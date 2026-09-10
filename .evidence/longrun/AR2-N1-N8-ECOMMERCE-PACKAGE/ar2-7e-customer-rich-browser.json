@@ -1,0 +1,2513 @@
+{
+  "schemaVersion": "aos.ar2-7e-customer-rich-browser/v1",
+  "generatedAt": "2026-09-10T07:51:40.101Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "isolated privacy-safe customer contracts; seven internal Action Proposal writes per viewport intercepted before backend transport",
+  "result": "PASS",
+  "counts": {
+    "passed": 3,
+    "total": 3,
+    "actionWrites": 21,
+    "formalReads": 36,
+    "otherWrites": 0,
+    "forbiddenWrites": 0,
+    "unknownGets": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "stoppedEarly": false
+  },
+  "zeroEffects": {
+    "approvalCount": 0,
+    "leaseCount": 0,
+    "permitRedemptionCount": 0,
+    "contactResolutionCount": 0,
+    "providerDispatchCount": 0,
+    "sendCount": 0,
+    "importCount": 0,
+    "customerMutationCount": 0,
+    "externalBusinessMutationCount": 0
+  },
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "客户分群",
+          "生命周期旅程",
+          "对话与批次",
+          "客户最小投影"
+        ],
+        "filters": [
+          "全部",
+          "可披露",
+          "待复核",
+          "已排除"
+        ],
+        "customerRefs": [
+          "eligible",
+          "review"
+        ],
+        "axesOpened": 6,
+        "workflow": [
+          "create",
+          "impact",
+          "revise",
+          "timeline",
+          "withdraw",
+          "recover"
+        ],
+        "proposalIds": [
+          "customer-proposal-v1",
+          "customer-proposal-v2",
+          "customer-recovery-v1"
+        ],
+        "approvalPreview": true,
+        "importPreflight": true,
+        "sendPreflight": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-08ce7dca-0cdd-46dd-9590-80205297f1a5",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:36.454Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-ba8bccc9-8de6-4582-96ea-0f3a4f55cd9e",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-8286f41a-909b-40f6-b949-90b47204d997",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:36.586Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-712cae0b-7aad-4659-8b7e-4b940c944d05",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-82948495-424d-4d64-bbdc-13f051074588",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-823848c3-fc08-4ee7-90bf-3e91359c2318",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:36.869Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-9443bb45-1083-424c-bca8-f50fcf26efa1",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-08ce7dca-0cdd-46dd-9590-80205297f1a5",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:36.454Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-ba8bccc9-8de6-4582-96ea-0f3a4f55cd9e",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-8286f41a-909b-40f6-b949-90b47204d997",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:36.586Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-712cae0b-7aad-4659-8b7e-4b940c944d05",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-82948495-424d-4d64-bbdc-13f051074588",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-823848c3-fc08-4ee7-90bf-3e91359c2318",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:36.869Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-9443bb45-1083-424c-bca8-f50fcf26efa1",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "lifecycleReads": 3,
+      "contactReads": 3,
+      "closureReads": 3
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "客户分群",
+          "生命周期旅程",
+          "对话与批次",
+          "客户最小投影"
+        ],
+        "filters": [
+          "全部",
+          "可披露",
+          "待复核",
+          "已排除"
+        ],
+        "customerRefs": [
+          "eligible",
+          "review"
+        ],
+        "axesOpened": 6,
+        "workflow": [
+          "create",
+          "impact",
+          "revise",
+          "timeline",
+          "withdraw",
+          "recover"
+        ],
+        "proposalIds": [
+          "customer-proposal-v1",
+          "customer-proposal-v2",
+          "customer-recovery-v1"
+        ],
+        "approvalPreview": true,
+        "importPreflight": true,
+        "sendPreflight": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-ff506725-a703-4b82-9ce3-c034eda244b8",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:37.849Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-6a333f63-7a61-43f5-b2b3-f90dbe4013f8",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-64ec20e7-9252-4214-aacf-97e7171cc156",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:37.965Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-ea91d5d8-a972-49b6-83d2-a3183a97b9b7",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-442a78db-4070-47c9-bb98-e2e7ffa4c5bf",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-8b9878e6-e52b-49e7-804e-b9ad188c5a98",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:38.248Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-8a16a81f-a169-4c25-a7b2-735bc48b648c",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-ff506725-a703-4b82-9ce3-c034eda244b8",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:37.849Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-6a333f63-7a61-43f5-b2b3-f90dbe4013f8",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-64ec20e7-9252-4214-aacf-97e7171cc156",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:37.965Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-ea91d5d8-a972-49b6-83d2-a3183a97b9b7",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-442a78db-4070-47c9-bb98-e2e7ffa4c5bf",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-8b9878e6-e52b-49e7-804e-b9ad188c5a98",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:38.248Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-8a16a81f-a169-4c25-a7b2-735bc48b648c",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "lifecycleReads": 3,
+      "contactReads": 3,
+      "closureReads": 3
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "客户分群",
+          "生命周期旅程",
+          "对话与批次",
+          "客户最小投影"
+        ],
+        "filters": [
+          "全部",
+          "可披露",
+          "待复核",
+          "已排除"
+        ],
+        "customerRefs": [
+          "eligible",
+          "review"
+        ],
+        "axesOpened": 6,
+        "workflow": [
+          "create",
+          "impact",
+          "revise",
+          "timeline",
+          "withdraw",
+          "recover"
+        ],
+        "proposalIds": [
+          "customer-proposal-v1",
+          "customer-proposal-v2",
+          "customer-recovery-v1"
+        ],
+        "approvalPreview": true,
+        "importPreflight": true,
+        "sendPreflight": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-c5b532ab-7d22-4979-b436-ee397b5b63ea",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:39.241Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-b4cf915c-01d5-4428-b127-bd95f0012fb0",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-c9de4694-bb69-4159-adfc-cd7c570853d2",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:39.357Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-3d8523ed-3f3b-46a9-9450-62ee4ec571af",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-9f784dc8-c0d7-4e09-a222-068203ebe14f",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-1fd9b406-71c6-48e9-b615-8c66f13e2f97",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:39.640Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-8bb3e46e-61f8-42b0-a1f9-caf4951738c7",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/timeline",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "actionWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-c5b532ab-7d22-4979-b436-ee397b5b63ea",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购教育"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:39.241Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v1/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-b4cf915c-01d5-4428-b127-bd95f0012fb0",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-create-c9de4694-bb69-4159-adfc-cd7c570853d2",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "taskId": null,
+            "runId": null,
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购教育",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "planType": {
+                "from": "journey",
+                "to": "journey"
+              },
+              "journeyStage": {
+                "from": "复购教育",
+                "to": "复购服务跟进"
+              },
+              "contentDraft": {
+                "from": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+                "to": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "impactPreviewRef": null,
+            "expiresAt": "2026-09-11T07:51:39.357Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-draft-v2/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-draft-submit-3d8523ed-3f3b-46a9-9450-62ee4ec571af",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-proposals/customer-proposal-v2/withdraw",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "action-withdraw-9f784dc8-c0d7-4e09-a222-068203ebe14f",
+          "body": {
+            "expectedProposalVersion": 2,
+            "expectedProposalHash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "reason": "运营人员撤回内部客户经营草稿"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-create-1fd9b406-71c6-48e9-b615-8c66f13e2f97",
+          "body": {
+            "actionTypeId": "ecommerce.customer.prepare-outreach-draft",
+            "objectRef": {
+              "resourceType": "CustomerLiteRevision",
+              "resourceId": "isolated-customer-eligible",
+              "revision": "1",
+              "authority": "ecommerce-workshop.customer-view"
+            },
+            "purpose": "客户复购旅程草稿",
+            "riskHint": "R2",
+            "payload": {
+              "viewId": "customer",
+              "planType": "journey",
+              "purpose": "customer-retention",
+              "segmentRule": "已同意且留存有效的客户最小投影",
+              "journeyStage": "复购服务跟进",
+              "contentDraft": "先确认 purpose、Consent、留存与频控，再提供相关说明；不强制转化。",
+              "customerRef": {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": 1,
+                "contentHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "receiptId": "receipt-isolated-customer-eligible"
+              },
+              "contactResolutionAllowed": false,
+              "providerDispatchAllowed": false,
+              "sendAllowed": false,
+              "externalEffectAllowed": false
+            },
+            "diff": {
+              "status": {
+                "from": null,
+                "to": "待审批"
+              },
+              "journeyStage": {
+                "from": null,
+                "to": "复购服务跟进"
+              }
+            },
+            "evidenceRefs": [
+              {
+                "resourceType": "CustomerLiteRevision",
+                "resourceId": "isolated-customer-eligible",
+                "revision": "1",
+                "authority": "ecommerce-workshop.customer-view"
+              }
+            ],
+            "expiresAt": "2026-09-11T07:51:39.640Z"
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/action-drafts/customer-recovery-draft/submit",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "operation-case-draft-submit-8bb3e46e-61f8-42b0-a1f9-caf4951738c7",
+          "body": {
+            "expectedRevision": 1,
+            "expectedContentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+          }
+        }
+      ],
+      "viewReads": 3,
+      "lifecycleReads": 3,
+      "contactReads": 3,
+      "closureReads": 3
+    }
+  ],
+  "boundaries": [
+    "Customer facts remained stable-ref and purpose-scoped; no protected contact was exposed.",
+    "Import, approval, and send controls were local preflight only; no approval, lease, permit, contact resolve, Provider, dispatch, or send request was made.",
+    "No production migration, release, push, or real customer mutation was attempted."
+  ]
+}
