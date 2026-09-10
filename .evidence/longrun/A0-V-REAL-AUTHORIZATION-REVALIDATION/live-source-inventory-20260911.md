@@ -1,0 +1,11 @@
+# 栖月汇恢复库证据实况与输入路径
+
+基线6555ea64。2026-09-11执行安全container_database_connect_factory连接colima-aos-extension/aos-a0v-recovery-pg/aos_meta_head，显式SET TRANSACTION READ ONLY，所有统计限定org-org/dev-project。未输出正文、标识符、凭据或客户数据。
+
+实际计数：public.aip_evidence=0；public.aip_evidence_bundle_revision=0；public.aip_evidence_disclosure_decision=0。payload顶层字段类型聚合为空。这个结论仅适用于当前恢复库和指定tenant，不代表上游微商城没有数据。当前无法从已存在Evidence构造生成上下文；此前合成PG测试不构成真实数据可用性证据。
+
+源码继续核查：source_read_observation_evidence.canonical_observation_evidence持久化的是observation、actor、purpose=observation-only、upstreamFreshness=unknown、factIds=[]。put(rows)验证rows，但并未把完整rows正文放入payload。configured_source_observation_evidence只封装configurationRef和observationEvidenceRef。因而即使写入这些观察记录，也不能把它们当商品事实正文；L3 materializer只是读取已有payload，不会自动补出业务事实。
+
+下一步必须沿真实配置读取→质量/事实映射→Evidence事实持久化的Owner链定位正文进入点，明确业务行如何绑定source hash/cutoff/marking/license，再装配生成上下文。禁止先假定productNames字段或从摘要填造商品名。需要复查data_requirement_quality_evidence与aip_task_store的事实Evidence写入调用方，确认自然触发路径实际使用哪一支。
+
+本轮无代码变更、无Provider调用、无业务写入；有新鲜数据库证据改变下一施工入口。完整首链仍未运行，八工作台、连续观察与发布评估未完成。不push，230 L0挂起。
