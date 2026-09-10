@@ -1,0 +1,35 @@
+from types import SimpleNamespace
+import pytest
+from aos_api.routers import wave_ext as api
+from aos_api import connector_registry, data_os_store
+
+
+@pytest.mark.parametrize('existing', [False, True])
+def test_failed_source_save_never_reports_success_or_changes_cache(monkeypatch, existing):
+    old = {'id':'source-test','type':'file','orgId':'org-org','projectId':'dev-project'}
+    cache = {'source-test':old.copy()} if existing else {}
+    monkeypatch.setattr(api, '_connectors', cache)
+    monkeypatch.setattr(api, '_hydrate_data_os_scope', lambda _: None)
+    monkeypatch.setattr(connector_registry, 'assert_type_installed', lambda _: 'file')
+    def fail(*args):
+        raise RuntimeError('sensitive-connection-error')
+    monkeypatch.setattr(data_os_store, 'persist_source', fail)
+    with pytest.raises(api.ApiError) as exc:
+        api.create_source(api.ConnectorIn(id='source-test'), SimpleNamespace(org_id='org-org',project_id='dev-project'))
+    assert 'sensitive' not in str(exc.value)
+    assert cache == ({'source-test':old} if existing else {})
+
+
+def test_source_cache_updates_only_after_persistence(monkeypatch):
+    cache = {}
+    monkeypatch.setattr(api, '_connectors', cache)
+    monkeypatch.setattr(api, '_hydrate_data_os_scope', lambda _: None)
+    monkeypatch.setattr(connector_registry, 'assert_type_installed', lambda _: 'file')
+    saved = []
+    def persist(scope, item):
+        assert cache == {}
+        assert scope.key == ('org-org','dev-project')
+        saved.append(item.copy())
+    monkeypatch.setattr(data_os_store, 'persist_source', persist)
+    api.create_source(api.ConnectorIn(id='source-test'), SimpleNamespace(org_id='org-org',project_id='dev-project'))
+    assert cache['source-test'] == saved[0]

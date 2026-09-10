@@ -1261,8 +1261,20 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         "orgId": principal.org_id,
         "projectId": principal.project_id,
     }
+    from aos_api.data_os_store import persist_source
+
+    try:
+        persist_source(scope, item)
+    except ApiError:
+        raise
+    except Exception:
+        # Connection exceptions can contain credentials; expose only a fixed code.
+        raise ApiError(
+            code="SOURCE_PERSISTENCE_UNAVAILABLE",
+            message="数据源登记未确认，请重新读取登记状态后再继续",
+            status_code=503,
+        ) from None
     _connectors[body.id] = item
-    _persist_safe("persist_source", scope, item)
     return _public_source(item)
 
 
