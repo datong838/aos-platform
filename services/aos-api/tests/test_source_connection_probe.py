@@ -5,11 +5,13 @@ from aos_api import source_connection_probe as probe
 from aos_api.tenant_scope import TenantScope
 
 
-@pytest.mark.parametrize('failure',['none','missing','version','state','type','transport'])
+@pytest.mark.parametrize('failure',['none','missing','version','state','type','transport','agent','worker','missing_mode'])
 def test_saved_source_probe_scope_version_and_private_connection(monkeypatch,failure):
     config=dict(sshHost='example.invalid',sshUser='reader',sshPassword='synthetic-ssh',
-                dbHost='127.0.0.1',database='shop',username='reader',password='synthetic-db')
+                dbHost='127.0.0.1',database='shop',username='reader',password='synthetic-db',runtimeMode='direct')
     row=dict(type='jdbc-mysql-ssh',status='registered',configuration_revision='version',props=config)
+    if failure in {'agent','worker'}:config['runtimeMode']=failure
+    if failure=='missing_mode':config.pop('runtimeMode')
     if failure=='version':row['configuration_revision']='other'
     if failure=='state':row['status']='disabled'
     if failure=='type':row['type']='file'

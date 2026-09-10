@@ -1,5 +1,5 @@
 import { executableConfig, verifySaved, verifyDiscovery, type Discovery } from "./s2/sourceSetup";
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../api/client";
 import { PageChrome } from "../components/PageChrome";
@@ -237,7 +237,9 @@ export function DataPage() {
   const [automaticSourceId] = useState(() => `source-${crypto.randomUUID()}`);
   const [savedConnection, setSavedConnection] = useState<{id:string; configurationRevision:string} | null>(null);
   const [sourceBusy, setSourceBusy] = useState(false);
+  const sourceInFlight = useRef(false);
   const [sourceDiscovery, setSourceDiscovery] = useState<Discovery | null>(null);
+  const [sshPort, setSshPort] = useState("22");
   const [sshHost, setSshHost] = useState("");
   const [sshUser, setSshUser] = useState("");
   const [sshPassword, setSshPassword] = useState("");
@@ -297,15 +299,26 @@ export function DataPage() {
     setTab("sources");
   }, [connectorPlugins, createRequested, requestedConnector]);
 
+  useEffect(() => {
+    setSourceDiscovery(null);
+    setMsg("");
+  }, [connectorType, runtimeMode, newSourceId, sshHost, sshPort, sshUser, sshPassword,
+      connHost, connPort, connDatabase, connUsername, connPassword]);
+
   async function createSource() {
-    if (sourceBusy) return;
+    if (sourceInFlight.current) return;
+    if (connectorType === "jdbc-mysql-ssh" && runtimeMode !== "direct") {
+      setErr("当前连接测试仅支持直接连接，请选择直接连接；代理测试尚未就绪");
+      return;
+    }
+    sourceInFlight.current = true;
     const id = newSourceId.trim() || automaticSourceId;
     setSourceBusy(true);
     setSourceDiscovery(null);
     setErr(null);
     try {
       const connection = connectorType === "jdbc-mysql-ssh" ? executableConfig(connectorType, {
-        sshHost, sshUser, sshPassword, sshPort: "22", dbHost: connHost,
+        sshHost, sshUser, sshPassword, sshPort, dbHost: connHost,
         dbPort: connPort || "3306", database: connDatabase, username: connUsername, password: connPassword,
       }) : null;
       const created = await apiPost<SourceRow & { id: string; configurationRevision: string }>("/v1/sources", {
@@ -342,7 +355,7 @@ export function DataPage() {
     } catch {
       setErr("保存或测试未确认成功，请检查配置并重新读取数据源状态");
     }
-    finally { setSourceBusy(false); }
+    finally { sourceInFlight.current = false; setSourceBusy(false); }
   }
 
   async function installConnector(pluginId: string) {
@@ -516,7 +529,7 @@ export function DataPage() {
       )}
 
       {tab === "sources" && sourceView === "new" && (
-        <div className="bp-object-panel" style={{ marginTop: "0.75rem" }}>
+        <fieldset disabled={sourceBusy} className="bp-object-panel" style={{ marginTop: "0.75rem", minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
             <div>
               <div className="bp-object-title">新建数据源</div>
@@ -680,6 +693,7 @@ export function DataPage() {
               </p>
               {connectorType === "jdbc-mysql-ssh" && <div>
                 <label>SSH 主机<input value={sshHost} onChange={e => setSshHost(e.target.value)} /></label>
+                <label>SSH 端口<input value={sshPort} onChange={e => setSshPort(e.target.value)} /></label>
                 <label>SSH 用户名<input value={sshUser} onChange={e => setSshUser(e.target.value)} /></label>
                 <label>SSH 密码<input type="password" value={sshPassword} onChange={e => setSshPassword(e.target.value)} /></label>
               </div>}
@@ -916,7 +930,7 @@ export function DataPage() {
               </BpToolbar>
             </>
           )}
-        </div>
+        </fieldset>
       )}
 
       {tab === "syncs" && (

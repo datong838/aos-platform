@@ -27,6 +27,9 @@ def probe_source_tables(scope: TenantScope, source_id: str, expected_revision: s
             props = row['props']
             if type(props) is not dict:
                 raise ValueError('invalid stored configuration')
+            if props.get('runtimeMode') != 'direct':
+                raise data_os_store.ApiError(code='SOURCE_PROBE_RUNTIME_UNAVAILABLE',
+                    message='当前连接测试仅支持直接连接，代理测试尚未就绪',status_code=409)
             config = normalize_source_connection_config(row['type'], {
                 key:value for key,value in props.items() if key in SOURCE_CONNECTION_FIELDS
             })
