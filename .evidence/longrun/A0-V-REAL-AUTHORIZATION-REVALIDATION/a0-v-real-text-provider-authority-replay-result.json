@@ -1,0 +1,59 @@
+{
+  "after": {
+    "canaryHealthObservationCount": 0,
+    "canaryProviderRevisionCount": 0,
+    "providerRevisionCount": 1
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-real-text-provider-authority/backups/aos_meta_head-pre-canonical-first-install.dump",
+    "sha256": "sha256:db40cd2fe1dda4d47d390ebec392b7dbdddc740a9a3847d50dcdc3f3a5a64fac",
+    "size": 4357116
+  },
+  "before": {
+    "canaryHealthObservationCount": 0,
+    "canaryProviderRevisionCount": 0,
+    "providerRevisionCount": 1
+  },
+  "effects": {
+    "businessMutationCount": 0,
+    "externalPublicationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "keychainMutationCount": 0,
+  "mode": "apply",
+  "mutationCount": 0,
+  "outcome": "A0V_REAL_TEXT_PROVIDER_AUTHORITY_GREEN",
+  "provider": {
+    "assetId": "a0v-agnes-text-readonly-dev",
+    "assetType": "ProviderInstanceRevision",
+    "baseUrl": "https://api.agnes-ai.cn/v1",
+    "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982",
+    "dataClassificationPolicyRef": {
+      "assetId": "a0v-ecommerce-public-catalog-v1",
+      "assetType": "DataClassificationPolicyRevision",
+      "contentHash": "1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477",
+      "revision": 1
+    },
+    "egressPolicyRef": {
+      "assetId": "a0v-ecommerce-egress-v1",
+      "assetType": "EgressPolicyRevision",
+      "contentHash": "c896eedb60d538552f1ee7a93b4130c2f87e8e90635328594f454a0c75864b8e",
+      "revision": 1
+    },
+    "lifecycle": "active",
+    "pluginRef": {
+      "assetId": "agnes-text",
+      "assetType": "ProviderPluginRevision",
+      "contentHash": "124adf49e0ea6df5b2003e5bd32825863797723139757609d2f99af7f1e3dd0e",
+      "revision": 3
+    },
+    "region": "cn-approved-development",
+    "revision": 1,
+    "secretRefFingerprint": "cee80cb35eec948135ace222ffa5c0a5321b17448907e7392769dff0e6730f80",
+    "secretVersion": "a0v-v1"
+  },
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  }
+}
