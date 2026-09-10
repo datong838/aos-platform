@@ -11,6 +11,16 @@ from typing import Any
 
 
 EXPECTED_RESULT = "A0_V_BLOCKED_WITH_ACTIONABLE_GAPS"
+EXPECTED_WORKSHOP_MODULE_IDS = {
+    "ecommerce.task-cockpit",
+    "ecommerce.content-campaign",
+    "ecommerce.creator-growth",
+    "ecommerce.media-studio",
+    "ecommerce.analyst",
+    "ecommerce.price-governance",
+    "ecommerce.customer",
+    "ecommerce.operations",
+}
 SENSITIVE_VALUE = re.compile(
     r"(?i)(?:bearer\s+(?!<redacted>)[a-z0-9._~+/=-]+|postgres(?:ql)?://[^:/\s]+:[^@/\s]+@)"
 )
@@ -111,6 +121,55 @@ def verify(document: dict[str, Any]) -> list[str]:
         if observation.get("httpStatus") == 200 and items == []:
             if f"{name}.authority" not in blocker_gates:
                 errors.append(f"missing {name} authority must remain a blocker")
+
+    installations = positive.get("bundleInstallations") or {}
+    if installations.get("httpStatus") == 200:
+        body = installations.get("body") or {}
+        items = body.get("items") if isinstance(body, dict) else None
+        active = (
+            [item for item in items if isinstance(item, dict) and item.get("state") == "active"]
+            if isinstance(items, list)
+            else []
+        )
+        if len(active) != 1:
+            if "bundleInstallations.active" not in blocker_gates:
+                errors.append("missing or ambiguous active installation must remain a blocker")
+        else:
+            runtime = observations.get("runtime") or {}
+            positive_runtime = runtime.get("positiveInstallation") or {}
+            canary_runtime = runtime.get("canaryInstallation") or {}
+            if (
+                positive_runtime.get("httpStatus") != 200
+                and "bundleRuntimeInstallation.positive" not in blocker_gates
+            ):
+                errors.append("active installation requires exact positive runtime evidence")
+            if (
+                canary_runtime.get("httpStatus") != 404
+                and "bundleRuntimeInstallation.canary" not in blocker_gates
+            ):
+                errors.append("active installation requires exact canary runtime isolation")
+
+    workshop = positive.get("workshopModules") or {}
+    if workshop.get("httpStatus") == 200:
+        body = workshop.get("body") or {}
+        items = body.get("items") if isinstance(body, dict) else None
+        module_ids = (
+            [item.get("moduleId") for item in items if isinstance(item, dict)]
+            if isinstance(items, list)
+            else []
+        )
+        ready = (
+            len(module_ids) == len(set(module_ids))
+            and set(module_ids) == EXPECTED_WORKSHOP_MODULE_IDS
+            and all(
+                isinstance(item, dict)
+                and item.get("readiness") == "available"
+                and item.get("blockers") == []
+                for item in (items or [])
+            )
+        )
+        if not ready and "workshopModules.readiness" not in blocker_gates:
+            errors.append("incomplete or unavailable Workshop modules must remain a blocker")
 
     isolation_unverified = any(
         isinstance(item, dict) and item.get("gate") == "crossTenantResourceIsolation"

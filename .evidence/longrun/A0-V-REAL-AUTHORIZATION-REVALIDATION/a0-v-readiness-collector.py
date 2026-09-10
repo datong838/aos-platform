@@ -14,6 +14,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 
 POSITIVE_TENANT = ("org-org", "dev-project")
@@ -38,6 +39,7 @@ READS = (
     ("modelChain", "/v1/aip/model-runtime/chain-overview", True),
     ("modelCost", "/v1/aip/model-runtime/cost-overview", True),
     ("bundleInstallations", "/v1/bundle-installations?limit=100&offset=0", True),
+    ("workshopModules", "/v1/ecommerce-workshop/modules", True),
     (
         "productionContexts",
         "/v1/aip/production-contracts/production-contexts",
@@ -112,20 +114,6 @@ def _request(
         "bodySha256": hashlib.sha256(raw).hexdigest(),
         "body": _redact(body),
     }
-
-
-def _collection_size(body: Any) -> int | None:
-    if isinstance(body, list):
-        return len(body)
-    if not isinstance(body, dict):
-        return None
-    if isinstance(body.get("count"), int):
-        return body["count"]
-    if isinstance(body.get("total"), int):
-        return body["total"]
-    if isinstance(body.get("items"), list):
-        return len(body["items"])
-    return None
 
 
 def _non_empty_model_sections(body: Any) -> dict[str, int]:
@@ -210,6 +198,139 @@ def _first_agent_instance_id(body: Any) -> str | None:
         and item["instanceId"].strip()
     )
     return values[0] if values else None
+
+
+EXPECTED_WORKSHOP_MODULE_IDS = {
+    "ecommerce.task-cockpit",
+    "ecommerce.content-campaign",
+    "ecommerce.creator-growth",
+    "ecommerce.media-studio",
+    "ecommerce.analyst",
+    "ecommerce.price-governance",
+    "ecommerce.customer",
+    "ecommerce.operations",
+}
+
+
+def _active_installation_readiness(
+    body: Any,
+) -> tuple[str | None, int | None, list[dict[str, Any]]]:
+    blockers: list[dict[str, Any]] = []
+    if not isinstance(body, dict):
+        return None, None, [
+            {"gate": "bundleInstallations.active", "reason": "MALFORMED_READINESS_BODY"}
+        ]
+    items = body.get("items")
+    total = body.get("total")
+    limit = body.get("limit")
+    offset = body.get("offset")
+    if (
+        not isinstance(items, list)
+        or not isinstance(total, int)
+        or not isinstance(limit, int)
+        or offset != 0
+        or total != len(items)
+        or len(items) > limit
+    ):
+        return None, None, [
+            {"gate": "bundleInstallations.active", "reason": "INCOMPLETE_OR_MALFORMED_COLLECTION"}
+        ]
+    active = [item for item in items if isinstance(item, dict) and item.get("state") == "active"]
+    if not active:
+        return None, None, [
+            {"gate": "bundleInstallations.active", "reason": "ACTIVE_INSTALLATION_MISSING"}
+        ]
+    if len(active) != 1:
+        return None, None, [
+            {"gate": "bundleInstallations.active", "reason": "ACTIVE_INSTALLATION_AMBIGUOUS"}
+        ]
+    item = active[0]
+    installation_id = item.get("installationId")
+    current_revision = item.get("currentRevision")
+    try:
+        canonical_id = str(UUID(installation_id)) if isinstance(installation_id, str) else None
+    except ValueError:
+        canonical_id = None
+    if (
+        canonical_id is None
+        or not isinstance(current_revision, int)
+        or current_revision < 1
+        or item.get("activeRevision") != current_revision
+        or item.get("etagVersion") != current_revision
+    ):
+        blockers.append(
+            {"gate": "bundleInstallations.active", "reason": "ACTIVE_INSTALLATION_POINTER_MISMATCH"}
+        )
+        return None, None, blockers
+    return canonical_id, current_revision, blockers
+
+
+def _workshop_module_readiness(body: Any) -> list[dict[str, Any]]:
+    if not isinstance(body, dict):
+        return [{"gate": "workshopModules.readiness", "reason": "MALFORMED_READINESS_BODY"}]
+    items = body.get("items")
+    count = body.get("count")
+    if not isinstance(items, list) or not isinstance(count, int) or count != len(items):
+        return [{"gate": "workshopModules.readiness", "reason": "COLLECTION_COUNT_MISMATCH"}]
+    module_ids = [item.get("moduleId") for item in items if isinstance(item, dict)]
+    if (
+        len(module_ids) != len(items)
+        or len(module_ids) != len(set(module_ids))
+        or set(module_ids) != EXPECTED_WORKSHOP_MODULE_IDS
+    ):
+        return [{"gate": "workshopModules.readiness", "reason": "EXPECTED_EXACT_EIGHT_MODULES"}]
+    if any(
+        item.get("readiness") != "available" or item.get("blockers") != []
+        for item in items
+    ):
+        return [{"gate": "workshopModules.readiness", "reason": "MODULE_NOT_AVAILABLE"}]
+    return []
+
+
+def _runtime_installation_readiness(
+    body: Any,
+    *,
+    installation_id: str,
+    installation_revision: int,
+) -> list[dict[str, Any]]:
+    if not isinstance(body, dict):
+        return [{"gate": "bundleRuntimeInstallation.readiness", "reason": "MALFORMED_READINESS_BODY"}]
+    binding = body.get("binding")
+    valid_binding = (
+        isinstance(binding, dict)
+        and isinstance(binding.get("generation"), str)
+        and bool(binding["generation"].strip())
+        and binding.get("installationRevision") == installation_revision
+        and isinstance(binding.get("profileRef"), str)
+        and bool(binding["profileRef"].strip())
+        and isinstance(binding.get("configRef"), dict)
+        and bool(binding["configRef"])
+        and isinstance(binding.get("executionEpoch"), int)
+        and binding["executionEpoch"] >= 1
+        and binding.get("desiredState") == "enabled"
+        and binding.get("observedState") == "ready"
+        and binding.get("enabled") is True
+        and binding.get("operationFence") is False
+        and isinstance(binding.get("revision"), int)
+        and binding["revision"] >= 1
+    )
+    current_operation = body.get("currentOperation")
+    operation_is_terminal = current_operation is None or (
+        isinstance(current_operation, dict)
+        and current_operation.get("status") in {"succeeded", "failed", "cancelled"}
+    )
+    if (
+        body.get("installationId") != installation_id
+        or body.get("installationRevision") != installation_revision
+        or body.get("installationEtag") != installation_revision
+        or body.get("installationState") != "active"
+        or body.get("effectiveState") != "ready"
+        or not operation_is_terminal
+        or body.get("reasons") != []
+        or not valid_binding
+    ):
+        return [{"gate": "bundleRuntimeInstallation.readiness", "reason": "RUNTIME_NOT_READY"}]
+    return []
 
 
 def _exact_isolation_outcome(
@@ -534,6 +655,28 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             ),
         }
 
+    active_installation_id: str | None = None
+    active_installation_revision: int | None = None
+    installation_semantic_blockers: list[dict[str, Any]] = []
+    if positive["bundleInstallations"].get("httpStatus") == 200:
+        (
+            active_installation_id,
+            active_installation_revision,
+            installation_semantic_blockers,
+        ) = _active_installation_readiness(positive["bundleInstallations"].get("body"))
+    runtime: dict[str, dict[str, Any]] = {}
+    if active_installation_id is not None:
+        encoded = urllib.parse.quote(active_installation_id, safe="")
+        path = f"/v1/bundle-runtime-installations/{encoded}"
+        runtime = {
+            "positiveInstallation": _request(
+                base_url, path, tenant=POSITIVE_TENANT, authenticated=True
+            ),
+            "canaryInstallation": _request(
+                base_url, path, tenant=CANARY_TENANT, authenticated=True
+            ),
+        }
+
     blockers: list[dict[str, Any]] = []
     unverified: list[dict[str, Any]] = []
     if health["httpStatus"] != 200:
@@ -553,14 +696,36 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             )
 
     blockers.extend(_semantic_readiness_blockers(positive))
-
-    for name in (
-        "bundleInstallations",
-    ):
-        observed = positive[name]
-        size = _collection_size(observed.get("body"))
-        if observed["httpStatus"] == 200 and size == 0:
-            blockers.append({"gate": name, "reason": "REQUIRED_COLLECTION_EMPTY"})
+    blockers.extend(installation_semantic_blockers)
+    if positive["workshopModules"].get("httpStatus") == 200:
+        blockers.extend(_workshop_module_readiness(positive["workshopModules"].get("body")))
+    if active_installation_id is not None and active_installation_revision is not None:
+        positive_runtime = runtime.get("positiveInstallation") or {}
+        canary_runtime = runtime.get("canaryInstallation") or {}
+        if positive_runtime.get("httpStatus") != 200:
+            blockers.append(
+                {
+                    "gate": "bundleRuntimeInstallation.positive",
+                    "reason": "EXPECTED_200",
+                    "httpStatus": positive_runtime.get("httpStatus"),
+                }
+            )
+        else:
+            blockers.extend(
+                _runtime_installation_readiness(
+                    positive_runtime.get("body"),
+                    installation_id=active_installation_id,
+                    installation_revision=active_installation_revision,
+                )
+            )
+        if canary_runtime.get("httpStatus") != 404:
+            blockers.append(
+                {
+                    "gate": "bundleRuntimeInstallation.canary",
+                    "reason": "EXPECTED_404",
+                    "httpStatus": canary_runtime.get("httpStatus"),
+                }
+            )
 
     model_counts: dict[str, dict[str, int]] = {}
     for name in ("modelRuntime", "modelChain", "modelCost"):
@@ -639,6 +804,7 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             "positive": positive,
             "canary": canary,
             "isolation": isolation,
+            "runtime": runtime,
             "negative": negatives,
         },
     }

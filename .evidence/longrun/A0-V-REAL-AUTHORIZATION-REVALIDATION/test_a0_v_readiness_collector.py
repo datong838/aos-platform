@@ -31,6 +31,58 @@ def ready_stats():
     }
 
 
+INSTALLATION_ID = "11111111-1111-4111-8111-111111111111"
+
+
+def ready_installation_collection():
+    return {
+        "items": [
+            {
+                "installationId": INSTALLATION_ID,
+                "state": "active",
+                "currentRevision": 7,
+                "activeRevision": 7,
+                "etagVersion": 7,
+            }
+        ],
+        "total": 1,
+        "limit": 100,
+        "offset": 0,
+    }
+
+
+def ready_runtime_installation():
+    return {
+        "installationId": INSTALLATION_ID,
+        "installationRevision": 7,
+        "installationEtag": 7,
+        "installationState": "active",
+        "effectiveState": "ready",
+        "binding": {
+            "generation": "generation-7",
+            "installationRevision": 7,
+            "profileRef": "internal-python-v1",
+            "configRef": {"configurationId": "approved-config"},
+            "executionEpoch": 2,
+            "desiredState": "enabled",
+            "observedState": "ready",
+            "enabled": True,
+            "operationFence": False,
+            "revision": 4,
+        },
+        "currentOperation": None,
+        "reasons": [],
+    }
+
+
+def ready_workshop_modules():
+    items = [
+        {"moduleId": module_id, "readiness": "available", "blockers": []}
+        for module_id in sorted(COLLECTOR.EXPECTED_WORKSHOP_MODULE_IDS)
+    ]
+    return {"items": items, "count": len(items)}
+
+
 def ready_positive():
     generated = datetime(2026, 9, 10, 10, tzinfo=timezone.utc)
     node = {"status": "ready", "blockerCode": None}
@@ -250,6 +302,112 @@ class SemanticReadinessTests(unittest.TestCase):
         self.assertIn(
             {"gate": "crossTenantResourceIsolation.canary", "reason": "EXPECTED_404"},
             blockers,
+        )
+
+    def test_exact_active_installation_is_selected(self):
+        installation_id, revision, blockers = COLLECTOR._active_installation_readiness(
+            ready_installation_collection()
+        )
+        self.assertEqual((installation_id, revision, blockers), (INSTALLATION_ID, 7, []))
+
+    def test_missing_ambiguous_and_stale_active_installations_fail_closed(self):
+        missing = ready_installation_collection()
+        missing["items"][0]["state"] = "uninstalled"
+        self.assertEqual(
+            COLLECTOR._active_installation_readiness(missing)[2][0]["reason"],
+            "ACTIVE_INSTALLATION_MISSING",
+        )
+
+        ambiguous = ready_installation_collection()
+        second = dict(ambiguous["items"][0])
+        second["installationId"] = "22222222-2222-4222-8222-222222222222"
+        ambiguous["items"].append(second)
+        ambiguous["total"] = 2
+        self.assertEqual(
+            COLLECTOR._active_installation_readiness(ambiguous)[2][0]["reason"],
+            "ACTIVE_INSTALLATION_AMBIGUOUS",
+        )
+
+        stale = ready_installation_collection()
+        stale["items"][0]["activeRevision"] = 6
+        self.assertEqual(
+            COLLECTOR._active_installation_readiness(stale)[2][0]["reason"],
+            "ACTIVE_INSTALLATION_POINTER_MISMATCH",
+        )
+
+    def test_incomplete_installation_page_fails_closed(self):
+        body = ready_installation_collection()
+        body["total"] = 2
+        self.assertEqual(
+            COLLECTOR._active_installation_readiness(body)[2][0]["reason"],
+            "INCOMPLETE_OR_MALFORMED_COLLECTION",
+        )
+
+    def test_runtime_requires_exact_ready_unfenced_binding(self):
+        self.assertEqual(
+            COLLECTOR._runtime_installation_readiness(
+                ready_runtime_installation(),
+                installation_id=INSTALLATION_ID,
+                installation_revision=7,
+            ),
+            [],
+        )
+        terminal = ready_runtime_installation()
+        terminal["currentOperation"] = {"status": "succeeded"}
+        self.assertEqual(
+            COLLECTOR._runtime_installation_readiness(
+                terminal,
+                installation_id=INSTALLATION_ID,
+                installation_revision=7,
+            ),
+            [],
+        )
+        for label, changes in (
+            ("fenced", {"operationFence": True}),
+            ("disabled", {"enabled": False}),
+            ("stale", {"installationRevision": 6}),
+            ("unconfigured", {"configRef": None}),
+        ):
+            with self.subTest(label=label):
+                body = ready_runtime_installation()
+                body["binding"].update(changes)
+                self.assertEqual(
+                    COLLECTOR._runtime_installation_readiness(
+                        body,
+                        installation_id=INSTALLATION_ID,
+                        installation_revision=7,
+                    )[0]["reason"],
+                    "RUNTIME_NOT_READY",
+                )
+        running = ready_runtime_installation()
+        running["currentOperation"] = {"status": "running"}
+        self.assertEqual(
+            COLLECTOR._runtime_installation_readiness(
+                running,
+                installation_id=INSTALLATION_ID,
+                installation_revision=7,
+            )[0]["reason"],
+            "RUNTIME_NOT_READY",
+        )
+
+    def test_workshop_requires_exact_eight_available_modules(self):
+        self.assertEqual(COLLECTOR._workshop_module_readiness(ready_workshop_modules()), [])
+
+        missing = ready_workshop_modules()
+        missing["items"].pop()
+        missing["count"] -= 1
+        self.assertEqual(
+            COLLECTOR._workshop_module_readiness(missing)[0]["reason"],
+            "EXPECTED_EXACT_EIGHT_MODULES",
+        )
+
+        degraded = ready_workshop_modules()
+        degraded["items"][0].update(
+            {"readiness": "degraded", "blockers": [{"reasonCode": "MISSING"}]}
+        )
+        self.assertEqual(
+            COLLECTOR._workshop_module_readiness(degraded)[0]["reason"],
+            "MODULE_NOT_AVAILABLE",
         )
 
 
