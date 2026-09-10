@@ -527,6 +527,9 @@ def prepare_persistent_signed_tree(*, build_dir: Path, state_dir: Path) -> dict[
         from aos_api.asset_registry.manifest_loader import ManifestLoader
         from aos_api.asset_registry.release_policy import ReleasePolicy
         from aos_api.asset_registry.signature import FileTrustRootProvider
+        from aos_api.extension_runtime.release_revalidation import (
+            RuntimeReleaseRevalidator,
+        )
 
         signing_dir = state_dir.resolve() / "signing"
         key_path = signing_dir / "registry-ed25519.pem"
@@ -890,10 +893,12 @@ def create_approved_first_installation(
             raise FirstInstallBlocked(
                 "COMPOSITION_MODULE_INVENTORY_DRIFT", str(module_count)
             )
+        runtime_revalidator = RuntimeReleaseRevalidator(release_policy=policy)
         service = InstallationService(
             store=installation_store,
             composition_store=composition_store,
             revalidator=InstallationRevalidator(release_policy=policy),
+            planning_revalidator=runtime_revalidator,
         )
         created = service.create(
             request=CreateInstallationRequest.model_validate(
