@@ -1,0 +1,5 @@
+# 已配置数据库有界表发现
+
+基线380ab0cb，端到端方案C/D前置。现有list_tables_only枚举可见schema，不用于本向导。新增JdbcConnectorRuntime.list_configured_tables，固定self.database作为SQL绑定参数，仅查询information_schema.tables的table_name/table_type，限定上限500（多读1行标记truncated），ORDER BY名称；必须复用_read_only_transaction，结束rollback，不读业务行和表注释。不返回虚构rowCount。
+
+文件jdbc_connector_runtime.py、test_configured_table_discovery.py。验证数据库绑定参数、只读事务、LIMIT 501、截断标记、错误传播无假成功、无任意schema参数。后续probe仍须使用reuse_cache=False和当前配置版本，此方法本身不授予探针权限、不装配API。无真实源读取、无UI修改，此阶段不称向导完成。

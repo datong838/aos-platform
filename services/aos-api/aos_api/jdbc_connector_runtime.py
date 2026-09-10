@@ -976,6 +976,22 @@ class JdbcConnectorRuntime:
                     tree.append({"name": schema, "tables": tables})
         return tree
 
+    def list_configured_tables(self) -> dict[str, Any]:
+        """Discover only this connection's database; no business row counts."""
+        with self._read_only_transaction():
+            with self._conn.cursor() as cur:
+                cur.execute(
+                    """SELECT table_name,table_type FROM information_schema.tables
+                       WHERE table_schema=%s ORDER BY table_name LIMIT 501""",
+                    (self.database,),
+                )
+                rows = cur.fetchall()
+        return {
+            "tables": [{"name": row["table_name"], "type": row["table_type"]}
+                       for row in rows[:500]],
+            "truncated": len(rows) > 500,
+        }
+
     def list_tables_only(self) -> list[dict[str, Any]]:
         """轻量版 discover_schemas：只返回 schema + table 名 + 注释，不拉字段。
 
