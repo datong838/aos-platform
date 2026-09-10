@@ -1,0 +1,7 @@
+# Dataset 成功发布顺序
+
+基线64fcc87f。复核ecom_consistency_store：Receipt检查先于对象写入，支持当前hash及旧CAS hash严格回放。现executor仍在OT/派生/投影前发布Dataset成功，后续失败留下该轮成功投影。
+
+修改ec_live_executor.py将sink_to_dataset放在project_pending返回后；保留原结构预检、各权威Owner调用顺序及异常传播。扩展test_ec_ingress_preflight.py注入OT、派生、Projector三处失败，均不得调用Dataset sink；正常路径验证顺序。既有Dataset/history原子保存保持。
+
+限制：提交后崩溃仍需要持久化原批次输入和阶段Receipt恢复；不以重读变化源冒充恢复。本轮只修复成功状态过早发布，不声明全链原子性。若Projector返回非异常失败状态，其语义须另查，不臆造成功判断。

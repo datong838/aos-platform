@@ -139,9 +139,6 @@ def ec_live_executor(
         # Reject malformed canonical output before publishing a Dataset success.
         validate_ot_output(scope, pipeline, output_rows)
 
-        # sink: Dataset（G4，W2 实现）
-        ds = sink_to_dataset(eng, scope, pipeline, output_rows)
-
         # sink: OT + Link（G5，W3 实现）
         sink_to_ot(eng, scope, pipeline, output_rows)
 
@@ -153,6 +150,9 @@ def ec_live_executor(
         from aos_api.ecom_projector import project_pending
 
         projection = project_pending(scope)
+
+        # Publish this run's Dataset success only after authoritative stages return.
+        ds = sink_to_dataset(eng, scope, pipeline, output_rows)
 
         return {
             "input_ref": "",
