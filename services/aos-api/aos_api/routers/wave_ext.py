@@ -241,6 +241,7 @@ class ConnectorIn(BaseModel):
     id: str
     type: str = "file"
     runtimeMode: Literal["direct", "agent", "worker"] | None = None
+    config: Any = Field(default=None, repr=False, exclude=True)
 
 
 class PipelineIn(BaseModel):
@@ -1241,6 +1242,7 @@ def _public_source(item: dict[str, Any]) -> dict[str, Any]:
 @router.post("/v1/sources")
 def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
     from aos_api.connector_registry import assert_type_installed
+    from aos_api.source_connection_config import normalize_source_connection_config
 
     try:
         plugin_id = assert_type_installed(body.type)
@@ -1248,6 +1250,16 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
         raise ApiError(code="UNKNOWN_CONNECTOR", message=str(exc), status_code=400) from None
     except PermissionError as exc:
         raise ApiError(code="PLUGIN_NOT_INSTALLED", message=str(exc), status_code=400) from None
+    connection = {}
+    if body.config is not None:
+        try:
+            connection = normalize_source_connection_config(plugin_id, body.config)
+        except ValueError:
+            raise ApiError(
+                code="SOURCE_CONNECTION_CONFIG_INVALID",
+                message="连接配置不完整或不受支持，请检查字段和认证方式",
+                status_code=400,
+            ) from None
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
     _assert_mutation_scope(
@@ -1255,6 +1267,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     )
     item = {
         **body.model_dump(exclude_none=True),
+        **connection,
         "type": plugin_id,
         "status": "registered",
         "pluginId": plugin_id,

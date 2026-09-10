@@ -33,3 +33,21 @@ def test_source_cache_updates_only_after_persistence(monkeypatch):
     monkeypatch.setattr(data_os_store, 'persist_source', persist)
     api.create_source(api.ConnectorIn(id='source-test'), SimpleNamespace(org_id='org-org',project_id='dev-project'))
     assert cache['source-test'] == saved[0]
+
+
+def test_connection_config_is_persisted_but_not_returned(monkeypatch):
+    monkeypatch.setattr(api, '_connectors', {})
+    monkeypatch.setattr(api, '_hydrate_data_os_scope', lambda _: None)
+    monkeypatch.setattr(connector_registry, 'assert_type_installed', lambda _: 'jdbc-mysql-ssh')
+    saved=[]
+    monkeypatch.setattr(data_os_store,'persist_source',lambda scope,item:saved.append(item.copy()))
+    config=dict(sshHost='example.invalid',sshUser='reader',sshPassword='synthetic-ssh',
+                dbHost='127.0.0.1',database='shop',username='reader',password='synthetic-db')
+    body=api.ConnectorIn(id='source-test',type='jdbc-mysql-ssh',config=config)
+    assert 'synthetic' not in repr(body)
+    result=api.create_source(body,SimpleNamespace(org_id='org-org',project_id='dev-project'))
+    assert saved[0]['password']=='synthetic-db'
+    assert saved[0]['connector_type']=='jdbc-mysql-ssh'
+    assert 'config' not in saved[0]
+    assert not set(config).intersection(result)
+    assert result['id']=='source-test'
