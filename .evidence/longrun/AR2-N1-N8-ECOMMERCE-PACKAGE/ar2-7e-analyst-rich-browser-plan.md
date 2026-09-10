@@ -52,3 +52,9 @@
 - Workshop 顶栏和生意探究面板均有 `aria-label="渠道视角"`，三级选择动作必须限定在 `#analyst-panel-investigation` 内，避免把顶栏租户选择误当业务渠道。
 - 七视图的可信空语义按各自结构验证：总览/驱动/诊断/计划/证据检查“未知”或待补证，效果复盘检查三段结果保持未知，质量检查账本为“未知”；不再要求每个面板正文都恰好包含同一字面量。
 - `AsyncJobDrawer` 会读取 `/api/v1/aip/async-jobs?limit=50`，隔离 fixture 增加当前租户可信空响应；仍禁止任何 async job 写入。
+
+## 6. 第二轮 strict schema 诊断
+
+- 第二轮两个视口均完成 pause、resume、DataRequirement request/confirm 四次受控写，并按 state v1→v5 完成 exact GET 回读；其他写、未知 GET、页面错误和控制台错误均为 0。
+- 阶段评审 fixture 使用了旧测试中的具体产物类型，当前严格解析器要求 ReviewIssue 的 `evidenceRefs.resourceType=Evidence`，StageReview 的 `artifactRef.resourceType=Artifact`。页面因此进入“阶段评审读取失败”并隐藏决定按钮，符合 fail-closed 产品行为。
+- 固定执行器改用当前 strict parser 类型，不修改产品解析器或降低校验；下一轮仍从全新浏览器 context 和 state v1 开始。
