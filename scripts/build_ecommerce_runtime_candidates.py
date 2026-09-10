@@ -16,6 +16,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib.request
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -343,7 +344,7 @@ def _export_registry_manifest(archive: Path, registry: Path, repository: str) ->
     return {"imageDigest": manifest_digest, "configDigest": config["digest"]}
 
 
-REGISTRY_SERVER = r'''from http.server import BaseHTTPRequestHandler, HTTPServer
+REGISTRY_SERVER = r'''from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import hashlib, re
 ROOT=Path('/fixture')
@@ -373,7 +374,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         if send_body: self.wfile.write(raw)
     def log_message(self,*args): pass
-HTTPServer(('0.0.0.0',5000),Handler).serve_forever()
+ThreadingHTTPServer(('0.0.0.0',5000),Handler).serve_forever()
 '''
 
 
@@ -439,29 +440,47 @@ def _pull_exact_images(
         deadline = time.monotonic() + 10
         while True:
             try:
-                with socket.create_connection(("127.0.0.1", port), timeout=1):
-                    break
-            except OSError:
+                with urllib.request.urlopen(
+                    f"http://127.0.0.1:{port}/v2/", timeout=1
+                ) as response:
+                    if response.status == 200 and response.read() == b"{}":
+                        break
+            except (OSError, ValueError):
                 if time.monotonic() > deadline:
                     raise CandidateBuildBlocked("REGISTRY_START_TIMEOUT", name)
                 time.sleep(0.1)
         for repository, identity in images.items():
             ref = f"127.0.0.1:{port}/{repository}@{identity['imageDigest']}"
-            subprocess.run(
-                [
-                    "docker",
-                    "--config",
-                    str(docker_config),
-                    "--host",
-                    endpoint,
-                    "pull",
-                    ref,
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
+            try:
+                subprocess.run(
+                    [
+                        "docker",
+                        "--config",
+                        str(docker_config),
+                        "--host",
+                        endpoint,
+                        "pull",
+                        ref,
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+            except subprocess.CalledProcessError as exc:
+                detail = (exc.stderr or exc.stdout or "exact image pull failed").strip()
+                logs = subprocess.run(
+                    ["docker", "--context", context, "logs", name],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                container_detail = (logs.stderr or logs.stdout or "").strip()
+                if container_detail:
+                    detail = detail + " | registry: " + container_detail
+                raise CandidateBuildBlocked(
+                    "EXACT_IMAGE_PULL_FAILED", detail[-2000:]
+                ) from exc
             rows = json.loads(_docker(context, "image", "inspect", identity["configDigest"]))
             if len(rows) != 1:
                 raise CandidateBuildBlocked("CACHED_IMAGE_MISSING", repository)
