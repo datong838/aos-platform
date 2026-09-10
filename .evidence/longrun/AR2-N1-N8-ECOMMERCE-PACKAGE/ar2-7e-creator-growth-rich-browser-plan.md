@@ -53,3 +53,10 @@
 - 定位歧义：页面同时存在 AppShell `main.main` 与业务区 `main.creator-growth-main`。初始业务回读改为精确选择 `.creator-growth-main`，不改变产品 DOM。
 - 路由漂移：产品客户端实际读取 `/api/v1/ecommerce-workshop/views/content-campaign/real-inputs`，执行器误写为 `/inputs`。fixture 路由改为产品客户端的真实路径。
 - 修正范围只限浏览器证据执行器；保留首轮 FAIL JSON 与 diagnostic 截图直至绿态证据生成，产品文件 hash 退出条件不变。
+
+## 7. 二轮诊断与断言收敛（2026-09-10）
+
+- 路由修正后两个视口均无 unknown GET、page error 或 console error；各完成 8 次内部草稿命令，其他写入与受禁写入均为 0。
+- “AI 匹配分析”位于右侧分析栏，不在中间业务 `main`；将它作为整页业务回读，候选 resource ref 仍在 `.creator-growth-main` 回读。
+- “第 8 版”同时存在于状态提示、当前草稿和历史项；restore 完成改为等待唯一的当前草稿容器 `aria-label=当前草稿` 出现“草稿 · 第 8 版”。
+- 执行器补齐六类准备面板逐一打开、标题与专属字段回读；candidate_import 面板随后承载八步生命周期，交互计数退出条件改为 6。
