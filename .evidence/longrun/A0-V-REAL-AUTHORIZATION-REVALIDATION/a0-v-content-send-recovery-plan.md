@@ -1,0 +1,9 @@
+# 内容首次发送与恢复执行器
+
+基线 e7f5d0ba，延续 content-real-execution-plan。修改 `services/aos-api/aos_api/ecommerce_content_execution_worker.py`，新增 `services/aos-api/tests/aip/test_a0v_content_execution_worker_pg.py`。
+
+执行器使用已存在命令日志与预算状态，无第二套claim状态。持锁读取日志及reservation；已存在result只回读，submitted/unknown仅返回待对账，不重发；只有held进入由进程装配的当前权威prepare，得到exact路由和经分级的prompt。匹配租户及原价格引用后，通过事务绑定BudgetStore.submit写ProviderRequestReceipt，关闭短事务，再调用ExactProviderInvoker。结果在新事务写不可变日志，暂不当作Artifact/结算。
+
+并发进程以reservation锁和首次submit回执决定唯一发送者；进程重启读submitted不能再发。调用异常保守记unknown，不猜测失败无副作用；结果落库失败则抛出脱敏错误，后续读submitted不会补发。prepare异常发生在submit之前，保持held可修复。模块只由内部装配，尚不注册启动worker或外部API；实际Host当前权威prepare、enqueue入口及最终产物消费后续接入。
+
+隔离PG验证发送时无数据库事务、请求回执已提交、并发仅一次、换执行器回放无发送、unknown不重发、prepare失败未提交。无真实Provider，public不升级。该执行器不处理媒体job查询；异步Provider job必须单独实现原job查询，不能把任务已提交当成已生成。回滚禁用装配，保留journal和reservation。

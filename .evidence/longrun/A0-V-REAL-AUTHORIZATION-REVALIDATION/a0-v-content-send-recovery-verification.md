@@ -1,0 +1,9 @@
+# 内容事务外首次发送与恢复验证
+
+基线 e7f5d0ba，Task A0V-CONTENT-SEND-RECOVERY。执行器使用现有预算reservation锁与submit首次/回放结果作为唯一发送裁决；结果存入上一切片journal，返回RESULT_RECORDED而不冒充业务COMPLETED。内部prepare/invoke必须由进程可信装配，尚未开放API或启动注册。
+
+新代码匹配prepared scope、READY、非空prompt/分级及原exact价格；prepare在提交前执行。ProviderRequestReceipt在短事务提交、连接关闭之后才调用模型。submitted/unknown不重发；调用异常记unknown并隐藏原始异常；落结果失败明确要求不重发，保留submitted等待对账。
+
+真实隔离PostgreSQL共5项通过：两个执行器并发仅首次发送；发送函数从另一连接能立即取得reservation行锁并看到submitted；新执行器回放同结果零发送；模拟超时后unknown不重发；prepare拒绝保持held且无请求回执；模拟结果落库失败后新执行器仅RECONCILE_ONLY；journal既有隔离和不可变场景回归。传输/prepare均为明确测试替身，无真实Provider请求。diff check通过，public未升级，随机schema由fixture清理。
+
+边界与剩余风险：真实安装/dispatch/来源/角色当前权威prepare尚未实现装配；媒体job查询、结果持久化失败后的独立对账、Artifact/Usage消费、Host enqueue及进程生命周期待接。当前准备与实际发送之间有短事务边界，真实装配须依既有epoch/撤销策略在最终发送入口复验，不以测试替身当权威。未推进A0-V，完整首链及八工作台未完成。既有启动schema和pytest warnings未修复。
