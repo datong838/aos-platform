@@ -1,0 +1,13 @@
+# 真实内容来源路径核查
+
+基线93f744e3；本轮为执行过的源码对账，不是已实现reader或数据接入验收。
+
+核查发现：
+1. ContentGenerateHostService._task_brief 已完整校验Task/Brief/创建Receipt/current revision及handoff lineage，但返回None。spec包含objective/channels/audience/timeWindow/constraints，没有productNames。不能把测试reader商品名照搬成真实上下文。
+2. BusinessInvestigationArtifactRevision只包含case/run/input refs及来源hash，不是可直接拼接的商品正文。DataFulfillmentReceiptRecord也只绑定artifact refs和cutoff；它是导航/权威链，不是事实值本身。
+3. EvidenceBundleRevision.item_refs指向Evidence；aip_production_contract_store._compute_evidence_bundle_coverage实际读取aip_evidence.payload及freshness、revoke event。这里才是事实正文来源入口，但必须保留exact hash/cutoff/撤销和许可边界。
+4. 现有_evaluate_disclosure 的L2仅提供最多200字excerpt；L3返回5分钟expiresAt和scopedSourceRef（EvidenceDisclosureDecision），不是正文。不能拿L2截断摘要冒充完整输入，也不能直接跨过披露Owner读取payload。
+
+下一施工入口调整：先补受控L3来源正文读取（当前scope、任务目的、exact evidence、decision有效期及实时撤销/marking/license/applicability复验），再将其与已验证Brief组合为真实生成输入和上下文。商品名须来自事实正文/结构化提取并保留证据引用，不在此处发明productNames字段或猜商品；未有数据字段合同前先核查现存数据样本的结构。
+
+本轮无模型调用、无业务数据访问或写入、无代码修改。此前结果消费者/发送器/用量/产物原子性已实现，但真实source reader仍未装配；不会以本核查宣布首链完成。继续开发，不请求报价、不push，230 L0挂起。
