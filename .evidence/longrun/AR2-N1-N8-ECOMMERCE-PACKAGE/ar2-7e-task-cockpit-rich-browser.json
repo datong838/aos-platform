@@ -1,0 +1,2153 @@
+{
+  "schemaVersion": "aos.ar2-7e-task-cockpit-rich-browser/v1",
+  "generatedAt": "2026-09-10T05:24:59.897Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "isolated contract data; the sole task POST is intercepted before backend transport",
+  "result": "PASS",
+  "counts": {
+    "passed": 3,
+    "total": 3,
+    "taskPosts": 3,
+    "preflightPosts": 0,
+    "colleagues": 18,
+    "capabilities": 30,
+    "workshopWrites": 0,
+    "otherWrites": 0,
+    "unknownGets": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "stoppedEarly": false
+  },
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "recommendation": {
+          "label": "复盘订单与商品规模",
+          "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+          "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1"
+        },
+        "preflightPosts": 0,
+        "taskPost": {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-fa54e288-7d30-4071-b3ab-762482013d24",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        },
+        "readbackMatched": true,
+        "colleagues": [
+          {
+            "role": "customer_service",
+            "inside": true
+          },
+          {
+            "role": "private_domain_manager",
+            "inside": true
+          },
+          {
+            "role": "shopping_advisor",
+            "inside": true
+          },
+          {
+            "role": "data_advisor",
+            "inside": true
+          },
+          {
+            "role": "content_officer",
+            "inside": true
+          },
+          {
+            "role": "campaign_planner",
+            "inside": true
+          }
+        ],
+        "capabilities": [
+          {
+            "label": "素材采集待核对",
+            "inside": true
+          },
+          {
+            "label": "策略规划待核对",
+            "inside": true
+          },
+          {
+            "label": "文案生成待核对",
+            "inside": true
+          },
+          {
+            "label": "脚本撰写待核对",
+            "inside": true
+          },
+          {
+            "label": "语音合成待核对",
+            "inside": true
+          },
+          {
+            "label": "视频合成待核对",
+            "inside": true
+          },
+          {
+            "label": "内容审核待核对",
+            "inside": true
+          },
+          {
+            "label": "直播编排待核对",
+            "inside": true
+          },
+          {
+            "label": "平台适配待核对",
+            "inside": true
+          },
+          {
+            "label": "数据复盘待核对",
+            "inside": true
+          }
+        ],
+        "reviews": [
+          "今日复盘",
+          "AI 改进建议",
+          "经验沉淀 Wiki · 今日入库"
+        ],
+        "roleColumns": 2,
+        "tomorrow": "明日预告 · 仅显示已排期业务任务\n2 项待规划",
+        "calendar": true,
+        "filterRoundTrip": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "workshopWrites": [],
+      "otherWrites": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/tasks",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "taskPosts": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-fa54e288-7d30-4071-b3ab-762482013d24",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        }
+      ],
+      "coreReadsAfterPost": 3
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "recommendation": {
+          "label": "复盘订单与商品规模",
+          "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+          "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1"
+        },
+        "preflightPosts": 0,
+        "taskPost": {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-4206584b-1f46-448d-a7fb-c7e390e09ef6",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        },
+        "readbackMatched": true,
+        "colleagues": [
+          {
+            "role": "customer_service",
+            "inside": true
+          },
+          {
+            "role": "private_domain_manager",
+            "inside": true
+          },
+          {
+            "role": "shopping_advisor",
+            "inside": true
+          },
+          {
+            "role": "data_advisor",
+            "inside": true
+          },
+          {
+            "role": "content_officer",
+            "inside": true
+          },
+          {
+            "role": "campaign_planner",
+            "inside": true
+          }
+        ],
+        "capabilities": [
+          {
+            "label": "素材采集待核对",
+            "inside": true
+          },
+          {
+            "label": "策略规划待核对",
+            "inside": true
+          },
+          {
+            "label": "文案生成待核对",
+            "inside": true
+          },
+          {
+            "label": "脚本撰写待核对",
+            "inside": true
+          },
+          {
+            "label": "语音合成待核对",
+            "inside": true
+          },
+          {
+            "label": "视频合成待核对",
+            "inside": true
+          },
+          {
+            "label": "内容审核待核对",
+            "inside": true
+          },
+          {
+            "label": "直播编排待核对",
+            "inside": true
+          },
+          {
+            "label": "平台适配待核对",
+            "inside": true
+          },
+          {
+            "label": "数据复盘待核对",
+            "inside": true
+          }
+        ],
+        "reviews": [
+          "今日复盘",
+          "AI 改进建议",
+          "经验沉淀 Wiki · 今日入库"
+        ],
+        "roleColumns": 2,
+        "tomorrow": "明日预告 · 仅显示已排期业务任务\n2 项待规划",
+        "calendar": true,
+        "filterRoundTrip": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "workshopWrites": [],
+      "otherWrites": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/tasks",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "taskPosts": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-4206584b-1f46-448d-a7fb-c7e390e09ef6",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        }
+      ],
+      "coreReadsAfterPost": 3
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "recommendation": {
+          "label": "复盘订单与商品规模",
+          "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+          "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1"
+        },
+        "preflightPosts": 0,
+        "taskPost": {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-3faa5107-f79c-4a74-9a2b-136a88051ba3",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        },
+        "readbackMatched": true,
+        "colleagues": [
+          {
+            "role": "customer_service",
+            "inside": true
+          },
+          {
+            "role": "private_domain_manager",
+            "inside": true
+          },
+          {
+            "role": "shopping_advisor",
+            "inside": true
+          },
+          {
+            "role": "data_advisor",
+            "inside": true
+          },
+          {
+            "role": "content_officer",
+            "inside": true
+          },
+          {
+            "role": "campaign_planner",
+            "inside": true
+          }
+        ],
+        "capabilities": [
+          {
+            "label": "素材采集待核对",
+            "inside": true
+          },
+          {
+            "label": "策略规划待核对",
+            "inside": true
+          },
+          {
+            "label": "文案生成待核对",
+            "inside": true
+          },
+          {
+            "label": "脚本撰写待核对",
+            "inside": true
+          },
+          {
+            "label": "语音合成待核对",
+            "inside": true
+          },
+          {
+            "label": "视频合成待核对",
+            "inside": true
+          },
+          {
+            "label": "内容审核待核对",
+            "inside": true
+          },
+          {
+            "label": "直播编排待核对",
+            "inside": true
+          },
+          {
+            "label": "平台适配待核对",
+            "inside": true
+          },
+          {
+            "label": "数据复盘待核对",
+            "inside": true
+          }
+        ],
+        "reviews": [
+          "今日复盘",
+          "AI 改进建议",
+          "经验沉淀 Wiki · 今日入库"
+        ],
+        "roleColumns": 2,
+        "tomorrow": "明日预告 · 仅显示已排期业务任务\n2 项待规划",
+        "calendar": true,
+        "filterRoundTrip": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "workshopWrites": [],
+      "otherWrites": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/tasks",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "taskPosts": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/aip/tasks",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "workshop-task-3faa5107-f79c-4a74-9a2b-136a88051ba3",
+          "body": {
+            "type": "ecommerce.workshop.business_task",
+            "title": "复盘栖月汇微商城的124 笔订单、57 个商品的经营表现并整理问题清单",
+            "description": "由日常任务总控大屏受理，建议导购顾问承接。",
+            "priority": 50,
+            "goal": {
+              "workshopAssignment": {
+                "roleKey": "shopping_advisor",
+                "colleagueName": "导购顾问",
+                "status": "requested"
+              },
+              "sourceEvidence": {
+                "definitionRef": "MetricDefinitionRevision:workshop.analyst.order_count@1|MetricDefinitionRevision:workshop.analyst.product_count@1",
+                "observationRef": "MetricObservation:order_count-observation@1|MetricObservation:product_count-observation@1",
+                "dataCutoff": "2026-08-15T10:00:00Z"
+              },
+              "origin": "workshop.task-cockpit"
+            }
+          }
+        }
+      ],
+      "coreReadsAfterPost": 3
+    }
+  ],
+  "boundaries": [
+    "No fixture request reached a real AOS write handler or database.",
+    "All Workshop requests remained tenant-scoped GET.",
+    "No Provider, publication, customer contact, payment, migration, release, or push was attempted."
+  ]
+}
