@@ -89,7 +89,9 @@ class AipR1BootstrapProbe:
         self._secret_resolver = secret_resolver or ExactSecretResolver()
         self._transport = transport or HttpxProviderTransport()
         self._clock = clock or (lambda: datetime.now(UTC))
-        self._allowed_approval_refs = allowed_approval_refs or frozenset({"35-R1-C"})
+        self._allowed_approval_refs = (
+            frozenset({"35-R1-C"}) if allowed_approval_refs is None else allowed_approval_refs
+        )
 
     def run(
         self,

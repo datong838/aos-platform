@@ -183,6 +183,29 @@ def test_probe_accepts_only_explicitly_injected_approval_refs():
     assert controlled.run(TenantScope("org-org", "dev-project"), request).status == "healthy"
 
 
+def test_empty_approval_set_blocks_before_secret_or_transport():
+    assets, request = assembly()
+    transport = Transport()
+
+    class ForbiddenSecretResolver:
+        def resolve(self, *_args):
+            pytest.fail("denied request must not resolve a secret")
+
+    controlled = AipR1BootstrapProbe(
+        model_store=ModelStore(assets.provider),
+        guard_store=GuardStore(assets),
+        network_store=NetworkStore(assets),
+        plugin_authority=PluginAuthority(assets.plugin),
+        secret_resolver=ForbiddenSecretResolver(),
+        transport=transport,
+        clock=lambda: NOW,
+        allowed_approval_refs=frozenset(),
+    )
+    with pytest.raises(R1BootstrapProbeBlocked, match="r1_probe_approval_blocked"):
+        controlled.run(TenantScope("org-org", "dev-project"), request)
+    assert transport.calls == []
+
+
 def test_probe_fails_closed_when_expected_response_contract_is_missing():
     assets, request = assembly()
     request = request.model_copy(
