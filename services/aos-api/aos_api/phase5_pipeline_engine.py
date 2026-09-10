@@ -1009,7 +1009,7 @@ class PipelineEngine:
             return
 
     def execute_pipeline_once(
-        self, scope: TenantScope, pipeline_id: str,
+        self, scope: TenantScope, pipeline_id: str, *, run_id: str | None = None,
     ) -> dict[str, Any]:
         """Phase B1: 直接执行一次 Pipeline (不经过 Schedule).
 
@@ -1043,6 +1043,7 @@ class PipelineEngine:
                 sample_input={},
                 execution_kind="direct_sync",
                 started_at=started,
+                run_id=run_id,
             )
         evidence, _ = self._collect_dispatch(dispatch)
         # ScheduleRun status 用 "succeeded"，SyncRun 用 "success"；两者都算成功。
@@ -1349,6 +1350,7 @@ class PipelineEngine:
         sample_input: dict[str, Any],
         execution_kind: str,
         started_at: float,
+        run_id: str | None = None,
     ) -> tuple[threading.Thread, queue.Queue, threading.Event, float, str, float]:
         executor_id = pipeline.executor_id
         executor = self._executors[executor_id]
@@ -1357,7 +1359,10 @@ class PipelineEngine:
         result_queue: queue.Queue = queue.Queue(maxsize=1)
         cancel_event = threading.Event()
         deadline = time.monotonic() + pipeline.execution_timeout_seconds
-        run_id = f"pipeline-run-{uuid.uuid4()}"
+        if run_id is not None and (type(run_id) is not str or not 1 <= len(run_id) <= 200
+                                   or run_id.strip() != run_id or "\x00" in run_id):
+            raise ValueError("PIPELINE_RUN_ID_INVALID")
+        run_id = run_id if run_id is not None else f"pipeline-run-{uuid.uuid4()}"
 
         def invoke() -> None:
             try:

@@ -1,0 +1,7 @@
+# 持久调度运行身份接续
+
+基线5f66e987。qyh_cron_scheduler在执行前持久claim scr运行；Phase5 _start_dispatch另生成pipeline-run，DLQ无法直接关联原持久运行。
+
+修改phase5_pipeline_engine.execute_pipeline_once及_start_dispatch新增可选run_id，仅内部调用使用；有值校验非空、无首尾空白、长度<=200、无NUL，没有值保持旧UUID生成。qyh_cron_scheduler传入刚claim的run_id。该参数只做谱系，不授予权限；当前scope和管道preflight保持。
+
+测试调度mock断言收到相同run_id，实际引擎注册无副作用executor验证传递；旧未指定行为保持。此轮不迁移数据库，不接journal写入；后续journal接入需要读持久记录检查scope/pipeline状态，不信任传入字符串本身。

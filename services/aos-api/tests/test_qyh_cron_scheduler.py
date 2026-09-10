@@ -106,7 +106,8 @@ def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None
 
     class Engine:
         @staticmethod
-        def execute_pipeline_once(_scope, _pipeline_id):
+        def execute_pipeline_once(_scope, _pipeline_id, *, run_id):
+            assert run_id == "run-1"
             return {
                 "ok": False,
                 "rows_written": 0,
@@ -156,7 +157,8 @@ def test_execute_schedule_masks_unexpected_scheduler_exception(monkeypatch) -> N
 
     class Engine:
         @staticmethod
-        def execute_pipeline_once(_scope, _pipeline_id):
+        def execute_pipeline_once(_scope, _pipeline_id, *, run_id):
+            assert run_id == "run-2"
             raise RuntimeError("password=secret user@example.com")
 
     monkeypatch.setattr(
