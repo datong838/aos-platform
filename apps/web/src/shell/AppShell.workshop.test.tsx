@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { EcommerceWorkshopClientError } from "../api/ecommerceWorkshop";
 import { setTenant } from "../api/tenant";
 import { EcommerceWorkshopCatalogProvider } from "../components/workshop";
 import { workshopCatalogFixture, workshopModuleFixture } from "../components/workshop/workshopTestFixtures";
@@ -180,6 +181,56 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
     expect(host.querySelector('a[href="/workshop/inventory"]')).toBeNull();
     expect(host.querySelectorAll("[data-workshop-module-id]")).toHaveLength(0);
+  });
+
+  it.each([
+    ["空目录", { listModules: async () => workshopCatalogFixture({ items: [] }) }, "模块未安装"],
+    ["目录读取失败", { listModules: async () => { throw new Error("catalog unavailable"); } }, "读取失败"],
+    ["目录无权", { listModules: async () => { throw new EcommerceWorkshopClientError("forbidden", {
+      status: 403,
+      operationId: "ecommerceWorkshopModulesList",
+      body: { code: "FORBIDDEN", message: "forbidden", details: null, traceId: "trace-forbidden" },
+    }); } }, "没有访问权限"],
+    ["目录租户漂移", { listModules: async () => workshopCatalogFixture({
+      orgId: "dev-org",
+      projectId: "dev-project",
+    }) }, "读取失败"],
+    ["仅安装其他模块", { listModules: async () => workshopCatalogFixture({
+      items: [workshopModuleFixture({
+        moduleId: "ecommerce.content-campaign",
+        route: "/workshop/content-campaign",
+        displayName: "内容与活动工作台",
+        menuLabel: "内容与活动工作台",
+        legacyRoutes: [],
+      })],
+    }) }, "模块未安装"],
+  ] as const)("%s 时 canonical 深链保持通用壳且不暴露专用业务控制", async (_caseName, client, expectedState) => {
+    await act(async () => root.render(
+      <MemoryRouter initialEntries={["/workshop/operations"]}>
+        <EcommerceWorkshopCatalogProvider client={client}>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route path="workshop/:workshopModule/*" element={<EcommerceWorkshopEntryRoute />} />
+            </Route>
+          </Routes>
+        </EcommerceWorkshopCatalogProvider>
+      </MemoryRouter>,
+    ));
+    await flush();
+
+    expect(host.querySelector(".ecommerce-workshop-host-state")?.textContent).toContain(expectedState);
+    expect(host.querySelector(".p-app")?.classList.contains("is-workshop-primary-visual")).toBe(false);
+    expect(host.querySelector(".p-app")?.classList.contains("is-analyst-visual")).toBe(false);
+    expect(host.querySelector(".p-app")?.classList.contains("is-task-cockpit-visual")).toBe(false);
+    expect(host.querySelector(".workshop-visual-header-left")).toBeNull();
+    expect(host.querySelector(".analyst-exact-header-left")).toBeNull();
+    expect(host.querySelector(".task-cockpit-exact-header-left")).toBeNull();
+    expect(host.textContent).not.toContain("栖月汇微商城");
+    expect(host.textContent).not.toContain("统一运营驾驶舱");
+    expect(host.textContent).not.toContain("＋ 新建处理");
+    expect(host.querySelector(".topbar-left")).not.toBeNull();
+    expect(host.querySelector(".brand-block")).not.toBeNull();
+    expect(host.querySelectorAll('[data-workshop-module-id="ecommerce.operations"]')).toHaveLength(0);
   });
 
   it("canonical 深层路径保持在同一 Module Shell 与唯一 active 导航中", async () => {

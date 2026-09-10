@@ -361,10 +361,11 @@ export function AppShell() {
       ? undefined
       : staticActive;
   const onApolloRoute = location.pathname.startsWith("/apollo");
-  const onAnalystVisualRoute = location.pathname === "/workshop/analyst";
-  const onTaskCockpitVisualRoute = location.pathname === "/workshop/cockpit";
-  const onWorkshopPrimaryVisualRoute = ["/workshop/cockpit", "/workshop/operations", "/workshop/content-campaign", "/workshop/creator-growth", "/workshop/media-studio", "/workshop/analyst", "/workshop/price-governance", "/workshop/customer"].includes(location.pathname);
-  const onWorkshopMappedHeaderRoute = Boolean(WORKSHOP_VISUAL_HEADERS[location.pathname]);
+  const hasActiveWorkshop = Boolean(activeWorkshop);
+  const onAnalystVisualRoute = hasActiveWorkshop && location.pathname === "/workshop/analyst";
+  const onTaskCockpitVisualRoute = hasActiveWorkshop && location.pathname === "/workshop/cockpit";
+  const onWorkshopPrimaryVisualRoute = hasActiveWorkshop && ["/workshop/cockpit", "/workshop/operations", "/workshop/content-campaign", "/workshop/creator-growth", "/workshop/media-studio", "/workshop/analyst", "/workshop/price-governance", "/workshop/customer"].includes(location.pathname);
+  const onWorkshopMappedHeaderRoute = hasActiveWorkshop && Boolean(WORKSHOP_VISUAL_HEADERS[location.pathname]);
   const cockpitDateLabel = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).format(new Date());
 
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } =
