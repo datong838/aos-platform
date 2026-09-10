@@ -100,6 +100,18 @@ def verify(document: dict[str, Any]) -> list[str]:
             if stats.get(key) != value and f"agentRegistry.stats.{key}" not in blocker_gates:
                 errors.append(f"agentRegistry {key} mismatch must remain a blocker")
 
+    dynamic_outputs = {"productionContexts", "productionStartDecisions", "taskBriefs"}
+    for gate in dynamic_outputs.intersection(blocker_gates):
+        errors.append(f"dynamic A1 output must not be an A0-V non-empty blocker: {gate}")
+
+    for name in ("responsibilityPlans", "stageTemplates"):
+        observation = positive.get(name) or {}
+        body = observation.get("body") or {}
+        items = body.get("items") if isinstance(body, dict) else None
+        if observation.get("httpStatus") == 200 and items == []:
+            if f"{name}.authority" not in blocker_gates:
+                errors.append(f"missing {name} authority must remain a blocker")
+
     errors.extend(_walk(document))
     return errors
 

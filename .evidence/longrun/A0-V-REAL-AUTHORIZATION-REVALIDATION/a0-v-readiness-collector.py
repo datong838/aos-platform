@@ -178,6 +178,26 @@ def _status_reason(value: Any) -> str:
     return f"STATUS_{value.strip().upper()}"
 
 
+def _collection_items(
+    name: str,
+    positive: dict[str, dict[str, Any]],
+    blockers: list[dict[str, Any]],
+) -> list[Any] | None:
+    observed = positive[name]
+    if observed.get("httpStatus") != 200:
+        return None
+    body = observed.get("body")
+    if not isinstance(body, dict):
+        blockers.append({"gate": f"{name}.collection", "reason": "MALFORMED_READINESS_BODY"})
+        return None
+    items = body.get("items")
+    count = body.get("count")
+    if not isinstance(items, list) or not isinstance(count, int) or count != len(items):
+        blockers.append({"gate": f"{name}.collection", "reason": "COLLECTION_COUNT_MISMATCH"})
+        return None
+    return items
+
+
 def _semantic_readiness_blockers(
     positive: dict[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
@@ -344,6 +364,86 @@ def _semantic_readiness_blockers(
         if not active_budget:
             blockers.append({"gate": "modelCost.budgets", "reason": "NO_ACTIVE_CNY_HARD_STOP_BUDGET"})
 
+    contract_items = {
+        name: _collection_items(name, positive, blockers)
+        for name in (
+            "productionContexts",
+            "productionStartDecisions",
+            "responsibilityPlans",
+            "stageTemplates",
+            "taskBriefs",
+        )
+    }
+
+    stages = contract_items["stageTemplates"]
+    if stages is not None:
+        matching = [
+            item
+            for item in stages
+            if isinstance(item, dict)
+            and item.get("profile") == "ecommerce.business-investigation"
+        ]
+        frozen = [item for item in matching if item.get("lifecycle") == "frozen"]
+        if not matching:
+            blockers.append({"gate": "stageTemplates.authority", "reason": "INVESTIGATION_TEMPLATE_MISSING"})
+        elif not frozen:
+            blockers.append({"gate": "stageTemplates.authority", "reason": "INVESTIGATION_TEMPLATE_NOT_FROZEN"})
+        elif len(frozen) != 1:
+            blockers.append({"gate": "stageTemplates.authority", "reason": "INVESTIGATION_TEMPLATE_AMBIGUOUS"})
+        else:
+            item = frozen[0]
+            stage_ids = [
+                stage.get("stageId") if isinstance(stage, dict) else None
+                for stage in item.get("stages", [])
+            ] if isinstance(item.get("stages"), list) else []
+            complete_seal = all(item.get(key) for key in ("sealedBy", "sealedAt", "sealHash"))
+            if (
+                item.get("readiness") != "ready"
+                or item.get("blockers") != []
+                or not complete_seal
+                or stage_ids != ["portrait", "diagnosis", "solution-design"]
+            ):
+                blockers.append({"gate": "stageTemplates.authority", "reason": "INVESTIGATION_TEMPLATE_NOT_READY"})
+
+    plans = contract_items["responsibilityPlans"]
+    if plans is not None:
+        matching = [
+            item
+            for item in plans
+            if isinstance(item, dict)
+            and item.get("profile") == "ecommerce.business-investigation.readonly"
+        ]
+        frozen = [item for item in matching if item.get("lifecycle") == "frozen"]
+        if not matching:
+            blockers.append({"gate": "responsibilityPlans.authority", "reason": "INVESTIGATION_PLAN_MISSING"})
+        elif not frozen:
+            blockers.append({"gate": "responsibilityPlans.authority", "reason": "INVESTIGATION_PLAN_NOT_FROZEN"})
+        elif len(frozen) != 1:
+            blockers.append({"gate": "responsibilityPlans.authority", "reason": "INVESTIGATION_PLAN_AMBIGUOUS"})
+        else:
+            item = frozen[0]
+            slot_ids = [
+                slot.get("slotId") if isinstance(slot, dict) else None
+                for slot in item.get("slots", [])
+            ] if isinstance(item.get("slots"), list) else []
+            expected_slots = {
+                "investigation-owner",
+                "data-steward",
+                "content-research",
+                "customer-research",
+                "channel-research",
+                "business-reviewer",
+            }
+            if (
+                item.get("readiness") != "ready"
+                or item.get("coverage") != "complete"
+                or item.get("blockers") != []
+                or item.get("uncoveredSlots") != []
+                or len(slot_ids) != 6
+                or set(slot_ids) != expected_slots
+            ):
+                blockers.append({"gate": "responsibilityPlans.authority", "reason": "INVESTIGATION_PLAN_NOT_READY"})
+
     return blockers
 
 
@@ -404,11 +504,6 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
 
     for name in (
         "bundleInstallations",
-        "productionContexts",
-        "productionStartDecisions",
-        "responsibilityPlans",
-        "stageTemplates",
-        "taskBriefs",
     ):
         observed = positive[name]
         size = _collection_size(observed.get("body"))
