@@ -33,8 +33,6 @@ def resume_prepared_derived(conn, scope: TenantScope, run_id: str, *,
         base = store.read_committed_batch(command)
         if base is None:
             raise IngressJournalConflict('INGRESS_BASE_RECEIPT_REQUIRED')
-        if base.objects_ignored or base.links_ignored:
-            raise IngressJournalConflict('INGRESS_BASE_RECONCILIATION_REQUIRED')
         commands = tuple(DerivedMetricCommand.model_validate(raw) for raw in saved['commands'])
         revision = store.read_committed_batch_revision(command)
         if any(item.input_revision != revision for item in commands):

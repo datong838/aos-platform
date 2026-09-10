@@ -69,13 +69,15 @@ def test_current_binding_denial_never_submits(store,prepared):
     store.update_derived_metrics.assert_not_called()
 
 
-def test_ignored_base_requires_reconciliation(store,prepared):
+def test_superseded_base_cannot_resume_old_derived(store,prepared):
+    from datetime import timedelta
+    from aos_api.ecom_core_models import EcomConsistencyError
     command,_,_ = prepared
     store.apply_batch(command)
-    original = store.read_committed_batch(command)
-    store.read_committed_batch = Mock(return_value=original.model_copy(update={'links_ignored':1}))
+    newer=command.objects[0].model_copy(update={'source_updated_at':NOW+timedelta(seconds=1)})
+    store.apply_batch(batch(newer,batch_scope=command.scope,key='newer',expected=1))
     store.update_derived_metrics = Mock()
-    with pytest.raises(IngressJournalConflict,match='INGRESS_BASE_RECONCILIATION_REQUIRED'):
+    with pytest.raises(EcomConsistencyError,match='original base record'):
         resume(store,prepared)
     store.update_derived_metrics.assert_not_called()
 

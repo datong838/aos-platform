@@ -797,13 +797,13 @@ def test_batch_revision_requires_receipt_and_complete_outbox(store):
         store.read_committed_batch_revision(original)
 
 
-def test_ignored_base_requires_reconciliation_before_revision(store):
+def test_identical_ignored_base_reuses_original_revision(store):
     original = batch(obj('Shop','shop-1'))
     store.apply_batch(original)
     ignored = batch(obj('Shop','shop-1'),key='ignored',expected=1)
     assert store.apply_batch(ignored).objects_ignored == 1
-    with pytest.raises(EcomConsistencyError,match='reconciliation'):
-        store.read_committed_batch_revision(ignored)
+    assert store.read_committed_batch_revision(ignored)==store.read_committed_batch_revision(original)
+    assert store.read_batch_projection_completion(ignored,[])=={'expected':1,'projected':0,'pending':1}
 
 
 def test_exact_derived_receipt_read_is_read_only_and_rejects_conflicts(store):
@@ -863,3 +863,40 @@ def test_no_change_derived_receipt_requires_prior_effective_event_projection(sto
     with store._engine.begin() as conn:
         conn.execute(update(projection_outbox).values(projected=True))
     assert store.read_batch_projection_completion(base,[unchanged])=={'expected':2,'projected':2,'pending':0}
+
+
+def test_mixed_duplicate_and_new_batch_tracks_both_projection_events(store):
+    original=batch(obj('Shop','one'))
+    store.apply_batch(original)
+    with store._engine.begin() as conn:
+        conn.execute(update(projection_outbox).values(projected=True))
+    mixed=batch(obj('Shop','one'),obj('Shop','two',when=NOW+timedelta(seconds=1)),key='mixed',expected=1)
+    result=store.apply_batch(mixed)
+    assert result.objects_written==1 and result.objects_ignored==1
+    assert store.read_batch_projection_completion(mixed,[])=={'expected':2,'projected':1,'pending':1}
+
+
+def test_older_ignored_record_and_dangling_link_cannot_be_reconciled(store):
+    store.apply_batch(batch(obj('Shop','one',when=NOW+timedelta(seconds=1))))
+    older=batch(obj('Shop','one'),key='older',expected=1,at=NOW+timedelta(seconds=1))
+    assert store.apply_batch(older).objects_ignored==1
+    with pytest.raises(EcomConsistencyError,match='original base record'):
+        store.read_committed_batch_revision(older)
+    dangling=batch(obj('Shop','shop-object',when=NOW+timedelta(seconds=2)),links=[shop_product_link()],key='dangling',expected=2)
+    assert store.apply_batch(dangling).links_ignored==1
+    with pytest.raises(EcomConsistencyError,match='original base record'):
+        store.read_committed_batch_revision(dangling)
+
+
+def test_duplicate_links_require_existing_exact_relation_event(store):
+    from sqlalchemy import delete
+    original=batch(obj('Shop','shop-object'),obj('Product','product-1'),links=[shop_product_link()])
+    store.apply_batch(original)
+    repeated=original.model_copy(update={'idempotency_key':'repeat-relations','expected_checkpoint_version':1})
+    result=store.apply_batch(repeated)
+    assert result.objects_ignored==2 and result.links_ignored==1
+    assert store.read_batch_projection_completion(repeated,[])=={'expected':3,'projected':0,'pending':3}
+    with store._engine.begin() as conn:
+        conn.execute(delete(projection_outbox).where(projection_outbox.c.change_kind=='links_written'))
+    with pytest.raises(EcomConsistencyError,match='outbox evidence'):
+        store.read_committed_batch_revision(repeated)

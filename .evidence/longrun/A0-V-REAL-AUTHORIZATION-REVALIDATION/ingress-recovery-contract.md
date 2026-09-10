@@ -91,3 +91,13 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 边界：空源尚不能构造BatchCommand，必须明确拒绝而非制造可恢复成功，后续补无变更运行合同；辅助读取仍需完整来源版本证明；public未迁移，API未重载，不能声称真实调度运行已通过。调度失败后的原run重启claim仍需接续，当前只接首次持久run及显式恢复重入。
 
 接线同轮发现CustomerLite聚合辅助读取仍使用字符串拼接且写aos.workspace_id而非canonical project GUC，失败返回空聚合。改用既有Store事务scope helper、过滤niushop/site1非删除订单，缺Store/读取失败抛固定错误；不得将读取失败算作0订单。新增聚合专项；其他辅助输入精确来源版本仍待后续验证。
+
+## ignored基础项精确对账
+
+2026-09-11，基线e585bdd2。不再把所有ignored作为同一种失败：校验原Receipt计数与命令数量、该事务实际写入Outbox计数；逐项核对当前基础对象/关系payload_hash与原命令完全相同，存活关系两端仍存在；按规范事件payload_hash寻找唯一已存在的权威基础事件，缺失/歧义拒绝。正常同版本同载荷重复可复用原事件，过旧被覆盖、缺关系、悬挂或缺历史事件不作为成功。
+
+原批水位取这组精确有效基础事件max，不取当前租户max。完成统计必须包含重复项对应旧事件的projected状态，不能只统计本次写入事件。当前记录已被后来更新的旧批暂拒绝自动继续，需显式superseded对账；不静默用新对象替代旧输入。派生输入水位回退仍由既有CAS拒绝，不抬高版本绕过来源检查。
+
+文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ingress_recovery.py与对应专项。新增正常重复、全重复仍待旧投影、混合新旧、过旧/缺Outbox/悬挂负例；SQLite先证据，PG组合后续。实际source为空的无变更合同仍单独实现。
+
+实现核查：基础request_hash不包含idempotency_key，相同内容不同key可共享request_hash。改以既有event_key（含scope/stream/key/identity/outcome）统计本批实际写入，提取生成函数供原writer和对账共用；不得把request_hash当唯一事务身份。

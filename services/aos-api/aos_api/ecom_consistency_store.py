@@ -414,24 +414,64 @@ class EcomConsistencyStore:
                 raise EcomConsistencyError("BASE_RECEIPT_REQUIRED", "committed base receipt required")
             if not self._receipt_matches_request(command=command, receipt=receipt, request_hash=command.request_hash()):
                 raise EcomConsistencyError("IDEMPOTENCY_CONFLICT", "stored receipt does not match the original command")
-            result = BatchResult.model_validate(receipt["result"])
-            if result.objects_ignored or result.links_ignored:
-                raise EcomConsistencyError("BASE_RECONCILIATION_REQUIRED", "ignored base records require reconciliation")
-            expected = result.objects_written + result.objects_tombstoned + result.links_written + result.links_tombstoned
-            count, revision = conn.execute(
-                select(func.count(), func.max(projection_outbox.c.input_revision)).where(
-                    projection_outbox.c.org_id == command.scope.org_id,
-                    projection_outbox.c.workspace_id == command.scope.workspace_id,
-                    projection_outbox.c.platform == command.scope.platform,
-                    projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
-                    projection_outbox.c.authority_tx_id == receipt["request_hash"],
-                    projection_outbox.c.event_source == "authoritative_store",
-                    projection_outbox.c.change_kind.in_(("objects_written", "objects_tombstoned", "links_written", "links_tombstoned")),
-                )
-            ).one()
-            if expected <= 0 or count != expected or revision is None or int(revision) <= 0:
-                raise EcomConsistencyError("BASE_OUTBOX_INCOMPLETE", "base outbox evidence is incomplete")
-            return int(revision)
+            events = self._reconcile_base_events(conn,command,receipt)
+            return max(int(row['input_revision']) for row in events)
+
+    @staticmethod
+    def _base_projection_event_key(command, entity, outcome):
+        identity = ((entity.object_type,entity.identity.external_id) if isinstance(entity,CoreObjectRecord)
+                    else (entity.link_type,entity.source_type,entity.source.external_id,entity.target_type,entity.target.external_id))
+        material = "\x1f".join((*command.scope.key(),command.idempotency_key,outcome,*identity))
+        return hashlib.sha256(material.encode('utf-8')).hexdigest()
+
+    def _reconcile_base_events(self, conn, command, receipt):
+        """Prove exact current records and their effective authoritative events."""
+        result = BatchResult.model_validate(receipt['result'])
+        object_count = result.objects_written+result.objects_tombstoned+result.objects_ignored
+        link_count = result.links_written+result.links_tombstoned+result.links_ignored
+        written = result.objects_written+result.objects_tombstoned+result.links_written+result.links_tombstoned
+        if object_count != len(command.objects) or link_count != len(command.links):
+            raise EcomConsistencyError('BASE_RECEIPT_COUNT_DRIFT','base receipt counts do not match original command')
+        scope_filter = (
+            projection_outbox.c.org_id == command.scope.org_id,
+            projection_outbox.c.workspace_id == command.scope.workspace_id,
+            projection_outbox.c.platform == command.scope.platform,
+            projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+            projection_outbox.c.event_source == 'authoritative_store',
+        )
+        batch_keys = [self._base_projection_event_key(command,entity,
+            ('objects_' if isinstance(entity,CoreObjectRecord) else 'links_')+('tombstoned' if entity.is_deleted else 'written'))
+            for entity in (*command.objects,*command.links)]
+        actual = conn.execute(select(func.count()).select_from(projection_outbox).where(
+            *scope_filter,projection_outbox.c.event_key.in_(batch_keys),
+            projection_outbox.c.change_kind.in_(('objects_written','objects_tombstoned','links_written','links_tombstoned')),
+        )).scalar_one()
+        if actual != written:
+            raise EcomConsistencyError('BASE_OUTBOX_INCOMPLETE','base outbox evidence is incomplete')
+        events = {}
+        for entity in (*command.objects,*command.links):
+            is_object = isinstance(entity,CoreObjectRecord)
+            table = ecom_object if is_object else ecom_link
+            clause = _object_clause(entity.identity,entity.object_type) if is_object else _link_clause(entity)
+            current = conn.execute(select(table.c.payload_hash).where(clause)).scalar_one_or_none()
+            if current != entity.payload_hash():
+                raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT','original base record is missing or has been superseded')
+            if not is_object and (not self._object_exists(conn,entity.source,entity.source_type,allow_tombstone=entity.is_deleted)
+                                  or not self._object_exists(conn,entity.target,entity.target_type,allow_tombstone=entity.is_deleted)):
+                raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT','original base record has unavailable link endpoints')
+            outcome = ('objects_' if is_object else 'links_')+('tombstoned' if entity.is_deleted else 'written')
+            payload = {'schemaVersion':1,'entityKind':'object' if is_object else 'link','changeKind':outcome,
+                       'record':entity.model_dump(mode='json')}
+            if is_object:
+                payload.update(objectType=entity.object_type,identity=entity.identity.model_dump(mode='json'))
+            digest = hashlib.sha256(json.dumps(_jsonable(payload),ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+            matches = conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.input_revision,projection_outbox.c.projected).where(
+                *scope_filter,projection_outbox.c.change_kind == outcome,projection_outbox.c.payload_hash == digest,
+            )).mappings().all()
+            if len(matches) != 1 or int(matches[0]['input_revision']) <= 0:
+                raise EcomConsistencyError('BASE_OUTBOX_INCOMPLETE','exact original base outbox evidence is missing or ambiguous')
+            events[matches[0]['event_key']] = matches[0]
+        return list(events.values())
 
     def get_derived_revision(
         self, identity: StorageIdentity, object_type: str
@@ -511,9 +551,8 @@ class EcomConsistencyStore:
             base = self._get_receipt(conn,command,for_update=False)
             if base is None or not self._receipt_matches_request(command=command,receipt=base,request_hash=command.request_hash()):
                 raise EcomConsistencyError('BASE_RECEIPT_REQUIRED','exact base receipt required')
-            result = BatchResult.model_validate(base['result'])
-            expected = result.objects_written+result.objects_tombstoned+result.links_written+result.links_tombstoned
-            groups = [((base['request_hash'],),expected)]
+            base_events = self._reconcile_base_events(conn,command,base)
+            groups = []
             for item in derived:
                 receipt = self._read_derived_receipt(conn,item)
                 if receipt is None:
@@ -538,7 +577,8 @@ class EcomConsistencyStore:
                     if not hashes:
                         raise EcomConsistencyError('DERIVED_PREDECESSOR_REQUIRED','effective derived write receipt required')
                     groups.append((hashes,1))
-            total = projected = 0
+            total = len(base_events)
+            projected = sum(row['projected'] is True for row in base_events)
             for authority,count in groups:
                 events = conn.execute(select(projection_outbox.c.projected).where(
                     projection_outbox.c.org_id == command.scope.org_id,
@@ -1113,14 +1153,7 @@ class EcomConsistencyStore:
         payload_json = json.dumps(
             _jsonable(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
-        event_material = "\x1f".join(
-            (
-                *command.scope.key(),
-                command.idempotency_key,
-                outcome,
-                *identity_material,
-            )
-        )
+        event_key = cls._base_projection_event_key(command,entity,outcome)
         conn.execute(
             insert(projection_outbox).values(
                 org_id=identity.org_id,
@@ -1131,7 +1164,7 @@ class EcomConsistencyStore:
                 platform=identity.platform,
                 shop_or_marketplace_id=identity.shop_or_marketplace_id,
                 payload=json.loads(payload_json),
-                event_key=hashlib.sha256(event_material.encode("utf-8")).hexdigest(),
+                event_key=event_key,
                 payload_hash=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
                 event_source="authoritative_store",
                 authority_tx_id=authority_tx_id,
