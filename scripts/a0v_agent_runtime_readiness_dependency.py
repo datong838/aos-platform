@@ -179,7 +179,9 @@ def audit(connect: Any, *, observed_at: datetime) -> dict[str, Any]:
         if identity is None or identity["database"] != "aos_meta_head":
             raise RuntimeReadinessAuditBlocked("DATABASE_IDENTITY_MISMATCH", str(identity))
         templates = conn.execute(
-            "SELECT template_id,lifecycle FROM aip_agent_template_revision WHERE template_id=ANY(%s)",
+            """SELECT DISTINCT ON (template_id) template_id,lifecycle
+                 FROM aip_agent_template_revision WHERE template_id=ANY(%s)
+                ORDER BY template_id,revision DESC""",
             (list(AGENT_IDS),),
         ).fetchall()
         instances = conn.execute(
@@ -187,11 +189,16 @@ def audit(connect: Any, *, observed_at: datetime) -> dict[str, Any]:
             (ORG_ID, PROJECT_ID, list(INSTANCE_IDS)),
         ).fetchall()
         skills = conn.execute(
-            "SELECT skill_id,lifecycle FROM aip_skill_template_revision WHERE skill_id=ANY(%s)",
+            """SELECT DISTINCT ON (skill_id) skill_id,lifecycle
+                 FROM aip_skill_template_revision WHERE skill_id=ANY(%s)
+                ORDER BY skill_id,revision DESC""",
             (list(SKILL_IDS),),
         ).fetchall()
         capabilities = conn.execute(
-            "SELECT capability_id,lifecycle,readiness,readiness_reasons FROM aip_capability_revision WHERE capability_id=ANY(%s)",
+            """SELECT DISTINCT ON (capability_id)
+                      capability_id,lifecycle,readiness,readiness_reasons
+                 FROM aip_capability_revision WHERE capability_id=ANY(%s)
+                ORDER BY capability_id,revision DESC""",
             (list(CAPABILITY_IDS),),
         ).fetchall()
         row = conn.execute(
