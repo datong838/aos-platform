@@ -4,7 +4,7 @@
 
 `A0V_FIRST_CHAIN_PRECONDITION_CLASSIFICATION_GREEN`。
 
-实现提交 `ef18123f2929b7a519e91bb1aefa2ff584ccc563` 将 A0-V 静态前置与 A1 动态输出分开判定。当前 A0-V 仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 16 个 blocker、1 个 unverified。
+实现提交 `ef18123f2929b7a519e91bb1aefa2ff584ccc563` 将 A0-V 静态前置与 A1 动态输出分开判定。本阶段采集时 A0-V 仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 16 个 blocker、1 个 unverified；最新总数以 `a0-v-readiness-result.json` 为准。
 
 该标记只证明前置分类与失败关闭逻辑正确，不表示 StageTemplate、ResponsibilityPlan 或任何首链配置已经存在。
 
@@ -30,7 +30,7 @@
 | 列表 count 与 items 不一致 | `COLLECTION_COUNT_MISMATCH` |
 | JSON 阶段验证器 | `A0_V_EVIDENCE_VALID blockers=16 unverified=1` |
 
-## 4. 当前采集结果
+## 4. 本阶段采集结果
 
 `a0-v-readiness-result.json` 于 `2026-09-10T11:45:02.564343+00:00` 对提交 `ef18123f2929b7a519e91bb1aefa2ff584ccc563` 采集，SHA-256=`1ccc4b5e37956293775f58f474e0b2c32ed2c31cc7f9320bc24b3ae717ce7d70`。
 

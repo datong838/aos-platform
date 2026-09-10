@@ -6,7 +6,7 @@
 
 修复提交 `14a1dcc81aa86dd2f9201d8ee7f7532fe4e112cc` 使 A0-V 判定从“接口可读/集合非空”提升为业务语义检查。该标记只证明采集器会可靠地失败关闭，不表示 A0-V 或真实业务链已 GREEN。
 
-本阶段采集时 A0-V 总结论为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 19 个 blocker、1 个 unverified。随后 `ef18123f` 修正首链前置分类，当前总数变为 16 个 blocker、1 个 unverified；本文件的 19 项保留为语义门首次启用时的时点证据。
+本阶段采集时 A0-V 总结论为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 19 个 blocker、1 个 unverified。随后 `ef18123f` 修正首链前置分类时变为 16 个 blocker；本文件的 19 项保留为语义门首次启用时的时点证据，最新总数以 `a0-v-readiness-result.json` 为准。
 
 ## 2. 修改文件
 

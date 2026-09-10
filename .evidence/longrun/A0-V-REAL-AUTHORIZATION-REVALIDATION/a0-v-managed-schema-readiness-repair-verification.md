@@ -6,7 +6,7 @@
 
 修复提交 `48c7cc28b2221e599b8efee7c3081fa7ee041918` 新增 Alembic revision `a0v_001`，将 legacy bootstrap 独占的 `meta_schedule_run` 纳入正式 managed-schema 链。未修改 SourceReadiness、Cron 或其他业务代码。
 
-修复后首次重采的 A0-V 总结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：在当时仅检查 HTTP 与集合非空的采集器口径下，blocker 从 17 降至 16，unverified 保持 1。随后 `14a1dcc8` 补齐业务语义门时为 19 个 blocker；再由 `ef18123f` 修正 A1 动态输出与 A0-V 静态前置的分类后，当前权威结果为 16 个 blocker、1 个 unverified。各数量只代表对应时点和判定口径，不能互相替代。该修复只关闭 managed-schema 缺表，不提升安装、Agent、模型、预算或真实数据源准入状态。
+修复后首次重采的 A0-V 总结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：在当时仅检查 HTTP 与集合非空的采集器口径下，blocker 从 17 降至 16，unverified 保持 1。随后 `14a1dcc8` 补齐业务语义门时为 19 个 blocker，`ef18123f` 修正首链前置分类后为 16 个 blocker。各数量只代表对应时点和判定口径，不能互相替代；最新总数以 `a0-v-readiness-result.json` 为准。该修复只关闭 managed-schema 缺表，不提升安装、Agent、模型、预算或真实数据源准入状态。
 
 ## 2. 修改文件
 
