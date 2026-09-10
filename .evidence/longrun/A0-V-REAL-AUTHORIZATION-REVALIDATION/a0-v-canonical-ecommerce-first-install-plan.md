@@ -74,6 +74,12 @@
 8. 正向唯一 active/三 ready/八 module，负向 404/空；最终重跑不新增资源。
 9. 运行受影响的 Registry、Composition、Installation、extension runtime、Workshop catalog 专项与 A0-V collector/validator。
 
+### 5.1 多成员签名 artifact 路由补强
+
+运行时开工复核确认，`PreparationWorker` 的 `load_record` 已按 `member.selected` 取包，但 `open_signed_session` 收到的是一个无成员上下文的二参数 `read_artifact(path, limit)`。单包测试成立，多个包含有同名 `artifacts/backend-runtime.json`、`artifacts/schema-requirements.json` 时无法证明读取的是当前 member 的签名字节。
+
+在实际三包 apply 前，给 `PreparationWorker` 增加可选的 `read_member_artifact(selected, path, limit)` 宿主注入；worker 必须在 member factory 内绑定 `member.selected` 后才把二参数闭包交给 admission。旧 `read_artifact(path, limit)` 保持兼容，现有单包调用不变。专项测试至少证明两个 member 的同名路径分别读到自己的字节，且未提供新入口时仍使用旧 reader。A0-V 首装执行器必须使用成员感知入口，不得靠全局当前包、遍历顺序或同名文件恰好一致。
+
 ## 6. 退出条件
 
 只有以下条件同时满足，才能写 `A0V_CANONICAL_ECOMMERCE_FIRST_INSTALL_RUNTIME_READY_GREEN`：
