@@ -61,4 +61,3 @@
 - JSON 顶层结果为 PASS，错误与副作用计数为 0；截图数量与矩阵一致。
 - Web 相关回归、全量、production build、`verify_closure.py --phase ar2-7` 和 `git diff --check` 仍为 GREEN。
 - Prime 对本次增量只读复核 PASS 后，才允许生成 7E 整波验证、Delivery Receipt 和 authority CAS；本执行器单独通过不宣布 `AR2_HOST_WIRING_CUTOVER_PLUGGABILITY_BROWSER_ACCEPTANCE_GREEN`。
-
