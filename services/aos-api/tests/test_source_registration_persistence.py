@@ -88,3 +88,16 @@ def test_explicit_config_replaces_credentials_and_type_change_is_rejected(monkey
         api.create_source(body,principal)
         assert 'password' not in saved[0] and 'sshPassword' not in saved[0]
         assert saved[0]['secretRef']==config['secretRef']
+
+
+def test_source_list_uses_current_owner_not_cached_configuration(monkeypatch):
+    monkeypatch.setattr(api,'_connectors',{'source-test':{'id':'source-test','configurationRevision':'stale'}})
+    calls=[]
+    def read(scope):
+        calls.append(scope.key)
+        return [dict(id='source-test',type='file',configurationRevision=str(len(calls)))]
+    monkeypatch.setattr(data_os_store,'load_source_metadata',read,raising=False)
+    principal=SimpleNamespace(org_id='org-org',project_id='dev-project')
+    monkeypatch.setattr(api,'_hydrate_data_os_scope',lambda _:None)
+    assert api.list_sources(principal)['items'][0]['configurationRevision']=='1'
+    assert api.list_sources(principal)['items'][0]['configurationRevision']=='2'

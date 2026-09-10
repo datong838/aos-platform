@@ -1309,12 +1309,14 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
 @router.get("/v1/sources")
 def list_sources(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
-    _hydrate_data_os_scope(scope)
-    items = [
-        _public_source(source)
-        for source in _connectors.values()
-        if _scope_visible(source, scope)
-    ]
+    from aos_api.data_os_store import load_source_metadata
+    try:
+        items = [_public_source(source) for source in load_source_metadata(scope)]
+    except ApiError:
+        raise
+    except Exception:
+        raise ApiError(code="SOURCE_PERSISTENCE_UNAVAILABLE",
+                       message="暂时无法读取数据源，请稍后重试", status_code=503) from None
     return {"items": items}
 
 

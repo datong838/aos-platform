@@ -1,0 +1,5 @@
+# 源列表当前数据库读取
+
+基线92eb5ae1。GET /v1/sources依赖只hydrate一次的缓存，配置CAS冲突后用户刷新仍可能拿旧版本。改为data_os_store.load_source_metadata单次tenant SQL，只投影公开props键及configuration_revision，不读取密码等字段；路由仍公共白名单过滤，数据库失败固定503不回退旧缓存。避免force load_all导致无关全量读取与跨请求共享缓存干扰。
+
+文件data_os_store.py/wave_ext.py、专项测试。测试列表无旧cache且每次调用Owner、异常不含内部错误、PG查询返回当前配置UUID且不含凭据。无迁移/真实源调用，向导后续接此接口回读。完整首链仍未完成。

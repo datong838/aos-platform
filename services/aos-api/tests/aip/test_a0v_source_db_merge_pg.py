@@ -27,6 +27,10 @@ def test_registration_merges_current_database_configuration(database,monkeypatch
     for expected in (None, first['configurationRevision']):
         with pytest.raises(store.ApiError):
             store.persist_source(scope,dict(base,password='synthetic-stale'),merge_existing=True,replace_fields=tuple(SOURCE_CONNECTION_FIELDS),expected_configuration_revision=expected)
+    public=store.load_source_metadata(scope)
+    assert len(public)==1
+    assert public[0]['configurationRevision']==rotated['configurationRevision']
+    assert 'password' not in public[0] and 'secretRef' not in public[0]
     assert 'password' not in rotated
     assert store.persist_source(scope,base,merge_existing=True)['secretRef']==rotated['secretRef']
     with pytest.raises(store.ApiError):

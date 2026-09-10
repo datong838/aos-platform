@@ -558,6 +558,25 @@ def delete_schedule(scope: TenantScope, schedule_id: str) -> None:
         conn.commit()
 
 
+def load_source_metadata(scope: TenantScope) -> list[dict[str, Any]]:
+    """Read current public source metadata without loading connection secrets."""
+    scope = _require_scope(scope)
+    ensure_data_os_schema()
+    keys = ["name", "displayName", "description", "siteId", "runtimeMode", "connector_type"]
+    with connect(scope) as conn:
+        rows = conn.execute(
+            """SELECT id,type,status,plugin_id,org_id,project_id,configuration_revision,
+                 (SELECT COALESCE(jsonb_object_agg(key,value),'{}'::jsonb)
+                    FROM jsonb_each(props) WHERE key=ANY(%s::text[])) AS metadata
+               FROM meta_source WHERE org_id=%s AND project_id=%s ORDER BY id""",
+            (keys, *scope.key),
+        ).fetchall()
+        return [{**dict(row["metadata"]), "id": row["id"], "type": row["type"],
+                 "status": row["status"], "pluginId": row["plugin_id"],
+                 "orgId": row["org_id"], "projectId": row["project_id"],
+                 "configurationRevision": str(row["configuration_revision"])} for row in rows]
+
+
 def load_all(scope: TenantScope) -> dict[str, Any]:
     """Return one tenant's Data OS projection for wave_ext memory maps."""
     scope = _require_scope(scope)
