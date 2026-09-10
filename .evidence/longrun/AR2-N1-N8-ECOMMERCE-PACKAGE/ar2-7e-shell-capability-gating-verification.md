@@ -1,9 +1,9 @@
 # AR2-7E AppShell 安装能力门控验证
 
-日期：2026-09-10  
-分支：`m1`  
-权威：`AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN`  
-对应方案：`ar2-7e-shell-capability-gating-plan.md`  
+日期：2026-09-10
+分支：`m1`
+权威：`AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN`
+对应方案：`ar2-7e-shell-capability-gating-plan.md`
 结论：`AR2_7E_SHELL_CAPABILITY_GATING_GREEN`
 
 ## 1. 变更范围
