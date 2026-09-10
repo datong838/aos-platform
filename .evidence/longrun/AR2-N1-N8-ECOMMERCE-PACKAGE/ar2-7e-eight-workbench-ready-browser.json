@@ -1,0 +1,7084 @@
+{
+  "schemaVersion": "aos.ar2-7e-eight-workbench-ready-browser/v1",
+  "generatedAt": "2026-09-10T04:48:04.961Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "contract-valid isolated degraded and trustworthy-empty projections; no real tenant facts",
+  "result": "PASS",
+  "counts": {
+    "passed": 24,
+    "total": 24,
+    "screenshots": 24,
+    "nonGetWorkshopRequests": 0,
+    "unknownGets": 0,
+    "tenantHeaderDrift": 0,
+    "http5xx": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "horizontalOverflow": 0,
+    "stoppedEarly": false
+  },
+  "results": [
+    {
+      "spec": {
+        "key": "cockpit",
+        "route": "/workshop/cockpit",
+        "moduleId": "ecommerce.task-cockpit"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部状态",
+          "待规划",
+          "规划中",
+          "待审批",
+          "已批准",
+          "执行中",
+          "已暂停",
+          "已完成",
+          "失败",
+          "已取消",
+          "已回滚"
+        ],
+        "tabSelections": [
+          "已完成",
+          "全部状态"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "cockpit",
+        "route": "/workshop/cockpit",
+        "moduleId": "ecommerce.task-cockpit"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部状态",
+          "待规划",
+          "规划中",
+          "待审批",
+          "已批准",
+          "执行中",
+          "已暂停",
+          "已完成",
+          "失败",
+          "已取消",
+          "已回滚"
+        ],
+        "tabSelections": [
+          "已完成",
+          "全部状态"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "cockpit",
+        "route": "/workshop/cockpit",
+        "moduleId": "ecommerce.task-cockpit"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部状态",
+          "待规划",
+          "规划中",
+          "待审批",
+          "已批准",
+          "执行中",
+          "已暂停",
+          "已完成",
+          "失败",
+          "已取消",
+          "已回滚"
+        ],
+        "tabSelections": [
+          "已完成",
+          "全部状态"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?status=completed&limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/capability-catalog",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/agent-registry",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "search": "?limit=20",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/capability-catalog",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/agent-registry",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/improvement-observations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/candidates",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/memory-authority/memories",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit/batch-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/task-cockpit",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "content-campaign",
+        "route": "/workshop/content-campaign",
+        "moduleId": "ecommerce.content-campaign"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "活动策划",
+          "内容日历",
+          "日常模板",
+          "＋ 新建活动"
+        ],
+        "tabSelections": [
+          "活动策划",
+          "内容日历",
+          "日常模板"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "保存草稿",
+          "disabled": true
+        },
+        {
+          "label": "批准并发布",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "content-campaign",
+        "route": "/workshop/content-campaign",
+        "moduleId": "ecommerce.content-campaign"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "活动策划",
+          "内容日历",
+          "日常模板",
+          "＋ 新建活动"
+        ],
+        "tabSelections": [
+          "活动策划",
+          "内容日历",
+          "日常模板"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "保存草稿",
+          "disabled": true
+        },
+        {
+          "label": "批准并发布",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "content-campaign",
+        "route": "/workshop/content-campaign",
+        "moduleId": "ecommerce.content-campaign"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "活动策划",
+          "内容日历",
+          "日常模板",
+          "＋ 新建活动"
+        ],
+        "tabSelections": [
+          "活动策划",
+          "内容日历",
+          "日常模板"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "保存草稿",
+          "disabled": true
+        },
+        {
+          "label": "批准并发布",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "operations",
+        "route": "/workshop/operations",
+        "moduleId": "ecommerce.operations"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "tabSelections": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "筛选",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建处理",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "operations",
+        "route": "/workshop/operations",
+        "moduleId": "ecommerce.operations"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "tabSelections": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "筛选",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建处理",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "operations",
+        "route": "/workshop/operations",
+        "moduleId": "ecommerce.operations"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "tabSelections": [
+          "全部7",
+          "订单与履约4",
+          "库存与告警1",
+          "售后与工单2"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "筛选",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建处理",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/commands/operations/readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/operations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "creator-growth",
+        "route": "/workshop/creator-growth",
+        "moduleId": "ecommerce.creator-growth"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "tabSelections": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入达人",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建邀约批次",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "creator-growth",
+        "route": "/workshop/creator-growth",
+        "moduleId": "ecommerce.creator-growth"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "tabSelections": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入达人",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建邀约批次",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "creator-growth",
+        "route": "/workshop/creator-growth",
+        "moduleId": "ecommerce.creator-growth"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "tabSelections": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "searchRoundTrip": true
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入达人",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建邀约批次",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "media-studio",
+        "route": "/workshop/media-studio",
+        "moduleId": "ecommerce.media-studio"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "tabSelections": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "查看内容计划",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建内容任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "media-studio",
+        "route": "/workshop/media-studio",
+        "moduleId": "ecommerce.media-studio"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "tabSelections": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "查看内容计划",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建内容任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "media-studio",
+        "route": "/workshop/media-studio",
+        "moduleId": "ecommerce.media-studio"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "tabSelections": [
+          "种草文案等待条件",
+          "短视频等待条件",
+          "数字人直播等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "查看内容计划",
+          "disabled": false
+        },
+        {
+          "label": "＋ 新建内容任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "analyst",
+        "route": "/workshop/analyst",
+        "moduleId": "ecommerce.analyst"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "tabSelections": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "analyst",
+        "route": "/workshop/analyst",
+        "moduleId": "ecommerce.analyst"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "tabSelections": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "analyst",
+        "route": "/workshop/analyst",
+        "moduleId": "ecommerce.analyst"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "tabSelections": [
+          "生意探究只读",
+          "经营总览等待条件",
+          "驱动因素等待条件",
+          "问题诊断等待条件",
+          "增长计划等待条件",
+          "效果复盘等待条件",
+          "证据链等待条件",
+          "数据质量等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/aip/async-jobs",
+          "search": "?limit=50",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "search": "?limit=200",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/aip/async-jobs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst/learning-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/analyst",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce/investigations/cases",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "price-governance",
+        "route": "/workshop/price-governance",
+        "moduleId": "ecommerce.price-governance"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "tabSelections": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导出报告",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建监测策略",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "price-governance",
+        "route": "/workshop/price-governance",
+        "moduleId": "ecommerce.price-governance"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "tabSelections": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导出报告",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建监测策略",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "price-governance",
+        "route": "/workshop/price-governance",
+        "moduleId": "ecommerce.price-governance"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "tabSelections": [
+          "同款价格治理等待条件",
+          "竞品比价等待条件",
+          "调度控制台等待条件"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导出报告",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建监测策略",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price-governance/dispositions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/price/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "customer",
+        "route": "/workshop/customer",
+        "moduleId": "ecommerce.customer"
+      },
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "tabSelections": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入客户",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建触达任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1280,
+        "scrollWidth": 1280,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "customer",
+        "route": "/workshop/customer",
+        "moduleId": "ecommerce.customer"
+      },
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "tabSelections": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入客户",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建触达任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1440,
+        "scrollWidth": 1440,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    },
+    {
+      "spec": {
+        "key": "customer",
+        "route": "/workshop/customer",
+        "moduleId": "ecommerce.customer"
+      },
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabLabels": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "tabSelections": [
+          "客户最小投影等待条件 · 正式来源 0",
+          "客户分群等待条件 · 正式来源 0",
+          "生命周期旅程等待条件 · 正式来源 0",
+          "对话与批次等待条件 · 正式来源 0"
+        ],
+        "searchRoundTrip": null
+      },
+      "navCount": 8,
+      "activeNavCount": 1,
+      "h1Count": 1,
+      "headerActions": [
+        {
+          "label": "导入客户",
+          "disabled": true
+        },
+        {
+          "label": "＋ 新建触达任务",
+          "disabled": true
+        }
+      ],
+      "layout": {
+        "clientWidth": 1920,
+        "scrollWidth": 1920,
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "search": "",
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/contact-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/customer/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        }
+      ],
+      "unknownGets": []
+    }
+  ],
+  "boundaries": [
+    "All Workshop requests remained GET and exact-tenant scoped.",
+    "Fixtures contain no real business facts and authorize no Provider, publication, or external effect.",
+    "Header business preparation actions remained disabled because actionTypes is empty."
+  ]
+}
