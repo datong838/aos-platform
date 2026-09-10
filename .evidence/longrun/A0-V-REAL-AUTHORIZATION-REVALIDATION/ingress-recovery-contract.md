@@ -33,3 +33,11 @@
 文件：services/aos-api/aos_api/ec_ingress_journal.py 提取可复用绑定检查；同目录新增ec_ingress_recovery.py；tests/test_ec_ingress_recovery.py验证部分提交后重放、缺失/不完整基础回执、绑定拒绝与命令缺失。SQLite验证真实ConsistencyStore写入；Journal/绑定用测试替身，PG绑定另有专项。不得以这些测试声称真实源或完整恢复已通。
 
 仍缺原始辅助输入持久化、恢复claim/worker、当前执行授权、精确输入revision来源、投影完成和Dataset接续；该函数只有内部已授权执行者可以装配。回滚移除新入口及还原提取，不变更现有executor行为或数据。
+
+## 规范恢复输入随基础命令原子保存
+
+2026-09-11，基线b0968513。扩展现有envelope可选outputRows，复用a0v005不可变行及同一INSERT，无新表/DDL。旧envelope仍可读；只有携带outputRows的批次具备恢复派生准备所需输入。保存仅提取OT/Link规范字段及pay_time、_order_create_time、delivery_time辅助字段；不保存任意原始源行、连接配置或凭据。JSON规范化datetime/Decimal，拒绝未知类型与非有限数字。通过原OT规范器重建对象和关系，要求与父BatchCommand逐项一致；固定时间值在保存前已生成，恢复不盖当前时间。
+
+文件：services/aos-api/aos_api/ec_ingress_journal.py（可选字段、规范化、完整性验证），tests/test_ec_ingress_input.py与tests/aip/test_a0v_ingress_journal_pg.py。验证datetime往返、计算辅助字段保留、基础漂移拒绝、幂等冲突及跨连接/跨租户读取。既有派生命令parentHash自然覆盖此字段。
+
+此规范快照用于恢复计算，不保证旧Dataset全部raw列可重建；Dataset完整输出合同另行接续。实际executor暂不切换，精确输入revision及claim仍需实现；该变更不得被称为完整可恢复。

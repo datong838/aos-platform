@@ -3,6 +3,8 @@ import hashlib
 import json
 import re
 from uuid import UUID
+from datetime import datetime
+from decimal import Decimal
 from psycopg import sql
 from aos_api.ecom_core_models import BatchCommand
 from aos_api.tenant_scope import TenantScope
@@ -19,8 +21,38 @@ def _digest(envelope):
     return hashlib.sha256(raw).hexdigest()
 
 
+# Only fields consumed by the canonical writer/derived preparation are retained.
+_OUTPUT_FIELDS = frozenset({
+    'ot','source_pk','source_updated_at','source_timezone','is_deleted','properties',
+    'external_id','status_raw','schema_version','link_type','source_type','target_type',
+    'target_source_pk','source_external_id','target_external_id','cursor_external_id',
+    'pay_time','_order_create_time','delivery_time',
+})
+
+
+def canonical_output_rows(command, rows):
+    """Detach fixed calculation input and prove its base records match the batch."""
+    from aos_api.ec_ot_writer import _normalize_rows
+    if type(rows) is not list or any(type(row) is not dict for row in rows):
+        raise ValueError('INGRESS_OUTPUT_INVALID')
+    def encode(value):
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, Decimal) and value.is_finite():
+            return str(value)
+        raise TypeError('INGRESS_OUTPUT_VALUE_INVALID')
+    selected = [{key:value for key,value in row.items() if key in _OUTPUT_FIELDS} for row in rows]
+    normalized = json.loads(json.dumps(selected,default=encode,allow_nan=False,ensure_ascii=False))
+    objects,links = _normalize_rows(normalized,command.scope)
+    if ([item.model_dump(mode='json') for item in objects] != [item.model_dump(mode='json') for item in command.objects]
+        or [item.model_dump(mode='json') for item in links] != [item.model_dump(mode='json') for item in command.links]):
+        raise IngressJournalConflict('INGRESS_OUTPUT_BASE_DRIFT')
+    return normalized
+
+
 def _validate(scope, envelope):
-    if type(scope) is not TenantScope or set(envelope) != {'runId','pipelineId','sourceId','sourceRevision','pipelineHash','command'}:
+    required = {'runId','pipelineId','sourceId','sourceRevision','pipelineHash','command'}
+    if type(scope) is not TenantScope or set(envelope) not in (required, required | {'outputRows'}):
         raise ValueError('INGRESS_ENVELOPE_INVALID')
     for key in ('runId', 'pipelineId', 'sourceId'):
         value = envelope[key]
@@ -35,6 +67,8 @@ def _validate(scope, envelope):
         raise ValueError('INGRESS_SCOPE_MISMATCH')
     if command.model_dump(mode='json') != envelope['command']:
         raise ValueError('INGRESS_COMMAND_NOT_CANONICAL')
+    if 'outputRows' in envelope and canonical_output_rows(command,envelope['outputRows']) != envelope['outputRows']:
+        raise IngressJournalConflict('INGRESS_OUTPUT_NOT_CANONICAL')
     return _digest(envelope)
 
 
@@ -54,9 +88,11 @@ class IngressJournal:
             raise IngressJournalConflict('INGRESS_COMMAND_DRIFT')
         return envelope
 
-    def save(self, conn, scope, *, run_id, pipeline_id, source_id, source_revision, pipeline_hash, command):
+    def save(self, conn, scope, *, run_id, pipeline_id, source_id, source_revision, pipeline_hash, command, output_rows=None):
         payload = BatchCommand.model_validate(command.model_dump(mode='python')).model_dump(mode='json')
         envelope = dict(runId=run_id,pipelineId=pipeline_id,sourceId=source_id,sourceRevision=source_revision,pipelineHash=pipeline_hash,command=payload)
+        if output_rows is not None:
+            envelope['outputRows'] = canonical_output_rows(BatchCommand.model_validate(payload),output_rows)
         digest = _validate(scope, envelope)
         conn.execute(sql.SQL('''INSERT INTO {} (org_id,project_id,run_id,pipeline_id,source_id,source_revision,envelope_hash,envelope)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(org_id,project_id,run_id) DO NOTHING''').format(self.table),

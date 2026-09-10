@@ -104,9 +104,14 @@ def test_derived_commands_are_durable_and_bound_to_original_objects(database):
     derived=prepare_derived_commands(SimpleNamespace(ecom_consistency_store=store),scope,pipeline,[row])
     journal=IngressJournal(storage_schema=database.schema); factory=runtime_connection(database)
     with factory(scope) as conn:
-        journal.save(conn,scope,run_id='run',pipeline_id='p08',source_id='source',source_revision=str(revision),pipeline_hash='a'*64,command=command)
+        parent=journal.save(conn,scope,run_id='run',pipeline_id='p08',source_id='source',source_revision=str(revision),pipeline_hash='a'*64,command=command,output_rows=[row])
         first=journal.save_derived(conn,scope,'run',derived)
     with factory(scope) as conn:
+        assert journal.read(conn,scope,'run') == parent
+        assert parent['outputRows'][0]['properties']['order_count'] == 2
+        changed = dict(row,properties=dict(row['properties'],order_count=3))
+        with pytest.raises(IngressJournalConflict):
+            journal.save(conn,scope,run_id='run',pipeline_id='p08',source_id='source',source_revision=str(revision),pipeline_hash='a'*64,command=command,output_rows=[changed])
         assert journal.read_derived(conn,scope,'run')==first
         assert journal.save_derived(conn,scope,'run',derived)==first
         with pytest.raises(IngressJournalConflict):
