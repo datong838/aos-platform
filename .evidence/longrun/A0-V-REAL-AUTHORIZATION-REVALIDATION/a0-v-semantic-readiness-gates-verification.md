@@ -6,7 +6,7 @@
 
 修复提交 `14a1dcc81aa86dd2f9201d8ee7f7532fe4e112cc` 使 A0-V 判定从“接口可读/集合非空”提升为业务语义检查。该标记只证明采集器会可靠地失败关闭，不表示 A0-V 或真实业务链已 GREEN。
 
-当前 A0-V 总结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 19 个 blocker、1 个 unverified。
+本阶段采集时 A0-V 总结论为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`，共 19 个 blocker、1 个 unverified。随后 `ef18123f` 修正首链前置分类，当前总数变为 16 个 blocker、1 个 unverified；本文件的 19 项保留为语义门首次启用时的时点证据。
 
 ## 2. 修改文件
 
@@ -33,7 +33,7 @@
 
 模型的 route resolution、健康、六节点 chain 和 CNY hard-stop budget 由语义门单独检查；基础非空检查只保留 provider、model 和 route 三个事实，避免一个 gate 重复计数。
 
-## 4. 当前事实
+## 4. 本阶段采集事实
 
 `a0-v-readiness-result.json` 于 `2026-09-10T11:33:36.510891+00:00` 对提交 `14a1dcc81aa86dd2f9201d8ee7f7532fe4e112cc` 采集，SHA-256=`2ed61a4b9b9d7c570dff92b85f8719ca004035b813452af7eeae17d04e6b882b`。
 

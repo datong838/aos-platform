@@ -1,5 +1,5 @@
 {
-  "collectedAt": "2026-09-10T11:33:36.510891+00:00",
+  "collectedAt": "2026-09-10T11:45:02.564343+00:00",
   "observations": {
     "canary": {
       "agentRegistry": {
@@ -7,9 +7,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "aa6248a9-9224-4440-9a12-d2fe567eebe4"
+          "traceId": "c744ca89-ecc2-45d4-b17d-438ac1171313"
         },
-        "bodySha256": "922cd20d87d3e969a83461af0d3e4cdd07d0d2c1e05f32e8d72e97e15a5207b5",
+        "bodySha256": "e94b53ea2f83b2139e281c7284e38734f619f1486dacb762daef165556f2093c",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry"
@@ -19,9 +19,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "29752071-b38c-48bf-999a-84fb354ea1fd"
+          "traceId": "94533273-0213-47d3-9127-35c60ee0b633"
         },
-        "bodySha256": "a426a833799ec1d23b5670fa422f1aff73b3c983810eb3aee3cf31b51f9cc970",
+        "bodySha256": "876183854f178ca2dbe127720aa6c29d3dd7a569e9bee9d494bc8b7892eafbeb",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -43,9 +43,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "e5bc3c9b-f12c-4776-af7d-94818361330e"
+          "traceId": "628f61f2-18fc-4f40-8036-9298c93efa6b"
         },
-        "bodySha256": "6e442ecd7435f84c846c5d315214b10e158c14f069e75312cf32eea8cf23960c",
+        "bodySha256": "1c80d32c931e49677218bd958d129d3890e64fac286b4859c3bc821c24fda078",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/capability-catalog"
@@ -53,7 +53,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T11:33:36.281442Z",
+          "generatedAt": "2026-09-10T11:45:02.334387Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -61,7 +61,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "2ee2d445695c1bcd1beec5ef47e970d917df87bbb0a8bdc9e08f205709816361",
+        "bodySha256": "7eb7e2d386f3062b8e9922fc5cfbf966c9c27552b1e3159264e3b52b04a0ed6f",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -69,7 +69,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T11:33:36.319550Z",
+          "generatedAt": "2026-09-10T11:45:02.374519Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -121,7 +121,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:36.319550Z",
+                "endsAt": "2026-09-10T11:45:02.374519Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -170,14 +170,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:36.319550Z",
+                "endsAt": "2026-09-10T11:45:02.374519Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T11:33:36.319550Z",
+                "startsAt": "2026-09-03T11:45:02.374519Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -219,14 +219,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:36.319550Z",
+                "endsAt": "2026-09-10T11:45:02.374519Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T11:33:36.319550Z",
+                "startsAt": "2026-08-11T11:45:02.374519Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -237,7 +237,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "71649554f7d8551284952850b3a20631417c29b7f5725ebd1626482c056cfb09",
+        "bodySha256": "6e294925a0dd5aaaefc9f32c232e6795aaeab5a0f08267e6b0fbbf3ac64ed5d9",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -246,7 +246,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T11:33:36.267950Z",
+          "generatedAt": "2026-09-10T11:45:02.319941Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -259,7 +259,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "57cebf07379cbdddd9778b3b538d8a51c66f064c140516a940568a321fbec0e2",
+        "bodySha256": "d12885a108c921aa607af1f1c8f379813d0266526dcb4e6b66d0d64bfc5bac3c",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -308,8 +308,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T11:33:35.995356Z",
-          "cutoffAt": "2026-09-10T11:33:35.995356Z",
+          "checkedAt": "2026-09-10T11:45:02.051596Z",
+          "cutoffAt": "2026-09-10T11:45:02.051596Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -326,7 +326,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -449,7 +449,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -572,7 +572,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -695,7 +695,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -818,7 +818,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -941,7 +941,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1064,7 +1064,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1187,7 +1187,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1310,7 +1310,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1433,7 +1433,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1556,7 +1556,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1679,7 +1679,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.995356Z",
+              "checkedAt": "2026-09-10T11:45:02.051596Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -1797,7 +1797,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "d6f7bc507c56d49318838dc1d9716df585c7198c38e809c7af1c9eefe30bef3c",
+        "bodySha256": "75370fab2c2a3570aaca43f2d32fccce00813c3033f05cf92b12ac2500323e0b",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -1835,9 +1835,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "183a9ab1-8fe3-4ca5-a2b7-51c3a104a184"
+          "traceId": "bffcba44-bdb8-4bd7-a20a-777a7a30180e"
         },
-        "bodySha256": "80409bd1af38fef29b909cd8c47a42a54d531a1f404e736a9c74eb07e436fcba",
+        "bodySha256": "b9937ff91aefa20c46b5c0da4701878581653a48125070b261925910cb26b66c",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -1873,9 +1873,9 @@
             ]
           },
           "message": "request validation failed",
-          "traceId": "564c2764-17b8-495f-9684-3d0b0caf124d"
+          "traceId": "4a8f7ff5-4a91-4fc6-8514-8894d360a7cb"
         },
-        "bodySha256": "d1c36191a04ea23ffdb92841536d417ee8e1dcb7c2f14e6b64a68616ae3e3bdf",
+        "bodySha256": "b41404daf1c925638e122f1dba3c5ad54e4ab1ec7b0807a8c9a30c68bf3a8f14",
         "httpStatus": 400,
         "method": "GET",
         "path": "/v1/bundle-installations?limit=101&offset=0"
@@ -1885,9 +1885,9 @@
           "code": "AUTH_REQUIRED",
           "details": null,
           "message": "Bearer [REDACTED] required",
-          "traceId": "891fd226-9534-4e6b-9e89-a760b25486f4"
+          "traceId": "1ca4c9c2-79c2-41a2-acd6-782047b3e9d7"
         },
-        "bodySha256": "419f00aafc8a6c2be00399e5a12972b95438a5f882e8b05663de617cf2c31aa8",
+        "bodySha256": "30f1177e39c324a6176521a11d44b2f52be4fa5962df0780d39f555c076b9518",
         "httpStatus": 401,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -1899,9 +1899,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "32179bc5-ebd6-4f2c-bf53-b1336ee431ae"
+          "traceId": "da842ac8-bcc0-4789-bc52-65bbf77ba996"
         },
-        "bodySha256": "a5ec39f668f0ab6fc023713ec04d966b3c50b1b61ff44e1ee9e578d5f653aeed",
+        "bodySha256": "9e6f1765353ce754dbf216adfe16c7c0412497684bc5b47808fa118e26349211",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry"
@@ -1911,9 +1911,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "c684123f-25da-4e26-b643-01d4be894fdf"
+          "traceId": "ec993ef3-c7c8-4eff-ad4f-7cbb2750ef3a"
         },
-        "bodySha256": "74a1880b4952e39517c8b2ef8222446923a9a44c17d40975f5dc2c35e66776d3",
+        "bodySha256": "40f75783ca1882c325c89c1371d103c960469d7c3ec307023a13b0a7724911fd",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -1935,9 +1935,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "e9538871-9fac-4280-9621-8cfeb2f4585d"
+          "traceId": "ee448831-630c-4d01-9de6-217023adbd92"
         },
-        "bodySha256": "bbda99b62da3ad95877600798bcf9a2f51af08166989f4df31215ae75c60375d",
+        "bodySha256": "738f4e2e8d34127a3bbcd045a1b957b797d852fb41a29daabde2bcf02634939c",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/capability-catalog"
@@ -1945,7 +1945,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T11:33:35.754683Z",
+          "generatedAt": "2026-09-10T11:45:01.801748Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -1953,7 +1953,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "0083529778b2eb8646b260cd2b0a762736dca54f10750be0b9656b4eebcdc97f",
+        "bodySha256": "9e5c7458eb412534b2c9794772130c1702a314fa9a027412d20e5d5060b83ff3",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -1961,7 +1961,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T11:33:35.793622Z",
+          "generatedAt": "2026-09-10T11:45:01.841935Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -2013,7 +2013,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:35.793622Z",
+                "endsAt": "2026-09-10T11:45:01.841935Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -2062,14 +2062,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:35.793622Z",
+                "endsAt": "2026-09-10T11:45:01.841935Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T11:33:35.793622Z",
+                "startsAt": "2026-09-03T11:45:01.841935Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -2111,14 +2111,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T11:33:35.793622Z",
+                "endsAt": "2026-09-10T11:45:01.841935Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T11:33:35.793622Z",
+                "startsAt": "2026-08-11T11:45:01.841935Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -2129,7 +2129,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "20474e5fadfcb1a08afb91de43d220a0f37824e0c72d9897ad35ebdad142fa9c",
+        "bodySha256": "fc391477a6d1c17a8e899b347a2062296ce7e07bb784ee7041fe02f06707e439",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -2138,7 +2138,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T11:33:35.740625Z",
+          "generatedAt": "2026-09-10T11:45:01.788021Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -2151,7 +2151,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "f5bff48b9fa41930ea587ccf1e8dfd3f3aab927c49ac4c89033996be3ed5d68c",
+        "bodySha256": "cc52a708b156027825ed85d995e9b28d2975f81638151e8c01c2aa19abc3c35f",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -2200,8 +2200,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T11:33:35.466545Z",
-          "cutoffAt": "2026-09-10T11:33:35.466545Z",
+          "checkedAt": "2026-09-10T11:45:01.507136Z",
+          "cutoffAt": "2026-09-10T11:45:01.507136Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -2218,7 +2218,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2341,7 +2341,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2464,7 +2464,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2587,7 +2587,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2710,7 +2710,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2833,7 +2833,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -2956,7 +2956,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3079,7 +3079,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3202,7 +3202,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3325,7 +3325,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3448,7 +3448,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3571,7 +3571,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T11:33:35.466545Z",
+              "checkedAt": "2026-09-10T11:45:01.507136Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -3689,7 +3689,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "072dfcaf58a560ffb8fd85032461f2065ba1581fc17357871787776f2125c8da",
+        "bodySha256": "29f8a901f2cbb6a1ea9682f890a5eab9fdc4ee251aae855621057e6e5253ba6d",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -3727,9 +3727,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "a13d2ebc-e447-4463-ab2d-4e56eb6aaac8"
+          "traceId": "0a93ae48-9ec9-4b72-b1ae-0285b32be415"
         },
-        "bodySha256": "d34b43722afd3a14d41c1695520f9b8d7c803c683dae417547b94d4652262b74",
+        "bodySha256": "b35a8e6ef85b501541c0d15b2a7a5987f74f732fbd60ff7e1f252321865817f3",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -3746,7 +3746,7 @@
     },
     "databaseEvidenceClass": "HISTORICAL_BACKUP_RECOVERED_THEN_MIGRATED_TO_HEAD",
     "databaseOriginalDataCutoff": "2026-08-05T05:02:48+08:00",
-    "gitHead": "14a1dcc81aa86dd2f9201d8ee7f7532fe4e112cc",
+    "gitHead": "ef18123f2929b7a519e91bb1aefa2ff584ccc563",
     "httpMethods": [
       "GET"
     ],
@@ -3763,7 +3763,7 @@
     }
   },
   "summary": {
-    "blockerCount": 19,
+    "blockerCount": 16,
     "blockers": [
       {
         "gate": "workshopSourceReadiness",
@@ -3810,27 +3810,15 @@
         "reason": "NO_ACTIVE_CNY_HARD_STOP_BUDGET"
       },
       {
+        "gate": "stageTemplates.authority",
+        "reason": "INVESTIGATION_TEMPLATE_MISSING"
+      },
+      {
+        "gate": "responsibilityPlans.authority",
+        "reason": "INVESTIGATION_PLAN_MISSING"
+      },
+      {
         "gate": "bundleInstallations",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
-      },
-      {
-        "gate": "productionContexts",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
-      },
-      {
-        "gate": "productionStartDecisions",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
-      },
-      {
-        "gate": "responsibilityPlans",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
-      },
-      {
-        "gate": "stageTemplates",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
-      },
-      {
-        "gate": "taskBriefs",
         "reason": "REQUIRED_COLLECTION_EMPTY"
       },
       {
