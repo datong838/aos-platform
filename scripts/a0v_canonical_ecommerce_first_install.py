@@ -527,9 +527,6 @@ def prepare_persistent_signed_tree(*, build_dir: Path, state_dir: Path) -> dict[
         from aos_api.asset_registry.manifest_loader import ManifestLoader
         from aos_api.asset_registry.release_policy import ReleasePolicy
         from aos_api.asset_registry.signature import FileTrustRootProvider
-        from aos_api.extension_runtime.release_revalidation import (
-            RuntimeReleaseRevalidator,
-        )
 
         signing_dir = state_dir.resolve() / "signing"
         key_path = signing_dir / "registry-ed25519.pem"
@@ -813,6 +810,9 @@ def create_approved_first_installation(
         from aos_api.asset_registry.registry_snapshot import RegistrySnapshotReader
         from aos_api.asset_registry.release_policy import ReleasePolicy
         from aos_api.asset_registry.signature import FileTrustRootProvider
+        from aos_api.extension_runtime.release_revalidation import (
+            RuntimeReleaseRevalidator,
+        )
 
         trust = FileTrustRootProvider(
             state_dir.resolve() / "signing/trust-roots.json"
