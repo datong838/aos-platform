@@ -162,6 +162,191 @@ def _tenant_claim(body: Any) -> tuple[str, str] | None:
     return None
 
 
+def _parse_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.utcoffset() is not None else None
+
+
+def _status_reason(value: Any) -> str:
+    if not isinstance(value, str) or not value.strip():
+        return "MALFORMED_READINESS_BODY"
+    return f"STATUS_{value.strip().upper()}"
+
+
+def _semantic_readiness_blockers(
+    positive: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    blockers: list[dict[str, Any]] = []
+
+    for name in ("sourceReadiness", "workshopSourceReadiness"):
+        observed = positive[name]
+        if observed.get("httpStatus") != 200:
+            continue
+        body = observed.get("body")
+        if not isinstance(body, dict):
+            blockers.append({"gate": f"{name}.status", "reason": "MALFORMED_READINESS_BODY"})
+            continue
+        status = body.get("status")
+        sources = body.get("sources")
+        if status != "ready":
+            blockers.append({"gate": f"{name}.status", "reason": _status_reason(status)})
+        if not isinstance(sources, list) or len(sources) != 12:
+            blockers.append({"gate": f"{name}.sources", "reason": "EXPECTED_12_SOURCES"})
+        elif any(not isinstance(item, dict) or item.get("status") != "ready" for item in sources):
+            blockers.append({"gate": f"{name}.sources", "reason": "SOURCE_NOT_READY"})
+
+    expected_agent_stats = {
+        "definitionCount": 6,
+        "installedCount": 6,
+        "runnableCount": 6,
+        "skillDefinitionCount": 37,
+        "capabilityDefinitionCount": 10,
+    }
+    observed = positive["agentRegistry"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        stats = body.get("stats") if isinstance(body, dict) else None
+        if not isinstance(stats, dict):
+            blockers.append({"gate": "agentRegistry.stats", "reason": "MALFORMED_READINESS_BODY"})
+        else:
+            for key, expected in expected_agent_stats.items():
+                if stats.get(key) != expected:
+                    blockers.append(
+                        {
+                            "gate": f"agentRegistry.stats.{key}",
+                            "reason": "COUNT_MISMATCH",
+                            "expected": expected,
+                            "observed": stats.get(key),
+                        }
+                    )
+
+    observed = positive["agentRuntimeReadiness"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        catalog = body.get("catalog") if isinstance(body, dict) else None
+        stats = catalog.get("stats") if isinstance(catalog, dict) else None
+        items = catalog.get("items") if isinstance(catalog, dict) else None
+        if not isinstance(stats, dict) or not isinstance(items, list):
+            blockers.append(
+                {"gate": "agentRuntimeReadiness.catalog", "reason": "MALFORMED_READINESS_BODY"}
+            )
+        else:
+            for key, expected in expected_agent_stats.items():
+                if stats.get(key) != expected:
+                    blockers.append(
+                        {
+                            "gate": f"agentRuntimeReadiness.stats.{key}",
+                            "reason": "COUNT_MISMATCH",
+                            "expected": expected,
+                            "observed": stats.get(key),
+                        }
+                    )
+            if len(items) != 6 or any(
+                not isinstance(item, dict)
+                or item.get("runtimeReadiness") != "runnable"
+                or item.get("blockers") != []
+                for item in items
+            ):
+                blockers.append(
+                    {"gate": "agentRuntimeReadiness.items", "reason": "AGENT_NOT_RUNNABLE"}
+                )
+
+    observed = positive["capabilityCatalog"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        if not isinstance(body, dict):
+            blockers.append(
+                {"gate": "capabilityCatalog.counts", "reason": "MALFORMED_READINESS_BODY"}
+            )
+        else:
+            for key in ("count", "availableCount"):
+                if body.get(key) != 10:
+                    blockers.append(
+                        {
+                            "gate": f"capabilityCatalog.{key}",
+                            "reason": "COUNT_MISMATCH",
+                            "expected": 10,
+                            "observed": body.get(key),
+                        }
+                    )
+
+    observed = positive["modelRuntime"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        if not isinstance(body, dict):
+            blockers.append({"gate": "modelRuntime.semantic", "reason": "MALFORMED_READINESS_BODY"})
+        else:
+            resolutions = body.get("resolutions")
+            if not isinstance(resolutions, list) or not any(
+                isinstance(item, dict) and item.get("readiness") == "ready"
+                for item in resolutions
+            ):
+                blockers.append({"gate": "modelRuntime.resolutions", "reason": "NO_READY_ROUTE"})
+            generated_at = _parse_datetime(body.get("generatedAt"))
+            health = body.get("healthObservations")
+            healthy = (
+                isinstance(health, list)
+                and generated_at is not None
+                and any(
+                    isinstance(item, dict)
+                    and item.get("status") == "healthy"
+                    and (expires_at := _parse_datetime(item.get("expiresAt"))) is not None
+                    and expires_at > generated_at
+                    for item in health
+                )
+            )
+            if not healthy:
+                blockers.append(
+                    {"gate": "modelRuntime.healthObservations", "reason": "NO_FRESH_HEALTHY_PROVIDER"}
+                )
+
+    observed = positive["modelChain"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        chains = body.get("chains") if isinstance(body, dict) else None
+        ready_chain = isinstance(chains, list) and any(
+            isinstance(chain, dict)
+            and chain.get("readiness") == "ready"
+            and chain.get("controlledTrialAllowed") is True
+            and isinstance(chain.get("nodes"), list)
+            and len(chain["nodes"]) == 6
+            and all(
+                isinstance(node, dict)
+                and node.get("status") == "ready"
+                and node.get("blockerCode") is None
+                for node in chain["nodes"]
+            )
+            for chain in chains
+        )
+        if not ready_chain:
+            blockers.append({"gate": "modelChain.chains", "reason": "NO_READY_CHAIN"})
+
+    observed = positive["modelCost"]
+    if observed.get("httpStatus") == 200:
+        body = observed.get("body")
+        budgets = body.get("budgets") if isinstance(body, dict) else None
+        active_budget = isinstance(budgets, list) and any(
+            isinstance(item, dict)
+            and item.get("status") == "active"
+            and item.get("currency") == "CNY"
+            and item.get("hardStop") is True
+            and isinstance(item.get("dailyLimitMinor"), int)
+            and item["dailyLimitMinor"] > 0
+            and isinstance(item.get("monthlyLimitMinor"), int)
+            and item["monthlyLimitMinor"] > 0
+            for item in budgets
+        )
+        if not active_budget:
+            blockers.append({"gate": "modelCost.budgets", "reason": "NO_ACTIVE_CNY_HARD_STOP_BUDGET"})
+
+    return blockers
+
+
 def _git_head(repo: Path) -> str:
     return subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=repo, text=True
@@ -215,6 +400,8 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
                 }
             )
 
+    blockers.extend(_semantic_readiness_blockers(positive))
+
     for name in (
         "bundleInstallations",
         "productionContexts",
@@ -232,9 +419,7 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
     for name in ("modelRuntime", "modelChain", "modelCost"):
         model_counts[name] = _non_empty_model_sections(positive[name].get("body"))
     required_model_sections = {
-        "modelRuntime": ("providers", "models", "routes", "healthObservations"),
-        "modelChain": ("chains",),
-        "modelCost": ("budgets",),
+        "modelRuntime": ("providers", "models", "routes"),
     }
     for name, keys in required_model_sections.items():
         if positive[name]["httpStatus"] != 200:

@@ -60,6 +60,10 @@ def verify(document: dict[str, Any]) -> list[str]:
     if not blockers:
         errors.append("current recovery baseline must not be promoted without blockers")
 
+    blocker_gates = {
+        item.get("gate") for item in blockers if isinstance(item, dict)
+    }
+
     observations = document.get("observations") or {}
     for group_name, group in observations.items():
         entries = group if isinstance(group, dict) and "method" not in group else {group_name: group}
@@ -71,6 +75,30 @@ def verify(document: dict[str, Any]) -> list[str]:
         errors.append("missing Bearer check must return 401")
     if (negative.get("invalidLimit") or {}).get("httpStatus") not in {400, 422}:
         errors.append("invalid limit check must return 400 or 422")
+
+    positive = observations.get("positive") or {}
+    for name in ("sourceReadiness", "workshopSourceReadiness"):
+        observation = positive.get(name) or {}
+        body = observation.get("body") or {}
+        status = body.get("status") if isinstance(body, dict) else None
+        if observation.get("httpStatus") == 200 and status != "ready":
+            if f"{name}.status" not in blocker_gates:
+                errors.append(f"blocked {name} status must remain a blocker")
+
+    agent = positive.get("agentRegistry") or {}
+    if agent.get("httpStatus") == 200:
+        body = agent.get("body") or {}
+        stats = body.get("stats") if isinstance(body, dict) else {}
+        expected = {
+            "definitionCount": 6,
+            "installedCount": 6,
+            "runnableCount": 6,
+            "skillDefinitionCount": 37,
+            "capabilityDefinitionCount": 10,
+        }
+        for key, value in expected.items():
+            if stats.get(key) != value and f"agentRegistry.stats.{key}" not in blocker_gates:
+                errors.append(f"agentRegistry {key} mismatch must remain a blocker")
 
     errors.extend(_walk(document))
     return errors
