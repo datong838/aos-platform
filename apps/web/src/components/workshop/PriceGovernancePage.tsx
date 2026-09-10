@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
-import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type PriceDispositionContributionViewResponse, type PriceGovernanceViewId, type PriceGovernanceViewResponse, type PriceResearchContributionViewResponse, type RemedyScenarioOutcomeAxisId, type RemedyScenarioStageId, type ThreeModuleClosureContributionViewResponse } from "../../api/ecommerceWorkshop";
+import { aipActionsSdk, type AipActionsSdk } from "../../api/aipActions/client";
+import type { ActionDraftBundle, ActionProposalTimeline } from "../../api/aipActions/contracts";
+import { EcommerceWorkshopClientError, ecommerceWorkshopClient, type PriceDispositionContributionViewResponse, type PriceGovernanceViewId, type PriceGovernanceViewResponse, type PriceGovernanceViewSlice, type PriceObservation, type PriceResearchContributionViewResponse, type RemedyScenarioOutcomeAxisId, type RemedyScenarioStageId, type ThreeModuleClosureContributionViewResponse } from "../../api/ecommerceWorkshop";
 import { AsyncStateBoundary, type AsyncState } from "./AsyncStateBoundary";
 import { deriveWorkshopViewState, pickPreferredWorkshopView } from "./workshopViewState";
 import { ThreeModuleClosureCard, unavailableThreeModuleClosure } from "./ThreeModuleClosureCard";
 
 type Client = Pick<typeof ecommerceWorkshopClient, "getPriceGovernanceView"> & Partial<Pick<typeof ecommerceWorkshopClient, "getPriceResearchContributionView" | "getPriceDispositionContributionView" | "getThreeModuleClosureContributionView">>;
+type PriceActions = Pick<AipActionsSdk, "createProposal" | "createReplacementProposal" | "withdraw" | "timeline">;
 type Phase = AsyncState;
+type ObservationFilter = "all" | "comparable" | "review" | "excluded";
 const LABELS: Record<PriceGovernanceViewId, string> = { governance: "同款价格治理", competitor: "竞品比价", schedule: "调度控制台" };
 const STATUS_LABELS: Record<string, string> = { ready: "可读取", blocked: "等待条件", unknown: "待核对", partial: "部分可用", failed: "读取失败" };
 const labelStatus = (value: string) => STATUS_LABELS[value] ?? "待核对";
@@ -18,13 +22,71 @@ const DISPOSITION_LABELS = { internal_advice: "内部建议", external_notice: "
 const REMEDY_STAGE_LABELS: Record<RemedyScenarioStageId, string> = { price_observation: "价格异常", match_decision: "同款判定", price_case: "PriceCase", affected_orders: "受影响订单", operation_case: "OperationCase", customer_handoff: "客户补救交接", contact_permit: "联系许可", action_outcomes: "动作结果", effect_review: "效果复核" };
 const REMEDY_AXIS_LABELS: Record<RemedyScenarioOutcomeAxisId, string> = { repricing_applied: "调价已应用", refund_compensation_submitted: "退款/补偿已提交", customer_message_accepted: "客户消息已接受", operation_case_resolved: "运营 Case 已解决", effect_mature: "效果已成熟" };
 
-export function PriceGovernancePage({ client = ecommerceWorkshopClient }: { client?: Client }) {
+function PriceStrategyWorkspace({ view, observation, actions }: { view: PriceGovernanceViewSlice; observation: PriceObservation | null; actions: PriceActions }) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState("内部价格监测策略");
+  const [tolerance, setTolerance] = useState("0.08");
+  const [freshnessHours, setFreshnessHours] = useState("24");
+  const [summary, setSummary] = useState("核对可比报价与同款证据，形成内部监测建议。");
+  const [proposal, setProposal] = useState<ActionDraftBundle | null>(null);
+  const [timeline, setTimeline] = useState<ActionProposalTimeline | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const source = observation?.observationRef ?? view.authorityRefs[0] ?? view.readinessAxes.find((axis) => axis.exactRef)?.exactRef ?? null;
+  useEffect(() => { setProposal(null); setTimeline(null); setEditing(false); setShowComparison(false); setNotice(""); }, [view.viewId]);
+  const submit = async () => {
+    if (!source || !title.trim() || !summary.trim()) { setNotice("缺少当前视图的 exact 价格来源或策略说明，保存失败关闭。"); return; }
+    const ratio = Number(tolerance); const hours = Number(freshnessHours);
+    if (!Number.isFinite(ratio) || ratio < 0 || ratio > 1 || !Number.isSafeInteger(hours) || hours < 1 || hours > 720) { setNotice("容差必须在 0 到 1，新鲜度必须在 1 到 720 小时。"); return; }
+    setBusy(true); setNotice("");
+    try {
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      if (proposal) {
+        const next = await actions.createReplacementProposal(proposal, { purpose: title.trim(), diff: { toleranceRatio: { from: proposal.proposal.payload.toleranceRatio ?? null, to: ratio }, freshnessHours: { from: proposal.proposal.payload.freshnessHours ?? null, to: hours }, summary: { from: proposal.proposal.payload.summary ?? null, to: summary.trim() } }, expiresAt });
+        setProposal(next); setEditing(false); setNotice(`策略修改已形成替代提案 ${next.proposal.id}，旧版本未被覆盖。`);
+      } else {
+        const objectRef = { resourceType: source.resourceType, resourceId: source.resourceId, revision: String(source.revision), authority: "ecommerce-workshop.price-governance-view" };
+        const next = await actions.createProposal({ actionTypeId: "ecommerce.price.prepare-strategy", objectRef, purpose: title.trim(), riskHint: "R2", payload: { viewId: view.viewId, toleranceRatio: ratio, freshnessHours: hours, summary: summary.trim(), observationRef: observation?.observationRef ?? null, externalEffectAllowed: false, repricingAllowed: false }, diff: { status: { from: null, to: "待审批" }, toleranceRatio: { from: null, to: ratio } }, evidenceRefs: [objectRef], expiresAt });
+        setProposal(next); setEditing(false); setNotice(`内部策略提案已形成：${next.proposal.id}。未采集、通知或调价。`);
+      }
+    } catch (error) { setNotice(error instanceof Error ? error.message : "内部价格策略保存失败关闭"); }
+    finally { setBusy(false); }
+  };
+  const readTimeline = async () => {
+    if (!proposal) { setNotice("当前尚未形成策略提案，执行结果保持可信空。"); return; }
+    setBusy(true);
+    try { const next = await actions.timeline(proposal.proposal.id); setTimeline(next); setNotice(`已回读 ${next.events.length} 条正式策略事件。`); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "策略事件读取失败关闭"); }
+    finally { setBusy(false); }
+  };
+  const withdraw = async () => {
+    if (!proposal) return; setBusy(true);
+    try { const next = await actions.withdraw(proposal, "运营人员撤回内部价格策略提案"); setProposal(next); setNotice(`策略 ${next.proposal.id} 已撤回，调价与外部效果仍为 0。`); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "策略撤回失败关闭"); }
+    finally { setBusy(false); }
+  };
+  return <section className="price-strategy-workspace" aria-label="内部价格策略工作区">
+    <header><div><span>MonitoringPolicy → Action Proposal</span><h3>内部价格策略</h3></div><strong>{proposal ? `${proposal.proposal.status} · v${proposal.proposal.version}` : "尚未提交"}</strong></header>
+    <p>{observation ? `当前依据：${observation.market} · ${observation.observationRef.resourceId}` : "请选择当前视图中的价格观察；没有 exact 来源时不生成策略。"}</p>
+    {editing ? <form onSubmit={(event) => { event.preventDefault(); void submit(); }}><label>策略标题<input aria-label="价格策略标题" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} /></label><div><label>价格容差<input aria-label="价格容差" type="number" min="0" max="1" step="0.01" value={tolerance} onChange={(event) => setTolerance(event.target.value)} /></label><label>新鲜度（小时）<input aria-label="价格新鲜度小时" type="number" min="1" max="720" step="1" value={freshnessHours} onChange={(event) => setFreshnessHours(event.target.value)} /></label></div><label>策略说明<textarea aria-label="价格策略说明" value={summary} onChange={(event) => setSummary(event.target.value)} maxLength={500} /></label><footer><button type="button" onClick={() => { setSummary("先核对同款、报价口径和 originals，再形成内部价格建议。"); setNotice("已采纳异常建议，尚未提交。"); }}>采纳异常建议</button><button type="button" onClick={() => setEditing(false)}>取消</button><button className="is-primary" type="submit" disabled={busy || !source}>{proposal ? "提交策略修改" : "保存策略草稿"}</button></footer></form> : <div className="price-strategy-actions"><button type="button" onClick={() => setEditing(true)}>{proposal ? "修改策略" : "新建监测策略"}</button><button type="button" onClick={() => setShowComparison((value) => !value)} disabled={!proposal}>对比预览</button><button type="button" onClick={readTimeline}>执行结果</button><button type="button" onClick={() => setNotice(proposal ? `审批前预览：${proposal.proposal.purpose}；风险 ${proposal.proposal.riskLevel}；需独立审批、短时租约与 R4 专业调价门，当前不允许执行。` : "请先形成内部策略提案。")}>批准预览</button><button type="button" onClick={withdraw} disabled={!proposal || busy || proposal.proposal.status === "withdrawn"}>撤回策略</button></div>}
+    {showComparison && proposal ? <dl className="price-strategy-comparison" aria-label="价格策略对比预览"><div><dt>当前基线</dt><dd>保持现有正式 MonitoringPolicy</dd></div><div><dt>提案版本</dt><dd>{proposal.proposal.id} · v{proposal.proposal.version}</dd></div><div><dt>影响预览</dt><dd>ResearchJob 0 · Provider 0 · 调价 0</dd></div></dl> : null}
+    {proposal ? <section className="price-strategy-receipt" aria-label="内部价格策略凭证"><strong>内部策略凭证</strong><span>{proposal.proposal.id} · 第 {proposal.proposal.version} 版</span><small title={proposal.proposal.proposalHash}>{proposal.proposal.proposalHash.slice(0, 16)}…</small><small>审批 {proposal.approvals.length} · 调价 0 · 外部效果 0</small></section> : null}
+    {timeline ? <ol className="price-strategy-timeline">{timeline.events.map((event) => <li key={event.id}><strong>{event.type}</strong><span>{new Date(event.createdAt).toLocaleString("zh-CN", { hour12: false })}</span></li>)}</ol> : null}
+    <button type="button" className="price-collection-preflight" onClick={() => setNotice("立即采集预检：来源许可、capacity、budget 与 Provider authority 未齐；ResearchJob 0，外部调用 0。")}>立即采集预检</button>
+    {notice ? <p className="price-strategy-notice" role="status">{notice}</p> : null}
+  </section>;
+}
+
+export function PriceGovernancePage({ client = ecommerceWorkshopClient, actions = aipActionsSdk }: { client?: Client; actions?: PriceActions }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [response, setResponse] = useState<PriceGovernanceViewResponse | null>(null);
   const [contribution, setContribution] = useState<PriceResearchContributionViewResponse | null>(null);
   const [disposition, setDisposition] = useState<PriceDispositionContributionViewResponse | null>(null);
   const [closure, setClosure] = useState<ThreeModuleClosureContributionViewResponse | null>(null);
   const [selected, setSelected] = useState<PriceGovernanceViewId>("governance");
+  const [observationFilter, setObservationFilter] = useState<ObservationFilter>("all");
+  const [selectedObservationId, setSelectedObservationId] = useState<string | null>(null);
   const request = useRef(0);
   const load = () => {
     const id = ++request.current; setPhase("loading"); setResponse(null); setContribution(null); setDisposition(null); setClosure(null);
@@ -32,6 +94,8 @@ export function PriceGovernancePage({ client = ecommerceWorkshopClient }: { clie
   };
   useEffect(() => { load(); return () => { request.current += 1; }; }, [client]);
   const view = response?.views.find((item) => item.viewId === selected);
+  const visibleObservations = view?.observations.filter((item) => observationFilter === "all" || (observationFilter === "comparable" && item.comparability === "comparable") || (observationFilter === "review" && (item.comparability === "unknown" || item.matchStatus === "preliminary" || item.matchStatus === "unknown")) || (observationFilter === "excluded" && item.comparability === "not_comparable")) ?? [];
+  const selectedObservation = view?.observations.find((item) => item.observationRef.resourceId === selectedObservationId) ?? view?.observations[0] ?? null;
   const comparable = response?.views.reduce((sum, item) => sum + item.countLedger.eligible, 0) ?? 0;
   const total = response?.views.reduce((sum, item) => sum + item.countLedger.input, 0) ?? 0;
   const content = response && view ? <div className="price-governance-read-model">
@@ -49,8 +113,8 @@ export function PriceGovernancePage({ client = ecommerceWorkshopClient }: { clie
     <div className="price-governance-tabs" role="tablist" aria-label="价格治理只读视图">{response.views.map((item, index) => <button id={`price-governance-tab-${item.viewId}`} aria-controls={`price-governance-panel-${item.viewId}`} type="button" role="tab" aria-selected={selected === item.viewId} tabIndex={selected === item.viewId ? 0 : -1} key={item.viewId} onClick={() => setSelected(item.viewId)} onKeyDown={(event) => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const nextIndex = event.key === "Home" ? 0 : event.key === "End" ? response.views.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + response.views.length) % response.views.length; setSelected(response.views[nextIndex]!.viewId); event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[nextIndex]?.focus(); }}><strong>{LABELS[item.viewId]}</strong><span>{labelStatus(item.status)}</span></button>)}</div>
     <section id={`price-governance-panel-${selected}`} aria-labelledby={`price-governance-tab-${selected}`} className="price-governance-panel" role="tabpanel" aria-label={LABELS[selected]}><header><div><span>当前业务视图</span><h2>{LABELS[view.viewId]}</h2></div><strong className={`content-campaign-status is-${view.status}`}>{view.status === "ready" ? "正式数据可读" : "等待数据"}</strong></header>
       <div className="price-governance-readiness"><header><span>价格治理流程</span><h2>价格治理任务链</h2></header>{view.readinessAxes.map((axis) => <article key={axis.axis} className={`is-${axis.status}`}><strong>{AXIS_LABELS[axis.axis]}</strong><span>{labelStatus(axis.status)}</span><p>{axis.exactRef ? "正式数据已挂接" : axis.axis === "repricing" ? "专业调价能力未开启" : "暂无可验证来源"}</p><details><summary>查看数据审计信息</summary><p>{axis.exactRef ? `${axis.exactRef.resourceType} · 第 ${axis.exactRef.revision} 版` : "未提供正式数据引用"}</p></details></article>)}</div>
-      <section className="price-observations">{view.observations.length ? view.observations.map((item) => <article key={`${item.observationRef.resourceId}:${item.observationRef.revision}`} className={`is-${item.comparability}`}><header><div><strong>{item.market}</strong><span>{item.comparability} · {item.matchStatus}</span></div>{item.amount === null ? <b>待核对，不以 0 代替</b> : <b>{item.quoteBasis.currency} {item.amount}</b>}</header><dl><div><dt>报价口径</dt><dd>{item.quoteBasis.basis} · {item.quoteBasis.quantity} {item.quoteBasis.unit}</dd></div><div><dt>税 / 运费</dt><dd>{item.quoteBasis.tax} / {item.quoteBasis.shipping}</dd></div><div><dt>新鲜度 / 许可</dt><dd>{item.freshness} / {item.license}</dd></div><div><dt>原始证据</dt><dd>{item.originalRefs.length + item.mergedOriginalRefs.length}</dd></div></dl><small>{item.quoteBasis.promotionCondition} · {new Date(item.observedAt).toLocaleString("zh-CN", { hour12: false })}</small></article>) : <div className="price-empty-sku"><header><strong>核心商品列表</strong><span>待核对</span></header><div><b>异常候选</b><span>未挂接</span></div><div><b>待复核商品</b><span>未挂接</span></div><div><b>可比报价</b><span>待核对</span></div><p>当前没有可挂接的价格观察；可信空与待补条件分开表达。</p></div>}</section>
-      <aside className="media-studio-blockers"><section className="price-colleague-summary"><span>数字同事</span><h3>数字同事协作</h3><strong>数据参谋主责 · 正式数据待挂接</strong><p>活动策划师与导购顾问只读校验，不生成价格结论。</p></section><h3>所需条件与下一步</h3>{view.blockers.length ? view.blockers.map((item) => <details key={item.code}><summary>补充正式价格数据</summary><span>当前不能形成调价结论</span><p>{item.requiredAction}</p><p>{item.dependency}</p><code>{item.code}</code></details>) : <p>本视图当前没有待补条件。</p>}</aside>
+      <section className="price-observations"><nav aria-label="价格观察筛选">{([['all', '全部'], ['comparable', '可比'], ['review', '待复核'], ['excluded', '已排除']] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={observationFilter === id} onClick={() => setObservationFilter(id)}>{label}</button>)}</nav>{visibleObservations.length ? visibleObservations.map((item) => <article key={`${item.observationRef.resourceId}:${item.observationRef.revision}`} className={`is-${item.comparability}${selectedObservation?.observationRef.resourceId === item.observationRef.resourceId ? " is-selected" : ""}`}><header><div><strong>{item.market}</strong><span>{item.comparability} · {item.matchStatus}</span></div>{item.amount === null ? <b>待核对，不以 0 代替</b> : <b>{item.quoteBasis.currency} {item.amount}</b>}</header><dl><div><dt>报价口径</dt><dd>{item.quoteBasis.basis} · {item.quoteBasis.quantity} {item.quoteBasis.unit}</dd></div><div><dt>税 / 运费</dt><dd>{item.quoteBasis.tax} / {item.quoteBasis.shipping}</dd></div><div><dt>新鲜度 / 许可</dt><dd>{item.freshness} / {item.license}</dd></div><div><dt>原始证据</dt><dd>{item.originalRefs.length + item.mergedOriginalRefs.length}</dd></div></dl><small>{item.quoteBasis.promotionCondition} · {new Date(item.observedAt).toLocaleString("zh-CN", { hour12: false })}</small><button type="button" aria-pressed={selectedObservation?.observationRef.resourceId === item.observationRef.resourceId} onClick={() => setSelectedObservationId(item.observationRef.resourceId)}>选择此观察</button></article>) : <div className="price-empty-sku"><header><strong>核心商品列表</strong><span>待核对</span></header><div><b>异常候选</b><span>未挂接</span></div><div><b>待复核商品</b><span>未挂接</span></div><div><b>可比报价</b><span>待核对</span></div><p>{view.observations.length ? "当前筛选没有匹配的价格观察；可切换筛选继续核对。" : "当前没有可挂接的价格观察；可信空与待补条件分开表达。"}</p></div>}</section>
+      <aside className="media-studio-blockers"><PriceStrategyWorkspace view={view} observation={selectedObservation} actions={actions} /><section className="price-colleague-summary"><span>数字同事</span><h3>数字同事协作</h3><strong>数据参谋主责 · 正式数据待挂接</strong><p>活动策划师与导购顾问只读校验，不生成价格结论。</p></section><h3>所需条件与下一步</h3>{view.blockers.length ? view.blockers.map((item) => <details key={item.code}><summary>补充正式价格数据</summary><span>当前不能形成调价结论</span><p>{item.requiredAction}</p><p>{item.dependency}</p><code>{item.code}</code></details>) : <p>本视图当前没有待补条件。</p>}</aside>
     </section>
     <footer className="content-campaign-footnote"><span>租户 {response.tenant.orgId}/{response.tenant.projectId}</span><span>统一数据截止 {new Date(response.dataCutoff).toLocaleString("zh-CN", { hour12: false })}</span><span>自动调价关闭</span></footer>
   </div> : null;

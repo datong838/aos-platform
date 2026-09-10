@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PriceGovernanceViewResponse } from "../../api/ecommerceWorkshop";
+import type { PriceGovernanceViewResponse, PriceObservation } from "../../api/ecommerceWorkshop";
 import { PriceGovernancePage } from "./PriceGovernancePage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -11,6 +11,12 @@ const axes = ["collection", "match", "policy_case", "notification", "advice_hand
 const cutoff = "2026-08-24T08:00:00Z";
 const blocked: PriceGovernanceViewResponse = { schemaVersion: "aos.ecommerce-workshop.price-governance-view/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, resourceRevision: 1, evaluatedAt: cutoff, dataCutoff: cutoff, readiness: "degraded", views: ids.map((viewId) => { const blocker = { code: `PRICE_${viewId.toUpperCase()}_AUTHORITY_NOT_AVAILABLE`, dependency: viewId, requiredAction: "attach exact licensed authority" }; return { viewId, status: "blocked", resourceRevision: 1, dataCutoff: cutoff, readinessAxes: axes.map((axis) => axis === "repricing" ? { axis, status: "disabled", exactRef: null, blockers: [{ code: "PRICE_REPRICING_DISABLED", dependency: "R4", requiredAction: "complete specialized gate" }] } : { axis, status: "blocked", exactRef: null, blockers: [blocker] }), observations: [], authorityRefs: [], blockers: [blocker], countLedger: { input: 0, eligible: 0, excluded: 0, needsReview: 0, unknown: 0, deduplicated: 0 } }; }), page: { limit: 100, count: 0, hasMore: false, nextCursor: null } };
 const remedyBlocked: PriceGovernanceViewResponse = { ...blocked, schemaVersion: "aos.ecommerce-workshop.price-governance-view/v2", remedyScenario: { schemaVersion: "aos.ecommerce-workshop.remedy-scenario/v1", status: "blocked", rootCaseRef: null, remedyBindingHash: null, evaluatedAt: cutoff, stages: (["price_observation", "match_decision", "price_case", "affected_orders", "operation_case", "customer_handoff", "contact_permit", "action_outcomes", "effect_review"] as const).map((stageId) => ({ stageId, status: "blocked", exactRefs: [], contribution: "等待 exact authority", blockers: [{ code: "PRICE_CASE_EXACT_ROOT_REQUIRED", dependency: "price-case", requiredAction: "provide exact root" }] })), ledger: { affectedOrdersExpected: 0, affectedOrdersObserved: 0, eligibleCustomersExpected: 0, eligibleCustomersObserved: 0, actionsExpected: 5, actionsReady: 0, actionsBlocked: 5, actionsUnknown: 0 }, outcomeAxes: (["repricing_applied", "refund_compensation_submitted", "customer_message_accepted", "operation_case_resolved", "effect_mature"] as const).map((axisId) => ({ axisId, status: "blocked", exactRef: null, blocker: { code: "PRICE_CASE_EXACT_ROOT_REQUIRED", dependency: "price-case", requiredAction: "provide exact root" } })), blockers: [{ code: "PRICE_CASE_EXACT_ROOT_REQUIRED", dependency: "price-case", requiredAction: "provide exact root" }], commands: { reprice: false, refundOrCompensate: false, sendMessage: false, resolveCase: false }, protectedContactResolved: false, externalEffectsAllowed: false } };
+const priceRef = (resourceType: string, resourceId: string, fill = "a") => ({ resourceType, resourceId, revision: 1, contentHash: `sha256:${fill.repeat(64)}`, receiptId: `receipt-${resourceId}` });
+const skuRef = priceRef("ProductSkuRevision", "isolated-sku-1", "b");
+const comparableObservation: PriceObservation = { observationRef: priceRef("PriceObservationRevision", "observation-comparable", "c"), market: "隔离公开市场 A", amount: 88, quoteBasis: { basis: "landed", skuRef, bundleRef: null, quantity: 1, unit: "piece", currency: "CNY", tax: "included", shipping: "included", promotionCondition: "none", effectiveFrom: cutoff, effectiveUntil: null }, observedAt: cutoff, freshness: "fresh", license: "allowed", comparability: "comparable", matchStatus: "confirmed", originalRefs: [priceRef("PriceOriginal", "original-a", "d")], mergedOriginalRefs: [], blockers: [] };
+const reviewObservation: PriceObservation = { ...comparableObservation, observationRef: priceRef("PriceObservationRevision", "observation-review", "e"), market: "隔离公开市场 B", amount: null, freshness: "unknown", license: "unknown", comparability: "unknown", matchStatus: "preliminary", originalRefs: [priceRef("PriceOriginal", "original-b", "f")], blockers: [{ code: "PRICE_MATCH_REVIEW_REQUIRED", dependency: "match", requiredAction: "人工核对同款证据" }] };
+const rich: PriceGovernanceViewResponse = { ...blocked, resourceRevision: 3, views: ids.map((viewId) => ({ viewId, status: "ready" as const, resourceRevision: 3, dataCutoff: cutoff, readinessAxes: axes.map((axis, index) => axis === "repricing" ? { axis, status: "disabled" as const, exactRef: null, blockers: [{ code: "PRICE_REPRICING_DISABLED", dependency: "R4", requiredAction: "complete specialized gate" }] } : { axis, status: "ready" as const, exactRef: priceRef(index === 2 ? "MonitoringPolicyRevision" : "PriceAuthorityRevision", `${viewId}-${axis}`, String((index % 6) + 1)), blockers: [] }), observations: [comparableObservation, reviewObservation], authorityRefs: [priceRef("MonitoringPolicyRevision", `${viewId}-policy`, "a")], blockers: [], countLedger: { input: 2, eligible: 1, excluded: 0, needsReview: 0, unknown: 1, deduplicated: 0 } })), page: { limit: 100, count: 6, hasMore: false, nextCursor: null } };
+const proposalBundle = { proposal: { id: "price-proposal-v1", actionType: { actionTypeId: "ecommerce.price.prepare-strategy", revisionHash: "a".repeat(64), objectType: "MonitoringPolicy" }, taskId: null, runId: null, objectRef: { resourceType: "PriceObservationRevision", resourceId: "observation-comparable", revision: "1", authority: "ecommerce-workshop.price-governance-view" }, impactPreviewRef: null, purpose: "内部价格监测策略", riskLevel: "R2" as const, payload: { toleranceRatio: 0.08, freshnessHours: 24, summary: "核对可比报价与同款证据，形成内部监测建议。", externalEffectAllowed: false, repricingAllowed: false }, proposalHash: "e".repeat(64), status: "drafted" as const, expiresAt: "2099-01-01T00:00:00Z", version: 1, createdBy: { actorType: "user", actorId: "maker" }, createdAt: cutoff, updatedAt: cutoff }, draft: { id: "price-draft-v1", proposalId: "price-proposal-v1", proposalVersion: 1, proposalHash: "e".repeat(64), diff: {}, evidenceRefs: [], status: "awaiting_approval", createdAt: cutoff }, approvals: [] };
 
 describe("PriceGovernancePage", () => {
   let host: HTMLDivElement; let root: Root;
@@ -24,4 +30,36 @@ describe("PriceGovernancePage", () => {
   it("支持方向键沿三视图循环", async () => { await act(async () => root.render(<PriceGovernancePage client={{ getPriceGovernanceView: vi.fn().mockResolvedValue(blocked) }} />)); const tabs = host.querySelectorAll<HTMLButtonElement>('[role="tab"]'); act(() => tabs[0]?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }))); const panel = host.querySelector<HTMLElement>('[role="tabpanel"]'); expect(panel?.getAttribute("aria-label")).toBe("竞品比价"); expect(tabs[1]?.tabIndex).toBe(0); expect(tabs[1]?.getAttribute("aria-controls")).toBe(panel?.id); expect(panel?.getAttribute("aria-labelledby")).toBe(tabs[1]?.id); });
   it("展示九阶段五独立结果轴且不解析联系方式或生成动作", async () => { await act(async () => root.render(<PriceGovernancePage client={{ getPriceGovernanceView: vi.fn().mockResolvedValue(remedyBlocked) }} />)); const card = host.querySelector('[aria-label="价格异常客户补救同链贡献"]'); expect(card?.querySelectorAll(".remedy-scenario-stages article")).toHaveLength(9); expect(card?.querySelectorAll(".remedy-scenario-axes article")).toHaveLength(5); expect(card?.textContent).toContain("原子 Skill → Logic 编排 → 数字同事绑定 → 工作台贡献"); expect(card?.textContent).toContain("受保护联系正文未解析"); expect(card?.textContent).toContain("客户消息发送 0"); expect(Array.from(card?.querySelectorAll("button") ?? [])).toHaveLength(0); });
   it("可信空保留商品任务链与数字同事三栏结构", async () => { await act(async () => root.render(<PriceGovernancePage client={{ getPriceGovernanceView: vi.fn().mockResolvedValue(blocked) }} />)); expect(host.textContent).toContain("核心商品列表"); expect(host.textContent).toContain("价格治理任务链"); expect(host.textContent).toContain("数字同事协作"); expect(host.textContent).toContain("PRICE_GOVERNANCE_AUTHORITY_NOT_AVAILABLE"); expect(host.textContent).not.toMatch(/玫瑰精粹|¥168|15\.2%/); });
+  it("以内部提案完成观察筛选、策略版本、预览、结果回读和撤回且不开放调价", async () => {
+    const revised = { ...proposalBundle, proposal: { ...proposalBundle.proposal, id: "price-proposal-v2", version: 2, proposalHash: "f".repeat(64) } };
+    const withdrawn = { ...revised, proposal: { ...revised.proposal, status: "withdrawn" as const } };
+    const actions = { createProposal: vi.fn().mockResolvedValue(proposalBundle), createReplacementProposal: vi.fn().mockResolvedValue(revised), timeline: vi.fn().mockResolvedValue({ bundle: proposalBundle, events: [{ id: "price-event-1", type: "submitted", actorId: "maker", proposalVersion: 1, proposalHash: "e".repeat(64), payload: {}, createdAt: cutoff }] }), withdraw: vi.fn().mockResolvedValue(withdrawn) };
+    await act(async () => root.render(<PriceGovernancePage client={{ getPriceGovernanceView: vi.fn().mockResolvedValue(rich) }} actions={actions} />));
+    const filters = host.querySelectorAll<HTMLButtonElement>('[aria-label="价格观察筛选"] button');
+    expect(filters).toHaveLength(4);
+    await act(async () => filters[2]?.click());
+    expect(host.querySelector(".price-observations")?.textContent).toContain("隔离公开市场 B");
+    expect(host.querySelector(".price-observations")?.textContent).not.toContain("隔离公开市场 A");
+    await act(async () => filters[0]?.click());
+    const click = async (label: string) => { const button = [...host.querySelectorAll<HTMLButtonElement>('.price-strategy-workspace button')].find((item) => item.textContent === label); expect(button).toBeDefined(); await act(async () => button!.click()); };
+    await click("新建监测策略");
+    await click("采纳异常建议");
+    await act(async () => host.querySelector<HTMLFormElement>('.price-strategy-workspace form')!.requestSubmit());
+    expect(actions.createProposal).toHaveBeenCalledWith(expect.objectContaining({ actionTypeId: "ecommerce.price.prepare-strategy", riskHint: "R2", payload: expect.objectContaining({ externalEffectAllowed: false, repricingAllowed: false }) }));
+    await click("对比预览");
+    expect(host.querySelector('[aria-label="价格策略对比预览"]')?.textContent).toContain("ResearchJob 0 · Provider 0 · 调价 0");
+    await click("修改策略");
+    await act(async () => host.querySelector<HTMLFormElement>('.price-strategy-workspace form')!.requestSubmit());
+    expect(actions.createReplacementProposal).toHaveBeenCalled();
+    await click("执行结果");
+    expect(host.textContent).toContain("submitted");
+    await click("批准预览");
+    expect(host.textContent).toContain("R4 专业调价门");
+    await click("立即采集预检");
+    expect(host.textContent).toContain("ResearchJob 0，外部调用 0");
+    await click("撤回策略");
+    expect(actions.withdraw).toHaveBeenCalled();
+    expect(host.textContent).toContain("调价与外部效果仍为 0");
+    expect([...host.querySelectorAll("button")].map((item) => item.textContent).join(" ")).not.toContain("执行调价");
+  });
 });
