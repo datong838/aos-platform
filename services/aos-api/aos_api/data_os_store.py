@@ -149,7 +149,10 @@ def _require_scope(scope: TenantScope | None) -> TenantScope:
     return scope
 
 
-def persist_source(scope: TenantScope, item: dict[str, Any]) -> None:
+def persist_source(
+    scope: TenantScope, item: dict[str, Any], *,
+    merge_existing: bool = False, replace_fields: tuple[str, ...] = (),
+) -> dict[str, Any]:
     scope = _require_scope(scope)
     ensure_data_os_schema()
     props = {k: v for k, v in item.items() if k not in {"id", "type", "status", "pluginId", "orgId", "projectId"}}
@@ -160,11 +163,13 @@ def persist_source(scope: TenantScope, item: dict[str, Any]) -> None:
             VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,NOW())
             ON CONFLICT (org_id, project_id, id) DO UPDATE SET
               type=EXCLUDED.type, status=EXCLUDED.status, plugin_id=EXCLUDED.plugin_id,
-              props=EXCLUDED.props,
+              props=CASE WHEN %s THEN (meta_source.props - %s::text[]) || EXCLUDED.props
+                         ELSE EXCLUDED.props END,
               updated_at=NOW()
             WHERE meta_source.org_id=EXCLUDED.org_id
               AND meta_source.project_id=EXCLUDED.project_id
-            RETURNING id
+              AND (NOT %s OR meta_source.type=EXCLUDED.type)
+            RETURNING *
             """,
             (
                 item["id"],
@@ -174,10 +179,14 @@ def persist_source(scope: TenantScope, item: dict[str, Any]) -> None:
                 scope.org_id,
                 scope.project_id,
                 json.dumps(props, ensure_ascii=False, default=str),
+                merge_existing, list(replace_fields), merge_existing,
             ),
         ).fetchone()
         _assert_scoped_upsert(row, resource="source", resource_id=str(item["id"]))
         conn.commit()
+        return {**dict(row["props"]), "id": row["id"], "type": row["type"],
+                "status": row["status"], "pluginId": row["plugin_id"],
+                "orgId": row["org_id"], "projectId": row["project_id"]}
 
 
 def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:

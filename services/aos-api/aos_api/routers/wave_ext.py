@@ -1274,11 +1274,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
             message="已有数据源不能通过重新登记更换连接器类型",
             status_code=409,
         )
-    if body.config is not None:
-        previous = {key: value for key, value in previous.items()
-                    if key not in SOURCE_CONNECTION_FIELDS}
     item = {
-        **previous,
         **body.model_dump(exclude_none=True),
         **connection,
         "type": plugin_id,
@@ -1290,7 +1286,10 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
     from aos_api.data_os_store import persist_source
 
     try:
-        persist_source(scope, item)
+        item = persist_source(
+            scope, item, merge_existing=True,
+            replace_fields=tuple(sorted(SOURCE_CONNECTION_FIELDS)) if body.config is not None else (),
+        )
     except ApiError:
         raise
     except Exception:

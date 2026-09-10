@@ -1,0 +1,5 @@
+# 源登记数据库原子合并
+
+基线10ddaefe（前轮DeliveryReceipt的HEAD字符串即此固定提交，不视为动态引用权威）。此前缓存合并不能守住跨进程配置，现将合并放入meta_source的INSERT ON CONFLICT原子更新：metadata-only请求只合并显式元数据，config替换先删除连接字段再合并新配置；同tenant/id只能相同type，冲突拒绝。RETURNING读取存储结果后更新cache。既有persist_source默认替换语义保留，新merge_existing选项仅供登记。
+
+文件data_os_store.py、wave_ext.py与登记/PG专项。验证旧缓存不带入保存请求，先真实配置后元数据登记保留配置，认证替换删除旧字段，数据库type冲突，tenant隔离。隔离schema合成连接配置，不访问上游。此项保护原子metadata合并，不宣称两个显式config更新有CAS；后续配置修改需expected revision。
