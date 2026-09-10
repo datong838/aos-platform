@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -49,6 +49,10 @@ class Store:
         return self.assets.provider
 
 
+    def get_price_snapshot(self, _scope, _asset_id, _revision=None):
+        return self.assets.price
+
+
 class GuardStore:
     def __init__(self, assets):
         self.assets = assets
@@ -78,7 +82,7 @@ class GovernanceStore:
     def __init__(self):
         self.calls = []
 
-    def require_model_dependencies(self, _scope, _model):
+    def require_model_dependencies(self, _scope, _model, *, price=None):
         self.calls.append("model")
 
     def require_runtime_policy_dependencies(self, _scope, _policy):
@@ -164,11 +168,20 @@ def assembly(*, org_id="org-org", model_hash=HASH, region="cn-shanghai"):
             lifecycle=ModelRuntimeLifecycle.ACTIVE,
             provider=provider_ref,
             provider_model_id="agnes-2.0-flash",
+            price_snapshot_ref=ref("ModelPriceSnapshotRevision", "price-1"),
             input_modalities=["text"],
             output_modalities=["text"],
             capabilities=["llm", "chat"],
             quota_policy_ref=quota_ref,
             budget_policy_ref=budget_ref,
+        ),
+        price=SimpleNamespace(
+            price_snapshot_id="price-1", revision=1, content_hash=HASH,
+            tenant=SimpleNamespace(org_id="org-org", project_id="dev-project"),
+            lifecycle=ModelRuntimeLifecycle.ACTIVE,
+            effective_from=datetime.now(UTC)-timedelta(minutes=1),
+            effective_until=datetime.now(UTC)+timedelta(minutes=5),
+            development_cost_authorization=None,
         ),
         provider=SimpleNamespace(
             tenant=SimpleNamespace(org_id="org-org", project_id="dev-project"),
@@ -369,5 +382,58 @@ def test_unapproved_data_classification_fails_before_secret(classification) -> N
     with pytest.raises(ExactProviderInvocationError, match="data_classification_blocked"):
         invoker(resolution, "prompt-must-not-leak", classification)
 
+    assert secret.calls == 0
+    assert transport.calls == []
+
+
+@pytest.mark.parametrize('drift', ['missing', 'binding', 'hash', 'tenant', 'inactive', 'future', 'expired'])
+def test_price_authority_drift_blocks_before_secret_and_transport(drift):
+    from datetime import timedelta
+    invoker, resolution, assets, secret, transport = assembly()
+    now = datetime.now(UTC)
+    price = SimpleNamespace(
+        price_snapshot_id='price-1', revision=1, content_hash=HASH,
+        tenant=SimpleNamespace(org_id='org-org', project_id='dev-project'),
+        lifecycle=ModelRuntimeLifecycle.ACTIVE,
+        effective_from=now-timedelta(minutes=1), effective_until=now+timedelta(minutes=1),
+        development_cost_authorization=None,
+    )
+    assets.model.price_snapshot_ref = resolution.selected_price_snapshot
+    invoker._model_store.get_price_snapshot = lambda *_: price
+    if drift == 'missing': resolution.selected_price_snapshot = None
+    if drift == 'binding': assets.model.price_snapshot_ref = ref('ModelPriceSnapshotRevision', 'other')
+    if drift == 'hash': price.content_hash = 'b'*64
+    if drift == 'tenant': price.tenant.org_id = 'dev-org'
+    if drift == 'inactive': price.lifecycle = ModelRuntimeLifecycle.DRAFT
+    if drift == 'future': price.effective_from = now+timedelta(minutes=1)
+    if drift == 'expired': price.effective_until = now-timedelta(seconds=1)
+    with pytest.raises(ExactProviderInvocationError, match='price'):
+        invoker(resolution, 'approved facts', 'approved_internal_knowledge')
+    assert secret.calls == 0
+    assert transport.calls == []
+
+
+def test_unavailable_price_is_not_a_provider_retry():
+    from aos_api.aip_model_runtime_store import ModelRuntimeStoreError
+    invoker, resolution, _, secret, transport = assembly()
+    def unavailable(*_):
+        raise ModelRuntimeStoreError('unavailable')
+    invoker._model_store.get_price_snapshot = unavailable
+    with pytest.raises(ExactProviderInvocationError, match='price_authority_unavailable'):
+        invoker(resolution, 'approved facts', 'approved_internal_knowledge')
+    assert secret.calls == 0
+    assert transport.calls == []
+
+
+def test_owned_deferred_authorization_mismatch_stops_real_invoker_path():
+    from test_aip_development_model_binding import assembly as governance_assembly
+    invoker, resolution, assets, secret, transport = assembly()
+    owner, _, budget, _ = governance_assembly()
+    assets.price.development_cost_authorization = budget.development_cost_authorization
+    budget.development_cost_authorization = None
+    owner.require_exact_active = lambda *_: budget
+    invoker._governance_store = owner
+    with pytest.raises(ExactProviderInvocationError, match='model_governance_policy_blocked'):
+        invoker(resolution, 'approved facts', 'approved_internal_knowledge')
     assert secret.calls == 0
     assert transport.calls == []

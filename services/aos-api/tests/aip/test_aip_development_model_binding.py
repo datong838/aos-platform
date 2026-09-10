@@ -47,3 +47,25 @@ def test_matching_and_legacy_models_keep_exact_policy_reads():
     budget.development_cost_authorization = None
     store.require_model_dependencies(scope, model)
     assert [r[1] for r in reads] == ['quota','budget','quota','budget']
+
+
+@pytest.mark.parametrize('change', ['missing_budget', 'approval', 'provider', 'model'])
+def test_deferred_price_requires_same_owned_budget_authorization(change):
+    store, model, budget, _ = assembly()
+    auth = budget.development_cost_authorization.model_copy(deep=True)
+    price = SimpleNamespace(development_cost_authorization=auth)
+    if change == 'missing_budget': budget.development_cost_authorization = None
+    if change == 'approval': auth.approval_ref = 'another-approval'
+    if change == 'provider': auth.provider = auth.provider.model_copy(update={'revision': 2})
+    if change == 'model': auth.provider_model_id = 'another-model'
+    with pytest.raises(ModelGovernancePolicyDependencyBlocked, match='price authorization'):
+        store.require_model_dependencies(TenantScope('org-org', 'dev-project'), model, price=price)
+
+
+def test_matching_deferred_price_checks_current_model_scope():
+    store, model, budget, _ = assembly()
+    price = SimpleNamespace(development_cost_authorization=budget.development_cost_authorization)
+    store.require_model_dependencies(TenantScope('org-org', 'dev-project'), model, price=price)
+    model.provider_model_id = 'other'
+    with pytest.raises(ModelGovernancePolicyDependencyBlocked, match='cover model'):
+        store.require_model_dependencies(TenantScope('org-org', 'dev-project'), model, price=price)

@@ -140,12 +140,14 @@ class ExactProviderInvoker:
         modality = self._validate_composition(
             scope, resolution, route, policy, model, provider
         )
+        price = self._validate_price_authority(scope, resolution, model)
         self._validate_runtime_dependencies(
             scope,
             policy,
             model,
             provider,
             data_classification,
+            price,
         )
         url = self._validated_url(policy, provider, modality=modality)
 
@@ -286,6 +288,28 @@ class ExactProviderInvoker:
             return "text"
         raise ExactProviderInvocationError("provider_plugin_capability_blocked")
 
+    def _validate_price_authority(self, scope, resolution, model):
+        price_ref = resolution.selected_price_snapshot
+        if price_ref is None or price_ref != model.price_snapshot_ref:
+            raise ExactProviderInvocationError("model_price_binding_drifted")
+        try:
+            price = self._model_store.get_price_snapshot(
+                scope, price_ref.asset_id, price_ref.revision
+            )
+        except ModelRuntimeStoreError:
+            raise ExactProviderInvocationError("model_price_authority_unavailable") from None
+        self._require_exact(price_ref, price, "price_snapshot_id", "model_price_ref_drifted")
+        if (price.tenant.org_id, price.tenant.project_id) != scope.key:
+            raise ExactProviderInvocationError("model_price_tenant_mismatch")
+        if price.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
+            raise ExactProviderInvocationError("model_price_lifecycle_blocked")
+        now = datetime.now(UTC)
+        if price.effective_from > now or (
+            price.effective_until is not None and price.effective_until <= now
+        ):
+            raise ExactProviderInvocationError("model_price_not_effective")
+        return price
+
     def _validate_runtime_dependencies(
         self,
         scope: TenantScope,
@@ -293,6 +317,7 @@ class ExactProviderInvoker:
         model: Any,
         provider: Any,
         data_classification: str,
+        price: Any,
     ) -> None:
         try:
             self._guard_store.require_provider_dependencies(scope, provider)
@@ -320,7 +345,7 @@ class ExactProviderInvoker:
         except NetworkPolicyStoreError:
             raise ExactProviderInvocationError("network_policy_blocked") from None
         try:
-            self._governance_store.require_model_dependencies(scope, model)
+            self._governance_store.require_model_dependencies(scope, model, price=price)
             self._governance_store.require_runtime_policy_dependencies(scope, policy)
         except ModelGovernancePolicyStoreError:
             raise ExactProviderInvocationError("model_governance_policy_blocked") from None

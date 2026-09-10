@@ -112,10 +112,15 @@ class AipModelGovernancePolicyStore:
             self._require_budget_revision(scope, item, now=instant)
         return item
 
-    def require_model_dependencies(self, scope: TenantScope, model: Any) -> None:
+    def require_model_dependencies(self, scope: TenantScope, model: Any, *, price: Any = None) -> None:
         self.require_exact_active(scope, model.quota_policy_ref)
         budget = self.require_exact_active(scope, model.budget_policy_ref)
         authorization = getattr(budget, 'development_cost_authorization', None)
+        price_authorization = getattr(price, 'development_cost_authorization', None)
+        if price_authorization is not None and price_authorization != authorization:
+            raise ModelGovernancePolicyDependencyBlocked(
+                'development price authorization does not match budget policy'
+            )
         if authorization is not None:
             try:
                 authorization.require_scope(
