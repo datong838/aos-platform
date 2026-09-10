@@ -25,7 +25,7 @@
 1. `/v1/bundle-installations` 必须是结构一致的分页响应，并且恰有一个 `state=active` 的安装；多个 active 安装失败关闭，历史非 active 记录不计入当前就绪。
 2. active 安装必须具有非空 `installationId`，且 `activeRevision=currentRevision=etagVersion`。
 3. 选中 active 安装后，以 URL encode 后的 exact ID 分别读取正向和 canary 的 `/v1/bundle-runtime-installations/{installationId}`；正向必须 200，canary 必须 404。
-4. 正向运行投影必须与 exact 安装 ID 和修订一致，`installationState=active`、`effectiveState=ready`、`currentOperation=null`、`reasons=[]`，并且 binding 非空、同修订、`desiredState=enabled`、`observedState=ready`、`enabled=true`、`operationFence=false`；generation、profileRef、executionEpoch、revision 必须为有效非空值或正整数。
+4. 正向运行投影必须与 exact 安装 ID 和修订一致，`installationState=active`、`effectiveState=ready`、`reasons=[]`；`currentOperation` 允许为空或保留已终结的历史操作，但不得处于运行中。binding 必须非空、同修订、含非空批准配置引用，并满足 `desiredState=enabled`、`observedState=ready`、`enabled=true`、`operationFence=false`；generation、profileRef、executionEpoch、revision 必须为有效非空值或正整数。
 5. `/v1/ecommerce-workshop/modules` 必须结构一致并精确包含八个唯一模块 ID：`ecommerce.task-cockpit`、`ecommerce.content-campaign`、`ecommerce.creator-growth`、`ecommerce.media-studio`、`ecommerce.analyst`、`ecommerce.price-governance`、`ecommerce.customer`、`ecommerce.operations`。每项必须 `readiness=available` 且 blockers 为空。
 6. 未找到 active 安装时，不发起伪 exact runtime 请求；以 `ACTIVE_INSTALLATION_MISSING` 记录根因。找到 active 安装后，运行 exact-id 隔离或语义任一不满足均单独产生 blocker。
 7. 该覆盖只证明包、运行绑定和八模块的当前准入事实；不替代 SourceReadiness、Agent/Capability、模型链、预算或静态调查 authority 门。
