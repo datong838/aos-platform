@@ -46,15 +46,17 @@ AOS API 只绑定 `127.0.0.1:18181` 并连接隔离恢复库 `aos_meta_head`。�
 - 采集器仅允许 loopback HTTP 和 GET；
 - 响应体限制为 2 MiB，敏感键、Bearer 和 DSN 密码递归脱敏。
 
-## 5. 复验结果
+## 5. 初始复验结果
 
-证据文件 `a0-v-readiness-result.json` 于 `2026-09-10T10:56:47.234368+00:00` 采集，结果为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：
+提交 `2b82e884` 固定的初始 `a0-v-readiness-result.json` 于 `2026-09-10T10:56:47.234368+00:00` 采集，结果为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：
 
 - 17 个阻断项：canonical SourceReadiness 500、Workshop 未安装、AIP 电商目录无效、必要安装/生产契约/责任计划/阶段模板/TaskBrief 为空，以及模型 Provider/Model/Route/Health/Chain/Budget 为空；
 - 1 个待验证项：正向租户没有可用于 exact-id 负向租户反查的资源，因此跨租户资源隔离不能在本恢复点上宣称通过；
 - 两个负向协议检查通过：缺失 Bearer 为 401，`limit=101` 为 400。
 
 SourceReadiness 的 500 已定位为 `meta_schedule_run` 不存在。该表只在 legacy `init_schema()` 的 `SCHEMA_SQL` 中创建，未进入从历史修订升级到当前 head 的 Alembic 迁移链；canonical SourceReadiness 和多个运行视图会读取它。这是独立的 managed-schema 缺口，须按单独方案修复并在隔离数据库验证。
+
+当前工作树中的同名结果文件已在修复提交 `48c7cc28` 后重新采集；修复后的 16 项阻断及验证结论见 `a0-v-managed-schema-readiness-repair-verification.md`。
 
 ## 6. 当前边界
 

@@ -1,5 +1,5 @@
 {
-  "collectedAt": "2026-09-10T10:56:47.234368+00:00",
+  "collectedAt": "2026-09-10T11:18:10.604231+00:00",
   "observations": {
     "canary": {
       "agentRegistry": {
@@ -7,9 +7,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "feb8e7d7-2619-4773-8046-a1c9cb144ced"
+          "traceId": "1caf6728-39d2-457d-b8fc-0aa2a6001b31"
         },
-        "bodySha256": "ce78ee6e06d1dd2a97419a75e0a5822b4a8440a1ea78f94db511ab7c05e9497f",
+        "bodySha256": "1448d59ee8a13a8ea973c4dbb7aeab97392be2155dcced3b5843e52355fb3748",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry"
@@ -19,9 +19,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "d16e59cf-b15f-4256-8753-642e90a0db03"
+          "traceId": "08a8a56b-9cbb-4017-a4e4-d6471ddc23ee"
         },
-        "bodySha256": "04646d0973cfc1883549d066cda2188fa884f5ee10581a5733bc6041ca761704",
+        "bodySha256": "153d70d83f6fe433c23dba2c15e3d2bcd7cb69fb4d67f1c716b47556ec7083d3",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -43,9 +43,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "ad733ac9-b910-4441-9176-3f867ee87b13"
+          "traceId": "28aa4f19-88c8-4023-86b1-88418a8e5b78"
         },
-        "bodySha256": "632439c9911052f816c9e78ac007fdeb30bb376e68fc4693a8d7de38626d0901",
+        "bodySha256": "52c9a1748f76aebc1bf8444c55aff7d14a5e13f08f6598f0fe618a9f070d2430",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/capability-catalog"
@@ -53,7 +53,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T10:56:47.007419Z",
+          "generatedAt": "2026-09-10T11:18:10.382808Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -61,7 +61,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "67b078fcd45eae078694cee27cabb90f60cf9c281be01233cdd1b06fba7aace4",
+        "bodySha256": "0f17d79a477f4154e5b8ba28f8723fce3863aa3e29f7ec39802ffa346352e013",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -69,7 +69,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T10:56:47.048628Z",
+          "generatedAt": "2026-09-10T11:18:10.420332Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -121,7 +121,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "endsAt": "2026-09-10T11:18:10.420332Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -170,14 +170,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "endsAt": "2026-09-10T11:18:10.420332Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T10:56:47.048628Z",
+                "startsAt": "2026-09-03T11:18:10.420332Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -219,14 +219,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:47.048628Z",
+                "endsAt": "2026-09-10T11:18:10.420332Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T10:56:47.048628Z",
+                "startsAt": "2026-08-11T11:18:10.420332Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -237,7 +237,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "4ab361ee18b448a5cb222a92745d5a500e7ede0ab4d2fbb03413d52cedb05dd7",
+        "bodySha256": "5cf8154fb9368d03a2298df309c7ce331894ebf75df5181486927d9865753663",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -246,7 +246,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T10:56:46.993467Z",
+          "generatedAt": "2026-09-10T11:18:10.369379Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -259,7 +259,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "01ce8569db36aa6ced94485c01c344c40f945bc00fbd7c1206dea867ed313f7d",
+        "bodySha256": "961f18f22fadd2855ad5c957d76531379fac14547a876c4ce94863719c07611b",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -308,13 +308,1497 @@
       },
       "sourceReadiness": {
         "body": {
-          "code": "INTERNAL",
-          "details": null,
-          "message": "internal error",
-          "traceId": "c708dc6b-0f74-445a-a3ff-dfb65b7c7be5"
+          "checkedAt": "2026-09-10T11:18:10.114352Z",
+          "cutoffAt": "2026-09-10T11:18:10.114352Z",
+          "investigation": null,
+          "receiptRef": null,
+          "schemaVersion": "aos.source-readiness/v1",
+          "sources": [
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p01-shop.yaml",
+                "resourceType": "Mapping",
+                "revision": "8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Shop",
+              "observedAt": null,
+              "pipelineId": "P01-shop-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bd28ab3265116146e86282f2014c4077591066096a75370d3557897ab42c0526",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p02-product.yaml",
+                "resourceType": "Mapping",
+                "revision": "bd28ab3265116146e86282f2014c4077591066096a75370d3557897ab42c0526"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Product",
+              "observedAt": null,
+              "pipelineId": "P02-product-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bd57e0cd779ffd563e3d84847aef46f479926e41f47f295d6190ba7c9f273b5e",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p03-product-sku.yaml",
+                "resourceType": "Mapping",
+                "revision": "bd57e0cd779ffd563e3d84847aef46f479926e41f47f295d6190ba7c9f273b5e"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "ProductSku",
+              "observedAt": null,
+              "pipelineId": "P03-product-sku-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bc25158abe4948d312a1564ad959ac984c2d3d43ce7b0493d70e4e53894ba08f",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p04-category.yaml",
+                "resourceType": "Mapping",
+                "revision": "bc25158abe4948d312a1564ad959ac984c2d3d43ce7b0493d70e4e53894ba08f"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Category",
+              "observedAt": null,
+              "pipelineId": "P04-category-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "6b1e70b38e7fa65065baf6cdad50af537a538b107859f7f86fa2746f244c443c",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p05-order.yaml",
+                "resourceType": "Mapping",
+                "revision": "6b1e70b38e7fa65065baf6cdad50af537a538b107859f7f86fa2746f244c443c"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Order",
+              "observedAt": null,
+              "pipelineId": "P05-order-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "c6ecb93f6fa2de75620d12456b968ca04fd9349f81f66710d6c08621ef81924c",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p06-order-line.yaml",
+                "resourceType": "Mapping",
+                "revision": "c6ecb93f6fa2de75620d12456b968ca04fd9349f81f66710d6c08621ef81924c"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "OrderLine",
+              "observedAt": null,
+              "pipelineId": "P06-order-line-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "67338c6917c287665cbd8789f2af1eb5786c858f2a87b87257f0892fe991af38",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p07-shipment.yaml",
+                "resourceType": "Mapping",
+                "revision": "67338c6917c287665cbd8789f2af1eb5786c858f2a87b87257f0892fe991af38"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Shipment",
+              "observedAt": null,
+              "pipelineId": "P07-shipment-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "9e75c9d3b1bca2d6818fd1f29208d8e3f3fcce5a73a331b97dcd2bde098dd767",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p08-customer-lite.yaml",
+                "resourceType": "Mapping",
+                "revision": "9e75c9d3b1bca2d6818fd1f29208d8e3f3fcce5a73a331b97dcd2bde098dd767"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "CustomerLite",
+              "observedAt": null,
+              "pipelineId": "P08-customer-lite-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "13652a5b2b3c60e71172551604b704669cf382fc0e20598a0106ce5de6be3697",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p09-weapp.yaml",
+                "resourceType": "Mapping",
+                "revision": "13652a5b2b3c60e71172551604b704669cf382fc0e20598a0106ce5de6be3697"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Weapp",
+              "observedAt": null,
+              "pipelineId": "P09-weapp-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "48ea67edd560eee943058778cf43642c3ddc39f8752fa3baaf0fed56d1044301",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p10-system-config.yaml",
+                "resourceType": "Mapping",
+                "revision": "48ea67edd560eee943058778cf43642c3ddc39f8752fa3baaf0fed56d1044301"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "SystemConfig",
+              "observedAt": null,
+              "pipelineId": "P10-system-config-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "f9c79cc0757f6ce35c7bafcb6a80bab8ad65b278a5012eb42da51a5c9be22b90",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p11-product-review.yaml",
+                "resourceType": "Mapping",
+                "revision": "f9c79cc0757f6ce35c7bafcb6a80bab8ad65b278a5012eb42da51a5c9be22b90"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "ProductReview",
+              "observedAt": null,
+              "pipelineId": "P11-product-review-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:10.114352Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "3925e9e6303d7778ea078fde731d62f3414466337ada36f913ccc031d37dc13d",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p12-payment.yaml",
+                "resourceType": "Mapping",
+                "revision": "3925e9e6303d7778ea078fde731d62f3414466337ada36f913ccc031d37dc13d"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Payment",
+              "observedAt": null,
+              "pipelineId": "P12-payment-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "dev-org",
+                "projectId": "dev-project"
+              }
+            }
+          ],
+          "status": "blocked",
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
         },
-        "bodySha256": "d8ece26ca951ae1a6d183a463b6bff81f86c3b30d8eaac1c16fc894dbde26c39",
-        "httpStatus": 500,
+        "bodySha256": "aefd9e231ce6208f8fd1877d84f5361f37a88e830e69169e012b9fd2ec0e29f0",
+        "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
       },
@@ -351,9 +1835,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "1d1718ab-5f57-40fa-861e-f4bb690be15d"
+          "traceId": "aab283ab-7b37-48bb-ba71-3d63628b6baa"
         },
-        "bodySha256": "3a510186316b6e7efd34ba0e8acd47fc84c6011e7c362cbd0ab93d54dee8eeb5",
+        "bodySha256": "4dccdd7555c8ed3703f6ec8872b2cac99057bd68b3dc629757a320ca8c3ecae1",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -389,9 +1873,9 @@
             ]
           },
           "message": "request validation failed",
-          "traceId": "b0423dcd-5acd-4ae4-ad2d-bc4f4834b691"
+          "traceId": "3c8ad909-73f4-4eac-bddc-24b1be83ae15"
         },
-        "bodySha256": "d4c4a4e69b09a4ef6e1c2b59434e5f84b5943c0476b8b1616b4257b69938c4d0",
+        "bodySha256": "b45809bea6c537d256b2b7aa8385f5d1b7ccdd9d2e563223c1b70dfdf40a0c14",
         "httpStatus": 400,
         "method": "GET",
         "path": "/v1/bundle-installations?limit=101&offset=0"
@@ -401,9 +1885,9 @@
           "code": "AUTH_REQUIRED",
           "details": null,
           "message": "Bearer [REDACTED] required",
-          "traceId": "c7188064-57bb-47f6-9f5a-29eac418214e"
+          "traceId": "827c806a-331e-4690-9496-1a6a3a65d479"
         },
-        "bodySha256": "63c67445dc22cb131f3d8f9f00083c43c63f9dd11a7da74cc16cb672976913df",
+        "bodySha256": "d2a904974d8a3e0f3091ebe913a85fb908ba5599c735c7d160848308098d339d",
         "httpStatus": 401,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -415,9 +1899,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "85c752f3-61a7-41aa-9f88-f1c6b632b668"
+          "traceId": "6421c2e1-ad70-4242-9176-1cfcf99ae0ac"
         },
-        "bodySha256": "9f9a0b3515a18f2017e4245e18eeba519e10b99ad1fbc093d1ccfa98cf107b0a",
+        "bodySha256": "d2d9f9b7acb5797052a0310b0788533b62d1ca77bd74f3b8e74732bb28eacc04",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry"
@@ -427,9 +1911,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "b4b03062-9dc5-4b06-b8fa-0e28e74539d8"
+          "traceId": "36bff701-b97c-4b9d-a475-6f35fcc188e9"
         },
-        "bodySha256": "63d00897ef7be33ea5ca9fa25ba964d8e5a005c0caa41c61d8671b22cd635325",
+        "bodySha256": "3a048965f92db76906a61edddceb4648d2808f6876b43d023d28c15baf0b9bcf",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -451,9 +1935,9 @@
           "code": "AIP_ECOMMERCE_CATALOG_INVALID",
           "details": null,
           "message": "ecommerce agent definitions differ from 6-role authority",
-          "traceId": "6bf128ef-8eae-45ed-9d86-7455f721b788"
+          "traceId": "41fc9686-1174-40fe-97b2-2df02fc1bbb5"
         },
-        "bodySha256": "c1c97d79d12f522ff453104bf902f9251959975c74a07937fd93250dff56220e",
+        "bodySha256": "3c18e784886686a6dbfe0b83d60ca5d500148033ec5cc3f2358a3dfe627057c9",
         "httpStatus": 409,
         "method": "GET",
         "path": "/v1/aip/capability-catalog"
@@ -461,7 +1945,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T10:56:46.509854Z",
+          "generatedAt": "2026-09-10T11:18:09.889477Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -469,7 +1953,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "ac421934f23084fa2e479875ce7a60e4dfffb5d22894eb9b01ee644c38bc8a94",
+        "bodySha256": "c540a9f7754779b54fd5c33bfc45752925b8a2984065096c2befa88d83570f98",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -477,7 +1961,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T10:56:46.549306Z",
+          "generatedAt": "2026-09-10T11:18:09.927055Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -529,7 +2013,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "endsAt": "2026-09-10T11:18:09.927055Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -578,14 +2062,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "endsAt": "2026-09-10T11:18:09.927055Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T10:56:46.549306Z",
+                "startsAt": "2026-09-03T11:18:09.927055Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -627,14 +2111,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T10:56:46.549306Z",
+                "endsAt": "2026-09-10T11:18:09.927055Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T10:56:46.549306Z",
+                "startsAt": "2026-08-11T11:18:09.927055Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -645,7 +2129,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "98d9b5238f4c38dbb0c1b30fd3e5e42d59d9d8e34f213b5494c330c7d5e7da39",
+        "bodySha256": "7523af2e491b5ba154cc6a39c0e18261c7c31cf03b060be94234a5e48b89d691",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -654,7 +2138,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T10:56:46.495731Z",
+          "generatedAt": "2026-09-10T11:18:09.876122Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -667,7 +2151,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "687cc190c20dd5767888322ac796d6120ea8d7de0d41ac390b252d76721c6ba1",
+        "bodySha256": "0da1522aca52a58cadb52399ca55ddf64d34e60e7afba5745d1346e3abc6b7fc",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -716,13 +2200,1497 @@
       },
       "sourceReadiness": {
         "body": {
-          "code": "INTERNAL",
-          "details": null,
-          "message": "internal error",
-          "traceId": "18a6b5ab-cd09-4324-855a-0eb4450e10a9"
+          "checkedAt": "2026-09-10T11:18:09.604972Z",
+          "cutoffAt": "2026-09-10T11:18:09.604972Z",
+          "investigation": null,
+          "receiptRef": null,
+          "schemaVersion": "aos.source-readiness/v1",
+          "sources": [
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p01-shop.yaml",
+                "resourceType": "Mapping",
+                "revision": "8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Shop",
+              "observedAt": null,
+              "pipelineId": "P01-shop-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bd28ab3265116146e86282f2014c4077591066096a75370d3557897ab42c0526",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p02-product.yaml",
+                "resourceType": "Mapping",
+                "revision": "bd28ab3265116146e86282f2014c4077591066096a75370d3557897ab42c0526"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Product",
+              "observedAt": null,
+              "pipelineId": "P02-product-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bd57e0cd779ffd563e3d84847aef46f479926e41f47f295d6190ba7c9f273b5e",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p03-product-sku.yaml",
+                "resourceType": "Mapping",
+                "revision": "bd57e0cd779ffd563e3d84847aef46f479926e41f47f295d6190ba7c9f273b5e"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "ProductSku",
+              "observedAt": null,
+              "pipelineId": "P03-product-sku-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "bc25158abe4948d312a1564ad959ac984c2d3d43ce7b0493d70e4e53894ba08f",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p04-category.yaml",
+                "resourceType": "Mapping",
+                "revision": "bc25158abe4948d312a1564ad959ac984c2d3d43ce7b0493d70e4e53894ba08f"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Category",
+              "observedAt": null,
+              "pipelineId": "P04-category-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "6b1e70b38e7fa65065baf6cdad50af537a538b107859f7f86fa2746f244c443c",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p05-order.yaml",
+                "resourceType": "Mapping",
+                "revision": "6b1e70b38e7fa65065baf6cdad50af537a538b107859f7f86fa2746f244c443c"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Order",
+              "observedAt": null,
+              "pipelineId": "P05-order-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "c6ecb93f6fa2de75620d12456b968ca04fd9349f81f66710d6c08621ef81924c",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p06-order-line.yaml",
+                "resourceType": "Mapping",
+                "revision": "c6ecb93f6fa2de75620d12456b968ca04fd9349f81f66710d6c08621ef81924c"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "OrderLine",
+              "observedAt": null,
+              "pipelineId": "P06-order-line-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "67338c6917c287665cbd8789f2af1eb5786c858f2a87b87257f0892fe991af38",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p07-shipment.yaml",
+                "resourceType": "Mapping",
+                "revision": "67338c6917c287665cbd8789f2af1eb5786c858f2a87b87257f0892fe991af38"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Shipment",
+              "observedAt": null,
+              "pipelineId": "P07-shipment-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "9e75c9d3b1bca2d6818fd1f29208d8e3f3fcce5a73a331b97dcd2bde098dd767",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p08-customer-lite.yaml",
+                "resourceType": "Mapping",
+                "revision": "9e75c9d3b1bca2d6818fd1f29208d8e3f3fcce5a73a331b97dcd2bde098dd767"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "CustomerLite",
+              "observedAt": null,
+              "pipelineId": "P08-customer-lite-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "13652a5b2b3c60e71172551604b704669cf382fc0e20598a0106ce5de6be3697",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p09-weapp.yaml",
+                "resourceType": "Mapping",
+                "revision": "13652a5b2b3c60e71172551604b704669cf382fc0e20598a0106ce5de6be3697"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Weapp",
+              "observedAt": null,
+              "pipelineId": "P09-weapp-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "48ea67edd560eee943058778cf43642c3ddc39f8752fa3baaf0fed56d1044301",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p10-system-config.yaml",
+                "resourceType": "Mapping",
+                "revision": "48ea67edd560eee943058778cf43642c3ddc39f8752fa3baaf0fed56d1044301"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "SystemConfig",
+              "observedAt": null,
+              "pipelineId": "P10-system-config-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "f9c79cc0757f6ce35c7bafcb6a80bab8ad65b278a5012eb42da51a5c9be22b90",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p11-product-review.yaml",
+                "resourceType": "Mapping",
+                "revision": "f9c79cc0757f6ce35c7bafcb6a80bab8ad65b278a5012eb42da51a5c9be22b90"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "ProductReview",
+              "observedAt": null,
+              "pipelineId": "P11-product-review-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            },
+            {
+              "blockers": [
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND"
+              ],
+              "checkedAt": "2026-09-10T11:18:09.604972Z",
+              "counts": {
+                "projectionTotal": 0,
+                "sourceActive": 0,
+                "sourceDeleted": 0,
+                "sourceTotal": 0,
+                "unexplainedDelta": 0
+              },
+              "dataCutoff": null,
+              "freshnessExpiresAt": null,
+              "freshnessPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-freshness.v1.json",
+                "resourceType": "FreshnessPolicy",
+                "revision": "05c051f03ae60ba09fb799b86a4f5f6cb7cfd563d55ba67ecbd6ff91fdfc8cd7"
+              },
+              "latestRun": {
+                "errorCode": null,
+                "finishedAt": null,
+                "rowsWritten": null,
+                "runId": null,
+                "scheduledFor": null,
+                "startedAt": null,
+                "status": "unknown"
+              },
+              "mappingRef": {
+                "authority": "git:file",
+                "contentHash": "3925e9e6303d7778ea078fde731d62f3414466337ada36f913ccc031d37dc13d",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/p12-payment.yaml",
+                "resourceType": "Mapping",
+                "revision": "3925e9e6303d7778ea078fde731d62f3414466337ada36f913ccc031d37dc13d"
+              },
+              "maskingPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/mappings/_pii-exclusion.yaml",
+                "resourceType": "MaskingPolicy",
+                "revision": "b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+              },
+              "objectType": "Payment",
+              "observedAt": null,
+              "pipelineId": "P12-payment-qyh",
+              "projectedAt": null,
+              "quality": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                  "resourceType": "QualityPolicy",
+                  "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+                },
+                "status": "fail",
+                "summary": "one or more observable metadata quality checks failed"
+              },
+              "qualityPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-quality.v1.json",
+                "resourceType": "QualityPolicy",
+                "revision": "74616ee9d09d6e969ac65254712f02edbb7c78211f51d3b790fc3762101586f5"
+              },
+              "queryCapabilityRef": null,
+              "reasons": [
+                "LATEST_RUN_NOT_SUCCEEDED",
+                "PIPELINE_NOT_FOUND",
+                "QUERY_CAPABILITY_REF_MISSING",
+                "SCHEDULE_CRON_POLICY_MISMATCH",
+                "SCHEDULE_INGEST_KIND_MISMATCH",
+                "SCHEDULE_NOT_FOUND",
+                "SCHEDULE_PIPELINE_REF_MISMATCH",
+                "SCHEDULE_SOURCE_REF_MISMATCH",
+                "SOURCE_CONFIG_EXACT_REF_MISSING",
+                "SOURCE_NOT_FOUND",
+                "SOURCE_QUALITY_FAILED"
+              ],
+              "reconciliation": {
+                "ruleRef": {
+                  "authority": "git:file",
+                  "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                  "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                  "resourceType": "ReconciliationPolicy",
+                  "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+                },
+                "status": "pass",
+                "summary": "source and projection counts reconcile in the same snapshot"
+              },
+              "reconciliationPolicyRef": {
+                "authority": "git:file",
+                "contentHash": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/policies/source-reconciliation.v1.json",
+                "resourceType": "ReconciliationPolicy",
+                "revision": "6e933f98398705143b20b1fdea51a4d420e8f2bea0460f8994b7f3eaa9cd02ae"
+              },
+              "schemaRef": {
+                "authority": "git:file",
+                "contentHash": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+                "resourceId": "bundles/platforms/ecommerce-niushop/content/schemas/niushop-schema-fingerprint.json",
+                "resourceType": "SchemaFingerprint",
+                "revision": "6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+              },
+              "schemaVersion": "aos.source-readiness/v1",
+              "sourceConfigRef": null,
+              "sourceEventAt": null,
+              "sourceId": "niushop-qyh",
+              "status": "blocked",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              }
+            }
+          ],
+          "status": "blocked",
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
         },
-        "bodySha256": "9f7bbb0737a1acd7bbede2f19c3aee7b32d04bfe3001fd0dec969230d10785b9",
-        "httpStatus": 500,
+        "bodySha256": "1d9f16625c5e5cdaff10b60b2f6f19d6093e99cfcc9091b2cfb6b1bea36dc72b",
+        "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
       },
@@ -759,9 +3727,9 @@
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "3bbb4b09-eb1b-4320-a9b5-b5dda7e1a57d"
+          "traceId": "150df343-d960-4f60-8d3e-3ba75141011e"
         },
-        "bodySha256": "30046b58ab8fcd0953e2ba324ef004e1d8a76cc4423bc73c3ec8b333e8cda986",
+        "bodySha256": "43afc79e7f848f9dbd9947e0d1f447e1da96c2c857d0f2dd805ad93d3b48c9f3",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -778,7 +3746,7 @@
     },
     "databaseEvidenceClass": "HISTORICAL_BACKUP_RECOVERED_THEN_MIGRATED_TO_HEAD",
     "databaseOriginalDataCutoff": "2026-08-05T05:02:48+08:00",
-    "gitHead": "eb1b084e1e1021a008053375b8f2675e5d9a0d97",
+    "gitHead": "48c7cc28b2221e599b8efee7c3081fa7ee041918",
     "httpMethods": [
       "GET"
     ],
@@ -795,13 +3763,8 @@
     }
   },
   "summary": {
-    "blockerCount": 17,
+    "blockerCount": 16,
     "blockers": [
-      {
-        "gate": "sourceReadiness",
-        "httpStatus": 500,
-        "reason": "INTERNAL"
-      },
       {
         "gate": "workshopSourceReadiness",
         "httpStatus": 404,
@@ -968,8 +3931,14 @@
         ]
       },
       "sourceReadiness": {
-        "canary": null,
-        "positive": null
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
       },
       "stageTemplates": {
         "canary": [
