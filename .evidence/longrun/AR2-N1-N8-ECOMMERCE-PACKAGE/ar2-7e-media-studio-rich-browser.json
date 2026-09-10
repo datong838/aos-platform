@@ -1,0 +1,3855 @@
+{
+  "schemaVersion": "aos.ar2-7e-media-studio-rich-browser/v1",
+  "generatedAt": "2026-09-10T08:45:39.874Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "isolated media refs; internal drafts, export and publish Proposal intercepted; no provider or platform action",
+  "result": "PASS",
+  "counts": {
+    "passed": 3,
+    "total": 3,
+    "workflowWrites": 36,
+    "exportWrites": 3,
+    "proposalWrites": 3,
+    "otherWrites": 0,
+    "forbiddenWrites": 0,
+    "unknownGets": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "stoppedEarly": false
+  },
+  "zeroEffects": {
+    "providerInvocationCount": 0,
+    "externalGenerationCount": 0,
+    "feeChargeCount": 0,
+    "publicationCount": 0,
+    "businessMutationCount": 0
+  },
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "种草文案",
+          "短视频",
+          "数字人直播"
+        ],
+        "filters": [
+          "全部",
+          "草稿",
+          "复核中"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "commands": [
+          "create",
+          "save_input",
+          "attach_evidence",
+          "reassign",
+          "pause",
+          "resume",
+          "prepare_sample",
+          "select_template",
+          "schedule",
+          "return",
+          "prepare_live",
+          "prepare_batch"
+        ],
+        "historyVersions": 12,
+        "candidateSelected": true,
+        "downloadFileName": "media-media-brief-isolated-r12.json",
+        "proposalReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false,
+        "mediaElements": 0
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029934325-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029934374-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029934424-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029934474-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029934524-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029934574-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029934624-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029934674-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029934724-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:34.724Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029934775-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029934824-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029934874-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029935324-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029934325-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029934374-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029934424-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029934474-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029934524-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029934574-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029934624-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029934674-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029934724-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:34.724Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029934775-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029934824-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029934874-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        }
+      ],
+      "exportWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        }
+      ],
+      "proposalWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029935324-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "commandIndex": 12,
+      "viewReads": 4,
+      "supportReads": 10
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "种草文案",
+          "短视频",
+          "数字人直播"
+        ],
+        "filters": [
+          "全部",
+          "草稿",
+          "复核中"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "commands": [
+          "create",
+          "save_input",
+          "attach_evidence",
+          "reassign",
+          "pause",
+          "resume",
+          "prepare_sample",
+          "select_template",
+          "schedule",
+          "return",
+          "prepare_live",
+          "prepare_batch"
+        ],
+        "historyVersions": 12,
+        "candidateSelected": true,
+        "downloadFileName": "media-media-brief-isolated-r12.json",
+        "proposalReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false,
+        "mediaElements": 0
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029936303-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029936351-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029936403-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029936453-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029936519-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029936586-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029936652-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029936719-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029936769-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:36.769Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029936836-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029936888-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029936952-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029937436-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029936303-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029936351-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029936403-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029936453-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029936519-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029936586-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029936652-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029936719-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029936769-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:36.769Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029936836-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029936888-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029936952-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        }
+      ],
+      "exportWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        }
+      ],
+      "proposalWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029937436-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "commandIndex": 12,
+      "viewReads": 4,
+      "supportReads": 10
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "种草文案",
+          "短视频",
+          "数字人直播"
+        ],
+        "filters": [
+          "全部",
+          "草稿",
+          "复核中"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "commands": [
+          "create",
+          "save_input",
+          "attach_evidence",
+          "reassign",
+          "pause",
+          "resume",
+          "prepare_sample",
+          "select_template",
+          "schedule",
+          "return",
+          "prepare_live",
+          "prepare_batch"
+        ],
+        "historyVersions": 12,
+        "candidateSelected": true,
+        "downloadFileName": "media-media-brief-isolated-r12.json",
+        "proposalReadback": true,
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false,
+        "mediaElements": 0
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029938403-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029938452-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029938519-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029938569-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029938619-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029938669-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029938719-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029938785-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029938836-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:38.836Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029938886-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029938936-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029938986-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029939436-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/full-production-scenario",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/delivery",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-create-1789029938403-1",
+          "body": {
+            "command": "create",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "businessObject": "栖月汇微商城商品",
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-save_input-1789029938452-2",
+          "body": {
+            "command": "save_input",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "objective": "基于当前租户正式商品资料准备内部内容"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-attach_evidence-1789029938519-3",
+          "body": {
+            "command": "attach_evidence",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "evidence": [
+                "栖月汇微商城商品中心正式资料"
+              ]
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-reassign-1789029938569-4",
+          "body": {
+            "command": "reassign",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "assignee": "内容官"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-pause-1789029938619-5",
+          "body": {
+            "command": "pause",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-resume-1789029938669-6",
+          "body": {
+            "command": "resume",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {},
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_sample-1789029938719-7",
+          "body": {
+            "command": "prepare_sample",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "sample": {
+                "durationSeconds": 15,
+                "objective": "商品讲解样片"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-select_template-1789029938785-8",
+          "body": {
+            "command": "select_template",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "template": {
+                "name": "栖月汇商品讲解模板"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-schedule-1789029938836-9",
+          "body": {
+            "command": "schedule",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "schedule": {
+                "plannedAt": "2026-09-11T08:45:38.836Z"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 8,
+              "contentHash": "8888888888888888888888888888888888888888888888888888888888888888"
+            },
+            "expectedVersion": 8
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-return-1789029938886-10",
+          "body": {
+            "command": "return",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "returnReason": "退回补充内容证据"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 9,
+              "contentHash": "9999999999999999999999999999999999999999999999999999999999999999"
+            },
+            "expectedVersion": 9
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_live-1789029938936-11",
+          "body": {
+            "command": "prepare_live",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "liveControl": {
+                "scene": "商品讲解",
+                "mode": "内部准备"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 10,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 10
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-prepare_batch-1789029938986-12",
+          "body": {
+            "command": "prepare_batch",
+            "mediaType": "planting_copy",
+            "title": "栖月汇种草内容生产",
+            "summary": "基于当前租户正式商品资料准备内部内容",
+            "details": {
+              "batch": {
+                "quantity": 1,
+                "scope": "当前媒体类型"
+              }
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 11,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 11
+          }
+        }
+      ],
+      "exportWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/exports",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            }
+          }
+        }
+      ],
+      "proposalWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/media-studio/workflow/drafts/media-brief-isolated/publish-proposals",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "media-publish-proposal-1789029939436-1",
+          "body": {
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "media-brief-isolated",
+              "revision": 12,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 12,
+            "selection": {
+              "familyId": "media-family-isolated",
+              "familyVersion": 3,
+              "variantRef": {
+                "resourceType": "ArtifactRevision",
+                "resourceId": "media-variant-isolated",
+                "revision": 4,
+                "contentHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+              },
+              "gateSetRef": {
+                "resourceType": "MediaGateSetDecision",
+                "resourceId": "media-gate-isolated",
+                "revision": 1,
+                "contentHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              },
+              "impactPreviewRef": {
+                "resourceType": "ImpactPreviewRevision",
+                "resourceId": "media-impact-isolated",
+                "revision": 2,
+                "contentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            },
+            "purpose": "栖月汇种草内容生产发布审批"
+          }
+        }
+      ],
+      "commandIndex": 12,
+      "viewReads": 4,
+      "supportReads": 10
+    }
+  ]
+}
