@@ -42,6 +42,8 @@
 7. **配置与启用**：只消费当前 A0-V 已存在且 exact 的本地配置权威；缺少 runtime policy/profile/config、权限或 generation target 时保留 actionable blocker，不伪造配置。满足后以 maker/checker 边界完成 configure/enable，使三行同 generation、`enabled=true`、`operation_fence=false`，并生成正向租户的八模块投影。
 8. **回读与反证**：GET/只读事务验证唯一 active installation、四个 exact resolved bundle、三 runtime ready binding、八个 available module；`dev-org/dev-project` exact installation/runtime/module 查询必须 404/空。只验证 registration 和读模型，不派发九条业务命令。
 
+运行时资源必须由同一进程所有权窗口覆盖 apply、verify、configure 和 enable。执行器在创建首个 runtime operation 前，先只读确认正向租户至少存在一个当前 frozen ResponsibilityPlan、当前 active RuntimePolicy 及其 active/effective data、network、egress、quota、budget-policy、BudgetRevision 依赖；缺任一项时保持 installation=`approved`，返回 `RUNTIME_CONFIGURATION_AUTHORITY_BLOCKED`，runtime operation/binding/container 仍为 0。不得先把 installation 推到 active 后再因配置缺口退出，也不得使用测试 fixture 造配置权威。
+
 ## 3. 幂等、恢复与停止规则
 
 - 数据库容器固定为隔离 context `colima-aos-extension` 中的 `aos-a0v-recovery-pg`，数据库固定为 `aos_meta_head`。执行器必须同时核对 Docker 容器名和 SQL `current_database()`；不接受仅靠连接串名称推断。
