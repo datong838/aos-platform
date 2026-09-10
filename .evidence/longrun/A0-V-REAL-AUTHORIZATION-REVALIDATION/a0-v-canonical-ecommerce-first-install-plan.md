@@ -44,6 +44,10 @@
 
 ## 3. 幂等、恢复与停止规则
 
+- 数据库容器固定为隔离 context `colima-aos-extension` 中的 `aos-a0v-recovery-pg`，数据库固定为 `aos_meta_head`。执行器必须同时核对 Docker 容器名和 SQL `current_database()`；不接受仅靠连接串名称推断。
+- 每次首次 mutation 前，以容器内 `pg_dump --format=custom` 生成仓库外备份到 `.aos-recovery-20260910/backups`。回执只记录路径、字节数和 SHA-256，不记录连接参数或口令；备份失败或空文件时禁止继续。
+- canonical 本地开发签名根固定落在 `.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing`。目录模式 0700、私钥模式 0600；重跑必须读取同一 Ed25519 key 并得到同一 trust-root revision，不允许静默轮换。
+- 签名后的完整 bundle tree 固定落在上述 state 目录，先写临时目录并完成 ReleasePolicy 回读，再原子替换；源码 Candidate 与 v4 staging 始终保持无签名。
 - 每个 Registry/Composition/Installation/runtime command 使用固定阶段前缀与 exact 输入 hash 派生的幂等键。重跑只能返回同一对象/Receipt；不得新建第二 active leaf 或第二 generation。
 - 任何 unknown outcome 先按 command receipt、operation journal、resource lease 和 exact target 回读对账；不得重发。
 - apply 前创建 `aos_meta_head` 的新逻辑备份并记录 SHA-256。失败时保留已成功的 canonical 阶段和 receipt，以状态机续跑；不直接删除审计数据。
