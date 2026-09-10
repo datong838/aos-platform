@@ -1,0 +1,7 @@
+# 实际调用器返回值的日志兼容修复
+
+基线3d47794f。实际ExactProviderInvoker返回usageReceipts[].observedAt为datetime，journal json.dumps会拒绝；过去worker PG测试仅answer字符串，未覆盖此事实。
+
+修改services/aos-api/aos_api/ecommerce_content_execution_journal.py，仅将有时区datetime转换为ISO字符串；不使用任意对象str fallback。持久化/比较/返回全部采用同一JSON规范化值，避免第一次datetime、回放字符串产生漂移。未知对象、naive日期与NaN仍拒绝。
+
+修改services/aos-api/tests/aip/test_a0v_content_execution_worker_pg.py，使用真实ExactProviderInvoker（存储/网络明确替身）产生含用量datetime的完整结果，经真实隔离PG日志保存再换连接回放。补journal纯规范化负例。无真实Provider调用、public不升级。随后继续用量Owner桥接；此修复不是首链完成。

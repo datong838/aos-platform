@@ -1,4 +1,5 @@
 """Transaction-bound immutable execution evidence, never a Provider dispatcher."""
+from datetime import datetime
 import hashlib
 import json
 import re
@@ -11,10 +12,16 @@ class ContentExecutionConflict(RuntimeError):
     pass
 
 
+def _json_datetime(value):
+    if isinstance(value, datetime) and value.utcoffset() is not None:
+        return value.isoformat()
+    raise TypeError('journal values must be JSON or timezone-aware datetime')
+
+
 def _payload(value):
     if type(value) is not dict:
         raise ValueError('journal payload must be an object')
-    text = json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+    text = json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False, default=_json_datetime)
     return text, hashlib.sha256(text.encode()).hexdigest()
 
 
@@ -36,6 +43,7 @@ class ContentExecutionJournal:
 
     def enqueue(self, conn, scope, reservation_id, *, budget_request_hash, command):
         text, digest = _payload(command)
+        command = json.loads(text)
         reservation = self._reservation(conn, scope, reservation_id)
         row = conn.execute(sql.SQL('SELECT * FROM {} WHERE org_id=%s AND project_id=%s AND reservation_id=%s').format(
             self._table('ecommerce_content_execution_command')), (*scope.key, reservation_id)).fetchone()
@@ -51,6 +59,7 @@ class ContentExecutionJournal:
 
     def record_result(self, conn, scope, reservation_id, *, provider_request_ref, result):
         text, digest = _payload(result)
+        result = json.loads(text)
         request_text, _ = _payload(provider_request_ref)
         reservation = self._reservation(conn, scope, reservation_id)
         row = conn.execute(sql.SQL('SELECT * FROM {} WHERE org_id=%s AND project_id=%s AND reservation_id=%s').format(

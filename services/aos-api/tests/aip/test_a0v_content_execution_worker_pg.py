@@ -93,3 +93,17 @@ def test_result_persistence_failure_is_not_a_resubmission_license(database):
     restarted=ContentExecutionWorker(factory,prepare=prepare,invoke=invoke,storage_schema=database.schema)
     assert restarted.run_one(scope,rid)['status']=='RECONCILE_ONLY'
     assert calls==[1]
+
+
+def test_real_invoker_result_shape_is_persisted_and_replayed(database):
+    from test_aip_exact_provider_invoker import assembly
+    scope,factory,store,rid,prepare=setup(database)
+    invoker,resolution,_,_,transport=assembly()
+    response=invoker(resolution,'approved facts','approved_internal_knowledge')
+    assert isinstance(response['usageReceipts'][0]['observedAt'],datetime)
+    worker=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_:response,storage_schema=database.schema)
+    saved=worker.run_one(scope,rid)
+    worker.invoke=lambda *_:pytest.fail('duplicate send')
+    assert worker.run_one(scope,rid)==saved
+    assert isinstance(saved['result']['usageReceipts'][0]['observedAt'],str)
+    assert saved['result']['tokens']==12 and len(transport.calls)==1

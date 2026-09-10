@@ -1,0 +1,7 @@
+# 实际Invoker结果JSON落库验证
+
+基线3d47794f，Task A0V-CONTENT-RESULT-JSON。真实ExactProviderInvoker代码返回usage observedAt=datetime；新增PG测试先失败于worker的result persistence failed。原先仅answer字符串的测试未覆盖此接口差异。
+
+修复journal只允许有时区datetime→ISO字符串，回放比较/返回均采用规范化JSON，拒绝naive日期、未知对象和NaN。最终10项通过（6项PG场景+4项纯JSON），进程exit0。实际Invoker代码配显式模拟网络产生完整结果，真实隔离PG落库并回放，远端Provider调用0。public未升级，随机schema清理；diff check通过。既有startup和pytest warnings保留。
+
+下一缺口已定位：Invoker的usage sourceHash是各用量项哈希，而BudgetStore要求sourceHash等于整笔provider_result_hash；直接复用AipProviderUsageBridge会不匹配，且Usage Owner要求先有invocation lineage。下一步必须通过规范化结果证据建立lineage和measured Usage，再接Artifact/费用状态，不能跳过Owner直接伪造用量。完整首链未完成。
