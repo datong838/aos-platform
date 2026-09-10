@@ -21,6 +21,8 @@ def _candidate_paths() -> list[Path]:
 
 def load_dotenv(force: bool = False) -> Path | None:
     global _LOADED
+    if os.getenv('AOS_DOTENV_DISABLED') == '1':
+        return None
     if _LOADED and not force:
         return None
     for path in _candidate_paths():

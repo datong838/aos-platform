@@ -59,8 +59,7 @@ def run(apply=False):
     if not apply:
         return {'mode': 'preflight', 'cases': [c[0] for c in CASES], 'providerCalls': 0}
     sys.path.insert(0, str(ROOT / 'services/aos-api'))
-    from aos_api import env_load
-    env_load.load_dotenv = lambda *args, **kwargs: None
+    os.environ['AOS_DOTENV_DISABLED'] = '1'
     from a0v_real_text_provider_health import _load_first_installer, _scoped_factory, _exact_ref, APPROVAL_REF
     from aos_api.aip_model_runtime_store import AipModelRuntimeStore
     from aos_api.aip_network_policy_store import AipNetworkPolicyStore
