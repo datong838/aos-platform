@@ -3694,6 +3694,15 @@ class AipProductionContractStore:
             reasons.append("EVIDENCE_EXACT_REF_MISSING_OR_DRIFTED")
         revoked_bundle = None
         if row is not None:
+            revoked_evidence = conn.execute(
+                """SELECT event_id FROM aip_evidence_revoke_event
+                   WHERE org_id=%s AND project_id=%s AND evidence_id=%s
+                     AND revision=%s AND content_hash=%s""",
+                (*scope.key, body.evidence_ref.resource_id,
+                 body.evidence_ref.revision, body.evidence_ref.content_hash),
+            ).fetchone()
+            if revoked_evidence is not None:
+                reasons.append("EVIDENCE_REVOKED")
             bundle_rows = conn.execute(
                 """SELECT bundle_id,revision,content_hash,item_refs
                    FROM aip_evidence_bundle_revision
