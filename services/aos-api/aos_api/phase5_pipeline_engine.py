@@ -1009,7 +1009,7 @@ class PipelineEngine:
             return
 
     def execute_pipeline_once(
-        self, scope: TenantScope, pipeline_id: str, *, run_id: str | None = None,
+        self, scope: TenantScope, pipeline_id: str, *, run_id: str | None = None, durable_ingress: bool = False,
     ) -> dict[str, Any]:
         """Phase B1: 直接执行一次 Pipeline (不经过 Schedule).
 
@@ -1044,6 +1044,7 @@ class PipelineEngine:
                 execution_kind="direct_sync",
                 started_at=started,
                 run_id=run_id,
+                durable_ingress=durable_ingress,
             )
         evidence, _ = self._collect_dispatch(dispatch)
         # ScheduleRun status 用 "succeeded"，SyncRun 用 "success"；两者都算成功。
@@ -1351,6 +1352,7 @@ class PipelineEngine:
         execution_kind: str,
         started_at: float,
         run_id: str | None = None,
+        durable_ingress: bool = False,
     ) -> tuple[threading.Thread, queue.Queue, threading.Event, float, str, float]:
         executor_id = pipeline.executor_id
         executor = self._executors[executor_id]
@@ -1378,6 +1380,7 @@ class PipelineEngine:
                         scope=scope,
                         run_id=run_id,
                         run_started_at=started_at,
+                        **({"durable_ingress": True} if durable_ingress else {}),
                     ))
                 )
             except Exception as exc:

@@ -252,7 +252,7 @@ def execute_schedule(
     result: dict[str, Any]
     try:
         from aos_api.phase5_pipeline_engine import get_engine
-        result = get_engine().execute_pipeline_once(scope, str(schedule["pipelineId"]), run_id=run_id)
+        result = get_engine().execute_pipeline_once(scope, str(schedule["pipelineId"]), run_id=run_id, durable_ingress=True)
     except Exception:  # fail closed and keep a durable error record
         result = {
             "ok": False, "rows_written": 0, "duration_ms": 0,

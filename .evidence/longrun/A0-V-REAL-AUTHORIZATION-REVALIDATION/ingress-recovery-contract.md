@@ -81,3 +81,13 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 不自动改变调度/DLQ状态；旧Dataset历史替换语义保持，运行回执单独永久保存，不以可覆盖历史作权威。调用方工厂须成功退出commit；public不迁移，实际调度/初始保存后续接入。Dataset当前展示可有后续批次，旧run重放不得回写旧元数据覆盖新批。
 
 本轮最终核查修正无变化派生完成门：无新事件不代表有效派生视图已投影。通过相同身份/derived_revision/input_revision/input_hash/payload_hash的updated=true前序Receipt定位有效派生事件，必须计入pending；原“零事件即可”结论撤回。新增修改ecom_consistency_store.py及相应专项，避免Dataset先于有效派生视图成功。
+
+## 实际调度原批次执行接线
+
+2026-09-11，基线455e8b91。qyh_cron_scheduler在持久run claim后显式传durable_ingress=True，PipelineEngine仅该路径向executor传标记；标记只选路，不授予权限。ec_live_executor durable路径在任意源读取前核验running run/schedule/graph/source，并对实际执行nodes的id/type/config/pipeline与持久图及write_mode核对。原记录已存在时不读源/不重算；新记录以versioned源读得到的实际配置ref核验版本，共用既有transform，构建并保存基础命令和规范输入后提交，再调用既有恢复基础/派生、投影、Dataset finalizer。
+
+文件：qyh_cron_scheduler.py、phase5_pipeline_engine.py、ec_live_executor.py、新ec_durable_executor.py；ec_ingress_recovery.py增加实际调用的合作取消/期限检查。保持旧非调度调用方式，后续统一其持久run；不增加公开API权限。新增单测验证选路、已有批次跳过源、新批次保存先于写入、版本/图漂移拒绝，回归调度与已有执行器专项。
+
+边界：空源尚不能构造BatchCommand，必须明确拒绝而非制造可恢复成功，后续补无变更运行合同；辅助读取仍需完整来源版本证明；public未迁移，API未重载，不能声称真实调度运行已通过。调度失败后的原run重启claim仍需接续，当前只接首次持久run及显式恢复重入。
+
+接线同轮发现CustomerLite聚合辅助读取仍使用字符串拼接且写aos.workspace_id而非canonical project GUC，失败返回空聚合。改用既有Store事务scope helper、过滤niushop/site1非删除订单，缺Store/读取失败抛固定错误；不得将读取失败算作0订单。新增聚合专项；其他辅助输入精确来源版本仍待后续验证。

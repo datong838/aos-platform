@@ -106,7 +106,8 @@ def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None
 
     class Engine:
         @staticmethod
-        def execute_pipeline_once(_scope, _pipeline_id, *, run_id):
+        def execute_pipeline_once(_scope, _pipeline_id, *, run_id, durable_ingress):
+            assert durable_ingress is True
             assert run_id == "run-1"
             return {
                 "ok": False,
@@ -157,7 +158,8 @@ def test_execute_schedule_masks_unexpected_scheduler_exception(monkeypatch) -> N
 
     class Engine:
         @staticmethod
-        def execute_pipeline_once(_scope, _pipeline_id, *, run_id):
+        def execute_pipeline_once(_scope, _pipeline_id, *, run_id, durable_ingress):
+            assert durable_ingress is True
             assert run_id == "run-2"
             raise RuntimeError("password=secret user@example.com")
 

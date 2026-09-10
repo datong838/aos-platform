@@ -5,8 +5,16 @@ from aos_api.ecom_core_models import BatchCommand, DerivedMetricCommand
 from aos_api.tenant_scope import TenantScope
 
 
+def _check_active(deadline=None,cancel_event=None):
+    import time
+    if cancel_event is not None and cancel_event.is_set():
+        raise IngressJournalConflict('INGRESS_CANCELLED')
+    if deadline is not None and time.monotonic() >= deadline:
+        raise IngressJournalConflict('INGRESS_DEADLINE_EXCEEDED')
+
+
 def resume_prepared_derived(conn, scope: TenantScope, run_id: str, *,
-                            journal: IngressJournal, store: EcomConsistencyStore):
+                            journal: IngressJournal, store: EcomConsistencyStore, deadline=None, cancel_event=None):
     """Resume exact saved commands under current running-schedule bindings.
 
     Caller must be the authorized internal executor and supply a tenant-scoped
@@ -31,7 +39,11 @@ def resume_prepared_derived(conn, scope: TenantScope, run_id: str, *,
         revision = store.read_committed_batch_revision(command)
         if any(item.input_revision != revision for item in commands):
             raise IngressJournalConflict('INGRESS_DERIVED_WATERMARK_DRIFT')
-        return tuple(store.update_derived_metrics(command) for command in commands)
+        results = []
+        for item in commands:
+            _check_active(deadline,cancel_event)
+            results.append(store.update_derived_metrics(item))
+        return tuple(results)
 
 
 def _bound_parent(conn, scope, run_id, journal):
@@ -46,7 +58,7 @@ def _bound_parent(conn, scope, run_id, journal):
 
 
 def recover_saved_authoritative_stages(connection_factory, scope: TenantScope, run_id: str, *,
-                                        journal: IngressJournal, store: EcomConsistencyStore):
+                                        journal: IngressJournal, store: EcomConsistencyStore, deadline=None, cancel_event=None):
     """Recover base and derived stages of an already saved, authorized run.
 
     Factory must yield fresh tenant-scoped connections and COMMIT on successful
@@ -64,14 +76,16 @@ def recover_saved_authoritative_stages(connection_factory, scope: TenantScope, r
                 raise IngressJournalConflict('INGRESS_OUTPUT_REQUIRED')
             command = BatchCommand.model_validate(parent['command'])
             # The original command retains its original checkpoint/idempotency key.
+            _check_active(deadline,cancel_event)
             store.apply_batch(command)
             if saved is None:
                 commands = prepare_derived_commands_for_batch(
                     SimpleNamespace(ecom_consistency_store=store), scope,
                     SimpleNamespace(id=parent['pipelineId']), command, parent['outputRows'])
+                _check_active(deadline,cancel_event)
                 journal.save_derived(conn, scope, run_id, commands)
     with connection_factory(scope) as conn:
-        return resume_prepared_derived(conn, scope, run_id, journal=journal, store=store)
+        return resume_prepared_derived(conn, scope, run_id, journal=journal, store=store,deadline=deadline,cancel_event=cancel_event)
 
 
 def read_saved_projection_completion(conn, scope: TenantScope, run_id: str, *,

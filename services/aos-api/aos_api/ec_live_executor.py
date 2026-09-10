@@ -94,6 +94,10 @@ def ec_live_executor(
     ensure_store_assembled(eng)
 
     try:
+        if kwargs.get('durable_ingress') is True:
+            from aos_api.ec_durable_executor import execute_durable_ingress
+            return execute_durable_ingress(eng=eng,pipeline=pipeline,nodes=nodes,scope=scope,
+                run_id=run_id,run_started_at=kwargs.get('run_started_at'),deadline=deadline,cancel_event=cancel_event)
         # source: 从 Niushop 只读源读取（W1 实现）
         input_rows = fetch_source_rows(
             pipeline=pipeline,
@@ -109,32 +113,8 @@ def ec_live_executor(
         #   3. D2.5: normalize_rows 将 raw ns_xxx 行转为 OT normalized 行（幂等）
         #   4. apply_derived_metrics: 按 target_ot 计算 8 个派生指标写入 row（含 link_aggregator）
         #   5. build_link_rows: 按 target_ot 构造 14 条核心 Link 行追加到 rows
-        enriched_input_rows = [dict(row) for row in input_rows]
-        _stamp_snapshot_observation(
-            pipeline=pipeline,
-            rows=enriched_input_rows,
-            run_started_at=kwargs.get("run_started_at"),
-        )
-        _enrich_payment_order_create_time(
-            pipeline=pipeline,
-            nodes=nodes,
-            node_id=node_id,
-            scope=scope,
-            rows=enriched_input_rows,
-        )
-        _enrich_shipment_order_pay_time(
-            pipeline=pipeline,
-            nodes=nodes,
-            node_id=node_id,
-            scope=scope,
-            rows=enriched_input_rows,
-        )
-        output_rows = normalize_rows(enriched_input_rows, pipeline)
-
-        # O1-A: 构造 link_aggregator（从已写入的 ecom_object/ecom_link 查 Order 聚合数据）
-        aggregator = _make_link_aggregator(eng, scope)
-        output_rows = apply_derived_metrics(output_rows, pipeline, link_aggregator=aggregator)
-        output_rows = build_link_rows(output_rows, pipeline)
+        output_rows = _transform_live_rows(eng=eng,pipeline=pipeline,nodes=nodes,node_id=node_id,
+            scope=scope,input_rows=input_rows,run_started_at=kwargs.get('run_started_at'))
 
         # Reject malformed canonical output before publishing a Dataset success.
         validate_ot_output(scope, pipeline, output_rows)
@@ -345,20 +325,19 @@ def _make_link_aggregator(eng: Any, scope: Any) -> Any:
     engine: Engine = getattr(store, "_engine", None) if store else None
 
     def aggregator(member_ids: frozenset[str]) -> dict[str, tuple[int, datetime | None]]:
-        if not member_ids or engine is None:
+        if not member_ids:
             return {}
+        if engine is None:
+            raise RuntimeError("LINK_AGGREGATOR_STORE_REQUIRED")
 
         try:
             # 查 Order → CustomerLite (placedByLite) link，聚合 order_count + max(createdAt)
             # 从 ecom_object 查 Order 的 properties.createdAt
             # 从 ecom_link 查 placedByLite 关系
             ids_list = list(member_ids)
-            with engine.connect() as conn:
-                # 设置 GUC
-                from sqlalchemy import text as _text
-
-                conn.execute(_text(f"SET LOCAL aos.org_id = '{org_id}'"))
-                conn.execute(_text(f"SET LOCAL aos.workspace_id = '{workspace_id}'"))
+            with engine.begin() as conn:
+                from aos_api.ecom_consistency_store import _apply_transaction_scope
+                _apply_transaction_scope(conn,org_id=org_id,workspace_id=workspace_id)
 
                 # 查 Order objects 的 member_id 和 createdAt
                 order_rows = conn.execute(
@@ -370,6 +349,9 @@ def _make_link_aggregator(eng: Any, scope: Any) -> Any:
                             _tbl.c.org_id == org_id,
                             _tbl.c.workspace_id == workspace_id,
                             _tbl.c.object_type == "Order",
+                            _tbl.c.platform == "niushop",
+                            _tbl.c.shop_or_marketplace_id == "1",
+                            _tbl.c.deleted_at.is_(None),
                         )
                     )
                 ).fetchall()
@@ -400,7 +382,37 @@ def _make_link_aggregator(eng: Any, scope: Any) -> Any:
             return result
 
         except Exception:
-            log.warning("link_aggregator_failed", exc_info=True)
-            return {}
+            raise RuntimeError("LINK_AGGREGATOR_READ_FAILED") from None
 
     return aggregator
+
+
+def _transform_live_rows(*,eng,pipeline,nodes,node_id,scope,input_rows,run_started_at):
+    """Shared transform for direct execution and persisted scheduled batches."""
+    enriched_input_rows = [dict(row) for row in input_rows]
+    _stamp_snapshot_observation(
+        pipeline=pipeline,
+        rows=enriched_input_rows,
+        run_started_at=run_started_at,
+    )
+    _enrich_payment_order_create_time(
+        pipeline=pipeline,
+        nodes=nodes,
+        node_id=node_id,
+        scope=scope,
+        rows=enriched_input_rows,
+    )
+    _enrich_shipment_order_pay_time(
+        pipeline=pipeline,
+        nodes=nodes,
+        node_id=node_id,
+        scope=scope,
+        rows=enriched_input_rows,
+    )
+    output_rows = normalize_rows(enriched_input_rows, pipeline)
+
+    # O1-A: 构造 link_aggregator（从已写入的 ecom_object/ecom_link 查 Order 聚合数据）
+    aggregator = _make_link_aggregator(eng, scope)
+    output_rows = apply_derived_metrics(output_rows, pipeline, link_aggregator=aggregator)
+    output_rows = build_link_rows(output_rows, pipeline)
+    return output_rows
