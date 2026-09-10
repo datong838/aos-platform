@@ -6,7 +6,7 @@
 
 修复提交 `48c7cc28b2221e599b8efee7c3081fa7ee041918` 新增 Alembic revision `a0v_001`，将 legacy bootstrap 独占的 `meta_schedule_run` 纳入正式 managed-schema 链。未修改 SourceReadiness、Cron 或其他业务代码。
 
-修复后 A0-V 总结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：blocker 从 17 降至 16，unverified 保持 1。该修复只关闭 managed-schema 缺表，不提升安装、Agent、模型、预算或真实数据源准入状态。
+修复后首次重采的 A0-V 总结论仍为 `A0_V_BLOCKED_WITH_ACTIONABLE_GAPS`：在当时仅检查 HTTP 与集合非空的采集器口径下，blocker 从 17 降至 16，unverified 保持 1。随后 `14a1dcc8` 补齐业务语义门，当前权威结果为 19 个 blocker、1 个 unverified；旧的 16 仅保留为 managed-schema 修复的时点证据，不能再作为当前总数。该修复只关闭 managed-schema 缺表，不提升安装、Agent、模型、预算或真实数据源准入状态。
 
 ## 2. 修改文件
 
@@ -40,7 +40,7 @@
 - `dev-org/dev-project` canonical SourceReadiness：HTTP 200；
 - 两者均返回结构化 readiness 事实，真实缺失项包括 Pipeline、Source、Schedule、query capability exact ref 和最新成功运行；
 - 缺失 Bearer 仍为 401，非法 limit 仍为 400；
-- 验证器：`A0_V_EVIDENCE_VALID blockers=16 unverified=1`。
+- 当时版本验证器：`A0_V_EVIDENCE_VALID blockers=16 unverified=1`；当前结果与口径见 `a0-v-semantic-readiness-gates-verification.md`。
 
 ## 5. 风险与下一步
 
