@@ -43,7 +43,11 @@
       "requiredPaths": [
         "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py",
-        "bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/__init__.py"
+        "bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/__init__.py",
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure-plan.md",
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure.py",
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-cumulative-closure.json",
+        ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-prime-final-readonly-review.md"
       ],
       "contains": {
         "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],

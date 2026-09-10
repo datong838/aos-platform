@@ -174,3 +174,15 @@ AR2-7 只通过数据库 CAS 切换这个 handler 指针，不再声称 Python �
 | `services/aos-api/aos_api/ecommerce_product_joint_quality.py` | 原路径 | data query port；验证观察后的固定逐商品联合字段计量，不产生业务事实 | NEW |
 | `services/aos-api/aos_api/ecommerce_fixed_metric.py` | 原路径 | data query port；两个固定查询共用真实Metric Owner写读 | NEW |
 | `services/aos-api/aos_api/ecommerce_joint_quality_query.py` | 原路径 | data query port；固定联合字段计量QueryResult持久化，partial不代表履约 | NEW |
+
+## 8. 2026-09-10 AR2-7E 累计闭合登记
+
+本节覆盖第 1 节的历史开工态描述。AR2-1～AR2-7D 已完成包内实现、公共 SDK ports、registration-only host ports、结果反馈恢复、Canonical Router/host composition/cutover/lifecycle 和旧 Router 单写转发；当前 authority 为 `AOS-000572`。AR2-7E 在同一 digest 与无真实凭据 fixture 边界上完成以下累计门：
+
+- shell capability gating、页头动作 authority 与 console 预期网络错误分类均有方案、回归和验证证据；
+- 八工作台入口/失败关闭矩阵 37/37 PASS；有效隔离数据矩阵 24/24 PASS，24 张截图齐备；
+- 任务总控、内容计划、统一运营、达人邀约、多媒体、经营参谋、价格治理、客户运营八个富交互专项各 3/3 PASS；
+- `ar2-7e-cumulative-closure.py` 对账 70 份 Git 跟踪证据、9 个产品页面哈希、三视口、租户/请求/页面/控制台错误和零副作用边界，失败集为空；
+- Prime 对 `m1@e52ec81a` 做最终增量只读复核，首行 `VERDICT: PASS`。
+
+本登记仍处于最终 CAS 前：只有 Web 测试/构建、`verify_closure.py --phase ar2-7`、共享记忆 CAS 与回读全部通过后，才可在本节写入唯一退出标记。AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业务 mutation、230 L0、A0-V 或发布完成；下一安全阶段仍为 A0-V。
