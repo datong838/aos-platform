@@ -41,6 +41,12 @@ Route Suite 使用固定 SELECT/BLOCK 矩阵，覆盖允许 task+text+capability
 
 ## 7. 2026-09-11 重启复核与先行修复
 
+### 用户最新范围修订：开发阶段不等待商业单价
+
+用户明确授权开发、自测和接单验收不看模型成本，商业使用时再核算。此前将供应商单价作为当前开发主线阻断的顺序撤销。下一切片优先实现真实模型评测和正式运行接线；以显式开发费用延后核算合同承接授权，实际 token 用量照常持久化，费用保持未核价，不伪造零价或固定单价。商业默认 unknownPrice=block 保持原状；开发合同必须限定 org-org/dev-project、当前 exact 模型/审批及有效期，不能隐式扩展其他租户或发布为商业默认。
+
+现有 ModelPriceSnapshot DTO 要求至少一个数值，BudgetPolicy 仅允许 unknownPrice=block，因此不能只配置开关或填 0 绕过。后续先形成跨 DTO/Resolver/Invoker/UsageReceipt 的完整最小施工卡，验证未核价能够被明确区分且重放不重复调用，然后编码；这项产品合同工作与无客户数据模型评测可串行推进，无需等待用户提供价格。
+
 原隔离数据库已启动，2026-09-10T17:22:30Z 只读审计显示 providerHealth 为首个未满足门；active route/binding/agent 均为 0，canary 计数为 0。审计未执行 mutation 或 Provider 调用。
 
 先行修复文件：`services/aos-api/aos_api/aip_r1_bootstrap_probe.py` 及 `services/aos-api/tests/aip/test_aip_r1_bootstrap_probe.py`。显式传入空审批集合必须拒绝全部请求；只有未传参数 None 才沿用旧默认。当前 `or` 会把空集合当成旧授权，违背失败关闭。先写失败测试，断言拒绝发生于 Secret resolve 和 transport 之前，再做单点修复，运行探针与 A0-V 健康回归。沿用现有 m1 A0-V Lease，不新增冲突租约。
