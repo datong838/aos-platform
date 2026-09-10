@@ -32,6 +32,7 @@ READS = (
     ("workshopSourceReadiness", "/v1/ecommerce-workshop/source-readiness", True),
     ("agentRegistry", "/v1/aip/agent-registry", True),
     ("agentRuntimeReadiness", "/v1/aip/agent-registry/runtime-readiness", True),
+    ("agentInstances", "/v1/aip/agents", True),
     ("capabilityCatalog", "/v1/aip/capability-catalog", True),
     ("modelRuntime", "/v1/aip/model-runtime/overview", True),
     ("modelChain", "/v1/aip/model-runtime/chain-overview", True),
@@ -196,6 +197,43 @@ def _collection_items(
         blockers.append({"gate": f"{name}.collection", "reason": "COLLECTION_COUNT_MISMATCH"})
         return None
     return items
+
+
+def _first_agent_instance_id(body: Any) -> str | None:
+    if not isinstance(body, dict) or not isinstance(body.get("items"), list):
+        return None
+    values = sorted(
+        item["instanceId"]
+        for item in body["items"]
+        if isinstance(item, dict)
+        and isinstance(item.get("instanceId"), str)
+        and item["instanceId"].strip()
+    )
+    return values[0] if values else None
+
+
+def _exact_isolation_outcome(
+    instance_id: str | None,
+    positive_exact: dict[str, Any] | None,
+    canary_exact: dict[str, Any] | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if instance_id is None:
+        return [], [
+            {
+                "gate": "crossTenantResourceIsolation",
+                "reason": "NO_POSITIVE_RESOURCE_AVAILABLE_FOR_CANARY_COMPARISON",
+            }
+        ]
+    blockers: list[dict[str, Any]] = []
+    if (positive_exact or {}).get("httpStatus") != 200:
+        blockers.append(
+            {"gate": "crossTenantResourceIsolation.positive", "reason": "EXPECTED_200"}
+        )
+    if (canary_exact or {}).get("httpStatus") != 404:
+        blockers.append(
+            {"gate": "crossTenantResourceIsolation.canary", "reason": "EXPECTED_404"}
+        )
+    return blockers, []
 
 
 def _semantic_readiness_blockers(
@@ -374,6 +412,7 @@ def _semantic_readiness_blockers(
             "taskBriefs",
         )
     }
+    _collection_items("agentInstances", positive, blockers)
 
     stages = contract_items["stageTemplates"]
     if stages is not None:
@@ -481,6 +520,19 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             authenticated=True,
         ),
     }
+    instance_id = _first_agent_instance_id(positive["agentInstances"].get("body"))
+    isolation: dict[str, dict[str, Any]] = {}
+    if instance_id is not None:
+        encoded = urllib.parse.quote(instance_id, safe="")
+        path = f"/v1/aip/agents/{encoded}"
+        isolation = {
+            "positiveAgentInstance": _request(
+                base_url, path, tenant=POSITIVE_TENANT, authenticated=True
+            ),
+            "canaryAgentInstance": _request(
+                base_url, path, tenant=CANARY_TENANT, authenticated=True
+            ),
+        }
 
     blockers: list[dict[str, Any]] = []
     unverified: list[dict[str, Any]] = []
@@ -530,8 +582,15 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
     if negatives["invalidLimit"]["httpStatus"] not in {400, 422}:
         blockers.append({"gate": "invalidLimit", "reason": "EXPECTED_4XX"})
 
+    isolation_blockers, isolation_unverified = _exact_isolation_outcome(
+        instance_id,
+        isolation.get("positiveAgentInstance"),
+        isolation.get("canaryAgentInstance"),
+    )
+    blockers.extend(isolation_blockers)
+    unverified.extend(isolation_unverified)
+
     tenant_claims: dict[str, dict[str, list[str] | None]] = {}
-    visible_positive_resources = False
     for name in positive:
         positive_claim = _tenant_claim(positive[name].get("body"))
         canary_claim = _tenant_claim(canary[name].get("body"))
@@ -539,21 +598,10 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             "positive": list(positive_claim) if positive_claim else None,
             "canary": list(canary_claim) if canary_claim else None,
         }
-        positive_size = _collection_size(positive[name].get("body"))
-        if isinstance(positive_size, int) and positive_size > 0:
-            visible_positive_resources = True
         if positive_claim and positive_claim != POSITIVE_TENANT:
             blockers.append({"gate": f"{name}.tenant", "reason": "TENANT_MISMATCH"})
         if canary_claim and canary_claim != CANARY_TENANT:
             blockers.append({"gate": f"{name}.canaryTenant", "reason": "TENANT_MISMATCH"})
-    if not visible_positive_resources:
-        unverified.append(
-            {
-                "gate": "crossTenantResourceIsolation",
-                "reason": "NO_POSITIVE_RESOURCE_AVAILABLE_FOR_CANARY_COMPARISON",
-            }
-        )
-
     return {
         "schemaVersion": 1,
         "collectedAt": datetime.now(timezone.utc).isoformat(),
@@ -590,6 +638,7 @@ def collect(base_url: str, repo: Path) -> dict[str, Any]:
             "health": health,
             "positive": positive,
             "canary": canary,
+            "isolation": isolation,
             "negative": negatives,
         },
     }

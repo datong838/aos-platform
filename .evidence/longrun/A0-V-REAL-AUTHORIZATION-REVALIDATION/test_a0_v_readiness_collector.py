@@ -81,6 +81,7 @@ def ready_positive():
                 }
             }
         ),
+        "agentInstances": observation({"items": [], "count": 0}),
         "capabilityCatalog": observation({"count": 10, "availableCount": 10}),
         "modelRuntime": observation(
             {
@@ -217,6 +218,37 @@ class SemanticReadinessTests(unittest.TestCase):
                 "gate": "stageTemplates.authority",
                 "reason": "INVESTIGATION_TEMPLATE_AMBIGUOUS",
             },
+            blockers,
+        )
+
+    def test_global_catalog_does_not_prove_tenant_isolation(self):
+        blockers, unverified = COLLECTOR._exact_isolation_outcome(None, None, None)
+        self.assertEqual(blockers, [])
+        self.assertEqual(
+            unverified,
+            [
+                {
+                    "gate": "crossTenantResourceIsolation",
+                    "reason": "NO_POSITIVE_RESOURCE_AVAILABLE_FOR_CANARY_COMPARISON",
+                }
+            ],
+        )
+
+    def test_exact_agent_instance_proves_or_blocks_isolation(self):
+        exact_id = COLLECTOR._first_agent_instance_id(
+            {"items": [{"instanceId": "z"}, {"instanceId": "a"}], "count": 2}
+        )
+        self.assertEqual(exact_id, "a")
+        blockers, unverified = COLLECTOR._exact_isolation_outcome(
+            exact_id, {"httpStatus": 200}, {"httpStatus": 404}
+        )
+        self.assertEqual((blockers, unverified), ([], []))
+        blockers, unverified = COLLECTOR._exact_isolation_outcome(
+            exact_id, {"httpStatus": 200}, {"httpStatus": 200}
+        )
+        self.assertEqual(unverified, [])
+        self.assertIn(
+            {"gate": "crossTenantResourceIsolation.canary", "reason": "EXPECTED_404"},
             blockers,
         )
 

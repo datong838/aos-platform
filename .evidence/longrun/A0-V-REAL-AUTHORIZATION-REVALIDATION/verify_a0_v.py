@@ -112,6 +112,17 @@ def verify(document: dict[str, Any]) -> list[str]:
             if f"{name}.authority" not in blocker_gates:
                 errors.append(f"missing {name} authority must remain a blocker")
 
+    isolation_unverified = any(
+        isinstance(item, dict) and item.get("gate") == "crossTenantResourceIsolation"
+        for item in unverified
+    )
+    if not isolation_unverified:
+        isolation = observations.get("isolation") or {}
+        if (isolation.get("positiveAgentInstance") or {}).get("httpStatus") != 200:
+            errors.append("verified isolation requires positive exact AgentInstance 200")
+        if (isolation.get("canaryAgentInstance") or {}).get("httpStatus") != 404:
+            errors.append("verified isolation requires canary exact AgentInstance 404")
+
     errors.extend(_walk(document))
     return errors
 
