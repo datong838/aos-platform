@@ -1,5 +1,5 @@
 {
-  "collectedAt": "2026-09-10T12:03:37.030282+00:00",
+  "collectedAt": "2026-09-10T12:25:44.687466+00:00",
   "observations": {
     "canary": {
       "agentInstances": {
@@ -5977,14 +5977,14 @@
               "projectId": "dev-project"
             }
           },
-          "evaluatedAt": "2026-09-10T12:03:36.608250Z",
+          "evaluatedAt": "2026-09-10T12:25:44.204926Z",
           "skillBindings": [],
           "tenant": {
             "orgId": "dev-org",
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "aae14e3b4a966e4be01e4f694c1c2bbdc1eb950df2eda5574bdd9d6acbf38e65",
+        "bodySha256": "6f6a268b97170c19cc277ce7ed3024c45e8d7385afb8876e1343bbaf85fa1021",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -6782,7 +6782,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T12:03:36.765193Z",
+          "generatedAt": "2026-09-10T12:25:44.363013Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -6790,7 +6790,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "86be8c5d2e15e043c8ecc7b7a8fecba683293af4dc1c8da939b5bed9b8f5f3ad",
+        "bodySha256": "9195a031d1e0f9fa1e489df0135119bb69549b26147cc69d5ead7b1584b87a00",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -6798,7 +6798,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T12:03:36.802526Z",
+          "generatedAt": "2026-09-10T12:25:44.400597Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -6850,7 +6850,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.802526Z",
+                "endsAt": "2026-09-10T12:25:44.400597Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -6899,14 +6899,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.802526Z",
+                "endsAt": "2026-09-10T12:25:44.400597Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T12:03:36.802526Z",
+                "startsAt": "2026-09-03T12:25:44.400597Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -6948,14 +6948,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.802526Z",
+                "endsAt": "2026-09-10T12:25:44.400597Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T12:03:36.802526Z",
+                "startsAt": "2026-08-11T12:25:44.400597Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -6966,7 +6966,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "d7fde67b35f04d88da96ab93bd1eedad57cdc57d556c8c25f52b2410c90cfb0f",
+        "bodySha256": "5374c1413f86cc8c1d9183a5f5d8c676b2252bd48be7b302bd757b0cd1006c94",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -6975,7 +6975,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T12:03:36.751483Z",
+          "generatedAt": "2026-09-10T12:25:44.349587Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -6988,7 +6988,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "9fb023f73b3e81f6736c09a9c1c75ab2689199c42d6a9760ca358a5fd4c6ff0c",
+        "bodySha256": "345df1c7edaa5bbc65b5df5d80e4a5930f55092acce3b02ddaf863c20a72fd32",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -7037,8 +7037,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T12:03:36.390507Z",
-          "cutoffAt": "2026-09-10T12:03:36.390507Z",
+          "checkedAt": "2026-09-10T12:25:43.979254Z",
+          "cutoffAt": "2026-09-10T12:25:43.979254Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -7055,7 +7055,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7178,7 +7178,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7301,7 +7301,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7424,7 +7424,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7547,7 +7547,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7670,7 +7670,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7793,7 +7793,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -7916,7 +7916,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8039,7 +8039,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8162,7 +8162,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8285,7 +8285,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8408,7 +8408,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:36.390507Z",
+              "checkedAt": "2026-09-10T12:25:43.979254Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -8526,7 +8526,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "6bb60ad53fe9e5c06b40ddbaafa62dec2696de87a9016b396b162e88fc20ffe4",
+        "bodySha256": "102a51bb3b76574415c0e7ea06cd3ccec7bf2215e99f58f5844cc23eadd26cba",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -8559,14 +8559,31 @@
         "method": "GET",
         "path": "/v1/aip/production-contracts/task-briefs"
       },
+      "workshopModules": {
+        "body": {
+          "count": 0,
+          "dataCutoff": null,
+          "evaluatedAt": "2026-09-10T12:25:44.473221Z",
+          "items": [],
+          "schemaVersion": "aos.ecommerce-workshop/v1",
+          "tenant": {
+            "orgId": "dev-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "67de24836b42007f644b75c456d5d87acd890d47d7c87bf97429a9e5b639c50c",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/ecommerce-workshop/modules"
+      },
       "workshopSourceReadiness": {
         "body": {
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "df0e0556-2b28-4b77-a2b1-4616bbb636c5"
+          "traceId": "e3f0483d-84d9-4fcb-9d4b-7571945f89d4"
         },
-        "bodySha256": "576ebfcdffd8e052126135819fede5baa3aa99efdacacb866089ad567ea1f5fd",
+        "bodySha256": "cb2d7d1acc17111e5b44854796fbb11107074d819ee46d9d59ae7a81d15b905e",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
@@ -8587,9 +8604,9 @@
           "code": "AIP_AGENT_REGISTRY_NOT_FOUND",
           "details": null,
           "message": "agent instance not found",
-          "traceId": "185d7bc0-56cf-4805-9dfa-addbe0df39da"
+          "traceId": "c3fa5279-6050-47fe-b8a6-55da288b5358"
         },
-        "bodySha256": "898a6be09ece6bf2c360eb7c51da418ac7564a94dea0aea9d7a9792069b9dfc7",
+        "bodySha256": "9736e69ea194cc487b3b7069fc6952e2f128f1ee01b8135b40f7987f47854186",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/aip/agents/ecommerce.campaign_planner.default"
@@ -8653,9 +8670,9 @@
             ]
           },
           "message": "request validation failed",
-          "traceId": "9c788266-a10c-43db-988a-f606020b7470"
+          "traceId": "7a3da64e-c8ed-4d34-a5e5-0dcbebb6e50b"
         },
-        "bodySha256": "884328cd51bcde09e43c436de202228894970980cee6f2fddd3feff11a7187ab",
+        "bodySha256": "82046ec12e0e5bdd72e102882fc3955331eaa696a15f1779edfd0fb5ad0a134c",
         "httpStatus": 400,
         "method": "GET",
         "path": "/v1/bundle-installations?limit=101&offset=0"
@@ -8665,9 +8682,9 @@
           "code": "AUTH_REQUIRED",
           "details": null,
           "message": "Bearer [REDACTED] required",
-          "traceId": "7d0cdaa2-0c36-4791-9dc2-34d10421b2cb"
+          "traceId": "5f2d7194-571d-4bf9-80c0-d4f245121f2d"
         },
-        "bodySha256": "7b86339462845add169e074e0ad87012910f14a0d087e950096edbdff7bfbe8c",
+        "bodySha256": "5df1bfe5b31c1d4cbd21ae6845c9156eaa98c465c6a7e5399196d02ae7701ca3",
         "httpStatus": 401,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -15196,14 +15213,14 @@
               "projectId": "dev-project"
             }
           },
-          "evaluatedAt": "2026-09-10T12:03:36.009903Z",
+          "evaluatedAt": "2026-09-10T12:25:43.533488Z",
           "skillBindings": [],
           "tenant": {
             "orgId": "org-org",
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "59d8de259c4534823fe1f0b273d58b29a55eebbbade3e0b8b8752f4010a94bf6",
+        "bodySha256": "94a9b4c2faf8e0ca1fe7389c909507580464824992d958f06057a7bc71b38c25",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/agent-registry/runtime-readiness"
@@ -16001,7 +16018,7 @@
       "modelChain": {
         "body": {
           "chains": [],
-          "generatedAt": "2026-09-10T12:03:36.168197Z",
+          "generatedAt": "2026-09-10T12:25:43.694683Z",
           "modelImpacts": [],
           "taskTraces": [],
           "tenant": {
@@ -16009,7 +16026,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "367aad9869f3e87b4133692dd65f2635793ff2c54ee3253cca9b50b6e9644b94",
+        "bodySha256": "a2c4c0a643455573cc79bdcd21839479e74d9d68a21e635cc1bf72b896695338",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/chain-overview"
@@ -16017,7 +16034,7 @@
       "modelCost": {
         "body": {
           "budgets": [],
-          "generatedAt": "2026-09-10T12:03:36.206200Z",
+          "generatedAt": "2026-09-10T12:25:43.734612Z",
           "modelPrices": [],
           "quotas": [],
           "tenant": {
@@ -16069,7 +16086,7 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.206200Z",
+                "endsAt": "2026-09-10T12:25:43.734612Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "today",
@@ -16118,14 +16135,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.206200Z",
+                "endsAt": "2026-09-10T12:25:43.734612Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "week",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-09-03T12:03:36.206200Z",
+                "startsAt": "2026-09-03T12:25:43.734612Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               },
@@ -16167,14 +16184,14 @@
                     "source": "explicit"
                   }
                 ],
-                "endsAt": "2026-09-10T12:03:36.206200Z",
+                "endsAt": "2026-09-10T12:25:43.734612Z",
                 "estimatedCount": 0,
                 "measuredCount": 0,
                 "period": "month",
                 "providerCounts": {},
                 "quantityTotals": {},
                 "receiptCount": 0,
-                "startsAt": "2026-08-11T12:03:36.206200Z",
+                "startsAt": "2026-08-11T12:25:43.734612Z",
                 "timeZone": "Asia/Shanghai",
                 "unknownCount": 0
               }
@@ -16185,7 +16202,7 @@
             "unknownCount": 0
           }
         },
-        "bodySha256": "3d9869308eb9c3bdb41766c46e11f7e8310919b720ab6efaa678b1c022e34faa",
+        "bodySha256": "f63c8f1b1ff13a156d9e1481c86325a937b2507e74a87d8ceecbe9ce599deaf4",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/cost-overview"
@@ -16194,7 +16211,7 @@
         "body": {
           "capacityPools": [],
           "evalGates": [],
-          "generatedAt": "2026-09-10T12:03:36.154619Z",
+          "generatedAt": "2026-09-10T12:25:43.681358Z",
           "healthObservations": [],
           "models": [],
           "policies": [],
@@ -16207,7 +16224,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "05bd5c02c14c59300f4c3567adb926af84e11a3e1e6f359649c5ef22344c051a",
+        "bodySha256": "15462b7c933a9906d7872032c94ea74c1efdb21b41ba7aebf8651e24fa3b36b6",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/aip/model-runtime/overview"
@@ -16256,8 +16273,8 @@
       },
       "sourceReadiness": {
         "body": {
-          "checkedAt": "2026-09-10T12:03:35.778972Z",
-          "cutoffAt": "2026-09-10T12:03:35.778972Z",
+          "checkedAt": "2026-09-10T12:25:43.284462Z",
+          "cutoffAt": "2026-09-10T12:25:43.284462Z",
           "investigation": null,
           "receiptRef": null,
           "schemaVersion": "aos.source-readiness/v1",
@@ -16274,7 +16291,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16397,7 +16414,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16520,7 +16537,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16643,7 +16660,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16766,7 +16783,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -16889,7 +16906,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17012,7 +17029,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17135,7 +17152,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17258,7 +17275,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17381,7 +17398,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17504,7 +17521,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17627,7 +17644,7 @@
                 "SOURCE_CONFIG_EXACT_REF_MISSING",
                 "SOURCE_NOT_FOUND"
               ],
-              "checkedAt": "2026-09-10T12:03:35.778972Z",
+              "checkedAt": "2026-09-10T12:25:43.284462Z",
               "counts": {
                 "projectionTotal": 0,
                 "sourceActive": 0,
@@ -17745,7 +17762,7 @@
             "projectId": "dev-project"
           }
         },
-        "bodySha256": "6e94f508d230729a5b5931d9728901fcd4840f3928ac22ce8908360cb44efabd",
+        "bodySha256": "accb41259d2217acdcf61001ae29fe121f23f0ee2c39ac771c5747d6d206aa0c",
         "httpStatus": 200,
         "method": "GET",
         "path": "/v1/data/source-readiness"
@@ -17778,19 +17795,37 @@
         "method": "GET",
         "path": "/v1/aip/production-contracts/task-briefs"
       },
+      "workshopModules": {
+        "body": {
+          "count": 0,
+          "dataCutoff": null,
+          "evaluatedAt": "2026-09-10T12:25:43.807621Z",
+          "items": [],
+          "schemaVersion": "aos.ecommerce-workshop/v1",
+          "tenant": {
+            "orgId": "org-org",
+            "projectId": "dev-project"
+          }
+        },
+        "bodySha256": "d627bdc7d30b2e24fe44f721798bb47dfe7bfe3c55fcd4b4095581d61e35c01f",
+        "httpStatus": 200,
+        "method": "GET",
+        "path": "/v1/ecommerce-workshop/modules"
+      },
       "workshopSourceReadiness": {
         "body": {
           "code": "WORKSHOP_NOT_INSTALLED",
           "details": null,
           "message": "No active ecommerce Workshop module is visible",
-          "traceId": "b9e6aa1b-1583-4af4-950a-de109c71820e"
+          "traceId": "4e059558-db71-47c9-ba8a-b060a4846cf3"
         },
-        "bodySha256": "1015f6b26039292d8f083d80a745db73ffe06dd8520a98190d57602962702378",
+        "bodySha256": "1f63db646e00fbb442694acda19451bf2b33120df9f089430253f73bd8aabc2a",
         "httpStatus": 404,
         "method": "GET",
         "path": "/v1/ecommerce-workshop/source-readiness"
       }
-    }
+    },
+    "runtime": {}
   },
   "result": "A0_V_BLOCKED_WITH_ACTIONABLE_GAPS",
   "schemaVersion": 1,
@@ -17802,7 +17837,7 @@
     },
     "databaseEvidenceClass": "HISTORICAL_BACKUP_RECOVERED_THEN_MIGRATED_TO_HEAD",
     "databaseOriginalDataCutoff": "2026-08-05T05:02:48+08:00",
-    "gitHead": "ecfc1baed99263d0945a4e6f01e7c0c1bfee04e9",
+    "gitHead": "223ab8aeb941da73e2c646bfce22d5c78e90a731",
     "httpMethods": [
       "GET"
     ],
@@ -17819,7 +17854,7 @@
     }
   },
   "summary": {
-    "blockerCount": 17,
+    "blockerCount": 18,
     "blockers": [
       {
         "gate": "workshopSourceReadiness",
@@ -17881,8 +17916,12 @@
         "reason": "INVESTIGATION_PLAN_MISSING"
       },
       {
-        "gate": "bundleInstallations",
-        "reason": "REQUIRED_COLLECTION_EMPTY"
+        "gate": "bundleInstallations.active",
+        "reason": "ACTIVE_INSTALLATION_MISSING"
+      },
+      {
+        "gate": "workshopModules.readiness",
+        "reason": "EXPECTED_EXACT_EIGHT_MODULES"
       },
       {
         "gate": "modelRuntime.providers",
@@ -18042,6 +18081,16 @@
         ]
       },
       "taskBriefs": {
+        "canary": [
+          "dev-org",
+          "dev-project"
+        ],
+        "positive": [
+          "org-org",
+          "dev-project"
+        ]
+      },
+      "workshopModules": {
         "canary": [
           "dev-org",
           "dev-project"
