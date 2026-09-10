@@ -1,0 +1,3552 @@
+{
+  "schemaVersion": "aos.ar2-7e-creator-growth-rich-browser/v1",
+  "generatedAt": "2026-09-10T08:09:53.669Z",
+  "baseUrl": "http://127.0.0.1:8434",
+  "authority": "AOS-000572 / AR2_7D_RUNTIME_WIRING_CANONICAL_ROUTER_GREEN",
+  "fixtureBoundary": "isolated creator refs with empty piiRefs; internal workflow commands intercepted",
+  "result": "PASS",
+  "counts": {
+    "passed": 3,
+    "total": 3,
+    "workflowWrites": 24,
+    "otherWrites": 0,
+    "forbiddenWrites": 0,
+    "unknownGets": 0,
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "stoppedEarly": false
+  },
+  "zeroEffects": {
+    "providerInvocationCount": 0,
+    "externalOutreachCount": 0,
+    "contractSignatureCount": 0,
+    "shipmentCount": 0,
+    "paymentCount": 0,
+    "commissionMutationCount": 0,
+    "businessMutationCount": 0
+  },
+  "results": [
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "filters": [
+          "全部",
+          "个人达人",
+          "机构",
+          "有合作记录"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "preparations": [
+          "新建邀约批次准备",
+          "编写邀约内容",
+          "新建合作准备",
+          "履约检查准备",
+          "关系维护计划",
+          "导入达人准备"
+        ],
+        "commands": [
+          "create",
+          "save",
+          "submit_review",
+          "reject",
+          "save",
+          "submit_review",
+          "approve",
+          "restore"
+        ],
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027788831-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027788880-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027788915-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027788964-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027789014-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027789048-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027789097-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027789164-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027788831-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027788880-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027788915-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027788964-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027789014-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027789048-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027789097-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027789164-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        }
+      ],
+      "viewReads": 3,
+      "supportReads": 31
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "filters": [
+          "全部",
+          "个人达人",
+          "机构",
+          "有合作记录"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "preparations": [
+          "新建邀约批次准备",
+          "编写邀约内容",
+          "新建合作准备",
+          "履约检查准备",
+          "关系维护计划",
+          "导入达人准备"
+        ],
+        "commands": [
+          "create",
+          "save",
+          "submit_review",
+          "reject",
+          "save",
+          "submit_review",
+          "approve",
+          "restore"
+        ],
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027790838-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027790888-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027790922-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027790972-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027791022-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027791056-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027791105-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027791172-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027790838-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027790888-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027790922-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027790972-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027791022-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027791056-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027791105-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027791172-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        }
+      ],
+      "viewReads": 3,
+      "supportReads": 31
+    },
+    {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "result": "PASS",
+      "failures": [],
+      "observed": {
+        "tabs": [
+          "达人库",
+          "招募漏斗",
+          "商务签约",
+          "履约效果",
+          "长期关系"
+        ],
+        "filters": [
+          "全部",
+          "个人达人",
+          "机构",
+          "有合作记录"
+        ],
+        "searches": [
+          "hit",
+          "empty",
+          "clear"
+        ],
+        "preparations": [
+          "新建邀约批次准备",
+          "编写邀约内容",
+          "新建合作准备",
+          "履约检查准备",
+          "关系维护计划",
+          "导入达人准备"
+        ],
+        "commands": [
+          "create",
+          "save",
+          "submit_review",
+          "reject",
+          "save",
+          "submit_review",
+          "approve",
+          "restore"
+        ],
+        "refreshReadback": true,
+        "sidebarRoundTrip": true,
+        "scrollEnd": true
+      },
+      "navCount": 8,
+      "h1Count": 1,
+      "layout": {
+        "horizontalOverflow": false
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "otherWrites": [],
+      "forbiddenWrites": [],
+      "tenantDrift": [],
+      "requests": [
+        {
+          "method": "GET",
+          "pathname": "/api/v1/me",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/orgs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/workspaces",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/health",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027792847-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027792896-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027792931-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027792979-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027793030-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027793064-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027793113-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027793180-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        },
+        {
+          "method": "GET",
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": null,
+          "body": null
+        }
+      ],
+      "responses": [
+        {
+          "pathname": "/api/v1/me",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/orgs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/workspaces",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/health",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/modules",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/source-readiness",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts/creator-brief-isolated/history",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/lifecycle",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator/closure-contributions",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/drafts",
+          "status": 200
+        },
+        {
+          "pathname": "/api/v1/ecommerce-workshop/views/content-campaign/real-inputs",
+          "status": 200
+        }
+      ],
+      "unknownGets": [],
+      "workflowWrites": [
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-create-1789027792847-0",
+          "body": {
+            "command": "create",
+            "purpose": "candidate_import",
+            "title": "达人候选导入",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027792896-1",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 1,
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "expectedVersion": 1
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027792931-2",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 2,
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "expectedVersion": 2
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-reject-1789027792979-3",
+          "body": {
+            "command": "reject",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 3,
+              "contentHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "expectedVersion": 3
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-save-1789027793030-4",
+          "body": {
+            "command": "save",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 4,
+              "contentHash": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "expectedVersion": 4
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-submit_review-1789027793064-5",
+          "body": {
+            "command": "submit_review",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 5,
+              "contentHash": "5555555555555555555555555555555555555555555555555555555555555555"
+            },
+            "expectedVersion": 5
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-approve-1789027793113-6",
+          "body": {
+            "command": "approve",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "productName": "隔离焕亮面膜",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道",
+              "budget": "",
+              "commission": "",
+              "benefits": "",
+              "deliverables": "",
+              "evidence": "",
+              "schedule": ""
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 6,
+              "contentHash": "6666666666666666666666666666666666666666666666666666666666666666"
+            },
+            "expectedVersion": 6
+          }
+        },
+        {
+          "method": "POST",
+          "pathname": "/api/v1/ecommerce-workshop/views/creator-growth/workflow/commands",
+          "orgId": "org-org",
+          "projectId": "dev-project",
+          "idempotencyKey": "creator-candidate_import-restore-1789027793180-7",
+          "body": {
+            "command": "restore",
+            "purpose": "candidate_import",
+            "title": "隔离达人候选计划",
+            "summary": "仅整理合法候选来源与内部筛选条件",
+            "details": {
+              "owner": "经营负责人",
+              "productRef": "isolated:product:65",
+              "candidateSource": "隔离公开候选库",
+              "contentCategory": "成分护肤",
+              "audienceScale": "一万至十万",
+              "channel": "站内受控渠道"
+            },
+            "draftRef": {
+              "resourceType": "TaskBriefRevision",
+              "resourceId": "creator-brief-isolated",
+              "revision": 7,
+              "contentHash": "7777777777777777777777777777777777777777777777777777777777777777"
+            },
+            "expectedVersion": 7,
+            "restoreRevision": 1
+          }
+        }
+      ],
+      "viewReads": 3,
+      "supportReads": 31
+    }
+  ]
+}
