@@ -83,3 +83,36 @@ def test_running_schedule_binding_blocks_drift(database):
     for mismatch in ({'pipeline_hash':'b'*64}, {'source_revision':str(uuid4())}):
         with factory(scope) as conn, pytest.raises(IngressJournalConflict):
             journal.save_for_running_schedule(conn, scope, **dict(args, **mismatch))
+
+
+def test_derived_commands_are_durable_and_bound_to_original_objects(database):
+    from aos_api.ec_ingress_journal import IngressJournal, IngressJournalConflict
+    from aos_api.ec_ot_writer import _normalize_rows, _build_sync_scope, _build_batch_command, prepare_derived_commands
+    database.owner.execute('CREATE TABLE data_source_configuration_revision(org_id text,project_id text,source_id text,revision_id uuid,PRIMARY KEY(org_id,project_id,source_id,revision_id))')
+    revision = uuid4()
+    database.owner.execute("INSERT INTO data_source_configuration_revision VALUES('org-org','dev-project','source',%s)", (revision,))
+    for filename in ('a0v_005_ingress_command_journal.py','a0v_006_ingress_derived_journal.py'):
+        spec = importlib.util.spec_from_file_location('migration', ROOT/'alembic/versions'/filename)
+        migration = importlib.util.module_from_spec(spec); spec.loader.exec_module(migration)
+        migration.op = SimpleNamespace(execute=database.owner.execute); migration.upgrade()
+    scope=TenantScope('org-org','dev-project'); pipeline=SimpleNamespace(id='p08')
+    row={'ot':'CustomerLite','source_pk':'1','source_updated_at':datetime.now(timezone.utc),
+        'properties':{'memberLevel':'1','status':'active','order_count':2}}
+    store=SimpleNamespace(get_checkpoint=lambda _:None,get_latest_authoritative_revision=lambda _:7,get_derived_revision=lambda *a:0)
+    objects,links=_normalize_rows([row],_build_sync_scope(scope,pipeline))
+    command=_build_batch_command(sync_scope=_build_sync_scope(scope,pipeline),objects=objects,links=links,pipeline_id='p08',store=store)
+    derived=prepare_derived_commands(SimpleNamespace(ecom_consistency_store=store),scope,pipeline,[row])
+    journal=IngressJournal(storage_schema=database.schema); factory=runtime_connection(database)
+    with factory(scope) as conn:
+        journal.save(conn,scope,run_id='run',pipeline_id='p08',source_id='source',source_revision=str(revision),pipeline_hash='a'*64,command=command)
+        first=journal.save_derived(conn,scope,'run',derived)
+    with factory(scope) as conn:
+        assert journal.read_derived(conn,scope,'run')==first
+        assert journal.save_derived(conn,scope,'run',derived)==first
+        with pytest.raises(IngressJournalConflict):
+            journal.save_derived(conn,scope,'run',[derived[0].model_copy(update={'expected_derived_revision':1})])
+        wrong=derived[0].model_copy(update={'identity':derived[0].identity.model_copy(update={'external_id':'niushop:1:other'})})
+        with pytest.raises(IngressJournalConflict): journal.save_derived(conn,scope,'run',[wrong])
+    with factory(TenantScope('dev-org','dev-project')) as conn:
+        assert journal.read_derived(conn,scope,'run') is None
+    with pytest.raises(errors.RaiseException), database.owner.transaction(): migration.downgrade()

@@ -96,3 +96,46 @@ class IngressJournal:
             or str(source['configuration_revision']) != args['source_revision']):
             raise IngressJournalConflict('INGRESS_SOURCE_CONFIGURATION_DRIFT')
         return self.save(conn, scope, **args)
+
+    def _derived_payload(self, parent, commands):
+        from aos_api.ecom_core_models import DerivedMetricCommand
+        base = BatchCommand.model_validate(parent['command'])
+        allowed = {(obj.object_type, obj.identity.scoped_key()) for obj in base.objects if not obj.is_deleted}
+        seen = set()
+        normalized = []
+        for raw in commands:
+            command = DerivedMetricCommand.model_validate(raw)
+            identity = (command.object_type, command.identity.scoped_key())
+            if identity not in allowed or identity in seen or command.stream != parent['pipelineId']:
+                raise IngressJournalConflict('INGRESS_DERIVED_IDENTITY_DRIFT')
+            seen.add(identity)
+            normalized.append(command.model_dump(mode='json'))
+        return {'parentHash': _digest(parent), 'commands': normalized}
+
+    def read_derived(self, conn, scope, run_id):
+        table = sql.Identifier(self.schema, 'ecommerce_ingress_derived_command')
+        row = conn.execute(sql.SQL('SELECT payload,payload_hash FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(table),(*scope.key,run_id)).fetchone()
+        if row is None:
+            return None
+        parent = self.read(conn,scope,run_id)
+        payload = row['payload']
+        if (parent is None or type(payload) is not dict or set(payload) != {'parentHash','commands'}
+            or type(payload['commands']) is not list or self._derived_payload(parent,payload['commands']) != payload
+            or _digest(payload) != row['payload_hash']):
+            raise IngressJournalConflict('INGRESS_DERIVED_PAYLOAD_DRIFT')
+        return payload
+
+    def save_derived(self, conn, scope, run_id, commands):
+        parent = self.read(conn,scope,run_id)
+        if parent is None:
+            raise IngressJournalConflict('INGRESS_PARENT_REQUIRED')
+        payload = self._derived_payload(parent,[c.model_dump(mode='json') for c in commands])
+        digest = _digest(payload)
+        table = sql.Identifier(self.schema, 'ecommerce_ingress_derived_command')
+        conn.execute(sql.SQL('''INSERT INTO {} (org_id,project_id,run_id,payload_hash,payload)
+            VALUES(%s,%s,%s,%s,%s::jsonb) ON CONFLICT(org_id,project_id,run_id) DO NOTHING''').format(table),
+            (*scope.key,run_id,digest,json.dumps(payload,ensure_ascii=False,allow_nan=False)))
+        saved = self.read_derived(conn,scope,run_id)
+        if saved is None or _digest(saved) != digest:
+            raise IngressJournalConflict('INGRESS_DERIVED_CONFLICT')
+        return saved
