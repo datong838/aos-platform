@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 from pathlib import Path
 
 from aos_api.asset_registry.manifest_loader import ManifestLoader
@@ -135,3 +137,45 @@ def test_registration_handlers_remain_fail_closed_before_cutover() -> None:
                 assert "registration-only" in str(exc)
             else:
                 raise AssertionError(f"candidate handler unexpectedly ran: {operation}")
+
+
+def test_runtime_candidates_bind_exact_platform_schema_compatibility() -> None:
+    expected_relations = [
+        "public.asset_bundle",
+        "public.asset_bundle_artifact",
+        "public.asset_bundle_evidence",
+        "public.asset_bundle_version",
+        "public.bundle_composition",
+        "public.bundle_composition_lock",
+        "public.bundle_installation",
+        "public.bundle_installation_revision",
+        "public.extension_operation_dispatch_binding",
+        "public.extension_runtime_binding",
+        "public.extension_runtime_operation",
+        "public.extension_runtime_resource_lease",
+        "public.extension_schema_installation",
+    ]
+    for candidate_path, _author_path, bundle_id, _version, _package, _operations in CASES:
+        artifacts = CANDIDATE_ROOT / candidate_path / "artifacts"
+        compatibility_raw = (artifacts / "schema-compatibility.json").read_bytes()
+        compatibility = json.loads(compatibility_raw)
+        assert compatibility == {
+            "schemaVersion": 1,
+            "bundleId": bundle_id,
+            "alembicRevision": "a0v_001",
+            "noPackageOwnedMigration": True,
+            "requiredRelations": expected_relations,
+        }
+        requirements = json.loads(
+            (artifacts / "schema-requirements.json").read_bytes()
+        )
+        assert requirements == {
+            "schemaVersion": 1,
+            "requirements": [
+                {
+                    "version": "aos-platform-a0v-001",
+                    "migrationHash": "sha256:"
+                    + hashlib.sha256(compatibility_raw).hexdigest(),
+                }
+            ],
+        }
