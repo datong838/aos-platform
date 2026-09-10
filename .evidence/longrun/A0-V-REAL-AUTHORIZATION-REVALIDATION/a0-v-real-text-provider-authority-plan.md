@@ -25,7 +25,7 @@
 - Secret version：`a0v-v1`
 - endpoint：`https://api.agnes-ai.cn/v1`，region 与现行 egress 完全一致，timeout 10 秒
 
-产品数据库只保存 Secret ref/version，不保存 Secret 内容。脚本仅从仓库根目录 `.env` 的 `AGNES_API_KEY` 读取非空值，通过 macOS Security Framework 的 `SecKeychainAddGenericPassword` / `SecKeychainItemModifyAttributesAndData` C API 从内存写入精确 Keychain 条目，避免 Secret 出现在进程参数列表、标准输入日志或子进程环境；标准输出、错误和证据均不得包含 Secret。已有非空条目不覆盖；已有空条目可由相同 identity 修复。若 `.env` 的 base URL 或 text model 与固定批准值不一致则 fail closed。
+产品数据库只保存 Secret ref/version，不保存 Secret 内容。脚本仅从仓库根目录 `.env` 的 `AGNES_API_KEY` 读取非空值，使用私有伪终端调用 `/usr/bin/security add-generic-password -U ... -w`：Secret 只写入已关闭 ECHO 的终端输入，不进入 argv、环境或输出；标准输出、错误和证据均不得包含 Secret。这样条目创建者与现有 `/usr/bin/security` resolver 一致。已有非空条目不覆盖；已有空条目可由相同 identity 原位修复。若 `.env` 的 base URL 或 text model 与固定批准值不一致则 fail closed。
 
 ## 4. 执行顺序与退出条件
 
