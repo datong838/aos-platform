@@ -74,6 +74,12 @@ EXPECTED_TAMPER_REJECTIONS = (
 REGISTRY_CREATE_ROLES = frozenset({"asset-publisher", "asset-registry-admin", "developer"})
 REGISTRY_PUBLISH_ROLES = frozenset({"asset-publisher", "asset-registry-admin"})
 PUBLISHER_SCOPES = frozenset({"aos"})
+INSTALL_MAKER = "a0v-canonical-ecommerce-first-install-maker"
+INSTALL_CHECKER = "a0v-canonical-ecommerce-first-install-checker"
+INSTALL_MAKER_ROLES = frozenset({"asset-installer"})
+INSTALL_CHECKER_ROLES = frozenset({"asset-install-approver"})
+INSTALL_MARKINGS = frozenset()
+INSTALL_IDEMPOTENCY_PREFIX = "a0v-canonical-ecommerce-first-install-v1"
 
 
 class FirstInstallBlocked(RuntimeError):
@@ -781,6 +787,211 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> dict
         sys.path.remove(str(API_ROOT))
 
 
+def create_approved_first_installation(
+    *, connect_factory: Any, state_dir: Path
+) -> dict[str, Any]:
+    sys.path.insert(0, str(API_ROOT))
+    try:
+        from aos_api.asset_registry.composition_contracts import (
+            ApproveInstallationRequest,
+            CompositionRequest,
+            CreateInstallationRequest,
+            EmptyInstallationActionRequest,
+            InstallationResponse,
+            StoredCompositionLock,
+        )
+        from aos_api.asset_registry.composition_service import CompositionService
+        from aos_api.asset_registry.composition_store import PostgresCompositionStore
+        from aos_api.asset_registry.installation_revalidation import (
+            InstallationRevalidator,
+        )
+        from aos_api.asset_registry.installation_service import InstallationService
+        from aos_api.asset_registry.installation_store import PostgresInstallationStore
+        from aos_api.asset_registry.registry_snapshot import RegistrySnapshotReader
+        from aos_api.asset_registry.release_policy import ReleasePolicy
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+
+        trust = FileTrustRootProvider(
+            state_dir.resolve() / "signing/trust-roots.json"
+        ).snapshot()
+        policy = ReleasePolicy(trust_roots=trust)
+        installation_store = PostgresInstallationStore(connect_factory=connect_factory)
+        composition_store = PostgresCompositionStore(connect_factory=connect_factory)
+        snapshot_reader = RegistrySnapshotReader(
+            connect_factory=connect_factory, release_policy=policy
+        )
+        composition_service = CompositionService(
+            snapshot_reader=snapshot_reader,
+            composition_store=composition_store,
+            command_store=installation_store,
+            baseline_reader=installation_store,
+        )
+        snapshot = snapshot_reader.read()
+        request = CompositionRequest.model_validate(
+            {
+                "requested": [
+                    {
+                        "publisher": "aos",
+                        "id": "platform.ecommerce.niushop",
+                        "version": "1.1.0",
+                    },
+                    {
+                        "publisher": "aos",
+                        "id": "solution.ecommerce.growth",
+                        "version": "1.4.0",
+                    },
+                    {
+                        "publisher": "aos",
+                        "id": "solution.ecommerce.operations-base",
+                        "version": "1.2.0",
+                    },
+                ],
+                "platformApiVersion": "1.7.0",
+                "platformRelease": "aos-platform/1.7.0",
+                "environment": "dev",
+                "registrySnapshotHash": snapshot.snapshot_hash,
+                "currentInstallationRef": None,
+            }
+        )
+        composition_receipt = composition_service.resolve(
+            request=request,
+            org_id=ORG_ID,
+            project_id=PROJECT_ID,
+            actor=INSTALL_MAKER,
+            roles=INSTALL_MAKER_ROLES,
+            markings=INSTALL_MARKINGS,
+            idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-composition",
+        )
+        lock = StoredCompositionLock.model_validate_json(
+            json.dumps(composition_receipt.response_json, default=str)
+        )
+        expected_coordinates = {
+            ("domain.ecommerce.core", "1.1.0"),
+            ("platform.ecommerce.niushop", "1.1.0"),
+            ("solution.ecommerce.growth", "1.4.0"),
+            ("solution.ecommerce.operations-base", "1.2.0"),
+        }
+        coordinates = {(item.id, item.version) for item in lock.payload.resolved}
+        if coordinates != expected_coordinates:
+            raise FirstInstallBlocked("COMPOSITION_RESOLUTION_DRIFT", str(coordinates))
+        if lock.payload.current_installation_ref is not None or len(lock.payload.edges) != 3:
+            raise FirstInstallBlocked("COMPOSITION_BASELINE_DRIFT", lock.lock_hash)
+        contribution_count = sum(
+            len(item.contributions) for item in lock.payload.resolved
+        )
+        module_count = sum(
+            1
+            for item in lock.payload.resolved
+            for contribution in item.contributions
+            if contribution.kind == "ui"
+            and contribution.slot == "workshop.primary.ecommerce"
+        )
+        if module_count != 8:
+            raise FirstInstallBlocked(
+                "COMPOSITION_MODULE_INVENTORY_DRIFT", str(module_count)
+            )
+        service = InstallationService(
+            store=installation_store,
+            composition_store=composition_store,
+            revalidator=InstallationRevalidator(release_policy=policy),
+        )
+        created = service.create(
+            request=CreateInstallationRequest.model_validate(
+                {
+                    "compositionId": lock.composition_id,
+                    "lockRevision": lock.revision,
+                    "overlayRevision": "a0v-canonical-ecommerce-v1",
+                    "displayName": "A0-V Canonical 电商八工作台首装",
+                }
+            ),
+            org_id=ORG_ID,
+            project_id=PROJECT_ID,
+            actor=INSTALL_MAKER,
+            roles=INSTALL_MAKER_ROLES,
+            markings=INSTALL_MARKINGS,
+            idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-create",
+        )
+        initial = InstallationResponse.model_validate_json(
+            json.dumps(created.response_json, default=str)
+        )
+        installation_id = initial.installation_id
+        current = installation_store.get_installation(
+            org_id=ORG_ID, project_id=PROJECT_ID, installation_id=installation_id
+        )
+        transitions = []
+        if current.state == "draft":
+            service.submit(
+                installation_id=installation_id,
+                request=EmptyInstallationActionRequest(),
+                org_id=ORG_ID,
+                project_id=PROJECT_ID,
+                actor=INSTALL_MAKER,
+                roles=INSTALL_MAKER_ROLES,
+                markings=INSTALL_MARKINGS,
+                idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-submit",
+                if_match=f'"{current.etag_version}"',
+            )
+            transitions.append("submit")
+            current = installation_store.get_installation(
+                org_id=ORG_ID, project_id=PROJECT_ID, installation_id=installation_id
+            )
+        if current.state == "submitted":
+            service.approve(
+                installation_id=installation_id,
+                request=ApproveInstallationRequest.model_validate(
+                    {
+                        "lockHash": lock.lock_hash,
+                        "permissionDiffHash": lock.permission_diff_hash,
+                        "migrationPlanHash": lock.migration_plan_hash,
+                        "contributionDiffHash": lock.contribution_diff_hash,
+                    }
+                ),
+                org_id=ORG_ID,
+                project_id=PROJECT_ID,
+                actor=INSTALL_CHECKER,
+                roles=INSTALL_CHECKER_ROLES,
+                markings=INSTALL_MARKINGS,
+                idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-approve",
+                if_match=f'"{current.etag_version}"',
+            )
+            transitions.append("approve")
+            current = installation_store.get_installation(
+                org_id=ORG_ID, project_id=PROJECT_ID, installation_id=installation_id
+            )
+        if current.state not in {"approved", "applied", "active"}:
+            raise FirstInstallBlocked("INSTALLATION_NOT_APPROVED", current.state)
+        return {
+            "snapshotHash": snapshot.snapshot_hash,
+            "compositionId": lock.composition_id,
+            "lockRevision": lock.revision,
+            "lockHash": lock.lock_hash,
+            "permissionDiffHash": lock.permission_diff_hash,
+            "migrationPlanHash": lock.migration_plan_hash,
+            "contributionDiffHash": lock.contribution_diff_hash,
+            "resolved": [
+                {
+                    "bundleId": item.id,
+                    "version": item.version,
+                    "contentHash": item.content_hash,
+                    "selectionReason": item.selection_reason,
+                }
+                for item in lock.payload.resolved
+            ],
+            "edgeCount": len(lock.payload.edges),
+            "contributionCount": contribution_count,
+            "moduleCount": module_count,
+            "installationId": installation_id,
+            "installationState": current.state,
+            "installationRevision": current.current_revision,
+            "installationEtag": current.etag_version,
+            "transitions": transitions,
+            "maker": INSTALL_MAKER,
+            "checker": INSTALL_CHECKER,
+        }
+    finally:
+        sys.path.remove(str(API_ROOT))
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence = verify_v4_inputs(
         build_dir=args.build_dir,
@@ -819,8 +1030,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "providerInvocationCount": 0,
         "externalPublicationCount": 0,
     }
-    evidence["mode"] = "apply-registry"
-    evidence["outcome"] = "CANONICAL_REGISTRY_PUBLISHED"
+    prior_installation_count = int(evidence["database"]["tenantCounts"]["installations"])
+    evidence["installation"] = create_approved_first_installation(
+        connect_factory=connect, state_dir=args.state_dir
+    )
+    evidence["effects"]["installationMutationCount"] = len(
+        evidence["installation"]["transitions"]
+    ) + (1 if prior_installation_count == 0 else 0)
+    evidence["mode"] = "apply-installation-approved"
+    evidence["outcome"] = "CANONICAL_INSTALLATION_APPROVED"
     return evidence
 
 
