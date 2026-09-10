@@ -1,0 +1,139 @@
+{
+  "before": {
+    "capability_revisions": 0,
+    "datasets": 0,
+    "suites": 0
+  },
+  "canaryCounts": {
+    "capability_bindings": 0,
+    "datasets": 0,
+    "suites": 0
+  },
+  "effects": {
+    "externalPublicationCount": 0,
+    "mutationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "mode": "preflight",
+  "outcome": "PREFLIGHT_GREEN",
+  "sourceHashes": {
+    "expected": "02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6",
+    "policy": "2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+    "source": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a"
+  },
+  "w0b": {
+    "blockers": [],
+    "ready": true,
+    "relationCount": 15,
+    "relations": [
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_artifact_relation",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_eval_contract_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_eval_contract_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_evidence_bundle_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_impact_preview_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_impact_preview_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_responsibility_plan_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_responsibility_plan_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_return_decision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_review_issue",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_review_issue_event",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_stage_template_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_stage_template_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_task_brief_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_task_brief_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      }
+    ],
+    "requiredRelationCount": 15,
+    "requiredStoreMethodCount": 22,
+    "storeMethodCount": 22
+  }
+}

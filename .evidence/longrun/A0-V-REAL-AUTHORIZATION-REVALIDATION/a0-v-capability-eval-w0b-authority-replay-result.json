@@ -1,0 +1,316 @@
+{
+  "after": {
+    "capability_revisions": 10,
+    "datasets": 10,
+    "suites": 10
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-capability-eval-w0b-authority/backups/aos_meta_head-pre-canonical-first-install.dump",
+    "sha256": "sha256:987d7777ded964fa70a55923a13e8fcba195b8371ab6fc4d001110aef9092eaf",
+    "size": 4353132
+  },
+  "before": {
+    "capability_revisions": 10,
+    "datasets": 10,
+    "suites": 10
+  },
+  "canaryCounts": {
+    "capability_bindings": 0,
+    "datasets": 0,
+    "suites": 0
+  },
+  "effects": {
+    "externalPublicationCount": 0,
+    "mutationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "items": [
+    {
+      "capabilityId": "material.collect",
+      "contentHash": "d4fe301213f78ea8ffa1aebd8aff3b165b02df0c17046f9f21ce3fc7563f59ec",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.material.collect",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "527f111425c2d0ee0a3cb44640b5fe0a36393c1621fe54f92494318986f6722a",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "strategy.plan",
+      "contentHash": "eb8fc755a23d17878e045973deccf0eaafe0cd711ca4160ec141ee612e49b15c",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.strategy.plan",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "fdca02ec64266278283dd682add82e7f95f611e28d96556e3c6cf9a0ba3be89b",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "copy.generate",
+      "contentHash": "735883ceef555062bdc2a5d312863e3ab2f9cd458f52745021a1f6c217c357f0",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.copy.generate",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "1e2fbac848af554e87d5e8213df3319c7c7860b2c5c27a1b4fd67e89b866fb46",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "script.compose",
+      "contentHash": "2a13084050b22de1443c6c636fb59247ebf7cbff291f14f30021c5f189c5851f",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.script.compose",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "bae67d96c0c8681524d35f8714b7ddfd38b07b1e2ab34ac796b50d9499aca6fd",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "speech.synthesize",
+      "contentHash": "76251a492f3974f7284c7f7f7b80d3077f61580c16b112c278aa2a72ea75bafa",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.speech.synthesize",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "ffd5bc8c5b2a4caee6fa52278fd9c80994a1dab2f364cba8ea4b3646eb8bb584",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "video.compose",
+      "contentHash": "9bb5ba502d29473771166ab7387c5dfc09360face33878253ed834c010e0bb54",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.video.compose",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "1425c9abcc0201a1505da4357d385dafe8abdeb03c215ba8a1dcdbac69af7054",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "content.review",
+      "contentHash": "ea0d7004db8122c9417efcad64a4e4426a8b0d9d9c046e6376f3de0a7649168d",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.content.review",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "3b77019fa44d2effd89a01d580db15eb2e74297775cfadc41bb08a289ad91ea4",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "live.orchestrate",
+      "contentHash": "843511d697ae1205f326977e61234ce975a423e4a5d9e87dbe1709cc0525a1e6",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.live.orchestrate",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "c453bb7e20921827da480413d984dc018fa5c06d6597b99e96e50da53c5b3317",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "platform.adapt",
+      "contentHash": "9ea1818c02c2a127136e62fd260a18a3649b367310b4a62582fac51c3b53876a",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.platform.adapt",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "ea9bc30fa13f07fe435ef1341709abe2e47c2dc6d2a2181b7c2e409cd055635d",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    },
+    {
+      "capabilityId": "performance.review",
+      "contentHash": "cbbae7be1e1f4d75dade70990aeba7389b24229bcfc03618b7fef4455801adbc",
+      "evalPackRef": {
+        "assetId": "a0v.ecommerce.capability.evalpack.performance.review",
+        "assetType": "EvalSuiteRevision",
+        "contentHash": "21daa021f83a46eeb5d24591f838375b4c1392b42ed4bab233d198d76e990df3",
+        "revision": 1
+      },
+      "readiness": "blocked",
+      "readinessReasons": [
+        "provider_unknown",
+        "aip7_route_authority_unavailable"
+      ],
+      "revision": 2
+    }
+  ],
+  "mode": "apply",
+  "outcome": "A0V_CAPABILITY_EVAL_W0B_AUTHORITY_GREEN",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "sourceHashes": {
+    "expected": "02b181ca7d55990bbca1e2e923a24eddefe97cc34f596c82def301d22563c4f6",
+    "policy": "2ff91b4c0b34906fcc18b40a467cb786835d6168a6301f8abc9647476417cd4f",
+    "source": "0d33aac853f9f7cac835ea97cd8409388a9c4afe22ddec3b4a8eb668c72acf5a"
+  },
+  "sourceTreeHash": "sha256:26a5942e8087252df8f72e5430e4c4c6e42c906a8f814fe2df428d33c1293950",
+  "w0b": {
+    "blockers": [],
+    "ready": true,
+    "relationCount": 15,
+    "relations": [
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_artifact_relation",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_eval_contract_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_eval_contract_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_evidence_bundle_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_impact_preview_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_impact_preview_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_responsibility_plan_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_responsibility_plan_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_return_decision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_review_issue",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_review_issue_event",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_stage_template_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_stage_template_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_task_brief_head",
+        "rls": true,
+        "tenant_key_columns": 2
+      },
+      {
+        "force_rls": true,
+        "policy_count": 1,
+        "relation": "aip_task_brief_revision",
+        "rls": true,
+        "tenant_key_columns": 2
+      }
+    ],
+    "requiredRelationCount": 15,
+    "requiredStoreMethodCount": 22,
+    "storeMethodCount": 22
+  }
+}
