@@ -1,0 +1,43 @@
+{
+  "after": {
+    "activeExactProviderCount": 1,
+    "canaryProviderAndHealthCount": 0,
+    "currentHealthyObservationCount": 1,
+    "exactHealthObservationCount": 1,
+    "observedAt": "2026-09-10 16:09:32.486189+00:00"
+  },
+  "before": {
+    "activeExactProviderCount": 1,
+    "canaryProviderAndHealthCount": 0,
+    "currentHealthyObservationCount": 1,
+    "exactHealthObservationCount": 1,
+    "observedAt": "2026-09-10 16:09:26.689066+00:00"
+  },
+  "businessMutationCount": 0,
+  "externalPublicationCount": 0,
+  "healthObservationMutationCount": 0,
+  "latencyMs": 483,
+  "mode": "apply",
+  "observation": {
+    "expiresAt": "2026-09-10 16:22:48.912754+00:00",
+    "observationId": "a0v-health-20260910160748912754",
+    "observedAt": "2026-09-10 16:07:48.912754+00:00",
+    "p50LatencyMs": 483,
+    "provider": {
+      "assetId": "a0v-agnes-text-readonly-dev",
+      "assetType": "ProviderInstanceRevision",
+      "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982",
+      "revision": 1
+    },
+    "status": "healthy"
+  },
+  "outcome": "A0V_REAL_TEXT_PROVIDER_HEALTH_GREEN",
+  "promptOrAnswerBodiesReported": 0,
+  "providerCalls": 0,
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "secretPayloadReadsReported": 0,
+  "totalTokens": 0
+}

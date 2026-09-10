@@ -1,0 +1,4 @@
+{
+  "outcome": "SAFE_BLOCKED",
+  "reasonCode": "KEYCHAIN_EXACT_SECRET_UNAVAILABLE"
+}

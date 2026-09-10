@@ -46,6 +46,8 @@ Prime 的 GitHub Copilot OAuth 和 `~/.prime/agent/auth.json` 未被读取或引
 
 ## 一致性与风险复核
 
-实现与方案一致：默认 preflight、显式目标库、发布前备份、Keychain 已有条目不覆盖、Secret 经标准输入交给 `security` 且不进入进程参数、数据库只存 opaque ref、canary fail closed、Provider 调用数为 0。
+实现与修订后方案一致：默认 preflight、显式目标库、发布前备份、不可判定 Keychain 条目默认不覆盖、显式修复只作用于已确认异常的精确 service/account、Secret 经关闭 ECHO 的私有伪终端两次输入给 `security` 且不进入进程参数/环境/输出、数据库只存 opaque ref、canary fail closed、Provider 调用数为 0。
+
+首次标准输入方案错误创建了空 Keychain 条目；v1 健康预检以 `secret_keychain_empty` 在 transport 前阻塞。随后 Security Framework 原位更新保留了不兼容 ACL，正式 resolver 仍安全阻塞。最终通过随机哨兵验证私有伪终端写入/读回 exact match 后，使用显式 `--repair-keychain-item` 删除并重建唯一异常条目。修复结果 `a0-v-real-text-provider-keychain-repair-green-result.json` 显示数据库 mutation=0、Keychain mutation=1、Provider invocation=0。
 
 剩余风险是 Keychain 只证明精确条目存在，尚未证明 Agnes 当前接受该凭据；Provider health 仍为 0，必须由下一切片的一次有界真实探针取得短期健康观察。随后仍需模型/路由、Capability route、37 份 Skill 发布链、6 个 AgentInstance 与 ResponsibilityPlan，才可能关闭 A0-V。

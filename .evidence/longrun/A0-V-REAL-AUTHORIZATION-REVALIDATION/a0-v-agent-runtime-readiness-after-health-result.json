@@ -1,0 +1,167 @@
+{
+  "databaseName": "aos_meta_head",
+  "effects": {
+    "externalPublicationCount": 0,
+    "mutationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "firstUnsatisfiedGate": "modelRoutes",
+  "inventory": {
+    "activeAgentInstanceCount": 0,
+    "activeModelRouteCount": 0,
+    "activeProviderCount": 1,
+    "agentInstanceStatusCounts": {
+      "provisioning": 6
+    },
+    "canaryCounts": {
+      "agent_instances": 0,
+      "capability_bindings": 0,
+      "providers": 0,
+      "responsibility_plans": 0,
+      "routes": 0,
+      "runtime_policies": 0,
+      "skill_bindings": 0
+    },
+    "capabilityDefinitionBlockers": [
+      "aip7_route_authority_unavailable",
+      "provider_unknown"
+    ],
+    "capabilityEvalAndW0bBlockers": [],
+    "capabilityEvalAndW0bReadyCount": 10,
+    "capabilityProviderRouteBlockers": [
+      "aip7_route_authority_unavailable",
+      "provider_unknown"
+    ],
+    "capabilityProviderRouteReadyCount": 0,
+    "configurationPolicyCount": 7,
+    "currentPassedEvalGateCount": 0,
+    "evaluatedSkillCount": 37,
+    "freshCapabilityBindingCount": 0,
+    "freshSkillBindingCount": 0,
+    "frozenEvalContractCount": 0,
+    "frozenResponsibilityPlanCount": 0,
+    "healthyProviderObservationCount": 1,
+    "logicPublicationCount": 0,
+    "publishedAgentTemplateCount": 6,
+    "publishedCapabilityCount": 10,
+    "publishedSkillCount": 0,
+    "skillLifecycleCounts": {
+      "evaluated": 37
+    }
+  },
+  "layers": {
+    "activeAgentInstances": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 6,
+      "status": "blocked"
+    },
+    "agentTemplates": {
+      "actual": 6,
+      "blockers": [],
+      "expected": 6,
+      "status": "ready"
+    },
+    "capabilityBindings": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 10,
+      "status": "blocked"
+    },
+    "capabilityDefinitions": {
+      "actual": 10,
+      "blockers": [],
+      "expected": 10,
+      "status": "ready"
+    },
+    "capabilityEvalAndW0b": {
+      "actual": 10,
+      "blockers": [],
+      "expected": 10,
+      "status": "ready"
+    },
+    "capabilityProviderRoute": {
+      "actual": 0,
+      "blockers": [
+        "aip7_route_authority_unavailable",
+        "provider_unknown"
+      ],
+      "expected": 10,
+      "status": "blocked"
+    },
+    "configurationPolicies": {
+      "actual": 7,
+      "blockers": [],
+      "expected": 7,
+      "status": "ready"
+    },
+    "evalContracts": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 37,
+      "status": "blocked"
+    },
+    "evalGates": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 37,
+      "status": "blocked"
+    },
+    "evaluatedSkills": {
+      "actual": 37,
+      "blockers": [],
+      "expected": 37,
+      "status": "ready"
+    },
+    "logicPublications": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 37,
+      "status": "blocked"
+    },
+    "modelRoutes": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 1,
+      "status": "blocked"
+    },
+    "providerHealth": {
+      "actual": 1,
+      "blockers": [],
+      "expected": 1,
+      "status": "ready"
+    },
+    "providers": {
+      "actual": 1,
+      "blockers": [],
+      "expected": 1,
+      "status": "ready"
+    },
+    "publishedSkills": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 37,
+      "status": "blocked"
+    },
+    "responsibilityPlan": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 1,
+      "status": "blocked"
+    },
+    "skillBindings": {
+      "actual": 0,
+      "blockers": [],
+      "expected": 37,
+      "status": "blocked"
+    }
+  },
+  "mode": "read-only-audit",
+  "nextAction": "ACTIVATE_EXACT_MODEL_ROUTE",
+  "observedAt": "2026-09-10T16:09:33.382695+00:00",
+  "outcome": "A0V_AGENT_RUNTIME_READINESS_BLOCKED",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  }
+}
