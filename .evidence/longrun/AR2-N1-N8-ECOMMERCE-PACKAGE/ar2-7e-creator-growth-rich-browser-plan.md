@@ -46,3 +46,10 @@
 - 内部 command response 每步 `providerInvocationCount=0`、`externalOutreachCount=0`、`contractSignatureCount=0`、`businessMutationCount=0`。
 - Creator 定向现有测试、Web 全量、production build、`verify_closure.py --phase ar2-7` 和 `git diff --check` 全绿；产品代码 hash 不变。
 - 本切片通过后富浏览器进度 `6/8`，继续 Media Studio，不前推 AR2-7E 总体标记。
+
+## 6. 首轮诊断与执行器修正（2026-09-10）
+
+- 首轮在 `1280×720` 与 `1440×900` 均于初始回读停止，内部 workflow 写入为 0；两视口根因相同，按同阶段两次失败规则先停止并复核。
+- 定位歧义：页面同时存在 AppShell `main.main` 与业务区 `main.creator-growth-main`。初始业务回读改为精确选择 `.creator-growth-main`，不改变产品 DOM。
+- 路由漂移：产品客户端实际读取 `/api/v1/ecommerce-workshop/views/content-campaign/real-inputs`，执行器误写为 `/inputs`。fixture 路由改为产品客户端的真实路径。
+- 修正范围只限浏览器证据执行器；保留首轮 FAIL JSON 与 diagnostic 截图直至绿态证据生成，产品文件 hash 退出条件不变。
