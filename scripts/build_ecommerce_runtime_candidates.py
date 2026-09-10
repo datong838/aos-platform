@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import importlib.util
 import json
@@ -16,6 +17,7 @@ import tarfile
 import tempfile
 import time
 import uuid
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Sequence
 
@@ -31,6 +33,7 @@ DEFAULT_REGISTRY_PORT = 18436
 BASE_IMAGE = "python:3.11-alpine"
 PLATFORM = "linux/arm64"
 RUNTIME_LOCK = b"aos-extension-sdk=repository-source-tree\n"
+QUALIFICATION_KEY_ID = "a0v-ephemeral-candidate-qualification"
 RUNTIME_CASES = (
     ("domain.ecommerce.core/1.1.0", "domain.ecommerce.core", "1.1.0", "ecommerce_core"),
     (
@@ -60,6 +63,29 @@ class CandidateBuildBlocked(RuntimeError):
     def __init__(self, reason_code: str, message: str) -> None:
         super().__init__(message)
         self.reason_code = reason_code
+
+
+class _ReleaseRecord:
+    def __init__(
+        self,
+        *,
+        publisher: str,
+        manifest: Any,
+        content_hash: str,
+        signature: Any,
+        status: Any,
+        evidence: list[Any],
+        artifacts: list[dict[str, object]],
+        persisted_manifest: dict[str, object] | None = None,
+    ) -> None:
+        self.publisher = publisher
+        self.manifest = manifest
+        self.content_hash = content_hash
+        self.signature = signature
+        self.status = status
+        self.evidence = evidence
+        self.artifacts = artifacts
+        self.persisted_manifest = persisted_manifest
 
 
 def _sha256(raw: bytes) -> str:
@@ -479,6 +505,354 @@ def _content_hashes(output: Path) -> dict[str, str]:
         sys.path.remove(str(API_ROOT))
 
 
+def _artifact_rows(bundle: Any) -> list[dict[str, object]]:
+    return [
+        {
+            "relativePath": item.relative_path,
+            "digest": item.digest,
+            "size": item.size,
+            "mediaType": item.media_type,
+        }
+        for item in bundle.artifacts
+    ]
+
+
+def _signature_payload(bundle: Any) -> bytes:
+    from aos_api.asset_registry.canonical_json import canonical_json
+
+    return canonical_json(
+        {
+            "manifest": bundle.manifest.model_dump(
+                mode="json", by_alias=True, exclude_none=False
+            ),
+            "artifacts": _artifact_rows(bundle),
+        }
+    )
+
+
+def _release_record(bundle: Any) -> _ReleaseRecord:
+    from aos_api.asset_registry.contracts import BundleVersionStatus
+
+    return _ReleaseRecord(
+        publisher=bundle.manifest.metadata.publisher,
+        manifest=bundle.manifest,
+        content_hash=bundle.content_hash,
+        signature=bundle.signature,
+        status=BundleVersionStatus.PUBLISHED,
+        evidence=list(bundle.evidence),
+        artifacts=_artifact_rows(bundle),
+    )
+
+
+def _snapshot_candidate(bundle: Any, approved: Any) -> Any:
+    from aos_api.asset_registry.composition_contracts import RegistrySnapshotCandidate
+
+    manifest = bundle.manifest
+    spec = manifest.spec
+    publisher = manifest.metadata.publisher
+    return RegistrySnapshotCandidate.model_validate(
+        {
+            "publisher": publisher,
+            "id": manifest.metadata.id,
+            "version": manifest.metadata.version,
+            "kind": manifest.kind,
+            "manifest": manifest,
+            "contentHash": bundle.content_hash,
+            "signatureFingerprint": approved.signature_fingerprint,
+            "releaseEvidenceRevision": approved.release_evidence_revision,
+            "dependencies": [
+                {
+                    "publisher": item.publisher or publisher,
+                    "id": item.id,
+                    "version": item.version,
+                }
+                for item in spec.dependencies
+            ],
+            "optionalDependencies": [
+                {
+                    "publisher": item.publisher or publisher,
+                    "id": item.id,
+                    "version": item.version,
+                }
+                for item in spec.optional_dependencies
+            ],
+            "conflicts": [
+                {
+                    "publisher": item.publisher or publisher,
+                    "id": item.id,
+                    "version": item.version,
+                }
+                for item in spec.conflicts
+            ],
+            "capabilities": spec.capabilities.model_dump(mode="json", by_alias=True),
+            "permissions": spec.permissions.model_dump(mode="json", by_alias=True),
+            "migration": {
+                "planRef": spec.migrations.plan,
+                "downgradePolicy": spec.migrations.downgrade_policy,
+            },
+            "contributions": [
+                item.model_dump(mode="json", by_alias=True)
+                for item in spec.contributions
+            ],
+        }
+    )
+
+
+def _read_receipt(path: Path, *, output: Path) -> dict[str, Any]:
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CandidateBuildBlocked("BUILD_RECEIPT_INVALID", str(path)) from exc
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("outcome") != "BUILD_GREEN"
+        or receipt.get("output") != str(output)
+        or receipt.get("outputTreeHash") != _tree_hash(output)
+    ):
+        raise CandidateBuildBlocked("BUILD_RECEIPT_MISMATCH", str(path))
+    head = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=REPOSITORY_ROOT, text=True
+    ).strip()
+    if receipt.get("gitHead") != head:
+        raise CandidateBuildBlocked("BUILD_RECEIPT_GIT_HEAD_MISMATCH", head)
+    if receipt.get("effects") != {
+        "registryPublishCount": 0,
+        "installationMutationCount": 0,
+        "providerInvocationCount": 0,
+        "externalPublicationCount": 0,
+    }:
+        raise CandidateBuildBlocked("BUILD_RECEIPT_EFFECTS_INVALID", str(path))
+    if (receipt.get("engine") or {}).get("platform") != PLATFORM:
+        raise CandidateBuildBlocked("BUILD_RECEIPT_PLATFORM_MISMATCH", str(path))
+    return receipt
+
+
+def _sign_staging_tree(root: Path, *, checked_at: datetime) -> tuple[Any, Any]:
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+    from aos_api.asset_registry.manifest_loader import ManifestLoader
+    from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
+
+    unsigned_loader = ManifestLoader({"a0v-candidate": root})
+    unsigned = {
+        bundle_id: unsigned_loader.load(f"bundle://a0v-candidate/{relative}")
+        for relative, bundle_id, _version, _package in ALL_CASES
+    }
+    key = Ed25519PrivateKey.generate()
+    public_key = key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+    public_key_b64 = base64.b64encode(public_key).decode("ascii")
+    trust_root = TrustRoot(
+        publisher="aos",
+        key_id=QUALIFICATION_KEY_ID,
+        public_key=public_key,
+        revision=canonical_sha256(
+            {
+                "publisher": "aos",
+                "keyId": QUALIFICATION_KEY_ID,
+                "algorithm": "Ed25519",
+                "publicKey": public_key_b64,
+            }
+        ),
+        not_before=checked_at - timedelta(minutes=5),
+        not_after=checked_at + timedelta(hours=1),
+    )
+    trust = FrozenTrustRootProvider({("aos", QUALIFICATION_KEY_ID): trust_root})
+    for relative, bundle_id, _version, _package in ALL_CASES:
+        envelope = {
+            "algorithm": "Ed25519",
+            "keyId": QUALIFICATION_KEY_ID,
+            "signature": base64.b64encode(
+                key.sign(_signature_payload(unsigned[bundle_id]))
+            ).decode("ascii"),
+            "signedAt": checked_at.isoformat(),
+        }
+        (root / relative / "bundle.signature.json").write_text(
+            json.dumps(envelope, sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
+    return ManifestLoader({"a0v-candidate": root}, trust_roots=trust), trust
+
+
+def _assert_signed_tampering_rejected(
+    *, signed_root: Path, loader: Any, policy: Any, checked_at: datetime
+) -> list[str]:
+    cases = {
+        "imageIndexBytes": (
+            "domain.ecommerce.core/1.1.0/artifacts/runtime-image-index.json",
+            lambda raw: raw + b" ",
+        ),
+        "imageDigest": (
+            "domain.ecommerce.core/1.1.0/artifacts/runtime-image-index.json",
+            lambda raw: raw.replace(b'"imageDigest":"sha256:', b'"imageDigest":"sha256:0', 1),
+        ),
+        "dependencyLock": (
+            "domain.ecommerce.core/1.1.0/artifacts/python-dependencies.lock",
+            lambda raw: raw + b"# tampered\n",
+        ),
+        "sbom": (
+            "domain.ecommerce.core/1.1.0/evidence/sbom.json",
+            lambda raw: raw + b" ",
+        ),
+        "backend": (
+            "domain.ecommerce.core/1.1.0/backend/ecommerce_core/__init__.py",
+            lambda raw: raw + b"\n# tampered\n",
+        ),
+    }
+    rejected: list[str] = []
+    for label, (relative, transform) in cases.items():
+        path = signed_root / relative
+        original = path.read_bytes()
+        try:
+            path.write_bytes(transform(original))
+            bundle = loader.load("bundle://a0v-candidate/domain.ecommerce.core/1.1.0")
+            policy.evaluate(_release_record(bundle), checked_at=checked_at)
+        except Exception:
+            rejected.append(label)
+        else:
+            raise CandidateBuildBlocked("SIGNED_TAMPERING_ACCEPTED", label)
+        finally:
+            path.write_bytes(original)
+    return rejected
+
+
+def qualify(
+    *, output: Path, build_receipt: Path, context: str, driver: Any | None = None
+) -> dict[str, Any]:
+    output = output.resolve(strict=True)
+    if output == REPOSITORY_ROOT or output.is_relative_to(REPOSITORY_ROOT):
+        raise CandidateBuildBlocked("OUTPUT_MUST_BE_OUTSIDE_REPOSITORY", str(output))
+    receipt = _read_receipt(build_receipt.resolve(strict=True), output=output)
+    if receipt.get("contentHashes") != _content_hashes(output):
+        raise CandidateBuildBlocked("BUILD_CONTENT_HASH_MISMATCH", str(output))
+
+    sys.path.insert(0, str(API_ROOT))
+    signed_root = Path(tempfile.mkdtemp(prefix="a0v-ecommerce-candidate-qualification-"))
+    try:
+        from aos_api.asset_registry.composition_contracts import (
+            CompositionRequest,
+            RegistrySnapshot,
+        )
+        from aos_api.asset_registry.release_policy import ReleasePolicy
+        from aos_api.asset_registry.resolver import resolve
+        from aos_api.extension_runtime.admission import admit_runtime_artifact
+        from aos_api.extension_runtime.oci_driver import OciDriver
+
+        shutil.rmtree(signed_root)
+        shutil.copytree(output, signed_root)
+        signed_at = datetime.now(UTC)
+        loader, trust = _sign_staging_tree(signed_root, checked_at=signed_at)
+        policy = ReleasePolicy(trust_roots=trust)
+        bundles: dict[str, Any] = {}
+        candidates = []
+        for relative, bundle_id, _version, _package in ALL_CASES:
+            bundle = loader.load(f"bundle://a0v-candidate/{relative}")
+            bundles[bundle_id] = bundle
+        checked_at = datetime.now(UTC)
+        for _relative, bundle_id, _version, _package in ALL_CASES:
+            bundle = bundles[bundle_id]
+            approved = policy.evaluate(_release_record(bundle), checked_at=checked_at)
+            candidates.append(_snapshot_candidate(bundle, approved))
+        snapshot = RegistrySnapshot.build(candidates=candidates, checked_at=checked_at)
+        requested_ids = (
+            "platform.ecommerce.niushop",
+            "solution.ecommerce.operations-base",
+            "solution.ecommerce.growth",
+        )
+        versions = {item.id: item.version for item in snapshot.candidates}
+        request = CompositionRequest.model_validate(
+            {
+                "requested": [
+                    {"publisher": "aos", "id": item, "version": versions[item]}
+                    for item in requested_ids
+                ],
+                "platformApiVersion": "1.7.0",
+                "platformRelease": "aos-platform/1.7.0",
+                "environment": "dev",
+                "registrySnapshotHash": snapshot.snapshot_hash,
+                "currentInstallationRef": None,
+            }
+        )
+        composition = resolve(request, snapshot, None)
+        resolved_by_id = {item.id: item for item in composition.resolved}
+        actual_driver = driver or OciDriver(context=context)
+        admitted = {}
+        for relative, bundle_id, _version, _package in RUNTIME_CASES:
+            root = signed_root / relative
+            artifact = admit_runtime_artifact(
+                record=_release_record(bundles[bundle_id]),
+                selected=resolved_by_id[bundle_id],
+                policy=policy,
+                checked_at=checked_at,
+                read_artifact=lambda path, limit, root=root: (root / path).read_bytes(),
+                platform=PLATFORM,
+                driver=actual_driver,
+            )
+            admitted[bundle_id] = {
+                "imageId": artifact.image_id,
+                "packageHash": artifact.package_hash,
+            }
+            receipt_identity = (receipt.get("images") or {}).get(
+                bundle_id.replace(".", "-")
+            )
+            index_document = json.loads(
+                (root / "artifacts/runtime-image-index.json").read_text(encoding="utf-8")
+            )
+            index_identity = next(
+                (
+                    item
+                    for item in index_document.get("images", [])
+                    if item.get("platform") == PLATFORM
+                ),
+                None,
+            )
+            if (
+                not isinstance(receipt_identity, dict)
+                or not isinstance(index_identity, dict)
+                or receipt_identity.get("configDigest") != artifact.image_id
+                or receipt_identity.get("configDigest")
+                != index_identity.get("configDigest")
+                or receipt_identity.get("imageDigest")
+                != index_identity.get("imageDigest")
+            ):
+                raise CandidateBuildBlocked("BUILD_RECEIPT_IMAGE_MISMATCH", bundle_id)
+        tamper_rejections = _assert_signed_tampering_rejected(
+            signed_root=signed_root,
+            loader=loader,
+            policy=policy,
+            checked_at=checked_at,
+        )
+        module_ids = {
+            item.module_id for bundle in bundles.values() for item in bundle.workshop_modules
+        }
+        return {
+            "outcome": "QUALIFICATION_GREEN",
+            "mode": "qualification",
+            "gitHead": receipt["gitHead"],
+            "buildReceipt": str(build_receipt.resolve()),
+            "buildReceiptHash": _sha256(build_receipt.read_bytes()),
+            "outputTreeHash": receipt["outputTreeHash"],
+            "snapshotHash": snapshot.snapshot_hash,
+            "resolved": [
+                {"id": item.id, "version": item.version, "reason": item.selection_reason}
+                for item in composition.resolved
+            ],
+            "runtimeAdmissions": admitted,
+            "moduleCount": len(module_ids),
+            "runtimeMemberCount": len(admitted),
+            "tamperRejections": tamper_rejections,
+            "ephemeralSignaturePersisted": False,
+            "effects": receipt["effects"],
+        }
+    finally:
+        shutil.rmtree(signed_root, ignore_errors=True)
+        sys.path.remove(str(API_ROOT))
+
+
 def build(*, context: str, port: int, output: Path) -> dict[str, Any]:
     source = preflight()
     output = output.resolve()
@@ -571,6 +945,8 @@ def build(*, context: str, port: int, output: Path) -> dict[str, Any]:
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", action="store_true")
+    parser.add_argument("--qualify-output", type=Path)
+    parser.add_argument("--build-receipt", type=Path)
     parser.add_argument("--docker-context", default=DEFAULT_CONTEXT)
     parser.add_argument("--registry-port", type=int, default=DEFAULT_REGISTRY_PORT)
     parser.add_argument("--output-dir", type=Path)
@@ -581,7 +957,22 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        if args.build:
+        if args.build and args.qualify_output is not None:
+            raise CandidateBuildBlocked(
+                "MODE_CONFLICT", "--build and --qualify-output are mutually exclusive"
+            )
+        if args.qualify_output is not None:
+            if args.build_receipt is None or args.receipt is None:
+                raise CandidateBuildBlocked(
+                    "QUALIFICATION_INPUT_REQUIRED",
+                    "--qualify-output requires --build-receipt and --receipt",
+                )
+            result = qualify(
+                output=args.qualify_output,
+                build_receipt=args.build_receipt,
+                context=args.docker_context,
+            )
+        elif args.build:
             if args.output_dir is None or args.receipt is None:
                 raise CandidateBuildBlocked(
                     "BUILD_OUTPUT_REQUIRED", "--build requires --output-dir and --receipt"
