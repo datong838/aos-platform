@@ -179,8 +179,8 @@ def direct_runtime_connection(database, scope: TenantScope):
         conn.close()
 
 
-def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400):
-    now = datetime(2026, 9, 8, 2, tzinfo=UTC)
+def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400, now=None):
+    now = now or datetime(2026, 9, 8, 2, tzinfo=UTC)
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
     budget_hash = "1" * 64

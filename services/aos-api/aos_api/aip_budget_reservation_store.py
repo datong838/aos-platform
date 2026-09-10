@@ -1281,6 +1281,7 @@ class AipBudgetReservationStore:
             "submitted": "submitted",
             "unknown": "unknown",
             "settled": "completed",
+            "cost_pending": "completed",
             "released": "failed",
         }.get(row["state"])
         if (

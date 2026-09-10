@@ -7,6 +7,9 @@ branch_labels = None
 depends_on = None
 
 def upgrade():
+    for column in ('from_state', 'to_state'):
+        op.execute(f'ALTER TABLE aip_budget_reservation_event DROP CONSTRAINT aip_budget_reservation_event_{column}_check')
+        op.execute(f"ALTER TABLE aip_budget_reservation_event ADD CONSTRAINT aip_budget_reservation_event_{column}_check CHECK({column} IN ('held','submitted','settled','released','unknown','cost_pending'))")
     op.execute("ALTER TABLE aip_budget_reservation DROP CONSTRAINT aip_budget_reservation_state_check")
     op.execute("ALTER TABLE aip_budget_reservation ADD CONSTRAINT aip_budget_reservation_state_check CHECK(state IN ('held','submitted','settled','released','unknown','cost_pending'))")
     op.execute("""CREATE OR REPLACE FUNCTION guard_ar2_budget_reservation_update() RETURNS trigger
@@ -55,6 +58,10 @@ def upgrade():
         END $$""")
 
 def downgrade():
+    op.execute("DO $$ BEGIN IF EXISTS(SELECT 1 FROM aip_budget_reservation_event WHERE from_state='cost_pending' OR to_state='cost_pending') THEN RAISE EXCEPTION 'pending cost history prevents downgrade'; END IF; END $$")
+    for column in ('from_state', 'to_state'):
+        op.execute(f'ALTER TABLE aip_budget_reservation_event DROP CONSTRAINT aip_budget_reservation_event_{column}_check')
+        op.execute(f"ALTER TABLE aip_budget_reservation_event ADD CONSTRAINT aip_budget_reservation_event_{column}_check CHECK({column} IN ('held','submitted','settled','released','unknown'))")
     op.execute("DO $$ BEGIN IF EXISTS(SELECT 1 FROM aip_budget_reservation WHERE state='cost_pending') THEN RAISE EXCEPTION 'pending costs prevent downgrade'; END IF; END $$")
     op.execute("ALTER TABLE aip_budget_reservation DROP CONSTRAINT aip_budget_reservation_state_check")
     op.execute("ALTER TABLE aip_budget_reservation ADD CONSTRAINT aip_budget_reservation_state_check CHECK(state IN ('held','submitted','settled','released','unknown'))")

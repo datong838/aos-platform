@@ -29,6 +29,7 @@ def test_pending_cost_sql_guard_and_downgrade():
             conn.execute(sql.SQL('CREATE SCHEMA {}').format(sql.Identifier(schema)))
             conn.execute(sql.SQL('SET LOCAL search_path TO {}').format(sql.Identifier(schema)))
             conn.execute('CREATE TABLE aip_budget_reservation (LIKE public.aip_budget_reservation INCLUDING CONSTRAINTS INCLUDING DEFAULTS)')
+            conn.execute('CREATE TABLE aip_budget_reservation_event (LIKE public.aip_budget_reservation_event INCLUDING CONSTRAINTS INCLUDING DEFAULTS)')
             class Ops:
                 def execute(self, query): conn.execute(query)
             migration.op = Ops()
