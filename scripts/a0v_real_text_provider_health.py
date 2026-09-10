@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import logging
 import os
 import sys
 import uuid
@@ -135,8 +136,18 @@ def _inventory(connect: Any) -> dict[str, Any]:
         ).fetchone()
         health = conn.execute(
             "SELECT count(*) AS n FROM aip_provider_health_observation "
-            "WHERE org_id=%s AND project_id=%s AND status='healthy' AND observed_at<=%s AND expires_at>%s",
-            (ORG_ID, PROJECT_ID, identity["observed_at"], identity["observed_at"]),
+            "WHERE org_id=%s AND project_id=%s AND status='healthy' "
+            "AND provider_ref->>'assetId'=%s "
+            "AND (provider_ref->>'revision')::integer=%s "
+            "AND observed_at<=clock_timestamp() AND expires_at>clock_timestamp()",
+            (ORG_ID, PROJECT_ID, PROVIDER_ID, PROVIDER_REVISION),
+        ).fetchone()
+        health_total = conn.execute(
+            "SELECT count(*) AS n FROM aip_provider_health_observation "
+            "WHERE org_id=%s AND project_id=%s "
+            "AND provider_ref->>'assetId'=%s "
+            "AND (provider_ref->>'revision')::integer=%s",
+            (ORG_ID, PROJECT_ID, PROVIDER_ID, PROVIDER_REVISION),
         ).fetchone()
         canary = conn.execute(
             "SELECT "
@@ -147,6 +158,7 @@ def _inventory(connect: Any) -> dict[str, Any]:
     result = {
         "activeExactProviderCount": int(provider["n"]),
         "currentHealthyObservationCount": int(health["n"]),
+        "exactHealthObservationCount": int(health_total["n"]),
         "canaryProviderAndHealthCount": int(canary["n"]),
         "observedAt": identity["observed_at"],
     }
@@ -178,6 +190,8 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
     if args.database_name != "aos_meta_head":
         raise ProviderHealthBlocked("EXPLICIT_ISOLATED_DATABASE_REQUIRED")
     installer = _load_first_installer()
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     connect = installer.container_database_connect_factory(
         context=args.docker_context,
         container=args.database_container,
@@ -327,8 +341,8 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
         "after": after,
         "providerCalls": provider_calls,
         "healthObservationMutationCount": (
-            after["currentHealthyObservationCount"]
-            - before["currentHealthyObservationCount"]
+            after["exactHealthObservationCount"]
+            - before["exactHealthObservationCount"]
         ),
         "totalTokens": total_tokens,
         "latencyMs": latency_ms,
