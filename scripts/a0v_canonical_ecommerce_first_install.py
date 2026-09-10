@@ -71,6 +71,9 @@ EXPECTED_TAMPER_REJECTIONS = (
     "schemaCompatibility",
     "schemaRequirements",
 )
+REGISTRY_CREATE_ROLES = frozenset({"asset-publisher", "asset-registry-admin", "developer"})
+REGISTRY_PUBLISH_ROLES = frozenset({"asset-publisher", "asset-registry-admin"})
+PUBLISHER_SCOPES = frozenset({"aos"})
 
 
 class FirstInstallBlocked(RuntimeError):
@@ -603,6 +606,171 @@ def prepare_persistent_signed_tree(*, build_dir: Path, state_dir: Path) -> dict[
         sys.path.remove(str(API_ROOT))
 
 
+def _expected_registry_version(loaded: Any) -> dict[str, Any]:
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+
+    return {
+        "sourceRef": loaded.source_ref,
+        "contentHash": loaded.content_hash,
+        "manifestHash": canonical_sha256(
+            loaded.manifest.model_dump(mode="json", by_alias=True, exclude_none=False)
+        ),
+        "artifacts": sorted(
+            (
+                {
+                    "relativePath": item.relative_path,
+                    "artifactRef": item.artifact_ref,
+                    "digest": item.digest,
+                }
+                for item in loaded.artifacts
+            ),
+            key=lambda item: item["artifactRef"],
+        ),
+    }
+
+
+def _comparable_registry_version(record: dict[str, Any]) -> dict[str, Any]:
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+
+    source_artifacts = sorted(
+        record.get("artifacts", []), key=lambda item: item.get("artifactRef", "")
+    )
+    artifacts = [
+        {
+            "relativePath": item.get("relativePath"),
+            "artifactRef": item.get("artifactRef"),
+            "digest": item.get("digest"),
+        }
+        for item in source_artifacts
+    ]
+    source_ref = record.get("sourceRef")
+    if source_ref is None:
+        refs = {
+            item["artifactRef"][: -(len(item["relativePath"]) + 1)]
+            for item in artifacts
+            if isinstance(item["relativePath"], str)
+            and isinstance(item["artifactRef"], str)
+            and item["artifactRef"].endswith("/" + item["relativePath"])
+        }
+        source_ref = next(iter(refs)) if len(refs) == 1 else None
+    manifest_hash = record.get("manifestHash")
+    if manifest_hash is None and isinstance(record.get("manifest"), dict):
+        manifest_hash = canonical_sha256(record["manifest"])
+    return {
+        "sourceRef": source_ref,
+        "contentHash": record.get("contentHash"),
+        "manifestHash": manifest_hash,
+        "artifacts": artifacts,
+    }
+
+
+def assert_registry_version_exact(
+    existing: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    if _comparable_registry_version(existing) != expected:
+        raise FirstInstallBlocked(
+            "EXISTING_VERSION_DRIFT", "existing canonical version is not exact"
+        )
+
+
+def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> list[dict[str, Any]]:
+    sys.path.insert(0, str(API_ROOT))
+    builder = _load_builder()
+    try:
+        from aos_api.asset_registry.errors import AssetNotFoundError
+        from aos_api.asset_registry.manifest_loader import ManifestLoader
+        from aos_api.asset_registry.registry_service import RegistryService
+        from aos_api.asset_registry.registry_store import PostgresRegistryStore
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+
+        signed_root = state_dir.resolve() / "signed-bundles-v4"
+        trust_path = state_dir.resolve() / "signing/trust-roots.json"
+        trust = FileTrustRootProvider(trust_path).snapshot()
+        loader = ManifestLoader({"a0v-canonical": signed_root}, trust_roots=trust)
+        store = PostgresRegistryStore(connect_factory=connect_factory)
+
+        def database_clock() -> datetime:
+            with connect_factory() as conn:
+                return conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+
+        service = RegistryService(
+            store=store, loader=loader, clock=database_clock, trust_roots=trust
+        )
+        published = []
+        for relative, bundle_id, version, _package in builder.ALL_CASES:
+            source_ref = f"bundle://a0v-canonical/{relative}"
+            loaded = loader.load(source_ref)
+            manifest = loaded.manifest
+            try:
+                bundle = store.get_bundle(bundle_id, publisher="aos")
+            except AssetNotFoundError:
+                bundle = service.create_bundle(
+                    publisher="aos",
+                    bundle_id=bundle_id,
+                    kind=manifest.kind,
+                    display_name=manifest.metadata.display_name,
+                    actor=f"a0v-first-install-{bundle_id}-bundle-creator",
+                    roles=REGISTRY_CREATE_ROLES,
+                    publisher_scopes=PUBLISHER_SCOPES,
+                )
+            if (
+                bundle.get("publisher") != "aos"
+                or bundle.get("bundleId") != bundle_id
+                or bundle.get("kind") != manifest.kind.value
+                or bundle.get("displayName") != manifest.metadata.display_name
+            ):
+                raise FirstInstallBlocked("EXISTING_BUNDLE_DRIFT", bundle_id)
+            expected = _expected_registry_version(loaded)
+            try:
+                current = store.get_version(bundle_id, version, publisher="aos")
+            except AssetNotFoundError:
+                current = service.create_version(
+                    publisher="aos",
+                    bundle_id=bundle_id,
+                    source_ref=source_ref,
+                    actor=f"a0v-first-install-{bundle_id}-version-creator",
+                    roles=REGISTRY_CREATE_ROLES,
+                    publisher_scopes=PUBLISHER_SCOPES,
+                )
+            assert_registry_version_exact(current, expected)
+            status = str(current.get("status", "")).lower()
+            if status == "draft":
+                current = service.validate(
+                    publisher="aos",
+                    bundle_id=bundle_id,
+                    version=version,
+                    actor=f"a0v-first-install-{bundle_id}-validator",
+                    roles=REGISTRY_CREATE_ROLES,
+                    publisher_scopes=PUBLISHER_SCOPES,
+                )
+                status = str(current.get("status", "")).lower()
+            if status == "validated":
+                current = service.publish(
+                    publisher="aos",
+                    bundle_id=bundle_id,
+                    version=version,
+                    actor=f"a0v-first-install-{bundle_id}-publisher",
+                    roles=REGISTRY_PUBLISH_ROLES,
+                    publisher_scopes=PUBLISHER_SCOPES,
+                )
+                status = str(current.get("status", "")).lower()
+            if status != "published":
+                raise FirstInstallBlocked("CANONICAL_VERSION_NOT_PUBLISHED", bundle_id)
+            final = store.get_version(bundle_id, version, publisher="aos")
+            assert_registry_version_exact(final, expected)
+            published.append(
+                {
+                    "bundleId": bundle_id,
+                    "version": version,
+                    "status": "published",
+                    "contentHash": loaded.content_hash,
+                }
+            )
+        return published
+    finally:
+        sys.path.remove(str(API_ROOT))
+
+
 def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence = verify_v4_inputs(
         build_dir=args.build_dir,
@@ -630,8 +798,11 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     evidence["signing"] = prepare_persistent_signed_tree(
         build_dir=args.build_dir.resolve(strict=True), state_dir=args.state_dir
     )
-    evidence["mode"] = "apply-prepared"
-    evidence["outcome"] = "CANONICAL_WRITE_PREREQUISITES_GREEN"
+    evidence["published"] = publish_canonical_releases(
+        connect_factory=connect, state_dir=args.state_dir
+    )
+    evidence["mode"] = "apply-registry"
+    evidence["outcome"] = "CANONICAL_REGISTRY_PUBLISHED"
     return evidence
 
 

@@ -214,3 +214,24 @@ def test_container_connection_rejects_noncanonical_target_before_inspect(
             database_name="aos_meta",
         )
     assert captured.value.reason_code == "DATABASE_TARGET_MISMATCH"
+
+
+def test_existing_registry_version_drift_fails_closed() -> None:
+    expected = {
+        "sourceRef": "bundle://a0v-canonical/example/1.0.0",
+        "contentHash": "sha256:" + "1" * 64,
+        "manifestHash": "sha256:" + "2" * 64,
+        "artifacts": [
+            {
+                "relativePath": "artifact.json",
+                "artifactRef": "bundle://a0v-canonical/example/1.0.0/artifact.json",
+                "digest": "sha256:" + "3" * 64,
+            }
+        ],
+    }
+    INSTALLER.assert_registry_version_exact(expected, expected)
+    with pytest.raises(INSTALLER.FirstInstallBlocked) as captured:
+        INSTALLER.assert_registry_version_exact(
+            {**expected, "contentHash": "sha256:" + "4" * 64}, expected
+        )
+    assert captured.value.reason_code == "EXISTING_VERSION_DRIFT"
