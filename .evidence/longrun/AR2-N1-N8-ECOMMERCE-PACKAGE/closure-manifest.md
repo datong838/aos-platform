@@ -466,3 +466,18 @@ PENDING。
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py` | exact 引用与已验真观察正文比较迁入；Task/Plan/Run/Step/Checkpoint/Evidence Owner 和装配仍 PENDING | cf0055eb757adc7100c6f3a67a6bd5cefbc59090656b50751d38441b7154a477 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_runtime_rule.py` | 原路径 | 三阶段正例、引用/拼写/观察漂移和隔离 import 合同 | 9b93c2cd59731a5c7074b932446b44aa8f6640a7bf078f5f7a55f19f4b94bf10 |
+
+### 9.16 阶段 Eval 报告最小证明
+
+2026-09-12：平台通用 EvalReportRevision 继续唯一拥有完整 Suite、target、dataset、judge、results
+合同；growth 包不复制该平台类型。包新增最小 `StageEvalReportProof`，只承载阶段评审所需的 report
+exact ref、EvalContract、subject Artifact、StepRunAttempt、GatePolicy、cutoff、gatePassed 和
+createdAt，并由 `require_stage_eval_report_inputs` 核对可信 now、passed/时间和五项 exact 输入。
+
+完整报告与原始行 hash、latest、EvalRun 成功与执行时序、Suite/Gate 当前性、TenantScope 和数据库
+仍归宿主。本切片不授予评审或执行权限，不修改当前 1.4.0 安装；第 9 节整体仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_eval_report.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py` | 最小证明 DTO 与 exact 输入比较迁入；完整 Report/Run/Suite/Gate Owner 和装配仍 PENDING | 09330f7238ddc238b69c0a7349cb58bd3624794a5258580f836d39b0da7af367 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_eval_report_proof.py` | 原路径 | passed/时间/五项绑定/布尔版本负向与隔离 import 合同 | 65f551c5e0353c0b9b75ed36ebd71fb4f9f7176d09e0debad3ee7db9a07f75c6 |
