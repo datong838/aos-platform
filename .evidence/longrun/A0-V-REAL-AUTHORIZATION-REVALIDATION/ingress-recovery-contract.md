@@ -207,3 +207,10 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 ### 完整恢复实测缺口：规范化函数查找路径
 
 完整pg_dump恢复在data_source_configuration_revision CHECK中失败，SQL调用public.canonical_asset_registry_jsonb后，函数内部递归未限定schema，而pg_restore会清空search_path；历史228asset0函数无SET search_path。新增services/aos-api/alembic/versions/a0v_011_canonical_hash_search_path.py，仅固定已有public函数的search_path=pg_catalog,public,pg_temp，不改变规范化正文、哈希算法、租户或业务数据。追加迁移不改历史。验证空search_path下嵌套对象/数组规范化、调用者同名函数不能劫持、已有输出不变；完整旧备份恢复需在一次性克隆pre-data后应用同一函数修复再data/post-data，明确记录历史备份兼容步骤；升级后的新备份必须原样恢复成功才可称恢复闭环。forward-only，避免降级恢复已知缺陷。
+
+
+## 当前恢复库升级波次
+
+基线1100b936；用户持续全权开发授权覆盖本地恢复库升级，不启用真实外部业务。前波已在完整克隆验证001→011及新备份原样恢复，现仅对显式colima-aos-extension/aos-a0v-recovery-pg/aos_meta_head执行同样迁移。先新建权限受限备份并记录原512表行数，确认版本001；事务迁移设置短锁等待/有界语句超时，失败回滚不强制清锁、不终止其他连接。迁移后原表行数逐表比对（alembic_version仅比较新revision），核查新增Journal/claim及退出默认字段。记录证据actual-recovery-upgrade-verification.md。原备份保留且历史恢复已验证兼容步骤，禁止已知forward-only迁移downgrade；必要恢复到独立库后切换，不原地删除业务库。
+
+API使用现有start-diagnostic-api.py，确认migration disabled/QYH cron false/AIP automation false/text health false/extension host 0并保持禁止预建SSH。完成DB核查后只重启18181该诊断进程加载当前代码，不启动其他worker；重载前先核对PID与命令身份，端口不明不杀。浏览器及HTTP仅作用域读/恢复资格空态，不伪造真实失败运行。具体产品代码本波无新增，迁移来自已提交3afa2303。
