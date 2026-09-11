@@ -1,0 +1,7 @@
+# 固定结构评估实际存储联合验证
+
+基线f0036d57，2026-09-11。新增services/aos-api/tests/test_analyst_structure_eval_pg.py，使用既有唯一owned clone复制DB，不访问共享库写入，不清理模板旧记录；仅本次随机DB创建/销毁，不FORCE。
+
+对portrait/diagnosis/solution-design分别通过正式Task/Plan/Run/Step Owner创建单阶段隔离任务，实际Artifact原文留存和授权读取，实际Eval Registry/Run/Report执行包内evaluate_structure。成功与带伪造approvedAt的错误正文各一次。输入规则与预期结果使用真实hash登记到Suite。EvalContract、来源库存和发布引用仍明确fixture，不声称全图授权或真实业务。包函数通过测试调用，不在生产平台import bundle。
+
+验收：正确正文gate_passed true，错误正文false但EvalRun执行成功；报告exact subject/stage、实际hash回读一致、无正文泄漏。相同幂等键再次执行按既有Runner拒绝，不重跑target或新增报告。清楚区分Eval执行成功与评估通过。下一波受信Owner来源规则生成和生产受控target装配。
