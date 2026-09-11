@@ -1,0 +1,11 @@
+# 内部阶段决定联合命令
+
+2026-09-11，基线25ab0531，AOS-000573；231-5/160人工阶段门，内部入口，不新增公开HTTP。
+
+新增 services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py：显式scoped connect factory，trusted actor/markings、完整AnalystStageDecisionRevision与expectedVersion/key，调用方不能以tenant/body自证权限。事务内验证item原hash/actor/scope和稳定target身份，锁定相同目标及key；复用stage runtime、当前职责、报告Reader、StageDecisionOwner。当前Task/Plan定位唯一业务compile receipt，actualtyped/raw/columns与Plan/Responsibility一致，经get_for_run回读；不任择职责。当前分析subject/parent链实际hash与original generationArtifact一致，读取原文当前markings且Artifact属于TaskRun。当前frozen/ready EvalContract原hash与Plan阶段gate_refs一致、subjectKind=agent_text_output；stagePolicyRef由合同显式固定，报告精确绑定；当前release gate有效且复用release service核验实际报告hash。所有核验完成才Owner.put，外层唯一提交。
+
+accept/return/reject以通过Eval后的当前阶段为对象；失败Eval继续既有ReviewIssue路线。revoke只允许prior current目标相同，并核对原编译职责及当前成员；撤销不依赖已失效产物或报告，不启动后继。重放先读既有Owner回执与历史决定、比对完整原请求，允许返回历史记录但不构成当前执行授权。新accept必须当下未过期；接续时再次读取current决定并完整复核，不由本入口自动执行。
+
+新增 services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py：组合真实StageDecisionOwner/事务回滚与隔离PG，来源Reader以明确替身覆盖排序和拒绝传播；各来源自身已独立隔离验证，整体实装编译/发布门/Provider首链尚未验证，不能激活主库。核心来源函数另测不符绑定拒绝。后续产品API/worker门与实际联合全图验证。
+
+检查发现：现有Eval循环只读取Suite case input，subject只是metadata，尚未把真实文本显式传给target。此命令额外要求合同subjectInputMode=text-envelope-v1，下一波必须实现受控正文输入协议并验证，当前入口保持未装配。不能把仅subject metadata绑定称为真实正文评测。
