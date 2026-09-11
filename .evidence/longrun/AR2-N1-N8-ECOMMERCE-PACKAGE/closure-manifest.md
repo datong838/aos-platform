@@ -903,3 +903,13 @@ backend hash 和 current author backend hash；目标存在、输入漂移、自
 | `scripts/build_ecommerce_runtime_candidates.py` | 原路径 | current growth build coordinate 提升到 1.5.0 | 31fe759651303a9109260964313456aa2fc2d5e676258a6633ff9edcd6487063 |
 | `services/aos-api/tests/extension_runtime/test_runnable_ecommerce_candidates.py` | 原路径 | 1.4.0 历史 hash 与 1.5.0 current exact 合同 | 0e2622ffa2532cf7d5978b6b8ca8e618316a7d1a4b3b1c82ac533278e79749b7 |
 | `services/aos-api/tests/extension_runtime/test_prepare_ecommerce_growth_1_5_candidate.py` | 原路径 | deterministic generate、漂移/覆盖拒绝与自引用反证 | 83091b57001d16a0b601aa0669d85d2e0504c53740603ea373bd8541c375e2d2 |
+
+### 9.43 Ecommerce growth 1.5.0 isolated OCI qualification
+
+2026-09-12：在具备 userns/seccomp 的 `colima-aos-extension` 唯一执行 build，仓外输出 tree hash
+`ea4dab...`，growth content/config/image 分别为 `416bfd...`、`20feb6...`、`7850aa...`。随后读取 exact
+build Receipt 完成 ephemeral qualification，snapshot hash `3cd775...`，resolved growth 为 1.5.0。
+
+3 runtime admissions、3 schema requirements、8 modules 与七类 tamper rejection 通过，ephemeral signature
+未持久化；两阶段四类业务 effect 全为 0。18436 与临时 Registry 容器已清除。本切片没有持久 Registry
+publish 或 Installation upgrade。

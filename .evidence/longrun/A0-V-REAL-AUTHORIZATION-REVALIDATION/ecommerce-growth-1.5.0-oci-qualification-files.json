@@ -1,0 +1,9 @@
+{
+  "phase": "A0-V ecommerce growth 1.5.0 OCI qualification",
+  "date": "2026-09-12",
+  "files": [
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-oci-qualification-plan.md", "sha256": "d4297fa9f45d7a0ee92d168dc4bc071aa8a7041ff61917465b60b249cfa07dbf"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-oci-build-result.json", "sha256": "9679e9c14edcbc4b68d6cc944d5ebda78e5223a704163e4545345163a13d1fce"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-oci-qualification-result.json", "sha256": "fc8cf9428f92b8ffe70e4aba97d27f022bd2fb1c651d788707a6261b75886f67"}
+  ]
+}
