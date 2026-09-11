@@ -134,6 +134,10 @@ class AipAgentRunExecutor:
         self._lineage_service = lineage_service or AipLineageService()
         self._retain_output_text = retain_output_text
 
+    @property
+    def retains_output_text(self) -> bool:
+        return self._retain_output_text
+
     def execute(
         self,
         scope: TenantScope,
