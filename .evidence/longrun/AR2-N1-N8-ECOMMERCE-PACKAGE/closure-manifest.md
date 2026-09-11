@@ -498,3 +498,18 @@ Provider。当前 1.4.0 不含本实现，宿主后续必须经安装 runtime IP
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py` | 原路径 | review operation 严格路由；当前安装未变化 | 5aa2430e7bf976c91bc0b45a45b0016d9869b5632069df7229ee1645ace4a403 |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_stage_review_runtime_operation.py` | 原路径 | 四类无副作用评审消息 dispatcher；宿主 IPC 适配仍 PENDING | db4bc5a5fc892e7cf67a310dd7426132094605acd57d73b205c6c35e5e9e93cd |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_runtime_operation.py` | 原路径 | 四消息、严格 envelope 与未知消息拒绝合同 | f1d763b641a7e6a722e63992a1068d52cf79e7430a501c07a0f7057f9f5d0427 |
+
+### 9.18 已安装阶段评审单次调用端口
+
+2026-09-12：新增宿主异步 `InstalledGrowthStageReviewPort`，只接受 9.17 四种 kind 的原生 JSON
+payload 与显式 expected response，固定调用 `ecommerce_growth_review_advance`，每次恰好 await 一次
+已安装会话调用。返回必须是原生 JSON 对象并与 expected exact 相等。
+
+旧 1.4.0 PermissionError、超时未知、取消和其他异常全部原样上抛，禁止重发或回退作者树。端口不
+发现 Installation、不缓存权限、不持有 TenantScope 或事务。同步 StageReviewCommand 的事务分段
+仍 PENDING，当前安装未变化。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_package_port.py` | 原路径 | host one-shot installed runtime transport；事务编排与安装选择仍 PENDING | fcd9d0238120a80209c0a247b4cfd924e3b4188dff4fc02ce06926c0254ad758 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_installed_port.py` | 原路径 | 四 kind、exact response、非 JSON、异常/取消零重试合同 | 4b86ee3d1c1651eb30000cf830729429020da6bd51544f25b7fd5a9891b0fa19 |
