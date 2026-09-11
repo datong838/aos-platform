@@ -631,3 +631,19 @@ host reader 两条消息已由作者包 operation exact 接受。尚未组合五
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | 原路径 | Eval/source proof 模式与旧同步兼容包装 | 82d7507e3595dc0ac876583b553a5f5bb8a5e00c37eb76acb5fc9a1a1e76f6ee |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py` | 原路径 | 零 deriver proof、canonical JSON、真实 query 包 parity 与旧漂移回归 | 325c748c7d184a79d0dd93bf7995b6a10321a13cf127a8b44d9fdf8d797d5b5b |
+
+### 9.26 阶段评审五门 composite authority reader
+
+2026-09-12：新增 `StageReviewCompositeAuthorityReader`，只组合宿主 command identity 与 9.23～9.25
+三个真实 proof readers，固定生成 command、slot、runtime、Eval、structure 五个 exchange。单一 snapshot
+封印 command payload hash 与三个组件 snapshot，不复制原 query；markings 在构造时固定，命令不能覆盖。
+
+Owner binding 向 reader 传递真实 key/expectedVersion。组件 shape 漂移在 IPC 前拒绝。内部异步 service、
+Receipt replay fast path 和 1.5.0 安装仍 PENDING；当前无产品入口、无运行或租户数据变更。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_composite_authority.py` | 原路径 | 五门固定组合与单一 authority snapshot | 9aaa2a81022e0012927dead1fcfeeb5cd538b8d4119b2352a3672cc40ae3c903 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | reader 获得真实 key/expectedVersion | d64be783285bc142c31b74bc6ba4651cc9b13eb9b401b1724ec3172ce46ffa98 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_composite_authority.py` | 原路径 | 顺序、shape、markings 与 canonical snapshot | b387739cdd98e98b6f45ab4c2c85f4680312db6e4294829523441fc5da3c5af7 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | reader 签名与真实 PG 五门回归 | 69fa86a1cda5fa6ade8505ccb6d8a4c4ee0c3fe6e1baaa34ebd8d62c914bc74a |

@@ -34,8 +34,9 @@ def exchanges(kinds=KINDS):
 def test_real_owner_publish_and_exact_readback_after_four_validations():
     with disposable_database() as connect:
         migrate(connect);value=item();reads=[];calls=[]
-        def read_authority(tx,scope,received,actor):
+        def read_authority(tx,scope,received,actor,key,expected_version):
             assert type(tx) is HostTransaction and scope==SCOPE and received==value and actor==value.created_by
+            assert key=='review' and expected_version==0
             reads.append("authority")
             return {"taskRunId":value.task_run_id,"authorityVersion":1},exchanges()
         binding=StageReviewDecisionOwnerBinding(SCOPE,read_authority=read_authority)

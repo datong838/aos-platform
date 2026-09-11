@@ -62,7 +62,8 @@ class StageReviewDecisionOwnerBinding:
             (*self.scope.key,_OPERATION,command["key"])).fetchone()
         if receipt is not None:
             raise ValueError("stage review replay must use owner fast path")
-        authority=self.read_authority(transaction,self.scope,item,command["actor"])
+        authority=self.read_authority(transaction,self.scope,item,command["actor"],command["key"],
+            command["expectedVersion"])
         if type(authority) is not tuple or len(authority)!=2:
             raise TypeError("authority snapshot and exchanges required")
         authority_snapshot,exchanges=authority
