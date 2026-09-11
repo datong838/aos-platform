@@ -546,3 +546,22 @@ builder、StageDecision publisher 与命令入口接线仍 PENDING；当前 1.4.
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_database_phases.py` | 原路径 | 双事务 prepare/current-revalidate/publish adapter；具体 Store 接线仍 PENDING | af318535aaa438181f4e1f3558658f06853d2d2137501eddf172955a9a8d11f7 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | authority snapshot 空值与篡改拒绝回归 | 2c66a60998e45659a632688bf77984c410e2834f8e861340e05142c321e65c29 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_database_phases.py` | 原路径 | 无跨 IPC 事务、漂移零发布、异常回滚与零重试合同 | 190a624aaabbacf666de686980dfc7126ebb1dcfa8f33aa8024b2a9a10f32e7b |
+
+### 9.21 阶段评审 StageDecision Owner 双事务绑定
+
+2026-09-12：新增 `StageReviewDecisionOwnerBinding`。prepare/current 两笔事务对同一 decision target
+与 idempotency key 取得排序 advisory lock，读取真实 StageDecision head 和 authority Receipt，并将四种
+package validation exchange 的 canonical hash 与 trusted authority snapshot 一起封印。四种结果齐全且
+第二事务 snapshot exact 相等后，publisher 只调用既有 `AnalystStageDecisionStore.put`。
+
+旧同步 command 的 identity 条件抽成宿主 helper 并原位复用。异步新发布路径发现同 key Receipt 时在
+authority reader 前拒绝，保留给后续 Owner replay fast path，禁止为历史重放重新读取失效来源或调用
+四门 IPC。真实 Task/Plan/Run、职责、runtime、Eval 复合 reader 和产品异步入口仍 PENDING；当前
+1.4.0 Installation 与真实租户数据未变。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | 原路径 | 提取并复用宿主命令 identity helper；旧同步行为不变 | b2477ad290264f084f8e36b1d7f121563c499d99a2f21b460553c7d0227452b6 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 真实 Owner head/Receipt snapshot、四门完整性与唯一 Store publisher | e573beaeea089b9ce6360e7792fed8fa625ae5c28b55b6a13ddaffe1d1c34b9b |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py` | 原路径 | helper scope 与严格整型版本回归 | 772e8919e42c467d87fc71bc0683504f2173426ff2de010f6e21276b3728b8ff |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 隔离 PG 发布/回读、竞争漂移、replay fast-path 和四门完整性 | 5787623c9d8d3bd806b6701785f9ea48d322e52e1be55f1b554a290d8f7ff864 |

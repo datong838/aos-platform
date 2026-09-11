@@ -190,3 +190,13 @@ def test_source_and_eval_mismatches_block(monkeypatch,fault):
 def test_stage_review_requires_explicit_installed_package_deriver():
     with pytest.raises(TypeError,match='case deriver'):
         module.AnalystStageReviewCommandService(lambda scope: None,derive_structure_case=None)
+
+
+def test_host_command_identity_helper_rejects_scope_and_boolean_version():
+    value=item()
+    with pytest.raises(ValueError,match='identity drifted'):
+        module.require_stage_review_command_identity(type(SCOPE)('dev-org','dev-project'),value,
+            actor=value.created_by,key='review',expected_version=0)
+    with pytest.raises(ValueError,match='identity drifted'):
+        module.require_stage_review_command_identity(SCOPE,value,actor=value.created_by,
+            key='review',expected_version=True)

@@ -24,6 +24,19 @@ from aos_api.ecommerce_analyst_stage_review_authority import require_stage_revie
 from aos_api.ecommerce_analyst_stage_review_runtime import require_stage_review_runtime
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+from aos_api.tenant_scope import TenantScope
+
+
+def require_stage_review_command_identity(scope,item,*,actor,key,expected_version):
+    if type(scope) is not TenantScope:
+        raise TypeError('stage decision command requires TenantScope')
+    item=AnalystStageDecisionRevision.model_validate(item.model_dump())
+    if (item.created_by!=actor or (item.tenant.org_id,item.tenant.project_id)!=scope.key
+        or item.decision_id!=stage_decision_id(item) or type(key) is not str or not key or key.strip()!=key or len(key)>200
+        or type(expected_version) is not int or expected_version<0
+        or canonical_hash(item.model_dump(mode='json',by_alias=True,exclude={'content_hash'}))!=item.content_hash):
+        raise ValueError('stage decision command identity drifted')
+    return item
 
 
 def _compiled_responsibility(tx, scope, item):
@@ -160,12 +173,7 @@ class AnalystStageReviewCommandService:
         self.connect=connect_factory;self.derive_structure_case=derive_structure_case
 
     def decide(self,scope,item,*,actor,key,expected_version,markings):
-        item=AnalystStageDecisionRevision.model_validate(item.model_dump())
-        if (item.created_by!=actor or (item.tenant.org_id,item.tenant.project_id)!=scope.key
-            or item.decision_id!=stage_decision_id(item) or type(key) is not str or not key or key.strip()!=key or len(key)>200
-            or type(expected_version) is not int or expected_version<0
-            or canonical_hash(item.model_dump(mode='json',by_alias=True,exclude={'content_hash'}))!=item.content_hash):
-            raise ValueError('stage decision command identity drifted')
+        item=require_stage_review_command_identity(scope,item,actor=actor,key=key,expected_version=expected_version)
         with self.connect(scope) as conn:
             tx=HostTransaction(conn);owner=AnalystStageDecisionStore(tx,scope)
             for lock in sorted({canonical_hash([*scope.key,'stage-target',item.decision_id]),canonical_hash([*scope.key,'stage-key',key])}):
