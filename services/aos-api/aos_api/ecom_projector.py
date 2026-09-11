@@ -95,6 +95,17 @@ def project_pending(scope: TenantScope, *, limit: int = 500) -> dict[str, int]:
         raise ValueError("limit must be between 1 and 5000")
     projected = 0
     with connect(scope) as conn:
+        # Row leases alone allow a later event to overtake a paused earlier
+        # event for the same object. Serialize projector transactions per tenant.
+        lock_material = _canonical_json(['ecom-projector-order-v1', *scope.key]).encode('utf-8')
+        lock_key = int.from_bytes(hashlib.sha256(lock_material).digest()[:8], 'big', signed=True)
+        locked = conn.execute('SELECT pg_try_advisory_xact_lock(%s) AS acquired', (lock_key,)).fetchone()['acquired']
+        if not locked:
+            pending = conn.execute(
+                "SELECT count(*) AS pending FROM projection_outbox WHERE org_id=%s AND project_id=%s "
+                "AND event_source='authoritative_store' AND projected=FALSE", scope.key,
+            ).fetchone()['pending']
+            return {'projected':0,'pending':int(pending)}
         conn.execute("SELECT set_config('aos.projection_actor', %s, true)", (PROJECTOR_ACTOR,))
         rows = conn.execute(
             "SELECT * FROM projection_outbox WHERE org_id=%s AND project_id=%s "

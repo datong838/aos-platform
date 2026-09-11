@@ -159,3 +159,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线8e8f0f03。tests/aip/test_a0v_ingress_journal_pg.py PG分支使用真实project_until_caught_up消费Store生成Outbox，替换手工projected=true；新建隔离最小meta_object_type/obj_instance，scoped RLS，使用实际PG连接工厂。保留Dataset pending拒绝，再投影并断言Payment对象及sourceIdentity/业务字段。SQLite分支维持显式标记，用于原Store回归。
 
 本波仅测试，无产品修改。验证实际payload hash/shape、基础派生投影、完成门及后续Dataset/claim事务组合；不扩大到link/tombstone、多店ID冲突或生产兼容表触发器证明，这些边界后续。public不迁移、真实源未接。
+
+## 并发投影顺序
+
+基线d6624907。project_pending的SKIP LOCKED仅防同事件双领，不防同对象旧/新事件分别被两个worker处理并逆序提交。新增租户projector事务advisory try-lock（独立namespace+tenant hash），拿不到时只返回当前pending/processed0，由已有deadline循环稍后重试。持锁者维持input_revision/outbox_id顺序完成整批；锁跟事务提交/回滚释放，不跨租户互斥。此策略串行同租户projector写入，保留各租户并行；不是全系统执行器锁。
+
+文件services/aos-api/aos_api/ecom_projector.py、tests/aip/test_a0v_projection_pending_pg.py。PG并发测试第一旧事件领取后在写对象前阻塞，第二worker不得越过它处理同对象新事件；释放后顺序处理新事件，最终属性必须新值。故障/原pending及其他tenant隔离回归。现有for-update skip锁仍保留；非projector人为占行导致跳读不作为正常owner路径承诺。后续生产迁移触发器与兼容对象多店身份仍待验证。
