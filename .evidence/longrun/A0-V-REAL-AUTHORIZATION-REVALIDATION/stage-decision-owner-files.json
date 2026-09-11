@@ -1,0 +1,5 @@
+{
+  "services/aos-api/alembic/versions/a0v_014_analyst_stage_decision.py": "30c417b1f966fa2a90f4f15ff943e8e8348e30492948e2f8a7f0646e9f450432",
+  "services/aos-api/aos_api/ecommerce_analyst_stage_decision_store.py": "eba8988bc7c7d2618ad4ff4891b2f91533bc78c2db585dbcd6765e7b4f6e07df",
+  "services/aos-api/tests/test_ecommerce_analyst_stage_decision_store.py": "7fffb1e30eb90947eca31a08b9d7c18dc9ceb3cca36ce598cac6f9e20ae226f1"
+}
