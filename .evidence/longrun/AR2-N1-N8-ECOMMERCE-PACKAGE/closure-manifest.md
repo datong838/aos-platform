@@ -761,3 +761,20 @@ owner 内固定消费 runtime-apply、runtime-verify、enable。后两段只通�
 |---|---|---|---|
 | `services/aos-api/aos_api/extension_runtime/live_installation_owner.py` | 原路径 | 单安装三段有序 delivery、失败短路与 owner 停止收敛 | 6e4e90a9db5d5a3cc01546789e321337318dbe802b601fd05b000fe1235b8de1 |
 | `services/aos-api/tests/extension_runtime/test_live_installation_owner.py` | 原路径 | 顺序、同 owner、失败、取消、并发与停止合同 | df6c9d81b648cfaee679c0b1feb020fc7e37cf645e5af1366eab108af28ec07f |
+
+### 9.34 Pending preparation 目录与 exact owner factory
+
+2026-09-12：新增 tenant-scoped pending preparation 目录，只在 `aos_runtime` 独立事务中读取当前租户
+immutable event/outbox/operation，固定筛选未投递 runtime-apply。结果按 Installation UUID 排序、去重并
+限制 100；不 claim、不 ACK、不读取 active binding，也不把 outbox 路由事实变成执行授权。
+
+新增 exact owner factory，只组合宿主已经完整构造的 `PreparationWorker`、control-plane 唯一 live job
+directory、connector、scope 和 descriptor，返回未启动的单 Installation owner。active binding 不进入
+创建目录，防止重启后冒领丢失的签名 session。scheduler、正式 worker composition 和 production wiring
+仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/pending_preparation_directory.py` | 原路径 | 有界 pending apply 路由读取与 exact owner factory | e9f3e2cc8c45eaea9f7a2be1beed00dfb6a13c8972a582992d495c1b0c2a22dc |
+| `services/aos-api/tests/extension_runtime/test_pending_preparation_directory.py` | 原路径 | 类型、排序、上限、跨租户与零启动 factory 合同 | 07ef9030b13c5fd021769610dbb2865b0ce8507ce048987165031b03d4693fb4 |
+| `services/aos-api/tests/extension_runtime/test_pending_preparation_directory_pg.py` | 原路径 | runtime role、租户、delivery/kind 与脏连接真实 PG 反证 | 8a313398323853500e622719d3962d092f75de2cbe03714bfec22e2fc5f9390c |

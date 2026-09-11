@@ -1,0 +1,22 @@
+{
+  "phase": "A0-V pending preparation directory",
+  "date": "2026-09-12",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/extension_runtime/pending_preparation_directory.py",
+      "sha256": "e9f3e2cc8c45eaea9f7a2be1beed00dfb6a13c8972a582992d495c1b0c2a22dc"
+    },
+    {
+      "path": "services/aos-api/tests/extension_runtime/test_pending_preparation_directory.py",
+      "sha256": "07ef9030b13c5fd021769610dbb2865b0ce8507ce048987165031b03d4693fb4"
+    },
+    {
+      "path": "services/aos-api/tests/extension_runtime/test_pending_preparation_directory_pg.py",
+      "sha256": "8a313398323853500e622719d3962d092f75de2cbe03714bfec22e2fc5f9390c"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/pending-preparation-directory-plan.md",
+      "sha256": "f4c05ff5101d8d17b5cb838007af1ff73ee876b4f255e496c2ba1cbdfa0a53ff"
+    }
+  ]
+}
