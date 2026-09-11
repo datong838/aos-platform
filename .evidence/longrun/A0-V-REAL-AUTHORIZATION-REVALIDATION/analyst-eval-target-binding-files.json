@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "aos.a0-v.changed-files/v1",
+  "baseline": "2eb007a8",
+  "files": {
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-eval-target-binding-plan.md": "a2d665d2ee201616e848f1ab404c90f5878b0fdb89fa5e602ad896b8ec5e2482",
+    "services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py": "ca5b442e0886b5bf31a6b6da0f2d89628a000470cbae274e08afb95167e4b999",
+    "services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py": "e66faa6dfb516f02c2dbfeccc379dcca914d9820cecda61d8add96a183693c9e"
+  }
+}

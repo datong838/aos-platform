@@ -5,7 +5,7 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_agent_text_output import read_agent_text
 from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceipt, BusinessInvestigationCompilationReceiptStore
 from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
-from aos_api.aip_eval_contracts import EvalContractRevisionRef, EvalGatePolicyRef, EvalSubjectArtifactRef
+from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType, EvalContractRevisionRef, EvalGatePolicyRef, EvalSubjectArtifactRef
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import CreateEvalContractRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
@@ -112,9 +112,12 @@ def _sources_and_eval(tx,scope,item,plan,markings):
         artifact_ref=EvalSubjectArtifactRef(resourceId=item.artifact_ref.resource_id,contentHash=item.artifact_ref.content_hash),
         stage_attempt_ref=item.stage_attempt_ref,eval_contract_ref=EvalContractRevisionRef(resourceId=ref.resource_id,revision=ref.revision,contentHash=ref.content_hash),
         gate_policy_ref=policy,cutoff_at=insight.cutoff_at)
+    expected_target=AssetRevisionRef(assetType=AssetType.SKILL_TEMPLATE,assetId=agent.request.skill.asset_id,
+        revision=str(agent.request.skill.revision),contentHash=agent.request.skill.content_hash)
     if (report.created_at<attempt.completed_at or report.suite_ref.asset_id!=contract.suite_ref.resource_id
-        or report.suite_ref.revision!=str(contract.suite_ref.revision) or report.suite_ref.content_hash!=contract.suite_ref.content_hash):
-        raise ValueError('stage report predates generation or uses a different suite')
+        or report.suite_ref.revision!=str(contract.suite_ref.revision) or report.suite_ref.content_hash!=contract.suite_ref.content_hash
+        or report.target!=expected_target):
+        raise ValueError('stage report predates generation or uses a different suite or target')
 
 
 class AnalystStageReviewCommandService:

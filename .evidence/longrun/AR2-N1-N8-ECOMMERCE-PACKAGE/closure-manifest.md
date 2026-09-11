@@ -265,3 +265,14 @@ marking。本切片只读，不增加公开路由、operation 注册、Provider 
 | `services/aos-api/aos_api/ecommerce_analyst_analysis_source_port.py` | 原路径 | platform host port；绑定租户和窄事务后调用既有 Owner 读取，不进入领域包 | 2c3d65ac64cfeb062e3c7a92a3636a93f4d9d444745930fe73c45a8be863d616 |
 | `services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py` | 包端单次读取编排与二次校验完成；成功 Attempt query、Artifact 和正式 Eval target 装配仍 PENDING | d79357fc1aacf96889b76fc0508ffc54b7c15eeabc19ce34904f9c5e7f91fc4a |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/sdk_ports.py` | 原路径 | solution package 公共 SDK；新增租户绑定的只读 GrowthAnalysisSourcePort | c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb |
+
+### 9.4 正式 Eval 目标绑定切片
+
+2026-09-11：阶段人工评审在同一宿主事务内，从已经核验的成功 AgentRun 请求派生 exact
+SkillTemplate target，并要求 passed Eval report.target 的类型、ID、revision、contentHash
+完全一致。合同 Suite、release gate、原始文字 Artifact、AgentRun Attempt、租户与时序的
+既有校验继续生效。该切片不创建 Eval、不发布 Skill、不调用 Provider。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 宿主阶段评审新增 exact Skill Eval target 防替换校验；包内编排迁移仍 PENDING | ca5b442e0886b5bf31a6b6da0f2d89628a000470cbae274e08afb95167e4b999 |

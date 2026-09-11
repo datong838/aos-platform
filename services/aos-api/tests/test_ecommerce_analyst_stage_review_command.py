@@ -89,6 +89,7 @@ def test_uncompiled_task_cannot_choose_own_responsibility():
 
 def sources(monkeypatch):
     from types import SimpleNamespace
+    from aos_api.aip_eval_contracts import AssetRevisionRef,AssetType
     from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
     from aos_api.aip_production_contracts import EvalContractRevision
     from aos_api.ecommerce_analyst_authority_store import canonical_hash
@@ -102,8 +103,10 @@ def sources(monkeypatch):
         contentHash=canonical_hash(body.model_dump(mode='json',by_alias=True)),lifecycle='frozen',readiness='ready',blockers=[],createdBy='compiler',createdAt=attempt.completed_at)
     ref=AnalystExactRef(resourceType='EvalContractRevision',resourceId=contract.contract_id,revision=2,contentHash=contract.content_hash)
     subject=SimpleNamespace(generation_artifact_ref=value.artifact_ref,created_at=attempt.completed_at,created_by=attempt.created_by,eval_ref=ref,cutoff_at=attempt.completed_at)
-    agent=SimpleNamespace(agent_run_id=attempt.agent_run_id,task_run_id=value.task_run_id,request=SimpleNamespace(skill=SimpleNamespace(asset_type='SkillTemplate',asset_id='ecommerce.skill.D01'),model_route=attempt.route_ref,policy=attempt.policy_ref))
-    state=dict(subject=subject,attempt=attempt,agent=agent,contract=contract,head=2,raw=True,gate=SimpleNamespace(invalidated_by=None),report=SimpleNamespace(created_at=attempt.completed_at,suite_ref=SimpleNamespace(asset_id=contract.suite_ref.resource_id,revision=str(contract.suite_ref.revision),content_hash=contract.suite_ref.content_hash)))
+    skill=SimpleNamespace(asset_type='SkillTemplate',asset_id='ecommerce.skill.D01',revision=1,content_hash='7'*64)
+    agent=SimpleNamespace(agent_run_id=attempt.agent_run_id,task_run_id=value.task_run_id,request=SimpleNamespace(skill=skill,model_route=attempt.route_ref,policy=attempt.policy_ref))
+    target=AssetRevisionRef(assetType=AssetType.SKILL_TEMPLATE,assetId=skill.asset_id,revision='1',contentHash=skill.content_hash)
+    state=dict(subject=subject,attempt=attempt,agent=agent,contract=contract,head=2,raw=True,gate=SimpleNamespace(invalidated_by=None),report=SimpleNamespace(created_at=attempt.completed_at,suite_ref=SimpleNamespace(asset_id=contract.suite_ref.resource_id,revision=str(contract.suite_ref.revision),content_hash=contract.suite_ref.content_hash),target=target))
     class Connection:
         def execute(self,sql,params=None):
             if 'clock_timestamp' in sql:row={'now':attempt.completed_at+timedelta(minutes=1)}
@@ -131,7 +134,7 @@ def test_sources_require_explicit_text_protocol_and_current_contract(monkeypatch
     assert run() is None
 
 
-@pytest.mark.parametrize('fault',['artifact','unknown','receipt','wrong_skill','raw','head','contract','input_mode','gate','suite','chronology','no_gate'])
+@pytest.mark.parametrize('fault',['artifact','unknown','receipt','wrong_skill','raw','head','contract','input_mode','gate','suite','chronology','target_kind','target_id','target_revision','target_hash','no_gate'])
 def test_source_and_eval_mismatches_block(monkeypatch,fault):
     run,state,plan=sources(monkeypatch)
     if fault=='artifact':state['subject'].generation_artifact_ref=None
@@ -145,5 +148,9 @@ def test_source_and_eval_mismatches_block(monkeypatch,fault):
     elif fault=='gate':state['gate'].invalidated_by='revoked'
     elif fault=='suite':state['report'].suite_ref.asset_id='other'
     elif fault=='chronology':state['report'].created_at-=timedelta(seconds=1)
+    elif fault=='target_kind':state['report'].target=state['report'].target.model_copy(update={'asset_type':'logic_graph'})
+    elif fault=='target_id':state['report'].target=state['report'].target.model_copy(update={'asset_id':'other'})
+    elif fault=='target_revision':state['report'].target=state['report'].target.model_copy(update={'revision':'2'})
+    elif fault=='target_hash':state['report'].target=state['report'].target.model_copy(update={'content_hash':'8'*64})
     else:plan['steps'][0]['gateRefs']=[]
     with pytest.raises(ValueError):run()
