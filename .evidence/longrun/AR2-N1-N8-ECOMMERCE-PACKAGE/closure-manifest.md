@@ -647,3 +647,18 @@ Receipt replay fast path 和 1.5.0 安装仍 PENDING；当前无产品入口、�
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | reader 获得真实 key/expectedVersion | d64be783285bc142c31b74bc6ba4651cc9b13eb9b401b1724ec3172ce46ffa98 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_composite_authority.py` | 原路径 | 顺序、shape、markings 与 canonical snapshot | b387739cdd98e98b6f45ab4c2c85f4680312db6e4294829523441fc5da3c5af7 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | reader 签名与真实 PG 五门回归 | 69fa86a1cda5fa6ade8505ccb6d8a4c4ee0c3fe6e1baaa34ebd8d62c914bc74a |
+
+### 9.27 阶段评审内部异步 service 与 replay fast path
+
+2026-09-12：新增 `AsyncAnalystStageReviewCommandService`，内部装配 composite reader、StageDecision
+Owner binding、双事务 phases、installed one-shot port 和 coordinator。decide 先用独立短事务读取同 key
+Receipt；命中后 Owner exact 回读并比较完整 item/version，零 proof reader、零 IPC 返回历史 ref。
+
+新发布按 prepare→五次事务外 IPC→current/publish 执行；超时未知零写。service 尚无公开入口，真实
+installed invocation factory 与 1.5.0 安装仍 PENDING，当前 1.4.0 和租户数据未变。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_async_service.py` | 原路径 | 内部 async 装配与 replay preflight | 918354d7f1415a046cee7a419a101910ad1a8a3ff67e6c399b279e0847f18262 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | exact Receipt replay Owner 回读 | 4422194578103acf404892eb83ecdb8805b530fb5cb91e9e05a8064451d32142 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_async_service.py` | 原路径 | 新发布/replay/conflict/timeout 隔离 PG | 1f1f95b4957f498da8c827087a2b4678ffd8117aef60cef42e61ea4de80da5b7 |

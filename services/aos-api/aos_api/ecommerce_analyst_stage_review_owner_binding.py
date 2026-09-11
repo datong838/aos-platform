@@ -8,6 +8,7 @@ from aos_api.asset_registry.canonical_json import canonical_json,canonical_sha25
 from aos_api.ecommerce_analyst_authority_store import canonical_hash
 from aos_api.ecommerce_analyst_stage_decision import AnalystStageDecisionRevision
 from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionStore
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_stage_review_command import require_stage_review_command_identity
 from aos_api.ecommerce_analyst_stage_review_coordinator import (
     PreparedStageReviewValidation,StageReviewValidationExchange)
@@ -86,6 +87,20 @@ class StageReviewDecisionOwnerBinding:
 
     def prepare_in_transaction(self,transaction,command):
         return self._read(transaction,command)
+
+    def read_replay_in_transaction(self,transaction,command):
+        if type(transaction) is not HostTransaction:
+            raise TypeError("stage review replay requires HostTransaction")
+        item=self._command(command);self._lock(transaction,item,command["key"])
+        receipt=transaction.execute("""SELECT result_ref FROM ecommerce_analyst_authority_receipt
+            WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s FOR SHARE""",
+            (*self.scope.key,_OPERATION,command["key"])).fetchone()
+        if receipt is None:return None
+        ref=AnalystExactRef.model_validate(receipt["result_ref"])
+        if (AnalystStageDecisionStore(transaction,self.scope).read_exact(ref)!=item
+            or command["expectedVersion"]!=item.version-1):
+            raise ValueError("stage review replay command drifted")
+        return ref.model_dump(mode="json",by_alias=True)
 
     def load_current_snapshot(self,transaction,command):
         snapshot,_=self._read(transaction,command)
