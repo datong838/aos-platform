@@ -1,11 +1,16 @@
 """Internal, transaction-bound human stage decisions. No public route or dispatch."""
+import inspect
+
+from aos_api.aip_agent_query_input import read_agent_query
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_agent_run_execution_service import AipAgentRunExecutionService
 from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_agent_text_output import read_agent_text
 from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceipt, BusinessInvestigationCompilationReceiptStore
 from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
-from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType, EvalContractRevisionRef, EvalGatePolicyRef, EvalSubjectArtifactRef
+from aos_api.aip_contracts import ArtifactRef
+from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType, EvalCaseKind, EvalContractRevisionRef, EvalGatePolicyRef, EvalSubjectArtifactRef
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import CreateEvalContractRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
@@ -60,7 +65,7 @@ def _subject(tx,scope,ref):
     return result
 
 
-def _sources_and_eval(tx,scope,item,plan,markings):
+def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
     factory=TransactionBoundConnectFactory(tx,scope)
     subject=_subject(tx,scope,item.subject_ref)
     if subject.generation_artifact_ref!=item.artifact_ref or item.artifact_ref.revision!=1:
@@ -72,7 +77,8 @@ def _sources_and_eval(tx,scope,item,plan,markings):
     if artifact is None or artifact['run_id']!=item.task_run_id or not isinstance(artifact['source'],dict):
         raise ValueError('original stage artifact is not in this run')
     source=artifact['source']
-    if not source.get('attemptId') or not source.get('agentRunId'):raise ValueError('original generation provenance missing')
+    if not source.get('attemptId') or not source.get('agentRunId') or not source.get('requestHash'):
+        raise ValueError('original generation provenance missing')
     attempt=AipAgentRunExecutionService(factory).get(scope,source['attemptId'])
     agent=AipAgentRunService(factory).get(scope,source['agentRunId'])
     original=attempt.output_artifact_ref
@@ -81,12 +87,27 @@ def _sources_and_eval(tx,scope,item,plan,markings):
         or attempt.reason_code is not None or not attempt.provider_receipt_id or not attempt.usage_receipt_ids
         or attempt.completed_at is None or not subject.created_at==attempt.completed_at<=now
         or attempt.created_by!=subject.created_by or original is None
+        or source['requestHash']!=attempt.request_hash
         or original.artifact_id!=item.artifact_ref.resource_id or original.content_hash!=item.artifact_ref.content_hash
         or agent.request.skill.asset_type!='SkillTemplate'
         or agent.request.model_route!=attempt.route_ref or agent.request.policy!=attempt.policy_ref
         or agent.request.skill.asset_id!={'portrait':'ecommerce.skill.D01','diagnosis':'ecommerce.skill.D02','solution-design':'ecommerce.skill.D03'}[item.stage]):
         raise ValueError('stage generation is not proven successful in this run')
     read_agent_text(tx,scope,original,markings=markings)
+    query_rows=tx.execute('''SELECT artifact_id,content_hash FROM aip_artifact
+        WHERE org_id=%s AND project_id=%s AND run_id=%s AND artifact_type='agent_query_input'
+        AND source->>'attemptId'=%s AND source->>'agentRunId'=%s
+        AND source->>'requestHash'=%s FOR SHARE''',(*scope.key,item.task_run_id,attempt.attempt_id,
+        agent.agent_run_id,attempt.request_hash)).fetchall()
+    if len(query_rows)!=1:raise ValueError('one original generation query artifact required')
+    query_ref=ArtifactRef(artifactId=query_rows[0]['artifact_id'],artifactType='agent_query_input',
+        revision='1',contentHash=query_rows[0]['content_hash'])
+    query=read_agent_query(tx,scope,query_ref,attempt_id=attempt.attempt_id,
+        request_hash=attempt.request_hash,markings=markings)
+    case_input=derive_structure_case(query,stage=item.stage)
+    if inspect.isawaitable(case_input) or type(case_input) is not dict:
+        if inspect.iscoroutine(case_input):case_input.close()
+        raise ValueError('installed growth package returned an invalid Eval case')
     # The approved Plan owns the stage's exact Eval contract; no caller-selected fallback.
     step=next(step for step in plan['steps'] if step['stepKey']==item.stage)
     refs=[AnalystExactRef.model_validate(ref) for ref in step.get('gateRefs',[]) if ref.get('resourceType')=='EvalContractRevision']
@@ -102,6 +123,20 @@ def _sources_and_eval(tx,scope,item,plan,markings):
         or contract.gate_policy.get('subjectInputMode')!='text-envelope-v1'
         or (item.stage=='portrait' and insight.eval_ref!=ref) or contract.release_gate_ref is None):
         raise ValueError('stage EvalContract is not an effective text contract')
+    suite=AipEvalPackRegistry(factory).get_suite_revision(scope,contract.suite_ref.resource_id,
+        contract.suite_ref.revision)
+    expected_target=AssetRevisionRef(assetType=AssetType.SKILL_TEMPLATE,assetId=agent.request.skill.asset_id,
+        revision=str(agent.request.skill.revision),contentHash=agent.request.skill.content_hash)
+    if (suite.suite_id!=contract.suite_ref.resource_id or suite.revision!=contract.suite_ref.revision
+        or suite.content_hash!=contract.suite_ref.content_hash or suite.target!=expected_target
+        or len(suite.cases)!=1):
+        raise ValueError('stage Eval Suite does not bind the generated Skill and one case')
+    case=suite.cases[0]
+    if (case.kind is not EvalCaseKind.POSITIVE or not case.required or case.expected_artifact is None
+        or case.input_artifact.artifact_type!='eval_input' or case.input_artifact.revision!='1'
+        or case.expected_artifact.artifact_type!='eval_expected' or case.expected_artifact.revision!='1'
+        or case.input_artifact.content_hash!=canonical_hash(case_input)):
+        raise ValueError('stage Eval case differs from original generation query')
     policy=EvalGatePolicyRef.model_validate(contract.gate_policy.get('stagePolicyRef'))
     gate_ref=contract.release_gate_ref
     tx.execute('SELECT decision_id FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s FOR SHARE',(*scope.key,gate_ref.resource_id)).fetchone()
@@ -112,18 +147,17 @@ def _sources_and_eval(tx,scope,item,plan,markings):
         artifact_ref=EvalSubjectArtifactRef(resourceId=item.artifact_ref.resource_id,contentHash=item.artifact_ref.content_hash),
         stage_attempt_ref=item.stage_attempt_ref,eval_contract_ref=EvalContractRevisionRef(resourceId=ref.resource_id,revision=ref.revision,contentHash=ref.content_hash),
         gate_policy_ref=policy,cutoff_at=insight.cutoff_at)
-    expected_target=AssetRevisionRef(assetType=AssetType.SKILL_TEMPLATE,assetId=agent.request.skill.asset_id,
-        revision=str(agent.request.skill.revision),contentHash=agent.request.skill.content_hash)
     if (report.created_at<attempt.completed_at or report.suite_ref.asset_id!=contract.suite_ref.resource_id
         or report.suite_ref.revision!=str(contract.suite_ref.revision) or report.suite_ref.content_hash!=contract.suite_ref.content_hash
-        or report.target!=expected_target):
+        or report.target!=expected_target or len(report.results)!=1 or report.results[0].case_id!=case.case_id):
         raise ValueError('stage report predates generation or uses a different suite or target')
 
 
 class AnalystStageReviewCommandService:
-    def __init__(self,connect_factory):
+    def __init__(self,connect_factory,*,derive_structure_case):
         if not callable(connect_factory):raise TypeError('explicit scoped connection factory required')
-        self.connect=connect_factory
+        if not callable(derive_structure_case):raise TypeError('installed growth package case deriver required')
+        self.connect=connect_factory;self.derive_structure_case=derive_structure_case
 
     def decide(self,scope,item,*,actor,key,expected_version,markings):
         item=AnalystStageDecisionRevision.model_validate(item.model_dump())
@@ -150,7 +184,7 @@ class AnalystStageReviewCommandService:
                 owner.read_current(item.prior_ref)
             else:
                 plan=require_stage_review_runtime(tx,scope,**{key:getattr(item,key) for key in ('task_run_id','plan_ref','stage','stage_attempt_ref','subject_ref')})
-                _sources_and_eval(tx,scope,item,plan,list(markings))
+                _sources_and_eval(tx,scope,item,plan,list(markings),self.derive_structure_case)
             now=tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
             if item.created_at>now or (item.decision=='accept' and item.expires_at<=now):raise ValueError('stage decision is not effective now')
             return owner.put(item,actor=actor,key=key,expected_version=expected_version)

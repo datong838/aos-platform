@@ -306,3 +306,19 @@ FAILED，Provider 调用数必须为零。默认 executor 仍不留存输入正�
 | sourcePath | targetPath | decision | 当前切片SHA256 |
 |---|---|---|---|
 | `services/aos-api/aos_api/aip_agent_run_executor.py` | 原路径 | platform 受治理执行编排；显式模式 Provider 前留存 query，失败零 Provider 副作用；后继 Eval case 装配仍 PENDING | f5dcb41673ec1802d9cddedc3aa3acd5ac88f53071845b9e25f4687994e6a48d |
+
+### 9.7 经营参谋正式 Eval case 同源绑定切片
+
+2026-09-11：阶段评审在同一宿主事务内，要求 output Artifact source 与成功 Attempt 的
+agentRunId、attemptId、requestHash 完全一致，并定位该 Attempt 唯一的 `agent_query_input`。
+query 经私有 Owner 按当前 markings 回读，再交给显式注入的已安装 growth 包纯函数按 stage
+派生结构 case；平台不反向 import 包，也不接受评审调用方自报 case。
+
+当前 EvalContract 所指 exact Suite 必须以 AgentRun request 的 exact SkillTemplate 为 target，
+且只含一条 required positive case；输入/期望 Artifact 类型、revision、派生 case hash 和报告
+caseId 全部匹配才允许阶段决定。历史无 query Artifact 的 Attempt fail closed。本切片不创建
+Suite、Eval、报告或 release gate，可信运行时函数装配仍是下一切片。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 宿主评审绑定私有 query、包派生 case、exact Suite/Skill/report；包内运行时装配仍 PENDING | 2c42badebac8822fb161cb40d86dcc0d9b0228570c9c606152db947789dc8372 |
