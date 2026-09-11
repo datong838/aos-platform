@@ -372,3 +372,19 @@ priorRef 并重算规范 contentHash。输出仍只是一份待宿主持久化�
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_growth_plan_approval.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py` | DRAFT→APPROVED 纯状态转换迁入；receipt-first 宿主事务与运行装配仍 PENDING | 89f4afe1633b5e298a2fd8cd2eeaf3d8cd9d07c9100ac02394a30233780e81f2 |
 | `services/aos-api/tests/extension_runtime/test_analyst_growth_plan_approval_rule.py` | 原路径 | 宿主合法结果 parity、exact/版本/状态/actor/时间负向边界与隔离 import | 98708bd1a6d0983bb9d22bc3d36ae165a85286e0f9ea57b7e48e979806a41d26 |
+
+### 9.11 经营计划到 TaskGraph 纯展开规则
+
+2026-09-12：审计确认 GrowthPlan 批准继续由认证 Principal 发起的唯一宿主 HTTP API 承担；
+现有 Store 已在一次事务中完成 Receipt-first、head lock、expectedVersion、CAS、revision 与 Receipt
+写入，因此不新增 extension 发起的第二审批端口。
+
+growth 包新增 `build_canonical_task_requests` 与 `assemble_task_graph`：先核验 approved plan 和
+exact planRef，只按原顺序展开 eligible item；宿主 Task Owner 返回完整且仅包含 exact Task ref
+的映射后，才组装数量守恒、一对一并按现行算法计算 hash 的 TaskGraphRevision。包不判断当前
+head，不创建 Task，不发布图，也不读写数据库或 Receipt。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_materializer.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_materializer.py` | eligible Task 请求与完整 TaskGraph 纯展开迁入；current、Task/图 Owner、事务和运行装配仍 PENDING | 189612b5c630608c68a7ba43bd31b7b7f212506d5fa5fff5c9931da1b8c48b25 |
+| `services/aos-api/tests/extension_runtime/test_analyst_materializer_rule.py` | 原路径 | 宿主合法结果 parity、映射/引用/状态/时间负向合同与隔离 import | 7ec1676274b9bfe068892248a8dbc083eb59f5f40a9d5fef4ab33a0f121e3cf0 |

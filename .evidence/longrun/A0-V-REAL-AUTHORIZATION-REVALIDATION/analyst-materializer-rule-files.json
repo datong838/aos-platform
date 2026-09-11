@@ -1,0 +1,11 @@
+{
+  "baseline": "e7c3f47a",
+  "files": [
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-materializer-rule-plan.md",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-materializer-rule-files.json",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-materializer-rule-verification.md",
+    ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/closure-manifest.md",
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+    "services/aos-api/tests/extension_runtime/test_analyst_materializer_rule.py"
+  ]
+}
