@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "aos.a0-v.changed-files/v1",
+  "baseline": "23ecdc29",
+  "files": {
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py": "c9b546c3b61d79694e39b0cfc821c4fa7e098d7e648208746b8b6fb7e2998583",
+    "services/aos-api/tests/extension_runtime/test_analyst_package_analysis_sources.py": "68d7bd3a2f96336f9acb6151b7d87b7a1acbf2a645abb3c3c429d71d04061239"
+  }
+}

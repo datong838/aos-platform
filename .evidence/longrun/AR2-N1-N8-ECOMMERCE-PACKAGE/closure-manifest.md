@@ -241,3 +241,13 @@ AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业�
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_eval.py` | 原路径 | growth纯结构评估；无权威、无运行注册，联合运行仍PENDING | ca60642772cd52e4b18715940d9f907f36171ef5bc6dec1cc6562dbe1e85122b |
 
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_case.py` | 原路径 | growth纯生成输入到结构规则转换；来源Owner与运行装配仍PENDING | 1c903f9e7781d1952d38c3847a670ee329e95a08bf8f9db205b8111471217109 |
+
+### 9.2 分析来源材料合同切片
+
+2026-09-11：`ecommerce_analyst_analysis_sources.py` 的纯请求/材料合同与二次完整性校验迁入 growth 包。宿主继续唯一拥有 TenantScope、TaskBrief、EvidenceBundle、Disclosure、freshness、revocation、marking、事务和数据库读取；本切片不修改宿主旧文件，不注册运行 operation。
+
+包校验 exact bundle/evidence refs、同 Task 且不重复的 grant 集合、材料全量覆盖、宿主权威顺序保留、Disclosure identity/expiry、payload 原文 hash、cutoff 和总字节上限。grants 明确为无序授权集合，不能重排宿主返回的 EvidenceBundle 项。运行 target、原始 Attempt query 绑定和宿主 source port 仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py` | 纯合同/材料校验迁入 growth；宿主 Owner 读取与事务 port 仍 PENDING | c9b546c3b61d79694e39b0cfc821c4fa7e098d7e648208746b8b6fb7e2998583 |
