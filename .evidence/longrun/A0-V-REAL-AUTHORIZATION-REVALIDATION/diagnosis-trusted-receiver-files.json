@@ -1,0 +1,17 @@
+[
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_authority_store.py",
+    "preHash": "c6c6b0847646aa7435cfe39c46ce07bfb35c619b74b49bf1d46d4b63196af4d9",
+    "postHash": "47a675d8fffb8380287158a64fca92e0330547b6324e6b752aa239e8f20f8011"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_receiver.py",
+    "preHash": null,
+    "postHash": "523f9bee10d550fc0dbb057e55a8dc7838fc23ffc785c6bfcf689e60da2abef9"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_diagnosis_receiver.py",
+    "preHash": null,
+    "postHash": "779fedeb65bb6604c368c7d45990a3dcd5fcf9d9f92aab6e311b752675097617"
+  }
+]
