@@ -76,12 +76,23 @@ def resource(kind, identity):
     return dict(resourceType=kind, resourceId=identity, revision="1", authority="postgresql")
 
 
-def seed_graph(connect, *, retain_text=False):
+def seed_graph(connect, *, retain_text=False, taor_ready=False):
     decision, attempt, answer = generation()
+    plan_fields = dict(content_hash="a" * 64, steps=[])
+    if taor_ready:
+        from types import SimpleNamespace
+        from aos_api.aip_contracts import PlanStep, ResourceRef
+        from aos_api.ecommerce_analyst_growth_plan_worker import growth_stage_attempt_id
+        steps = [PlanStep(step_key=key, title=key) for key in ("portrait", "diagnosis", "solution-design")]
+        steps[-1].assignee_refs = [ResourceRef(resource_type="AgentInstance", resource_id="a0v-full-instance", revision="1", authority="aip-assignee-directory")]
+        payload = dict(steps=[step.model_dump(mode="json", by_alias=True) for step in steps], dependencies=[], risk={})
+        plan_fields = dict(**payload, content_hash=canonical_hash(payload), approval_status="approved", approved_by="pytest", approved_at=NOW)
+        snapshot = SimpleNamespace(run=SimpleNamespace(id="a0v-full-task-run"), plan=SimpleNamespace(id="a0v-full-plan", content_hash=plan_fields["content_hash"]))
+        attempt = attempt.model_copy(update={"attempt_id": growth_stage_attempt_id(SCOPE, snapshot)})
     with connect(SCOPE) as conn:
         assert not conn.execute("SELECT 1 FROM aip_agent_run WHERE org_id=%s AND project_id=%s AND agent_run_id=%s", (*SCOPE.key, attempt.agent_run_id)).fetchone()
         insert(conn, "aip_task", task_id="a0v-full-task", task_type="analysis", title="Synthetic full graph", status="executing", idempotency_key="a0v-full-task", request_hash="a" * 64, created_by="pytest")
-        insert(conn, "aip_plan_revision", plan_revision_id="a0v-full-plan", task_id="a0v-full-task", revision=1, content_hash="a" * 64, steps=[], idempotency_key="a0v-full-plan", request_hash="a" * 64, created_by="pytest")
+        insert(conn, "aip_plan_revision", plan_revision_id="a0v-full-plan", task_id="a0v-full-task", revision=1, **plan_fields, idempotency_key="a0v-full-plan", request_hash="a" * 64, created_by="pytest")
         insert(conn, "aip_task_run", run_id="a0v-full-task-run", task_id="a0v-full-task", plan_revision_id="a0v-full-plan", status="running", idempotency_key="a0v-full-task-run", request_hash="a" * 64, created_by="pytest")
         template = conn.execute("SELECT template_id,revision FROM aip_agent_template_revision ORDER BY template_id,revision LIMIT 1").fetchone()
         assert template, "owned clone has no template for synthetic FK fixture"
