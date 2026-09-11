@@ -1,0 +1,30 @@
+{
+  "base": "8b169ab7",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_product_joint_quality.py",
+      "preHash": "7547d3fca0b31f71f6f73c46581ab99a09b64c26285af963fdbef0105f52d46a",
+      "postHash": "32788e695a85cd9fec10796bd65eef573e8f25132c9bd9cdb901fdfbd74bb983"
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_product_content_snapshot.py",
+      "preHash": null,
+      "postHash": "612befa3e64d70b99a6a026cb67a63093e484859da9cf6db3a513f19411b7bac"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_product_content_snapshot.py",
+      "preHash": null,
+      "postHash": "a1fbdf11d243b38616326caa04412a427b0f12e15628f9e8013f5fe4919f6df6"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/product-content-snapshot-plan.md",
+      "preHash": null,
+      "postHash": "a443effdcbf414bfce081063d688536140c070e9520ecfc886f65ad97251ee0b"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/product-content-snapshot-verification.md",
+      "preHash": null,
+      "postHash": "bfc9ae67f8da10dd857cb1af7a71970460fbb21053e40c9db0f9d1d8661bd8be"
+    }
+  ]
+}

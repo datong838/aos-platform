@@ -62,30 +62,40 @@ def _time(value, cutoff):
     return type(value) is int and 0 < value <= cutoff.timestamp()
 
 
-def _counts(rows, finished_at):
+def _eligible_rows(rows):
     candidates = [row for row in rows if not (_strict(row.get("is_delete"), 1) or _strict(row.get("goods_state"), 0))]
     frequencies = Counter(row["goods_id"] for row in candidates if _positive_id(row.get("goods_id")))
     eligible = [row for row in candidates if not (_positive_id(row.get("goods_id")) and frequencies[row["goods_id"]] > 1)]
+    return len(rows) - len(candidates), len(candidates) - len(eligible), eligible
+
+
+def product_row_checks(row, finished_at):
+    """The same eight predicates used by the versioned joint-quality policy."""
+    category = row.get("category_id")
+    created = _time(row.get("create_time"), finished_at)
+    updated = _time(row.get("modify_time"), finished_at)
+    return (
+        _positive_id(row.get("goods_id")) and _strict(row.get("site_id"), 1),
+        type(row.get("goods_name")) is str and bool(row["goods_name"].strip()),
+        _strict(row.get("goods_state"), 1) and _strict(row.get("is_delete"), 0),
+        _positive_id(category) or (type(category) is str and bool(category.strip()) and category == category.strip() and category != "0"),
+        _number(row.get("price")) is not None,
+        _number(row.get("goods_stock"), integer=True) is not None,
+        created,
+        created and updated and row["modify_time"] >= row["create_time"],
+    )
+
+
+def _counts(rows, finished_at):
+    excluded, duplicates, eligible = _eligible_rows(rows)
     counts = dict.fromkeys(_FIELDS, 0)
     joint = 0
     for row in eligible:
-        category = row.get("category_id")
-        created = _time(row.get("create_time"), finished_at)
-        updated = _time(row.get("modify_time"), finished_at)
-        checks = (
-            _positive_id(row.get("goods_id")) and _strict(row.get("site_id"), 1),
-            type(row.get("goods_name")) is str and bool(row["goods_name"].strip()),
-            _strict(row.get("goods_state"), 1) and _strict(row.get("is_delete"), 0),
-            _positive_id(category) or (type(category) is str and bool(category.strip()) and category == category.strip() and category != "0"),
-            _number(row.get("price")) is not None,
-            _number(row.get("goods_stock"), integer=True) is not None,
-            created,
-            created and updated and row["modify_time"] >= row["create_time"],
-        )
+        checks = product_row_checks(row, finished_at)
         for field, valid in zip(_FIELDS, checks):
             counts[field] += int(valid)
         joint += int(all(checks))
-    return (len(rows) - len(candidates), len(candidates) - len(eligible), len(eligible),
+    return (excluded, duplicates, len(eligible),
         len({row["goods_id"] for row in eligible if _positive_id(row.get("goods_id"))}), tuple(counts.items()), joint)
 
 
