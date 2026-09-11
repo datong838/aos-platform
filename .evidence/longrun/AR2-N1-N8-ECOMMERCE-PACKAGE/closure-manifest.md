@@ -679,3 +679,19 @@ installed invocation factory 与 1.5.0 安装仍 PENDING，当前 1.4.0 和租�
 | `services/aos-api/aos_api/extension_runtime/preparation_owner.py` | 原路径 | owner 内一次调用、串行和清理收敛；session 不逃逸 | bade722713d0fee9e4777283e4493c5f5b6019103b2e147cdcd292367cc41374 |
 | `services/aos-api/aos_api/extension_runtime/preparation_worker.py` | 原路径 | 按 plan member exact package id/hash 选择 live session | 48ebb2ebccc8c2705ef378273dbc22dcba13e08069e85dbbfa46df6ff8cd715b |
 | `services/aos-api/tests/extension_runtime/test_live_owner_invocation.py` | 原路径 | 原位调用、串行、零重试、package 绑定与 stop 收敛合同 | bd75d693432349599d8e32ea5dea07821382bc8a8d7cdd799462c6e719db96a2 |
+
+### 9.29 Live PreparedJob exact 目录
+
+2026-09-12：新增进程所有的 `LivePreparedJobDirectory`，目录键只从真实 `PreparedJob` 派生为
+TenantScope/Installation/generation。相同 owner 重复登记幂等，同键竞争 owner、跨租户、错安装和错代际
+均拒绝；撤销必须匹配原 job 对象。
+
+`PreparationConsumer` 在 owner routing 校验成功后登记，在关闭时即使 stop 异常也撤销；登记冲突先
+停止新 owner。目录不读取或缓存授权，不持久化 token，不启动运行时，也不构成当前 Installation、
+binding epoch 或 package lock 的调用许可。当前性前后复核与 stage-review service 装配仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/live_job_directory.py` | 原路径 | exact live job identity directory；无 admission 权限 | 9c211d1228587d297572b3de7b37500ac24e1b0ffde3d59d6bc05654df42207e |
+| `services/aos-api/aos_api/extension_runtime/preparation_consumer.py` | 原路径 | owner 校验后登记、关闭必撤销、冲突先清理 | fc4d1e0deacd13dd2252c66c005eba9686b39f0c681592f0f61346d300278de1 |
+| `services/aos-api/tests/extension_runtime/test_live_job_directory.py` | 原路径 | exact lookup、竞争/隔离拒绝与 consumer 生命周期合同 | b1fba96a76b6ee6155bdcdda8272ce7ba7e097af728cabdc988d7a426d666396 |

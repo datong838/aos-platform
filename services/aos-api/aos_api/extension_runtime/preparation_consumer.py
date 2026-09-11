@@ -20,13 +20,18 @@ class PreparationDeliveryResult:
 
 
 class PreparationConsumer:
-    def __init__(self,*,connect,worker,installation_id,org_id,project_id):
+    def __init__(self,*,connect,worker,installation_id,org_id,project_id,live_directory=None):
         self.tenant_scope=TenantScope(org_id,project_id)
         if not callable(connect) or not isinstance(worker,PreparationWorker):
             raise ValueError('trusted preparation worker and connection required')
+        if live_directory is not None:
+            from .live_job_directory import LivePreparedJobDirectory
+            if type(live_directory) is not LivePreparedJobDirectory:
+                raise TypeError('exact live PreparedJob directory required')
         self.scope=dict(org_id=org_id,project_id=project_id)
         self.installation=UUID(str(installation_id))
         self.connect,self.worker=connect,worker
+        self.live_directory=live_directory
         self.outbox=RuntimeOutboxStore()
         self._task=self._job=self._close_task=None
         self._closing=False
@@ -70,6 +75,11 @@ class PreparationConsumer:
                 or job.plan.operation_id!=operation):
             await _settled(job.stop())
             raise RuntimeConflict('prepared owner routing mismatch')
+        if self.live_directory is not None:
+            try:self.live_directory.register(job)
+            except BaseException:
+                await _settled(job.stop())
+                raise
         return job
 
     async def _run(self):
@@ -102,6 +112,9 @@ class PreparationConsumer:
             if isinstance(original,CleanupUncertainError) and original is not cleanup:
                 raise original from cleanup
             raise
+        finally:
+            if self._job is not None and self.live_directory is not None:
+                self.live_directory.unregister(self._job)
         if original is not None:raise original
 
     async def stop(self):
