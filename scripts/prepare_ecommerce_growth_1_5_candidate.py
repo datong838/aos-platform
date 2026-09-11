@@ -55,11 +55,6 @@ def prepare(target: Path = TARGET) -> dict[str, object]:
         if text.count("  displayName: 电商增长方案包（W3：六数字同事生产 Profile Candidate）\n") != 1:
             raise RuntimeError("base candidate display name drifted")
         text = text.replace("  version: 1.4.0\n", "  version: 1.5.0\n", 1)
-        text = text.replace(
-            "  displayName: 电商增长方案包（W3：六数字同事生产 Profile Candidate）\n",
-            "  displayName: 电商增长方案包（经营参谋阶段评审 Runtime Candidate）\n",
-            1,
-        )
         manifest.write_text(text, encoding="utf-8")
         old_ref = b"bundle://aos/solution.ecommerce.growth@1.4.0"
         new_ref = b"bundle://aos/solution.ecommerce.growth@1.5.0"

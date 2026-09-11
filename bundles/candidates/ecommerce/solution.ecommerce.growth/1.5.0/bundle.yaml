@@ -3,7 +3,7 @@ kind: SolutionPack
 metadata:
   id: solution.ecommerce.growth
   version: 1.5.0
-  displayName: 电商增长方案包（经营参谋阶段评审 Runtime Candidate）
+  displayName: 电商增长方案包（W3：六数字同事生产 Profile Candidate）
   publisher: aos
   license: internal
 spec:

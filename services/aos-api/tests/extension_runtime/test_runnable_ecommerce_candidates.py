@@ -79,8 +79,16 @@ def test_immutable_1_4_0_candidate_keeps_exact_historical_hashes() -> None:
 
 def test_current_1_5_0_candidate_keeps_exact_reviewed_source_hash() -> None:
     candidate = CANDIDATE_ROOT / "solution.ecommerce.growth/1.5.0"
-    assert _tree_hash(candidate) == "34cd4bc2e9f6bc9c2d9ceb0cf8bee16a93232bce374396e075c3afae9c5b43d8"
+    assert _tree_hash(candidate) == "34446fcbfc1a8b7239cc44cdb4d801584d618deffbadc9c6bddaf7d69e5b0bd0"
     assert _tree_hash(candidate / "backend") == "0d9a0b6988c1ffbfb79ff4ab2389f4038d81385ab2735389a8a800901c85c302"
+
+
+def test_growth_successor_preserves_registry_bundle_identity() -> None:
+    loader = ManifestLoader({"candidate": CANDIDATE_ROOT})
+    previous = loader.load("bundle://candidate/solution.ecommerce.growth/1.4.0")
+    successor = loader.load("bundle://candidate/solution.ecommerce.growth/1.5.0")
+
+    assert successor.manifest.metadata.display_name == previous.manifest.metadata.display_name
 
 
 def _module(path: Path, package: str):
