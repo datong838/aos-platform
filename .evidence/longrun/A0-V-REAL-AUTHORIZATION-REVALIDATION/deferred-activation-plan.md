@@ -1,0 +1,19 @@
+# 开发未核价记录完整生命周期
+
+基线98b0b4e3。用户已明确开发费用延后；既有DTO将deferred限定draft/validated是阶段施工闸，不是商业规则。Model Owner/Resolver/Invoker已经在价格active有效性及exact引用之外，联查当前预算同一开发授权、scope、Provider/model、审批与有效期；原子Usage/Artifact/cost_pending持久承接已完成局部验证，完整内容Host接线仍待。本切片不直接调用Provider、不发布live模型/路由、不切安装候选，仅开放已具备治理校验路径所需的价格生命周期表达。
+
+修改services/aos-api/aos_api/aip_model_runtime_contracts.py：移除阶段性draft/validated限定，允许已有枚举active/suspended/revoked；保留必须有明确DevelopmentCostAuthorization、所有数值价格None、正租户与CNY、有界时区窗口包含于授权。suspended/revoked是撤回表示，实际执行仍只接受active。旧无授权价格仍至少input/output一个数值，序列化省略新增空字段以保持既有hash。
+
+测试services/aos-api/tests/aip/test_aip_model_runtime_contracts.py：先证明三新生命周期目前失败，完整JSON序列化回读不变，商业全空/零价混用/授权窗口/租户负例保持。services/aos-api/tests/aip/test_aip_development_model_binding.py增加实际价格DTO接Owner治理，预算授权缺失/漂移/过期仍拒绝；结合已有Resolver/Invoker检查，不用SimpleNamespace假造active价格覆盖关键新路径。隔离升级克隆中实测正式Price Owner发布、重复回读、暂停/撤销与canary，不改变主恢复库真实配置。具体PG验证按现有Owner表结构，不用默认5433。
+
+风险：DTO可表达不是真实模型已注册或业务链可运行；不将文本能力泛化到媒体；后续正式Eval/Model/Route及职责绑定仍须逐项完成。原商业unknownPrice=block不改，不编造0价格。
+
+
+### 激活前追加当前版本禁入门
+
+复核发现旧exact active价格/预算授权可能在head已换为撤销版本后仍被引用。开发延后费用只允许使用当前已授权版本，因此扩展文件aip_model_runtime_store.py（共享require_current_development_price供Owner及Invoker调用）、aip_exact_provider_invoker.py、aip_model_governance_policy_store.py（带开发授权BudgetPolicy读取head并比对revision/hash/active）。仅deferred opt-in触发新门，旧商业价格pin行为不改。授权更新要求模型/价格重新exact绑定，不能旧版持续豁免。校验仍发生于Secret和transport前；不承诺消除校验后到网络发送间的所有并发撤销窗口，宿主执行锁与审批另行约束。
+
+实际新增联合测试放test_a0v_model_readiness_governance.py（复用现有Owner/Resolver装配）和test_aip_development_model_binding.py，补旧ref在新head撤销下失败及当前DTO匹配正例。不是仅对传入DTO修改lifecycle的假撤销测试。
+
+
+PG验证落在新增tests/aip/test_a0v_deferred_price_pg.py：为本次创建独立schema，三张表LIKE public INCLUDING ALL并显式FORCE RLS，使用aos_runtime真实Price Owner发布与读取，结束只删本schema。没有修改升级克隆或主库的实际模型配置；此为真实SQL Owner行为及RLS专项，不是再次完整安装迁移验收。

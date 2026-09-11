@@ -210,7 +210,7 @@ def test_price_snapshot_requires_honest_currency_prices_and_effective_range() ->
         ModelPriceSnapshotRevision(**{**snapshot.model_dump(), "input_token_price": None, "output_token_price": None})
 
 
-def test_deferred_price_cannot_pretend_to_be_free_or_active():
+def test_deferred_price_lifecycle_keeps_explicit_authorization_and_unknown_amount():
     from datetime import UTC, datetime, timedelta
     now = datetime(2026, 9, 11, tzinfo=UTC)
     authorization = dict(tenant={'orgId': 'org-org', 'projectId': 'dev-project'},
@@ -223,7 +223,13 @@ def test_deferred_price_cannot_pretend_to_be_free_or_active():
         developmentCostAuthorization=authorization)
     snapshot = ModelPriceSnapshotRevision(**body)
     assert snapshot.input_token_price is None and snapshot.output_token_price is None
-    for change in ({'inputTokenPrice': 0}, {'cachedTokenPrice': 0}, {'lifecycle': 'active'},
+    for lifecycle in ('active', 'suspended', 'revoked'):
+        governed = ModelPriceSnapshotRevision(**(body | {'lifecycle': lifecycle}))
+        restored = ModelPriceSnapshotRevision.model_validate_json(governed.model_dump_json(by_alias=True))
+        assert restored == governed
+        assert restored.input_token_price is None and restored.output_token_price is None
+        assert restored.development_cost_authorization == snapshot.development_cost_authorization
+    for change in ({'inputTokenPrice': 0}, {'cachedTokenPrice': 0},
                    {'currency': 'USD'}, {'effectiveUntil': now + timedelta(days=2)},
                    {'tenant': {'orgId': 'dev-org', 'projectId': 'dev-project'}}):
         with pytest.raises(ValueError):

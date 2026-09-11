@@ -69,3 +69,23 @@ def test_matching_deferred_price_checks_current_model_scope():
     model.provider_model_id = 'other'
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match='cover model'):
         store.require_model_dependencies(TenantScope('org-org', 'dev-project'), model, price=price)
+
+
+@pytest.mark.parametrize('changed', [False, True])
+def test_exact_development_budget_must_still_be_the_current_revision(changed):
+    from test_aip_model_governance_policy_contracts import development_body, NOW
+    from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevisionCreate, ModelGovernancePolicyLifecycle
+    from aos_api.aip_model_governance_policy_store import materialize_policy
+    scope = TenantScope('org-org', 'dev-project')
+    item = materialize_policy(scope, 'test', BudgetPolicyRevisionCreate(**development_body()), created_at=NOW)
+    latest = item.model_copy(update={'revision': 2, 'lifecycle': ModelGovernancePolicyLifecycle.REVOKED}) if changed else item
+    owner = object.__new__(AipModelGovernancePolicyStore)
+    owner._get = lambda *_: item
+    owner.get_budget_head = lambda *_: (latest, latest.revision)
+    owner._require_budget_revision = lambda *_args, **_kwargs: None
+    ref = VersionedAssetRef(assetType='BudgetPolicyRevision', assetId=item.policy_id, revision=item.revision, contentHash=item.content_hash)
+    if changed:
+        with pytest.raises(ModelGovernancePolicyDependencyBlocked, match='current'):
+            owner.require_exact_active(scope, ref, now=NOW)
+    else:
+        assert owner.require_exact_active(scope, ref, now=NOW) == item

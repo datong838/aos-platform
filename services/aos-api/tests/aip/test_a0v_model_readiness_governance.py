@@ -77,3 +77,43 @@ def test_authorization_uses_resolver_decision_time():
     later = budget.development_cost_authorization.effective_until
     with pytest.raises(ModelRuntimeDependencyBlocked, match='cover model'):
         store.require_model_governance(SCOPE, model, price, now=later)
+
+
+@pytest.mark.parametrize('state', ['active', 'suspended', 'revoked'])
+def test_real_deferred_price_dto_obeys_owner_lifecycle_and_authorization(state):
+    from aos_api.aip_model_runtime_contracts import ModelPriceSnapshotRevision
+    owner, model, _, budget, writes = setup_store()
+    auth = budget.development_cost_authorization
+    ref = model.price_snapshot_ref
+    price = ModelPriceSnapshotRevision(
+        tenant=model.tenant, priceSnapshotId=ref.asset_id, revision=ref.revision,
+        contentHash=ref.content_hash, currency='CNY', lifecycle=state,
+        effectiveFrom=auth.effective_from, effectiveUntil=auth.effective_until,
+        createdBy='test', createdAt=auth.effective_from,
+        developmentCostAuthorization=auth,
+    )
+    price = ModelPriceSnapshotRevision.model_validate_json(price.model_dump_json(by_alias=True))
+    owner.get_price_snapshot = lambda *_: price
+    if state != 'active':
+        with pytest.raises(ModelRuntimeDependencyBlocked, match='not effective'):
+            owner.publish_model(SCOPE, 'test', 'inactive-price', model)
+        assert writes == []
+        return
+    owner.publish_model(SCOPE, 'test', 'active-price', model)
+    assert len(writes) == 1
+    budget.development_cost_authorization = None
+    with pytest.raises(ModelRuntimeDependencyBlocked, match='price authorization'):
+        owner.publish_model(SCOPE, 'test', 'withdrawn-authorization', model)
+    assert len(writes) == 1
+
+
+def test_deferred_old_price_ref_cannot_survive_current_price_revocation():
+    owner, model, price, budget, writes = setup_store()
+    price.development_cost_authorization = budget.development_cost_authorization
+    revoked = SimpleNamespace(**vars(price)) if not hasattr(price, 'model_copy') else price.model_copy(deep=True)
+    revoked.revision = price.revision + 1
+    revoked.lifecycle = ModelRuntimeLifecycle.REVOKED
+    owner.get_price_snapshot = lambda _scope, _id, revision=None: price if revision is not None else revoked
+    with pytest.raises(ModelRuntimeDependencyBlocked, match='current'):
+        owner.publish_model(SCOPE, 'test', 'old-price', model)
+    assert writes == []

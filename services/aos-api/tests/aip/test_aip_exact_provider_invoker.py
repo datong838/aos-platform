@@ -437,3 +437,16 @@ def test_owned_deferred_authorization_mismatch_stops_real_invoker_path():
         invoker(resolution, 'approved facts', 'approved_internal_knowledge')
     assert secret.calls == 0
     assert transport.calls == []
+
+
+def test_deferred_price_revoked_at_head_blocks_before_secret_and_transport():
+    invoker, resolution, assets, secret, transport = assembly()
+    assets.price.development_cost_authorization = object()
+    revoked = SimpleNamespace(**vars(assets.price))
+    revoked.revision = 2
+    revoked.lifecycle = ModelRuntimeLifecycle.REVOKED
+    invoker._model_store.get_price_snapshot = lambda _scope, _id, revision=None: assets.price if revision is not None else revoked
+    with pytest.raises(ExactProviderInvocationError, match='current'):
+        invoker(resolution, 'approved facts', 'approved_internal_knowledge')
+    assert secret.calls == 0
+    assert transport.calls == []

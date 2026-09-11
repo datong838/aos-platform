@@ -72,6 +72,20 @@ class ModelRuntimeDependencyBlocked(ModelRuntimeStoreError):
     code = "AIP_DEPENDENCY_BLOCKED"
 
 
+def require_current_development_price(store: Any, scope: TenantScope, price: Any) -> None:
+    """A development waiver cannot survive replacement of its price authority."""
+    if getattr(price, "development_cost_authorization", None) is None:
+        return
+    current = store.get_price_snapshot(scope, price.price_snapshot_id)
+    if (
+        current.revision != price.revision
+        or current.content_hash != price.content_hash
+        or current.lifecycle is not ModelRuntimeLifecycle.ACTIVE
+        or (current.tenant.org_id, current.tenant.project_id) != scope.key
+    ):
+        raise ModelRuntimeDependencyBlocked("development price is not current active authority")
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -166,6 +180,8 @@ class AipModelRuntimeStore:
             or (price.effective_until is not None and price.effective_until <= instant)
         ):
             raise ModelRuntimeDependencyBlocked("active model price snapshot is not effective")
+        if model.lifecycle is ModelRuntimeLifecycle.ACTIVE:
+            require_current_development_price(self, scope, price)
         try:
             self._governance_policy_store.require_model_dependencies(scope, model, price=price, now=instant)
         except ModelGovernancePolicyDependencyBlocked as exc:

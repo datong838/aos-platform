@@ -25,7 +25,9 @@ from aos_api.aip_model_runtime_contracts import (
     ModelRuntimeLifecycle,
     ModelRuntimeReadiness,
 )
-from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore, ModelRuntimeStoreError, require_current_development_price,
+)
 from aos_api.aip_network_policy_store import (
     AipNetworkPolicyStore,
     NetworkPolicyStoreError,
@@ -308,6 +310,10 @@ class ExactProviderInvoker:
             price.effective_until is not None and price.effective_until <= now
         ):
             raise ExactProviderInvocationError("model_price_not_effective")
+        try:
+            require_current_development_price(self._model_store, scope, price)
+        except ModelRuntimeStoreError:
+            raise ExactProviderInvocationError("model_price_current_authority_blocked") from None
         return price
 
     def _validate_runtime_dependencies(

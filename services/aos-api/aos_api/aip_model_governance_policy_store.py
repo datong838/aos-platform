@@ -109,6 +109,16 @@ class AipModelGovernancePolicyStore:
         if not (item.effective_from <= instant < item.effective_until):
             raise ModelGovernancePolicyDependencyBlocked("model governance policy is outside effective window")
         if isinstance(item, BudgetPolicyRevision):
+            if item.development_cost_authorization is not None:
+                current, _version = self.get_budget_head(scope, item.policy_id)
+                if (
+                    current.revision != item.revision
+                    or current.content_hash != item.content_hash
+                    or current.lifecycle is not ModelGovernancePolicyLifecycle.ACTIVE
+                ):
+                    raise ModelGovernancePolicyDependencyBlocked(
+                        "development budget policy is not current active authority"
+                    )
             self._require_budget_revision(scope, item, now=instant)
         return item
 

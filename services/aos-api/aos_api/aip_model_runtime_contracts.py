@@ -203,8 +203,9 @@ class ModelPriceSnapshotRevision(AipContractModel):
                 raise ValueError('deferred cost cannot declare numeric prices')
             if self.tenant != authorization.tenant or self.currency != 'CNY':
                 raise ValueError('deferred cost tenant or currency mismatch')
-            if self.lifecycle not in {ModelRuntimeLifecycle.DRAFT, ModelRuntimeLifecycle.VALIDATED}:
-                raise ValueError('deferred price runtime activation is not wired')
+            # Lifecycle is independent of price discovery. Runtime Owners still
+            # require ACTIVE and the matching current budget authorization;
+            # SUSPENDED/REVOKED must remain representable for withdrawal.
             if self.effective_from.utcoffset() is None or self.effective_until is None or self.effective_until.utcoffset() is None:
                 raise ValueError('deferred cost requires bounded timezone-aware window')
             if self.effective_from < authorization.effective_from or self.effective_until > authorization.effective_until:
