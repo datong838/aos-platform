@@ -1,0 +1,35 @@
+{
+  "base": {
+    "coordinate": "aos/solution.ecommerce.growth@1.4.0",
+    "fileCount": 73,
+    "treeHash": "sha256:4dc6cfbeadc2c50d9bcdbaf85fc78b0aa9f8174db525c696e6c23dadcfaf43b3",
+    "backendFileCount": 20,
+    "backendTreeHash": "sha256:959f154b717d31c3d09451a2dde9d837993d69aa85be5c7c23afe06cee555649"
+  },
+  "candidate": {
+    "coordinate": "aos/solution.ecommerce.growth@1.5.0",
+    "backendFileCount": 34,
+    "backendTreeHash": "sha256:0d9a0b6988c1ffbfb79ff4ab2389f4038d81385ab2735389a8a800901c85c302"
+  },
+  "modified": [
+    {"path": "__init__.py", "sha256": "aafb1c7938c8a920666194ea353918d1965399bce89fcff5170f2f4cb165cb4c"},
+    {"path": "content_capability_runtime.py", "sha256": "7135b5f20efb6c19145d23d177bff78bd39b565f47d94cbf8732d5bf3e95d9c6"},
+    {"path": "sdk_ports.py", "sha256": "c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb"}
+  ],
+  "added": [
+    "analyst_stage_review_runtime_operation.py",
+    "analyst_structure_case.py",
+    "analyst_structure_eval.py",
+    "ecommerce_analyst_analysis_proposal.py",
+    "ecommerce_analyst_analysis_sources.py",
+    "ecommerce_analyst_authority_contracts.py",
+    "ecommerce_analyst_growth_plan_approval.py",
+    "ecommerce_analyst_growth_plan_draft.py",
+    "ecommerce_analyst_materializer.py",
+    "ecommerce_analyst_stage_decision.py",
+    "ecommerce_analyst_stage_eval_report.py",
+    "ecommerce_analyst_stage_review_authority.py",
+    "ecommerce_analyst_stage_review_command.py",
+    "ecommerce_analyst_stage_review_runtime.py"
+  ]
+}

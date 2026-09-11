@@ -1,0 +1,9 @@
+{
+  "phase": "A0-V ecommerce growth 1.5.0 candidate audit",
+  "date": "2026-09-12",
+  "files": [
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-candidate-plan.md", "sha256": "ffdfa6fcbd9766ad3da9b98a592e2f763e70bd07790802287b0d90e9b2644e67"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-backend-delta.json", "sha256": "0fcb1748600dbc23e9f61cc6f93127a956eb3cd9ec5c04504d7febd4bad6c945"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-candidate-audit-verification.md", "sha256": "b623c293cba046c94a3cfbcd0545f519a5487bc2f96cc763af413a1649426efb"}
+  ]
+}

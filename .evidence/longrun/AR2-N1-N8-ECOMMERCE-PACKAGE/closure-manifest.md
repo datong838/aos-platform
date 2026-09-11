@@ -875,3 +875,13 @@ owners 始终为空。退出后同一 host/scheduler closing，后台任务、st
 | sourcePath | targetPath | decision | 当前切片SHA256 |
 |---|---|---|---|
 | `services/aos-api/tests/extension_runtime/test_runtime_startup_composition.py` | 原路径 | concrete host/scheduler 首 tick、唯一任务与 graceful stop | c14621a3c5e30b9b1d263c4c28a15c85cb57ffec1a8039b98ca4dac61b188c88 |
+
+### 9.41 Ecommerce growth 1.5.0 candidate 不可变升级审计
+
+2026-09-12：确认 1.4.0 是 73 文件、tree hash `4dc6cf...` 的历史快照，backend 为 20 文件、
+hash `959f15...`；当前作者 backend 已增至 34 文件、hash `0d9a0b...`，包含 14 个新增经营参谋/阶段评审
+模块和 3 个修改文件。现有 runnable test 将历史 1.4.0 与最新作者树比较，实测仅该项失败，其余 4 项通过。
+
+下一 candidate 固定为 1.5.0：克隆 1.4.0 的完整已版本化内容，整体替换 current author backend，只提升
+manifest version/displayName；1.4.0 改以完整树/backend hash 固化，禁止覆盖。OCI build、签名、publish、
+Installation upgrade 仍分波执行，本切片零租户、Registry、OCI 和 Provider 副作用。
