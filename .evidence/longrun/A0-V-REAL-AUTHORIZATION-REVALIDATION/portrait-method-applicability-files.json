@@ -1,0 +1,30 @@
+{
+  "base": "68d1f556",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_analyst_portrait_method.py",
+      "preHash": null,
+      "postHash": "98d8ef0c8f65748f3427c7febeb775bfb576c924cf243ea41911af3a183e2247"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_analyst_portrait_method.py",
+      "preHash": null,
+      "postHash": "f6fb5c1897f7ffc6fa885728e02c081b3f40e9ae127de93a36e4420a3d2d00e5"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/portrait-method-applicability-plan.md",
+      "preHash": null,
+      "postHash": "1caa85c2da1bd0c1ea47e673beab464ceedbf3e8ea2320553d3dc17ec7404eb2"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/portrait-method-applicability-verification.md",
+      "preHash": null,
+      "postHash": "5f0e62340f6a96e463b6b4e1d58b2784e582a3c8cbd906034269613895cae06a"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/source-agent-recovery-verification.md",
+      "preHash": null,
+      "postHash": "347191b41f5bebeecb002f3c60037f79cb18608c6eff881b57460a7ff797b299"
+    }
+  ]
+}
