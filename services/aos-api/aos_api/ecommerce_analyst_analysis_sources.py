@@ -65,7 +65,8 @@ def read_analysis_bundle(*, conn, scope, task_id, actor, request: AnalysisBundle
         grants[key] = grant
     if set(grants) != set(wanted):
         raise ValueError("analysis requires a disclosure grant for every exact bundle item")
-    material = {"bundleRef": ref.model_dump(mode="json", by_alias=True), "cutoffAt": bundle.cutoff_at.isoformat(), "items": []}
+    material = {"bundleRef": ref.model_dump(mode="json", by_alias=True), "cutoffAt": bundle.cutoff_at.isoformat(),
+                "marking": bundle.marking, "items": []}
     for key in wanted:
         grant = grants[key]
         item = owner.read_disclosed_evidence_source(conn, scope, actor, grant.decision_id, grant.request, markings=markings)

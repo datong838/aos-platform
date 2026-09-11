@@ -18,7 +18,7 @@ def setup(monkeypatch):
     bundle_ref = ref("EvidenceBundleRevision", "bundle")
     tenant = SimpleNamespace(org_id=SCOPE.org_id, project_id=SCOPE.project_id)
     bundle = SimpleNamespace(tenant=tenant, bundle_id="bundle", revision=1, content_hash="a" * 64, lifecycle="frozen", coverage="complete", freshness="fresh", revoked=False,
-        cutoff_at=NOW, brief_ref=ref("TaskBriefRevision", "brief"), item_refs=items)
+        cutoff_at=NOW, brief_ref=ref("TaskBriefRevision", "brief"), item_refs=items, marking=["internal"])
     brief = SimpleNamespace(tenant=tenant, task_id="task", brief_id="brief", revision=1, content_hash="a" * 64, lifecycle="frozen")
     grants = [dict(decisionId="grant-" + x.resource_id, request=dict(evidenceRef=x.model_dump(mode="json", by_alias=True), purpose="source", requestedLevel="l3", taskId="task")) for x in reversed(items)]
     request = module.AnalysisBundleSourceRequest(bundleRef=bundle_ref.model_dump(mode="json", by_alias=True), grants=grants)

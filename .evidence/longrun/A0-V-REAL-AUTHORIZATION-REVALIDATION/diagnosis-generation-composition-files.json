@@ -1,0 +1,32 @@
+[
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_service.py",
+    "preHash": null,
+    "postHash": "e3a593a18c52183d2e6cea8221ca56d2d7587a0414b3a66e9e8e42022be43a57"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_receiver.py",
+    "preHash": "523f9bee10d550fc0dbb057e55a8dc7838fc23ffc785c6bfcf689e60da2abef9",
+    "postHash": "d9aac341e906f9885f8fcb77da3d863fe4310aa89181e4a7d3d760deb41de057"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py",
+    "preHash": "5c77af701694bf57a026437c262ab972bcf479ffdb64094ab75f50876c51f34f",
+    "postHash": "e3b2bec141e929e2c7aa6d69227cf7c042359be744caa1ba129c54b8bc10467a"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_generation.py",
+    "preHash": "c1bca3b29dfdf44473b3120cead4190b2e314a6ec211ba8f29e51460b725c6b7",
+    "postHash": "89b8faee6376a0ea02c4ddab100c36bdae90feeafa4eb524130720901540b340"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_diagnosis_service.py",
+    "preHash": null,
+    "postHash": "8d51af8fa70852ff6bd97473f10b6127c1b81741ace74b8c9a3b3719732420bf"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_analysis_sources.py",
+    "preHash": "0d914e9040ef9f215b0b2d96e6ec2f407bb620d897509baa0d7411b333e98541",
+    "postHash": "6afd81294df22235aae872f92d98e3e59642156d0bbce407f9ca675c01302f06"
+  }
+]

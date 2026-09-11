@@ -28,6 +28,7 @@ class _EvidenceMaterial(AipContractModel):
 class _BundleMaterial(AipContractModel):
     bundle_ref: AnalystExactRef
     cutoff_at: datetime
+    marking: list[str] | None = None
     items: list[_EvidenceMaterial] = Field(min_length=1, max_length=100)
 
 

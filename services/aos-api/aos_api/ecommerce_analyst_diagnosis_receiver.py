@@ -19,6 +19,39 @@ from aos_api.ecommerce_analyst_growth_plan_sources import require_current_revisi
 from aos_api.tenant_scope import TenantScope
 
 
+def read_diagnosis_inputs(*, conn, scope, insight_ref, source_requests, run, actor, markings,
+                          now, max_source_age, max_bytes):
+    """Current complete source snapshot shared by generation and publication."""
+    insight = require_current_revision(conn, scope, insight_ref)
+    if (insight.cutoff_at.utcoffset() is None or insight.cutoff_at > now
+            or now - insight.cutoff_at > max_source_age):
+        raise ValueError("insight cutoff is stale or future")
+    if not isinstance(source_requests, list) or not 1 <= len(source_requests) <= 100:
+        raise ValueError("bounded complete source inventory required")
+    requests = [AnalysisBundleSourceRequest.model_validate(item) for item in source_requests]
+    def ref_key(ref):
+        return ref.resource_type, ref.resource_id, ref.revision, ref.content_hash
+    indexed = {ref_key(item.bundle_ref): item for item in requests}
+    if (len(indexed) != len(requests)
+            or set(indexed) != {ref_key(ref) for ref in insight.evidence_refs}):
+        raise ValueError("diagnosis source inventory mismatch")
+    inputs = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
+              for ref in run.request.input_refs}
+    required = {(ref.resource_type, ref.resource_id, str(ref.revision), "postgresql")
+                for ref in [insight_ref, *insight.evidence_refs]}
+    if not required.issubset(inputs):
+        raise ValueError("D02 run did not declare exact diagnosis inputs")
+    materials = []
+    for ref in insight.evidence_refs:
+        materials.append(read_analysis_bundle(conn=conn, scope=scope, task_id=run.task_id, actor=actor,
+            request=indexed[ref_key(ref)], markings=markings, now=now,
+            max_source_age=max_source_age, max_bytes=max_bytes))
+        if len(json.dumps(materials, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                          allow_nan=False, default=str).encode("utf-8")) > max_bytes:
+            raise ValueError("complete diagnosis material exceeds byte limit")
+    return insight, materials
+
+
 class DiagnosisReceiver:
     def __init__(self, connect_factory):
         if not callable(connect_factory):
@@ -80,33 +113,9 @@ class DiagnosisReceiver:
                         or old.decision_id != "diagnosis-" + identity[:40] or old.revision != 1):
                     raise ValueError("diagnosis replay command drifted")
                 return replay
-            insight = require_current_revision(conn, scope, insight_ref)
-            if (insight.cutoff_at.utcoffset() is None or insight.cutoff_at > now
-                    or now - insight.cutoff_at > max_source_age):
-                raise ValueError("insight cutoff is stale or future")
-            if not isinstance(source_requests, list) or not 1 <= len(source_requests) <= 100:
-                raise ValueError("bounded complete source inventory required")
-            requests = [AnalysisBundleSourceRequest.model_validate(item) for item in source_requests]
-            def ref_key(ref):
-                return ref.resource_type, ref.resource_id, ref.revision, ref.content_hash
-            indexed = {ref_key(item.bundle_ref): item for item in requests}
-            if (len(indexed) != len(requests)
-                    or set(indexed) != {ref_key(ref) for ref in insight.evidence_refs}):
-                raise ValueError("diagnosis source inventory mismatch")
-            inputs = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
-                      for ref in run.request.input_refs}
-            required = {(ref.resource_type, ref.resource_id, str(ref.revision), "postgresql")
-                        for ref in [insight_ref, *insight.evidence_refs]}
-            if not required.issubset(inputs):
-                raise ValueError("D02 run did not declare exact diagnosis inputs")
-            materials = []
-            for ref in insight.evidence_refs:
-                materials.append(read_analysis_bundle(conn=conn, scope=scope, task_id=run.task_id, actor=actor,
-                    request=indexed[ref_key(ref)], markings=markings, now=now,
-                    max_source_age=max_source_age, max_bytes=max_bytes))
-                if len(json.dumps(materials, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
-                                  allow_nan=False, default=str).encode("utf-8")) > max_bytes:
-                    raise ValueError("complete diagnosis material exceeds byte limit")
+            insight, materials = read_diagnosis_inputs(conn=conn, scope=scope, insight_ref=insight_ref,
+                source_requests=source_requests, run=run, actor=actor, markings=markings, now=now,
+                max_source_age=max_source_age, max_bytes=max_bytes)
             decision = decision_from_completed_generation(insight=insight, materials=materials,
                                                          attempt=attempt, answer=answer, actor=actor)
             return owner.publish_decision(scope, actor, key, decision, expected_version=0)
