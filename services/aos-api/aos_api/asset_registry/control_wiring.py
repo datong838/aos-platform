@@ -69,14 +69,24 @@ class _LazyRuntimeViewReader:
 
 def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlane):
     """Build but do not start the explicitly enabled persistent runtime host."""
-    from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+    from aos_api.asset_registry.control_policy import (
+        APPLY_INSTALLATION_OPERATION,
+        DISABLE_RUNTIME_OPERATION,
+        ENABLE_RUNTIME_OPERATION,
+        VERIFY_INSTALLATION_OPERATION,
+    )
+    from aos_api.asset_registry.release_policy import ReleasePolicy
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
     from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
     from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
+    from aos_api.extension_runtime.production_preparation import (
+        ProductionPreparationDependencies,
+    )
     from aos_api.extension_runtime.production_runtime import (
         RuntimeWorkerDependencies,
         select_production_runtime_host,
     )
+    from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
     from aos_api.extension_runtime.runtime_connections import (
         runtime_directory_connection,
         runtime_web_identity_connection,
@@ -87,6 +97,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
     runtime_dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
     directory_dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
     oci_context = os.getenv("AOS_EXTENSION_OCI_CONTEXT", "").strip()
+    runtime_platform = os.getenv("AOS_EXTENSION_RUNTIME_PLATFORM", "").strip()
     dependencies = None
     if (
         enabled
@@ -94,8 +105,36 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
         and runtime_dsn
         and directory_dsn
         and oci_context
+        and runtime_platform
     ):
         try:
+            trust_roots = _configured_trust_roots()
+            policy = ReleasePolicy(trust_roots=trust_roots)
+            loader = ManifestLoader(
+                _allowlist_roots(repository_root=_REPOSITORY_ROOT),
+                trust_roots=trust_roots,
+            )
+            driver = OciDriver(context=oci_context)
+            preparation = ProductionPreparationDependencies(
+                connect=runtime_worker_connection,
+                installation_store=control_plane.installation_store,
+                revalidator=RuntimeReleaseRevalidator(release_policy=policy),
+                policy=policy,
+                loader=loader,
+                apply_permission=CurrentControlPermission(
+                    operation=APPLY_INSTALLATION_OPERATION
+                ),
+                verification_permission=CurrentControlPermission(
+                    operation=VERIFY_INSTALLATION_OPERATION
+                ),
+                enable_permission=CurrentControlPermission(
+                    operation=ENABLE_RUNTIME_OPERATION
+                ),
+                configuration_authorize=control_plane.configuration_authorize,
+                driver=driver,
+                platform=runtime_platform,
+                live_directory=control_plane.live_job_directory,
+            )
             dependencies = RuntimeWorkerDependencies(
                 installation_store=control_plane.installation_store,
                 configuration_authorize=control_plane.configuration_authorize,
@@ -103,8 +142,9 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                     operation=DISABLE_RUNTIME_OPERATION
                 ),
                 drain_reader=GenerationDrainReader(),
-                cleanup_driver=CleanupOnlyOciDriver(OciDriver(context=oci_context)),
+                cleanup_driver=CleanupOnlyOciDriver(driver),
                 disable_dependent=control_plane.disable_dependent,
+                preparation=preparation,
             )
         except (TypeError, ValueError):
             dependencies = None

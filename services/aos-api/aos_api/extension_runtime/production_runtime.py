@@ -18,6 +18,7 @@ from .generation_attempts import (
     GenerationDrainReader,
 )
 from .oci_driver import CleanupOnlyOciDriver
+from .production_preparation import ProductionPreparationDependencies
 from .resource_recovery import ExpiredResourceRecovery
 from .runtime_directory import PostgresRuntimeTenantDirectory
 from .runtime_host import RuntimeHost, RuntimeTenantAssignment
@@ -45,6 +46,7 @@ class RuntimeWorkerDependencies:
     drain_reader: GenerationDrainReader
     cleanup_driver: CleanupOnlyOciDriver
     disable_dependent: EcommerceGrowthDisableDependent
+    preparation: ProductionPreparationDependencies
 
     def __post_init__(self) -> None:
         if type(self.installation_store) is not PostgresInstallationStore:
@@ -65,6 +67,15 @@ class RuntimeWorkerDependencies:
             raise TypeError("production runtime requires the cleanup-only OCI facade")
         if type(self.disable_dependent) is not EcommerceGrowthDisableDependent:
             raise TypeError("production runtime requires ecommerce disable lifecycle authority")
+        if type(self.preparation) is not ProductionPreparationDependencies:
+            raise TypeError("production runtime requires exact preparation dependencies")
+        if (
+            self.preparation.installation_store is not self.installation_store
+            or self.preparation.configuration_authorize
+            is not self.configuration_authorize
+            or self.preparation.driver.context != self.cleanup_driver.context
+        ):
+            raise TypeError("production runtime dependency graph is inconsistent")
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +126,8 @@ def select_production_runtime_host(
     connectors = (directory_connect, runtime_connect, web_connect)
     if any(not callable(value) or inspect.iscoroutinefunction(value) for value in connectors):
         return _inactive("MISSING_DEPENDENCIES")
+    if dependencies.preparation.connect is not runtime_connect:
+        return _inactive("MISMATCHED_RUNTIME_CONNECTOR")
 
     directory_identity: RuntimeDatabaseIdentity | None = None
 
@@ -151,6 +164,7 @@ def select_production_runtime_host(
             scope=scope,
             recovery=recovery,
             attempt_recovery=ExpiredSignedReadAttemptRecovery(connect=runtime_connect),
+            lifecycle=dependencies.preparation.build_scheduler(scope),
             consumers=(configure, disable),
         )
 

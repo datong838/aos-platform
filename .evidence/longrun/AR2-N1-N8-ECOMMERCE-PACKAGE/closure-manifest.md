@@ -843,3 +843,22 @@ conditions 读取，组合未启动的 PreparationWorker、pending directory、o
 |---|---|---|---|
 | `services/aos-api/aos_api/extension_runtime/production_preparation.py` | 原路径 | exact production worker dependency graph 与 per-tenant scheduler builder | fa4fe195a9244a941cc5794a3d7c2db26dac974e5d10c59aaad33cf8c055cda9 |
 | `services/aos-api/tests/extension_runtime/test_production_preparation.py` | 原路径 | 同源权威、权限/platform、租户隔离与零副作用构造反证 | fc6a01a40a5e671bee0b04f60a3d1bf95b6b46fd2d3c290be4dff70d32fc40b8 |
+
+### 9.39 Production host preparation lifecycle 接线
+
+2026-09-12：正式 host wiring 新增显式 `AOS_EXTENSION_RUNTIME_PLATFORM` 门并组合 9.38 preparation
+闭包。缺任一环境配置或 platform 非 linux/arm64、linux/amd64 时保持 inactive。selector 要求 preparation
+connector 就是完成身份验证的 runtime connector；worker dependency graph 还要求 preparation 与
+configure/disable 共用 Installation store、四来源授权和 OCI context。
+
+assignment 仍只在 directory/runtime/web 三平面 identity preflight 全部通过后 materialize；每个 exact
+TenantScope 现在持有 same-scope scheduler，并继续由 assignment revision cache 与 host replacement/stop
+逻辑收敛。本波没有主动启动 host；真实 PG 无 pending apply 回归只执行有界只读发现，零 OCI、零 ACK、
+零租户状态变化。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/asset_registry/control_wiring.py` | 原路径 | server-owned policy/loader/driver/platform/preparation 完整环境装配 | d7e705a153f66455bd70c82f518aa99249edf8bb2fd47d06e3c03f509fdf370e |
+| `services/aos-api/aos_api/extension_runtime/production_runtime.py` | 原路径 | 预检后 same-scope lifecycle assignment 与 connector/依赖图一致性 | 1feb37282c65c775de36f1473adf84a686d17a788507cef4e62dd83e44f98689 |
+| `services/aos-api/tests/extension_runtime/test_production_runtime.py` | 原路径 | 配置/platform/connector/预检/cache/lifecycle 反证 | 2434293e49d62a250a72da2f281e7acef2591e52fe3fbb82b0bb96bf167b0b5a |
+| `services/aos-api/tests/extension_runtime/test_runtime_host_directory_pg.py` | 原路径 | 三平面真实 PG 与 same-scope 无 pending lifecycle 回归 | c19888c6b46180db10296adabb5380fc4cb701d9bf2a5618d86bc8a3a122dc6b |

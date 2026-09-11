@@ -1,0 +1,11 @@
+{
+  "phase": "A0-V production preparation host wiring",
+  "date": "2026-09-12",
+  "files": [
+    {"path": "services/aos-api/aos_api/asset_registry/control_wiring.py", "sha256": "d7e705a153f66455bd70c82f518aa99249edf8bb2fd47d06e3c03f509fdf370e"},
+    {"path": "services/aos-api/aos_api/extension_runtime/production_runtime.py", "sha256": "1feb37282c65c775de36f1473adf84a686d17a788507cef4e62dd83e44f98689"},
+    {"path": "services/aos-api/tests/extension_runtime/test_production_runtime.py", "sha256": "2434293e49d62a250a72da2f281e7acef2591e52fe3fbb82b0bb96bf167b0b5a"},
+    {"path": "services/aos-api/tests/extension_runtime/test_runtime_host_directory_pg.py", "sha256": "c19888c6b46180db10296adabb5380fc4cb701d9bf2a5618d86bc8a3a122dc6b"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/production-preparation-host-wiring-plan.md", "sha256": "cb12a5529a10fffcb28739899edbc97052b2288921b019fe66d6e478b34b327f"}
+  ]
+}

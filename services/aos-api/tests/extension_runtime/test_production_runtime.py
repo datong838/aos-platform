@@ -4,13 +4,20 @@ from types import SimpleNamespace
 import pytest
 from psycopg.pq import TransactionStatus
 
-from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+from aos_api.asset_registry.control_policy import (
+    APPLY_INSTALLATION_OPERATION,
+    DISABLE_RUNTIME_OPERATION,
+    ENABLE_RUNTIME_OPERATION,
+    VERIFY_INSTALLATION_OPERATION,
+)
 from aos_api.asset_registry.control_wiring import (
     RuntimeControlPlane,
     build_production_runtime_host_selection,
     build_runtime_control_plane,
 )
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.aip_runtime_configuration_sources import (
     build_current_configuration_authorization,
 )
@@ -29,12 +36,17 @@ from aos_api.extension_runtime.generation_attempts import (
     GenerationDrainReader,
 )
 from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
+from aos_api.extension_runtime.production_preparation import (
+    ProductionPreparationDependencies,
+)
 from aos_api.extension_runtime.production_runtime import (
     RuntimeHostSelection,
     RuntimeWorkerDependencies,
     select_production_runtime_host,
 )
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+from aos_api.extension_runtime.live_installation_scheduler import LiveInstallationScheduler
+from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
 from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery
 from aos_api.extension_runtime.runtime_identity import RuntimeDatabaseIdentity
 from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
@@ -94,22 +106,41 @@ def _identity(name, oid, *, directory=False, runtime=False):
     )
 
 
-def _dependencies():
-    return RuntimeWorkerDependencies(
-        installation_store=PostgresInstallationStore(),
-        configuration_authorize=build_current_configuration_authorization(
-            permission=CurrentConfigurationPermission(
-                installation_store=PostgresInstallationStore()
-            )
+def _dependencies(runtime_connect):
+    store = PostgresInstallationStore()
+    authorize = build_current_configuration_authorization(
+        permission=CurrentConfigurationPermission(installation_store=store)
+    )
+    policy = ReleasePolicy(trust_roots=None)
+    driver = OciDriver(context="colima-aos-extension")
+    preparation = ProductionPreparationDependencies(
+        connect=runtime_connect,
+        installation_store=store,
+        revalidator=RuntimeReleaseRevalidator(release_policy=policy),
+        policy=policy,
+        loader=ManifestLoader({}, trust_roots=None),
+        apply_permission=CurrentControlPermission(
+            operation=APPLY_INSTALLATION_OPERATION
         ),
+        verification_permission=CurrentControlPermission(
+            operation=VERIFY_INSTALLATION_OPERATION
+        ),
+        enable_permission=CurrentControlPermission(operation=ENABLE_RUNTIME_OPERATION),
+        configuration_authorize=authorize,
+        driver=driver,
+        platform="linux/arm64",
+        live_directory=LivePreparedJobDirectory(),
+    )
+    return RuntimeWorkerDependencies(
+        installation_store=store,
+        configuration_authorize=authorize,
         disable_permission=CurrentControlPermission(
             operation=DISABLE_RUNTIME_OPERATION
         ),
         drain_reader=GenerationDrainReader(),
-        cleanup_driver=CleanupOnlyOciDriver(
-            OciDriver(context="colima-aos-extension")
-        ),
+        cleanup_driver=CleanupOnlyOciDriver(driver),
         disable_dependent=EcommerceGrowthDisableDependent(),
+        preparation=preparation,
     )
 
 
@@ -127,18 +158,19 @@ def _patch_identities(monkeypatch, overrides=None):
 
 
 @pytest.mark.parametrize(
-    ("enabled", "dependencies", "connector", "code"),
+    ("enabled", "has_dependencies", "connector", "code"),
     [
-        (False, _dependencies(), "valid", "DISABLED"),
-        (True, None, "valid", "MISSING_DEPENDENCIES"),
-        (True, _dependencies(), "invalid", "MISSING_DEPENDENCIES"),
+        (False, True, "valid", "DISABLED"),
+        (True, False, "valid", "MISSING_DEPENDENCIES"),
+        (True, True, "invalid", "MISSING_DEPENDENCIES"),
     ],
 )
 def test_incomplete_selector_is_inactive_before_any_connection(
-    enabled, dependencies, connector, code
+    enabled, has_dependencies, connector, code
 ):
     calls = []
     valid = _connector("unexpected", calls)
+    dependencies = _dependencies(valid) if has_dependencies else None
     selected = select_production_runtime_host(
         enabled=enabled,
         directory_connect=valid if connector == "valid" else None,
@@ -153,15 +185,33 @@ def test_incomplete_selector_is_inactive_before_any_connection(
 def test_empty_directory_is_inactive_without_runtime_web_or_oci(monkeypatch):
     _patch_identities(monkeypatch)
     calls = []
+    runtime_connect = _connector("runtime", calls)
     selected = select_production_runtime_host(
         enabled=True,
         directory_connect=_connector("directory", calls),
-        runtime_connect=_connector("runtime", calls),
+        runtime_connect=runtime_connect,
         web_connect=_connector("web", calls),
-        dependencies=_dependencies(),
+        dependencies=_dependencies(runtime_connect),
     )
     assert selected == RuntimeHostSelection(None, "INACTIVE", "DIRECTORY_EMPTY")
     assert calls == ["directory"]
+
+
+def test_mismatched_runtime_connector_is_inactive_before_any_connection():
+    calls = []
+    verified_runtime = _connector("runtime", calls)
+    other_runtime = _connector("other-runtime", calls)
+    selected = select_production_runtime_host(
+        enabled=True,
+        directory_connect=_connector("directory", calls),
+        runtime_connect=verified_runtime,
+        web_connect=_connector("web", calls),
+        dependencies=_dependencies(other_runtime),
+    )
+    assert selected == RuntimeHostSelection(
+        None, "INACTIVE", "MISMATCHED_RUNTIME_CONNECTOR"
+    )
+    assert calls == []
 
 
 def test_directory_identity_failure_stops_before_reading_other_planes(monkeypatch):
@@ -170,14 +220,15 @@ def test_directory_identity_failure_stops_before_reading_other_planes(monkeypatc
         {"directory": _identity("directory", 1, runtime=True)},
     )
     calls = []
+    runtime_connect = _connector("runtime", calls)
     selected = select_production_runtime_host(
         enabled=True,
         directory_connect=_connector("directory", calls, ({
             "org_id": "org-org", "project_id": "dev-project", "assignment_revision": 1,
         },)),
-        runtime_connect=_connector("runtime", calls),
+        runtime_connect=runtime_connect,
         web_connect=_connector("web", calls),
-        dependencies=_dependencies(),
+        dependencies=_dependencies(runtime_connect),
     )
     assert selected.error_code == "DIRECTORY_PREFLIGHT_FAILED"
     assert calls == ["directory"]
@@ -189,12 +240,13 @@ def test_complete_selector_builds_only_concrete_workers_and_reuses_assignment(mo
     rows = ({
         "org_id": "org-org", "project_id": "dev-project", "assignment_revision": 7,
     },)
+    runtime_connect = _connector("runtime", calls)
     selected = select_production_runtime_host(
         enabled=True,
         directory_connect=_connector("directory", calls, rows),
-        runtime_connect=_connector("runtime", calls),
+        runtime_connect=runtime_connect,
         web_connect=_connector("web", calls),
-        dependencies=_dependencies(),
+        dependencies=_dependencies(runtime_connect),
     )
     assert selected.status == "ACTIVE" and selected.error_code is None
     assert calls == ["directory", "runtime", "web"]
@@ -203,6 +255,8 @@ def test_complete_selector_builds_only_concrete_workers_and_reuses_assignment(mo
     assert first is second
     assert type(first.recovery) is ExpiredResourceRecovery
     assert type(first.attempt_recovery) is ExpiredSignedReadAttemptRecovery
+    assert type(first.lifecycle) is LiveInstallationScheduler
+    assert first.lifecycle.directory.scope == first.scope
     assert tuple(type(value) for value in first.consumers) == (
         ConfigurationConsumer,
         RuntimeDisableConsumer,
@@ -220,12 +274,13 @@ def test_three_plane_mismatch_returns_fixed_inactive_result(monkeypatch):
     rows = ({
         "org_id": "org-org", "project_id": "dev-project", "assignment_revision": 1,
     },)
+    runtime_connect = _connector("runtime", calls)
     selected = select_production_runtime_host(
         enabled=True,
         directory_connect=_connector("directory", calls, rows),
-        runtime_connect=_connector("runtime", calls),
+        runtime_connect=runtime_connect,
         web_connect=_connector("web", calls),
-        dependencies=_dependencies(),
+        dependencies=_dependencies(runtime_connect),
     )
     assert selected == RuntimeHostSelection(
         None, "INACTIVE", "IDENTITY_PREFLIGHT_FAILED"
@@ -251,12 +306,13 @@ def test_three_plane_mismatch_constructs_zero_workers(monkeypatch):
     rows = ({
         "org_id": "org-org", "project_id": "dev-project", "assignment_revision": 1,
     },)
+    runtime_connect = _connector("runtime", [])
     selected = select_production_runtime_host(
         enabled=True,
         directory_connect=_connector("directory", [], rows),
-        runtime_connect=_connector("runtime", []),
+        runtime_connect=runtime_connect,
         web_connect=_connector("web", []),
-        dependencies=_dependencies(),
+        dependencies=_dependencies(runtime_connect),
     )
     assert selected.error_code == "IDENTITY_PREFLIGHT_FAILED"
     assert constructed == []
@@ -284,6 +340,7 @@ def test_selector_rejects_non_four_source_authority_before_connections(authorize
                 OciDriver(context="colima-aos-extension")
             ),
             disable_dependent=EcommerceGrowthDisableDependent(),
+            preparation=object(),
         )
     assert calls == []
 
@@ -313,6 +370,7 @@ def test_environment_wiring_stays_zero_access_until_all_values_exist(monkeypatch
         "AOS_EXTENSION_RUNTIME_DATABASE_URL",
         "AOS_EXTENSION_DIRECTORY_DATABASE_URL",
         "AOS_EXTENSION_OCI_CONTEXT",
+        "AOS_EXTENSION_RUNTIME_PLATFORM",
     ):
         monkeypatch.delenv(name, raising=False)
     selected = build_production_runtime_host_selection(
@@ -321,11 +379,57 @@ def test_environment_wiring_stays_zero_access_until_all_values_exist(monkeypatch
     assert selected == RuntimeHostSelection(None, "INACTIVE", "DISABLED")
 
 
+def test_environment_wiring_requires_platform_before_allowlist_access(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
+    monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
+    monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
+    monkeypatch.delenv("AOS_EXTENSION_RUNTIME_PLATFORM", raising=False)
+    monkeypatch.setattr(
+        "aos_api.asset_registry.control_wiring._allowlist_roots",
+        lambda **_: (_ for _ in ()).throw(AssertionError("allowlist accessed")),
+    )
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None)
+    )
+    assert selected == RuntimeHostSelection(
+        None, "INACTIVE", "MISSING_DEPENDENCIES"
+    )
+
+
+def test_environment_wiring_rejects_unsupported_platform(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
+    monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
+    monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PLATFORM", "darwin/arm64")
+    store = PostgresInstallationStore()
+    authorize = build_current_configuration_authorization(
+        permission=CurrentConfigurationPermission(installation_store=store)
+    )
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(
+            store,
+            None,
+            None,
+            None,
+            None,
+            authorize,
+            disable_dependent=EcommerceGrowthDisableDependent(),
+            live_job_directory=LivePreparedJobDirectory(),
+        )
+    )
+    assert selected == RuntimeHostSelection(
+        None, "INACTIVE", "MISSING_DEPENDENCIES"
+    )
+
+
 def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch):
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
     monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
     monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PLATFORM", "linux/arm64")
     captured = {}
 
     def select(**kwargs):
@@ -336,15 +440,17 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
         "aos_api.extension_runtime.production_runtime.select_production_runtime_host",
         select,
     )
+    store = PostgresInstallationStore()
     authorize = build_current_configuration_authorization(
         permission=CurrentConfigurationPermission(
-            installation_store=PostgresInstallationStore()
+            installation_store=store
         )
     )
     dependent = EcommerceGrowthDisableDependent()
     plane = RuntimeControlPlane(
-        PostgresInstallationStore(), None, None, None, None, authorize,
+        store, None, None, None, None, authorize,
         disable_dependent=dependent,
+        live_job_directory=LivePreparedJobDirectory(),
     )
     selected = build_production_runtime_host_selection(control_plane=plane)
     assert selected.error_code == "TEST_CAPTURE"
@@ -355,3 +461,6 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
     assert type(dependencies.drain_reader) is GenerationDrainReader
     assert type(dependencies.cleanup_driver) is CleanupOnlyOciDriver
     assert dependencies.disable_dependent is dependent
+    assert type(dependencies.preparation) is ProductionPreparationDependencies
+    assert dependencies.preparation.connect is captured["runtime_connect"]
+    assert dependencies.preparation.live_directory is plane.live_job_directory

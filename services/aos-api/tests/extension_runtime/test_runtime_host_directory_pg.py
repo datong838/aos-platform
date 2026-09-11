@@ -23,13 +23,23 @@ from aos_api.extension_runtime.generation_attempts import (
     PostgresRuntimeAttemptStore,
 )
 from aos_api.extension_runtime.oci_driver import CleanupOnlyOciDriver, OciDriver
+from aos_api.extension_runtime.production_preparation import (
+    ProductionPreparationDependencies,
+)
 from aos_api.extension_runtime.production_runtime import (
     RuntimeWorkerDependencies,
     select_production_runtime_host,
 )
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
-from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+from aos_api.asset_registry.control_policy import (
+    APPLY_INSTALLATION_OPERATION,
+    DISABLE_RUNTIME_OPERATION,
+    ENABLE_RUNTIME_OPERATION,
+    VERIFY_INSTALLATION_OPERATION,
+)
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.aip_runtime_configuration_sources import (
     build_current_configuration_authorization,
 )
@@ -37,6 +47,8 @@ from aos_api.extension_runtime.configuration_authorization import (
     CurrentConfigurationPermission,
 )
 from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
+from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
 
 pytestmark = pytest.mark.skipif(
     os.getenv("AOS_EXTENSION_PG_TEST") != "1", reason="dedicated database opt-in required"
@@ -377,29 +389,54 @@ def test_production_selector_uses_real_directory_roles_and_runtime_drain(directo
             with psycopg.connect(role_dsn, row_factory=dict_row) as conn:
                 yield conn
 
+        store = PostgresInstallationStore()
+        authorize = build_current_configuration_authorization(
+            permission=CurrentConfigurationPermission(installation_store=store)
+        )
+        policy = ReleasePolicy(trust_roots=None)
+        driver = OciDriver(context="colima-aos-extension")
+        preparation = ProductionPreparationDependencies(
+            connect=runtime_connect,
+            installation_store=store,
+            revalidator=RuntimeReleaseRevalidator(release_policy=policy),
+            policy=policy,
+            loader=ManifestLoader({}, trust_roots=None),
+            apply_permission=CurrentControlPermission(
+                operation=APPLY_INSTALLATION_OPERATION
+            ),
+            verification_permission=CurrentControlPermission(
+                operation=VERIFY_INSTALLATION_OPERATION
+            ),
+            enable_permission=CurrentControlPermission(
+                operation=ENABLE_RUNTIME_OPERATION
+            ),
+            configuration_authorize=authorize,
+            driver=driver,
+            platform="linux/arm64",
+            live_directory=LivePreparedJobDirectory(),
+        )
         selected = select_production_runtime_host(
             enabled=True,
             directory_connect=directory_connect,
             runtime_connect=runtime_connect,
             web_connect=web_connect,
             dependencies=RuntimeWorkerDependencies(
-                installation_store=PostgresInstallationStore(),
-                configuration_authorize=build_current_configuration_authorization(
-                    permission=CurrentConfigurationPermission(
-                        installation_store=PostgresInstallationStore()
-                    )
-                ),
+                installation_store=store,
+                configuration_authorize=authorize,
                 disable_permission=CurrentControlPermission(
                     operation=DISABLE_RUNTIME_OPERATION
                 ),
                 drain_reader=GenerationDrainReader(),
-                cleanup_driver=CleanupOnlyOciDriver(
-                    OciDriver(context="colima-aos-extension")
-                ),
+                cleanup_driver=CleanupOnlyOciDriver(driver),
                 disable_dependent=EcommerceGrowthDisableDependent(),
+                preparation=preparation,
             ),
         )
         assert selected.status == "ACTIVE"
+        assert selected.host._current_assignments()[0].lifecycle.directory.scope.key == (
+            "org-org",
+            "dev-project",
+        )
         with runtime_connect() as conn:
             with conn.transaction():
                 conn.execute("SET LOCAL ROLE aos_runtime")
