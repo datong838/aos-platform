@@ -1,0 +1,93 @@
+{
+  "after": {
+    "assignment": {
+      "host_id": "a0v-local-ecommerce-host-20260912",
+      "revision": 1,
+      "state": "assigned"
+    },
+    "canaryAssignments": 0,
+    "identity": {
+      "database_role": "aos_a0v_directory_20260912",
+      "enabled": true,
+      "host_id": "a0v-local-ecommerce-host-20260912",
+      "revision": 1
+    },
+    "roles": {
+      "directory": {
+        "directory_member": true,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": false
+      },
+      "runtime": {
+        "directory_member": false,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": true
+      },
+      "web": {
+        "directory_member": false,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": false
+      }
+    }
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-runtime-host/backups/aos_meta_head-pre-runtime-host-bootstrap.dump",
+    "sha256": "sha256:350eedcc51f951c0d6a5f456122fb032a9cf8b545aefa4397e5c9bfddbd2ca64",
+    "size": 4402036
+  },
+  "before": {
+    "assignment": null,
+    "canaryAssignments": 0,
+    "identity": {
+      "database_role": "aos_a0v_directory_20260912",
+      "enabled": true,
+      "host_id": "a0v-local-ecommerce-host-20260912",
+      "revision": 1
+    },
+    "roles": {
+      "directory": {
+        "directory_member": true,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": false
+      },
+      "runtime": {
+        "directory_member": false,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": true
+      },
+      "web": {
+        "directory_member": false,
+        "rolbypassrls": false,
+        "rolcanlogin": true,
+        "rolsuper": false,
+        "runtime_member": false
+      }
+    }
+  },
+  "credentialFile": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-runtime-host/runtime-host-identities.json",
+  "credentialFileHash": "sha256:082b135c6bcc18a97b562b408a5473c82f2a1176507b8cd814914ca3f3e4e24b",
+  "database": "aos_meta_head",
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "hostId": "a0v-local-ecommerce-host-20260912",
+  "mode": "apply",
+  "outcome": "RUNTIME_HOST_BOOTSTRAP_GREEN",
+  "roles": {
+    "directory": "aos_a0v_directory_20260912",
+    "runtime": "aos_a0v_runtime_20260912",
+    "web": "aos_a0v_web_20260912"
+  }
+}

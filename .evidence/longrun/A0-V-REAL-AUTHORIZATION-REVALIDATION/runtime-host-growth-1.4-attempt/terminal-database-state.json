@@ -1,0 +1,64 @@
+{
+  "businessOperationCount": 0,
+  "canaryMembershipCount": 0,
+  "installation": {
+    "active_revision": null,
+    "current_revision": 3,
+    "etag_version": 3
+  },
+  "membership": [
+    {
+      "role": "admin",
+      "subject": "a0v-ecommerce-growth-1.4-runtime-owner"
+    }
+  ],
+  "operations": [
+    {
+      "failure_code": "PREPARATION_EXPIRED",
+      "kind": "runtime-apply",
+      "operation_id": "0238f2c7-6c5f-4c27-a785-66a08c8e1e96",
+      "phase": "accepted",
+      "revision": 2,
+      "status": "failed"
+    },
+    {
+      "failure_code": "PREPARATION_EXECUTION_FAILED",
+      "kind": "runtime-apply",
+      "operation_id": "7ceea519-f92e-4abe-a214-6e6d20426a52",
+      "phase": "preparing",
+      "revision": 8,
+      "status": "failed"
+    }
+  ],
+  "outcome": "ECOMMERCE_GROWTH_1_4_PREPARATION_FAILED_CLEAN",
+  "providerInvocationCount": 0,
+  "resources": [
+    {
+      "cleanup_state": "released",
+      "engine_context": "colima-aos-extension",
+      "observed_release": true,
+      "operation_id": "7ceea519-f92e-4abe-a214-6e6d20426a52",
+      "package_hash": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+      "package_id": "domain.ecommerce.core",
+      "was_created": true
+    },
+    {
+      "cleanup_state": "released",
+      "engine_context": "colima-aos-extension",
+      "observed_release": true,
+      "operation_id": "7ceea519-f92e-4abe-a214-6e6d20426a52",
+      "package_hash": "sha256:23d432e1b01e5255d9c309a902dec30983366f8c2a6738854822fa5015790042",
+      "package_id": "solution.ecommerce.growth",
+      "was_created": false
+    },
+    {
+      "cleanup_state": "released",
+      "engine_context": "colima-aos-extension",
+      "observed_release": true,
+      "operation_id": "7ceea519-f92e-4abe-a214-6e6d20426a52",
+      "package_hash": "sha256:5a3e65d39ac276d2e9ab761835195fc3f5d9ace9d253b47368c5895c62402cd3",
+      "package_id": "platform.ecommerce.niushop",
+      "was_created": false
+    }
+  ]
+}

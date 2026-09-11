@@ -1,0 +1,45 @@
+{
+  "identities": {
+    "directory": {
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": true,
+      "ownsProtectedRelation": false,
+      "privileged": false,
+      "roleOid": 203325,
+      "runtimeMember": false,
+      "sessionUser": "aos_a0v_directory_20260912"
+    },
+    "runtime": {
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": false,
+      "ownsProtectedRelation": false,
+      "privileged": false,
+      "roleOid": 203324,
+      "runtimeMember": true,
+      "sessionUser": "aos_a0v_runtime_20260912"
+    },
+    "web": {
+      "authority": [
+        "172.17.0.2/32",
+        5432,
+        "aos_meta_head"
+      ],
+      "directoryMember": false,
+      "ownsProtectedRelation": false,
+      "privileged": false,
+      "roleOid": 203323,
+      "runtimeMember": false,
+      "sessionUser": "aos_a0v_web_20260912"
+    }
+  },
+  "outcome": "RUNTIME_HOST_IDENTITIES_GREEN",
+  "protectedRelationCount": 6
+}

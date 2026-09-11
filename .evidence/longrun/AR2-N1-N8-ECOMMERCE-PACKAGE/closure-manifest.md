@@ -938,3 +938,25 @@ trust-root path 与 linux/arm64，每项唯一非空且被 gitignore。Installat
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-identity-oci-qualification-v2-result.json` | 原路径 | v2 QUALIFICATION_GREEN Receipt | 8f0566b0355a1f5e14b6878f459993850cc99fd88b8a2c47353b0f01221a789f |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-registry-successor-apply-v2-result.json` | 原路径 | create/validate/publish 各一与零 Installation mutation | c48554f8d4b90a892984b13dfe3582690616698783adac0011970d6cda5ee2db |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-registry-successor-replay-v2-result.json` | 原路径 | Registry/config/signed tree 零 mutation 重放 | 2f460c65ce38b3b24febd1378d323a3095edf2161f908086a90e3e008fb1a99a |
+
+### 9.45 A0-V 独立 Runtime Host 与 invalid 1.4 fail-closed 证据
+
+2026-09-12：在隔离 `aos_meta_head` 建立 directory/runtime/web 三个互异非特权登录主体，持久凭据仅存
+仓外 0600 文件。Host Identity/Assignment 均 revision 1 且重放不增长；正租户 assignment=1、负租户=0。
+真实连接探针证明三个主体同库、均非 owner/bypass/superuser，并保持 directory-only、runtime-only、none
+成员边界。独立 Host 达到 ACTIVE，18181 诊断 API 继续 host=0。
+
+1.4 首次 preparation 的 v1 过期未 claim Operation 用既有终结命令标记 `PREPARATION_EXPIRED`。v2 通过
+当前持久 admin membership 和签名 admission，进入 preparing 后因运行镜像 registration 与签名 Manifest
+不一致而 fail closed；终态 `PREPARATION_EXECUTION_FAILED`，三个 resource lease 全部 released/observed，
+无 extension container，Installation 仍 approved revision 3、activeRevision null。静态根因是三个后端注册
+1/2/9 个 API，但已发布 Manifest 未声明对应 API；禁止放宽 exact registration 或修改已发布字节，改线为
+新不可变坐标、完整 Session qualification 与重新首次安装。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `scripts/a0v_ecommerce_runtime_host_bootstrap.py` | 原路径 | 隔离三身份、host identity/assignment、目录函数最小授权与备份 | 0258d15365a1fb7f419adda604201213e73b84b61965fc67067c0f73aaf7943e |
+| `scripts/a0v_ecommerce_runtime_host.py` | 原路径 | 单实例独立 Host、ACTIVE/STOPPED/fail-closed 状态 | 633ad20dcc552d4e4a5dcf559174b647b8fef60671f727d6c7bed5596a52feb6 |
+| `scripts/a0v_ecommerce_growth_1_4_activate.py` | 原路径 | 当前 membership、过期 apply 收口与受限 apply/verify | 5b34c92a4b1f046a6b8724aee6bab3f30181019a7f0f8ccd1a8b3370289a8a5c |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-runtime-host-growth-1.4-attempt-verification.md` | 原路径 | 三平面与失败清理审计 | ae996920bc7476f7ac096e3aba402c45af70d73669e65f1948d1ef4703ef1019 |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/runtime-host-growth-1.4-attempt/terminal-database-state.json` | 原路径 | Operation/lease/membership/Installation 终态 | 9882e4bcdbc5175900f8f43d0a427545ea026a6ccb5ee89d5cea671d9bcbcd67 |
