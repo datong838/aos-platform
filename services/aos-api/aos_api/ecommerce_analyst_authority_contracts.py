@@ -133,11 +133,21 @@ class DecisionSummaryRevision(_RevisionBase):
     counter_evidence: list[str] = Field(default_factory=list, max_length=50)
     alternative_explanations: list[str] = Field(default_factory=list, max_length=50)
     uncertainty: str = Field(min_length=1, max_length=2000)
+    generation_artifact_ref: AnalystExactRef | None = None
+
+    @model_serializer(mode="wrap")
+    def _legacy_payload(self, handler):
+        payload = handler(self)
+        if self.generation_artifact_ref is None:
+            payload.pop("generationArtifactRef", None)
+            payload.pop("generation_artifact_ref", None)
+        return payload
 
     @model_validator(mode="after")
     def _integrity(self) -> "DecisionSummaryRevision":
         self._validate_chain(self.decision_id, "DecisionSummaryRevision")
         _require_type(self.insight_ref, {"InsightRevision"}, "insightRef")
+        _require_type(self.generation_artifact_ref, {"Artifact"}, "generationArtifactRef")
         _unique_refs(self.evidence_refs, "evidenceRefs")
         for ref in self.evidence_refs:
             _require_type(ref, {"EvidenceBundleRevision"}, "evidenceRefs")

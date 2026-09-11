@@ -1,0 +1,15 @@
+# D02 固定请求与原结果绑定
+
+2026-09-11，基线9bd2f39d，AOS-000573；m1串行、不push、230 L0挂起。
+
+合同preHash：97ceef2bdf55ed7d32a5a902a9041b178e614eabf993bffd343099e08e357d9a。
+
+231-5/231-6的有来源诊断→方案链。当前D01 MethodRevision仅引用类型、无已实现权威读取入口，不填伪造方法记录。本波先完成可独立推进的D02，后续继续可信接收和Owner落库，不等待定时唤醒。
+
+新增 services/aos-api/aos_api/ecommerce_analyst_diagnosis_generation.py、tests/test_ecommerce_analyst_diagnosis_generation.py；修改ecommerce_analyst_authority_contracts.py的DecisionSummaryRevision增加可选generationArtifactRef，仅Artifact，空值序列化省略，旧hash兼容。
+
+diagnosis_prompt只接受已校验Insight和完整material列表；重算Insight内容hash、来源集合精确覆盖且按Insight evidence顺序排列、每项Evidence正文hash、Bundle cutoff及引用形状。固定中文系统提示与协议aos.diagnosis-proposal/v1，来源仅资料不作指令，不声称因果或审批。发送内容保留来源和正文，临时Disclosure ID/到期信息不放进模型请求；重新授权同一不可变来源不改变请求hash。超过原Executor16000字符上限拒绝，不截断。
+
+decision_from_completed_generation为纯转换：复用原Executor请求hash计算，验证同租户SUCCEEDED attempt、Provider/Usage凭据、完成时间、原text Artifact r1与答复hash；严格D02解析；tenant+attempt确定稳定decision ID，服务端绑定Insight、Evidence与生成Artifact，r1/version1，actor及completedAt，重算正式payload hash。不声称输入为DB权威，不开放公共接收入口。未知/缺凭据/来源与请求漂移一律拒绝，不重发。
+
+测试先红后绿、原Decision合同/hash兼容、来源/答复/原请求漂移、稳定重放与预算容量hash绑定；回归现有D03生成与Owner。退出只代表请求/转换完成；下一波数据库可信接收、事务幂等Owner保存和真实隔离源图，之后D01方法与指标权威、宿主执行及真实首链。
