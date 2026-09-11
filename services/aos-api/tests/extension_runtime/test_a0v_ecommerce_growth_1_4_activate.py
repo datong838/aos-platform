@@ -48,3 +48,4 @@ def test_main_records_domain_failure_without_secret_fields(tmp_path: Path, monke
 def test_runtime_actor_uses_persisted_admin_role() -> None:
     assert ACTIVATE.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
     assert ACTIVATE.ROLES == frozenset({"admin"})
+    assert "runtime-apply-v2" in SCRIPT.read_text()

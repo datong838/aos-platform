@@ -115,6 +115,48 @@ def _ensure_control_membership(connect) -> dict[str, int]:
     return {"created": created, "positiveCount": 1, "canaryCount": 0}
 
 
+def _settle_expired_apply(connect) -> dict[str, Any]:
+    if str(API) not in sys.path:
+        sys.path.insert(0, str(API))
+    from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+    from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
+
+    with connect() as conn:
+        with conn.transaction():
+            apply_asset_transaction_scope(conn, org_id=ORG_ID, project_id=PROJECT_ID)
+            rows = conn.execute(
+                """SELECT operation_id,status,phase,revision,deadline < clock_timestamp() AS expired
+                     FROM extension_runtime_operation
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                      AND kind='runtime-apply' AND status NOT IN ('succeeded','failed','cancelled')
+                    ORDER BY operation_id FOR UPDATE""",
+                (ORG_ID, PROJECT_ID, INSTALLATION_ID),
+            ).fetchall()
+            if not rows:
+                return {"settledCount": 0}
+            if len(rows) != 1:
+                raise ActivationBlocked("AMBIGUOUS_ACTIVE_APPLY")
+            row = rows[0]
+            if (row["status"], row["phase"], row["expired"]) != ("accepted", "accepted", True):
+                raise ActivationBlocked("ACTIVE_APPLY_NOT_RECOVERABLE")
+            result = RuntimeOperationStore().fail_uncommitted_preparation(
+                conn,
+                org_id=ORG_ID,
+                project_id=PROJECT_ID,
+                operation_id=row["operation_id"],
+                expected_revision=row["revision"],
+                failure_code="PREPARATION_EXPIRED",
+            )
+        conn.commit()
+    return {
+        "settledCount": 1,
+        "operationId": str(result.operation_id),
+        "status": result.status,
+        "revision": result.revision,
+        "failureCode": "PREPARATION_EXPIRED",
+    }
+
+
 def _snapshot(connect, store) -> dict[str, Any]:
     record = store.get_installation(
         org_id=ORG_ID, project_id=PROJECT_ID, installation_id=INSTALLATION_ID
@@ -172,6 +214,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         database_name=DATABASE,
     )
     membership = _ensure_control_membership(connect)
+    recovery = _settle_expired_apply(connect)
     store, lifecycle = _services(connect, args.trust_roots_file)
     before = _snapshot(connect, store)
     if before["canaryInstallationCount"] != 0:
@@ -187,7 +230,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             installation_id=INSTALLATION_ID, kind="runtime-apply",
             org_id=ORG_ID, project_id=PROJECT_ID, actor=ACTOR,
             roles=ROLES, markings=MARKINGS,
-            idempotency_key="a0v-ecommerce-growth-1.4-runtime-apply-v1",
+            idempotency_key="a0v-ecommerce-growth-1.4-runtime-apply-v2",
             if_match=f'"{current.etag_version}"',
         )
         receipts.append({"kind": "runtime-apply", **receipt.response_json})
@@ -217,6 +260,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "outcome": "ECOMMERCE_GROWTH_1_4_ACTIVE_GREEN",
         "database": DATABASE,
         "controlMembership": membership,
+        "expiredApplyRecovery": recovery,
         "before": before,
         "receipts": receipts,
         "after": after,
