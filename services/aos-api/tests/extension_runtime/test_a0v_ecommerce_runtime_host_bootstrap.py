@@ -120,6 +120,7 @@ def test_provision_binds_identity_and_assignment() -> None:
     BOOTSTRAP._provision(connection, credentials)
 
     statements = [str(statement) for statement, _parameters in connection.calls]
+    assert sum("extension_runtime_read_host_assignments" in item for item in statements) == 1
     assert sum("extension_runtime_bind_host_identity" in item for item in statements) == 1
     assert sum("extension_runtime_set_host_assignment" in item for item in statements) == 1
     assignment_parameters = next(

@@ -155,6 +155,11 @@ def _provision(conn: Any, credentials: dict[str, Any]) -> None:
             )
     conn.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(ROLES["runtime"])))
     conn.execute(sql.SQL("GRANT aos_extension_directory TO {}").format(sql.Identifier(ROLES["directory"])))
+    conn.execute(
+        sql.SQL(
+            "GRANT EXECUTE ON FUNCTION extension_runtime_read_host_assignments() TO {}"
+        ).format(sql.Identifier(ROLES["directory"]))
+    )
     identity_payload = {"databaseRole": ROLES["directory"], "hostId": HOST_ID, "enabled": True}
     conn.execute(
         "SELECT extension_runtime_bind_host_identity(%s,%s,true,0,%s,%s,%s)",
