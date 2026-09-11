@@ -30,13 +30,13 @@ FIRST_INSTALL_STATE = (
     ROOT.parent
     / ".aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install"
 )
-BUILD_DIR = RECOVERY_ROOT / "builds/ecommerce-runtime-1.5.0-v1"
-BUILD_RECEIPT = RECOVERY_ROOT / "logs/ecommerce-runtime-1.5.0-build-v1.json"
+BUILD_DIR = RECOVERY_ROOT / "builds/ecommerce-runtime-1.5.0-v2"
+BUILD_RECEIPT = RECOVERY_ROOT / "logs/ecommerce-runtime-1.5.0-build-v2.json"
 QUALIFICATION_RECEIPT = (
-    RECOVERY_ROOT / "logs/ecommerce-runtime-1.5.0-qualification-v1.json"
+    RECOVERY_ROOT / "logs/ecommerce-runtime-1.5.0-qualification-v2.json"
 )
-STATE_DIR = RECOVERY_ROOT / "state/ecommerce-growth-1.5.0-registry-successor"
-OUTPUT = RECOVERY_ROOT / "logs/ecommerce-growth-1.5.0-registry-successor.json"
+STATE_DIR = RECOVERY_ROOT / "state/ecommerce-growth-1.5.0-registry-successor-v2"
+OUTPUT = RECOVERY_ROOT / "logs/ecommerce-growth-1.5.0-registry-successor-v2.json"
 DOCKER_CONTEXT = "colima-aos-extension"
 DATABASE_CONTAINER = "aos-a0v-recovery-pg"
 DATABASE_NAME = "aos_meta_head"
@@ -640,6 +640,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = run(args)
     except SuccessorBlocked as exc:
         result = {"outcome": "SAFE_BLOCKED", "reasonCode": exc.reason_code, "message": str(exc)}
+        code = 2
+    except Exception as exc:
+        result = {
+            "outcome": "SAFE_BLOCKED",
+            "reasonCode": "UNEXPECTED_DOMAIN_ERROR",
+            "errorType": type(exc).__name__,
+            "message": str(exc),
+        }
         code = 2
     else:
         code = 0

@@ -280,3 +280,23 @@ def test_apply_requires_exact_database_before_connection(
     with pytest.raises(SUCCESSOR.SuccessorBlocked) as captured:
         SUCCESSOR.run(args)
     assert captured.value.reason_code == "EXPLICIT_ISOLATED_DATABASE_REQUIRED"
+
+
+def test_main_persists_unexpected_domain_failure_as_safe_blocked(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "result.json"
+    monkeypatch.setattr(
+        SUCCESSOR,
+        "run",
+        lambda _args: (_ for _ in ()).throw(ValueError("domain mismatch")),
+    )
+
+    assert SUCCESSOR.main(["--output", str(output)]) == 2
+    result = json.loads(output.read_text(encoding="utf-8"))
+    assert result == {
+        "outcome": "SAFE_BLOCKED",
+        "reasonCode": "UNEXPECTED_DOMAIN_ERROR",
+        "errorType": "ValueError",
+        "message": "domain mismatch",
+    }
