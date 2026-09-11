@@ -195,3 +195,15 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线d4d60461。apps/web/src/pages/s2/dataSchedules.tsx接recoverScheduledRun；历史扩finishedAt/recovery字段，显示失败原因；只有候选true、启用计划、当前数据写角色可点击。useRef同步忙碌锁阻止同一事件循环双击，useState显示进行中；恢复时禁用新建/保存/手动执行，开始清旧提示；捕获tenant+subject+schedule上下文，响应到达后仅上下文一致且组件仍挂载才更新提示/刷新。网络错误保留客户端claim，duplicate提示已处理请求、刷新历史，不误报成功。
 
 文件上述页面及dataSchedules.test.ts扩展原因纯合同，另交互测试按现有React DOM测试模式验证重复点击/禁用。浏览器看实际路由布局；因实际API未迁移重载，只能验证当前可达状态，不能虚构真实可恢复运行。后续隔离完整安装升级、服务重载与实际恢复验收。
+
+
+## 完整恢复基线升级与经营参谋目标
+
+基线5654f2d7。先以显式colima-aos-extension/aos-a0v-recovery-pg只读核查aos_meta_head，再pg_dump到权限0700的本地证据外目录，在新建唯一aos_upgrade_check_*数据库恢复；不使用活动库TEMPLATE、不终止连接、不迁移原库、不重载服务。克隆上执行现有完整Alembic升级，检查revision/恢复表/退出字段/投影guard，失败保留准确SQLSTATE及迁移节点，不把最小fixture通过作为安装成功。凭据仅内存，不打印或写入环境；克隆保留供诊断，清理只能精确本波创建的数据库。证据文件full-upgrade-verification.md；必要修复须先追加根因和具体文件方案。
+
+用户补充：经营参谋应以栖月汇真实数据形成业务计划。同步计划与业务计划分离：前者负责数据接入，后者由真实数据变化自然触发Case/Run、形成有来源的分析/建议与exact评审，经内容任务及受控能力执行后回流。计划空态不得靠虚构业务数据或直接种计划消除。升级后核查现有经营参谋入口、计划生成与自然触发断点；不改变原首链及八工作台目标。
+
+
+### 完整恢复实测缺口：规范化函数查找路径
+
+完整pg_dump恢复在data_source_configuration_revision CHECK中失败，SQL调用public.canonical_asset_registry_jsonb后，函数内部递归未限定schema，而pg_restore会清空search_path；历史228asset0函数无SET search_path。新增services/aos-api/alembic/versions/a0v_011_canonical_hash_search_path.py，仅固定已有public函数的search_path=pg_catalog,public,pg_temp，不改变规范化正文、哈希算法、租户或业务数据。追加迁移不改历史。验证空search_path下嵌套对象/数组规范化、调用者同名函数不能劫持、已有输出不变；完整旧备份恢复需在一次性克隆pre-data后应用同一函数修复再data/post-data，明确记录历史备份兼容步骤；升级后的新备份必须原样恢复成功才可称恢复闭环。forward-only，避免降级恢复已知缺陷。
