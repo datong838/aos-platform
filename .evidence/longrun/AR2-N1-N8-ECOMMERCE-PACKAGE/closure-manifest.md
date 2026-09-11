@@ -322,3 +322,20 @@ Suite、Eval、报告或 release gate，可信运行时函数装配仍是下一�
 | sourcePath | targetPath | decision | 当前切片SHA256 |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 宿主评审绑定私有 query、包派生 case、exact Suite/Skill/report；包内运行时装配仍 PENDING | 2c42badebac8822fb161cb40d86dcc0d9b0228570c9c606152db947789dc8372 |
+
+### 9.8 Growth 包结构 case 纯运行 operation
+
+2026-09-11：growth 作者树复用已声明的 `ecommerce_growth_analysis_advance` operation，只对
+严格的 `derive_structure_case` 消息开放包内纯函数。payload 必须恰好包含 `kind/query/stage`；
+query 与 stage 继续由包内规则校验。返回值只有结构 case，不回传原始 query，也不读取租户、
+数据库、安装、权限、预算或凭据。其他消息与其他已注册 operation 继续 registration-only，
+未知 operation 继续拒绝。
+
+已 canonical publish 且属于 approved Installation 的 `solution.ecommerce.growth@1.4.0` 未修改。
+因此本节证明作者包具备可装配入口，不证明当前 Installation 已获得该实现。下一步先复核本节
+其余 PENDING 边界，闭合后冻结新的 1.5.0 Candidate、OCI/签名和 successor install。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py` | 原路径 | 严格消息路由到包内结构派生；无外部副作用，当前安装装配仍 PENDING | ce22b4f702ca4bd82163ac1fa973ae86e2ced13349cbb4454b1f2e90de296266 |
+| `services/aos-api/tests/extension_runtime/test_analyst_structure_runtime_operation.py` | 原路径 | 三阶段正例、严格 envelope、无正文返回及其余 operation 拒绝合同 | 282ff5396923668eb2399b2ae4da65e428340962f67532829dd6fbf7b96b8537 |

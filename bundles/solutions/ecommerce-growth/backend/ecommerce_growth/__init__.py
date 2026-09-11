@@ -25,4 +25,13 @@ def register(_context):
 def handle(operation_id, _payload, _context):
     if operation_id not in {item[0] for item in _OPERATIONS}:
         raise ValueError("unregistered ecommerce growth operation")
+    if (
+        operation_id == "ecommerce_growth_analysis_advance"
+        and type(_payload) is dict
+        and set(_payload) == {"kind", "query", "stage"}
+        and _payload.get("kind") == "derive_structure_case"
+    ):
+        from .analyst_structure_case import structure_case_from_query
+
+        return structure_case_from_query(_payload.get("query"), stage=_payload.get("stage"))
     raise PermissionError("ecommerce growth runtime is registration-only before AR2-7 cutover")
