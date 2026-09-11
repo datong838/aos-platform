@@ -32,3 +32,6 @@
 
 ### 受信事务接收检查点
 新增ecommerce_analyst_growth_plan_receiver.py及对应tests。显式connect_factory，调用侧提供可信scope/markings/时效/预算/任务类型，不新增公开route。以tenant+attempt事务advisory lock序列化同一生成接收；读取原attempt及AgentRun，要求D03 Skill、route/policy一致，Run inputRefs包含exact Decision/Insight/Decision Evidence。读取已保存Artifact要求run/type/hash/contentRef/source agentRunId/attemptId一致。先复用来源读取及纯转换，再同连接调用既有Owner保存，不复制Receipt/CAS协议。已保存的同attempt在当前来源失效后允许回读原草稿，但须核对原Artifact、请求字段、actor、decisionRef、budget、taskType和原答复hash；不得新建或重新调用Provider。数据库原子正向验证单独记录，单元测试不能当成真实业务完成。
+
+### 完整依赖图集成检查点
+在明确开关AOS_GROWTH_DRAFT_FULL_GRAPH_TEST=1下，从固定独有克隆aos_upgrade_check_f1dc452abade创建随机a0v_growth_graph_test_<uuid>一次性测试数据库。禁止从实际runtime DB复制/改写业务记录。保留真实表结构、FK和触发器；合成fixture只在该一次性DB。直接插入测试前置Task/Plan/Run/Instance/Binding/Brief/Evidence及生成记录，Bundle通过既有Owner建立；Receiver、来源读器、Run/attempt读器和GrowthPlan Owner不mock。验证完整正向回读、错误答复拒绝无新增记录、重放及注入保存后异常事务回滚。无Provider调用，不证明真实生成/生产治理调用链。finally只删除本次创建且名字精确匹配的DB，不FORCE，不触碰恢复DB和磁盘备份。新增tests/test_ecommerce_analyst_growth_plan_full_graph.py。
