@@ -1,0 +1,84 @@
+{
+  "buildGitHead": "da3db79605d0b0fdf1c7e6cd856398e6dbf38f15",
+  "buildOutput": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/builds/ecommerce-runtime-1.5.0-v2",
+  "buildReceiptHash": "sha256:d87d457ce379524bfa4b0368d140b0183c10ac9f8c44fa5669239d52aa05999c",
+  "contentHashes": {
+    "domain.ecommerce.core": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+    "platform.ecommerce.niushop": "sha256:5a3e65d39ac276d2e9ab761835195fc3f5d9ace9d253b47368c5895c62402cd3",
+    "solution.ecommerce.growth": "sha256:6a547118c5fe129cc4d9bb10c0066a9a503ee949cc67ce1e57105a0c70f3edab",
+    "solution.ecommerce.operations-base": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  },
+  "currentGitHead": "573d9035d6cd40c8cc70808e080458bbd2df104b",
+  "databaseBackup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-growth-1.5.0-registry-successor-v2/backups/aos_meta_head-pre-growth-1.5-registry.dump",
+    "sha256": "sha256:c2a178ec8eb69605c0f5931a6f6340a4bcdf3aa7b2b43a5f2e61b739110c9a99",
+    "size": 4398842
+  },
+  "databaseCounts": {
+    "after": {
+      "canary": 0,
+      "installations": 1,
+      "positive": 1,
+      "target_versions": 1
+    },
+    "before": {
+      "canary": 0,
+      "installations": 1,
+      "positive": 1,
+      "target_versions": 1
+    }
+  },
+  "effects": {
+    "canonicalRegistry": {
+      "publishCount": 0,
+      "validateCount": 0,
+      "versionCreateCount": 0
+    },
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "mode": "apply",
+  "outcome": "GROWTH_1_5_REGISTRY_SUCCESSOR_PUBLISHED",
+  "outputTreeHash": "sha256:ebadbd7c49105dac011c849fc53807d1963ab4bfc41e57ec23f2229a97968cfc",
+  "persistentPreflight": {
+    "firstState": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install",
+    "historicalSignedRoot": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signed-bundles-v4",
+    "ready": true
+  },
+  "qualificationReceiptHash": "sha256:8f0566b0355a1f5e14b6878f459993850cc99fd88b8a2c47353b0f01221a789f",
+  "registry": {
+    "bundleId": "solution.ecommerce.growth",
+    "contentHash": "sha256:6a547118c5fe129cc4d9bb10c0066a9a503ee949cc67ce1e57105a0c70f3edab",
+    "mutations": {
+      "publishCount": 0,
+      "validateCount": 0,
+      "versionCreateCount": 0
+    },
+    "status": "published",
+    "version": "1.5.0"
+  },
+  "runtimeEnvironment": {
+    "addedKeys": [],
+    "configuredKeys": [
+      "AOS_BUNDLE_ROOT",
+      "AOS_BUNDLE_TRUST_ROOTS_FILE",
+      "AOS_EXTENSION_RUNTIME_PLATFORM"
+    ],
+    "path": "/Users/ddt/work/projects/ai_agent/aos-platform/.env",
+    "sha256": "sha256:c02506210fb44c3fecc1c9a6b4e9f11fde5046a6837d140e9e2d08594e513de4"
+  },
+  "signing": {
+    "coordinates": {
+      "domain.ecommerce.core@1.1.0": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+      "platform.ecommerce.niushop@1.1.0": "sha256:5a3e65d39ac276d2e9ab761835195fc3f5d9ace9d253b47368c5895c62402cd3",
+      "solution.ecommerce.growth@1.4.0": "sha256:23d432e1b01e5255d9c309a902dec30983366f8c2a6738854822fa5015790042",
+      "solution.ecommerce.growth@1.5.0": "sha256:6a547118c5fe129cc4d9bb10c0066a9a503ee949cc67ce1e57105a0c70f3edab",
+      "solution.ecommerce.operations-base@1.2.0": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+    },
+    "keyId": "a0v-local-ecommerce-canonical-v1",
+    "signedBundleRoot": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-growth-1.5.0-registry-successor-v2/signed-bundles-v5",
+    "trustRootRevision": "sha256:fc8d449ed6b5dea8b2b933ee0f573e794c9ebe86f540d8b6aab23462f12219c7",
+    "trustRootsPath": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json"
+  }
+}

@@ -913,3 +913,28 @@ build Receipt 完成 ephemeral qualification，snapshot hash `3cd775...`，resol
 3 runtime admissions、3 schema requirements、8 modules 与七类 tamper rejection 通过，ephemeral signature
 未持久化；两阶段四类业务 effect 全为 0。18436 与临时 Registry 容器已清除。本切片没有持久 Registry
 publish 或 Installation upgrade。
+
+### 9.44 Ecommerce growth 1.5.0 Registry successor 与持久运行根
+
+2026-09-12：首次 v1 apply 在 create_version 前因 1.5 displayName 改变、违反 Registry bundle 跨版本 identity
+而拒绝；Registry 1.5 仍为零。修正 Candidate 继承 1.4 稳定 displayName，不放宽 Registry，1.5 source tree
+由 `34cd4b...` 更新为 `34446f...`，backend `0d9a0b...` 与 1.4 immutable hash 均不变。v2 OCI build /
+qualification 各一次成功，output `ebadbd...`、growth content `6a5471...`、snapshot `b6e747...`。
+
+生产 allowlist 在明确配置 server root 时同时兼容历史 persisted `a0v-canonical` alias；未配置时继续 fail
+closed。successor 复用持久 key/trust root，生成含 growth 1.4 与 1.5 的五坐标 signed tree。Registry 首次
+mutation 为 create/validate/publish 各 1，重放三项均 0；1.5 唯一 published。`.env` 持久化 bundle root、
+trust-root path 与 linux/arm64，每项唯一非空且被 gitignore。Installation 前后仍为正租户 1、负租户 0，
+当前正租户仍 approved growth 1.4；本节没有 OCI runtime 启动、Provider 或外部发布。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/asset_registry/control_wiring.py` | 原路径 | server root 同源兼容历史 canonical alias | eca81907a686c518655d55f73bc95dd8e91292a61955d7fff24ea2a18fb7e9fe |
+| `scripts/prepare_ecommerce_growth_1_5_candidate.py` | 原路径 | 继承稳定 Registry bundle identity | c3a5ebe7d573e35cf7291f72af5d508e01bfd04b082c376e7f318a8826b29322 |
+| `bundles/candidates/ecommerce/solution.ecommerce.growth/1.5.0/` | 原路径 | identity-corrected 87 文件 source tree | 34446fcbfc1a8b7239cc44cdb4d801584d618deffbadc9c6bddaf7d69e5b0bd0 |
+| `scripts/a0v_ecommerce_growth_1_5_registry_successor.py` | 原路径 | bound Receipt、持久签名、Registry 状态机、配置与安全重放 | 1be94be3e3750ef8f4535089c4f69852600a58ddb11e207b62fd35662a8ee516 |
+| `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_growth_1_5_registry_successor.py` | 原路径 | preflight、v4 保留、签名/config 幂等与异常 Receipt | 2fe70bbaafc3502bcef10a6e0991e6b8d0dc3932c4d9a30f775436e3f3444d95 |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-identity-oci-build-v2-result.json` | 原路径 | v2 BUILD_GREEN Receipt | d87d457ce379524bfa4b0368d140b0183c10ac9f8c44fa5669239d52aa05999c |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-identity-oci-qualification-v2-result.json` | 原路径 | v2 QUALIFICATION_GREEN Receipt | 8f0566b0355a1f5e14b6878f459993850cc99fd88b8a2c47353b0f01221a789f |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-registry-successor-apply-v2-result.json` | 原路径 | create/validate/publish 各一与零 Installation mutation | c48554f8d4b90a892984b13dfe3582690616698783adac0011970d6cda5ee2db |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-registry-successor-replay-v2-result.json` | 原路径 | Registry/config/signed tree 零 mutation 重放 | 2f460c65ce38b3b24febd1378d323a3095edf2161f908086a90e3e008fb1a99a |
