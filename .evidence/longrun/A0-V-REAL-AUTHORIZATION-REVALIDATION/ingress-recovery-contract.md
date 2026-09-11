@@ -129,3 +129,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 空观察恢复保存空派生清单，原hash关联；不调用Store基础/派生写入、不推进checkpoint、不删除对象、不生成Outbox、不处理无关投影。exact完成为0个事件，且返回empty_observation标记。Dataset结果沿现有不可变回执/Build机制记录本次0行，不能据此清空权威对象或称全量同步已完成。原数据集本就展示本次处理行数，保持既有语义。当前禁入、取消/期限及先提交后恢复仍保留。
 
 文件：services/aos-api/aos_api/ec_ingress_journal.py、ec_ingress_recovery.py、ec_durable_executor.py；tests/test_ec_ingress_empty.py、test_ec_durable_executor.py、tests/aip/test_a0v_ingress_journal_pg.py。先合同/无Store调用负例，再实际入口选路与隔离PG不可变保存重放，旧非空回归。public不迁移，失败run claim后续，不push，230 L0挂起。
+
+## 失败重领前置：执行器退出事实
+
+2026-09-11，基线66d11861。调度failed不等于worker已停止；join超时仅set取消。先新增a0v008 meta_schedule_run.executor_stopped boolean NOT NULL DEFAULT false。历史未知不得回填true。execute_pipeline_once只在_collect_dispatch之后直接读取自身dispatch线程is_alive，返回executor_stopped；前置拒绝/未知异常不授予重领事实。调度持久化严格is True，不能依据错误码/任意truthy。此字段仅说明本次本地线程退出，不代替当前权限/原Journal/幂等对账。
+
+文件：services/aos-api/aos_api/phase5_pipeline_engine.py、qyh_cron_scheduler.py；alembic/versions/a0v_008_schedule_executor_stopped.py；tests/test_ec_run_lineage.py、test_qyh_cron_scheduler.py、新tests/aip/test_a0v_executor_stopped_pg.py。验证运行中false、结束true、错误退出true、缺证明false，隔离PG历史默认false与回滚保护。downgrade有true事实时拒绝丢证。public不迁移，下一波安全重领必须同时status=failed/退出true/当前绑定/保存原批，并保留历史失败事实。

@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+import pytest
 
 import aos_api.phase5_pipeline_engine as pipeline_engine_module
 import aos_api.qyh_cron_scheduler as scheduler_module
@@ -96,7 +97,8 @@ def test_cron_slot_requires_an_explicit_timezone() -> None:
         raise AssertionError("naive cron slot must be rejected")
 
 
-def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None:
+@pytest.mark.parametrize('stopped',[None,True,'true'])
+def test_execute_schedule_persists_sanitized_transport_code(monkeypatch,stopped) -> None:
     scope = TenantScope("org-org", "dev-project")
     conn = _PersistConnection()
 
@@ -113,6 +115,7 @@ def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None
                 "ok": False,
                 "rows_written": 0,
                 "duration_ms": 17,
+                "executor_stopped": stopped,
                 "error_code": "SSH_CONNECT_TIMEOUT",
                 "error_message": "pipeline executor failed",
             }
@@ -145,6 +148,7 @@ def test_execute_schedule_persists_sanitized_transport_code(monkeypatch) -> None
     assert outcome["status"] == "failed"
     assert persisted[3] == "SSH_CONNECT_TIMEOUT"
     assert persisted[4] == "pipeline executor failed"
+    assert persisted[6] is (stopped is True)
     assert conn.committed is True
 
 

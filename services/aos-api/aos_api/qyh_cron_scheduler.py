@@ -269,11 +269,11 @@ def execute_schedule(
     with connect(scope) as conn:
         conn.execute(
             """UPDATE meta_schedule_run SET status=%s, finished_at=NOW(), duration_ms=%s,
-                   rows_written=%s, error_code=%s, error_message=%s, executor_id=%s
+                   rows_written=%s, error_code=%s, error_message=%s, executor_id=%s, executor_stopped=%s
                WHERE id=%s AND org_id=%s AND project_id=%s""",
             (status, duration_ms, int(result.get("rows_written") or 0),
              str(result.get("error_code") or ""), str(result.get("error_message") or "")[:1000],
-             "ec-live-v1", run_id, *scope.key),
+             "ec-live-v1", result.get("executor_stopped") is True, run_id, *scope.key),
         )
         conn.execute(
             "UPDATE meta_schedule SET last_run=%s::jsonb, updated_at=NOW() "

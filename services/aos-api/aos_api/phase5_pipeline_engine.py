@@ -1058,6 +1058,7 @@ class PipelineEngine:
         )
         return {
             "ok": ok,
+            "executor_stopped": not dispatch[0].is_alive(),
             "rows_written": rows,
             "duration_ms": duration_ms,
             "error_code": "" if ok else str(evidence.get("error_code") or "PIPELINE_EXEC_FAILED"),
