@@ -17,7 +17,8 @@ from test_ecommerce_analyst_growth_plan_full_graph import disposable_database,SC
 
 pytestmark=pytest.mark.skipif(os.getenv('AOS_GROWTH_DRAFT_FULL_GRAPH_TEST')!='1',
     reason='explicit disposable database')
-KINDS=("validate_command_identity","validate_review_slot","validate_runtime","validate_eval_proof")
+KINDS=("validate_command_identity","validate_review_slot","validate_runtime","validate_eval_proof",
+    "validate_structure_case")
 
 
 def command(value,key="review"):
@@ -100,6 +101,6 @@ def test_incomplete_or_duplicate_validations_never_publish(kinds):
         binding=StageReviewDecisionOwnerBinding(SCOPE,
             read_authority=lambda *_:({"authorityVersion":1},exchanges(kinds)))
         with connect(SCOPE) as conn:
-            with pytest.raises(ValueError,match="four exact"):
+            with pytest.raises(ValueError,match="five exact"):
                 binding.prepare_in_transaction(HostTransaction(conn),command(value))
             assert conn.execute('SELECT count(*) AS n FROM ecommerce_analyst_stage_decision_head').fetchone()['n']==0

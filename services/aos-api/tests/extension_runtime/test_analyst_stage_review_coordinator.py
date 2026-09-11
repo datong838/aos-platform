@@ -79,6 +79,9 @@ def test_dependencies_and_unique_bounded_exchanges_are_strict():
     item=StageReviewValidationExchange({"kind":"validate_runtime"},{})
     with pytest.raises(ValueError,match="unique"):PreparedStageReviewValidation(
         "sha256:"+"a"*64,(item,item),{"owner":"owner-1"})
+    with pytest.raises(ValueError,match="bounded"):PreparedStageReviewValidation(
+        "sha256:"+"a"*64,tuple(StageReviewValidationExchange(
+            {"kind":"kind-"+str(index)},{}) for index in range(6)),{"owner":"owner-1"})
 
 
 def test_authority_snapshot_must_be_non_empty_and_remain_unchanged():

@@ -16,7 +16,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 _KINDS=frozenset({"validate_command_identity","validate_review_slot",
-    "validate_runtime","validate_eval_proof"})
+    "validate_runtime","validate_eval_proof","validate_structure_case"})
 _OPERATION="analyst.stage_decision_publish"
 
 
@@ -71,7 +71,7 @@ class StageReviewDecisionOwnerBinding:
         if (any(type(exchange) is not StageReviewValidationExchange for exchange in exchanges)
             or {exchange.payload.get("kind") for exchange in exchanges}!=_KINDS
             or len(exchanges)!=len(_KINDS)):
-            raise ValueError("four exact stage review validations required")
+            raise ValueError("five exact stage review validations required")
         snapshot={"schemaVersion":"aos.stage-review-owner-snapshot/v1",
             "scope":{"orgId":self.scope.org_id,"projectId":self.scope.project_id},
             "decisionId":item.decision_id,"authority":authority_snapshot,

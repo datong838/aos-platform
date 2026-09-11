@@ -36,7 +36,7 @@ class PreparedStageReviewValidation:
     def __post_init__(self):
         if type(self.command_hash) is not str or _HASH.fullmatch(self.command_hash) is None:
             raise ValueError("canonical stage review command hash required")
-        if type(self.exchanges) is not tuple or not 1<=len(self.exchanges)<=4:
+        if type(self.exchanges) is not tuple or not 1<=len(self.exchanges)<=5:
             raise ValueError("bounded stage review exchanges required")
         if any(type(item) is not StageReviewValidationExchange for item in self.exchanges):
             raise ValueError("unique stage review exchanges required")

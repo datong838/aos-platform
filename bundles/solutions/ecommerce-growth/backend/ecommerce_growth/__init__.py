@@ -43,6 +43,7 @@ def handle(operation_id, _payload, _context):
             "validate_review_slot",
             "validate_runtime",
             "validate_eval_proof",
+            "validate_structure_case",
         }
     ):
         from .analyst_stage_review_runtime_operation import handle_stage_review_message

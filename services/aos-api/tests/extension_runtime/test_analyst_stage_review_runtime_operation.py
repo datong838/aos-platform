@@ -1,10 +1,13 @@
 import importlib
+import hashlib
+import json
 from pathlib import Path
 import pytest
 
 from test_analyst_stage_review_command_identity import package_item
 from test_analyst_stage_review_runtime_rule import values as runtime_values, observation
 from test_analyst_stage_eval_report_proof import values as proof_values
+from test_analyst_structure_case import query as structure_query
 
 ROOT=Path(__file__).resolve().parents[4];BACKEND=ROOT/"bundles/solutions/ecommerce-growth/backend"
 
@@ -46,6 +49,20 @@ def test_runtime_and_eval_messages(package):
         "evalContractRef":args["eval_contract_ref"].model_dump(mode="json",by_alias=True),"gatePolicyRef":args["gate_policy_ref"].model_dump(mode="json",by_alias=True),
         "cutoffAt":args["cutoff_at"].isoformat(),"now":args["now"].isoformat()}
     assert call(runtime,e)["reportRef"]["resourceId"]=="report"
+
+
+@pytest.mark.parametrize("stage",["portrait","diagnosis","solution-design"])
+def test_structure_case_hash_message_uses_real_generation_query(package,monkeypatch,stage):
+    runtime,_=package;raw=structure_query(monkeypatch,stage)
+    structure=importlib.import_module("ecommerce_growth.analyst_structure_case").structure_case_from_query(
+        raw,stage=stage)
+    expected=hashlib.sha256(json.dumps(structure,ensure_ascii=False,sort_keys=True,
+        separators=(",",":"),allow_nan=False).encode()).hexdigest()
+    payload={"kind":"validate_structure_case","query":raw,"stage":stage,
+        "expectedCaseInputHash":expected}
+    assert call(runtime,payload)=={"caseInputHash":expected}
+    payload["expectedCaseInputHash"]="0"*64
+    with pytest.raises(ValueError,match="differs"):call(runtime,payload)
 
 @pytest.mark.parametrize("payload",[{}, {"kind":"unknown"}, {"kind":"validate_runtime","orgId":"org-org"}])
 def test_unknown_or_inexact_messages_rejected(package,payload):

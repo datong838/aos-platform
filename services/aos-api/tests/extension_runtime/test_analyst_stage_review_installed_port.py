@@ -5,7 +5,7 @@ import pytest
 from aos_api.ecommerce_analyst_stage_review_package_port import InstalledGrowthStageReviewPort
 
 
-@pytest.mark.parametrize("kind", ["validate_command_identity", "validate_review_slot", "validate_runtime", "validate_eval_proof"])
+@pytest.mark.parametrize("kind", ["validate_command_identity", "validate_review_slot", "validate_runtime", "validate_eval_proof", "validate_structure_case"])
 def test_each_kind_invokes_installed_runtime_exactly_once(kind):
     calls=[]
     async def invoke(operation,payload):

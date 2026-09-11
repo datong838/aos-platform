@@ -14,6 +14,7 @@ _KINDS = frozenset(
         "validate_review_slot",
         "validate_runtime",
         "validate_eval_proof",
+        "validate_structure_case",
     }
 )
 

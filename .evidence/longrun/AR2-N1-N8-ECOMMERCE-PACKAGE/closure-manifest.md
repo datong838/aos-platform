@@ -565,3 +565,25 @@ authority reader 前拒绝，保留给后续 Owner replay fast path，禁止为�
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 真实 Owner head/Receipt snapshot、四门完整性与唯一 Store publisher | e573beaeea089b9ce6360e7792fed8fa625ae5c28b55b6a13ddaffe1d1c34b9b |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py` | 原路径 | helper scope 与严格整型版本回归 | 772e8919e42c467d87fc71bc0683504f2173426ff2de010f6e21276b3728b8ff |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 隔离 PG 发布/回读、竞争漂移、replay fast-path 和四门完整性 | 5787623c9d8d3bd806b6701785f9ea48d322e52e1be55f1b554a290d8f7ff864 |
+
+### 9.22 阶段评审结构化 Eval 输入 hash 第五门
+
+2026-09-12：审计发现旧 `_sources_and_eval` 仍在数据库事务内调用包侧结构派生，不能直接接入
+9.20 双事务。作者包 review operation 因此新增严格 `validate_structure_case` 消息：输入原 query、stage
+和 Owner 读取的 expected Eval case input hash，复用包内 parser/validator 派生后只返回 exact hash，
+不返回 query、Evidence 内容或 case。宿主 port、prepared 上限和 Owner 完整集合同步为五门。
+
+错误 hash/消息/query 均 fail closed；旧 1.4.0 不含新消息并继续拒绝，未修改 Installation、Registry、
+runtime binding 或租户数据。真实复合 authority reader 与未来 1.5.0 Candidate 仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py` | 未来 1.5.0 Candidate | review dispatcher 接受第五种严格消息；当前安装不变 | aafb1c7938c8a920666194ea353918d1965399bce89fcff5170f2f4cb165cb4c |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_stage_review_runtime_operation.py` | 未来 1.5.0 Candidate | 结构 case 派生与 Eval input hash exact 校验 | 216105dc5035f3ea7e048d131a403390e977f2ba6afe540df98054fe9e4eeed7 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_package_port.py` | 原路径 | fifth kind one-shot transport | 76a8886b1ac8cfe7e12a0b955b77956fdc004efbaab61f4b1da532c2c4220b59 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_coordinator.py` | 原路径 | prepared 上限五条；六条拒绝 | 3b381dafdf22d61893d1fdce5ff3fb51873c1cfeaf44478615e217a6ae5710f4 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 新发布必须五门齐全 | 179b6dba153cdfd3ffd0b4da06cd4c226e8ebdf9fe8d19a20c1c7dcc7c3805e4 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_runtime_operation.py` | 原路径 | 三阶段真实 prompt 与错误 hash | 616304d28f3ff4a7353405a327e3caff967251d5032606e10b9f378d259554d9 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_installed_port.py` | 原路径 | fifth kind transport 回归 | 4a0a91a2264415e02fcb9bdaaa7b6b443d4235a64eb83f2d8cdb3c430657613e |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | 五条允许、六条拒绝 | 96df3afba850c733fdd4f77af76e6a9b33a43dd5aebc668d2be7f7fe8ef02e09 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 五门 Owner 发布完整性回归 | 5e2a61bdac796779c1e6eb2a94d3475969dd7bccfd4864fa95572586863bb68b |

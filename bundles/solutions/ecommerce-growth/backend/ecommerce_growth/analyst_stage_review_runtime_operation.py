@@ -1,6 +1,9 @@
 """Strict no-effect messages for the installed growth review operation."""
 
 from datetime import datetime
+from hashlib import sha256
+import json
+import re
 
 from .ecommerce_analyst_authority_contracts import AnalystExactRef, TenantContext
 from .ecommerce_analyst_stage_decision import AssigneeRef, AnalystStageDecisionRevision, EvalStageAttemptRef
@@ -13,11 +16,17 @@ from .ecommerce_analyst_stage_review_command import require_stage_review_command
 from .ecommerce_analyst_stage_review_runtime import (
     require_observed_stage_subject, require_stage_runtime_references,
 )
+from .analyst_structure_case import structure_case_from_query
 
 
 def _exact(payload, keys):
     if type(payload) is not dict or set(payload) != set(keys):
         raise ValueError("exact stage review message required")
+
+
+def _hash(value):
+    raw=json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(",",":"),allow_nan=False)
+    return sha256(raw.encode()).hexdigest()
 
 
 def handle_stage_review_message(payload: dict[str, object]) -> dict[str, object]:
@@ -59,6 +68,15 @@ def handle_stage_review_message(payload: dict[str, object]) -> dict[str, object]
             gate_policy_ref=EvalGatePolicyRef.model_validate(payload["gatePolicyRef"]),
             cutoff_at=datetime.fromisoformat(payload["cutoffAt"]), now=datetime.fromisoformat(payload["now"]))
         return {"reportRef": proof.report_ref.model_dump(mode="json", by_alias=True)}
+    if kind == "validate_structure_case":
+        _exact(payload,("kind","query","stage","expectedCaseInputHash"))
+        expected=payload["expectedCaseInputHash"]
+        if type(expected) is not str or re.fullmatch(r"[0-9a-f]{64}",expected) is None:
+            raise ValueError("exact structure case hash required")
+        actual=_hash(structure_case_from_query(payload["query"],stage=payload["stage"]))
+        if actual!=expected:
+            raise ValueError("structure case differs from Eval input")
+        return {"caseInputHash":actual}
     raise ValueError("unknown stage review message")
 
 
