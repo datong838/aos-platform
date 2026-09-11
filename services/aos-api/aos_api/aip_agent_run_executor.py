@@ -1,8 +1,8 @@
 """Canonical, single-attempt AgentRun execution composition.
 
-The executor persists only hashes and exact authority references. Provider
-prompt/answer text is transient and is never written to attempts, receipts or
-logs by this layer.
+The default executor persists only hashes and exact authority references.
+Trusted compositions can explicitly retain answers in private artifact storage;
+prompt/answer text is never written to attempts, receipts or logs by this layer.
 """
 from __future__ import annotations
 
@@ -122,13 +122,17 @@ class AipAgentRunExecutor:
         llm_adapter: Any | None = None,
         artifact_store: Any | None = None,
         lineage_service: Any | None = None,
+        retain_output_text: bool = False,
     ) -> None:
+        if type(retain_output_text) is not bool:
+            raise ValueError("output text retention must be explicitly boolean")
         self._run_service = run_service or AipAgentRunService()
         self._attempt_service = attempt_service or AipAgentRunExecutionService()
         self._resolver = resolver or AipModelRuntimeResolver()
         self._llm_adapter = llm_adapter or LLMAdapter()
         self._artifact_store = artifact_store or AipTaskStore()
         self._lineage_service = lineage_service or AipLineageService()
+        self._retain_output_text = retain_output_text
 
     def execute(
         self,
@@ -427,6 +431,7 @@ class AipAgentRunExecutor:
                     "usageReceiptIds": self._usage_receipts(response),
                 },
             },
+            **({"text_content": answer} if self._retain_output_text else {}),
         )
         return ArtifactRef(
             artifactId=artifact_id,

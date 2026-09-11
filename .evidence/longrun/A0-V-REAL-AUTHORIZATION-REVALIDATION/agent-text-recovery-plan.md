@@ -1,0 +1,11 @@
+# Agent文本产物可恢复存储方案
+
+基线9d3b9a29。产品需要可读产物和中断恢复；现有executor只保留hash/长度、timeline直接返回artifact metadata，因此不得将正文放入metadata。保持默认executor不持久化正文，仅由受信业务组合显式启用retention，不新增客户端开关。
+
+1. a0v_012新增aip_agent_text_output：tenant+artifact主键/FK、正文、content_hash、marking、created_at。CHECK UTF8正文不超过2MiB且sha256一致，强制tenant RLS、append-only及no-truncate，PUBLIC无权限。正文与现有Artifact由同连接同事务保存，时间线读取不JOIN该表。
+2. AipTaskStore.record_artifact新增可选keyword text_content，默认为None保持全部旧路径SQL与行为；仅agent_text_output支持，校验hash/有界正文/合法marking。显式artifact id重放核对正文且不补写历史缺失正文。
+3. 新aip_agent_text_output.py封装同事务写入与scoped读取。读取需exactArtifactRef及允许markings，联合artifact校验正文hash/type/marking；缺失/跨scope/权限不足/哈希错均拒绝，不调用Provider。
+4. AipAgentRunExecutor新增受信构造参数retain_output_text=False，开启时将原答复通过text_content传给Artifact Owner，原attempt/receipt/log仍只保留引用。旧构造及API默认无变化；新表迁移未部署前禁止开启。
+5. 单元回归验证默认路径、显式retention、旧Artifact无法自动恢复；一次性DB运行真实迁移及原表保存、正文读取、timeline不泄露、越权/错hash拒绝、immutability及原子失败回滚。当前主库不升级、不重启；待克隆迁移门禁后另步备份升级。
+
+文件：services/aos-api/alembic/versions/a0v_012_agent_text_output.py；services/aos-api/aos_api/aip_agent_text_output.py、aip_task_store.py、aip_agent_run_executor.py；对应tests。下一步GrowthPlan接收可从正文表恢复、实际D03生成组合显式启用，并验证unknown不重发。此次不声称真实模型/经营链完成。

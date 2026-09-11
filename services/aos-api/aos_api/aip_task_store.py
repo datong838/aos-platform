@@ -1096,6 +1096,7 @@ class AipTaskStore:
         payload: dict[str, Any],
         *,
         artifact_id: str | None = None,
+        text_content: str | None = None,
     ) -> str:
         """Persist an artifact; an explicit identity enables exact, immutable replay."""
         stable_identity = artifact_id is not None
@@ -1121,6 +1122,11 @@ class AipTaskStore:
             and all(character in "0123456789abcdef" for character in content_hash)
         ):
             raise AipTaskTransitionBlocked("artifact contentHash must be exact sha256")
+        if text_content is not None:
+            from aos_api.aip_agent_text_output import validate_agent_text
+            if artifact_type != "agent_text_output":
+                raise AipTaskTransitionBlocked("retained text requires agent_text_output")
+            validate_agent_text(text_content, content_hash, marking)
         family_id: str | None = None
         family_revision: int | None = None
         family_role: str | None = None
@@ -1196,6 +1202,14 @@ class AipTaskStore:
                     }
                     if _canonical_hash({key: existing[key] for key in expected}) != _canonical_hash(expected):
                         raise AipTaskTransitionBlocked("artifact identity replay content drifted")
+                    if text_content is not None:
+                        from aos_api.aip_agent_text_output import read_agent_text
+                        from aos_api.aip_contracts import ArtifactRef
+                        retained = read_agent_text(conn, scope, ArtifactRef(
+                            artifactId=artifact_id, artifactType=artifact_type,
+                            revision="1", contentHash=content_hash), markings=marking)
+                        if retained != text_content:
+                            raise AipTaskTransitionBlocked("retained artifact replay drifted")
                     return artifact_id
             conn.execute(
                 """INSERT INTO aip_artifact (
@@ -1229,6 +1243,9 @@ class AipTaskStore:
                     self._json(lineage_refs) if lineage_refs is not None else None,
                 ),
             )
+            if text_content is not None:
+                from aos_api.aip_agent_text_output import write_agent_text
+                write_agent_text(conn, scope, artifact_id, text_content, content_hash, marking)
             conn.commit()
         return artifact_id
 
