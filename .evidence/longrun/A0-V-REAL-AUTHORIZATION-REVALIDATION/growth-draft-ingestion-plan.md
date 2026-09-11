@@ -26,3 +26,6 @@
 
 ### 下一检查点：确定性生成绑定
 固定版本system/query将完整Decision正文、exact来源及其风险元信息、外部明确计划budget绑定；不静默截断超长资料，超过执行器query限制拒绝。使用原执行器_request_hash核对SUCCEEDED attempt，完整answer原始字节hash绑定Artifact。纯转换函数只返回draft，不打开数据库、不调用Provider、不自动审批。稳定planId基于tenant+attempt，时间取completedAt，itemId序号稳定，任务类型来自明确工作流配置并纳入prompt绑定，eligible沿既有契约为true（表示审批后可纳入任务图，draft生命周期本身不具备执行许可）。这一步仍要求随后数据库读取器证实所有传入对象来自当前scope权威；纯转换不能当作可信公开接口。原计划中数据库原子接收仍待实现。
+
+### 当前来源读取检查点
+新增ecommerce_analyst_growth_plan_sources.py，显式传入scope、当前事务连接、允许markings、时钟及正值max_source_age（来自调用侧业务配置，不虚构TTL）。先JOIN当前Decision/Insight head并核验exact/tenant/identity/canonical payload hash，再复用ProductionContractStore读取bundle与当前TaskBrief；拒绝非冻结、非complete、非fresh、撤销、空items、cutoff超龄或未来、跨scope。逐个底层Evidence核验exact/hash/marking/撤销和freshness_at，不把历史bundle fresh当作持续有效。该读取器不写入、不生成业务记录，尚需后续接原D03 AgentRun/Artifact核验与Owner事务保存。
