@@ -251,3 +251,17 @@ AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业�
 | sourcePath | targetPath | decision | 当前切片SHA256 |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py` | 纯合同/材料校验迁入 growth；宿主 Owner 读取与事务 port 仍 PENDING | c9b546c3b61d79694e39b0cfc821c4fa7e098d7e648208746b8b6fb7e2998583 |
+
+### 9.3 分析来源宿主端口切片
+
+2026-09-11：growth 包通过 `GrowthAnalysisSourcePort` 单次读取由宿主授权的分析材料，
+随后执行 9.2 的二次完整性校验。宿主端口在构造时绑定 `TenantScope` 与
+`HostTransaction`，调用方不能传入或覆盖租户，包不能获得原始数据库连接。既有宿主
+Owner 继续唯一裁决 TaskBrief、EvidenceBundle、Disclosure、freshness、revocation 与
+marking。本切片只读，不增加公开路由、operation 注册、Provider 或 Receipt。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_analysis_source_port.py` | 原路径 | platform host port；绑定租户和窄事务后调用既有 Owner 读取，不进入领域包 | 2c3d65ac64cfeb062e3c7a92a3636a93f4d9d444745930fe73c45a8be863d616 |
+| `services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py` | 包端单次读取编排与二次校验完成；成功 Attempt query、Artifact 和正式 Eval target 装配仍 PENDING | d79357fc1aacf96889b76fc0508ffc54b7c15eeabc19ce34904f9c5e7f91fc4a |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/sdk_ports.py` | 原路径 | solution package 公共 SDK；新增租户绑定的只读 GrowthAnalysisSourcePort | c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb |

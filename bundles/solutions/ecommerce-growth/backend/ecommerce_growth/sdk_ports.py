@@ -63,6 +63,22 @@ class GrowthReadPort(Protocol):
     def read_exact(self, *, tenant: TenantRef, ref: ExactRef) -> Mapping[str, Any]: ...
 
 
+class GrowthAnalysisSourcePort(Protocol):
+    """Tenant-bound host reader for authorized analysis source material."""
+
+    def read(
+        self,
+        *,
+        task_id: str,
+        actor: str,
+        request: Mapping[str, Any],
+        markings: tuple[str, ...],
+        now: datetime,
+        max_source_age_seconds: int,
+        max_bytes: int,
+    ) -> Mapping[str, Any]: ...
+
+
 class GrowthDataPort(Protocol):
     """Public Data authority port; the host derives tenant from DispatchRef."""
 
@@ -136,6 +152,7 @@ class GrowthFeedbackPort(Protocol):
 
 __all__ = [
     "ExactRef",
+    "GrowthAnalysisSourcePort",
     "GrowthCapabilityPort",
     "GrowthContentReviewPort",
     "GrowthFeedbackPort",

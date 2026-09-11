@@ -9,9 +9,12 @@ from __future__ import annotations
 from datetime import datetime
 from hashlib import sha256
 import json
-from typing import Annotated, Any, Literal
+from typing import TYPE_CHECKING, Annotated, Any, Literal, Mapping
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+if TYPE_CHECKING:
+    from .sdk_ports import GrowthAnalysisSourcePort
 
 
 Identity = Annotated[
@@ -173,6 +176,56 @@ def validate_analysis_bundle_material(
         raise ValueError("INVALID_ANALYSIS_SOURCE_MATERIAL") from None
 
 
+def read_authorized_analysis_bundle(
+    port: GrowthAnalysisSourcePort,
+    *,
+    task_id: str,
+    actor: str,
+    request: AnalysisBundleSourceRequest | Mapping[str, Any],
+    markings: tuple[str, ...],
+    now: datetime,
+    max_source_age_seconds: int,
+    max_bytes: int,
+) -> dict[str, Any]:
+    """Read once through the tenant-bound host, then validate its material."""
+    try:
+        read = getattr(port, "read", None)
+        if (
+            not callable(read)
+            or type(task_id) is not str
+            or not 1 <= len(task_id.strip()) <= 240
+            or type(actor) is not str
+            or not 1 <= len(actor.strip()) <= 240
+            or type(markings) is not tuple
+            or not markings
+            or len(markings) != len(set(markings))
+            or any(type(item) is not str or not 1 <= len(item.strip()) <= 120 for item in markings)
+            or not isinstance(now, datetime)
+            or now.utcoffset() is None
+            or type(max_source_age_seconds) is not int
+            or not 1 <= max_source_age_seconds <= 2_678_400
+            or type(max_bytes) is not int
+            or not 1 <= max_bytes <= 2_097_152
+        ):
+            raise ValueError()
+        wanted = AnalysisBundleSourceRequest.model_validate(request)
+    except (ValueError, TypeError, KeyError, RecursionError):
+        raise ValueError("INVALID_ANALYSIS_SOURCE_PORT_REQUEST") from None
+
+    material = read(
+        task_id=task_id,
+        actor=actor,
+        request=wanted.model_dump(mode="json", by_alias=True),
+        markings=markings,
+        now=now,
+        max_source_age_seconds=max_source_age_seconds,
+        max_bytes=max_bytes,
+    )
+    if not isinstance(material, Mapping):
+        raise ValueError("INVALID_ANALYSIS_SOURCE_MATERIAL")
+    return validate_analysis_bundle_material(wanted, dict(material), now=now, max_bytes=max_bytes)
+
+
 __all__ = [
     "AnalysisBundleMaterial",
     "AnalysisBundleSourceRequest",
@@ -180,5 +233,6 @@ __all__ = [
     "AnalysisEvidenceGrant",
     "AnalysisExactRef",
     "AnalysisMaterialItem",
+    "read_authorized_analysis_bundle",
     "validate_analysis_bundle_material",
 ]

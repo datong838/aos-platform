@@ -61,6 +61,105 @@ def test_valid_host_material_is_canonical_and_preserves_bundle_order():
     assert [item["payload"]["fact"] for item in result["items"]] == ["orders", "products"]
 
 
+def test_bound_port_is_called_once_with_canonical_request_and_material_is_rechecked():
+    module, request, material = _fixture()
+
+    class Port:
+        def __init__(self):
+            self.calls = []
+
+        def read(self, **kwargs):
+            self.calls.append(kwargs)
+            return material
+
+    port = Port()
+    result = module.read_authorized_analysis_bundle(
+        port,
+        task_id="task-1",
+        actor="analyst-1",
+        request=request,
+        markings=("internal", "secret"),
+        now=NOW,
+        max_source_age_seconds=86_400,
+        max_bytes=10_000,
+    )
+    assert len(port.calls) == 1
+    assert port.calls[0] == {
+        "task_id": "task-1",
+        "actor": "analyst-1",
+        "request": request,
+        "markings": ("internal", "secret"),
+        "now": NOW,
+        "max_source_age_seconds": 86_400,
+        "max_bytes": 10_000,
+    }
+    assert [item["payload"]["fact"] for item in result["items"]] == ["orders", "products"]
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"task_id": " "},
+        {"actor": ""},
+        {"markings": ("internal", "internal")},
+        {"now": datetime(2026, 9, 11, 8)},
+        {"max_source_age_seconds": True},
+        {"max_source_age_seconds": 2_678_401},
+        {"max_bytes": 2_097_153},
+        {"request": {}},
+    ],
+)
+def test_invalid_port_request_fails_before_host_read(change):
+    module, request, _ = _fixture()
+
+    class Port:
+        calls = 0
+
+        def read(self, **kwargs):
+            self.calls += 1
+            raise AssertionError("must not be called")
+
+    port = Port()
+    kwargs = dict(
+        task_id="task-1",
+        actor="analyst-1",
+        request=request,
+        markings=("internal",),
+        now=NOW,
+        max_source_age_seconds=86_400,
+        max_bytes=10_000,
+    )
+    kwargs.update(change)
+    with pytest.raises(ValueError, match="INVALID_ANALYSIS_SOURCE_PORT_REQUEST"):
+        module.read_authorized_analysis_bundle(port, **kwargs)
+    assert port.calls == 0
+
+
+def test_host_error_is_propagated_without_retry():
+    module, request, _ = _fixture()
+
+    class Port:
+        calls = 0
+
+        def read(self, **kwargs):
+            self.calls += 1
+            raise RuntimeError("HOST_AUTHORITY_REVOKED")
+
+    port = Port()
+    with pytest.raises(RuntimeError, match="HOST_AUTHORITY_REVOKED"):
+        module.read_authorized_analysis_bundle(
+            port,
+            task_id="task-1",
+            actor="analyst-1",
+            request=request,
+            markings=("internal",),
+            now=NOW,
+            max_source_age_seconds=86_400,
+            max_bytes=10_000,
+        )
+    assert port.calls == 1
+
+
 @pytest.mark.parametrize(
     "fault",
     [

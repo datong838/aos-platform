@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "aos.a0-v.changed-files/v1",
+  "baseline": "8f0640fb",
+  "files": {
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-source-host-port-plan.md": "005e359f9208ce66e11b7e76e3ae25c57bac8cb55983e199c50732fb4900dfb2",
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py": "d79357fc1aacf96889b76fc0508ffc54b7c15eeabc19ce34904f9c5e7f91fc4a",
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/sdk_ports.py": "c36cda9fdbfcae6bbea1915ae7ee70ae0f8f5b00cbf008ca87694967c84b9cdb",
+    "services/aos-api/aos_api/ecommerce_analyst_analysis_source_port.py": "2c3d65ac64cfeb062e3c7a92a3636a93f4d9d444745930fe73c45a8be863d616",
+    "services/aos-api/tests/extension_runtime/test_analyst_package_analysis_sources.py": "1b063af27af438d340126c5a563277e59fa3039f0a4b16f174c111387bdd7d12",
+    "services/aos-api/tests/extension_runtime/test_ecommerce_analyst_analysis_source_port.py": "ae21ac1009a6b7d4bc43e157f996a8f6c5398f2d06b0e04a255f6af98fa25439"
+  }
+}
