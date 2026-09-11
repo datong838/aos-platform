@@ -1,0 +1,11 @@
+{
+  "baseline": "b8cb2ce9",
+  "files": [
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-authority-contracts-package-plan.md",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-authority-contracts-package-files.json",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-authority-contracts-package-verification.md",
+    ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/closure-manifest.md",
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+    "services/aos-api/tests/extension_runtime/test_analyst_authority_contracts_package.py"
+  ]
+}

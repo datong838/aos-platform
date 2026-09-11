@@ -339,3 +339,20 @@ query 与 stage 继续由包内规则校验。返回值只有结构 case，不�
 |---|---|---|---|
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py` | 原路径 | 严格消息路由到包内结构派生；无外部副作用，当前安装装配仍 PENDING | ce22b4f702ca4bd82163ac1fa973ae86e2ced13349cbb4454b1f2e90de296266 |
 | `services/aos-api/tests/extension_runtime/test_analyst_structure_runtime_operation.py` | 原路径 | 三阶段正例、严格 envelope、无正文返回及其余 operation 拒绝合同 | 282ff5396923668eb2399b2ae4da65e428340962f67532829dd6fbf7b96b8537 |
+
+### 9.9 经营参谋权威领域 DTO 根包化
+
+2026-09-12：新增 growth 包内独立 `ecommerce_analyst_authority_contracts.py`，完整承载
+AnalystExactRef、Method、Insight、Decision、GrowthPlan、TaskGraph、EffectReview 和 Receipt
+的版本化 DTO 与校验规则。包文件只依赖 Python/Pydantic；TenantContext 仅是响应/证据上下文，
+请求携带它不能授权访问。平台旧路径保持不变，包/宿主所有公开模型由 JSON Schema parity 和
+代表性序列化 parity 约束，禁止两个合同静默分叉。
+
+本切片没有迁移 Store、事务、TenantScope、Task/Artifact/Eval Owner，没有注册运行 operation，
+也没有修改 Candidate、OCI、Registry 或 Installation。第 9 节 29 项整体仍为增量迁移 PENDING；
+后续纯领域规则可依赖此包内 DTO 根，混合模块仍须拆为包内编排与宿主窄端口。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py` | 全量领域 DTO/schema 迁入；平台保留不依赖包的版本兼容路径，运行装配仍 PENDING | f1b25967829edd0a597f2a7b713f59ee3a42f25b2c043b3bb2cbabcd571675b0 |
+| `services/aos-api/tests/extension_runtime/test_analyst_authority_contracts_package.py` | 原路径 | 全模型 schema、关键序列化、负向校验与独立 import 合同 | 45dfd841a176189a62301f52a84e470dae38eb66d506aa858e0fb3a8748a86af |
