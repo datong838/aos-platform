@@ -149,7 +149,7 @@ def test_decision_exact_owner_checks_identity_and_body(drift):
         assert conn.calls[0][1] == (*SCOPE.key, item.decision_id, 1)
 
 
-def seed_diagnosis_graph(connect):
+def seed_diagnosis_graph(connect, *, taor_ready=False):
     """Synthetic provenance graph with real table constraints and source Owners.
 
     Does not exercise provisioning, Provider execution, or tenant business data.
@@ -176,7 +176,25 @@ def seed_diagnosis_graph(connect):
     with connect(SCOPE) as conn:
         migration.op = SimpleNamespace(execute=conn.execute)
         migration.upgrade()
-    run = running_run(AipTaskStore(connect_factory=connect))
+    tasks = AipTaskStore(connect_factory=connect)
+    if taor_ready:
+        from aos_api.aip_contracts import PlanStep, ResourceRef
+        from aos_api.aip_task_models import CreateTaskRequest, CreatePlanRevisionRequest, CreateTaskRunRequest
+        from aos_api.ecommerce_analyst_diagnosis_worker import diagnosis_stage_attempt_id
+        task = tasks.create_task(SCOPE, "compiler", "diagnosis-task", CreateTaskRequest(type="analysis", title="Synthetic diagnosis worker"))
+        steps = [PlanStep(step_key=key, title=key) for key in ("portrait", "diagnosis", "solution-design")]
+        steps[1].assignee_refs = [ResourceRef(resource_type="AgentInstance", resource_id="diagnosis-instance", revision="1", authority="aip-assignee-directory")]
+        plan = tasks.create_plan(SCOPE, "compiler", task.id, "diagnosis-plan", CreatePlanRevisionRequest(expected_task_version=task.version, steps=steps))
+        task = tasks.get_task(SCOPE, task.id)
+        tasks.approve_plan(SCOPE, "compiler", task.id, plan.revision, task.version, plan.content_hash)
+        task = tasks.get_task(SCOPE, task.id)
+        run = tasks.create_run(SCOPE, "compiler", task.id, "diagnosis-run", CreateTaskRunRequest(plan_revision_id=plan.id, expected_task_version=task.version))
+        snapshot = tasks.timeline(SCOPE, run.id)
+        tasks.start_run(SCOPE, run.id, expected_run_version=run.version, expected_task_version=snapshot.task.version,
+                        actor="compiler", idempotency_key="diagnosis-start", reason="synthetic stage handoff")
+        attempt = attempt.model_copy(update={"attempt_id": diagnosis_stage_attempt_id(SCOPE, tasks.timeline(SCOPE, run.id))})
+    else:
+        run = running_run(tasks)
     payload = {"facts": ["repeat_rate"], "values": {"repeat_rate": 0.2}, "marking": ["internal"]}
     with connect(SCOPE) as conn:
         insert(conn, "aip_task_brief_head", brief_id="diagnosis-brief", task_id=run.task_id, current_revision=1)

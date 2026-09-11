@@ -1,0 +1,27 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_taor_loop.py",
+    "preHash": "d309f01272e951b4d8d8835efb8902706fa44633702163b2b61a8a1d816e2ee8",
+    "postHash": "e9e5945cd2565f843646231341039effe6db02e878729f476dc6df712238f419"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_worker.py",
+    "preHash": null,
+    "postHash": "2618041c6a23ee9a39988c724d533c1556993af9b4cfe56353a7a083b2521a1f"
+  },
+  {
+    "path": "services/aos-api/tests/test_aip_taor_stage_boundary.py",
+    "preHash": null,
+    "postHash": "8ded305de778d2fe96c177ebb798d7712ea26e92e6232b4b398fdef6344d28a5"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_diagnosis_worker.py",
+    "preHash": null,
+    "postHash": "2d755d5727cd9ccbbb9bf071e3bc462adf4fa8523215905b910df47f8811e184"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_diagnosis_receiver.py",
+    "preHash": "779fedeb65bb6604c368c7d45990a3dcd5fcf9d9f92aab6e311b752675097617",
+    "postHash": "dfaea86975b91cefb8974525c8f6e48c2b677d60b72d73919fc1c18b8bcbf73c"
+  }
+]

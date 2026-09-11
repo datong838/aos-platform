@@ -68,6 +68,7 @@ class CanonicalTaorRunner:
         adapter: CanonicalTaorAdapter,
         lease_seconds: int = 30,
         renew_step_lease: bool = False,
+        stop_after_step: str | None = None,
     ) -> RunControlResult:
         if type(renew_step_lease) is not bool or (
             renew_step_lease and (type(lease_seconds) is not int or lease_seconds < 1)
@@ -75,6 +76,12 @@ class CanonicalTaorRunner:
             raise ValueError("lease renewal requires an explicit boolean and positive integer duration")
         timeline = self.store.timeline(scope, run_id)
         self._validate_bindings(timeline.model_dump(mode="json", by_alias=True))
+        keys = [step.step_key for step in timeline.plan.steps]
+        if stop_after_step is not None and (
+            not isinstance(stop_after_step, str) or not stop_after_step.strip()
+            or keys.count(stop_after_step) != 1
+        ):
+            raise ValueError("stage boundary must identify one exact plan step")
         if timeline.run.status.value == "queued":
             started = self.store.start_run(
                 scope,
@@ -90,6 +97,12 @@ class CanonicalTaorRunner:
             raise AipTaskTransitionBlocked("run must be queued or actively executing")
 
         completed = self._completed_observations(scope, timeline)
+        if stop_after_step in completed:
+            prefix = keys[:keys.index(stop_after_step) + 1]
+            if not all(key in completed for key in prefix):
+                raise AipTaskTransitionBlocked("completed boundary has unfinished predecessors")
+            if stop_after_step != keys[-1]:
+                return RunControlResult(task=timeline.task, run=timeline.run)
         context: dict[str, Any] = {
             "taskRef": timeline.task.id,
             "taskGoal": dict(timeline.task.goal),
@@ -164,6 +177,8 @@ class CanonicalTaorRunner:
                 )
                 paused = self.store.timeline(scope, run_id)
                 if paused.run.status.value == "paused":
+                    return RunControlResult(task=paused.task, run=paused.run)
+                if plan_step.step_key == stop_after_step and stop_after_step != keys[-1]:
                     return RunControlResult(task=paused.task, run=paused.run)
                 context[f"step:{plan_step.step_key}"] = persisted_observation
             except AipTaskStoreError:
