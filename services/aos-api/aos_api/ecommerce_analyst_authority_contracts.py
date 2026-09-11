@@ -111,6 +111,15 @@ class InsightRevision(_RevisionBase):
     cutoff_at: datetime
     assumptions: list[str] = Field(default_factory=list, max_length=50)
     uncertainty: str = Field(min_length=1, max_length=2000)
+    generation_artifact_ref: AnalystExactRef | None = None
+
+    @model_serializer(mode="wrap")
+    def _legacy_payload(self, handler):
+        payload = handler(self)
+        if self.generation_artifact_ref is None:
+            payload.pop("generationArtifactRef", None)
+            payload.pop("generation_artifact_ref", None)
+        return payload
 
     @field_validator("cutoff_at")
     @classmethod
@@ -138,6 +147,7 @@ class InsightRevision(_RevisionBase):
     @model_validator(mode="after")
     def _integrity(self) -> "InsightRevision":
         self._validate_chain(self.insight_id, "InsightRevision")
+        _require_type(self.generation_artifact_ref, {"Artifact"}, "generationArtifactRef")
         _require_type(self.method_ref, {"MethodRevision"}, "methodRef")
         _require_type(self.eval_ref, {"EvalContractRevision", "EvalRunRevision"}, "evalRef")
         return self

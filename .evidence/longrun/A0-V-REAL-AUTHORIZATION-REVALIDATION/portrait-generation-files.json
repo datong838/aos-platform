@@ -1,0 +1,5 @@
+{
+  "services/aos-api/aos_api/ecommerce_analyst_authority_contracts.py": "d069b6b4339edc16f7c8644c3fbb538edc24683a798cfd93a7bba3d3c7b3722a",
+  "services/aos-api/aos_api/ecommerce_analyst_portrait_generation.py": "18ead3a5c49f146e3c97c25146a948a594de86230b85e7b7d258b7e1e9d11eb8",
+  "services/aos-api/tests/test_ecommerce_analyst_portrait_generation.py": "06f5b8a041f2a08a6e6642f8bd16eb62bd61a4e193d5957e18793858f7c1dabd"
+}
