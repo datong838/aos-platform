@@ -388,3 +388,19 @@ head，不创建 Task，不发布图，也不读写数据库或 Receipt。
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_materializer.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_materializer.py` | eligible Task 请求与完整 TaskGraph 纯展开迁入；current、Task/图 Owner、事务和运行装配仍 PENDING | 189612b5c630608c68a7ba43bd31b7b7f212506d5fa5fff5c9931da1b8c48b25 |
 | `services/aos-api/tests/extension_runtime/test_analyst_materializer_rule.py` | 原路径 | 宿主合法结果 parity、映射/引用/状态/时间负向合同与隔离 import | 7ec1676274b9bfe068892248a8dbc083eb59f5f40a9d5fef4ab33a0f121e3cf0 |
+
+### 9.12 exact 人工阶段决定领域合同
+
+2026-09-12：growth 包新增独立 AnalystStageDecisionRevision、EvalStageAttemptRef 和
+AssigneeRef/AssigneeKind 值合同，JSON Schema 与宿主完全一致；同时迁入仅比较宿主已核验当前
+决定的适用性规则。portrait、diagnosis、solution-design 分别只接受对应 subject 类型，reviewer
+必须是与 createdBy 相同的 human_principal，accept 必须有不超过七天的显式有效期。
+
+TenantContext 只参与相等比较，不能成为请求授权；当前决定、人工身份、角色、租户、TaskRun、
+EvalReport、ResponsibilityPlan 的读取与发布事务仍归宿主 Owner。包不读取数据库、不注册
+operation、不创建 Handoff。当前 1.4.0 安装未改变，第 9 节整体仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_decision.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_decision.py` | 阶段决定 DTO 与无权威适用性比较迁入；当前决定 Owner、运行/评审权威和装配仍 PENDING | 43911d6d7b1255a81d592f6803bff5df48b778688c5513e4876cecc3bda7c352 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_decision_package.py` | 原路径 | 全 schema、三阶段序列化、适用性/替换/布尔版本负向与隔离 import | 3a033f9921b86be396581f582f65ddcb8654644f042de6e998901401c3f67bbc |
