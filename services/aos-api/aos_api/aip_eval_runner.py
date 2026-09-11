@@ -162,7 +162,11 @@ class AipEvalRunner:
             if eval_contract_ref is None:
                 raise AipEvalAuthorityConflict("media subject eval requires exact contract")
             assert stage_attempt_ref is not None
-            self._assert_media_subject(scope, subject_artifact_ref, stage_attempt_ref)
+            subject_contract = self._resolve_contract(scope, eval_contract_ref)
+            subject_kind = subject_contract.gate_policy.get("subjectKind", "media_variant")
+            self._assert_media_subject(
+                scope, subject_artifact_ref, stage_attempt_ref, subject_kind=subject_kind
+            )
         suite = self._registry.get_suite_revision(scope, suite_id, suite_revision)
         if eval_contract_ref is not None:
             contract = self._resolve_contract(scope, eval_contract_ref)
@@ -379,12 +383,16 @@ class AipEvalRunner:
         scope: TenantScope,
         artifact_ref: EvalSubjectArtifactRef,
         attempt_ref: EvalStageAttemptRef,
+        *,
+        subject_kind: str = "media_variant",
     ) -> None:
-        """Resolve media subject and require the canonical latest StepRun attempt."""
+        """Resolve the contract-declared subject and canonical latest StepRun."""
+        if type(subject_kind) is not str or subject_kind not in {"media_variant", "agent_text_output"}:
+            raise AipEvalAuthorityConflict("unsupported contract eval subject kind")
         try:
             with self._connect(scope) as conn:
                 artifact = conn.execute(
-                    """SELECT artifact_id,content_hash,run_id,family_role
+                    """SELECT artifact_id,content_hash,run_id,family_role,artifact_type
                        FROM aip_artifact
                        WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
                     (*scope.key, artifact_ref.resource_id),
@@ -408,7 +416,10 @@ class AipEvalRunner:
         if (
             artifact is None
             or artifact["content_hash"] != artifact_ref.content_hash
-            or artifact["family_role"] != "variant"
+            or (subject_kind == "media_variant" and artifact["family_role"] != "variant")
+            or (subject_kind == "agent_text_output" and (
+                artifact["artifact_type"] != "agent_text_output" or artifact["family_role"] is not None
+            ))
             or artifact["run_id"] != attempt_ref.run_id
         ):
             raise AipEvalAuthorityConflict("media eval Artifact is missing or drifted")
