@@ -53,7 +53,7 @@ def test_unknown_subject_kind_is_not_accepted(kind):
 def test_run_resolves_contract_before_subject_check(declared):
     runner=AipEvalRunner()
     events=[]
-    policy={} if declared is None else {'subjectKind':declared}
+    policy={} if declared is None else {'subjectKind':declared,'subjectInputMode':'text-envelope-v1'}
     runner._resolve_contract=lambda *args: (events.append('contract') or SimpleNamespace(gate_policy=policy))
     def subject(*args,**kwargs):
         events.append(kwargs['subject_kind'])

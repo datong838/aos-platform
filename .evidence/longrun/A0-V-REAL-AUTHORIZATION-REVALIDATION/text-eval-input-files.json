@@ -1,0 +1,5 @@
+{
+  "services/aos-api/aos_api/aip_eval_runner.py": "228b5690322267f3a99194f5a83c9d27313c237e97ca1d156b9ab4c9525af3b0",
+  "services/aos-api/tests/test_aip_text_stage_eval_subject.py": "0bfd21c84ad07a95ad959eb30714c04970d13663eb0d55e8fc415295f33015df",
+  "services/aos-api/tests/test_aip_text_eval_input.py": "5e84aa581986cf03eb0c7124912a9d938b4fb2151c06a6593f3c197622885e66"
+}

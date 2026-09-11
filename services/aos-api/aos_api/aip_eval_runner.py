@@ -8,6 +8,7 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any
 
@@ -148,6 +149,7 @@ class AipEvalRunner:
         gate_policy_ref: EvalGatePolicyRef | None = None,
         evidence_cutoff_at: datetime | None = None,
     ) -> EvalReportRevision:
+        subject_kind = None
         media_refs = (
             subject_artifact_ref,
             stage_attempt_ref,
@@ -164,6 +166,8 @@ class AipEvalRunner:
             assert stage_attempt_ref is not None
             subject_contract = self._resolve_contract(scope, eval_contract_ref)
             subject_kind = subject_contract.gate_policy.get("subjectKind", "media_variant")
+            if subject_kind == "agent_text_output" and subject_contract.gate_policy.get("subjectInputMode") != "text-envelope-v1":
+                raise AipEvalAuthorityConflict("text subject requires explicit text-envelope-v1 input mode")
             self._assert_media_subject(
                 scope, subject_artifact_ref, stage_attempt_ref, subject_kind=subject_kind
             )
@@ -219,6 +223,8 @@ class AipEvalRunner:
             for case in suite.cases:
                 started = time.monotonic()
                 input_value = self._resolve_exact(resolve_artifact, case.input_artifact)
+                if subject_kind == "agent_text_output":
+                    input_value = self._text_subject_input(resolve_artifact, subject_artifact_ref, input_value)
                 expected_value = (
                     self._resolve_exact(resolve_artifact, case.expected_artifact)
                     if case.expected_artifact
@@ -470,6 +476,21 @@ class AipEvalRunner:
         if _hash(resolved.value) != ref.content_hash:
             raise AipEvalAuthorityConflict("eval artifact content hash drifted")
         return resolved.value
+
+    @staticmethod
+    def _text_subject_input(resolver, subject, case_input):
+        """Keep the raw UTF-8 artifact hash distinct from JSON case hashes."""
+        ref = ArtifactRef(artifact_id=subject.resource_id, artifact_type="agent_text_output",
+                          revision="1", content_hash=subject.content_hash)
+        resolved = resolver(ref)
+        if (not isinstance(resolved, ResolvedArtifact) or resolved.reference != ref
+            or not isinstance(resolved.value, str)
+            or len(resolved.value.encode("utf-8")) > 2097152
+            or hashlib.sha256(resolved.value.encode("utf-8")).hexdigest() != subject.content_hash):
+            raise AipEvalAuthorityConflict("text eval subject original body or reference drifted")
+        return {"schemaVersion": "aos.eval-text-subject-input/v1",
+                "subjectArtifactRef": subject.model_dump(mode="json", by_alias=True),
+                "subjectText": resolved.value, "caseInput": deepcopy(case_input)}
 
     @staticmethod
     def _event(tenant: TenantContext, run_id: str, sequence: int, from_status: EvalRunStatus | None, to_status: EvalRunStatus, actor: str) -> EvalRunEvent:
