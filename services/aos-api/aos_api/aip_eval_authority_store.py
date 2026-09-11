@@ -768,6 +768,28 @@ class AipEvalAuthorityStore:
             extra_lookup=("revision", definition.revision),
         )
 
+    def get_metric_definition(self, scope: TenantScope, metric_id: str, revision: int) -> MetricDefinitionRevision:
+        """Read one scoped definition revision, without claiming observation readiness."""
+        self._require_scope(scope)
+        if not metric_id.strip() or type(revision) is not int or revision < 1:
+            raise ValueError("exact metric identity and revision required")
+        try:
+            with self._connect(scope) as conn:
+                row = conn.execute(
+                    "SELECT org_id,project_id,metric_id,revision,content_hash,definition FROM aip_metric_definition_revision WHERE org_id=%s AND project_id=%s AND metric_id=%s AND revision=%s",
+                    (*scope.key, metric_id, revision),
+                ).fetchone()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError("metric definition read failed") from exc
+        if row is None:
+            raise AipEvalAuthorityNotFound("metric definition not found")
+        definition = MetricDefinitionRevision.model_validate(row["definition"])
+        if ((row["org_id"], row["project_id"]) != scope.key or row["metric_id"] != metric_id
+                or row["revision"] != revision or definition.metric_id != metric_id or definition.revision != revision
+                or definition.content_hash != row["content_hash"]):
+            raise AipEvalAuthorityConflict("metric definition identity drifted")
+        return definition
+
     def list_lineage_events(
         self, scope: TenantScope, lineage_id: str
     ) -> list[LineageEvent]:

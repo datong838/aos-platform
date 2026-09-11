@@ -1,0 +1,17 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_eval_authority_store.py",
+    "preHash": "4c561674c5ff5630708743ab22ec575653db3a01364f631b9ad5b26715cc324b",
+    "postHash": "e1267264f975d9c287d50beb4229b64be2d6bd522cb83da2e2adcd5409fd8c4f"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_analyst_portrait_sources.py",
+    "preHash": null,
+    "postHash": "2d3069016b381322fd3fb6558287d879a54dad9bbf5a998271872f955d5f9259"
+  },
+  {
+    "path": "services/aos-api/tests/test_ecommerce_analyst_portrait_sources.py",
+    "preHash": null,
+    "postHash": "4c903b89d195842b50e7770cf3209449891262a5bc9ed0179876c8a6a1783ccf"
+  }
+]
