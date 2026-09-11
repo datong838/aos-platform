@@ -183,3 +183,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线b51d4b8e。list_runs额外读取executor_stopped及同tenant/run原Journal EXISTS，返回recovery={candidate,reason}；reason为not_failed/executor_unknown/input_missing/ready。仅failed且退出严格true、finished_at非空、原Journal存在候选true。候选是展示提示，不证明当前source/graph/角色允许；恢复POST仍重新判定。原字段/顺序/limit保持，不加入源原始内容。
 
 文件services/aos-api/aos_api/qyh_cron_scheduler.py、tests/test_qyh_cron_scheduler.py、新tests/aip/test_a0v_recovery_history_pg.py。纯分类覆盖未知和成功；隔离PG完整形状run表验证EXISTS同tenant、canary Journal不能满足目标run、正常候选及limit。下一波前端显示原因并接恢复POST，public未迁移、API未重载。
+
+## 恢复页面客户端前置
+
+基线bc1c09a9。现有apiPost离线会写自动队列，恢复不得进入队列。api/client.ts新增apiPostImmediate，离线直接固定错误且不入队，在线沿现有认证/错误解析发送，queueOfflineWrite=false；既有调用行为不变。新api/scheduleRecovery.ts封装恢复提交，sessionStorage按tenant/org/project/subject/schedule/run键保存claimId与原finishedAt，先保存后发送；未知异常/duplicate保持标识，明确succeeded/failed响应才清除。后续刷新看到另一次明确finishedAt且failed可恢复，允许建立新claim，避免未知结果永远无法继续。缓存只存请求去重身份，不作授权；scope由现有api认证生成，调用前绑定当前tenant，不能传业务输入。
+
+文件apps/web/src/api/client.ts、新scheduleRecovery.ts与scheduleRecovery.test.ts。测试连续失败重试同claim、明确结果后新claim、跨tenant/run隔离、存储失败不发送、离线无队列。此波先交付安全提交原语，页面按钮与浏览器验收下一波，避免借用标记为ReadOnly的POST函数进行写入。

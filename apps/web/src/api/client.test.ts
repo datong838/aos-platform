@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { apiGetAuthoritative, formatNetworkError } from "./client";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as offlineQueue from "../lib/offlineQueue";
+import { apiGetAuthoritative, apiPostImmediate, formatNetworkError } from "./client";
 import { setConnectivity } from "../lib/offlineStore";
 
 describe("api client network errors", () => {
@@ -17,5 +18,15 @@ describe("api client network errors", () => {
       .rejects.toMatchObject({
         body: { code: "OFFLINE_AUTHORITATIVE_READ_REQUIRED" },
       });
+  });
+
+  it("blocks immediate recovery writes while offline", async () => {
+    setConnectivity("offline", "test");
+    const enqueue = vi.spyOn(offlineQueue, "enqueueOfflineWrite");
+    try {
+      await expect(apiPostImmediate("/v1/schedules/s/runs/r/recover", { claimId: "same" }))
+        .rejects.toMatchObject({ body: { code: "OFFLINE_WRITE_BLOCKED" } });
+      expect(enqueue).not.toHaveBeenCalled();
+    } finally { enqueue.mockRestore(); }
   });
 });

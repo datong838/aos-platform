@@ -164,6 +164,14 @@ export async function apiPost<T>(
   });
 }
 
+/** Immediate writes must never be enqueued for later automatic replay. */
+export async function apiPostImmediate<T>(path: string, body: unknown): Promise<T> {
+  if (isOffline()) {
+    throw Object.assign(new Error("当前离线，请联网后再恢复运行"), { status: 0, body: { code: "OFFLINE_WRITE_BLOCKED" } });
+  }
+  return request<T>("POST", path, { body: JSON.stringify(body) }, { queueOfflineWrite: false });
+}
+
 /** POST 形式的纯查询：离线时失败关闭，禁止进入写队列或恢复后重放。 */
 export async function apiPostReadOnly<T>(
   path: string,
