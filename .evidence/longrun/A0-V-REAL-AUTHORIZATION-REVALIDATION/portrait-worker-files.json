@@ -1,0 +1,4 @@
+{
+  "services/aos-api/aos_api/ecommerce_analyst_portrait_worker.py": "ba5f1f79418ef6e196bbe642c4b4df25232ea6e0f0b268db37afe34780040da9",
+  "services/aos-api/tests/test_ecommerce_analyst_portrait_worker.py": "59789f9042da021439850bcc16d4c55840703ebb5de4457a6ae7654626b4db47"
+}
