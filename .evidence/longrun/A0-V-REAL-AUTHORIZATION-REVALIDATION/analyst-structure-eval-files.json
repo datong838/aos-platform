@@ -1,0 +1,5 @@
+{
+  "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_eval.py": "ca60642772cd52e4b18715940d9f907f36171ef5bc6dec1cc6562dbe1e85122b",
+  "services/aos-api/tests/extension_runtime/test_analyst_structure_eval.py": "c1743cc0d2e83316676b9add63c62431252c8f4b44a3bdb0b281ad2c79f97f56",
+  "services/aos-api/tests/extension_runtime/test_analyst_package_proposals.py": "f49b23fc3d10f882ec9123ef96f23199ba061cac2d2ecf316ad8d10d26fe8a03"
+}
