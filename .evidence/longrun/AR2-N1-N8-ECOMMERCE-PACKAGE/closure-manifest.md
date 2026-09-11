@@ -426,3 +426,24 @@ operation、不修改 Candidate、OCI、Registry 或 Installation；当前 1.4.0
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py` | 职责槽纯匹配规则迁入；计划/成员/Receipt/current/事务 Owner 和运行装配仍 PENDING | 3af9697c38a94d544510aed0458e18763ae6af563d21c31097365c57c75b7462 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_slot_rule.py` | 原路径 | 三阶段 parity、字段/身份/布尔版本负向边界与隔离 import | fb141b72c902bed0883772585136e867b3d1e0d948ae6a4274501a5616717bd2 |
+
+### 9.14 阶段评审命令身份纯规则
+
+2026-09-12：审计确认阶段评审 command 的私有 query、AgentRun、Artifact、Eval Suite/Gate/Report、
+责任计划、人工权限、安装运行时、事务锁、幂等 Receipt 和 StageDecision Store 发布均属于宿主。
+现有产品也没有自动替人生成 accept/return/reject/revoke 的规则，本切片不发明自动评审。
+
+growth 包新增与宿主一致的 `stage_decision_id` 和 `require_stage_review_command_identity`。稳定 ID
+绑定 tenant、TaskRun、Plan、stage、StepRunAttempt、subject、Artifact 与 EvalReport；提议决定
+还必须匹配期望 tenant、规范 actor、规范幂等 key、严格非负 expectedVersion、自身 ID 和规范
+contentHash。ResponsibilityPlan 是决定正文的 exact 字段并受 contentHash 保护，依照现行宿主
+合同不参与稳定目标 ID，从而允许同一评审目标的职责计划迭代仍归于同一决定链。
+
+该函数只验证值身份，不认证 actor，不证明 current/prior/Eval/责任计划有效，也不写 Receipt 或
+数据库。宿主仍在同一事务中完成全部当前性与副作用裁决。当前 1.4.0 安装未改变，第 9 节整体
+仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 稳定 decisionId 与命令身份校验迁入；来源/Eval/权限/事务/Receipt/Store 和运行装配仍 PENDING | 5ece350a645d0a9269c48efb970079a9d0590f104545ebb256bdfc6ab2222206 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_command_identity.py` | 原路径 | 三阶段宿主算法 parity、身份/hash/布尔版本负向边界与隔离 import | 0ed0fe2849a011455bb516edd527021a6acab50b6926169a74b3896ec952621a |
