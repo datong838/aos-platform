@@ -862,3 +862,16 @@ TenantScope 现在持有 same-scope scheduler，并继续由 assignment revision
 | `services/aos-api/aos_api/extension_runtime/production_runtime.py` | 原路径 | 预检后 same-scope lifecycle assignment 与 connector/依赖图一致性 | 1feb37282c65c775de36f1473adf84a686d17a788507cef4e62dd83e44f98689 |
 | `services/aos-api/tests/extension_runtime/test_production_runtime.py` | 原路径 | 配置/platform/connector/预检/cache/lifecycle 反证 | 2434293e49d62a250a72da2f281e7acef2591e52fe3fbb82b0bb96bf167b0b5a |
 | `services/aos-api/tests/extension_runtime/test_runtime_host_directory_pg.py` | 原路径 | 三平面真实 PG 与 same-scope 无 pending lifecycle 回归 | c19888c6b46180db10296adabb5380fc4cb701d9bf2a5618d86bc8a3a122dc6b |
+
+### 9.40 API lifespan concrete live scheduler 启停证据
+
+2026-09-12：新增 app lifespan 组合合同，使用 concrete RuntimeHost、exact TenantScope assignment 和
+LiveInstallationScheduler。线程事件证明 ACTIVE 后台宿主至少完成一次空 pending 读取；factory 零调用、
+owners 始终为空。退出后同一 host/scheduler closing，后台任务、stop events 和 app state 全部清除。
+
+本切片未修改生产代码。空 pending 反证保证零 OCI、零 claim/ACK、零租户状态变化；它只补齐 9.39 正式
+接线进入既有 lifespan 后的启停闭环，不构成 1.5.0 发布或安装证明。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/tests/extension_runtime/test_runtime_startup_composition.py` | 原路径 | concrete host/scheduler 首 tick、唯一任务与 graceful stop | c14621a3c5e30b9b1d263c4c28a15c85cb57ffec1a8039b98ca4dac61b188c88 |

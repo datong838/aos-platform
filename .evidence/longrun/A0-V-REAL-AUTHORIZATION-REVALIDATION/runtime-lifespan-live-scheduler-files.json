@@ -1,0 +1,8 @@
+{
+  "phase": "A0-V runtime lifespan live scheduler",
+  "date": "2026-09-12",
+  "files": [
+    {"path": "services/aos-api/tests/extension_runtime/test_runtime_startup_composition.py", "sha256": "c14621a3c5e30b9b1d263c4c28a15c85cb57ffec1a8039b98ca4dac61b188c88"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/runtime-lifespan-live-scheduler-plan.md", "sha256": "05dff2b69d4784e175f6254cd0b6c71f083baf1e069aba9c1f6bef33eae788f9"}
+  ]
+}

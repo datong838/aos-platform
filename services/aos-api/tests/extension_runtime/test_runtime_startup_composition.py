@@ -2,12 +2,20 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from types import SimpleNamespace
 
 import pytest
 
 from aos_api import main
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+from aos_api.extension_runtime.live_installation_scheduler import LiveInstallationScheduler
+from aos_api.extension_runtime.pending_preparation_directory import (
+    LiveInstallationOwnerFactory,
+    PostgresPendingPreparationDirectory,
+)
+from aos_api.extension_runtime.runtime_host import RuntimeHost, RuntimeTenantAssignment
+from aos_api.tenant_scope import TenantScope
 
 
 def _quiet_startup(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -206,6 +214,60 @@ def test_active_runtime_host_is_unique_and_stops_gracefully(
             assert tasks[0].get_name() == "extension-runtime-host"
             assert main.app.state.extension_runtime_host_status == "ACTIVE"
         assert stopped.is_set()
+        assert main.app.state.extension_runtime_host_task is None
+        assert main.app.state.runtime_background_tasks == []
+        assert main.app.state.extension_runtime_host_status == "STOPPED"
+
+    asyncio.run(probe())
+
+
+def test_lifespan_runs_and_stops_concrete_empty_live_scheduler(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _quiet_startup(monkeypatch)
+    import aos_api.asset_registry.control_wiring as wiring
+
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
+    scope = TenantScope("org-org", "dev-project")
+    ticked = threading.Event()
+    factory_calls = []
+
+    directory = object.__new__(PostgresPendingPreparationDirectory)
+    directory.scope = scope
+
+    def read_descriptors():
+        ticked.set()
+        return ()
+
+    directory.read_descriptors = read_descriptors
+    factory = object.__new__(LiveInstallationOwnerFactory)
+    factory.scope = scope
+    factory.__call__ = lambda descriptor: factory_calls.append(descriptor)
+    scheduler = LiveInstallationScheduler(directory=directory, factory=factory)
+    assignment = RuntimeTenantAssignment(scope=scope, lifecycle=scheduler)
+    host = RuntimeHost(assignments=lambda: (assignment,))
+    monkeypatch.setattr(
+        wiring,
+        "build_production_runtime_host_selection",
+        lambda *, control_plane: SimpleNamespace(
+            host=host, status="ACTIVE", error_code=None
+        ),
+    )
+
+    async def probe() -> None:
+        async with main.lifespan(main.app):
+            assert await asyncio.to_thread(ticked.wait, 2)
+            assert main.app.state.extension_runtime_host_status == "ACTIVE"
+            assert len(main.app.state.runtime_background_tasks) == 1
+            assert main.app.state.extension_runtime_host_task.get_name() == (
+                "extension-runtime-host"
+            )
+            assert scheduler.owners == ()
+            assert factory_calls == []
+        assert host._closing is True
+        assert scheduler._closing is True
+        assert scheduler.owners == ()
+        assert factory_calls == []
         assert main.app.state.extension_runtime_host_task is None
         assert main.app.state.runtime_background_tasks == []
         assert main.app.state.extension_runtime_host_status == "STOPPED"
