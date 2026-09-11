@@ -37,3 +37,14 @@ Registry 已唯一 published growth 1.5.0，持久 signed root 同时包含 1.4.
 ## 本波退出条件
 
 三身份 probe/assignment/重放/负租户隔离全绿；独立 host ACTIVE 且可优雅停止；1.4 signed preparation 与 verify 形成 active baseline；1.5 exact replacement active；运行绑定、9 个 growth operation、generation/epoch/fence 可读。若四来源仍缺，则明确停在 verified/active-but-disabled 边界并立即进入授权补齐波次，不把测试绿当业务完成。
+
+## 2026-09-12 运行发现与改线
+
+1.4 首次真实 preparation 在签名与成员权限检查之后，由 Session exact-registration 阻断。静态复核确认三个运行包的后端分别注册 1/2/9 个 API，但其签名 Manifest 没有对应 API contribution；Growth 仅声明 navigation/UI。该 1.4 Installation 从未 active，失败 Operation 已终结，三个资源租约全部 `released` 且 `observed_release=true`，无遗留容器。
+
+不得过滤 observed API、放宽 exact registration、修改已发布 1.4/1.5 字节或伪造 active 基线。后续改为：
+
+1. 保留 1.4 的失败 Receipt，使用正式 uninstall 控制路径移除这个从未 active 的 approved Installation。
+2. 新建不可变版本 `domain.ecommerce.core/1.2.0`、`platform.ecommerce.niushop/1.2.0`、`solution.ecommerce.growth/1.6.0`，在签名 Manifest 中逐项声明后端实际注册的 1/2/9 个 API；operations-base 1.2.0 不变。
+3. Candidate preflight 必须比较 Manifest API contribution 与后端 registration 的 operationId/method/path/mode 全量集合，资格阶段增加真实 persistent Session registration/heartbeat；只做 image admission 不再足以判绿。
+4. 新版本完成 build、签名、Registry 发布后，从 `currentInstallationRef=null` 创建新的 first Installation，再由独立 Host 完成 apply/verify。只有这个合法 active 基线形成后，才进入 configure/enable 与真实业务链。
