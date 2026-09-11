@@ -1,0 +1,9 @@
+{
+  "phase": "A0-V production preparation composition",
+  "date": "2026-09-12",
+  "files": [
+    {"path": "services/aos-api/aos_api/extension_runtime/production_preparation.py", "sha256": "fa4fe195a9244a941cc5794a3d7c2db26dac974e5d10c59aaad33cf8c055cda9"},
+    {"path": "services/aos-api/tests/extension_runtime/test_production_preparation.py", "sha256": "fc6a01a40a5e671bee0b04f60a3d1bf95b6b46fd2d3c290be4dff70d32fc40b8"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/production-preparation-composition-plan.md", "sha256": "7418a9a68d07ba97acbf0b82f6516e6802f92b50511e1aa7c2f86282cce09410"}
+  ]
+}

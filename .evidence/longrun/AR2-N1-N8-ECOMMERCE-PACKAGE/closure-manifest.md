@@ -826,3 +826,20 @@ reader 不缓存 record/source/bytes，非法 path/limit 在查库前拒绝。pr
 |---|---|---|---|
 | `services/aos-api/aos_api/extension_runtime/runtime_release_artifacts.py` | 原路径 | exact published record、唯一 source、allowlisted artifact 双校验 | 1bd2992cd27b780f794cc8a696c437fdbfbc9b312d1716e1c3dbf0346babdda8 |
 | `services/aos-api/tests/extension_runtime/test_runtime_release_artifacts.py` | 原路径 | source/path/size/digest/identity/row cardinality 反证 | a84007de35312bfe0076e7f8b23932a36ba605c69f553ef002f75e1642d77718 |
+
+### 9.38 Production PreparationWorker 可信依赖闭包
+
+2026-09-12：新增 exact `ProductionPreparationDependencies`，固定同步 runtime connector、PostgreSQL
+Installation store、同一 policy/revalidator、同 trust-root loader、apply/verify/enable 当前权限、同 store 四来源
+配置授权、完整 OCI driver、显式 Linux platform 与 control-plane 唯一 live directory。任何 concrete 类型、
+operation 或依赖图 identity 混搭均在构造时拒绝。
+
+per-tenant builder 用同一个 `CurrentRuntimeReleaseArtifacts` 同时提供 record、member artifact 与 schema
+conditions 读取，组合未启动的 PreparationWorker、pending directory、owner factory 和 scheduler。legacy
+无 selected-release artifact reader 固定拒绝。构造零数据库、零制品、零 OCI 调用；production selector 尚未
+接入该闭包，因此本切片不启动 runtime、不消费 outbox、不改变 1.4.0 或租户数据。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/production_preparation.py` | 原路径 | exact production worker dependency graph 与 per-tenant scheduler builder | fa4fe195a9244a941cc5794a3d7c2db26dac974e5d10c59aaad33cf8c055cda9 |
+| `services/aos-api/tests/extension_runtime/test_production_preparation.py` | 原路径 | 同源权威、权限/platform、租户隔离与零副作用构造反证 | fc6a01a40a5e671bee0b04f60a3d1bf95b6b46fd2d3c290be4dff70d32fc40b8 |
