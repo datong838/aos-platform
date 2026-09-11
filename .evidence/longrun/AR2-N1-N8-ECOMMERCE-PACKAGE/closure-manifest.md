@@ -228,3 +228,12 @@ AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业�
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py` | 拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分；PENDING | 1e549eaca433462b9ea807241dfd98443e5f1b0f46940caf9f89c022638f7186 |
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分；PENDING | a1fb256df668f69ae3db3d43fc71df816660cd399476e183e62506e975ddfd4d |
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py` | 拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分；PENDING | 6e8bd4e0bb827e550e97c7fbc15a38f8531da6cfe529e020c1b342ade4d4bf36 |
+
+### 9.1 无权威回答DTO切片
+
+2026-09-11：以下两个包文件现在只拥有D01/D02/D03严格回答解析。平台仍通过原路径提供兼容DTO，以schema/正负样例验证对齐，不从平台import bundle。growth_plan_draft的提示词、实际生成、接收事务和后继编排仍未迁移，故第9节29项整体PENDING不变。inventory.json是9bab3171冻结快照，不覆盖历史targetExists；本节才是新目标存在性证据。没有新增运行operation或安装激活。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_analysis_proposal.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py` | DTO解析切片迁入 growth；执行编排仍PENDING | 4a4316fa1f4f7f4532148fbe3bcae9e19b68988c1cb22ef6143a69681e44ca0e |
+| `services/aos-api/aos_api/ecommerce_analyst_growth_plan_draft.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py` | DTO解析切片迁入 growth；执行编排仍PENDING | 74129df3c3ea51a0a9632984b1d26124c4c5fdda8e17bbcdf256c0718541221c |
