@@ -1278,6 +1278,7 @@ def _load_record_by_pk(
                 contribution_diff_hash=record.current.contribution_diff_hash,
                 decision_id=record.decision.decision_id,
                 observed_at=event.evidence.observed_at,
+                from_state=event.from_state,
             )
         return record
     except (ValidationError, ValueError, TypeError, KeyError) as exc:

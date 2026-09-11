@@ -84,3 +84,18 @@ def test_runtime_preparation_is_reproducible_without_changing_old_shape():
     assert prepared.evidence_hash!=original.evidence_hash
     assert set(prepared.model_dump(by_alias=True))==set(original.model_dump(by_alias=True))
     verify_event_evidence(prepared,**{k:v for k,v in arguments.items() if k!='evidence_type'})
+
+
+def test_uninstall_evidence_seals_clean_approved_source_state() -> None:
+    arguments = {**_arguments(), "evidence_type": "uninstall", "from_state": "approved"}
+    evidence = build_event_evidence(**arguments)
+    verify_event_evidence(
+        evidence,
+        **{key: value for key, value in arguments.items() if key != "evidence_type"},
+    )
+
+
+def test_uninstall_evidence_rejects_unrelated_source_state() -> None:
+    arguments = {**_arguments(), "evidence_type": "uninstall", "from_state": "submitted"}
+    with pytest.raises(ValueError, match="does not allow"):
+        build_event_evidence(**arguments)

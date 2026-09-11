@@ -1,0 +1,119 @@
+{
+  "after": {
+    "etag": 4,
+    "revision": 4,
+    "state": "uninstalled"
+  },
+  "before": {
+    "etag": 3,
+    "revision": 3,
+    "state": "approved"
+  },
+  "cleanPrecondition": {
+    "bindingCount": 0,
+    "canaryInstallationCount": 0,
+    "unresolvedOperationCount": 0,
+    "unsafeResourceCount": 0
+  },
+  "database": "aos_meta_head",
+  "effects": {
+    "businessOperationCount": 0,
+    "providerInvocationCount": 0
+  },
+  "firstReplayed": false,
+  "installationId": "c1eb714f-56de-4f28-ba06-c3440b3d18cb",
+  "outcome": "INVALID_ECOMMERCE_1_4_UNINSTALLED_GREEN",
+  "receipt": {
+    "activeRevision": null,
+    "createdAt": "2026-09-10T14:22:10.534448Z",
+    "current": {
+      "compositionId": "f58647ac-56a9-4739-898a-ba412c400f9f",
+      "contributionDiffHash": "sha256:f03cb321aeeadb66589ca8e8d35872d03f6f051d0a73ab28799ce2b06bc212c2",
+      "createdAt": "2026-09-11T23:55:21.007310Z",
+      "decisionId": "a02d52b1-4c67-4f1b-9756-d599f5f4053c",
+      "installationId": "c1eb714f-56de-4f28-ba06-c3440b3d18cb",
+      "lockHash": "sha256:569f57bfa137fc146cebbbba0d617b3216698fd0eed2280677f2b06f77c1311a",
+      "lockRevision": 1,
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "overlayRevision": "a0v-canonical-ecommerce-v1",
+      "parentRevision": 3,
+      "permissionDiffHash": "sha256:d310d873b7fdb3d8adc8f6689156883cb8fb5d9a0b95f566d9541851a731bd20",
+      "requestedBy": "a0v-canonical-ecommerce-first-install-maker",
+      "revision": 4,
+      "state": "uninstalled"
+    },
+    "currentRevision": 4,
+    "decision": {
+      "actor": "a0v-canonical-ecommerce-first-install-checker",
+      "contributionDiffHash": "sha256:f03cb321aeeadb66589ca8e8d35872d03f6f051d0a73ab28799ce2b06bc212c2",
+      "createdAt": "2026-09-10T14:24:35.329724Z",
+      "decision": "approved",
+      "decisionId": "a02d52b1-4c67-4f1b-9756-d599f5f4053c",
+      "installationId": "c1eb714f-56de-4f28-ba06-c3440b3d18cb",
+      "lockHash": "sha256:569f57bfa137fc146cebbbba0d617b3216698fd0eed2280677f2b06f77c1311a",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "permissionDiffHash": "sha256:d310d873b7fdb3d8adc8f6689156883cb8fb5d9a0b95f566d9541851a731bd20",
+      "reason": null,
+      "submittedRevision": 2
+    },
+    "displayName": "A0-V Canonical 电商八工作台首装",
+    "etagVersion": 4,
+    "events": [
+      {
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "createdAt": "2026-09-10T14:22:10.534448Z",
+        "evidence": null,
+        "fromRevision": null,
+        "fromState": null,
+        "reason": null,
+        "sequence": 1,
+        "toRevision": 1,
+        "toState": "draft"
+      },
+      {
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "createdAt": "2026-09-10T14:24:35.245746Z",
+        "evidence": null,
+        "fromRevision": 1,
+        "fromState": "draft",
+        "reason": null,
+        "sequence": 2,
+        "toRevision": 2,
+        "toState": "submitted"
+      },
+      {
+        "actor": "a0v-canonical-ecommerce-first-install-checker",
+        "createdAt": "2026-09-10T14:24:35.329724Z",
+        "evidence": null,
+        "fromRevision": 2,
+        "fromState": "submitted",
+        "reason": null,
+        "sequence": 3,
+        "toRevision": 3,
+        "toState": "approved"
+      },
+      {
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "createdAt": "2026-09-11T23:55:21.007310Z",
+        "evidence": {
+          "evidenceHash": "sha256:49374b070acdd80b0e400f29fb18be0497a336ab9cbb66a2d743cf0b296509ed",
+          "evidenceRef": "evidence://bundle-installations/c1eb714f-56de-4f28-ba06-c3440b3d18cb/revisions/4/uninstall",
+          "observedAt": "2026-09-11T23:55:21.007310Z",
+          "status": "valid",
+          "type": "uninstall"
+        },
+        "fromRevision": 3,
+        "fromState": "approved",
+        "reason": "Signed runtime API declarations are absent",
+        "sequence": 4,
+        "toRevision": 4,
+        "toState": "uninstalled"
+      }
+    ],
+    "installationId": "c1eb714f-56de-4f28-ba06-c3440b3d18cb",
+    "previousActiveRevision": null,
+    "state": "uninstalled",
+    "updatedAt": "2026-09-11T23:55:21.007310Z"
+  },
+  "secondReplayed": true
+}

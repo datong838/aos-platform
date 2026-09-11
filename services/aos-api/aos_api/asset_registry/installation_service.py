@@ -671,6 +671,7 @@ def _evidence(
         contribution_diff_hash=current.contribution_diff_hash,
         decision_id=locked.record.decision.decision_id,
         observed_at=observed_at,
+        from_state=locked.record.current.state,
     )
 
 

@@ -44,7 +44,7 @@ Registry 已唯一 published growth 1.5.0，持久 signed root 同时包含 1.4.
 
 不得过滤 observed API、放宽 exact registration、修改已发布 1.4/1.5 字节或伪造 active 基线。后续改为：
 
-1. 保留 1.4 的失败 Receipt，使用正式 uninstall 控制路径移除这个从未 active 的 approved Installation。现有状态机只接受 `active -> uninstalled`，因此补齐受限的 `approved -> uninstalled`：必须无 Runtime Binding、没有未终结 Runtime Operation，且历史 resource lease 全部 `released + observed_release=true`；仍由 Installation Command Receipt 幂等审计。active 路径继续强制 disable/detach/uninstall Receipt，不共享这个分支。
+1. 保留 1.4 的失败 Receipt，使用正式 uninstall 控制路径移除这个从未 active 的 approved Installation。现有状态机只接受 `active -> uninstalled`，因此补齐受限的 `approved -> uninstalled`：必须无 Runtime Binding、没有未终结 Runtime Operation，且历史 resource lease 全部 `released + observed_release=true`；仍由 Installation Command Receipt 幂等审计。约束同时落在应用层 guard、数据库不可变 revision trigger 与完整历史领域模型，任何一层缺失或读到不安全状态都拒绝提交；uninstall Evidence 明确封存真实的 `fromState`。active 路径继续强制 disable/detach/uninstall Receipt，不共享这个分支。
 2. 新建不可变版本 `domain.ecommerce.core/1.2.0`、`platform.ecommerce.niushop/1.2.0`、`solution.ecommerce.growth/1.6.0`，在签名 Manifest 中逐项声明后端实际注册的 1/2/9 个 API；operations-base 1.2.0 不变。
 3. Candidate preflight 必须比较 Manifest API contribution 与后端 registration 的 operationId/method/path/mode 全量集合，资格阶段增加真实 persistent Session registration/heartbeat；只做 image admission 不再足以判绿。
 4. 新版本完成 build、签名、Registry 发布后，从 `currentInstallationRef=null` 创建新的 first Installation，再由独立 Host 完成 apply/verify。只有这个合法 active 基线形成后，才进入 configure/enable 与真实业务链。

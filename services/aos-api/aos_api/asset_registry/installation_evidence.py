@@ -15,6 +15,10 @@ _TRANSITIONS = {
     "rollback": ("active", "rolled_back"),
     "uninstall": ("active", "uninstalled"),
 }
+_ALLOWED_FROM_STATES = {
+    **{kind: frozenset({transition[0]}) for kind, transition in _TRANSITIONS.items()},
+    "uninstall": frozenset({"active", "approved"}),
+}
 
 
 def format_evidence_timestamp(value: datetime) -> str:
@@ -42,11 +46,15 @@ def build_evidence_basis(
     contribution_diff_hash: str,
     decision_id: str,
     observed_at: datetime,
+    from_state: str | None = None,
 ) -> dict[str, object]:
     try:
-        from_state, to_state = _TRANSITIONS[evidence_type]
+        default_from_state, to_state = _TRANSITIONS[evidence_type]
     except KeyError as exc:
         raise ValueError("unsupported installation evidence type") from exc
+    from_state = default_from_state if from_state is None else from_state
+    if from_state not in _ALLOWED_FROM_STATES[evidence_type]:
+        raise ValueError("evidence type does not allow the supplied source state")
     evidence_ref = (
         "evidence://bundle-installations/"
         f"{installation_id}/revisions/{to_revision}/{evidence_type}"

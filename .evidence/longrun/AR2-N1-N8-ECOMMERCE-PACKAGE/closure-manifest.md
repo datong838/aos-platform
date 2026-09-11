@@ -960,3 +960,22 @@ trust-root path 与 linux/arm64，每项唯一非空且被 gitignore。Installat
 | `scripts/a0v_ecommerce_growth_1_4_activate.py` | 原路径 | 当前 membership、过期 apply 收口与受限 apply/verify | 5b34c92a4b1f046a6b8724aee6bab3f30181019a7f0f8ccd1a8b3370289a8a5c |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-runtime-host-growth-1.4-attempt-verification.md` | 原路径 | 三平面与失败清理审计 | ae996920bc7476f7ac096e3aba402c45af70d73669e65f1948d1ef4703ef1019 |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/runtime-host-growth-1.4-attempt/terminal-database-state.json` | 原路径 | Operation/lease/membership/Installation 终态 | 9882e4bcdbc5175900f8f43d0a427545ea026a6ccb5ee89d5cea671d9bcbcd67 |
+
+### 9.46 Invalid growth 1.4 清洁退役
+
+2026-09-12：为从未 active 的 approved Installation 增加唯一受限退役路径。应用 guard、数据库不可变
+revision trigger 与完整历史领域模型共同要求：零 Runtime Binding、零未终结 Runtime Operation，且全部
+历史 resource lease 已 released/observed；uninstall Evidence 显式哈希真实 `fromState=approved`。active
+卸载仍走既有 runtime uninstall Receipt 路径。
+
+隔离库升级前仓外备份 4,571,944 bytes、SHA-256 `322efe8d...`；Alembic 从 a0v_012 升至唯一
+head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninstalled revision 4，首写成功、
+相同幂等键重放；clean/canary/effect 计数均为零。失败 preparation Receipt 与 released lease 历史保留。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/alembic/versions/a0v_016_clean_approved_installation_retirement.py` | 原路径 | 数据库双重清洁守卫与 forward-only 迁移 | 2ebd533e627f4e3da0d6635223ec1cf360fe2493fff904af41bbcfff5e5cf27a |
+| `services/aos-api/aos_api/asset_registry/composition_contracts.py` | 原路径 | 完整历史接受受限 approved 退役 | d637c69ce3dd8f5fdfc96f7ba769acb6a9cdf48818ce0501932c3f1822a0dace |
+| `services/aos-api/aos_api/asset_registry/installation_evidence.py` | 原路径 | uninstall Evidence 封存真实 source state | 633ebc0b90d48f8a171dc7c263986492973385d7a70a32331b196220bb2c9a67 |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/invalid-growth-1.4-retirement-verification.md` | 原路径 | 迁移、退役、回放与无副作用审计 | 43bad01ddb8f814e0990c7edb723d6d7d9a3e77a582d03dddd4904534ee64c4c |
+| `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/invalid-growth-1.4-retirement/uninstall-result.json` | 原路径 | 真实退役与幂等回放 Receipt | 35f949cc3e07ec98a1f0fee3455e211b66819cc740567c906a9d7ac9ba468485 |

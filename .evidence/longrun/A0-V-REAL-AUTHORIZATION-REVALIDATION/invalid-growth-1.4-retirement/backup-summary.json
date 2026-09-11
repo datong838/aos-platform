@@ -1,0 +1,8 @@
+{
+  "artifactLocation": "external-recovery-only",
+  "checkpoint": "before-a0v016",
+  "containsCredentials": false,
+  "database": "aos_meta_head",
+  "sha256": "322efe8dfffcb89774d7ec0f765eb07d2b60dd256ad0efc0c2147415b2649b95",
+  "sizeBytes": 4571944
+}

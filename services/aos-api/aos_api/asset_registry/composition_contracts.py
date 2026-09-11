@@ -1315,6 +1315,7 @@ INSTALLATION_STATE_TRANSITIONS = frozenset(
         ("submitted", "approved"),
         ("submitted", "rejected"),
         ("approved", "applied"),
+        ("approved", "uninstalled"),
         ("applied", "active"),
         ("active", "rolled_back"),
         ("active", "uninstalled"),
