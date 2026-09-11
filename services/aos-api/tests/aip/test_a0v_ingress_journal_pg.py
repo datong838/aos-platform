@@ -207,8 +207,24 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         assert database.owner.execute('SELECT count(*) AS n FROM meta_dataset').fetchone()['n']==0
         with pytest.raises(IngressJournalConflict,match='INGRESS_PROJECTION_PENDING'):
             finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
-        with engine.begin() as conn:
-            conn.execute(update(projection_outbox).values(projected=True))
+        if store_backend=='postgresql':
+            import time
+            from aos_api import ecom_projector as projector
+            database.owner.execute('CREATE TABLE meta_object_type(id text PRIMARY KEY,name text,description text,published boolean,properties jsonb)')
+            database.owner.execute('CREATE TABLE obj_instance(org_id text,project_id text,object_type text,object_id text,props jsonb,PRIMARY KEY(org_id,project_id,object_type,object_id))')
+            database.owner.execute('GRANT SELECT,INSERT,UPDATE ON meta_object_type,obj_instance TO aos_runtime')
+            database.owner.execute('ALTER TABLE obj_instance ENABLE ROW LEVEL SECURITY')
+            database.owner.execute('ALTER TABLE obj_instance FORCE ROW LEVEL SECURITY')
+            database.owner.execute("CREATE POLICY tenant_scope ON obj_instance TO aos_runtime USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
+            monkeypatch.setattr(projector,'connect',factory)
+            assert projector.project_until_caught_up(scope,deadline=time.monotonic()+5)=={'projected':2,'pending':0}
+            projected=database.owner.execute('SELECT object_type,props FROM obj_instance').fetchall()
+            assert len(projected)==1 and projected[0]['object_type']=='Payment'
+            assert projected[0]['props']['orderId']=='o-1'
+            assert projected[0]['props']['_sourceIdentity']['externalId']==command.objects[0].identity.external_id
+        else:
+            with engine.begin() as conn:
+                conn.execute(update(projection_outbox).values(projected=True))
         database.owner.execute('ALTER TABLE ecommerce_ingress_dataset_receipt ADD CONSTRAINT reject_test CHECK(false)')
         with pytest.raises(errors.CheckViolation):
             finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)

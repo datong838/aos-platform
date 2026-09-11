@@ -153,3 +153,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线ddd96732。现有Journal/保存失败/派生重放/Dataset原子结果/空观察/claim竞争组合主要Store是SQLite，扩展同一用例store_backend=sqlite/postgresql。PG复用test_a0v_ecom_store_pg.pg_store隔离schema夹具，Store six tables/RLS/local sequence，与Journal/Dataset/claim使用同一个隔离PG。只改tests/aip/test_a0v_ingress_journal_pg.py，不动产品。验证跨连接已提交前缀、原水位、Receipt/结果幂等、回滚与claim竞争在PG真实事务下成立。
 
 边界：Store由SQLAlchemy metadata创建，非全部production migration证明；projected仍测试显式更新，不冒充实际projector；来源/当前绑定部分是最小fixture。public不迁移、不触真实租户数据。后续实际projector与迁移兼容性继续验证。
+
+## PostgreSQL实际投影器组合
+
+基线8e8f0f03。tests/aip/test_a0v_ingress_journal_pg.py PG分支使用真实project_until_caught_up消费Store生成Outbox，替换手工projected=true；新建隔离最小meta_object_type/obj_instance，scoped RLS，使用实际PG连接工厂。保留Dataset pending拒绝，再投影并断言Payment对象及sourceIdentity/业务字段。SQLite分支维持显式标记，用于原Store回归。
+
+本波仅测试，无产品修改。验证实际payload hash/shape、基础派生投影、完成门及后续Dataset/claim事务组合；不扩大到link/tombstone、多店ID冲突或生产兼容表触发器证明，这些边界后续。public不迁移、真实源未接。
