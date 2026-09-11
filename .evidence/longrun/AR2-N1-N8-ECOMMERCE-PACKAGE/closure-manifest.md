@@ -404,3 +404,25 @@ operation、不创建 Handoff。当前 1.4.0 安装未改变，第 9 节整体�
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_decision.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_decision.py` | 阶段决定 DTO 与无权威适用性比较迁入；当前决定 Owner、运行/评审权威和装配仍 PENDING | 43911d6d7b1255a81d592f6803bff5df48b778688c5513e4876cecc3bda7c352 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_decision_package.py` | 原路径 | 全 schema、三阶段序列化、适用性/替换/布尔版本负向与隔离 import | 3a033f9921b86be396581f582f65ddcb8654644f042de6e998901401c3f67bbc |
+
+### 9.13 人工阶段评审职责槽纯规则
+
+2026-09-12：审计确认 `AnalystStageDecisionStore` 必须继续留在宿主：它绑定
+HostTransaction 与 TenantScope，并在同一事务中完成 advisory lock、Receipt-first、head CAS、
+相邻 revision、事务时钟、不可变历史和租户隔离。包不得直接获得数据库或用另一写端口绕过
+这条单写者路径。
+
+growth 包新增 `require_stage_review_slot`，只核对由宿主当前 ResponsibilityPlan Owner 已验证并
+投影出的职责槽值。三个阶段必须各自命中唯一命名规则；槽必须是 independent_review，回退到
+同一阶段，requiredCapabilityIds 为严格空列表，assignee 是 actor 本人的 human_principal v1，
+且解析 Receipt ID 规范非空。布尔 version、额外 capability、字段替换和超长 Receipt ID 均拒绝。
+
+成员资格、计划 current/hash/lifecycle/readiness/coverage、Receipt 存在与有效期、snapshot/content
+hash、exact selection 和 bundle version lock 仍由宿主在锁内复核。本切片不读取数据库、不注册
+operation、不修改 Candidate、OCI、Registry 或 Installation；当前 1.4.0 安装未改变，第 9 节
+整体仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py` | 职责槽纯匹配规则迁入；计划/成员/Receipt/current/事务 Owner 和运行装配仍 PENDING | 3af9697c38a94d544510aed0458e18763ae6af563d21c31097365c57c75b7462 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_slot_rule.py` | 原路径 | 三阶段 parity、字段/身份/布尔版本负向边界与隔离 import | fb141b72c902bed0883772585136e867b3d1e0d948ae6a4274501a5616717bd2 |
