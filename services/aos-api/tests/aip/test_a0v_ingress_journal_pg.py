@@ -221,6 +221,9 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         assert len(eng.list_builds(scope,first['dataset']['rid']))==1
         eng.create_dataset(scope,id=first['dataset']['rid'],name='newer',updated_at=first['dataset']['updatedAt']+10)
         database.owner.execute("UPDATE meta_dataset SET name='newer'")
+        def changed_base(*args, **kwargs):
+            raise IngressJournalConflict('BASE_RECORD_NOT_CURRENT')
+        monkeypatch.setattr(store, 'read_batch_projection_completion', changed_base)
         assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)==first
         assert eng.get_dataset(scope,first['dataset']['rid']).name=='newer'
         assert database.owner.execute('SELECT name FROM meta_dataset').fetchone()['name']=='newer'
@@ -233,6 +236,8 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         with pytest.raises(errors.RaiseException),database.owner.transaction():
             migration.downgrade()
         database.owner.execute("UPDATE meta_source SET status='disabled'")
+        with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
+            finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
         with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
             recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)
     finally:

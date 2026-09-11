@@ -109,3 +109,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 文件：services/aos-api/aos_api/ecom_consistency_store.py、ec_ingress_recovery.py；SQLite专项及新的tests/aip/test_a0v_ecom_store_pg.py隔离PG owner组合。验证外部预检后基础被更新时拒绝且无新派生Receipt/事件，匹配基础可写及exact重复回读，身份错配拒绝。恢复测试包装提交器透传expected_base，避免测试替身吞掉新门。
 
 旧非恢复派生调用暂维持原接口；其他关联输入来源版本不由本对象hash替代。空批、重新claim、全运行验收仍待完成。不push，230 L0挂起。
+
+## 已完成Dataset回执优先回读
+
+2026-09-11，基线2bcc72da。现有finalizer先核验当前基础版本再读取已提交结果，使原批已完成后正常新批更新可能阻塞原结果恢复。调整为当前run/schedule/source绑定和完整原Journal校验后，先读取不可变Dataset回执；有回执只验证其hash及原父/派生hash，不重新判断当前基础/投影，也不写Dataset。无回执仍完整核验基础派生投影，pending不得成功。历史成功不代表当前对象仍为旧版本，不放松当前权限绑定。
+
+文件：services/aos-api/aos_api/ec_ingress_dataset.py、services/aos-api/tests/aip/test_a0v_ingress_journal_pg.py。新增已完成后当前完成检查不可用仍可回读、保留新Dataset展示、源禁用仍拒绝；验证已有首次pending与原子回滚负例。此项先修恢复阻断；空批与重新claim仍后续施工，public不迁移、不push。

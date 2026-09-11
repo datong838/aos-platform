@@ -17,9 +17,8 @@ def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store,
             journal.lock_run(conn,scope,run_id)
             parent = _bound_parent(conn,scope,run_id,journal)
             derived = journal.read_derived(conn,scope,run_id)
-            completion = read_saved_projection_completion(conn,scope,run_id,journal=journal,store=store)
-            if completion['pending'] != 0:
-                raise IngressJournalConflict('INGRESS_PROJECTION_PENDING')
+            if derived is None:
+                raise IngressJournalConflict('INGRESS_DERIVED_COMMAND_REQUIRED')
             row = conn.execute(sql.SQL('SELECT payload,payload_hash FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(table),(*scope.key,run_id)).fetchone()
             if row is not None:
                 result = row['payload']
@@ -27,6 +26,11 @@ def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store,
                     or result.get('derivedHash') != _digest(derived)):
                     raise IngressJournalConflict('INGRESS_DATASET_RECEIPT_DRIFT')
             else:
+                # A committed receipt proves historical completion; only a new
+                # result must reconcile the current authoritative records.
+                completion = read_saved_projection_completion(conn,scope,run_id,journal=journal,store=store)
+                if completion['pending'] != 0:
+                    raise IngressJournalConflict('INGRESS_PROJECTION_PENDING')
                 pipeline = SimpleNamespace(id=parent['pipelineId'])
                 dataset_lock = int.from_bytes(hashlib.sha256(json.dumps(['dataset',*scope.key,_resolve_stable_rid(pipeline)]).encode()).digest()[:8],'big',signed=True)
                 conn.execute('SELECT pg_advisory_xact_lock(%s)',(dataset_lock,))
