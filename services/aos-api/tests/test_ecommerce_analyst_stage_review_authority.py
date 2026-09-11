@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
 import pytest
+from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
 from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
 from aos_api.aip_production_contracts import ResponsibilitySlot, CreateResponsibilityPlanRequest
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
-from aos_api.ecommerce_analyst_stage_review_authority import require_stage_review_authority
+from aos_api.ecommerce_analyst_stage_review_authority import (
+    read_stage_review_responsibility_authority,require_stage_review_authority)
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.tenant_scope import TenantScope
@@ -63,6 +65,13 @@ def test_actual_human_resolution_and_frozen_plan_current_checks():
         with connect(SCOPE) as conn:
             ref,_=setup(conn)
             assert check(conn,ref)==slot().assignee
+            proof=read_stage_review_responsibility_authority(HostTransaction(conn),SCOPE,
+                responsibility_plan_ref=ref,stage='portrait',actor=ACTOR)
+            assert proof['reviewer']==slot().assignee
+            assert proof['payload']['kind']=='validate_review_slot'
+            assert proof['payload']['assignee']==proof['expected']['assignee']
+            assert proof['snapshot']['responsibilityPlanRef']==ref.model_dump(mode='json',by_alias=True)
+            canonical_json(proof['snapshot']);canonical_json(proof['payload']);canonical_json(proof['expected'])
             for args in [dict(actor='other'),dict(stage='diagnosis'),dict(scope=TenantScope('dev-org','dev-project')),
                 dict(responsibility_plan_ref=ref.model_copy(update={'content_hash':'b'*64})),
                 dict(responsibility_plan_ref=ref.model_copy(update={'revision':1}))]:

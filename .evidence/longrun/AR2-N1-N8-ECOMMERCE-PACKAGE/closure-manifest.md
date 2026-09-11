@@ -602,3 +602,17 @@ observation；职责与 Eval/source proof reader 仍 PENDING，单个 runtime pr
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py` | 原路径 | 真实 runtime snapshot + validate_runtime message；兼容 wrapper 保留 | 3343ef47c153251837124874a76ae53bcb49a82130cbbd5c282b6a04507c8b9a |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_runtime.py` | 原路径 | 三阶段真实 PG proof、canonical JSON 与旧拒绝合同 | bcbf4dbe5d22e25a3d84ef20f3b618eeb5bc63882dd90f8783ae4d64259a043c |
+
+### 9.24 阶段评审 responsibility proof reader
+
+2026-09-12：`read_stage_review_responsibility_authority` 复用当前 ResponsibilityPlan、唯一人工阶段槽、
+租户 membership、AssigneeResolution Receipt 有效期/body hash 与 Owner exact resolution 校验，在同一事务
+输出可 canonical 封印的 responsibility snapshot 和 `validate_review_slot` payload/expected。
+
+原 `require_stage_review_authority` 保持签名与 reviewer 返回值。reader 不 IPC、不写库、不接受调用方
+slot/Receipt 内容；Eval/source proof reader 与五门组合仍 PENDING，单个职责 proof 不构成发布授权。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py` | 原路径 | 真实职责 snapshot + validate_review_slot message；兼容 wrapper 保留 | 08a88647c32b92e9e967aded1492fcfc7c67b833c0de970af2e4c028ba519ee5 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_authority.py` | 原路径 | 真实 PG proof、canonical JSON 与旧拒绝合同 | 18d574c313f52640e3f3dfa8b0567bcb0946e0b7585434713f4c008c18b3839f |

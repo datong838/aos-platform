@@ -10,7 +10,7 @@ from aos_api.tenant_scope import TenantScope
 _STAGES = frozenset({'portrait', 'diagnosis', 'solution-design'})
 
 
-def require_stage_review_authority(transaction, scope, *, responsibility_plan_ref, stage, actor):
+def read_stage_review_responsibility_authority(transaction, scope, *, responsibility_plan_ref, stage, actor):
     if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
         raise TypeError('review authority requires HostTransaction and TenantScope')
     ref = AnalystExactRef.model_validate(responsibility_plan_ref.model_dump())
@@ -66,4 +66,23 @@ def require_stage_review_authority(transaction, scope, *, responsibility_plan_re
     # Re-check after acquiring the receipt lock; the Owner validates exact selection and capability coverage.
     store._require_exact_assignee_resolution(transaction, scope, slot.assignee_resolution_receipt_id,
         slot.assignee, set(), slot.slot_id)
-    return slot.assignee
+    slot_body=slot.model_dump(mode='json',by_alias=True)
+    validation=dict(kind='validate_review_slot',stage=stage,actor=actor,
+        slotId=slot.slot_id,responsibilityType=slot.responsibility_type,
+        requiredCapabilityIds=slot.required_capability_ids,returnStage=slot.return_stage,
+        assignee=slot_body['assignee'],assigneeResolutionReceiptId=slot.assignee_resolution_receipt_id)
+    authority_snapshot=dict(schemaVersion='aos.stage-review-responsibility-snapshot/v1',
+        responsibilityPlanRef=ref.model_dump(mode='json',by_alias=True),planVersion=plan.version,
+        slotId=slot.slot_id,slotHash=canonical_hash(slot_body),memberSubject=member['subject'],
+        resolutionReceiptId=slot.assignee_resolution_receipt_id,
+        resolutionSnapshotHash=receipt['snapshot_hash'],resolutionContentHash=receipt['content_hash'],
+        resolutionCreatedAt=receipt['created_at'].isoformat(),resolutionExpiresAt=receipt['expires_at'].isoformat())
+    return dict(reviewer=slot.assignee,snapshot=authority_snapshot,payload=validation,
+        expected={'assignee':slot_body['assignee']})
+
+
+def require_stage_review_authority(transaction,scope,**values):
+    return read_stage_review_responsibility_authority(transaction,scope,**values)['reviewer']
+
+
+__all__=['read_stage_review_responsibility_authority','require_stage_review_authority']
