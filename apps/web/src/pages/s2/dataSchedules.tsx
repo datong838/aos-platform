@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getTenant } from "../../api/tenant";
+import { recoverScheduledRun } from "../../api/scheduleRecovery";
 import { apiPatch, apiPost } from "../../api/client";
 import {
   BpBanner,
@@ -67,6 +69,10 @@ export function isValidScheduleDraft(name: string, pipelineId: string, cron: str
 }
 
 /** 85 · 对齐 schedules.html · Cron 预设 + Tab + 表格 */
+export function recoveryReasonLabel(reason?: string): string {
+  return ({ ready: "可从原运行继续", executor_unknown: "尚未确认执行已停止", input_missing: "缺少原批次，暂不能恢复" } as Record<string,string>)[reason || ""] || "恢复条件尚未确认";
+}
+
 export function SchedulesPage() {
   const { data, err, reload } = useJsonGet<{
     items: {
@@ -86,8 +92,17 @@ export function SchedulesPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [localErr, setLocalErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState<string | null>(null);
+  const recoveryBusy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current=true; return () => { mounted.current=false; }; }, []);
+  const tenant = getTenant();
+  const viewKey = JSON.stringify([tenant.orgId,tenant.projectId,tenant.subject,editId]);
+  const currentView = useRef(viewKey);
+  currentView.current=viewKey;
+  const canRecover = (tenant.roles || []).some(role => ["admin","developer","data-owner"].includes(role));
   const { data: runs, err: runsErr, loading: runsLoading, reload: reloadRuns } = useJsonGet<{
-    items: { id: string; status: string; startedAt?: string; durationMs?: number; rowsWritten?: number; errorCode?: string; errorMessage?: string }[];
+    items: { id: string; status: string; startedAt?: string; finishedAt?: string; durationMs?: number; rowsWritten?: number; errorCode?: string; errorMessage?: string; recovery?: { candidate: boolean; reason: string } }[];
   }>(editId ? `/v1/schedules/${encodeURIComponent(editId)}/runs?limit=14` : null);
 
   const nextRun = useMemo(() => nextRunLabel(cron, tab), [tab, cron]);
@@ -102,6 +117,7 @@ export function SchedulesPage() {
   }
 
   async function createSch() {
+    if (recoveryBusy.current) return;
     setLocalErr(null);
     try {
       const item = await apiPost<{ id: string }>("/v1/schedules", {
@@ -119,6 +135,7 @@ export function SchedulesPage() {
   }
 
   async function saveSch() {
+    if (recoveryBusy.current) return;
     if (!editId) {
       setLocalErr("先点选或新建一条计划");
       return;
@@ -139,6 +156,7 @@ export function SchedulesPage() {
   }
 
   async function runNow() {
+    if (recoveryBusy.current) return;
     if (!editId) {
       setLocalErr("先选择一条真实计划");
       return;
@@ -151,6 +169,28 @@ export function SchedulesPage() {
       reloadRuns();
     } catch (e) {
       setLocalErr(String((e as Error).message || e));
+    }
+  }
+
+  async function recoverRun(runId: string, finishedAt: string) {
+    if (!editId || recoveryBusy.current || !canRecover || !selectedSchedule?.enabled) return;
+    const origin=viewKey;
+    const originTenant=JSON.stringify([tenant.orgId,tenant.projectId,tenant.subject]);
+    const stillCurrent=() => {
+      const now=getTenant();
+      return mounted.current && currentView.current===origin && JSON.stringify([now.orgId,now.projectId,now.subject])===originTenant;
+    };
+    recoveryBusy.current=true; setRecovering(runId); setLocalErr(null); setMsg(null);
+    try {
+      const result=await recoverScheduledRun(editId,runId,finishedAt);
+      if (!stillCurrent()) return;
+      setMsg(result.status==="succeeded" ? "原运行已恢复完成" : result.status==="duplicate" ? "该恢复请求已处理，请查看原运行的最新状态" : "原运行仍未完成，请查看最新失败原因");
+      reloadRuns(); reload();
+    } catch (error) {
+      if (stillCurrent()) { setLocalErr(String((error as Error).message || error)); reloadRuns(); }
+    } finally {
+      recoveryBusy.current=false;
+      if (mounted.current) setRecovering(null);
     }
   }
 
@@ -235,13 +275,13 @@ export function SchedulesPage() {
             </label>
 
             <BpToolbar>
-              <button type="button" className="btn-primary" disabled={!validDraft || Boolean(editId)} onClick={() => void createSch()}>
+              <button type="button" className="btn-primary" disabled={Boolean(recovering) || !validDraft || Boolean(editId)} onClick={() => void createSch()}>
                 + 新建计划
               </button>
-              <button type="button" className="btn-primary" disabled={!editId || !validDraft} onClick={() => void saveSch()}>
+              <button type="button" className="btn-primary" disabled={Boolean(recovering) || !editId || !validDraft} onClick={() => void saveSch()}>
                 保存计划
               </button>
-              <button type="button" onClick={() => void runNow()} disabled={!editId}>
+              <button type="button" onClick={() => void runNow()} disabled={!editId || Boolean(recovering)}>
                 立即真实同步
               </button>
               <button type="button" className="btn" onClick={() => { reload(); pipelines.reload(); if (editId) reloadRuns(); }}>
@@ -325,7 +365,11 @@ export function SchedulesPage() {
             <strong>{scheduleRunStatusLabel(run.status)}</strong>
             <span>{formatDuration(run.durationMs)}</span>
             <span>{run.rowsWritten == null ? "写入行数未读取" : `${run.rowsWritten} 行`}</span>
-            <details className="bp-audit-details"><summary>运行审计</summary><span className="muted">状态：{run.status || "未读取"} · 错误：{run.errorCode || run.errorMessage || "无"}</span></details>
+            <div>
+              <details className="bp-audit-details"><summary>运行审计</summary><span className="muted">状态：{run.status || "未读取"} · 错误：{run.errorCode || run.errorMessage || "无"}</span></details>
+              {run.status==="failed" && <span className="muted">{recoveryReasonLabel(run.recovery?.reason)}</span>}
+              {run.recovery?.candidate && run.finishedAt && canRecover && selectedSchedule?.enabled && <button type="button" disabled={Boolean(recovering)} onClick={() => void recoverRun(run.id,run.finishedAt!)}>{recovering===run.id ? "正在恢复…" : "恢复原运行"}</button>}
+            </div>
           </div>
         ))}
       </div>

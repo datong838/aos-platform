@@ -189,3 +189,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线bc1c09a9。现有apiPost离线会写自动队列，恢复不得进入队列。api/client.ts新增apiPostImmediate，离线直接固定错误且不入队，在线沿现有认证/错误解析发送，queueOfflineWrite=false；既有调用行为不变。新api/scheduleRecovery.ts封装恢复提交，sessionStorage按tenant/org/project/subject/schedule/run键保存claimId与原finishedAt，先保存后发送；未知异常/duplicate保持标识，明确succeeded/failed响应才清除。后续刷新看到另一次明确finishedAt且failed可恢复，允许建立新claim，避免未知结果永远无法继续。缓存只存请求去重身份，不作授权；scope由现有api认证生成，调用前绑定当前tenant，不能传业务输入。
 
 文件apps/web/src/api/client.ts、新scheduleRecovery.ts与scheduleRecovery.test.ts。测试连续失败重试同claim、明确结果后新claim、跨tenant/run隔离、存储失败不发送、离线无队列。此波先交付安全提交原语，页面按钮与浏览器验收下一波，避免借用标记为ReadOnly的POST函数进行写入。
+
+## 计划页面恢复操作
+
+基线d4d60461。apps/web/src/pages/s2/dataSchedules.tsx接recoverScheduledRun；历史扩finishedAt/recovery字段，显示失败原因；只有候选true、启用计划、当前数据写角色可点击。useRef同步忙碌锁阻止同一事件循环双击，useState显示进行中；恢复时禁用新建/保存/手动执行，开始清旧提示；捕获tenant+subject+schedule上下文，响应到达后仅上下文一致且组件仍挂载才更新提示/刷新。网络错误保留客户端claim，duplicate提示已处理请求、刷新历史，不误报成功。
+
+文件上述页面及dataSchedules.test.ts扩展原因纯合同，另交互测试按现有React DOM测试模式验证重复点击/禁用。浏览器看实际路由布局；因实际API未迁移重载，只能验证当前可达状态，不能虚构真实可恢复运行。后续隔离完整安装升级、服务重载与实际恢复验收。

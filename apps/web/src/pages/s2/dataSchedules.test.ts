@@ -18,3 +18,10 @@ describe("schedule editor trust boundaries", () => {
     expect(scheduleRunStatusLabel()).toBe("未读取");
   });
 });
+
+import { recoveryReasonLabel } from './dataSchedules';
+it('does not describe unknown recovery state as ready', () => {
+  expect(recoveryReasonLabel()).toBe('恢复条件尚未确认');
+  expect(recoveryReasonLabel('executor_unknown')).toBe('尚未确认执行已停止');
+  expect(recoveryReasonLabel('input_missing')).toBe('缺少原批次，暂不能恢复');
+});
