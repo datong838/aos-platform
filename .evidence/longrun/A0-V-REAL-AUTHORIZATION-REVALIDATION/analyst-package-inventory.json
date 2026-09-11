@@ -1,0 +1,567 @@
+{
+  "baseline": "9bab3171",
+  "classificationIsImplementation": false,
+  "activationAuthorizedByInventory": false,
+  "entries": [
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_analysis_proposal.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_proposal.py",
+      "sha256": "a82e0a5cebe1abfbeb4ef534e35377c455961a2ba2b85b4812efe4b75071bacd",
+      "directImports": [
+        "__future__",
+        "aos_api.ecommerce_analyst_growth_plan_draft",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_analysis_sources.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_analysis_sources.py",
+      "sha256": "e3b2bec141e929e2c7aa6d69227cf7c042359be744caa1ba129c54b8bc10467a",
+      "directImports": [
+        "aos_api.aip_contracts",
+        "aos_api.aip_production_contract_store",
+        "aos_api.aip_production_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "datetime",
+        "pydantic"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_authority_contracts.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py",
+      "sha256": "d069b6b4339edc16f7c8644c3fbb538edc24683a798cfd93a7bba3d3c7b3722a",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_contracts",
+        "datetime",
+        "enum",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "领域 DTO 迁入 growth；平台仅保留版本化 DTO 兼容转发，尚未完成增量同步",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_authority_store.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_store.py",
+      "sha256": "a93a904abee9a9b500ae57dd35fd32c2c6d07de4ca5abfa12a8883d4861560a2",
+      "directImports": [
+        "__future__",
+        "aos_api.db",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.tenant_scope",
+        "collections.abc",
+        "contextlib",
+        "typing"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_generation.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_diagnosis_generation.py",
+      "sha256": "89b8faee6376a0ea02c4ddab100c36bdae90feeafa4eb524130720901540b340",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_executor",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_analysis_proposal",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "datetime",
+        "hashlib",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_receiver.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_diagnosis_receiver.py",
+      "sha256": "97360fe51c48e3a51e0174e8be643722f8d23b9fde6f339dc1d7e4e39c8fde84",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_agent_text_output",
+        "aos_api.ecommerce_analyst_analysis_sources",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_diagnosis_generation",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters",
+        "aos_api.tenant_scope",
+        "contextlib",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_service.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_diagnosis_service.py",
+      "sha256": "e3a593a18c52183d2e6cea8221ca56d2d7587a0414b3a66e9e8e42022be43a57",
+      "directImports": [
+        "aos_api.aip_agent_registry_contracts",
+        "aos_api.aip_agent_registry_store",
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_analysis_sources",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_diagnosis_generation",
+        "aos_api.ecommerce_analyst_diagnosis_receiver",
+        "aos_api.tenant_scope",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_diagnosis_worker.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_diagnosis_worker.py",
+      "sha256": "2618041c6a23ee9a39988c724d533c1556993af9b4cfe56353a7a083b2521a1f",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_taor_loop",
+        "aos_api.aip_task_models",
+        "aos_api.aip_task_store",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_diagnosis_receiver",
+        "aos_api.ecommerce_analyst_diagnosis_service",
+        "aos_api.public_contracts",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_approval.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+      "sha256": "9d3013da2cfb7f78bc5075183a986155a5515a3ecb24e02abed35ec42b834728",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.tenant_scope",
+        "collections.abc",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_draft.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py",
+      "sha256": "efd1efa8ed85605f9bceb61e3e092e8932bc962bde8ed2e5746b259652840271",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_executor",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "hashlib",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_generation.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_generation.py",
+      "sha256": "d0efab091d904f9bf016e74e0f183cb5cbbe6e259dabd767312f0dd72ce03e39",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_agent_registry_contracts",
+        "aos_api.aip_agent_registry_store",
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_growth_plan_draft",
+        "aos_api.ecommerce_analyst_growth_plan_receiver",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "aos_api.tenant_scope",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_receiver.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_receiver.py",
+      "sha256": "8c5ae5598a08fbb24fd9caba6fbdb28007e7bf4e9e0920039e871edece5d6ffa",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_agent_text_output",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_growth_plan_draft",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters",
+        "aos_api.tenant_scope",
+        "contextlib",
+        "datetime",
+        "hashlib"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_sources.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_sources.py",
+      "sha256": "7fa6125be35a312c5c4ecded4777a404014e145534ef467e51fb043bf435b99c",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_production_contract_store",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.tenant_scope",
+        "datetime",
+        "typing"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_worker.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_worker.py",
+      "sha256": "0d9b35064d469ce5a8baefbe9910ed6a90b09334e8bfa268376cde4b259cb59d",
+      "directImports": [
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_taor_loop",
+        "aos_api.aip_task_models",
+        "aos_api.aip_task_store",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_growth_plan_generation",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "aos_api.public_contracts",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_materializer.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_materializer.py",
+      "sha256": "e992f722a94c8f0f048ad1822ea359a95aca50cdef4ccb58429cfe7f5c8924fd",
+      "directImports": [
+        "__future__",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.tenant_scope",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_generation.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_generation.py",
+      "sha256": "18ead3a5c49f146e3c97c25146a948a594de86230b85e7b7d258b7e1e9d11eb8",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_executor",
+        "aos_api.aip_production_contracts",
+        "aos_api.ecommerce_analyst_analysis_proposal",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_diagnosis_generation",
+        "aos_api.ecommerce_analyst_portrait_method",
+        "hashlib"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_inputs.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_inputs.py",
+      "sha256": "7dfe12d419643974e8ca48da8e6160ed76a12124495e372715648963edd8d01e",
+      "directImports": [
+        "aos_api.aip_contracts",
+        "aos_api.business_investigation_shared_contracts",
+        "aos_api.ecommerce_analyst_analysis_sources",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_portrait_generation",
+        "aos_api.ecommerce_analyst_portrait_query_sources",
+        "aos_api.ecommerce_analyst_portrait_sources",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_method.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_method.py",
+      "sha256": "98d8ef0c8f65748f3427c7febeb775bfb576c924cf243ea41911af3a183e2247",
+      "directImports": [
+        "aos_api.aip_analyst_contracts",
+        "aos_api.aip_analyst_query_store",
+        "aos_api.aip_eval_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "datetime"
+      ],
+      "decision": "纯领域规则迁入 growth；私有权威依赖改用 SDK DTO/ports，尚未完成",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_query_sources.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_query_sources.py",
+      "sha256": "d3f26f8b522e8596b77e79bf4d46e04b630dbad006db072ff6b4d7adf2f72bb6",
+      "directImports": [
+        "aos_api.aip_analyst_contracts",
+        "aos_api.aip_analyst_query_store",
+        "aos_api.business_investigation_shared_contracts",
+        "aos_api.ecommerce_analyst_analysis_sources",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "contextlib",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_receiver.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_receiver.py",
+      "sha256": "898c8f854de97a40cf26cb60bcc4f1bd0492fa0f26a61543c1afab87450f5671",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_agent_text_output",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_portrait_generation",
+        "aos_api.ecommerce_analyst_portrait_inputs",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters",
+        "aos_api.tenant_scope",
+        "contextlib",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_service.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_service.py",
+      "sha256": "501b2ae364f967b9dadc2333c2c302e21d9e97e80b9f8421fcd1cbcb0ddaf8bb",
+      "directImports": [
+        "aos_api.aip_agent_registry_contracts",
+        "aos_api.aip_agent_registry_store",
+        "aos_api.aip_agent_run_execution_contracts",
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_diagnosis_service",
+        "aos_api.ecommerce_analyst_portrait_generation",
+        "aos_api.ecommerce_analyst_portrait_inputs",
+        "aos_api.ecommerce_analyst_portrait_receiver",
+        "aos_api.tenant_scope",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_sources.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_sources.py",
+      "sha256": "2d3069016b381322fd3fb6558287d879a54dad9bbf5a998271872f955d5f9259",
+      "directImports": [
+        "aos_api.aip_eval_authority_store",
+        "aos_api.aip_production_contract_store",
+        "aos_api.aip_production_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "contextlib",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_portrait_worker.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_portrait_worker.py",
+      "sha256": "ba5f1f79418ef6e196bbe642c4b4df25232ea6e0f0b268db37afe34780040da9",
+      "directImports": [
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_taor_loop",
+        "aos_api.aip_task_models",
+        "aos_api.aip_task_store",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_portrait_inputs",
+        "aos_api.ecommerce_analyst_portrait_service",
+        "aos_api.public_contracts",
+        "datetime"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_decision.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_decision.py",
+      "sha256": "2682979a24abeaba6625f983599eeb4e6a2064723a45476a0f50ea9594e1aaf4",
+      "directImports": [
+        "aos_api.aip_eval_contracts",
+        "aos_api.aip_production_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "datetime",
+        "pydantic",
+        "typing"
+      ],
+      "decision": "领域 DTO 迁入 growth；平台仅保留版本化 DTO 兼容转发，尚未完成增量同步",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_decision_store.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_decision_store.py",
+      "sha256": "eba8988bc7c7d2618ad4ff4891b2f91533bc78c2db585dbcd6765e7b4f6e07df",
+      "directImports": [
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_stage_decision",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters",
+        "aos_api.tenant_scope"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_eval_report.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py",
+      "sha256": "42738a811ca13568d79b60a73a20af7304bf4f758a43c71930a3b1e49d57d731",
+      "directImports": [
+        "aos_api.aip_eval_runner",
+        "aos_api.aip_release_publication_service",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.tenant_scope"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_authority.py",
+      "sha256": "1e549eaca433462b9ea807241dfd98443e5f1b0f46940caf9f89c022638f7186",
+      "directImports": [
+        "aos_api.aip_assignee_resolution_store",
+        "aos_api.aip_production_contract_store",
+        "aos_api.aip_production_contracts",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters",
+        "aos_api.tenant_scope"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py",
+      "sha256": "a1fb256df668f69ae3db3d43fc71df816660cd399476e183e62506e975ddfd4d",
+      "directImports": [
+        "aos_api.aip_agent_registry_contracts",
+        "aos_api.aip_agent_run_execution_service",
+        "aos_api.aip_agent_run_service",
+        "aos_api.aip_agent_text_output",
+        "aos_api.aip_business_investigation_compile_saga",
+        "aos_api.aip_eval_authority_store",
+        "aos_api.aip_eval_contracts",
+        "aos_api.aip_production_contract_store",
+        "aos_api.aip_production_contracts",
+        "aos_api.aip_release_publication_service",
+        "aos_api.ecommerce_analyst_authority_contracts",
+        "aos_api.ecommerce_analyst_authority_store",
+        "aos_api.ecommerce_analyst_growth_plan_sources",
+        "aos_api.ecommerce_analyst_stage_decision",
+        "aos_api.ecommerce_analyst_stage_decision_store",
+        "aos_api.ecommerce_analyst_stage_eval_report",
+        "aos_api.ecommerce_analyst_stage_review_authority",
+        "aos_api.ecommerce_analyst_stage_review_runtime",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.ecommerce_growth_runtime_adapters"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    },
+    {
+      "sourcePath": "services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py",
+      "targetPath": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py",
+      "sha256": "6e8bd4e0bb827e550e97c7fbc15a38f8531da6cfe529e020c1b342ade4d4bf36",
+      "directImports": [
+        "aos_api.aip_task_store",
+        "aos_api.ecommerce_growth_host_ports",
+        "aos_api.tenant_scope"
+      ],
+      "decision": "拆分：领域规则迁入 growth；通用权威读取/事务/执行留宿主公共 port，尚未拆分",
+      "status": "PENDING_INCREMENTAL_PACKAGE_MIGRATION",
+      "targetExists": false
+    }
+  ]
+}
