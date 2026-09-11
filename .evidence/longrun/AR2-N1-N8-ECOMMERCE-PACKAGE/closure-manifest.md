@@ -481,3 +481,20 @@ createdAt，并由 `require_stage_eval_report_inputs` 核对可信 now、passed/
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_eval_report.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_eval_report.py` | 最小证明 DTO 与 exact 输入比较迁入；完整 Report/Run/Suite/Gate Owner 和装配仍 PENDING | 09330f7238ddc238b69c0a7349cb58bd3624794a5258580f836d39b0da7af367 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_eval_report_proof.py` | 原路径 | passed/时间/五项绑定/布尔版本负向与隔离 import 合同 | 65f551c5e0353c0b9b75ed36ebd71fb4f9f7176d09e0debad3ee7db9a07f75c6 |
+
+### 9.17 阶段评审包侧 review operation
+
+2026-09-12：作者树既有 `ecommerce_growth_review_advance` 由 registration-only 扩展为四类严格
+无副作用消息：command identity、review slot、runtime exact/observation、Eval proof。dispatcher
+要求每类 payload 键集合完全一致，复用 9.13—9.16 纯规则，只返回最小 decision/assignee/
+subject/report 引用。空 payload、未知 kind 和额外字段继续拒绝；既有 analysis derive 不变。
+
+该 operation 不读取数据库、不认证 Principal、不判断 current/latest、不写 Receipt 或决定、不调用
+Provider。当前 1.4.0 不含本实现，宿主后续必须经安装 runtime IPC 调用，禁止直接 import 作者树；
+1.5.0 Candidate 与 successor Installation 仍待清册边界闭合。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py` | 原路径 | review operation 严格路由；当前安装未变化 | 5aa2430e7bf976c91bc0b45a45b0016d9869b5632069df7229ee1645ace4a403 |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_stage_review_runtime_operation.py` | 原路径 | 四类无副作用评审消息 dispatcher；宿主 IPC 适配仍 PENDING | db4bc5a5fc892e7cf67a310dd7426132094605acd57d73b205c6c35e5e9e93cd |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_runtime_operation.py` | 原路径 | 四消息、严格 envelope 与未知消息拒绝合同 | f1d763b641a7e6a722e63992a1068d52cf79e7430a501c07a0f7057f9f5d0427 |

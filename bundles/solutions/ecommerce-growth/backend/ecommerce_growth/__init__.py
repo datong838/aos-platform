@@ -34,4 +34,18 @@ def handle(operation_id, _payload, _context):
         from .analyst_structure_case import structure_case_from_query
 
         return structure_case_from_query(_payload.get("query"), stage=_payload.get("stage"))
+    if (
+        operation_id == "ecommerce_growth_review_advance"
+        and type(_payload) is dict
+        and _payload.get("kind")
+        in {
+            "validate_command_identity",
+            "validate_review_slot",
+            "validate_runtime",
+            "validate_eval_proof",
+        }
+    ):
+        from .analyst_stage_review_runtime_operation import handle_stage_review_message
+
+        return handle_stage_review_message(_payload)
     raise PermissionError("ecommerce growth runtime is registration-only before AR2-7 cutover")
