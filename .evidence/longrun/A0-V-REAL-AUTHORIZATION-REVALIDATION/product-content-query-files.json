@@ -1,0 +1,4 @@
+{
+  "services/aos-api/aos_api/ecommerce_product_content_query.py": "86ea5c852119af99c7f0af8b4d9f9eb85335f2e72fe8d16d56539b165f9d24a3",
+  "services/aos-api/tests/test_ecommerce_product_content_query.py": "60b6d5ef851c0f66c962da250d3b0452e189f54824136909fd1727ef0cd3d1c1"
+}
