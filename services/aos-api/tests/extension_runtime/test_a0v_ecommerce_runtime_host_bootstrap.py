@@ -78,3 +78,20 @@ def test_main_records_unexpected_failure(tmp_path: Path, monkeypatch) -> None:
     )
     assert BOOTSTRAP.main(["--output", str(output)]) == 2
     assert json.loads(output.read_text())["reasonCode"] == "UNEXPECTED_DOMAIN_ERROR"
+
+
+def test_backup_replays_existing_nonempty_dump_without_docker(tmp_path: Path, monkeypatch) -> None:
+    target = tmp_path / "backups/aos_meta_head-pre-runtime-host-bootstrap.dump"
+    target.parent.mkdir()
+    target.write_bytes(b"existing-backup")
+    monkeypatch.setattr(
+        BOOTSTRAP.subprocess, "check_output",
+        lambda *_args, **_kwargs: '{"Config":{"Env":[]}}',
+    )
+    monkeypatch.setattr(
+        BOOTSTRAP.subprocess, "run",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("pg_dump called")),
+    )
+    result = BOOTSTRAP._backup(tmp_path)
+    assert result["size"] == len(b"existing-backup")
+    assert result["sha256"] == BOOTSTRAP._sha(b"existing-backup")

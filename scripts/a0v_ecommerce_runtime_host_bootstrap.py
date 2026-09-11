@@ -9,6 +9,7 @@ import json
 import os
 import secrets
 import stat
+import subprocess
 import uuid
 from pathlib import Path
 from typing import Any, Sequence
@@ -160,6 +161,43 @@ def _provision(conn: Any, credentials: dict[str, Any]) -> None:
         (ROLES["directory"], HOST_ID, "a0v-runtime-host-bootstrap",
          "a0v-runtime-host-identity-v1", _command_hash(identity_payload)),
     )
+
+
+def _backup(state_dir: Path) -> dict[str, Any]:
+    try:
+        inspected = json.loads(subprocess.check_output(
+            ["docker", "--context", CONTEXT, "inspect", "--format", "{{json .}}", CONTAINER],
+            text=True, stderr=subprocess.PIPE, timeout=15,
+        ))
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        raise BootstrapBlocked("DATABASE_CONTAINER_UNAVAILABLE", CONTAINER) from exc
+    environment = {}
+    for item in (inspected.get("Config") or {}).get("Env") or ():
+        if isinstance(item, str) and "=" in item:
+            key, value = item.split("=", 1)
+            environment[key] = value
+    directory = state_dir.resolve() / "backups"
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(directory, 0o700)
+    target = directory / "aos_meta_head-pre-runtime-host-bootstrap.dump"
+    if not target.exists():
+        temporary = target.with_name(target.name + ".tmp-" + uuid.uuid4().hex)
+        try:
+            with temporary.open("xb") as handle:
+                completed = subprocess.run(
+                    ["docker", "--context", CONTEXT, "exec", CONTAINER, "pg_dump",
+                     "-U", environment.get("POSTGRES_USER", "postgres"), "--dbname", DATABASE,
+                     "--format=custom", "--no-owner", "--no-privileges"],
+                    stdout=handle, stderr=subprocess.PIPE, timeout=120, check=False,
+                )
+            if completed.returncode != 0 or temporary.stat().st_size <= 0:
+                raise BootstrapBlocked("DATABASE_BACKUP_FAILED", str(target))
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+    if not target.is_file() or target.stat().st_size <= 0:
+        raise BootstrapBlocked("DATABASE_BACKUP_INVALID", str(target))
+    return {"path": str(target), "size": target.stat().st_size, "sha256": _sha(target.read_bytes())}
     assignment_payload = {"orgId": ORG_ID, "projectId": PROJECT_ID, "hostId": HOST_ID, "state": "assigned"}
     conn.execute(
         "SELECT extension_runtime_set_host_assignment(%s,%s,%s,'assigned',0,%s,%s,%s)",
@@ -197,6 +235,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     if not args.apply:
         return {"outcome": "PREFLIGHT_GREEN", "mode": "preflight", "database": DATABASE,
                 "credentialStatePresent": bool(credentials), "before": before}
+    backup = _backup(args.state_dir)
     with connect() as conn:
         _provision(conn, credentials)
         conn.commit()
@@ -205,7 +244,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     _assert_exact(after, applied=True)
     return {"outcome": "RUNTIME_HOST_BOOTSTRAP_GREEN", "mode": "apply", "database": DATABASE,
             "hostId": HOST_ID, "roles": ROLES, "credentialFile": str(credential_path),
-            "credentialFileHash": _sha(credential_path.read_bytes()), "before": before, "after": after,
+            "credentialFileHash": _sha(credential_path.read_bytes()), "backup": backup,
+            "before": before, "after": after,
             "effects": {"providerInvocationCount": 0, "externalPublicationCount": 0,
                         "installationMutationCount": 0}}
 
