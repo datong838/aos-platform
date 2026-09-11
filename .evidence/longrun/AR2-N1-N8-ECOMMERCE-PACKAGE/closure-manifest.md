@@ -356,3 +356,19 @@ AnalystExactRef、Method、Insight、Decision、GrowthPlan、TaskGraph、EffectR
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_authority_contracts.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_authority_contracts.py` | 全量领域 DTO/schema 迁入；平台保留不依赖包的版本兼容路径，运行装配仍 PENDING | f1b25967829edd0a597f2a7b713f59ee3a42f25b2c043b3bb2cbabcd571675b0 |
 | `services/aos-api/tests/extension_runtime/test_analyst_authority_contracts_package.py` | 原路径 | 全模型 schema、关键序列化、负向校验与独立 import 合同 | 45dfd841a176189a62301f52a84e470dae38eb66d506aa858e0fb3a8748a86af |
+
+### 9.10 经营计划审批 successor 纯规则
+
+2026-09-12：growth 包新增无存储的 `approve_growth_plan_successor`。它要求 draft 与 exact ref
+的类型、ID、revision、contentHash 一致，path、If-Match 版本、宿主已核验 current 标记、规范
+actor 和带时区审批时间全部有效，才生成 revision/version 相邻的 APPROVED successor，绑定
+priorRef 并重算规范 contentHash。输出仍只是一份待宿主持久化的领域对象，不允许外部效果。
+
+幂等 Receipt、当前头、调用身份、并发 CAS 和 publish 继续由宿主 Store 在事务内裁决。宿主
+旧 Service 未修改，合法转换结果由 parity 测试约束。当前 Candidate、OCI、Registry、Installation
+均未改变；第 9 节整体仍 PENDING，后续还需窄写端口和可信运行装配。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_growth_plan_approval.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py` | DRAFT→APPROVED 纯状态转换迁入；receipt-first 宿主事务与运行装配仍 PENDING | 89f4afe1633b5e298a2fd8cd2eeaf3d8cd9d07c9100ac02394a30233780e81f2 |
+| `services/aos-api/tests/extension_runtime/test_analyst_growth_plan_approval_rule.py` | 原路径 | 宿主合法结果 parity、exact/版本/状态/actor/时间负向边界与隔离 import | 98708bd1a6d0983bb9d22bc3d36ae165a85286e0f9ea57b7e48e979806a41d26 |

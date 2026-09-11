@@ -1,0 +1,11 @@
+{
+  "baseline": "8801589a",
+  "files": [
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-growth-plan-approval-rule-plan.md",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-growth-plan-approval-rule-files.json",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/analyst-growth-plan-approval-rule-verification.md",
+    ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/closure-manifest.md",
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_approval.py",
+    "services/aos-api/tests/extension_runtime/test_analyst_growth_plan_approval_rule.py"
+  ]
+}
