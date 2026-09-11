@@ -30,6 +30,7 @@ class StageReviewValidationExchange:
 class PreparedStageReviewValidation:
     command_hash: str
     exchanges: tuple[StageReviewValidationExchange,...]
+    authority_snapshot: dict[str,object]
     _snapshot_hash: str=field(init=False,repr=False)
 
     def __post_init__(self):
@@ -42,11 +43,16 @@ class PreparedStageReviewValidation:
         kinds=tuple(item.payload.get("kind") for item in self.exchanges)
         if len(kinds)!=len(set(kinds)):
             raise ValueError("unique stage review exchanges required")
-        object.__setattr__(self,"_snapshot_hash",canonical_sha256([[item.payload,item.expected] for item in self.exchanges]))
+        if type(self.authority_snapshot) is not dict or not self.authority_snapshot:
+            raise ValueError("non-empty stage review authority snapshot required")
+        canonical_json(self.authority_snapshot)
+        object.__setattr__(self,"_snapshot_hash",canonical_sha256([
+            [[item.payload,item.expected] for item in self.exchanges],self.authority_snapshot]))
 
     def verify(self):
         for item in self.exchanges:item.verify()
-        if canonical_sha256([[item.payload,item.expected] for item in self.exchanges])!=self._snapshot_hash:
+        if canonical_sha256([[[item.payload,item.expected] for item in self.exchanges],
+                self.authority_snapshot])!=self._snapshot_hash:
             raise ValueError("prepared stage review validation changed")
 
 

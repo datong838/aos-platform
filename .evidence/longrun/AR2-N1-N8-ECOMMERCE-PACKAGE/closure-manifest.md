@@ -528,3 +528,21 @@ PENDING，当前 1.4.0 Installation 不变。
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_coordinator.py` | 原路径 | prepare→IPC→snapshot verify→commit 编排；数据库 adapter 仍 PENDING | 29c1f322a12dd48a72438e0d6d475220be97773aad9f1b23d593f7208d3eb9a4 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | 顺序、hash、篡改和三阶段异常零重试合同 | 487b7ef5be65c6c89ee0ab45c95206af35b8e416bb8ab77a6eaab6b5cc45cc8d |
+
+### 9.20 阶段评审数据库双事务适配
+
+2026-09-12：新增 `StageReviewDatabasePhases`，将 prepare 与 commit 固定为两笔独立短事务；第一笔事务
+固定 command hash、非空 authority snapshot 与 exchanges，事务关闭后 coordinator 才调用已安装 Growth
+包。全部 IPC exact 成功后，第二笔事务重读 current snapshot，只有 canonical JSON exact 相等才调用
+publisher，且 publisher 返回检查发生在事务提交前。
+
+IPC 期间活跃事务为零；IPC 拒绝/超时/取消不打开第二笔事务，current 漂移零发布，publisher 异常回滚，
+各阶段均零重试。数据库回调限定同步且事务体无 await，避免取消后后台线程继续发布。真实 Owner snapshot
+builder、StageDecision publisher 与命令入口接线仍 PENDING；当前 1.4.0 Installation 和真实租户数据未变。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_coordinator.py` | 原路径 | prepared 增加非空 authority snapshot 完整性封印 | c471c6c180fc1273445e149cbc283c464b9c6799363f423078a2fb91e2fc0cfe |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_database_phases.py` | 原路径 | 双事务 prepare/current-revalidate/publish adapter；具体 Store 接线仍 PENDING | af318535aaa438181f4e1f3558658f06853d2d2137501eddf172955a9a8d11f7 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | authority snapshot 空值与篡改拒绝回归 | 2c66a60998e45659a632688bf77984c410e2834f8e861340e05142c321e65c29 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_database_phases.py` | 原路径 | 无跨 IPC 事务、漂移零发布、异常回滚与零重试合同 | 190a624aaabbacf666de686980dfc7126ebb1dcfa8f33aa8024b2a9a10f32e7b |

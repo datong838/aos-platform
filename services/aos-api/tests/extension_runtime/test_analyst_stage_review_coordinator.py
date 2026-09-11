@@ -14,7 +14,7 @@ def run(*,runtime=None,prepare_change=None,commit_error=None):
         StageReviewValidationExchange({"kind":"validate_runtime"},{"ok":2}))
     async def prepare(value):
         events.append("prepare")
-        prepared=PreparedStageReviewValidation(canonical_sha256(value),exchanges)
+        prepared=PreparedStageReviewValidation(canonical_sha256(value),exchanges,{"owner":"owner-1"})
         if prepare_change:prepare_change(prepared)
         return prepared
     async def invoke(operation,payload):
@@ -40,7 +40,7 @@ def test_prepare_ipc_commit_order_and_exact_objects():
 
 def test_wrong_prepare_hash_never_invokes_runtime_or_commit():
     async def prepare(value):return PreparedStageReviewValidation("sha256:"+"0"*64,
-        (StageReviewValidationExchange({"kind":"validate_runtime"},{"ok":True}),))
+        (StageReviewValidationExchange({"kind":"validate_runtime"},{"ok":True}),),{"owner":"owner-1"})
     calls=[]
     async def invoke(*args):calls.append("ipc");return {"ok":True}
     async def commit(*args):calls.append("commit");return {}
@@ -77,4 +77,15 @@ def test_dependencies_and_unique_bounded_exchanges_are_strict():
     port=InstalledGrowthStageReviewPort(async_fn)
     with pytest.raises(TypeError):AsyncStageReviewCommandCoordinator(prepare=lambda x:x,port=port,commit=async_fn)
     item=StageReviewValidationExchange({"kind":"validate_runtime"},{})
-    with pytest.raises(ValueError,match="unique"):PreparedStageReviewValidation("sha256:"+"a"*64,(item,item))
+    with pytest.raises(ValueError,match="unique"):PreparedStageReviewValidation(
+        "sha256:"+"a"*64,(item,item),{"owner":"owner-1"})
+
+
+def test_authority_snapshot_must_be_non_empty_and_remain_unchanged():
+    item=StageReviewValidationExchange({"kind":"validate_runtime"},{})
+    with pytest.raises(ValueError,match="non-empty"):
+        PreparedStageReviewValidation("sha256:"+"a"*64,(item,),{})
+    snapshot={"owner":"owner-1"}
+    prepared=PreparedStageReviewValidation("sha256:"+"a"*64,(item,),snapshot)
+    snapshot["owner"]="owner-2"
+    with pytest.raises(ValueError,match="validation changed"):prepared.verify()
