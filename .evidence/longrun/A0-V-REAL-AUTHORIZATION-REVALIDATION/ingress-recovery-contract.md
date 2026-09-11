@@ -177,3 +177,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线e0bea9f5。新增POST /v1/schedules/{schedule_id}/runs/{run_id}/recover，body仅claimId UUID，extra forbid；不接source/command/tenant，scope从Principal。沿已有数据写角色admin/developer/data-owner，其他403。直接调用持久execute_schedule(trigger=recovery,原run,claim)，不读取/回写内存_schedules，避免旧内存覆盖当前DB配置。schedule缺失404、合同状态冲突409、数据库/未知错误503固定中文提示，不暴露原异常或假成功；重复claim沿现有duplicate返回。
 
 文件services/aos-api/aos_api/routers/wave_ext.py、tests/test_schedule_recovery_api.py。HTTP专项验证登录依赖、角色拒绝不调用执行器、可信scope及原run、UUID/额外字段拒绝、固定冲突/503错误和404。真实PG租户/领取原语已另验，此HTTP suite执行器Mock，不冒充全栈。public未迁移/API未重载，下一波运行历史可恢复状态与前端入口、完整安装迁移后实测。
+
+## 运行历史恢复候选状态
+
+基线b51d4b8e。list_runs额外读取executor_stopped及同tenant/run原Journal EXISTS，返回recovery={candidate,reason}；reason为not_failed/executor_unknown/input_missing/ready。仅failed且退出严格true、finished_at非空、原Journal存在候选true。候选是展示提示，不证明当前source/graph/角色允许；恢复POST仍重新判定。原字段/顺序/limit保持，不加入源原始内容。
+
+文件services/aos-api/aos_api/qyh_cron_scheduler.py、tests/test_qyh_cron_scheduler.py、新tests/aip/test_a0v_recovery_history_pg.py。纯分类覆盖未知和成功；隔离PG完整形状run表验证EXISTS同tenant、canary Journal不能满足目标run、正常候选及limit。下一波前端显示原因并接恢复POST，public未迁移、API未重载。

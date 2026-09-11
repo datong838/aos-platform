@@ -186,13 +186,27 @@ def _get_schedule(scope: TenantScope, schedule_id: str) -> dict[str, Any] | None
     }
 
 
+def _recovery_hint(row: dict[str, Any]) -> dict[str, Any]:
+    if row['status'] != 'failed':
+        reason = 'not_failed'
+    elif row['executor_stopped'] is not True or row['finished_at'] is None:
+        reason = 'executor_unknown'
+    elif row['has_saved_input'] is not True:
+        reason = 'input_missing'
+    else:
+        reason = 'ready'
+    return {'candidate': reason == 'ready', 'reason': reason}
+
+
 def list_runs(scope: TenantScope, schedule_id: str, limit: int = 24) -> list[dict[str, Any]]:
     safe_limit = max(1, min(int(limit), 100))
     with connect(scope) as conn:
         rows = conn.execute(
             """SELECT id, scheduled_for, trigger, status, started_at, finished_at,
-                      duration_ms, rows_written, error_code, error_message, executor_id
-               FROM meta_schedule_run
+                      duration_ms, rows_written, error_code, error_message, executor_id, executor_stopped,
+                      EXISTS(SELECT 1 FROM ecommerce_ingress_command saved
+                             WHERE saved.org_id=r.org_id AND saved.project_id=r.project_id AND saved.run_id=r.id) AS has_saved_input
+               FROM meta_schedule_run r
                WHERE org_id=%s AND project_id=%s AND schedule_id=%s
                ORDER BY started_at DESC LIMIT %s""",
             (*scope.key, schedule_id, safe_limit),
@@ -204,6 +218,7 @@ def list_runs(scope: TenantScope, schedule_id: str, limit: int = 24) -> list[dic
             "durationMs": row["duration_ms"], "rowsWritten": row["rows_written"],
             "errorCode": row["error_code"], "errorMessage": row["error_message"],
             "executor": row["executor_id"],
+            "recovery": _recovery_hint(row),
         }
         for row in rows
     ]

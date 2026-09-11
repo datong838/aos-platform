@@ -238,3 +238,13 @@ def test_invalid_recovery_arguments_never_claim(monkeypatch,args):
     with pytest.raises(ValueError,match='SCHEDULE_RECOVERY_ARGUMENTS_INVALID'):
         scheduler_module.execute_schedule(TenantScope('org-org','dev-project'),'s',**args)
     new_claim.assert_not_called()
+
+
+@pytest.mark.parametrize('status,stopped,finished,saved,reason',[
+    ('failed',True,1,True,'ready'),('failed',False,1,True,'executor_unknown'),
+    ('failed',True,None,True,'executor_unknown'),('failed',True,1,False,'input_missing'),
+    ('running',True,1,True,'not_failed'),('succeeded',True,1,True,'not_failed'),
+])
+def test_recovery_hint_is_not_execution_authority(status,stopped,finished,saved,reason):
+    hint=scheduler_module._recovery_hint({'status':status,'executor_stopped':stopped,'finished_at':finished,'has_saved_input':saved})
+    assert hint=={'candidate':reason=='ready','reason':reason}
