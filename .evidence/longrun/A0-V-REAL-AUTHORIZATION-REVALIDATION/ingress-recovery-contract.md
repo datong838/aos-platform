@@ -165,3 +165,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线d6624907。project_pending的SKIP LOCKED仅防同事件双领，不防同对象旧/新事件分别被两个worker处理并逆序提交。新增租户projector事务advisory try-lock（独立namespace+tenant hash），拿不到时只返回当前pending/processed0，由已有deadline循环稍后重试。持锁者维持input_revision/outbox_id顺序完成整批；锁跟事务提交/回滚释放，不跨租户互斥。此策略串行同租户projector写入，保留各租户并行；不是全系统执行器锁。
 
 文件services/aos-api/aos_api/ecom_projector.py、tests/aip/test_a0v_projection_pending_pg.py。PG并发测试第一旧事件领取后在写对象前阻塞，第二worker不得越过它处理同对象新事件；释放后顺序处理新事件，最终属性必须新值。故障/原pending及其他tenant隔离回归。现有for-update skip锁仍保留；非projector人为占行导致跳读不作为正常owner路径承诺。后续生产迁移触发器与兼容对象多店身份仍待验证。
+
+## 生产投影触发器更新归属门
+
+基线6d88f8f5。复核o1r2_001发现UPDATE使用COALESCE(NEW.object_type,OLD.object_type)/rel，只判断新归属，可能将受保护旧对象/关系改成未保护类型绕过actor门。本波先在PG恢复组合实际应用原trigger迁移，非actor创建电商对象必须拒绝，真实projector仍可消费；再测试非actor把Payment改Other或Order.hasPayment改OtherRel必须拒绝。
+
+确认缺口后新增a0v010替换同名函数，对INSERT/UPDATE/DELETE分别采集NEW/OLD分类，只要任一侧属于电商都要求现有actor；普通非电商写入不受影响。原o1r2_001文件不改，触发器不重复创建。downgrade拒绝恢复已知可绕过旧门，作为forward-only安全修复，不等于领域包不可卸载。文件services/aos-api/alembic/versions/a0v_010_projector_guard_both_sides.py、tests/aip/test_a0v_ingress_journal_pg.py。public不迁移，测试最小兼容表承载真实生产trigger，非完整迁移证明。

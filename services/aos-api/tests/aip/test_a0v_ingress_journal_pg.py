@@ -212,16 +212,42 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
             from aos_api import ecom_projector as projector
             database.owner.execute('CREATE TABLE meta_object_type(id text PRIMARY KEY,name text,description text,published boolean,properties jsonb)')
             database.owner.execute('CREATE TABLE obj_instance(org_id text,project_id text,object_type text,object_id text,props jsonb,PRIMARY KEY(org_id,project_id,object_type,object_id))')
+            database.owner.execute('CREATE TABLE graph_edge(org_id text,project_id text,src_type text,src_id text,rel text,dst_type text,dst_id text,PRIMARY KEY(org_id,project_id,src_type,src_id,rel,dst_type,dst_id))')
+            guard_spec=importlib.util.spec_from_file_location('guard_migration',ROOT/'alembic/versions/o1r2_001_projector_ownership_guard.py')
+            guard=importlib.util.module_from_spec(guard_spec);guard_spec.loader.exec_module(guard)
+            guard.op=SimpleNamespace(execute=database.owner.execute);guard.upgrade()
+            fix_spec=importlib.util.spec_from_file_location('guard_fix',ROOT/'alembic/versions/a0v_010_projector_guard_both_sides.py')
+            fix=importlib.util.module_from_spec(fix_spec);fix_spec.loader.exec_module(fix)
+            fix.op=SimpleNamespace(execute=database.owner.execute);fix.upgrade()
             database.owner.execute('GRANT SELECT,INSERT,UPDATE ON meta_object_type,obj_instance TO aos_runtime')
             database.owner.execute('ALTER TABLE obj_instance ENABLE ROW LEVEL SECURITY')
             database.owner.execute('ALTER TABLE obj_instance FORCE ROW LEVEL SECURITY')
             database.owner.execute("CREATE POLICY tenant_scope ON obj_instance TO aos_runtime USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
             monkeypatch.setattr(projector,'connect',factory)
+            with pytest.raises(errors.InsufficientPrivilege),factory(scope) as conn:
+                conn.execute("INSERT INTO obj_instance VALUES('org-org','dev-project','Payment','forbidden','{}'::jsonb)")
             assert projector.project_until_caught_up(scope,deadline=time.monotonic()+5)=={'projected':2,'pending':0}
             projected=database.owner.execute('SELECT object_type,props FROM obj_instance').fetchall()
             assert len(projected)==1 and projected[0]['object_type']=='Payment'
             assert projected[0]['props']['orderId']=='o-1'
             assert projected[0]['props']['_sourceIdentity']['externalId']==command.objects[0].identity.external_id
+            with pytest.raises(errors.InsufficientPrivilege),factory(scope) as conn:
+                conn.execute("UPDATE obj_instance SET object_type='Other' WHERE object_type='Payment'")
+            database.owner.execute('GRANT SELECT,INSERT,UPDATE,DELETE ON graph_edge TO aos_runtime')
+            with factory(scope) as conn:
+                conn.execute("SELECT set_config('aos.projection_actor','ecom-projector-v1',true)")
+                conn.execute("INSERT INTO graph_edge VALUES('org-org','dev-project','Order','o','Order.hasPayment','Payment','p')")
+            with pytest.raises(errors.InsufficientPrivilege),factory(scope) as conn:
+                conn.execute("UPDATE graph_edge SET rel='OtherRel'")
+            with pytest.raises(errors.InsufficientPrivilege),factory(scope) as conn:
+                conn.execute('DELETE FROM graph_edge')
+            with factory(scope) as conn:
+                conn.execute("INSERT INTO obj_instance VALUES('org-org','dev-project','Other','allowed','{}'::jsonb)")
+                conn.execute("UPDATE obj_instance SET props='{}'::jsonb WHERE object_type='Other'")
+            with pytest.raises(errors.InsufficientPrivilege),factory(scope) as conn:
+                conn.execute("UPDATE obj_instance SET object_type='Payment' WHERE object_type='Other'")
+            with pytest.raises(RuntimeError,match='Forward-only'):
+                fix.downgrade()
         else:
             with engine.begin() as conn:
                 conn.execute(update(projection_outbox).values(projected=True))
