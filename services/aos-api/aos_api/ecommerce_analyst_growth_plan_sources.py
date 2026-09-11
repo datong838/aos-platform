@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, DecisionSummaryRevision, InsightRevision
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, DecisionSummaryRevision, InsightRevision, MethodRevision
 from aos_api.ecommerce_analyst_authority_store import canonical_hash
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.tenant_scope import TenantScope
@@ -15,6 +15,7 @@ def require_current_revision(conn: Any, scope: TenantScope, ref: AnalystExactRef
     kinds = {
         "DecisionSummaryRevision": ("decision", "decision_id", DecisionSummaryRevision),
         "InsightRevision": ("insight", "insight_id", InsightRevision),
+        "MethodRevision": ("method", "method_id", MethodRevision),
     }
     if ref.resource_type not in kinds:
         raise ValueError("unsupported analyst source kind")

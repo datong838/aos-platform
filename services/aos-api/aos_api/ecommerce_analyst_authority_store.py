@@ -6,7 +6,7 @@ import hashlib
 import json
 import uuid
 from collections.abc import Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, contextmanager
 from typing import Any
 
 from aos_api.db import connect as db_connect
@@ -16,6 +16,7 @@ from aos_api.ecommerce_analyst_authority_contracts import (
     EcommerceEffectReviewRevision,
     GrowthPlanRevision,
     InsightRevision,
+    MethodRevision,
     TaskGraphRevision,
 )
 from aos_api.tenant_scope import TenantScope
@@ -51,6 +52,47 @@ class EcommerceAnalystAuthorityStore:
 
     def publish_insight(self, scope: TenantScope, actor: str, key: str, item: InsightRevision, *, expected_version: int) -> AnalystExactRef:
         return self._publish(scope, actor, key, item, expected_version=expected_version, identity=item.insight_id, identity_column="insight_id", resource_type="InsightRevision", head_table="ecommerce_analyst_insight_head", revision_table="ecommerce_analyst_insight_revision", operation="analyst.insight_publish")
+
+    def publish_method(self, scope: TenantScope, actor: str, key: str, item: MethodRevision, *, expected_version: int) -> AnalystExactRef:
+        item = MethodRevision.model_validate(item.model_dump(mode="python"))
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        if (not key.strip() or actor != item.created_by or not actor.strip()
+                or type(expected_version) is not int or expected_version < 0
+                or canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != item.content_hash):
+            raise AnalystAuthorityConflict("method actor, key or payload hash mismatch")
+        with self._connect_factory(scope) as conn:
+            for lock in sorted({"analyst-method-id:" + canonical_hash([*scope.key, item.method_id]),
+                                "analyst-method-key:" + canonical_hash([*scope.key, key])}):
+                conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))", (lock,))
+            @contextmanager
+            def bound(requested_scope):
+                if requested_scope != scope:
+                    raise AnalystAuthorityConflict("method transaction scope mismatch")
+                yield conn
+            owner = EcommerceAnalystAuthorityStore(bound)
+            if item.prior_ref is not None:
+                owner.get_method_exact(scope, item.prior_ref)
+            return owner._publish(scope, actor, key, item, expected_version=expected_version,
+                identity=item.method_id, identity_column="method_id", resource_type="MethodRevision",
+                head_table="ecommerce_analyst_method_head", revision_table="ecommerce_analyst_method_revision",
+                operation="analyst.method_publish")
+
+    def get_method_exact(self, scope: TenantScope, ref: AnalystExactRef) -> MethodRevision:
+        if ref.resource_type != "MethodRevision":
+            raise AnalystAuthorityNotFound("exact ref is not a MethodRevision")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT payload,content_hash FROM ecommerce_analyst_method_revision WHERE org_id=%s AND project_id=%s AND method_id=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise AnalystAuthorityNotFound("exact MethodRevision was not found in scope")
+        item = MethodRevision.model_validate(row["payload"])
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        if (item.method_id != ref.resource_id or item.revision != ref.revision or item.content_hash != ref.content_hash
+                or canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != ref.content_hash):
+            raise AnalystAuthorityNotFound("MethodRevision payload does not match authority")
+        return item
 
     def publish_decision(self, scope: TenantScope, actor: str, key: str, item: DecisionSummaryRevision, *, expected_version: int) -> AnalystExactRef:
         return self._publish(scope, actor, key, item, expected_version=expected_version, identity=item.decision_id, identity_column="decision_id", resource_type="DecisionSummaryRevision", head_table="ecommerce_analyst_decision_head", revision_table="ecommerce_analyst_decision_revision", operation="analyst.decision_publish")

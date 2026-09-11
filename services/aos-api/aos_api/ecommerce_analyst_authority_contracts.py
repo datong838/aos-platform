@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_serializer, model_validator
 
@@ -78,6 +79,25 @@ class _RevisionBase(AipContractModel):
                 raise ValueError("priorRef must retain identity")
             if self.prior_ref.revision != self.revision - 1:
                 raise ValueError("priorRef must target the preceding revision")
+
+
+class MethodRevision(_RevisionBase):
+    """Versioned descriptive method metadata; never causal approval."""
+    method_id: str = Field(min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=2000)
+    algorithm: Literal["descriptive_snapshot_v1"]
+    insight_kind: Literal["observation"]
+    min_source_items: int = Field(strict=True, ge=1, le=100)
+    max_source_age_seconds: int = Field(strict=True, ge=1, le=31536000)
+    limitations: list[Annotated[str, Field(min_length=1, max_length=2000)]] = Field(min_length=1, max_length=50)
+
+    @model_validator(mode="after")
+    def _method_integrity(self) -> "MethodRevision":
+        self._validate_chain(self.method_id, "MethodRevision")
+        if any(not value.strip() for value in [self.method_id, self.name, self.description, *self.limitations]):
+            raise ValueError("method metadata must be explicit and nonblank")
+        return self
 
 
 class InsightRevision(_RevisionBase):
