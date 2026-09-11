@@ -711,3 +711,22 @@ PENDING，本切片无数据库写入或真实租户状态变化。
 |---|---|---|---|
 | `services/aos-api/aos_api/extension_runtime/installed_package_invoker.py` | 原路径 | active Installation/binding/lock/marking 双快照包围一次 live IPC | d868b18c1c4f4c726b1986f377172fb8f74bac30de487122858aecc8c3d740c4 |
 | `services/aos-api/tests/extension_runtime/test_installed_package_invoker.py` | 原路径 | 事务外 IPC、漂移丢弃、隔离/marking/package 与零重试合同 | 47df876705c6eb55732b86e8b6b218bed6555671973ab2682ecbdc7b6db03d60 |
+
+### 9.31 阶段评审与当前已安装运行时组合封印
+
+2026-09-12：`CurrentInstalledPackageInvoker` 的 snapshot reader 收窄为只接受 `HostTransaction`。
+`AsyncAnalystStageReviewCommandService` 新发布在原业务 authority snapshot 中加入 `installedRuntime`：
+prepare 事务封印一次，五门 IPC 完成后的 commit 事务再读一次，exact 相等后才允许 StageDecision Owner
+发布。第五门成功后发生 binding/epoch/lock/package 漂移也会零发布。
+
+新增正式 `build_current_installed_analyst_stage_review_service`，调用方法和 snapshot reader 必须来自同一
+concrete invoker。历史 Receipt replay 不重新要求当前 runtime 存活，继续零 proof、零 runtime read、零
+IPC。当前无公开入口，production control plane 尚未持有 live directory，1.5.0 candidate 也未安装；因此
+真实租户 stage-review 仍未激活。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/installed_package_invoker.py` | 原路径 | HostTransaction-only snapshot reader 与一次 IPC 前后当前性 | 6f14f6ad0e00f5a91850baee6de03f608c4678f75c046d84a772866bfdd12242 |
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_async_service.py` | 原路径 | installedRuntime prepare/commit 封印与 concrete factory | 5ffda95e508ede17a95503d86e31ecbe6fd58685144931272587f924cc3cc3ec |
+| `services/aos-api/tests/extension_runtime/test_installed_package_invoker.py` | 原路径 | 同一 invoker factory 与既有当前性回归 | 7403b9105bf8ccbb2b0b8e4da6de38c90803cd225ed03d5abd98ff4f4296f463 |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_async_service.py` | 原路径 | 第五门后 runtime 漂移零发布与 replay 零读取 | 54df3880d36cba2a0b92888c1229c9accd245c33b4cce1f5456b71e9eea3ad6f |

@@ -7,9 +7,13 @@ from uuid import uuid4
 import pytest
 
 from aos_api.asset_registry.composition_contracts import CurrentInstallationRef
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 from aos_api.extension_runtime.preparation_worker import PreparedJob
+from aos_api.ecommerce_analyst_stage_review_async_service import (
+    build_current_installed_analyst_stage_review_service,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -61,7 +65,7 @@ class _Store:
         self.state = state
 
     def load_active_baseline_in_transaction(self, conn, *, org_id, project_id, requested_ref):
-        assert conn.active and (org_id, project_id) == SCOPE.key
+        assert type(conn) is HostTransaction and (org_id, project_id) == SCOPE.key
         assert requested_ref == CurrentInstallationRef(
             installationId=str(INSTALLATION), revision=4,
             lockHash=LOCK_HASH, overlayRevision="overlay-4"
@@ -188,3 +192,14 @@ def test_ipc_failure_or_cancel_is_never_retried(failure):
         asyncio.run(invoker("operation", {}))
     assert len(calls) == 1
     assert len(observations) == 1
+
+
+def test_stage_review_factory_binds_one_concrete_invoker_to_call_and_snapshot():
+    state, calls, observations = _state(), [], []
+    service = build_current_installed_analyst_stage_review_service(
+        _connect(state, observations), scope=SCOPE, installation_id=INSTALLATION,
+        generation=GENERATION, installation_store=_Store(state),
+        live_directory=_directory(calls), markings=["internal"],
+    )
+    assert isinstance(service.invoke.__self__, CurrentInstalledPackageInvoker)
+    assert service.installed_snapshot.__self__ is service.invoke.__self__

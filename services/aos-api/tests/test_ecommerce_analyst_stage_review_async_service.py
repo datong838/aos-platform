@@ -51,3 +51,38 @@ def test_unknown_ipc_never_publishes(monkeypatch):
             SCOPE,value,actor=value.created_by,key='unknown',expected_version=0))
         with connect(SCOPE) as conn:
             assert conn.execute('SELECT count(*) AS n FROM ecommerce_analyst_stage_decision_head').fetchone()['n']==0
+
+
+def test_installed_runtime_snapshot_is_sealed_until_publish(monkeypatch):
+    with disposable_database() as connect:
+        migrate(connect);value=item();monkeypatch.setattr(module,'StageReviewCompositeAuthorityReader',Reader)
+        runtime_revision={'value':9};reads=[];ipc=[]
+        def runtime_snapshot(transaction):
+            assert type(transaction) is HostTransaction
+            reads.append(runtime_revision['value'])
+            return {'bindingRevision':runtime_revision['value'],'generation':'generation-1'}
+        async def invoke(operation,payload):
+            ipc.append(payload['kind'])
+            if payload['kind']=='validate_structure_case':runtime_revision['value']=10
+            return {'ok':payload['kind']}
+        service=AsyncAnalystStageReviewCommandService(connect,invoke_installed_once=invoke,
+            installed_snapshot_in_transaction=runtime_snapshot,markings=['internal'])
+        with pytest.raises(ValueError,match='snapshot changed'):
+            asyncio.run(service.decide(SCOPE,value,actor=value.created_by,key='runtime-drift',expected_version=0))
+        assert reads==[9,10] and ipc==list(KINDS)
+        with connect(SCOPE) as conn:
+            assert conn.execute('SELECT count(*) AS n FROM ecommerce_analyst_stage_decision_head').fetchone()['n']==0
+
+
+def test_replay_skips_installed_runtime_snapshot(monkeypatch):
+    with disposable_database() as connect:
+        migrate(connect);value=item();Reader.calls=0;monkeypatch.setattr(module,'StageReviewCompositeAuthorityReader',Reader)
+        reads=[];ipc=[]
+        def runtime_snapshot(_):reads.append(1);return {'bindingRevision':9}
+        async def invoke(operation,payload):ipc.append(payload['kind']);return {'ok':payload['kind']}
+        service=AsyncAnalystStageReviewCommandService(connect,invoke_installed_once=invoke,
+            installed_snapshot_in_transaction=runtime_snapshot,markings=['internal'])
+        first=asyncio.run(service.decide(SCOPE,value,actor=value.created_by,key='sealed-replay',expected_version=0))
+        assert reads==[1,1]
+        second=asyncio.run(service.decide(SCOPE,value,actor=value.created_by,key='sealed-replay',expected_version=0))
+        assert second==first and reads==[1,1] and ipc==list(KINDS)

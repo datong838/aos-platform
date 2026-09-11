@@ -6,6 +6,7 @@ from uuid import UUID
 
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.asset_registry.composition_contracts import CurrentInstallationRef
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
 from .live_job_directory import LivePreparedJobDirectory
 
@@ -37,9 +38,10 @@ class CurrentInstalledPackageInvoker:
         self.store = installation_store
         self.directory = live_directory
 
-    def _read_current(self):
-        with self.connect(self.scope) as conn:
-            installation = conn.execute(
+    def read_current_in_transaction(self, transaction):
+        if type(transaction) is not HostTransaction:
+            raise TypeError("installed snapshot requires HostTransaction")
+        installation = transaction.execute(
                 """SELECT i.active_revision,r.lock_hash,r.overlay_revision
                      FROM bundle_installation i
                      JOIN bundle_installation_revision r
@@ -50,7 +52,7 @@ class CurrentInstalledPackageInvoker:
                     FOR SHARE OF i,r""",
                 (*self.scope.key, self.installation_id),
             ).fetchone()
-            binding = conn.execute(
+        binding = transaction.execute(
                 """SELECT installation_revision,package_lock_ref,profile_ref,config_ref,
                           execution_epoch,desired_state,observed_state,enabled,
                           operation_fence,revision
@@ -59,22 +61,22 @@ class CurrentInstalledPackageInvoker:
                       AND installation_id=%s AND generation=%s FOR SHARE""",
                 (*self.scope.key, self.installation_id, self.generation),
             ).fetchone()
-            if installation is None or binding is None:
-                raise PermissionError("current installed runtime unavailable")
-            current_ref = CurrentInstallationRef.model_validate({
+        if installation is None or binding is None:
+            raise PermissionError("current installed runtime unavailable")
+        current_ref = CurrentInstallationRef.model_validate({
                 "installationId": str(self.installation_id),
                 "revision": installation["active_revision"],
                 "lockHash": installation["lock_hash"],
                 "overlayRevision": installation["overlay_revision"],
             })
-            baseline = self.store.load_active_baseline_in_transaction(
-                conn, org_id=self.scope.org_id, project_id=self.scope.project_id,
-                requested_ref=current_ref,
-            )
-            if baseline.server_ref != current_ref or baseline.lock.lock_hash != current_ref.lock_hash:
-                raise PermissionError("current Installation baseline drifted")
-            lock_ref = binding["package_lock_ref"]
-            if (
+        baseline = self.store.load_active_baseline_in_transaction(
+            transaction, org_id=self.scope.org_id, project_id=self.scope.project_id,
+            requested_ref=current_ref,
+        )
+        if baseline.server_ref != current_ref or baseline.lock.lock_hash != current_ref.lock_hash:
+            raise PermissionError("current Installation baseline drifted")
+        lock_ref = binding["package_lock_ref"]
+        if (
                 binding["installation_revision"] != current_ref.revision
                 or type(lock_ref) is not dict
                 or lock_ref.get("lockHash") != current_ref.lock_hash
@@ -82,21 +84,21 @@ class CurrentInstalledPackageInvoker:
                 or binding["observed_state"] != "ready"
                 or binding["enabled"] is not True
                 or binding["operation_fence"] is not False
-            ):
-                raise PermissionError("current installed runtime is not admitted")
-            target_markings = baseline.lock.payload.permission_diff.target.markings
-            if type(target_markings) is not list or any(
+        ):
+            raise PermissionError("current installed runtime is not admitted")
+        target_markings = baseline.lock.payload.permission_diff.target.markings
+        if type(target_markings) is not list or any(
                 type(value) is not str or not value for value in target_markings
-            ) or not set(target_markings).issubset(self.markings):
-                raise PermissionError("current installed package markings are not admitted")
-            selected = tuple(
+        ) or not set(target_markings).issubset(self.markings):
+            raise PermissionError("current installed package markings are not admitted")
+        selected = tuple(
                 value for value in baseline.lock.payload.resolved
                 if value.id == self.package_id
-            )
-            if len(selected) != 1:
-                raise PermissionError("current installed package is not unique")
-            package = selected[0]
-            snapshot = {
+        )
+        if len(selected) != 1:
+            raise PermissionError("current installed package is not unique")
+        package = selected[0]
+        snapshot = {
                 "scope": {"orgId": self.scope.org_id, "projectId": self.scope.project_id},
                 "installationRef": current_ref.model_dump(mode="json", by_alias=True),
                 "generation": str(self.generation),
@@ -114,15 +116,20 @@ class CurrentInstalledPackageInvoker:
                 },
                 "package": package.model_dump(mode="json", by_alias=True),
                 "targetMarkings": sorted(set(target_markings)),
-            }
-            canonical_json(snapshot)
-            return snapshot, package.content_hash
+        }
+        canonical_json(snapshot)
+        return snapshot
+
+    def _read_current(self):
+        with self.connect(self.scope) as conn:
+            return self.read_current_in_transaction(HostTransaction(conn))
 
     async def __call__(self, operation, payload):
         if type(operation) is not str or not operation or type(payload) is not dict:
             raise ValueError("exact installed invocation required")
         canonical_json(payload)
-        before, package_hash = self._read_current()
+        before = self._read_current()
+        package_hash = before["package"]["contentHash"]
         job = self.directory.resolve(
             scope=self.scope, installation_id=self.installation_id,
             generation=self.generation,
@@ -131,8 +138,8 @@ class CurrentInstalledPackageInvoker:
             package_id=self.package_id, package_hash=package_hash,
             operation=operation, payload=payload,
         )
-        after, after_package_hash = self._read_current()
-        if after != before or after_package_hash != package_hash:
+        after = self._read_current()
+        if after != before:
             raise PermissionError("installed invocation authority changed")
         return result
 
