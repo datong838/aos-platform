@@ -150,14 +150,11 @@ def test_complete_database_graph_and_rejected_answer():
         with pytest.raises(ValueError): receiver.receive(SCOPE, **dict(kwargs, answer=kwargs["answer"] + " "))
         class InjectedCommitFailure(RuntimeError):
             pass
-        class BeforeCommitFailure:
-            def __init__(self, conn): self.conn = conn
-            def __getattr__(self, name): return getattr(self.conn, name)
-            def commit(self): raise InjectedCommitFailure("synthetic failure before commit")
         @contextmanager
         def failing_connect(scope):
             with connect(scope) as conn:
-                yield BeforeCommitFailure(conn)
+                yield conn
+                raise InjectedCommitFailure("synthetic failure at outer transaction boundary")
         with pytest.raises(InjectedCommitFailure):
             GrowthPlanDraftReceiver(failing_connect).receive(SCOPE, **kwargs)
         identity = canonical_hash({"tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id}, "attemptId": kwargs["attempt_id"]})

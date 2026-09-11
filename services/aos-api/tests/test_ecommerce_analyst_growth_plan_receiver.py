@@ -48,12 +48,15 @@ def setup_receiver(monkeypatch):
         def __init__(self, factory): pass
         def get(self, scope, identity): return state["run"]
     class Owner:
-        def __init__(self, factory): self.factory = factory
+        def __init__(self, factory):
+            from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+            assert isinstance(factory,TransactionBoundConnectFactory)
+            self.factory = factory
         def find_plan_publication_receipt(self, scope, key): return state["receipt"]
         def get_plan_exact(self, scope, ref): return state["saved"]
         def publish_plan(self, scope, actor, key, plan, *, expected_version):
             assert scope == SCOPE and expected_version == 0
-            with self.factory(scope) as bound: assert bound is connection
+            with self.factory(scope) as bound: assert bound.commit() is None
             state["published"].append(plan)
             state["saved"] = plan
             state["receipt"] = AnalystExactRef(resourceType="GrowthPlanRevision", resourceId=plan.plan_id, revision=1, contentHash=plan.content_hash)

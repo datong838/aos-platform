@@ -1,0 +1,10 @@
+{
+  "services/aos-api/aos_api/ecommerce_analyst_portrait_receiver.py": "898c8f854de97a40cf26cb60bcc4f1bd0492fa0f26a61543c1afab87450f5671",
+  "services/aos-api/aos_api/ecommerce_analyst_authority_store.py": "a93a904abee9a9b500ae57dd35fd32c2c6d07de4ca5abfa12a8883d4861560a2",
+  "services/aos-api/aos_api/ecommerce_analyst_diagnosis_receiver.py": "97360fe51c48e3a51e0174e8be643722f8d23b9fde6f339dc1d7e4e39c8fde84",
+  "services/aos-api/aos_api/ecommerce_analyst_growth_plan_receiver.py": "8c5ae5598a08fbb24fd9caba6fbdb28007e7bf4e9e0920039e871edece5d6ffa",
+  "services/aos-api/tests/test_ecommerce_analyst_portrait_receiver.py": "4aab174fb1712d706b56256bcfe64069d879f741ff276d1a1e65495ddd1be5a0",
+  "services/aos-api/tests/test_ecommerce_analyst_diagnosis_receiver.py": "673adae5418cf3309ae88d3b73bc9b3c4f9732468a8101bc25e931c310d77789",
+  "services/aos-api/tests/test_ecommerce_analyst_growth_plan_receiver.py": "e12e5cd6d7d55abfcc8ad983143af90530660cfca8b276f2bab7bad3ffebc870",
+  "services/aos-api/tests/test_ecommerce_analyst_growth_plan_full_graph.py": "6fd874794bdcea601146c47710ca4f30b5f21c7712b84554510a0c9655a2966c"
+}

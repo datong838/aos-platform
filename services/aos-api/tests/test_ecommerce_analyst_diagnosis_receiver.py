@@ -45,12 +45,15 @@ def setup_receiver(monkeypatch):
         def __init__(self, factory): pass
         def get(self, scope, identity): return state["run"]
     class Owner:
-        def __init__(self, factory): self.factory = factory
+        def __init__(self, factory):
+            from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+            assert isinstance(factory,TransactionBoundConnectFactory)
+            self.factory = factory
         def find_decision_publication_receipt(self, scope, key): return state["receipt"]
         def get_decision_exact(self, scope, ref): return state["saved"]
         def publish_decision(self, scope, actor, key, decision, *, expected_version):
             assert expected_version == 0 and actor == "compiler"
-            with self.factory(scope) as conn: assert conn is connection
+            with self.factory(scope) as conn: assert conn.commit() is None
             state["publications"].append(decision)
             state["saved"] = decision
             state["receipt"] = AnalystExactRef(resourceType="DecisionSummaryRevision", resourceId=decision.decision_id,
@@ -280,13 +283,11 @@ def test_full_database_receiver_boundaries(case):
                                     (*SCOPE.key, "diagnosis-receive:" + identity)).fetchone()["n"] == expected
         if case == "rollback_concurrent_replay":
             class CommitFailure(RuntimeError): pass
-            class FailCommit:
-                def __init__(self, conn): self.conn = conn
-                def __getattr__(self, name): return getattr(self.conn, name)
-                def commit(self): raise CommitFailure("injected before commit")
             @contextmanager
             def failing(scope):
-                with connect(scope) as conn: yield FailCommit(conn)
+                with connect(scope) as conn:
+                    yield conn
+                    raise CommitFailure("injected at outer transaction boundary")
             with pytest.raises(CommitFailure): module.DiagnosisReceiver(failing).recover(SCOPE, **kwargs)
             assert_count(0)
             with ThreadPoolExecutor(max_workers=2) as pool:

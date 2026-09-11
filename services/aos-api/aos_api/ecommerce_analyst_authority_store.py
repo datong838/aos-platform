@@ -134,6 +134,33 @@ class EcommerceAnalystAuthorityStore:
             return None
         return AnalystExactRef.model_validate(row["result_ref"])
 
+    def get_insight_exact(self, scope: TenantScope, ref: AnalystExactRef) -> InsightRevision:
+        """Read an immutable historical portrait, not current execution authority."""
+        if ref.resource_type != "InsightRevision":
+            raise AnalystAuthorityNotFound("exact ref is not a InsightRevision")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT payload,content_hash FROM ecommerce_analyst_insight_revision WHERE org_id=%s AND project_id=%s AND insight_id=%s AND revision=%s",
+                (*scope.key, ref.resource_id, ref.revision),
+            ).fetchone()
+        if row is None or row["content_hash"] != ref.content_hash:
+            raise AnalystAuthorityNotFound("exact InsightRevision was not found in scope")
+        item = InsightRevision.model_validate(row["payload"])
+        self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
+        if (item.insight_id != ref.resource_id or item.revision != ref.revision
+                or item.content_hash != ref.content_hash
+                or canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != ref.content_hash):
+            raise AnalystAuthorityNotFound("InsightRevision payload does not match authority")
+        return item
+
+    def find_insight_publication_receipt(self, scope: TenantScope, key: str) -> AnalystExactRef | None:
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT result_ref FROM ecommerce_analyst_authority_receipt WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s",
+                (*scope.key, "analyst.insight_publish", key),
+            ).fetchone()
+        return None if row is None else AnalystExactRef.model_validate(row["result_ref"])
+
     def get_decision_exact(self, scope: TenantScope, ref: AnalystExactRef) -> DecisionSummaryRevision:
         """Read an immutable historical diagnosis, not current execution authority."""
         if ref.resource_type != "DecisionSummaryRevision":

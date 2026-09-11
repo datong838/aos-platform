@@ -16,6 +16,8 @@ from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.ecommerce_analyst_diagnosis_generation import decision_from_completed_generation
 from aos_api.ecommerce_analyst_growth_plan_sources import require_current_revision
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.tenant_scope import TenantScope
 
 
@@ -104,7 +106,7 @@ class DiagnosisReceiver:
                 raise ValueError("persisted diagnosis artifact provenance mismatch")
             expected_artifact = AnalystExactRef(resourceType="Artifact", resourceId=artifact.artifact_id,
                                                 revision=1, contentHash=artifact.content_hash)
-            owner = EcommerceAnalystAuthorityStore(bound)
+            owner = EcommerceAnalystAuthorityStore(TransactionBoundConnectFactory(HostTransaction(conn), scope))
             replay = owner.find_decision_publication_receipt(scope, key)
             if replay is not None:
                 old = owner.get_decision_exact(scope, replay)

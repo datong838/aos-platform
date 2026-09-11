@@ -15,6 +15,8 @@ from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.ecommerce_analyst_growth_plan_draft import draft_from_completed_generation
 from aos_api.ecommerce_analyst_growth_plan_sources import require_growth_plan_sources
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.tenant_scope import TenantScope
 
 
@@ -92,7 +94,7 @@ class GrowthPlanDraftReceiver:
                     or row["source"].get("agentRunId") != run.agent_run_id
                     or row["source"].get("attemptId") != attempt.attempt_id):
                 raise ValueError("persisted generation artifact mismatch")
-            owner = EcommerceAnalystAuthorityStore(bound)
+            owner = EcommerceAnalystAuthorityStore(TransactionBoundConnectFactory(HostTransaction(conn), scope))
             replay_ref = owner.find_plan_publication_receipt(scope, key)
             if replay_ref is not None:
                 old = owner.get_plan_exact(scope, replay_ref)
