@@ -947,7 +947,12 @@ class PostgresInstallationStore:
             if to_state != "applied":
                 raise InstallationStateConflictError("runtime preparation cannot activate")
             evidence_type = "runtime_preparation"
-        if current.state != expected_from:
+        accepted_from = (
+            {"active", "approved"}
+            if to_state == "uninstalled"
+            else {expected_from}
+        )
+        if current.state not in accepted_from:
             raise InstallationStateConflictError(
                 "installation state transition is not allowed"
             )

@@ -115,6 +115,35 @@ class RuntimeUninstallGuard:
         if conn.info.transaction_status!=TransactionStatus.INTRANS:
             raise RuntimeError('runtime uninstall guard requires an explicit transaction')
         installation_id=UUID(str(installation_id))
+        head=conn.execute('''SELECT r.state FROM bundle_installation i
+            JOIN bundle_installation_revision r
+              ON r.org_id=i.org_id AND r.project_id=i.project_id
+             AND r.installation_pk=i.installation_pk AND r.revision=i.current_revision
+            WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s
+              AND i.current_revision=%s AND i.etag_version=%s FOR SHARE OF i,r''',
+            (org_id,project_id,installation_id,expected_installation_revision,
+             expected_installation_revision)).fetchone()
+        if head is None:
+            raise RuntimeConflict('current installation authority is unavailable')
+        state=_values(head,('state',))[0]
+        if state=='approved':
+            row=conn.execute('''SELECT
+              (SELECT count(*) FROM extension_runtime_binding b
+                WHERE b.org_id=%s AND b.project_id=%s AND b.installation_id=%s) AS bindings,
+              (SELECT count(*) FROM extension_runtime_operation o
+                WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s
+                  AND o.status NOT IN ('succeeded','failed','cancelled')) AS unresolved,
+              (SELECT count(*) FROM extension_runtime_resource_lease r
+                JOIN extension_runtime_operation o
+                  ON o.org_id=r.org_id AND o.project_id=r.project_id
+                 AND o.operation_id=r.operation_id
+                WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s
+                  AND (r.cleanup_state<>'released' OR r.observed_release IS NOT TRUE)) AS unsafe''',
+                (org_id,project_id,installation_id,org_id,project_id,installation_id,
+                 org_id,project_id,installation_id)).fetchone()
+            if _values(row,('bindings','unresolved','unsafe'))!=(0,0,0):
+                raise RuntimeConflict('approved runtime preparation is not clean for uninstall')
+            return None
         row=conn.execute('''SELECT applied,receipt_data,content_hash
             FROM extension_runtime_uninstall_commit_ar2_018(%s,%s,%s)''',
             (installation_id,expected_installation_revision,actor)).fetchone()
