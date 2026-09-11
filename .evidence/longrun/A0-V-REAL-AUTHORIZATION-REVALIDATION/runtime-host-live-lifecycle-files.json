@@ -1,0 +1,11 @@
+{
+  "phase": "A0-V runtime host live lifecycle",
+  "date": "2026-09-12",
+  "files": [
+    {"path": "services/aos-api/aos_api/extension_runtime/disable_consumer.py", "sha256": "aa1de99e64eda1146238e40887b5267ecb07cd081287dcae0df739d4053f8f0f"},
+    {"path": "services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py", "sha256": "03053a24234a6acfd2ae977e868ea09ce390e469a69a1927328ba39453c09dba"},
+    {"path": "services/aos-api/aos_api/extension_runtime/runtime_host.py", "sha256": "adf78ac37f25c2ed7502e250ab8937e8479008bbf5f7168bae67f4f054a43fd4"},
+    {"path": "services/aos-api/tests/extension_runtime/test_runtime_host.py", "sha256": "3a96d0c96b19e438cef3f0d18a0c71fae4d2fa32c4dc7d842ad376c1db3f5ddc"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/runtime-host-live-lifecycle-plan.md", "sha256": "c7372af15596a8be935d188451ec39fabaf55dafdf451b04837656e4c300a9b5"}
+  ]
+}

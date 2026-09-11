@@ -793,3 +793,21 @@ production assignment，disable 前撤销和 assignment replacement cleanup 仍 
 |---|---|---|---|
 | `services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py` | 原路径 | 有界创建/保留、串行 tick、identity revoke 和全量 stop | 06d49439db13698376167a50a5b430ca91e04938be05274b23256b3a49e621c2 |
 | `services/aos-api/tests/extension_runtime/test_live_installation_scheduler.py` | 原路径 | 保留、排序、上限、失败、取消、撤销与清理合同 | db1d616847a127818f3c53cbc9224c5da3df8bec4becd17cd138ae74b7b87380 |
+
+### 9.36 Runtime host live lifecycle 与 disable exact handoff
+
+2026-09-12：typed tenant assignment 可选持有 same-scope live scheduler。host 固定在 recovery/attempt
+recovery 后运行 lifecycle，再执行 configure 和 disable；assignment identity 替换/删除与 host stop 都会
+收敛旧 scheduler，即使 tick 失败或 assignment 没有同步 consumer 也不漏清理。
+
+disable consumer 的兼容 `run_once` 被等价拆为 exact claim/finish。带 lifecycle 时 host 先 claim 同一条
+lease、读取其 Installation identity、撤销 exact live owner，再执行原 disable executor 与 ACK/retry。
+撤销失败零 finish、零 execute、零 ACK。production selector 尚未创建 scheduler，正式 worker composition
+仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/disable_consumer.py` | 原路径 | exact disable claim/Installation/finish，旧 run_once 兼容 | aa1de99e64eda1146238e40887b5267ecb07cd081287dcae0df739d4053f8f0f |
+| `services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py` | 原路径 | exact owner identity lookup | 03053a24234a6acfd2ae977e868ea09ce390e469a69a1927328ba39453c09dba |
+| `services/aos-api/aos_api/extension_runtime/runtime_host.py` | 原路径 | recovery-first lifecycle、disable handoff 与 assignment cleanup | adf78ac37f25c2ed7502e250ab8937e8479008bbf5f7168bae67f4f054a43fd4 |
+| `services/aos-api/tests/extension_runtime/test_runtime_host.py` | 原路径 | 顺序、replacement、stop 与 revoke-failure 零 finish 合同 | 3a96d0c96b19e438cef3f0d18a0c71fae4d2fa32c4dc7d842ad376c1db3f5ddc |

@@ -13,11 +13,15 @@ from uuid import UUID
 from aos_api.tenant_scope import TenantScope
 
 from .configuration_consumer import ConfigurationConsumer
-from .disable_consumer import RuntimeDisableConsumer
+from .disable_consumer import ClaimedDisableDelivery, RuntimeDisableConsumer
 from .generation_attempts import ExpiredSignedReadAttemptRecovery
 from .owned_control_consumer import _settled
 from .preparation_owner import _observe
 from .resource_recovery import ExpiredResourceRecovery, RecoveryPage
+from .live_installation_scheduler import (
+    LiveInstallationScheduler,
+    LiveInstallationSchedulerTick,
+)
 
 
 _SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer)
@@ -28,6 +32,7 @@ class RuntimeTenantAssignment:
     scope: TenantScope
     recovery: ExpiredResourceRecovery | None = None
     attempt_recovery: ExpiredSignedReadAttemptRecovery | None = None
+    lifecycle: LiveInstallationScheduler | None = None
     consumers: tuple[object, ...] = ()
 
     def __post_init__(self) -> None:
@@ -40,6 +45,11 @@ class RuntimeTenantAssignment:
             and type(self.attempt_recovery) is not ExpiredSignedReadAttemptRecovery
         ):
             raise TypeError("runtime assignment requires concrete attempt recovery worker")
+        if self.lifecycle is not None and (
+            type(self.lifecycle) is not LiveInstallationScheduler
+            or self.lifecycle.directory.scope != self.scope
+        ):
+            raise TypeError("runtime assignment requires same-scope lifecycle scheduler")
         if type(self.consumers) is not tuple or any(
             type(consumer) not in _SYNC_CONSUMERS for consumer in self.consumers
         ):
@@ -62,7 +72,8 @@ class RuntimeTenantAssignment:
                 )
             ),
         )
-        if self.recovery is None and self.attempt_recovery is None and not self.consumers:
+        if (self.recovery is None and self.attempt_recovery is None
+                and self.lifecycle is None and not self.consumers):
             raise ValueError("runtime assignment has no worker")
 
 
@@ -71,6 +82,7 @@ class RuntimeTenantTick:
     scope: TenantScope
     recovery: RecoveryPage | None
     recovered_attempts: tuple[UUID, ...]
+    lifecycle: LiveInstallationSchedulerTick | None
     deliveries: tuple[object | None, ...]
 
 
@@ -90,6 +102,7 @@ class RuntimeHost:
         self._assignments = assignments
         self._recovery_page_size = recovery_page_size
         self._recovery_cursors: dict[tuple[str, str], UUID | None] = {}
+        self._lifecycles: dict[int, tuple[RuntimeTenantAssignment, LiveInstallationScheduler]] = {}
         self._current_tick: asyncio.Task[RuntimeHostTick] | None = None
         self._close_task: asyncio.Task[None] | None = None
         self._closing = False
@@ -135,7 +148,40 @@ class RuntimeHost:
         # object for the same tenant revokes the old snapshot for this tick.
         return any(item is assignment for item in self._current_assignments())
 
+    async def _retire_assignment(self, assignment: RuntimeTenantAssignment) -> None:
+        owned=self._lifecycles.pop(id(assignment),None)
+        if owned is not None:
+            await _settled(owned[1].stop())
+
+    async def _still_current(self, assignment: RuntimeTenantAssignment) -> bool:
+        if self._contains_assignment(assignment):return True
+        await self._retire_assignment(assignment)
+        return False
+
+    async def _synchronize_lifecycles(
+        self, assignments: tuple[RuntimeTenantAssignment, ...]
+    ) -> None:
+        current={id(item) for item in assignments}
+        stale=tuple(value for key,value in self._lifecycles.items() if key not in current)
+        for assignment,_ in stale:
+            await self._retire_assignment(assignment)
+        for assignment in assignments:
+            if assignment.lifecycle is not None:
+                self._lifecycles[id(assignment)]=(assignment,assignment.lifecycle)
+
     async def _consume(self, assignment: RuntimeTenantAssignment, consumer: object):
+        if type(consumer) is RuntimeDisableConsumer and assignment.lifecycle is not None:
+            claimed=await _settled(asyncio.to_thread(
+                consumer.claim_once,org_id=assignment.scope.org_id,
+                project_id=assignment.scope.project_id))
+            if claimed is None:return None
+            if type(claimed) is not ClaimedDisableDelivery:
+                raise TypeError("disable consumer returned invalid claim")
+            owner=assignment.lifecycle.find_owner(claimed.installation_id)
+            if owner is not None:
+                await _settled(assignment.lifecycle.revoke(claimed.installation_id,owner))
+            if not await self._still_current(assignment):return None
+            return await _settled(asyncio.to_thread(consumer.finish_claimed,claimed))
         return await _settled(
             asyncio.to_thread(
                 consumer.run_once,
@@ -162,16 +208,22 @@ class RuntimeHost:
 
     async def _run_tick(self) -> RuntimeHostTick:
         tenants: list[RuntimeTenantTick] = []
-        for assignment in self._current_assignments():
+        assignments=self._current_assignments()
+        await self._synchronize_lifecycles(assignments)
+        for assignment in assignments:
             recovery = await self._recover(assignment)
             recovered_attempts: tuple[UUID, ...] = ()
-            if self._contains_assignment(assignment):
+            if await self._still_current(assignment):
                 recovered_attempts = await self._recover_attempts(assignment)
+            lifecycle=None
+            if assignment.lifecycle is not None and await self._still_current(assignment):
+                lifecycle=await _settled(assignment.lifecycle.run_once())
             deliveries = []
-            for consumer in assignment.consumers:
+            current=await self._still_current(assignment)
+            for consumer in assignment.consumers if current else ():
                 # A directory revocation after recovery closes the remainder of
                 # this tenant's tick.  It never ACKs or rewrites the claim.
-                if not self._contains_assignment(assignment):
+                if not await self._still_current(assignment):
                     break
                 deliveries.append(await self._consume(assignment, consumer))
             tenants.append(
@@ -179,6 +231,7 @@ class RuntimeHost:
                     scope=assignment.scope,
                     recovery=recovery,
                     recovered_attempts=recovered_attempts,
+                    lifecycle=lifecycle,
                     deliveries=tuple(deliveries),
                 )
             )
@@ -194,8 +247,18 @@ class RuntimeHost:
         return await asyncio.shield(self._current_tick)
 
     async def _close(self) -> None:
-        if self._current_tick is not None:
-            await asyncio.shield(self._current_tick)
+        original=None
+        try:
+            if self._current_tick is not None:
+                await asyncio.shield(self._current_tick)
+        except BaseException as exc:original=exc
+        owned=tuple(self._lifecycles.values())
+        self._lifecycles.clear()
+        for _,scheduler in owned:
+            try:await _settled(scheduler.stop())
+            except BaseException as exc:
+                if original is None:original=exc
+        if original is not None:raise original
 
     async def stop(self) -> None:
         self._closing = True

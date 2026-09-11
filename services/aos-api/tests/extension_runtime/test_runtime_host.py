@@ -3,15 +3,24 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+from datetime import datetime, timezone
+from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
 
 from aos_api.extension_runtime.configuration_consumer import ConfigurationConsumer
 from aos_api.extension_runtime.disable_consumer import RuntimeDisableConsumer
+from aos_api.extension_runtime.disable_consumer import ClaimedDisableDelivery
 from aos_api.extension_runtime.generation_attempts import ExpiredSignedReadAttemptRecovery
 from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery, RecoveryPage
 from aos_api.extension_runtime.runtime_host import RuntimeHost, RuntimeTenantAssignment
+from aos_api.extension_runtime.live_installation_owner import LiveInstallationLifecycleOwner
+from aos_api.extension_runtime.live_installation_scheduler import (
+    LiveInstallationScheduler,
+    LiveInstallationSchedulerTick,
+)
+from aos_api.extension_runtime.outbox_store import OutboxLease
 from aos_api.tenant_scope import TenantScope
 
 
@@ -46,6 +55,58 @@ def configuration(calls, *, result=None, action=None):
 def disable(calls):
     consumer = object.__new__(RuntimeDisableConsumer)
     consumer.run_once = lambda **scope: calls.append(("disable", scope))
+    return consumer
+
+
+def lifecycle(calls, tenant, *, installation=None, action=None, failure=None,
+              revoke_failure=None):
+    scheduler = object.__new__(LiveInstallationScheduler)
+    scheduler.directory = SimpleNamespace(scope=tenant)
+    owner = object.__new__(LiveInstallationLifecycleOwner) if installation else None
+
+    async def run_once():
+        calls.append(("lifecycle", tenant.key))
+        if action is not None:
+            action()
+        if failure is not None:
+            raise failure
+        return LiveInstallationSchedulerTick(())
+
+    async def revoke(target, expected):
+        assert target == installation and expected is owner
+        calls.append(("revoke", target))
+        if revoke_failure is not None:
+            raise revoke_failure
+
+    async def stop():
+        calls.append(("lifecycle-stop", tenant.key))
+
+    scheduler.run_once = run_once
+    scheduler.find_owner = lambda target: owner if target == installation else None
+    scheduler.revoke = revoke
+    scheduler.stop = stop
+    return scheduler
+
+
+def coordinated_disable(calls, tenant, installation):
+    consumer = object.__new__(RuntimeDisableConsumer)
+    lease = OutboxLease(
+        UUID(int=80), UUID(int=81), 1, "operation-accepted", 1,
+        datetime.now(timezone.utc),
+    )
+    claimed = ClaimedDisableDelivery(tenant, lease, installation)
+
+    def claim_once(**scope):
+        calls.append(("disable-claim", scope))
+        return claimed
+
+    def finish_claimed(value):
+        assert value is claimed
+        calls.append(("disable-finish", installation))
+        return "disabled"
+
+    consumer.claim_once = claim_once
+    consumer.finish_claimed = finish_claimed
     return consumer
 
 
@@ -95,6 +156,84 @@ def test_consumer_order_is_fixed_independent_of_input_order():
     )
     asyncio.run(RuntimeHost(assignments=lambda: (assignment,)).run_once())
     assert [call[0] for call in calls] == ["configuration", "disable"]
+
+
+def test_lifecycle_runs_after_recovery_before_configure_and_claimed_disable_revoke():
+    calls = []
+    tenant = scope("org", "project")
+    installation = UUID(int=90)
+    scheduler = lifecycle(calls, tenant, installation=installation)
+    assignment = RuntimeTenantAssignment(
+        tenant,
+        recovery=recovery((RecoveryPage((), None),), calls),
+        attempt_recovery=attempt_recovery(calls),
+        lifecycle=scheduler,
+        consumers=(configuration(calls), coordinated_disable(calls, tenant, installation)),
+    )
+    result = asyncio.run(RuntimeHost(assignments=lambda: (assignment,)).run_once())
+    assert [item[0] for item in calls] == [
+        "recovery", "attempt-recovery", "lifecycle", "configuration",
+        "disable-claim", "revoke", "disable-finish",
+    ]
+    assert type(result.tenants[0].lifecycle) is LiveInstallationSchedulerTick
+    assert result.tenants[0].deliveries == (None, "disabled")
+
+
+def test_assignment_replacement_after_lifecycle_stops_old_before_consumer():
+    calls = []
+    current = None
+
+    def replace():
+        nonlocal current
+        current = RuntimeTenantAssignment(
+            scope("org", "project"), consumers=(configuration(calls),)
+        )
+
+    original = RuntimeTenantAssignment(
+        scope("org", "project"),
+        lifecycle=lifecycle(calls, scope("org", "project"), action=replace),
+    )
+    current = original
+    result = asyncio.run(RuntimeHost(assignments=lambda: (current,)).run_once())
+    assert [item[0] for item in calls] == ["lifecycle", "lifecycle-stop"]
+    assert result.tenants[0].deliveries == ()
+
+
+def test_failed_lifecycle_tick_still_cleans_scheduler_on_host_stop():
+    calls = []
+    assignment = RuntimeTenantAssignment(
+        scope("org", "project"),
+        lifecycle=lifecycle(calls, scope("org", "project"), failure=RuntimeError("tick failed")),
+    )
+
+    async def exercise():
+        host = RuntimeHost(assignments=lambda: (assignment,))
+        with pytest.raises(RuntimeError, match="tick failed"):
+            await host.run_once()
+        with pytest.raises(RuntimeError, match="tick failed"):
+            await host.stop()
+
+    asyncio.run(exercise())
+    assert [item[0] for item in calls] == ["lifecycle", "lifecycle-stop"]
+
+
+def test_disable_revoke_failure_never_finishes_claim_or_acks():
+    calls = []
+    tenant = scope("org", "project")
+    installation = UUID(int=91)
+    assignment = RuntimeTenantAssignment(
+        tenant,
+        lifecycle=lifecycle(
+            calls, tenant, installation=installation,
+            revoke_failure=RuntimeError("cleanup uncertain"),
+        ),
+        consumers=(coordinated_disable(calls, tenant, installation),),
+    )
+    with pytest.raises(RuntimeError, match="cleanup uncertain"):
+        asyncio.run(RuntimeHost(assignments=lambda: (assignment,)).run_once())
+    assert [item[0] for item in calls] == [
+        "lifecycle", "disable-claim", "revoke",
+    ]
 
 
 def test_tick_sorts_tenants_and_runs_recoveries_before_concrete_consumers():

@@ -50,6 +50,11 @@ class LiveInstallationScheduler:
     def owners(self) -> tuple[tuple[UUID, LiveInstallationLifecycleOwner], ...]:
         return tuple(sorted(self._owners.items()))
 
+    def find_owner(self, installation_id: UUID) -> LiveInstallationLifecycleOwner | None:
+        if type(installation_id) is not UUID:
+            raise TypeError("exact installation identity required")
+        return self._owners.get(installation_id)
+
     async def _run(self) -> LiveInstallationSchedulerTick:
         descriptors = await _settled(
             asyncio.to_thread(self.directory.read_descriptors)
