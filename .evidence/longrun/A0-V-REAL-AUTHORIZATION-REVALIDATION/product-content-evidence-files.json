@@ -1,0 +1,12 @@
+{
+  "services/aos-api/aos_api/source_read_observation.py": "ca007d170b6c224841aa07840b3618ce18d9369964e4cd652964a54dcfc24833",
+  "services/aos-api/aos_api/ec_source_adapter.py": "e585a53d1b78df1542bc0801f4dfca5f21aa9d1fe50749947ad6163dc4fc12a1",
+  "services/aos-api/aos_api/source_observation_rows_codec.py": "da958e3a9fdec46569db068a575700f445af1967df85fadcebdbd4427c736658",
+  "services/aos-api/aos_api/ecommerce_product_content_snapshot.py": "8deb472b0be4e080e39fa7a88aed5476113cfa3c563414580655d85f939aa215",
+  "services/aos-api/aos_api/ecommerce_product_content_evidence.py": "250598f8907e4aec221891e11fccbeee6e47111135e1eeaa4e979eddf6bcbfd7",
+  "services/aos-api/aos_api/aip_evidence_dependencies.py": "42acd892515fe0d9111f4df826fb47176bb2273ae8c64abba1ec198cf743fa59",
+  "services/aos-api/aos_api/aip_production_contract_store.py": "f358d9c2f34cde92b670c2ddde6181c4d4e1e96e65914b3d36d9fe147162d462",
+  "services/aos-api/tests/test_source_observation_rows_codec.py": "f5f30c7a097d9b974a072bda68a03d00ef8c5d3aae79288b576b5bde2443898f",
+  "services/aos-api/tests/test_ecommerce_product_content_evidence.py": "9d45f09c7bd5c59840ee3e16815cef22d149102ceaa47a537a9b299041d3064e",
+  "services/aos-api/tests/test_aip_evidence_dependencies.py": "bd312aad9db3087e28610b077b498621427b445336a42d16493d45aa0f9d0cc1"
+}

@@ -21,6 +21,16 @@ OBSERVATION_CLEANING_VERSIONS = MappingProxyType({
 })
 
 
+_PRODUCT_FIELDS = frozenset({
+    "goods_id", "site_id", "goods_name", "price", "goods_stock", "state",
+    "is_delete", "modify_time", "create_time",
+})
+OBSERVATION_PUBLIC_FIELDS = MappingProxyType({
+    "niushop.product-observation/v1": _PRODUCT_FIELDS,
+    "niushop.product-quality-observation/v1": (_PRODUCT_FIELDS - {"state"}) | {"goods_state", "category_id"},
+})
+
+
 def _typed(value: Any) -> Any:
     if value is None:
         return ["null"]

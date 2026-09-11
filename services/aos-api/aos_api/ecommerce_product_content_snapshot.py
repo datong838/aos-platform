@@ -46,19 +46,23 @@ class ProductContentSnapshotReader:
         saved=self._observations.read_exact(values['evidence_ref'])
         if saved is None:
             raise ValueError('configured product observation unavailable')
-        _,_,eligible=_eligible_rows(values['rows'])
-        qualified=[row for row in eligible if all(product_row_checks(row,saved.observation.observation.read_finished_at))]
-        if len(qualified)!=quality.joint_valid_count:
-            raise ValueError('product content and quality rules drifted')
-        candidates=[]
-        for row in qualified:
-            stock=_number(row['goods_stock'],integer=True)
-            if stock>9_223_372_036_854_775_807:
-                raise ValueError('product content stock exceeds supported integer range')
-            if stock==0:
-                continue
-            if len(row['goods_name'])>4000:
-                raise ValueError('complete product title exceeds supported length')
-            candidates.append(ProductContentCandidate(product_id=row['goods_id'],title=row['goods_name'],stock=int(stock),observed_row_hash=observed_rows_hash([row])))
-        candidates.sort(key=lambda item:(-item.stock,item.product_id))
-        return ProductContentSnapshot(quality=quality,preparable_product_count=len(candidates),candidates=tuple(candidates[:5]))
+        return build_product_content_snapshot(values["rows"], quality, saved.observation.observation.read_finished_at)
+
+
+def build_product_content_snapshot(rows, quality, finished_at):
+    _,_,eligible=_eligible_rows(rows)
+    qualified=[row for row in eligible if all(product_row_checks(row,finished_at))]
+    if len(qualified)!=quality.joint_valid_count:
+        raise ValueError('product content and quality rules drifted')
+    candidates=[]
+    for row in qualified:
+        stock=_number(row['goods_stock'],integer=True)
+        if stock>9_223_372_036_854_775_807:
+            raise ValueError('product content stock exceeds supported integer range')
+        if stock==0:
+            continue
+        if len(row['goods_name'])>4000:
+            raise ValueError('complete product title exceeds supported length')
+        candidates.append(ProductContentCandidate(product_id=row['goods_id'],title=row['goods_name'],stock=int(stock),observed_row_hash=observed_rows_hash([row])))
+    candidates.sort(key=lambda item:(-item.stock,item.product_id))
+    return ProductContentSnapshot(quality=quality,preparable_product_count=len(candidates),candidates=tuple(candidates[:5]))

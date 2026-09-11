@@ -30,7 +30,7 @@ from aos_api.source_configuration_revision import SourceConfigurationRevisionSto
 from aos_api.db import connect
 from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
 from aos_api.logging_facade import get_logger
-from aos_api.source_read_observation import OBSERVATION_CLEANING_VERSIONS, SourceReadObservation, observed_rows_hash
+from aos_api.source_read_observation import OBSERVATION_CLEANING_VERSIONS, OBSERVATION_PUBLIC_FIELDS, SourceReadObservation, observed_rows_hash
 from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.ec-source")
@@ -187,15 +187,8 @@ def fetch_source_rows_versioned(
         raise ValueError('SOURCE_VERSIONED_READ_FAILED') from None
 
 
-_PRODUCT_OBSERVATION_FIELDS = frozenset({
-    "goods_id", "site_id", "goods_name", "price", "goods_stock", "state",
-    "is_delete", "modify_time", "create_time",
-})
-
-
-_PRODUCT_QUALITY_OBSERVATION_FIELDS = (_PRODUCT_OBSERVATION_FIELDS - {"state"}) | {
-    "goods_state", "category_id",
-}
+_PRODUCT_OBSERVATION_FIELDS = OBSERVATION_PUBLIC_FIELDS["niushop.product-observation/v1"]
+_PRODUCT_QUALITY_OBSERVATION_FIELDS = OBSERVATION_PUBLIC_FIELDS["niushop.product-quality-observation/v1"]
 
 
 def _read_observation_clock() -> datetime:

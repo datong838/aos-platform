@@ -3814,6 +3814,12 @@ class AipProductionContractStore:
                 required_markings = [
                     str(item).strip() for item in payload["marking"] if str(item).strip()
                 ] or ["public"]
+        if "evidencePolicyVersion" in payload:
+            from aos_api.aip_evidence_dependencies import require_evidence_dependencies
+            try:
+                require_evidence_dependencies(conn, scope, payload)
+            except (ValueError, RuntimeError):
+                reasons.append("EVIDENCE_DEPENDENCY_UNAVAILABLE")
         if row is not None and row["source_type"] == "aip-metric-query":
             from aos_api.aip_metric_query_evidence import validate_metric_query_evidence
             try:
