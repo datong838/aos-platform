@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from aos_api import main
+from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 
 
 def _quiet_startup(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -43,6 +44,22 @@ def test_lifespan_installs_and_clears_runtime_control_plane(
         async with main.lifespan(main.app):
             assert main.app.state.extension_runtime_control_plane is sentinel
         assert main.app.state.extension_runtime_control_plane is None
+
+    asyncio.run(probe())
+
+
+def test_real_control_plane_keeps_one_live_directory_for_the_app_lifespan(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _quiet_startup(monkeypatch)
+
+    async def probe() -> None:
+        async with main.lifespan(main.app):
+            plane = main.app.state.extension_runtime_control_plane
+            assert type(plane.live_job_directory) is LivePreparedJobDirectory
+            directory = plane.live_job_directory
+        assert main.app.state.extension_runtime_control_plane is None
+        assert type(directory) is LivePreparedJobDirectory
 
     asyncio.run(probe())
 

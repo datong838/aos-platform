@@ -8,6 +8,7 @@ from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
 from aos_api.asset_registry.control_wiring import (
     RuntimeControlPlane,
     build_production_runtime_host_selection,
+    build_runtime_control_plane,
 )
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.aip_runtime_configuration_sources import (
@@ -33,6 +34,7 @@ from aos_api.extension_runtime.production_runtime import (
     RuntimeWorkerDependencies,
     select_production_runtime_host,
 )
+from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery
 from aos_api.extension_runtime.runtime_identity import RuntimeDatabaseIdentity
 from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
@@ -44,6 +46,14 @@ class _Transaction:
 
     def __exit__(self, *_):
         return False
+
+
+def test_production_control_plane_owns_one_empty_live_job_directory():
+    first = build_runtime_control_plane(disable_dependent=EcommerceGrowthDisableDependent())
+    second = build_runtime_control_plane(disable_dependent=EcommerceGrowthDisableDependent())
+    assert type(first.live_job_directory) is LivePreparedJobDirectory
+    assert type(second.live_job_directory) is LivePreparedJobDirectory
+    assert first.live_job_directory is not second.live_job_directory
 
 
 class _Connection:

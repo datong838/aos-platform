@@ -730,3 +730,19 @@ IPC。当前无公开入口，production control plane 尚未持有 live directo
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_async_service.py` | 原路径 | installedRuntime prepare/commit 封印与 concrete factory | 5ffda95e508ede17a95503d86e31ecbe6fd58685144931272587f924cc3cc3ec |
 | `services/aos-api/tests/extension_runtime/test_installed_package_invoker.py` | 原路径 | 同一 invoker factory 与既有当前性回归 | 7403b9105bf8ccbb2b0b8e4da6de38c90803cd225ed03d5abd98ff4f4296f463 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_async_service.py` | 原路径 | 第五门后 runtime 漂移零发布与 replay 零读取 | 54df3880d36cba2a0b92888c1229c9accd245c33b4cce1f5456b71e9eea3ad6f |
+
+### 9.32 Production control plane 唯一 live directory 所有权
+
+2026-09-12：`RuntimeControlPlane` 新增进程所有的 `LivePreparedJobDirectory`，正式 builder 每次恰好
+创建一个独立空目录。app lifespan 持有同一 control plane 对象，退出时清除；构造阶段不连接数据库、
+不启动 OCI、不登记 job。
+
+目录存在不代表 runtime host active、Installation ready 或 package 可调用。production host 当前仍只
+装配 recovery/configure/disable，runtime-apply/verify/enable 的 live owner orchestration 仍 PENDING；
+因此当前目录会保持空，stage-review factory 仍 fail closed。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/asset_registry/control_wiring.py` | 原路径 | control plane 持有唯一 live directory；纯 wiring | ece42c19d637ca264f0e6bacc265169ef1ae280fd65ce4df09ac3930c7c4b5e2 |
+| `services/aos-api/tests/extension_runtime/test_production_runtime.py` | 原路径 | builder 独立目录与既有 selector 零访问回归 | cfb83f4beb2f48d93a135239705f7c5a4b7b7534eecf69c86cf81e95bf004d71 |
+| `services/aos-api/tests/extension_runtime/test_runtime_startup_composition.py` | 原路径 | app lifespan exact directory 持有与清除 | 5db65270ec08e28e6494113ab52e4d4ea66c1a60a08e604db67acd4063c4f6ee |
