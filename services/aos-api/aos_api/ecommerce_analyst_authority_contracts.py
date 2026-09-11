@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_serializer, model_validator
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
 
@@ -151,6 +151,23 @@ class GrowthPlanItem(AipContractModel):
     objective: str = Field(min_length=1, max_length=2000)
     priority: int = Field(default=50, ge=0, le=100)
     eligible: bool = True
+    evidence_refs: list[AnalystExactRef] = Field(default_factory=list, max_length=100)
+
+    @field_validator("evidence_refs")
+    @classmethod
+    def _sources(cls, refs: list[AnalystExactRef]) -> list[AnalystExactRef]:
+        _unique_refs(refs, "evidenceRefs")
+        for ref in refs:
+            _require_type(ref, {"EvidenceBundleRevision"}, "evidenceRefs")
+        return refs
+
+    @model_serializer(mode="wrap")
+    def _legacy_payload(self, handler):
+        payload = handler(self)
+        if not self.evidence_refs:
+            payload.pop("evidenceRefs", None)
+            payload.pop("evidence_refs", None)
+        return payload
 
 
 class GrowthPlanRevision(_RevisionBase):
@@ -165,11 +182,21 @@ class GrowthPlanRevision(_RevisionBase):
     stop_conditions: list[str] = Field(min_length=1, max_length=100)
     items: list[GrowthPlanItem] = Field(min_length=1, max_length=500)
     approved_at: datetime | None = None
+    generation_artifact_ref: AnalystExactRef | None = None
+
+    @model_serializer(mode="wrap")
+    def _legacy_payload(self, handler):
+        payload = handler(self)
+        if self.generation_artifact_ref is None:
+            payload.pop("generationArtifactRef", None)
+            payload.pop("generation_artifact_ref", None)
+        return payload
 
     @model_validator(mode="after")
     def _integrity(self) -> "GrowthPlanRevision":
         self._validate_chain(self.plan_id, "GrowthPlanRevision")
         _require_type(self.decision_ref, {"DecisionSummaryRevision"}, "decisionRef")
+        _require_type(self.generation_artifact_ref, {"Artifact"}, "generationArtifactRef")
         ids = [item.item_id for item in self.items]
         if len(ids) != len(set(ids)):
             raise ValueError("plan itemId must be unique")
