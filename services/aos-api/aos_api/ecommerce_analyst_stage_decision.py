@@ -59,7 +59,7 @@ class AnalystStageDecisionRevision(_RevisionBase):
             if ref.resource_type!=kind:raise ValueError('stage decision reference type drifted')
         if (self.reviewer.kind!='human_principal' or self.reviewer.resource_id!=self.created_by
             or self.stage_attempt_ref.run_id!=self.task_run_id
-            or self.stage_attempt_ref.step_key!=self.stage.replace('-','_')):
+            or self.stage_attempt_ref.step_key not in ({'solution-design','solution_design'} if self.stage=='solution-design' else {self.stage})):
             raise ValueError('human reviewer or exact stage attempt required')
         if self.decision=='accept':
             if (self.expires_at is None or self.expires_at.utcoffset() is None

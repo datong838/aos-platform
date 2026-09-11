@@ -1,0 +1,11 @@
+# 当前阶段评审运行谱系
+
+2026-09-11，基线17679e95，AOS-000573。延续160三波人工决定与231-5自动链，保持旧检查点不可篡改。
+
+新增 services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py：显式HostTransaction/Scope，锁TaskRun/Task/Plan，当前Task计划、exact Plan原bodyhash、approved固定三阶段、run状态可评审。最新阶段Step必须succeeded，attempt/input_hash精确一致，不允许已开始后继步骤后重评旧阶段。检查对应checkpoint原body/statehash、plan/input/step及当前依赖snapshot，正式observe Evidence的实际bodyhash及payload中对应insightRef/decisionRef/growthPlanRef等于评审subject。只读运行来源，非人工/合同/正文授权。
+
+同时修复方案阶段命名边界：真实TAOR用solution-design，BI展示stage用solution_design。AnalystStageDecision允许此阶段的这两种已知写法，但不改写原exact StepRunAttempt；BI StageEvalRequest兼容实际solution-design并保留旧solution_design，其余阶段必须完全同名。最终读取必须与真实Step完全一致，不能靠字符串归一化冒充另一个步骤。
+
+修改 services/aos-api/aos_api/ecommerce_analyst_stage_decision.py、services/aos-api/aos_api/aip_business_investigation_eval.py；新增 services/aos-api/tests/test_ecommerce_analyst_stage_review_runtime.py。实际隔离PG用正式Task/Plan/Run/TAOR四阶段记录生成checkpoint，检查合法运行和旧plan/错subject/错attempt/无checkpoint/后继开始拒绝，三阶段命名有明确正反例。后续与当前职责、报告、合同、正文联合为命令入口，不迁移主库不调用Provider。
+
+实施补充：当前Task状态须与Run一致，所有前序阶段的最新attempt必须succeeded；隔离验证表明底层claim可先领取diagnosis，因此经营流程入口必须自行守住顺序，不能从单步成功推定前序完成。

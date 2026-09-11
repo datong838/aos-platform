@@ -56,7 +56,8 @@ class BusinessInvestigationStageEvalRequest(AipContractModel):
 
     @model_validator(mode="after")
     def _stage_matches_attempt(self) -> BusinessInvestigationStageEvalRequest:
-        if self.stage_attempt_ref.step_key != self.stage:
+        allowed_steps = {"solution-design", "solution_design"} if self.stage == "solution_design" else {self.stage}
+        if self.stage_attempt_ref.step_key not in allowed_steps:
             raise ValueError("stageAttemptRef stepKey must match stage")
         return self
 
