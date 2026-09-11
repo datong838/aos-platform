@@ -31,7 +31,7 @@ def setup(monkeypatch,existing=False,wrong_version=False):
     monkeypatch.setattr(live,'_transform_live_rows',lambda **kw: events.append('transform') or [row])
     monkeypatch.setattr(durable,'recover_saved_authoritative_stages',lambda *a,**kw: events.append('recover') or ())
     monkeypatch.setattr(durable,'project_until_caught_up',lambda *a,**kw: events.append('project') or {'projected':1,'pending':0})
-    monkeypatch.setattr(durable,'finalize_saved_dataset',lambda *a,**kw: events.append('finalize') or {'dataset':{'rid':'saved'},'build':{'rows_written':1}})
+    monkeypatch.setattr(durable,'finalize_saved_dataset',lambda *a,**kw: None if kw.get('only_existing') else events.append('finalize') or {'dataset':{'rid':'saved'},'build':{'rows_written':1}})
     args=dict(eng=eng,pipeline=pipeline,nodes=[node],scope=scope,run_id='run',run_started_at=1,deadline=float('inf'),cancel_event=None)
     return durable,args,events,fetch
 
@@ -41,6 +41,22 @@ def test_existing_batch_never_rereads_source(monkeypatch):
     result=durable.execute_durable_ingress(**args)
     assert result['output_ref']=='dataset://catalog/saved'
     assert events==['commit','recover','project','finalize']
+    fetch.assert_not_called()
+
+
+def test_completed_batch_skips_all_authoritative_reexecution(monkeypatch):
+    durable,args,events,fetch=setup(monkeypatch,existing=True)
+    result={'dataset':{'rid':'saved'},'build':{'rows_written':1},
+            'completion':{'expected':2,'projected':2,'pending':0}}
+    finalize=Mock(return_value=result)
+    monkeypatch.setattr(durable,'finalize_saved_dataset',finalize)
+    output=durable.execute_durable_ingress(**args)
+    assert events==['commit']
+    assert output['completed_replay'] is True
+    assert output['rows_read']==0 and output['rows_written']==1
+    assert output['projection']['projected']==0
+    assert output['completion']==result['completion']
+    assert finalize.call_args.kwargs['only_existing'] is True
     fetch.assert_not_called()
 
 

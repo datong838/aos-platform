@@ -115,3 +115,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 2026-09-11，基线2bcc72da。现有finalizer先核验当前基础版本再读取已提交结果，使原批已完成后正常新批更新可能阻塞原结果恢复。调整为当前run/schedule/source绑定和完整原Journal校验后，先读取不可变Dataset回执；有回执只验证其hash及原父/派生hash，不重新判断当前基础/投影，也不写Dataset。无回执仍完整核验基础派生投影，pending不得成功。历史成功不代表当前对象仍为旧版本，不放松当前权限绑定。
 
 文件：services/aos-api/aos_api/ec_ingress_dataset.py、services/aos-api/tests/aip/test_a0v_ingress_journal_pg.py。新增已完成后当前完成检查不可用仍可回读、保留新Dataset展示、源禁用仍拒绝；验证已有首次pending与原子回滚负例。此项先修恢复阻断；空批与重新claim仍后续施工，public不迁移、不push。
+
+## 调度入口已完成运行回读
+
+基线2aa865f2。ec_ingress_dataset.finalize_saved_dataset增加内部only_existing模式：锁run、校验当前绑定/原Journal后，无结果回执返回None且不对账或写入；有结果回执仍完整hash校验及提交后恢复缓存。ec_durable_executor在输入事务提交后调用该模式，有原结果则返回其行数及历史完成摘要，跳过基础/派生/投影；无结果沿原恢复链。返回completed_replay显式区别历史完成与本次投影处理；不把历史完成统计冒充本次处理数。
+
+文件：services/aos-api/aos_api/ec_ingress_dataset.py、ec_durable_executor.py及tests/test_ec_durable_executor.py、tests/aip/test_a0v_ingress_journal_pg.py。验证已完成无源读取/无恢复/无投影、未完成仍按原顺序、无回执查询无写入、source禁用仍拒绝。只增加内部选路，失败run claim仍不放宽。

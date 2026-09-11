@@ -196,6 +196,9 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         database.owner.execute("ALTER TABLE meta_dataset_history ALTER COLUMN id SET DEFAULT nextval('local_dataset_history_id')")
         database.owner.execute('GRANT USAGE ON SEQUENCE local_dataset_history_id TO aos_runtime')
         eng=object.__new__(PipelineEngine);eng._datasets={};eng._builds={}
+        assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng,only_existing=True) is None
+        assert eng._datasets=={}
+        assert database.owner.execute('SELECT count(*) AS n FROM meta_dataset').fetchone()['n']==0
         with pytest.raises(IngressJournalConflict,match='INGRESS_PROJECTION_PENDING'):
             finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
         with engine.begin() as conn:
@@ -217,6 +220,7 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         monkeypatch.setattr(eng,'add_build',real_add)
         first=finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
         assert first==committed
+        assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng,only_existing=True)==first
         assert finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)==first
         assert len(eng.list_builds(scope,first['dataset']['rid']))==1
         eng.create_dataset(scope,id=first['dataset']['rid'],name='newer',updated_at=first['dataset']['updatedAt']+10)

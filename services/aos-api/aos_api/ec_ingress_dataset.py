@@ -9,7 +9,7 @@ from aos_api.ec_ingress_journal import IngressJournalConflict, _digest
 from aos_api.ec_ingress_recovery import _bound_parent, read_saved_projection_completion
 
 
-def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store, eng):
+def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store, eng, only_existing=False):
     """Internal running-run finalizer; factory commits before publishing memory."""
     table = sql.Identifier(journal.schema,'ecommerce_ingress_dataset_receipt')
     with connection_factory(scope) as conn:
@@ -17,9 +17,11 @@ def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store,
             journal.lock_run(conn,scope,run_id)
             parent = _bound_parent(conn,scope,run_id,journal)
             derived = journal.read_derived(conn,scope,run_id)
+            row = conn.execute(sql.SQL('SELECT payload,payload_hash FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(table),(*scope.key,run_id)).fetchone()
+            if row is None and only_existing:
+                return None
             if derived is None:
                 raise IngressJournalConflict('INGRESS_DERIVED_COMMAND_REQUIRED')
-            row = conn.execute(sql.SQL('SELECT payload,payload_hash FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(table),(*scope.key,run_id)).fetchone()
             if row is not None:
                 result = row['payload']
                 if (_digest(result) != row['payload_hash'] or result.get('parentHash') != _digest(parent)

@@ -62,6 +62,13 @@ def execute_durable_ingress(*,eng,pipeline,nodes,scope,run_id,run_started_at,dea
             command = _build_batch_command(sync_scope=sync,objects=objects,links=links,pipeline_id=pipeline.id,store=eng.ecom_consistency_store)
             parent = journal.save_for_running_schedule(conn,scope,**args,command=command,output_rows=output)
     _check_active(deadline,cancel_event)
+    completed = finalize_saved_dataset(connect,scope,run_id,journal=journal,store=eng.ecom_consistency_store,
+                                       eng=eng,only_existing=True)
+    if completed is not None:
+        return dict(input_ref='',output_ref='dataset://catalog/'+completed['dataset']['rid'],lineage_ref='',quality_ref='',
+                    rows_read=rows_read,rows_written=completed['build']['rows_written'],output_rows=parent.get('outputRows',[]),
+                    completed_replay=True,completion=completed['completion'],projection={'projected':0,'pending':0},
+                    derived={'derived_updated':0,'derived_replayed':0})
     derived = recover_saved_authoritative_stages(connect,scope,run_id,journal=journal,store=eng.ecom_consistency_store,
                                                 deadline=deadline,cancel_event=cancel_event)
     projection = project_until_caught_up(scope,deadline=deadline,cancel_event=cancel_event)
