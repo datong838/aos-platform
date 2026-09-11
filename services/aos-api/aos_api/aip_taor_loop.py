@@ -6,6 +6,7 @@ Phase 1 核心：将 aip_logic_engine 的 mock execute_flow 替换为真实 TAOR
 from __future__ import annotations
 
 import time
+from copy import deepcopy
 from typing import Any, Protocol
 
 from aos_api.aip_task_model import (
@@ -23,11 +24,12 @@ from aos_api.aip_llm_adapter import get_llm_adapter
 from aos_api.aip_tool_executor import get_executor
 from aos_api.aip_verify_skills import get_verify_registry
 from aos_api.public_contracts import TaskStatus
-from aos_api.aip_task_models import RunControlResult
+from aos_api.aip_task_models import RunControlResult, TaskTimeline
 from aos_api.aip_task_store import (
     AipTaskStore,
     AipTaskStoreError,
     AipTaskTransitionBlocked,
+    _canonical_hash,
 )
 from aos_api.tenant_scope import TenantScope
 
@@ -81,11 +83,7 @@ class CanonicalTaorRunner:
         elif timeline.run.status.value != "running" or timeline.task.status is not TaskStatus.EXECUTING:
             raise AipTaskTransitionBlocked("run must be queued or actively executing")
 
-        completed = {
-            str(row["step_key"])
-            for row in timeline.steps
-            if row.get("status") == "succeeded"
-        }
+        completed = self._completed_observations(scope, timeline)
         context: dict[str, Any] = {
             "taskRef": timeline.task.id,
             "taskGoal": dict(timeline.task.goal),
@@ -97,6 +95,7 @@ class CanonicalTaorRunner:
         }
         for plan_step in timeline.plan.steps:
             if plan_step.step_key in completed:
+                context[f"step:{plan_step.step_key}"] = completed[plan_step.step_key]
                 continue
             step = plan_step.model_dump(mode="json", by_alias=True)
             lease = self.store.claim_step(
@@ -168,6 +167,49 @@ class CanonicalTaorRunner:
                     },
                 )
         return self.store.complete_run(scope, run_id)
+
+    @staticmethod
+    def _completed_observations(
+        scope: TenantScope, timeline: TaskTimeline
+    ) -> dict[str, dict[str, Any]]:
+        """Restore historical outputs, not current business authorization."""
+        plan_keys = {step.step_key for step in timeline.plan.steps}
+        result: dict[str, dict[str, Any]] = {}
+        evidence_by_id: dict[str, list[dict[str, Any]]] = {}
+        for evidence in timeline.evidence:
+            evidence_by_id.setdefault(evidence.get("evidence_id"), []).append(evidence)
+        for row in timeline.steps:
+            if row.get("status") != "succeeded":
+                continue
+            key = row.get("step_key")
+            ref = row.get("observe_ref")
+            if (
+                key not in plan_keys or key in result
+                or (row.get("org_id"), row.get("project_id")) != scope.key
+                or row.get("run_id") != timeline.run.id
+                or not isinstance(row.get("step_run_id"), str) or not row["step_run_id"]
+                or not isinstance(ref, dict)
+                or not isinstance(ref.get("evidenceId"), str) or not ref["evidenceId"]
+            ):
+                raise AipTaskTransitionBlocked("completed step has invalid observation lineage")
+            matches = evidence_by_id.get(ref["evidenceId"], [])
+            if len(matches) != 1:
+                raise AipTaskTransitionBlocked("completed observation evidence is missing or ambiguous")
+            evidence = matches[0]
+            payload = evidence.get("payload")
+            if (
+                (evidence.get("org_id"), evidence.get("project_id")) != scope.key
+                or evidence.get("run_id") != timeline.run.id
+                or evidence.get("evidence_type") != "taor.observe"
+                or not isinstance(payload, dict)
+                or payload.get("stepRunId") != row["step_run_id"]
+                or payload.get("stepKey") != key
+                or not isinstance(payload.get("payload"), dict)
+                or evidence.get("content_hash") != _canonical_hash(payload)
+            ):
+                raise AipTaskTransitionBlocked("completed observation evidence failed integrity checks")
+            result[key] = deepcopy(payload["payload"])
+        return result
 
     def _persist_artifacts(
         self,
