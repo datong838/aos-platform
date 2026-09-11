@@ -1,0 +1,30 @@
+{
+  "base": "9635082c",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/aip_metric_query_evidence.py",
+      "preHash": null,
+      "postHash": "2c507c8093311084f4daa5305fd129dad44c23d67ca42b8ae7b10f42c7a83ece"
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "preHash": "9e2f99e61d3461bbd956a6bdb78b681b443ecaac8bfe7211d04a3a2c75b96c06",
+      "postHash": "861a8411107384e43f28b7df9f14e0e71446d24418ba30e577253d50203347d9"
+    },
+    {
+      "path": "services/aos-api/tests/test_aip_metric_query_evidence.py",
+      "preHash": null,
+      "postHash": "29520b07039f41bbe63ad662515e1a0082ba7c91b85b82f922c5b5920b0bfe36"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/query-evidence-producer-plan.md",
+      "preHash": null,
+      "postHash": "0290c3e77e9d576d31a7a99e2b3456d96264c17261e3e615e1c40a3bffd79e20"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/query-evidence-producer-verification.md",
+      "preHash": null,
+      "postHash": "1c49392d3f1cbb31cc29a4246cdcf3225b73642fbd99527eca4dae837b9b7816"
+    }
+  ]
+}

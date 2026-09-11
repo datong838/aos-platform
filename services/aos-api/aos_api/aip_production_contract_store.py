@@ -3814,6 +3814,12 @@ class AipProductionContractStore:
                 required_markings = [
                     str(item).strip() for item in payload["marking"] if str(item).strip()
                 ] or ["public"]
+        if row is not None and row["source_type"] == "aip-metric-query":
+            from aos_api.aip_metric_query_evidence import validate_metric_query_evidence
+            try:
+                validate_metric_query_evidence(conn, scope, actor, body.task_id, payload, markings=markings)
+            except (ValueError, RuntimeError):
+                reasons.append("QUERY_SOURCE_AUTHORITY_UNAVAILABLE")
         if not set(required_markings).issubset(set(markings or [])):
             reasons.append("MARKING_ACCESS_DENIED")
         if body.requested_level is DisclosureLevel.L2 and "restricted" not in set(
