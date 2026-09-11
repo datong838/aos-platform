@@ -1,0 +1,11 @@
+# 首链技能发布准备：先隔离契约，再真实业务产物
+
+基线2b61f033。经营参谋当前D01/D02/D03均只有evaluated r1；D01/D02依赖material.collect，D03依赖strategy.plan。六职责另外需要content.review。新文本Route仅chat.answer，不能由此宣称其他任务/视频/音频可运行。
+
+旧R06引导脚本schema为aip13_001、模型名model-qyh-text-dev、默认数据库连接，不能原样在当前恢复库执行。其隔离adapter输出明确“not Provider quality evidence”，Graph末尾返回输出契约标签。这些是历史契约测试，不是可读经营计划；本波不得把其结果充当真实业务验收。
+
+最小分段：先在自有完整升级克隆aos_upgrade_check_f1dc452abade上，使用当前已发布模型/Route exact，正式物化D01/D02 Graph、契约Eval、Logic Publication、Skill Eval/Release/Published Skill。同请求恢复时先查既有权威，保持报告ID和幂等键稳定。D03不同专属实现下一段独立处理，不复制D01替代。Provider调用0，不激活Binding/Agent/安装，不写aos_meta_head。
+
+实现文件scripts/a0v_firstchain_skill_publication.py；复用scripts/aip/bootstrap_r06_data_advisor_skill_authority.py既有纯契约生成方法，给_skill_eval增加显式connect_factory依赖注入，默认旧调用保持不变；新执行器所有Store使用同一显式克隆连接，Skill发布的RouteAuthority也显式注入。禁止默认回落到环境数据库。实测克隆发布+重放逐表计数、scope和模型引用保持；拒绝非允许克隆目标的测试必须先于写入。
+
+后续真实模型产物验收另立门：使用真实已就绪店铺来源、验证可读画像/诊断/增长计划内容和引用，exact评审和内容承接继续原授权链。若当前Graph仅契约标签，不能通过这些结果宣布其经营功能完成；沿真实执行路径定位并实现产物生成后再验收。
