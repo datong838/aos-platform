@@ -76,7 +76,7 @@ def resource(kind, identity):
     return dict(resourceType=kind, resourceId=identity, revision="1", authority="postgresql")
 
 
-def seed_graph(connect):
+def seed_graph(connect, *, retain_text=False):
     decision, attempt, answer = generation()
     with connect(SCOPE) as conn:
         assert not conn.execute("SELECT 1 FROM aip_agent_run WHERE org_id=%s AND project_id=%s AND agent_run_id=%s", (*SCOPE.key, attempt.agent_run_id)).fetchone()
@@ -124,6 +124,9 @@ def seed_graph(connect):
         insert(conn, "aip_artifact", artifact_id=attempt.output_artifact_ref.artifact_id, run_id="a0v-full-task-run", artifact_type="agent_text_output",
             content_hash=attempt.output_artifact_ref.content_hash, content_ref="sha256://" + attempt.output_artifact_ref.content_hash,
             source=dict(agentRunId=attempt.agent_run_id, attemptId=attempt.attempt_id), marking=["internal"], created_by="pytest")
+        if retain_text:
+            from aos_api.aip_agent_text_output import write_agent_text
+            write_agent_text(conn, SCOPE, attempt.output_artifact_ref.artifact_id, answer, attempt.output_artifact_ref.content_hash, ["internal"])
     return dict(attempt_id=attempt.attempt_id, decision_ref=decision_ref, answer=answer, budget="100", task_type="analysis", actor="compiler", markings=["internal"], now=NOW, max_source_age=timedelta(days=1))
 
 
@@ -181,3 +184,29 @@ def test_complete_database_graph_rejects_unusable_source(blocker):
         identity = canonical_hash({"tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id}, "attemptId": kwargs["attempt_id"]})
         with connect(SCOPE) as conn:
             assert conn.execute("SELECT count(*) AS n FROM ecommerce_analyst_growth_plan_head WHERE org_id=%s AND project_id=%s AND plan_id=%s", (*SCOPE.key, "growth-draft-" + identity[:40])).fetchone()["n"] == 0
+
+
+@pytest.mark.parametrize("retained", [False, True])
+def test_recovery_from_new_instance_requires_retained_original_text(retained):
+    if os.getenv("AOS_GROWTH_DRAFT_FULL_GRAPH_TEST") != "1":
+        pytest.skip("requires explicit disposable full-graph database test")
+    import importlib.util
+    from types import SimpleNamespace
+    with disposable_database() as connect:
+        path = Path(__file__).resolve().parents[1] / "alembic/versions/a0v_012_agent_text_output.py"
+        spec = importlib.util.spec_from_file_location("recovery_text_migration", path)
+        migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration)
+        with connect(SCOPE) as conn:
+            migration.op = SimpleNamespace(execute=conn.execute)
+            migration.upgrade()
+        kwargs = seed_graph(connect, retain_text=retained)
+        del kwargs["answer"]
+        if not retained:
+            with pytest.raises(ValueError): GrowthPlanDraftReceiver(connect).recover(SCOPE, **kwargs)
+        else:
+            first = GrowthPlanDraftReceiver(connect).recover(SCOPE, **kwargs)
+            assert GrowthPlanDraftReceiver(connect).recover(SCOPE, **kwargs) == first
+            saved = EcommerceAnalystAuthorityStore(connect).get_plan_exact(SCOPE, first)
+            assert saved.items[0].title == "检查回购间隔"
+            assert saved.generation_artifact_ref.resource_id == "artifact-1"

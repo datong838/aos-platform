@@ -9,3 +9,7 @@
 5. 单元回归验证默认路径、显式retention、旧Artifact无法自动恢复；一次性DB运行真实迁移及原表保存、正文读取、timeline不泄露、越权/错hash拒绝、immutability及原子失败回滚。当前主库不升级、不重启；待克隆迁移门禁后另步备份升级。
 
 文件：services/aos-api/alembic/versions/a0v_012_agent_text_output.py；services/aos-api/aos_api/aip_agent_text_output.py、aip_task_store.py、aip_agent_run_executor.py；对应tests。下一步GrowthPlan接收可从正文表恢复、实际D03生成组合显式启用，并验证unknown不重发。此次不声称真实模型/经营链完成。
+
+## 受信GrowthPlan恢复入口检查点
+GrowthPlanDraftReceiver新增recover，显式typed入参与receive相同但不接answer。先在scoped连接读取原SUCCEEDED attempt及其exact私有正文（markings核验），关闭读取事务后把原文传入既有receive重新验证原Run/Artifact/当前来源。正文append-only、receive重验hash，因此两事务之间不能以内容漂移绕过；来源撤销会阻断新保存。历史无正文、unknown/failed调用拒绝，不调用Provider。测试在一次性012 DB中构造同时带正文的生成fixture，丢弃调用方原answer，用新Receiver实例恢复并重放，仍仅一份计划；默认无正文fixture恢复拒绝。
+文件：aos_api/ecommerce_analyst_growth_plan_receiver.py；tests/test_ecommerce_analyst_growth_plan_full_graph.py和test_ecommerce_analyst_growth_plan_receiver.py。实际D03生成入口/迁移部署仍后续，不能把恢复方法存在当成已接业务入口。

@@ -24,6 +24,24 @@ class GrowthPlanDraftReceiver:
             raise ValueError("explicit scoped connection factory required")
         self._connect_factory = connect_factory
 
+    def recover(self, scope: TenantScope, *, attempt_id: str, decision_ref: AnalystExactRef,
+                budget: str, task_type: str, actor: str, markings: list[str],
+                now: datetime, max_source_age: timedelta) -> AnalystExactRef:
+        """Recover an already completed output, never invoke or retry a Provider."""
+        from aos_api.aip_agent_text_output import read_agent_text
+        attempt = AipAgentRunExecutionService(self._connect_factory).get(scope, attempt_id)
+        if ((attempt.tenant.org_id, attempt.tenant.project_id) != scope.key
+                or attempt.attempt_id != attempt_id or attempt.status != "succeeded"
+                or attempt.output_artifact_ref is None):
+            raise ValueError("only a completed retained generation can be recovered")
+        with self._connect_factory(scope) as conn:
+            answer = read_agent_text(conn, scope, attempt.output_artifact_ref, markings=markings)
+        # Immutable body may be read separately. receive rechecks the attempt,
+        # artifact and current source authority before any new plan is saved.
+        return self.receive(scope, attempt_id=attempt_id, decision_ref=decision_ref,
+                            answer=answer, budget=budget, task_type=task_type, actor=actor,
+                            markings=markings, now=now, max_source_age=max_source_age)
+
     def receive(self, scope: TenantScope, *, attempt_id: str, decision_ref: AnalystExactRef,
                 answer: str, budget: str, task_type: str, actor: str, markings: list[str],
                 now: datetime, max_source_age: timedelta) -> AnalystExactRef:

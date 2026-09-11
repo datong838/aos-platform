@@ -172,3 +172,13 @@ def test_real_owner_persistence_and_replay_in_owned_clone(monkeypatch):
     finally:
         with psycopg.connect(**params) as admin:
             admin.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+
+
+@pytest.mark.parametrize("status", ["unknown", "failed", "prepared", "invoking"])
+def test_recovery_never_reads_or_retries_incomplete_generation(monkeypatch, status):
+    receiver, state, kwargs = setup_receiver(monkeypatch)
+    state["attempt"] = state["attempt"].model_copy(update={"status": status})
+    kwargs.pop("answer")
+    with pytest.raises(ValueError, match="completed retained generation"):
+        receiver.recover(SCOPE, **kwargs)
+    assert state["source_calls"] == 0 and state["published"] == []
