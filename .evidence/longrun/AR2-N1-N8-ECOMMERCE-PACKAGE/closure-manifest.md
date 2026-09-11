@@ -447,3 +447,22 @@ contentHash。ResponsibilityPlan 是决定正文的 exact 字段并受 contentHa
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 稳定 decisionId 与命令身份校验迁入；来源/Eval/权限/事务/Receipt/Store 和运行装配仍 PENDING | 5ece350a645d0a9269c48efb970079a9d0590f104545ebb256bdfc6ab2222206 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_command_identity.py` | 原路径 | 三阶段宿主算法 parity、身份/hash/布尔版本负向边界与隔离 import | 0ed0fe2849a011455bb516edd527021a6acab50b6926169a74b3896ec952621a |
+
+### 9.15 阶段评审运行 exact 纯规则
+
+2026-09-12：审计确认 stage review runtime 对当前 Task/Plan/Run、最新 StepRun、Checkpoint、
+依赖快照和 Evidence 的读取，以及状态机、撤销与内容 hash 校验，均是宿主权威，不进入包。
+
+growth 包新增 `require_stage_runtime_references` 与 `require_observed_stage_subject`。前者固定三个阶段
+的 PlanRevision、同 TaskRun 的 exact StepRunAttempt 和对应 subject 类型，并要求 runtime stepKey
+使用精确阶段拼写；后者只在宿主已验证 Evidence 当前、未撤销且正文 hash 正确之后，核对正文
+绑定同一 stepRun、stage 和 exact `insightRef`/`decisionRef`/`growthPlanRef`。
+
+包函数不判断 Run/Task/Plan current、step 状态与顺序、inputHash、Checkpoint、依赖快照、Evidence
+hash/revocation/marking，也不访问 TenantScope 或数据库。当前 1.4.0 安装未改变，第 9 节整体仍
+PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_runtime.py` | exact 引用与已验真观察正文比较迁入；Task/Plan/Run/Step/Checkpoint/Evidence Owner 和装配仍 PENDING | cf0055eb757adc7100c6f3a67a6bd5cefbc59090656b50751d38441b7154a477 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_runtime_rule.py` | 原路径 | 三阶段正例、引用/拼写/观察漂移和隔离 import 合同 | 9b93c2cd59731a5c7074b932446b44aa8f6640a7bf078f5f7a55f19f4b94bf10 |
