@@ -71,6 +71,7 @@ sys.path.insert(0, sys.argv[1])
 from ecommerce_growth.ecommerce_analyst_analysis_proposal import parse_portrait_answer
 from ecommerce_growth.ecommerce_analyst_growth_plan_draft import parse_growth_plan_answer
 from ecommerce_growth.analyst_structure_eval import evaluate_structure
+from ecommerce_growth.analyst_structure_case import structure_case_from_query
 assert not any(k.startswith("aos_api") for k in sys.modules)
 '''
     subprocess.run([sys.executable,'-I','-c',program,str(BACKEND)],check=True,capture_output=True,text=True)

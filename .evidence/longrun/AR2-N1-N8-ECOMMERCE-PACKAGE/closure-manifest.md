@@ -239,3 +239,5 @@ AR2 的 fixture 证据不代表真实经营数据接入、真实 Provider、业�
 | `services/aos-api/aos_api/ecommerce_analyst_growth_plan_draft.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_growth_plan_draft.py` | DTO解析切片迁入 growth；执行编排仍PENDING | 74129df3c3ea51a0a9632984b1d26124c4c5fdda8e17bbcdf256c0718541221c |
 
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_eval.py` | 原路径 | growth纯结构评估；无权威、无运行注册，联合运行仍PENDING | ca60642772cd52e4b18715940d9f907f36171ef5bc6dec1cc6562dbe1e85122b |
+
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_case.py` | 原路径 | growth纯生成输入到结构规则转换；来源Owner与运行装配仍PENDING | 1c903f9e7781d1952d38c3847a670ee329e95a08bf8f9db205b8111471217109 |

@@ -44,7 +44,9 @@ def test_package_structure_function_forms_real_exact_report(monkeypatch,stage,va
         body=json.loads(item['subjectText']);body['approvedAt']='UNTRUSTED_APPROVAL_MARKER'
         fixture.replace_body(item,body)
     text=item['subjectText'];h=helpers(monkeypatch)
-    h.INPUT_VALUE=item['caseInput']
+    query_fixture=importlib.import_module('test_analyst_structure_case')
+    derive=importlib.import_module('ecommerce_growth.analyst_structure_case').structure_case_from_query
+    h.INPUT_VALUE=derive(query_fixture.query(monkeypatch,stage),stage=stage)
     h.EXPECTED_VALUE=dict(schemaVersion='aos.analyst-structure-result/v1',stage=stage,structurePassed=True,detailCode='STRUCTURE_VALID')
     h.INPUT=h.INPUT.model_copy(update={'content_hash':h._value_hash(h.INPUT_VALUE)})
     h.EXPECTED=h.EXPECTED.model_copy(update={'content_hash':h._value_hash(h.EXPECTED_VALUE)})

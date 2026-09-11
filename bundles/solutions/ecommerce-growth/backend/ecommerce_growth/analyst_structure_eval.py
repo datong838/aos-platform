@@ -48,21 +48,27 @@ class _Input(_Strict):
     case_input: _Case = Field(alias='caseInput')
 
 
+def validate_structure_case(value) -> _Case:
+    case = _Case.model_validate(value)
+    identities = {(s.resource_type, s.resource_id) for s in case.source_refs}
+    if (len(identities) != len(case.source_refs)
+            or bool(case.metric_sources) != (case.stage == 'portrait')):
+        raise ValueError('INVALID_STRUCTURE_INPUT')
+    for indices in case.metric_sources:
+        if len(set(indices)) != len(indices) or any(i >= len(case.source_refs) for i in indices):
+            raise ValueError('INVALID_STRUCTURE_INPUT')
+    return case
+
+
 def _read_input(value):
     try:
         if type(value) is not dict:
             raise ValueError()
         item = _Input.model_validate(value)
         body = item.subject_text.encode('utf-8')
-        case = item.case_input
-        identities = {(s.resource_type, s.resource_id) for s in case.source_refs}
-        if (len(body) > 2097152 or sha256(body).hexdigest() != item.subject_artifact_ref.content_hash
-                or len(identities) != len(case.source_refs)
-                or bool(case.metric_sources) != (case.stage == 'portrait')):
+        validate_structure_case(item.case_input.model_dump(mode='json', by_alias=True))
+        if len(body) > 2097152 or sha256(body).hexdigest() != item.subject_artifact_ref.content_hash:
             raise ValueError()
-        for indices in case.metric_sources:
-            if len(set(indices)) != len(indices) or any(i >= len(case.source_refs) for i in indices):
-                raise ValueError()
         return item
     except ValueError:
         # Never propagate Pydantic's input excerpts or business text to reports.

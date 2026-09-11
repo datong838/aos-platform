@@ -1,0 +1,7 @@
+{
+  "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_case.py": "1c903f9e7781d1952d38c3847a670ee329e95a08bf8f9db205b8111471217109",
+  "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_structure_eval.py": "12215ca3d4a6c53bf869d54f2b9855319e3120a05a4046ee7bd6eb009af4b0f4",
+  "services/aos-api/tests/extension_runtime/test_analyst_structure_case.py": "ca358a62974445efd18e89a8d749f1d8c4906116d910d82e06c1623f3cc8cbf5",
+  "services/aos-api/tests/extension_runtime/test_analyst_package_proposals.py": "4c3b03701a6cdc993cf683a574c3e99d247f923bcf778dc935e46387e8f54d6e",
+  "services/aos-api/tests/test_analyst_structure_eval_pg.py": "a60fca38a5371e801bb529f0dbd1138e49ce7ea67fc1337c2101fde725957c6c"
+}

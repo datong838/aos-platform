@@ -1,0 +1,9 @@
+# 从生成Query自动形成结构评估规则
+
+基线dada32cb，2026-09-11。包内新增analyst_structure_case.py，修改analyst_structure_eval.py抽出共用规则验证，新增tests/extension_runtime/test_analyst_structure_case.py，更新闭包与证据。
+
+输入是D01/D02/D03既有固定生成query及明确stage，不接来源计数字段。严格JSON/重复键/长度/协议检查；D01/D02按原sources顺序自动生成exact来源库存并验证各Evidence原payload hash；D02要求与Insight.evidenceRefs完全同序。D03要求与Decision.evidenceRefs同序。画像按实际MetricDefinition hash及source payload中的metricDefinitionRef自动找到唯一支持来源，缺失或重复来源拒绝；保持同一索引顺序。输出唯一结构case协议，复用同一输入验证，不输出原始业务文本。
+
+这是无I/O转换，不能自证query来自数据库。宿主在使用前必须从当前Owner重建query、复算完成AgentRunExecutionAttempt.request_hash并核验原始Artifact/权限，再持久化exact Suite输入；本波不注册生产target，不把自带hash当授权。测试使用实际prompt函数输出证明兼容，覆盖来源顺序/正文hash/指标缺失/协议漂移和固定异常码。下一波宿主受控读取与绑定。
+
+联合验证追加：现有test_analyst_structure_eval_pg.py的Suite输入改为实际prompt输出经包函数自动推导，保留原6组正文/报告正负验证；来源本身仍fixture，不更改生产代码。
