@@ -695,3 +695,19 @@ binding epoch 或 package lock 的调用许可。当前性前后复核与 stage-
 | `services/aos-api/aos_api/extension_runtime/live_job_directory.py` | 原路径 | exact live job identity directory；无 admission 权限 | 9c211d1228587d297572b3de7b37500ac24e1b0ffde3d59d6bc05654df42207e |
 | `services/aos-api/aos_api/extension_runtime/preparation_consumer.py` | 原路径 | owner 校验后登记、关闭必撤销、冲突先清理 | fc4d1e0deacd13dd2252c66c005eba9686b39f0c681592f0f61346d300278de1 |
 | `services/aos-api/tests/extension_runtime/test_live_job_directory.py` | 原路径 | exact lookup、竞争/隔离拒绝与 consumer 生命周期合同 | b1fba96a76b6ee6155bdcdda8272ce7ba7e097af728cabdc988d7a426d666396 |
+
+### 9.30 当前已安装 package 前后快照调用门禁
+
+2026-09-12：新增 `CurrentInstalledPackageInvoker`。第一笔短事务锁读 active Installation ref 和指定
+generation binding，复用 canonical baseline reader 校验 lock，要求 ready/enabled/unfenced、exact
+installation revision/lock hash，并检查调用 markings 覆盖 lock target markings、目标 package 唯一。
+
+事务关闭后才从 9.29 live directory 解析 exact job 并调用一次；IPC 返回后第二笔短事务重读完整
+Installation/binding/package/markings snapshot，任何漂移都丢弃响应。异常、超时、取消不重试，不在
+事务中 await，不缓存 admission token。stage-review composition 与最终 commit runtime snapshot 封印仍
+PENDING，本切片无数据库写入或真实租户状态变化。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/installed_package_invoker.py` | 原路径 | active Installation/binding/lock/marking 双快照包围一次 live IPC | d868b18c1c4f4c726b1986f377172fb8f74bac30de487122858aecc8c3d740c4 |
+| `services/aos-api/tests/extension_runtime/test_installed_package_invoker.py` | 原路径 | 事务外 IPC、漂移丢弃、隔离/marking/package 与零重试合同 | 47df876705c6eb55732b86e8b6b218bed6555671973ab2682ecbdc7b6db03d60 |
