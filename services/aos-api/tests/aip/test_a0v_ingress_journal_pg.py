@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from psycopg import errors
 from test_aip_budget_reservation_pg import database, runtime_connection, ROOT
+from test_a0v_ecom_store_pg import pg_store
 from aos_api.tenant_scope import TenantScope
 
 pytestmark = pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PG opt-in')
@@ -123,8 +124,9 @@ def test_derived_commands_are_durable_and_bound_to_original_objects(database):
     with pytest.raises(errors.RaiseException), database.owner.transaction(): migration.downgrade()
 
 
-def test_recovery_cross_connection_commit_before_derived_submission(database,monkeypatch):
-    """Real PG journal/binding transactions plus real SQLite consistency owner."""
+@pytest.mark.parametrize('store_backend',['sqlite','postgresql'])
+def test_recovery_cross_connection_commit_before_derived_submission(database,monkeypatch,request,store_backend):
+    """PG journal/binding transactions with SQLite and PG consistency owners."""
     import json
     from sqlalchemy import create_engine,select,func
     from sqlalchemy.pool import StaticPool
@@ -158,9 +160,13 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
     with factory(scope) as conn:
         journal.save_for_running_schedule(conn,scope,run_id='run',pipeline_id=pipeline.id,source_id='source',
             source_revision=revision,pipeline_hash=_digest(graph),command=command,output_rows=[row])
-    engine=create_engine('sqlite+pysqlite:///:memory:',poolclass=StaticPool)
-    metadata.create_all(engine)
-    store=EcomConsistencyStore(engine)
+    if store_backend=='postgresql':
+        store=request.getfixturevalue('pg_store')
+        engine=store._engine
+    else:
+        engine=create_engine('sqlite+pysqlite:///:memory:',poolclass=StaticPool)
+        metadata.create_all(engine)
+        store=EcomConsistencyStore(engine)
     try:
         original_save=journal.save_derived
         def fail_save(*args):

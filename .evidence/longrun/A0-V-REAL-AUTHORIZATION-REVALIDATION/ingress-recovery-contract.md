@@ -147,3 +147,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线a5cdd5ff。execute_schedule新增内部recovery_run_id/recovery_claim_id，必须同时非空且trigger=recovery、不能传scheduled_for；一般manual/cron不变，公开路由暂不扩权。claim_failed_run增加expected_schedule_id，原run.schedule_id必须相同才可改状态。领取成功commit后使用原runId执行durable_ingress=True；相同claim重放False直接返回duplicate，不执行也不更新run。后续结果沿现有持久回写，退出事实重新获取。原输入存在才允许领取，durable必走原Journal不会重读源。
 
 文件：services/aos-api/aos_api/qyh_cron_scheduler.py、ec_ingress_claim.py；tests/test_qyh_cron_scheduler.py、tests/aip/test_a0v_ingress_journal_pg.py。验证不调用新run claim、原run传递、领取重复/拒绝不启动、参数缺失拒绝、调度错配PG零副作用及既有cron回归。真实恢复API/worker后续接完整权限与显示，当前是内部实际调度函数接线，不宣称产品用户已可操作。
+
+## PostgreSQL恢复事务组合
+
+基线ddd96732。现有Journal/保存失败/派生重放/Dataset原子结果/空观察/claim竞争组合主要Store是SQLite，扩展同一用例store_backend=sqlite/postgresql。PG复用test_a0v_ecom_store_pg.pg_store隔离schema夹具，Store six tables/RLS/local sequence，与Journal/Dataset/claim使用同一个隔离PG。只改tests/aip/test_a0v_ingress_journal_pg.py，不动产品。验证跨连接已提交前缀、原水位、Receipt/结果幂等、回滚与claim竞争在PG真实事务下成立。
+
+边界：Store由SQLAlchemy metadata创建，非全部production migration证明；projected仍测试显式更新，不冒充实际projector；来源/当前绑定部分是最小fixture。public不迁移、不触真实租户数据。后续实际projector与迁移兼容性继续验证。
