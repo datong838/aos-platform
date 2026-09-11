@@ -1,0 +1,17 @@
+{
+  "phase": "A0-V ecommerce growth 1.5.0 source candidate",
+  "date": "2026-09-12",
+  "candidate": {
+    "path": "bundles/candidates/ecommerce/solution.ecommerce.growth/1.5.0",
+    "fileCount": 87,
+    "treeHash": "sha256:34cd4bc2e9f6bc9c2d9ceb0cf8bee16a93232bce374396e075c3afae9c5b43d8",
+    "backendTreeHash": "sha256:0d9a0b6988c1ffbfb79ff4ab2389f4038d81385ab2735389a8a800901c85c302"
+  },
+  "files": [
+    {"path": "scripts/prepare_ecommerce_growth_1_5_candidate.py", "sha256": "72496830e24b7a2bf1da4db3d2b9f608abac1b91b605fb181abc13782a95f9a3"},
+    {"path": "scripts/build_ecommerce_runtime_candidates.py", "sha256": "31fe759651303a9109260964313456aa2fc2d5e676258a6633ff9edcd6487063"},
+    {"path": "services/aos-api/tests/extension_runtime/test_runnable_ecommerce_candidates.py", "sha256": "0e2622ffa2532cf7d5978b6b8ca8e618316a7d1a4b3b1c82ac533278e79749b7"},
+    {"path": "services/aos-api/tests/extension_runtime/test_prepare_ecommerce_growth_1_5_candidate.py", "sha256": "83091b57001d16a0b601aa0669d85d2e0504c53740603ea373bd8541c375e2d2"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-growth-1.5.0-candidate-plan.md", "sha256": "c546816d384d5d0f73864820dd51fb0c4ee683e6cd418f83ba475ecc9f4621a1"}
+  ]
+}

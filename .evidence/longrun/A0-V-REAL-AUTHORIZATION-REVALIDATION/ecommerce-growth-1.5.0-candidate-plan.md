@@ -21,7 +21,8 @@ command identity、review slot、runtime、eval proof、structure case。
 
 1. 不修改、覆盖、补文件或重新签名 1.4.0。
 2. 新建 `bundles/candidates/ecommerce/solution.ecommerce.growth/1.5.0/`；以 1.4.0 完整目录为固定 base，
-   将 backend 整体替换为当前作者 backend，manifest 只把 version 提升为 `1.5.0` 并更新 displayName。
+   将 backend 整体替换为当前作者 backend，manifest 把 version 提升为 `1.5.0` 并更新 displayName；同时只将
+   八个 workshop/analyst-template 文档的自有 `bundleRef` 从 1.4.0 提升到 1.5.0，满足 loader 的内部坐标一致性。
 3. 保留 1.4.0 candidate 专属 content：七个 production profiles、media production templates、cost projection
    contracts；本波不把作者目录缺失误判为删除。
 4. schema compatibility/requirements 沿用 no-package-migration 的 `a0v_001` 契约；若作者 backend 不引入新表，

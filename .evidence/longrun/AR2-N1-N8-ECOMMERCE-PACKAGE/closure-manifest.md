@@ -885,3 +885,21 @@ hash `959f15...`；当前作者 backend 已增至 34 文件、hash `0d9a0b...`�
 下一 candidate 固定为 1.5.0：克隆 1.4.0 的完整已版本化内容，整体替换 current author backend，只提升
 manifest version/displayName；1.4.0 改以完整树/backend hash 固化，禁止覆盖。OCI build、签名、publish、
 Installation upgrade 仍分波执行，本切片零租户、Registry、OCI 和 Provider 副作用。
+
+### 9.42 Ecommerce growth 1.5.0 unsigned source candidate
+
+2026-09-12：新增 fail-closed 生成器与 87 文件 1.5.0 source candidate。生成前 exact 校验 1.4.0 完整/
+backend hash 和 current author backend hash；目标存在、输入漂移、自引用数量漂移均拒绝并清理半成品。
+候选继承 1.4.0 完整内容，整体替换 34 文件 backend，提升 manifest 与八个内部 bundleRef。
+
+1.5.0 tree hash 为 `34cd4b...`，backend hash 为 `0d9a0b...`；1.4.0 完整/backend hash 独立固化且
+零修改。builder preflight 已指向 1.5.0 并保持 4 bundles、3 runtime members、8 modules、12 operations。
+本切片仍 unsigned，无 OCI build、签名、Registry publish、Installation upgrade、租户或 Provider 副作用。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `bundles/candidates/ecommerce/solution.ecommerce.growth/1.5.0/` | 原路径 | 87 文件 immutable unsigned candidate tree | 34cd4bc2e9f6bc9c2d9ceb0cf8bee16a93232bce374396e075c3afae9c5b43d8 |
+| `scripts/prepare_ecommerce_growth_1_5_candidate.py` | 原路径 | exact base/author hash、版本自引用与半成品清理 | 72496830e24b7a2bf1da4db3d2b9f608abac1b91b605fb181abc13782a95f9a3 |
+| `scripts/build_ecommerce_runtime_candidates.py` | 原路径 | current growth build coordinate 提升到 1.5.0 | 31fe759651303a9109260964313456aa2fc2d5e676258a6633ff9edcd6487063 |
+| `services/aos-api/tests/extension_runtime/test_runnable_ecommerce_candidates.py` | 原路径 | 1.4.0 历史 hash 与 1.5.0 current exact 合同 | 0e2622ffa2532cf7d5978b6b8ca8e618316a7d1a4b3b1c82ac533278e79749b7 |
+| `services/aos-api/tests/extension_runtime/test_prepare_ecommerce_growth_1_5_candidate.py` | 原路径 | deterministic generate、漂移/覆盖拒绝与自引用反证 | 83091b57001d16a0b601aa0669d85d2e0504c53740603ea373bd8541c375e2d2 |

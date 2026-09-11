@@ -61,9 +61,9 @@ RUNTIME_CASES = (
         "ecommerce_niushop",
     ),
     (
-        "solution.ecommerce.growth/1.4.0",
+        "solution.ecommerce.growth/1.5.0",
         "solution.ecommerce.growth",
-        "1.4.0",
+        "1.5.0",
         "ecommerce_growth",
     ),
 )

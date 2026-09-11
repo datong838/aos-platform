@@ -31,10 +31,10 @@ CASES = (
         ("ecommerce_niushop_source_describe", "ecommerce_niushop_facts_read"),
     ),
     (
-        "solution.ecommerce.growth/1.4.0",
+        "solution.ecommerce.growth/1.5.0",
         "bundles/solutions/ecommerce-growth",
         "solution.ecommerce.growth",
-        "1.4.0",
+        "1.5.0",
         "ecommerce_growth",
         (
             "ecommerce_growth_investigation_describe",
@@ -57,6 +57,30 @@ def _python_tree(root: Path) -> dict[str, bytes]:
         for path in sorted(root.rglob("*.py"))
         if "__pycache__" not in path.parts
     }
+
+
+def _tree_hash(root: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        if "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        raw = path.read_bytes()
+        digest.update(str(path.relative_to(root)).encode("utf-8") + b"\0")
+        digest.update(str(len(raw)).encode("ascii") + b"\0")
+        digest.update(raw)
+    return digest.hexdigest()
+
+
+def test_immutable_1_4_0_candidate_keeps_exact_historical_hashes() -> None:
+    legacy = CANDIDATE_ROOT / "solution.ecommerce.growth/1.4.0"
+    assert _tree_hash(legacy) == "4dc6cfbeadc2c50d9bcdbaf85fc78b0aa9f8174db525c696e6c23dadcfaf43b3"
+    assert _tree_hash(legacy / "backend") == "959f154b717d31c3d09451a2dde9d837993d69aa85be5c7c23afe06cee555649"
+
+
+def test_current_1_5_0_candidate_keeps_exact_reviewed_source_hash() -> None:
+    candidate = CANDIDATE_ROOT / "solution.ecommerce.growth/1.5.0"
+    assert _tree_hash(candidate) == "34cd4bc2e9f6bc9c2d9ceb0cf8bee16a93232bce374396e075c3afae9c5b43d8"
+    assert _tree_hash(candidate / "backend") == "0d9a0b6988c1ffbfb79ff4ab2389f4038d81385ab2735389a8a800901c85c302"
 
 
 def _module(path: Path, package: str):
@@ -105,7 +129,7 @@ def test_candidate_composition_has_exact_versions_dependencies_and_eight_modules
         "domain.ecommerce.core/1.1.0",
         "platform.ecommerce.niushop/1.1.0",
         "solution.ecommerce.operations-base/1.2.0",
-        "solution.ecommerce.growth/1.4.0",
+        "solution.ecommerce.growth/1.5.0",
     )
     loaded = [loader.load(f"bundle://candidate/{path}") for path in paths]
     coordinates = {(item.manifest.metadata.id, item.manifest.metadata.version) for item in loaded}
@@ -113,7 +137,7 @@ def test_candidate_composition_has_exact_versions_dependencies_and_eight_modules
         ("domain.ecommerce.core", "1.1.0"),
         ("platform.ecommerce.niushop", "1.1.0"),
         ("solution.ecommerce.operations-base", "1.2.0"),
-        ("solution.ecommerce.growth", "1.4.0"),
+        ("solution.ecommerce.growth", "1.5.0"),
     }
     for item in loaded[1:]:
         dependencies = item.manifest.spec.dependencies
