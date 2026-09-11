@@ -29,3 +29,6 @@
 
 ### 当前来源读取检查点
 新增ecommerce_analyst_growth_plan_sources.py，显式传入scope、当前事务连接、允许markings、时钟及正值max_source_age（来自调用侧业务配置，不虚构TTL）。先JOIN当前Decision/Insight head并核验exact/tenant/identity/canonical payload hash，再复用ProductionContractStore读取bundle与当前TaskBrief；拒绝非冻结、非complete、非fresh、撤销、空items、cutoff超龄或未来、跨scope。逐个底层Evidence核验exact/hash/marking/撤销和freshness_at，不把历史bundle fresh当作持续有效。该读取器不写入、不生成业务记录，尚需后续接原D03 AgentRun/Artifact核验与Owner事务保存。
+
+### 受信事务接收检查点
+新增ecommerce_analyst_growth_plan_receiver.py及对应tests。显式connect_factory，调用侧提供可信scope/markings/时效/预算/任务类型，不新增公开route。以tenant+attempt事务advisory lock序列化同一生成接收；读取原attempt及AgentRun，要求D03 Skill、route/policy一致，Run inputRefs包含exact Decision/Insight/Decision Evidence。读取已保存Artifact要求run/type/hash/contentRef/source agentRunId/attemptId一致。先复用来源读取及纯转换，再同连接调用既有Owner保存，不复制Receipt/CAS协议。已保存的同attempt在当前来源失效后允许回读原草稿，但须核对原Artifact、请求字段、actor、decisionRef、budget、taskType和原答复hash；不得新建或重新调用Provider。数据库原子正向验证单独记录，单元测试不能当成真实业务完成。
