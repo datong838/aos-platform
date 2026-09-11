@@ -32,6 +32,7 @@ from aos_api.aip_task_store import (
     _canonical_hash,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_taor_lease_adapter import LeaseMaintainedTaorAdapter
 
 
 class CanonicalTaorAdapter(Protocol):
@@ -66,7 +67,12 @@ class CanonicalTaorRunner:
         worker_id: str,
         adapter: CanonicalTaorAdapter,
         lease_seconds: int = 30,
+        renew_step_lease: bool = False,
     ) -> RunControlResult:
+        if type(renew_step_lease) is not bool or (
+            renew_step_lease and (type(lease_seconds) is not int or lease_seconds < 1)
+        ):
+            raise ValueError("lease renewal requires an explicit boolean and positive integer duration")
         timeline = self.store.timeline(scope, run_id)
         self._validate_bindings(timeline.model_dump(mode="json", by_alias=True))
         if timeline.run.status.value == "queued":
@@ -105,16 +111,25 @@ class CanonicalTaorRunner:
                 worker_id,
                 lease_seconds=lease_seconds,
             )
+            step_adapter = adapter
+            if renew_step_lease:
+                step_adapter = LeaseMaintainedTaorAdapter(
+                    adapter,
+                    lambda: self.store.heartbeat_step(
+                        scope, lease.step_run_id, worker_id, lease.fence, lease_seconds=lease_seconds
+                    ),
+                    lease_seconds,
+                )
             try:
-                thought = adapter.think(step, dict(context))
+                thought = step_adapter.think(step, dict(context))
                 self.store.record_step_phase(
                     scope, lease.step_run_id, worker_id, lease.fence, actor, "think", thought
                 )
-                action = adapter.act(step, thought)
+                action = step_adapter.act(step, thought)
                 self.store.record_step_phase(
                     scope, lease.step_run_id, worker_id, lease.fence, actor, "act", action
                 )
-                verification = adapter.verify(step, action)
+                verification = step_adapter.verify(step, action)
                 if verification.get("passed") is not True:
                     error = {
                         "code": "AIP_VERIFY_FAILED",
@@ -130,7 +145,7 @@ class CanonicalTaorRunner:
                 self.store.record_step_phase(
                     scope, lease.step_run_id, worker_id, lease.fence, actor, "verify", verification
                 )
-                observation = adapter.observe(step, action, verification)
+                observation = step_adapter.observe(step, action, verification)
                 artifact_ids = self._persist_artifacts(
                     scope, run_id, actor, observation.get("artifacts", [])
                 )

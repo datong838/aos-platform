@@ -1019,6 +1019,13 @@ class AipTaskStore:
                 """UPDATE aip_step_run SET heartbeat_at=NOW(),lease_expires_at=%s,updated_at=NOW()
                    WHERE org_id=%s AND project_id=%s AND step_run_id=%s AND status='running'
                      AND lease_owner=%s AND fence=%s AND lease_expires_at>NOW()
+                     AND EXISTS (SELECT 1 FROM aip_task_run run
+                       JOIN aip_task task ON task.org_id=run.org_id AND task.project_id=run.project_id
+                         AND task.task_id=run.task_id
+                       WHERE run.org_id=aip_step_run.org_id AND run.project_id=aip_step_run.project_id
+                         AND run.run_id=aip_step_run.run_id
+                         AND ((run.status='running' AND task.status='executing')
+                           OR (run.status='pausing' AND task.status='paused')))
                      AND EXISTS (SELECT 1 FROM aip_execution_assignment_head head
                        WHERE head.org_id=aip_step_run.org_id AND head.project_id=aip_step_run.project_id
                          AND head.step_run_id=aip_step_run.step_run_id AND head.attempt=aip_step_run.attempt
