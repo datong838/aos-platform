@@ -95,3 +95,40 @@ def test_backup_replays_existing_nonempty_dump_without_docker(tmp_path: Path, mo
     result = BOOTSTRAP._backup(tmp_path)
     assert result["size"] == len(b"existing-backup")
     assert result["sha256"] == BOOTSTRAP._sha(b"existing-backup")
+
+
+def test_provision_binds_identity_and_assignment() -> None:
+    class Result:
+        @staticmethod
+        def fetchone():
+            return (1,)
+
+    class Connection:
+        def __init__(self) -> None:
+            self.calls: list[tuple[object, object]] = []
+
+        def execute(self, statement, parameters=None):
+            self.calls.append((statement, parameters))
+            return Result()
+
+    connection = Connection()
+    credentials = {
+        plane: {"password": f"{plane}-password"}
+        for plane in BOOTSTRAP.ROLES
+    }
+
+    BOOTSTRAP._provision(connection, credentials)
+
+    statements = [str(statement) for statement, _parameters in connection.calls]
+    assert sum("extension_runtime_bind_host_identity" in item for item in statements) == 1
+    assert sum("extension_runtime_set_host_assignment" in item for item in statements) == 1
+    assignment_parameters = next(
+        parameters
+        for statement, parameters in connection.calls
+        if "extension_runtime_set_host_assignment" in str(statement)
+    )
+    assert assignment_parameters[:3] == (
+        BOOTSTRAP.ORG_ID,
+        BOOTSTRAP.PROJECT_ID,
+        BOOTSTRAP.HOST_ID,
+    )

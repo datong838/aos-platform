@@ -161,6 +161,12 @@ def _provision(conn: Any, credentials: dict[str, Any]) -> None:
         (ROLES["directory"], HOST_ID, "a0v-runtime-host-bootstrap",
          "a0v-runtime-host-identity-v1", _command_hash(identity_payload)),
     )
+    assignment_payload = {"orgId": ORG_ID, "projectId": PROJECT_ID, "hostId": HOST_ID, "state": "assigned"}
+    conn.execute(
+        "SELECT extension_runtime_set_host_assignment(%s,%s,%s,'assigned',0,%s,%s,%s)",
+        (ORG_ID, PROJECT_ID, HOST_ID, "a0v-runtime-host-bootstrap",
+         "a0v-runtime-host-assignment-v1", _command_hash(assignment_payload)),
+    )
 
 
 def _backup(state_dir: Path) -> dict[str, Any]:
@@ -198,12 +204,6 @@ def _backup(state_dir: Path) -> dict[str, Any]:
     if not target.is_file() or target.stat().st_size <= 0:
         raise BootstrapBlocked("DATABASE_BACKUP_INVALID", str(target))
     return {"path": str(target), "size": target.stat().st_size, "sha256": _sha(target.read_bytes())}
-    assignment_payload = {"orgId": ORG_ID, "projectId": PROJECT_ID, "hostId": HOST_ID, "state": "assigned"}
-    conn.execute(
-        "SELECT extension_runtime_set_host_assignment(%s,%s,%s,'assigned',0,%s,%s,%s)",
-        (ORG_ID, PROJECT_ID, HOST_ID, "a0v-runtime-host-bootstrap",
-         "a0v-runtime-host-assignment-v1", _command_hash(assignment_payload)),
-    )
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
