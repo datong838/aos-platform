@@ -67,7 +67,33 @@ _ROLE_BLUEPRINTS = (
 
 
 def selected_skill_refs() -> dict[str, ExactRevisionRef]:
+    """Historical BI-W10 references; not a current runtime selection."""
     return {ref.resource_id: ref for ref in INVESTIGATION_SKILL_SELECTION}
+
+
+INVESTIGATION_SKILL_IDS = tuple(ref.resource_id for ref in INVESTIGATION_SKILL_SELECTION)
+
+
+class InvestigationSkillSelectionBlocked(ValueError):
+    def __init__(self, code: str, skill_id: str) -> None:
+        self.code = code
+        super().__init__(f"exact active SkillBinding unavailable: {skill_id} ({code})")
+
+
+def selected_bound_skill_ref(skill_id: str, bindings: list[Mapping[str, Any]]) -> ExactRevisionRef:
+    """Select the explicit unique active binding, never the latest template."""
+    if skill_id not in INVESTIGATION_SKILL_IDS:
+        raise ValueError('unsupported investigation skill')
+    candidates = [row for row in bindings if row['skill_id'] == skill_id and row['status'] == 'active']
+    if len(candidates) != 1:
+        code = 'AIP_SKILL_BINDING_MISSING' if not candidates else 'AIP_SKILL_BINDING_AMBIGUOUS'
+        raise InvestigationSkillSelectionBlocked(code, skill_id)
+    row = candidates[0]
+    try:
+        return ExactRevisionRef(resourceType='SkillTemplateRevision', resourceId=skill_id,
+            revision=row['skill_revision'], contentHash=row['bound_skill_hash'])
+    except (KeyError, ValueError):
+        raise InvestigationSkillSelectionBlocked('AIP_SKILL_SELECTION_REF_MISSING_OR_DRIFTED', skill_id) from None
 
 
 def _schema(resource_id: str) -> ResourceRef:

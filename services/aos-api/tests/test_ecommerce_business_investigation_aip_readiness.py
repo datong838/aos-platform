@@ -287,6 +287,60 @@ def test_missing_exact_selected_skill_binding_fails_closed() -> None:
     )
     with pytest.raises(ValueError, match="exact active SkillBinding unavailable"):
         coordinator.refresh(SCOPE)
+    assert events == []
+
+
+def test_explicitly_rebound_skills_refresh_and_unassigned_duplicates_are_ignored():
+    from copy import deepcopy
+    events = []
+    current_plan = plan()
+    skills = exact_skill_bindings()
+    skills[-1].skill.revision = 8
+    skills[-1].skill.content_hash = 'f'*64
+    unrelated = deepcopy(skills[-1])
+    unrelated.binding_id = 'unassigned-duplicate'
+    unrelated.instance_id = 'unassigned-agent'
+    skills.append(unrelated)
+    result = BusinessInvestigationBindingReadinessCoordinator(
+        store=Store(current_plan),
+        capabilities=CapabilityService([
+            binding('cap-material', capability_id='material.collect'),
+            binding('cap-strategy', capability_id='strategy.plan'),
+        ], events),
+        skills=SkillRegistry(skills, events),
+        materializer=Materializer(current_plan), clock=lambda: NOW,
+    ).refresh(SCOPE)
+    assert result.responsibility_plan_lifecycle == 'frozen'
+    assert len(result.items) == 5
+    assert all(event[1] != 'unassigned-duplicate' for event in events)
+
+
+def test_selection_changed_during_capability_refresh_does_not_refresh_another_skill():
+    from copy import deepcopy
+    events = []
+    current_plan = plan()
+    skills = exact_skill_bindings()
+    class ChangingRegistry(SkillRegistry):
+        reads = 0
+        def list_bindings(self, scope, limit):
+            self.reads += 1
+            if self.reads == 2:
+                duplicate = deepcopy(self.items[-1])
+                duplicate.binding_id = 'concurrent-active'
+                duplicate.skill.revision = 8
+                duplicate.skill.content_hash = 'f'*64
+                self.items.append(duplicate)
+            return super().list_bindings(scope, limit)
+    coordinator = BusinessInvestigationBindingReadinessCoordinator(
+        store=Store(current_plan),
+        capabilities=CapabilityService([
+            binding('cap-material', capability_id='material.collect'),
+            binding('cap-strategy', capability_id='strategy.plan'),
+        ], events),
+        skills=ChangingRegistry(skills, events), materializer=Materializer(current_plan), clock=lambda: NOW)
+    with pytest.raises(ValueError, match='AIP_SKILL_BINDING_AMBIGUOUS'):
+        coordinator.refresh(SCOPE)
+    assert all(event[0] == 'capability' for event in events)
 
 
 def test_only_capabilities_required_by_each_assignee_are_refreshed() -> None:

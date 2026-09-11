@@ -73,6 +73,7 @@ def rows() -> dict[str, list[dict]]:
                 "instance_id": "ecommerce.data-advisor.default",
                 "skill_id": skill_id,
                 "skill_revision": selected.revision,
+                "bound_skill_hash": selected.content_hash,
                 "status": "active",
                 "version": 7,
                 "dependency_snapshot_hash": h("d"),
@@ -141,10 +142,10 @@ class Connection:
     def execute(self, sql, params):
         if "aip_logic_publication" in sql:
             key = "publications"
-        elif "aip_skill_template_revision" in sql:
-            key = "skills"
         elif "aip_skill_binding" in sql:
             key = "bindings"
+        elif "aip_skill_template_revision" in sql:
+            key = "skills"
         elif "aip_stage_template_revision" in sql:
             key = "stages"
         elif "aip_responsibility_plan_revision" in sql:
@@ -199,6 +200,35 @@ def test_explicit_skill_ref_is_selected_without_using_latest_revision() -> None:
     assert "AIP_SKILL_SELECTION_REF_MISSING_OR_DRIFTED" not in actual.blockers
     d03 = next(ref for ref in actual.skill_refs if ref.resource_id == "ecommerce.skill.D03")
     assert d03.revision == 4
+
+
+def test_republished_skill_requires_explicit_binding_and_selects_exact_logic_history() -> None:
+    data = rows()
+    updated = deepcopy(data['skills'][-1])
+    updated.update(revision=8, content_hash=h('f'))
+    updated['logic_revision_ref'].update(revision=3, contentHash=h('a'))
+    data['skills'].append(updated)
+    data['bindings'][-1].update(skill_revision=8, bound_skill_hash=h('f'))
+    publication = deepcopy(data['publications'][-1])
+    publication.update(publication_id='new-publication', graph_revision=3, graph_hash=h('a'))
+    data['publications'].append(publication)
+    actual = source(data)[0].read(SCOPE, 'initial_store_analysis', observed_at=NOW, production_context_ref=context_ref())
+    assert actual.ready, actual.blockers
+    assert actual.skill_refs[-1].revision == 8
+    assert actual.logic_refs[-1].revision == 3
+
+
+def test_two_active_skill_versions_are_ambiguous_even_if_one_is_historical_default() -> None:
+    data = rows()
+    updated = deepcopy(data['skills'][-1])
+    updated.update(revision=8, content_hash=h('f'))
+    data['skills'].append(updated)
+    binding = deepcopy(data['bindings'][-1])
+    binding.update(binding_id='second-active', skill_revision=8, bound_skill_hash=h('f'))
+    data['bindings'].append(binding)
+    actual = source(data)[0].read(SCOPE, 'initial_store_analysis', observed_at=NOW, production_context_ref=context_ref())
+    assert not actual.ready
+    assert 'AIP_SKILL_BINDING_AMBIGUOUS' in actual.blockers
 
 
 def test_declared_skill_ref_drift_does_not_fall_back_to_another_revision() -> None:

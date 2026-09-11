@@ -19,7 +19,8 @@ from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_stage_template_authority import resolve_stage_template_source
 from aos_api.ecommerce_business_investigation_aip_authority import (
     BusinessInvestigationAuthorityMaterializer,
-    selected_skill_refs,
+    INVESTIGATION_SKILL_IDS,
+    selected_bound_skill_ref,
 )
 from aos_api.ecommerce_business_investigation_aip_composition import (
     INVESTIGATION_RESPONSIBILITY_PROFILE,
@@ -95,6 +96,12 @@ class BusinessInvestigationBindingReadinessCoordinator:
             if item.status == "active"
             and item.instance_id in required_by_assignee
         ]
+        selection_rows = [dict(skill_id=item.skill.asset_id, skill_revision=item.skill.revision,
+            bound_skill_hash=item.skill.content_hash, status=item.status) for item in active_skills]
+        selected = {skill_id: selected_bound_skill_ref(skill_id, selection_rows)
+            for skill_id in INVESTIGATION_SKILL_IDS}
+        selected_binding_ids = {item.skill.asset_id: item.binding_id for item in active_skills
+            if item.skill.asset_id in selected}
         required_by_binding: dict[str, set[str]] = {}
         for item in active_skills:
             for binding_id in item.capability_binding_ids:
@@ -119,13 +126,20 @@ class BusinessInvestigationBindingReadinessCoordinator:
             for binding in capability_bindings
         ]
 
-        selected = selected_skill_refs()
         refreshed_skills = self._skills.list_bindings(scope, limit=200)
+        refreshed_rows = [dict(skill_id=item.skill.asset_id, skill_revision=item.skill.revision,
+            bound_skill_hash=item.skill.content_hash, status=item.status) for item in refreshed_skills
+            if item.instance_id in required_by_assignee]
+        if any(selected_bound_skill_ref(skill_id, refreshed_rows) != exact
+                for skill_id, exact in selected.items()):
+            raise ValueError('exact active SkillBinding selection changed during refresh')
         for skill_id, exact in selected.items():
             candidates = [
                 item
                 for item in refreshed_skills
                 if item.status == "active"
+                and item.instance_id in required_by_assignee
+                and item.binding_id == selected_binding_ids[skill_id]
                 and item.skill.asset_id == skill_id
                 and item.skill.revision == exact.revision
                 and item.skill.content_hash.removeprefix("sha256:")

@@ -14,7 +14,10 @@ from pydantic import Field, model_validator
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect as db_connect
-from aos_api.ecommerce_business_investigation_aip_authority import selected_skill_refs
+from aos_api.ecommerce_business_investigation_aip_authority import (
+    InvestigationSkillSelectionBlocked,
+    selected_bound_skill_ref,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -126,13 +129,14 @@ class PostgresAipProductionCompositionSource:
                 (list(INVESTIGATION_SKILL_IDS),),
             ).fetchall()
             bindings = conn.execute(
-                """SELECT binding_id,instance_id,skill_id,skill_revision,status,version,
-                          dependency_snapshot_hash,readiness,readiness_reasons,
-                          last_evaluated_at,readiness_expires_at
-                   FROM aip_skill_binding
-                   WHERE org_id=%s AND project_id=%s AND skill_id=ANY(%s)
-                     AND status='active'
-                   ORDER BY skill_id,skill_revision,binding_id""",
+                """SELECT b.binding_id,b.instance_id,b.skill_id,b.skill_revision,b.status,b.version,
+                          b.dependency_snapshot_hash,b.readiness,b.readiness_reasons,
+                          b.last_evaluated_at,b.readiness_expires_at,s.content_hash AS bound_skill_hash
+                   FROM aip_skill_binding b
+                   JOIN aip_skill_template_revision s ON s.skill_id=b.skill_id AND s.revision=b.skill_revision
+                   WHERE b.org_id=%s AND b.project_id=%s AND b.skill_id=ANY(%s)
+                     AND b.status='active'
+                   ORDER BY b.skill_id,b.skill_revision,b.binding_id""",
                 (*scope.key, list(INVESTIGATION_SKILL_IDS)),
             ).fetchall()
             stages = conn.execute(
@@ -167,26 +171,6 @@ class PostgresAipProductionCompositionSource:
         publications_by_logic: dict[str, list[Any]] = defaultdict(list)
         for row in publications:
             publications_by_logic[str(row["graph_id"])].append(row)
-        logic_by_id: dict[str, InvestigationExactRef] = {}
-        for logic_id in INVESTIGATION_LOGIC_IDS:
-            candidates = publications_by_logic[logic_id]
-            if not candidates:
-                blockers.append("AIP_LOGIC_PUBLICATION_MISSING")
-                continue
-            if len(candidates) != 1:
-                blockers.append("AIP_LOGIC_PUBLICATION_AMBIGUOUS")
-                continue
-            row = candidates[0]
-            exact = InvestigationExactRef(
-                resourceType="LogicRevision",
-                resourceId=logic_id,
-                revision=int(row["graph_revision"]),
-                contentHash=_sha(str(row["graph_hash"])),
-                receiptId=str(row["publication_id"]),
-            )
-            logic_refs.append(exact)
-            logic_by_id[logic_id] = exact
-
         skills_by_id: dict[str, list[Any]] = defaultdict(list)
         for row in skills:
             tenant = row["publication_tenant"] or {}
@@ -194,13 +178,16 @@ class PostgresAipProductionCompositionSource:
                 continue
             skills_by_id[str(row["skill_id"])].append(row)
         selected_skill_by_id: dict[str, Any] = {}
-        selection = selected_skill_refs()
         for skill_id, logic_id in zip(INVESTIGATION_SKILL_IDS, INVESTIGATION_LOGIC_IDS):
             candidates = skills_by_id[skill_id]
             if not candidates:
                 blockers.append("AIP_SKILL_PUBLICATION_MISSING")
                 continue
-            expected = selection[skill_id]
+            try:
+                expected = selected_bound_skill_ref(skill_id, bindings)
+            except InvestigationSkillSelectionBlocked as exc:
+                blockers.append(exc.code)
+                continue
             exact_candidates = [
                 row
                 for row in candidates
@@ -219,15 +206,23 @@ class PostgresAipProductionCompositionSource:
                 contentHash=_sha(str(row["content_hash"])),
             )
             skill_refs.append(skill_ref)
-            logic = logic_by_id.get(logic_id)
             declared = row["logic_revision_ref"] or {}
-            if logic is None or (
-                declared.get("assetType") != "LogicRevision"
-                or declared.get("assetId") != logic.resource_id
-                or int(declared.get("revision", 0)) != logic.revision
-                or _sha(str(declared.get("contentHash", ""))) != logic.content_hash
-            ):
+            if declared.get("assetType") != "LogicRevision" or declared.get("assetId") != logic_id:
                 blockers.append("AIP_SKILL_LOGIC_REF_DRIFTED")
+                continue
+            exact_publications = [item for item in publications_by_logic[logic_id]
+                if int(item['graph_revision']) == int(declared.get('revision', 0))
+                and _sha(str(item['graph_hash'])) == _sha(str(declared.get('contentHash', '')))]
+            if not exact_publications:
+                blockers.append("AIP_LOGIC_PUBLICATION_MISSING")
+                blockers.append("AIP_SKILL_LOGIC_REF_DRIFTED")
+            elif len(exact_publications) != 1:
+                blockers.append("AIP_LOGIC_PUBLICATION_AMBIGUOUS")
+            else:
+                publication = exact_publications[0]
+                logic_refs.append(InvestigationExactRef(resourceType='LogicRevision', resourceId=logic_id,
+                    revision=int(publication['graph_revision']), contentHash=_sha(str(publication['graph_hash'])),
+                    receiptId=str(publication['publication_id'])))
 
         bindings_by_skill: dict[str, list[Any]] = defaultdict(list)
         for row in bindings:
