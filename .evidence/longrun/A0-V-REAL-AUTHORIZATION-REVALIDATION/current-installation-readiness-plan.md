@@ -1,0 +1,7 @@
+# 当前安装/数字同事就绪接续
+
+基线d521cca0。数据库当前011；已有1个approved安装、0runtime binding，不重复安装。运行配置7类均有当前记录，缺frozen responsibility plan；运行依赖审计显示当前Provider健康0、active route0，能力/技能/实例仍不可运行。先沿已授权api.agnes-ai.cn/agnes-2.5-flash的无客户数据健康探针刷新过期观察。
+
+复用scripts/a0v_real_text_provider_health.py已验证apply合同；原固定attempt-v2已完成后才能为新的当前健康观察建立独立attemptId和独立0700 state_dir，不能重用旧数据库幂等键、覆盖旧Journal或将submitted/blocked未知旧请求视作可重复。调用前确认原Journal completed/对应Provider，新的attemptId固定a0v-provider-health-20260911-refresh-1，原脚本模块ATTEMPT_ID仅在本次受信执行进程设为新ID；记录该明确操作，不改变脚本默认旧语义。maxAttempts1、timeout10秒、maxOutput32、无fallback；keychain仅原resolver内存，prompt固定无客户数据；响应仅元数据。健康1次不冒充业务质量或3/3模型验收。
+
+后续复用已有固定文本样本已完成证据和开发费用延后合同，正式发布exact模型/文本路由；不得把文本通过扩张为视频/语音。安装候选构建声明仍a0v001且首次安装检查严格相等，需补已验证011兼容证据或重新构建，不能修改旧签名/哈希绕过。此波不执行激活、业务分析或外部发布。
