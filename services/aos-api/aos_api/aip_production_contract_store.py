@@ -3332,7 +3332,7 @@ class AipProductionContractStore:
         if row is None or row["content_hash"] != body.evidence_ref.content_hash:
             raise ProductionContractDependencyBlocked(denied)
         payload = self._load(row["payload"])
-        if not isinstance(payload, dict):
+        if not isinstance(payload, dict) or canonical_hash(payload) != body.evidence_ref.content_hash:
             raise ProductionContractDependencyBlocked(denied)
         check_current()
         return {

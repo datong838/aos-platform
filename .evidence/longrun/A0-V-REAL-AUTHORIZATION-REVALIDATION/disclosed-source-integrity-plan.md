@@ -1,0 +1,13 @@
+# 分析来源正文完整性修复
+
+2026-09-11；基线a80b95e5；Task A0V-DISCLOSED-SOURCE-INTEGRITY-20260911。
+
+preHash：aip_production_contract_store.py=aea2649bcebfef6e6028c23aab0c026af87156341145a7eafa2307e5c60b0269；test_evidence_disclosed_source.py=484ae9cb3c8e22d21334f0fb5fd496db51abb8aae88ac6c26f5d6c739c2a000c；test_a0v_disclosed_source_pg.py=a04d4f9f769b00ea20c4eb726ae1b2dd0309f7ba39466c9c52067c0b83c257b9。
+
+231-5/231-6要求有真实来源的分析。准备D01/D02正文输入时发现read_disclosed_evidence_source已有actor/原请求Receipt/L3/当前权限/到期/撤销双重校验，但返回payload前只比较数据库content_hash和引用，没有重算正文。必须先修复这个可信读取边界，避免错误正文进入模型。
+
+最小范围：services/aos-api/aos_api/aip_production_contract_store.py在既有原文读取中使用原canonical_hash重算payload，和exact ref比较；不改L1/L2/L3授予逻辑，不新增授权、不改历史数据。旧证据如不满足正文hash合同，拒绝原文读取，不补造hash或改写引用。
+
+测试：修改services/aos-api/tests/aip/test_evidence_disclosed_source.py和test_a0v_disclosed_source_pg.py的合法合成样本为真实canonical hash，新增正文漂移负例。新增services/aos-api/tests/test_disclosed_source_integrity.py用一次性完整克隆通过真实Disclosure Owner/Receipt/current policy读取合法正文和拒绝错误正文，保留正式表约束。先红后绿、原单元回归；旧PG测试环境若未执行明确标注，不能算通过。
+
+仅开发自测，不调用Provider、不写主库、不重试源连接、不push；230 L0挂起。下一步仍为真实分析输入materialization、固定请求与原attempt绑定、指标/Method/Eval引用核验及可信Owner接收，再宿主三阶段与真实首链。

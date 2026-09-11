@@ -17,9 +17,11 @@ from aos_api.aip_production_contract_store import canonical_hash
 @pytest.fixture
 def setup_reader(monkeypatch):
     scope = TenantScope('org-org', 'dev-project')
+    payload = {'summary': '真实正文结构的合成样本' * 100, 'marking': ['public']}
+    payload_hash = canonical_hash(payload)
     body = ResolveEvidenceDisclosureRequest.model_validate({
         'evidenceRef': {'resourceType': 'Evidence', 'resourceId': 'ev-test',
-                        'revision': 1, 'contentHash': 'a' * 64},
+                        'revision': 1, 'contentHash': payload_hash},
         'purpose': 'source', 'requestedLevel': 'l3', 'taskId': 'task-original',
     })
     decision = SimpleNamespace(
@@ -29,9 +31,8 @@ def setup_reader(monkeypatch):
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=5),
         decision_hash='b' * 64,
     )
-    state = SimpleNamespace(receipt=True, hash='a' * 64, reads=0, checks=0,
+    state = SimpleNamespace(receipt=True, hash=payload_hash, reads=0, checks=0,
                             deny_on=0, expire_on=0)
-    payload = {'summary': '真实正文结构的合成样本' * 100, 'marking': ['public']}
 
     class Connection:
         def execute(self, sql, params):
@@ -75,6 +76,14 @@ def test_source_is_complete_and_bound_to_existing_lease(setup_reader):
     assert result['expiresAt'] == decision.expires_at.isoformat()
     assert result['evidenceRef'] == body.evidence_ref.model_dump(mode='json', by_alias=True)
     assert state.checks == 2
+
+
+def test_source_denies_body_drift_even_when_registered_hash_still_matches(setup_reader):
+    read, _, state, body, payload = setup_reader
+    assert state.hash == body.evidence_ref.content_hash
+    payload['summary'] = 'changed body with unchanged registered hash'
+    with pytest.raises(ProductionContractDependencyBlocked, match='EVIDENCE_SOURCE_DISCLOSURE_DENIED'):
+        read()
 
 
 @pytest.mark.parametrize('failure', ['actor', 'task', 'receipt', 'expired', 'level', 'status',
