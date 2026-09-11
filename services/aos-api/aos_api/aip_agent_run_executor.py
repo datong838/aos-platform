@@ -1,8 +1,9 @@
 """Canonical, single-attempt AgentRun execution composition.
 
 The default executor persists only hashes and exact authority references.
-Trusted compositions can explicitly retain answers in private artifact storage;
-prompt/answer text is never written to attempts, receipts or logs by this layer.
+Trusted compositions can explicitly retain query and answer text in private
+artifact storage; prompt/answer text is never written to attempts, receipts or
+logs by this layer.
 """
 from __future__ import annotations
 
@@ -138,6 +139,10 @@ class AipAgentRunExecutor:
     def retains_output_text(self) -> bool:
         return self._retain_output_text
 
+    @property
+    def retains_input_text(self) -> bool:
+        return self._retain_output_text
+
     def execute(
         self,
         scope: TenantScope,
@@ -250,6 +255,36 @@ class AipAgentRunExecutor:
         actor: str,
         occurred_at: datetime,
     ) -> ExecuteAgentRunResponse:
+        if self._retain_output_text:
+            try:
+                self._record_input_artifact(scope, run, attempt, request, actor)
+            except Exception as exc:
+                try:
+                    attempt, _ = self._attempt_service.transition(
+                        scope,
+                        attempt.attempt_id,
+                        TransitionAgentRunExecutionAttemptRequest(
+                            expectedVersion=attempt.version,
+                            fromStatus="prepared",
+                            toStatus="failed",
+                            reasonCode="INPUT_ARTIFACT_WRITE_FAILED",
+                        ),
+                        idempotency_key=f"{idempotency_key}:failed:input-artifact-write",
+                        actor=actor,
+                        occurred_at=occurred_at,
+                    )
+                except Exception as transition_exc:
+                    self._align_run_terminal(
+                        scope, run.agent_run_id, AgentRunStatus.UNKNOWN, actor, occurred_at
+                    )
+                    raise AipAgentRunExecutorError(
+                        "INPUT_ARTIFACT_FAILURE_COMMIT_FAILED"
+                    ) from transition_exc
+                self._align_run_terminal(
+                    scope, run.agent_run_id, AgentRunStatus.FAILED, actor, occurred_at
+                )
+                raise AipAgentRunExecutorError("INPUT_ARTIFACT_WRITE_FAILED") from exc
+
         try:
             attempt, _ = self._attempt_service.transition(
                 scope,
@@ -428,6 +463,7 @@ class AipAgentRunExecutor:
                 "source": {
                     "agentRunId": run.agent_run_id,
                     "attemptId": attempt.attempt_id,
+                    "requestHash": attempt.request_hash,
                     "providerReceiptId": self._provider_receipt(response),
                 },
                 "metadata": {
@@ -440,6 +476,58 @@ class AipAgentRunExecutor:
         return ArtifactRef(
             artifactId=artifact_id,
             artifactType="agent_text_output",
+            revision="1",
+            contentHash=content_hash,
+        )
+
+    def _record_input_artifact(
+        self,
+        scope: TenantScope,
+        run: AgentRun,
+        attempt: AgentRunExecutionAttempt,
+        request: ExecuteAgentRunRequest,
+        actor: str,
+    ) -> ArtifactRef:
+        query = request.query
+        content_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+        identity = hashlib.sha256(
+            json.dumps(
+                {
+                    "orgId": scope.org_id,
+                    "projectId": scope.project_id,
+                    "attemptId": attempt.attempt_id,
+                    "artifactType": "agent_query_input",
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()[:20]
+        artifact_id = f"artifact-{identity}"
+        recorded_id = self._artifact_store.record_artifact(
+            scope,
+            run.task_run_id,
+            actor,
+            "agent_query_input",
+            {
+                "contentRef": f"sha256://{content_hash}",
+                "schemaRef": "aos://schemas/aip-agent-query-input/v1",
+                "contentHash": content_hash,
+                "marking": [attempt.data_classification],
+                "source": {
+                    "agentRunId": run.agent_run_id,
+                    "attemptId": attempt.attempt_id,
+                    "requestHash": attempt.request_hash,
+                },
+                "metadata": {"queryLength": len(query)},
+            },
+            artifact_id=artifact_id,
+            text_content=query,
+        )
+        if recorded_id != artifact_id:
+            raise AipAgentRunExecutorError("INPUT_ARTIFACT_ID_DRIFTED")
+        return ArtifactRef(
+            artifactId=artifact_id,
+            artifactType="agent_query_input",
             revision="1",
             contentHash=content_hash,
         )

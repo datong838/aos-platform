@@ -1,0 +1,11 @@
+{
+  "baseline": "cc65dbe6",
+  "files": [
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/agent-query-executor-retention-plan.md",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/agent-query-executor-retention-files.json",
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/agent-query-executor-retention-verification.md",
+    ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/closure-manifest.md",
+    "services/aos-api/aos_api/aip_agent_run_executor.py",
+    "services/aos-api/tests/aip/test_aip_agent_run_executor.py"
+  ]
+}

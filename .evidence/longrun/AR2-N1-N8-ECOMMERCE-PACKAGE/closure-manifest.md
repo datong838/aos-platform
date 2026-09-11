@@ -291,3 +291,18 @@ D01/D02/D03 生成或 Eval case；不调用 Provider、不产生业务 mutation�
 |---|---|---|---|
 | `services/aos-api/aos_api/aip_agent_query_input.py` | 原路径 | platform private source owner；原始 query 受租户、Attempt、requestHash 与 marking 约束 | 58552c531d35a1f754d77396e40f3611624c669d15d27de2880b410507642ccf |
 | `services/aos-api/aos_api/aip_task_store.py` | 原路径 | platform Artifact owner；新增 agent_query_input 私有正文分派，既有路径保持 | 56e59616c566bd8c1e1d07904c7076970e195809fcae915b1d59255e6a4c6b9f |
+
+### 9.6 AgentRun Query 执行期留存切片
+
+2026-09-11：明确开启正文留存的受治理 AgentRun executor，在 Attempt 仍为 PREPARED 且
+Provider 尚未调用时，先写确定性的 `agent_query_input` Artifact。写入绑定 tenant、TaskRun、
+AgentRun、Attempt、requestHash、query contentHash 与 marking；正文仅交给 9.5 私有 Owner，
+不进入通用 Artifact metadata、Receipt 或日志。输入写入失败时 Attempt/AgentRun 收口为
+FAILED，Provider 调用数必须为零。默认 executor 仍不留存输入正文。
+
+输出 Artifact source 同步携带 Attempt requestHash，供后继 Eval case 对 query/output/Skill
+做同源核验。本切片不创建 Eval、不启动真实业务运行，也不扩大 Provider、预算或审批权限。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/aip_agent_run_executor.py` | 原路径 | platform 受治理执行编排；显式模式 Provider 前留存 query，失败零 Provider 副作用；后继 Eval case 装配仍 PENDING | f5dcb41673ec1802d9cddedc3aa3acd5ac88f53071845b9e25f4687994e6a48d |

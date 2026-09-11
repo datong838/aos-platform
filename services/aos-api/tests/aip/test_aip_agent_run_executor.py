@@ -222,15 +222,22 @@ class Llm:
 
 
 class Artifacts:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self, error: Exception | None = None, *, order: list[str] | None = None
+    ) -> None:
         self.error = error
         self.payload = None
+        self.calls: list[tuple[str, dict, dict]] = []
+        self.order = order
 
-    def record_artifact(self, scope, run_id, actor, artifact_type, payload):
+    def record_artifact(self, scope, run_id, actor, artifact_type, payload, **kwargs):
         if self.error:
             raise self.error
         self.payload = payload
-        return "artifact-1"
+        self.calls.append((artifact_type, payload, kwargs))
+        if self.order is not None:
+            self.order.append(f"artifact:{artifact_type}")
+        return kwargs.get("artifact_id", "artifact-1")
 
 
 class Lineage:
@@ -246,7 +253,7 @@ class Lineage:
         return ["event-1", "event-2"]
 
 
-def executor(*, llm=None, artifacts=None, resolver_value=None):
+def executor(*, llm=None, artifacts=None, resolver_value=None, retain_output_text=False):
     runs = RunService()
     attempts = AttemptService()
     lineage = Lineage()
@@ -259,6 +266,7 @@ def executor(*, llm=None, artifacts=None, resolver_value=None):
         llm_adapter=llm,
         artifact_store=artifacts,
         lineage_service=lineage,
+        retain_output_text=retain_output_text,
     )
     return value, runs, attempts, llm, artifacts
 
@@ -280,6 +288,58 @@ def test_success_persists_only_answer_hash_and_exact_evidence() -> None:
         AgentRunExecutionStatus.SUCCEEDED,
     ]
     assert runs.transitions == [AgentRunStatus.SUCCEEDED]
+
+
+def test_retained_mode_records_query_before_provider_with_exact_attempt_source() -> None:
+    order: list[str] = []
+    llm = Llm(order=order)
+    artifacts = Artifacts(order=order)
+    value, _, attempts, _, _ = executor(
+        llm=llm, artifacts=artifacts, retain_output_text=True
+    )
+    request = execute_request()
+
+    result = value.execute(
+        SCOPE, "run-1", request, idempotency_key="idem-1",
+        actor="pytest", occurred_at=NOW,
+    )
+
+    assert result.attempt.status is AgentRunExecutionStatus.SUCCEEDED
+    assert value.retains_input_text is True
+    assert [call[0] for call in artifacts.calls] == [
+        "agent_query_input", "agent_text_output"
+    ]
+    assert order.index("artifact:agent_query_input") < order.index("invoke")
+    assert order.index("invoke") < order.index("artifact:agent_text_output")
+    input_kind, input_payload, input_kwargs = artifacts.calls[0]
+    assert input_kind == "agent_query_input"
+    assert input_kwargs["text_content"] == request.query
+    assert input_kwargs["artifact_id"].startswith("artifact-")
+    assert request.query not in str(input_payload)
+    assert input_payload["source"] == {
+        "agentRunId": "run-1",
+        "attemptId": "attempt-1",
+        "requestHash": attempts.value.request_hash,
+    }
+    assert artifacts.calls[1][1]["source"]["requestHash"] == attempts.value.request_hash
+
+
+def test_input_artifact_failure_is_known_failed_and_never_invokes_provider() -> None:
+    artifacts = Artifacts(RuntimeError("private owner unavailable"))
+    value, runs, attempts, llm, _ = executor(
+        artifacts=artifacts, retain_output_text=True
+    )
+
+    with pytest.raises(AipAgentRunExecutorError, match="INPUT_ARTIFACT_WRITE_FAILED"):
+        value.execute(
+            SCOPE, "run-1", execute_request(), idempotency_key="idem-1",
+            actor="pytest", occurred_at=NOW,
+        )
+
+    assert llm.calls == 0
+    assert attempts.value.status is AgentRunExecutionStatus.FAILED
+    assert attempts.value.reason_code == "INPUT_ARTIFACT_WRITE_FAILED"
+    assert runs.value.status is AgentRunStatus.FAILED
 
 
 def test_terminal_replay_never_invokes_provider_again() -> None:
