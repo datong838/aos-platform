@@ -31,6 +31,8 @@ class PreparationOwner:
         self._started = False
         self._cleaning = False
         self._sessions = []
+        self._invocations = set()
+        self._invocation_lock = asyncio.Lock()
         self._verification = None
         self._control = None
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))
@@ -67,6 +69,7 @@ class PreparationOwner:
                         children.append(self._verification)
                     if self._control is not None:
                         children.append(self._control)
+                    children.extend(self._invocations)
                     for child in children:
                         child.cancel()
                     results, _ = await _settle(asyncio.gather(*children, return_exceptions=True))
@@ -173,6 +176,34 @@ class PreparationOwner:
 
         task.add_done_callback(supervised)
         return await asyncio.shield(task)
+
+    async def invoke_once(self, session_index, operation, payload):
+        """Invoke one operation through an owned live session without exporting it."""
+        if (
+            type(session_index) is not int
+            or session_index < 0
+            or type(operation) is not str
+            or not operation
+            or type(payload) is not dict
+        ):
+            raise ValueError("exact owned session invocation required")
+        await self.prepared()
+        async with self._invocation_lock:
+            if (
+                self._stopping
+                or self._cleaning
+                or self._task.done()
+                or session_index >= len(self._sessions)
+            ):
+                raise RuntimeError("invocation requires live preparation ownership")
+            task = asyncio.create_task(
+                self._sessions[session_index].invoke(operation, payload)
+            )
+            self._invocations.add(task)
+            try:
+                return await task
+            finally:
+                self._invocations.discard(task)
 
     async def prepared(self):
         return await asyncio.shield(self._ready)

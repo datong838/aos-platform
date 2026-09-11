@@ -662,3 +662,20 @@ installed invocation factory 与 1.5.0 安装仍 PENDING，当前 1.4.0 和租�
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_async_service.py` | 原路径 | 内部 async 装配与 replay preflight | 918354d7f1415a046cee7a419a101910ad1a8a3ff67e6c399b279e0847f18262 |
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | exact Receipt replay Owner 回读 | 4422194578103acf404892eb83ecdb8805b530fb5cb91e9e05a8064451d32142 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_async_service.py` | 原路径 | 新发布/replay/conflict/timeout 隔离 PG | 1f1f95b4957f498da8c827087a2b4678ffd8117aef60cef42e61ea4de80da5b7 |
+
+### 9.28 已安装运行时 live owner 一次调用窄缝
+
+2026-09-12：审计确认签名 OCI session 的唯一所有者是 `PreparationOwner`；重新打开相同 resource
+或把 session 交给业务 service 都会破坏资源租约和单一 owner。现有 owner/PreparedJob 因此只增加
+一次调用窄缝：按 `PreparationPlan.members` 中 package id/content hash 唯一选择 owner 内 session，
+同 owner 串行调用，停止时取消并收敛在途调用，session 对象始终不逃逸。
+
+错误、超时、取消均零重试；declared operation 仍由 `RuntimeSession` 校验，所以旧 1.4.0 缺少第五门时
+明确拒绝。本切片没有 live-job directory，也没有 Installation/generation/binding epoch 前后当前性复核，
+因此尚不构成 installed invocation factory，未接 stage-review service，未修改租户数据或安装状态。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/preparation_owner.py` | 原路径 | owner 内一次调用、串行和清理收敛；session 不逃逸 | bade722713d0fee9e4777283e4493c5f5b6019103b2e147cdcd292367cc41374 |
+| `services/aos-api/aos_api/extension_runtime/preparation_worker.py` | 原路径 | 按 plan member exact package id/hash 选择 live session | 48ebb2ebccc8c2705ef378273dbc22dcba13e08069e85dbbfa46df6ff8cd715b |
+| `services/aos-api/tests/extension_runtime/test_live_owner_invocation.py` | 原路径 | 原位调用、串行、零重试、package 绑定与 stop 收敛合同 | bd75d693432349599d8e32ea5dea07821382bc8a8d7cdd799462c6e719db96a2 |

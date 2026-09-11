@@ -76,6 +76,27 @@ class PreparedJob:
                 raise
             raise
 
+    async def invoke_selected_once(self, *, package_id, package_hash, operation, payload):
+        if (
+            type(package_id) is not str
+            or not package_id
+            or type(package_hash) is not str
+            or not package_hash
+            or type(operation) is not str
+            or not operation
+            or type(payload) is not dict
+        ):
+            raise ValueError("exact installed package invocation required")
+        matches = tuple(
+            index
+            for index, member in enumerate(self.plan.members)
+            if member.selected.id == package_id
+            and member.selected.content_hash == package_hash
+        )
+        if len(matches) != 1:
+            raise PermissionError("package is not owned by this live preparation")
+        return await self._owner.invoke_once(matches[0], operation, payload)
+
     async def verify(self, *, operation_id, expected_revision):
         if self._verify is None:
             raise RuntimeError('current verification conditions reader required')
