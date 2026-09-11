@@ -1,7 +1,9 @@
 # Analyst stage review 数据库三阶段适配方案
 
-日期：2026-09-12  
-基线：`aa6d7d35`  
+日期：2026-09-12
+
+基线：`aa6d7d35`
+
 状态：APPROVED_FOR_IMPLEMENTATION（用户已授权 m1 串行持续开发，不 push）
 
 ## 目标

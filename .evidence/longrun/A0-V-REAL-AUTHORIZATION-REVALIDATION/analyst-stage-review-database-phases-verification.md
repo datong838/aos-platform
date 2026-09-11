@@ -1,6 +1,7 @@
 # Analyst stage review 数据库三阶段适配验证
 
-日期：2026-09-12  
+日期：2026-09-12
+
 基线：`aa6d7d35`
 
 结论：准备事务与提交事务已由通用宿主适配器分离，已安装 Growth 包 IPC 期间不持有事务；current authority snapshot exact 漂移时零发布。具体 Owner 读取与 StageDecision publisher 尚待下一波绑定。
@@ -36,7 +37,7 @@
 - database phases：`af318535aaa438181f4e1f3558658f06853d2d2137501eddf172955a9a8d11f7`
 - coordinator tests：`2c66a60998e45659a632688bf77984c410e2834f8e861340e05142c321e65c29`
 - database phase tests：`190a624aaabbacf666de686980dfc7126ebb1dcfa8f33aa8024b2a9a10f32e7b`
-- plan：`0cb8d569299db49b47d3315b39a2966d8f8cf2117be0dd2f67fc8c1d1af6131d`
+- plan：`d05071cbe2d871118ed46911f29299b90568ea91584c10f1e02b1fab90369c49`
 
 ## 风险与下一门
 
