@@ -171,3 +171,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线6d88f8f5。复核o1r2_001发现UPDATE使用COALESCE(NEW.object_type,OLD.object_type)/rel，只判断新归属，可能将受保护旧对象/关系改成未保护类型绕过actor门。本波先在PG恢复组合实际应用原trigger迁移，非actor创建电商对象必须拒绝，真实projector仍可消费；再测试非actor把Payment改Other或Order.hasPayment改OtherRel必须拒绝。
 
 确认缺口后新增a0v010替换同名函数，对INSERT/UPDATE/DELETE分别采集NEW/OLD分类，只要任一侧属于电商都要求现有actor；普通非电商写入不受影响。原o1r2_001文件不改，触发器不重复创建。downgrade拒绝恢复已知可绕过旧门，作为forward-only安全修复，不等于领域包不可卸载。文件services/aos-api/alembic/versions/a0v_010_projector_guard_both_sides.py、tests/aip/test_a0v_ingress_journal_pg.py。public不迁移，测试最小兼容表承载真实生产trigger，非完整迁移证明。
+
+## 产品恢复API
+
+基线e0bea9f5。新增POST /v1/schedules/{schedule_id}/runs/{run_id}/recover，body仅claimId UUID，extra forbid；不接source/command/tenant，scope从Principal。沿已有数据写角色admin/developer/data-owner，其他403。直接调用持久execute_schedule(trigger=recovery,原run,claim)，不读取/回写内存_schedules，避免旧内存覆盖当前DB配置。schedule缺失404、合同状态冲突409、数据库/未知错误503固定中文提示，不暴露原异常或假成功；重复claim沿现有duplicate返回。
+
+文件services/aos-api/aos_api/routers/wave_ext.py、tests/test_schedule_recovery_api.py。HTTP专项验证登录依赖、角色拒绝不调用执行器、可信scope及原run、UUID/额外字段拒绝、固定冲突/503错误和404。真实PG租户/领取原语已另验，此HTTP suite执行器Mock，不冒充全栈。public未迁移/API未重载，下一波运行历史可恢复状态与前端入口、完整安装迁移后实测。

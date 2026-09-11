@@ -2724,6 +2724,32 @@ def list_schedule_runs(
     return {"items": rows, "count": len(rows)}
 
 
+class ScheduleRecoveryIn(BaseModel):
+    model_config = {"extra": "forbid"}
+    claimId: uuid.UUID
+
+
+@router.post("/v1/schedules/{schedule_id}/runs/{run_id}/recover")
+def recover_schedule_run(schedule_id: str, run_id: str, body: ScheduleRecoveryIn,
+                         principal: Principal = Depends(require_principal)):
+    """Resume a stopped failed run from its saved input under current authority."""
+    if not {"admin", "developer", "data-owner"}.intersection(principal.roles):
+        raise ApiError(code="SCHEDULE_RECOVERY_FORBIDDEN", message="当前角色不能恢复数据运行", status_code=403)
+    if len(schedule_id)>200 or len(run_id)>200:
+        raise ApiError(code="VALIDATION", message="运行或计划标识无效", status_code=400)
+    from aos_api.ec_ingress_journal import IngressJournalConflict
+    from aos_api.qyh_cron_scheduler import execute_schedule
+    try:
+        return execute_schedule(_mutation_scope(principal),schedule_id,trigger="recovery",
+                                recovery_run_id=run_id,recovery_claim_id=str(body.claimId))
+    except KeyError:
+        raise ApiError(code="NOT_FOUND",message="未找到当前租户的计划",status_code=404) from None
+    except (IngressJournalConflict, ValueError):
+        raise ApiError(code="SCHEDULE_RECOVERY_CONFLICT",message="当前运行不满足恢复条件，请刷新运行状态",status_code=409) from None
+    except Exception:
+        raise ApiError(code="SCHEDULE_RECOVERY_UNAVAILABLE",message="恢复结果暂未确认，请刷新原运行的状态",status_code=503) from None
+
+
 @router.get("/v1/dlq")
 def list_dlq(principal: Principal = Depends(require_principal)):
     return {"items": list_failures(_mutation_scope(principal))}
