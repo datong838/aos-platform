@@ -1,0 +1,80 @@
+"""Fail-closed tests for the local production runtime-host bootstrap."""
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[4]
+SCRIPT = ROOT / "scripts/a0v_ecommerce_runtime_host_bootstrap.py"
+SPEC = importlib.util.spec_from_file_location("runtime_host_bootstrap", SCRIPT)
+assert SPEC and SPEC.loader
+BOOTSTRAP = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(BOOTSTRAP)
+
+
+def test_credentials_are_private_and_replay_exactly(tmp_path: Path) -> None:
+    path = tmp_path / "state/runtime-host-identities.json"
+    parameters = {"host": "127.0.0.1", "port": "18435"}
+
+    first = BOOTSTRAP._credentials(path, parameters=parameters, create=True)
+    second = BOOTSTRAP._credentials(path, parameters=parameters, create=True)
+
+    assert second == first
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert set(first) == set(BOOTSTRAP.ROLES)
+    assert len({item["password"] for item in first.values()}) == 3
+    assert all(item["password"] not in str(path) for item in first.values())
+
+
+def test_missing_credentials_preflight_does_not_create_file(tmp_path: Path) -> None:
+    path = tmp_path / "missing.json"
+    assert BOOTSTRAP._credentials(
+        path, parameters={"host": "127.0.0.1", "port": "1"}, create=False
+    ) == {}
+    assert not path.exists()
+
+
+def test_exact_snapshot_rejects_membership_and_canary_drift() -> None:
+    clean = {
+        "roles": {"web": None, "runtime": None, "directory": None},
+        "identity": None,
+        "assignment": None,
+        "canaryAssignments": 0,
+    }
+    BOOTSTRAP._assert_exact(clean, applied=False)
+    bad_role = json.loads(json.dumps(clean))
+    bad_role["roles"]["runtime"] = {
+        "rolcanlogin": True, "rolsuper": False, "rolbypassrls": False,
+        "runtime_member": False, "directory_member": False,
+    }
+    with pytest.raises(BOOTSTRAP.BootstrapBlocked) as captured:
+        BOOTSTRAP._assert_exact(bad_role, applied=False)
+    assert captured.value.code == "LOGIN_ROLE_DRIFT"
+
+    canary = {**clean, "canaryAssignments": 1}
+    with pytest.raises(BOOTSTRAP.BootstrapBlocked) as captured:
+        BOOTSTRAP._assert_exact(canary, applied=False)
+    assert captured.value.code == "CANARY_ASSIGNMENT_PRESENT"
+
+
+def test_apply_requires_exact_database_before_loading_connector(monkeypatch) -> None:
+    monkeypatch.setattr(
+        BOOTSTRAP, "_load_first",
+        lambda: (_ for _ in ()).throw(AssertionError("connector loaded")),
+    )
+    with pytest.raises(BOOTSTRAP.BootstrapBlocked) as captured:
+        BOOTSTRAP.run(BOOTSTRAP.parse_args(["--apply", "--database-name", "wrong"]))
+    assert captured.value.code == "EXPLICIT_ISOLATED_DATABASE_REQUIRED"
+
+
+def test_main_records_unexpected_failure(tmp_path: Path, monkeypatch) -> None:
+    output = tmp_path / "result.json"
+    monkeypatch.setattr(
+        BOOTSTRAP, "run",
+        lambda _args: (_ for _ in ()).throw(ValueError("unexpected")),
+    )
+    assert BOOTSTRAP.main(["--output", str(output)]) == 2
+    assert json.loads(output.read_text())["reasonCode"] == "UNEXPECTED_DOMAIN_ERROR"
