@@ -1,0 +1,7 @@
+# 正式文本评测的历史证据读取
+
+基线228b7433，依据已有三个真实文本probe而非新造通过结果。新增scripts/a0v_text_eval_evidence.py只读固定三个Journal；由当前Owner提供exact Provider/Network与固定agnes-2.5-flash/开发审批，重建原R1BootstrapProbeRequest（固定合成样本、public_catalog、exact_text、32tokens），逐条比较整个identity及requestHash。拒绝缺失/超长/异常JSON、未完成、身份变更、模型变更、合同非严格true、缺答案、非法/不一致token、无时区/未来或超过24小时证据、未知字段。固定24小时是本次文本能力证据最大年龄，不替代15分钟健康检查，过期后不能把旧文件当新调用。
+
+输出仅caseId、requestHash、原文件哈希、原observedAt及用量/时延，不输出prompt/expected/answer；集合hash按稳定内容计算，不含本次checkedAt，重复回读稳定且无provider/DB写入。该读取器信任已授权本地执行器保留的Journal，不是远端签名，也无法重算已不存储的回答正文，限制必须明示；不会自行生成PASSED Gate。
+
+新增tests/extension_runtime/test_a0v_text_eval_evidence.py覆盖真实形状三样本、上述篡改及原时间保留，实际读取既有三个完整记录、核对当前DB exact refs但不修改DB。下一切片正式Dataset/Suite/Runner/Release服务将本来源引用与当前候选治理测试组合，明确历史探针来源而非冒充注册模型当时已运行。
