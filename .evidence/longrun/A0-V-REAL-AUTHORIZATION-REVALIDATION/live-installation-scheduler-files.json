@@ -1,0 +1,18 @@
+{
+  "phase": "A0-V live installation scheduler",
+  "date": "2026-09-12",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py",
+      "sha256": "06d49439db13698376167a50a5b430ca91e04938be05274b23256b3a49e621c2"
+    },
+    {
+      "path": "services/aos-api/tests/extension_runtime/test_live_installation_scheduler.py",
+      "sha256": "db1d616847a127818f3c53cbc9224c5da3df8bec4becd17cd138ae74b7b87380"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/live-installation-scheduler-plan.md",
+      "sha256": "daf88b7426c9a6fcc735a61476b3accf3c98309cbddfbc613009e981189ddae8"
+    }
+  ]
+}

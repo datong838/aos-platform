@@ -778,3 +778,18 @@ directory、connector、scope 和 descriptor，返回未启动的单 Installatio
 | `services/aos-api/aos_api/extension_runtime/pending_preparation_directory.py` | 原路径 | 有界 pending apply 路由读取与 exact owner factory | e9f3e2cc8c45eaea9f7a2be1beed00dfb6a13c8972a582992d495c1b0c2a22dc |
 | `services/aos-api/tests/extension_runtime/test_pending_preparation_directory.py` | 原路径 | 类型、排序、上限、跨租户与零启动 factory 合同 | 07ef9030b13c5fd021769610dbb2865b0ce8507ce048987165031b03d4693fb4 |
 | `services/aos-api/tests/extension_runtime/test_pending_preparation_directory_pg.py` | 原路径 | runtime role、租户、delivery/kind 与脏连接真实 PG 反证 | 8a313398323853500e622719d3962d092f75de2cbe03714bfec22e2fc5f9390c |
+
+### 9.35 Tenant-scoped live Installation scheduler
+
+2026-09-12：新增有界 `LiveInstallationScheduler`。它只从 9.34 pending-apply descriptor 创建新 owner，
+同 Installation 本进程只创建一次；此后即使 apply event 已 ACK、descriptor 消失，仍继续按 UUID 顺序
+tick cache owner，以承接 verify/enable 和已安装 package 调用。
+
+caller cancellation 不取消 owner 持有的 tick；identity revoke 等待 tick 后只停止 exact owner。host stop
+先等待在途 tick，再隔离 cache 并逐个 stop；单个 cleanup 失败不跳过其余 owner。scheduler 尚未接入
+production assignment，disable 前撤销和 assignment replacement cleanup 仍 PENDING。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py` | 原路径 | 有界创建/保留、串行 tick、identity revoke 和全量 stop | 06d49439db13698376167a50a5b430ca91e04938be05274b23256b3a49e621c2 |
+| `services/aos-api/tests/extension_runtime/test_live_installation_scheduler.py` | 原路径 | 保留、排序、上限、失败、取消、撤销与清理合同 | db1d616847a127818f3c53cbc9224c5da3df8bec4becd17cd138ae74b7b87380 |
