@@ -135,3 +135,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 2026-09-11，基线66d11861。调度failed不等于worker已停止；join超时仅set取消。先新增a0v008 meta_schedule_run.executor_stopped boolean NOT NULL DEFAULT false。历史未知不得回填true。execute_pipeline_once只在_collect_dispatch之后直接读取自身dispatch线程is_alive，返回executor_stopped；前置拒绝/未知异常不授予重领事实。调度持久化严格is True，不能依据错误码/任意truthy。此字段仅说明本次本地线程退出，不代替当前权限/原Journal/幂等对账。
 
 文件：services/aos-api/aos_api/phase5_pipeline_engine.py、qyh_cron_scheduler.py；alembic/versions/a0v_008_schedule_executor_stopped.py；tests/test_ec_run_lineage.py、test_qyh_cron_scheduler.py、新tests/aip/test_a0v_executor_stopped_pg.py。验证运行中false、结束true、错误退出true、缺证明false，隔离PG历史默认false与回滚保护。downgrade有true事实时拒绝丢证。public不迁移，下一波安全重领必须同时status=failed/退出true/当前绑定/保存原批，并保留历史失败事实。
+
+## 原失败运行原子重领
+
+基线6f1dfff0。新增ec_ingress_claim.claim_failed_run内部原语及a0v009不可变ecommerce_ingress_recovery_claim表（scope/run/claim UUID主键、父Journal FK、payload/hash、FORCE RLS、SELECT/INSERT、禁止修改删除截断）。调用方工厂必须成功commit后才返回。先锁Journal run，再读原parent与run FOR UPDATE；仅failed且executor_stopped=True且finished_at非空允许。原claim_id已存在时验证hash/parentHash返回False，不重启。保存旧失败行（JSON时间ISO）和parentHash，改status=running、清退出标记/完成时间；保留原runId、scheduled_for、started_at，当前schedule/graph/source绑定核验在同事务，失败全部回滚。
+
+领取只允许已有原批；无原批可能需重读源，不在本合同自动重启。running/未知/成功均拒绝。相同或不同claim并发由run事务锁串行，只有一个新claim可成功。当前接口不调用executor、不更新DLQ、不授予外部能力。文件services/aos-api/aos_api/ec_ingress_claim.py、alembic/versions/a0v_009_ingress_recovery_claim.py、tests/aip/test_a0v_ingress_journal_pg.py。隔离PG验证状态/证据同事务、source禁用回滚、同claim重放与不同claim并发、不可变及canary；下一波接实际调度入口，public不迁移。

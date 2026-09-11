@@ -265,5 +265,45 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
             finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)
         with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
             recover_saved_authoritative_stages(factory,scope,'run',journal=journal,store=store)
+        from aos_api.ec_ingress_claim import claim_failed_run
+        database.owner.execute('ALTER TABLE meta_schedule_run ADD COLUMN executor_stopped boolean NOT NULL DEFAULT false')
+        database.owner.execute('ALTER TABLE meta_schedule_run ADD COLUMN finished_at timestamptz')
+        spec=importlib.util.spec_from_file_location('claim_migration',ROOT/'alembic/versions/a0v_009_ingress_recovery_claim.py')
+        claims_migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(claims_migration)
+        claims_migration.op=SimpleNamespace(execute=database.owner.execute)
+        claims_migration.upgrade();claims_migration.downgrade();claims_migration.upgrade()
+        database.owner.execute("UPDATE meta_schedule_run SET status='failed',executor_stopped=true,finished_at=NOW() WHERE id='run'")
+        claim_id=str(uuid4())
+        with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
+            claim_failed_run(factory,scope,'run',claim_id,journal=journal)
+        assert database.owner.execute("SELECT status FROM meta_schedule_run WHERE id='run'").fetchone()['status']=='failed'
+        assert database.owner.execute('SELECT count(*) AS n FROM ecommerce_ingress_recovery_claim').fetchone()['n']==0
+        database.owner.execute("UPDATE meta_source SET status='registered'")
+        database.owner.execute("UPDATE meta_schedule_run SET executor_stopped=false WHERE id='run'")
+        with pytest.raises(IngressJournalConflict,match='INGRESS_STOPPED_FAILED_RUN_REQUIRED'):
+            claim_failed_run(factory,scope,'run',claim_id,journal=journal)
+        database.owner.execute("UPDATE meta_schedule_run SET executor_stopped=true WHERE id='run'")
+        from concurrent.futures import ThreadPoolExecutor
+        def claim(candidate):
+            try:
+                return claim_failed_run(factory,scope,'run',candidate,journal=journal)
+            except IngressJournalConflict as exc:
+                return str(exc)
+        ids=[claim_id,str(uuid4())]
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes=list(pool.map(claim,ids))
+        assert sorted(str(x) for x in outcomes)==['INGRESS_STOPPED_FAILED_RUN_REQUIRED','True']
+        winner=ids[outcomes.index(True)]
+        assert claim_failed_run(factory,scope,'run',winner,journal=journal) is False
+        saved=database.owner.execute('SELECT payload FROM ecommerce_ingress_recovery_claim').fetchone()['payload']
+        assert saved['previousRun']['status']=='failed' and saved['previousRun']['executor_stopped'] is True
+        state=database.owner.execute("SELECT status,executor_stopped,finished_at FROM meta_schedule_run WHERE id='run'").fetchone()
+        assert state=={'status':'running','executor_stopped':False,'finished_at':None}
+        with factory(TenantScope('dev-org','dev-project')) as conn:
+            assert conn.execute('SELECT * FROM ecommerce_ingress_recovery_claim').fetchone() is None
+        with pytest.raises(errors.RaiseException),database.owner.transaction():
+            database.owner.execute('DELETE FROM ecommerce_ingress_recovery_claim')
+        with pytest.raises(errors.RaiseException),database.owner.transaction():
+            claims_migration.downgrade()
     finally:
         engine.dispose()
