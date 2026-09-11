@@ -20,7 +20,7 @@ CANARY_ORG_ID = "dev-org"
 DATABASE = "aos_meta_head"
 INSTALLATION_ID = "c1eb714f-56de-4f28-ba06-c3440b3d18cb"
 ACTOR = "a0v-ecommerce-growth-1.4-runtime-owner"
-ROLES = frozenset({"asset-installer"})
+ROLES = frozenset({"admin"})
 MARKINGS = frozenset()
 
 
@@ -68,6 +68,51 @@ def _services(connect, trust_roots_file: Path):
     return store, RuntimeLifecycleService(
         installation_store=store, installation_reader=reader, revalidator=planning
     )
+
+
+def _ensure_control_membership(connect) -> dict[str, int]:
+    """CAS-like, audited grant matching the existing Membership dual-write model."""
+    with connect() as conn:
+        conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (f"a0v-runtime-membership:{ORG_ID}:{PROJECT_ID}:{ACTOR}",),
+        )
+        rows = conn.execute(
+            "SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR UPDATE",
+            (ORG_ID, PROJECT_ID, ACTOR),
+        ).fetchall()
+        if len(rows) > 1 or (rows and rows[0]["role"] != "admin"):
+            raise ActivationBlocked("CONTROL_MEMBERSHIP_DRIFT")
+        canary = conn.execute(
+            "SELECT count(*) AS count FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s",
+            (CANARY_ORG_ID, PROJECT_ID, ACTOR),
+        ).fetchone()
+        if int(canary["count"]) != 0:
+            raise ActivationBlocked("CANARY_CONTROL_MEMBERSHIP_PRESENT")
+        created = 0
+        if not rows:
+            conn.execute(
+                "INSERT INTO meta_membership(org_id,project_id,subject,role,updated_at) VALUES(%s,%s,%s,'admin',now())",
+                (ORG_ID, PROJECT_ID, ACTOR),
+            )
+            conn.execute(
+                """INSERT INTO twa_ws_member(org_id,project_id,subject,role)
+                   VALUES(%s,%s,%s,'admin')
+                   ON CONFLICT(org_id,project_id,subject) DO UPDATE SET role=EXCLUDED.role""",
+                (ORG_ID, PROJECT_ID, ACTOR),
+            )
+            conn.execute(
+                """INSERT INTO twa_audit(id,ts,org_id,project_id,actor_id,action,detail)
+                   VALUES(%s,now()::text,%s,%s,'user:dev','membership.upsert',%s::jsonb)
+                   ON CONFLICT(id) DO NOTHING""",
+                (
+                    "a0v-ecommerce-runtime-owner-admin-v1", ORG_ID, PROJECT_ID,
+                    json.dumps({"subject": ACTOR, "role": "admin"}, sort_keys=True),
+                ),
+            )
+            created = 1
+        conn.commit()
+    return {"created": created, "positiveCount": 1, "canaryCount": 0}
 
 
 def _snapshot(connect, store) -> dict[str, Any]:
@@ -126,6 +171,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         container="aos-a0v-recovery-pg",
         database_name=DATABASE,
     )
+    membership = _ensure_control_membership(connect)
     store, lifecycle = _services(connect, args.trust_roots_file)
     before = _snapshot(connect, store)
     if before["canaryInstallationCount"] != 0:
@@ -170,6 +216,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "outcome": "ECOMMERCE_GROWTH_1_4_ACTIVE_GREEN",
         "database": DATABASE,
+        "controlMembership": membership,
         "before": before,
         "receipts": receipts,
         "after": after,

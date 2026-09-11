@@ -43,3 +43,8 @@ def test_main_records_domain_failure_without_secret_fields(tmp_path: Path, monke
     assert json.loads(output.read_text()) == {
         "message": "TEST_BLOCK", "outcome": "SAFE_BLOCKED", "reasonCode": "TEST_BLOCK"
     }
+
+
+def test_runtime_actor_uses_persisted_admin_role() -> None:
+    assert ACTIVATE.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
+    assert ACTIVATE.ROLES == frozenset({"admin"})

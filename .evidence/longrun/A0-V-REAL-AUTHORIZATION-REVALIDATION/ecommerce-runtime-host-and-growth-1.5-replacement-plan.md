@@ -15,10 +15,11 @@ Registry 已唯一 published growth 1.5.0，持久 signed root 同时包含 1.4.
 1. 新增单用途 runtime-host bootstrap/launcher。apply 必须锁定 `colima-aos-extension / aos-a0v-recovery-pg / aos_meta_head`，先备份；生成三个随机口令，只写仓外 `0600` 文件。创建 `aos_a0v_web_20260912`、`aos_a0v_runtime_20260912`、`aos_a0v_directory_20260912` 三个 LOGIN、NOSUPERUSER、NOBYPASSRLS 主体；runtime 仅继承 `aos_runtime`，directory 仅继承 `aos_extension_directory`，web 两者都不继承。
 2. 最小授权：directory 只调用 `extension_runtime_read_host_assignments()`；runtime 通过既有 `aos_runtime` 角色在 tenant transaction 内工作；web 只用于 host 三平面身份探针，不承载诊断 API 请求。启动器内的 `db.get_dsn` 指向该 web identity，因此 selector 检查的是宿主自身真实 web plane；诊断 API 继续隔离、host=0。
 3. 用现有 `extension_runtime_bind_host_identity` 与 `extension_runtime_set_host_assignment` SECURITY DEFINER command，固定 host id、actor、request hash、CAS 和 idempotency key；仅 assignment `org-org/dev-project`，负租户保持空。默认 preflight，重放零 revision。
-4. 宿主作为独立本地进程运行，显式注入三 DSN、`AOS_EXTENSION_OCI_CONTEXT=colima-aos-extension`、持久 bundle/trust root 与 platform；启动前 selector 必须 ACTIVE，退出时 graceful stop。凭据不进入命令行、Git、Receipt 或日志。
-5. 对现有 1.4 approved Installation 创建唯一 `runtime-apply` operation；host 消费 outbox、启动三个 signed OCI member并提交 `runtime_preparation`，Installation 到 applied。随后创建 `runtime-verify`，同一 live owner 做当前 schema/release/permission 检查并到 active。此过程不调用任何业务 operation 或 Provider。
-6. 读取 active 1.4 的 exact installationId/revision/lockHash/overlayRevision 作为 `currentInstallationRef`，解析 growth 1.5 Composition；permission/migration/contribution diff 必须符合预期。maker 创建/submit，checker 独立 approve，再按同一 runtime apply/verify 形成 1.5 active replacement；激活时 predecessor 被 shadow，保留 rollback 链。
-7. enable 必须在当前四来源授权全绿后执行。ResponsibilityPlan 由经营参谋基于用户给定材料形成真实计划并冻结；BudgetPolicy 使用用户“不限费用、聚焦功能”的明确开发授权，但仍通过既有 Policy Owner/Receipt 发布，不直写表。配置 target 必须引用当前四来源 exact revision；任何过期、缺失或歧义都阻断。
+4. Runtime 控制命令的请求角色必须与 `meta_membership` 当前持久成员一致。保留已有 `user:dev=owner` 不变；单用途执行器依照既有 Membership 服务的 `meta_membership` + `twa_ws_member` 双写及 `twa_audit` 审计语义，为主体 `a0v-ecommerce-growth-1.4-runtime-owner` 新增 `admin`，授权 actor 记录为 `user:dev`；正租户恰好一条，负租户为零，重放不更新。禁止用请求体里的临时角色绕过当前成员检查。
+5. 宿主作为独立本地进程运行，显式注入三 DSN、`AOS_EXTENSION_OCI_CONTEXT=colima-aos-extension`、持久 bundle/trust root 与 platform；启动前 selector 必须 ACTIVE，退出时 graceful stop。凭据不进入命令行、Git、Receipt 或日志。
+6. 对现有 1.4 approved Installation 创建唯一 `runtime-apply` operation；host 消费 outbox、启动三个 signed OCI member并提交 `runtime_preparation`，Installation 到 applied。随后创建 `runtime-verify`，同一 live owner 做当前 schema/release/permission检查并到 active。此过程不调用任何业务 operation 或 Provider。
+7. 读取 active 1.4 的 exact installationId/revision/lockHash/overlayRevision 作为 `currentInstallationRef`，解析 growth 1.5 Composition；permission/migration/contribution diff 必须符合预期。maker 创建/submit，checker 独立 approve，再按同一 runtime apply/verify 形成 1.5 active replacement；激活时 predecessor 被 shadow，保留 rollback 链。
+8. enable 必须在当前四来源授权全绿后执行。ResponsibilityPlan 由经营参谋基于用户给定材料形成真实计划并冻结；BudgetPolicy 使用用户“不限费用、聚焦功能”的明确开发授权，但仍通过既有 Policy Owner/Receipt 发布，不直写表。配置 target 必须引用当前四来源 exact revision；任何过期、缺失或歧义都阻断。
 
 ## 修改范围
 
