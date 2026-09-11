@@ -513,3 +513,18 @@ payload 与显式 expected response，固定调用 `ecommerce_growth_review_adva
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_package_port.py` | 原路径 | host one-shot installed runtime transport；事务编排与安装选择仍 PENDING | fcd9d0238120a80209c0a247b4cfd924e3b4188dff4fc02ce06926c0254ad758 |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_installed_port.py` | 原路径 | 四 kind、exact response、非 JSON、异常/取消零重试合同 | 4b86ee3d1c1651eb30000cf830729429020da6bd51544f25b7fd5a9891b0fa19 |
+
+### 9.19 阶段评审三段式无重试协调器
+
+2026-09-12：新增 `AsyncStageReviewCommandCoordinator` 与不可变 prepared/exchange 快照。宿主
+prepare 必须绑定原命令 canonical hash，并提供一至四个 kind 唯一的 payload/expected；协调器
+逐个调用 9.18 one-shot port，在调用前后复核快照 hash，最后仅调用 commit 一次。
+
+prepare hash 错、IPC 拒绝/超时/取消/响应漂移、调用中 payload 篡改和 commit 失败均立即停止，
+不重放先前 IPC。协调器不访问数据库、不写 Receipt；commit 的新事务 current 重验证适配仍
+PENDING，当前 1.4.0 Installation 不变。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_coordinator.py` | 原路径 | prepare→IPC→snapshot verify→commit 编排；数据库 adapter 仍 PENDING | 29c1f322a12dd48a72438e0d6d475220be97773aad9f1b23d593f7208d3eb9a4 |
+| `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | 顺序、hash、篡改和三阶段异常零重试合同 | 487b7ef5be65c6c89ee0ab45c95206af35b8e416bb8ab77a6eaab6b5cc45cc8d |
