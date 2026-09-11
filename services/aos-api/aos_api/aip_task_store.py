@@ -1130,10 +1130,23 @@ class AipTaskStore:
         ):
             raise AipTaskTransitionBlocked("artifact contentHash must be exact sha256")
         if text_content is not None:
-            from aos_api.aip_agent_text_output import validate_agent_text
-            if artifact_type != "agent_text_output":
-                raise AipTaskTransitionBlocked("retained text requires agent_text_output")
-            validate_agent_text(text_content, content_hash, marking)
+            if artifact_type == "agent_text_output":
+                from aos_api.aip_agent_text_output import validate_agent_text
+                validate_agent_text(text_content, content_hash, marking)
+            elif artifact_type == "agent_query_input":
+                from aos_api.aip_agent_query_input import validate_agent_query
+                validate_agent_query(
+                    text_content,
+                    content_hash,
+                    source.get("requestHash"),
+                    marking,
+                )
+                if not isinstance(source.get("attemptId"), str) or not source["attemptId"].strip():
+                    raise AipTaskTransitionBlocked("retained query requires exact Attempt identity")
+            else:
+                raise AipTaskTransitionBlocked(
+                    "retained text requires an AgentRun input or output Artifact"
+                )
         family_id: str | None = None
         family_revision: int | None = None
         family_role: str | None = None
@@ -1210,11 +1223,24 @@ class AipTaskStore:
                     if _canonical_hash({key: existing[key] for key in expected}) != _canonical_hash(expected):
                         raise AipTaskTransitionBlocked("artifact identity replay content drifted")
                     if text_content is not None:
-                        from aos_api.aip_agent_text_output import read_agent_text
                         from aos_api.aip_contracts import ArtifactRef
-                        retained = read_agent_text(conn, scope, ArtifactRef(
+                        ref = ArtifactRef(
                             artifactId=artifact_id, artifactType=artifact_type,
-                            revision="1", contentHash=content_hash), markings=marking)
+                            revision="1", contentHash=content_hash,
+                        )
+                        if artifact_type == "agent_text_output":
+                            from aos_api.aip_agent_text_output import read_agent_text
+                            retained = read_agent_text(conn, scope, ref, markings=marking)
+                        else:
+                            from aos_api.aip_agent_query_input import read_agent_query
+                            retained = read_agent_query(
+                                conn,
+                                scope,
+                                ref,
+                                attempt_id=source["attemptId"],
+                                request_hash=source["requestHash"],
+                                markings=marking,
+                            )
                         if retained != text_content:
                             raise AipTaskTransitionBlocked("retained artifact replay drifted")
                     return artifact_id
@@ -1251,8 +1277,21 @@ class AipTaskStore:
                 ),
             )
             if text_content is not None:
-                from aos_api.aip_agent_text_output import write_agent_text
-                write_agent_text(conn, scope, artifact_id, text_content, content_hash, marking)
+                if artifact_type == "agent_text_output":
+                    from aos_api.aip_agent_text_output import write_agent_text
+                    write_agent_text(conn, scope, artifact_id, text_content, content_hash, marking)
+                else:
+                    from aos_api.aip_agent_query_input import write_agent_query
+                    write_agent_query(
+                        conn,
+                        scope,
+                        artifact_id,
+                        source["attemptId"],
+                        text_content,
+                        content_hash,
+                        source["requestHash"],
+                        marking,
+                    )
             conn.commit()
         return artifact_id
 

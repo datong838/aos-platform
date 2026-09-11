@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "aos.a0-v.changed-files/v1",
+  "baseline": "2f53c4fc",
+  "files": {
+    ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/agent-query-input-owner-plan.md": "cdf0584d98e23faae3120c2fbc0f2410d942b3f5f150944c653f4fba59fcd12d",
+    "services/aos-api/alembic/versions/a0v_015_agent_query_input.py": "3c642915dc71860f2d5daf864a70d4fe0ee66f6b44740417909ea3f8c2a3ee17",
+    "services/aos-api/aos_api/aip_agent_query_input.py": "58552c531d35a1f754d77396e40f3611624c669d15d27de2880b410507642ccf",
+    "services/aos-api/aos_api/aip_task_store.py": "56e59616c566bd8c1e1d07904c7076970e195809fcae915b1d59255e6a4c6b9f",
+    "services/aos-api/tests/test_aip_agent_query_input.py": "6e2d8cf5ed54c0591f7ed877044186efd550ba14f2f2ec1ee1cf94e0ecafc007"
+  }
+}

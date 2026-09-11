@@ -276,3 +276,18 @@ SkillTemplate target，并要求 passed Eval report.target 的类型、ID、revi
 | sourcePath | targetPath | decision | 当前切片SHA256 |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_analyst_stage_review_command.py` | 宿主阶段评审新增 exact Skill Eval target 防替换校验；包内编排迁移仍 PENDING | ca5b442e0886b5bf31a6b6da0f2d89628a000470cbae274e08afb95167e4b999 |
+
+### 9.5 AgentRun 原始 Query 私有 Owner
+
+2026-09-11：新增租户隔离、append-only 的 `aip_agent_query_input`，将原始 query 正文与
+exact Artifact、AgentRun Attempt、requestHash、contentHash 和 marking 同时绑定。正文
+不进入通用 Artifact metadata、Receipt、日志或 Eval report。`AipTaskStore` 仅为明确的
+`agent_query_input` 类型调用该 Owner；既有输出正文路径保持不变。
+
+该切片只建立 Owner 和原子 Artifact 写入能力，尚未默认留存模型输入，也未接入
+D01/D02/D03 生成或 Eval case；不调用 Provider、不产生业务 mutation。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/aip_agent_query_input.py` | 原路径 | platform private source owner；原始 query 受租户、Attempt、requestHash 与 marking 约束 | 58552c531d35a1f754d77396e40f3611624c669d15d27de2880b410507642ccf |
+| `services/aos-api/aos_api/aip_task_store.py` | 原路径 | platform Artifact owner；新增 agent_query_input 私有正文分派，既有路径保持 | 56e59616c566bd8c1e1d07904c7076970e195809fcae915b1d59255e6a4c6b9f |
