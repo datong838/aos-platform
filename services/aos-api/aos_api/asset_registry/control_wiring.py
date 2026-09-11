@@ -386,7 +386,11 @@ def _allowlist_roots(*, repository_root: Path) -> dict[str, Path]:
         roots["catalog"] = catalog_root
     configured_root = os.getenv("AOS_BUNDLE_ROOT")
     if configured_root:
-        roots["server"] = Path(configured_root)
+        server_root = Path(configured_root)
+        roots["server"] = server_root
+        # Canonical ecommerce releases created by the first-install executor
+        # persist this alias in their immutable artifact references.
+        roots["a0v-canonical"] = server_root
     return roots
 
 

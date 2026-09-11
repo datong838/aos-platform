@@ -224,8 +224,26 @@ def test_registry_builder_uses_only_server_controlled_roots(
 
     assert service._store.__class__ is StoreSpy
     assert captured == {
-        "allowlist_roots": {"catalog": catalog_root, "server": server_root},
+        "allowlist_roots": {
+            "catalog": catalog_root,
+            "server": server_root,
+            "a0v-canonical": server_root,
+        },
         "trust_roots": None,
+    }
+
+
+def test_registry_builder_does_not_expose_server_aliases_without_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    repository_root = tmp_path / "repository"
+    catalog_root = repository_root / "bundles"
+    catalog_root.mkdir(parents=True)
+    monkeypatch.delenv("AOS_BUNDLE_ROOT", raising=False)
+
+    assert control_wiring._allowlist_roots(repository_root=repository_root) == {
+        "catalog": catalog_root
     }
 
 
