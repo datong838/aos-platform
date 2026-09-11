@@ -23,3 +23,6 @@
 ## 串行检查点（2026-09-11）
 
 为保证每次提交可独立回归，先提交步骤4/5的答复解析与可选来源契约：无数据库写入、无Provider调用、无公开入口。步骤1/2/3/6（当前来源读取、固定prompt、原attempt核验、Owner保存与克隆重放）接续施工，不能将本检查点视为接收服务完成。新增契约对旧payload省略空字段，针对既有contracts/store/approval回归；下一检查点需补新来源字段穿过审批的验证。
+
+### 下一检查点：确定性生成绑定
+固定版本system/query将完整Decision正文、exact来源及其风险元信息、外部明确计划budget绑定；不静默截断超长资料，超过执行器query限制拒绝。使用原执行器_request_hash核对SUCCEEDED attempt，完整answer原始字节hash绑定Artifact。纯转换函数只返回draft，不打开数据库、不调用Provider、不自动审批。稳定planId基于tenant+attempt，时间取completedAt，itemId序号稳定，任务类型来自明确工作流配置并纳入prompt绑定，eligible沿既有契约为true（表示审批后可纳入任务图，draft生命周期本身不具备执行许可）。这一步仍要求随后数据库读取器证实所有传入对象来自当前scope权威；纯转换不能当作可信公开接口。原计划中数据库原子接收仍待实现。
