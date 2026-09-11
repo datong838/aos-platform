@@ -8,7 +8,7 @@ _OUTPUTS = dict(portrait=('InsightRevision','insightRef'),diagnosis=('DecisionSu
     **{'solution-design':('GrowthPlanRevision','growthPlanRef')})
 
 
-def require_stage_review_runtime(transaction,scope,*,task_run_id,plan_ref,stage,stage_attempt_ref,subject_ref):
+def read_stage_review_runtime_authority(transaction,scope,*,task_run_id,plan_ref,stage,stage_attempt_ref,subject_ref):
     if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
         raise TypeError('stage review runtime requires HostTransaction and TenantScope')
     if (stage not in _STAGES or plan_ref.resource_type!='PlanRevision'
@@ -62,4 +62,22 @@ def require_stage_review_runtime(transaction,scope,*,task_run_id,plan_ref,stage,
         or not isinstance(body.get('payload'),dict)
         or body['payload'].get(_OUTPUTS[stage][1])!=subject_ref.model_dump(mode='json',by_alias=True)):
         raise ValueError('stage observed a different subject')
-    return plan
+    payload=dict(kind='validate_runtime',taskRunId=task_run_id,
+        planRef=plan_ref.model_dump(mode='json',by_alias=True),stage=stage,
+        stageAttemptRef=stage_attempt_ref.model_dump(mode='json',by_alias=True),
+        subjectRef=subject_ref.model_dump(mode='json',by_alias=True),observationPayload=body)
+    snapshot=dict(schemaVersion='aos.stage-review-runtime-snapshot/v1',taskId=task['task_id'],
+        taskStatus=task['status'],runId=task_run_id,runStatus=run['status'],
+        planRef=payload['planRef'],stageAttemptRef=payload['stageAttemptRef'],
+        checkpointId=checkpoint['checkpoint_id'],checkpointStateHash=checkpoint['state_hash'],
+        dependencySnapshotHash=checkpoint['dependency_snapshot_hash'],
+        observationEvidenceId=evidence['evidence_id'],observationContentHash=evidence['content_hash'])
+    return dict(plan=plan,snapshot=snapshot,payload=payload,
+        expected={'subjectRef':payload['subjectRef']})
+
+
+def require_stage_review_runtime(transaction,scope,**values):
+    return read_stage_review_runtime_authority(transaction,scope,**values)['plan']
+
+
+__all__=['read_stage_review_runtime_authority','require_stage_review_runtime']

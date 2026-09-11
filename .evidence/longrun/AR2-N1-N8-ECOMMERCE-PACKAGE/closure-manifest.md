@@ -587,3 +587,18 @@ runtime binding 或租户数据。真实复合 authority reader 与未来 1.5.0 
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_installed_port.py` | 原路径 | fifth kind transport 回归 | 4a0a91a2264415e02fcb9bdaaa7b6b443d4235a64eb83f2d8cdb3c430657613e |
 | `services/aos-api/tests/extension_runtime/test_analyst_stage_review_coordinator.py` | 原路径 | 五条允许、六条拒绝 | 96df3afba850c733fdd4f77af76e6a9b33a43dd5aebc668d2be7f7fe8ef02e09 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_owner_binding.py` | 原路径 | 五门 Owner 发布完整性回归 | 5e2a61bdac796779c1e6eb2a94d3475969dd7bccfd4864fa95572586863bb68b |
+
+### 9.23 阶段评审 runtime proof reader
+
+2026-09-12：`read_stage_review_runtime_authority` 复用现有 Task/Plan/Run、最新 StepRun、Checkpoint
+及 Observation Evidence 的真实只读校验，在同一事务输出可 canonical 封印的 runtime snapshot 与
+`validate_runtime` payload/expected。payload 中 observation 来自数据库 actual Evidence；snapshot
+固定 task/run 状态、plan/attempt、checkpoint state/dependency hash 和 Evidence id/content hash。
+
+原 `require_stage_review_runtime` 保持签名与 plan 返回值。reader 不 IPC、不写库、不读取调用方提供的
+observation；职责与 Eval/source proof reader 仍 PENDING，单个 runtime proof 不构成发布授权。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_runtime.py` | 原路径 | 真实 runtime snapshot + validate_runtime message；兼容 wrapper 保留 | 3343ef47c153251837124874a76ae53bcb49a82130cbbd5c282b6a04507c8b9a |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_runtime.py` | 原路径 | 三阶段真实 PG proof、canonical JSON 与旧拒绝合同 | bcbf4dbe5d22e25a3d84ef20f3b618eeb5bc63882dd90f8783ae4d64259a043c |

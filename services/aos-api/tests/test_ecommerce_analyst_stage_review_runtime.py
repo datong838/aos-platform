@@ -1,10 +1,12 @@
 import pytest
+from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_task_models import CreateTaskRequest,CreatePlanRevisionRequest,CreateTaskRunRequest
 from aos_api.aip_eval_contracts import EvalStageAttemptRef
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
-from aos_api.ecommerce_analyst_stage_review_runtime import require_stage_review_runtime
+from aos_api.ecommerce_analyst_stage_review_runtime import (
+    read_stage_review_runtime_authority,require_stage_review_runtime)
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database,SCOPE
@@ -44,6 +46,14 @@ def test_all_three_actual_stage_checkpoints_and_exact_subjects():
             with connect(SCOPE) as conn:
                 result=require_stage_review_runtime(HostTransaction(conn),SCOPE,**args)
                 assert result['plan_revision_id']==plan.id
+                proof=read_stage_review_runtime_authority(HostTransaction(conn),SCOPE,**args)
+                assert proof['plan']==result
+                assert proof['payload']['kind']=='validate_runtime'
+                assert proof['payload']['observationPayload']['payload'][{
+                    'portrait':'insightRef','diagnosis':'decisionRef','solution-design':'growthPlanRef'}[stage]]==proof['expected']['subjectRef']
+                assert proof['snapshot']['runId']==run.id
+                assert proof['snapshot']['checkpointStateHash'] and proof['snapshot']['observationContentHash']
+                canonical_json(proof['snapshot']);canonical_json(proof['payload']);canonical_json(proof['expected'])
                 for field,change in [('plan_ref',{'content_hash':'b'*64}),('subject_ref',{'content_hash':'b'*64}),('stage_attempt_ref',{'attempt':99})]:
                     bad={**args,field:args[field].model_copy(update=change)}
                     with pytest.raises(ValueError):require_stage_review_runtime(HostTransaction(conn),SCOPE,**bad)
