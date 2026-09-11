@@ -746,3 +746,18 @@ IPC。当前无公开入口，production control plane 尚未持有 live directo
 | `services/aos-api/aos_api/asset_registry/control_wiring.py` | 原路径 | control plane 持有唯一 live directory；纯 wiring | ece42c19d637ca264f0e6bacc265169ef1ae280fd65ce4df09ac3930c7c4b5e2 |
 | `services/aos-api/tests/extension_runtime/test_production_runtime.py` | 原路径 | builder 独立目录与既有 selector 零访问回归 | cfb83f4beb2f48d93a135239705f7c5a4b7b7534eecf69c86cf81e95bf004d71 |
 | `services/aos-api/tests/extension_runtime/test_runtime_startup_composition.py` | 原路径 | app lifespan exact directory 持有与清除 | 5db65270ec08e28e6494113ab52e4d4ea66c1a60a08e604db67acd4063c4f6ee |
+
+### 9.33 单 Installation live lifecycle owner
+
+2026-09-12：新增 `LiveInstallationLifecycleOwner`，只接收 exact `PreparationConsumer`，在一个进程
+owner 内固定消费 runtime-apply、runtime-verify、enable。后两段只通过 preparation 保留的同一个
+`PreparedJob`、同一 trusted connection 和 TenantScope 执行；不重新打开签名 session。
+
+无 live job 时不进入控制阶段；verify 返回失败或抛错时不进入 enable。tick 串行且由 owner 持有，调用
+方取消不取消后台动作；停止先等待 tick 收敛，再复用 preparation stop 的 OCI 清理和 directory 撤销。
+本切片尚无可信 Installation 发现、owner factory 或 production wiring，真实租户 runtime 不会自动启动。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/live_installation_owner.py` | 原路径 | 单安装三段有序 delivery、失败短路与 owner 停止收敛 | 6e4e90a9db5d5a3cc01546789e321337318dbe802b601fd05b000fe1235b8de1 |
+| `services/aos-api/tests/extension_runtime/test_live_installation_owner.py` | 原路径 | 顺序、同 owner、失败、取消、并发与停止合同 | df6c9d81b648cfaee679c0b1feb020fc7e37cf645e5af1366eab108af28ec07f |

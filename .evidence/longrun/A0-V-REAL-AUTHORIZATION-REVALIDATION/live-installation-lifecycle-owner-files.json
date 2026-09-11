@@ -1,0 +1,18 @@
+{
+  "phase": "A0-V live installation lifecycle owner",
+  "date": "2026-09-12",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/extension_runtime/live_installation_owner.py",
+      "sha256": "6e4e90a9db5d5a3cc01546789e321337318dbe802b601fd05b000fe1235b8de1"
+    },
+    {
+      "path": "services/aos-api/tests/extension_runtime/test_live_installation_owner.py",
+      "sha256": "df6c9d81b648cfaee679c0b1feb020fc7e37cf645e5af1366eab108af28ec07f"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/live-installation-lifecycle-owner-plan.md",
+      "sha256": "7ca1092163751c8748a16360acde1a6f106692bb1621448f9c767ff93d36011b"
+    }
+  ]
+}
