@@ -1,0 +1,11 @@
+# D03隔离契约恢复及业务计划产物缺口
+
+2026-09-11，北京时间13:15；基线0e3ee17b。D03专属Graph/adapter/evaluator/Skill Eval均沿自己的draft_only/敏感信息/事实来源约束，未知技能拒绝。旧辅助评测增加显式连接和actor，原默认行为保持。
+
+18项专项通过（先2项新接口缺失失败，实现后通过）；克隆aos_upgrade_check_f1dc452abade新增D03 Graph/Logic Publication/契约Eval/Skill Release和Skill r2，hash7fe17842c21502f6996f24fbb645a362dfae4d6810ca161817bc76f0131ba86c。D01/D02 exact保持。连续重放两次518表行数全部不变。主库D01/D02/D03 published计数仍0。Provider调用0、Binding激活0、经营计划0，只是CONTRACT_PREPARATION_ONLY。
+
+实际产物路径核查：execute_r2_d03_real_pilot.py固定旧schema aip10_006、旧Skill r4/Route以及多次历史attempt，不可原样执行；QUERY是“内部演示目标/提升复购”，AgentRun inputRefs=[]。该脚本能走AgentRunExecutor的受限Provider→Usage/Artifact元数据链，但不证明店铺真实来源。AipAgentRunExecutor._record_output_artifact保存sha256 contentRef/answerLength/source元数据，正文仅随响应返回，不在该处保存可读取内容。D03契约Graph终端仍是GrowthPlan.DRAFT固定标签，必须与实际生成区分。
+
+ecommerce_analyst_authority_store已有GrowthPlanRevision持久Owner；当前publish_plan调用只发现审批转换及独立调查观察Store，未发现从可信模型答复生成经营参谋草稿的接线（本次搜索范围services/aos-api/aos_api和scripts）。这是后续产品施工项，不能靠插入审批通过状态补齐。
+
+下一波：新增受信增长计划草稿接收服务，消耗当前tenant真实来源exact和已完成模型答复，校验可读计划、逐项来源、缺数据不猜测、幂等Receipt，经现有Owner保存draft；不自动approve或执行。输入/产物结构必须复习现有GrowthPlan与Observation协议，不能建立第二套权威。先独立代码测试/隔离验证，待真实数据和绑定就绪后真实首链接线。实际安装/来源/职责/内容续跑/八场景/观察发布仍未完成。API仍1100b936、不push、230 L0挂起。

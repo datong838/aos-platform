@@ -6,6 +6,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'aip'))
 from bootstrap_r06_data_advisor_authority import _isolated_registry, exact_model_alias
 from bootstrap_r06_data_advisor_skill_authority import _skill_eval
+from bootstrap_r2_d03_pilot import _isolated_registry as _d03_registry
+from bootstrap_r2_d03_skill_authority import _skill_eval as _d03_skill_eval
+from aos_api.aip_d03_pilot import build_d03_graph_request, evaluate_d03_contract
 from aos_api.aip_agent_registry_contracts import PublishEvaluatedSkillRevisionRequest
 from aos_api.aip_data_advisor_logic import build_data_advisor_graph_request, evaluate_data_advisor_contract
 from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
@@ -28,6 +31,18 @@ ALLOWED_CLONE = 'aos_upgrade_check_f1dc452abade'
 ACTOR = 'a0v-firstchain-contract-preparation'
 
 
+def contract_components(logic_id):
+    if logic_id == 'D03':
+        return (lambda alias: build_d03_graph_request(model_id=alias),
+            lambda graph, registry, now: evaluate_d03_contract(graph, registry, now=now),
+            _d03_registry)
+    if logic_id in ('D01', 'D02'):
+        return (lambda alias: build_data_advisor_graph_request(logic_id, model_id=alias),
+            lambda graph, registry, now: evaluate_data_advisor_contract(logic_id, graph, registry, now=now),
+            _isolated_registry)
+    raise ValueError('FIRSTCHAIN_SKILL_UNSUPPORTED')
+
+
 def require_clone(connect):
     if not callable(connect):
         raise ValueError('EXPLICIT_CLONE_CONNECTION_REQUIRED')
@@ -39,7 +54,8 @@ def require_clone(connect):
 
 def _logic(connect, logic_id, model):
     store = LogicGraphStore(connect)
-    request = build_data_advisor_graph_request(logic_id, model_id=exact_model_alias(model))
+    build, evaluate, adapters = contract_components(logic_id)
+    request = build(exact_model_alias(model))
     try:
         graph = store.get(*SCOPE.key, request.id)
     except LogicGraphNotFound:
@@ -49,13 +65,13 @@ def _logic(connect, logic_id, model):
     if actual != expected:
         raise ValueError('FIRSTCHAIN_LOGIC_DRIFT')
     key = 'a0v-contract-'+logic_id.lower()+'-'+graph.graph_hash[:24]
-    registry = _isolated_registry(exact_model_alias(model))
+    registry = adapters(exact_model_alias(model))
     evidence = EvalEvidenceStore(connect)
     try:
         report = evidence.get_report(*SCOPE.key, key+'-report')
         suite = evidence.get_suite(*SCOPE.key, report.suite_id)
     except EvalNotFound:
-        evaluated = evaluate_data_advisor_contract(logic_id, graph, registry, now=datetime.now(UTC))
+        evaluated = evaluate(graph, registry, datetime.now(UTC))
         suite = evidence.create_suite(*SCOPE.key, ACTOR, evaluated.suite)
         if suite.model_dump(mode='json') != evaluated.suite.model_dump(mode='json'):
             raise ValueError('FIRSTCHAIN_LOGIC_SUITE_DRIFT')
@@ -97,13 +113,16 @@ def prepare_contracts(connect):
     if not any(candidate.model == exact('RegisteredModelRevision', model, 'registered_model_id') for candidate in route.candidates):
         raise ValueError('FIRSTCHAIN_MODEL_ROUTE_DRIFT')
     result = []
-    for logic_id in ('D01', 'D02'):
+    for logic_id in ('D01', 'D02', 'D03'):
         require_clone(connect)
         graph, logic_publication = _logic(connect, logic_id, model)
         source = AipSkillRegistry(connect).get_skill('ecommerce.skill.'+logic_id, 1)
         if source.lifecycle.value != 'evaluated':
             raise ValueError('FIRSTCHAIN_SOURCE_SKILL_NOT_EVALUATED')
-        suite, report = _skill_eval(logic_id, source, graph, model, connect_factory=connect, actor=ACTOR)
+        if logic_id == 'D03':
+            suite, report = _d03_skill_eval(source, graph, model, connect_factory=connect, actor=ACTOR)
+        else:
+            suite, report = _skill_eval(logic_id, source, graph, model, connect_factory=connect, actor=ACTOR)
         release = AipReleasePublicationService(connect)
         key = 'a0v-firstchain-'+logic_id.lower()+'-'+suite.content_hash[:24]
         gate = release.derive_gate(SCOPE, actor=ACTOR, request=DeriveReleaseGateRequest(

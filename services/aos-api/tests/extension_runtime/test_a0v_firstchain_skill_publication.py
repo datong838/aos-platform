@@ -28,3 +28,25 @@ def test_non_owned_clone_is_rejected_before_constructing_stores(monkeypatch, dat
 def test_no_implicit_database_fallback():
     with pytest.raises(ValueError, match='EXPLICIT_CLONE_CONNECTION_REQUIRED'):
         preparation.prepare_contracts(None)
+
+
+def test_d03_uses_its_own_graph_and_input_contract():
+    build, evaluate, registry = preparation.contract_components('D03')
+    request = build('exact-test-model')
+    assert request.id == 'ecommerce.logic.D03'
+    assert request.nodes[-1].config['expression'] == '"GrowthPlan.DRAFT"'
+    from aos_api.aip_logic_graph_models import LogicGraphSnapshot
+    from datetime import UTC, datetime
+    from aos_api.aip_logic_graph_models import compute_logic_graph_hash
+    graph = LogicGraphSnapshot(**request.model_dump(exclude={'id'}), id=request.id,
+        revision=1, graph_hash=compute_logic_graph_hash(request),
+        created_at=datetime.now(UTC), updated_at=datetime.now(UTC))
+    result = evaluate(graph, registry('exact-test-model'), datetime.now(UTC))
+    assert result.report.gate_passed
+    assert {case.id for case in result.suite.cases} == {
+        'd03-positive','d03-structure','d03-fact-boundary','d03-external-action','d03-sensitive','d03-adapter-failure'}
+
+
+def test_unknown_skill_does_not_reuse_a_data_advisor_recipe():
+    with pytest.raises(ValueError, match='FIRSTCHAIN_SKILL_UNSUPPORTED'):
+        preparation.contract_components('D99')

@@ -1,0 +1,9 @@
+# D03专属契约恢复与真实产物断点
+
+基线0e3ee17b，m1串行，用户授权持续本地开发。复习首链技能发布方案与D03产品草稿边界。D03使用自己的draft_only输入、敏感信息拒绝和GrowthPlan.DRAFT契约，不能套用D01/D02定义。
+
+扩展scripts/a0v_firstchain_skill_publication.py固定执行D01/D02/D03：D01/D02重放保持，D03调用aip_d03_pilot的Graph builder/evaluator和专属隔离adapter、专属Skill Eval。scripts/aip/bootstrap_r2_d03_skill_authority.py的_skill_eval增加显式connect_factory/actor，所有Owner保持同一自有克隆，默认旧调用不变。先测试路由至D03专属定义，再克隆发布、双重放518表计数、确认主库D03未发布。
+
+新增/修改测试services/aos-api/tests/extension_runtime/test_a0v_firstchain_skill_publication.py；相关D03旧契约/输入拒绝测试回归。D03隔离发布仍不激活Binding/Agent、无Provider调用、不生成经营计划。
+
+本波另核对scripts/aip/execute_r2_d03_real_pilot.py及下游实际生成路径：确认输出是否保存可读计划、来源和草稿状态，并登记阻断；不能以Graph终端固定标签代替真实产物。后续真实数据就绪后才执行真实计划任务；源连接未变化不重试凭据。无主库写入、无迁移、不push、230 L0挂起。
