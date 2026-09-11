@@ -117,10 +117,12 @@ def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
         revision='1',contentHash=query_rows[0]['content_hash'])
     query=read_agent_query(tx,scope,query_ref,attempt_id=attempt.attempt_id,
         request_hash=attempt.request_hash,markings=markings)
-    case_input=derive_structure_case(query,stage=item.stage)
-    if inspect.isawaitable(case_input) or type(case_input) is not dict:
-        if inspect.iscoroutine(case_input):case_input.close()
-        raise ValueError('installed growth package returned an invalid Eval case')
+    case_input=None
+    if derive_structure_case is not None:
+        case_input=derive_structure_case(query,stage=item.stage)
+        if inspect.isawaitable(case_input) or type(case_input) is not dict:
+            if inspect.iscoroutine(case_input):case_input.close()
+            raise ValueError('installed growth package returned an invalid Eval case')
     # The approved Plan owns the stage's exact Eval contract; no caller-selected fallback.
     step=next(step for step in plan['steps'] if step['stepKey']==item.stage)
     refs=[AnalystExactRef.model_validate(ref) for ref in step.get('gateRefs',[]) if ref.get('resourceType')=='EvalContractRevision']
@@ -148,7 +150,7 @@ def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
     if (case.kind is not EvalCaseKind.POSITIVE or not case.required or case.expected_artifact is None
         or case.input_artifact.artifact_type!='eval_input' or case.input_artifact.revision!='1'
         or case.expected_artifact.artifact_type!='eval_expected' or case.expected_artifact.revision!='1'
-        or case.input_artifact.content_hash!=canonical_hash(case_input)):
+        or (case_input is not None and case.input_artifact.content_hash!=canonical_hash(case_input))):
         raise ValueError('stage Eval case differs from original generation query')
     policy=EvalGatePolicyRef.model_validate(contract.gate_policy.get('stagePolicyRef'))
     gate_ref=contract.release_gate_ref
@@ -164,6 +166,37 @@ def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
         or report.suite_ref.revision!=str(contract.suite_ref.revision) or report.suite_ref.content_hash!=contract.suite_ref.content_hash
         or report.target!=expected_target or len(report.results)!=1 or report.results[0].case_id!=case.case_id):
         raise ValueError('stage report predates generation or uses a different suite or target')
+    if derive_structure_case is not None:return None
+    report_ref=item.eval_report_ref.model_dump(mode='json',by_alias=True)
+    contract_ref=ref.model_dump(mode='json',by_alias=True)
+    artifact_ref=EvalSubjectArtifactRef(resourceId=item.artifact_ref.resource_id,
+        contentHash=item.artifact_ref.content_hash).model_dump(mode='json',by_alias=True)
+    attempt_ref=item.stage_attempt_ref.model_dump(mode='json',by_alias=True)
+    policy_ref=policy.model_dump(mode='json',by_alias=True)
+    proof=dict(tenant=item.tenant.model_dump(mode='json',by_alias=True),reportRef=report_ref,
+        evalContractRef=contract_ref,subjectArtifactRef=artifact_ref,stageAttemptRef=attempt_ref,
+        gatePolicyRef=policy_ref,evidenceCutoffAt=insight.cutoff_at.isoformat(),gatePassed=True,
+        createdAt=report.created_at.isoformat())
+    eval_payload=dict(kind='validate_eval_proof',proof=proof,tenant=proof['tenant'],
+        artifactRef=artifact_ref,stageAttemptRef=attempt_ref,evalContractRef=contract_ref,
+        gatePolicyRef=policy_ref,cutoffAt=insight.cutoff_at.isoformat(),now=now.isoformat())
+    structure_payload=dict(kind='validate_structure_case',query=query,stage=item.stage,
+        expectedCaseInputHash=case.input_artifact.content_hash)
+    snapshot=dict(schemaVersion='aos.stage-review-eval-source-snapshot/v1',
+        artifactRef=item.artifact_ref.model_dump(mode='json',by_alias=True),
+        attemptId=attempt.attempt_id,agentRunId=agent.agent_run_id,requestHash=attempt.request_hash,
+        queryArtifactRef=query_ref.model_dump(mode='json',by_alias=True),evalContractRef=contract_ref,
+        suiteRef=contract.suite_ref.model_dump(mode='json',by_alias=True),
+        releaseGateRef=gate_ref.model_dump(mode='json',by_alias=True),reportRef=report_ref,
+        caseInputHash=case.input_artifact.content_hash,completedAt=attempt.completed_at.isoformat(),
+        reportCreatedAt=report.created_at.isoformat())
+    return dict(snapshot=snapshot,evalPayload=eval_payload,evalExpected={'reportRef':report_ref},
+        structurePayload=structure_payload,
+        structureExpected={'caseInputHash':case.input_artifact.content_hash})
+
+
+def read_stage_review_eval_source_authority(tx,scope,item,plan,markings):
+    return _sources_and_eval(tx,scope,item,plan,markings,None)
 
 
 class AnalystStageReviewCommandService:

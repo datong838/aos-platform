@@ -616,3 +616,18 @@ slot/Receipt 内容；Eval/source proof reader 与五门组合仍 PENDING，单�
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py` | 原路径 | 真实职责 snapshot + validate_review_slot message；兼容 wrapper 保留 | 08a88647c32b92e9e967aded1492fcfc7c67b833c0de970af2e4c028ba519ee5 |
 | `services/aos-api/tests/test_ecommerce_analyst_stage_review_authority.py` | 原路径 | 真实 PG proof、canonical JSON 与旧拒绝合同 | 18d574c313f52640e3f3dfa8b0567bcb0946e0b7585434713f4c008c18b3839f |
+
+### 9.25 阶段评审 Eval/source proof reader
+
+2026-09-12：`read_stage_review_eval_source_authority` 复用原 subject/source/Eval 全链只读核验，但不在
+事务内调用 Growth 包；它输出 `validate_eval_proof` 与 `validate_structure_case` 两条 exact 消息。
+structure expected hash 只来自当前 Suite 唯一 required positive case，Eval proof 绑定当前 tenant、
+artifact、attempt、contract、policy、cutoff、report 与事务时钟。旧同步命令仍显式调用 deriver 一次并
+比较同一 case hash。
+
+host reader 两条消息已由作者包 operation exact 接受。尚未组合五门、接产品异步入口或改变 1.4.0。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py` | 原路径 | Eval/source proof 模式与旧同步兼容包装 | 82d7507e3595dc0ac876583b553a5f5bb8a5e00c37eb76acb5fc9a1a1e76f6ee |
+| `services/aos-api/tests/test_ecommerce_analyst_stage_review_command.py` | 原路径 | 零 deriver proof、canonical JSON、真实 query 包 parity 与旧漂移回归 | 325c748c7d184a79d0dd93bf7995b6a10321a13cf127a8b44d9fdf8d797d5b5b |

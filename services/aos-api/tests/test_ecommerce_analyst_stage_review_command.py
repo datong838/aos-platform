@@ -1,6 +1,8 @@
 from contextlib import contextmanager
 from datetime import timedelta
+import importlib
 import pytest
+from aos_api.asset_registry.canonical_json import canonical_json
 import aos_api.ecommerce_analyst_stage_review_command as module
 from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionStore
 from aos_api.ecommerce_growth_host_ports import HostTransaction
@@ -151,12 +153,46 @@ def sources(monkeypatch):
     monkeypatch.setattr(module,'read_agent_query',query)
     plan={'steps':[{'stepKey':'portrait','gateRefs':[ref.model_dump(mode='json',by_alias=True)]}]}
     derive=lambda query,stage: state['case_input'] if state['derive'] and query==state['query_body'] and stage=='portrait' else None
+    state['read_proof']=lambda:module.read_stage_review_eval_source_authority(
+        HostTransaction(Connection()),SCOPE,value,plan,['internal'])
     return lambda:module._sources_and_eval(HostTransaction(Connection()),SCOPE,value,plan,['internal'],derive),state,plan
 
 
 def test_sources_require_explicit_text_protocol_and_current_contract(monkeypatch):
     run,state,plan=sources(monkeypatch)
     assert run() is None
+
+
+def test_eval_source_reader_emits_two_canonical_messages_without_deriver(monkeypatch):
+    _,state,_=sources(monkeypatch)
+    state['derive']=False
+    proof=state['read_proof']()
+    assert proof['evalPayload']['kind']=='validate_eval_proof'
+    assert proof['evalExpected']['reportRef']==proof['snapshot']['reportRef']
+    assert proof['structurePayload']['kind']=='validate_structure_case'
+    assert proof['structurePayload']['query']==state['query_body']
+    assert proof['structurePayload']['expectedCaseInputHash']==proof['structureExpected']['caseInputHash']
+    for key in ('snapshot','evalPayload','evalExpected','structurePayload','structureExpected'):
+        canonical_json(proof[key])
+
+
+def test_eval_source_reader_messages_match_package_rules(monkeypatch):
+    from pathlib import Path
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parent/'extension_runtime'))
+    from test_analyst_structure_case import query as actual_query
+    from aos_api.ecommerce_analyst_authority_store import canonical_hash
+    _,state,_=sources(monkeypatch)
+    backend=Path(__file__).resolve().parents[3]/'bundles/solutions/ecommerce-growth/backend'
+    monkeypatch.syspath_prepend(str(backend))
+    runtime=importlib.import_module('ecommerce_growth')
+    structure=importlib.import_module('ecommerce_growth.analyst_structure_case')
+    state['query_body']=actual_query(monkeypatch,'portrait')
+    case=structure.structure_case_from_query(state['query_body'],stage='portrait')
+    state['suite'].cases[0].input_artifact=state['suite'].cases[0].input_artifact.model_copy(
+        update={'content_hash':canonical_hash(case)})
+    proof=state['read_proof']()
+    assert runtime.handle('ecommerce_growth_review_advance',proof['evalPayload'],object())==proof['evalExpected']
+    assert runtime.handle('ecommerce_growth_review_advance',proof['structurePayload'],object())==proof['structureExpected']
 
 
 @pytest.mark.parametrize('fault',['artifact','unknown','receipt','wrong_skill','source_request','raw','query','derive','head','contract','input_mode','gate','suite','case_hash','case_count','suite_target','chronology','target_kind','target_id','target_revision','target_hash','no_gate'])
