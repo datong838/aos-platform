@@ -1,0 +1,5 @@
+{
+  "services/aos-api/aos_api/aip_production_contracts.py": "562354dc813c52c073c91c9c480516fe382e34f2ae86e5bd63b27cbbf7fd3105",
+  "services/aos-api/aos_api/ecommerce_analyst_stage_review_authority.py": "1e549eaca433462b9ea807241dfd98443e5f1b0f46940caf9f89c022638f7186",
+  "services/aos-api/tests/test_ecommerce_analyst_stage_review_authority.py": "53600a6ec7025258ffd992eb4b7e90fe5eaade723b6ee0357090a4681e13ce59"
+}

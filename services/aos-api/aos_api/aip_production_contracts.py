@@ -179,7 +179,7 @@ class AssigneeRef(AipContractModel):
 class ResponsibilitySlot(AipContractModel):
     slot_id: str = Field(min_length=1, max_length=160)
     responsibility_type: str = Field(min_length=1, max_length=160)
-    required_capability_ids: list[str] = Field(min_length=1)
+    required_capability_ids: list[str]
     input_schema_ref: ResourceRef
     output_schema_ref: ResourceRef
     gate_refs: list[ExactRevisionRef] = Field(default_factory=list)
@@ -195,6 +195,12 @@ class ResponsibilitySlot(AipContractModel):
         if len(values) != len(set(values)) or any(not value.strip() for value in values):
             raise ValueError("required capability IDs must be unique and non-blank")
         return values
+
+    @model_validator(mode="after")
+    def _machine_responsibilities_require_capabilities(self) -> ResponsibilitySlot:
+        if self.assignee.kind is not AssigneeKind.HUMAN_PRINCIPAL and not self.required_capability_ids:
+            raise ValueError("non-human responsibilities require capability IDs")
+        return self
 
 
 class MergeDecision(AipContractModel):
