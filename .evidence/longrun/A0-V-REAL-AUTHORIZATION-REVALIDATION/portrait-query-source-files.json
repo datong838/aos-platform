@@ -1,0 +1,25 @@
+{
+  "base": "b23dcb08",
+  "files": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_analyst_portrait_query_sources.py",
+      "preHash": null,
+      "postHash": "d3f26f8b522e8596b77e79bf4d46e04b630dbad006db072ff6b4d7adf2f72bb6"
+    },
+    {
+      "path": "services/aos-api/tests/test_ecommerce_analyst_portrait_query_sources.py",
+      "preHash": null,
+      "postHash": "fe692663be37a958587eb09c92062af5a391162a171b83a7f27b4f52c73d4c15"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/portrait-query-source-plan.md",
+      "preHash": null,
+      "postHash": "3c4451a366616f286f50afce346689b025d77c9e4b5551d1c80f3edd86b6ca07"
+    },
+    {
+      "path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/portrait-query-source-verification.md",
+      "preHash": null,
+      "postHash": "987b6bebb28d2bb8abc28a121fe6032315d352f40b96556d63623dbb6765f606"
+    }
+  ]
+}
