@@ -230,6 +230,8 @@ def execute_schedule(
     *,
     trigger: str,
     scheduled_for: datetime | None = None,
+    recovery_run_id: str | None = None,
+    recovery_claim_id: str | None = None,
 ) -> dict[str, Any]:
     """执行一次真实 live pipeline，并把运行事实写入 PostgreSQL。"""
     schedule = _get_schedule(scope, schedule_id)
@@ -241,12 +243,22 @@ def execute_schedule(
     if ingest.get("kind") != "pipeline-live-v1" or ingest.get("pipelineId") != schedule["pipelineId"]:
         raise ValueError("SCHEDULE_LIVE_BINDING_MISSING")
 
-    slot = scheduled_for or datetime.now(timezone.utc)
-    if trigger == "cron":
-        slot = _validate_cron_slot(slot)
-    run_id = _claim_run(scope, schedule_id, slot, trigger)
-    if run_id is None:
-        return {"status": "duplicate", "scheduleId": schedule_id, "scheduledFor": slot}
+    if trigger == 'recovery' or recovery_run_id is not None or recovery_claim_id is not None:
+        if trigger != 'recovery' or not recovery_run_id or not recovery_claim_id or scheduled_for is not None:
+            raise ValueError('SCHEDULE_RECOVERY_ARGUMENTS_INVALID')
+        from aos_api.ec_ingress_claim import claim_failed_run
+        from aos_api.ec_ingress_journal import IngressJournal
+        if not claim_failed_run(connect,scope,recovery_run_id,recovery_claim_id,
+                                journal=IngressJournal(),expected_schedule_id=schedule_id):
+            return {'status':'duplicate','scheduleId':schedule_id,'id':recovery_run_id}
+        run_id = recovery_run_id
+    else:
+        slot = scheduled_for or datetime.now(timezone.utc)
+        if trigger == "cron":
+            slot = _validate_cron_slot(slot)
+        run_id = _claim_run(scope, schedule_id, slot, trigger)
+        if run_id is None:
+            return {"status": "duplicate", "scheduleId": schedule_id, "scheduledFor": slot}
 
     started = time.monotonic()
     result: dict[str, Any]

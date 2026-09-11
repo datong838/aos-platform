@@ -141,3 +141,9 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线6f1dfff0。新增ec_ingress_claim.claim_failed_run内部原语及a0v009不可变ecommerce_ingress_recovery_claim表（scope/run/claim UUID主键、父Journal FK、payload/hash、FORCE RLS、SELECT/INSERT、禁止修改删除截断）。调用方工厂必须成功commit后才返回。先锁Journal run，再读原parent与run FOR UPDATE；仅failed且executor_stopped=True且finished_at非空允许。原claim_id已存在时验证hash/parentHash返回False，不重启。保存旧失败行（JSON时间ISO）和parentHash，改status=running、清退出标记/完成时间；保留原runId、scheduled_for、started_at，当前schedule/graph/source绑定核验在同事务，失败全部回滚。
 
 领取只允许已有原批；无原批可能需重读源，不在本合同自动重启。running/未知/成功均拒绝。相同或不同claim并发由run事务锁串行，只有一个新claim可成功。当前接口不调用executor、不更新DLQ、不授予外部能力。文件services/aos-api/aos_api/ec_ingress_claim.py、alembic/versions/a0v_009_ingress_recovery_claim.py、tests/aip/test_a0v_ingress_journal_pg.py。隔离PG验证状态/证据同事务、source禁用回滚、同claim重放与不同claim并发、不可变及canary；下一波接实际调度入口，public不迁移。
+
+## 调度入口原run恢复接线
+
+基线a5cdd5ff。execute_schedule新增内部recovery_run_id/recovery_claim_id，必须同时非空且trigger=recovery、不能传scheduled_for；一般manual/cron不变，公开路由暂不扩权。claim_failed_run增加expected_schedule_id，原run.schedule_id必须相同才可改状态。领取成功commit后使用原runId执行durable_ingress=True；相同claim重放False直接返回duplicate，不执行也不更新run。后续结果沿现有持久回写，退出事实重新获取。原输入存在才允许领取，durable必走原Journal不会重读源。
+
+文件：services/aos-api/aos_api/qyh_cron_scheduler.py、ec_ingress_claim.py；tests/test_qyh_cron_scheduler.py、tests/aip/test_a0v_ingress_journal_pg.py。验证不调用新run claim、原run传递、领取重复/拒绝不启动、参数缺失拒绝、调度错配PG零副作用及既有cron回归。真实恢复API/worker后续接完整权限与显示，当前是内部实际调度函数接线，不宣称产品用户已可操作。

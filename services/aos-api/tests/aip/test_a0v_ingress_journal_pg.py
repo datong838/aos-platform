@@ -279,6 +279,9 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         assert database.owner.execute("SELECT status FROM meta_schedule_run WHERE id='run'").fetchone()['status']=='failed'
         assert database.owner.execute('SELECT count(*) AS n FROM ecommerce_ingress_recovery_claim').fetchone()['n']==0
         database.owner.execute("UPDATE meta_source SET status='registered'")
+        with pytest.raises(IngressJournalConflict,match='INGRESS_SCHEDULE_BINDING_DRIFT'):
+            claim_failed_run(factory,scope,'run',claim_id,journal=journal,expected_schedule_id='other-schedule')
+        assert database.owner.execute('SELECT count(*) AS n FROM ecommerce_ingress_recovery_claim').fetchone()['n']==0
         database.owner.execute("UPDATE meta_schedule_run SET executor_stopped=false WHERE id='run'")
         with pytest.raises(IngressJournalConflict,match='INGRESS_STOPPED_FAILED_RUN_REQUIRED'):
             claim_failed_run(factory,scope,'run',claim_id,journal=journal)

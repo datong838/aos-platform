@@ -6,7 +6,7 @@ from psycopg import sql
 from aos_api.ec_ingress_journal import IngressJournalConflict, _digest
 
 
-def claim_failed_run(connection_factory, scope, run_id, claim_id, *, journal):
+def claim_failed_run(connection_factory, scope, run_id, claim_id, *, journal, expected_schedule_id=None):
     if str(UUID(claim_id)) != claim_id:
         raise ValueError('INGRESS_CLAIM_ID_INVALID')
     claims=sql.Identifier(journal.schema,'ecommerce_ingress_recovery_claim')
@@ -23,6 +23,8 @@ def claim_failed_run(connection_factory, scope, run_id, claim_id, *, journal):
                     raise IngressJournalConflict('INGRESS_CLAIM_DRIFT')
                 return False
             run=conn.execute(sql.SQL('SELECT * FROM {} WHERE org_id=%s AND project_id=%s AND id=%s FOR UPDATE').format(runs),(*scope.key,run_id)).fetchone()
+            if run is not None and expected_schedule_id is not None and run['schedule_id'] != expected_schedule_id:
+                raise IngressJournalConflict('INGRESS_SCHEDULE_BINDING_DRIFT')
             if run is None or run['status']!='failed' or run['executor_stopped'] is not True or run['finished_at'] is None:
                 raise IngressJournalConflict('INGRESS_STOPPED_FAILED_RUN_REQUIRED')
             def encode(value):

@@ -195,3 +195,46 @@ def test_execute_schedule_masks_unexpected_scheduler_exception(monkeypatch) -> N
     assert persisted[3] == "SCHEDULE_EXECUTOR_EXCEPTION"
     assert persisted[4] == "schedule executor failed"
     assert "secret" not in str(persisted)
+
+
+@pytest.mark.parametrize('claimed',[True,False])
+def test_recovery_uses_original_run_and_never_creates_new_slot(monkeypatch,claimed):
+    from unittest.mock import Mock
+    from aos_api import ec_ingress_claim
+    scope=TenantScope('org-org','dev-project')
+    conn=_PersistConnection()
+    @contextmanager
+    def connect(_):
+        yield conn
+    monkeypatch.setattr(scheduler_module,'connect',connect)
+    monkeypatch.setattr(scheduler_module,'_get_schedule',lambda *_:{'enabled':True,'pipelineId':'p01','ingest':{'kind':'pipeline-live-v1','pipelineId':'p01'}})
+    new_claim=Mock(side_effect=AssertionError('must not create run'))
+    monkeypatch.setattr(scheduler_module,'_claim_run',new_claim)
+    claim=Mock(return_value=claimed)
+    monkeypatch.setattr(ec_ingress_claim,'claim_failed_run',claim)
+    execute=Mock(return_value={'ok':True,'rows_written':3,'executor_stopped':True})
+    monkeypatch.setattr(pipeline_engine_module,'get_engine',lambda:Mock(execute_pipeline_once=execute))
+    result=scheduler_module.execute_schedule(scope,'schedule',trigger='recovery',recovery_run_id='old-run',recovery_claim_id='claim')
+    assert claim.call_args.kwargs['expected_schedule_id']=='schedule'
+    new_claim.assert_not_called()
+    if claimed:
+        execute.assert_called_once_with(scope,'p01',run_id='old-run',durable_ingress=True)
+        assert result['id']=='old-run'
+    else:
+        execute.assert_not_called()
+        assert result['status']=='duplicate' and conn.calls==[]
+
+
+@pytest.mark.parametrize('args',[
+    {'trigger':'recovery'},
+    {'trigger':'manual','recovery_run_id':'old','recovery_claim_id':'claim'},
+    {'trigger':'recovery','recovery_run_id':'old','recovery_claim_id':'claim','scheduled_for':datetime.now(timezone.utc)},
+])
+def test_invalid_recovery_arguments_never_claim(monkeypatch,args):
+    from unittest.mock import Mock
+    monkeypatch.setattr(scheduler_module,'_get_schedule',lambda *_:{'enabled':True,'pipelineId':'p','ingest':{'kind':'pipeline-live-v1','pipelineId':'p'}})
+    new_claim=Mock(side_effect=AssertionError('unexpected claim'))
+    monkeypatch.setattr(scheduler_module,'_claim_run',new_claim)
+    with pytest.raises(ValueError,match='SCHEDULE_RECOVERY_ARGUMENTS_INVALID'):
+        scheduler_module.execute_schedule(TenantScope('org-org','dev-project'),'s',**args)
+    new_claim.assert_not_called()
