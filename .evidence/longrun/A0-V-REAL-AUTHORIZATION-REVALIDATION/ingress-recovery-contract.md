@@ -121,3 +121,11 @@ ec_ot_writer新增prepare_derived_commands_for_batch，先校验调用scope/pipe
 基线2aa865f2。ec_ingress_dataset.finalize_saved_dataset增加内部only_existing模式：锁run、校验当前绑定/原Journal后，无结果回执返回None且不对账或写入；有结果回执仍完整hash校验及提交后恢复缓存。ec_durable_executor在输入事务提交后调用该模式，有原结果则返回其行数及历史完成摘要，跳过基础/派生/投影；无结果沿原恢复链。返回completed_replay显式区别历史完成与本次投影处理；不把历史完成统计冒充本次处理数。
 
 文件：services/aos-api/aos_api/ec_ingress_dataset.py、ec_durable_executor.py及tests/test_ec_durable_executor.py、tests/aip/test_a0v_ingress_journal_pg.py。验证已完成无源读取/无恢复/无投影、未完成仍按原顺序、无回执查询无写入、source禁用仍拒绝。只增加内部选路，失败run claim仍不放宽。
+
+## 空源观察持久合同
+
+2026-09-11，基线02adc71d。空源只证明本次已授权读取返回0行，不证明商城全量为空或所有业务无变化。新增原Journal包络变体kind=empty_observation_v1、command=null、outputRows=[]；仍包含原run/pipeline/source配置版本/图hash，旧非空包络与BatchCommand验证不放宽。内部save_empty_for_running_schedule与正常保存共用不可变写入，来源版本/运行绑定照常检查。只在实际读取rows为空且transform输出为空时生成；有源行但转换为空继续拒绝。
+
+空观察恢复保存空派生清单，原hash关联；不调用Store基础/派生写入、不推进checkpoint、不删除对象、不生成Outbox、不处理无关投影。exact完成为0个事件，且返回empty_observation标记。Dataset结果沿现有不可变回执/Build机制记录本次0行，不能据此清空权威对象或称全量同步已完成。原数据集本就展示本次处理行数，保持既有语义。当前禁入、取消/期限及先提交后恢复仍保留。
+
+文件：services/aos-api/aos_api/ec_ingress_journal.py、ec_ingress_recovery.py、ec_durable_executor.py；tests/test_ec_ingress_empty.py、test_ec_durable_executor.py、tests/aip/test_a0v_ingress_journal_pg.py。先合同/无Store调用负例，再实际入口选路与隔离PG不可变保存重放，旧非空回归。public不迁移，失败run claim后续，不push，230 L0挂起。

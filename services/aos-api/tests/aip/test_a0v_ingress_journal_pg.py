@@ -239,6 +239,27 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
             database.owner.execute('DELETE FROM ecommerce_ingress_dataset_receipt')
         with pytest.raises(errors.RaiseException),database.owner.transaction():
             migration.downgrade()
+        # A separately bound empty observation survives commits without touching
+        # the consistency owner or fabricating a base receipt/checkpoint.
+        from unittest.mock import Mock
+        empty_store=Mock()
+        database.owner.execute("INSERT INTO meta_schedule_run VALUES('org-org','dev-project','empty-run','schedule','running')")
+        empty_args=dict(run_id='empty-run',pipeline_id=pipeline.id,source_id='source',
+                        source_revision=revision,pipeline_hash=_digest(graph))
+        with factory(scope) as conn:
+            empty_parent=journal.save_empty_for_running_schedule(conn,scope,**empty_args)
+        with factory(scope) as conn:
+            assert journal.save_empty_for_running_schedule(conn,scope,**empty_args)==empty_parent
+            with pytest.raises(IngressJournalConflict):
+                journal.save_for_running_schedule(conn,scope,**empty_args,command=command,output_rows=[row])
+        assert recover_saved_authoritative_stages(factory,scope,'empty-run',journal=journal,store=empty_store)==()
+        empty_result=finalize_saved_dataset(factory,scope,'empty-run',journal=journal,store=empty_store,eng=eng)
+        assert empty_result['build']['rows_written']==0
+        assert empty_result['completion']=={'expected':0,'projected':0,'pending':0}
+        assert finalize_saved_dataset(factory,scope,'empty-run',journal=journal,store=empty_store,eng=eng)==empty_result
+        assert empty_store.mock_calls==[]
+        with factory(TenantScope('dev-org','dev-project')) as conn:
+            assert journal.read(conn,scope,'empty-run') is None
         database.owner.execute("UPDATE meta_source SET status='disabled'")
         with pytest.raises(IngressJournalConflict,match='INGRESS_SOURCE_CONFIGURATION_DRIFT'):
             finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng)

@@ -66,6 +66,31 @@ def test_new_batch_commits_input_before_authoritative_recovery(monkeypatch):
     assert events==['fetch','transform','save','commit','recover','project','finalize']
 
 
+def test_empty_source_is_saved_without_projecting_unrelated_events(monkeypatch):
+    durable,args,events,fetch=setup(monkeypatch)
+    from aos_api import ec_live_executor as live
+    journal=durable.IngressJournal()
+    from test_ec_ingress_empty import envelope
+    parent=envelope();parent['pipelineId']=args['pipeline'].id
+    journal.save_empty_for_running_schedule.side_effect=lambda *a,**kw: events.append('save-empty') or parent
+    fetch.side_effect=None
+    fetch.return_value=([],SimpleNamespace(resource_id='source-config-'+parent['sourceRevision']))
+    monkeypatch.setattr(live,'_transform_live_rows',lambda **kw:[])
+    result=durable.execute_durable_ingress(**args)
+    assert result['empty_observation'] is True and result['rows_read']==0
+    assert events==['save-empty','commit','recover','finalize']
+    journal.save_for_running_schedule.assert_not_called()
+
+
+def test_nonempty_source_lost_in_transform_is_not_empty_success(monkeypatch):
+    durable,args,events,_=setup(monkeypatch)
+    from aos_api import ec_live_executor as live
+    monkeypatch.setattr(live,'_transform_live_rows',lambda **kw:[])
+    with pytest.raises(RuntimeError,match='INGRESS_TRANSFORM_EMPTY_OUTPUT'):
+        durable.execute_durable_ingress(**args)
+    assert events==['fetch']
+
+
 def test_changed_source_read_version_stops_before_any_saved_effect(monkeypatch):
     durable,args,events,_=setup(monkeypatch,wrong_version=True)
     with pytest.raises(RuntimeError,match='INGRESS_SOURCE_READ_VERSION_DRIFT'):

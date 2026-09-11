@@ -29,6 +29,9 @@ def resume_prepared_derived(conn, scope: TenantScope, run_id: str, *,
         saved = journal.read_derived(conn, scope, run_id)
         if saved is None:
             raise IngressJournalConflict('INGRESS_DERIVED_PREPARATION_REQUIRED')
+        if parent.get('kind') == 'empty_observation_v1':
+            _check_active(deadline,cancel_event)
+            return ()
         command = BatchCommand.model_validate(parent['command'])
         base = store.read_committed_batch(command)
         if base is None:
@@ -73,6 +76,11 @@ def recover_saved_authoritative_stages(connection_factory, scope: TenantScope, r
             saved = journal.read_derived(conn, scope, run_id)
             if saved is None and 'outputRows' not in parent:
                 raise IngressJournalConflict('INGRESS_OUTPUT_REQUIRED')
+            if parent.get('kind') == 'empty_observation_v1':
+                _check_active(deadline,cancel_event)
+                if saved is None:
+                    journal.save_derived(conn,scope,run_id,())
+                return ()
             command = BatchCommand.model_validate(parent['command'])
             # The original command retains its original checkpoint/idempotency key.
             _check_active(deadline,cancel_event)
@@ -96,6 +104,8 @@ def read_saved_projection_completion(conn, scope: TenantScope, run_id: str, *,
         saved = journal.read_derived(conn, scope, run_id)
         if saved is None:
             raise IngressJournalConflict('INGRESS_DERIVED_PREPARATION_REQUIRED')
+        if parent.get('kind') == 'empty_observation_v1':
+            return {'expected':0,'projected':0,'pending':0}
         return store.read_batch_projection_completion(
             BatchCommand.model_validate(parent['command']),
             [DerivedMetricCommand.model_validate(raw) for raw in saved['commands']])

@@ -52,7 +52,9 @@ def canonical_output_rows(command, rows):
 
 def _validate(scope, envelope):
     required = {'runId','pipelineId','sourceId','sourceRevision','pipelineHash','command'}
-    if type(scope) is not TenantScope or set(envelope) not in (required, required | {'outputRows'}):
+    empty = envelope.get('kind') == 'empty_observation_v1'
+    allowed = (required | {'kind','outputRows'},) if empty else (required, required | {'outputRows'})
+    if type(scope) is not TenantScope or set(envelope) not in allowed:
         raise ValueError('INGRESS_ENVELOPE_INVALID')
     for key in ('runId', 'pipelineId', 'sourceId'):
         value = envelope[key]
@@ -62,6 +64,10 @@ def _validate(scope, envelope):
         raise ValueError('INGRESS_SOURCE_REVISION_INVALID')
     if type(envelope['pipelineHash']) is not str or re.fullmatch('[0-9a-f]{64}', envelope['pipelineHash']) is None:
         raise ValueError('INGRESS_PIPELINE_HASH_INVALID')
+    if empty:
+        if envelope['command'] is not None or envelope['outputRows'] != []:
+            raise ValueError('INGRESS_EMPTY_OBSERVATION_INVALID')
+        return _digest(envelope)
     command = BatchCommand.model_validate(envelope['command'])
     if (command.scope.org_id, command.scope.workspace_id) != scope.key or command.scope.stream != envelope['pipelineId']:
         raise ValueError('INGRESS_SCOPE_MISMATCH')
@@ -99,7 +105,18 @@ class IngressJournal:
         envelope = dict(runId=run_id,pipelineId=pipeline_id,sourceId=source_id,sourceRevision=source_revision,pipelineHash=pipeline_hash,command=payload)
         if output_rows is not None:
             envelope['outputRows'] = canonical_output_rows(BatchCommand.model_validate(payload),output_rows)
+        return self._save_envelope(conn,scope,envelope)
+
+    def save_empty_for_running_schedule(self, conn, scope, **args):
+        self.verify_running_schedule(conn,scope,**args)
+        envelope = dict(runId=args['run_id'],pipelineId=args['pipeline_id'],sourceId=args['source_id'],
+                        sourceRevision=args['source_revision'],pipelineHash=args['pipeline_hash'],
+                        kind='empty_observation_v1',command=None,outputRows=[])
+        return self._save_envelope(conn,scope,envelope)
+
+    def _save_envelope(self, conn, scope, envelope):
         digest = _validate(scope, envelope)
+        run_id,pipeline_id,source_id,source_revision = (envelope[k] for k in ('runId','pipelineId','sourceId','sourceRevision'))
         conn.execute(sql.SQL('''INSERT INTO {} (org_id,project_id,run_id,pipeline_id,source_id,source_revision,envelope_hash,envelope)
             VALUES(%s,%s,%s,%s,%s,%s,%s,%s::jsonb) ON CONFLICT(org_id,project_id,run_id) DO NOTHING''').format(self.table),
             (*scope.key,run_id,pipeline_id,source_id,source_revision,digest,json.dumps(envelope,ensure_ascii=False,allow_nan=False)))
@@ -145,6 +162,10 @@ class IngressJournal:
 
     def _derived_payload(self, parent, commands):
         from aos_api.ecom_core_models import DerivedMetricCommand
+        if parent.get('kind') == 'empty_observation_v1':
+            if commands:
+                raise IngressJournalConflict('INGRESS_EMPTY_DERIVED_INVALID')
+            return {'parentHash':_digest(parent),'commands':[]}
         base = BatchCommand.model_validate(parent['command'])
         allowed = {(obj.object_type, obj.identity.scoped_key()) for obj in base.objects if not obj.is_deleted}
         seen = set()
