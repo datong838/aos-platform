@@ -1,0 +1,9 @@
+{
+  "phase": "A0-V runtime release artifact reader",
+  "date": "2026-09-12",
+  "files": [
+    {"path": "services/aos-api/aos_api/extension_runtime/runtime_release_artifacts.py", "sha256": "1bd2992cd27b780f794cc8a696c437fdbfbc9b312d1716e1c3dbf0346babdda8"},
+    {"path": "services/aos-api/tests/extension_runtime/test_runtime_release_artifacts.py", "sha256": "a84007de35312bfe0076e7f8b23932a36ba605c69f553ef002f75e1642d77718"},
+    {"path": ".evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/runtime-release-artifact-reader-plan.md", "sha256": "2766a69af0d9a4aef1e97c1b214dad3b4037411450fb38aa1c3cbbd7bc62bf0c"}
+  ]
+}

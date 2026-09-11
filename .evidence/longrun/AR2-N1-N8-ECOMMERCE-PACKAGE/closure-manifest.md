@@ -811,3 +811,18 @@ lease、读取其 Installation identity、撤销 exact live owner，再执行原
 | `services/aos-api/aos_api/extension_runtime/live_installation_scheduler.py` | 原路径 | exact owner identity lookup | 03053a24234a6acfd2ae977e868ea09ce390e469a69a1927328ba39453c09dba |
 | `services/aos-api/aos_api/extension_runtime/runtime_host.py` | 原路径 | recovery-first lifecycle、disable handoff 与 assignment cleanup | adf78ac37f25c2ed7502e250ab8937e8479008bbf5f7168bae67f4f054a43fd4 |
 | `services/aos-api/tests/extension_runtime/test_runtime_host.py` | 原路径 | 顺序、replacement、stop 与 revoke-failure 零 finish 合同 | 3a96d0c96b19e438cef3f0d18a0c71fae4d2fa32c4dc7d842ad376c1db3f5ddc |
+
+### 9.37 Current published runtime release/artifact reader
+
+2026-09-12：新增正式 runtime release artifact reader。record 在 exact TenantScope/runtime role 的独立事务
+读取唯一 published coordinate/content hash，canonical 转换后再次校验 identity。artifact metadata 必须
+relativePath 唯一且所有持久 artifactRef 归一到同一个 `bundle://` source；bytes 由 exact allowlisted
+ManifestLoader 读取，并再次比较持久 size/digest。
+
+reader 不缓存 record/source/bytes，非法 path/limit 在查库前拒绝。production worker composition 尚未注入
+该 reader，本切片未启动 OCI 或改变安装状态。
+
+| sourcePath | targetPath | decision | 当前切片SHA256 |
+|---|---|---|---|
+| `services/aos-api/aos_api/extension_runtime/runtime_release_artifacts.py` | 原路径 | exact published record、唯一 source、allowlisted artifact 双校验 | 1bd2992cd27b780f794cc8a696c437fdbfbc9b312d1716e1c3dbf0346babdda8 |
+| `services/aos-api/tests/extension_runtime/test_runtime_release_artifacts.py` | 原路径 | source/path/size/digest/identity/row cardinality 反证 | a84007de35312bfe0076e7f8b23932a36ba605c69f553ef002f75e1642d77718 |
