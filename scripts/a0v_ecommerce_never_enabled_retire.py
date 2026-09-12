@@ -18,6 +18,29 @@ def load(name):
     return module
 
 
+def retirement_target(*, reinstall_generation=False, configured_1_7=False,
+                      enabled_undispatched_1_7=False, second_sleep_1_7=False):
+    flags = (reinstall_generation, configured_1_7, enabled_undispatched_1_7, second_sleep_1_7)
+    if any(type(flag) is not bool for flag in flags) or sum(flags) > 1:
+        raise ValueError('one exact retirement target required')
+    installation = 'efc4e640-1b15-403f-9d06-4c6d1a5330a7' if reinstall_generation else INSTALLATION
+    etag = '"5"' if reinstall_generation else '"7"'
+    key = 'a0v-ecommerce-1.6-reinstall-never-enabled-retire-v1' if reinstall_generation else 'a0v-ecommerce-1.6-never-enabled-retire-v1'
+    if configured_1_7:
+        installation='e42e042b-1fe7-4cfa-bb83-469ff256081d'
+        etag='"5"'
+        key='a0v-ecommerce-1.7-configured-disabled-retire-v1'
+    if enabled_undispatched_1_7:
+        installation='af1992e8-89c2-406a-816d-01e61d7bf982'
+        etag='"5"'
+        key='a0v-ecommerce-1.7-enabled-undispatched-retire-v1'
+    if second_sleep_1_7:
+        installation='a0fd8e25-cb6f-49e5-aa77-7faddae12099'
+        etag='"5"'
+        key='a0v-ecommerce-1.7-second-sleep-retire-v1'
+    return installation, etag, key
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
@@ -26,18 +49,11 @@ def main():
     group.add_argument('--reinstall-generation', action='store_true')
     group.add_argument('--configured-1-7', action='store_true')
     group.add_argument('--enabled-undispatched-1-7', action='store_true')
+    group.add_argument('--second-sleep-1-7', action='store_true')
     args = parser.parse_args()
-    installation = 'efc4e640-1b15-403f-9d06-4c6d1a5330a7' if args.reinstall_generation else INSTALLATION
-    etag = '"5"' if args.reinstall_generation else '"7"'
-    key = 'a0v-ecommerce-1.6-reinstall-never-enabled-retire-v1' if args.reinstall_generation else 'a0v-ecommerce-1.6-never-enabled-retire-v1'
-    if args.configured_1_7:
-        installation='e42e042b-1fe7-4cfa-bb83-469ff256081d'
-        etag='"5"'
-        key='a0v-ecommerce-1.7-configured-disabled-retire-v1'
-    if args.enabled_undispatched_1_7:
-        installation='af1992e8-89c2-406a-816d-01e61d7bf982'
-        etag='"5"'
-        key='a0v-ecommerce-1.7-enabled-undispatched-retire-v1'
+    installation, etag, key = retirement_target(
+        reinstall_generation=args.reinstall_generation, configured_1_7=args.configured_1_7,
+        enabled_undispatched_1_7=args.enabled_undispatched_1_7, second_sleep_1_7=args.second_sleep_1_7)
     if not args.apply: raise ValueError('explicit retirement required')
     host = load('a0v_ecommerce_runtime_host')
     credential_path = RECOVERY/'state/installation-control-identity.json'

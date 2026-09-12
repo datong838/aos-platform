@@ -1,0 +1,22 @@
+{
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "counts": {
+    "extension_dispatch_cutover_operation": 0,
+    "extension_operation_dispatch_binding": 0,
+    "automation_occurrence": 0,
+    "extension_runtime_execution_attempt": 0
+  },
+  "binding": {
+    "revision": 7,
+    "execution_epoch": 5,
+    "desired_state": "disabled",
+    "observed_state": "unknown",
+    "enabled": false,
+    "operation_fence": true,
+    "config_ref": {
+      "hash": "sha256:003889108cdab115a50f0519ccc852a874ea67d3c41547f7349f49d9530c7f2c",
+      "revision": 1,
+      "configurationId": "2360b80e-45cb-48fb-83db-c779dea3c63e"
+    }
+  }
+}
