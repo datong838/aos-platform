@@ -158,7 +158,7 @@ def test_apply_requires_exact_explicit_isolated_database(
 def test_tampered_build_tree_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     output, build, qualification = _fixture(tmp_path)
     monkeypatch.setattr(INSTALLER, "_verify_source_revision", lambda head: head)
-    target = output / "domain.ecommerce.core/1.1.0/bundle.yaml"
+    target = output / INSTALLER._load_builder().RUNTIME_CASES[0][0] / "bundle.yaml"
     target.write_text(target.read_text(encoding="utf-8") + "\n", encoding="utf-8")
     with pytest.raises(INSTALLER.FirstInstallBlocked) as captured:
         INSTALLER.verify_v4_inputs(

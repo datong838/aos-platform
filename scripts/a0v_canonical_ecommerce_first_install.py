@@ -869,7 +869,9 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> dict
 
 
 def create_approved_first_installation(
-    *, connect_factory: Any, state_dir: Path
+    *, connect_factory: Any, state_dir: Path, core_version: str = "1.1.0",
+    adapter_version: str = "1.1.0", growth_version: str = "1.4.0",
+    idempotency_prefix: str = INSTALL_IDEMPOTENCY_PREFIX
 ) -> dict[str, Any]:
     sys.path.insert(0, str(API_ROOT))
     try:
@@ -917,12 +919,12 @@ def create_approved_first_installation(
                     {
                         "publisher": "aos",
                         "id": "platform.ecommerce.niushop",
-                        "version": "1.1.0",
+                        "version": adapter_version,
                     },
                     {
                         "publisher": "aos",
                         "id": "solution.ecommerce.growth",
-                        "version": "1.4.0",
+                        "version": growth_version,
                     },
                     {
                         "publisher": "aos",
@@ -944,15 +946,15 @@ def create_approved_first_installation(
             actor=INSTALL_MAKER,
             roles=INSTALL_MAKER_ROLES,
             markings=INSTALL_MARKINGS,
-            idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-composition",
+            idempotency_key=f"{idempotency_prefix}-composition",
         )
         lock = StoredCompositionLock.model_validate_json(
             json.dumps(composition_receipt.response_json, default=str)
         )
         expected_coordinates = {
-            ("domain.ecommerce.core", "1.1.0"),
-            ("platform.ecommerce.niushop", "1.1.0"),
-            ("solution.ecommerce.growth", "1.4.0"),
+            ("domain.ecommerce.core", core_version),
+            ("platform.ecommerce.niushop", adapter_version),
+            ("solution.ecommerce.growth", growth_version),
             ("solution.ecommerce.operations-base", "1.2.0"),
         }
         coordinates = {(item.id, item.version) for item in lock.payload.resolved}
@@ -995,7 +997,7 @@ def create_approved_first_installation(
             actor=INSTALL_MAKER,
             roles=INSTALL_MAKER_ROLES,
             markings=INSTALL_MARKINGS,
-            idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-create",
+            idempotency_key=f"{idempotency_prefix}-create",
         )
         initial = InstallationResponse.model_validate_json(
             json.dumps(created.response_json, default=str)
@@ -1014,7 +1016,7 @@ def create_approved_first_installation(
                 actor=INSTALL_MAKER,
                 roles=INSTALL_MAKER_ROLES,
                 markings=INSTALL_MARKINGS,
-                idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-submit",
+                idempotency_key=f"{idempotency_prefix}-submit",
                 if_match=f'"{current.etag_version}"',
             )
             transitions.append("submit")
@@ -1037,7 +1039,7 @@ def create_approved_first_installation(
                 actor=INSTALL_CHECKER,
                 roles=INSTALL_CHECKER_ROLES,
                 markings=INSTALL_MARKINGS,
-                idempotency_key=f"{INSTALL_IDEMPOTENCY_PREFIX}-approve",
+                idempotency_key=f"{idempotency_prefix}-approve",
                 if_match=f'"{current.etag_version}"',
             )
             transitions.append("approve")

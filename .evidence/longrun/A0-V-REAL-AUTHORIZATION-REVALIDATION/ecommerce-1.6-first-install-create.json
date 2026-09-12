@@ -1,0 +1,49 @@
+{
+  "canaryInstallationCount": 0,
+  "checker": "a0v-canonical-ecommerce-first-install-checker",
+  "compositionId": "49d3b07b-ab15-4c59-a714-77b2f56efc65",
+  "contributionCount": 28,
+  "contributionDiffHash": "sha256:a4d1fb5b2d1fd310a38d85a694a1be33e15888b519cff5ff112bba0d921717cc",
+  "edgeCount": 3,
+  "installationEtag": 3,
+  "installationId": "3d267738-ba0a-49ef-812b-d6b72d3374fd",
+  "installationRevision": 3,
+  "installationState": "approved",
+  "lockHash": "sha256:9fc663f58386ea447e19198f8697faf76d5b3668c8dcca8de03cc34f4be4e6a6",
+  "lockRevision": 1,
+  "maker": "a0v-canonical-ecommerce-first-install-maker",
+  "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+  "moduleCount": 8,
+  "permissionDiffHash": "sha256:d310d873b7fdb3d8adc8f6689156883cb8fb5d9a0b95f566d9541851a731bd20",
+  "resolved": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "contentHash": "sha256:98aa65e8a3bcbe319a25fc59da6497b278ba98c86434dbfb019e7afb6fe4a0f6",
+      "selectionReason": "dependency",
+      "version": "1.2.0"
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "contentHash": "sha256:351e9bcb23757f02d93f650be26636bedc0e31a8c25897cac582b37ff174cbdc",
+      "selectionReason": "requested",
+      "version": "1.2.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "contentHash": "sha256:2dfd08839f5033dde989551337d6defad10722a01e9ac033345adf02ea73ddce",
+      "selectionReason": "requested",
+      "version": "1.6.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+      "selectionReason": "requested",
+      "version": "1.2.0"
+    }
+  ],
+  "snapshotHash": "sha256:0e1c069bb4e39aa630ea57c6da8b10a638ba6d93d0a8fe0dd874459319117a8e",
+  "transitions": [
+    "submit",
+    "approve"
+  ]
+}
