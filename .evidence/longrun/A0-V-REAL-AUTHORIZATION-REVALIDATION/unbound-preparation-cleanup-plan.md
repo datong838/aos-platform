@@ -1,0 +1,11 @@
+# 未绑定准备资源的清理收口
+
+2026-09-12，基线1770fae8。新实例afd792de-e85e-4680-86d0-c83404824fb3已applied@4，无binding；准备操作bd0f9202-c83e-4362-9f68-54dc6de32ca8在13:54:54Z跨准备期限后资源清理使其needs_attention/RESOURCE_CLEANUP_UNCERTAIN。Host的committed_cleanup只接受已有fenced binding，因此退出。核验请求事务被拒，未重复apply/create。该故障与源SSH无关。
+
+执行沿现存同一m1主A0-V Lease（API、tests、evidence）和Niushop安装Lease（scripts）；新重叠Lease登记被拒，未另开写者。
+
+文件：services/aos-api/aos_api/extension_runtime/committed_cleanup.py；services/aos-api/tests/extension_runtime/test_committed_cleanup_pg.py。后续scripts/a0v_ecommerce_1_7_first_install.py显式reset入口复用现有LifecycleService，不直改数据库。
+
+设计：保留原已绑定路径的failed/PREPARED_RUNTIME_RELEASED与全部证明检查。增加无binding分支，必须锁定installation为applied、active_revision为空、current_revision和lockHash精确对应preparation_committed；拒绝任何已经committing/succeeded的verify。仍核验唯一原证明hash、全部资源的generation/container/package精确匹配并确认released。只恢复原apply提交的succeeded状态并追加unbound_preparation_released证明，清除清理故障；不创建binding、不恢复资源、不启用。这个succeeded只表示原apply已提交；资源不可用事实由不可变清理事件与released行保持。随后原reset Owner继续验证全部资源、权限、当前lock，append applied→approved，再以新revision执行正常apply/verify。
+
+幂等：同revision重放要求相同终结事件/hash；不放宽绑定路径，不跳过租户/运行角色/CAS。回滚事务不得留下状态或事件。测试先RED后GREEN，覆盖无绑定正常、重放、batch，以及wrong state/revision/lock、active pointer、committed verify、resource mismatch、rollback。主库不DDL；无源读取/业务派发/230L0/push。

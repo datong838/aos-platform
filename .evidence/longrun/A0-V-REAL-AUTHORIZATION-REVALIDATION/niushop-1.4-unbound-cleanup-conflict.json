@@ -1,0 +1,18 @@
+{
+  "activeRevision": null,
+  "bindings": [],
+  "canaryInstallationCount": 0,
+  "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+  "operations": [
+    {
+      "expected_installation_etag": 3,
+      "failure_code": "RESOURCE_CLEANUP_UNCERTAIN",
+      "kind": "runtime-apply",
+      "operation_id": "bd0f9202-c83e-4362-9f68-54dc6de32ca8",
+      "phase": "succeeded",
+      "status": "needs_attention"
+    }
+  ],
+  "revision": 4,
+  "state": "applied"
+}

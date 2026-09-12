@@ -1,0 +1,185 @@
+{
+  "errorChain": [
+    {
+      "errorType": "RuntimeConflict",
+      "frames": [
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_ecommerce_runtime_host.py",
+          "function": "main",
+          "line": 182
+        },
+        {
+          "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py",
+          "function": "run",
+          "line": 190
+        },
+        {
+          "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py",
+          "function": "run",
+          "line": 118
+        },
+        {
+          "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py",
+          "function": "run_until_complete",
+          "line": 654
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_ecommerce_runtime_host.py",
+          "function": "_serve",
+          "line": 151
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+          "function": "serve",
+          "line": 283
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+          "function": "_close",
+          "line": 261
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+          "function": "_close",
+          "line": 253
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+          "function": "_run_tick",
+          "line": 214
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+          "function": "_recover",
+          "line": 132
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/owned_control_consumer.py",
+          "function": "_settled",
+          "line": 16
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/journaled_session.py",
+          "function": "_settle",
+          "line": 15
+        },
+        {
+          "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/threads.py",
+          "function": "to_thread",
+          "line": 25
+        },
+        {
+          "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/thread.py",
+          "function": "run",
+          "line": 58
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/resource_recovery.py",
+          "function": "run_batch",
+          "line": 60
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/resource_recovery.py",
+          "function": "_settle_committed_batch",
+          "line": 85
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/committed_cleanup.py",
+          "function": "settle_committed_cleanup",
+          "line": 37
+        }
+      ],
+      "relation": "raised"
+    }
+  ],
+  "errorType": "RuntimeConflict",
+  "frames": [
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_ecommerce_runtime_host.py",
+      "function": "main",
+      "line": 182
+    },
+    {
+      "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py",
+      "function": "run",
+      "line": 190
+    },
+    {
+      "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py",
+      "function": "run",
+      "line": 118
+    },
+    {
+      "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py",
+      "function": "run_until_complete",
+      "line": 654
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_ecommerce_runtime_host.py",
+      "function": "_serve",
+      "line": 151
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+      "function": "serve",
+      "line": 283
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+      "function": "_close",
+      "line": 261
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+      "function": "_close",
+      "line": 253
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+      "function": "_run_tick",
+      "line": 214
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/runtime_host.py",
+      "function": "_recover",
+      "line": 132
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/owned_control_consumer.py",
+      "function": "_settled",
+      "line": 16
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/journaled_session.py",
+      "function": "_settle",
+      "line": 15
+    },
+    {
+      "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/threads.py",
+      "function": "to_thread",
+      "line": 25
+    },
+    {
+      "file": "/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/thread.py",
+      "function": "run",
+      "line": 58
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/resource_recovery.py",
+      "function": "run_batch",
+      "line": 60
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/resource_recovery.py",
+      "function": "_settle_committed_batch",
+      "line": 85
+    },
+    {
+      "file": "/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/extension_runtime/committed_cleanup.py",
+      "function": "settle_committed_cleanup",
+      "line": 37
+    }
+  ],
+  "outcome": "SAFE_BLOCKED",
+  "reasonCode": "HOST_RUNTIME_FAILED"
+}
