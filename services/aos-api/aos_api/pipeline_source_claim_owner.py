@@ -7,7 +7,7 @@ from psycopg.rows import dict_row
 from aos_api.ec_ingress_journal import IngressJournal
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
-from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner, _ref_identity
+from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner, _ref_identity, decode_control_row
 from aos_api.tenant_scope import TenantScope
 
 
@@ -65,7 +65,16 @@ class PipelineSourceClaimOwner:
     def read_current(self, conn, *, scope, run_id, control_ref, actor):
         return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,actor=actor,create=False).record
 
-    def _operate(self, conn, *, scope, run_id, control_ref, actor, create):
+    def read_saved_current(self, conn, *, scope, run_id, control_ref, actor):
+        """Authorize only saved input under an exact same-scope window renewal.
+
+        The original claim remains unchanged. This path cannot reserve or grant
+        another source call, including when the original outcome is unknown.
+        """
+        return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,
+            actor=actor,create=False,saved_recovery=True).record
+
+    def _operate(self, conn, *, scope, run_id, control_ref, actor, create, saved_recovery=False):
         run_id,actor = _text(run_id,200),_text(actor,240)
         ref = PipelineExactRef.model_validate(control_ref)
         identity = UUID(_ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-'))
@@ -101,8 +110,27 @@ class PipelineSourceClaimOwner:
                          identity,ref.revision,ref.content_hash,count['count']+1,actor))
                     row,created = read(),True
                 record = _decode(row)
+                if saved_recovery:
+                    if self._journal.read(conn,scope,run_id) is None:
+                        raise RuntimeConflict('saved recovery requires original input')
+                    if record.control_ref != ref:
+                        if (record.control_ref.resource_id != ref.resource_id
+                                or ref.revision <= record.control_ref.revision):
+                            raise RuntimeConflict('saved recovery control family differs')
+                        original_row=cursor.execute('''SELECT * FROM pipeline_runtime_control_revision
+                            WHERE org_id=%s AND project_id=%s AND control_id=%s AND revision=%s''',
+                            (*scope.key,identity,record.control_ref.revision)).fetchone()
+                        if original_row is None:
+                            raise RuntimeConflict('original control unavailable')
+                        original=decode_control_row(original_row)
+                        excluded={'not_before','expires_at','source_selection_ref'}
+                        if (original.ref != record.control_ref or original.actor != record.actor
+                                or original.draft.model_dump(mode='json',exclude=excluded)
+                                   != draft.model_dump(mode='json',exclude=excluded)):
+                            raise RuntimeConflict('saved recovery context differs')
                 if (record.scope != scope or record.run_id != run_id or record.installation_id != draft.installation_ref.installation_id
-                    or record.generation != draft.generation or record.pipeline_id != draft.pipeline_id or record.control_ref != ref
+                    or record.generation != draft.generation or record.pipeline_id != draft.pipeline_id
+                    or (record.control_ref != ref and not saved_recovery)
                     or record.actor != actor or record.call_ordinal > draft.max_source_calls):
                     raise RuntimeConflict('source claim current binding differs')
                 return SourceClaimReservation(record,created)

@@ -101,3 +101,36 @@ def test_real_saved_input_to_object_dataset_and_replay(integrated,monkeypatch,in
     with executor._ingress._transaction(TenantScope('dev-org','dev-project')) as negative:
         for table in expected:
             assert negative.execute(f'SELECT count(*) FROM {table}').fetchone()=={'count':0}
+
+
+def test_expired_control_renewal_finishes_saved_input_without_source(integrated,claim_case,monkeypatch):
+    from test_controlled_saved_recovery_pg import renew
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    executor,conn,args,state,eng=integrated
+    conn.execute('ALTER TABLE ecommerce_ingress_dataset_receipt ADD CONSTRAINT fail_once CHECK(false)')
+    with pytest.raises(Exception,match='fail_once'):executor.execute(**args)
+    conn.execute('ALTER TABLE ecommerce_ingress_dataset_receipt DROP CONSTRAINT fail_once')
+    conn.execute('SET ROLE aos_runtime')
+    ref=renew(claim_case,monkeypatch)
+    renewed=args|{'control_ref':ref}
+    with pytest.raises(RuntimeConflict):executor.execute(**renewed)
+    result=executor.resume_saved(**renewed)
+    assert result['rows_read']==0 and result['rows_written']==1 and state['calls']==1
+    assert executor.resume_saved(**renewed)['completed_replay']
+    conn.execute('RESET ROLE')
+    for table in ('pipeline_controlled_source_claim','ecom_ingest_receipt','obj_instance','ecommerce_ingress_dataset_receipt'):
+        assert conn.execute(f'SELECT count(*) FROM {table}').fetchone()=={'count':1}
+
+
+def test_renewal_cannot_resume_unknown_source_outcome(integrated,claim_case,monkeypatch):
+    from test_controlled_saved_recovery_pg import renew
+    from aos_api.ec_ingress_journal import IngressJournalConflict
+    executor,conn,args,state,eng=integrated
+    state['source_error']=True
+    with pytest.raises(ValueError,match='SELECTED_SNAPSHOT_READ_FAILED'):executor.execute(**args)
+    state['source_error']=False
+    conn.execute('SET ROLE aos_runtime')
+    ref=renew(claim_case,monkeypatch)
+    with pytest.raises(IngressJournalConflict,match='PARENT_REQUIRED'):
+        executor.resume_saved(**(args|{'control_ref':ref}))
+    assert state['calls']==1 and eng._datasets=={}

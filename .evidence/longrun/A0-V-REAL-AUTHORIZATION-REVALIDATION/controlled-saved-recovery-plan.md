@@ -1,0 +1,9 @@
+# 原批准过期后仅恢复保存输入
+
+2026-09-12，bf273acc，主A0-V Lease。产品要求真实可恢复：当前旧claim绑定原Control，任何版本续期都使原任务read_current拒绝，不能靠换run/重复读源解决。
+
+新增显式保存输入恢复入口，绝不调用prepare或reserve。批准仍通过原SourceSelection/Control Owner追加，调用方必须提交exact当前ControlRef；同一control_id较新revision，原actor一致，原安装/代际/配置/执行epoch/package/source/mapping/schema/masking/graph/限额等全部相同，只允许not_before/expires_at及source_selection_ref因续期改变。原control row必须decode并匹配原claim的exact ref。不同Control家族、任何业务范围差异、无已保存parent、当前授权拒绝、无原claim全部失败。原claim不修改、不新增占用，不增加调用序号。
+
+具体文件：pipeline_source_claim_owner.py增加read_saved_current，复用current Control锁与schedule/source/graph检查；仅read分支允许上述续期。pipeline_controlled_ingress_journal.py增加内部固定saved_recovery标记，verify_running_schedule走保存恢复检查，常规source prepare仍严格原Ref。pipeline_controlled_executor.py增加resume_saved，先固定journal读取原parent，再复用完成/恢复/投影/Dataset链，无source函数；常规execute不变。所有路径仍需running schedule；failed run必须先经既有claim_failed_run原子恢复，不能直接改状态。
+
+第一切片验证源claim Owner，第二切片journal/装配，第三切片真实PG集成续期并重试源调用数恒1；无parent时未知结果仍不能恢复。测试目录tests/extension_runtime/test_pipeline_source_claim_owner_pg.py、test_controlled_executor_integration_pg.py。当前新批准版本是显式提交，不推断最新记录为授权，不支持跨配置变更迁移旧输入；该情况需另行制定转换/作废处理。

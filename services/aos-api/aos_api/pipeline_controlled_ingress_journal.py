@@ -7,9 +7,12 @@ from aos_api.tenant_scope import TenantScope
 
 
 class ControlledIngressJournal(IngressJournal):
-    def __init__(self, *, claims, scope, run_id, control_ref, actor):
+    def __init__(self, *, claims, scope, run_id, control_ref, actor, saved_recovery=False):
         if type(claims) is not PipelineSourceClaimOwner or type(scope) is not TenantScope:
             raise TypeError('exact claim Owner and tenant required')
+        if type(saved_recovery) is not bool:
+            raise TypeError('explicit saved recovery mode required')
+        self._saved_recovery = saved_recovery
         self._scope = scope
         self._run_id = _text(run_id,200)
         self._actor = _text(actor,240)
@@ -31,7 +34,8 @@ class ControlledIngressJournal(IngressJournal):
 
     def verify_running_schedule(self, conn, scope, **args):
         self._fixed(scope,args['run_id'])
-        self._claims.read_current(conn,scope=scope,run_id=self._run_id,control_ref=self._ref,actor=self._actor)
+        read = self._claims.read_saved_current if self._saved_recovery else self._claims.read_current
+        read(conn,scope=scope,run_id=self._run_id,control_ref=self._ref,actor=self._actor)
         # Also bind the supplied original batch, not only the current draft.
         super().verify_schedule_binding(conn,scope,**args)
 

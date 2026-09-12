@@ -1,9 +1,9 @@
 """Internal controlled snapshot execution; no scheduling or approval authority."""
 from aos_api.ec_ingress_dataset import finalize_saved_dataset
-from aos_api.ec_ingress_recovery import _check_active, recover_saved_authoritative_stages
+from aos_api.ec_ingress_recovery import _bound_parent, _check_active, recover_saved_authoritative_stages
 from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
 from aos_api.pipeline_controlled_projection import project_saved_batch
-from aos_api.pipeline_controlled_snapshot_ingress import ControlledSnapshotIngress
+from aos_api.pipeline_controlled_snapshot_ingress import ControlledSnapshotIngress, PreparedControlledSnapshot
 
 
 class ControlledSnapshotExecutor:
@@ -18,6 +18,21 @@ class ControlledSnapshotExecutor:
         active = dict(deadline=deadline, cancel_event=cancel_event)
         prepared = self._ingress.prepare(**args, **active)
         journal = ControlledIngressJournal(claims=self._claims, **args)
+        return self._finish(scope, run_id, journal, prepared, active)
+
+    def resume_saved(self, *, scope, run_id, control_ref, actor, deadline=None, cancel_event=None):
+        """Continue saved input only; never reserve or invoke the source reader."""
+        active = dict(deadline=deadline, cancel_event=cancel_event)
+        _check_active(**active)
+        journal = ControlledIngressJournal(claims=self._claims, scope=scope, run_id=run_id,
+            control_ref=control_ref, actor=actor, saved_recovery=True)
+        with self._ingress._transaction(scope) as conn:
+            journal.lock_run(conn, scope, run_id)
+            parent = _bound_parent(conn, scope, run_id, journal)
+        prepared = PreparedControlledSnapshot(parent, 0, True)
+        return self._finish(scope, run_id, journal, prepared, active)
+
+    def _finish(self, scope, run_id, journal, prepared, active):
         connection_factory = self._ingress._transaction
         common = dict(journal=journal, store=self._store, **active)
         _check_active(**active)
