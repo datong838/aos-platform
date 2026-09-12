@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-09-12T07:22:55.972972+00:00",
+  "tenant": "org-org/dev-project",
+  "pipelineId": "P01-shop-qyh",
+  "http": 409,
+  "code": "PIPELINE_EXECUTION_NOT_ENABLED",
+  "sameGraph": true,
+  "revision": 1,
+  "buildCount": 0,
+  "scheduleCount": 0,
+  "health": "ok"
+}
