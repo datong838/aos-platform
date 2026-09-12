@@ -1,0 +1,230 @@
+{
+  "at": "2026-09-12T20:43:09.035615+00:00",
+  "http": 200,
+  "response": {
+    "name": "栖月汇-商品",
+    "edges": [
+      {
+        "id": "P02-product-qyh-edge-0",
+        "label": "",
+        "created_at": 1789245789.01543,
+        "pipeline_id": "P02-product-qyh",
+        "source_node_id": "P02-product-qyh-source",
+        "target_node_id": "P02-product-qyh-transform"
+      },
+      {
+        "id": "P02-product-qyh-edge-1",
+        "label": "",
+        "created_at": 1789245789.015433,
+        "pipeline_id": "P02-product-qyh",
+        "source_node_id": "P02-product-qyh-transform",
+        "target_node_id": "P02-product-qyh-sink"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "P02-product-qyh-source",
+        "name": "source",
+        "config": {
+          "pk": "goods_id",
+          "table": "ns_goods",
+          "initial": false,
+          "source_id": "niushop-qyh",
+          "primary_key": "goods_id",
+          "site_filter": "site_id=1",
+          "source_table": "ns_goods",
+          "unique_key_pattern": "niushop:{site_id}:{pk}",
+          "incremental_strategy": "snapshot"
+        },
+        "status": "idle",
+        "node_type": "source",
+        "created_at": 1789245789.015305,
+        "position_x": 60.0,
+        "position_y": 60.0,
+        "updated_at": 1789245789.015305,
+        "pipeline_id": "P02-product-qyh"
+      },
+      {
+        "id": "P02-product-qyh-transform",
+        "name": "transform",
+        "config": {
+          "target_ot": "Product",
+          "expression": "row",
+          "field_mappings": [
+            {
+              "type": "int",
+              "source": "goods_id",
+              "target": "id"
+            },
+            {
+              "type": "string",
+              "source": "goods_name",
+              "target": "title"
+            },
+            {
+              "type": "int",
+              "source": "goods_class",
+              "target": "goodsClass"
+            },
+            {
+              "type": "string",
+              "source": "goods_class_name",
+              "target": "goodsClassName"
+            },
+            {
+              "type": "int",
+              "source": "site_id",
+              "target": "shopId"
+            },
+            {
+              "type": "string",
+              "source": "site_name",
+              "target": "siteName"
+            },
+            {
+              "type": "string",
+              "source": "goods_image",
+              "target": "image"
+            },
+            {
+              "type": "text",
+              "source": "goods_content",
+              "target": "content"
+            },
+            {
+              "type": "int",
+              "source": "goods_state",
+              "target": "state"
+            },
+            {
+              "type": "string",
+              "source": "category_id",
+              "target": "categoryId"
+            },
+            {
+              "type": "int",
+              "source": "brand_id",
+              "target": "brandId"
+            },
+            {
+              "type": "string",
+              "source": "brand_name",
+              "target": "brandName"
+            },
+            {
+              "type": "decimal",
+              "source": "price",
+              "target": "price"
+            },
+            {
+              "type": "decimal",
+              "source": "market_price",
+              "target": "marketPrice"
+            },
+            {
+              "type": "decimal",
+              "source": "cost_price",
+              "target": "costPrice"
+            },
+            {
+              "type": "decimal",
+              "source": "goods_stock",
+              "target": "stock"
+            },
+            {
+              "type": "int",
+              "source": "is_virtual",
+              "target": "isVirtual"
+            },
+            {
+              "type": "int",
+              "source": "is_free_shipping",
+              "target": "isFreeShipping"
+            },
+            {
+              "type": "string",
+              "source": "introduction",
+              "target": "introduction"
+            },
+            {
+              "type": "string",
+              "source": "keywords",
+              "target": "keywords"
+            },
+            {
+              "type": "string",
+              "source": "unit",
+              "target": "unit"
+            },
+            {
+              "type": "int",
+              "source": "sort",
+              "target": "sort"
+            },
+            {
+              "type": "int",
+              "source": "sku_id",
+              "target": "skuId"
+            },
+            {
+              "type": "int",
+              "source": "supplier_id",
+              "target": "supplierId"
+            },
+            {
+              "type": "decimal",
+              "source": "sale_num",
+              "target": "saleNum"
+            },
+            {
+              "type": "int",
+              "source": "is_delete",
+              "target": "isDelete"
+            },
+            {
+              "type": "timestamp",
+              "source": "create_time",
+              "target": "createdAt"
+            },
+            {
+              "type": "timestamp",
+              "source": "modify_time",
+              "target": "modifyTime"
+            }
+          ]
+        },
+        "status": "idle",
+        "node_type": "transform",
+        "created_at": 1789245789.015305,
+        "position_x": 320.0,
+        "position_y": 60.0,
+        "updated_at": 1789245789.015305,
+        "pipeline_id": "P02-product-qyh"
+      },
+      {
+        "id": "P02-product-qyh-sink",
+        "name": "sink",
+        "config": {
+          "target_ot": "Product",
+          "write_mode": "SNAPSHOT",
+          "unique_key_pattern": "niushop:{site_id}:{pk}"
+        },
+        "status": "idle",
+        "node_type": "sink",
+        "created_at": 1789245789.015305,
+        "position_x": 580.0,
+        "position_y": 60.0,
+        "updated_at": 1789245789.015305,
+        "pipeline_id": "P02-product-qyh"
+      }
+    ],
+    "edge_count": 2,
+    "node_count": 3,
+    "write_mode": "SNAPSHOT",
+    "pipeline_id": "P02-product-qyh",
+    "pipeline_type": "ETL",
+    "revision": 1,
+    "persisted": true,
+    "demo": false
+  }
+}

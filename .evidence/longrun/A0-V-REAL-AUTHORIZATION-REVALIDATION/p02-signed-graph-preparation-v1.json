@@ -1,0 +1,235 @@
+{
+  "observedAt": "2026-09-12T20:42:15.639070+00:00",
+  "sourceRowsRead": 0,
+  "approvalsWritten": 0,
+  "businessWrites": 0,
+  "spec": {
+    "table": "ns_goods",
+    "columnCount": 28,
+    "objectType": "Product"
+  },
+  "artifactRefs": {
+    "mappingRef": {
+      "resourceType": "Mapping",
+      "resourceId": "content/mappings/p02-product.yaml",
+      "revision": "1.5.0",
+      "contentHash": "sha256:cba304c2703c559a5ccefe6763c56a4cc79cc57cb14eaafbcfa9589608c1730f"
+    },
+    "schemaRef": {
+      "resourceType": "SchemaFingerprint",
+      "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+      "revision": "1.5.0",
+      "contentHash": "sha256:6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7"
+    },
+    "maskingPolicyRef": {
+      "resourceType": "MaskingPolicy",
+      "resourceId": "content/mappings/_pii-exclusion.yaml",
+      "revision": "1.5.0",
+      "contentHash": "sha256:b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd"
+    }
+  },
+  "outcome": "SIGNED_PRODUCT_GRAPH_PREPARED",
+  "graph": {
+    "pipeline_id": "P02-product-qyh",
+    "write_mode": "SNAPSHOT",
+    "pipeline_type": "ETL",
+    "name": "栖月汇-商品",
+    "nodes": [
+      {
+        "id": "P02-product-qyh-source",
+        "name": "source",
+        "node_type": "source",
+        "position_x": 60,
+        "position_y": 60,
+        "config": {
+          "source_id": "niushop-qyh",
+          "table": "ns_goods",
+          "source_table": "ns_goods",
+          "pk": "goods_id",
+          "primary_key": "goods_id",
+          "site_filter": "site_id=1",
+          "incremental_strategy": "snapshot",
+          "initial": false,
+          "unique_key_pattern": "niushop:{site_id}:{pk}"
+        }
+      },
+      {
+        "id": "P02-product-qyh-transform",
+        "name": "transform",
+        "node_type": "transform",
+        "position_x": 320,
+        "position_y": 60,
+        "config": {
+          "expression": "row",
+          "field_mappings": [
+            {
+              "source": "goods_id",
+              "target": "id",
+              "type": "int"
+            },
+            {
+              "source": "goods_name",
+              "target": "title",
+              "type": "string"
+            },
+            {
+              "source": "goods_class",
+              "target": "goodsClass",
+              "type": "int"
+            },
+            {
+              "source": "goods_class_name",
+              "target": "goodsClassName",
+              "type": "string"
+            },
+            {
+              "source": "site_id",
+              "target": "shopId",
+              "type": "int"
+            },
+            {
+              "source": "site_name",
+              "target": "siteName",
+              "type": "string"
+            },
+            {
+              "source": "goods_image",
+              "target": "image",
+              "type": "string"
+            },
+            {
+              "source": "goods_content",
+              "target": "content",
+              "type": "text"
+            },
+            {
+              "source": "goods_state",
+              "target": "state",
+              "type": "int"
+            },
+            {
+              "source": "category_id",
+              "target": "categoryId",
+              "type": "string"
+            },
+            {
+              "source": "brand_id",
+              "target": "brandId",
+              "type": "int"
+            },
+            {
+              "source": "brand_name",
+              "target": "brandName",
+              "type": "string"
+            },
+            {
+              "source": "price",
+              "target": "price",
+              "type": "decimal"
+            },
+            {
+              "source": "market_price",
+              "target": "marketPrice",
+              "type": "decimal"
+            },
+            {
+              "source": "cost_price",
+              "target": "costPrice",
+              "type": "decimal"
+            },
+            {
+              "source": "goods_stock",
+              "target": "stock",
+              "type": "decimal"
+            },
+            {
+              "source": "is_virtual",
+              "target": "isVirtual",
+              "type": "int"
+            },
+            {
+              "source": "is_free_shipping",
+              "target": "isFreeShipping",
+              "type": "int"
+            },
+            {
+              "source": "introduction",
+              "target": "introduction",
+              "type": "string"
+            },
+            {
+              "source": "keywords",
+              "target": "keywords",
+              "type": "string"
+            },
+            {
+              "source": "unit",
+              "target": "unit",
+              "type": "string"
+            },
+            {
+              "source": "sort",
+              "target": "sort",
+              "type": "int"
+            },
+            {
+              "source": "sku_id",
+              "target": "skuId",
+              "type": "int"
+            },
+            {
+              "source": "supplier_id",
+              "target": "supplierId",
+              "type": "int"
+            },
+            {
+              "source": "sale_num",
+              "target": "saleNum",
+              "type": "decimal"
+            },
+            {
+              "source": "is_delete",
+              "target": "isDelete",
+              "type": "int"
+            },
+            {
+              "source": "create_time",
+              "target": "createdAt",
+              "type": "timestamp"
+            },
+            {
+              "source": "modify_time",
+              "target": "modifyTime",
+              "type": "timestamp"
+            }
+          ],
+          "target_ot": "Product"
+        }
+      },
+      {
+        "id": "P02-product-qyh-sink",
+        "name": "sink",
+        "node_type": "sink",
+        "position_x": 580,
+        "position_y": 60,
+        "config": {
+          "target_ot": "Product",
+          "write_mode": "SNAPSHOT",
+          "unique_key_pattern": "niushop:{site_id}:{pk}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "P02-product-qyh-edge-0",
+        "source_node_id": "P02-product-qyh-source",
+        "target_node_id": "P02-product-qyh-transform"
+      },
+      {
+        "id": "P02-product-qyh-edge-1",
+        "source_node_id": "P02-product-qyh-transform",
+        "target_node_id": "P02-product-qyh-sink"
+      }
+    ]
+  }
+}

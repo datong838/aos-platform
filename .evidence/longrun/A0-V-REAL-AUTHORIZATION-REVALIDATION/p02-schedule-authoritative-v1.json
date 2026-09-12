@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-09-12T20:45:54.073548+00:00",
+  "schedule": [
+    {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "pipeline_id": "P02-product-qyh",
+      "enabled": false,
+      "ingest": {
+        "kind": "pipeline-live-v1",
+        "pipelineId": "P02-product-qyh"
+      }
+    }
+  ],
+  "binding": {
+    "binding_id": "eeff7221-b61f-4ca5-a6cd-f333947a1cff",
+    "revision": 1,
+    "installation_id": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+    "generation": "23afd05b-762c-406a-adfb-247a14412b9f",
+    "pipeline_id": "P02-product-qyh",
+    "control_id": "4e106b52-2c12-4c8b-954e-5b7d613fffbd",
+    "control_revision": 1,
+    "control_hash": "sha256:9222aaf275006371ec38eda2061073e46eab2ea5d8d66948baf837281c3c3b72",
+    "content_hash": "sha256:6625672c4f0b0833306b87ad6ad13b083215faa08605c19a5b89f27e4f95d719"
+  },
+  "sourceClaims": 0,
+  "verified": true
+}

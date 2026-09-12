@@ -1,0 +1,9 @@
+{
+  "id": "P02-product-qyh",
+  "sourceId": "niushop-qyh",
+  "target": "dataset",
+  "datasetRid": "ri.aos.main.dataset.P02-product-qyh",
+  "name": "栖月汇-商品",
+  "displayName": "栖月汇-商品",
+  "objectTypeHint": "Product"
+}

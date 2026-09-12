@@ -1,0 +1,19 @@
+{
+  "at": "2026-09-12T20:43:09.097289+00:00",
+  "http": 200,
+  "response": {
+    "id": "P02-product-qyh",
+    "sourceId": "niushop-qyh",
+    "target": "dataset",
+    "datasetRid": "ri.aos.main.dataset.P02-product-qyh",
+    "objectTypeHint": "Product",
+    "name": "栖月汇-商品",
+    "displayName": "栖月汇-商品",
+    "nodes": [],
+    "edges": [],
+    "config": {},
+    "lastBuild": null,
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "at": "2026-09-12T20:44:30.803580+00:00",
+  "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "localDevelopmentIdentity": true,
+  "key": "a0v-p02-selection-20260913-v1",
+  "request": {
+    "draft": {
+      "state": "prepared",
+      "readOnly": true,
+      "orgId": "org-org",
+      "projectId": "dev-project",
+      "pipelineId": "P02-product-qyh",
+      "graphRevision": 1,
+      "graphHash": "538aaeb637ca1592548de41feceddc2942a8a955bef15c36887d4a159890dc2d",
+      "installationRef": {
+        "installationId": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+        "revision": 5,
+        "lockHash": "sha256:26e8189ca75d124fe49b27c5e6922a5115071e8f2a7e126c904e3949e4539f59",
+        "overlayRevision": "a0v-canonical-ecommerce-v1"
+      },
+      "generation": "23afd05b-762c-406a-adfb-247a14412b9f",
+      "executionEpoch": 3,
+      "configurationRef": {
+        "configurationId": "f134da1e-69bf-4406-917a-c0e665e12e02",
+        "revision": 1,
+        "hash": "sha256:af72d785cb326f4ac28b0f768402c2b7f6beaf0507f14490640b3713ccba8adf"
+      },
+      "packageRef": {
+        "publisher": "aos",
+        "id": "platform.ecommerce.niushop",
+        "version": "1.5.0",
+        "contentHash": "sha256:1a21beea3ed901baa95042636eca915eb7915709be24f2e58a2690f94005e7dd"
+      },
+      "sourceId": "niushop-qyh",
+      "sourceConfigurationRef": {
+        "resourceType": "DataSourceConfigurationRevision",
+        "resourceId": "source-config-a84b6c79-8654-48f0-98c2-57d41b067b3d",
+        "revision": 1,
+        "contentHash": "sha256:1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+        "receiptId": null
+      },
+      "mappingRef": {
+        "resourceType": "Mapping",
+        "resourceId": "content/mappings/p02-product.yaml",
+        "revision": "1.5.0",
+        "contentHash": "sha256:cba304c2703c559a5ccefe6763c56a4cc79cc57cb14eaafbcfa9589608c1730f",
+        "receiptId": null
+      },
+      "schemaRef": {
+        "resourceType": "SchemaFingerprint",
+        "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+        "revision": "1.5.0",
+        "contentHash": "sha256:6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+        "receiptId": null
+      },
+      "maskingPolicyRef": {
+        "resourceType": "MaskingPolicy",
+        "resourceId": "content/mappings/_pii-exclusion.yaml",
+        "revision": "1.5.0",
+        "contentHash": "sha256:b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+        "receiptId": null
+      },
+      "rowLimit": 1000,
+      "timeoutSeconds": 30,
+      "maxSourceCalls": 1,
+      "notBefore": "2026-09-12T20:43:42.069703Z",
+      "expiresAt": "2026-09-12T20:58:42.069703Z",
+      "schemaVersion": "aos.pipeline-source-selection-draft/v1"
+    }
+  }
+}
