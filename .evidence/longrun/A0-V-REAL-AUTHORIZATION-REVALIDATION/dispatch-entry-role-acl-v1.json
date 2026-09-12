@@ -1,0 +1,77 @@
+{
+  "at": "2026-09-12T21:20:18.720471+00:00",
+  "identity": {
+    "adopted_role": "aos_runtime",
+    "login_role": "aos_a0v_runtime_20260912",
+    "rolsuper": false,
+    "rolbypassrls": false
+  },
+  "dispatchAcl": [
+    {
+      "grantee": "aos_app",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_app",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "grantee": "aos_runtime",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    }
+  ],
+  "inheritedRoles": [
+    {
+      "rolname": "aos_runtime"
+    }
+  ],
+  "mutations": 0
+}
