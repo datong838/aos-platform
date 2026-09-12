@@ -28,7 +28,7 @@
 拟修改文件（逐项施工前再核对所有权与现状）：
 - services/aos-api/aos_api/ecommerce_growth_registration_contracts.py：严格请求/只读预览/Receipt契约；不接数据库或授权。
 - services/aos-api/aos_api/ecommerce_growth_registration.py：正式登记Owner，复用当前安装与配置读取、角色/markings校验。
-- services/aos-api/alembic/versions/a0v_026_dispatch_first_registration.py：专用登记及撤销Receipt、受限入口；仅在权限评审完成后部署。
+- services/aos-api/alembic/versions/a0v_026_dispatch_registration_receipt.py：首先建立不可变登记Receipt，仅runtime读取，无任何写入/函数执行授权；后续独立迁移提供经评审的受限登记入口与撤销Receipt。仅完成隔离验证后再决定部署。
 - services/aos-api/aos_api/ecommerce_growth_cutover.py：仅支持带真实首次登记Receipt的fenced起点，保留旧路径。
 - services/aos-api/aos_api/routers/bundle_runtime_installations.py：正式安装控制登记/预览入口。
 - services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_contracts.py、test_ecommerce_growth_first_registration_pg.py：新增契约和实际隔离数据库验收；旧cutover/lifecycle/OCI测试继续保留。
@@ -49,6 +49,12 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 - 未激活登记可禁用卸载重装，已激活须先fence/drain/detach，不能绕过旧generation任务排空。
 
 ## 经营首链接续
+
+### 回执存储切片
+
+本波新增a0v_026_dispatch_registration_receipt.py及tests/extension_runtime/test_dispatch_registration_receipt_pg.py。登记回执绑定tenant、安装/generation、group、requestHash、canonical payload与contentHash；tenant/idempotencyKey及tenant/group唯一，外键指向原runtime binding。复用canonical_asset_registry_jsonb与pgcrypto校验内容摘要，普通runtime只有SELECT，PUBLIC及runtime无INSERT/UPDATE/DELETE/TRUNCATE；所有身份的更新/删除/截断由不可变触发器拒绝。无新增可执行高权限函数，无九路由写入。payload的具体九项及当前权限由后续正式登记Owner/受限入口验证，此表不是独立写入API。
+
+用18432独立测试数据库（沿用description PG fixture）验证真实迁移、哈希漂移拒绝、不可变历史、唯一组/幂等键、runtime不可写和跨租户不可见；测试Owner种入回执仅验证存储，不称真实登记成功。主库本波不迁移、不授权。
 
 ### 当前安装登记前检查切片
 
