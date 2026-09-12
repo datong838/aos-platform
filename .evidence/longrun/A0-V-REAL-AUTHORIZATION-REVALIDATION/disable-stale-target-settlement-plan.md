@@ -7,3 +7,5 @@
 修改文件：services/aos-api/aos_api/extension_runtime/disable_commit.py、disable_executor.py；新增tests/extension_runtime/test_disable_stale_settlement_pg.py。隔离18432真实事务验证失败事件与绑定未改、tenant/permission/CAS/hash/rollback等反例；原Host/OCI停用流程回归。
 
 真实恢复先使用既有consumer处理原operation，确认failed并保留原target@4，然后以新action/key和冻结binding@5请求保守停用，确认真实drain与disabled_committed。这是明确失败后的新命令，不是未知结果重发，不复用原key。随后才能启动新版、prepare/verify/configure/enable。旧Host当前已退出，无需再次杀进程。对外不发布、不push，230L0挂起。
+
+实际执行入口补充：scripts/a0v_niushop_1_5_replacement.py增加固定disable-parent-recovered，唯一目标旧ID@7/generation275e…/binding@5、enabled=false/fenced=true/observed=unknown；观察必须发现原e578ff09终态failed且DISABLE_TARGET_STALE，全部旧资源released。使用新的exclusive命令文件与key，原disable-parent仍固定@4，不能覆盖。新版Host先启动用于恢复消费者，尚无新版运行资源，因此仍是单写者。相应commands测试补充错误代次/资源前置条件。

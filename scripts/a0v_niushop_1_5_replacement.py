@@ -18,19 +18,23 @@ PREDECESSOR=dict(installationId='afd792de-e85e-4680-86d0-c83404824fb3',revision=
 KEY='a0v-niushop-1.5-replacement-20260913-v1'
 REPLACEMENT='eda57424-b8cb-401e-a6f7-94220cb4f9ef'
 PARENT_GENERATION='275e1941-2e87-4a75-aa3c-e0508be9e2ce'
+STALE_DISABLE='e578ff09-b0ba-4de8-979e-ee4f7e13d6a3'
 
 
 def command_target(action,record,bindings):
-    if action=='disable-parent':
+    if action in ('disable-parent','disable-parent-recovered'):
         if (str(record.installation_id)!=PREDECESSOR['installationId']
                 or record.state!='active' or record.etag_version!=7 or len(bindings)!=1):
             raise ValueError('exact active predecessor required')
         binding=bindings[0]
-        if (str(binding['generation'])!=PARENT_GENERATION or binding['revision']!=4
-                or binding['enabled'] is not True or binding['operation_fence'] is not False):
+        recovered=action=='disable-parent-recovered'
+        expected_revision=5 if recovered else 4
+        if (str(binding['generation'])!=PARENT_GENERATION or binding['revision']!=expected_revision
+                or binding['enabled'] is not (not recovered) or binding['operation_fence'] is not recovered
+                or (recovered and binding.get('observed_state')!='unknown')):
             raise ValueError('exact enabled predecessor generation required')
         return dict(installationId=PREDECESSOR['installationId'],etag=7,
-            target=dict(generation=PARENT_GENERATION,bindingRevision=4))
+            target=dict(generation=PARENT_GENERATION,bindingRevision=expected_revision))
     expected={'prepare':('approved',3,'runtime-apply'),'verify':('applied',4,'runtime-verify')}
     if action not in expected:raise ValueError('unsupported replacement command')
     state,etag,kind=expected[action]
@@ -56,7 +60,7 @@ def observe():
             bindings=conn.execute('''SELECT generation,revision,enabled,operation_fence,execution_epoch,
                 desired_state,observed_state FROM extension_runtime_binding
                 WHERE org_id=%s AND project_id=%s AND installation_id=%s''',params).fetchall()
-            operations=conn.execute('''SELECT operation_id,kind,status,phase,revision FROM extension_runtime_operation
+            operations=conn.execute('''SELECT operation_id,kind,status,phase,revision,failure_code FROM extension_runtime_operation
                 WHERE org_id=%s AND project_id=%s AND installation_id=%s ORDER BY created_at''',params).fetchall()
             resources=conn.execute('''SELECT l.resource_id,l.generation,l.package_id,l.container_id,
                 l.cleanup_state,l.observed_release FROM extension_runtime_resource_lease l
@@ -78,10 +82,17 @@ def freeze_command(path,frozen):
 def request_command(plane,action):
     from types import SimpleNamespace
     state=observe()['installations']
-    installation=PREDECESSOR['installationId'] if action=='disable-parent' else REPLACEMENT
+    disabling=action in ('disable-parent','disable-parent-recovered')
+    installation=PREDECESSOR['installationId'] if disabling else REPLACEMENT
     selected=state[installation]
     frozen=command_target(action,SimpleNamespace(**selected['record']),selected['bindings'])
-    if action=='disable-parent':
+    if action=='disable-parent-recovered':
+        prior=[o for o in selected['operations'] if str(o['operation_id'])==STALE_DISABLE]
+        if len(prior)!=1 or prior[0]['status']!='failed' or prior[0]['failure_code']!='DISABLE_TARGET_STALE':
+            raise ValueError('original disable must be conclusively failed')
+        if not selected['resources'] or any(r['cleanup_state']!='released' or r['observed_release'] is not True for r in selected['resources']):
+            raise ValueError('all predecessor resources must be confirmed released')
+    if disabling:
         checked=preflight(plane)
         if any(checked['pipelineCounts'].values()):raise ValueError('predecessor schedule activity must settle')
     path=STATE/(action+'-command.json')
@@ -91,7 +102,7 @@ def request_command(plane,action):
     arguments=dict(installation_id=installation,org_id='org-org',project_id='dev-project',
         actor=activation.ACTOR,roles=activation.ROLES,markings=activation.MARKINGS,
         idempotency_key=KEY+'-'+action,if_match='"'+str(frozen['etag'])+'"')
-    if action=='disable-parent':
+    if disabling:
         receipt=plane.disable_service.request(**arguments,target=frozen['target'])
     else:
         receipt=plane.lifecycle_service.request_preparation(**arguments,kind=frozen['kind'])
@@ -152,12 +163,12 @@ def preflight(plane):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--action',choices=('preflight','create','observe','disable-parent','prepare','verify'),required=True)
+    parser=argparse.ArgumentParser();parser.add_argument('--action',choices=('preflight','create','observe','disable-parent','disable-parent-recovered','prepare','verify'),required=True)
     parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
     if args.output.exists():raise ValueError('immutable output already exists')
     plane=setup()
     if args.action=='observe':result=observe()
-    elif args.action in ('disable-parent','prepare','verify'):result=request_command(plane,args.action)
+    elif args.action in ('disable-parent','disable-parent-recovered','prepare','verify'):result=request_command(plane,args.action)
     else:result=preflight(plane)
     if args.action=='create':
         if INITIAL.exists():raise ValueError('replacement initial receipt exists; observe before further action')

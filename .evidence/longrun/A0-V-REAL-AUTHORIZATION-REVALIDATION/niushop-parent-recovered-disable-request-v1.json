@@ -1,0 +1,18 @@
+{
+  "command": {
+    "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+    "etag": 7,
+    "target": {
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "bindingRevision": 5
+    }
+  },
+  "receipt": {
+    "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+    "operationId": "cd6d0bd1-d52d-4847-b18c-77a4588f3a87",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  },
+  "replayed": false
+}

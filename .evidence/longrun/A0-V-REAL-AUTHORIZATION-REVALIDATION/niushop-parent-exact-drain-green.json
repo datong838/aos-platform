@@ -1,0 +1,12 @@
+{
+  "outcome": "EXACT_PREDECESSOR_DRAIN_GREEN",
+  "observedAt": "2026-09-12T20:25:06.244119+00:00",
+  "predecessor": {
+    "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+    "revision": 7,
+    "lockHash": "sha256:539a2b9fc61adab875793153b92c5f7641049bc4dec01c44a6d5fae876c69404",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "sourceCalls": 0,
+  "installationMutations": 0
+}

@@ -62,3 +62,33 @@ def test_unknown_owner_outcome_is_not_resent(monkeypatch,tmp_path):
     assert owner.call_args.kwargs['installation_id']==m.REPLACEMENT
     assert owner.call_args.kwargs['kind']=='runtime-apply'
     assert owner.call_args.kwargs['if_match']=='"3"'
+
+
+@pytest.mark.parametrize('case',['valid','still_enabled','wrong_revision','wrong_generation','not_unknown'])
+def test_recovered_disable_requires_exact_fenced_generation(case):
+    m=module();r=SimpleNamespace(installation_id=m.PREDECESSOR['installationId'],state='active',etag_version=7)
+    b=dict(generation=m.PARENT_GENERATION,revision=5,enabled=False,operation_fence=True,observed_state='unknown')
+    if case=='still_enabled':b['enabled']=True
+    if case=='wrong_revision':b['revision']=4
+    if case=='wrong_generation':b['generation']='wrong'
+    if case=='not_unknown':b['observed_state']='ready'
+    if case=='valid':assert m.command_target('disable-parent-recovered',r,[b])['target']['bindingRevision']==5
+    else:
+        with pytest.raises(ValueError):m.command_target('disable-parent-recovered',r,[b])
+
+
+@pytest.mark.parametrize('case',['unknown_outcome','different_failure','resource_pending','no_resources'])
+def test_recovery_refuses_unproven_terminal_or_resource_state(monkeypatch,tmp_path,case):
+    m=module();monkeypatch.setattr(m,'STATE',tmp_path)
+    prior=dict(operation_id=m.STALE_DISABLE,status='failed',failure_code='DISABLE_TARGET_STALE')
+    resources=[dict(cleanup_state='released',observed_release=True)]
+    if case=='unknown_outcome':prior['status']='accepted'
+    if case=='different_failure':prior['failure_code']='OTHER'
+    if case=='resource_pending':resources[0]['observed_release']=False
+    if case=='no_resources':resources=[]
+    state=dict(record=dict(installation_id=m.PREDECESSOR['installationId'],state='active',etag_version=7),
+        bindings=[dict(generation=m.PARENT_GENERATION,revision=5,enabled=False,operation_fence=True,observed_state='unknown')],
+        operations=[prior],resources=resources)
+    monkeypatch.setattr(m,'observe',lambda:dict(installations={m.PREDECESSOR['installationId']:state}))
+    with pytest.raises(ValueError):m.request_command(SimpleNamespace(),'disable-parent-recovered')
+    assert not list(tmp_path.iterdir())
