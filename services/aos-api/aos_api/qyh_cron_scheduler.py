@@ -10,6 +10,7 @@ import json
 import threading
 import time
 import uuid
+from functools import partial
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -224,9 +225,10 @@ def list_runs(scope: TenantScope, schedule_id: str, limit: int = 24) -> list[dic
     ]
 
 
-def _claim_run(scope: TenantScope, schedule_id: str, scheduled_for: datetime, trigger: str) -> str | None:
+def _claim_run(scope: TenantScope, schedule_id: str, scheduled_for: datetime, trigger: str, *, binding=None) -> str | None:
     run_id = f"scr-{uuid.uuid4().hex[:16]}"
-    with connect(scope) as conn:
+    from aos_api.pipeline_schedule_claim import schedule_claim_connection
+    with schedule_claim_connection(scope, schedule_id=schedule_id, binding=binding) as conn:
         row = conn.execute(
             """INSERT INTO meta_schedule_run
                  (id, org_id, project_id, schedule_id, scheduled_for, trigger, status, started_at)
@@ -235,7 +237,6 @@ def _claim_run(scope: TenantScope, schedule_id: str, scheduled_for: datetime, tr
                RETURNING id""",
             (run_id, *scope.key, schedule_id, scheduled_for.astimezone(timezone.utc), trigger),
         ).fetchone()
-        conn.commit()
     return str(row["id"]) if row else None
 
 
@@ -247,6 +248,7 @@ def execute_schedule(
     scheduled_for: datetime | None = None,
     recovery_run_id: str | None = None,
     recovery_claim_id: str | None = None,
+    control_factory=None,
 ) -> dict[str, Any]:
     """执行一次真实 live pipeline，并把运行事实写入 PostgreSQL。"""
     schedule = _get_schedule(scope, schedule_id)
@@ -258,20 +260,30 @@ def execute_schedule(
     if ingest.get("kind") != "pipeline-live-v1" or ingest.get("pipelineId") != schedule["pipelineId"]:
         raise ValueError("SCHEDULE_LIVE_BINDING_MISSING")
 
-    if trigger == 'recovery' or recovery_run_id is not None or recovery_claim_id is not None:
-        if trigger != 'recovery' or not recovery_run_id or not recovery_claim_id or scheduled_for is not None:
-            raise ValueError('SCHEDULE_RECOVERY_ARGUMENTS_INVALID')
-        from aos_api.ec_ingress_claim import claim_failed_run
-        from aos_api.ec_ingress_journal import IngressJournal
-        if not claim_failed_run(connect,scope,recovery_run_id,recovery_claim_id,
-                                journal=IngressJournal(),expected_schedule_id=schedule_id):
+    recovery = trigger == 'recovery' or recovery_run_id is not None or recovery_claim_id is not None
+    if recovery and (trigger != 'recovery' or not recovery_run_id or not recovery_claim_id or scheduled_for is not None):
+        raise ValueError('SCHEDULE_RECOVERY_ARGUMENTS_INVALID')
+    from aos_api.pipeline_controlled_runtime import resolve_schedule_execution
+    controlled = resolve_schedule_execution(scope, schedule_id, str(schedule["pipelineId"]),
+        control_factory=control_factory, recovery=recovery)
+    if recovery:
+        if controlled is not None:
+            claimed = controlled.claim_recovery(run_id=recovery_run_id, claim_id=recovery_claim_id)
+        else:
+            from aos_api.ec_ingress_claim import claim_failed_run
+            from aos_api.ec_ingress_journal import IngressJournal
+            from aos_api.pipeline_schedule_claim import schedule_claim_connection
+            claimed = claim_failed_run(partial(schedule_claim_connection, schedule_id=schedule_id),
+                scope, recovery_run_id, recovery_claim_id, journal=IngressJournal(), expected_schedule_id=schedule_id)
+        if not claimed:
             return {'status':'duplicate','scheduleId':schedule_id,'id':recovery_run_id}
         run_id = recovery_run_id
     else:
         slot = scheduled_for or datetime.now(timezone.utc)
         if trigger == "cron":
             slot = _validate_cron_slot(slot)
-        run_id = _claim_run(scope, schedule_id, slot, trigger)
+        run_id = _claim_run(scope, schedule_id, slot, trigger,
+            **({"binding": controlled.binding} if controlled is not None else {}))
         if run_id is None:
             return {"status": "duplicate", "scheduleId": schedule_id, "scheduledFor": slot}
 
@@ -279,7 +291,8 @@ def execute_schedule(
     result: dict[str, Any]
     try:
         from aos_api.phase5_pipeline_engine import get_engine
-        result = get_engine().execute_pipeline_once(scope, str(schedule["pipelineId"]), run_id=run_id, durable_ingress=True)
+        result = get_engine().execute_pipeline_once(scope, str(schedule["pipelineId"]), run_id=run_id, durable_ingress=True,
+            **({"controlled_execution": controlled} if controlled is not None else {}))
     except Exception:  # fail closed and keep a durable error record
         result = {
             "ok": False, "rows_written": 0, "duration_ms": 0,
@@ -312,7 +325,7 @@ def execute_schedule(
     return {"id": run_id, "scheduleId": schedule_id, "status": status, "lastRun": last_run, "result": result}
 
 
-def run_due_qyh(now: datetime | None = None) -> list[dict[str, Any]]:
+def run_due_qyh(now: datetime | None = None, *, control_factory=None) -> list[dict[str, Any]]:
     """Cron worker 单次 tick；只处理唯一栖月汇目标租户。"""
     local_now = (now or datetime.now(_SHANGHAI)).astimezone(_SHANGHAI)
     with _RUN_LOCK:
@@ -325,5 +338,5 @@ def run_due_qyh(now: datetime | None = None) -> list[dict[str, Any]]:
         outcomes: list[dict[str, Any]] = []
         for row in rows:
             if cron_matches(str(row["cron"]), local_now):
-                outcomes.append(execute_schedule(QYH_SCOPE, str(row["id"]), trigger="cron", scheduled_for=local_now))
+                outcomes.append(execute_schedule(QYH_SCOPE, str(row["id"]), trigger="cron", scheduled_for=local_now, control_factory=control_factory))
         return outcomes

@@ -32,7 +32,7 @@ def test_recovery_uses_principal_scope_and_original_run(api):
     assert response.status_code==200
     assert execute.call_args.args[0].key==('org-org','dev-project')
     assert execute.call_args.args[1]=='s'
-    assert execute.call_args.kwargs=={'trigger':'recovery','recovery_run_id':'original','recovery_claim_id':claim}
+    assert execute.call_args.kwargs=={'trigger':'recovery','recovery_run_id':'original','recovery_claim_id':claim,'control_factory':None}
 
 
 def test_viewer_cannot_start_recovery(api):
@@ -63,3 +63,38 @@ def test_duplicate_recovery_is_not_reported_as_new_success(api):
     response=client.post('/v1/schedules/s/runs/original/recover',json={'claimId':str(uuid4())})
     assert response.status_code==200 and response.json()['status']=='duplicate'
     assert execute.call_args.args[0].key==('dev-org','dev-project')
+
+
+def test_recovery_passes_only_server_control_factory(api):
+    from types import SimpleNamespace
+    client, _, execute = api
+    factory = object()
+    client.app.state.extension_runtime_control_plane = SimpleNamespace(pipeline_control_factory=factory)
+    response = client.post('/v1/schedules/s/runs/original/recover',json={'claimId':str(uuid4())})
+    assert response.status_code == 200
+    assert execute.call_args.kwargs['control_factory'] is factory
+
+
+def test_manual_passes_same_server_factory(api, monkeypatch):
+    from types import SimpleNamespace
+    client, _, execute = api
+    factory = object()
+    client.app.state.extension_runtime_control_plane = SimpleNamespace(pipeline_control_factory=factory)
+    monkeypatch.setattr(wave_ext, '_hydrate_data_os_scope', lambda *a: None)
+    monkeypatch.setattr(wave_ext, '_persist_safe', lambda *a: None)
+    monkeypatch.setitem(wave_ext._schedules, 's', dict(id='s',orgId='org-org',projectId='dev-project',enabled=True))
+    response = client.post('/v1/schedules/s/run')
+    assert response.status_code == 200
+    assert execute.call_args.kwargs['control_factory'] is factory
+
+
+@pytest.mark.parametrize('error,status', [(PermissionError('private detail'),403),(RuntimeError('private detail'),503)])
+def test_manual_control_failures_are_readable_and_safe(api,monkeypatch,error,status):
+    client, _, execute = api
+    monkeypatch.setattr(wave_ext, '_hydrate_data_os_scope', lambda *a: None)
+    monkeypatch.setattr(wave_ext, '_persist_safe', lambda *a: None)
+    monkeypatch.setitem(wave_ext._schedules, 's', dict(id='s',orgId='org-org',projectId='dev-project',enabled=True))
+    execute.side_effect = error
+    response = client.post('/v1/schedules/s/run')
+    assert response.status_code == status
+    assert 'private detail' not in response.text

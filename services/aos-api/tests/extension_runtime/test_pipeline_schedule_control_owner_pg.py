@@ -12,6 +12,7 @@ def setup(binding_case,claim_case):
     from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
     conn,*_=binding_case
     _,_,args,controls,_,_=claim_case
+    conn.execute("UPDATE meta_schedule_run SET status='succeeded',executor_stopped=true")
     return conn,PipelineScheduleControlOwner(controls=controls),dict(scope=args['scope'],schedule_id='schedule',
         control_ref=args['control_ref'],actor=args['actor'],idempotency_key='binding-first')
 
@@ -92,4 +93,13 @@ def test_request_path_pipeline_mismatch_is_rejected_before_binding(binding_case,
     conn,owner,args=setup(binding_case,claim_case)
     with pytest.raises(ValueError,match='request pipeline differs'):
         bind(conn,owner,args,expected_pipeline_id='another-pipeline')
+    assert conn.execute('SELECT count(*) FROM pipeline_schedule_control_binding').fetchone()=={'count':0}
+
+
+@pytest.mark.parametrize('status,stopped', [('running',True),('running',False),('failed',False),('failed',None)])
+def test_first_binding_rejects_running_or_unconfirmed_old_execution(binding_case,claim_case,status,stopped):
+    conn,owner,args=setup(binding_case,claim_case)
+    conn.execute('UPDATE meta_schedule_run SET status=%s,executor_stopped=%s',(status,stopped))
+    with pytest.raises(RuntimeConflict,match='stopped'):
+        bind(conn,owner,args)
     assert conn.execute('SELECT count(*) FROM pipeline_schedule_control_binding').fetchone()=={'count':0}

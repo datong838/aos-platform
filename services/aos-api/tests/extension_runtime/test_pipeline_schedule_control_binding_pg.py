@@ -17,6 +17,7 @@ def binding_case(claim_case):
     conn,claims,args,controls,draft,selections=claim_case
     conn.execute('RESET ROLE')
     conn.execute('ALTER TABLE meta_schedule ADD PRIMARY KEY(org_id,project_id,id)')
+    conn.execute('ALTER TABLE meta_schedule_run ADD COLUMN IF NOT EXISTS executor_stopped boolean')
     # Simulate installations with permissive inherited defaults.
     conn.execute(sql.SQL('ALTER DEFAULT PRIVILEGES IN SCHEMA {} GRANT ALL ON TABLES TO aos_runtime').format(sql.Identifier(claims._journal.schema)))
     path=Path(__file__).resolve().parents[2]/'alembic/versions/a0v_025_pipeline_schedule_control_binding.py'

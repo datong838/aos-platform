@@ -128,3 +128,21 @@ def test_engine_timeout_keeps_worker_resources_until_actual_exit(configured, mon
         release.set()
         if entered.is_set():
             assert finished.wait(5)
+
+
+@pytest.mark.parametrize('factory', [None, object()])
+def test_bound_schedule_without_exact_factory_never_falls_back(configured, monkeypatch, factory):
+    module, execution, args, events, _ = configured
+    import aos_api.pipeline_schedule_claim as claims
+    monkeypatch.setattr(claims, 'read_schedule_binding', lambda *a: execution.binding)
+    with pytest.raises((RuntimeError, TypeError)):
+        module.resolve_schedule_execution(args['scope'], 'schedule', 'pipeline', control_factory=factory, recovery=False)
+    assert events == []
+
+
+def test_unbound_schedule_needs_no_control_factory(configured, monkeypatch):
+    module, _, args, events, _ = configured
+    import aos_api.pipeline_schedule_claim as claims
+    monkeypatch.setattr(claims, 'read_schedule_binding', lambda *a: None)
+    assert module.resolve_schedule_execution(args['scope'], 'schedule', 'pipeline', control_factory=None, recovery=False) is None
+    assert events == []

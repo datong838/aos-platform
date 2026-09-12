@@ -15,6 +15,12 @@ from aos_api.qyh_cron_scheduler import (
 from aos_api.tenant_scope import TenantScope
 
 
+@pytest.fixture(autouse=True)
+def no_binding_fixture(monkeypatch):
+    import aos_api.pipeline_schedule_claim as claims
+    monkeypatch.setattr(claims, 'read_schedule_binding', lambda *_: None)
+
+
 class _PersistConnection:
     def __init__(self) -> None:
         self.calls = []
@@ -248,3 +254,54 @@ def test_invalid_recovery_arguments_never_claim(monkeypatch,args):
 def test_recovery_hint_is_not_execution_authority(status,stopped,finished,saved,reason):
     hint=scheduler_module._recovery_hint({'status':status,'executor_stopped':stopped,'finished_at':finished,'has_saved_input':saved})
     assert hint=={'candidate':reason=='ready','reason':reason}
+
+
+@pytest.mark.parametrize('recovery', [False, True])
+def test_bound_schedule_routes_controlled_object_and_original_recovery(monkeypatch, recovery):
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    import aos_api.pipeline_controlled_runtime as runtime
+    scope = TenantScope('org-org','dev-project')
+    execution = SimpleNamespace(binding=object(), claim_recovery=Mock(return_value=True))
+    factory = object()
+    resolve = Mock(return_value=execution)
+    monkeypatch.setattr(runtime, 'resolve_schedule_execution', resolve)
+    monkeypatch.setattr(scheduler_module, '_get_schedule', lambda *_: {'enabled':True,'pipelineId':'pipeline',
+        'ingest':{'kind':'pipeline-live-v1','pipelineId':'pipeline'}})
+    claim = Mock(return_value='new-run')
+    monkeypatch.setattr(scheduler_module, '_claim_run', claim)
+    conn = _PersistConnection()
+    @contextmanager
+    def connect(_): yield conn
+    monkeypatch.setattr(scheduler_module, 'connect', connect)
+    execute = Mock(return_value={'ok':True,'executor_stopped':True})
+    monkeypatch.setattr(pipeline_engine_module, 'get_engine', lambda: SimpleNamespace(execute_pipeline_once=execute))
+    extra = dict(recovery_run_id='old-run',recovery_claim_id='claim') if recovery else {}
+    result = scheduler_module.execute_schedule(scope, 'schedule', trigger='recovery' if recovery else 'manual',
+        control_factory=factory, **extra)
+    resolve.assert_called_once_with(scope,'schedule','pipeline',control_factory=factory,recovery=recovery)
+    execute.assert_called_once_with(scope,'pipeline',run_id='old-run' if recovery else 'new-run',
+        durable_ingress=True,controlled_execution=execution)
+    if recovery:
+        claim.assert_not_called()
+        execution.claim_recovery.assert_called_once_with(run_id='old-run',claim_id='claim')
+    else:
+        assert claim.call_args.kwargs['binding'] is execution.binding
+    assert result['status']=='succeeded'
+
+
+def test_cron_passes_same_server_factory(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    factory = object()
+    @contextmanager
+    def connection(scope):
+        assert scope == scheduler_module.QYH_SCOPE
+        yield SimpleNamespace(execute=lambda *a: SimpleNamespace(fetchall=lambda: [{'id':'s','cron':'* * * * *'}]))
+    monkeypatch.setattr(scheduler_module, 'connect', connection)
+    execute = Mock(return_value={'status':'duplicate'})
+    monkeypatch.setattr(scheduler_module, 'execute_schedule', execute)
+    result = scheduler_module.run_due_qyh(control_factory=factory)
+    assert result == [{'status':'duplicate'}]
+    assert execute.call_args.kwargs['control_factory'] is factory
+    assert execute.call_args.kwargs['trigger'] == 'cron'

@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -2247,8 +2247,9 @@ def patch_schedule(
 
 
 @router.post("/v1/schedules/{schedule_id}/run")
-def run_schedule(schedule_id: str, principal: Principal = Depends(require_principal)):
+def run_schedule(schedule_id: str, request: Request, principal: Principal = Depends(require_principal)):
     """手动触发一次真实 live pipeline，并写入持久运行历史。"""
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
     item = _schedules.get(schedule_id)
@@ -2262,9 +2263,17 @@ def run_schedule(schedule_id: str, principal: Principal = Depends(require_princi
     try:
         from aos_api.qyh_cron_scheduler import execute_schedule
 
-        result = execute_schedule(scope, schedule_id, trigger="manual")
+        plane = getattr(request.app.state, 'extension_runtime_control_plane', None)
+        result = execute_schedule(scope, schedule_id, trigger="manual",
+            control_factory=getattr(plane, 'pipeline_control_factory', None))
+    except (RuntimeConflict, RuntimeRevisionConflict):
+        raise ApiError(code="SCHEDULE_CONTROL_CONFLICT", message="计划或审批条件已变化，请刷新核对后再运行", status_code=409) from None
+    except PermissionError:
+        raise ApiError(code="SCHEDULE_CONTROL_FORBIDDEN", message="当前权限不允许执行此计划", status_code=403) from None
     except ValueError as exc:
         raise ApiError(code="VALIDATION", message=str(exc), status_code=400) from exc
+    except Exception:
+        raise ApiError(code="SCHEDULE_CONTROL_UNAVAILABLE", message="执行服务暂不可用，请先刷新运行记录确认状态", status_code=503) from None
     item["lastRun"] = result.get("lastRun")
     _schedules[schedule_id] = item
     _persist_safe("persist_schedule", scope, item)
@@ -2296,7 +2305,7 @@ class ScheduleRecoveryIn(BaseModel):
 
 
 @router.post("/v1/schedules/{schedule_id}/runs/{run_id}/recover")
-def recover_schedule_run(schedule_id: str, run_id: str, body: ScheduleRecoveryIn,
+def recover_schedule_run(schedule_id: str, run_id: str, body: ScheduleRecoveryIn, request: Request,
                          principal: Principal = Depends(require_principal)):
     """Resume a stopped failed run from its saved input under current authority."""
     if not {"admin", "developer", "data-owner"}.intersection(principal.roles):
@@ -2306,8 +2315,10 @@ def recover_schedule_run(schedule_id: str, run_id: str, body: ScheduleRecoveryIn
     from aos_api.ec_ingress_journal import IngressJournalConflict
     from aos_api.qyh_cron_scheduler import execute_schedule
     try:
+        plane = getattr(request.app.state, 'extension_runtime_control_plane', None)
         return execute_schedule(_mutation_scope(principal),schedule_id,trigger="recovery",
-                                recovery_run_id=run_id,recovery_claim_id=str(body.claimId))
+                                recovery_run_id=run_id,recovery_claim_id=str(body.claimId),
+                                control_factory=getattr(plane, 'pipeline_control_factory', None))
     except KeyError:
         raise ApiError(code="NOT_FOUND",message="未找到当前租户的计划",status_code=404) from None
     except (IngressJournalConflict, ValueError):

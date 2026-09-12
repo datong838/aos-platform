@@ -411,7 +411,9 @@ async def _lifespan_body(_app: FastAPI):
             try:
                 from aos_api.qyh_cron_scheduler import run_due_qyh
 
-                await asyncio.to_thread(run_due_qyh)
+                plane = getattr(_app.state, 'extension_runtime_control_plane', None)
+                await asyncio.to_thread(run_due_qyh,
+                    control_factory=getattr(plane, 'pipeline_control_factory', None))
             except Exception:
                 log.exception("qyh_cron_tick_failed")
             try:

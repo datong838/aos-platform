@@ -16,8 +16,10 @@ def bound_case(executor_case,binding_case):
     original,conn,args,state=executor_case
     owner=PipelineScheduleControlOwner(controls=original._claims._controls)
     bind_args=dict(scope=args['scope'],schedule_id='schedule',control_ref=args['control_ref'],actor=args['actor'])
+    conn.execute("UPDATE meta_schedule_run SET status='succeeded',executor_stopped=true")
     with original._transaction(args['scope']) as db:
         binding=owner.bind(db,**bind_args,idempotency_key='binding')
+    conn.execute("UPDATE meta_schedule_run SET status='running',executor_stopped=false")
     bound=ControlledSnapshotIngress(claims=original._claims,store=original._store,connect=original._connect,schedule_binding=binding)
     return bound,original,conn,args,state,owner,bind_args,binding
 

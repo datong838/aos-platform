@@ -84,3 +84,20 @@ class ControlledScheduleExecution:
             operation=executor.resume_saved if self.recovery else executor.execute
             return operation(scope=scope,run_id=run_id,control_ref=self.binding.control_ref,
                 actor=self.binding.actor,deadline=deadline,cancel_event=cancel_event)
+
+
+def resolve_schedule_execution(scope, schedule_id, pipeline_id, *, control_factory, recovery):
+    from aos_api.pipeline_control_service import PipelineControlServiceFactory
+    from aos_api.pipeline_schedule_claim import read_schedule_binding
+    from aos_api.phase5_pipeline_engine import get_engine
+
+    binding = read_schedule_binding(scope, schedule_id)
+    if binding is None:
+        return None
+    if type(control_factory) is not PipelineControlServiceFactory:
+        raise RuntimeError('controlled schedule service unavailable')
+    if binding.scope != scope or binding.schedule_id != schedule_id or binding.pipeline_id != pipeline_id:
+        raise RuntimeConflict('schedule control pipeline differs')
+    execution = ControlledScheduleExecution(control_factory.build(scope), binding, get_engine(), recovery)
+    execution.validate_current()
+    return execution

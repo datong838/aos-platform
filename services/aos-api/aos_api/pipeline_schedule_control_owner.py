@@ -72,15 +72,17 @@ class PipelineScheduleControlOwner:
             raise TypeError('exact current control Owner required')
         self._controls=controls
 
-    def _identity(self,conn,scope):
+    @staticmethod
+    def _identity(conn,scope):
         _require_transaction(conn)
         if type(scope) is not TenantScope:raise TypeError('exact tenant required')
         row=conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
         if _values(row,('role','org_id','project_id'))!=('aos_runtime',*scope.key):
             raise PermissionError('current runtime identity and tenant required')
 
-    def read_latest(self,conn,*,scope,schedule_id):
-        self._identity(conn,scope)
+    @staticmethod
+    def read_latest(conn,*,scope,schedule_id):
+        PipelineScheduleControlOwner._identity(conn,scope)
         schedule_id=_text(schedule_id,200)
         with conn.cursor(row_factory=dict_row) as cursor:
             row=cursor.execute('''SELECT * FROM pipeline_schedule_control_binding
@@ -122,6 +124,13 @@ class PipelineScheduleControlOwner:
                 latest=self.read_latest(conn,scope=scope,schedule_id=schedule_id)
                 if (latest.ref if latest else None)!=previous_ref:
                     raise RuntimeRevisionConflict('schedule binding predecessor is not current')
+                if latest is None:
+                    active=cursor.execute('''SELECT 1 FROM meta_schedule_run
+                        WHERE org_id=%s AND project_id=%s AND schedule_id=%s
+                        AND (status='running' OR executor_stopped IS NOT TRUE) LIMIT 1''',
+                        (*scope.key,schedule_id)).fetchone()
+                    if active is not None:
+                        raise RuntimeConflict('first schedule binding requires stopped previous executions')
                 row=dict(org_id=scope.org_id,project_id=scope.project_id,schedule_id=schedule_id,
                     binding_id=identity,revision=revision,installation_id=draft.installation_ref.installation_id,generation=draft.generation,
                     pipeline_id=draft.pipeline_id,control_id=control_id,control_revision=control_ref.revision,
