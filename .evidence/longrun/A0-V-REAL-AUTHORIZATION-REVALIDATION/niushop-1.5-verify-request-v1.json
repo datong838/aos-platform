@@ -1,0 +1,15 @@
+{
+  "command": {
+    "installationId": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+    "etag": 4,
+    "kind": "runtime-verify"
+  },
+  "receipt": {
+    "installationId": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+    "operationId": "7a731a57-7a99-4edc-9edd-65ec7772e58a",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  },
+  "replayed": false
+}

@@ -17,3 +17,5 @@
 
 
 03:50后续命令入口：新实例已实际确定为eda57424-b8cb-401e-a6f7-94220cb4f9ef@3，lock26e8189c…；脚本增加固定操作目标校验。disable-parent只认旧ID/指定generation且当前enabled/unfenced，prepare/verify只认新ID及approved/applied；unknown action、错误ID/代次、多个binding一律在创建command文件和Owner调用前拒绝。每次操作先exclusive创建仓外action-command.json，已有文件拒绝再发，转observe；所有动作回执单独新路径，不覆盖。observe只读取两实例状态/操作/绑定/资源结果。原preflight/create保留，初始凭据不读出。接口使用既有RuntimeDisableService/RuntimeLifecycleService和现有runtime-owner，无直接UPDATE安装或binding。
+
+04:27配置入口方案：新增scripts/a0v_niushop_1_5_configure.py，以私有导入既有a0v_ecommerce_1_7_configure模块，仅替换BUNDLE_ROOT和固定configuration_target（新ID及独立仓外配置文件）；原模块与默认旧目标不改。仍由原四源当前读/authorize、append_configuration及RuntimeConfigurationService实现。拒绝旧恢复flags；stage/configure/enable先exclusive持久化intent，存在则只观察不重发。preflight不创建intent、不写配置。测试私有目标/原默认不变/错误flag与重复动作拒绝；实际每步回读后前进。新Host代码2b2ab503含停用修复与单写门，API随后重启到当前代码与1.5根。
