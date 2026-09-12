@@ -1,0 +1,73 @@
+{
+  "after": {
+    "canary": 0,
+    "installations": 1,
+    "positive": 1,
+    "target_versions": 1
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-1.6-registry/backups/aos_meta_head-pre-growth-1.5-registry.dump",
+    "sha256": "sha256:c2929d8c0602b71f5a64bacceb90c82dd131d7eb11c12a0f3d638d0676387144",
+    "size": 4430168
+  },
+  "before": {
+    "canary": 0,
+    "installations": 1,
+    "positive": 1,
+    "target_versions": 1
+  },
+  "externalPublicationCount": 0,
+  "installationMutationCount": 0,
+  "outcome": "ECOMMERCE_1_6_REGISTRY_GREEN",
+  "outputTreeHash": "sha256:768af3234ae1ff395bcabceceb0a8889e746f689bfae378bf7177a44619be445",
+  "providerInvocationCount": 0,
+  "releases": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "mutations": {
+        "create": 1,
+        "publish": 1,
+        "validate": 1
+      },
+      "version": "1.2.0"
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "mutations": {
+        "create": 1,
+        "publish": 1,
+        "validate": 1
+      },
+      "version": "1.2.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "mutations": {
+        "create": 1,
+        "publish": 1,
+        "validate": 1
+      },
+      "version": "1.6.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "mutations": {
+        "create": 0,
+        "publish": 0,
+        "validate": 0
+      },
+      "version": "1.2.0"
+    }
+  ],
+  "rootChanged": true,
+  "signedContent": {
+    "domain.ecommerce.core/1.1.0": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+    "domain.ecommerce.core/1.2.0": "sha256:98aa65e8a3bcbe319a25fc59da6497b278ba98c86434dbfb019e7afb6fe4a0f6",
+    "platform.ecommerce.niushop/1.1.0": "sha256:5a3e65d39ac276d2e9ab761835195fc3f5d9ace9d253b47368c5895c62402cd3",
+    "platform.ecommerce.niushop/1.2.0": "sha256:351e9bcb23757f02d93f650be26636bedc0e31a8c25897cac582b37ff174cbdc",
+    "solution.ecommerce.growth/1.4.0": "sha256:23d432e1b01e5255d9c309a902dec30983366f8c2a6738854822fa5015790042",
+    "solution.ecommerce.growth/1.5.0": "sha256:6a547118c5fe129cc4d9bb10c0066a9a503ee949cc67ce1e57105a0c70f3edab",
+    "solution.ecommerce.growth/1.6.0": "sha256:2dfd08839f5033dde989551337d6defad10722a01e9ac033345adf02ea73ddce",
+    "solution.ecommerce.operations-base/1.2.0": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  }
+}

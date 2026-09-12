@@ -993,3 +993,10 @@ head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninsta
 输出树 hash 为 768af3234ae1ff395bcabceceb0a8889e746f689bfae378bf7177a44619be445。
 证据为 A0-V 目录 ecommerce-1.6-build-result.json / ecommerce-1.6-qualification-result.json。
 下一步按照 ecommerce-1.6-registry-plan.md 进行新三坐标 Registry successor，不修改历史制品。
+
+### 9.49 三坐标 Registry successor
+
+2026-09-12：domain 1.2/platform 1.2/growth 1.6 各 create/validate/publish 一次；重放全部为零。
+八坐标签名目录保留历史五坐标的 content hash，宿主根路径 CAS 成功且重放不写。正租户安装仍为 1
+（已卸载旧实例），负租户为零。本步新安装/Provider/外部发布均为零；执行器测试 6 passed。
+证据：A0-V 目录 ecommerce-1.6-registry-apply.json / ecommerce-1.6-registry-replay.json。
