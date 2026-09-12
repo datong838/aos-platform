@@ -83,6 +83,8 @@ describe("InstalledModuleNavigation", () => {
     await flush();
     expect(host.querySelectorAll("a")).toHaveLength(0);
     expect(host.textContent).not.toContain("未安装");
+    expect(host.textContent).toContain("暂无可见工作台入口");
+    expect(host.querySelector("button")?.textContent).toBe("重新读取目录");
   });
 
   it("目录读取失败时不伪造产品入口或安装状态", async () => {
@@ -99,5 +101,19 @@ describe("InstalledModuleNavigation", () => {
     expect(links).toHaveLength(0);
     expect(host.textContent).not.toContain("未安装");
     expect(host.textContent).not.toContain("已就绪");
+    expect(host.textContent).toContain("工作台目录读取失败");
+  });
+
+  it("空目录可重读恢复真实入口", async () => {
+    let reads = 0;
+    const client = { listModules: async () => workshopCatalogFixture({ items: ++reads === 1 ? [] : [workshopModuleFixture()] }) };
+    await act(async () => root.render(<MemoryRouter><EcommerceWorkshopCatalogProvider client={client}><InstalledModuleNavigation /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
+    await flush();
+    expect(host.querySelector("button")).not.toBeNull();
+    await act(async () => host.querySelector<HTMLButtonElement>("button")!.click());
+    await flush();
+    expect(reads).toBe(2);
+    expect(host.querySelectorAll("a")).toHaveLength(1);
+    expect(host.textContent).not.toContain("暂无可见工作台入口");
   });
 });

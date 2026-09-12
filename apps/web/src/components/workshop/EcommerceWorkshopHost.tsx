@@ -20,7 +20,7 @@ function HostState({
   state,
   onRetry,
 }: {
-  state: "loading" | "empty" | "forbidden" | "failed" | "not-installed";
+  state: "loading" | "empty" | "forbidden" | "failed";
   onRetry?: () => void;
 }) {
   return (
@@ -28,6 +28,8 @@ function HostState({
       <h1>电商工作台</h1>
       <AsyncStateBoundary
         state={state}
+        title={state === "empty" ? "当前工作台入口不可用" : undefined}
+        description={state === "empty" ? "当前目录没有此工作台的可见入口。请核对安装配置与访问权限后重新读取。" : undefined}
         action={
           onRetry ? (
             <button type="button" onClick={onRetry}>重新读取目录</button>
@@ -68,6 +70,5 @@ export function EcommerceWorkshopHost() {
   if (catalog.phase === "failed") {
     return <HostState state="failed" onRetry={catalog.reload} />;
   }
-  if (catalog.phase === "empty") return <HostState state="not-installed" />;
-  return <HostState state="not-installed" />;
+  return <HostState state="empty" onRetry={catalog.reload} />;
 }

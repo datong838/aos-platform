@@ -1,0 +1,175 @@
+{
+  "outcome": "CONTINUITY_CROSS_INITIAL_DEADLINE_GREEN",
+  "fencedConfigurationProven": false,
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "observedAt": "2026-09-12 05:57:55.770919+00:00",
+  "originalDeadline": "2026-09-12 05:48:31.905617+00:00",
+  "elapsedSeconds": 863.892419,
+  "renewalCount": 14,
+  "renewals": [
+    {
+      "occurred_at": "2026-09-12 05:44:37.950072+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:47:37.995110+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:44:37.956228+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:45:38.159945+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:48:38.212780+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:45:38.168004+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:46:38.657843+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:49:38.729774+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:46:38.665421+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:47:39.405044+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:50:39.464679+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:47:39.412947+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:48:39.656540+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:51:39.708518+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:48:39.664354+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:49:39.903563+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:52:39.956298+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:49:39.912005+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:50:40.270778+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:53:40.323884+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:50:40.279279+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:51:40.508200+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:54:40.560011+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:51:40.516357+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:52:40.812065+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:55:40.863541+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:52:40.820420+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:53:41.142492+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:56:41.196387+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:53:41.150635+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:54:41.372345+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:57:41.423142+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:54:41.380455+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:55:41.679148+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:58:41.732681+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:55:41.687335+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:56:42.002730+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T05:59:42.054286+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:56:42.010792+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 05:57:42.361717+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T06:00:42.426039+00:00",
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "healthCheckedAt": "2026-09-12T05:57:42.368954+00:00"
+      }
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "6a7d43f7-969e-40cf-9fbc-9915b8f495eb",
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "container_id": "d54c6d1be52be34a1ed88b152a7373525dc7375a04faa97bb56fd28f741d6ce3",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 06:00:42.426039+00:00"
+    },
+    {
+      "resource_id": "bfb022d1-790a-44c7-b26f-19081809163b",
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "container_id": "b85cf2cc0fd8520af24fa7fb50f2ff7ef352e21ce10745aede0636de4a5e907f",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 06:00:42.426039+00:00"
+    },
+    {
+      "resource_id": "c9af1903-0e30-4c0f-9598-975c6db28523",
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "container_id": "bfe60f1601618cb4f06d30fd83f28143e2c8d936de32c8805fd656b8ac05ddce",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 06:00:42.426039+00:00"
+    }
+  ],
+  "containersRunning": [
+    true,
+    true,
+    true
+  ],
+  "containerObservations": [
+    "running",
+    "running",
+    "running"
+  ],
+  "bindings": [
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "observed_state": "ready",
+      "desired_state": "enabled",
+      "enabled": true,
+      "operation_fence": false,
+      "revision": 4,
+      "config_ref": {
+        "hash": "sha256:003889108cdab115a50f0519ccc852a874ea67d3c41547f7349f49d9530c7f2c",
+        "revision": 1,
+        "configurationId": "2360b80e-45cb-48fb-83db-c779dea3c63e"
+      }
+    }
+  ],
+  "canaryInstallationCount": 0
+}

@@ -24,6 +24,14 @@ describe("EcommerceWorkshopHost task cockpit", () => {
   beforeEach(() => { sessionStorage.clear(); setTenant({ orgId: "org-org", projectId: "dev-project", workspaceName: "real" }); host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { vi.restoreAllMocks(); act(() => root.unmount()); host.remove(); });
 
+  it("空目录不能证明模块未安装，并提供重读入口", async () => {
+    const catalog = { listModules: async () => workshopCatalogFixture({ items: [] }) };
+    await act(async () => root.render(<MemoryRouter initialEntries={["/workshop/operations"]}><EcommerceWorkshopCatalogProvider client={catalog}><EcommerceWorkshopHost /></EcommerceWorkshopCatalogProvider></MemoryRouter>));
+    expect(host.textContent).toContain("当前工作台入口不可用");
+    expect(host.textContent).not.toContain("模块未安装");
+    expect(host.querySelector("button")?.textContent).toBe("重新读取目录");
+  });
+
   it("只在 canonical task-cockpit Module 中挂载 partial read page，并保持 Shell 唯一 H1", async () => {
     const taskModule = moduleWithReadiness("degraded"); Object.assign(taskModule, { moduleId: "ecommerce.task-cockpit", displayName: "日常任务总控大屏", menuLabel: "日常任务总控大屏", route: "/workshop/cockpit" });
     const catalog = { listModules: vi.fn().mockResolvedValue(workshopCatalogFixture({ items: [taskModule] })) };
