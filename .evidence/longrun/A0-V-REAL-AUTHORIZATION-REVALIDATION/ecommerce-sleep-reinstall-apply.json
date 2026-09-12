@@ -1,0 +1,16 @@
+{
+  "activeRevision": null,
+  "bindings": [],
+  "canaryInstallationCount": 0,
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "operations": [],
+  "receipt": {
+    "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+    "operationId": "4a4eea12-214f-4f30-9f18-aaf91e01126d",
+    "phase": "accepted",
+    "revision": 1,
+    "status": "accepted"
+  },
+  "revision": 3,
+  "state": "approved"
+}

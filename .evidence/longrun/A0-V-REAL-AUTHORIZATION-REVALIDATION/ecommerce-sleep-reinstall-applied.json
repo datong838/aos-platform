@@ -1,0 +1,18 @@
+{
+  "activeRevision": null,
+  "bindings": [],
+  "canaryInstallationCount": 0,
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "operations": [
+    {
+      "expected_installation_etag": 3,
+      "failure_code": null,
+      "kind": "runtime-apply",
+      "operation_id": "4a4eea12-214f-4f30-9f18-aaf91e01126d",
+      "phase": "succeeded",
+      "status": "succeeded"
+    }
+  ],
+  "revision": 4,
+  "state": "applied"
+}

@@ -41,3 +41,21 @@ def test_recovery_requires_distinct_valid_installation_and_state(tmp_path,monkey
         installation,path,key,command=executor.configuration_target(True)
         assert installation==identity and path.name=='ecommerce-1.7-recovered-configuration.json'
         assert key=='a0v-ecommerce-1.7-recovered' and command=='ecommerce-1.7-recovered'
+
+
+@pytest.mark.parametrize('case',['fresh','configured-predecessor','sleep-predecessor','invalid','both'])
+def test_sleep_recovery_uses_a_new_installation_and_command_namespace(tmp_path,monkeypatch,case):
+    monkeypatch.setattr(executor,'RECOVERY',tmp_path)
+    state=tmp_path/'state';state.mkdir()
+    identity={'configured-predecessor':executor.INSTALLATION,
+              'sleep-predecessor':'af1992e8-89c2-406a-816d-01e61d7bf982',
+              'invalid':'bad'}.get(case,str(uuid4()))
+    (state/'ecommerce-1.7-sleep-recovered-first-install.json').write_text(json.dumps({'installationId':identity}))
+    if case!='fresh':
+        with pytest.raises(ValueError):executor.configuration_target(case=='both',sleep_recovery=True)
+    else:
+        installation,path,key,command=executor.configuration_target(sleep_recovery=True)
+        assert installation==identity
+        assert path.name=='ecommerce-1.7-sleep-recovered-configuration.json'
+        assert key=='a0v-ecommerce-1.7-sleep-recovered'
+        assert command=='ecommerce-1.7-sleep-recovered'
