@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import base64
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import shutil
 import socket
@@ -53,17 +55,17 @@ SCHEMA_COMPATIBILITY_RELATIONS = (
     "public.extension_schema_installation",
 )
 RUNTIME_CASES = (
-    ("domain.ecommerce.core/1.1.0", "domain.ecommerce.core", "1.1.0", "ecommerce_core"),
+    ("domain.ecommerce.core/1.2.0", "domain.ecommerce.core", "1.2.0", "ecommerce_core"),
     (
-        "platform.ecommerce.niushop/1.1.0",
+        "platform.ecommerce.niushop/1.2.0",
         "platform.ecommerce.niushop",
-        "1.1.0",
+        "1.2.0",
         "ecommerce_niushop",
     ),
     (
-        "solution.ecommerce.growth/1.5.0",
+        "solution.ecommerce.growth/1.6.0",
         "solution.ecommerce.growth",
-        "1.5.0",
+        "1.6.0",
         "ecommerce_growth",
     ),
 )
@@ -130,7 +132,7 @@ def _load_manifest(path: Path) -> dict[str, Any]:
     return value
 
 
-def _runtime_registration(path: Path, package: str) -> tuple[str, ...]:
+def _runtime_registration(path: Path, package: str) -> tuple[tuple[str, str, str, str], ...]:
     entrypoint = path / "backend" / package / "__init__.py"
     if not entrypoint.is_file():
         raise CandidateBuildBlocked("RUNTIME_ENTRYPOINT_MISSING", str(entrypoint))
@@ -143,16 +145,40 @@ def _runtime_registration(path: Path, package: str) -> tuple[str, ...]:
     contributions = registration.get("contributions") if isinstance(registration, dict) else None
     if not isinstance(contributions, list):
         raise CandidateBuildBlocked("REGISTRATION_INVALID", package)
+    declared = (_load_manifest(path).get("spec") or {}).get("contributions") or []
+    def identities(items):
+        return sorted(json.dumps(item, sort_keys=True, separators=(",", ":")) for item in items)
+    if identities(contributions) != identities(declared):
+        raise CandidateBuildBlocked("MANIFEST_RUNTIME_API_MISMATCH", package)
+    if len(set(identities(contributions))) != len(contributions):
+        raise CandidateBuildBlocked("REGISTRATION_INVALID", package)
+    contributions = [item for item in contributions if isinstance(item, dict) and item.get("kind") == "api"]
     operations = tuple(
-        item.get("operationId") for item in contributions if isinstance(item, dict)
+        (item.get("operationId"), item.get("method"), item.get("path"), item.get("mode"))
+        for item in contributions if isinstance(item, dict)
     )
     if (
         len(operations) != len(contributions)
-        or any(not isinstance(item, str) or not item for item in operations)
+        or any(
+            not all(isinstance(value, str) and value for value in item)
+            or item[1] != item[1].upper() or item[2].endswith("/") or item[3] != "exclusive"
+            for item in operations
+        )
         or len(set(operations)) != len(operations)
     ):
         raise CandidateBuildBlocked("REGISTRATION_INVALID", package)
     return operations
+
+
+def _manifest_api_registration(manifest: dict[str, Any]) -> tuple[tuple[str, str, str, str], ...]:
+    contributions = (manifest.get("spec") or {}).get("contributions") or []
+    values = tuple(
+        (item.get("operationId"), item.get("method"), item.get("path"), item.get("mode"))
+        for item in contributions if isinstance(item, dict) and item.get("kind") == "api"
+    )
+    if len(set(values)) != len(values):
+        raise CandidateBuildBlocked("MANIFEST_API_DUPLICATE", str((manifest.get("metadata") or {}).get("id")))
+    return values
 
 
 def _schema_compatibility(path: Path, bundle_id: str) -> str:
@@ -214,7 +240,11 @@ def preflight() -> dict[str, Any]:
                 or backend.get("imageIndex") != "artifacts/runtime-image-index.json"
             ):
                 raise CandidateBuildBlocked("RUNTIME_DECLARATION_DRIFT", relative)
-            operations = _runtime_registration(root, package)
+            registration = _runtime_registration(root, package)
+            declared = _manifest_api_registration(manifest)
+            if set(registration) != set(declared) or len(registration) != len(declared):
+                raise CandidateBuildBlocked("MANIFEST_RUNTIME_API_MISMATCH", relative)
+            operations = tuple(item[0] for item in registration)
             schema_compatibility_hash = _schema_compatibility(root, expected_id)
             if operation_ids.intersection(operations):
                 raise CandidateBuildBlocked("DUPLICATE_RUNTIME_OPERATION", relative)
@@ -753,31 +783,31 @@ def _assert_signed_tampering_rejected(
 ) -> list[str]:
     cases = {
         "imageIndexBytes": (
-            "domain.ecommerce.core/1.1.0/artifacts/runtime-image-index.json",
+            "domain.ecommerce.core/1.2.0/artifacts/runtime-image-index.json",
             lambda raw: raw + b" ",
         ),
         "imageDigest": (
-            "domain.ecommerce.core/1.1.0/artifacts/runtime-image-index.json",
+            "domain.ecommerce.core/1.2.0/artifacts/runtime-image-index.json",
             lambda raw: raw.replace(b'"imageDigest":"sha256:', b'"imageDigest":"sha256:0', 1),
         ),
         "dependencyLock": (
-            "domain.ecommerce.core/1.1.0/artifacts/python-dependencies.lock",
+            "domain.ecommerce.core/1.2.0/artifacts/python-dependencies.lock",
             lambda raw: raw + b"# tampered\n",
         ),
         "sbom": (
-            "domain.ecommerce.core/1.1.0/evidence/sbom.json",
+            "domain.ecommerce.core/1.2.0/evidence/sbom.json",
             lambda raw: raw + b" ",
         ),
         "backend": (
-            "domain.ecommerce.core/1.1.0/backend/ecommerce_core/__init__.py",
+            "domain.ecommerce.core/1.2.0/backend/ecommerce_core/__init__.py",
             lambda raw: raw + b"\n# tampered\n",
         ),
         "schemaCompatibility": (
-            "domain.ecommerce.core/1.1.0/artifacts/schema-compatibility.json",
+            "domain.ecommerce.core/1.2.0/artifacts/schema-compatibility.json",
             lambda raw: raw + b" ",
         ),
         "schemaRequirements": (
-            "domain.ecommerce.core/1.1.0/artifacts/schema-requirements.json",
+            "domain.ecommerce.core/1.2.0/artifacts/schema-requirements.json",
             lambda raw: raw + b" ",
         ),
     }
@@ -787,7 +817,7 @@ def _assert_signed_tampering_rejected(
         original = path.read_bytes()
         try:
             path.write_bytes(transform(original))
-            bundle = loader.load("bundle://a0v-candidate/domain.ecommerce.core/1.1.0")
+            bundle = loader.load("bundle://a0v-candidate/domain.ecommerce.core/1.2.0")
             policy.evaluate(_release_record(bundle), checked_at=checked_at)
         except Exception:
             rejected.append(label)
@@ -796,6 +826,39 @@ def _assert_signed_tampering_rejected(
         finally:
             path.write_bytes(original)
     return rejected
+
+
+def _qualify_session(*, driver, image_id, contributions, journal_root: Path):
+    """Persist a one-use diagnostic resource identity before any container create."""
+    from aos_api.extension_runtime.contracts import RegistrationDescription
+    from aos_api.extension_runtime.session_supervisor import open_session
+    from aos_api.extension_runtime.supervisor import ResourceIdentity
+
+    declared = RegistrationDescription(contributions=contributions)
+    identity = ResourceIdentity(uuid.uuid4().hex)
+    journal_root.mkdir(parents=True, exist_ok=True)
+    journal = journal_root / (identity.owner + ".jsonl")
+    with journal.open("x", encoding="utf-8") as stream:
+        os.chmod(journal, 0o600)
+        def record(state):
+            stream.write(json.dumps({"state": state, "resourceName": identity.name,
+                "owner": identity.owner, "imageId": image_id, "context": driver.context}, sort_keys=True) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        record("claimed")
+        async def run():
+            async with open_session(driver, image_id=image_id, declared=declared,
+                                    resource_identity=identity) as session:
+                await session.check_health()
+                record("registered_and_alive")
+        try:
+            asyncio.run(run())
+        except BaseException:
+            record("failed_requires_observation")
+            raise
+        record("released")
+    return {"registration": "exact", "heartbeat": "alive", "cleanup": "released",
+            "contributionCount": len(declared.contributions), "journal": str(journal)}
 
 
 def qualify(
@@ -862,6 +925,7 @@ def qualify(
         resolved_by_id = {item.id: item for item in composition.resolved}
         actual_driver = driver or OciDriver(context=context)
         admitted = {}
+        sessions = {}
         schema_requirements = {}
         for relative, bundle_id, _version, _package in RUNTIME_CASES:
             root = signed_root / relative
@@ -920,6 +984,11 @@ def qualify(
                 != index_identity.get("imageDigest")
             ):
                 raise CandidateBuildBlocked("BUILD_RECEIPT_IMAGE_MISMATCH", bundle_id)
+            sessions[bundle_id] = _qualify_session(
+                driver=actual_driver, image_id=artifact.image_id,
+                contributions=record.manifest.spec.contributions,
+                journal_root=build_receipt.parent / "qualification-session-journal",
+            )
         tamper_rejections = _assert_signed_tampering_rejected(
             signed_root=signed_root,
             loader=loader,
@@ -942,6 +1011,7 @@ def qualify(
                 for item in composition.resolved
             ],
             "runtimeAdmissions": admitted,
+            "runtimeSessions": sessions,
             "schemaRequirements": schema_requirements,
             "moduleCount": len(module_ids),
             "runtimeMemberCount": len(admitted),

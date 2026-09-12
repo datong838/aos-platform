@@ -979,3 +979,9 @@ head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninsta
 | `services/aos-api/aos_api/asset_registry/installation_evidence.py` | 原路径 | uninstall Evidence 封存真实 source state | 633ebc0b90d48f8a171dc7c263986492973385d7a70a32331b196220bb2c9a67 |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/invalid-growth-1.4-retirement-verification.md` | 原路径 | 迁移、退役、回放与无副作用审计 | 43bad01ddb8f814e0990c7edb723d6d7d9a3e77a582d03dddd4904534ee64c4c |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/invalid-growth-1.4-retirement/uninstall-result.json` | 原路径 | 真实退役与幂等回放 Receipt | 35f949cc3e07ec98a1f0fee3455e211b66819cc740567c906a9d7ac9ba468485 |
+
+### 9.47 三包完整注册新候选
+
+新增 domain 1.2.0 / Niushop 1.2.0 / growth 1.6.0：完整签名 contribution 与运行注册同步，历史版本字节保留。
+候选生成、预检与资格代码验证 22 passed；真实 OCI qualification 尚待执行。
+证据：`../A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-1.6-candidate-verification.md`。

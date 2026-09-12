@@ -1,0 +1,150 @@
+{
+  "id": "l05-commission-anomaly",
+  "name": "L05 分润异常检测",
+  "description": "基于 Order + OrderLine + Commission（跨平台 Ontology CommissionLog 占位）数据底座的分润异常检测 Logic Graph。输出 CommissionAnomalyDecision（overpaid / underpaid / manual_review / normal）。分润表未正式落地前，用 OrderLine.pay_price * 预设佣金率做估算兜底，actual_commission = null 时降级为 manual_review。",
+  "status": "draft",
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "order_line_read",
+      "kind": "input",
+      "label": "读取订单行与佣金上下文",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "schema": {
+          "required": [
+            "order_id",
+            "order_line_id",
+            "pay_price",
+            "commission_rate",
+            "actual_commission"
+          ]
+        },
+        "note": "commission_rate 来自商家预设（D3 阶段写死默认 10%，生产环境接 Commission 配置表）；actual_commission 在微商城 Niushop 无分润表时为 null。"
+      }
+    },
+    {
+      "id": "expected_commission_calc",
+      "kind": "transform",
+      "label": "计算预期佣金",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "pay_price * (commission_rate if commission_rate != null else 0.10)"
+      }
+    },
+    {
+      "id": "diff_calc",
+      "kind": "transform",
+      "label": "佣金偏差计算",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "if actual_commission != null then (actual_commission - expected_commission_calc) else null"
+      }
+    },
+    {
+      "id": "diff_ratio_calc",
+      "kind": "transform",
+      "label": "佣金偏差比例",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "expression": "if expected_commission_calc > 0 and actual_commission != null then (diff_calc / expected_commission_calc) else null"
+      }
+    },
+    {
+      "id": "anomaly_decision_gate",
+      "kind": "branch",
+      "label": "分润异常决策门",
+      "position_x": 0,
+      "position_y": 0,
+      "config": {
+        "paths": [
+          {
+            "id": "manual_review",
+            "condition": "actual_commission == null",
+            "note": "分润表未落地，微商城默认走人工复核通道，不自动判定异常"
+          },
+          {
+            "id": "overpaid",
+            "condition": "diff_ratio_calc != null and diff_ratio_calc > 0.20",
+            "note": "实际佣金比预期高 20% 以上，疑似多发"
+          },
+          {
+            "id": "underpaid",
+            "condition": "diff_ratio_calc != null and diff_ratio_calc < -0.20",
+            "note": "实际佣金比预期低 20% 以上，疑似少发"
+          },
+          {
+            "id": "normal",
+            "default": true
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-order_line_read-to-expected_commission_calc",
+      "source_node_id": "order_line_read",
+      "source_port": "out",
+      "target_node_id": "expected_commission_calc",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-expected_commission_calc-to-diff_calc",
+      "source_node_id": "expected_commission_calc",
+      "source_port": "out",
+      "target_node_id": "diff_calc",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-order_line_read-to-diff_calc",
+      "source_node_id": "order_line_read",
+      "source_port": "out",
+      "target_node_id": "diff_calc",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 1
+    },
+    {
+      "id": "edge-diff_calc-to-diff_ratio_calc",
+      "source_node_id": "diff_calc",
+      "source_port": "out",
+      "target_node_id": "diff_ratio_calc",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-diff_ratio_calc-to-anomaly_decision_gate",
+      "source_node_id": "diff_ratio_calc",
+      "source_port": "out",
+      "target_node_id": "anomaly_decision_gate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 0
+    },
+    {
+      "id": "edge-order_line_read-to-anomaly_decision_gate",
+      "source_node_id": "order_line_read",
+      "source_port": "out",
+      "target_node_id": "anomaly_decision_gate",
+      "target_port": "in",
+      "branch_path": "",
+      "order": 1
+    }
+  ],
+  "entry_node_ids": [
+    "order_line_read"
+  ],
+  "blocked_reason": "D3 阶段已完成 Logic Graph 骨架与 dryRun 分支。分润真源 Commission 表未入 Ontology（微商城 Niushop 无分润模块），实际落地排期需等跨平台 CommissionLog 接入。",
+  "dry_run_compatible": true,
+  "fallback_tag_when_commission_missing": "manual_review"
+}

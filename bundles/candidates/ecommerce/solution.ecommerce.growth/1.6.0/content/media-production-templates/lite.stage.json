@@ -1,0 +1,14 @@
+{
+  "schema":"aos.ecommerce-media-stage-template/v1",
+  "templateId":"ecommerce.media-studio.lite.stage",
+  "revision":1,
+  "profile":"LITE",
+  "responsibilityTemplateId":"ecommerce.media-studio.lite.responsibility",
+  "stages":[
+    {"stageId":"plan","title":"目标与素材计划","dependsOn":[],"responsibilitySlotIds":["media.producer","media.director"],"requiredCapabilityIds":["strategy.plan","material.collect","performance.review","copy.generate","script.compose"],"liveStage":false},
+    {"stageId":"script","title":"脚本准备","dependsOn":["plan"],"responsibilitySlotIds":["media.screenwriter"],"requiredCapabilityIds":["copy.generate","script.compose"],"liveStage":false},
+    {"stageId":"generate","title":"生成与后期","dependsOn":["script"],"responsibilitySlotIds":["media.capture","media.post"],"requiredCapabilityIds":["material.collect","speech.synthesize","video.compose","platform.adapt"],"liveStage":false},
+    {"stageId":"review","title":"独立评审","dependsOn":["generate"],"responsibilitySlotIds":["media.review"],"requiredCapabilityIds":["content.review","performance.review"],"liveStage":false}
+  ],
+  "requiredCapabilityIds":["material.collect","strategy.plan","copy.generate","script.compose","speech.synthesize","video.compose","content.review","platform.adapt","performance.review"]
+}

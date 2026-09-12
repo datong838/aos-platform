@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 SCRIPT = Path(__file__).resolve().parents[4] / "scripts/build_ecommerce_runtime_candidates.py"
@@ -33,6 +34,25 @@ def test_default_preflight_never_calls_docker(monkeypatch) -> None:
         for item in result["bundles"]
         if item["runtimeOperations"]
     )
+
+
+@pytest.mark.parametrize("change", ["missing", "method", "path", "mode", "duplicate"])
+def test_registration_rejects_manifest_drift_before_docker(tmp_path, change):
+    source = BUILDER.CANDIDATE_ROOT / BUILDER.RUNTIME_CASES[0][0]
+    target = tmp_path / "candidate"
+    shutil.copytree(source, target)
+    path = target / "bundle.yaml"
+    manifest = yaml.safe_load(path.read_text())
+    contributions = manifest["spec"]["contributions"]
+    if change == "missing":
+        contributions.clear()
+    elif change == "duplicate":
+        contributions.append(dict(contributions[0]))
+    else:
+        contributions[0][change] = {"method": "GET", "path": "/wrong", "mode": "shared"}[change]
+    path.write_text(yaml.safe_dump(manifest))
+    with pytest.raises(BUILDER.CandidateBuildBlocked, match="ecommerce_core"):
+        BUILDER._runtime_registration(target, "ecommerce_core")
 
 
 def test_build_rejects_repository_output_before_engine_access(monkeypatch) -> None:
@@ -153,8 +173,13 @@ def _qualification_fixture(tmp_path: Path) -> tuple[Path, Path, dict[str, dict[s
 
 
 def test_qualification_uses_ephemeral_signing_policy_admission_and_resolver(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch,
 ) -> None:
+    sessions = []
+    def qualify_session(**kwargs):
+        sessions.append(kwargs)
+        return {"registration": "exact", "heartbeat": "alive", "cleanup": "released"}
+    monkeypatch.setattr(BUILDER, "_qualify_session", qualify_session)
     output, receipt, identities = _qualification_fixture(tmp_path)
     by_config = {item["configDigest"]: item for item in identities.values()}
 
@@ -181,6 +206,8 @@ def test_qualification_uses_ephemeral_signing_policy_admission_and_resolver(
     )
 
     assert result["outcome"] == "QUALIFICATION_GREEN"
+    assert len(sessions) == 3
+    assert len(result["runtimeSessions"]) == 3
     assert [item["id"] for item in result["resolved"]] == [
         "domain.ecommerce.core",
         "platform.ecommerce.niushop",
