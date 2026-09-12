@@ -19,6 +19,22 @@ def load(name):
     return module
 
 
+def installation_target(*, after_config_recovery=False, after_sleep_recovery=False, niushop_1_4=False):
+    flags = (after_config_recovery, after_sleep_recovery, niushop_1_4)
+    if any(type(flag) is not bool for flag in flags) or sum(flags) > 1:
+        raise ValueError('one exact installation profile required')
+    if niushop_1_4:
+        return (RECOVERY / 'state/niushop-1.4-first-install.json', 'a0v-niushop-1.4',
+                '1.4.0', 'a0fd8e25-cb6f-49e5-aa77-7faddae12099')
+    if after_sleep_recovery:
+        return (RECOVERY / 'state/ecommerce-1.7-sleep-recovered-first-install.json',
+                'a0v-ecommerce-1.7-sleep-recovered', '1.3.0', 'af1992e8-89c2-406a-816d-01e61d7bf982')
+    if after_config_recovery:
+        return (RECOVERY / 'state/ecommerce-1.7-recovered-first-install.json',
+                'a0v-ecommerce-1.7-recovered', '1.3.0', 'e42e042b-1fe7-4cfa-bb83-469ff256081d')
+    return STATE, 'a0v-ecommerce-1.7', '1.3.0', None
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", choices=("create", "apply", "verify", "observe"), required=True)
@@ -26,15 +42,11 @@ def main():
     group=parser.add_mutually_exclusive_group()
     group.add_argument("--after-config-recovery", action="store_true")
     group.add_argument("--after-sleep-recovery", action="store_true")
+    group.add_argument("--niushop-1-4", action="store_true")
     args = parser.parse_args()
-    state_path = STATE
-    key_prefix = "a0v-ecommerce-1.7"
-    if args.after_config_recovery:
-        state_path=RECOVERY/"state/ecommerce-1.7-recovered-first-install.json"
-        key_prefix="a0v-ecommerce-1.7-recovered"
-    if args.after_sleep_recovery:
-        state_path=RECOVERY/"state/ecommerce-1.7-sleep-recovered-first-install.json"
-        key_prefix="a0v-ecommerce-1.7-sleep-recovered"
+    state_path, key_prefix, adapter_version, predecessor_id = installation_target(
+        after_config_recovery=args.after_config_recovery,
+        after_sleep_recovery=args.after_sleep_recovery, niushop_1_4=args.niushop_1_4)
     first = load("a0v_canonical_ecommerce_first_install")
     activation = load("a0v_ecommerce_growth_1_4_activate")
     connect = first.container_database_connect_factory(context="colima-aos-extension", container="aos-a0v-recovery-pg", database_name="aos_meta_head")
@@ -49,17 +61,13 @@ def main():
     predecessor = store.get_installation(org_id="org-org", project_id="dev-project", installation_id="efc4e640-1b15-403f-9d06-4c6d1a5330a7")
     if predecessor.state != "uninstalled" or predecessor.active_revision is not None:
         raise ValueError("1.6 reinstall must be formally retired first")
-    if args.after_config_recovery:
-        retired=store.get_installation(org_id="org-org",project_id="dev-project",installation_id="e42e042b-1fe7-4cfa-bb83-469ff256081d")
+    if predecessor_id is not None:
+        retired=store.get_installation(org_id="org-org",project_id="dev-project",installation_id=predecessor_id)
         if retired.state!="uninstalled" or retired.active_revision is not None:
-            raise ValueError("configured predecessor must be formally uninstalled")
-    if args.after_sleep_recovery:
-        retired=store.get_installation(org_id="org-org",project_id="dev-project",installation_id="af1992e8-89c2-406a-816d-01e61d7bf982")
-        if retired.state!="uninstalled" or retired.active_revision is not None:
-            raise ValueError("sleep predecessor must be formally uninstalled")
+            raise ValueError("selected predecessor must be formally uninstalled")
     if args.action == "create":
         result = first.create_approved_first_installation(connect_factory=connect, state_dir=TRUST_STATE,
-            core_version="1.3.0", adapter_version="1.3.0", growth_version="1.7.0",
+            core_version="1.3.0", adapter_version=adapter_version, growth_version="1.7.0",
             idempotency_prefix=key_prefix + "-first-install-v1")
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")

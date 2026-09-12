@@ -29,15 +29,28 @@ def verify_physical(conn, compatibility, revisions):
             raise ValueError("required physical relation is missing: " + relation)
 
 
+def select_successor(*, successor_1_7=False, niushop_1_4=False):
+    if any(type(flag) is not bool for flag in (successor_1_7, niushop_1_4)) or (successor_1_7 and niushop_1_4):
+        raise ValueError('one exact schema profile required')
+    name = ('a0v_niushop_1_4_registry_successor.py' if niushop_1_4 else
+            'a0v_ecommerce_1_7_registry_successor.py' if successor_1_7 else
+            'a0v_ecommerce_1_6_registry_successor.py')
+    spec = importlib.util.spec_from_file_location('schema_receipt_successor', ROOT / 'scripts' / name)
+    successor = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(successor)
+    return successor.load_successor() if niushop_1_4 else successor
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument('--successor-1-7', action='store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--successor-1-7', action='store_true')
+    group.add_argument('--niushop-1-4', action='store_true')
     args = parser.parse_args()
     sys.path.insert(0, str(API))
-    spec = importlib.util.spec_from_file_location("successor", ROOT / ("scripts/a0v_ecommerce_1_7_registry_successor.py" if args.successor_1_7 else "scripts/a0v_ecommerce_1_6_registry_successor.py"))
-    successor = importlib.util.module_from_spec(spec); spec.loader.exec_module(successor)
+    successor = select_successor(successor_1_7=args.successor_1_7, niushop_1_4=args.niushop_1_4)
     helper = successor.legacy()
     builder = helper._builder()
     from alembic.config import Config
