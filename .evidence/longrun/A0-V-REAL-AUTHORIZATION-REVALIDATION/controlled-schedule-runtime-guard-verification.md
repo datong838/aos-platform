@@ -1,0 +1,9 @@
+# 执行中计划关联当前性
+
+2026-09-13，11628a93。ControlledSnapshotIngress可固定服务器ScheduleControlBinding；每段事务CurrentControl安装锁内核对最新关联，提交前复验。prepare与resume_saved要求scope/controlRef/actor一致。ControlledSnapshotExecutor将固定关联传入统一事务工厂。
+
+补充_run_transaction在安装锁之后取原run advisory lock与行锁，核对run.schedule_id等于固定binding.schedule_id，提交前再次检查。覆盖源占用/原输入、authoritative恢复、本批投影和Dataset。防止同pipeline不同计划借用关联。未绑定内部路径维持原行为；正式调度服务必须传入真实关联。
+
+初次schedule_binding参数缺失4项RED；基础20项通过后，新增同pipeline另一schedule反例实际未拒绝（有效RED）。修复后guard、完整持久层集成、源输入及装配四文件共25 passed。改绑旧执行器在读源前拒绝，事务内改绑使该段更新回滚，actor不符连接前拒绝，同pipeline跨计划占用0/源调用0。包资产和外部源仍fixture，数据库关联/锁/事务为真实PG。
+
+清册1805/158/93五类错误空，diff check通过。main仍024，未创建实际关联/批准/源查询。下一切片运行身份ConsistencyStore装配与正式调度桥接，保持无factory不回退旧执行路径。
