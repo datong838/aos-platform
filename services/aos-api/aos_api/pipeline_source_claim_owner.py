@@ -73,7 +73,7 @@ class PipelineSourceClaimOwner:
         def current(draft, spec):
             # Global lock order: current installation first, then immutable run.
             self._journal.lock_run(conn,scope,run_id)
-            self._journal.verify_running_schedule(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,
+            self._journal.verify_schedule_binding(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,
                 source_id=draft.source_id,source_revision=draft.source_configuration_ref.resource_id.removeprefix('source-config-'),
                 pipeline_hash=draft.graph_hash,graph_revision=draft.graph_revision)
             with conn.cursor(row_factory=dict_row) as cursor:
@@ -85,6 +85,8 @@ class PipelineSourceClaimOwner:
                 if row is None:
                     if not create:
                         raise LookupError('source call claim unavailable')
+                    if self._journal.read(conn,scope,run_id) is not None:
+                        raise RuntimeConflict('uncontrolled ingress already exists')
                     count = cursor.execute('''SELECT count(*) AS count,max(call_ordinal) AS last
                         FROM pipeline_controlled_source_claim WHERE org_id=%s AND project_id=%s AND control_id=%s AND control_revision=%s''',
                         (*scope.key,identity,ref.revision)).fetchone()

@@ -131,7 +131,21 @@ class IngressJournal:
         return self.save(conn, scope, **args)
 
     def verify_running_schedule(self, conn, scope, **args):
-        """Lock and validate current binding; caller retains the transaction."""
+        """Legacy ingress cannot consume a run owned by current control approvals."""
+        self.lock_run(conn, scope, args['run_id'])
+        self.verify_schedule_binding(conn, scope, **args)
+        table = sql.Identifier(self.schema, 'pipeline_controlled_source_claim')
+        # Older deployed schemas retain their legacy behavior. A permission or
+        # query failure when the table exists must never be treated as absence.
+        exists = conn.execute('SELECT to_regclass(%s) AS relation', (table.as_string(conn),)).fetchone()
+        if exists['relation'] is not None:
+            claimed = conn.execute(sql.SQL('SELECT 1 FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(table),
+                (*scope.key, args['run_id'])).fetchone()
+            if claimed is not None:
+                raise IngressJournalConflict('INGRESS_CURRENT_CONTROL_REQUIRED')
+
+    def verify_schedule_binding(self, conn, scope, **args):
+        """Structural binding only; does not grant execution or bypass control checks."""
         def read(table, identity_column, identity, columns):
             return conn.execute(sql.SQL('SELECT {} FROM {} WHERE org_id=%s AND project_id=%s AND {}=%s FOR SHARE').format(
                 sql.SQL(columns), sql.Identifier(self.schema, table), sql.Identifier(identity_column)),

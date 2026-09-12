@@ -1,0 +1,13 @@
+# 受控运行拒绝旧执行器绕过
+
+2026-09-12，基线8862ae82。文件services/aos-api/aos_api/ec_ingress_journal.py、pipeline_source_claim_owner.py；测试扩展test_pipeline_source_claim_owner_pg.py，并回归既有Ingress/恢复PG。
+
+当前旧持久执行器、恢复、Dataset完成和恢复认领都经过IngressJournal.verify_running_schedule。该入口先锁run，再验证当前绑定并检查同scope/run的pipeline_controlled_source_claim；已有占用则明确INGRESS_CURRENT_CONTROL_REQUIRED，不能从旧路径读源或继续恢复。不存在024表的旧部署保持旧行为；一旦表存在，权限/读取失败必须抛错，不按“无claim”降级。
+
+提取verify_schedule_binding作为纯结构检查，明确不授予执行；Current SourceClaim Owner已经在完整CurrentControl检查内，改调用纯绑定检查，避免自身占用被旧路径防线拒绝。只有后续严格构造的ControlledIngressJournal可以组合CurrentControl再放行受控run，不能添加客户端可传的skip/bypass布尔值。
+
+首次占用前也检查原Ingress：已有无受控占用的批次不得事后挂一个新控制冒充受控读取。当前控制检查与既有run锁共同序列化，旧执行器若已经在读取将先保存批次；新占用不能覆盖或收编它。真实主库不部署或写入。本波为集中拒绝边界，不能声称受控执行已完成。
+
+锁序说明：CurrentControl先持安装以及当前配置/图源锁，再取得run/调度锁；旧路径只取得run及图源锁，不反向取得安装锁。后续ControlledIngressJournal的lock_run必须先完成CurrentControl检查，不能在run锁后首次取得安装锁。
+
+验证：无claim旧路径仍可运行；已有claim的旧校验/保存/恢复入口拒绝；已有无控制Ingress不可新占用；现有claim通过Current Owner仍能回读；旧schema无024继续正常；查询权限缺失失败。PG夹具新增真实a0v_005日志表用于测试，不更改真实环境权限。

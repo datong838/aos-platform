@@ -35,6 +35,10 @@ def claim_case(owner_case):
     conn.execute('INSERT INTO meta_schedule VALUES(%s,%s,%s,%s,true,%s)',(*scope.key,'schedule',draft.pipeline_id,Jsonb({'kind':'pipeline-live-v1','pipelineId':draft.pipeline_id})))
     conn.execute('INSERT INTO phase5_pipeline_graph VALUES(%s,%s,%s,1,%s)',(*scope.key,draft.pipeline_id,Jsonb(graph)))
     conn.execute('INSERT INTO meta_source VALUES(%s,%s,%s,%s,%s,%s)',(*scope.key,draft.source_id,'jdbc-mysql-ssh','registered',draft.source_configuration_ref.resource_id.removeprefix('source-config-')))
+    journal_path=Path(__file__).resolve().parents[2]/'alembic/versions/a0v_005_ingress_command_journal.py'
+    journal_spec=importlib.util.spec_from_file_location('claim_original_journal_migration',journal_path)
+    journal_module=importlib.util.module_from_spec(journal_spec);journal_spec.loader.exec_module(journal_module)
+    journal_module.op=SimpleNamespace(execute=conn.execute);journal_module.upgrade()
     path=Path(__file__).resolve().parents[2]/'alembic/versions/a0v_024_pipeline_controlled_source_claim.py'
     spec=importlib.util.spec_from_file_location('claim_owner_migration',path)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
@@ -126,3 +130,70 @@ def test_concurrent_connections_cannot_double_spend_one_call(claim_case,same_run
         outcomes=list(pool.map(attempt,['run-one','run-one' if same_run else 'run-two']))
     assert outcomes.count(True)==1
     assert outcomes.count(False if same_run else 'budget')==1
+
+
+def legacy_args(case):
+    _,_,args,_,draft,_=case
+    return dict(run_id=args['run_id'],pipeline_id=draft.pipeline_id,source_id=draft.source_id,
+        source_revision=draft.source_configuration_ref.resource_id.removeprefix('source-config-'),
+        pipeline_hash=draft.graph_hash,graph_revision=draft.graph_revision)
+
+
+def test_claimed_run_cannot_use_legacy_ingress_path(claim_case):
+    conn,owner,args,*_=claim_case
+    with conn.transaction():owner._journal.verify_running_schedule(conn,args['scope'],**legacy_args(claim_case))
+    reserve(claim_case)
+    with pytest.raises(IngressJournalConflict,match='INGRESS_CURRENT_CONTROL_REQUIRED'),conn.transaction():
+        owner._journal.verify_running_schedule(conn,args['scope'],**legacy_args(claim_case))
+    with pytest.raises(IngressJournalConflict,match='INGRESS_CURRENT_CONTROL_REQUIRED'),conn.transaction():
+        owner._journal.save_empty_for_running_schedule(conn,args['scope'],**legacy_args(claim_case))
+    assert reserve(claim_case).created is False
+
+
+def test_existing_uncontrolled_batch_cannot_be_adopted(claim_case):
+    conn,owner,args,*_=claim_case
+    with conn.transaction():owner._journal.save_empty_for_running_schedule(conn,args['scope'],**legacy_args(claim_case))
+    with pytest.raises(RuntimeConflict,match='uncontrolled ingress'):reserve(claim_case)
+    assert conn.execute('SELECT count(*) FROM pipeline_controlled_source_claim').fetchone()=={'count':0}
+
+
+@pytest.mark.parametrize('claimed',[False,True])
+def test_claim_table_permission_failure_never_means_uncontrolled(claim_case,claimed):
+    import psycopg
+    if claimed:reserve(claim_case)
+    conn,owner,args,*_=claim_case
+    conn.execute('RESET ROLE')
+    conn.execute('REVOKE SELECT ON pipeline_controlled_source_claim FROM aos_runtime')
+    conn.execute('SET ROLE aos_runtime')
+    with pytest.raises(psycopg.errors.InsufficientPrivilege),conn.transaction():
+        owner._journal.verify_running_schedule(conn,args['scope'],**legacy_args(claim_case))
+
+
+def test_legacy_recovery_rejection_rolls_back_claim_and_run_change(claim_case):
+    from contextlib import contextmanager
+    from uuid import uuid4
+    from aos_api.ec_ingress_claim import claim_failed_run
+    conn,owner,args,*_=claim_case
+    reserve(claim_case)
+    # A valid saved empty batch simulates later controlled preparation only.
+    binding=legacy_args(claim_case)
+    with conn.transaction():
+        owner._journal._save_envelope(conn,args['scope'],dict(runId=binding['run_id'],pipelineId=binding['pipeline_id'],
+            sourceId=binding['source_id'],sourceRevision=binding['source_revision'],pipelineHash=binding['pipeline_hash'],
+            kind='empty_observation_v1',command=None,outputRows=[]))
+    conn.execute('RESET ROLE')
+    conn.execute('ALTER TABLE meta_schedule_run ADD COLUMN executor_stopped boolean, ADD COLUMN finished_at timestamptz')
+    conn.execute("UPDATE meta_schedule_run SET status='failed',executor_stopped=true,finished_at=clock_timestamp()")
+    path=Path(__file__).resolve().parents[2]/'alembic/versions/a0v_009_ingress_recovery_claim.py'
+    spec=importlib.util.spec_from_file_location('legacy_recovery_claim_migration',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    module.op=SimpleNamespace(execute=conn.execute);module.upgrade()
+    conn.execute('SET ROLE aos_runtime')
+    @contextmanager
+    def connection(scope):
+        assert scope==args['scope']
+        yield conn
+    with pytest.raises(IngressJournalConflict,match='INGRESS_CURRENT_CONTROL_REQUIRED'):
+        claim_failed_run(connection,args['scope'],args['run_id'],str(uuid4()),journal=owner._journal)
+    assert conn.execute('SELECT count(*) FROM ecommerce_ingress_recovery_claim').fetchone()=={'count':0}
+    assert conn.execute('SELECT status,executor_stopped FROM meta_schedule_run WHERE id=%s',(args['run_id'],)).fetchone()=={'status':'failed','executor_stopped':True}

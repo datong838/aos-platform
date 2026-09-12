@@ -1,0 +1,9 @@
+# 旧持久路径拒绝受控运行
+
+2026-09-12，基线8862ae82。两项PG RED证明原代码允许已占用run走旧校验、允许旧批次事后挂控制。现已在公共verify_running_schedule集中取得run锁、验证结构、检查claim；有claim明确CURRENT_CONTROL_REQUIRED。无024表维持旧部署行为，表存在但无SELECT则抛错，不降级。SourceClaimOwner在完整CurrentControl内使用纯结构绑定检查，首次占用拒绝已有无控制Ingress。
+
+48项既有及关联回归通过（包含独立PG、持久执行/恢复/空观察）；补充后占用Owner专项19 passed。两新增权限分支均拒绝，旧恢复认领在改run和INSERT claim后遇受控标记时整体事务回滚，原status=failed/executor_stopped=true保持、恢复claim=0。旧schema无024的PG场景继续通过。AR2闭包1799/158/93五类错误空，diff check通过。
+
+本波没有读取真实源、写真实审批/claim或迁移主库。此防线针对同一持久ScheduleRun的旧Ingress路径；不宣称所有遗留非持久执行入口都已消除。P01仍禁用，后续正式受控入口不能通过开启旧graph live执行模式来绕过审批。
+
+下一波实现严格ControlledIngressJournal，按当前控制→run锁顺序供受控保存/恢复使用；再接独立占用提交和一次有界读取，已有占用无原批次为未知结果、禁止重读。之后正式部署、页面确认与真实P01验收。m1单写、不push、230 L0挂起；主任务仍未完成。
