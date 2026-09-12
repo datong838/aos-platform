@@ -1,0 +1,14 @@
+# 管道运行控制的持久修订
+
+2026-09-12，基线6d486091。承接pipeline-runtime-control-plan.md；不向graph写live标志，不复活旧bootstrap。
+
+## 实现顺序
+
+1. 先补来源选择当前消费入口：在同一调用者事务锁安装，按当前运行身份/租户读指定SourceSelectionRevision，校验记录codec与同目标最新revision；调用已有Owner当前检查重新派生规格，并与持久规格相等后同步执行可信后续操作。旧选择修订不得继续使用。入口不返回独立许可，不自动调用源，测试证明撤销/漂移后回调零次。
+2. 后续新增a0v_023，pipeline_runtime_control_revision不可变历史：scope/installation/generation/pipeline/control UUID/revision、selection UUID/revision/hash、payload/content/request hash、前序hash链、actor/idempotency。同代际同管道只能引用真实来源选择行；RLS与更新/删除/清空禁令延续a0v_022。记录产生必须经过第一步当前消费入口。
+3. RuntimeControlDraft与SelectionDraft共有字段要求规范JSON逐字段完全一致，只增加sourceSelectionRef；批准不允许偷偷放宽行数/时间/字段/来源范围。新控制最新修订替代旧控制；每次执行再消费最新控制及最新来源选择，既有binding禁用/卸载/代际变化仍阻断旧控制。
+4. 待持久控制及生产工厂完整验证，再将手动/调度入口统一绑定ScheduleRun和ec_durable_executor原输入日志，使用已实现的有界读取替换仅新控制路径的读取；原输入存在时只恢复原批次。记录状态不冒充业务成功。
+
+本波第1步具体文件：services/aos-api/aos_api/pipeline_source_selection_owner.py；tests/extension_runtime/test_pipeline_source_selection_owner_pg.py。先验证当前选择消费、旧修订拒绝、当前检查/规格漂移拒绝、回调异常的外层回滚。后续a0v_023实施前补齐DDL文件和退出测试清单。真实库暂不迁移、不启用P01、不push，230 L0挂起。
+
+DDL实施补充：新增services/aos-api/alembic/versions/a0v_023_pipeline_runtime_control.py，以及tests/extension_runtime/test_pipeline_runtime_control_schema_pg.py。保存control_id/revision、selection_id/selection_revision/selection_hash、同目标前序修订及hash、完整payload和幂等请求hash；Selection外键必须包含tenant/installation/generation/pipeline及hash。payload顶层身份须与列一致，布尔/空值不能通过字符串比较漏洞；created_at由DB写。没有enabled或live捷径字段，是否可执行取决于后续当前Owner消费最新记录。独立18432临时schema验证真实FK/唯一性/RLS/不可变、完整迁移head；真实18435不迁移。

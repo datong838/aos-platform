@@ -21,7 +21,7 @@ from aos_api.extension_runtime.configuration_authorization import CurrentConfigu
 from aos_api.extension_runtime.configuration_store import read_configuration
 from aos_api.extension_runtime.ipc import _pairs, _constant
 from aos_api.extension_runtime.lifecycle_store import _require_transaction, _values, RuntimeConflict, RuntimeRevisionConflict
-from aos_api.extension_runtime.runtime_gate import CurrentPolicy, run_guarded
+from aos_api.extension_runtime.runtime_gate import CurrentPolicy, run_guarded, _reject_deferred
 from aos_api.extension_runtime.runtime_release_artifacts import CurrentRuntimeReleaseArtifacts
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef, PipelineSourceSelectionDraft
 from aos_api.pipeline_source_selection import derive_mapping_read_spec
@@ -129,6 +129,53 @@ class PipelineSourceSelectionOwner:
                      None if revision == 1 else revision-1,previous_hash,request_hash,idempotency_key,actor)).fetchone()
                 return decode_selection_row(row).ref
         return self._guarded(conn,draft,actor,persist)
+
+    def run_current(self, conn, *, scope, ref, actor, execute):
+        """Consume the latest exact selection inside current locks, never a permit.
+
+        The callback is trusted host code, not request-supplied execution logic.
+        It must finish synchronously in this caller-owned transaction.
+        """
+        _require_transaction(conn)
+        if type(scope) is not TenantScope or not callable(execute):
+            raise TypeError('exact scope and synchronous host operation required')
+        identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
+        if _values(identity,('role','org_id','project_id')) != ('aos_runtime',*scope.key):
+            raise PermissionError('current runtime identity and tenant required')
+        ref = PipelineExactRef.model_validate(ref)
+        selection_id = ref.resource_id.removeprefix('source-selection-')
+        if (ref.resource_type != 'SourceSelectionRevision' or type(ref.revision) is not int
+                or ref.resource_id != 'source-selection-'+str(UUID(selection_id))):
+            raise ValueError('exact selection identity required')
+        with conn.cursor(row_factory=dict_row) as cursor:
+            row = cursor.execute('''SELECT * FROM pipeline_source_selection_revision
+                WHERE org_id=%s AND project_id=%s AND selection_id=%s AND revision=%s''',
+                (*scope.key,UUID(selection_id),ref.revision)).fetchone()
+            if row is None:
+                raise LookupError('source selection unavailable')
+            saved = decode_selection_row(row)
+            if saved.ref != ref:
+                raise RuntimeConflict('source selection reference differs')
+            target = (*scope.key,row['installation_id'],row['generation'],row['pipeline_id'])
+            if cursor.execute('''SELECT installation_id FROM bundle_installation
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',target[:3]).fetchone() is None:
+                raise LookupError('source selection installation unavailable')
+            latest = cursor.execute('''SELECT * FROM pipeline_source_selection_revision
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s AND pipeline_id=%s
+                ORDER BY revision DESC LIMIT 1''',target).fetchone()
+            if latest is None or decode_selection_row(latest).ref != ref:
+                raise RuntimeRevisionConflict('source selection was superseded')
+        # Reuse canonical actor validation without creating an approval record.
+        selection_request_hash(draft=saved.draft,actor=actor,selection_id=selection_id,
+            revision=ref.revision,previous_hash=saved.previous_hash)
+
+        def consume(spec):
+            if spec != saved.read_spec:
+                raise RuntimeConflict('current source selection specification differs')
+            result = execute(saved.draft,spec)
+            _reject_deferred(result)
+            return result
+        return self._guarded(conn,saved.draft,actor,consume)
 
     def _guarded(self, conn, draft, actor, callback):
         scope = TenantScope(draft.org_id,draft.project_id)

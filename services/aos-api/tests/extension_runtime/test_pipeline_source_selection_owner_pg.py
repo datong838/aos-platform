@@ -86,3 +86,38 @@ def test_wrong_connection_identity_never_reaches_current_reader(owner_case, mode
     with pytest.raises(PermissionError):
         approve(conn, owner, draft)
     assert calls == []
+
+
+def test_current_consumption_revalidates_and_rejects_superseded_selection(owner_case):
+    from aos_api.tenant_scope import TenantScope
+    conn,owner,draft,calls=owner_case
+    first=approve(conn,owner,draft)
+    scope=TenantScope(draft.org_id,draft.project_id)
+    invoked=[]
+    def consume(ref):
+        with conn.transaction():
+            return owner.run_current(conn,scope=scope,ref=ref,actor='test-actor',
+                execute=lambda item,spec:invoked.append(item.pipeline_id) or len(spec.columns))
+    assert consume(first)==2 and invoked==[draft.pipeline_id] and len(calls)==2
+    second=approve(conn,owner,draft,'next',first)
+    with pytest.raises(RuntimeRevisionConflict):consume(first)
+    assert len(invoked)==1
+    assert consume(second)==2 and len(invoked)==2
+
+
+@pytest.mark.parametrize('mode',['current_denial','read_spec','scope','ref_hash'])
+def test_current_consumption_cannot_bypass_changed_authority(owner_case,mode):
+    from aos_api.tenant_scope import TenantScope
+    conn,owner,draft,_=owner_case
+    ref=approve(conn,owner,draft)
+    scope=TenantScope(draft.org_id,draft.project_id)
+    if mode=='current_denial':
+        def denied(*args):raise PermissionError('current denial')
+        owner._guarded=denied
+    elif mode=='read_spec':
+        owner._guarded=lambda db,item,actor,callback:callback(MappingReadSpec('other','Shop','site_id',('site_id',),(('site_id',1),)))
+    elif mode=='scope':scope=TenantScope('dev-org','dev-project')
+    else:ref=ref.model_copy(update={'content_hash':'sha256:'+'f'*64})
+    with pytest.raises((ValueError,PermissionError,LookupError)),conn.transaction():
+        owner.run_current(conn,scope=scope,ref=ref,actor='test-actor',
+            execute=lambda *a:pytest.fail('invalid current selection was consumed'))
