@@ -24,6 +24,12 @@ OLD_ROOT = RECOVERY / "state/ecommerce-1.6-registry/signed-bundles-v6"
 NEW_ROOT = STATE / "signed-bundles-v7"
 VERSIONS = {"domain.ecommerce.core": "1.3.0", "platform.ecommerce.niushop": "1.3.0",
             "solution.ecommerce.growth": "1.7.0", "solution.ecommerce.operations-base": "1.2.0"}
+EXPECTED_OLD_COUNT = 8
+EXPECTED_NEW_COUNT = 11
+ENV_BACKUP_NAME = "env-before-v7"
+ACTOR_PREFIX = "a0v-ecommerce-1.7"
+SUCCESS_OUTCOME = "ECOMMERCE_1_7_REGISTRY_GREEN"
+EXTRA_BUILD_PATHS = ()
 
 
 def legacy():
@@ -66,6 +72,7 @@ def verify_inputs(helper):
         raise ValueError("qualified coordinates differ")
     helper._git("merge-base", "--is-ancestor", build["gitHead"], "HEAD")
     paths = ["scripts/build_ecommerce_runtime_candidates.py", "packages/aos-extension-sdk/python/aos_extension_sdk"]
+    paths += list(EXTRA_BUILD_PATHS)
     paths += [f"bundles/candidates/ecommerce/{key}/{value}" for key, value in VERSIONS.items()]
     if (helper._git("diff", "--name-only", build["gitHead"], "--", *paths)
             or helper._git("status", "--porcelain", "--", *paths)):
@@ -91,7 +98,7 @@ def signed_tree(helper, build):
             result[relative] = bundle.content_hash
         return result
     before = read_all(OLD_ROOT)
-    if len(before) != 8:
+    if len(before) != EXPECTED_OLD_COUNT:
         raise ValueError("historical signed root differs")
     STATE.mkdir(parents=True, exist_ok=True)
     if not NEW_ROOT.exists():
@@ -115,7 +122,7 @@ def signed_tree(helper, build):
             if temp.exists():
                 shutil.rmtree(temp)
     after = read_all(NEW_ROOT)
-    if len(after) != 11 or any(after.get(k) != v for k, v in before.items()):
+    if len(after) != EXPECTED_NEW_COUNT or any(after.get(k) != v for k, v in before.items()):
         raise ValueError("historical content changed in successor")
     for key, version in VERSIONS.items():
         if after.get(key + "/" + version) != build["contentHashes"][key]:
@@ -143,16 +150,16 @@ def publish(helper, connect, trust_path):
             row = store.get_version(bundle_id, version, publisher="aos")
         except AssetNotFoundError:
             row = service.create_version(publisher="aos", bundle_id=bundle_id, source_ref=source,
-                actor="a0v-ecommerce-1.7-creator", roles=helper.CREATE_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
+                actor=ACTOR_PREFIX + "-creator", roles=helper.CREATE_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
             counts["create"] = 1
         first.assert_registry_version_exact(row, expected)
         if row["status"] == "draft":
             row = service.validate(publisher="aos", bundle_id=bundle_id, version=version,
-                actor="a0v-ecommerce-1.7-validator", roles=helper.CREATE_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
+                actor=ACTOR_PREFIX + "-validator", roles=helper.CREATE_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
             counts["validate"] = 1
         if row["status"] == "validated":
             row = service.publish(publisher="aos", bundle_id=bundle_id, version=version,
-                actor="a0v-ecommerce-1.7-publisher", roles=helper.PUBLISH_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
+                actor=ACTOR_PREFIX + "-publisher", roles=helper.PUBLISH_ROLES, publisher_scopes=helper.PUBLISHER_SCOPES)
             counts["publish"] = 1
         if row["status"] != "published":
             raise ValueError("new version did not reach published")
@@ -173,7 +180,7 @@ def switch_root(env_path):
         return False
     if current != str(OLD_ROOT):
         raise ValueError("runtime root CAS drift")
-    backup = STATE / "env-before-v7"
+    backup = STATE / ENV_BACKUP_NAME
     if not backup.exists():
         with os.fdopen(os.open(backup, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600), "wb") as f:
             f.write(raw)
@@ -208,7 +215,7 @@ def main():
         if before != after:
             raise ValueError("installation or historical version counts changed")
         switched = switch_root(ROOT / ".env")
-        result.update(outcome="ECOMMERCE_1_7_REGISTRY_GREEN", releases=releases, signedContent=hashes,
+        result.update(outcome=SUCCESS_OUTCOME, releases=releases, signedContent=hashes,
             backup=backup, before=before, after=after, rootChanged=switched,
             installationMutationCount=0, providerInvocationCount=0, externalPublicationCount=0)
     args.output.parent.mkdir(parents=True, exist_ok=True)
