@@ -1008,3 +1008,18 @@ head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninsta
 因 LookupError 退出，三资源已释放，无绑定。真实库 extension_schema_installation 为空；verify 未完成。
 本波不能判 active green。下一波入口是 A0-V 目录 ecommerce-1.6-recovery-plan.md，补 Schema 实证与
 applied 安装受控恢复；不重写已提交历史、不盲重试原 Operation。首装回归 8 passed。
+
+### 9.51 Schema 实证、恢复首装与持续运行缺口
+
+2026-09-12：三包签名 Schema requirement 与平台迁移/各 13 个物理关系核实完成，首次登记及零写入回放见
+ecommerce-1.6-schema-apply/replay.json。a0v_017/a0v_018 补齐 applied→approved 的清洁恢复及审批继承，
+首次 reset approved@5，旧 apply 保留、旧 verify 终结；同键回放不重复写。新 apply→applied@6，
+verify→active@7（2026-09-12T00:45:54Z），ready/disabled/fenced，canary=0。
+
+资源于 00:48:02Z 到期后退出，00:49:34Z 绑定已 unknown/disabled/fenced。安装时点成功不等于持续健康。
+71be0b06 修复空闲宿主不检测资源失效；7bf516cd 增加成功 verify 后 60 秒核验、180 秒短租续约，43 项
+测试通过，但尚缺真实 PG/OCI 跨五分钟观测。当前没有运行中的电商 Host，不可将 active 历史当作可经营。
+
+下一波权威入口：A0-V/ecommerce-runtime-continuity-plan.md。优先补已验证但从未启用安装的正式恢复/卸载，
+现有 uninstall 要求曾启用后的 disable/detach Receipt，不能伪造该证据。之后真实续租观测、四来源配置、
+enable、经营首链与八工作台。全部任务未完成；m1 串行、不 push、230 L0 挂起。自动接续仍 ACTIVE。
