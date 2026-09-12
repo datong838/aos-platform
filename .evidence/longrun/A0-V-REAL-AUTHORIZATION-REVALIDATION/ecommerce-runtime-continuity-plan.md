@@ -15,3 +15,15 @@
 续租实现检查点：新增 `extension_runtime/lease_renewal.py`，原 owner 经健康和 durable expiry 成功后重设计时器；PreparedJob 仅成功 verify 后每 60 秒续约 180 秒。43 项单元/异步回归测试通过，包括权限拒绝、unknown binding、条件失效、提交时过期、资源集合漂移、未 verify 和已关闭 owner 拒绝。当前仍缺真实 PostgreSQL + OCI 超过初始五分钟的连续观测，不能标为长期运行完成。已到期 active@7 不可用续租复活；下一项需正式 active runtime recovery 或规范卸载重装。
 
 第 5/6 步发现：ar2_018 的 active uninstall 固定要求 exact disable/detach 与 activation 外键；已验证但从未配置/启用的安装没有这种历史，无法规范卸载。下一波 1/6 明确 never-enabled 分支：当前禁用/unknown、config_ref=null、无 enable/dispatch/cutover/业务执行历史、全部资源已释放和零未决义务，建立独立真实终结回执；不伪造 activation/disable。2/6 数据库/服务约束设计；3/6 负向及 PG 测试；4/6 真实卸载重装；5/6 同宿主续租跨五分钟及撤权/到期拒绝；6/6 配置启用前置与下一波业务链。若选择 runtime recovery，亦须独立新 generation 及权威回执，不覆盖旧资源。
+
+## never-enabled 卸载实现方案
+
+新增 `services/aos-api/alembic/versions/a0v_019_never_enabled_retirement.py`：既有 immutable uninstall Receipt 增加 retirement_kind，历史默认 detached；仅 never_enabled 类型允许 disable/activation 为空，detached 仍两者非空并保留外键。不伪造曾启用事件。既有 SECURITY DEFINER 函数在禁用/unknown/fenced 检查后增加严格分支：config_ref=null、无配置和 enable/disable 操作历史、无 cutover/dispatch/occurrence/runtime execution、无未决操作、全部资源 released且数量非零。保持原当前安装 CAS、非特权会话、Receipt 哈希、终结一致性触发器。
+
+新维护脚本 `scripts/a0v_ecommerce_never_enabled_retire.py` 使用既有 web 受限身份和 InstallationService.uninstall，同键回放；不直接改状态。测试核对分支必要条件和历史 detached 约束，并在真实隔离库事务中逐项注入可回滚负例验证拒绝；数据库备份后执行真实卸载。随后新 Installation 重装，保留旧实例全历史。未跨五分钟真实运行之前不得宣称续租验收完成。
+
+权限核查修正：宿主 web 身份没有 aos_app 成员权，原设计不能用于安装管理。保留其隔离，新建专用 `aos_a0v_installation_20260912` LOGIN/NOINHERIT/NOSUPERUSER/NOBYPASSRLS，仅成员 aos_app。密码仅保存在隔离恢复目录 0600 文件；连接后明确 SET ROLE aos_app。不授予 runtime/directory 或改动已有身份。首次真实测试被权限拒绝，尚未卸载，负向断言改为精确业务错误码以排除权限假阳性。
+
+七项 PostgreSQL 回滚验收已通过；正式服务发现 `asset_registry/tenant_transaction.py` 强制把已经采用的 aos_app 改成 aos_runtime，与仅授予 aos_app 的卸载函数冲突。最小修复：对当前角色 aos_runtime 或 aos_app 均仅设置 TenantScope，其他角色保持原采用流程。aos_app 已有资产表权限和 RLS；不额外授予账号 aos_runtime，不改业务授权。新增角色保留及租户绑定测试后继续正式卸载。
+
+真实卸载完成：7 项 PostgreSQL 正负例（全部回滚）及 6 项角色/卸载回归通过。数据库备份 4,623,846 bytes，SHA256 954342a91672bf001eec764e5c81ad5a46d031ea5f61c9dcc8dc3b5fedfe7900。a0v_019 正式服务调用后安装 uninstalled@8，首次 replay=false、第二次=true，见 ecommerce-never-enabled-retire.json。重装使用独立 state/ecommerce-1.6-reinstall.json 和幂等前缀；必须读回此前实例 uninstalled，保留所有旧状态文件。

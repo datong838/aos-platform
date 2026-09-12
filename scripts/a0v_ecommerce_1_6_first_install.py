@@ -23,7 +23,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", choices=("create", "apply", "verify", "reset", "observe"), required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--reinstall", action="store_true")
     args = parser.parse_args()
+    state_path = RECOVERY / "state/ecommerce-1.6-reinstall.json" if args.reinstall else STATE
+    key_prefix = "a0v-ecommerce-1.6-reinstall" if args.reinstall else "a0v-ecommerce-1.6"
     first = load("a0v_canonical_ecommerce_first_install")
     activation = load("a0v_ecommerce_growth_1_4_activate")
     connect = first.container_database_connect_factory(context="colima-aos-extension", container="aos-a0v-recovery-pg", database_name="aos_meta_head")
@@ -35,14 +38,21 @@ def main():
     old = store.get_installation(org_id="org-org", project_id="dev-project", installation_id=activation.INSTALLATION_ID)
     if old.state != "uninstalled":
         raise ValueError("previous invalid installation must be retired")
+    if args.reinstall:
+        prior_id = json.loads(STATE.read_text())["installationId"]
+        prior = store.get_installation(org_id="org-org", project_id="dev-project", installation_id=prior_id)
+        if prior.state != "uninstalled" or prior.active_revision is not None:
+            raise ValueError("reinstall requires terminal predecessor")
+        if args.action == "reset":
+            raise ValueError("first-install reset authority does not cover reinstall")
     if args.action == "create":
         result = first.create_approved_first_installation(connect_factory=connect, state_dir=TRUST_STATE,
             core_version="1.2.0", adapter_version="1.2.0", growth_version="1.6.0",
-            idempotency_prefix="a0v-ecommerce-1.6-first-install-v1")
-        STATE.parent.mkdir(parents=True, exist_ok=True)
-        STATE.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+            idempotency_prefix=key_prefix + ("-v1" if args.reinstall else "-first-install-v1"))
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     else:
-        initial = json.loads(STATE.read_text())
+        initial = json.loads(state_path.read_text())
         installation_id = initial["installationId"]
         record = store.get_installation(org_id="org-org", project_id="dev-project", installation_id=installation_id)
         result = {"installationId": installation_id, "state": record.state,
@@ -78,7 +88,7 @@ def main():
             receipt = lifecycle.request_preparation(installation_id=installation_id, kind=kind,
                 org_id="org-org", project_id="dev-project", actor=activation.ACTOR,
                 roles=activation.ROLES, markings=activation.MARKINGS,
-                idempotency_key="a0v-ecommerce-1.6-" + kind + (f"-after-reset-r{record.etag_version}" if recovered else "-v1"),
+                idempotency_key=key_prefix + "-" + kind + (f"-after-reset-r{record.etag_version}" if recovered else "-v1"),
                 if_match=f'"{record.etag_version}"')
             result["receipt"] = receipt.response_json
     result["canaryInstallationCount"] = canary

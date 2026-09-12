@@ -14,7 +14,7 @@ def apply_asset_transaction_scope(
     """Bind canonical GUCs; activate the runtime role only after RLS adoption."""
     if isinstance(conn, psycopg.Connection):
         current = conn.execute("SELECT current_user AS current_user").fetchone()
-        if current is not None and str(current["current_user"]) == RUNTIME_DB_ROLE:
+        if current is not None and str(current["current_user"]) in {RUNTIME_DB_ROLE, "aos_app"}:
             conn.execute(
                 """
                 SELECT set_config('aos.org_id', %s, true),
