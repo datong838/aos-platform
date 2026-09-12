@@ -45,3 +45,7 @@
 新增 bundles/candidates/ecommerce/domain.ecommerce.core/1.3.0、platform.ecommerce.niushop/1.3.0、solution.ecommerce.growth/1.7.0，复制对应旧候选且仅调整版本；operations-base/1.2.0 保持。scripts/build_ecommerce_runtime_candidates.py 默认坐标切到新三包，SDK 构建来源为已提交 e3f8daab 修复。真实资格在每个容器执行 2048 次健康检查，记入 heartbeatChecks，注册必须完全匹配且清理成功。新 scripts/a0v_ecommerce_1_7_registry_successor.py 要求该检查数量，历史根 v6 八坐标扩到 v7 十一坐标，历史字节不变。业务请求额度及现有授权边界保持。
 
 候选新版本还必须同步工作台资产的自引用 bundleRef；首轮资格测试准确拒绝了旧版自引用。仅更新新候选的自身坐标，不改依赖版本范围或历史策略版本。
+
+## 新版本正式重装控制路径
+
+scripts/a0v_ecommerce_1_7_first_install.py 固定新三坐标，前置 efc4e640-1b15-403f-9d06-4c6d1a5330a7 已正式卸载，保存独立 1.7 状态文件。scripts/a0v_ecommerce_never_enabled_retire.py 新增精确后继退役选项，仅允许上述已知实例及 etag 5，不开放任意实例输入。scripts/a0v_ecommerce_continuity_observe.py 新增显式 1.7 观测选项；默认旧实例保持。Schema 实证脚本允许选择新签名根，对应坐标从 successor.VERSIONS 派生，避免构建器默认版本变化破坏旧根复核。正式安装仍通过组合、审批、Host apply/verify，不直接改状态。

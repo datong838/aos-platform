@@ -24,11 +24,13 @@ def container_observation(container_id):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--successor-1-7',action='store_true')
     args=parser.parse_args()
     spec=importlib.util.spec_from_file_location('first',ROOT/'scripts/a0v_canonical_ecommerce_first_install.py')
     first=importlib.util.module_from_spec(spec);spec.loader.exec_module(first)
     connect=first.container_database_connect_factory(context='colima-aos-extension',container='aos-a0v-recovery-pg',database_name='aos_meta_head')
-    installation=json.loads((RECOVERY/'state/ecommerce-1.6-reinstall.json').read_text())['installationId']
+    state='state/ecommerce-1.7-first-install.json' if args.successor_1_7 else 'state/ecommerce-1.6-reinstall.json'
+    installation=json.loads((RECOVERY/state).read_text())['installationId']
     with connect() as conn:
         now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
         operation=conn.execute("SELECT operation_id,created_at,deadline,status FROM extension_runtime_operation WHERE installation_id=%s AND kind='runtime-apply'",(installation,)).fetchall()

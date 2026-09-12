@@ -33,9 +33,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument('--successor-1-7', action='store_true')
     args = parser.parse_args()
     sys.path.insert(0, str(API))
-    spec = importlib.util.spec_from_file_location("successor", ROOT / "scripts/a0v_ecommerce_1_6_registry_successor.py")
+    spec = importlib.util.spec_from_file_location("successor", ROOT / ("scripts/a0v_ecommerce_1_7_registry_successor.py" if args.successor_1_7 else "scripts/a0v_ecommerce_1_6_registry_successor.py"))
     successor = importlib.util.module_from_spec(spec); spec.loader.exec_module(successor)
     helper = successor.legacy()
     builder = helper._builder()
@@ -58,22 +59,24 @@ def main():
     first = helper._first_installer()
     connect = first.container_database_connect_factory(context=helper.DOCKER_CONTEXT,
         container=helper.DATABASE_CONTAINER, database_name=helper.DATABASE_NAME)
+    cases = tuple((key+"/"+version,key,version,None) for key,version in successor.VERSIONS.items())
+    runtime_cases = tuple(case for case in cases if case[1] != "solution.ecommerce.operations-base")
     bundles = {relative: loader.load("bundle://a0v-canonical/" + relative)
-               for relative, _, _, _ in builder.ALL_CASES}
+               for relative, _, _, _ in cases}
     now = datetime.now(UTC)
     results = []
     with connect() as conn:
         with conn.transaction():
             if conn.execute("SELECT current_database() AS name").fetchone()["name"] != "aos_meta_head":
                 raise ValueError("isolated database required")
-            for relative, bundle_id, version, _ in builder.RUNTIME_CASES:
+            for relative, bundle_id, version, _ in runtime_cases:
                 bundle = bundles[relative]
                 record = builder._release_record(bundle)
                 # Use the canonical resolver, so selected-release inputs have the same shape as runtime.
                 from aos_api.asset_registry.composition_contracts import RegistrySnapshot, CompositionRequest
                 from aos_api.asset_registry.resolver import resolve
                 candidates = []
-                for rel, _, _, _ in builder.ALL_CASES:
+                for rel, _, _, _ in cases:
                     item = bundles[rel]
                     candidates.append(builder._snapshot_candidate(item, policy.evaluate(builder._release_record(item), checked_at=now)))
                 snapshot = RegistrySnapshot.build(candidates=candidates, checked_at=now)

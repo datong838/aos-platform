@@ -1,0 +1,76 @@
+{
+  "after": {
+    "canary": 0,
+    "installations": 3,
+    "positive": 3,
+    "target_versions": 1
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-1.7-registry/backups/aos_meta_head-pre-growth-1.5-registry.dump",
+    "sha256": "sha256:2e58d1a69e96c030a6bcb31a6e26fda72d4c3bb9dd649526852189ad7d32c2cb",
+    "size": 4501440
+  },
+  "before": {
+    "canary": 0,
+    "installations": 3,
+    "positive": 3,
+    "target_versions": 1
+  },
+  "externalPublicationCount": 0,
+  "installationMutationCount": 0,
+  "outcome": "ECOMMERCE_1_7_REGISTRY_GREEN",
+  "outputTreeHash": "sha256:0a29ad14933c4155bc06de7fd5bd95519d7a893b119513ce66da544c006a4dae",
+  "providerInvocationCount": 0,
+  "releases": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "mutations": {
+        "create": 0,
+        "publish": 0,
+        "validate": 0
+      },
+      "version": "1.3.0"
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "mutations": {
+        "create": 0,
+        "publish": 0,
+        "validate": 0
+      },
+      "version": "1.3.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "mutations": {
+        "create": 0,
+        "publish": 0,
+        "validate": 0
+      },
+      "version": "1.7.0"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "mutations": {
+        "create": 0,
+        "publish": 0,
+        "validate": 0
+      },
+      "version": "1.2.0"
+    }
+  ],
+  "rootChanged": false,
+  "signedContent": {
+    "domain.ecommerce.core/1.1.0": "sha256:cff310a440dcd75cd70cf8b31a56a237fccb39fabcdecda2b4ae3a1f77f4e4e1",
+    "domain.ecommerce.core/1.2.0": "sha256:98aa65e8a3bcbe319a25fc59da6497b278ba98c86434dbfb019e7afb6fe4a0f6",
+    "domain.ecommerce.core/1.3.0": "sha256:a7e986882ea1e121fe510d662540f8f153bab1e862b0335ebcec3b7e2c1ed872",
+    "platform.ecommerce.niushop/1.1.0": "sha256:5a3e65d39ac276d2e9ab761835195fc3f5d9ace9d253b47368c5895c62402cd3",
+    "platform.ecommerce.niushop/1.2.0": "sha256:351e9bcb23757f02d93f650be26636bedc0e31a8c25897cac582b37ff174cbdc",
+    "platform.ecommerce.niushop/1.3.0": "sha256:3d860b2200b2e6bc28a73d5eb2692badb9c1778c9486eb279c1fe2d69654d981",
+    "solution.ecommerce.growth/1.4.0": "sha256:23d432e1b01e5255d9c309a902dec30983366f8c2a6738854822fa5015790042",
+    "solution.ecommerce.growth/1.5.0": "sha256:6a547118c5fe129cc4d9bb10c0066a9a503ee949cc67ce1e57105a0c70f3edab",
+    "solution.ecommerce.growth/1.6.0": "sha256:2dfd08839f5033dde989551337d6defad10722a01e9ac033345adf02ea73ddce",
+    "solution.ecommerce.growth/1.7.0": "sha256:3d8561e780d4bd5e2cc2ca3fba0ed8971afa8702e0badc1cd4c0d7dd6fa1922c",
+    "solution.ecommerce.operations-base/1.2.0": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  }
+}

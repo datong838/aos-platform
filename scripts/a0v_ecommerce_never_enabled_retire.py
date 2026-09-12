@@ -22,7 +22,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--reinstall-generation', action='store_true')
     args = parser.parse_args()
+    installation = 'efc4e640-1b15-403f-9d06-4c6d1a5330a7' if args.reinstall_generation else INSTALLATION
+    etag = '"5"' if args.reinstall_generation else '"7"'
+    key = 'a0v-ecommerce-1.6-reinstall-never-enabled-retire-v1' if args.reinstall_generation else 'a0v-ecommerce-1.6-never-enabled-retire-v1'
     if not args.apply: raise ValueError('explicit retirement required')
     host = load('a0v_ecommerce_runtime_host')
     credential_path = RECOVERY/'state/installation-control-identity.json'
@@ -45,17 +49,17 @@ def main():
     trust = ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json'
     store, service = legacy._build(connect, trust)
     from aos_api.asset_registry.composition_contracts import UninstallInstallationRequest
-    before = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=INSTALLATION)
-    command = dict(installation_id=INSTALLATION,
+    before = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=installation)
+    command = dict(installation_id=installation,
         request=UninstallInstallationRequest(reason='Retire verified never-enabled generation after expired resources'),
         org_id='org-org',project_id='dev-project',actor=ACTOR,roles=['admin'],markings=[],
-        idempotency_key='a0v-ecommerce-1.6-never-enabled-retire-v1',if_match='"7"')
+        idempotency_key=key,if_match=etag)
     first = service.uninstall(**command)
     replay = service.uninstall(**command)
-    after = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=INSTALLATION)
+    after = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=installation)
     if after.state != 'uninstalled' or after.active_revision is not None:
         raise ValueError('retirement readback differs')
-    result = dict(installationId=INSTALLATION,before=dict(state=before.state,revision=before.current_revision),
+    result = dict(installationId=installation,before=dict(state=before.state,revision=before.current_revision),
         after=dict(state=after.state,revision=after.current_revision),
         firstReplayed=first.replayed,secondReplayed=replay.replayed,receipt=first.response_json)
     args.output.parent.mkdir(parents=True,exist_ok=True)
