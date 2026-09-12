@@ -9,3 +9,5 @@
 第二项：读取现有disable、uninstall、运行恢复合同；先正式disable相同installation/generation/binding revision，冻结命令并幂等回读。已enable而未dispatch的卸载与自动重建必须有独立exact证明，不套用never_enabled分支。若现有接口无此路径，先补方案、隔离PG验证，再在正常Owner权限内执行。不得借登记权限待批项增加权限。保留旧配置、旧enable及所有Receipt。
 
 第三项：恢复后重新verify/configure/enable，跨初始期限且持续观察；本地休眠会中断worker，不能宣称具备无人值守在线服务。业务自然首链仍须先恢复真实源及正式调度登记，八场景和发布评估未完成。
+
+禁用执行文件：scripts/a0v_ecommerce_1_7_disable.py增加--after-config-recovery，复用configuration_target读取已冻结新安装id，为旧e42和新af1992e8分别选择命令文件/幂等键，默认旧路径不变。tests/extension_runtime/test_a0v_recovered_configuration_target.py验证隔离选择。执行前检查无另一Host，启动新v11状态文件；原服务校验当前权限、exact版本，正常Host消费。只接受succeeded及真实disabled_committed回读，未知不重发新key。

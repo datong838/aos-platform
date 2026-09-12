@@ -1,0 +1,9 @@
+# 休眠失效实例禁用预检与实际拒绝
+
+基线cf145102。禁用执行器新增独立恢复命令空间，原e42路径/键保持不变；先红1 failed/4 passed，后5 passed，CLI帮助确认新flag。v11 Host已启动，pid60382，旧v10已退出。
+
+本次对af1992e8的正式RuntimeDisableService请求被RuntimeConflict拒绝：unresolved operation requires lifecycle reconciliation。未生成新禁用操作；冻结命令保留，不换key或更新目标重试。实际查询四项历史操作：apply 08c58e06 phase=succeeded/status=needs_attention/revision61；verify/configure/enable均succeeded。三资源全部confirmed released，绑定已禁入。
+
+根因合同：ResourceJournal先写uncertain再写released，但released保留操作needs_attention。PreparationWorker._finalize遇到succeeded+needs_attention抛committed preparation requires cleanup reconciliation；RuntimeOperationStore.settle_failed_preparation只允许accepted/validating/preparing/registered，不能收尾已成功准备。这是正式恢复能力缺口，不能直接UPDATE状态或放开DisableService的未决检查。
+
+下一波先方案/隔离PG测试，为已提交准备的资源释放增加独立收尾：同租户/安装/操作/CAS、所有资源确认释放、当前绑定禁入且同generation、保留原成功事件；只形成恢复收尾事件，不重新启用或运行。随后原禁用命令同键重放并核验真实回执，再继续恢复安装。权限扩展和SSH配置仍待回复。
