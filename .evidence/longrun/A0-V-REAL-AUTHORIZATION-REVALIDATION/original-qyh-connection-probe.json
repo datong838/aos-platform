@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-09-12T06:34:07.731052+00:00",
+  "localPort": 13306,
+  "authMode": "original-askpass-password",
+  "strictHostKeyChecking": true,
+  "sshExitCode": 0,
+  "localListener": true,
+  "databaseReadOnlyProbe": true,
+  "elapsedSeconds": 1.188
+}
