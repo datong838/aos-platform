@@ -68,10 +68,9 @@ class PipelinePackageRef(AipContractModel):
         return value
 
 
-class PipelineRuntimeControlDraft(AipContractModel):
+class PipelineControlContext(AipContractModel):
     """All refs must still be resolved by current locked Owners before any use."""
     model_config = _FROZEN
-    schema_version: Literal['aos.pipeline-runtime-control-draft/v1'] = 'aos.pipeline-runtime-control-draft/v1'
     state: Literal['prepared'] = 'prepared'
     read_only: Literal[True] = True
     org_id: str = Field(min_length=1, max_length=160)
@@ -86,7 +85,6 @@ class PipelineRuntimeControlDraft(AipContractModel):
     package_ref: PipelinePackageRef
     source_id: str = Field(min_length=1, max_length=200)
     source_configuration_ref: PipelineExactRef
-    source_selection_ref: PipelineExactRef
     mapping_ref: PipelineExactRef
     schema_ref: PipelineExactRef
     masking_policy_ref: PipelineExactRef
@@ -125,7 +123,6 @@ class PipelineRuntimeControlDraft(AipContractModel):
         TenantScope(self.org_id, self.project_id)
         expected = (
             (self.source_configuration_ref, 'DataSourceConfigurationRevision'),
-            (self.source_selection_ref, 'SourceSelectionRevision'),
             (self.mapping_ref, 'Mapping'),
             (self.schema_ref, 'SchemaFingerprint'),
             (self.masking_policy_ref, 'MaskingPolicy'),
@@ -136,8 +133,6 @@ class PipelineRuntimeControlDraft(AipContractModel):
         if not source.resource_id.startswith('source-config-') or type(source.revision) is not int or source.revision != 1:
             raise ValueError('exact source configuration revision required')
         _canonical_uuid(source.resource_id.removeprefix('source-config-'))
-        if type(self.source_selection_ref.revision) is not int:
-            raise ValueError('integer source selection revision required')
         if self.installation_ref.revision > _MAX_REVISION:
             raise ValueError('installation revision exceeds storage range')
         duration = self.expires_at - self.not_before
@@ -148,3 +143,21 @@ class PipelineRuntimeControlDraft(AipContractModel):
     def content_hash(self) -> str:
         validated = type(self).model_validate(self)
         return canonical_sha256(validated.model_dump(mode='json', by_alias=True))
+
+
+class PipelineRuntimeControlDraft(PipelineControlContext):
+    schema_version: Literal['aos.pipeline-runtime-control-draft/v1'] = 'aos.pipeline-runtime-control-draft/v1'
+    source_selection_ref: PipelineExactRef
+
+    @model_validator(mode='after')
+    def exact_selection(self):
+        if self.source_selection_ref.resource_type != 'SourceSelectionRevision':
+            raise ValueError('reference purpose differs')
+        if type(self.source_selection_ref.revision) is not int:
+            raise ValueError('integer source selection revision required')
+        return self
+
+
+class PipelineSourceSelectionDraft(PipelineControlContext):
+    """Prepared input for an Owner; no self-reference or execution grant."""
+    schema_version: Literal['aos.pipeline-source-selection-draft/v1'] = 'aos.pipeline-source-selection-draft/v1'

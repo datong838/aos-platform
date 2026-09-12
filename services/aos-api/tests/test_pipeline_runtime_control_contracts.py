@@ -29,6 +29,7 @@ def payload():
 def test_roundtrip_is_stable_and_never_enabled():
     item=PipelineRuntimeControlDraft.model_validate(payload())
     assert item.state=='prepared' and item.read_only is True
+    assert item.content_hash() == 'sha256:9b91cdf86f2ce473c33b8e90f36ccf2c68b58d298fa20c80f70238563668f77b'
     assert PipelineRuntimeControlDraft.model_validate_json(item.model_dump_json(by_alias=True))==item
     assert item.content_hash()==PipelineRuntimeControlDraft.model_validate(payload()).content_hash()
     changed=payload();changed['rowLimit']=50
@@ -110,3 +111,28 @@ def test_nested_unvalidated_copies_cannot_be_hashed(field, update):
     invalid = item.model_copy(update={field: ref})
     with pytest.raises(ValidationError):
         invalid.content_hash()
+
+
+def test_source_selection_draft_has_no_self_reference_or_approval():
+    from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft
+    body = payload()
+    body.pop('sourceSelectionRef')
+    item = PipelineSourceSelectionDraft.model_validate(body)
+    assert item.state == 'prepared' and item.read_only is True
+    assert 'sourceSelectionRef' not in item.model_dump(by_alias=True)
+    assert item.schema_version == 'aos.pipeline-source-selection-draft/v1'
+    assert PipelineSourceSelectionDraft.model_validate_json(item.model_dump_json(by_alias=True)) == item
+    with pytest.raises(ValidationError):
+        PipelineSourceSelectionDraft.model_validate(payload())
+    with pytest.raises(ValidationError):
+        PipelineSourceSelectionDraft.model_validate({**body, 'state': 'approved'})
+
+
+@pytest.mark.parametrize('key,value', [('rowLimit', True), ('graphRevision', 0), ('readOnly', False)])
+def test_source_selection_inherits_strict_control_bounds(key, value):
+    from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft
+    body = payload()
+    body.pop('sourceSelectionRef')
+    body[key] = value
+    with pytest.raises(ValidationError):
+        PipelineSourceSelectionDraft.model_validate(body)
