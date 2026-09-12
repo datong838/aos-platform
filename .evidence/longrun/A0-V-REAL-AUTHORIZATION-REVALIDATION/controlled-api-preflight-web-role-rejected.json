@@ -1,0 +1,21 @@
+{
+  "outcome": "STOPPED_FOR_INSPECTION",
+  "errorChain": [
+    {
+      "errorType": "ValueError",
+      "relation": "raised",
+      "frames": [
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_controlled_api.py",
+          "function": "main",
+          "line": 88
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_controlled_api.py",
+          "function": "preflight",
+          "line": 64
+        }
+      ]
+    }
+  ]
+}
