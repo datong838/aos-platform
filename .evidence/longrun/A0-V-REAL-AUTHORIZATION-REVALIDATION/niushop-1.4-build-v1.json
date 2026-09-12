@@ -1,0 +1,92 @@
+{
+  "bundleCount": 4,
+  "bundles": [
+    {
+      "id": "domain.ecommerce.core",
+      "runtimeOperations": [
+        "ecommerce_core_object_describe"
+      ],
+      "schemaCompatibilityHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+      "sourceTreeHash": "sha256:3ea7e6a6d5707644b8e51b668c849efb7569562760cf31805c07383e790c3db6",
+      "version": "1.3.0"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "runtimeOperations": [
+        "ecommerce_niushop_source_describe",
+        "ecommerce_niushop_facts_read"
+      ],
+      "schemaCompatibilityHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+      "sourceTreeHash": "sha256:e819116f16f2c0e057fbbbbbcfba05e614ddafb2f312566c24dc07cb15244709",
+      "version": "1.4.0"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "runtimeOperations": [
+        "ecommerce_growth_investigation_describe",
+        "ecommerce_growth_case_put",
+        "ecommerce_growth_schedule_put",
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+        "ecommerce_growth_review_advance",
+        "ecommerce_growth_content_generate",
+        "ecommerce_growth_content_review"
+      ],
+      "schemaCompatibilityHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+      "sourceTreeHash": "sha256:2ba9ed424307ca1d4bf379656714705429a3efa93b9657d0a3976bd5fbd3a1b1",
+      "version": "1.7.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "runtimeOperations": [],
+      "schemaCompatibilityHash": null,
+      "sourceTreeHash": "sha256:673f70cf99c5fe9070994547564cb874758e518840d26187c93ff8711dce48ee",
+      "version": "1.2.0"
+    }
+  ],
+  "contentHashes": {
+    "domain.ecommerce.core": "sha256:a7e986882ea1e121fe510d662540f8f153bab1e862b0335ebcec3b7e2c1ed872",
+    "platform.ecommerce.niushop": "sha256:05dcca8fb3f28ef338f63118a753daabe91804aec2aa4cafc76756606735bad0",
+    "solution.ecommerce.growth": "sha256:3d8561e780d4bd5e2cc2ca3fba0ed8971afa8702e0badc1cd4c0d7dd6fa1922c",
+    "solution.ecommerce.operations-base": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  },
+  "dependencyLockHash": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  },
+  "engine": {
+    "baseConfigDigest": "sha256:0505371492f8406a47d406e1d1ea3bcf707a95fc1ddf785bf6c95c84df55922a",
+    "baseImage": "python:3.11-alpine",
+    "platform": "linux/arm64"
+  },
+  "gitHead": "8f2e4fefc824bf6a3c9159aa32c4fdcf041bcbcd",
+  "images": {
+    "domain-ecommerce-core": {
+      "configDigest": "sha256:bc85b368fe05157da96d69de7c0a5f0ea1285d56dbdbadf535d92dc62fb385ce",
+      "imageDigest": "sha256:6e104237ab45b6ec2234f1fc6fff50ec7faf437630431bbda2ee551b04ed8bd4",
+      "localRef": "127.0.0.1:18436/domain-ecommerce-core@sha256:6e104237ab45b6ec2234f1fc6fff50ec7faf437630431bbda2ee551b04ed8bd4"
+    },
+    "platform-ecommerce-niushop": {
+      "configDigest": "sha256:78cfbf85cc31723abe5f2b915e5928c1553b259f7e840ca384274eff86d04dd9",
+      "imageDigest": "sha256:89badba6f22ef16cdad58898c5a321895fda3f0e87b2a4d4d565936b557b0ec6",
+      "localRef": "127.0.0.1:18436/platform-ecommerce-niushop@sha256:89badba6f22ef16cdad58898c5a321895fda3f0e87b2a4d4d565936b557b0ec6"
+    },
+    "solution-ecommerce-growth": {
+      "configDigest": "sha256:6dfe9bbd897e4ba611a2a8b10477496b99fcdf6f34e389e18a021057549ece56",
+      "imageDigest": "sha256:69d805ed371a0a55368548ea7cd2d27ca972f46f27af185f975623a6d243e8bc",
+      "localRef": "127.0.0.1:18436/solution-ecommerce-growth@sha256:69d805ed371a0a55368548ea7cd2d27ca972f46f27af185f975623a6d243e8bc"
+    }
+  },
+  "mode": "build",
+  "moduleCount": 8,
+  "operationCount": 12,
+  "outcome": "BUILD_GREEN",
+  "output": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/niushop-1.4-build-v1",
+  "outputTreeHash": "sha256:58f773aed1a8ba2946d685af14d7b0fb91b9cd4c1bee183a50df534ab2fac062",
+  "runtimeMemberCount": 3,
+  "sdkTreeHash": "sha256:328ddd63fc4baaa53eeb7446bfa5fd7509124c60d00ce93768716048682c0660"
+}
