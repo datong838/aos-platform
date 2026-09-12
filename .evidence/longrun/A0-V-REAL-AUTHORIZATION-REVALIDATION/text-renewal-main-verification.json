@@ -1,0 +1,22 @@
+{
+  "authorityTablesCompared": 227,
+  "replayChanges": {},
+  "canaryTablesChecked": 223,
+  "nonzeroCanary": {
+    "aip_eval_report": 2,
+    "aip_eval_suite": 1,
+    "aip_kv_ownership_ledger": 23,
+    "aip_logic_graph": 4,
+    "aip_logic_graph_revision": 7,
+    "aip_logic_graph_run_nodes": 9,
+    "aip_logic_graph_runs": 3,
+    "aip_logic_publication": 1
+  },
+  "modelGovernance": "CURRENT_VALID",
+  "effectiveUntil": "2026-09-13T01:28:40.949357+00:00",
+  "modelRevision": 2,
+  "canaryBaseline": "pre-renewal backup restored clone",
+  "canaryContentChanges": [],
+  "canaryPreserved": true,
+  "existingCanaryRows": 50
+}

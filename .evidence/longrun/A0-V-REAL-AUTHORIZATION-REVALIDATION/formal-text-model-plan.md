@@ -13,3 +13,11 @@
 实现文件scripts/a0v_formal_text_model.py，使用freeze_plan与apply_plan受信函数，默认不存在自动外部调用。freeze_plan保存带hash的非秘密JSON，apply_plan接显式受信连接factory以便同计划先克隆后实际。预算/价格/策略Owner重放，正式评测先查同幂等运行及已有report；已有report经生产Release核验继续，存在运行无report则拒绝而非重造新attempt。模型Gate含数据库生成时间，克隆/实际各自产生真实Gate与最终Model hash，route从各自正式model ref构造，不能跨库移用Gate。方案与脚本的专项验证以隔离完整升级克隆执行/再执行零新增权威计数为主。
 
 复核补充：历史探针hash相同仍不代表当前Provider/Network有效；读取证据之前核验当前Provider与Network active及Network有效期。新增services/aos-api/tests/extension_runtime/test_a0v_formal_text_model.py覆盖停用、撤销、到期、尚未生效和计划漂移拒绝。冻结计划落盘后同步父目录，避免重启丢失目录项。
+
+## 2026-09-12 新窗口续接
+
+实际读回：模型 r1 的 Price/Budget 于 2026-09-11T17:38:54Z 到期；当前 Provider 健康不能替代治理有效期。按用户持续开发及费用授权，建立新 revision，不修改历史时间或 Gate。先为 scripts/a0v_exact_text_live_eval.py 增加显式独立批次目录（默认路径不变），三项固定合成 case 每项日志先提交再调用，已完成复用、未知拒绝。所有 case 明确 healthy 且 contract_passed 才返回通过。
+
+随后 scripts/a0v_formal_text_model_renewal.py 创建并冻结新计划，沿原 Budget/Price/Policy/Model/Route Owner 发布新版本；source 必须是本批次真实通过的三项证据，期限不超过最早证据+24h、Quota 和 Network 到期。旧开发 Budget 窗口已结束，新的明确开发授权承接下一窗口；不将旧窗口当作仍有效，不变更金额/无限调用或商业 unknown-price 门控。新幂等键来自计划 hash；新 Route 仍仅 chat.answer，专项经营任务需后续独立验证。先克隆演练再真实库备份与发布，重放不可重复写。
+
+新增测试覆盖独立日志/失败不能判通过，以及计划漂移、证据失效、exact 当前身份和版本约束。保持 Provider/租户不变，不在此步创建业务 Run 或启用安装。代码目录 scripts/ 与 services/aos-api/tests/extension_runtime/。

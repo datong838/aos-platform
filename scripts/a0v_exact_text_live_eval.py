@@ -55,7 +55,14 @@ def complete(path, value):
     os.replace(temporary, path)
 
 
-def run(apply=False):
+def require_passed(prior):
+    if (prior.get('status') != 'completed'
+            or prior['result'].get('status') != 'healthy'
+            or prior['result'].get('response_contract_passed') is not True):
+        raise RuntimeError('EVAL_CASE_NOT_PASSED')
+
+
+def run(apply=False, *, state_dir=STATE):
     if not apply:
         return {'mode': 'preflight', 'cases': [c[0] for c in CASES], 'providerCalls': 0}
     sys.path.insert(0, str(ROOT / 'services/aos-api'))
@@ -90,7 +97,7 @@ def run(apply=False):
         identity = {'caseId': case_id, 'requestHash': digest(request.model_dump(mode='json')),
             'provider': request.provider.model_dump(mode='json'),
             'network': request.network_policy.model_dump(mode='json')}
-        path = STATE / (case_id + '.json')
+        path = Path(state_dir) / (case_id + '.json')
         prior = claim(path, identity)
         if prior is None:
             result = probe.run(scope, request)
@@ -99,6 +106,7 @@ def run(apply=False):
                 'result': result.model_dump(mode='json')}
             complete(path, prior)
         results.append(prior)
+        require_passed(prior)
     return {'mode': 'apply', 'providerCalls': calls, 'businessMutationCount': 0,
         'outcome': 'FIXED_TEXT_CASES_PASSED', 'cases': results}
 
@@ -107,9 +115,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--state-dir', type=Path, default=STATE)
     args = parser.parse_args()
     try:
-        rendered = json.dumps(run(args.apply), ensure_ascii=False, indent=2)
+        rendered = json.dumps(run(args.apply, state_dir=args.state_dir), ensure_ascii=False, indent=2)
         if args.output:
             args.output.write_text(rendered + '\n', encoding='utf-8')
         print(rendered)

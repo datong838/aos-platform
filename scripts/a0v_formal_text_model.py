@@ -48,7 +48,7 @@ def rehash(model, body):
     return model.model_validate(value)
 
 
-def evidence(connect, *, checked_at=None):
+def evidence(connect, *, checked_at=None, evidence_dir=EVIDENCE_DIR):
     runtime = AipModelRuntimeStore(connect)
     provider = runtime.get_provider(SCOPE, PROVIDER_ID)
     network = AipNetworkPolicyStore(connect).get(SCOPE, NETWORK_ID)
@@ -56,30 +56,35 @@ def evidence(connect, *, checked_at=None):
     if (provider.lifecycle.value != 'active' or network.lifecycle.value != 'active'
             or not network.effective_from <= now < network.effective_until):
         raise ValueError('FORMAL_MODEL_CURRENT_DEPENDENCY_INACTIVE')
-    return read_verified_text_evidence(EVIDENCE_DIR,
+    return read_verified_text_evidence(evidence_dir,
         provider=exact('ProviderInstanceRevision', provider, 'provider_instance_id'),
         network=exact('NetworkPolicyRevision', network, 'policy_id'),
         provider_model_id=PROVIDER_MODEL, approval_ref=PROBE_APPROVAL,
         checked_at=now)
 
 
-def freeze_plan(connect, state_dir):
+def freeze_plan(connect, state_dir, *, evidence_dir=EVIDENCE_DIR, renew=False):
     state_dir = Path(state_dir)
     path = state_dir / 'plan.json'
     if path.exists():
         plan = json.loads(path.read_text())
         if canonical_hash({k: v for k, v in plan.items() if k != 'planHash'}) != plan['planHash']:
             raise ValueError('FORMAL_MODEL_PLAN_DRIFT')
+        if renew != bool(plan.get('renewal')) or (renew and
+                plan.get('evidenceDirectory') != str(Path(evidence_dir).resolve())):
+            raise ValueError('FORMAL_MODEL_PLAN_CONTEXT_DRIFT')
         return plan
     now = datetime.now(UTC)
-    source = evidence(connect, checked_at=now)
+    source = evidence(connect, checked_at=now, evidence_dir=evidence_dir)
     runtime = AipModelRuntimeStore(connect)
     governance = AipModelGovernancePolicyStore(connect)
     current_policy = runtime.get_policy(SCOPE, POLICY_ID)
     quota, _ = governance.get_quota_head(SCOPE, current_policy.quota_policy_ref.asset_id)
     budget, budget_version = governance.get_budget_head(SCOPE, current_policy.budget_policy_ref.asset_id)
     oldest = min(datetime.fromisoformat(row['observedAt']) for row in source['cases'])
-    end = min(oldest+timedelta(hours=24), budget.effective_until, quota.effective_until)
+    network = AipNetworkPolicyStore(connect).get(SCOPE, NETWORK_ID)
+    end = min(oldest+timedelta(hours=24), quota.effective_until, network.effective_until,
+              quota.effective_until if renew else budget.effective_until)
     if end <= now:
         raise ValueError('FORMAL_MODEL_AUTHORIZATION_WINDOW_EMPTY')
     auth = dict(tenant={'orgId': SCOPE.org_id, 'projectId': SCOPE.project_id},
@@ -91,7 +96,8 @@ def freeze_plan(connect, state_dir):
     budget_create = BudgetPolicyRevisionCreate.model_validate(budget_body)
     budget_next = materialize_policy(SCOPE, ACTOR, budget_create, created_at=now)
     price = rehash(ModelPriceSnapshotRevision, dict(tenant=auth['tenant'], priceSnapshotId=PRICE_ID,
-        revision=1, currency='CNY', lifecycle='active', effectiveFrom=auth['effectiveFrom'],
+        revision=runtime.get_price_snapshot(SCOPE, PRICE_ID).revision+1 if renew else 1,
+        currency='CNY', lifecycle='active', effectiveFrom=auth['effectiveFrom'],
         effectiveUntil=auth['effectiveUntil'], createdBy=ACTOR, createdAt=now.isoformat(),
         developmentCostAuthorization=auth))
     policy_body = current_policy.model_dump(mode='json', by_alias=True)
@@ -101,7 +107,8 @@ def freeze_plan(connect, state_dir):
         maxAttempts=1, allowedFallbackReasons=[], createdBy=ACTOR, createdAt=now.isoformat())
     policy = rehash(RuntimePolicyRevision, policy_body)
     model = rehash(RegisteredModelRevision, dict(tenant=auth['tenant'], registeredModelId=MODEL_ID,
-        revision=1, provider=source['provider'], providerModelId=PROVIDER_MODEL,
+        revision=runtime.get_model(SCOPE, MODEL_ID).revision+1 if renew else 1,
+        provider=source['provider'], providerModelId=PROVIDER_MODEL,
         inputModalities=['text'], outputModalities=['text'], capabilities=['llm', 'chat'],
         contextWindow=min(8000, quota.max_input_tokens), quotaPolicyRef=policy.quota_policy_ref,
         budgetPolicyRef=policy.budget_policy_ref, priceSnapshotRef=exact('ModelPriceSnapshotRevision', price, 'price_snapshot_id'),
@@ -113,6 +120,20 @@ def freeze_plan(connect, state_dir):
         budget=budget_create.model_dump(mode='json', by_alias=True),
         price=price.model_dump(mode='json', by_alias=True), policy=policy.model_dump(mode='json', by_alias=True),
         modelCandidate=model.model_dump(mode='json', by_alias=True))
+    if renew:
+        plan.update(evidenceDirectory=str(Path(evidence_dir).resolve()),
+            routeRevision=runtime.get_route(SCOPE, ROUTE_ID).revision+1,
+            renewal=True)
+        with connect(SCOPE) as conn:
+            for kind, identifier, name in (
+                    ('model_price_snapshot', PRICE_ID, 'priceExpectedVersion'),
+                    ('registered_model', MODEL_ID, 'modelExpectedVersion'),
+                    ('model_route', ROUTE_ID, 'routeExpectedVersion')):
+                row = conn.execute(f'SELECT version FROM aip_{kind}_head WHERE org_id=%s AND project_id=%s AND {kind}_id=%s',
+                    (*SCOPE.key, identifier)).fetchone()
+                if row is None:
+                    raise ValueError('FORMAL_RENEWAL_HEAD_MISSING')
+                plan[name] = int(row['version'])
     plan['planHash'] = canonical_hash(plan)
     state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(state_dir, 0o700)
@@ -208,23 +229,29 @@ def _derive(connect, plan, candidate, mode, check_current):
 def apply_plan(connect, plan):
     if canonical_hash({k: v for k, v in plan.items() if k != 'planHash'}) != plan['planHash']:
         raise ValueError('FORMAL_MODEL_PLAN_DRIFT')
+    if plan.get('renewal') and any(type(plan.get(name)) is not int or plan[name] < 1
+            for name in ('priceExpectedVersion', 'modelExpectedVersion', 'routeExpectedVersion')):
+        raise ValueError('FORMAL_RENEWAL_HEAD_VERSIONS_REQUIRED')
     runtime = AipModelRuntimeStore(connect)
     governance = AipModelGovernancePolicyStore(connect)
     model = RegisteredModelRevision.model_validate(plan['modelCandidate'])
     price = ModelPriceSnapshotRevision.model_validate(plan['price'])
     policy = RuntimePolicyRevision.model_validate(plan['policy'])
-    source = evidence(connect)
+    source_dir = plan.get('evidenceDirectory', EVIDENCE_DIR)
+    source = evidence(connect, evidence_dir=source_dir)
     if source['sourceHash'] != plan['source']['sourceHash']:
         raise ValueError('FORMAL_MODEL_EVIDENCE_DRIFT')
     price.development_cost_authorization.require_scope(scope=SCOPE, provider=model.provider,
         provider_model_id=model.provider_model_id, approval_ref=APPROVAL, now=datetime.now(UTC))
-    budget = governance.publish_budget(SCOPE, ACTOR, 'a0v-formal-text-budget-v1', BudgetPolicyRevisionCreate.model_validate(plan['budget']), expected_version=plan['budgetExpectedVersion'])
+    key = ('a0v-text-renew-'+plan['planHash'][:24]) if plan.get('renewal') else 'a0v-formal-text'
+    budget = governance.publish_budget(SCOPE, ACTOR, key+'-budget-v1', BudgetPolicyRevisionCreate.model_validate(plan['budget']), expected_version=plan['budgetExpectedVersion'])
     if exact('BudgetPolicyRevision', budget, 'policy_id') != model.budget_policy_ref:
         raise ValueError('FORMAL_MODEL_BUDGET_DRIFT')
-    runtime.publish_price_snapshot(SCOPE, ACTOR, 'a0v-formal-text-price-v1', price)
-    runtime.publish_policy(SCOPE, ACTOR, 'a0v-formal-text-policy-v1', policy, expected_version=plan['policyExpectedVersion'])
+    runtime.publish_price_snapshot(SCOPE, ACTOR, key+'-price-v1', price,
+        expected_version=plan.get('priceExpectedVersion', 0))
+    runtime.publish_policy(SCOPE, ACTOR, key+'-policy-v1', policy, expected_version=plan['policyExpectedVersion'])
     def check_current():
-        current = evidence(connect)
+        current = evidence(connect, evidence_dir=source_dir)
         if current['sourceHash'] != plan['source']['sourceHash']:
             raise ValueError('FORMAL_MODEL_EVIDENCE_DRIFT')
         runtime.require_model_governance(SCOPE, model, price)
@@ -233,16 +260,18 @@ def apply_plan(connect, plan):
     check_current()
     model_gate = _derive(connect, plan, model, 'model', check_current)
     model = rehash(RegisteredModelRevision, {**model.model_dump(mode='json', by_alias=True), 'evalGateRef': model_gate})
-    saved_model = runtime.publish_model(SCOPE, ACTOR, 'a0v-formal-text-model-v1', model)
+    saved_model = runtime.publish_model(SCOPE, ACTOR, key+'-model-v1', model,
+        expected_version=plan.get('modelExpectedVersion', 0))
     route = rehash(ModelRouteRevision, dict(tenant={'orgId': SCOPE.org_id, 'projectId': SCOPE.project_id},
-        routeId=ROUTE_ID, revision=1, taskTypes=['chat.answer'], requiredInputModality='text',
+        routeId=ROUTE_ID, revision=plan.get('routeRevision', 1), taskTypes=['chat.answer'], requiredInputModality='text',
         requiredOutputModality='text', requiredCapabilities=['llm', 'chat'],
         candidates=[{'model': exact('RegisteredModelRevision', saved_model, 'registered_model_id')}], strategy='failover',
         runtimePolicyRef=exact('RuntimePolicyRevision', policy, 'policy_id'), evalGateRef=PLACEHOLDER,
         lifecycle='active', createdBy=ACTOR, createdAt=plan['createdAt']))
     route_gate = _derive(connect, plan, route, 'route', check_current)
     route = rehash(ModelRouteRevision, {**route.model_dump(mode='json', by_alias=True), 'evalGateRef': route_gate})
-    saved_route = runtime.publish_route(SCOPE, ACTOR, 'a0v-formal-text-route-v1', route)
+    saved_route = runtime.publish_route(SCOPE, ACTOR, key+'-route-v1', route,
+        expected_version=plan.get('routeExpectedVersion', 0))
     return dict(planHash=plan['planHash'], model=exact('RegisteredModelRevision', saved_model, 'registered_model_id').model_dump(mode='json'),
         route=exact('ModelRouteRevision', saved_route, 'route_id').model_dump(mode='json'),
         modelGate=model_gate.model_dump(mode='json'), routeGate=route_gate.model_dump(mode='json'),
