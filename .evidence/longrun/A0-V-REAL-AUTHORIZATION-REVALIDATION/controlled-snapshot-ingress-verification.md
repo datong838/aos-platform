@@ -1,0 +1,9 @@
+# 受控原始快照批次准备验证
+
+2026-09-12，基线64003807，主A0-V代码Lease。新增ControlledSnapshotIngress只接受exact claim/consistency Owners及可信独立连接，内部固定current snapshot→claim COMMIT→重新current snapshot/read_current→一次selected read→原Ingress COMMIT。SourceClaimReservation.created不作为调用方参数；已存在claim且无原Ingress明确SOURCE_OUTCOME_UNCONFIRMED；已有原结果仅回放。第一提交确认丢失、第二保存回滚、源错误、占用后权限拒绝均不重复查询。空源保存empty_observation，不执行删除。只读checkpoint准备BatchCommand，不调用apply_batch，不改变ScheduleRun成功状态，不投影。
+
+RED为新增模块不存在导致collection error；实现后核心6通过。扩展role/nonidle/mapping/cancel/concurrent后与claims/journal/selected reader52通过；并发测试明确允许竞争者在原结果尚未保存时收到UNKNOWN，后续回放不重读，复测目标12通过。实际隔离PG由独立连接见到第一claim提交后才进入fake源；全部源与资产fixture是假数据，不是商城真实链路证据。主库未DDL/未源读取。
+
+closure ar2-7扫描1802/分类158/迁移93，五数组为空。14:53:48Z真实实例仍ready/enabled，3容器running，30次续租，elapsed1938.754秒，canary0。源执行器尚未装配到运行入口，a0v_024未部署主库、API旧进程。新prepare结果不代表完整业务任务或对象Receipt。
+
+下一步：按原Ingress恢复对象/派生Receipt；限定原批次及其派生的投影范围，不能调用当前全租户project_until_caught_up冒充本次批准内执行；完成真实Schema024部署前备份与恢复验证、API重载、exact SourceSelection/Control及P01真实执行。还需同范围审批续期恢复协议，守住旧图/源/包/预算不能漂移；八工作台经营验收未完成，230L0挂起、不push。

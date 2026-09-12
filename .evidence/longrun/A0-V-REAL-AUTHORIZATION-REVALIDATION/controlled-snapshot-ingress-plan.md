@@ -1,0 +1,15 @@
+# 一次性受控快照原始批次准备
+
+2026-09-12，64003807。主A0-V Lease；本切片只保存可恢复的原始Ingress，不派发对象处理、不投影、不标记ScheduleRun成功。
+
+新增services/aos-api/aos_api/pipeline_controlled_snapshot_ingress.py、services/aos-api/tests/extension_runtime/test_controlled_snapshot_ingress_pg.py。
+
+固定构造：exact PipelineSourceClaimOwner、EcomConsistencyStore、可信独立连接factory；不接受请求提供读源回调或created布尔值。prepare(scope,run_id,control_ref,actor,deadline,cancel_event)内部构造固定ControlledIngressJournal。
+
+第一独立IDLE连接事务：设置租户，current snapshot Owner内先编译批准映射，再reserve原run claim，事务和连接正常退出后才允许后续读源。第二独立事务：再次进入current snapshot、read_current claim、校验原run/source/graph；已有Ingress只读取原记录、rows_read=0/replayed=true。已有claim无Ingress且非本次created，抛SOURCE_OUTCOME_UNCONFIRMED，不重发。第一事务提交结果未知时立即传播失败，绝不读源；重试原run将沿现存claim处理。
+
+首次读：控制草案转换为完全同范围SelectionDraft，调用固定read_selected_snapshot一次；检查返回source ref和deadline，materialize使用明确completed_at；SyncScope从编译platform/shop/pipeline生成，复用_normalize_rows与_build_batch_command只读checkpoint。非空保存原BatchCommand及outputRows；真正空源保存empty_observation，不能解释成删除。保存前后由ControlledJournal/current Owner重校验；第二事务失败仍保留第一claim，源结果未知时后续不再查询。
+
+返回仅包含已提交原批次和本次读取行数/是否回放，不代表对象写入或业务完成。原始输入保存后另波接exact恢复与限定投影，避免当前全租户projector越过本次任务范围。主库024部署、API重载、真实审批、管道启用仍待后续。
+
+实际隔离PG测试：首次非空/空保存、原run重放只读一次、独立提交可见性、第一事务提交结果未知、源错误、保存事务回滚、占用后权限拒绝、错误角色/非idle拒绝；fake源与资产明确不作真实链路证明。不得有真实SSH或模型请求。
