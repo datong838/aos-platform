@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-09-12T21:12:44.602787+00:00",
+  "runId": "scr-bc63f0d8437d4eed",
+  "counts": {
+    "INACTIVE": 18,
+    "DELETED": 8,
+    "ELIGIBLE_STATUS": 39
+  },
+  "newSourceCalls": 0,
+  "businessWrites": 0,
+  "productionConsumerWired": false
+}
