@@ -150,3 +150,13 @@ def test_bad_file_denies_every_plane_without_fallback(monkeypatch, tmp_path, pla
         with connector():
             pass
     assert 'private-fixture' not in str(error.value)
+
+
+def test_worker_dsn_selection_never_returns_web_fallback(monkeypatch,tmp_path):
+    from aos_api.extension_runtime import runtime_connections as module
+    path=credential_file(tmp_path)
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE',str(path))
+    monkeypatch.setattr(module,'get_dsn',lambda:pytest.fail('protected reference must not read web environment'))
+    assert module.runtime_worker_dsn()=='runtime'
+    path.chmod(0o644)
+    with pytest.raises(RuntimeError):module.runtime_worker_dsn()

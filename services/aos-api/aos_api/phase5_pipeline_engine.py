@@ -1010,6 +1010,7 @@ class PipelineEngine:
 
     def execute_pipeline_once(
         self, scope: TenantScope, pipeline_id: str, *, run_id: str | None = None, durable_ingress: bool = False,
+        controlled_execution: Any = None,
     ) -> dict[str, Any]:
         """Phase B1: 直接执行一次 Pipeline (不经过 Schedule).
 
@@ -1045,6 +1046,7 @@ class PipelineEngine:
                 started_at=started,
                 run_id=run_id,
                 durable_ingress=durable_ingress,
+                controlled_execution=controlled_execution,
             )
         evidence, _ = self._collect_dispatch(dispatch)
         # ScheduleRun status 用 "succeeded"，SyncRun 用 "success"；两者都算成功。
@@ -1354,9 +1356,18 @@ class PipelineEngine:
         started_at: float,
         run_id: str | None = None,
         durable_ingress: bool = False,
+        controlled_execution: Any = None,
     ) -> tuple[threading.Thread, queue.Queue, threading.Event, float, str, float]:
         executor_id = pipeline.executor_id
         executor = self._executors[executor_id]
+        if controlled_execution is not None:
+            from .pipeline_controlled_runtime import ControlledScheduleExecution
+
+            if type(controlled_execution) is not ControlledScheduleExecution:
+                raise TypeError("exact controlled schedule execution required")
+            if durable_ingress is not True or executor_id != "ec-live-v1":
+                raise ValueError("controlled execution requires durable ec-live-v1 dispatch")
+            executor = controlled_execution.invoke
         pipeline_snapshot = pipeline.model_copy(deep=True)
         nodes_snapshot = [copy.deepcopy(n) for n in self.list_nodes(scope, pipeline.id)]
         result_queue: queue.Queue = queue.Queue(maxsize=1)

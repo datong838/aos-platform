@@ -39,9 +39,8 @@ def _runtime_file_dsns(reference):
         raise RuntimeError('runtime credential reference is invalid') from None
 
 
-@contextmanager
-def runtime_worker_connection():
-    """Return an unscoped IDLE connection; the concrete worker owns each transaction."""
+def runtime_worker_dsn():
+    """Resolve the host-only runtime secret; never expose it in API responses."""
     reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
     if reference:
         identities = _runtime_file_dsns(reference)
@@ -53,6 +52,13 @@ def runtime_worker_connection():
         raise RuntimeError("runtime worker database identity is not configured")
     if dsn == web_dsn:
         raise RuntimeError("runtime worker identity must differ from the web database identity")
+    return dsn
+
+
+@contextmanager
+def runtime_worker_connection():
+    """Return an unscoped IDLE connection; the concrete worker owns each transaction."""
+    dsn = runtime_worker_dsn()
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
         if conn.info.transaction_status != TransactionStatus.IDLE:
             raise RuntimeError("runtime worker connection must start idle")
