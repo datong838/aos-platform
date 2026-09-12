@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-09-12T21:45:27.757863+00:00",
+  "cases": [
+    {
+      "case": "negative_tenant",
+      "rejected": true,
+      "errorType": "AssetNotFoundError"
+    },
+    {
+      "case": "unknown_actor",
+      "rejected": true,
+      "errorType": "RuntimeConflict"
+    },
+    {
+      "case": "binding_drift",
+      "rejected": true,
+      "errorType": "ValueError"
+    },
+    {
+      "case": "configuration_drift",
+      "rejected": true,
+      "errorType": "ValueError"
+    }
+  ],
+  "dispatchCount": 0,
+  "businessWrites": 0,
+  "newSourceCalls": 0
+}

@@ -50,4 +50,10 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 
 ## 经营首链接续
 
+### 当前安装登记前检查切片
+
+新增services/aos-api/aos_api/ecommerce_growth_registration_preflight.py与services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_preflight.py。复用PostgresInstallationStore和CurrentFourSourceConfigurationAuthorization，不接受假权限callback或调用方路由列表。先锁安装CAS，再读取active lock，检查resolved内solution.ecommerce.growth唯一存在；精确锁定runtime generation/bindingRevision/epoch/configRef并要求enabled/ready/unfenced。调用既有read_configuration完成当前角色、markings及四来源核验。当前tenant存在任一九项路由就标记不满足首次登记条件，不能预览为可补齐。
+
+输出只包含安全引用、checkedAt、固定fenced预览及currentConfigurationValidated；authorityValidated仍false，businessWrites=0。函数只在调用方已有受控事务中读与锁，无INSERT/UPDATE/DELETE，没有新授权。执行登记时必须在同事务重用检查，不能把预检结果作为未来写入授权。测试覆盖runtime字段漂移/类型伪装/配置变更/组已存在/权威依赖拒绝；随后以当前真实安装只读核验。检查不证明签名包声明已具备完整登记资格，该资格在正式Owner写入前另校验。
+
 登记与激活完成后接源事件消费者：SourceSelection/current配置校验→按事件存在性扫描而非MAX revision→冻结deadline→record_event_batch→CanonicalRouter→initial_store_analysis。下架/删除事件要撤销旧候选，候选状态函数不能过滤事件流。需要新版本平台包纳入候选状态规则；当前签名1.5不改动。真实成功门是Case/Run和后续业务产物，而不是九行登记或测试通过。
