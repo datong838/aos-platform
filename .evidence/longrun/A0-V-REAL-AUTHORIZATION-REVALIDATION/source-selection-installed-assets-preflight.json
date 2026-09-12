@@ -1,0 +1,56 @@
+{
+  "observedAt": "2026-09-12 08:03:53.665348+00:00",
+  "installationRef": {
+    "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+    "revision": 5,
+    "lockHash": "sha256:fa3de9e59055a9626e93a7b88269b9660eb40ea6a4c219038692346ab134b8cd",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "package": {
+    "id": "platform.ecommerce.niushop",
+    "version": "1.3.0",
+    "contentHash": "sha256:3d860b2200b2e6bc28a73d5eb2692badb9c1778c9486eb279c1fe2d69654d981"
+  },
+  "artifacts": [
+    {
+      "path": "content/mappings/p01-shop.yaml",
+      "sha256": "sha256:8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245",
+      "bytes": 1119
+    },
+    {
+      "path": "content/schemas/niushop-schema-fingerprint.json",
+      "sha256": "sha256:6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+      "bytes": 4826
+    },
+    {
+      "path": "content/mappings/_pii-exclusion.yaml",
+      "sha256": "sha256:b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+      "bytes": 1848
+    }
+  ],
+  "pipeline": "P01",
+  "sourceTable": "ns_site",
+  "targetObject": "Shop",
+  "siteFilter": "site_id=1",
+  "selectedColumns": [
+    "site_id",
+    "site_type",
+    "site_domain",
+    "site_name",
+    "username",
+    "logo",
+    "logo_square",
+    "seo_keywords",
+    "seo_description",
+    "seo_title",
+    "create_time"
+  ],
+  "excludedColumns": [
+    "site_tel"
+  ],
+  "schemaIdentityMatches": true,
+  "sourceRowsRead": 0,
+  "executionGranted": false,
+  "diagnosticRuntimeReaderDenied": true,
+  "limitation": "Only registered asset bytes checked. Live column schema, current source selection permission and production runtime composition remain unverified."
+}

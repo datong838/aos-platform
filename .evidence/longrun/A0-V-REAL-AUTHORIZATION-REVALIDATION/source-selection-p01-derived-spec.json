@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-09-12T08:09:29.661425+00:00",
+  "readSpec": {
+    "table": "ns_site",
+    "object_type": "Shop",
+    "primary_key": "site_id",
+    "columns": [
+      "site_id",
+      "site_type",
+      "site_domain",
+      "site_name",
+      "username",
+      "logo",
+      "logo_square",
+      "seo_keywords",
+      "seo_description",
+      "seo_title",
+      "create_time"
+    ],
+    "filters": [
+      [
+        "site_id",
+        1
+      ]
+    ]
+  },
+  "sourceRowsRead": 0,
+  "executionGranted": false,
+  "assetIdentityEvidence": "source-selection-installed-assets-preflight.json",
+  "interpreterSha256": "32d9ecef7fd89708098da950ba15cc9a38bf4f0561befb143f38a5e15858adaf"
+}
