@@ -119,3 +119,46 @@ def test_real_app_registers_both_approval_routes_once():
     paths=app.openapi()['paths']
     for suffix in ('source-selection-approvals','runtime-control-approvals'):
         assert 'post' in paths[f'/v1/pipelines/{{pipeline_id}}/{suffix}']
+
+
+def binding_body():
+    return {'scheduleId':'schedule-one','controlRef':{
+        'resourceType':'PipelineRuntimeControlRevision','resourceId':'pipeline-control-55555555-5555-4555-8555-555555555555',
+        'revision':1,'contentHash':'sha256:'+'a'*64}}
+
+
+def test_binding_route_uses_authenticated_actor_and_exact_control(harness):
+    def bind(**kw):
+        harness[2].append(kw)
+        return PipelineExactRef(resource_type='PipelineScheduleControlBinding',resource_id='schedule-control-55555555-5555-4555-8555-555555555555',revision=1,content_hash='sha256:'+'b'*64)
+    harness[4].bind_schedule=bind
+    response=harness[0].post('/v1/pipelines/P01-shop-qyh/schedule-control-bindings',json=binding_body(),headers={'Idempotency-Key':'binding-first'})
+    assert response.status_code==200,response.text
+    assert response.json()['resourceType']=='PipelineScheduleControlBinding'
+    assert harness[2][0]['actor']=='signed-user'
+    assert harness[2][0]['pipeline_id']=='P01-shop-qyh' and harness[2][0]['schedule_id']=='schedule-one'
+    assert harness[2][0]['idempotency_key']=='binding-first'
+    assert harness[3][0].key==('test-org','test-project')
+
+
+@pytest.mark.parametrize('mode',['actor','tenant','kind','previous','numeric','schedule'])
+def test_invalid_binding_does_not_reach_service(harness,mode):
+    value=binding_body()
+    if mode in ('actor','tenant'):value[mode]='forged'
+    elif mode=='kind':value['controlRef']['resourceType']='SourceSelectionRevision'
+    elif mode=='previous':value['previousRef']=value['controlRef']
+    elif mode=='numeric':value['controlRef']['revision']=True
+    else:value['scheduleId']=' '
+    response=harness[0].post('/v1/pipelines/P01-shop-qyh/schedule-control-bindings',json=value,headers={'Idempotency-Key':'binding-first'})
+    assert response.status_code==422,response.text
+    assert not harness[2] and not harness[3]
+
+
+def test_binding_route_failure_is_safe_and_never_retried(harness):
+    def uncertain(**kw):
+        harness[2].append(kw)
+        raise OSError('private-sentinel')
+    harness[4].bind_schedule=uncertain
+    response=harness[0].post('/v1/pipelines/P01-shop-qyh/schedule-control-bindings',json=binding_body(),headers={'Idempotency-Key':'binding-first'})
+    assert response.status_code==503 and 'private-sentinel' not in response.text
+    assert len(harness[2])==1

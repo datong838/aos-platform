@@ -88,9 +88,10 @@ class PipelineScheduleControlOwner:
                 (*scope.key,schedule_id)).fetchone()
         return decode_binding(row) if row else None
 
-    def bind(self,conn,*,scope,schedule_id,control_ref,actor,idempotency_key,previous_ref=None):
+    def bind(self,conn,*,scope,schedule_id,control_ref,actor,idempotency_key,previous_ref=None,expected_pipeline_id=None):
         self._identity(conn,scope)
         schedule_id,actor=_text(schedule_id,200),_text(actor,240)
+        if expected_pipeline_id is not None:expected_pipeline_id=_text(expected_pipeline_id,200)
         control_ref=PipelineExactRef.model_validate(control_ref)
         control_id=_ref_identity(control_ref,'PipelineRuntimeControlRevision','pipeline-control-')
         key=validate_idempotency_key(idempotency_key)
@@ -101,6 +102,8 @@ class PipelineScheduleControlOwner:
             revision=previous_ref.revision+1
         request_hash=_request_hash(scope,schedule_id,control_ref,actor,previous_ref)
         def persist(draft,spec):
+            if expected_pipeline_id is not None and draft.pipeline_id!=expected_pipeline_id:
+                raise ValueError('request pipeline differs')
             with conn.cursor(row_factory=dict_row) as cursor:
                 schedule=cursor.execute('''SELECT pipeline_id,ingest FROM meta_schedule
                     WHERE org_id=%s AND project_id=%s AND id=%s FOR UPDATE''',(*scope.key,schedule_id)).fetchone()

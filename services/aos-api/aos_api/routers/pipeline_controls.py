@@ -16,6 +16,8 @@ from aos_api.pipeline_runtime_control_contracts import (
 )
 from aos_api.routers.asset_control_headers import require_idempotency_key
 from aos_api.tenant_scope import TenantScope
+from aos_api.pipeline_runtime_control_owner import _ref_identity
+from aos_api.pipeline_source_claim_owner import _text
 
 router = APIRouter(prefix='/v1/pipelines', tags=['pipeline-control'],
                    dependencies=[Security(HTTPBearer(auto_error=False))])
@@ -42,20 +44,40 @@ class ControlApprovalRequest(SelectionApprovalRequest):
     draft: PipelineRuntimeControlDraft
 
 
+class ScheduleBindingRequest(BaseModel):
+    model_config = ConfigDict(strict=True, extra='forbid', hide_input_in_errors=True)
+    schedule_id: str = Field(alias='scheduleId',min_length=1,max_length=200)
+    control_ref: PipelineExactRef = Field(alias='controlRef')
+    previous_ref: PipelineExactRef | None = Field(default=None,alias='previousRef')
+
+    @model_validator(mode='after')
+    def exact_binding(self):
+        _text(self.schedule_id,200)
+        _ref_identity(self.control_ref,'PipelineRuntimeControlRevision','pipeline-control-')
+        if self.previous_ref is not None:
+            _ref_identity(self.previous_ref,'PipelineScheduleControlBinding','schedule-control-')
+        return self
+
+
 def _approve(request, principal, pipeline_id, body, selection):
     try:
         key = require_idempotency_key(request)
-        draft = body.draft
+        _text(pipeline_id,200)
+        binding = isinstance(body,ScheduleBindingRequest)
+        draft = None if binding else body.draft
         scope = TenantScope(principal.org_id, principal.project_id)
-        if scope.key != (draft.org_id, draft.project_id):
+        if not binding and scope.key != (draft.org_id, draft.project_id):
             raise PermissionError('request scope differs')
-        if draft.pipeline_id != pipeline_id:
+        if not binding and draft.pipeline_id != pipeline_id:
             raise ValueError('request pipeline differs')
         plane = getattr(request.app.state, 'extension_runtime_control_plane', None)
         factory = getattr(plane, 'pipeline_control_factory', None)
         if factory is None:
             raise ApiError(code='PIPELINE_CONTROL_UNAVAILABLE', message='管道控制服务当前不可用。', status_code=503)
         service = factory.build(scope)
+        if binding:
+            return service.bind_schedule(pipeline_id=pipeline_id,schedule_id=body.schedule_id,
+                control_ref=body.control_ref,actor=principal.subject,idempotency_key=key,previous_ref=body.previous_ref)
         operation = service.approve_selection if selection else service.approve_control
         return operation(draft=draft, actor=principal.subject, idempotency_key=key, previous_ref=body.previous_ref)
     except ApiError:
@@ -99,4 +121,10 @@ async def approve_selection(pipeline_id: str, request: Request, principal: Princ
 @router.post('/{pipeline_id}/runtime-control-approvals', response_model=PipelineExactRef)
 async def approve_control(pipeline_id: str, request: Request, principal: PrincipalDependency):
     body = await _request_body(request, ControlApprovalRequest)
+    return await run_in_threadpool(_approve, request, principal, pipeline_id, body, False)
+
+
+@router.post('/{pipeline_id}/schedule-control-bindings', response_model=PipelineExactRef)
+async def bind_schedule_control(pipeline_id: str, request: Request, principal: PrincipalDependency):
+    body = await _request_body(request, ScheduleBindingRequest)
     return await run_in_threadpool(_approve, request, principal, pipeline_id, body, False)

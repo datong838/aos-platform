@@ -86,3 +86,10 @@ def test_concurrent_same_request_has_one_binding(binding_case,claim_case):
     with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(attempt,range(2)))
     assert results[0]==results[1]
     assert conn.execute('SELECT count(*) FROM pipeline_schedule_control_binding').fetchone()=={'count':1}
+
+
+def test_request_path_pipeline_mismatch_is_rejected_before_binding(binding_case,claim_case):
+    conn,owner,args=setup(binding_case,claim_case)
+    with pytest.raises(ValueError,match='request pipeline differs'):
+        bind(conn,owner,args,expected_pipeline_id='another-pipeline')
+    assert conn.execute('SELECT count(*) FROM pipeline_schedule_control_binding').fetchone()=={'count':0}

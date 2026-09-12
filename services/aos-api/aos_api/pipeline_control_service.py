@@ -14,6 +14,7 @@ from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDra
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner
 from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
+from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.tenant_scope import TenantScope
 
 
@@ -41,6 +42,15 @@ class PipelineControlServices:
 
     def approve_control(self,*,draft,actor,idempotency_key,previous_ref=None):
         return self._approve(draft=draft,actor=actor,idempotency_key=idempotency_key,previous_ref=previous_ref,selection=False)
+
+    def bind_schedule(self,*,pipeline_id,schedule_id,control_ref,actor,idempotency_key,previous_ref=None):
+        owner=PipelineScheduleControlOwner(controls=self.controls)
+        scope=dict(org_id=self.scope.org_id,project_id=self.scope.project_id)
+        with consumer_connection(runtime_worker_connection,scope) as conn:
+            require_runtime_role(conn,**scope,protected_tables=(
+                'public.pipeline_schedule_control_binding','public.pipeline_runtime_control_revision'))
+            return owner.bind(conn,scope=self.scope,schedule_id=schedule_id,control_ref=control_ref,
+                actor=actor,idempotency_key=idempotency_key,previous_ref=previous_ref,expected_pipeline_id=pipeline_id).ref
 
 
 @dataclass(frozen=True)
