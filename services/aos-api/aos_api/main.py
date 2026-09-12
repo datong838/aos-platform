@@ -122,6 +122,9 @@ except Exception:  # pragma: no cover
 
 def _prebuild_jdbc_ssh_tunnels() -> None:
     """Best-effort read-only transport preparation for every migration mode."""
+    if os.getenv("AOS_JDBC_SSH_PREBUILD_ENABLED", "true").strip().lower() not in {"1", "true", "yes", "on"}:
+        log.info("startup_jdbc_ssh_prebuild_disabled explicit=true")
+        return
     try:
         from aos_api.jdbc_connector_runtime import (
             prebuild_all_ssh_tunnels_from_meta_source,
@@ -130,6 +133,18 @@ def _prebuild_jdbc_ssh_tunnels() -> None:
         prebuild_all_ssh_tunnels_from_meta_source()
     except Exception:
         log.exception("startup_jdbc_ssh_prebuild_failed_continue")
+
+
+def _register_pipeline_runtime() -> None:
+    """Pure runtime wiring; never depend on legacy DDL or sample data seeding."""
+    from aos_api.ec_live_executor import ec_live_executor
+    from aos_api.ec_pipeline_resolvers import dataset_resolver
+    from aos_api.phase5_pipeline_engine import get_engine
+
+    engine = get_engine()
+    engine.register_evidence_resolver("dataset", dataset_resolver)
+    engine.register_executor("ec-live-v1", ec_live_executor)
+    log.info("startup_pipeline_registered resolver=dataset executor=ec-live-v1")
 
 
 @asynccontextmanager
@@ -188,19 +203,6 @@ async def _lifespan_body(_app: FastAPI):
                 data_os_store.boot_data_os(wave_ext_mod)
             except Exception:
                 log.exception("startup_data_os_failed_continue")
-            try:
-                from aos_api.ec_live_executor import ec_live_executor
-                from aos_api.ec_pipeline_resolvers import dataset_resolver
-                from aos_api.phase5_pipeline_engine import get_engine
-
-                eng = get_engine()
-                eng.register_evidence_resolver("dataset", dataset_resolver)
-                eng.register_executor("ec-live-v1", ec_live_executor)
-                log.info(
-                    "startup_pipeline_registered resolver=dataset executor=ec-live-v1"
-                )
-            except Exception:
-                log.exception("startup_pipeline_registration_failed_continue")
             # ── 从 YAML bundle 加载真实栖月汇管道（替代 demo fallback）──
             try:
                 from pathlib import Path as _Path
@@ -333,6 +335,8 @@ async def _lifespan_body(_app: FastAPI):
             log.exception("startup_meta_store_failed_continue")
     else:
         log.info("startup_schema_bootstrap_skipped migration_mode=%s", mode_value)
+
+    _register_pipeline_runtime()
 
     # SSH is read-only transport preparation, not schema bootstrap. Managed
     # migration mode must therefore receive the same best-effort warm-up.
