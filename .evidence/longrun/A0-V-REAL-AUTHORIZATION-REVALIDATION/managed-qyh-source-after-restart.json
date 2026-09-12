@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-09-12T06:41:23.325459+00:00",
+  "sourceId": "niushop-qyh",
+  "expectedRevision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+  "readStatus": 200,
+  "sameRevision": true,
+  "probeStatus": 200,
+  "ok": true,
+  "latencyMs": 1630,
+  "truncated": false,
+  "tableCount": 302
+}

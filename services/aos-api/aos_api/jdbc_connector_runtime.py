@@ -23,6 +23,7 @@ import atexit
 import hashlib
 import os
 import re
+import shlex
 import socket
 import subprocess
 import tempfile
@@ -628,9 +629,7 @@ class SshTunnel:
     def _open_with_password(self) -> int:
         """密码认证模式：SSH_ASKPASS + 由 AOS 持有的 ssh -N 子进程。"""
         # 创建临时 askpass helper 脚本
-        askpass_content = f"""#!/bin/bash
-echo '{self.ssh_password}'
-"""
+        askpass_content = "#!/bin/bash\nprintf '%s\\n' " + shlex.quote(self.ssh_password) + "\n"
         fd, self._askpass_file = tempfile.mkstemp(suffix=".sh", prefix="_ssh_askpass_")
         with os.fdopen(fd, "w") as f:
             f.write(askpass_content)
@@ -644,7 +643,7 @@ echo '{self.ssh_password}'
             "-o", "ServerAliveInterval=15",
             "-o", "ServerAliveCountMax=4",
             "-o", "TCPKeepAlive=yes",
-            "-o", "StrictHostKeyChecking=no",
+            "-o", "StrictHostKeyChecking=yes",
             "-o", "ExitOnForwardFailure=yes",
             "-p", str(self.ssh_port),
             "-N", "-L",

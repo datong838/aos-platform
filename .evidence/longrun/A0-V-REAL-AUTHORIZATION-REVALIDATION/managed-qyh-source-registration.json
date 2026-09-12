@@ -1,0 +1,19 @@
+{
+  "startedAt": "2026-09-12T06:39:20.307042+00:00",
+  "sourceId": "niushop-qyh",
+  "tenant": [
+    "org-org",
+    "dev-project"
+  ],
+  "state": "RESPONSE_RECEIVED",
+  "httpStatus": 200,
+  "metadata": {
+    "id": "niushop-qyh",
+    "type": "jdbc-mysql-ssh",
+    "status": "registered",
+    "runtimeMode": "direct",
+    "configurationRevision": "a84b6c79-8654-48f0-98c2-57d41b067b3d"
+  },
+  "readbackCount": 1,
+  "publicSecretsAbsent": true
+}
