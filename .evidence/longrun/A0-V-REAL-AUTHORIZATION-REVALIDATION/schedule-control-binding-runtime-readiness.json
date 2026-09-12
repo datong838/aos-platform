@@ -1,0 +1,36 @@
+{
+  "at": "2026-09-12T17:32:47.585847+00:00",
+  "identity": {
+    "session_user": "aos_a0v_runtime_20260912",
+    "current_user": "aos_runtime",
+    "current_database": "aos_meta_head"
+  },
+  "privileges": {
+    "pipeline_schedule_control_binding": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": false,
+      "TRUNCATE": false
+    },
+    "pipeline_controlled_source_claim": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false
+    },
+    "meta_schedule": {
+      "SELECT": true,
+      "UPDATE": true
+    },
+    "meta_schedule_run": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true
+    }
+  },
+  "p01Schedules": [],
+  "unconfirmedPriorRuns": [],
+  "bindingAbsent": true,
+  "sourceCalls": 0,
+  "businessWrites": 0
+}
