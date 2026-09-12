@@ -6,11 +6,13 @@ from psycopg import sql
 from aos_api import data_os_store
 from aos_api.ec_dataset_sink import _resolve_stable_rid, _resolve_dataset_name, _resolve_ot_hint
 from aos_api.ec_ingress_journal import IngressJournalConflict, _digest
-from aos_api.ec_ingress_recovery import _bound_parent, read_saved_projection_completion
+from aos_api.ec_ingress_recovery import _bound_parent, _check_active, read_saved_projection_completion
 
 
-def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store, eng, only_existing=False):
+def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store, eng, only_existing=False,
+                           deadline=None, cancel_event=None):
     """Internal running-run finalizer; factory commits before publishing memory."""
+    _check_active(deadline,cancel_event)
     table = sql.Identifier(journal.schema,'ecommerce_ingress_dataset_receipt')
     with connection_factory(scope) as conn:
         with conn.transaction():
@@ -49,6 +51,10 @@ def finalize_saved_dataset(connection_factory, scope, run_id, *, journal, store,
                     history_entries=[dict(version=1,status='SUCCEEDED',at=at,rowsWritten=count,runId=run_id,buildId=build_id)])
                 conn.execute(sql.SQL('INSERT INTO {}(org_id,project_id,run_id,payload_hash,payload) VALUES(%s,%s,%s,%s,%s::jsonb)').format(table),
                     (*scope.key,run_id,_digest(result),json.dumps(result,ensure_ascii=False,allow_nan=False)))
+            # Current control may expire while persistence runs. Reject before
+            # committing metadata or publishing its in-memory completion.
+            _check_active(deadline,cancel_event)
+            _bound_parent(conn,scope,run_id,journal)
     # Replaying an old run must not replace newer cached Dataset metadata.
     item = result['dataset']
     current = eng.get_dataset(scope,item['rid'])

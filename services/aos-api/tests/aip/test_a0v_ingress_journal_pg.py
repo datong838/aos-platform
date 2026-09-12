@@ -300,6 +300,31 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         assert database.owner.execute('SELECT count(*) AS n FROM meta_dataset_history').fetchone()['n']==0
         assert eng._datasets=={}
         database.owner.execute('ALTER TABLE ecommerce_ingress_dataset_receipt DROP CONSTRAINT reject_test')
+        from threading import Event
+        from aos_api import ec_ingress_dataset as dataset_module
+        real_persist=dataset_module.data_os_store._persist_dataset_in_transaction
+        real_verify=journal.verify_running_schedule
+        for failure in ('revoked','cancelled'):
+            cancelled=Event()
+            state={'written':False}
+            def persist_then_invalidate(*args,**kwargs):
+                real_persist(*args,**kwargs)
+                state['written']=True
+                if failure=='cancelled':cancelled.set()
+            def verify_current(*args,**kwargs):
+                if failure=='revoked' and state['written']:
+                    raise PermissionError('SIMULATED_CURRENT_CONTROL_REVOKED')
+                return real_verify(*args,**kwargs)
+            monkeypatch.setattr(dataset_module.data_os_store,'_persist_dataset_in_transaction',persist_then_invalidate)
+            monkeypatch.setattr(journal,'verify_running_schedule',verify_current)
+            with pytest.raises((PermissionError,IngressJournalConflict),match='REVOKED|CANCELLED'):
+                finalize_saved_dataset(factory,scope,'run',journal=journal,store=store,eng=eng,cancel_event=cancelled)
+            assert state['written']
+            for table in ('meta_dataset','meta_dataset_history','ecommerce_ingress_dataset_receipt'):
+                assert database.owner.execute(f'SELECT count(*) AS n FROM {table}').fetchone()['n']==0
+            assert eng._datasets=={} and eng._builds=={}
+        monkeypatch.setattr(dataset_module.data_os_store,'_persist_dataset_in_transaction',real_persist)
+        monkeypatch.setattr(journal,'verify_running_schedule',real_verify)
         real_add=eng.add_build
         def fail_publish(*args,**kwargs):
             raise RuntimeError('SIMULATED_MEMORY_PUBLISH_FAILURE')

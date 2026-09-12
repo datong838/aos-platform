@@ -1,0 +1,64 @@
+{
+  "identity": {
+    "session_user": "aos_a0v_runtime_20260912",
+    "current_user": "aos_runtime"
+  },
+  "relations": [
+    {
+      "table": "projection_outbox",
+      "exists": true,
+      "privileges": {
+        "SELECT": true,
+        "UPDATE": true
+      }
+    },
+    {
+      "table": "obj_instance",
+      "exists": true,
+      "privileges": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": true
+      }
+    },
+    {
+      "table": "graph_edge",
+      "exists": true,
+      "privileges": {
+        "SELECT": true,
+        "INSERT": true,
+        "DELETE": true
+      }
+    },
+    {
+      "table": "meta_object_type",
+      "exists": true,
+      "privileges": {
+        "SELECT": true
+      }
+    },
+    {
+      "table": "meta_dataset",
+      "exists": true,
+      "privileges": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true
+      }
+    },
+    {
+      "table": "meta_dataset_history",
+      "exists": true,
+      "privileges": {
+        "SELECT": true,
+        "INSERT": true
+      }
+    },
+    {
+      "table": "pipeline_controlled_source_claim",
+      "exists": false,
+      "privileges": {}
+    }
+  ]
+}
