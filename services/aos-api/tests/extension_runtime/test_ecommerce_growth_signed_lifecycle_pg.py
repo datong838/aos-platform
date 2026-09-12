@@ -179,6 +179,8 @@ def database():
         for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
             owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}")
                           .format(sql.Identifier(schema), sql.Identifier(granted)))
+        assert owner.execute("SELECT has_table_privilege('aos_app',%s,'UPDATE') AS allowed",
+            (schema+'.bundle_installation_revision',)).fetchone()['allowed'] is False
         yield SimpleNamespace(owner=owner, schema=schema, role=role, root=root, helper=helper)
     finally:
         engine.dispose()
@@ -254,6 +256,10 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
     scope_dict = dict(org_id=scope.org_id, project_id=scope.project_id)
     context = "colima-aos-extension"
     OciDriver(context=context).require_isolation()
+    def owned_container_ids():
+        return set(subprocess.check_output(["docker", "--context", context, "ps", "-aq",
+            "--filter", "label=aos.extension.owner"], text=True, timeout=15).split())
+    existing_containers = owned_container_ids()
 
     def package_probe(**package):
         store = package["store"]
@@ -544,5 +550,4 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
 
     result = run_signed_installation(connect, database.helper, tmp_path, package_probe=package_probe)
     assert result[0]["draft"].installation_id != result[1]["draft"].installation_id
-    assert subprocess.check_output(["docker", "--context", context, "ps", "-aq",
-        "--filter", "label=aos.extension.owner"], text=True, timeout=15).strip() == ""
+    assert owned_container_ids() == existing_containers

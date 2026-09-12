@@ -13,6 +13,7 @@ from .lifecycle_store import (_require_transaction, _values, _deadline_valid,
 from .preparation_commit import _expected_backend_claims, _registered_resources
 from .runtime_gate import _reject_deferred
 from .verification_commit import _fresh_health
+from .replacement_enable_guard import require_predecessor_drained
 
 
 def commit_enabled(conn, *, installation_store, revalidator, check_current_permission,
@@ -30,6 +31,9 @@ def commit_enabled(conn, *, installation_store, revalidator, check_current_permi
         installation_id=str(installation_id),expected_etag_version=etag)
     lock=_load_current_lock(conn,locked=locked,org_id=org_id,project_id=project_id)
     installation_store.guard_replacement_activation_in_transaction(conn,locked=locked,
+        requested_ref=lock.payload.current_installation_ref)
+    installation_store.guard_no_active_replacement_in_transaction(conn,locked=locked)
+    require_predecessor_drained(conn,org_id=org_id,project_id=project_id,
         requested_ref=lock.payload.current_installation_ref)
     row=conn.execute('''SELECT kind,phase,status,revision,requested_by,deadline FROM extension_runtime_operation
         WHERE org_id=%s AND project_id=%s AND operation_id=%s FOR UPDATE''',identity).fetchone()

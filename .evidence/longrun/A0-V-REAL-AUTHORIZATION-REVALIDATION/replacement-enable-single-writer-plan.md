@@ -1,0 +1,19 @@
+# 替换安装启用单写者门
+
+2026-09-13，基线e0ddecba。m1主A0-V Lease。依据231-3 safe replacement，不变更当前实例或DDL。
+
+文件：修改 services/aos-api/aos_api/extension_runtime/enable_commit.py；新增同目录 replacement_enable_guard.py；新增 tests/extension_runtime/test_replacement_enable_guard_pg.py；扩展 test_enable_renewed_lease.py。
+
+在原enable顶层事务和安装锁内，复用 guard_no_active_replacement_in_transaction 拒绝有active后继的旧实例重新启用；复用原 guard_replacement_activation 已锁定精确前驱并核前驱版本。新guard只对有CurrentInstallationRef的runtime替换执行：锁前驱所有binding按generation顺序，必须唯一且installation_revision等于ref.revision、lockHash相同、enabled=false/fence=true/desired disabled/observed unknown。随后读取前驱同generation由成功disable操作产生的disabled_committed事件，重算hash并要求payload严格匹配当前bindingRevision/epoch和resourcesRetained=true。缺失/多代/未排空/过期epoch/错误hash/跨租户均拒绝；没有前驱的首装不增加读取。
+
+前驱disabled_committed是现有finish_disable在真实drain检查后同事务写入的authority，不用静态ready标志冒充排空。父安装锁与绑定锁保持到子enable提交；父enable也在其安装锁下执行leaf保护，不能在子activate后再次放行。新verify只准备disabled/fenced代，仍可在旧代运行时完成；切换执行必须先disable旧再enable新。现有锁链潜在死锁由PG回滚fail-closed，本切片不改既有安装锁顺序；后续实际替换动作串行，不能声称通用零停机迁移已完成。
+
+严格范围：缺前驱binding或不具备本次exact排空凭据的替换拒绝，需要显式恢复；不引入隐式旧版回退。暂不扩展纯内容前驱→runtime替换。测试先红：真实PG独立18432随机schema校验禁入/排空/hash/epoch/租户；并验证持锁使另一连接无法更新旧binding，外层事务退出后可更新。真实旧父启用入口通过受影响enable测试验证拒绝且零UPDATE；其安装lineage查询复用已有Owner，不复制替换图。
+
+通过后运行enable/disable/真实生命周期邻接及闭包。API/Host不热加载，未重新部署前不报实际替换已受保护。下一波才准备真实替换实例、保持历史数据、正式P02审批和读取。
+
+
+03:34 回归新增明确修复范围：实际OCI signed lifecycle旧测试失败于runtime_uninstall.py:118的FOR SHARE OF i,r，aos_app没有不可变bundle_installation_revision的UPDATE权。将enable_commit在独立Python进程替换回e0ddecba旧源码后，同一测试8.16秒复现相同失败，非本波enable回归。修复runtime_uninstall.py为只FOR SHARE OF i；在当前安装头锁和revision条件下读不可变r，不需要再锁历史行，不扩展GRANT。原完整signed lifecycle测试必须通过；夹具增加aos_app对revision无UPDATE的实际权限断言，防止通过授予历史写权掩盖问题。此新增范围直接支撑卸载重装目标，不修改真实库权限或历史。
+
+
+03:36 OCI回归已越过卸载并完成重装，最后的旧测试全局断言要求整个隔离引擎不存在任何AOS容器，因此误计当前真实Host的三个长期运行容器。Docker独立观察确认报出的三个ID正是原业务容器且已运行5小时，不是测试泄漏。修正测试为前后owner容器集合严格一致，证明本轮新资源释放且既有资源未动；禁止删除真实Host容器来满足空集合。随机测试安装/代次本轮均新建，不复用已有容器。此修正仅测试范围，没有放宽生产回收条件。

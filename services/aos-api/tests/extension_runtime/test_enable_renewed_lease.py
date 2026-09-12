@@ -10,7 +10,7 @@ from aos_api.extension_runtime.enable_commit import commit_enabled
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 
 
-@pytest.mark.parametrize('case', ['renewed', 'enable_expired', 'lease_expired'])
+@pytest.mark.parametrize('case', ['renewed', 'enable_expired', 'lease_expired', 'active_child', 'predecessor_unproven'])
 def test_enable_uses_current_request_and_live_resource_deadlines(case):
     now=datetime.now(UTC);installation,operation,preparation,generation=[uuid4() for _ in range(4)]
     conn=MagicMock();conn.info.transaction_status=TransactionStatus.INTRANS
@@ -31,11 +31,13 @@ def test_enable_uses_current_request_and_live_resource_deadlines(case):
         return result
     conn.execute.side_effect=execute
     store=MagicMock();store.lock_for_transition_in_transaction.return_value.record=SimpleNamespace(state='active',current=SimpleNamespace(revision=5))
+    if case=='active_child':store.guard_no_active_replacement_in_transaction.side_effect=RuntimeConflict('active child exists')
     def resources(db,scope,gen,claims,cutoff):
         if min(cutoff,lease_expiry)<=now:raise RuntimeConflict('current resource or request expired')
         return proof,[cutoff,lease_expiry]
     target=SimpleNamespace(generation=str(generation),bindingRevision=8,configRef=SimpleNamespace(model_dump=lambda **kw:config))
-    with patch('aos_api.extension_runtime.enable_commit._load_current_lock',return_value=SimpleNamespace(lock_hash='lock',payload=SimpleNamespace(current_installation_ref=None))), patch('aos_api.extension_runtime.enable_commit.load_enable_target',return_value=target), patch('aos_api.extension_runtime.enable_commit._target',return_value=('org-org','dev-project',installation,generation)), patch('aos_api.extension_runtime.enable_commit.read_configuration'), patch('aos_api.extension_runtime.enable_commit._expected_backend_claims',return_value={}), patch('aos_api.extension_runtime.enable_commit._registered_resources',side_effect=resources), patch('aos_api.extension_runtime.enable_commit._fresh_health'), patch('aos_api.extension_runtime.enable_commit._deadline_valid',side_effect=lambda db,value:value>now), patch('aos_api.extension_runtime.enable_commit.RuntimeOperationStore') as operations:
+    predecessor=SimpleNamespace(installation_id=str(uuid4()),revision=7,lock_hash='lock') if case=='predecessor_unproven' else None
+    with patch('aos_api.extension_runtime.enable_commit._load_current_lock',return_value=SimpleNamespace(lock_hash='lock',payload=SimpleNamespace(current_installation_ref=predecessor))), patch('aos_api.extension_runtime.enable_commit.load_enable_target',return_value=target), patch('aos_api.extension_runtime.enable_commit._target',return_value=('org-org','dev-project',installation,generation)), patch('aos_api.extension_runtime.enable_commit.read_configuration'), patch('aos_api.extension_runtime.enable_commit._expected_backend_claims',return_value={}), patch('aos_api.extension_runtime.enable_commit._registered_resources',side_effect=resources), patch('aos_api.extension_runtime.enable_commit._fresh_health'), patch('aos_api.extension_runtime.enable_commit._deadline_valid',side_effect=lambda db,value:value>now), patch('aos_api.extension_runtime.enable_commit.RuntimeOperationStore') as operations:
         operations.return_value.advance.return_value=SimpleNamespace(revision=2)
         args=dict(installation_store=store,revalidator=MagicMock(),check_current_permission=lambda **kw:True,check_current_conditions=lambda **kw:True,authorize=lambda *a,**kw:True,org_id='org-org',project_id='dev-project',operation_id=operation,expected_revision=1,preparation_operation_id=preparation,generation=generation,health_checked_at=now)
         if case=='renewed':

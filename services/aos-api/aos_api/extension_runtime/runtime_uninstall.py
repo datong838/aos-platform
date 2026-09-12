@@ -115,12 +115,14 @@ class RuntimeUninstallGuard:
         if conn.info.transaction_status!=TransactionStatus.INTRANS:
             raise RuntimeError('runtime uninstall guard requires an explicit transaction')
         installation_id=UUID(str(installation_id))
+        # Lock the mutable head; its revision row is immutable and does not
+        # require UPDATE privilege merely to inspect the current state.
         head=conn.execute('''SELECT r.state FROM bundle_installation i
             JOIN bundle_installation_revision r
               ON r.org_id=i.org_id AND r.project_id=i.project_id
              AND r.installation_pk=i.installation_pk AND r.revision=i.current_revision
             WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s
-              AND i.current_revision=%s AND i.etag_version=%s FOR SHARE OF i,r''',
+              AND i.current_revision=%s AND i.etag_version=%s FOR SHARE OF i''',
             (org_id,project_id,installation_id,expected_installation_revision,
              expected_installation_revision)).fetchone()
         if head is None:
