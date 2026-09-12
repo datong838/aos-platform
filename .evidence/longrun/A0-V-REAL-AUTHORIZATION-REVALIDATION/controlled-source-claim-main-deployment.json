@@ -1,0 +1,122 @@
+{
+  "outcome": "LOCAL_CONTROLLED_SOURCE_CLAIM_SCHEMA_DEPLOYED",
+  "at": "2026-09-12T15:52:12.918861+00:00",
+  "database": "aos_meta_head",
+  "revision": "a0v_024",
+  "migrations": {
+    "a0v_024_pipeline_controlled_source_claim.py": "sha256:13907e0e5467b8dcb7cfaa097414f182b8921ade46446dd77893c09f2023fc52"
+  },
+  "before": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 1,
+      "digest": "e6364d65afd22e684869b970cfa97bfb"
+    },
+    "meta_pipeline": {
+      "count": 1,
+      "digest": "01106197ffb1c483b0b360c931e601c4"
+    },
+    "meta_schedule": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_schedule_run": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_dataset": {
+      "count": 1,
+      "digest": "a1dcdeb30ccb24cf244e2095ee3de77a"
+    },
+    "bundle_installation": {
+      "count": 7,
+      "digest": "7ea38eefa47a3cd51b358e67bb5d05aa"
+    },
+    "extension_runtime_configuration": {
+      "count": 4,
+      "digest": "a51d032e027e494736e039b5a2145211"
+    },
+    "pipeline_source_selection_revision": {
+      "count": 0,
+      "digest": null
+    },
+    "pipeline_runtime_control_revision": {
+      "count": 0,
+      "digest": null
+    }
+  },
+  "after": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 1,
+      "digest": "e6364d65afd22e684869b970cfa97bfb"
+    },
+    "meta_pipeline": {
+      "count": 1,
+      "digest": "01106197ffb1c483b0b360c931e601c4"
+    },
+    "meta_schedule": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_schedule_run": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_dataset": {
+      "count": 1,
+      "digest": "a1dcdeb30ccb24cf244e2095ee3de77a"
+    },
+    "bundle_installation": {
+      "count": 7,
+      "digest": "7ea38eefa47a3cd51b358e67bb5d05aa"
+    },
+    "extension_runtime_configuration": {
+      "count": 4,
+      "digest": "a51d032e027e494736e039b5a2145211"
+    },
+    "pipeline_source_selection_revision": {
+      "count": 0,
+      "digest": null
+    },
+    "pipeline_runtime_control_revision": {
+      "count": 0,
+      "digest": null
+    }
+  },
+  "tables": {
+    "pipeline_controlled_source_claim": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "can_truncate": false,
+      "can_trigger": false,
+      "can_reference": false,
+      "count": 0,
+      "triggers": [
+        "immutable_history",
+        "immutable_truncate"
+      ]
+    }
+  },
+  "approvalsWritten": 0,
+  "sourceRowsRead": 0,
+  "businessWrites": 0
+}
