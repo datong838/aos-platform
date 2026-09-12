@@ -312,6 +312,29 @@ def persist_phase5_pipeline_graph(
     return committed
 
 
+def load_phase5_pipeline_graph_catalog(scope: TenantScope) -> list[dict[str, Any]]:
+    """Read saved graph identities without exposing node configuration or activating them."""
+    scope = _require_scope(scope)
+    ensure_data_os_schema()
+    with connect(scope) as conn:
+        rows = conn.execute(
+            "SELECT pipeline_id, payload->>'name' AS name, "
+            "payload->>'pipeline_type' AS pipeline_type, "
+            "payload->>'write_mode' AS write_mode "
+            "FROM phase5_pipeline_graph WHERE org_id=%s AND project_id=%s "
+            "ORDER BY pipeline_id",
+            scope.key,
+        ).fetchall()
+    return [
+        {"id": row["pipeline_id"], "name": row["name"] or row["pipeline_id"],
+         "pipeline_type": row["pipeline_type"] or "ETL",
+         "write_mode": row["write_mode"] or "SNAPSHOT",
+         "status": "draft", "execution_mode": "disabled", "persisted": True,
+         "orgId": scope.org_id, "projectId": scope.project_id}
+        for row in rows
+    ]
+
+
 def load_phase5_pipeline_graph(
     scope: TenantScope, pipeline_id: str
 ) -> dict[str, Any] | None:

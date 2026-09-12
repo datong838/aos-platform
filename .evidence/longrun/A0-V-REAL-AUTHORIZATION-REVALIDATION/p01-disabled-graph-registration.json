@@ -1,0 +1,141 @@
+{
+  "checkedAt": "2026-09-12T07:11:09.044540+00:00",
+  "pipelineId": "P01-shop-qyh",
+  "tenant": "org-org/dev-project",
+  "mappingSha256": "8d0f71ced3ad1fbdab222c3a634106edf281751be9be1dcbf12158817e4d1245",
+  "state": "REGISTERED_DISABLED",
+  "request": {
+    "name": "栖月汇-店铺",
+    "pipeline_type": "Batch",
+    "write_mode": "SNAPSHOT",
+    "nodes": [
+      {
+        "id": "P01-shop-qyh-source",
+        "name": "source",
+        "node_type": "source",
+        "position_x": 60,
+        "position_y": 60,
+        "config": {
+          "source_id": "niushop-qyh",
+          "source_table": "ns_site",
+          "pk": "site_id",
+          "primary_key": "site_id",
+          "site_filter": "site_id=1",
+          "incremental_strategy": "snapshot",
+          "incremental_cursor": {
+            "fields": [],
+            "fallback": "create_time",
+            "mode": "snapshot"
+          },
+          "unique_key_pattern": "niushop:{site_id}:{pk}",
+          "validation": {
+            "required": [
+              "site_name"
+            ]
+          },
+          "pii_exclusion": [
+            "site_tel"
+          ],
+          "initial": false
+        }
+      },
+      {
+        "id": "P01-shop-qyh-transform",
+        "name": "transform",
+        "node_type": "transform",
+        "position_x": 320,
+        "position_y": 60,
+        "config": {
+          "expression": "row",
+          "filter": "site_id=1",
+          "field_mappings": [
+            {
+              "source": "site_id",
+              "target": "siteId",
+              "type": "int"
+            },
+            {
+              "source": "site_type",
+              "target": "siteType",
+              "type": "string"
+            },
+            {
+              "source": "site_domain",
+              "target": "domain",
+              "type": "string"
+            },
+            {
+              "source": "site_name",
+              "target": "name",
+              "type": "string"
+            },
+            {
+              "source": "username",
+              "target": "username",
+              "type": "string"
+            },
+            {
+              "source": "logo",
+              "target": "logo",
+              "type": "string"
+            },
+            {
+              "source": "logo_square",
+              "target": "logoSquare",
+              "type": "string"
+            },
+            {
+              "source": "seo_keywords",
+              "target": "seoKeywords",
+              "type": "string"
+            },
+            {
+              "source": "seo_description",
+              "target": "seoDescription",
+              "type": "string"
+            },
+            {
+              "source": "seo_title",
+              "target": "seoTitle",
+              "type": "string"
+            },
+            {
+              "source": "create_time",
+              "target": "createTime",
+              "type": "timestamp"
+            }
+          ],
+          "target_ot": "Shop"
+        }
+      },
+      {
+        "id": "P01-shop-qyh-sink",
+        "name": "sink",
+        "node_type": "sink",
+        "position_x": 580,
+        "position_y": 60,
+        "config": {
+          "target_ot": "Shop",
+          "write_mode": "SNAPSHOT",
+          "unique_key_pattern": "niushop:{site_id}:{pk}"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "P01-shop-qyh-edge-0",
+        "source_node_id": "P01-shop-qyh-source",
+        "target_node_id": "P01-shop-qyh-transform"
+      },
+      {
+        "id": "P01-shop-qyh-edge-1",
+        "source_node_id": "P01-shop-qyh-transform",
+        "target_node_id": "P01-shop-qyh-sink"
+      }
+    ]
+  },
+  "http": 200,
+  "revision": 1,
+  "executionMode": "disabled",
+  "graphSha256": "de39916f7e16e585e87404e0d96169199dd3928bbf970259538f0b27d61f4de9"
+}

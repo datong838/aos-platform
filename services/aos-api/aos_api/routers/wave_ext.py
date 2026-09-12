@@ -1843,6 +1843,11 @@ def patch_dataset(
 def list_pipelines(principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
     _hydrate_data_os_scope(scope)
+    retired_ids = {
+        p.get("id") for p in _pipelines.values()
+        if _scope_visible(p, scope)
+        and str(p.get("status") or "").lower() in {"decommissioned", "deleted", "archived"}
+    }
     items = [
         p
         for p in _pipelines.values()
@@ -1857,10 +1862,16 @@ def list_pipelines(principal: Principal = Depends(require_principal)):
         _phase5_items, _ = _eng.list_pipelines(scope, page_size=100)
         existing_ids = {p.get("id") for p in items}
         for _p in _phase5_items:
-            if _p.id not in existing_ids:
+            if _p.id not in existing_ids and _p.id not in retired_ids:
+                source_ids = {
+                    node.config["source_id"] for node in _eng.list_nodes(scope, _p.id)
+                    if node.node_type == "source"
+                    and isinstance(node.config.get("source_id"), str)
+                    and node.config["source_id"]
+                }
                 items.append({
                     "id": _p.id,
-                    "sourceId": "niushop-qyh",
+                    "sourceId": next(iter(source_ids)) if len(source_ids) == 1 else None,
                     "target": "dataset",
                     "datasetRid": f"ri.aos.main.dataset.{_p.id}",
                     "orgId": scope.org_id,
@@ -1872,6 +1883,13 @@ def list_pipelines(principal: Principal = Depends(require_principal)):
                 })
     except Exception:
         pass
+    from aos_api.data_os_store import load_phase5_pipeline_graph_catalog
+
+    existing_ids = {p.get("id") for p in items}
+    items.extend(
+        p for p in load_phase5_pipeline_graph_catalog(scope)
+        if p["id"] not in existing_ids and p["id"] not in retired_ids
+    )
     return {"items": items}
 
 

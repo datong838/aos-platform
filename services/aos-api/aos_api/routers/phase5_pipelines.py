@@ -126,6 +126,12 @@ async def get_pipeline(pl_id: str, principal: Annotated[Principal, Depends(requi
     eng = get_engine()
     pl = eng.get_pipeline(_scope(principal), pl_id)
     if pl is None:
+        try:
+            eng.get_graph(_scope(principal), pl_id)
+        except KeyError:
+            raise HTTPException(404, f"Pipeline {pl_id} not found")
+        pl = eng.get_pipeline(_scope(principal), pl_id)
+    if pl is None:
         raise HTTPException(404, f"Pipeline {pl_id} not found")
     return pl.model_dump()
 
