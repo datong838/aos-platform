@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-09-12T07:29:11.291728+00:00",
+  "state": "REGISTERED_NO_EXECUTION",
+  "request": {
+    "id": "P01-shop-qyh",
+    "sourceId": "niushop-qyh",
+    "target": "dataset",
+    "datasetRid": "ri.aos.main.dataset.P01-shop-qyh",
+    "name": "栖月汇-店铺",
+    "displayName": "栖月汇-店铺",
+    "objectTypeHint": "Shop"
+  },
+  "beforeReasons": [
+    "LATEST_RUN_NOT_SUCCEEDED",
+    "PIPELINE_NOT_FOUND",
+    "QUERY_CAPABILITY_REF_MISSING",
+    "SCHEDULE_CRON_POLICY_MISMATCH",
+    "SCHEDULE_INGEST_KIND_MISMATCH",
+    "SCHEDULE_NOT_FOUND",
+    "SCHEDULE_PIPELINE_REF_MISMATCH",
+    "SCHEDULE_SOURCE_REF_MISMATCH",
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "SOURCE_NOT_FOUND",
+    "SOURCE_QUALITY_FAILED"
+  ],
+  "http": 200,
+  "lastBuild": null,
+  "sameGraph": true,
+  "afterStatus": "blocked",
+  "afterReasons": [
+    "LATEST_RUN_NOT_SUCCEEDED",
+    "QUERY_CAPABILITY_REF_MISSING",
+    "SCHEDULE_CRON_POLICY_MISMATCH",
+    "SCHEDULE_INGEST_KIND_MISMATCH",
+    "SCHEDULE_NOT_FOUND",
+    "SCHEDULE_PIPELINE_REF_MISMATCH",
+    "SCHEDULE_SOURCE_REF_MISMATCH",
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "SOURCE_QUALITY_FAILED"
+  ],
+  "buildCount": 0,
+  "scheduleCount": 0
+}

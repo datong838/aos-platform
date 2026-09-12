@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-09-12T07:34:29.900224+00:00",
+  "tenant": "org-org/dev-project",
+  "persistedCount": 1,
+  "pipeline": {
+    "id": "P01-shop-qyh",
+    "source_id": "niushop-qyh",
+    "target": "dataset",
+    "dataset_rid": "ri.aos.main.dataset.P01-shop-qyh",
+    "object_type_hint": "Shop"
+  }
+}

@@ -1,0 +1,9 @@
+# P01 正式元数据登记与运行缺口对账
+
+2026-09-12。本波不修改代码，通过既有正式POST /v1/pipelines登记P01-shop-qyh与niushop-qyh/Shop/既有datasetRid关系；写前SourceReadiness确认PIPELINE_NOT_FOUND且原图revision1 disabled；单次POST200，图未变，lastBuild=null，builds0/schedules0。07:34:29Z新进程新连接只读回读meta_pipeline唯一一行，来源、target、dataset及Shop类型匹配。
+
+SourceReadiness两项缺口PIPELINE_NOT_FOUND/SOURCE_NOT_FOUND消除，仍blocked，不改成ready。剩余包含无正式调度、无同步历史、组合SourceConfigRef及QueryCapabilityRef缺失。已澄清组合SourceConfig引用不是实际连接DataSourceConfigurationRevision。真实库8个active首链CapabilityBinding与旧硬编码query binding ID不同；不能只换ID或者用active状态冒认当前依赖就绪。
+
+证据：p01-canonical-pipeline-registration.json、p01-canonical-pipeline-persistence.json、p01-current-admission-gaps.json。运行控制方案pipeline-runtime-control-plan.md明确首次读取资格与事后新鲜度区分、绑定installation generation/current四源授权/graphHash/真实source revision/mapping/schema/masking及读取预算；统一复用ScheduleRun和Ingress恢复。
+
+本波是实际配置恢复与设计对账，不是P01数据摄入或首链成功。没有调用源业务读取、Provider、外部写入、调度执行、权限grant；源库无写入。下一波实现持久运行控制的严格合同与当前权限Owner适配，再连接正式调度。仍m1单写、不push、230 L0挂起。

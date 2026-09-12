@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-09-12T07:33:30.903448+00:00",
+  "pipelineId": "P01-shop-qyh",
+  "readinessHttp": 200,
+  "status": "blocked",
+  "reasons": [
+    "LATEST_RUN_NOT_SUCCEEDED",
+    "QUERY_CAPABILITY_REF_MISSING",
+    "SCHEDULE_CRON_POLICY_MISMATCH",
+    "SCHEDULE_INGEST_KIND_MISMATCH",
+    "SCHEDULE_NOT_FOUND",
+    "SCHEDULE_PIPELINE_REF_MISMATCH",
+    "SCHEDULE_SOURCE_REF_MISMATCH",
+    "SOURCE_CONFIG_EXACT_REF_MISSING",
+    "SOURCE_QUALITY_FAILED"
+  ],
+  "sourceConfigRef": null,
+  "queryCapabilityRef": null,
+  "pipelineMode": "disabled",
+  "graphRevision": 1,
+  "buildCount": 0,
+  "scheduleCount": 0
+}
