@@ -1,0 +1,11 @@
+# 商品真实字段结构核验与替换入口检查
+
+2026-09-13 03:26，基线04ac2a4d。现有API只读columns接口首次502，trace a76c3511-afd3-4352-bc25-0dd0ab40094f；API日志稳定诊断SSH_PROCESS_ERROR，未取得字段。首次请求经过本机代理，但API实际处理到了数据源连接阶段，因此不能断言代理是根因。
+
+第二次同一API路径trust_env=false，HTTP200，trace49a1f83f-999c-4233-bd9a-f6cd2bf7843e。demo=false，ns_goods共90列、28所选列齐全无重复；按声明的int/timestamp/string/text/decimal与实际SQL类型逐列比较，没有类型冲突。该接口实际调用information_schema.columns参数化查询；没有业务明细SELECT或同步计划运行。敏感连接材料不出内存，字段注释和默认值不归档。
+
+goods_content实际nullable=true，现转换严格拒绝None，不能声称所有合法源行已兼容。暂未读商品明细，不知道当前是否有NULL；后续明确null合同或首读拒绝时再修正，不伪造空内容。其余字段声明类型匹配不代表状态枚举、更新时间、行数或数据质量通过。
+
+231-3要求safe replacement先准备未启用的新代，禁入并排空旧代，再切换启用。代码检查发现enable_commit现有guard只核前驱安装仍active和无其他active替换，尚未检查前驱runtime已禁入并有排空凭据；旧父实例enable也没有leaf保护。故先补齐服务端替换启用门，再做实际安装升级。此为已定位代码风险，尚未构造双启用或操作当前实例，不能靠串行脚本的操作顺序代替产品门禁。
+
+下一波：在既有enable事务复用安装lineage保护，增加前驱当前绑定/禁入/排空exact证据核验及防旧父重新启用；先补设计与针对性反例，再编码和PG并发/租户验证。实际新实例部署仍未开始，原1.4继续运行；本波不报经营首链完成。

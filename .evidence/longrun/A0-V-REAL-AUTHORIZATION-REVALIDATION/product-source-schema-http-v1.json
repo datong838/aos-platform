@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-09-12T19:21:04.907911+00:00",
+  "sourceId": "niushop-qyh",
+  "schema": "niushop_b2c_v5",
+  "table": "ns_goods",
+  "businessRowsRead": 0,
+  "query": "existing table columns endpoint",
+  "httpStatus": 502
+}

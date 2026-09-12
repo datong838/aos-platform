@@ -1,0 +1,185 @@
+{
+  "observedAt": "2026-09-12T19:23:55.363025+00:00",
+  "sourceId": "niushop-qyh",
+  "schema": "niushop_b2c_v5",
+  "table": "ns_goods",
+  "businessRowsRead": 0,
+  "query": "same existing table columns endpoint",
+  "localProxyBypassed": true,
+  "httpStatus": 200,
+  "traceId": "49a1f83f-999c-4233-bd9a-f6cd2bf7843e",
+  "demo": false,
+  "totalColumns": 90,
+  "selectedColumns": [
+    {
+      "name": "goods_id",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": true
+    },
+    {
+      "name": "goods_name",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "goods_class",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "goods_class_name",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "site_id",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "site_name",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "goods_image",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "goods_content",
+      "datatype": "text",
+      "nullable": true,
+      "primary_key": false
+    },
+    {
+      "name": "goods_state",
+      "datatype": "tinyint",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "category_id",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "brand_id",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "brand_name",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "price",
+      "datatype": "decimal",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "market_price",
+      "datatype": "decimal",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "cost_price",
+      "datatype": "decimal",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "goods_stock",
+      "datatype": "decimal",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "is_virtual",
+      "datatype": "tinyint",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "is_free_shipping",
+      "datatype": "tinyint",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "is_delete",
+      "datatype": "tinyint",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "introduction",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "keywords",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "unit",
+      "datatype": "varchar",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "sort",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "create_time",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "modify_time",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "sale_num",
+      "datatype": "decimal",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "supplier_id",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    },
+    {
+      "name": "sku_id",
+      "datatype": "int",
+      "nullable": false,
+      "primary_key": false
+    }
+  ],
+  "missingSelectedColumns": [],
+  "duplicateNames": false
+}
