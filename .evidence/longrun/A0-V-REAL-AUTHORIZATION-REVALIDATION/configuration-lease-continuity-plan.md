@@ -9,3 +9,7 @@
 启用使用当前 enable deadline 和真实资源租约 deadline；已成功 preparation 的历史执行 deadline 不再作为运行时有效期。保留 preparation 必须 succeeded 和同代真实资源核验，当前权限/配置/健康/最终时效全部保留。过期 enable 或 lease 仍拒绝。
 
 验证：失效场景先红再绿；原负向测试不回退；加入旧 preparation deadline 已过而新 lease/enable 有效的正例、过期 lease/enable 负例。完成后正式恢复再验证配置→等待跨续租→enable，不在产品库修改 deadline/state 来造场景。
+
+恢复执行器新增 scripts/a0v_ecommerce_1_7_disable.py，仅 e42 故障安装；纯读取得同 generation/current bindingRevision/etag 后持久化命令，正式 RuntimeDisableService 取消同目标未执行 enable 并立刻 fence。新 Host 使用修复代码完成 disable；随后正常卸载服务执行卸载。配置非空不能走 never_enabled 旁路。任何未知返回先观察同 operation，不换键重发。
+
+复用 scripts/a0v_ecommerce_never_enabled_retire.py 的正式卸载服务，新增互斥 --configured-1-7 目标预设；名称为历史名称，新分支使用同一 RuntimeUninstallGuard 的正常已禁用配置路径，无守卫旁路。已核验 disable succeeded，待 enable cancelled。

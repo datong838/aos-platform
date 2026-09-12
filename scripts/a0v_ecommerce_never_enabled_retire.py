@@ -1,4 +1,4 @@
-"""Retire only the known never-enabled instance using normal web authority."""
+"""Retire exact known instances through the normal uninstall authority."""
 import argparse
 from contextlib import contextmanager
 import importlib.util
@@ -22,11 +22,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--reinstall-generation', action='store_true')
+    group=parser.add_mutually_exclusive_group()
+    group.add_argument('--reinstall-generation', action='store_true')
+    group.add_argument('--configured-1-7', action='store_true')
     args = parser.parse_args()
     installation = 'efc4e640-1b15-403f-9d06-4c6d1a5330a7' if args.reinstall_generation else INSTALLATION
     etag = '"5"' if args.reinstall_generation else '"7"'
     key = 'a0v-ecommerce-1.6-reinstall-never-enabled-retire-v1' if args.reinstall_generation else 'a0v-ecommerce-1.6-never-enabled-retire-v1'
+    if args.configured_1_7:
+        installation='e42e042b-1fe7-4cfa-bb83-469ff256081d'
+        etag='"5"'
+        key='a0v-ecommerce-1.7-configured-disabled-retire-v1'
     if not args.apply: raise ValueError('explicit retirement required')
     host = load('a0v_ecommerce_runtime_host')
     credential_path = RECOVERY/'state/installation-control-identity.json'
@@ -51,7 +57,7 @@ def main():
     from aos_api.asset_registry.composition_contracts import UninstallInstallationRequest
     before = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=installation)
     command = dict(installation_id=installation,
-        request=UninstallInstallationRequest(reason='Retire verified never-enabled generation after expired resources'),
+        request=UninstallInstallationRequest(reason='Retire exact disabled generation after confirmed resource cleanup'),
         org_id='org-org',project_id='dev-project',actor=ACTOR,roles=['admin'],markings=[],
         idempotency_key=key,if_match=etag)
     first = service.uninstall(**command)

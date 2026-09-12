@@ -1,0 +1,18 @@
+{
+  "command": {
+    "installationId": "e42e042b-1fe7-4cfa-bb83-469ff256081d",
+    "etag": 5,
+    "target": {
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "bindingRevision": 3
+    }
+  },
+  "receipt": {
+    "installationId": "e42e042b-1fe7-4cfa-bb83-469ff256081d",
+    "operationId": "294359fc-4a51-4406-994f-bdc85e312881",
+    "phase": "fencing",
+    "status": "running",
+    "revision": 2
+  },
+  "replayed": false
+}

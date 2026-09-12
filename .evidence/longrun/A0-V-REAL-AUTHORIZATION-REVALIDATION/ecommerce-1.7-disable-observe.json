@@ -1,0 +1,58 @@
+{
+  "activeRevision": 5,
+  "bindings": [
+    {
+      "desired_state": "disabled",
+      "enabled": false,
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "observed_state": "unknown",
+      "operation_fence": true
+    }
+  ],
+  "canaryInstallationCount": 0,
+  "installationId": "e42e042b-1fe7-4cfa-bb83-469ff256081d",
+  "operations": [
+    {
+      "expected_installation_etag": 3,
+      "failure_code": null,
+      "kind": "runtime-apply",
+      "operation_id": "466fd27b-fa61-409d-983b-84b183ca3fb3",
+      "phase": "succeeded",
+      "status": "succeeded"
+    },
+    {
+      "expected_installation_etag": 4,
+      "failure_code": null,
+      "kind": "runtime-verify",
+      "operation_id": "3fe37e0d-3302-43cf-8729-0a44cb3a415b",
+      "phase": "succeeded",
+      "status": "succeeded"
+    },
+    {
+      "expected_installation_etag": 5,
+      "failure_code": null,
+      "kind": "configure",
+      "operation_id": "7dcb0581-5c51-4680-aa84-f376915b1954",
+      "phase": "succeeded",
+      "status": "succeeded"
+    },
+    {
+      "expected_installation_etag": 5,
+      "failure_code": null,
+      "kind": "enable",
+      "operation_id": "c3eac8dd-e13f-4eb7-8ab5-c5266a951248",
+      "phase": "accepted",
+      "status": "cancelled"
+    },
+    {
+      "expected_installation_etag": 5,
+      "failure_code": null,
+      "kind": "disable",
+      "operation_id": "294359fc-4a51-4406-994f-bdc85e312881",
+      "phase": "succeeded",
+      "status": "succeeded"
+    }
+  ],
+  "revision": 5,
+  "state": "active"
+}
