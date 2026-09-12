@@ -91,3 +91,19 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 ### Owner 强制签名资格接入
 
 修改 services/aos-api/aos_api/ecommerce_growth_registration.py 与 tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py。构造 Owner 必须提供 exact ReleasePolicy，不给默认绕过；当前安装/四来源检查后，在同一连接和 serializable 事务重新取已锁定安装 baseline，执行 qualify_registration_release 后才切换 maintainer 并调用 027。资格结果须锁摘要一致、固定 schema/包ID/九项、executable=false；缺失、失效、异常结果一律零写回滚。历史读取仍只做当前访问权限检查，不重新授予资格。隔离 PG 编排测试替换资格节点并核对与实际写回执相同 backend pid/tx，另测拒绝无写；真实签名验证沿用上一波当前主库只读证据，不以编排替身冒充全依赖正式 API 验收。
+
+### 正式 HTTP 适配与安装上下文历史查询
+
+修改 aos_api/routers/bundle_runtime_installations.py，新增 POST /v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-registrations 和 GET 同路径 /receipt。POST 要求严格既有 FirstDispatchRegistrationRequest、单一 Idempotency-Key/If-Match 且与正文完全一致；actor/tenant 仅来自 Principal，路径安装必须与正文一致。GET 用单一 Idempotency-Key 查询指定安装下回执，强制调用当前权限 Owner，无重新登记。首次返回 201，幂等重放 200；不自动重试。
+
+修改 aos_api/ecommerce_growth_registration.py：历史读取必需 installation_id，_read SQL 加安装过滤，既有 register 回读同样绑定请求安装；不能把另一安装的同键回执当目标返回。无权、未找到、漂移和数据库错误使用固定安全错误文本，不泄露原始 SQL/连接信息。未知提交结果用独立历史查询核验。
+
+修改 aos_api/asset_registry/control_wiring.py：RuntimeControlPlane 追加可选 first_dispatch_registration_service；build_runtime_control_plane 仅在宿主显式传入 registration_connect 时构造，默认 None，不回退普通 runtime/Web/超管连接。构造不连接、不迁移、不启动任务；缺少正式服务 HTTP 返回503。维护身份安全文件读取、角色权限部署及启动集成后续独立审查，不能把接口测试当已对主库开放。
+
+测试新增 tests/extension_runtime/test_ecommerce_growth_registration_http.py，更新 Owner PG 测试和 control wiring 测试。覆盖 Principal 绑定、路径/版本/键不一致、未知注入字段、重复/缺失头、回执查询、未配置服务、固定安全错误、只调用一次、错误安装历史不可见；既有安装操作 API 回归。主库不进行登记/迁移/身份授权。
+
+HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input，且请求契约顶层导入 Host 操作集合使原惰性控制平面提前加载安装服务。仅给新增登记子路由使用 APIRoute 校验异常转换，返回固定422文案而不更改全站错误行为；将请求契约中仅 preview 使用的操作集合延迟到函数内导入。追加修改 ecommerce_growth_registration_contracts.py，保留模型、hash、预览结果不变，并回归既有惰性导入测试。
+
+惰性导入基线复核更正：把本波修改模块替换为 0e26444b 原始源码的独立进程仍提前加载 installation_store/revalidation。实际链为既有 routers/pipeline_controls.py 顶层导入 pipeline_runtime_control_owner._ref_identity（提交11628a93），并非全部由新登记契约引入。本波增加最小修复：将该单一 helper 导入移至 ScheduleBindingRequest.exact_binding 内，校验执行不变，补跑既有流水线 HTTP 测试；不改流水线业务状态或数据库。前述把惰性失败全归因新请求契约的初判撤回。
+
+进一步追踪确认同一既有流水线路由还通过 _text 顶层导入另一 Owner。两个 helper 均延迟至实际使用点（exact_binding 与 _approve）后，原惰性导入测试通过。没有删改校验；既有流水线审批与调度绑定 HTTP 一起回归。

@@ -43,6 +43,7 @@ class RuntimeControlPlane:
     disable_dependent: Any = None
     live_job_directory: Any = None
     pipeline_control_factory: Any = None
+    first_dispatch_registration_service: Any = None
 
 
 class _LazyRuntimeViewReader:
@@ -280,7 +281,7 @@ def build_runtime_view_reader():
     return _LazyRuntimeViewReader()
 
 
-def build_runtime_control_plane(*, disable_dependent: Any = None) -> RuntimeControlPlane:
+def build_runtime_control_plane(*, disable_dependent: Any = None, registration_connect: Any = None) -> RuntimeControlPlane:
     """Assemble current runtime controls without connecting or starting workers."""
     from aos_api.aip_runtime_configuration_sources import (
         build_current_configuration_authorization,
@@ -343,7 +344,15 @@ def build_runtime_control_plane(*, disable_dependent: Any = None) -> RuntimeCont
         revalidator=planning,
         authorize=authorize,
     )
+    registration = None
+    if registration_connect is not None:
+        from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
+        registration = FirstDispatchRegistrationService(
+            connect=registration_connect, installation_store=store,
+            configuration_authorize=authorize, release_policy=policy,
+        )
     return RuntimeControlPlane(
+        first_dispatch_registration_service=registration,
         installation_store=store,
         installation_reader=installation,
         revalidator=planning,

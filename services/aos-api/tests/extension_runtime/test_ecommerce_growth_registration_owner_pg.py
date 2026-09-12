@@ -107,10 +107,10 @@ def test_history_requires_current_permission_after_runtime_drift(owner_case,monk
     def check(**kwargs):seen.append(kwargs['actor']);return allowed
     monkeypatch.setattr('aos_api.ecommerce_growth_registration.CurrentControlPermission',lambda **kw:check)
     if allowed:
-        result=service.read_receipt(scope=scope,idempotency_key=request.idempotencyKey,actor='actor')
+        result=service.read_receipt(scope=scope,installation_id=request.installationRef.installation_id,idempotency_key=request.idempotencyKey,actor='actor')
         assert result['receiptId']==first['receiptId'] and result['historical'] is True and result['executable'] is False
     else:
-        with pytest.raises(PermissionError):service.read_receipt(scope=scope,idempotency_key=request.idempotencyKey,actor='actor')
+        with pytest.raises(PermissionError):service.read_receipt(scope=scope,installation_id=request.installationRef.installation_id,idempotency_key=request.idempotencyKey,actor='actor')
     assert seen==['actor']
     assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==1
 
@@ -137,3 +137,12 @@ def test_revoked_signature_has_no_writes(owner_case,monkeypatch):
             request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
     assert case.db.owner.execute('SELECT count(*) AS n FROM extension_operation_dispatch_binding').fetchone()['n']==0
     assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==0
+
+
+def test_history_cannot_read_another_installation(owner_case):
+    case,service,_=owner_case;scope=TenantScope('org-a','project-a')
+    request=FirstDispatchRegistrationRequest.model_validate(case.request)
+    service.register(scope=scope,request=request,actor='actor')
+    with pytest.raises(LookupError):
+        service.read_receipt(scope=scope,installation_id='99999999-9999-4999-8999-999999999999',
+            idempotency_key=request.idempotencyKey,actor='actor')

@@ -6,6 +6,12 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Path, Request, Response, Security, status
 from fastapi.security import HTTPBearer
+from fastapi.routing import APIRoute
+from fastapi.exceptions import RequestValidationError
+from psycopg import Error as DatabaseError
+
+from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
+from aos_api.tenant_scope import TenantScope
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aos_api.asset_registry.errors import AssetRegistryError
@@ -199,3 +205,85 @@ def create_bundle_runtime_operation(
     result = RuntimeOperationAccepted.model_validate(receipt.response_json)
     response.headers["Location"] = f"/v1/bundle-runtime-installations/operations/{result.operationId}"
     return result
+
+
+# First registration creates fenced metadata only; activation is a separate review.
+class _RegistrationRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+        async def safe_handler(request):
+            try:
+                return await handler(request)
+            except RequestValidationError:
+                raise ApiError(code='REGISTRATION_REQUEST_INVALID', message='登记请求格式不符合要求。', status_code=422) from None
+        return safe_handler
+
+
+_registration_router = APIRouter(route_class=_RegistrationRoute)
+
+
+def _registration_service(control_plane):
+    service = getattr(control_plane, 'first_dispatch_registration_service', None)
+    if service is None:
+        raise ApiError(code='REGISTRATION_UNAVAILABLE', message='经营入口登记服务尚未配置。', status_code=503)
+    return service
+
+
+def _invoke_registration(operation):
+    try:
+        return _invoke(operation)
+    except ValueError:
+        raise ApiError(code='REGISTRATION_TARGET_CONFLICT', message='登记目标或证据已变化，请重新核对。', status_code=409) from None
+    except DatabaseError as exc:
+        code = exc.sqlstate
+        if code == '42501':
+            raise ApiError(code='REGISTRATION_ACCESS_DENIED', message='当前账号无权登记此经营入口。', status_code=403) from None
+        if code in ('40001', '40P01', '55000', '23505'):
+            raise ApiError(code='REGISTRATION_CONFLICT', message='登记状态已变化，请先查询回执并核对当前状态。', status_code=409) from None
+        if code == '22023':
+            raise ApiError(code='REGISTRATION_REQUEST_INVALID', message='登记请求不符合要求。', status_code=422) from None
+        raise ApiError(code='REGISTRATION_STORAGE_UNAVAILABLE', message='登记结果暂时无法确认，请先查询回执。', status_code=503) from None
+    except (RuntimeError, OSError):
+        raise ApiError(code='REGISTRATION_UNAVAILABLE', message='登记服务暂不可用，请先查询回执。', status_code=503) from None
+
+
+@_registration_router.post(
+    '/{installation_id}/ecommerce-growth-registrations',
+    operation_id='create_ecommerce_growth_registration',
+    responses={201: {'description': 'Fenced registration receipt'}, **_ERRORS},
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER, _IF_MATCH_PARAMETER]},
+)
+def create_ecommerce_growth_registration(
+    installation_id: CanonicalUuidPath, body: FirstDispatchRegistrationRequest,
+    request: Request, response: Response, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    match = _invoke(lambda: require_if_match(request))
+    if (installation_id != body.installationRef.installation_id or key != body.idempotencyKey
+            or match != f'"{body.installationRef.revision}"'):
+        raise ApiError(code='REGISTRATION_REFERENCE_MISMATCH', message='安装、版本或请求编号不一致。', status_code=409)
+    service = _registration_service(control_plane)
+    result = _invoke_registration(lambda: service.register(
+        scope=TenantScope(principal.org_id, principal.project_id), request=body, actor=principal.subject))
+    response.status_code = 200 if result['replayed'] else 201
+    return result
+
+
+@_registration_router.get(
+    '/{installation_id}/ecommerce-growth-registrations/receipt',
+    operation_id='get_ecommerce_growth_registration_receipt', responses=_ERRORS,
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def get_ecommerce_growth_registration_receipt(
+    installation_id: CanonicalUuidPath, request: Request, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    service = _registration_service(control_plane)
+    return _invoke_registration(lambda: service.read_receipt(
+        scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
+        idempotency_key=key, actor=principal.subject))
+
+
+router.include_router(_registration_router)

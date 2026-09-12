@@ -9,7 +9,6 @@ from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.asset_registry.composition_contracts import CurrentInstallationRef
 from aos_api.asset_registry.control_policy import validate_idempotency_key
 from aos_api.asset_registry.errors import IdempotencyKeyRequiredError
-from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.extension_runtime.configuration_contracts import ConfigurationRef
 
 
@@ -47,6 +46,7 @@ class FirstDispatchRegistrationRequest(BaseModel):
 
 def preview_registration(request: FirstDispatchRegistrationRequest) -> dict:
     """Proposed metadata only; the Owner must revalidate live authority separately."""
+    from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
     if type(request) is not FirstDispatchRegistrationRequest:
         raise TypeError('validated first registration request required')
     request = FirstDispatchRegistrationRequest.model_validate(

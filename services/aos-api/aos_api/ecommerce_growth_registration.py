@@ -1,5 +1,6 @@
 """Registration Owner: current checks, restricted write, readback, then commit."""
 from contextlib import contextmanager
+from uuid import UUID
 
 from psycopg import IsolationLevel
 from psycopg.pq import TransactionStatus
@@ -49,10 +50,11 @@ class FirstDispatchRegistrationService:
             raise ValueError('trusted registration actor and scope required')
 
     @staticmethod
-    def _read(conn,scope,key):
+    def _read(conn,scope,key,installation_id):
         row=conn.execute('''SELECT org_id,project_id,receipt_id,installation_id,generation,group_id,
             idempotency_key,request_hash,payload,content_hash FROM extension_dispatch_registration_receipt
-            WHERE org_id=%s AND project_id=%s AND idempotency_key=%s''',(*scope.key,key)).fetchone()
+            WHERE org_id=%s AND project_id=%s AND idempotency_key=%s AND installation_id=%s''',
+            (*scope.key,key,installation_id)).fetchone()
         if row is None:raise LookupError('registration receipt unavailable')
         return decode_registration_receipt(row,scope=scope)
 
@@ -81,7 +83,7 @@ class FirstDispatchRegistrationService:
             response=conn.execute('SELECT extension_dispatch_register_a0v_027(%s,%s) AS receipt',
                 (Jsonb(request.model_dump(mode='json',by_alias=True)),actor)).fetchone()['receipt']
             conn.execute('SET LOCAL ROLE aos_runtime')
-            result=self._read(conn,scope,request.idempotencyKey)
+            result=self._read(conn,scope,request.idempotencyKey,request.installationRef.installation_id)
             if (result['requestHash']!=request.request_hash() or result['actor']!=actor
                     or result['receiptId']!=response.get('receiptId')
                     or result['contentHash']!=response.get('contentHash')
@@ -90,10 +92,12 @@ class FirstDispatchRegistrationService:
             result['replayed']=response['replayed']
         return result
 
-    def read_receipt(self, *, scope: TenantScope, idempotency_key: str, actor: str) -> dict:
+    def read_receipt(self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str) -> dict:
         self._identity(scope,actor);key=validate_idempotency_key(idempotency_key)
+        if type(installation_id) is not str or str(UUID(installation_id))!=installation_id:
+            raise ValueError('canonical receipt installation required')
         with self._transaction(scope) as conn:
-            result=self._read(conn,scope,key)
+            result=self._read(conn,scope,key,installation_id)
             row=conn.execute('''SELECT etag_version FROM bundle_installation
                 WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
                 (*scope.key,result['installationId'])).fetchone()

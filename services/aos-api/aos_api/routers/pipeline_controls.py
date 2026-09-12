@@ -16,8 +16,6 @@ from aos_api.pipeline_runtime_control_contracts import (
 )
 from aos_api.routers.asset_control_headers import require_idempotency_key
 from aos_api.tenant_scope import TenantScope
-from aos_api.pipeline_runtime_control_owner import _ref_identity
-from aos_api.pipeline_source_claim_owner import _text
 
 router = APIRouter(prefix='/v1/pipelines', tags=['pipeline-control'],
                    dependencies=[Security(HTTPBearer(auto_error=False))])
@@ -52,6 +50,8 @@ class ScheduleBindingRequest(BaseModel):
 
     @model_validator(mode='after')
     def exact_binding(self):
+        from aos_api.pipeline_runtime_control_owner import _ref_identity
+        from aos_api.pipeline_source_claim_owner import _text
         _text(self.schedule_id,200)
         _ref_identity(self.control_ref,'PipelineRuntimeControlRevision','pipeline-control-')
         if self.previous_ref is not None:
@@ -60,6 +60,7 @@ class ScheduleBindingRequest(BaseModel):
 
 
 def _approve(request, principal, pipeline_id, body, selection):
+    from aos_api.pipeline_source_claim_owner import _text
     try:
         key = require_idempotency_key(request)
         _text(pipeline_id,200)

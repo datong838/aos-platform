@@ -453,3 +453,16 @@ def test_runtime_control_plane_permission_locks_the_current_installation(
         7,
     )
     assert calls["permission"] == (conn, locked, "operator@example.test")
+
+
+def test_first_registration_requires_explicit_connection_and_construction_is_idle():
+    from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
+    assert control_wiring.build_runtime_control_plane().first_dispatch_registration_service is None
+    def connect():
+        pytest.fail('construction must not open a connection')
+    plane=control_wiring.build_runtime_control_plane(registration_connect=connect)
+    service=plane.first_dispatch_registration_service
+    assert type(service) is FirstDispatchRegistrationService
+    assert service._connect is connect and service._store is plane.installation_store
+    assert service._authorize is plane.configuration_authorize
+    with pytest.raises(TypeError):control_wiring.build_runtime_control_plane(registration_connect='not-a-connection')
