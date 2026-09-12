@@ -1,0 +1,91 @@
+{
+  "outcome": "CONTINUITY_CROSS_INITIAL_DEADLINE_GREEN",
+  "installationId": "efc4e640-1b15-403f-9d06-4c6d1a5330a7",
+  "observedAt": "2026-09-12 01:21:23.550750+00:00",
+  "originalDeadline": "2026-09-12 01:20:49.777917+00:00",
+  "elapsedSeconds": 333.798498,
+  "renewalCount": 5,
+  "renewals": [
+    {
+      "occurred_at": "2026-09-12 01:16:27.909432+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T01:19:27.954011+00:00",
+        "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+        "healthCheckedAt": "2026-09-12T01:16:27.923733+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 01:17:30.021302+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T01:20:30.071244+00:00",
+        "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+        "healthCheckedAt": "2026-09-12T01:17:30.036501+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 01:18:32.087237+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T01:21:32.134232+00:00",
+        "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+        "healthCheckedAt": "2026-09-12T01:18:32.102356+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 01:19:34.406544+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T01:22:34.456389+00:00",
+        "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+        "healthCheckedAt": "2026-09-12T01:19:34.421756+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 01:20:34.699986+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T01:23:34.749174+00:00",
+        "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+        "healthCheckedAt": "2026-09-12T01:20:34.714624+00:00"
+      }
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "44a50612-ef52-44f1-83d5-0e2285130636",
+      "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+      "container_id": "640b8ebd58caab73a7a1af67ee683d0787f093435a6b81a2e254036132fdacf9",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 01:23:34.749174+00:00"
+    },
+    {
+      "resource_id": "7bb5020d-fa40-4fcb-93cf-e8f3fff2e5b2",
+      "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+      "container_id": "ec5c124f7f23777691a968bec85ffb8fd7c5ef05f4a11a65fe3a0b5f5a14ebfb",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 01:23:34.749174+00:00"
+    },
+    {
+      "resource_id": "81a7ff06-e67e-4719-8d06-78895433db7b",
+      "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+      "container_id": "b119cd9620dfeece491fa4143d5e1fa4cd3606f7828f1d4254394cc343069b62",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 01:23:34.749174+00:00"
+    }
+  ],
+  "containersRunning": [
+    true,
+    true,
+    true
+  ],
+  "bindings": [
+    {
+      "generation": "7b3ebc06-6340-4462-b07d-1476d2a1fb17",
+      "observed_state": "ready",
+      "desired_state": "disabled",
+      "enabled": false,
+      "operation_fence": true
+    }
+  ],
+  "canaryInstallationCount": 0
+}

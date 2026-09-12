@@ -64,3 +64,14 @@ def test_invalid_or_foreign_attempt_journal_fails_closed(tmp_path):
     with pytest.raises(HEALTH.ProviderHealthBlocked) as captured:
         HEALTH._read_journal(tmp_path)
     assert captured.value.code == "HEALTH_ATTEMPT_JOURNAL_INVALID"
+
+
+def test_new_attempt_keeps_old_consumed_journal(tmp_path):
+    old = {"attemptId": HEALTH.ATTEMPT_ID, "status": "completed"}
+    new = {"attemptId": "a0v-health-20260912-v1", "status": "submitted"}
+    HEALTH._write_journal(tmp_path, old)
+    HEALTH._write_journal(tmp_path, new)
+    assert HEALTH._read_journal(tmp_path) == old
+    assert HEALTH._read_journal(tmp_path, new["attemptId"]) == new
+    with pytest.raises(HEALTH.ProviderHealthBlocked):
+        HEALTH._journal_path(tmp_path, "../escape")

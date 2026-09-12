@@ -27,3 +27,7 @@
 七项 PostgreSQL 回滚验收已通过；正式服务发现 `asset_registry/tenant_transaction.py` 强制把已经采用的 aos_app 改成 aos_runtime，与仅授予 aos_app 的卸载函数冲突。最小修复：对当前角色 aos_runtime 或 aos_app 均仅设置 TenantScope，其他角色保持原采用流程。aos_app 已有资产表权限和 RLS；不额外授予账号 aos_runtime，不改业务授权。新增角色保留及租户绑定测试后继续正式卸载。
 
 真实卸载完成：7 项 PostgreSQL 正负例（全部回滚）及 6 项角色/卸载回归通过。数据库备份 4,623,846 bytes，SHA256 954342a91672bf001eec764e5c81ad5a46d031ea5f61c9dcc8dc3b5fedfe7900。a0v_019 正式服务调用后安装 uninstalled@8，首次 replay=false、第二次=true，见 ecommerce-never-enabled-retire.json。重装使用独立 state/ecommerce-1.6-reinstall.json 和幂等前缀；必须读回此前实例 uninstalled，保留所有旧状态文件。
+
+新安装 efc4e640-1b15-403f-9d06-4c6d1a5330a7 已 active@5，generation 7b3ebc06-6340-4462-b07d-1476d2a1fb17。独立 Host PID 41365；`scripts/a0v_ecommerce_continuity_observe.py` 仅读取资源租约、续租事件和逐容器真实 Running，不续租、不调用业务。原始期限 2026-09-12T01:20:49.777917Z，跨期限观测后归档。
+
+下一波依赖：当前 Provider healthy=0、六个 AgentInstance=provisioning、37 skills=evaluated、0 published/frozen plan。先在 `scripts/a0v_real_text_provider_health.py` 加入显式新 attempt 标识，默认旧标识/旧日志路径保持兼容；每个标识独立一次调用，已消耗或未知结果禁止重发。刷新既有 agnes-2.5-flash 的元数据健康证据，然后推进正式 Skill 发布、绑定和责任计划；不把历史健康时间改成当前。

@@ -8,6 +8,7 @@ import importlib.util
 import json
 import logging
 import os
+import re
 import sys
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -52,6 +53,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=RECOVERY_ROOT / "state/a0v-real-text-provider-health",
     )
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--attempt-id", default=ATTEMPT_ID)
     return parser.parse_args(argv)
 
 
@@ -82,19 +84,22 @@ def _exact_ref(asset_type: str, item: Any, identity: str) -> Any:
     )
 
 
-def _journal_path(state_dir: Path) -> Path:
-    return state_dir.resolve() / "attempt-v2.json"
+def _journal_path(state_dir: Path, attempt_id: str = ATTEMPT_ID) -> Path:
+    if not isinstance(attempt_id, str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,99}", attempt_id):
+        raise ProviderHealthBlocked("HEALTH_ATTEMPT_ID_INVALID")
+    name = "attempt-v2.json" if attempt_id == ATTEMPT_ID else attempt_id + ".json"
+    return state_dir.resolve() / name
 
 
-def _read_journal(state_dir: Path) -> dict[str, Any] | None:
-    path = _journal_path(state_dir)
+def _read_journal(state_dir: Path, attempt_id: str = ATTEMPT_ID) -> dict[str, Any] | None:
+    path = _journal_path(state_dir, attempt_id)
     if not path.exists():
         return None
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         raise ProviderHealthBlocked("HEALTH_ATTEMPT_JOURNAL_INVALID") from None
-    if not isinstance(value, dict) or value.get("attemptId") != ATTEMPT_ID:
+    if not isinstance(value, dict) or value.get("attemptId") != attempt_id:
         raise ProviderHealthBlocked("HEALTH_ATTEMPT_JOURNAL_INVALID")
     return value
 
@@ -103,7 +108,7 @@ def _write_journal(state_dir: Path, payload: dict[str, Any]) -> None:
     state_dir = state_dir.resolve()
     state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(state_dir, 0o700)
-    path = _journal_path(state_dir)
+    path = _journal_path(state_dir, payload.get("attemptId"))
     temporary = path.with_name(path.name + ".tmp-" + uuid.uuid4().hex)
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str) + "\n"
     try:
@@ -187,6 +192,8 @@ def preflight() -> dict[str, Any]:
 
 
 def apply(args: argparse.Namespace) -> dict[str, Any]:
+    attempt_id = args.attempt_id
+    _journal_path(args.state_dir, attempt_id)
     if args.database_name != "aos_meta_head":
         raise ProviderHealthBlocked("EXPLICIT_ISOLATED_DATABASE_REQUIRED")
     installer = _load_first_installer()
@@ -234,7 +241,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             total_tokens = 0
             latency_ms = observation.p50_latency_ms
         else:
-            journal = _read_journal(args.state_dir)
+            journal = _read_journal(args.state_dir, attempt_id)
             if journal is not None:
                 raise ProviderHealthBlocked("HEALTH_ATTEMPT_ALREADY_CONSUMED")
             secret_resolver = ExactSecretResolver()
@@ -248,7 +255,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             _write_journal(
                 args.state_dir,
                 {
-                    "attemptId": ATTEMPT_ID,
+                    "attemptId": attempt_id,
                     "status": "submitted",
                     "provider": provider_ref.model_dump(mode="json", by_alias=True),
                     "networkPolicy": network_ref.model_dump(mode="json", by_alias=True),
@@ -283,7 +290,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
                 _write_journal(
                     args.state_dir,
                     {
-                        "attemptId": ATTEMPT_ID,
+                        "attemptId": attempt_id,
                         "status": "blocked",
                         "reasonCode": exc.code,
                         "provider": provider_ref.model_dump(mode="json", by_alias=True),
@@ -305,7 +312,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             observation = store.record_health(
                 scope,
                 ACTOR,
-                ATTEMPT_ID,
+                attempt_id,
                 observation,
             )
             provider_calls = 1
@@ -314,7 +321,7 @@ def apply(args: argparse.Namespace) -> dict[str, Any]:
             _write_journal(
                 args.state_dir,
                 {
-                    "attemptId": ATTEMPT_ID,
+                    "attemptId": attempt_id,
                     "status": "completed",
                     "observationId": observation.observation_id,
                     "provider": provider_ref.model_dump(mode="json", by_alias=True),

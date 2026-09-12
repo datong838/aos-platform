@@ -1023,3 +1023,9 @@ verify→active@7（2026-09-12T00:45:54Z），ready/disabled/fenced，canary=0�
 下一波权威入口：A0-V/ecommerce-runtime-continuity-plan.md。优先补已验证但从未启用安装的正式恢复/卸载，
 现有 uninstall 要求曾启用后的 disable/detach Receipt，不能伪造该证据。之后真实续租观测、四来源配置、
 enable、经营首链与八工作台。全部任务未完成；m1 串行、不 push、230 L0 挂起。自动接续仍 ACTIVE。
+
+### 9.52 正式重装及跨初始期限实证
+
+2026-09-12T01:21:23Z：8707c887 补齐从未启用安装的严格卸载回执；旧安装规范 uninstalled@8，重放不重复写。新安装 efc4e640-1b15-403f-9d06-4c6d1a5330a7 active@5，原期限 01:20:49Z，333 秒观测包含 5 次自动续租、3 个真实 Running 容器、同 generation、ready/disabled/fenced、canary=0。详见 A0-V/ecommerce-reinstall-continuity.json。9.51 无运行 Host 的状态已被此实证取代；当前 Host 持续运行，业务尚未启用。
+
+01:24:43Z 一次真实模型健康调用成功，延迟 576ms，健康有效至 01:39:43Z；新 attempt 独立日志，旧日志保持不变，5 项健康脚本测试通过。下一波继续正式技能发布、数字同事准备、责任计划与配置启用，再验证自然首链及八工作台；不能把运行连续性当作经营闭环完成。
