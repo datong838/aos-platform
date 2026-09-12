@@ -985,3 +985,11 @@ head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninsta
 新增 domain 1.2.0 / Niushop 1.2.0 / growth 1.6.0：完整签名 contribution 与运行注册同步，历史版本字节保留。
 候选生成、预检与资格代码验证 22 passed；真实 OCI qualification 尚待执行。
 证据：`../A0-V-REAL-AUTHORIZATION-REVALIDATION/ecommerce-1.6-candidate-verification.md`。
+
+### 9.48 三包真实 persistent session 资格通过
+
+2026-09-12：69819df7 的隔离 build 与 qualification 一次通过。domain/platform/growth 完整 registration
+数量为 1/2/23，三者 heartbeat alive、cleanup released，七类签名篡改拒绝。Docker 无遗留 aos-ext 容器。
+输出树 hash 为 768af3234ae1ff395bcabceceb0a8889e746f689bfae378bf7177a44619be445。
+证据为 A0-V 目录 ecommerce-1.6-build-result.json / ecommerce-1.6-qualification-result.json。
+下一步按照 ecommerce-1.6-registry-plan.md 进行新三坐标 Registry successor，不修改历史制品。

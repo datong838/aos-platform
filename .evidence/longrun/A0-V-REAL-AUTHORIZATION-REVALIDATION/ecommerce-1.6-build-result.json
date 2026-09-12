@@ -1,0 +1,92 @@
+{
+  "bundleCount": 4,
+  "bundles": [
+    {
+      "id": "domain.ecommerce.core",
+      "runtimeOperations": [
+        "ecommerce_core_object_describe"
+      ],
+      "schemaCompatibilityHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+      "sourceTreeHash": "sha256:c4eee495804491e7a67360c2ba1c76a8c3937aee90ed44501e9ac0a00f311fb7",
+      "version": "1.2.0"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "runtimeOperations": [
+        "ecommerce_niushop_source_describe",
+        "ecommerce_niushop_facts_read"
+      ],
+      "schemaCompatibilityHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+      "sourceTreeHash": "sha256:0681f18c4191597498a5ecdab32c31a20ee4918ac328bef92ac53d8e8b015749",
+      "version": "1.2.0"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "runtimeOperations": [
+        "ecommerce_growth_investigation_describe",
+        "ecommerce_growth_case_put",
+        "ecommerce_growth_schedule_put",
+        "ecommerce_growth_schedule_trigger",
+        "ecommerce_growth_data_fulfill",
+        "ecommerce_growth_analysis_advance",
+        "ecommerce_growth_review_advance",
+        "ecommerce_growth_content_generate",
+        "ecommerce_growth_content_review"
+      ],
+      "schemaCompatibilityHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+      "sourceTreeHash": "sha256:84304e72cab728d8470dff55a837f1b63e0c424da0ab4ee65fd3268ba50b1c3a",
+      "version": "1.6.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "runtimeOperations": [],
+      "schemaCompatibilityHash": null,
+      "sourceTreeHash": "sha256:673f70cf99c5fe9070994547564cb874758e518840d26187c93ff8711dce48ee",
+      "version": "1.2.0"
+    }
+  ],
+  "contentHashes": {
+    "domain.ecommerce.core": "sha256:98aa65e8a3bcbe319a25fc59da6497b278ba98c86434dbfb019e7afb6fe4a0f6",
+    "platform.ecommerce.niushop": "sha256:351e9bcb23757f02d93f650be26636bedc0e31a8c25897cac582b37ff174cbdc",
+    "solution.ecommerce.growth": "sha256:2dfd08839f5033dde989551337d6defad10722a01e9ac033345adf02ea73ddce",
+    "solution.ecommerce.operations-base": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298"
+  },
+  "dependencyLockHash": "sha256:7082d71d73dfa0ef7a607045bfa22242621728e3346d99542087d6c629fbcacb",
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  },
+  "engine": {
+    "baseConfigDigest": "sha256:0505371492f8406a47d406e1d1ea3bcf707a95fc1ddf785bf6c95c84df55922a",
+    "baseImage": "python:3.11-alpine",
+    "platform": "linux/arm64"
+  },
+  "gitHead": "69819df73067673eec52b3e8cdf0d1eb2c441998",
+  "images": {
+    "domain-ecommerce-core": {
+      "configDigest": "sha256:83dd5f277091f579e57e6c27df17b8cf2c01da8507e2d4d244264fd43b01a9a0",
+      "imageDigest": "sha256:43252c9095d07328cc904178cb4409073cf1fdc9a1457868765e837681772359",
+      "localRef": "127.0.0.1:18436/domain-ecommerce-core@sha256:43252c9095d07328cc904178cb4409073cf1fdc9a1457868765e837681772359"
+    },
+    "platform-ecommerce-niushop": {
+      "configDigest": "sha256:3e36b9cf974989e066c6f611042357e7ea91829c59ac7620e85e97e4d33f270a",
+      "imageDigest": "sha256:a3fa03c3479a307a6da5738096cac8accbb0db40a56525c25b44567b0621a638",
+      "localRef": "127.0.0.1:18436/platform-ecommerce-niushop@sha256:a3fa03c3479a307a6da5738096cac8accbb0db40a56525c25b44567b0621a638"
+    },
+    "solution-ecommerce-growth": {
+      "configDigest": "sha256:2b3ddc2c53d09b3f7e0e24503d28de3ad1dee6d7d30a093052fd48bade7b0304",
+      "imageDigest": "sha256:807d817157c4647e15341a1bb5b5344624071a66bd2784ea67043021c48685e7",
+      "localRef": "127.0.0.1:18436/solution-ecommerce-growth@sha256:807d817157c4647e15341a1bb5b5344624071a66bd2784ea67043021c48685e7"
+    }
+  },
+  "mode": "build",
+  "moduleCount": 8,
+  "operationCount": 12,
+  "outcome": "BUILD_GREEN",
+  "output": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/ecommerce-runtime-1.6.0-build-v1",
+  "outputTreeHash": "sha256:768af3234ae1ff395bcabceceb0a8889e746f689bfae378bf7177a44619be445",
+  "runtimeMemberCount": 3,
+  "sdkTreeHash": "sha256:3f3639b97991ccf571d6f062e6345525c307e4c30f45e62335bb6d73620cd63b"
+}
