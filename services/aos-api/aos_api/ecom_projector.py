@@ -89,6 +89,12 @@ def _project_link(conn: Any, scope: TenantScope, payload: dict[str, Any]) -> Non
     )
 
 
+def projection_order_lock_key(scope: TenantScope) -> int:
+    """Stable tenant ordering lock shared by all authoritative projectors."""
+    material = _canonical_json(['ecom-projector-order-v1', *scope.key]).encode('utf-8')
+    return int.from_bytes(hashlib.sha256(material).digest()[:8], 'big', signed=True)
+
+
 def project_pending(scope: TenantScope, *, limit: int = 500) -> dict[str, int]:
     """Project one leased batch atomically; safe for concurrent workers and replay."""
     if limit < 1 or limit > 5000:
@@ -97,8 +103,7 @@ def project_pending(scope: TenantScope, *, limit: int = 500) -> dict[str, int]:
     with connect(scope) as conn:
         # Row leases alone allow a later event to overtake a paused earlier
         # event for the same object. Serialize projector transactions per tenant.
-        lock_material = _canonical_json(['ecom-projector-order-v1', *scope.key]).encode('utf-8')
-        lock_key = int.from_bytes(hashlib.sha256(lock_material).digest()[:8], 'big', signed=True)
+        lock_key = projection_order_lock_key(scope)
         locked = conn.execute('SELECT pg_try_advisory_xact_lock(%s) AS acquired', (lock_key,)).fetchone()['acquired']
         if not locked:
             pending = conn.execute(
