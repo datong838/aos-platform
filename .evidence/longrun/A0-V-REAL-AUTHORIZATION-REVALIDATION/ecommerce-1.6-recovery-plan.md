@@ -12,3 +12,16 @@
 6. 归档并进入四来源配置、enable 与经营首链。
 
 风险：旧 PreparationOwner 只有最多 300 秒寿命，恢复不等于长期持续可运行；enable 后宿主持续性仍需单独观察与改进。严格保持真实业务目标，不能因安装过绿而宣称八工作台已完成。
+
+## 第 1 步实证
+
+维护脚本 `scripts/a0v_ecommerce_schema_receipts.py` 完成签名校验、平台迁移祖先检查和各包 13 个物理关系检查。首次因检查时间早于加载证据而拒绝，事务没有写入；调整加载顺序后，三包 exact Schema Receipt 首次 recorded=true，重复执行全部 recorded=false。证据见同目录 ecommerce-1.6-schema-apply.json / ecommerce-1.6-schema-replay.json。三个物理条件测试通过；未执行 DDL、业务调用或安装状态变更。
+
+## 恢复实现文件与验收约束
+
+- `services/aos-api/aos_api/extension_runtime/preparation_reset.py`：当前权限、Installation CAS、无绑定、所有资源已释放；只收束 runtime-verify 的未提交阶段。必须拒绝 committing/succeeded 以及其他未决操作。
+- `services/aos-api/aos_api/asset_registry/{composition_contracts,installation_evidence,installation_store}.py`：明确 preparation_reset 证据和 applied→approved 追加修订；继承原 decision，保留全部历史。
+- `services/aos-api/alembic/versions/a0v_017_*.py`：数据库同样强制清洁检查和 decision 继承，不依赖脚本绕过。
+- 对应 runtime 与 installation 测试：覆盖权限、租户、CAS、绑定、释放不明、已提交 verify 拒绝及合法恢复和幂等回放。
+
+数据库迁移前备份。回滚采用停止新控制操作和保留历史，不删除已追加修订。原安装未恢复前不发第二次 apply。
