@@ -1,0 +1,20 @@
+# 来源选择服务：当前检查与同事务追加
+
+2026-09-12，基线945ba918。前置合同、资产解释器、查询选列、a0v_022历史表和共享图/源校验已落地；仍无可批准来源选择的服务。本步骤新增services/aos-api/aos_api/pipeline_source_selection_store.py及对应tests，逐项验证后接生产工厂，不先开放HTTP或启用P01。
+
+## 不可分开的服务操作
+
+1. 接受PipelineSourceSelectionDraft、actor、idempotencyKey、可选previousRef；严格重验实例。要求调用方已有事务、双租户GUC吻合、aos_runtime当前身份。构造器只接受现有PostgresInstallationStore、CurrentRuntimeReleaseArtifacts和ReleasePolicy；内部构造当前配置权限及四源Owner，不接受请求注入布尔标志/任意权限回调。
+2. 序列化同一安装的追加后，利用run_guarded检查active安装引用、代际、epoch和enabled/ready/unfenced绑定；核对当前config_ref并由read_configuration与CurrentFourSourceConfigurationAuthorization确认actor及角色/数据/预算/运行策略。不同DTO子类引用转成原权威DTO或规范JSON比较，不能用子类对象相等性误判版本。
+3. verify_pipeline_source_binding锁定当前图/源；严格传graph_revision和Ingress payload摘要。SourceConfigurationRevisionStore只读当前非秘密身份，与draft exact ref逐字段匹配。源节点的表/主键/过滤和sink对象必须匹配从钉住包资产导出的规格；否则拒绝。
+4. 选定package必须来自当前安装锁。实际published record需通过ReleasePolicy的签名/evidence固定引用检查。三份资产路径必须来自相应exports且digest符合draft引用；引用revision使用选定包版本，resourceId使用包内相对路径，packageRef负责命名空间。解析后再读取数据库时间确认有效窗口，并重验四源当前权限，避免资产读取耗时越过有效期。
+5. 规范记录体包含schemaVersion、scope/installation/generation/pipeline/source/selection/revision、actor、previousHash、draft、固定methodVersion和readSpec。完整hash由既有canonical_sha256生成。相同幂等键同请求回读原记录，不同请求冲突；previousRef须为同管道最新修订且全部引用匹配，随后原子追加。不commit调用者事务，不调用源、不生成ScheduleRun。
+6. 回读验证payload身份/完整合同/hash与数据库列一致。审批服务输出SourceSelectionRevision引用，只能用于后续控制审批，执行端仍须重新核对当前安装/配置/源/图/选择/有效期，不能把本次检查导出成永久通行证。
+
+## 验证次序和生产边界
+
+先验证规范记录编码/解码、幂等请求hash与跨目标/前序冲突，再验证当前权限组合拒绝非运行身份、无/漂移config、过期/错误源图包资产；独立PG验证追加回滚、CAS链、同键复用及再授权拒绝。测试替身只证明控制流，不能替代实际权限正向验收。
+
+真实aos_meta_head仍a0v_021；本步骤不借其他身份或修改dispatch权限，不把a0v_022结构检查当作已部署。部署/真实批准之前须补齐当前工厂权限及完整事务验收；现有未授权dispatch事项保持原边界。P01仍禁用、不读业务源、不push，230 L0挂起。
+
+实现顺序补充：先在新store模块完成严格记录编解码与请求hash，校验payload、列、完整草稿、读取规格和前序hash相互一致；这不是审批服务，也不执行INSERT。MappingReadSpec补构造校验（services/aos-api/aos_api/pipeline_source_selection.py），防止持久JSON回读绕过派生函数的基础标识符/范围限制。随后在同模块接当前Owner与事务追加，不将纯codec输出作为授权。

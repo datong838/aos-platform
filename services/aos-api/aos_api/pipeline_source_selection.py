@@ -31,6 +31,29 @@ class MappingReadSpec:
     columns: tuple[str, ...]
     filters: tuple[tuple[str, str | int | float], ...]
 
+    def __post_init__(self):
+        for value in (self.table, self.object_type, self.primary_key):
+            _identifier(value)
+        if type(self.columns) is not tuple or not 1 <= len(self.columns) <= 100:
+            raise ValueError('bounded immutable columns required')
+        _fields(list(self.columns))
+        if self.primary_key not in self.columns:
+            raise ValueError('primary key must be selected')
+        if type(self.filters) is not tuple or not 1 <= len(self.filters) <= 8:
+            raise ValueError('bounded immutable scope required')
+        names = []
+        for term in self.filters:
+            if type(term) is not tuple or len(term) != 2:
+                raise ValueError('immutable equality pair required')
+            column, value = term
+            names.append(_identifier(column).casefold())
+            if (type(value) not in (str, int, float)
+                    or (type(value) is float and not math.isfinite(value))
+                    or (type(value) is str and len(value) > 160)):
+                raise ValueError('bounded scalar scope value required')
+        if len(names) != len(set(names)):
+            raise ValueError('duplicate equality scope')
+
 
 def derive_mapping_read_spec(mapping, schema, masking) -> MappingReadSpec:
     """Caller must verify asset digests and current authority separately.
