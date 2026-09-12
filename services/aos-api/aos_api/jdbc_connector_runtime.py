@@ -1057,6 +1057,7 @@ class JdbcConnectorRuntime:
         limit: int | None = 100,
         composite_cursor: tuple[Any, Any, str, str] | None = None,
         where_equals: Mapping[str, Any] | None = None,
+        columns: Sequence[str] | None = None,
     ) -> list[dict[str, Any]]:
         """读取表行流（带游标增量）。
 
@@ -1064,8 +1065,22 @@ class JdbcConnectorRuntime:
         - 无 cursor：SELECT * FROM {table} LIMIT %s
         - 有 cursor：SELECT * FROM {table} WHERE {pk} > %s ORDER BY {pk} LIMIT %s
           cursor = (watermark, pk)
+        - 显式 columns：只查询指定标识符列，要求 1..1000 行严格上限。
+          列的业务授权由调用方当前 Owner 核验，此方法仅执行查询约束。
         """
         identifier = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+        selected_columns = "*"
+        if columns is not None:
+            if (
+                type(columns) not in (list, tuple)
+                or not 1 <= len(columns) <= 100
+                or any(type(column) is not str or not identifier.fullmatch(column) for column in columns)
+                or len(set(columns)) != len(columns)
+            ):
+                raise ValueError("columns must be unique SQL identifiers, between 1 and 100")
+            if type(limit) is not int or not 1 <= limit <= 1000:
+                raise ValueError("selected reads require an integer limit between 1 and 1000")
+            selected_columns = ", ".join(f"`{column}`" for column in columns)
         for value in (table, schema):
             if value is not None and not identifier.fullmatch(value):
                 raise ValueError(f"unsafe SQL identifier: {value!r}")
@@ -1102,7 +1117,7 @@ class JdbcConnectorRuntime:
         else:
             order_by = ""
 
-        sql = f"SELECT * FROM {table_ref}"
+        sql = f"SELECT {selected_columns} FROM {table_ref}"
         if where_parts:
             sql += " WHERE " + " AND ".join(where_parts)
         sql += order_by
