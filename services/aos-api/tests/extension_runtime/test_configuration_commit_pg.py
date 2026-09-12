@@ -117,3 +117,22 @@ def test_commit_configuration_rejects_and_preserves_fence(prepared_configuration
             if failure=='rollback':raise RuntimeError('test rollback')
     assert conn.execute('SELECT config_ref,enabled FROM extension_runtime_binding').fetchone()==(None,False)
     assert conn.execute("SELECT count(*) FROM extension_runtime_event WHERE type='configuration_committed'").fetchone()==(0,)
+
+
+@pytest.mark.parametrize('phase', ['draining', 'configured', 'wrong_tenant', 'wrong_generation'])
+def test_real_configuration_evidence_admits_only_its_fenced_lease(prepared_configuration, phase):
+    from uuid import uuid4
+    from aos_api.extension_runtime.configuration_commit import commit_configuration
+    from aos_api.extension_runtime.lease_renewal import _configuration_transition_owned
+    conn,args,_=prepared_configuration
+    if phase!='draining':
+        with conn.transaction():commit_configuration(conn,**args)
+    fields=('installation_id','generation','observed_state','desired_state','enabled','operation_fence','revision','config_ref')
+    row=dict(zip(fields,conn.execute('SELECT '+','.join(fields)+' FROM extension_runtime_binding').fetchone()))
+    before=conn.execute('SELECT revision,enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()
+    target=(args['org_id'],args['project_id'],row['installation_id'])
+    if phase=='wrong_tenant':target=('dev-org',args['project_id'],row['installation_id'])
+    generation=uuid4() if phase=='wrong_generation' else row['generation']
+    with conn.transaction():
+        assert _configuration_transition_owned(conn,target=target,generation=generation,binding=row) is (phase in ('draining','configured'))
+    assert conn.execute('SELECT revision,enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()==before

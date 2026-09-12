@@ -2,10 +2,46 @@
 from datetime import timedelta
 from uuid import UUID
 from aos_api.asset_registry.installation_service import _load_current_lock
-from .lifecycle_store import _require_transaction, _values, RuntimeConflict, RuntimeOperationStore
+from .lifecycle_store import _require_transaction, _values, RuntimeConflict, RuntimeOperationStore, _digest, _deadline_valid
 from .preparation_commit import _expected_backend_claims, _registered_resources
 from .verification_commit import _fresh_health
 from .runtime_gate import _reject_deferred
+
+
+def _configuration_transition_owned(conn, *, target, generation, binding):
+    """Retain healthy fenced resources; this never authorizes business dispatch."""
+    observed, desired, enabled, fence, revision, config = _values(binding,
+        ('observed_state', 'desired_state', 'enabled', 'operation_fence', 'revision', 'config_ref'))
+    if (observed not in {'unknown', 'draining'} or desired not in {'disabled', 'enabled'}
+            or (observed == 'unknown' and desired != 'disabled')
+            or enabled is not False or fence is not True):
+        return False
+    rows = conn.execute("""SELECT o.operation_id,o.status,o.phase,o.deadline,e.payload,e.payload_hash
+        FROM extension_runtime_operation o JOIN extension_runtime_event e
+          ON e.org_id=o.org_id AND e.project_id=o.project_id AND e.operation_id=o.operation_id
+        WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s AND o.kind='configure'
+          AND ((o.status='succeeded' AND o.phase='succeeded' AND e.type='configuration_committed')
+            OR (o.status='running' AND o.phase='fencing' AND e.type='fencing' AND e.sequence=o.revision))""", target).fetchall()
+    matches = 0
+    for row in rows:
+        operation, status, phase, deadline, payload, digest = _values(row,
+            ('operation_id', 'status', 'phase', 'deadline', 'payload', 'payload_hash'))
+        if not isinstance(payload, dict) or _digest(payload) != digest:
+            continue
+        if observed == 'unknown' and (status, phase) == ('succeeded', 'succeeded'):
+            if (config is not None and payload.get('installationId') == str(target[2])
+                    and payload.get('generation') == str(generation)
+                    and payload.get('configRef') == config and payload.get('bindingRevision') == revision
+                    and payload.get('enabled') is False and payload.get('observedState') == 'unknown'):
+                matches += 1
+        elif observed == 'draining' and (status, phase) == ('running', 'fencing'):
+            if payload != {'previousPhase': 'validating'} or not _deadline_valid(conn, deadline):
+                continue
+            from .configuration_request import load_configure_target
+            accepted = load_configure_target(conn, org_id=target[0], project_id=target[1], operation_id=operation)
+            if accepted.generation == str(generation) and accepted.bindingRevision + 1 == revision:
+                matches += 1
+    return matches == 1
 
 
 def renew_verified_lease(conn, *, installation_store, revalidator, check_current_permission,
@@ -34,15 +70,18 @@ def renew_verified_lease(conn, *, installation_store, revalidator, check_current
     if permission is not True: raise RuntimeConflict('current lease permission required')
     lock = _load_current_lock(conn, locked=locked, org_id=org_id, project_id=project_id)
     binding = conn.execute('''SELECT installation_revision,package_lock_ref,observed_state,
-        desired_state,resource_handle_ref FROM extension_runtime_binding
+        desired_state,resource_handle_ref,enabled,operation_fence,revision,config_ref FROM extension_runtime_binding
         WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
         (*target, generation)).fetchone()
     if binding is None: raise LookupError('verified binding not found')
     installed, package, observed, desired, handle = _values(binding,
         ('installation_revision','package_lock_ref','observed_state','desired_state','resource_handle_ref'))
     if (installed != locked.record.current_revision or package != {'lockHash': lock.lock_hash}
-            or observed != 'ready' or desired not in {'disabled','enabled'}
+            or desired not in {'disabled','enabled'}
             or not isinstance(handle, dict) or handle.get('preparationOperationId') != str(operation_id)):
+        raise RuntimeConflict('verified binding cannot renew')
+    if observed != 'ready' and not _configuration_transition_owned(
+            conn, target=target, generation=generation, binding=binding):
         raise RuntimeConflict('verified binding cannot renew')
     checked = revalidator.revalidate_in_transaction(conn, lock=lock)
     expected = _expected_backend_claims(lock, checked)

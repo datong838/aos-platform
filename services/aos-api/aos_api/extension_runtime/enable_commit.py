@@ -41,11 +41,11 @@ def commit_enabled(conn, *, installation_store, revalidator, check_current_permi
     request=load_enable_target(conn,org_id=org_id,project_id=project_id,operation_id=operation_id)
     if UUID(request.generation)!=generation:
         raise RuntimeConflict('enable generation differs from owned resource group')
-    prepared=conn.execute('''SELECT phase,status,deadline FROM extension_runtime_operation
+    prepared=conn.execute('''SELECT phase,status FROM extension_runtime_operation
         WHERE org_id=%s AND project_id=%s AND operation_id=%s AND installation_id=%s
         AND kind='runtime-apply' FOR UPDATE''',(*preparation,installation_id)).fetchone()
     if prepared is None:raise LookupError('owned preparation not found')
-    pphase,pstatus,pdeadline=_values(prepared,('phase','status','deadline'))
+    pphase,pstatus=_values(prepared,('phase','status'))
     if (pphase,pstatus)!=('succeeded','succeeded'):
         raise RuntimeConflict('owned preparation is not committed')
     target=_target(conn,org_id,project_id,installation_id,generation)
@@ -70,8 +70,10 @@ def commit_enabled(conn, *, installation_store, revalidator, check_current_permi
             generation=generation,actor=actor,ref=request.configRef,authorize=authorize)
     configuration()
     checked=revalidator.revalidate_in_transaction(conn,lock=lock)
+    # A committed preparation is bounded by its renewable resource leases.
+    # Its historical execution deadline does not expire the live generation.
     proofs,expiries=_registered_resources(conn,preparation,generation,
-        _expected_backend_claims(lock,checked),min(deadline,pdeadline))
+        _expected_backend_claims(lock,checked),deadline)
     if resources!={'preparationOperationId':str(preparation[2]),'resources':proofs}:
         raise RuntimeConflict('owned resources differ from verified binding')
     conditions=check_current_conditions(conn=conn,locked=locked,lock=lock,actor=actor)

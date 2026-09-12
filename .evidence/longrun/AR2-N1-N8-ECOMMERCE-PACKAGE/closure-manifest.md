@@ -1047,3 +1047,7 @@ enable、经营首链与八工作台。全部任务未完成；m1 串行、不 p
 ### 9.55 心跳修复签名后继与新安装
 
 e3f8daab 修复 SDK 心跳占用额度，7ec6f4e0 构建 core/Niushop 1.3、growth 1.7；每真实镜像 2048 心跳通过，七类篡改拒绝。a1b94507 本地正式登记新三坐标，保留历史八坐标，重放零写；旧 efc 安装 uninstalled@6，新 e42e042b-1fe7-4cfa-bb83-469ff256081d 完成 apply/verify。02:32:44Z 307 秒、4 续租、三容器存活；旧 36 分钟点待观察。A0-V/firstchain-binding-preflight-verification.md 记录后续连接隔离缺陷修复与真实只读依赖预检，目前仍需新鲜 Provider 健康及能力/技能绑定，不能宣称业务链完成。
+
+### 9.56 六职责与配置切换实证
+
+462baceb 完成六职责及限定8技能就绪、不可变配置和 configure succeeded。启用仅 accepted；03:27:24Z Host 因 unknown 配置态被续租拒绝而退出。9.55 的运行观测为历史证据，当前不可经营。下一波 configuration-lease-continuity-plan.md 修复后正式恢复，不复活释放资源；业务首链和八工作台未完成。
