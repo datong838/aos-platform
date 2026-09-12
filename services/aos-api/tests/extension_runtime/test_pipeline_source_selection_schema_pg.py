@@ -118,3 +118,10 @@ def test_destructive_downgrade_is_not_available(ledger):
     _, _, migration = ledger
     with pytest.raises(RuntimeError, match='retained'):
         migration.downgrade()
+
+
+def test_new_selection_ledger_removes_legacy_default_mutation_grants(database):
+    conn,_,schema=database
+    conn.execute(sql.SQL('ALTER DEFAULT PRIVILEGES IN SCHEMA {} GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO aos_runtime').format(sql.Identifier(schema)))
+    ledger.__wrapped__(database)
+    assert conn.execute("SELECT has_table_privilege('aos_runtime','pipeline_source_selection_revision','UPDATE'),has_table_privilege('aos_runtime','pipeline_source_selection_revision','DELETE')").fetchone()==(False,False)

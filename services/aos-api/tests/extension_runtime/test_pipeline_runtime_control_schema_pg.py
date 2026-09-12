@@ -79,3 +79,11 @@ def test_runtime_role_tenant_isolation(control_ledger):
 def test_no_destructive_downgrade(control_ledger):
     _,_,module=control_ledger
     with pytest.raises(RuntimeError,match='retained'):module.downgrade()
+
+
+def test_new_control_ledger_removes_legacy_default_mutation_grants(database):
+    conn,_,schema=database
+    conn.execute(sql.SQL('ALTER DEFAULT PRIVILEGES IN SCHEMA {} GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO aos_runtime').format(sql.Identifier(schema)))
+    selected=ledger.__wrapped__(database)
+    control_ledger.__wrapped__(selected)
+    assert conn.execute("SELECT has_table_privilege('aos_runtime','pipeline_runtime_control_revision','UPDATE'),has_table_privilege('aos_runtime','pipeline_runtime_control_revision','DELETE')").fetchone()==(False,False)

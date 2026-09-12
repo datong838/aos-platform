@@ -52,8 +52,13 @@ def upgrade():
         FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation();
     CREATE TRIGGER immutable_truncate BEFORE TRUNCATE ON pipeline_source_selection_revision
         FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation();
-    GRANT SELECT,INSERT ON pipeline_source_selection_revision TO aos_runtime;
     ''')
+    restrict_history_permissions()
+
+
+def restrict_history_permissions():
+    # Older installations may grant ALL through default privileges.
+    op.execute('REVOKE ALL ON pipeline_source_selection_revision FROM PUBLIC,aos_runtime; GRANT SELECT,INSERT ON pipeline_source_selection_revision TO aos_runtime;')
 
 
 def downgrade():

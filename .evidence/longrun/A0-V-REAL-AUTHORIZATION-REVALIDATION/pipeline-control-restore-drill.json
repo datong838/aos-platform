@@ -1,0 +1,26 @@
+{
+  "outcome": "STOPPED_FOR_INSPECTION",
+  "errorChain": [
+    {
+      "errorType": "ValueError",
+      "relation": "raised",
+      "frames": [
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_pipeline_control_deploy.py",
+          "function": "<module>",
+          "line": 196
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_pipeline_control_deploy.py",
+          "function": "prepare",
+          "line": 160
+        },
+        {
+          "file": "/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_pipeline_control_deploy.py",
+          "function": "verify_tables",
+          "line": 91
+        }
+      ]
+    }
+  ]
+}

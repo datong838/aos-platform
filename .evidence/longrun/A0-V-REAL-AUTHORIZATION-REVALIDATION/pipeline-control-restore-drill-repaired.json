@@ -1,0 +1,128 @@
+{
+  "outcome": "ISOLATED_RESTORE_AND_MIGRATION_VERIFIED",
+  "at": "2026-09-12T10:52:21.409068+00:00",
+  "main": "aos_meta_head",
+  "clone": "aos_pipeline_control_20260912_ti4_test",
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/pipeline-control-deployment/aos_meta_head-before-a0v_022-023.dump",
+    "bytes": 4833085,
+    "sha256": "sha256:9987cfa90679ebc5441b662fa11433faa28116ae10c4b525fa8478aad652477d"
+  },
+  "migrations": {
+    "a0v_022_pipeline_source_selection.py": "sha256:3bd9909591625b8f2d9fcb962e0feaadaa67f3558f4315f96bede1bd3fcf52f9",
+    "a0v_023_pipeline_runtime_control.py": "sha256:b88c489313c2a6cd6cc9389969960cf7e94f9cf7c0937895ee0f0ab9a2047ae0"
+  },
+  "before": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 1,
+      "digest": "e6364d65afd22e684869b970cfa97bfb"
+    },
+    "meta_pipeline": {
+      "count": 1,
+      "digest": "01106197ffb1c483b0b360c931e601c4"
+    },
+    "meta_schedule": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_schedule_run": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_dataset": {
+      "count": 1,
+      "digest": "a1dcdeb30ccb24cf244e2095ee3de77a"
+    },
+    "bundle_installation": {
+      "count": 6,
+      "digest": "68ad4c44c09be043760cdd8d885b9c8e"
+    },
+    "extension_runtime_configuration": {
+      "count": 3,
+      "digest": "31fe33a7b4554df03af0d91fb4eebdb5"
+    }
+  },
+  "after": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 1,
+      "digest": "e6364d65afd22e684869b970cfa97bfb"
+    },
+    "meta_pipeline": {
+      "count": 1,
+      "digest": "01106197ffb1c483b0b360c931e601c4"
+    },
+    "meta_schedule": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_schedule_run": {
+      "count": 0,
+      "digest": null
+    },
+    "meta_dataset": {
+      "count": 1,
+      "digest": "a1dcdeb30ccb24cf244e2095ee3de77a"
+    },
+    "bundle_installation": {
+      "count": 6,
+      "digest": "68ad4c44c09be043760cdd8d885b9c8e"
+    },
+    "extension_runtime_configuration": {
+      "count": 3,
+      "digest": "31fe33a7b4554df03af0d91fb4eebdb5"
+    }
+  },
+  "tables": {
+    "pipeline_source_selection_revision": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "can_truncate": false,
+      "can_trigger": false,
+      "can_reference": false,
+      "count": 0,
+      "triggers": [
+        "immutable_history",
+        "immutable_truncate"
+      ]
+    },
+    "pipeline_runtime_control_revision": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "can_select": true,
+      "can_insert": true,
+      "can_update": false,
+      "can_delete": false,
+      "can_truncate": false,
+      "can_trigger": false,
+      "can_reference": false,
+      "count": 0,
+      "triggers": [
+        "immutable_history",
+        "immutable_truncate"
+      ]
+    }
+  },
+  "sourceRowsRead": 0,
+  "businessWrites": 0,
+  "repair": "Retained restored clone: restricted inherited default privileges on two empty new tables only"
+}
