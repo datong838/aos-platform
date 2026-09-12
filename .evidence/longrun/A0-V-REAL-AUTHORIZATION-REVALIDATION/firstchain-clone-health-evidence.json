@@ -1,0 +1,8 @@
+{
+  "sourceDatabase": "aos_meta_head",
+  "targetDatabase": "aos_text_renewal_20260912",
+  "observationId": "a0v-health-20260912023652258181",
+  "observedAt": "2026-09-12 02:36:52.258181+00:00",
+  "expiresAt": "2026-09-12 02:51:52.258181+00:00",
+  "newProviderCalls": 0
+}

@@ -1,0 +1,49 @@
+{
+  "database": "aos_meta_head",
+  "bindings": [
+    {
+      "skillId": "ecommerce.skill.D01",
+      "bindingId": "a0v-firstchain-d01-material.collect",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "0363c33741f5332f98113ef72121c6841aa3352a8826cb55fc4e891e4ff2c7bb",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:58:35.757119+00:00",
+      "bindingExistedBefore": false
+    },
+    {
+      "skillId": "ecommerce.skill.D02",
+      "bindingId": "a0v-firstchain-d02-material.collect",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "0c7d7fa38b645418095b4439b936a494193b92a6707a69a790045a59c2e66c4d",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:58:36.062080+00:00",
+      "bindingExistedBefore": false
+    },
+    {
+      "skillId": "ecommerce.skill.D03",
+      "bindingId": "a0v-firstchain-d03-strategy.plan",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "69ae8b77c14b9fedeb5408a21eb895726812588e7a684322899f6c593d092f78",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:58:36.358187+00:00",
+      "bindingExistedBefore": false
+    }
+  ],
+  "providerCalls": 0,
+  "agentActivations": 0,
+  "businessRuns": 0,
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260912/state/firstchain-capability-before/backups/aos_meta_head-pre-growth-1.5-registry.dump",
+    "size": 4524558,
+    "sha256": "sha256:8f66f2d3b3ddf3ae00a32eecbc9c772b79fb4216f4f601cef9c9b856a370e31e"
+  }
+}

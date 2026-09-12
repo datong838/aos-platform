@@ -1,0 +1,46 @@
+{
+  "database": "aos_text_renewal_20260912",
+  "bindings": [
+    {
+      "skillId": "ecommerce.skill.D01",
+      "bindingId": "a0v-firstchain-d01-material.collect",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "f0931b848e60812545ea332dd50fffbe13e1478329644a323223f01fed6e92da",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:56:12.239312+00:00",
+      "bindingExistedBefore": true
+    },
+    {
+      "skillId": "ecommerce.skill.D02",
+      "bindingId": "a0v-firstchain-d02-material.collect",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "332340a0f78388463650cc7195d207e80c2314217bc5abf1870aa7ce4e0bda92",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:56:12.593456+00:00",
+      "bindingExistedBefore": true
+    },
+    {
+      "skillId": "ecommerce.skill.D03",
+      "bindingId": "a0v-firstchain-d03-strategy.plan",
+      "status": "active",
+      "version": 3,
+      "health": "healthy",
+      "readiness": "available",
+      "dependencySnapshotHash": "24f573b2e0b9854a3ca6c3f82b6ddb730e15a907026eebc415f31c2146bffea5",
+      "observedAt": "2026-09-12 02:36:52.258181+00:00",
+      "readinessExpiresAt": "2026-09-12 02:56:12.934261+00:00",
+      "bindingExistedBefore": true
+    }
+  ],
+  "providerCalls": 0,
+  "agentActivations": 0,
+  "businessRuns": 0,
+  "replayTablesCompared": 524,
+  "changedTables": []
+}

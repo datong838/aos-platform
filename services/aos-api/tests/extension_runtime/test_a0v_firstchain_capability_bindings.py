@@ -35,3 +35,29 @@ def test_contract_retains_exact_skill_gate_lineage(fault):
     if fault:
         with pytest.raises(ValueError,match='CONTRACT_LINEAGE'):require_contract(row,skill)
     else:require_contract(row,skill)
+
+@pytest.mark.parametrize('fault',['missing','future','expired','provider','unhealthy'])
+def test_activation_refuses_unusable_health(fault):
+    from contextlib import contextmanager
+    from datetime import UTC,datetime,timedelta
+    import a0v_firstchain_capability_activate as activate
+    from a0v_firstchain_capability_bindings import exact
+    now=datetime.now(UTC);provider=exact('ProviderInstanceRevision','provider',1,'a'*64)
+    row={'status':'healthy','observed_at':now-timedelta(minutes=1),'expires_at':now+timedelta(minutes=1),
+        'provider_ref':provider.model_dump(mode='json',by_alias=True)}
+    if fault=='missing':row=None
+    if fault=='future':row['observed_at']=now+timedelta(minutes=2)
+    if fault=='expired':row['expires_at']=now-timedelta(seconds=1)
+    if fault=='provider':row['provider_ref']['contentHash']='b'*64
+    if fault=='unhealthy':row['status']='unknown'
+    @contextmanager
+    def connect(scope):yield NS(execute=lambda *a:NS(fetchone=lambda:row))
+    with pytest.raises(ValueError,match='EXACT_HEALTH'):activate.latest_health(connect,provider)
+
+
+def test_blocked_preview_never_creates_binding_service(monkeypatch):
+    import a0v_firstchain_capability_activate as activate
+    monkeypatch.setattr(activate,'prepare',lambda _: (None,None,[('D01',None,None,NS(readiness=NS(value='blocked'),reasons=['stale']))]))
+    def forbidden(*a,**k):raise AssertionError('write service created')
+    monkeypatch.setattr(activate,'AipCapabilityBindingService',forbidden)
+    with pytest.raises(ValueError,match='DEPENDENCIES_BLOCKED'):activate.run('aos_meta_head')
