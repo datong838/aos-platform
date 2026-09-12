@@ -1,0 +1,16 @@
+# 当前Niushop1.4到1.5维护替换
+
+2026-09-13，10630d1c。当前afd792de-e85e-4680-86d0-c83404824fb3 active@7，lock sha256:539a2b9fc61adab875793153b92c5f7641049bc4dec01c44a6d5fae876c69404，overlay a0v-canonical-ecommerce-v1，generation275e1941-2e87-4a75-aa3c-e0508be9e2ce。主机v15 PID98435旧代码/旧签名根，不能热加载新包或新单写门；API PID12426也旧代码。
+
+文件：扩展scripts/a0v_canonical_ecommerce_first_install.py（既有专属Lease）可选current_installation_ref，默认首装None不变，严格CurrentInstallationRef解析，resolve结果必须与输入exact相同；新scripts/a0v_niushop_1_5_replacement.py固定前驱、1.5坐标、仓外状态路径和操作。新scripts/a0v_product_controlled_api.py私有调用原API launcher仅替换新完整签名根，默认原launcher不变。受控源与mainAPI租户身份继续原规则，不复制凭证。
+
+先校验current前驱/Registry/源schema及新目标不存在，创建新Composition携带前驱ref，再原InstallationService create/submit/独立开发测试actor approve，停在approved，不在旧Host发送prepare。此开发actor体系沿既有验收脚本，不声称真实双人审批。Runtime current permission使用已存在runtime-owner身份，不新增成员或权限。
+
+本地维护切换：通过RuntimeDisableService使旧代fenced并完成真实drain，核disabled_committed；再TERM旧Host并确认三旧资源released、进程退出、绑定保持同一禁入epoch。旧历史active用于exact replacement基线，不能uninstall父以绕过lineage。随后启动唯一新Host，固定1.5完整签名根并含10630d1c单写门；API同样新根且Host/Cron/自动LLM关闭。新实例依次runtime-apply/verify→四源当前配置→enable；每步通过原Owner及新鲜ref回读，幂等key与初始command保存在仓外不可覆盖文件，未知结果只observe。
+
+此为允许本地中断的维护替换，不承诺零停机。旧Host不可读取1.5根，故不假造先prepare新代而仍由旧Host拥有；先创建approved新实例减少维护窗口，再停旧换Host准备新代。全程禁止两个Host同租户同时运行，不改活跃lock、旧generation或手工设置ready。旧已完成P01/Receipt和源配置保留，计划当前disabled，原审批耗尽且过期不复用。
+
+失败后旧代保持禁入，查phase/资源后由正式恢复或新的replacement恢复旧代码，不能越过leaf-first保护重新enable旧父。数据不删、不push、不外部发布、230L0挂起。测试predecessor无效值在读取签名/连接前拒绝；固定目标/路径单测，原first-install和API launcher回归。之后真实stage证据逐步写入，不把accepted当完成。
+
+
+03:47准备验证：invalid predecessor首轮3 failed，扩展后原first-install及新反例11 passed；原API launcher2 passed。实际只读replacement preflight确认旧1.4@7/binding@4 enabled/ready，关联计划enabled0、unstopped0。新API profile check通过，仍明确localDiagnostic=true/productionWebIdentityComplete=false、Host/Cron/自动LLM关闭、sourceCalls0/runs0；未启动第二API或Host。SQL仅统计当前最新绑定归属旧实例的计划，不能被无关租户历史run误阻断。下面固定提交后创建approved新实例，不请求prepare或修改旧实例。

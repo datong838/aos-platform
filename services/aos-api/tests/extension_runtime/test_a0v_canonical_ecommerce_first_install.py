@@ -283,3 +283,13 @@ def test_runtime_configuration_authority_reports_every_missing_source() -> None:
         ],
         "ready": False,
     }
+
+
+@pytest.mark.parametrize('bad_ref',[{}, {'installationId':'invalid'}, {'installationId':False}])
+def test_replacement_rejects_invalid_predecessor_before_connect_or_trust(tmp_path,bad_ref):
+    from pydantic import ValidationError
+    calls=[]
+    with pytest.raises(ValidationError):
+        INSTALLER.create_approved_first_installation(connect_factory=lambda:calls.append('connected'),
+            state_dir=tmp_path,current_installation_ref=bad_ref)
+    assert calls==[]

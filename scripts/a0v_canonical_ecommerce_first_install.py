@@ -871,13 +871,15 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> dict
 def create_approved_first_installation(
     *, connect_factory: Any, state_dir: Path, core_version: str = "1.1.0",
     adapter_version: str = "1.1.0", growth_version: str = "1.4.0",
-    idempotency_prefix: str = INSTALL_IDEMPOTENCY_PREFIX
+    idempotency_prefix: str = INSTALL_IDEMPOTENCY_PREFIX,
+    current_installation_ref: Any | None = None
 ) -> dict[str, Any]:
     sys.path.insert(0, str(API_ROOT))
     try:
         from aos_api.asset_registry.composition_contracts import (
             ApproveInstallationRequest,
             CompositionRequest,
+            CurrentInstallationRef,
             CreateInstallationRequest,
             EmptyInstallationActionRequest,
             InstallationResponse,
@@ -897,6 +899,8 @@ def create_approved_first_installation(
             RuntimeReleaseRevalidator,
         )
 
+        predecessor = (None if current_installation_ref is None else
+            CurrentInstallationRef.model_validate(current_installation_ref))
         trust = FileTrustRootProvider(
             state_dir.resolve() / "signing/trust-roots.json"
         ).snapshot()
@@ -936,7 +940,7 @@ def create_approved_first_installation(
                 "platformRelease": "aos-platform/1.7.0",
                 "environment": "dev",
                 "registrySnapshotHash": snapshot.snapshot_hash,
-                "currentInstallationRef": None,
+                "currentInstallationRef": None if predecessor is None else predecessor.model_dump(mode="json", by_alias=True),
             }
         )
         composition_receipt = composition_service.resolve(
@@ -960,7 +964,7 @@ def create_approved_first_installation(
         coordinates = {(item.id, item.version) for item in lock.payload.resolved}
         if coordinates != expected_coordinates:
             raise FirstInstallBlocked("COMPOSITION_RESOLUTION_DRIFT", str(coordinates))
-        if lock.payload.current_installation_ref is not None or len(lock.payload.edges) != 3:
+        if lock.payload.current_installation_ref != predecessor or len(lock.payload.edges) != 3:
             raise FirstInstallBlocked("COMPOSITION_BASELINE_DRIFT", lock.lock_hash)
         contribution_count = sum(
             len(item.contributions) for item in lock.payload.resolved
@@ -989,7 +993,7 @@ def create_approved_first_installation(
                     "compositionId": lock.composition_id,
                     "lockRevision": lock.revision,
                     "overlayRevision": "a0v-canonical-ecommerce-v1",
-                    "displayName": "A0-V Canonical 电商八工作台首装",
+                    "displayName": "A0-V Canonical 电商八工作台首装" if predecessor is None else "栖月汇电商商品接入版本替换",
                 }
             ),
             org_id=ORG_ID,

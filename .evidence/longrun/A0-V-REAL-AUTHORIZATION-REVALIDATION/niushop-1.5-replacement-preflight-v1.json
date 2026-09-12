@@ -1,0 +1,24 @@
+{
+  "outcome": "REPLACEMENT_PREDECESSOR_PREFLIGHT_GREEN",
+  "observedAt": "2026-09-12T19:45:31.299416+00:00",
+  "predecessor": {
+    "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+    "revision": 7,
+    "lockHash": "sha256:539a2b9fc61adab875793153b92c5f7641049bc4dec01c44a6d5fae876c69404",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "binding": {
+    "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+    "revision": 4,
+    "execution_epoch": 3,
+    "enabled": true,
+    "operation_fence": false,
+    "desired_state": "enabled",
+    "observed_state": "ready"
+  },
+  "pipelineCounts": {
+    "unstopped_runs": 0,
+    "enabled_schedules": 0
+  },
+  "installationMutations": 0
+}
