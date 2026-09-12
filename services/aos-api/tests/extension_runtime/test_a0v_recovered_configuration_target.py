@@ -9,7 +9,8 @@ import a0v_ecommerce_1_7_configure as executor
 import a0v_ecommerce_1_7_disable as disable
 
 
-def test_setup_uses_file_reference_without_connecting(tmp_path, monkeypatch):
+@pytest.mark.parametrize('niushop',[False,True])
+def test_setup_uses_file_reference_without_connecting(tmp_path, monkeypatch,niushop):
     import os
     from types import SimpleNamespace
     from aos_api.asset_registry.installation_store import PostgresInstallationStore
@@ -25,15 +26,19 @@ def test_setup_uses_file_reference_without_connecting(tmp_path, monkeypatch):
     (trust / 'trust-roots.json').write_text('{}')
     monkeypatch.setattr(os, 'environ', dict(os.environ))
     monkeypatch.setattr(executor, 'BUNDLE_ROOT', tmp_path)
+    monkeypatch.setattr(executor, 'RECOVERY', tmp_path)
+    new_root=tmp_path/'state/niushop-1.4-registry/signed-bundles-niushop-1.4'
+    new_root.mkdir(parents=True)
     monkeypatch.setattr(executor, 'TRUST_STATE', tmp_path)
     store = PostgresInstallationStore()
     activation = SimpleNamespace(_services=lambda *a: (store, SimpleNamespace(_reader=object(), _revalidator=object())))
     monkeypatch.setattr(executor, 'load', lambda name: host if name == 'a0v_ecommerce_runtime_host' else activation)
     monkeypatch.setattr(runtime_connections.psycopg, 'connect', lambda *a, **kw: pytest.fail('setup connected'))
-    connect, selected, authorize, service = executor.setup()
+    connect, selected, authorize, service = executor.setup(niushop_1_4=niushop)
     assert connect is runtime_connections.runtime_worker_connection
     assert selected is activation and callable(authorize) and service._store is store
     assert os.environ['AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE'] == str(path)
+    assert os.environ['AOS_BUNDLE_ROOT'] == str(new_root if niushop else tmp_path)
     assert all(name not in os.environ for name in ('AOS_DATABASE_URL', 'AOS_EXTENSION_RUNTIME_DATABASE_URL', 'AOS_EXTENSION_DIRECTORY_DATABASE_URL'))
 
 
@@ -104,3 +109,18 @@ def test_sleep_recovery_uses_a_new_installation_and_command_namespace(tmp_path,m
         assert path.name=='ecommerce-1.7-sleep-recovered-configuration.json'
         assert key=='a0v-ecommerce-1.7-sleep-recovered'
         assert command=='ecommerce-1.7-sleep-recovered'
+
+
+@pytest.mark.parametrize('case',['fresh','original','recovered','sleep','invalid','both'])
+def test_niushop_configuration_profile_is_distinct(tmp_path,monkeypatch,case):
+    monkeypatch.setattr(executor,'RECOVERY',tmp_path)
+    state=tmp_path/'state';state.mkdir()
+    identity={'original':executor.INSTALLATION,'recovered':'af1992e8-89c2-406a-816d-01e61d7bf982',
+              'sleep':'a0fd8e25-cb6f-49e5-aa77-7faddae12099','invalid':'bad'}.get(case,str(uuid4()))
+    (state/'niushop-1.4-first-install.json').write_text(json.dumps({'installationId':identity}))
+    if case!='fresh':
+        with pytest.raises(ValueError):executor.configuration_target(case=='both',niushop_1_4=True)
+    else:
+        actual,path,key,command=executor.configuration_target(niushop_1_4=True)
+        assert actual==identity and path.name=='niushop-1.4-configuration.json'
+        assert key=='a0v-niushop-1.4' and command=='niushop-1.4'

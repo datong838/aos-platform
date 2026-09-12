@@ -11,3 +11,7 @@
 完成标准：新lock只选Niushop1.4，实际3资源/精确注册，verify和配置/启用事件提交，canary0，跨初始deadline续租；发布与安装不是源读取授权。P01仍禁用，源claim占用/单次读取尚待接线，主库a0v_023，230L0挂起、不push。
 
 入口第一段：3 RED/3 passed后schema/安装/原canonical首装相关14通过；补充前序仍active时不得调用create的负例，目标文件3通过。13:43:37Z真实物理预检通过，三个包各13项关系与实际已安装Alembic祖先匹配，未记录schema receipt；见niushop-1.4-schema-preflight.json。新profile已由CLI测试证明传入adapter1.4及精确前序，原三个state/key保持，配置与观察入口尚待下一段。
+
+22:15配置段补充：新实例已reset@5，同实例保留旧apply，不得以最新时间排序冒认当前操作。continuity新增显式niushop-1-4目标，查询当前binding generation对应资源的runtime-apply，要求恰好1项，带org/project限定；历史default路径保持。配置目标/根按原方案，新UUID拒绝三个历史实例。测试setup新旧根、target互斥、旧ID拒绝，以及当前代际观察选择不选历史apply。全部入口提交后才重跑有5分钟准备期限的apply，避免实现工作消耗准备期。
+
+配置入口RED8失败/11通过（缺新参数），实现后19通过。代际观察初始fixture因复用同一幂等键导致4个UniqueViolation，修正合成历史操作键后有效RED4个缺函数；实现后与配置/安装目标累计27通过，包含真实隔离PG的当前代际/歧义/无binding/跨租户。旧configuration target默认及原恢复路径保持。主库与真实数据未被这些测试修改。

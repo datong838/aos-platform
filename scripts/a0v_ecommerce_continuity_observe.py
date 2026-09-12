@@ -22,12 +22,27 @@ def container_observation(container_id):
     return {'true':'running','false':'stopped'}.get(result.stdout.strip(),'unavailable')
 
 
+def current_preparation(conn,installation,*,org_id,project_id):
+    rows=conn.execute("""SELECT o.operation_id,o.created_at,o.deadline,o.status
+        FROM extension_runtime_operation o
+        WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s
+          AND o.kind='runtime-apply' AND EXISTS (
+            SELECT 1 FROM extension_runtime_resource_lease r
+            JOIN extension_runtime_binding b ON b.org_id=r.org_id AND b.project_id=r.project_id
+              AND b.generation=r.generation AND b.installation_id=o.installation_id
+            WHERE r.org_id=o.org_id AND r.project_id=o.project_id AND r.operation_id=o.operation_id)
+        ORDER BY o.operation_id""",(org_id,project_id,installation)).fetchall()
+    if len(rows)!=1:raise ValueError('exact current preparation required')
+    return rows[0]
+
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True)
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--successor-1-7',action='store_true')
     group.add_argument('--after-config-recovery',action='store_true')
     group.add_argument('--after-sleep-recovery',action='store_true')
+    group.add_argument('--niushop-1-4',action='store_true')
     args=parser.parse_args()
     spec=importlib.util.spec_from_file_location('first',ROOT/'scripts/a0v_canonical_ecommerce_first_install.py')
     first=importlib.util.module_from_spec(spec);spec.loader.exec_module(first)
@@ -35,18 +50,22 @@ def main():
     state='state/ecommerce-1.7-first-install.json' if args.successor_1_7 else 'state/ecommerce-1.6-reinstall.json'
     if args.after_config_recovery:state='state/ecommerce-1.7-recovered-first-install.json'
     if args.after_sleep_recovery:state='state/ecommerce-1.7-sleep-recovered-first-install.json'
+    if args.niushop_1_4:state='state/niushop-1.4-first-install.json'
     installation=json.loads((RECOVERY/state).read_text())['installationId']
     with connect() as conn:
         now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-        operation=conn.execute("SELECT operation_id,created_at,deadline,status FROM extension_runtime_operation WHERE installation_id=%s AND kind='runtime-apply'",(installation,)).fetchall()
-        if len(operation)!=1:raise ValueError('exact reinstall operation required')
-        operation=operation[0]
+        if args.niushop_1_4:
+            operation=current_preparation(conn,installation,org_id='org-org',project_id='dev-project')
+        else:
+            operation=conn.execute("SELECT operation_id,created_at,deadline,status FROM extension_runtime_operation WHERE installation_id=%s AND kind='runtime-apply'",(installation,)).fetchall()
+            if len(operation)!=1:raise ValueError('exact reinstall operation required')
+            operation=operation[0]
         events=conn.execute("SELECT occurred_at,payload FROM extension_runtime_event WHERE operation_id=%s AND type='runtime_lease_renewed' ORDER BY sequence",(operation['operation_id'],)).fetchall()
         resources=conn.execute("SELECT resource_id,generation,container_id,cleanup_state,observed_release,expires_at FROM extension_runtime_resource_lease WHERE operation_id=%s ORDER BY resource_id",(operation['operation_id'],)).fetchall()
         bindings=conn.execute("SELECT generation,observed_state,desired_state,enabled,operation_fence,revision,config_ref FROM extension_runtime_binding WHERE installation_id=%s",(installation,)).fetchall()
         canary=conn.execute("SELECT count(*) AS n FROM bundle_installation WHERE org_id='dev-org' AND project_id='dev-project'").fetchone()['n']
         fenced_configuration=False
-        if (args.after_config_recovery or args.after_sleep_recovery) and len(bindings)==1 and bindings[0]['observed_state']=='unknown':
+        if (args.after_config_recovery or args.after_sleep_recovery or args.niushop_1_4) and len(bindings)==1 and bindings[0]['observed_state']=='unknown':
             import sys
             sys.path.insert(0,str(ROOT/'services/aos-api'))
             from aos_api.extension_runtime.lease_renewal import _configuration_transition_owned

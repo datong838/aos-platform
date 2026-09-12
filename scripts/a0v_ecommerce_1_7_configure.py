@@ -10,9 +10,11 @@ STATE=RECOVERY/'state/ecommerce-1.7-configuration.json'
 BUNDLE_ROOT=RECOVERY/'state/ecommerce-1.7-registry/signed-bundles-v7'
 
 
-def setup():
+def setup(*, niushop_1_4=False):
+    if type(niushop_1_4) is not bool:raise ValueError("ONE_RECOVERY_TARGET_REQUIRED")
+    bundle_root=RECOVERY/"state/niushop-1.4-registry/signed-bundles-niushop-1.4" if niushop_1_4 else BUNDLE_ROOT
     host=load('a0v_ecommerce_runtime_host')
-    host._configure_environment(host.DEFAULT_CREDENTIALS,bundle_root=BUNDLE_ROOT,trust_roots_file=TRUST_STATE/'signing/trust-roots.json')
+    host._configure_environment(host.DEFAULT_CREDENTIALS,bundle_root=bundle_root,trust_roots_file=TRUST_STATE/'signing/trust-roots.json')
     import sys
     sys.path.insert(0,str(ROOT/'services/aos-api'))
     from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
@@ -27,8 +29,16 @@ def setup():
     return connect,activation,authorize,service
 
 
-def configuration_target(recovery=False, *, sleep_recovery=False):
-    if recovery and sleep_recovery:raise ValueError("ONE_RECOVERY_TARGET_REQUIRED")
+def configuration_target(recovery=False, *, sleep_recovery=False, niushop_1_4=False):
+    flags=(recovery,sleep_recovery,niushop_1_4)
+    if any(type(flag) is not bool for flag in flags) or sum(flags)>1:raise ValueError("ONE_RECOVERY_TARGET_REQUIRED")
+    if niushop_1_4:
+        from uuid import UUID
+        initial=json.loads((RECOVERY/'state/niushop-1.4-first-install.json').read_text())
+        installation=str(UUID(initial['installationId']))
+        if installation in {INSTALLATION,'af1992e8-89c2-406a-816d-01e61d7bf982','a0fd8e25-cb6f-49e5-aa77-7faddae12099'}:
+            raise ValueError('RECOVERY_REQUIRES_NEW_INSTALLATION')
+        return installation,RECOVERY/'state/niushop-1.4-configuration.json','a0v-niushop-1.4','niushop-1.4'
     if sleep_recovery:
         from uuid import UUID
         initial=json.loads((RECOVERY/"state/ecommerce-1.7-sleep-recovered-first-install.json").read_text())
@@ -44,9 +54,9 @@ def configuration_target(recovery=False, *, sleep_recovery=False):
     return installation,RECOVERY/"state/ecommerce-1.7-recovered-configuration.json","a0v-ecommerce-1.7-recovered","ecommerce-1.7-recovered"
 
 
-def run(action,recovery=False, *, sleep_recovery=False):
-    installation_id,state_path,key_prefix,command_prefix=configuration_target(recovery,sleep_recovery=sleep_recovery)
-    connect,activation,authorize,service=setup()
+def run(action,recovery=False, *, sleep_recovery=False, niushop_1_4=False):
+    installation_id,state_path,key_prefix,command_prefix=configuration_target(recovery,sleep_recovery=sleep_recovery,niushop_1_4=niushop_1_4)
+    connect,activation,authorize,service=setup(niushop_1_4=niushop_1_4)
     from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
     from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument,ConfigurationSourceRef,ConfigureTarget
     from aos_api.extension_runtime.configuration_store import append_configuration
@@ -111,6 +121,7 @@ if __name__=='__main__':
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--after-config-recovery',action='store_true')
     group.add_argument('--after-sleep-recovery',action='store_true')
-    args=parser.parse_args();result=run(args.action,recovery=args.after_config_recovery,sleep_recovery=args.after_sleep_recovery)
+    group.add_argument('--niushop-1-4',action='store_true')
+    args=parser.parse_args();result=run(args.action,recovery=args.after_config_recovery,sleep_recovery=args.after_sleep_recovery,niushop_1_4=args.niushop_1_4)
     args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,default=str,indent=2)+'\n')
     print(json.dumps(result,default=str,indent=2))
