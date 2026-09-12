@@ -1,0 +1,208 @@
+[
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 330,
+    "occurred_at": "2026-09-12 19:48:07.597413+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:51:07.650237+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:48:07.596302+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 331,
+    "occurred_at": "2026-09-12 19:49:09.778199+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:52:09.830383+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:49:09.777140+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 332,
+    "occurred_at": "2026-09-12 19:50:12.088833+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:53:12.930364+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:50:12.087649+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 333,
+    "occurred_at": "2026-09-12 19:51:15.069600+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:54:15.122851+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:51:15.068597+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 334,
+    "occurred_at": "2026-09-12 19:52:17.174064+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:55:17.226896+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:52:17.172736+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 335,
+    "occurred_at": "2026-09-12 19:53:19.305131+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:56:19.357084+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:53:19.303948+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 336,
+    "occurred_at": "2026-09-12 19:54:21.409486+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:57:21.467765+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:54:21.408012+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 337,
+    "occurred_at": "2026-09-12 19:55:23.532496+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:58:23.582771+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:55:23.531341+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 338,
+    "occurred_at": "2026-09-12 19:56:25.847141+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T19:59:25.899704+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:56:25.845724+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 339,
+    "occurred_at": "2026-09-12 19:57:28.103375+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:00:28.157875+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:57:28.102097+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 340,
+    "occurred_at": "2026-09-12 19:58:30.174803+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:01:30.228680+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:58:30.172901+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 341,
+    "occurred_at": "2026-09-12 19:59:32.471929+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:02:32.525455+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T19:59:32.470752+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 342,
+    "occurred_at": "2026-09-12 20:00:34.768111+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:03:34.825180+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T20:00:34.766338+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 343,
+    "occurred_at": "2026-09-12 20:01:36.840769+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:04:36.894318+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T20:01:36.839666+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 344,
+    "occurred_at": "2026-09-12 20:02:39.105037+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:05:39.162000+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T20:02:39.103939+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 345,
+    "occurred_at": "2026-09-12 20:03:41.230574+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:06:41.280832+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T20:03:41.227566+00:00"
+    }
+  },
+  {
+    "type": "runtime_lease_renewed",
+    "sequence": 346,
+    "occurred_at": "2026-09-12 20:04:43.416621+00:00",
+    "payload": {
+      "expiresAt": "2026-09-12T20:07:43.467746+00:00",
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "healthCheckedAt": "2026-09-12T20:04:43.415391+00:00"
+    }
+  },
+  {
+    "type": "accepted",
+    "sequence": 1,
+    "occurred_at": "2026-09-12 20:05:04.713200+00:00",
+    "payload": {
+      "kind": "disable",
+      "bindingTarget": {
+        "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+        "bindingRevision": 4
+      }
+    }
+  },
+  {
+    "type": "resource_released",
+    "sequence": 347,
+    "occurred_at": "2026-09-12 20:05:05.994963+00:00",
+    "payload": {
+      "resourceId": "12d9132f-decd-489f-b5f9-bca8f6cd7c7f"
+    }
+  },
+  {
+    "type": "resource_released",
+    "sequence": 348,
+    "occurred_at": "2026-09-12 20:05:06.112430+00:00",
+    "payload": {
+      "resourceId": "cf0fffe0-28e3-4cf6-905a-75afa741a978"
+    }
+  },
+  {
+    "type": "resource_released",
+    "sequence": 349,
+    "occurred_at": "2026-09-12 20:05:06.290104+00:00",
+    "payload": {
+      "resourceId": "350e6552-0592-4190-b12e-d17f7c76d8fc"
+    }
+  }
+]

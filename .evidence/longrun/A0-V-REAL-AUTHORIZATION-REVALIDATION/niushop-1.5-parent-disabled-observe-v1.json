@@ -1,0 +1,128 @@
+{
+  "outcome": "REPLACEMENT_OBSERVED",
+  "observedAt": "2026-09-12T20:05:35.628916+00:00",
+  "installations": {
+    "afd792de-e85e-4680-86d0-c83404824fb3": {
+      "record": {
+        "installation_id": "afd792de-e85e-4680-86d0-c83404824fb3",
+        "etag_version": 7,
+        "state": "active"
+      },
+      "bindings": [
+        {
+          "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+          "revision": 5,
+          "enabled": false,
+          "operation_fence": true,
+          "execution_epoch": 4,
+          "desired_state": "enabled",
+          "observed_state": "unknown"
+        }
+      ],
+      "operations": [
+        {
+          "operation_id": "bd0f9202-c83e-4362-9f68-54dc6de32ca8",
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 18
+        },
+        {
+          "operation_id": "12eff3e4-5d44-4f9e-a91b-7dc79cb2a4ac",
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 349
+        },
+        {
+          "operation_id": "2686692c-3f1e-4240-a721-18cdfe59128f",
+          "kind": "runtime-verify",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 5
+        },
+        {
+          "operation_id": "0a1b3203-e2dd-4e04-9255-253ef3065892",
+          "kind": "configure",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 6
+        },
+        {
+          "operation_id": "97f315dd-a6b4-4c3c-b25a-90c8b65867f8",
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 5
+        },
+        {
+          "operation_id": "e578ff09-b0ba-4de8-979e-ee4f7e13d6a3",
+          "kind": "disable",
+          "status": "accepted",
+          "phase": "accepted",
+          "revision": 1
+        }
+      ],
+      "resources": [
+        {
+          "resource_id": "12d9132f-decd-489f-b5f9-bca8f6cd7c7f",
+          "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+          "package_id": "solution.ecommerce.growth",
+          "container_id": "8d116f197c6b9cc55a9ea159c0d9c65ce9156d565872a561874b3efc5b998f7d",
+          "cleanup_state": "released",
+          "observed_release": true
+        },
+        {
+          "resource_id": "17816574-80e0-4fe4-b4f0-b33482530c5d",
+          "generation": "624262c6-21e1-4658-ad99-517810413eb0",
+          "package_id": "domain.ecommerce.core",
+          "container_id": "2677296b07248804897e904c84184bcecc30027cb0c0afe9892fa44a0283149d",
+          "cleanup_state": "released",
+          "observed_release": true
+        },
+        {
+          "resource_id": "350e6552-0592-4190-b12e-d17f7c76d8fc",
+          "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+          "package_id": "domain.ecommerce.core",
+          "container_id": "c836d1d35a0121eeec4f0803ed4cf0f04383b9959520fc81037725a2ffb2bada",
+          "cleanup_state": "released",
+          "observed_release": true
+        },
+        {
+          "resource_id": "cf0fffe0-28e3-4cf6-905a-75afa741a978",
+          "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+          "package_id": "platform.ecommerce.niushop",
+          "container_id": "bf271d8f4c1385adf770eed4a3fa2d3e50eb1e223bdbaecd6d6adb8991f8284a",
+          "cleanup_state": "released",
+          "observed_release": true
+        },
+        {
+          "resource_id": "d1d8c865-811a-4e93-8a98-5404bb4d443c",
+          "generation": "624262c6-21e1-4658-ad99-517810413eb0",
+          "package_id": "platform.ecommerce.niushop",
+          "container_id": "058214d0e3de0040319c386f758f8e44399b8a7cab2eaa16f5898110fb762791",
+          "cleanup_state": "released",
+          "observed_release": true
+        },
+        {
+          "resource_id": "fbf00a06-abec-4366-851c-295f57c7707b",
+          "generation": "624262c6-21e1-4658-ad99-517810413eb0",
+          "package_id": "solution.ecommerce.growth",
+          "container_id": "c83b4abdf517b4e663d42351e73b065fb95032b71e3da3ce22a4a47fb9ef7036",
+          "cleanup_state": "released",
+          "observed_release": true
+        }
+      ]
+    },
+    "eda57424-b8cb-401e-a6f7-94220cb4f9ef": {
+      "record": {
+        "installation_id": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+        "etag_version": 3,
+        "state": "approved"
+      },
+      "bindings": [],
+      "operations": [],
+      "resources": []
+    }
+  }
+}

@@ -13,7 +13,7 @@ from uuid import UUID
 from aos_api.tenant_scope import TenantScope
 
 from .configuration_consumer import ConfigurationConsumer
-from .disable_consumer import ClaimedDisableDelivery, RuntimeDisableConsumer
+from .disable_consumer import ClaimedDisableDelivery, DisableDeliveryResult, RuntimeDisableConsumer
 from .generation_attempts import ExpiredSignedReadAttemptRecovery
 from .owned_control_consumer import _settled
 from .preparation_owner import _observe
@@ -177,11 +177,17 @@ class RuntimeHost:
             if claimed is None:return None
             if type(claimed) is not ClaimedDisableDelivery:
                 raise TypeError("disable consumer returned invalid claim")
-            owner=assignment.lifecycle.find_owner(claimed.installation_id)
-            if owner is not None:
-                await _settled(assignment.lifecycle.revoke(claimed.installation_id,owner))
             if not await self._still_current(assignment):return None
-            return await _settled(asyncio.to_thread(consumer.finish_claimed,claimed))
+            result=await _settled(asyncio.to_thread(consumer.finish_claimed,claimed))
+            # Cleanup advances the binding version. Fence and commit the exact
+            # drain first; otherwise cleanup invalidates the accepted command.
+            if type(result) is not DisableDeliveryResult:
+                raise TypeError('disable consumer returned invalid result')
+            if result.operation_status=='succeeded' and await self._still_current(assignment):
+                owner=assignment.lifecycle.find_owner(claimed.installation_id)
+                if owner is not None:
+                    await _settled(assignment.lifecycle.revoke(claimed.installation_id,owner))
+            return result
         return await _settled(
             asyncio.to_thread(
                 consumer.run_once,

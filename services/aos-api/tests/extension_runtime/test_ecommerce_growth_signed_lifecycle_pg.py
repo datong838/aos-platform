@@ -428,18 +428,38 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
                 if_match=f'"{generation["verified"].etag_version}"',
                 target=dict(generation=str(generation["job"].plan.generation),
                     bindingRevision=current_binding_revision))
-            result = RuntimeDisableExecutor(connect=runtime_connect, installation_store=runtime_store,
+            from aos_api.extension_runtime.disable_consumer import RuntimeDisableConsumer
+            from aos_api.extension_runtime.runtime_host import RuntimeHost, RuntimeTenantAssignment
+            from aos_api.extension_runtime.live_installation_scheduler import LiveInstallationScheduler
+            from aos_api.extension_runtime.live_installation_owner import LiveInstallationLifecycleOwner
+            from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+            consumer = RuntimeDisableConsumer(connect=runtime_connect, installation_store=runtime_store,
                 check_current_permission=permission(DISABLE_RUNTIME_OPERATION),
-                check_drained=lambda *args, **kwargs: True, dependent=dependent).execute(
-                    **scope_dict, operation_id=accepted.response_json["operationId"],
-                    expected_revision=accepted.response_json["revision"])
-            assert result.phase == "succeeded"
+                check_drained=GenerationDrainReader(), dependent=dependent)
+            # Real Owner cleanup changes the binding revision. Exercise the Host
+            # coordination boundary instead of calling the executor directly.
+            scheduler=object.__new__(LiveInstallationScheduler)
+            scheduler.directory=SimpleNamespace(scope=scope)
+            owner=object.__new__(LiveInstallationLifecycleOwner)
+            installation=uuid.UUID(str(generation['draft'].installation_id))
+            scheduler.find_owner=lambda target: owner if target==installation else None
+            async def release(target,expected):
+                assert target==installation and expected is owner
+                await generation['job'].stop()
+            scheduler.revoke=release
+            assignment=RuntimeTenantAssignment(scope,lifecycle=scheduler,consumers=(consumer,))
+            host=RuntimeHost(assignments=lambda:(assignment,))
+            result=None
+            for _ in range(30):
+                delivered=await host._consume(assignment,consumer)
+                if delivered and str(delivered.operation_id)==accepted.response_json['operationId']:
+                    result=delivered;break
+            assert result is not None and result.operation_status=='succeeded'
             with connect() as conn:
                 detached = conn.execute("""SELECT count(*) AS n FROM extension_operation_dispatch_binding
                     WHERE org_id=%s AND project_id=%s AND handler_kind='legacy' AND operation_fence=false""",
                     scope.key).fetchone()["n"]
             assert detached == len(ECOMMERCE_GROWTH_OPERATIONS)
-            await generation["job"].stop()
             absent = subprocess.run(["docker", "--context", context, "inspect",
                 generation["job"].plan.members[0].intent.identity.name], capture_output=True, text=True, timeout=15)
             assert absent.returncode != 0 and "no such" in absent.stderr.lower()
