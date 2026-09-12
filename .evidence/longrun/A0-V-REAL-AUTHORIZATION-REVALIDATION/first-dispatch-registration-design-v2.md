@@ -79,3 +79,11 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 输出只包含安全引用、checkedAt、固定fenced预览及currentConfigurationValidated；authorityValidated仍false，businessWrites=0。函数只在调用方已有受控事务中读与锁，无INSERT/UPDATE/DELETE，没有新授权。执行登记时必须在同事务重用检查，不能把预检结果作为未来写入授权。测试覆盖runtime字段漂移/类型伪装/配置变更/组已存在/权威依赖拒绝；随后以当前真实安装只读核验。检查不证明签名包声明已具备完整登记资格，该资格在正式Owner写入前另校验。
 
 登记与激活完成后接源事件消费者：SourceSelection/current配置校验→按事件存在性扫描而非MAX revision→冻结deadline→record_event_batch→CanonicalRouter→initial_store_analysis。下架/删除事件要撤销旧候选，候选状态函数不能过滤事件流。需要新版本平台包纳入候选状态规则；当前签名1.5不改动。真实成功门是Case/Run和后续业务产物，而不是九行登记或测试通过。
+
+### 当前签名声明资格切片
+
+新增 services/aos-api/aos_api/ecommerce_growth_registration_qualification.py 与 tests/extension_runtime/test_ecommerce_growth_registration_qualification.py。复用 RuntimeReleaseRevalidator 在调用方已有事务内的 Registry 锁、当前信任根与发布证据检查，禁止另开连接形成签名检查时间窗。锁内必须唯一选择经营 SolutionPack；固定九个 POST/exclusive 的 operationId/path 必须完整、无重复、无额外 API。其完整 contributions 摘要须匹配重新验证签名清单得到的 backend_claims，不能凭安装锁里同名包或伪造声明放行。返回安全资格摘要，不授予执行权。非 API 声明一并绑定摘要但不新增前端能力假设。
+
+本切片先独立测试并用当前真实安装执行只读资格检查；随后 Owner 必须在同一登记事务接入它，正式 API 仍需完成连接配置、权限评审、fenced 切换和未激活撤销。此切片不迁移主库、不调用登记函数。测试含缺失/重复/替换接口、错误方法路径、不同包类别、无 backend、签名摘要不符和当前发布检查拒绝。未修改任何已签名候选包。
+
+真实只读检查发现安装锁会重排 contributions：23 项与签名 manifest 集合一致、顺序不同。不能用原始列表摘要作语义等价判断。补充修改 extension_runtime/registration.py，基于既有 _index（拒绝重复 conflict key）生成顺序无关摘要；release_revalidation.py 的 RuntimeReleaseCheck 追加 backend_claim_fingerprints，保留既有 backend_claims 原值与消费者行为。登记资格只比较新语义摘要；发布签名本身仍按原始 descriptor 完整核验，不放松密码学验证。测试补充重排一致与重复声明拒绝。

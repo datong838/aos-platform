@@ -22,3 +22,14 @@ def validate_registration(declared: RegistrationDescription, observed: Registrat
     observed = RegistrationDescription.model_validate(observed)
     if _index(declared) != _index(observed):
         raise ValueError("registration differs from signed contributions")
+
+
+def registration_fingerprint(description: RegistrationDescription) -> str:
+    """Order-independent digest of the existing exact, duplicate-free index."""
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+
+    description = RegistrationDescription.model_validate(description)
+    return canonical_sha256([
+        [list(key), value.decode('utf-8')]
+        for key, value in sorted(_index(description).items())
+    ])

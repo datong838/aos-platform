@@ -16,6 +16,7 @@ class RuntimeReleaseCheck:
     # Only backend members have an OCI registration proof. Other runtime forms
     # need their own preparation worker; callers must not silently skip them.
     backend_claims: tuple[tuple[str, str, str], ...] = ()
+    backend_claim_fingerprints: tuple[tuple[str, str, str], ...] = ()
 
 
 class RuntimeReleaseRevalidator:
@@ -41,6 +42,7 @@ class RuntimeReleaseRevalidator:
             indexed[key]=row
         runtime_members=[]
         backend_claims=[]
+        backend_claim_fingerprints=[]
         for selected in lock.payload.resolved:
             row=indexed.get((selected.publisher,selected.id,selected.version))
             if row is None:
@@ -57,7 +59,9 @@ class RuntimeReleaseRevalidator:
                 runtime_members.append(selected.id)
                 if record.manifest.spec.runtime.backend is not None:
                     from .contracts import RegistrationDescription
+                    from .registration import registration_fingerprint
                     claims=RegistrationDescription(contributions=record.manifest.spec.contributions)
+                    backend_claim_fingerprints.append((selected.id,selected.content_hash,registration_fingerprint(claims)))
                     backend_claims.append((selected.id,selected.content_hash,
                         _digest(claims.model_dump(mode='json',by_alias=True))))
-        return RuntimeReleaseCheck(checked_at=checked_at,runtime_members=tuple(runtime_members),backend_claims=tuple(backend_claims))
+        return RuntimeReleaseCheck(checked_at=checked_at,runtime_members=tuple(runtime_members),backend_claims=tuple(backend_claims),backend_claim_fingerprints=tuple(backend_claim_fingerprints))
