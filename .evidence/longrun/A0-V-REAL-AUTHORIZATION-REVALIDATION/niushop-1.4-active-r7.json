@@ -1,0 +1,42 @@
+{
+  "activeRevision": 7,
+  "bindings": [
+    {
+      "desired_state": "disabled",
+      "enabled": false,
+      "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+      "observed_state": "ready",
+      "operation_fence": true
+    }
+  ],
+  "canaryInstallationCount": 0,
+  "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+  "operations": [
+    {
+      "expected_installation_etag": 3,
+      "failure_code": null,
+      "kind": "runtime-apply",
+      "operation_id": "bd0f9202-c83e-4362-9f68-54dc6de32ca8",
+      "phase": "succeeded",
+      "status": "succeeded"
+    },
+    {
+      "expected_installation_etag": 5,
+      "failure_code": null,
+      "kind": "runtime-apply",
+      "operation_id": "12eff3e4-5d44-4f9e-a91b-7dc79cb2a4ac",
+      "phase": "succeeded",
+      "status": "succeeded"
+    },
+    {
+      "expected_installation_etag": 6,
+      "failure_code": null,
+      "kind": "runtime-verify",
+      "operation_id": "2686692c-3f1e-4240-a721-18cdfe59128f",
+      "phase": "succeeded",
+      "status": "succeeded"
+    }
+  ],
+  "revision": 7,
+  "state": "active"
+}
