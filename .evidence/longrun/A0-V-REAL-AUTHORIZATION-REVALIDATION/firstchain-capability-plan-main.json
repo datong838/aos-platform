@@ -1,0 +1,199 @@
+{
+  "database": "aos_meta_head",
+  "writes": 0,
+  "providerCalls": 0,
+  "bindings": [
+    {
+      "skillId": "ecommerce.skill.D01",
+      "bindingId": "a0v-firstchain-d01-material.collect",
+      "capability": {
+        "assetType": "CapabilityRevision",
+        "assetId": "material.collect",
+        "revision": 2,
+        "contentHash": "d4fe301213f78ea8ffa1aebd8aff3b165b02df0c17046f9f21ce3fc7563f59ec"
+      },
+      "readiness": "blocked",
+      "reasons": [
+        "MODEL_ROUTE_BLOCKED",
+        "PROVIDER_HEALTH_UNAVAILABLE"
+      ],
+      "dependencies": {
+        "providerRef": {
+          "assetType": "ProviderInstanceRevision",
+          "assetId": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "modelRouteRef": {
+          "assetType": "ModelRouteRevision",
+          "assetId": "a0v-ecommerce-text-readonly-v1",
+          "revision": 2,
+          "contentHash": "210f0a337cdc2f30e3c5022a6b56b44cc90c6f99216476c3b86d6b5aee1afb27"
+        },
+        "runtimePolicyRef": {
+          "assetType": "RuntimePolicyRevision",
+          "assetId": "a0v-ecommerce-runtime-policy-v1",
+          "revision": 3,
+          "contentHash": "930bebbb5979a177c54bba4b910124a5ae7490fc10a31c3a9c4a6442e4d8c433"
+        },
+        "evalGateRef": {
+          "assetType": "EvalGateDecision",
+          "assetId": "gate-2099a3626a81efe95137d1611723f495",
+          "revision": 1,
+          "contentHash": "7ed79448b1d4ae9cc12f7986371eadf87bb40047b3a6bb213a048c7be3d82cf8"
+        },
+        "evalContractRef": {
+          "assetType": "EvalContractRevision",
+          "assetId": "eval-contract-89aa59c102774828b791",
+          "revision": 2,
+          "contentHash": "38a3ff83a088b9c123055eb00d04595538226e2f7fa8209e3f31a6420cca97c9"
+        },
+        "licenseEvidenceRefs": [
+          {
+            "resourceType": "EvidenceBundleRevision",
+            "resourceId": "evidence-bundle-e4e1e551b83c4c8983d4",
+            "revision": "1",
+            "authority": "aip-production"
+          }
+        ],
+        "dataDependencyRefs": [],
+        "toolDependencyRefs": [],
+        "budgetPolicyRef": {
+          "assetType": "BudgetPolicyRevision",
+          "assetId": "a0v-ecommerce-budget-policy-v1",
+          "revision": 3,
+          "contentHash": "5654fc1615a26a541dec2b1a29286c6c96d8bf0052e14b50cb86cfae9f1e9c77"
+        },
+        "allowDegraded": false
+      }
+    },
+    {
+      "skillId": "ecommerce.skill.D02",
+      "bindingId": "a0v-firstchain-d02-material.collect",
+      "capability": {
+        "assetType": "CapabilityRevision",
+        "assetId": "material.collect",
+        "revision": 2,
+        "contentHash": "d4fe301213f78ea8ffa1aebd8aff3b165b02df0c17046f9f21ce3fc7563f59ec"
+      },
+      "readiness": "blocked",
+      "reasons": [
+        "MODEL_ROUTE_BLOCKED",
+        "PROVIDER_HEALTH_UNAVAILABLE"
+      ],
+      "dependencies": {
+        "providerRef": {
+          "assetType": "ProviderInstanceRevision",
+          "assetId": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "modelRouteRef": {
+          "assetType": "ModelRouteRevision",
+          "assetId": "a0v-ecommerce-text-readonly-v1",
+          "revision": 2,
+          "contentHash": "210f0a337cdc2f30e3c5022a6b56b44cc90c6f99216476c3b86d6b5aee1afb27"
+        },
+        "runtimePolicyRef": {
+          "assetType": "RuntimePolicyRevision",
+          "assetId": "a0v-ecommerce-runtime-policy-v1",
+          "revision": 3,
+          "contentHash": "930bebbb5979a177c54bba4b910124a5ae7490fc10a31c3a9c4a6442e4d8c433"
+        },
+        "evalGateRef": {
+          "assetType": "EvalGateDecision",
+          "assetId": "gate-2099a3626a81efe95137d1611723f495",
+          "revision": 1,
+          "contentHash": "7ed79448b1d4ae9cc12f7986371eadf87bb40047b3a6bb213a048c7be3d82cf8"
+        },
+        "evalContractRef": {
+          "assetType": "EvalContractRevision",
+          "assetId": "eval-contract-350b80ba8e3f4d06b0ef",
+          "revision": 2,
+          "contentHash": "d2561dce3b01d080a577e6c18d1b0fa95415688ff45c3ca9ef3c135509aa3cc6"
+        },
+        "licenseEvidenceRefs": [
+          {
+            "resourceType": "EvidenceBundleRevision",
+            "resourceId": "evidence-bundle-e4e1e551b83c4c8983d4",
+            "revision": "1",
+            "authority": "aip-production"
+          }
+        ],
+        "dataDependencyRefs": [],
+        "toolDependencyRefs": [],
+        "budgetPolicyRef": {
+          "assetType": "BudgetPolicyRevision",
+          "assetId": "a0v-ecommerce-budget-policy-v1",
+          "revision": 3,
+          "contentHash": "5654fc1615a26a541dec2b1a29286c6c96d8bf0052e14b50cb86cfae9f1e9c77"
+        },
+        "allowDegraded": false
+      }
+    },
+    {
+      "skillId": "ecommerce.skill.D03",
+      "bindingId": "a0v-firstchain-d03-strategy.plan",
+      "capability": {
+        "assetType": "CapabilityRevision",
+        "assetId": "strategy.plan",
+        "revision": 2,
+        "contentHash": "eb8fc755a23d17878e045973deccf0eaafe0cd711ca4160ec141ee612e49b15c"
+      },
+      "readiness": "blocked",
+      "reasons": [
+        "MODEL_ROUTE_BLOCKED",
+        "PROVIDER_HEALTH_UNAVAILABLE"
+      ],
+      "dependencies": {
+        "providerRef": {
+          "assetType": "ProviderInstanceRevision",
+          "assetId": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "contentHash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "modelRouteRef": {
+          "assetType": "ModelRouteRevision",
+          "assetId": "a0v-ecommerce-text-readonly-v1",
+          "revision": 2,
+          "contentHash": "210f0a337cdc2f30e3c5022a6b56b44cc90c6f99216476c3b86d6b5aee1afb27"
+        },
+        "runtimePolicyRef": {
+          "assetType": "RuntimePolicyRevision",
+          "assetId": "a0v-ecommerce-runtime-policy-v1",
+          "revision": 3,
+          "contentHash": "930bebbb5979a177c54bba4b910124a5ae7490fc10a31c3a9c4a6442e4d8c433"
+        },
+        "evalGateRef": {
+          "assetType": "EvalGateDecision",
+          "assetId": "gate-2099a3626a81efe95137d1611723f495",
+          "revision": 1,
+          "contentHash": "7ed79448b1d4ae9cc12f7986371eadf87bb40047b3a6bb213a048c7be3d82cf8"
+        },
+        "evalContractRef": {
+          "assetType": "EvalContractRevision",
+          "assetId": "eval-contract-7282fb9b5fac459b90e6",
+          "revision": 2,
+          "contentHash": "3e260e2d0e5b402a9a770d8c5a91c5fa77b6a0a42f6c9bc61ced179de5703eb4"
+        },
+        "licenseEvidenceRefs": [
+          {
+            "resourceType": "EvidenceBundleRevision",
+            "resourceId": "evidence-bundle-e4e1e551b83c4c8983d4",
+            "revision": "1",
+            "authority": "aip-production"
+          }
+        ],
+        "dataDependencyRefs": [],
+        "toolDependencyRefs": [],
+        "budgetPolicyRef": {
+          "assetType": "BudgetPolicyRevision",
+          "assetId": "a0v-ecommerce-budget-policy-v1",
+          "revision": 3,
+          "contentHash": "5654fc1615a26a541dec2b1a29286c6c96d8bf0052e14b50cb86cfae9f1e9c77"
+        },
+        "allowDegraded": false
+      }
+    }
+  ]
+}

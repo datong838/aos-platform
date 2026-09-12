@@ -1,0 +1,6 @@
+{
+  "healthObservationWritten": false,
+  "outcome": "SAFE_BLOCKED",
+  "providerCallsMayHaveOccurred": true,
+  "reasonCode": "provider_timeout"
+}

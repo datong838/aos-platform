@@ -1043,3 +1043,7 @@ enable、经营首链与八工作台。全部任务未完成；m1 串行、不 p
 2026-09-12T01:52:29Z Host 退出，35 次续租后三资源释放，安装仍禁用且隔离。9.52 的 Running 仅为历史观测，当前不可经营。发现并复现 SDK 1024 帧额度误计心跳，修复及 24 项验证见 A0-V/ecommerce-sdk-heartbeat-budget-verification.md；真实根异常链不完整，不把时间吻合当成完全归因。
 
 下一步是三包不可变新版本及超过 1024 心跳的真实镜像资格，然后正式卸载重装、持续运行观测，再恢复 firstchain-binding-dependencies-plan.md。不覆盖旧制品，不复活旧 generation。首链内部许可 EvidenceBundle 已正式完成，但数字同事及业务首链仍未完成。
+
+### 9.55 心跳修复签名后继与新安装
+
+e3f8daab 修复 SDK 心跳占用额度，7ec6f4e0 构建 core/Niushop 1.3、growth 1.7；每真实镜像 2048 心跳通过，七类篡改拒绝。a1b94507 本地正式登记新三坐标，保留历史八坐标，重放零写；旧 efc 安装 uninstalled@6，新 e42e042b-1fe7-4cfa-bb83-469ff256081d 完成 apply/verify。02:32:44Z 307 秒、4 续租、三容器存活；旧 36 分钟点待观察。A0-V/firstchain-binding-preflight-verification.md 记录后续连接隔离缺陷修复与真实只读依赖预检，目前仍需新鲜 Provider 健康及能力/技能绑定，不能宣称业务链完成。

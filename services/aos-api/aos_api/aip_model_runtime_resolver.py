@@ -28,6 +28,8 @@ from aos_api.tenant_scope import TenantScope
 class AipModelRuntimeResolver:
     def __init__(self, store: AipModelRuntimeStore | None = None) -> None:
         self._store = store or AipModelRuntimeStore()
+        self._connect_factory = getattr(self._store, "_connect_factory", db_connect)
+        self._eval_authority_store = getattr(self._store, "_eval_authority_store", None) or AipEvalAuthorityStore(self._connect_factory)
 
     def resolve(self, scope: TenantScope, route_id: str, *, now: datetime | None = None) -> ModelRouteResolution:
         resolved_at = now or datetime.now(UTC)
@@ -135,24 +137,23 @@ class AipModelRuntimeResolver:
     def _ref(kind: str, asset_id: str, revision: int, content_hash: str) -> VersionedAssetRef:
         return VersionedAssetRef(assetType=kind, assetId=asset_id, revision=revision, contentHash=content_hash)
 
-    @staticmethod
     def _gate_passed(
+        self,
         scope: TenantScope,
         ref: VersionedAssetRef,
         expected_target: VersionedAssetRef,
         now: datetime,
     ) -> bool:
         try:
-            AipEvalAuthorityStore().require_exact_passed(
+            self._eval_authority_store.require_exact_passed(
                 scope, ref, expected_target=expected_target, now=now
             )
         except AipEvalGateDependencyBlocked:
             return False
         return True
 
-    @staticmethod
-    def _health_is_fresh(scope: TenantScope, provider_ref: VersionedAssetRef, now: datetime) -> bool:
-        with db_connect(scope) as conn:
+    def _health_is_fresh(self, scope: TenantScope, provider_ref: VersionedAssetRef, now: datetime) -> bool:
+        with self._connect_factory(scope) as conn:
             row = conn.execute(
                 """SELECT status,provider_ref,expires_at FROM aip_provider_health_observation
                 WHERE org_id=%s AND project_id=%s AND provider_ref->>'assetId'=%s
