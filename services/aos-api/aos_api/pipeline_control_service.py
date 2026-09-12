@@ -13,6 +13,7 @@ from aos_api.extension_runtime.storage_ports import require_runtime_role
 from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDraft, PipelineSourceSelectionDraft
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner
 from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
+from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.tenant_scope import TenantScope
 
 
@@ -21,6 +22,7 @@ class PipelineControlServices:
     scope: TenantScope
     selections: PipelineSourceSelectionOwner
     controls: PipelineRuntimeControlOwner
+    claims: PipelineSourceClaimOwner | None = None
 
     def _approve(self,*,draft,actor,idempotency_key,previous_ref,selection):
         kind=PipelineSourceSelectionDraft if selection else PipelineRuntimeControlDraft
@@ -61,4 +63,5 @@ class PipelineControlServiceFactory:
         artifacts=CurrentRuntimeReleaseArtifacts(connect=runtime_worker_connection,scope=scope,loader=loader)
         selections=PipelineSourceSelectionOwner(installation_store=self.installation_store,
             artifacts=artifacts,release_policy=self.policy)
-        return PipelineControlServices(scope,selections,PipelineRuntimeControlOwner(selections=selections))
+        controls=PipelineRuntimeControlOwner(selections=selections)
+        return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls))

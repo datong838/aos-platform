@@ -17,6 +17,7 @@ def test_factory_composes_same_current_dependencies_without_connection(tmp_path,
     import aos_api.pipeline_control_service as module
     monkeypatch.setattr(module,'runtime_worker_connection',lambda:pytest.fail('constructor connected'))
     f=factory(tmp_path);service=f.build(TenantScope('org-org','dev-project'))
+    assert service.claims._controls is service.controls
     assert service.controls._selections is service.selections
     assert service.selections._store is f.installation_store
     assert service.selections._release_policy is f.policy

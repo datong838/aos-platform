@@ -1,0 +1,13 @@
+# 读取占用当前Owner
+
+2026-09-12，基线d7eb3cf8。新增services/aos-api/aos_api/pipeline_source_claim_owner.py及tests/extension_runtime/test_pipeline_source_claim_owner_pg.py。沿主A0-V Lease，不修改主库或部署024。
+
+构造器只接收exact PipelineRuntimeControlOwner，内部使用既有IngressJournal。reserve(conn,scope,run_id,control_ref,actor)要求调用者事务；先Current Control run_current获取安装锁并重新校验全部权限，再取得run advisory锁并验证真实running ScheduleRun与enabled pipeline-live-v1调度及当前图/源绑定。该顺序固定为安装→run→调度，后续受控恢复不得倒置锁顺序。
+
+读取现有claim：严格回读字段、绑定当前scope/install/gen/pipeline/ref/actor，返回created=false，不增加调用次数，更不能重新发起源读取。无claim时按controlId/revision统计count与最大序号一致，下一序号必须不超过当前draft.maxSourceCalls；同事务INSERT并回读返回created=true。不提交调用者事务、不调用源、不变更ScheduleRun/Ingress状态。调用方只有明确确认占用事务提交后，才可在再次Current Control检查内执行一次读取；提交不明或created=false永远不能把返回对象当作读取许可。
+
+read_current(conn,...)同样重验当前权限与ScheduleRun后返回确切claim；不存在拒绝。只读回读是恢复的一个前置条件，不执行恢复、不会默认为批次已存在或任务成功。持久字段不包含自由权限回调或已批准布尔值。
+
+PG验证实际claim/Control存储、当前Control latest检查、当前ScheduleRun/图源检查、预算耗尽、同run回读不重复计数、不同actor拒绝、回滚无占用、停用/失效控制拒绝、canary隔离。最底层签名/资产/角色读取沿既有明确fake当前资产检查，不能以测试替身声称真实授权；该限制写入验证报告。随后增加独立提交调用与受控源读取/Ingress接线，不能因本模块有created字段提前启用P01。
+
+生产组合补充：在pipeline_control_service.py现有工厂输出中加入claims，复用同一controls实例，只构造Owner、不连接或执行；test_pipeline_control_service.py检查依赖身份一致。为保持旧内部三参数构造兼容，claims字段默认None，正式工厂总是填入exact Owner。实际reserve仍由后续独立提交编排调用，本波不新增HTTP读取或占用按钮。
