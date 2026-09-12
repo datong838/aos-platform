@@ -1000,3 +1000,11 @@ head a0v_016。真实 1.4 Installation 从 approved revision 3 退役为 uninsta
 八坐标签名目录保留历史五坐标的 content hash，宿主根路径 CAS 成功且重放不写。正租户安装仍为 1
 （已卸载旧实例），负租户为零。本步新安装/Provider/外部发布均为零；执行器测试 6 passed。
 证据：A0-V 目录 ecommerce-1.6-registry-apply.json / ecommerce-1.6-registry-replay.json。
+
+### 9.50 正式首装 applied 与 verify 恢复缺口
+
+2026-09-12：新 Installation 3d267738-ba0a-49ef-812b-d6b72d3374fd 经组合、maker/checker 审批、
+独立 Host apply 达到 applied@4，8 工作台/3 依赖边/28 contributions。verify 请求 accepted 后 Host
+因 LookupError 退出，三资源已释放，无绑定。真实库 extension_schema_installation 为空；verify 未完成。
+本波不能判 active green。下一波入口是 A0-V 目录 ecommerce-1.6-recovery-plan.md，补 Schema 实证与
+applied 安装受控恢复；不重写已提交历史、不盲重试原 Operation。首装回归 8 passed。
