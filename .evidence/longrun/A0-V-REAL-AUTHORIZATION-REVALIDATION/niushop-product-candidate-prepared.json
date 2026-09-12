@@ -1,0 +1,50 @@
+{
+  "outcome": "NIUSHOP_PRODUCT_SNAPSHOT_CANDIDATE_PREPARED",
+  "sourceTreeHash": "sha256:e819116f16f2c0e057fbbbbbcfba05e614ddafb2f312566c24dc07cb15244709",
+  "targetTreeHash": "sha256:e25d7e781db3b03b72cf8443167d9536b2b1e9aad01aa385e4cd96d0ad4edfec",
+  "changedFiles": [
+    "bundle.yaml",
+    "content/mappings/p02-product.yaml",
+    "evidence/bundle-evals.json"
+  ],
+  "evaluation": {
+    "status": "passed",
+    "failed": 0,
+    "scope": "static-shop-and-product-snapshot-only",
+    "shop": {
+      "status": "passed",
+      "failed": 0,
+      "scope": "static-snapshot-mapping-only",
+      "checks": [
+        "pinned-source-schema-privacy-and-materialization-compile",
+        "fourteen-declared-properties-enter-existing-object-kernel",
+        "zero-source-time-and-explicit-observation",
+        "pii-extra-column-rejected",
+        "wrong-shop-rejected",
+        "duplicate-source-key-rejected"
+      ],
+      "mappingHash": "sha256:893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc"
+    },
+    "product": {
+      "status": "passed",
+      "failed": 0,
+      "scope": "synthetic-product-snapshot-only",
+      "columnCount": 28,
+      "checks": [
+        "schema-privacy-and-v2-compile",
+        "canonical-product-properties",
+        "stable-source-time",
+        "off-shelf-preserved",
+        "explicit-tombstone",
+        "negative-money-rejected",
+        "extra-column-rejected",
+        "wrong-shop-rejected",
+        "duplicate-key-rejected",
+        "unknown-state-rejected"
+      ]
+    },
+    "mappingHash": "sha256:cba304c2703c559a5ccefe6763c56a4cc79cc57cb14eaafbcfa9589608c1730f"
+  },
+  "published": false,
+  "installed": false
+}

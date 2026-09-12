@@ -17,6 +17,7 @@ class SnapshotMappingV2:
     status_field: str
     status_target: str
     statuses: tuple[tuple[int, str], ...]
+    non_negative: tuple[str, ...]
 
     @property
     def read_spec(self): return self.base.read_spec
@@ -51,6 +52,12 @@ def compile_v2(mapping, read_spec):
         reserved={str(f['target']).casefold() for f in fields}|{str(k).casefold() for k in config['property_defaults']}
         if target.casefold() in reserved: raise ValueError('state property overwrites mapped field')
         kinds={f['source']:f['type'] for f in fields}
+        validation=value['validation']
+        if type(validation) is not dict: raise ValueError('explicit validation required')
+        non_negative=validation.pop('non_negative',[])
+        if (type(non_negative) is not list or any(type(name) is not str or kinds.get(name) not in ('int','decimal') for name in non_negative)
+                or len(set(non_negative))!=len(non_negative)):
+            raise ValueError('selected unique numeric constraints required')
         if any(kinds.get(clock[k])!='timestamp' for k in ('primary','fallback')):
             raise ValueError('selected source timestamp required')
         if kinds.get(deleted['field'])!='int' or kinds.get(status['field'])!='int':
@@ -78,7 +85,7 @@ def compile_v2(mapping, read_spec):
         value['snapshot_materialization']['schema_version']='aos.snapshot-materialization/v1'
         base=compile_snapshot_mapping(value,read_spec)
         return SnapshotMappingV2(base,tuple(conversions),(clock['primary'],clock['fallback']),
-            (deleted['field'],live,removed),status['field'],target,tuple(sorted(states)))
+            (deleted['field'],live,removed),status['field'],target,tuple(sorted(states)),tuple(non_negative))
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
         raise ValueError('SNAPSHOT_MAPPING_INVALID') from None
 
@@ -113,6 +120,8 @@ def materialize_v2(rows,mapping,*,observed_at):
         result=materialize_snapshot(converted,mapping.base,observed_at=observed_at)
         states=dict(mapping.statuses)
         for source,output in zip(rows,result):
+            if any(source[field]<0 for field in mapping.non_negative):
+                raise ValueError('nonnegative source value required')
             primary,fallback=mapping.source_time
             stamp=source[primary] if source[primary]!=0 else source[fallback]
             if type(stamp) is not int or stamp<=0: raise ValueError('source timestamp absent')

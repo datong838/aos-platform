@@ -118,3 +118,20 @@ def test_repeated_poll_does_not_emit_a_second_authoritative_product_change():
         with engine.connect() as conn:
             assert len(conn.execute(select(projection_outbox)).all())==1
     finally:engine.dispose()
+
+
+@pytest.mark.parametrize('price',[Decimal('-0.01'),Decimal('0.00')])
+def test_declared_nonnegative_money_constraint_is_preserved(price):
+    value=declaration();value['validation']['non_negative']=['price']
+    plan=compiled(value)
+    if price<0:
+        with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
+            materialize_snapshot([row()|{'price':price}],plan,observed_at=NOW)
+    else:
+        assert materialize_snapshot([row()|{'price':price}],plan,observed_at=NOW)[0]['properties']['price']=='0.00'
+
+
+@pytest.mark.parametrize('fields',[['name'],['missing'],['price','price'],'price'])
+def test_invalid_numeric_constraints_are_rejected(fields):
+    value=declaration();value['validation']['non_negative']=fields
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)
