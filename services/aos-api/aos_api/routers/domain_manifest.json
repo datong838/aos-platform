@@ -3282,6 +3282,12 @@
       "module": "aos_api.routers.bundle_runtime_installations",
       "attribute": "router",
       "order": 546
+    },
+    {
+      "domain": "data",
+      "module": "aos_api.routers.pipeline_controls",
+      "attribute": "router",
+      "order": 547
     }
   ]
 }
