@@ -107,3 +107,11 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 惰性导入基线复核更正：把本波修改模块替换为 0e26444b 原始源码的独立进程仍提前加载 installation_store/revalidation。实际链为既有 routers/pipeline_controls.py 顶层导入 pipeline_runtime_control_owner._ref_identity（提交11628a93），并非全部由新登记契约引入。本波增加最小修复：将该单一 helper 导入移至 ScheduleBindingRequest.exact_binding 内，校验执行不变，补跑既有流水线 HTTP 测试；不改流水线业务状态或数据库。前述把惰性失败全归因新请求契约的初判撤回。
 
 进一步追踪确认同一既有流水线路由还通过 _text 顶层导入另一 Owner。两个 helper 均延迟至实际使用点（exact_binding 与 _approve）后，原惰性导入测试通过。没有删改校验；既有流水线审批与调度绑定 HTTP 一起回归。
+
+### 专用登记连接与启动组装
+
+新增 aos_api/ecommerce_growth_registration_connection.py 和 tests/extension_runtime/test_ecommerce_growth_registration_connection.py；修改 main.py 的控制平面构造注入 selector 返回值，并回归 runtime_startup_composition。只读环境项 AOS_ECOMMERCE_REGISTRATION_CREDENTIAL_FILE，内容采用固定 schemaVersion/role/dsn，绝对路径、当前UID、普通文件0600、拒绝符号链接、限制64KiB；无环境DSN/Web/runtime身份回退。不记录或返回原始文件、DSN、连接异常。
+
+连接建立后先在独立短事务核验：session_user/current_user 等于文件声明的独立登录名，登录非super/bypass/createrole/createdb/replication、NOINHERIT；可达角色仅 aos_runtime 与 aos_extension_maintainer，禁止多余继承链、缺角色或admin_option。两组角色须非登录、非super/bypass/createrole/createdb/replication。检查结束恢复IDLE后才交给已有Owner；每次连接重新验证，无权限授予/迁移。默认selector返回None，显式配置才提供固定连接函数，启动只组装不执行登记。
+
+测试安全文件坏权限/相对路径/符号链接/错误结构/未知字段无连接，异常不回显；隔离PG真实非特权双角色连接通过，超管、单角色、额外角色/管理权限拒绝，交付IDLE；已有启动/HTTP/Owner回归。正式主库身份创建和026/027迁移需随后依据权限审查与完整验收部署，本切片不改主库身份。

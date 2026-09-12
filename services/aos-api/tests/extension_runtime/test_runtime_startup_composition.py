@@ -480,3 +480,18 @@ def test_cancelled_shutdown_caller_waits_for_host_cleanup_then_propagates(
         assert main.app.state.runtime_shutdown_task is None
 
     asyncio.run(probe())
+
+
+@pytest.mark.parametrize('configured',[False,True])
+def test_startup_selects_explicit_registration_connector_without_opening_it(monkeypatch,configured):
+    _quiet_startup(monkeypatch)
+    import aos_api.ecommerce_growth_registration_connection as connection_module
+    def connect():pytest.fail('startup must not open registration connection')
+    monkeypatch.setattr(connection_module,'configured_registration_connection',lambda:connect if configured else None)
+    async def probe():
+        async with main.lifespan(main.app):
+            service=main.app.state.extension_runtime_control_plane.first_dispatch_registration_service
+            if configured:assert service._connect is connect
+            else:assert service is None
+        assert main.app.state.extension_runtime_control_plane is None
+    asyncio.run(probe())

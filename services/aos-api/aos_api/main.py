@@ -173,8 +173,10 @@ async def _lifespan_body(_app: FastAPI):
     from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
     _app.state.extension_runtime_control_plane = None
+    from aos_api.ecommerce_growth_registration_connection import configured_registration_connection
     _app.state.extension_runtime_control_plane = build_runtime_control_plane(
-        disable_dependent=EcommerceGrowthDisableDependent()
+        disable_dependent=EcommerceGrowthDisableDependent(),
+        registration_connect=configured_registration_connection(),
     )
     # ``None`` preserves compatibility with the pre-W1 implementation. Once W1
     # is merged, only its explicit LEGACY_BOOTSTRAP mode may execute runtime DDL.
