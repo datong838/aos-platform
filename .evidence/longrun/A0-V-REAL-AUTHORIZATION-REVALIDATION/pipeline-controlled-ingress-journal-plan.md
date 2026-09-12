@@ -1,0 +1,11 @@
+# 当前控制下的原始批次日志适配
+
+2026-09-12，基线cb346e4b。新增services/aos-api/aos_api/pipeline_controlled_ingress_journal.py及tests/extension_runtime/test_pipeline_controlled_ingress_journal_pg.py，复用既有Ingress、Derived、Dataset和Recovery Claim存储，不新增表或游标。
+
+ControlledIngressJournal只接受exact PipelineSourceClaimOwner、固定TenantScope/runId/controlRef/actor，存储schema从Owner内部既有Journal取得；不接受客户端权限回调或跳过校验开关。构造无DB访问，实例不是批准令牌。
+
+lock_run先通过CurrentControlOwner重验安装/当前配置/图源/签名资产，再取得原run锁，避免先run后安装的锁顺序反转。此阶段不要求run为running，供既有失败认领流程先锁定及读取；它本身不能允许写入。verify_running_schedule再由SourceClaimOwner.read_current核验exact claim、actor、真实running ScheduleRun及当前图源，同时校验调用方的原批次绑定。这允许既有claim_failed_run在同事务内将符合stopped_failed条件的run改running后完成验证；不符合控制或claim时整个事务回滚。
+
+保存原始envelope和save_derived必须调用当前验证；read保留历史结构读取能力，不产生执行许可。相同原始批次重放不会重读源、不会改hash；当前拒绝、控制被替代、错run/租户/ref/actor时拒绝所有写入。禁止直接调用旧Journal绕过上波防线。
+
+验证：实际PG保存空观察、同批次回读、派生准备，以及旧恢复函数使用适配器从stopped_failed恢复到原run/原parent；当前拒绝时保持无新增envelope/derived，跨run/租户拒绝，重复认领不重复推进。底层真实角色/资产权威仍为原明确fake测试夹具，只验证组合与存储，不声称真实批准。主库仍023、无真实源读取。本适配器不实现独立占用提交或源调用；下一步接一次读取准备，不能先启用旧live路径。
