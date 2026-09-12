@@ -1,0 +1,7 @@
+# 原批次投影只读证据切片
+
+2026-09-12，基线967e0755，主A0-V Lease。EcomConsistencyStore新增不可变ProjectionEventEvidence及read_batch_projection_evidence；沿原完整base/derived/ignored/no-change对账返回确切key/hash/input_revision/projected，拒绝重复事件身份。原read_batch_projection_completion仅以该同一集合计数，旧行为与错误门保留。无写入、无投影执行入口新增。
+
+RED1失败/42通过（缺新API），实现后一致性store与Ingress恢复55通过。新用例验证事件有序不可变、无关事件不纳入、无变化派生回执指向原有效事件、与真实测试outbox元数据完全一致。这里store测试使用真实SQLite事务，不当作PG角色或当前批准证据。closure ar2-7扫描1802/分类158/迁移93，五数组为空。
+
+本波继续：受控投影必须从完整已保存Ingress/derived列表取证，不能把返回的事件清单当作权限token。下一步同租户advisory顺序锁、exact事件锁/摘要复核、当前control校验，遇到范围外更早pending则ORDER_BLOCKED，不越过或顺带执行其他任务。随后实际PG边界与回滚测试。main API仍旧、schema023、无实际SourceSelection/Control/源读取，真实八工作台未完成。

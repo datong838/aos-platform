@@ -918,3 +918,25 @@ def test_derived_write_checks_expected_base_inside_write_transaction(store):
     wrong=newer.model_copy(update={'identity':ident('other')})
     with pytest.raises(EcomConsistencyError,match='base identity'):
         store.update_derived_metrics(command,expected_base=wrong)
+
+
+def test_exact_projection_evidence_contains_only_effective_original_events(store):
+    from dataclasses import FrozenInstanceError
+    payment={'orderId':'o-1','outTradeNo':'t-1','payStatus':'1','updatedAt':NOW}
+    base=batch(obj('Payment','payment-1',properties=payment),batch_scope=scope(stream='P12-payment'))
+    store.apply_batch(base)
+    derived=_derived_command().model_copy(update={'input_revision':store.read_committed_batch_revision(base)})
+    store.update_derived_metrics(derived)
+    original=store.read_batch_projection_evidence(base,[derived])
+    assert len(original)==2 and all(not item.projected for item in original)
+    assert [item.input_revision for item in original]==sorted(item.input_revision for item in original)
+    with pytest.raises(FrozenInstanceError):original[0].event_key='different'
+    store.apply_batch(batch(obj('Shop','unrelated'),batch_scope=scope(stream='other'),key='other'))
+    assert store.read_batch_projection_evidence(base,[derived])==original
+    unchanged=derived.model_copy(update={'idempotency_key':'unchanged-proof','expected_derived_revision':1})
+    assert not store.update_derived_metrics(unchanged).updated
+    assert store.read_batch_projection_evidence(base,[unchanged])==original
+    with store._engine.begin() as conn:
+        rows=conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.payload_hash,projection_outbox.c.input_revision)
+            .where(projection_outbox.c.event_key.in_([item.event_key for item in original]))).mappings().all()
+    assert {(item.event_key,item.payload_hash,item.input_revision) for item in original}=={(row['event_key'],row['payload_hash'],row['input_revision']) for row in rows}

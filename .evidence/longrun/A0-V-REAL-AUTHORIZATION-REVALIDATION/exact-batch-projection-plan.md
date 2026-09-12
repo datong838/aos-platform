@@ -1,0 +1,9 @@
+# 原批次投影范围与顺序
+
+2026-09-12，967e0755。现有read_batch_projection_completion已经核验原base及派生Receipt、当前对象、ignored/no-change对应历史有效事件，但只返回计数；现有project_until_caught_up会推进整个租户，不能直接用于本次受控任务。
+
+先完成只读证据切片：services/aos-api/aos_api/ecom_consistency_store.py新增不可变ProjectionEventEvidence及read_batch_projection_evidence，复用原完整对账，返回event_key/payload_hash/input_revision/projected，按revision/key排序。旧completion调用同一证据集合返回原计数，不减少任何当前性、派生范围、原Receipt与ignored/no-change证明检查。tests/test_ecom_consistency_store.py验证只包含原始+派生/有效前序事件，遗漏/漂移拒绝、 unrelated outbox不进入证据。证据不是执行许可；调用方仍须当前control与完整saved derived list，不接受请求传任意key集合。
+
+后续受控投影切片拟新增pipeline_controlled_projection.py，在固定ControlledIngressJournal的当前锁与原Ingress/derived记录下取得全量证据；使用与既有projector相同租户advisory lock和写入函数，事务内重验每个exact事件及payload。按既有全租户顺序，如果存在更早且不属于本批的未投影事件则明确ORDER_BLOCKED，不越过它或顺带执行它；先保守守住顺序，后续由独立合法投影队列处理前序。处理本批而不改变无关较晚事件。不得发起源调用或扩展批准范围。
+
+不涉及主库DDL、不启动P01；先证据API测试再受控投影真实PG测试，随后接完整执行器。旧全租户projector供原授权后台路径使用，默认行为不变。所有代码仍在主A0-V Lease内。

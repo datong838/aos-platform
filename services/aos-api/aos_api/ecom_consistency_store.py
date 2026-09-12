@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from threading import RLock
 from typing import Any, Mapping
 
@@ -274,6 +275,15 @@ def _link_clause(link: CoreLinkRecord):
     )
 
 
+@dataclass(frozen=True)
+class ProjectionEventEvidence:
+    """Read-only exact event identity; never permission to execute a projection."""
+    event_key: str
+    payload_hash: str
+    input_revision: int
+    projected: bool
+
+
 class EcomConsistencyStore:
     """Apply one normalized page atomically and advance its checkpoint by CAS."""
 
@@ -465,7 +475,7 @@ class EcomConsistencyStore:
             if is_object:
                 payload.update(objectType=entity.object_type,identity=entity.identity.model_dump(mode='json'))
             digest = hashlib.sha256(json.dumps(_jsonable(payload),ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-            matches = conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.input_revision,projection_outbox.c.projected).where(
+            matches = conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.payload_hash,projection_outbox.c.input_revision,projection_outbox.c.projected).where(
                 *scope_filter,projection_outbox.c.change_kind == outcome,projection_outbox.c.payload_hash == digest,
             )).mappings().all()
             if len(matches) != 1 or int(matches[0]['input_revision']) <= 0:
@@ -535,7 +545,16 @@ class EcomConsistencyStore:
             return None if row is None else DerivedMetricResult.model_validate(row['result_json'])
 
     def read_batch_projection_completion(self, command: BatchCommand, derived_commands) -> dict[str,int]:
-        """Verify supplied exact commands; caller must pass the full saved derived list."""
+        evidence=self.read_batch_projection_evidence(command,derived_commands)
+        projected=sum(item.projected for item in evidence)
+        return {'expected':len(evidence),'projected':projected,'pending':len(evidence)-projected}
+
+    def read_batch_projection_evidence(self, command: BatchCommand, derived_commands) -> tuple[ProjectionEventEvidence,...]:
+        """Reconcile exact events; caller must pass the full saved derived list.
+
+        These immutable identities are evidence, not an execution grant. A writer
+        must still hold current authorization and revalidate the event rows.
+        """
         command = BatchCommand.model_validate(command.model_dump(mode='python'))
         derived = [DerivedMetricCommand.model_validate(item.model_dump(mode='python')) for item in derived_commands]
         revision = self.read_committed_batch_revision(command)
@@ -577,22 +596,24 @@ class EcomConsistencyStore:
                     if not hashes:
                         raise EcomConsistencyError('DERIVED_PREDECESSOR_REQUIRED','effective derived write receipt required')
                     groups.append((hashes,1))
-            total = len(base_events)
-            projected = sum(row['projected'] is True for row in base_events)
+            all_events=list(base_events)
             for authority,count in groups:
-                events = conn.execute(select(projection_outbox.c.projected).where(
+                events = conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.payload_hash,
+                    projection_outbox.c.input_revision,projection_outbox.c.projected).where(
                     projection_outbox.c.org_id == command.scope.org_id,
                     projection_outbox.c.workspace_id == command.scope.workspace_id,
                     projection_outbox.c.platform == command.scope.platform,
                     projection_outbox.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
                     projection_outbox.c.event_source == 'authoritative_store',
                     projection_outbox.c.authority_tx_id.in_(authority),
-                )).scalars().all()
+                )).mappings().all()
                 if len(events) != count:
                     raise EcomConsistencyError('OUTBOX_INCOMPLETE','original command outbox evidence is incomplete')
-                total += count
-                projected += sum(value is True for value in events)
-            return {'expected':total,'projected':projected,'pending':total-projected}
+                all_events.extend(events)
+            if len({row['event_key'] for row in all_events})!=len(all_events):
+                raise EcomConsistencyError('OUTBOX_INCOMPLETE','original event identities are ambiguous')
+            return tuple(ProjectionEventEvidence(row['event_key'],row['payload_hash'],int(row['input_revision']),row['projected'] is True)
+                         for row in sorted(all_events,key=lambda row:(int(row['input_revision']),row['event_key'])))
 
     def update_derived_metrics(
         self, command: DerivedMetricCommand, *, expected_base: CoreObjectRecord | None = None
