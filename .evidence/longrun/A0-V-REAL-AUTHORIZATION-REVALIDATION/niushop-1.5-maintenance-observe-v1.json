@@ -1,0 +1,70 @@
+{
+  "outcome": "REPLACEMENT_OBSERVED",
+  "observedAt": "2026-09-12T19:58:20.226057+00:00",
+  "installations": {
+    "afd792de-e85e-4680-86d0-c83404824fb3": {
+      "record": {
+        "installation_id": "afd792de-e85e-4680-86d0-c83404824fb3",
+        "etag_version": 7,
+        "state": "active"
+      },
+      "bindings": [
+        {
+          "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+          "revision": 4,
+          "enabled": true,
+          "operation_fence": false,
+          "execution_epoch": 3,
+          "desired_state": "enabled",
+          "observed_state": "ready"
+        }
+      ],
+      "operations": [
+        {
+          "operation_id": "bd0f9202-c83e-4362-9f68-54dc6de32ca8",
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 18
+        },
+        {
+          "operation_id": "12eff3e4-5d44-4f9e-a91b-7dc79cb2a4ac",
+          "kind": "runtime-apply",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 339
+        },
+        {
+          "operation_id": "2686692c-3f1e-4240-a721-18cdfe59128f",
+          "kind": "runtime-verify",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 5
+        },
+        {
+          "operation_id": "0a1b3203-e2dd-4e04-9255-253ef3065892",
+          "kind": "configure",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 6
+        },
+        {
+          "operation_id": "97f315dd-a6b4-4c3c-b25a-90c8b65867f8",
+          "kind": "enable",
+          "status": "succeeded",
+          "phase": "succeeded",
+          "revision": 5
+        }
+      ]
+    },
+    "eda57424-b8cb-401e-a6f7-94220cb4f9ef": {
+      "record": {
+        "installation_id": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+        "etag_version": 3,
+        "state": "approved"
+      },
+      "bindings": [],
+      "operations": []
+    }
+  }
+}

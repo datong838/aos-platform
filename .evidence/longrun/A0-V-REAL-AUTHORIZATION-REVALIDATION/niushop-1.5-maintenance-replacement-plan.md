@@ -14,3 +14,6 @@
 
 
 03:47准备验证：invalid predecessor首轮3 failed，扩展后原first-install及新反例11 passed；原API launcher2 passed。实际只读replacement preflight确认旧1.4@7/binding@4 enabled/ready，关联计划enabled0、unstopped0。新API profile check通过，仍明确localDiagnostic=true/productionWebIdentityComplete=false、Host/Cron/自动LLM关闭、sourceCalls0/runs0；未启动第二API或Host。SQL仅统计当前最新绑定归属旧实例的计划，不能被无关租户历史run误阻断。下面固定提交后创建approved新实例，不请求prepare或修改旧实例。
+
+
+03:50后续命令入口：新实例已实际确定为eda57424-b8cb-401e-a6f7-94220cb4f9ef@3，lock26e8189c…；脚本增加固定操作目标校验。disable-parent只认旧ID/指定generation且当前enabled/unfenced，prepare/verify只认新ID及approved/applied；unknown action、错误ID/代次、多个binding一律在创建command文件和Owner调用前拒绝。每次操作先exclusive创建仓外action-command.json，已有文件拒绝再发，转observe；所有动作回执单独新路径，不覆盖。observe只读取两实例状态/操作/绑定/资源结果。原preflight/create保留，初始凭据不读出。接口使用既有RuntimeDisableService/RuntimeLifecycleService和现有runtime-owner，无直接UPDATE安装或binding。
