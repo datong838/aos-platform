@@ -1,0 +1,30 @@
+{
+  "receipt_id": "974a3d4d-a60c-4f8c-8847-7c18821740cf",
+  "installation_id": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+  "installation_revision": 5,
+  "binding_revision": 8,
+  "retirement_kind": "enabled_undispatched",
+  "authority_data": {
+    "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "orgId": "org-org",
+    "configRef": {
+      "hash": "sha256:003889108cdab115a50f0519ccc852a874ea67d3c41547f7349f49d9530c7f2c",
+      "revision": 1,
+      "configurationId": "2360b80e-45cb-48fb-83db-c779dea3c63e"
+    },
+    "projectId": "dev-project",
+    "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+    "dispatchCount": 0,
+    "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+    "retirementKind": "enabled_undispatched",
+    "bindingRevision": 8,
+    "enableOperationId": "20cb00ef-2201-46e9-b1b5-18748fd72e60",
+    "disableOperationId": "76e09779-9bd2-4947-b29b-ff8224c52a35",
+    "installationRevision": 5,
+    "releasedResourceCount": 3,
+    "successfulEnableCount": 1,
+    "businessExecutionCount": 0
+  },
+  "content_hash": "sha256:fa099db02af55fb4ec0f8057983caf90f564736cb3d63cd500e27499a8273a34"
+}

@@ -1,0 +1,9 @@
+# 新版本前序退役实证
+
+2026-09-12，实现b5018291；固定目标旧路径保持，6 RED后相关12通过。13:33Z只读预检调度切换/绑定/occurrence/执行attempt四类记录均零。
+
+13:34:03.737882Z正常InstallationService.uninstall使a0fd8e25-cb6f-49e5-aa77-7faddae12099由active@5到uninstalled@6，activeRevision=null，原审批/历史配置/安装事件保留。首次replayed=false，同键同命令第二次replayed=true，没有第二次卸载。
+
+13:35Z单独只读回查原PG权威Receipt：974a3d4d-a60c-4f8c-8847-7c18821740cf；retirementKind=enabled_undispatched，旧generation49427eeb-e9f8-42d5-8588-108e90110beb，installationRevision5/bindingRevision8，原configRef精确绑定，enableOperation20cb00ef-2201-46e9-b1b5-18748fd72e60与disableOperation76e09779-9bd2-4947-b29b-ff8224c52a35精确绑定；releasedResourceCount3、successfulEnableCount1、dispatchCount0、businessExecutionCount0。正文摘要sha256:fa099db02af55fb4ec0f8057983caf90f564736cb3d63cd500e27499a8273a34。详见同名前缀authority/result JSON。
+
+本次没有删除商城、数据源或历史业务数据，没有启用P01、调用Provider、外部发布或push。只是完成旧安装正常退役，新安装尚未创建。下一波为已发布Niushop1.4的物理schema证明、新安装独立命名空间和正常组合审批/apply/verify/configure/enable。Host重启新根后持续观察，不能再次把控制进程存活当业务实例恢复。230L0挂起，真实首链及八场景仍未完成。
