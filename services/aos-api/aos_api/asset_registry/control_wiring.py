@@ -42,6 +42,7 @@ class RuntimeControlPlane:
     view_reader: Any = None
     disable_dependent: Any = None
     live_job_directory: Any = None
+    pipeline_control_factory: Any = None
 
 
 class _LazyRuntimeViewReader:
@@ -307,6 +308,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None) -> RuntimeCont
     )
     from aos_api.extension_runtime.runtime_uninstall import RuntimeUninstallGuard
     from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+    from aos_api.pipeline_control_service import PipelineControlServiceFactory
 
     store = PostgresInstallationStore()
     policy = ReleasePolicy(trust_roots=_configured_trust_roots())
@@ -355,6 +357,11 @@ def build_runtime_control_plane(*, disable_dependent: Any = None) -> RuntimeCont
         configuration_authorize=authorize,
         disable_dependent=disable_dependent,
         live_job_directory=LivePreparedJobDirectory(),
+        pipeline_control_factory=PipelineControlServiceFactory(
+            installation_store=store,
+            policy=policy,
+            allowlist_roots=_allowlist_roots(repository_root=_REPOSITORY_ROOT),
+        ),
     )
 
 

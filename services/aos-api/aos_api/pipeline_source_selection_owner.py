@@ -218,7 +218,7 @@ class PipelineSourceSelectionOwner:
             self._release_policy.evaluate(record,checked_at=_now(conn),
                 expected_signature_fingerprint=selected.signature_fingerprint,
                 expected_evidence_revision=selected.release_evidence_revision)
-            exports = record.manifest.exports
+            exports = record.manifest.spec.exports
             documents = []
             for ref, paths in ((draft.mapping_ref,exports.mappings),(draft.schema_ref,exports.schemas),
                                (draft.masking_policy_ref,exports.policies+exports.mappings)):

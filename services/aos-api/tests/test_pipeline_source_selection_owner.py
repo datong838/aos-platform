@@ -86,8 +86,12 @@ def composed_case(monkeypatch):
     owner = object.__new__(PipelineSourceSelectionOwner)
     owner._store = NS(load_active_baseline_in_transaction=lambda *a,**kw:baseline)
     owner._authorization = object()
+    from pathlib import Path
+    import yaml
+    from aos_api.asset_registry.contracts import BundleManifest
+    manifest = BundleManifest.model_validate(yaml.safe_load((Path(__file__).resolve().parents[3] / 'bundles/platforms/ecommerce-niushop/bundle.yaml').read_text()))
     owner._artifacts = NS(scope=TenantScope(draft.org_id,draft.project_id),
-        load_record=lambda item:NS(manifest=NS(exports=NS(mappings=['content/mappings/'],schemas=['content/schemas/'],policies=[]))),
+        load_record=lambda item:NS(manifest=manifest),
         read_artifact=lambda item,path,limit:raw[path])
     owner._release_policy = NS(evaluate=lambda *a,**kw:state['calls'].append('release'))
     def current_config(*a,**kw):
