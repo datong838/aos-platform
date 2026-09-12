@@ -1,0 +1,12 @@
+{
+  "database": "aos_text_renewal_20260912",
+  "governanceTaskId": "task-6c46565b65a94792810a",
+  "governanceRunId": "run-51ccf736b3ed49d09b5f",
+  "bundleId": "evidence-bundle-4445c6dac04b4d8da8bf",
+  "revision": 1,
+  "contentHash": "69127f4164ab5870a47262850629383eba74f0e610c395e829ee510e4a075e39",
+  "coverage": "complete",
+  "freshness": "fresh",
+  "providerCalls": 0,
+  "businessRuns": 0
+}

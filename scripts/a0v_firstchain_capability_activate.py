@@ -38,8 +38,8 @@ def copy_health_to_clone():
         'observedAt':result.observed_at,'expiresAt':result.expires_at,'newProviderCalls':0}
 
 
-def run(database):
-    connect,readiness,items=prepare(database)
+def run(database, logic_ids=('D01','D02','D03')):
+    connect,readiness,items=prepare(database,logic_ids)
     if any(result.readiness.value!='available' or result.reasons for _,_,_,result in items):
         raise ValueError('FIRSTCHAIN_DEPENDENCIES_BLOCKED')
     service=AipCapabilityBindingService(connect,readiness_service=readiness)

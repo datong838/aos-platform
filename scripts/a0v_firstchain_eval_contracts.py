@@ -35,12 +35,14 @@ def require_lineage(skill, gate, event, now):
         raise ValueError('FIRSTCHAIN_EVAL_PUBLICATION_LINEAGE_INVALID')
 
 
-def run(database, apply=False):
+def run(database, apply=False, logic_ids=('D01','D02','D03')):
+    if tuple(logic_ids) not in {('D01','D02','D03'),('S01','P01','C06','A02','G06')}:
+        raise ValueError('EXACT_CONTRACT_SKILL_SET_REQUIRED')
     connect = database_connect(database)
     store = AipProductionContractStore(connect)
     skills = AipSkillRegistry(connect)
     results = []
-    for logic_id in ('D01', 'D02', 'D03'):
+    for logic_id in logic_ids:
         require_target(connect, database)
         skill = skills.get_skill('ecommerce.skill.'+logic_id, 2)
         with connect(SCOPE) as conn:
@@ -54,6 +56,8 @@ def run(database, apply=False):
             require_lineage(skill, gate, event, datetime.now(UTC))
             AipReleasePublicationService._verify_gate_evidence(conn, SCOPE, gate)
             event_hash = canonical_hash(store._publication_snapshot(event))
+            from aos_api.aip_eval_runner import AipEvalRunner
+            report = AipEvalRunner(connect).get_report(SCOPE, gate.eval_report.artifact_id, int(gate.eval_report.revision))
         body = CreateEvalContractRequest(
             suite_ref=ExactRevisionRef(resource_type='EvalSuiteRevision', resource_id=gate.suite_ref.asset_id,
                 revision=int(gate.suite_ref.revision), content_hash=gate.suite_ref.content_hash),
@@ -64,7 +68,7 @@ def run(database, apply=False):
             artifact_schema_ref=ResourceRef(resource_type='Schema', resource_id='SkillPublicationContract.'+logic_id,
                 revision='1', authority='aip-contract'),
             severity_thresholds={'critical': 1.0, 'required': 1.0},
-            gate_policy={'requiredPassRate': 1.0, 'requiredCases': 6, 'evidenceKind': 'isolated_skill_contract'},
+            gate_policy={'requiredPassRate': 1.0, 'requiredCases': report.total, 'evidenceKind': 'isolated_skill_contract'},
             return_mapping={'pass': 'publish', 'fail': 'block'}, override_policy={'allowed': False})
         if not apply:
             results.append({'skillId': skill.skill_id, 'status': 'ready_to_freeze'})

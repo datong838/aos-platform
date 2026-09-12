@@ -49,12 +49,12 @@ def require_contract(row, skill):
         raise ValueError('FIRSTCHAIN_EVAL_CONTRACT_LINEAGE_INVALID')
 
 
-def prepare(database):
+def prepare(database, logic_ids=('D01','D02','D03')):
     connect = database_connect(database)
     require_target(connect, database)
     registry = AipSkillRegistry(connect)
-    skills = [registry.get_skill('ecommerce.skill.'+logic, 2) for logic in ('D01','D02','D03')]
-    require_internal_skills(skills)
+    skills = [registry.get_skill('ecommerce.skill.'+logic, 2) for logic in logic_ids]
+    require_internal_skills(skills,logic_ids)
     models = AipModelRuntimeStore(connect)
     route = models.get_route(SCOPE, 'a0v-ecommerce-text-readonly-v1')
     if len(route.candidates) != 1:
@@ -71,7 +71,10 @@ def prepare(database):
     with connect(SCOPE) as conn:
         bundles = conn.execute("SELECT * FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND lifecycle='frozen' AND license_summary->>'authorizationRef'=%s", (*SCOPE.key,AUTHORITY)).fetchall()
         valid_bundles = []
+        expected_subjects={(skill.skill_id,str(skill.revision)) for skill in skills}
         for row in bundles:
+            if {(ref.get('resourceId'),ref.get('revision')) for ref in row['subject_refs']} != expected_subjects:
+                continue
             require_license(row, skills)
             valid_bundles.append(row)
         if len(valid_bundles) != 1:

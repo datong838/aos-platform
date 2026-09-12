@@ -50,3 +50,17 @@ def test_d03_uses_its_own_graph_and_input_contract():
 def test_unknown_skill_does_not_reuse_a_data_advisor_recipe():
     with pytest.raises(ValueError, match='FIRSTCHAIN_SKILL_UNSUPPORTED'):
         preparation.contract_components('D99')
+
+@pytest.mark.parametrize('logic_id',['S01','P01','C06','A02','G06'])
+def test_investigation_role_uses_own_complete_contract(logic_id):
+    from datetime import UTC,datetime
+    from aos_api.aip_logic_graph_models import LogicGraphSnapshot,compute_logic_graph_hash
+    build,evaluate,registry=preparation.contract_components(logic_id)
+    request=build('exact-test-model')
+    assert request.id=='ecommerce.logic.'+logic_id
+    graph=LogicGraphSnapshot(**request.model_dump(exclude={'id'}),id=request.id,revision=1,
+        graph_hash=compute_logic_graph_hash(request),created_at=datetime.now(UTC),updated_at=datetime.now(UTC))
+    result=evaluate(graph,registry('exact-test-model'),datetime.now(UTC))
+    assert result.report.gate_passed
+    assert result.report.total>=6
+    assert all(case.id.startswith(logic_id.lower()+'-') for case in result.suite.cases)

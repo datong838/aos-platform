@@ -1,0 +1,63 @@
+{
+  "database": "aos_meta_head",
+  "skills": [
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.S01",
+        "revision": 2,
+        "content_hash": "734327efa5f987567e039fc6bc824015d600c07447873dd8034ea042aedfb623"
+      },
+      "logicPublicationId": "logic-pub-4f134034f82d4b20a5570e2f09cf8f8f",
+      "contractCasesPassed": 7
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.P01",
+        "revision": 2,
+        "content_hash": "eed2ddf9ab2f82bf4d5333b96c776460246039d1cd3a8cabc4418e2fdbafdbb2"
+      },
+      "logicPublicationId": "logic-pub-c058ad38f779434abc9fb816d161a942",
+      "contractCasesPassed": 9
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.C06",
+        "revision": 2,
+        "content_hash": "591a8eba9505a10850054aedf76401826131785b7271b23fa426d1461627f89f"
+      },
+      "logicPublicationId": "logic-pub-d1aa13c9c45d47e18331fc4545804b86",
+      "contractCasesPassed": 8
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.A02",
+        "revision": 2,
+        "content_hash": "ea272dfde3caa8c2d8f0750dde5a5af6e8b48d8e8f9c977662047049624f2bcd"
+      },
+      "logicPublicationId": "logic-pub-a4f08c85b1b4490eb180ccf24d97cc63",
+      "contractCasesPassed": 6
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.G06",
+        "revision": 2,
+        "content_hash": "765aac198c819419bfbbeca90eb701adfdb293231f9f8e6c0d49dcebcd31438c"
+      },
+      "logicPublicationId": "logic-pub-4c737c02220348378cdfc0a3d63b4b9f",
+      "contractCasesPassed": 11
+    }
+  ],
+  "providerCalls": 0,
+  "businessPlansGenerated": 0,
+  "readiness": "CONTRACT_PREPARATION_ONLY",
+  "bindingsActivated": 0,
+  "replayTablesCompared": 227,
+  "changedTables": [],
+  "canaryTablesCompared": 223,
+  "canaryChangedTables": []
+}

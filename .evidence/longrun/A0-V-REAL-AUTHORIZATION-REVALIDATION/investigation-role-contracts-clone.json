@@ -1,0 +1,59 @@
+{
+  "database": "aos_text_renewal_20260912",
+  "skills": [
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.S01",
+        "revision": 2,
+        "content_hash": "b1b1c7e78c1bb16233dd0db29a0d9060de2cfec2c8ee0b7310f38d373972d725"
+      },
+      "logicPublicationId": "logic-pub-f6cd4bc70d5e4e55a593fef533d8df8d",
+      "contractCasesPassed": 7
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.P01",
+        "revision": 2,
+        "content_hash": "4e9f97273a8d94b2a15d1bcf67af40fed9e95164a2745af861884f716878e2d0"
+      },
+      "logicPublicationId": "logic-pub-18dc4385f0a840ecb1168e0841553a07",
+      "contractCasesPassed": 9
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.C06",
+        "revision": 2,
+        "content_hash": "65f004b6e0273d4eb80bc24dbe4467d496ad55433fb55f7571577d6f7a8fb886"
+      },
+      "logicPublicationId": "logic-pub-3d020e107615433c893b59d9dbecdfe2",
+      "contractCasesPassed": 8
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.A02",
+        "revision": 2,
+        "content_hash": "1dfeac3fb481febd8c59e861bcdb4133c1a00f9b4f04841aa05e70e1d7f97415"
+      },
+      "logicPublicationId": "logic-pub-98b0d4df73f6432ebd30b565ea76642a",
+      "contractCasesPassed": 6
+    },
+    {
+      "skill": {
+        "asset_type": "SkillTemplateRevision",
+        "asset_id": "ecommerce.skill.G06",
+        "revision": 2,
+        "content_hash": "3f5bdf1f5159ae80a9cc95c592cfe1f993a767bf981455d50d9bd21aa98ad209"
+      },
+      "logicPublicationId": "logic-pub-8bfbb9bc1aeb46c1af97adb7ccf4a807",
+      "contractCasesPassed": 11
+    }
+  ],
+  "providerCalls": 0,
+  "businessPlansGenerated": 0,
+  "readiness": "CONTRACT_PREPARATION_ONLY",
+  "bindingsActivated": 0
+}

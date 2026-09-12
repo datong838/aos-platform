@@ -1,0 +1,352 @@
+{
+  "outcome": "CONTINUITY_CROSS_INITIAL_DEADLINE_GREEN",
+  "installationId": "e42e042b-1fe7-4cfa-bb83-469ff256081d",
+  "observedAt": "2026-09-12 03:05:30.491150+00:00",
+  "originalDeadline": "2026-09-12 02:32:36.959791+00:00",
+  "elapsedSeconds": 2273.5584,
+  "renewalCount": 37,
+  "renewals": [
+    {
+      "occurred_at": "2026-09-12 02:28:49.394761+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:31:49.439709+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:28:49.408469+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:29:49.702347+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:32:49.754813+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:29:49.718025+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:30:52.063314+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:33:52.114071+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:30:52.078800+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:31:52.299905+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:34:52.352036+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:31:52.315091+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:32:53.224882+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:35:53.290777+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:32:53.239985+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:33:54.126145+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:36:54.184877+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:33:54.141297+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:34:55.089237+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:37:55.166154+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:34:55.104208+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:35:55.604849+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:38:55.668088+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:35:55.619779+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:36:56.155781+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:39:56.208748+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:36:56.170701+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:37:56.828020+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:40:56.896961+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:37:56.843368+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:38:58.640046+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:41:58.714473+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:38:58.655519+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:40:00.053310+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:43:00.149229+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:40:00.068673+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:41:00.689966+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:44:00.744534+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:41:00.705257+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:42:01.161243+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:45:01.214788+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:42:01.176911+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:43:01.823388+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:46:01.885584+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:43:01.838623+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:44:02.293949+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:47:02.350639+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:44:02.308997+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:45:02.776730+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:48:02.832574+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:45:02.792333+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:46:03.124592+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:49:03.181503+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:46:03.139973+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:47:03.402746+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:50:03.459617+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:47:03.418216+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:48:03.735740+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:51:03.795508+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:48:03.750814+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:49:03.954988+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:52:04.007107+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:49:03.970282+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:50:04.538596+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:53:04.607353+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:50:04.553093+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:51:04.988053+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:54:05.048328+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:51:05.003061+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:52:05.289217+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:55:05.349672+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:52:05.304079+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:53:05.579177+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:56:05.632744+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:53:05.594506+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:54:05.892153+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:57:05.943676+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:54:05.907711+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:55:06.221381+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:58:06.276241+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:55:06.236690+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:56:06.444610+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T02:59:06.500419+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:56:06.459705+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:57:06.978307+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:00:07.071282+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:57:06.993617+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:58:07.374624+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:01:07.433222+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:58:07.390064+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 02:59:07.713112+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:02:07.764669+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T02:59:07.728728+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:00:08.165398+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:03:08.222156+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:00:08.180749+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:01:08.598899+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:04:08.666244+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:01:08.612489+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:02:09.721516+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:05:09.784206+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:02:09.736489+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:03:10.436307+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:06:10.604663+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:03:10.438333+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:04:11.887376+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:07:11.957912+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:04:11.900539+00:00"
+      }
+    },
+    {
+      "occurred_at": "2026-09-12 03:05:12.651018+00:00",
+      "payload": {
+        "expiresAt": "2026-09-12T03:08:12.712770+00:00",
+        "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+        "healthCheckedAt": "2026-09-12T03:05:12.665914+00:00"
+      }
+    }
+  ],
+  "resources": [
+    {
+      "resource_id": "0640b365-04fe-483c-892d-fdafa57e2fba",
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "container_id": "b5c9e29113f87a54ebe0d4b7dcc681ebe970f7955bd5af4a21e9cb40c4435f15",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 03:08:12.712770+00:00"
+    },
+    {
+      "resource_id": "a7c8e17b-cbb2-45f3-970f-f59b514d3c01",
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "container_id": "63cc31fbf5b4129d99617a06e1031f79a56cad43b01a65654b39fbe4f80065fc",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 03:08:12.712770+00:00"
+    },
+    {
+      "resource_id": "aebefa02-b186-4289-aeff-dd0917c43b5b",
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "container_id": "1607e0678d023ca102dfb9767ccabab2873486afe1fd207d6a5f4cc79422dea7",
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "expires_at": "2026-09-12 03:08:12.712770+00:00"
+    }
+  ],
+  "containersRunning": [
+    true,
+    true,
+    true
+  ],
+  "containerObservations": [
+    "running",
+    "running",
+    "running"
+  ],
+  "bindings": [
+    {
+      "generation": "4df27635-7b08-4301-9edb-b27b89328f35",
+      "observed_state": "ready",
+      "desired_state": "disabled",
+      "enabled": false,
+      "operation_fence": true
+    }
+  ],
+  "canaryInstallationCount": 0
+}

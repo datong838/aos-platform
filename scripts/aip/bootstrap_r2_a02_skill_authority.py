@@ -338,7 +338,7 @@ def _governance_evidence() -> tuple[ExactRevisionRef, ExactRevisionRef]:
     )
 
 
-def _skill_eval(source_skill: Any, graph: Any, model: Any):
+def _skill_eval(source_skill: Any, graph: Any, model: Any, *, connect_factory=None, actor=ACTOR):
     evaluated = evaluate_a02_contract(graph, _isolated_registry(_model_alias(model)))
     actual = {item.case_id: item.actual for item in evaluated.report.results}
     expected = {
@@ -425,8 +425,8 @@ def _skill_eval(source_skill: Any, graph: Any, model: Any):
         case_count=6,
         captured_at=datetime(2026, 8, 17, 12, 0, tzinfo=UTC),
     )
-    registry = AipEvalPackRegistry()
-    registry.register_dataset_revision(SCOPE, dataset, manifest, actor=ACTOR)
+    registry = AipEvalPackRegistry(connect_factory)
+    registry.register_dataset_revision(SCOPE, dataset, manifest, actor=actor)
     target = AssetRevisionRef(
         asset_type=AssetType.SKILL_TEMPLATE,
         asset_id=source_skill.skill_id,
@@ -449,9 +449,9 @@ def _skill_eval(source_skill: Any, graph: Any, model: Any):
         gate_threshold=1.0,
     )
     suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
-    suite = registry.register_suite_revision(SCOPE, suite, actor=ACTOR)
+    suite = registry.register_suite_revision(SCOPE, suite, actor=actor)
     run_key = f"{SUITE_ID}-run-r1"
-    with db_connect(SCOPE) as conn:
+    with (connect_factory or db_connect)(SCOPE) as conn:
         existing = conn.execute(
             "SELECT run_id,status FROM aip_eval_run WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
             (*SCOPE.key, run_key),
@@ -464,7 +464,7 @@ def _skill_eval(source_skill: Any, graph: Any, model: Any):
             if existing and existing["status"] == "succeeded"
             else None
         )
-    runner = AipEvalRunner()
+    runner = AipEvalRunner(connect_factory)
     if report_row:
         report = runner.get_report(SCOPE, report_row["report_id"], report_row["revision"])
     elif existing:
@@ -481,7 +481,7 @@ def _skill_eval(source_skill: Any, graph: Any, model: Any):
             suite_id=suite.suite_id,
             suite_revision=suite.revision,
             idempotency_key=run_key,
-            actor=ACTOR,
+            actor=actor,
             resolve_artifact=resolve,
             execute_target=lambda ref, value: TargetExecution(
                 target=ref, value=actual[value["caseId"]]

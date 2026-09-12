@@ -57,7 +57,7 @@ def test_activation_refuses_unusable_health(fault):
 
 def test_blocked_preview_never_creates_binding_service(monkeypatch):
     import a0v_firstchain_capability_activate as activate
-    monkeypatch.setattr(activate,'prepare',lambda _: (None,None,[('D01',None,None,NS(readiness=NS(value='blocked'),reasons=['stale']))]))
+    monkeypatch.setattr(activate,'prepare',lambda *_: (None,None,[('D01',None,None,NS(readiness=NS(value='blocked'),reasons=['stale']))]))
     def forbidden(*a,**k):raise AssertionError('write service created')
     monkeypatch.setattr(activate,'AipCapabilityBindingService',forbidden)
     with pytest.raises(ValueError,match='DEPENDENCIES_BLOCKED'):activate.run('aos_meta_head')

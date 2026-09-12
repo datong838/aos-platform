@@ -1,0 +1,42 @@
+{
+  "database": "aos_meta_head",
+  "contracts": [
+    {
+      "skillId": "ecommerce.skill.S01",
+      "contractId": "eval-contract-f9c7cf200f07485cac23",
+      "revision": 2,
+      "contentHash": "d9d1b0637815b9848dc10ba787a6c73d0f5403836cb3246a42d2d3d10277c53e",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.P01",
+      "contractId": "eval-contract-ecb87695b26b475ea66d",
+      "revision": 2,
+      "contentHash": "29c621997fc90d22a7320721cf0664f0bd1ff9ece19a9bd629eeacce7ae03a9c",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.C06",
+      "contractId": "eval-contract-5e47f6e8fcf1408da77c",
+      "revision": 2,
+      "contentHash": "211a195ae547f09b86a2f949786ee0a2e9dbecaeb07593c825a13670467ce28b",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.A02",
+      "contractId": "eval-contract-eb9f0980d318402bba57",
+      "revision": 2,
+      "contentHash": "63d133b613dd0574049ae11a9d2914de260a7d41cfc44979fd5a56e07bcbe820",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.G06",
+      "contractId": "eval-contract-591cbee28ff34960bd86",
+      "revision": 2,
+      "contentHash": "9e70546f17e54b22d12437ba7f841904490cfc10f7194fabc79a01bfdaba5637",
+      "lifecycle": "frozen"
+    }
+  ],
+  "providerCalls": 0,
+  "businessRuns": 0
+}

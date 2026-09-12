@@ -176,7 +176,7 @@ def _expected_results(logic_id: str) -> dict[str, dict[str, Any]]:
     return values
 
 
-def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any):
+def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any, *, connect_factory=None, actor=ACTOR):
     suite_id = _suite_id(logic_id)
     expected = _expected_results(logic_id)
     evaluated = evaluate_shopping_advisor_contract(
@@ -262,8 +262,8 @@ def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any):
         case_count=9,
         captured_at=datetime(2026, 8, 21, 4, 0, tzinfo=UTC),
     )
-    registry = AipEvalPackRegistry()
-    registry.register_dataset_revision(SCOPE, dataset, manifest, actor=ACTOR)
+    registry = AipEvalPackRegistry(connect_factory)
+    registry.register_dataset_revision(SCOPE, dataset, manifest, actor=actor)
     target = AssetRevisionRef(
         asset_type=AssetType.SKILL_TEMPLATE,
         asset_id=source_skill.skill_id,
@@ -288,9 +288,9 @@ def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any):
         gate_threshold=1.0,
     )
     suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
-    suite = registry.register_suite_revision(SCOPE, suite, actor=ACTOR)
+    suite = registry.register_suite_revision(SCOPE, suite, actor=actor)
     run_key = f"{suite_id}-run-r1"
-    with db_connect(SCOPE) as conn:
+    with (connect_factory or db_connect)(SCOPE) as conn:
         existing = conn.execute(
             "SELECT run_id,status FROM aip_eval_run "
             "WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
@@ -305,7 +305,7 @@ def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any):
             if existing and existing["status"] == "succeeded"
             else None
         )
-    runner = AipEvalRunner()
+    runner = AipEvalRunner(connect_factory)
     if report_row:
         report = runner.get_report(
             SCOPE, report_row["report_id"], report_row["revision"]
@@ -325,7 +325,7 @@ def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any):
             suite_id=suite.suite_id,
             suite_revision=suite.revision,
             idempotency_key=run_key,
-            actor=ACTOR,
+            actor=actor,
             resolve_artifact=resolve,
             execute_target=lambda ref, value: TargetExecution(
                 target=ref, value=actual[value["caseId"]]

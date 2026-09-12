@@ -1,5 +1,6 @@
 """Record user-authorized internal development scope through canonical owners."""
 import argparse
+from datetime import UTC, datetime
 import json
 from pathlib import Path
 
@@ -19,9 +20,11 @@ FACTS = ['firstchain.skill.internal-license', 'firstchain.user.development-scope
 AUTHORITY = 'user-session:AOS-AR2-continuous-development'
 
 
-def require_internal_skills(skills):
-    if len(skills) != 3 or {s.skill_id for s in skills} != {
-            'ecommerce.skill.D01', 'ecommerce.skill.D02', 'ecommerce.skill.D03'}:
+def require_internal_skills(skills, logic_ids=('D01','D02','D03')):
+    allowed = {frozenset(('D01','D02','D03')), frozenset(('S01','P01','C06','A02','G06'))}
+    if frozenset(logic_ids) not in allowed or len(logic_ids)!=len(set(logic_ids)):
+        raise ValueError('INTERNAL_LICENSE_EXACT_SKILLS_REQUIRED')
+    if len(skills)!=len(logic_ids) or {s.skill_id for s in skills}!={'ecommerce.skill.'+x for x in logic_ids}:
         raise ValueError('INTERNAL_LICENSE_EXACT_SKILLS_REQUIRED')
     for s in skills:
         if (s.revision != 2 or s.lifecycle.value != 'published' or s.source_license != 'internal'
@@ -30,12 +33,12 @@ def require_internal_skills(skills):
             raise ValueError('INTERNAL_LICENSE_SOURCE_OR_TENANT_INVALID')
 
 
-def run(database, apply=False):
+def run(database, apply=False, logic_ids=('D01','D02','D03')):
     connect = database_connect(database)
     require_target(connect, database)
     registry = AipSkillRegistry(connect)
-    skills = [registry.get_skill('ecommerce.skill.'+x,2) for x in ('D01','D02','D03')]
-    require_internal_skills(skills)
+    skills = [registry.get_skill('ecommerce.skill.'+x,2) for x in logic_ids]
+    require_internal_skills(skills,logic_ids)
     runtime = AipModelRuntimeStore(connect)
     model = runtime.get_model(SCOPE,MODEL_ID)
     runtime.require_model_governance(SCOPE,model,runtime.get_price_snapshot(SCOPE,PRICE_ID))
@@ -70,12 +73,15 @@ def run(database, apply=False):
         task_run = result.run
     if task_run.status.value == 'running':
         with connect(SCOPE) as conn:
-            step = conn.execute("SELECT status FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='record-internal-scope' ORDER BY attempt DESC LIMIT 1",(*SCOPE.key,task_run.id)).fetchone()
+            step = conn.execute("SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='record-internal-scope' ORDER BY attempt DESC LIMIT 1",(*SCOPE.key,task_run.id)).fetchone()
         if not step or step['status'] != 'succeeded':
-            lease = tasks.claim_step(SCOPE,task_run.id,'record-internal-scope',ACTOR,lease_seconds=300)
-            require_internal_skills([registry.get_skill(s.skill_id,s.revision) for s in skills])
+            require_internal_skills([registry.get_skill(s.skill_id,s.revision) for s in skills],logic_ids)
+            if step and step['status']=='running' and step['lease_owner']==ACTOR and step['lease_expires_at']>datetime.now(UTC):
+                lease=tasks.heartbeat_step(SCOPE,step['step_run_id'],ACTOR,step['fence'],lease_seconds=300)
+            else:
+                lease = tasks.claim_step(SCOPE,task_run.id,'record-internal-scope',ACTOR,lease_seconds=300)
             for phase,payload in [('think',{'authorizationRef':AUTHORITY}),('act',{'sourceRefs':refs}),
-                    ('verify',{'verifiedInternalLicenseCount':3,'providerCalls':0}),('observe',facts)]:
+                    ('verify',{'verifiedInternalLicenseCount':len(skills),'providerCalls':0}),('observe',facts)]:
                 tasks.record_step_phase(SCOPE,lease.step_run_id,ACTOR,lease.fence,ACTOR,phase,payload)
             tasks.complete_step(SCOPE,lease.step_run_id,ACTOR,lease.fence,ACTOR)
         tasks.complete_run(SCOPE,task_run.id)

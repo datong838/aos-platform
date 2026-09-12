@@ -31,6 +31,31 @@ ALLOWED_CLONE = 'aos_upgrade_check_f1dc452abade'
 ACTOR = 'a0v-firstchain-contract-preparation'
 
 
+ROLE_COMPONENTS = {
+    'S01': ('customer_service', 'r09_customer_service'),
+    'P01': ('private_domain_manager', 'r07_private_domain_manager'),
+    'C06': ('content_officer', 'r11_content_officer'),
+    'A02': ('campaign_planner', 'r10_campaign_planner'),
+    'G06': ('shopping_advisor', 'r08_shopping_advisor'),
+}
+
+
+def role_components(logic_id):
+    import importlib
+    if logic_id == 'A02':
+        from aos_api.aip_a02_pilot import build_a02_graph_request, evaluate_a02_contract
+        from bootstrap_r2_a02_pilot import _isolated_registry as adapters
+        from bootstrap_r2_a02_skill_authority import _skill_eval as evaluate_skill
+        return (lambda _id, **kw: build_a02_graph_request(**kw),
+            lambda _id, graph, registry, **kw: evaluate_a02_contract(graph, registry, **kw),
+            adapters, lambda _id, *args, **kw: evaluate_skill(*args, **kw))
+    family, script = ROLE_COMPONENTS[logic_id]
+    logic = importlib.import_module('aos_api.aip_'+family+'_logic')
+    adapter = importlib.import_module('bootstrap_'+script+'_authority')
+    skill = importlib.import_module('bootstrap_'+script+'_skill_authority')
+    return getattr(logic,'build_'+family+'_graph_request'), getattr(logic,'evaluate_'+family+'_contract'), adapter._isolated_registry, skill._skill_eval
+
+
 def contract_components(logic_id):
     if logic_id == 'D03':
         return (lambda alias: build_d03_graph_request(model_id=alias),
@@ -40,6 +65,10 @@ def contract_components(logic_id):
         return (lambda alias: build_data_advisor_graph_request(logic_id, model_id=alias),
             lambda graph, registry, now: evaluate_data_advisor_contract(logic_id, graph, registry, now=now),
             _isolated_registry)
+    if logic_id in ROLE_COMPONENTS:
+        build, evaluate, registry, _ = role_components(logic_id)
+        return (lambda alias: build(logic_id, model_id=alias),
+            lambda graph, adapters, now: evaluate(logic_id, graph, adapters, now=now), registry)
     raise ValueError('FIRSTCHAIN_SKILL_UNSUPPORTED')
 
 
@@ -104,7 +133,9 @@ def prepare_contracts(connect):
         database=ALLOWED_CLONE, authority_scope='clone-only-contract-preparation')
 
 
-def materialize_contracts(connect, *, require_target, database, authority_scope):
+def materialize_contracts(connect, *, require_target, database, authority_scope, logic_ids=('D01','D02','D03')):
+    if not logic_ids or len(set(logic_ids))!=len(logic_ids) or not set(logic_ids)<={'D01','D02','D03',*ROLE_COMPONENTS}:
+        raise ValueError('FIRSTCHAIN_SKILL_SET_UNSUPPORTED')
     require_target(connect)
     runtime = AipModelRuntimeStore(connect)
     model = runtime.get_model(SCOPE, MODEL_ID)
@@ -118,7 +149,7 @@ def materialize_contracts(connect, *, require_target, database, authority_scope)
     if not any(candidate.model == exact('RegisteredModelRevision', model, 'registered_model_id') for candidate in route.candidates):
         raise ValueError('FIRSTCHAIN_MODEL_ROUTE_DRIFT')
     result = []
-    for logic_id in ('D01', 'D02', 'D03'):
+    for logic_id in logic_ids:
         require_target(connect)
         graph, logic_publication = _logic(connect, logic_id, model)
         source = AipSkillRegistry(connect).get_skill('ecommerce.skill.'+logic_id, 1)
@@ -126,6 +157,8 @@ def materialize_contracts(connect, *, require_target, database, authority_scope)
             raise ValueError('FIRSTCHAIN_SOURCE_SKILL_NOT_EVALUATED')
         if logic_id == 'D03':
             suite, report = _d03_skill_eval(source, graph, model, connect_factory=connect, actor=ACTOR)
+        elif logic_id in ROLE_COMPONENTS:
+            suite, report = role_components(logic_id)[3](logic_id, source, graph, model, connect_factory=connect, actor=ACTOR)
         else:
             suite, report = _skill_eval(logic_id, source, graph, model, connect_factory=connect, actor=ACTOR)
         release = AipReleasePublicationService(connect)
