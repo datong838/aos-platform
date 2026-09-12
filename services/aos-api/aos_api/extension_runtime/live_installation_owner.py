@@ -43,6 +43,10 @@ class LiveInstallationLifecycleOwner:
         if job is None:
             return LiveInstallationTick(preparation, None, None)
 
+        # Idle outboxes do not imply that the retained process owner is alive.
+        # Health failure settles cleanup before the host reports failure.
+        await _settled(job.check_health())
+
         verifier = self._owned("runtime-verify", job)
         verification = await _settled(verifier.run_once())
         if self.preparation.job is not job:

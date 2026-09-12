@@ -11,6 +11,7 @@ from pathlib import Path
 import signal
 import stat
 import sys
+import traceback
 from typing import Any, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -163,6 +164,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "outcome": "SAFE_BLOCKED",
                 "reasonCode": "HOST_RUNTIME_FAILED",
                 "errorType": type(exc).__name__,
+                "frames": [{"file": frame.filename, "function": frame.name, "line": frame.lineno}
+                           for frame in traceback.extract_tb(exc.__traceback__)],
             }
         _write(args.status_file.resolve(), result)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)

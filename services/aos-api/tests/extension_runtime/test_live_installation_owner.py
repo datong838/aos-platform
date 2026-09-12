@@ -51,7 +51,12 @@ def install_owned(monkeypatch, calls, results=None, *, fail_kind=None):
     monkeypatch.setattr(module, "OwnedControlConsumer", Owned)
 
 
-expected_job = object()
+class HealthyJob:
+    async def check_health(self):
+        return None
+
+
+expected_job = HealthyJob()
 expected_connect = None
 
 
@@ -67,6 +72,17 @@ def test_without_job_only_runs_preparation(monkeypatch):
     result = asyncio.run(owner.run_once())
     assert result.preparation == "prepared"
     assert result.verification is None and result.enablement is None
+    assert calls == ["runtime-apply"]
+
+
+def test_idle_tick_detects_lost_resource_before_any_control(monkeypatch):
+    calls = []
+    class LostJob:
+        async def check_health(self):
+            raise RuntimeError("preparation is no longer owned")
+    owner = LiveInstallationLifecycleOwner(preparation=preparation(calls, job=LostJob()))
+    with pytest.raises(RuntimeError, match="no longer owned"):
+        asyncio.run(owner.run_once())
     assert calls == ["runtime-apply"]
 
 
