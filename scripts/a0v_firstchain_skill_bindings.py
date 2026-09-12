@@ -15,12 +15,15 @@ from aos_api.aip_skill_registry import AipSkillRegistry
 
 INSTANCE='ecommerce.data_advisor.default'
 ACTOR='a0v-firstchain-skill-owner'
+ROLE_SKILLS={INSTANCE:('D01','D02','D03'),'ecommerce.customer_service.default':('S01',),
+    'ecommerce.private_domain_manager.default':('P01',),'ecommerce.content_officer.default':('C06',),
+    'ecommerce.campaign_planner.default':('A02',),'ecommerce.shopping_advisor.default':('G06',)}
 
 
-def require_template(instance,template):
-    if (instance.instance_id!=INSTANCE or template.template_id!='ecommerce.data_advisor'
+def require_template(instance,template,instance_id=INSTANCE):
+    if (instance_id not in ROLE_SKILLS or instance.instance_id!=instance_id or template.template_id!=instance_id.removesuffix('.default')
             or template.lifecycle.value!='published' or template.content_hash!=instance.template.content_hash
-            or not {'D01','D02','D03'}<=set(template.manifest.get('logicIds',[]))):
+            or not set(ROLE_SKILLS[instance_id])<=set(template.manifest.get('logicIds',[]))):
         raise ValueError('FIRSTCHAIN_EXACT_ADVISOR_TEMPLATE_REQUIRED')
 
 
@@ -28,6 +31,12 @@ def run(database):
     connect,readiness,items=prepare(database)
     if len(items)!=3 or {x[0] for x in items}!={'ecommerce.skill.D01','ecommerce.skill.D02','ecommerce.skill.D03'}:
         raise ValueError('FIRSTCHAIN_EXACT_THREE_SKILLS_REQUIRED')
+    return bind_items(connect,readiness,items,INSTANCE,database=database)
+
+
+def bind_items(connect,readiness,items,instance_id,*,database):
+    if instance_id not in ROLE_SKILLS or {item[0].rsplit('.',1)[1] for item in items}!=set(ROLE_SKILLS[instance_id]):
+        raise ValueError('INVESTIGATION_ROLE_SKILL_MAPPING_INVALID')
     capabilities=AipCapabilityBindingService(connect,readiness_service=readiness)
     by_skill={}
     for skill,request,deps,preview in items:
@@ -40,14 +49,14 @@ def run(database):
             raise ValueError('FIRSTCHAIN_EXACT_ACTIVE_CAPABILITY_REQUIRED')
         by_skill[skill]=(binding,deps)
     agents=AipAgentRegistryStore(connect)
-    instance=agents.get_instance(SCOPE,INSTANCE)
+    instance=agents.get_instance(SCOPE,instance_id)
     template=agents.get_template(instance.template.asset_id,instance.template.revision)
-    require_template(instance,template)
+    require_template(instance,template,instance_id)
     if instance.status.value not in {'provisioning','active'}:raise ValueError('FIRSTCHAIN_ADVISOR_STATE_UNSUPPORTED')
     # The original exact transition is replayed when already active.
-    instance,_=AipAgentInstanceActivationService(connect_factory=connect,store=agents).activate(SCOPE,INSTANCE,
+    instance,_=AipAgentInstanceActivationService(connect_factory=connect,store=agents).activate(SCOPE,instance_id,
         ActivateAgentInstanceRequest(expected_version=1,capability_binding_ids=[by_skill[k][0].binding_id for k in sorted(by_skill)]),
-        idempotency_key='a0v-firstchain-advisor-activate-v1',actor=ACTOR,occurred_at=datetime.now(UTC))
+        idempotency_key='a0v-firstchain-advisor-activate-v1' if instance_id==INSTANCE else 'a0v-investigation-'+instance_id+'-activate-v1',actor=ACTOR,occurred_at=datetime.now(UTC))
     registry=AipSkillRegistry(connect)
     results=[]
     for skill_id in sorted(by_skill):
@@ -57,12 +66,12 @@ def run(database):
             eval_gate_ref=skill.release_gate_ref,budget_policy_ref=cap_deps.budget_policy_ref)
         if deps.model_route_ref!=cap_deps.model_route_ref or deps.runtime_policy_ref!=cap_deps.runtime_policy_ref:
             raise ValueError('FIRSTCHAIN_SKILL_ROUTE_DRIFT')
-        request=CreateSkillBindingRequest(binding_id='a0v-firstchain-skill-'+skill_id.rsplit('.',1)[1].lower(),instance_id=INSTANCE,
+        request=CreateSkillBindingRequest(binding_id='a0v-firstchain-skill-'+skill_id.rsplit('.',1)[1].lower(),instance_id=instance_id,
             skill=exact('SkillTemplate',skill.skill_id,skill.revision,skill.content_hash),capability_binding_ids=[capability.binding_id],
             budget_policy_ref=deps.budget_policy_ref)
         key=request.binding_id
         binding,_=registry.create_binding(SCOPE,request,idempotency_key=key+'-create',actor=ACTOR,occurred_at=datetime.now(UTC))
-        if binding.instance_id!=INSTANCE or binding.skill!=request.skill or binding.capability_binding_ids!=request.capability_binding_ids:
+        if binding.instance_id!=instance_id or binding.skill!=request.skill or binding.capability_binding_ids!=request.capability_binding_ids:
             raise ValueError('FIRSTCHAIN_SKILL_BINDING_DRIFT')
         if binding.status=='provisioning':
             if binding.dependencies!=deps or binding.readiness.value!='available' or binding.readiness_expires_at is None or binding.readiness_expires_at<=datetime.now(UTC):
@@ -73,12 +82,18 @@ def run(database):
             binding,_=registry.update_binding(SCOPE,binding.binding_id,
                 UpdateSkillBindingRequest(expected_version=binding.version,from_status='provisioning',to_status='active'),
                 idempotency_key=key+'-activate',actor=ACTOR,occurred_at=datetime.now(UTC))
-        elif binding.status!='active' or binding.dependencies!=deps or binding.readiness_expires_at<=datetime.now(UTC):
+        elif binding.status=='active' and binding.dependencies==deps:
+            if binding.readiness_expires_at<=datetime.now(UTC):
+                binding,result,_=registry.evaluate_binding(SCOPE,binding.binding_id,
+                    EvaluateOperationalBindingRequest(expected_version=binding.version,dependencies=deps),
+                    idempotency_key=key+'-refresh-v'+str(binding.version),actor=ACTOR,evaluated_at=datetime.now(UTC))
+                if result.readiness.value!='available':raise ValueError('FIRSTCHAIN_SKILL_REFRESH_BLOCKED')
+        else:
             raise ValueError('FIRSTCHAIN_SKILL_STATE_REVALIDATION_REQUIRED')
         results.append({'skillId':skill_id,'bindingId':binding.binding_id,'status':binding.status,'version':binding.version,
             'readiness':binding.readiness.value,'dependencySnapshotHash':binding.dependency_snapshot_hash,'expiresAt':binding.readiness_expires_at})
-    return {'database':database,'instanceId':INSTANCE,'instanceStatus':instance.status.value,'instanceVersion':instance.version,
-        'skillBindings':results,'providerCalls':0,'businessRuns':0,'unboundSkills':['D04','D05','D06']}
+    return {'database':database,'instanceId':instance_id,'instanceStatus':instance.status.value,'instanceVersion':instance.version,
+        'skillBindings':results,'providerCalls':0,'businessRuns':0,'unboundSkills':['D04','D05','D06'] if instance_id==INSTANCE else []}
 
 
 if __name__=='__main__':

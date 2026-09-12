@@ -55,21 +55,30 @@ def run(database, logic_ids=('D01','D02','D03')):
         binding,receipt=service.create(SCOPE,request,idempotency_key=key+'-create',actor=ACTOR,occurred_at=datetime.now(UTC))
         if binding.capability!=request.binding.capability or binding.secret_ref!=request.binding.secret_ref:
             raise ValueError('FIRSTCHAIN_BINDING_TARGET_DRIFT')
+        epoch=health.observation_id
         if binding.status=='active':
-            if binding.dependencies!=deps or binding.operational_readiness.value!='available' or binding.readiness_expires_at<=datetime.now(UTC):
-                raise ValueError('FIRSTCHAIN_ACTIVE_BINDING_NEEDS_REVALIDATION')
-        elif binding.status=='provisioning':
+            if binding.dependencies!=deps:
+                raise ValueError('FIRSTCHAIN_ACTIVE_BINDING_DEPENDENCY_DRIFT')
+            if binding.readiness_expires_at<=datetime.now(UTC) or binding.observed_at!=health.observed_at:
+                binding,_=service.update(SCOPE,binding.binding_id,
+                    UpdateCapabilityBindingRequest(expected_version=binding.version,from_status='active',to_status='suspended',
+                        health=health.status,observed_at=health.observed_at),idempotency_key=key+'-suspend-'+epoch,actor=ACTOR)
+        if binding.status in {'provisioning','suspended'}:
             if (binding.dependency_snapshot_hash!=preview.dependency_snapshot_hash
-                    or binding.readiness_expires_at is None or binding.readiness_expires_at<=datetime.now(UTC)):
+                    or binding.readiness_expires_at is None or binding.readiness_expires_at<=datetime.now(UTC)
+                    or binding.last_evaluated_at is None or binding.last_evaluated_at<health.observed_at):
                 binding,result,_=service.evaluate(SCOPE,binding.binding_id,
                     EvaluateOperationalBindingRequest(expected_version=binding.version,dependencies=deps,
                         expected_dependency_snapshot_hash=preview.dependency_snapshot_hash),
                     idempotency_key=key+'-evaluate-v'+str(binding.version),actor=ACTOR,evaluated_at=datetime.now(UTC))
                 if result.readiness.value!='available':raise ValueError('FIRSTCHAIN_READINESS_CHANGED')
+            previous=binding.status
             binding,_=service.update(SCOPE,binding.binding_id,
-                UpdateCapabilityBindingRequest(expected_version=binding.version,from_status='provisioning',to_status='active',
-                    health='healthy',observed_at=health.observed_at),idempotency_key=key+'-activate',actor=ACTOR)
-        else:raise ValueError('FIRSTCHAIN_BINDING_STATE_UNSUPPORTED')
+                UpdateCapabilityBindingRequest(expected_version=binding.version,from_status=previous,to_status='active',
+                    health='healthy',observed_at=health.observed_at),
+                idempotency_key=key+('-activate' if previous=='provisioning' else '-reactivate-'+epoch),actor=ACTOR)
+        elif binding.status!='active':
+            raise ValueError('FIRSTCHAIN_BINDING_STATE_UNSUPPORTED')
         results.append({'skillId':skill,'bindingId':binding.binding_id,'status':binding.status,'version':binding.version,
             'health':binding.health.value,'readiness':binding.operational_readiness.value,'dependencySnapshotHash':binding.dependency_snapshot_hash,
             'observedAt':binding.observed_at,'readinessExpiresAt':binding.readiness_expires_at,'bindingExistedBefore':existed})
