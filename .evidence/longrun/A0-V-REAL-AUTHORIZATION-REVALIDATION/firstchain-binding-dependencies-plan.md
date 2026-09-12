@@ -18,3 +18,9 @@
 只读预检暴露实际接线缺陷：AipModelRuntimeResolver._gate_passed 新建默认 AipEvalAuthorityStore，_health_is_fresh 直接 db_connect，绕开注入的 ModelRuntimeStore。修改 services/aos-api/aos_api/aip_model_runtime_resolver.py，从同一 Store 继承 connect_factory 和 eval_authority_store；默认构造仍使用原默认连接，测试替身缺省行为保留。新增服务级回归验证 exact target/租户传递、健康查询仅使用注入连接、过期和 provider hash 不符拒绝；不得用测试通过替代真实健康。
 
 健康探针 v1 超时；独立 v2 于 02:36:52Z 成功，4225ms，有效至 02:51:52Z。克隆演练复用这条实际 Provider 观测：仅当两库当前 Provider exact ref 相同且生命周期 active 时，通过克隆库 record_health Owner 保存原始 observation_id/observed_at/expires_at/latency，不延长时间，不宣称新调用。主库不反向导入克隆证据。能力创建固定 ID，create→evaluate→active，实际健康来自本库可追溯观测；已 active 且 exact 依赖不变的重放只回读。部分完成仅从真实 Owner 当前状态接续，不重复 Provider 调用、不改变其他能力。
+
+## 数据参谋及三技能绑定
+
+新增 scripts/a0v_firstchain_skill_bindings.py：只接续 ecommerce.data_advisor.default，校验 exact published template 包含 D01/D02/D03，依据已激活的三 capability binding 并再次验证当前依赖，沿 AipAgentInstanceActivationService 激活，再沿 AipSkillRegistry create/evaluate/update 创建三 Skill Binding。依赖严格采用每个 Skill 已发布 route/policy/gate 与当前 budget，不把 Route Gate 当 Skill Gate。其他 Skill 不新增绑定。固定幂等键及原版本 transition 用于重放，主库写前保留现有完整备份。
+
+发现 AipSkillBindingReadinessService 同样未把注入连接传给 ModelRuntimeStore 与 PostgresSkillPublicationRouteAuthority。修改 services/aos-api/aos_api/aip_skill_binding_readiness_service.py，默认子服务使用相同连接和同一评审权威；显式注入的子服务保持优先。用默认连接禁止访问的回归及真实克隆技能绑定验证，不绕过评审。

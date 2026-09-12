@@ -41,3 +41,20 @@ def test_gate_uses_injected_authority_with_exact_target_and_time():
     resolver=AipModelRuntimeResolver(SimpleNamespace(_eval_authority_store=authority))
     assert resolver._gate_passed(SCOPE,REF,REF,NOW)
     assert calls==[((SCOPE,REF),{'expected_target':REF,'now':NOW})]
+
+
+def test_skill_readiness_child_route_lookup_uses_injected_database(monkeypatch):
+    from aos_api.aip_skill_binding_readiness_service import AipSkillBindingReadinessService
+    from aos_api.aip_agent_registry_store import AipAgentRegistryTransitionBlocked
+    calls=[]
+    @contextmanager
+    def connect(scope):
+        calls.append(scope)
+        yield SimpleNamespace(execute=lambda *a,**k:SimpleNamespace(fetchone=lambda:None))
+    def forbidden(*a,**k):raise AssertionError('default database used')
+    monkeypatch.setattr('aos_api.aip_model_runtime_store.db_connect',forbidden)
+    monkeypatch.setattr('aos_api.aip_eval_authority_store.db_connect',forbidden)
+    service=AipSkillBindingReadinessService(connect_factory=connect)
+    with pytest.raises(AipAgentRegistryTransitionBlocked):
+        service._route_authority.require_ready(SCOPE,REF,REF,evaluated_at=NOW)
+    assert calls==[SCOPE]

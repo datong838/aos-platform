@@ -13,6 +13,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
+from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
 from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
 from aos_api.aip_skill_publication_service import (
     PostgresSkillPublicationRouteAuthority,
@@ -34,10 +35,12 @@ class AipSkillBindingReadinessService:
         if ttl <= timedelta(0):
             raise ValueError("skill binding readiness ttl must be positive")
         self._connect_factory = connect_factory or db_connect
-        self._route_authority = (
-            route_authority or PostgresSkillPublicationRouteAuthority()
+        self._model_store = model_store or AipModelRuntimeStore(self._connect_factory)
+        self._route_authority = route_authority or PostgresSkillPublicationRouteAuthority(
+            store=self._model_store,
+            eval_authority=getattr(self._model_store, "_eval_authority_store", None)
+            or AipEvalAuthorityStore(self._connect_factory),
         )
-        self._model_store = model_store or AipModelRuntimeStore()
         self._ttl = ttl
 
     def evaluate(
