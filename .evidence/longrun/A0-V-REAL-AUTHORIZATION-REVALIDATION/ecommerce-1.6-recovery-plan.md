@@ -31,3 +31,7 @@
 第 4 步：已备份 4,617,753 bytes，SHA256 5c0056da78fdb996fe92d8805b703814eca3c19b5eb510c1496ee5804e85fdc5，并迁移到 a0v_017。首次 reset 被 ensure_bundle_installation_revision_decision 的 submitted-parent 约束拒绝，事务回滚。新增 a0v_018，仅对 applied 父修订且同 decision 的 approved 恢复豁免“紧接 submitted”；其余审批绑定、计划哈希、职责分离、清洁资源约束全部保留。
 
 第 4 步完成：a0v_018 后 reset 首次写入 approved@5，同键 replay=true。独立读回旧 apply succeeded 不变、旧 verify failed/PREPARATION_OWNER_LOST、activeRevision=null、bindings=[]、canary=0。见 ecommerce-1.6-reset-v1.json（顶层是命令前快照，receipt 是结果）与 ecommerce-1.6-after-reset.json（命令后权威读回）。后续新 apply/verify 仅允许存在 preparation_reset 事件且未在当前 etag 发过同种操作，幂等键含恢复后修订号。
+
+第 5/6 步：新 apply 0d00395f-2c72-40f9-b5eb-22ea1eed8cdf succeeded→applied@6；verify ba9af262-a5bb-4448-a0bf-d393317dabe2 succeeded→active@7。2026-09-12T00:45:54Z 读回 generation=61d7d4aa-96f5-4aaa-8510-7400a0ae18e0，ready/disabled/enabled=false/operation_fence=true，canary=0。见 ecommerce-1.6-active-v2.json。这是安装时点证据，不是长期健康或真实业务闭环证据。
+
+下一波六步自动接续：1）核查短期 owner 到期后真实资源与绑定状态；2）完善持久宿主租约/健康丢失隔离及恢复方案；3）实现最小状态一致性修复并自测；4）真实到期和恢复观察；5）配置四来源/enable 前置检查；6）归档并进入真实经营首链。禁止只延长超时或把 stale ready 当作可运行。
