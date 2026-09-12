@@ -1029,3 +1029,11 @@ enable、经营首链与八工作台。全部任务未完成；m1 串行、不 p
 2026-09-12T01:21:23Z：8707c887 补齐从未启用安装的严格卸载回执；旧安装规范 uninstalled@8，重放不重复写。新安装 efc4e640-1b15-403f-9d06-4c6d1a5330a7 active@5，原期限 01:20:49Z，333 秒观测包含 5 次自动续租、3 个真实 Running 容器、同 generation、ready/disabled/fenced、canary=0。详见 A0-V/ecommerce-reinstall-continuity.json。9.51 无运行 Host 的状态已被此实证取代；当前 Host 持续运行，业务尚未启用。
 
 01:24:43Z 一次真实模型健康调用成功，延迟 576ms，健康有效至 01:39:43Z；新 attempt 独立日志，旧日志保持不变，5 项健康脚本测试通过。下一波继续正式技能发布、数字同事准备、责任计划与配置启用，再验证自然首链及八工作台；不能把运行连续性当作经营闭环完成。
+
+### 9.53 模型窗口续接及首链三技能正式权威
+
+9251a025 通过新三项真实文本探针及正式 Owner/Runner/Release 发布 Model/Route r2、Price r2、Budget/Policy r3，治理有效至 2026-09-13T01:28:40Z；不覆盖旧窗口。d71b2275 在主库正式发布 D01/D02/D03 Skill r2 和 Logic Publication，各六项隔离契约通过；随后三个对应 EvalContract 正式 frozen。它们仅是契约权威，生产可读产物仍由已有 Portrait/Diagnosis/GrowthPlan Generation Service 产生并接受独立真实验证。
+
+重复执行 227 个 AIP 表零新增，223 个租户 AIP 表 canary 内容摘要保持（存在 50 行历史测试数据，不能宣称全库 canary=0）。当前累计 3/37 个 Published Skill、3/37 个 Frozen EvalContract，六数字同事未激活、责任计划未冻结。健康观测时间已过期，需要在正式 Binding/调用时独立刷新；不重复借健康成功宣称业务就绪。
+
+下一权威入口 A0-V/firstchain-binding-dependencies-plan.md：内部用途许可 EvidenceBundle→首链 Capability/Skill Binding→职责计划→源配置启用→自然首链与八场景。m1 串行、不 push、230 L0 挂起；全部目标未完成，继续 Loop。

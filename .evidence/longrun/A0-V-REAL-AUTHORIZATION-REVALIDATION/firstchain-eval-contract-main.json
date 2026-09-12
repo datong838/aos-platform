@@ -1,0 +1,28 @@
+{
+  "database": "aos_meta_head",
+  "contracts": [
+    {
+      "skillId": "ecommerce.skill.D01",
+      "contractId": "eval-contract-89aa59c102774828b791",
+      "revision": 2,
+      "contentHash": "38a3ff83a088b9c123055eb00d04595538226e2f7fa8209e3f31a6420cca97c9",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.D02",
+      "contractId": "eval-contract-350b80ba8e3f4d06b0ef",
+      "revision": 2,
+      "contentHash": "d2561dce3b01d080a577e6c18d1b0fa95415688ff45c3ca9ef3c135509aa3cc6",
+      "lifecycle": "frozen"
+    },
+    {
+      "skillId": "ecommerce.skill.D03",
+      "contractId": "eval-contract-7282fb9b5fac459b90e6",
+      "revision": 2,
+      "contentHash": "3e260e2d0e5b402a9a770d8c5a91c5fa77b6a0a42f6c9bc61ced179de5703eb4",
+      "lifecycle": "frozen"
+    }
+  ],
+  "providerCalls": 0,
+  "businessRuns": 0
+}
