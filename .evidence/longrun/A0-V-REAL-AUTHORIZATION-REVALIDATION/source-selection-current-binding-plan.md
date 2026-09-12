@@ -1,0 +1,11 @@
+# 复用当前管道与数据源校验
+
+2026-09-12，基线59193273。Owner实现核对发现：已有Ingress验证同时要求running ScheduleRun，而首次来源选择审批发生在调度前；不能为通过检查伪造一次运行，也不复制第二份graph/source准入逻辑。
+
+修改services/aos-api/aos_api/ec_ingress_journal.py，将当前graph/source锁定与核验提取为verify_pipeline_source_binding；verify_running_schedule仍先检查原run/schedule，再委托同一校验。新方法支持显式graph_revision，在已有payload摘要之外比较修订号；旧调用不传该项时保持原行为与查询形状。此方法只校验当前绑定，不等于安装、预算或审批已通过，也不启用管道。
+
+图摘要必须使用phase5_pipeline_graph.payload的规范摘要（与现有Ingress _digest一致）；GET图额外的revision/persisted/demo展示字段不进入该摘要。Owner在同事务拿到图锁并核对版本，不能混用页面响应整体摘要。
+
+新增tests/test_pipeline_source_binding.py：无ScheduleRun也能只读校验当前图和源；错误图摘要、修订、源身份/配置、跨scope绑定均拒绝；验证仍使用FOR SHARE和显式双租户参数。关联现有Ingress独立PG及恢复测试，确保正式运行没有绕过ScheduleRun检查。源库读取次数必须为0。之后继续Owner审批/持久CAS，未完成前P01禁用。不push，230 L0挂起。
+
+关联修复：tests/aip/test_a0v_ingress_journal_pg.py两项恢复用例原先LIKE public.meta_dataset，依赖测试宿主遗留表。改用228ti4d1的正式建表常量及228ti4d7的主键常量，在本测试临时schema创建两张Dataset表；不写public，不更改生产DDL，不删除恢复断言。该测试文件补一个直接当前绑定的PG用例，证明无需调度表、跨scope和错revision拒绝。

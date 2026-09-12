@@ -12,6 +12,50 @@ from aos_api.tenant_scope import TenantScope
 pytestmark = pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PG opt-in')
 
 
+def _create_isolated_dataset_tables(database):
+    """Use canonical columns/key definitions without relying on shared public tables."""
+    assert database.schema != 'public'
+    assert database.owner.execute('SELECT current_schema() AS name').fetchone()['name'] == database.schema
+    modules = []
+    for filename in ('228ti4d1_data_os_expand.py', '228ti4d7_data_os_contract.py'):
+        spec = importlib.util.spec_from_file_location(filename[:-3], ROOT/'alembic/versions'/filename)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        modules.append(module)
+    for table in ('meta_dataset', 'meta_dataset_history'):
+        statements = [statement for statement in modules[0].LEGACY_DATA_OS_SCHEMA
+                      if statement.startswith(f'CREATE TABLE IF NOT EXISTS {table} (')]
+        assert len(statements) == 1
+        database.owner.execute(statements[0])
+        database.owner.execute(f'ALTER TABLE {table} ADD COLUMN org_id text NOT NULL, ADD COLUMN project_id text NOT NULL')
+        columns = ','.join(modules[1].SCOPED_PRIMARY_KEYS[table])
+        database.owner.execute(f'ALTER TABLE {table} DROP CONSTRAINT {table}_pkey, ADD PRIMARY KEY ({columns})')
+        database.owner.execute(f'GRANT SELECT,INSERT,UPDATE,DELETE ON {table} TO aos_runtime')
+
+
+def test_pipeline_source_binding_before_any_schedule(database):
+    import json
+    from aos_api.ec_ingress_journal import IngressJournal, IngressJournalConflict, _digest
+    database.owner.execute('CREATE TABLE phase5_pipeline_graph(org_id text,project_id text,pipeline_id text,payload jsonb,revision bigint)')
+    database.owner.execute('CREATE TABLE meta_source(org_id text,project_id text,id text,type text,status text,configuration_revision uuid)')
+    graph = {'pipeline_id':'p01','nodes':[{'node_type':'source','config':{'source_id':'source'}}]}
+    source_revision = str(uuid4())
+    database.owner.execute("INSERT INTO phase5_pipeline_graph VALUES('org-org','dev-project','p01',%s::jsonb,3)", (json.dumps(graph),))
+    database.owner.execute("INSERT INTO meta_source VALUES('org-org','dev-project','source','jdbc-mysql-ssh','registered',%s)", (source_revision,))
+    database.owner.execute('GRANT SELECT,UPDATE ON phase5_pipeline_graph,meta_source TO aos_runtime')
+    journal = IngressJournal(storage_schema=database.schema)
+    args = dict(pipeline_id='p01',source_id='source',source_revision=source_revision,pipeline_hash=_digest(graph),graph_revision=3)
+    factory = runtime_connection(database)
+    scope = TenantScope('org-org','dev-project')
+    with factory(scope) as conn:
+        journal.verify_pipeline_source_binding(conn, scope, **args)
+    canary = TenantScope('dev-org','dev-project')
+    with pytest.raises(IngressJournalConflict), factory(canary) as conn:
+        journal.verify_pipeline_source_binding(conn, canary, **args)
+    with pytest.raises(IngressJournalConflict), factory(scope) as conn:
+        journal.verify_pipeline_source_binding(conn, scope, **(args|{'graph_revision':4}))
+
+
 def test_ingress_command_survives_connections_and_rejects_replacement(database):
     from aos_api.ec_ingress_journal import IngressJournal, IngressJournalConflict
     from aos_api.ec_ot_writer import _normalize_rows, _build_sync_scope, _build_batch_command
@@ -195,9 +239,7 @@ def test_recovery_cross_connection_commit_before_derived_submission(database,mon
         from aos_api.phase5_pipeline_engine import PipelineEngine
         from sqlalchemy import update
         from aos_api.ecom_consistency_store import projection_outbox
-        for table in ('meta_dataset','meta_dataset_history'):
-            database.owner.execute(f'CREATE TABLE {table} (LIKE public.{table} INCLUDING ALL)')
-            database.owner.execute(f'GRANT SELECT,INSERT,UPDATE,DELETE ON {table} TO aos_runtime')
+        _create_isolated_dataset_tables(database)
         database.owner.execute('CREATE SEQUENCE local_dataset_history_id')
         database.owner.execute("ALTER TABLE meta_dataset_history ALTER COLUMN id SET DEFAULT nextval('local_dataset_history_id')")
         database.owner.execute('GRANT USAGE ON SEQUENCE local_dataset_history_id TO aos_runtime')

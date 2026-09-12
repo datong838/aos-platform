@@ -144,9 +144,34 @@ class IngressJournal:
             or type(schedule['ingest']) is not dict or schedule['ingest'].get('kind') != 'pipeline-live-v1'
             or schedule['ingest'].get('pipelineId') != args['pipeline_id']):
             raise IngressJournalConflict('INGRESS_SCHEDULE_BINDING_DRIFT')
-        graph = read('phase5_pipeline_graph', 'pipeline_id', args['pipeline_id'], 'payload')
+        self.verify_pipeline_source_binding(conn, scope,
+            pipeline_id=args['pipeline_id'], source_id=args['source_id'],
+            source_revision=args['source_revision'], pipeline_hash=args['pipeline_hash'],
+            graph_revision=args.get('graph_revision'))
+
+    def verify_pipeline_source_binding(self, conn, scope, *, pipeline_id, source_id,
+                                      source_revision, pipeline_hash, graph_revision=None):
+        """Check current graph/source only; this grants no execution permission.
+
+        The caller retains the transaction and must check installation, current
+        authorization and budgets separately. No ScheduleRun is manufactured.
+        """
+        if type(scope) is not TenantScope:
+            raise TypeError('exact pipeline tenant scope required')
+        if graph_revision is not None and (type(graph_revision) is not int or not 1 <= graph_revision < 2**63):
+            raise ValueError('positive graph revision required')
+        args = dict(pipeline_id=pipeline_id, source_id=source_id,
+                    source_revision=source_revision, pipeline_hash=pipeline_hash)
+        def read(table, identity_column, identity, columns):
+            return conn.execute(sql.SQL('SELECT {} FROM {} WHERE org_id=%s AND project_id=%s AND {}=%s FOR SHARE').format(
+                sql.SQL(columns), sql.Identifier(self.schema, table), sql.Identifier(identity_column)),
+                (*scope.key, identity)).fetchone()
+        graph = read('phase5_pipeline_graph', 'pipeline_id', args['pipeline_id'],
+                     'payload,revision' if graph_revision is not None else 'payload')
         if graph is None or type(graph['payload']) is not dict or _digest(graph['payload']) != args['pipeline_hash']:
             raise IngressJournalConflict('INGRESS_GRAPH_DRIFT')
+        if graph_revision is not None and graph.get('revision') != graph_revision:
+            raise IngressJournalConflict('INGRESS_GRAPH_REVISION_DRIFT')
         payload = graph['payload']
         nodes = payload.get('nodes')
         if payload.get('pipeline_id') != args['pipeline_id'] or type(nodes) is not list or any(type(n) is not dict for n in nodes):
