@@ -208,7 +208,7 @@ def main():
         if before != after:
             raise ValueError("installation or historical version counts changed")
         switched = switch_root(ROOT / ".env")
-        result.update(outcome="ECOMMERCE_1_6_REGISTRY_GREEN", releases=releases, signedContent=hashes,
+        result.update(outcome="ECOMMERCE_1_7_REGISTRY_GREEN", releases=releases, signedContent=hashes,
             backup=backup, before=before, after=after, rootChanged=switched,
             installationMutationCount=0, providerInvocationCount=0, externalPublicationCount=0)
     args.output.parent.mkdir(parents=True, exist_ok=True)

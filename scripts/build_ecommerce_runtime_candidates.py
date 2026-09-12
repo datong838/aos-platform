@@ -783,31 +783,31 @@ def _assert_signed_tampering_rejected(
 ) -> list[str]:
     cases = {
         "imageIndexBytes": (
-            "domain.ecommerce.core/1.2.0/artifacts/runtime-image-index.json",
+            f"{RUNTIME_CASES[0][0]}/artifacts/runtime-image-index.json",
             lambda raw: raw + b" ",
         ),
         "imageDigest": (
-            "domain.ecommerce.core/1.2.0/artifacts/runtime-image-index.json",
+            f"{RUNTIME_CASES[0][0]}/artifacts/runtime-image-index.json",
             lambda raw: raw.replace(b'"imageDigest":"sha256:', b'"imageDigest":"sha256:0', 1),
         ),
         "dependencyLock": (
-            "domain.ecommerce.core/1.2.0/artifacts/python-dependencies.lock",
+            f"{RUNTIME_CASES[0][0]}/artifacts/python-dependencies.lock",
             lambda raw: raw + b"# tampered\n",
         ),
         "sbom": (
-            "domain.ecommerce.core/1.2.0/evidence/sbom.json",
+            f"{RUNTIME_CASES[0][0]}/evidence/sbom.json",
             lambda raw: raw + b" ",
         ),
         "backend": (
-            "domain.ecommerce.core/1.2.0/backend/ecommerce_core/__init__.py",
+            f"{RUNTIME_CASES[0][0]}/backend/ecommerce_core/__init__.py",
             lambda raw: raw + b"\n# tampered\n",
         ),
         "schemaCompatibility": (
-            "domain.ecommerce.core/1.2.0/artifacts/schema-compatibility.json",
+            f"{RUNTIME_CASES[0][0]}/artifacts/schema-compatibility.json",
             lambda raw: raw + b" ",
         ),
         "schemaRequirements": (
-            "domain.ecommerce.core/1.2.0/artifacts/schema-requirements.json",
+            f"{RUNTIME_CASES[0][0]}/artifacts/schema-requirements.json",
             lambda raw: raw + b" ",
         ),
     }
@@ -817,7 +817,7 @@ def _assert_signed_tampering_rejected(
         original = path.read_bytes()
         try:
             path.write_bytes(transform(original))
-            bundle = loader.load("bundle://a0v-candidate/domain.ecommerce.core/1.2.0")
+            bundle = loader.load(f"bundle://a0v-candidate/{RUNTIME_CASES[0][0]}")
             policy.evaluate(_release_record(bundle), checked_at=checked_at)
         except Exception:
             rejected.append(label)
