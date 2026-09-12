@@ -39,6 +39,27 @@ def _write(path: Path, value: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
+def _safe_error_chain(error: BaseException) -> list[dict[str, Any]]:
+    """Keep bounded causal locations, never exception values or frame locals."""
+    result: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    current: BaseException | None = error
+    relation = "raised"
+    while current is not None and id(current) not in seen and len(result) < 16:
+        seen.add(id(current))
+        result.append({
+            "errorType": type(current).__name__,
+            "relation": relation,
+            "frames": [{"file": frame.filename, "function": frame.name, "line": frame.lineno}
+                       for frame in traceback.extract_tb(current.__traceback__)[-32:]],
+        })
+        if current.__cause__ is not None:
+            current, relation = current.__cause__, "cause"
+        else:
+            current, relation = current.__context__, "context"
+    return result
+
+
 def _load_credentials(path: Path) -> dict[str, dict[str, str]]:
     if path.is_symlink() or not path.is_file() or stat.S_IMODE(path.stat().st_mode) != 0o600:
         raise HostBlocked("CREDENTIAL_FILE_INVALID")
@@ -164,6 +185,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "outcome": "SAFE_BLOCKED",
                 "reasonCode": "HOST_RUNTIME_FAILED",
                 "errorType": type(exc).__name__,
+                "errorChain": _safe_error_chain(exc),
                 "frames": [{"file": frame.filename, "function": frame.name, "line": frame.lineno}
                            for frame in traceback.extract_tb(exc.__traceback__)],
             }

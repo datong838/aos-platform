@@ -101,3 +101,37 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     assert result["outcome"] == "RUNTIME_HOST_STOPPED"
     assert result["tenantCount"] == 1
     assert result["canaryTenantCount"] == 0
+
+
+def test_runtime_failure_records_private_safe_exception_chain(tmp_path, monkeypatch):
+    async def fail(_args):
+        try:
+            raise TimeoutError("password=do-not-record-original")
+        except TimeoutError as original:
+            raise RuntimeError("token=do-not-record-cleanup") from original
+
+    monkeypatch.setattr(HOST, "_serve", fail)
+    status = tmp_path / "status.json"
+    assert HOST.main(["--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust"),
+                      "--status-file", str(status)]) == 2
+    result = json.loads(status.read_text())
+    assert [item["errorType"] for item in result["errorChain"]] == ["RuntimeError", "TimeoutError"]
+    assert result["errorChain"][1]["relation"] == "cause"
+    assert result["errorChain"][1]["frames"][-1]["function"] == "fail"
+    assert "do-not-record" not in status.read_text()
+    assert result["errorType"] == "RuntimeError"
+
+
+def test_error_chain_context_cycle_and_bound():
+    first = RuntimeError("private")
+    second = ValueError("private")
+    first.__context__ = second
+    second.__context__ = first
+    result = HOST._safe_error_chain(first)
+    assert len(result) == 2
+    assert result[1]["relation"] == "context"
+    current = first = RuntimeError()
+    for _ in range(30):
+        current.__cause__ = RuntimeError()
+        current = current.__cause__
+    assert len(HOST._safe_error_chain(first)) == 16
