@@ -1,0 +1,11 @@
+{
+  "phase": "ar2-7",
+  "scannedPythonModules": 1789,
+  "classifiedModules": 158,
+  "migratedModules": 93,
+  "hashErrors": [],
+  "unclassifiedForwardDependencies": [],
+  "unclassifiedReverseCallers": [],
+  "bundleCrossLayerImports": [],
+  "dynamicReferenceErrors": []
+}

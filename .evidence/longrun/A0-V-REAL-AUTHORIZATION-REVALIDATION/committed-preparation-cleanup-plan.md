@@ -1,0 +1,9 @@
+# 已成功准备的释放收尾
+
+基线9b7ca72f，沿用ecommerce-sleep-recovery-plan.md。真实阻断为runtime-apply phase=succeeded/status=needs_attention，三资源确认释放后仍不能进入disable。保留原成功历史，新增明确释放收尾事件，不恢复资源，不改变配置、租约或业务权限。
+
+合同：可信runtime事务内按租户/安装/operation加锁，CAS当前revision；只接纳runtime-apply、succeeded、needs_attention、RESOURCE_CLEANUP_UNCERTAIN。唯一完整preparation_committed事件及hash、generation和资源id集合必须与当前资源一致；全部资源released/observed_release=true，同一当前generation的绑定enabled=false、operation_fence=true、observed_state=unknown。任何缺失、漂移、仍运行或未确认资源拒绝。成功后phase保留succeeded、status改failed、failure_code=PREPARED_RUNTIME_RELEASED，追加committed_preparation_released事件及资源集合；重放仅认可同一终态和精确事件。
+
+文件：extension_runtime/committed_cleanup.py实现独立收尾合同；resource_recovery.py在既有run_batch扫描本租户最多100项候选并调用，随Host恢复自然运行，不要求开发者修改表；preparation_worker.py最终清理复用相同服务；tests/extension_runtime/test_committed_cleanup_pg.py覆盖真实PG正向/重放/回滚、跨租户/CAS、坏证明、缺资源、未释放、错generation、未禁入和无权限。保持旧未提交恢复路径不变，既有recovery/worker/Host测试回归。
+
+先隔离18432验证，禁止在主库造测试记录。通过后正常Host重载并验证真实操作由needs_attention收尾、旧成功事件不变、原disable命令同键成功。下一步另行处理已enable未dispatch卸载合同，不隐含扩权。当前主任务m1 Lease覆盖产品代码与测试。

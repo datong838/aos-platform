@@ -1,0 +1,19 @@
+{
+  "operation": {
+    "revision": 62,
+    "status": "failed",
+    "failure_code": "PREPARED_RUNTIME_RELEASED"
+  },
+  "events": [
+    {
+      "type": "preparation_committed",
+      "sequence": 12,
+      "payload_hash": "sha256:204e04f05d7c4783f6a4853d53ecf10a2dba8592e61583d99a5530f777165aea"
+    },
+    {
+      "type": "committed_preparation_released",
+      "sequence": 62,
+      "payload_hash": "sha256:c0e420cccd6c25ffacfad793071217389234f2491cd97ac552db0a844e01addb"
+    }
+  ]
+}

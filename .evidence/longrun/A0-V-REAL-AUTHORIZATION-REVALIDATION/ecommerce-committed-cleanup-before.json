@@ -1,0 +1,50 @@
+{
+  "operations": [
+    {
+      "operation_id": "08c58e06-d4b9-495b-b085-97b39b916ec4",
+      "kind": "runtime-apply",
+      "phase": "succeeded",
+      "status": "needs_attention",
+      "revision": 61,
+      "failure_code": "RESOURCE_CLEANUP_UNCERTAIN"
+    },
+    {
+      "operation_id": "06cfb4f0-23ff-4625-9da7-58b6e59bc074",
+      "kind": "runtime-verify",
+      "phase": "succeeded",
+      "status": "succeeded",
+      "revision": 5,
+      "failure_code": null
+    },
+    {
+      "operation_id": "61277af9-52f6-4353-8996-fe8175690b33",
+      "kind": "configure",
+      "phase": "succeeded",
+      "status": "succeeded",
+      "revision": 6,
+      "failure_code": null
+    },
+    {
+      "operation_id": "1066ba10-3b62-4019-802d-52c8a955bd50",
+      "kind": "enable",
+      "phase": "succeeded",
+      "status": "succeeded",
+      "revision": 5,
+      "failure_code": null
+    }
+  ],
+  "binding": {
+    "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+    "revision": 5,
+    "enabled": false,
+    "operation_fence": true,
+    "observed_state": "unknown",
+    "desired_state": "enabled"
+  },
+  "preparationProof": [
+    {
+      "sequence": 12,
+      "payload_hash": "sha256:204e04f05d7c4783f6a4853d53ecf10a2dba8592e61583d99a5530f777165aea"
+    }
+  ]
+}

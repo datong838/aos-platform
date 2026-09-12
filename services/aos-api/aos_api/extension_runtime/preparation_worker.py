@@ -248,7 +248,10 @@ class PreparationWorker:
                 if row is None:raise LookupError('operation not found')
                 revision,phase,status=_values(row,('revision','phase','status'))
                 if (phase,status)==('succeeded','succeeded'):return
-                if phase=='succeeded':raise RuntimeConflict('committed preparation requires cleanup reconciliation')
+                if phase=='succeeded':
+                    from .committed_cleanup import settle_committed_cleanup
+                    settle_committed_cleanup(conn,**scope,operation_id=plan.operation_id,expected_revision=revision)
+                    return
                 RuntimeOperationStore().fail_uncommitted_preparation(conn,**scope,
                     operation_id=plan.operation_id,expected_revision=revision,failure_code=code)
 

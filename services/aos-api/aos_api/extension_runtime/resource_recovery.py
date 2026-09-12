@@ -26,6 +26,7 @@ class ResourceRecoveryBusy(RuntimeConflict):
 class RecoveryPage:
     results: tuple[tuple[UUID,str],...]
     cursor: UUID | None
+    settled_operations: tuple[UUID,...] = ()
 
 
 class ExpiredResourceRecovery:
@@ -56,7 +57,36 @@ class ExpiredResourceRecovery:
             except ResourceStillLive:state='live'
             # Permission, DB, identity and other failures deliberately propagate.
             results.append((resource,state))
-        return RecoveryPage(tuple(results),candidates[-1] if candidates else after)
+        settled=self._settle_committed_batch(scope,limit)
+        return RecoveryPage(tuple(results),candidates[-1] if candidates else after,settled)
+
+    def _settle_committed_batch(self,scope,limit):
+        from .committed_cleanup import settle_committed_cleanup
+        from .lifecycle_store import RuntimeRevisionConflict
+        with self._idle() as conn:
+            with self._transaction(conn,scope):
+                rows=conn.execute('''SELECT o.operation_id,o.revision FROM extension_runtime_operation o
+                    WHERE o.org_id=%s AND o.project_id=%s AND o.kind='runtime-apply'
+                      AND o.phase='succeeded' AND o.status='needs_attention'
+                      AND o.failure_code='RESOURCE_CLEANUP_UNCERTAIN'
+                      AND EXISTS(SELECT 1 FROM extension_runtime_resource_lease r
+                        WHERE r.org_id=o.org_id AND r.project_id=o.project_id AND r.operation_id=o.operation_id)
+                      AND NOT EXISTS(SELECT 1 FROM extension_runtime_resource_lease r
+                        WHERE r.org_id=o.org_id AND r.project_id=o.project_id AND r.operation_id=o.operation_id
+                          AND (NOT r.observed_release OR r.cleanup_state<>'released' OR r.engine_context<>%s))
+                    ORDER BY o.operation_id LIMIT %s''',
+                    (scope['org_id'],scope['project_id'],self.driver.context,limit)).fetchall()
+        settled=[]
+        for row in rows:
+            operation,revision=_values(row,('operation_id','revision'))
+            try:
+                with self._idle() as conn:
+                    with self._transaction(conn,scope):
+                        settle_committed_cleanup(conn,**scope,operation_id=operation,expected_revision=revision)
+            except RuntimeRevisionConflict:
+                continue
+            settled.append(operation)
+        return tuple(settled)
 
     def settle_preparation(self,*,org_id,project_id,operation_id,expected_revision):
         TenantScope(org_id,project_id)

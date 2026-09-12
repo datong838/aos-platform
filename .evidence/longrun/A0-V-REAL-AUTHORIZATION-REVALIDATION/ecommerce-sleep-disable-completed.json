@@ -1,0 +1,30 @@
+{
+  "operation": {
+    "phase": "succeeded",
+    "status": "succeeded",
+    "revision": 6
+  },
+  "binding": {
+    "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+    "revision": 7,
+    "desired_state": "disabled",
+    "observed_state": "unknown",
+    "enabled": false,
+    "operation_fence": true,
+    "execution_epoch": 5
+  },
+  "events": [
+    {
+      "sequence": 5,
+      "type": "disabled_committed",
+      "payload": {
+        "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+        "executionEpoch": 5,
+        "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+        "bindingRevision": 7,
+        "resourcesRetained": true
+      },
+      "payload_hash": "sha256:118dde78e0b70dfd087e1631258bb6f179db664e9256d5689b148d8fe93777d9"
+    }
+  ]
+}

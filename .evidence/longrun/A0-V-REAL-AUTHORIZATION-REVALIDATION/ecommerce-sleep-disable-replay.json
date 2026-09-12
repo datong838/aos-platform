@@ -1,0 +1,18 @@
+{
+  "command": {
+    "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+    "etag": 5,
+    "target": {
+      "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+      "bindingRevision": 5
+    }
+  },
+  "receipt": {
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1,
+    "operationId": "6286f967-a0a8-45ba-bd7b-98d4feb66bf2",
+    "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982"
+  },
+  "replayed": true
+}
