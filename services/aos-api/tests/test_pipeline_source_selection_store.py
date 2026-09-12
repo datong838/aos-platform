@@ -81,3 +81,9 @@ def test_boolean_previous_revision_is_not_a_database_revision():
     row['previous_revision'] = True
     with pytest.raises(ValueError):
         decode_selection_row(row)
+
+
+def test_boolean_header_cannot_equal_integer_revision():
+    row=selection_row()
+    row['payload']['revision']=True
+    with pytest.raises(ValueError):decode_selection_row(row)

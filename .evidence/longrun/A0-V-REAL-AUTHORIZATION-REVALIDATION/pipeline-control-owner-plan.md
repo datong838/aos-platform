@@ -1,0 +1,12 @@
+# 管道运行控制当前Owner
+
+2026-09-12，基线dbdf739d。遵循pipeline-runtime-control-plan.md和pipeline-control-ledger-plan.md；新代码services/aos-api/aos_api/pipeline_runtime_control_owner.py，单元tests/test_pipeline_runtime_control_owner.py与独立PG tests/extension_runtime/test_pipeline_runtime_control_owner_pg.py。
+
+- 固定依赖PipelineSourceSelectionOwner，禁止请求注入权限回调。批准入口严格RuntimeControlDraft、actor、idempotencyKey、previousRef；通过来源选择run_current后在同事务追加控制。控制与来源选择公共合同必须逐字段完全相等（只忽略各自schemaVersion和控制sourceSelectionRef）；不得通过控制扩大预算或延长期限。
+- 记录codec保存完整draft和明确的顶层身份、selection ref、actor、previousHash，严格解码并验证hash、数据库列、请求hash和前序。首修订随机control_id不进入请求hash。重复key同请求回读，但仍重验当前选择；不同请求冲突，旧previousRef冲突。
+- 消费入口按current role与scope、control exact ref、同目标最新revision校验，再由来源选择run_current检查当前权限/派生规格/有效期。可信同步操作收到控制draft与当前spec；不返回独立许可。已退休/旧代际依靠原runtime_gate拒绝，不绕开原Owner。
+- 只实现控制批准/消费，不从此入口自建ScheduleRun或执行SQL源查询；后续执行Factory须把它包在原run日志流程中。测试替身只证明组合/持久边界，实租户生产组合单独验收。
+
+先通过共享合同拒绝漂移及记录防篡改；再独立PG验证一条幂等记录、版本链、失效选择/控制、外层回滚、当前拒绝不回调。真实库不迁移，P01不启用、不push，230 L0仍挂起。
+
+审查补充：记录内容比较不能只用Python字典相等（True==1）。本波同时最小修改pipeline_source_selection_store.py及tests/test_pipeline_source_selection_store.py，要求实际payload规范摘要、重建payload规范摘要、存储hash三者一致；新增顶层revision布尔替换的拒绝测试。控制codec同样执行此规则。

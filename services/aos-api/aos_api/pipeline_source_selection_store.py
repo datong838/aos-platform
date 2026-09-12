@@ -79,7 +79,7 @@ def decode_selection_row(row) -> SourceSelectionRecord:
         identity, revision, previous_hash, actor = str(row['selection_id']), row['revision'], row['previous_hash'], row['actor']
         expected = build_selection_payload(draft=draft, read_spec=spec, selection_id=identity,
             revision=revision, previous_hash=previous_hash, actor=actor)
-        if payload != expected or canonical_sha256(expected) != row['content_hash']:
+        if canonical_sha256(payload) != canonical_sha256(expected) or canonical_sha256(expected) != row['content_hash']:
             raise ValueError('selection payload or content hash differs')
         columns = {'org_id':'orgId','project_id':'projectId','installation_id':'installationId',
             'generation':'generation','pipeline_id':'pipelineId','source_id':'sourceId',
