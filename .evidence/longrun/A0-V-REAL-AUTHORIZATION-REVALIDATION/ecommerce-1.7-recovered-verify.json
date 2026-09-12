@@ -1,0 +1,25 @@
+{
+  "activeRevision": null,
+  "bindings": [],
+  "canaryInstallationCount": 0,
+  "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+  "operations": [
+    {
+      "expected_installation_etag": 3,
+      "failure_code": null,
+      "kind": "runtime-apply",
+      "operation_id": "08c58e06-d4b9-495b-b085-97b39b916ec4",
+      "phase": "succeeded",
+      "status": "succeeded"
+    }
+  ],
+  "receipt": {
+    "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+    "operationId": "06cfb4f0-23ff-4625-9da7-58b6e59bc074",
+    "phase": "accepted",
+    "revision": 1,
+    "status": "accepted"
+  },
+  "revision": 4,
+  "state": "applied"
+}

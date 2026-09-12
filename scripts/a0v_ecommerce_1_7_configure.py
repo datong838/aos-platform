@@ -28,7 +28,17 @@ def setup():
     return connect,activation,authorize,service
 
 
-def run(action):
+def configuration_target(recovery=False):
+    if not recovery:return INSTALLATION,STATE,"a0v-ecommerce-1.7","ecommerce-1.7"
+    from uuid import UUID
+    initial=json.loads((RECOVERY/"state/ecommerce-1.7-recovered-first-install.json").read_text())
+    installation=str(UUID(initial["installationId"]))
+    if installation==INSTALLATION:raise ValueError("RECOVERY_REQUIRES_NEW_INSTALLATION")
+    return installation,RECOVERY/"state/ecommerce-1.7-recovered-configuration.json","a0v-ecommerce-1.7-recovered","ecommerce-1.7-recovered"
+
+
+def run(action,recovery=False):
+    installation_id,state_path,key_prefix,command_prefix=configuration_target(recovery)
     connect,activation,authorize,service=setup()
     from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
     from aos_api.extension_runtime.configuration_contracts import ConfigurationDocument,ConfigurationSourceRef,ConfigureTarget
@@ -56,24 +66,24 @@ def run(action):
     with connect() as conn:
         with conn.transaction():
             apply_asset_transaction_scope(conn,org_id=scope.org_id,project_id=scope.project_id)
-            installation=conn.execute('SELECT r.state,i.etag_version FROM bundle_installation i JOIN bundle_installation_revision r ON r.org_id=i.org_id AND r.project_id=i.project_id AND r.installation_pk=i.installation_pk AND r.revision=i.current_revision WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s',(*scope.key,INSTALLATION)).fetchone()
-            binding=conn.execute('SELECT generation,revision,desired_state,observed_state,enabled,operation_fence,config_ref FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s AND installation_id=%s',(*scope.key,INSTALLATION)).fetchone()
+            installation=conn.execute('SELECT r.state,i.etag_version FROM bundle_installation i JOIN bundle_installation_revision r ON r.org_id=i.org_id AND r.project_id=i.project_id AND r.installation_pk=i.installation_pk AND r.revision=i.current_revision WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s',(*scope.key,installation_id)).fetchone()
+            binding=conn.execute('SELECT generation,revision,desired_state,observed_state,enabled,operation_fence,config_ref FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s AND installation_id=%s',(*scope.key,installation_id)).fetchone()
             if not installation or installation['state']!='active' or not binding:raise ValueError('KNOWN_ACTIVE_INSTALLATION_REQUIRED')
-            target={'org_id':scope.org_id,'project_id':scope.project_id,'installation_id':INSTALLATION,'generation':str(binding['generation'])}
+            target={'org_id':scope.org_id,'project_id':scope.project_id,'installation_id':installation_id,'generation':str(binding['generation'])}
             authorize(conn,**target,actor=activation.ACTOR,configuration=document)
-            result={'action':action,'installationId':INSTALLATION,'installation':dict(installation),'binding':dict(binding),'configuration':document.model_dump(mode='json'),'authorized':True}
+            result={'action':action,'installationId':installation_id,'installation':dict(installation),'binding':dict(binding),'configuration':document.model_dump(mode='json'),'authorized':True}
             if action=='stage':
-                frozen=json.loads(STATE.read_text()) if STATE.exists() else {'installationEtag':installation['etag_version'],'bindingRevision':binding['revision'],'generation':str(binding['generation']),'configuration':document.model_dump(mode='json')}
+                frozen=json.loads(state_path.read_text()) if state_path.exists() else {'installationEtag':installation['etag_version'],'bindingRevision':binding['revision'],'generation':str(binding['generation']),'configuration':document.model_dump(mode='json')}
                 if frozen['generation']!=str(binding['generation']) or frozen['configuration']!=document.model_dump(mode='json'):raise ValueError('CONFIGURATION_INPUT_DRIFT')
                 staged=append_configuration(conn,**target,expected_installation_etag=frozen['installationEtag'],expected_binding_revision=frozen['bindingRevision'],
-                    actor=activation.ACTOR,idempotency_key='a0v-ecommerce-1.7-config-stage-v1',configuration=document,authorize=authorize)
+                    actor=activation.ACTOR,idempotency_key=key_prefix+'-config-stage-v1',configuration=document,authorize=authorize)
                 frozen['configRef']=staged.model_dump(mode='json');result['staged']=frozen
     if action=='stage':
-        STATE.parent.mkdir(parents=True,exist_ok=True);temporary=STATE.with_suffix('.tmp');temporary.write_text(json.dumps(result['staged'],indent=2)+'\n');os.chmod(temporary,0o600);temporary.replace(STATE)
+        state_path.parent.mkdir(parents=True,exist_ok=True);temporary=state_path.with_suffix('.tmp');temporary.write_text(json.dumps(result['staged'],indent=2)+'\n');os.chmod(temporary,0o600);temporary.replace(state_path)
     elif action in {'configure','enable'}:
-        frozen=json.loads(STATE.read_text())
+        frozen=json.loads(state_path.read_text())
         if frozen['generation']!=str(binding['generation']):raise ValueError('CONFIGURATION_GENERATION_DRIFT')
-        command_path=STATE.with_name('ecommerce-1.7-'+action+'-command.json')
+        command_path=state_path.with_name(command_prefix+'-'+action+'-command.json')
         if command_path.exists():
             command=json.loads(command_path.read_text())
         else:
@@ -82,8 +92,8 @@ def run(action):
                 os.chmod(command_path,0o600);handle.write(json.dumps(command,indent=2)+'\n');handle.flush();os.fsync(handle.fileno())
         if command['generation']!=frozen['generation'] or command['configRef']!=frozen['configRef']:raise ValueError('FROZEN_CONFIGURATION_COMMAND_DRIFT')
         command_target=ConfigureTarget(generation=command['generation'],bindingRevision=command['bindingRevision'],configRef=command['configRef'])
-        receipt=service.request(installation_id=INSTALLATION,kind=action,org_id=scope.org_id,project_id=scope.project_id,
-            actor=activation.ACTOR,roles=activation.ROLES,markings=activation.MARKINGS,idempotency_key='a0v-ecommerce-1.7-'+action+'-v1',
+        receipt=service.request(installation_id=installation_id,kind=action,org_id=scope.org_id,project_id=scope.project_id,
+            actor=activation.ACTOR,roles=activation.ROLES,markings=activation.MARKINGS,idempotency_key=key_prefix+'-'+action+'-v1',
             if_match='"'+str(command['etag'])+'"',target=command_target)
         result['receipt']=receipt.response_json
     return result
@@ -91,6 +101,7 @@ def run(action):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--action',choices=['preflight','stage','configure','enable'],required=True);parser.add_argument('--output',type=Path,required=True)
-    args=parser.parse_args();result=run(args.action)
+    parser.add_argument('--after-config-recovery',action='store_true')
+    args=parser.parse_args();result=run(args.action,recovery=args.after_config_recovery)
     args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,default=str,indent=2)+'\n')
     print(json.dumps(result,default=str,indent=2))

@@ -9,3 +9,7 @@
 以现有 Installation lock + operation/resource 行锁防并发；现有数据库私有应用身份检查、终态一致性约束、回执 content hash 不变。新回执有 disable ID、无 activation ID。先专用完整克隆跑 upgrade 与逐场景事务回滚的正负案例；测试完整 InstallationService 卸载事务，裸函数回滚不冒充真正提交。负例覆盖未释放、未终结 enable、成功 enable 历史、配置错指针、错代/版本/租户、缺失/篡改禁用证明。克隆成功再主库迁移和正式卸载，原请求无成功回执可使用相同固定请求，不生成新键重试副作用未知任务。
 
 克隆初版正例触发旧 disable_operation_id 对 dispatch_lifecycle 的第二外键。保持该外键不动，新增 unactivated_disable_operation_id（引用 runtime_operation），新类型旧 disable/activation 两列为空、独立列非空并匹配 authorityData；原两类型独立列为空。保留初版克隆供取证，重新从原 019 快照验证候选迁移，不修改主库。
+
+重装沿用已签名 core/Niushop 1.3 + growth1.7，不再构建重复制品。scripts/a0v_ecommerce_1_7_first_install.py 新增 --after-config-recovery，先验证 e42 已正式卸载，再使用独立幂等前缀和 state/ecommerce-1.7-recovered-first-install.json；旧状态保留。scripts/a0v_ecommerce_1_7_configure.py 同名标志只读取该正式首装回执的新安装 ID，使用独立配置/命令文件及前缀，不覆盖 e42 历史。新安装 apply/verify 后先 configure，跨至少一次60秒续租再 enable，读取真实 Host/资源租约与回执，确认本轮修复。
+
+持续观察脚本 scripts/a0v_ecommerce_continuity_observe.py 增加互斥 --after-config-recovery；配置 unknown 态仅在同一正式配置事件核验通过且三真实容器/租约有效时报告 CONFIGURED_FENCED_CONTINUITY，不报告 ready/enabled。旧观察模式保持原准入条件。

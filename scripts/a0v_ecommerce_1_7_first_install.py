@@ -23,9 +23,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--action", choices=("create", "apply", "verify", "observe"), required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--after-config-recovery", action="store_true")
     args = parser.parse_args()
     state_path = STATE
     key_prefix = "a0v-ecommerce-1.7"
+    if args.after_config_recovery:
+        state_path=RECOVERY/"state/ecommerce-1.7-recovered-first-install.json"
+        key_prefix="a0v-ecommerce-1.7-recovered"
     first = load("a0v_canonical_ecommerce_first_install")
     activation = load("a0v_ecommerce_growth_1_4_activate")
     connect = first.container_database_connect_factory(context="colima-aos-extension", container="aos-a0v-recovery-pg", database_name="aos_meta_head")
@@ -40,6 +44,10 @@ def main():
     predecessor = store.get_installation(org_id="org-org", project_id="dev-project", installation_id="efc4e640-1b15-403f-9d06-4c6d1a5330a7")
     if predecessor.state != "uninstalled" or predecessor.active_revision is not None:
         raise ValueError("1.6 reinstall must be formally retired first")
+    if args.after_config_recovery:
+        retired=store.get_installation(org_id="org-org",project_id="dev-project",installation_id="e42e042b-1fe7-4cfa-bb83-469ff256081d")
+        if retired.state!="uninstalled" or retired.active_revision is not None:
+            raise ValueError("configured predecessor must be formally uninstalled")
     if args.action == "create":
         result = first.create_approved_first_installation(connect_factory=connect, state_dir=TRUST_STATE,
             core_version="1.3.0", adapter_version="1.3.0", growth_version="1.7.0",

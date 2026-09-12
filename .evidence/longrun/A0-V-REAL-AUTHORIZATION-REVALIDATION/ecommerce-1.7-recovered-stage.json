@@ -1,0 +1,90 @@
+{
+  "action": "stage",
+  "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+  "installation": {
+    "state": "active",
+    "etag_version": 5
+  },
+  "binding": {
+    "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+    "revision": 1,
+    "desired_state": "disabled",
+    "observed_state": "ready",
+    "enabled": false,
+    "operation_fence": true,
+    "config_ref": null
+  },
+  "configuration": {
+    "schemaVersion": 1,
+    "roleRefs": [
+      {
+        "authority": "aip.responsibility_plan_revision",
+        "id": "responsibility-plan-63c82d2a75614e1b95f1",
+        "revision": 2,
+        "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+      }
+    ],
+    "dataRefs": [
+      {
+        "authority": "aip.data_classification_policy_revision",
+        "id": "a0v-ecommerce-public-catalog-v1",
+        "revision": 1,
+        "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+      }
+    ],
+    "budgetRef": {
+      "authority": "aip.budget_revision",
+      "id": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "policyRef": {
+      "authority": "aip.runtime_policy_revision",
+      "id": "a0v-ecommerce-runtime-policy-v1",
+      "revision": 3,
+      "hash": "sha256:930bebbb5979a177c54bba4b910124a5ae7490fc10a31c3a9c4a6442e4d8c433"
+    }
+  },
+  "authorized": true,
+  "staged": {
+    "installationEtag": 5,
+    "bindingRevision": 1,
+    "generation": "bba8cd06-76ad-4ed6-a6bc-624c5b442d0c",
+    "configuration": {
+      "schemaVersion": 1,
+      "roleRefs": [
+        {
+          "authority": "aip.responsibility_plan_revision",
+          "id": "responsibility-plan-63c82d2a75614e1b95f1",
+          "revision": 2,
+          "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+        }
+      ],
+      "dataRefs": [
+        {
+          "authority": "aip.data_classification_policy_revision",
+          "id": "a0v-ecommerce-public-catalog-v1",
+          "revision": 1,
+          "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+        }
+      ],
+      "budgetRef": {
+        "authority": "aip.budget_revision",
+        "id": "a0v-ecommerce-hard-stop-budget-v1",
+        "revision": 1,
+        "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+      },
+      "policyRef": {
+        "authority": "aip.runtime_policy_revision",
+        "id": "a0v-ecommerce-runtime-policy-v1",
+        "revision": 3,
+        "hash": "sha256:930bebbb5979a177c54bba4b910124a5ae7490fc10a31c3a9c4a6442e4d8c433"
+      }
+    },
+    "configRef": {
+      "configurationId": "bc533647-a95a-4553-bc23-ff261b811343",
+      "revision": 1,
+      "hash": "sha256:9a99f093e28208c01427a1c3ac9822a0d362cd62c940dbe1de596a951f69b9fa"
+    }
+  }
+}

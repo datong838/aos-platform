@@ -1051,3 +1051,7 @@ e3f8daab 修复 SDK 心跳占用额度，7ec6f4e0 构建 core/Niushop 1.3、grow
 ### 9.56 六职责与配置切换实证
 
 462baceb 完成六职责及限定8技能就绪、不可变配置和 configure succeeded。启用仅 accepted；03:27:24Z Host 因 unknown 配置态被续租拒绝而退出。9.55 的运行观测为历史证据，当前不可经营。下一波 configuration-lease-continuity-plan.md 修复后正式恢复，不复活释放资源；业务首链和八工作台未完成。
+
+### 9.57 配置续租与未接入卸载恢复
+
+b5b25f80 修复配置期续租和延迟启用截止时间；d53d9584 新增 exact disabled proof 的 configured_unactivated 卸载。主库 e42 已卸载@6。新 af1992e8 安装 apply/verify，配置后03:54:15Z续租成功，仍禁用/待核验。下一步跨03:56:43Z原准备deadline执行enable，再准备正式调度接入与业务链。未声称业务验收完成。
