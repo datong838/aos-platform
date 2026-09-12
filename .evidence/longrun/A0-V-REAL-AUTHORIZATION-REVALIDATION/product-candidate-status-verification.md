@@ -4,6 +4,7 @@
 
 - RED：新模块未实现，定向测试收集报ModuleNotFoundError。
 - GREEN：候选状态测试与实际Owner源事件契约测试共56 passed（4.75s），7项既有警告。
+- 提交后审查发现新测试文件名称与已有候选包生成测试重名；立即从4928937e精确恢复原文件，将新增测试独立为test_niushop_product_candidate_status.py。三文件共同验证59 passed（4.17s），原有3项保护完整保留。未amend历史提交。
 - 真数据只读核验：从IngressJournal原保存命令读取65条；39 ELIGIBLE_STATUS、18 INACTIVE、8 DELETED；sourceCalls=0、businessWrites=0。详见product-candidate-real-observation-v1.json。
 - AR2清册验证：1811模块、158分类、93迁移；hashErrors、双向依赖、跨层导入、动态引用错误列表全空。
 - 自审：代码位于Niushop平台适配包，不将平台字段放入core；无外部I/O、不改变原输入、不写旧状态和Receipt。scope/platform/shop严格相等，枚举与布尔/整数不隐式转换；矛盾或缺失状态不合格。与方案一致。

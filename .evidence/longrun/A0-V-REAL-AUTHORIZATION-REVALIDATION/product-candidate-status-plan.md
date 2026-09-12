@@ -6,7 +6,7 @@ Rules：沿用aos-engineering-delivery、m1单写、用户持续开发授权；�
 
 具体新增文件：
 - bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/product_candidate.py：平台包内纯函数，对可信Owner读出的单个Canonical Product按显式org/project/shop做身份匹配，返回固定原因码。拒绝错误类型、缺字段、字符串/布尔代替数字、矛盾状态；只允许ACTIVE/active/unknown=false、is_deleted=false、state=1、isDelete=0。下架与删除保留为不同不合格原因。
-- services/aos-api/tests/extension_runtime/test_niushop_product_candidate.py：状态矩阵、跨租户/店铺/平台、未知/矛盾/缺失、输入不可变回归。
+- services/aos-api/tests/extension_runtime/test_niushop_product_candidate_status.py：状态矩阵、跨租户/店铺/平台、未知/矛盾/缺失、输入不可变回归。
 
 这不是授权验证或经营任务创建接口，不替代SourceSelection、Readiness、当前对象版本复查、预算和exact审批。事件消费者仍须消费下架/删除事件以撤销旧候选，不可因不合格就丢失事件。本波只完善数据解释契约并用保存的真实命令核对39/18/8；生产包发布安装与消费者接入在后续波次完成。
 
