@@ -7,7 +7,7 @@ from uuid import UUID
 from .binding_store import RuntimeBindingStore
 from .disable_request import load_disable_target
 from .lifecycle_store import (_require_transaction,_values,_digest,RuntimeConflict,
-    RuntimeRevisionConflict,RuntimeOperationStore)
+    RuntimeRevisionConflict,RuntimeOperationStore,OperationResult)
 from .runtime_gate import _reject_deferred
 
 
@@ -45,6 +45,28 @@ def begin_disable(conn, **args):
         if not callable(hook):raise RuntimeConflict('valid disable dependent required')
         hook(conn,org_id=identity[0],project_id=identity[1],runtime_operation_id=identity[2])
     return result
+
+
+def settle_stale_disable_target(conn, **args):
+    """Terminal failure for an obsolete accepted target; never change binding CAS."""
+    identity,installation_id,request,revision=_locked(conn,**args,phase='accepted')
+    binding=conn.execute('''SELECT revision FROM extension_runtime_binding
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s FOR UPDATE''',
+        (*identity[:2],installation_id,UUID(request.generation))).fetchone()
+    if binding is None:raise LookupError('disable binding not found')
+    current=_values(binding,('revision',))[0]
+    if current==request.bindingRevision:return None
+    if type(current) is not int or current<request.bindingRevision:
+        raise RuntimeConflict('disable binding version regressed')
+    revision+=1
+    conn.execute('''UPDATE extension_runtime_operation SET status='failed',revision=%s,
+        failure_code='DISABLE_TARGET_STALE' WHERE org_id=%s AND project_id=%s AND operation_id=%s''',
+        (revision,*identity))
+    RuntimeOperationStore._event(conn,*identity,revision,'disable_target_stale',dict(
+        installationId=str(installation_id),generation=request.generation,
+        acceptedBindingRevision=request.bindingRevision,currentBindingRevision=current,
+        failureCode='DISABLE_TARGET_STALE'))
+    return OperationResult(identity[2],'accepted','failed',revision)
 
 
 def finish_disable(conn, *, check_drained, **args):

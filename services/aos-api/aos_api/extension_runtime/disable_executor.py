@@ -8,7 +8,7 @@ from uuid import UUID
 from psycopg.pq import TransactionStatus
 
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
-from .disable_commit import begin_disable,finish_disable
+from .disable_commit import begin_disable,finish_disable,settle_stale_disable_target
 from .lifecycle_store import _values,RuntimeConflict,RuntimeRevisionConflict
 
 
@@ -49,6 +49,8 @@ class RuntimeDisableExecutor:
             if kind!='disable' or phase not in ('accepted','fencing'):
                 raise RuntimeConflict('disable requires accepted or fenced operation')
             if phase=='accepted':
+                stale=settle_stale_disable_target(conn,**args)
+                if stale is not None:return stale
                 args['expected_revision']=begin_disable(conn,**args,dependent=self.dependent).revision
         # The first connection context has committed before this one is opened.
         with self._connection(scope) as conn:
