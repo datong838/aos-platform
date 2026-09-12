@@ -57,6 +57,23 @@ def test_disable_recovery_keeps_original_command_namespace(tmp_path,monkeypatch)
     assert fresh_key!=old_key
 
 
+def test_disable_sleep_recovery_is_distinct_and_exclusive(tmp_path, monkeypatch):
+    monkeypatch.setattr(executor, 'RECOVERY', tmp_path)
+    state = tmp_path / 'state'
+    state.mkdir()
+    config_id, sleep_id = str(uuid4()), str(uuid4())
+    for name, value in [('recovered', config_id), ('sleep-recovered', sleep_id)]:
+        (state / f'ecommerce-1.7-{name}-first-install.json').write_text(json.dumps({'installationId': value}))
+    targets = [disable.disable_target(), disable.disable_target(True), disable.disable_target(sleep_recovery=True)]
+    assert targets[2][0] == sleep_id
+    assert targets[2][1].name == 'ecommerce-1.7-sleep-recovered-disable-command.json'
+    assert len({item[0] for item in targets}) == 3
+    assert len({item[1] for item in targets}) == 3
+    assert len({item[2] for item in targets}) == 3
+    with pytest.raises(ValueError, match='ONE_RECOVERY_TARGET_REQUIRED'):
+        disable.disable_target(True, sleep_recovery=True)
+
+
 @pytest.mark.parametrize('case',['fresh','old','invalid'])
 def test_recovery_requires_distinct_valid_installation_and_state(tmp_path,monkeypatch,case):
     monkeypatch.setattr(executor,'RECOVERY',tmp_path)

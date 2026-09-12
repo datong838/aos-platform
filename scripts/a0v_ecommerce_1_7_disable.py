@@ -6,13 +6,13 @@ from pathlib import Path
 from a0v_ecommerce_1_7_configure import setup, configuration_target
 
 
-def disable_target(recovery=False):
-    installation,configuration,key,command=configuration_target(recovery)
+def disable_target(recovery=False, *, sleep_recovery=False):
+    installation,configuration,key,command=configuration_target(recovery,sleep_recovery=sleep_recovery)
     return installation,configuration.with_name(command+'-disable-command.json'),key+'-disable-after-config-host-loss-v1'
 
 
-def run(recovery=False):
-    installation_id,path,key=disable_target(recovery)
+def run(recovery=False, *, sleep_recovery=False):
+    installation_id,path,key=disable_target(recovery,sleep_recovery=sleep_recovery)
     connect,activation,_,configuration=setup()
     from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
     from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
@@ -38,7 +38,9 @@ def run(recovery=False):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--apply',action='store_true');parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--after-config-recovery',action='store_true')
+    group=parser.add_mutually_exclusive_group()
+    group.add_argument('--after-config-recovery',action='store_true')
+    group.add_argument('--after-sleep-recovery',action='store_true')
     args=parser.parse_args()
     if not args.apply:raise ValueError('EXPLICIT_DISABLE_REQUIRED')
-    result=run(recovery=args.after_config_recovery);args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,default=str,indent=2)+'\n');print(json.dumps(result,default=str,indent=2))
+    result=run(recovery=args.after_config_recovery,sleep_recovery=args.after_sleep_recovery);args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,default=str,indent=2)+'\n');print(json.dumps(result,default=str,indent=2))

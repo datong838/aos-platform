@@ -1,0 +1,59 @@
+{
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "bindings": [
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "observed_state": "unknown",
+      "desired_state": "enabled",
+      "enabled": false,
+      "operation_fence": true,
+      "revision": 5
+    }
+  ],
+  "operations": [
+    {
+      "operation_id": "4a4eea12-214f-4f30-9f18-aaf91e01126d",
+      "kind": "runtime-apply",
+      "status": "failed",
+      "revision": 386
+    },
+    {
+      "operation_id": "1062a791-316c-4fd2-ac35-1be4abcf80e1",
+      "kind": "runtime-verify",
+      "status": "succeeded",
+      "revision": 5
+    },
+    {
+      "operation_id": "7069bee9-5479-4589-b244-004e1a161d89",
+      "kind": "configure",
+      "status": "succeeded",
+      "revision": 6
+    },
+    {
+      "operation_id": "20cb00ef-2201-46e9-b1b5-18748fd72e60",
+      "kind": "enable",
+      "status": "succeeded",
+      "revision": 5
+    }
+  ],
+  "resources": [
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "cleanup_state": "released",
+      "observed_release": true,
+      "expires_at": "2026-09-12 11:58:22.210581+00:00"
+    },
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "cleanup_state": "released",
+      "observed_release": true,
+      "expires_at": "2026-09-12 11:58:22.210581+00:00"
+    },
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "cleanup_state": "released",
+      "observed_release": true,
+      "expires_at": "2026-09-12 11:58:22.210581+00:00"
+    }
+  ]
+}
