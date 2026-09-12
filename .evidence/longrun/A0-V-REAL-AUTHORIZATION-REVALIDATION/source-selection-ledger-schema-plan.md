@@ -1,0 +1,20 @@
+# 来源选择历史表：独立数据库验证方案
+
+2026-09-12，基线dec5f99a；迁移HEAD已核对a0v_021，新增a0v_022_pipeline_source_selection.py。本步骤只建历史表合同并在18432独立测试环境验证，不对18435真实库执行迁移，不创建真实批准记录。
+
+## 文件
+
+- services/aos-api/alembic/versions/a0v_022_pipeline_source_selection.py
+- services/aos-api/tests/extension_runtime/test_pipeline_source_selection_schema_pg.py
+
+## 结构与保护
+
+pipeline_source_selection_revision归属org/project/installation/generation/pipeline，selection_id稳定、revision递增；保存source_id/source_configuration_revision、payload、content_hash、previous_revision/previous_hash、request_hash、idempotency_key、actor、created_at。payload为后续Owner的规范记录体，CHECK要求记录schema、tenant/installation/generation/pipeline/source与外部列一致，不允许缺字段因NULL绕过。
+
+主键固定每代际管道修订，selection引用在租户内唯一，幂等键在代际内唯一。前序外键携带同tenant/installation/generation/pipeline/selection及hash，必须revision-1；拒绝分叉、跳号及跨目标借前序。FK绑定现有extension_runtime_binding和data_source_configuration_revision的同租户身份。
+
+强制RLS；复用extension_reject_history_mutation禁止UPDATE/DELETE/TRUNCATE；仅给既有aos_runtime SELECT/INSERT，不创建身份、不修改其他表权限、不触及dispatch授权。新Owner还必须进行当前权限和版本判断，表内合法行不自行开启执行。历史不可破坏，downgrade明确拒绝，包卸载保留审计历史。
+
+## 验证
+
+复用test_lifecycle_pg的明确opt-in临时schema/非超级角色，引用表按真实键形状建立仅用于外键测试的测试数据，不能冒充完整安装审批或SourceSelection授权。覆盖合法链、重复revision/idempotency、错误前序hash/跳号/切换selection、跨租户source与generation、RLS读隐藏/写拒绝、篡改/删除/截断拒绝。随后完整迁移链在现有独立API测试库启动验证，生产数据库保持原版本。下一步继续Owner事务实现及当前权限测试，不push，230 L0挂起。
