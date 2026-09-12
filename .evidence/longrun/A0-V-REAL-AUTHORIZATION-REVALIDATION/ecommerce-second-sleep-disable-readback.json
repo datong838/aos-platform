@@ -1,0 +1,78 @@
+{
+  "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+  "operation": {
+    "operation_id": "76e09779-9bd2-4947-b29b-ff8224c52a35",
+    "kind": "disable",
+    "phase": "succeeded",
+    "status": "succeeded",
+    "revision": 6
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "type": "accepted",
+      "occurred_at": "2026-09-12 12:54:12.260818+00:00",
+      "payload": {
+        "kind": "disable",
+        "bindingTarget": {
+          "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+          "bindingRevision": 5
+        }
+      }
+    },
+    {
+      "sequence": 2,
+      "type": "fencing",
+      "occurred_at": "2026-09-12 12:54:13.928382+00:00",
+      "payload": {
+        "previousPhase": "accepted"
+      }
+    },
+    {
+      "sequence": 3,
+      "type": "draining",
+      "occurred_at": "2026-09-12 12:54:13.993926+00:00",
+      "payload": {
+        "previousPhase": "fencing"
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "committing",
+      "occurred_at": "2026-09-12 12:54:13.993926+00:00",
+      "payload": {
+        "previousPhase": "draining"
+      }
+    },
+    {
+      "sequence": 5,
+      "type": "disabled_committed",
+      "occurred_at": "2026-09-12 12:54:13.993926+00:00",
+      "payload": {
+        "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+        "executionEpoch": 5,
+        "installationId": "a0fd8e25-cb6f-49e5-aa77-7faddae12099",
+        "bindingRevision": 7,
+        "resourcesRetained": true
+      }
+    },
+    {
+      "sequence": 6,
+      "type": "succeeded",
+      "occurred_at": "2026-09-12 12:54:13.993926+00:00",
+      "payload": {
+        "previousPhase": "committing"
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "generation": "49427eeb-e9f8-42d5-8588-108e90110beb",
+      "observed_state": "unknown",
+      "desired_state": "disabled",
+      "enabled": false,
+      "operation_fence": true,
+      "revision": 7
+    }
+  ]
+}
