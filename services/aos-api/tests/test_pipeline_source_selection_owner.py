@@ -129,3 +129,35 @@ def test_composed_denial_never_reaches_append(composed_case,monkeypatch,mode):
     else: monkeypatch.setattr(SourceConfigurationRevisionStore,'read_current',lambda *a:None)
     with pytest.raises((PermissionError,ValueError)):
         owner._guarded(conn,draft,'actor',lambda value:pytest.fail('denied request appended'))
+
+
+def test_current_snapshot_compiles_only_verified_asset(composed_case):
+    import json,hashlib
+    owner,conn,draft,state,raw=composed_case
+    path=draft.mapping_ref.resource_id
+    mapping=json.loads(raw[path])
+    mapping['snapshot_materialization']={'schema_version':'aos.snapshot-materialization/v1','platform':'niushop',
+        'shop_key':'site_id','source_timezone':'+08:00','property_defaults':{'status':'active','currency':'CNY','timezone':'+08:00'}}
+    raw[path]=json.dumps(mapping).encode()
+    draft=draft.model_copy(update={'mapping_ref':draft.mapping_ref.model_copy(update={'content_hash':'sha256:'+hashlib.sha256(raw[path]).hexdigest()})})
+    compiled=owner._guarded(conn,draft,'actor',lambda value:value,snapshot=True)
+    assert compiled.read_spec.table=='ns_site' and len(compiled.fields)==11
+    assert compiled.platform=='niushop' and compiled.shop_id=='1'
+    raw[path]+=b' '
+    with pytest.raises(ValueError,match='digest'):
+        owner._guarded(conn,draft,'actor',lambda value:pytest.fail('drift consumed'),snapshot=True)
+
+
+def test_current_snapshot_missing_declaration_does_not_reach_consumer(composed_case):
+    owner,conn,draft,_,_=composed_case
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):
+        owner._guarded(conn,draft,'actor',lambda value:pytest.fail('undeclared mapping consumed'),snapshot=True)
+
+
+def test_current_selection_rechecks_window_after_synchronous_callback(composed_case):
+    owner,conn,draft,state,_=composed_case
+    def slow(spec):
+        state['now']=draft.expires_at
+        return 'uncommitted result'
+    with pytest.raises(PermissionError,match='window'):
+        owner._guarded(conn,draft,'actor',slow)

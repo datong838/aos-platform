@@ -135,7 +135,14 @@ class PipelineRuntimeControlOwner:
                 return decode_control_row(row).ref
         return self._selections.run_current(conn,scope=scope,ref=draft.source_selection_ref,actor=actor,execute=persist)
 
+    def run_current_snapshot(self,conn,*,scope,ref,actor,execute):
+        """Use the current control with the mapping compiled by asset authority."""
+        return self._run_current(conn,scope=scope,ref=ref,actor=actor,execute=execute,snapshot=True)
+
     def run_current(self,conn,*,scope,ref,actor,execute):
+        return self._run_current(conn,scope=scope,ref=ref,actor=actor,execute=execute,snapshot=False)
+
+    def _run_current(self,conn,*,scope,ref,actor,execute,snapshot):
         _require_transaction(conn)
         if type(scope) is not TenantScope or not callable(execute):raise TypeError('exact current control consumer required')
         current=conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
@@ -161,4 +168,5 @@ class PipelineRuntimeControlOwner:
             result=execute(saved.draft,spec)
             _reject_deferred(result)
             return result
-        return self._selections.run_current(conn,scope=scope,ref=saved.draft.source_selection_ref,actor=actor,execute=consume)
+        consume_selection=self._selections.run_current_snapshot if snapshot else self._selections.run_current
+        return consume_selection(conn,scope=scope,ref=saved.draft.source_selection_ref,actor=actor,execute=consume)

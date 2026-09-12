@@ -75,3 +75,40 @@ def test_control_append_is_owned_by_outer_transaction(control_case):
         owner.append(conn,draft=draft,actor='test-actor',idempotency_key='rollback')
         raise RuntimeError('rollback')
     assert conn.execute('SELECT count(*) FROM pipeline_runtime_control_revision').fetchone()==(0,)
+
+
+@pytest.mark.parametrize('mode',['current','control_superseded','selection_superseded','spec_changed','denied','deferred'])
+def test_snapshot_consumption_retains_current_control_and_selection(control_case,mode):
+    from aos_api.pipeline_source_selection import MappingReadSpec
+    from aos_api.pipeline_snapshot_materialization import compile_snapshot_mapping
+    conn,owner,draft,selections,selection,_=control_case
+    ref=append(conn,owner,draft)
+    if mode=='control_superseded':append(conn,owner,draft,'next',ref)
+    if mode=='selection_superseded':approve(conn,selections,selection,'next-selection',draft.source_selection_ref)
+    mapping={'source_table':'ns_site','target_ot':'Shop','primary_key':'site_id','incremental_strategy':'snapshot',
+        'site_filter':'site_id=1','field_mappings':[{'source':'site_id','target':'siteId','type':'int'},
+            {'source':'site_name','target':'name','type':'string'}],
+        'validation':{'required':['site_id','site_name']},'unique_key_pattern':'niushop:{pk}',
+        'snapshot_materialization':{'schema_version':'aos.snapshot-materialization/v1','platform':'niushop',
+            'shop_key':'site_id','source_timezone':'+08:00','property_defaults':{}}}
+    if mode=='spec_changed':mapping['source_table']='different'
+    spec=MappingReadSpec(mapping['source_table'],'Shop','site_id',('site_id','site_name'),(('site_id',1),))
+    compiled=compile_snapshot_mapping(mapping,spec)
+    # Explicit fake asset gate. The real asset compile seam is tested separately.
+    def fake_guard(db,item,actor,callback,*,snapshot=False):
+        assert snapshot is True
+        if mode=='denied':raise PermissionError('current denied')
+        return callback(compiled)
+    selections._guarded=fake_guard
+    calls=[]
+    def execute(current,value):
+        calls.append(value)
+        assert current==draft and value is compiled
+        return (x for x in []) if mode=='deferred' else value.shop_id
+    with conn.transaction():
+        if mode=='current':
+            assert owner.run_current_snapshot(conn,scope=TenantScope(draft.org_id,draft.project_id),ref=ref,actor='test-actor',execute=execute)=='1'
+        else:
+            with pytest.raises((RuntimeConflict,PermissionError,ValueError)):
+                owner.run_current_snapshot(conn,scope=TenantScope(draft.org_id,draft.project_id),ref=ref,actor='test-actor',execute=execute)
+    assert len(calls)==(1 if mode in {'current','deferred'} else 0)

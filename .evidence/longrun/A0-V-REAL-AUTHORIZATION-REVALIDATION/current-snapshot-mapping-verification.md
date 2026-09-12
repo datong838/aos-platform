@@ -1,0 +1,9 @@
+# 当前批准快照映射验证
+
+2026-09-12，基线307f19b9，主A0-V代码Lease。新run_current_snapshot通过原Selection与Control当前锁/版本/资产摘要链，编译验证过的documents[0]，不另读工作区映射；旧run_current/append合同保持。回调返回后重新检查批准时间窗，延迟操作跨期使所在事务失败。无新表/持久payload变更、无源读取、无新批准。
+
+RED3失败/24通过：两个缺snapshot参数和一个回调跨期未拒。实现后Selection/Control/claim相关60通过；新增真实隔离PG的snapshot控制消费current/superseded control/superseded selection/spec drift/denial/deferred，与materializer/controlled ingress相关51通过。两次测试集合有重叠，不相加冒充111个独立用例。资产权限在这些fixture中显式fake，不是实际批准证据。
+
+AR2-7扫描1801/分类158/迁移93，五错误数组为空。14:39:46Z真实Niushop实例仍ready/enabled，3容器running，16次续租，elapsed1096.888秒，canary0。此观察仅为运行连续性，不是业务首链成功。memory强投影CURRENT，validateGREEN；Codex eventual note仍PENDING_ASYNC。
+
+下一步执行器：独立事务确认claim提交，重新在当前snapshot Owner内校验same claim，仅本次created可发起一次读取；claim已存在且Ingress缺失返回SOURCE_OUTCOME_UNCONFIRMED；已有Ingress恢复原批次，保存前后重查期限。需要避免当前project_until_caught_up全租户投影范围超出本次批准，后续按原批次限定。主库仍a0v_023、API旧进程，SourceSelection/Control实际批准与八工作台仍待完成。

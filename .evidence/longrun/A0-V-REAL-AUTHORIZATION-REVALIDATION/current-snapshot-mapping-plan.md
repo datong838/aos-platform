@@ -1,0 +1,9 @@
+# 当前批准资产内编译快照映射
+
+2026-09-12，307f19b9。真实Niushop1.4已启用；源码占用/Ingress/纯materializer已具备，但Control回调只拿到MappingReadSpec，不含已核验的mapping声明。执行器不能重新从工作区读取一份映射当作批准资产。
+
+先补当前Owner内部能力，现存主A0-V Lease覆盖。文件：services/aos-api/aos_api/pipeline_source_selection_owner.py、pipeline_runtime_control_owner.py；tests/test_pipeline_source_selection_owner.py及tests/extension_runtime/test_pipeline_runtime_control_owner_pg.py。
+
+新增run_current_snapshot(conn,scope,ref,actor,execute)与原run_current共享同一私有当前读取实现，只有新入口在_source Selection._guarded读完唯一已安装签名包、exact导出路径/hash、graph/source/config/期限后，把documents[0]编译为不可变SnapshotMapping，并同步回调(draft,compiled)。旧run_current与append继续MappingReadSpec，无持久payload格式变化。新入口比对compiled.read_spec与原selection中的readSpec；RuntimeControl继续验证当前最新control和selection完全同域，再传递compiled。
+
+回调返回后再次检查approval时间窗，避免慢操作跨期限仍提交；异步/生成器照旧拒绝。此处仅编译与当前检查，不生成占用，不读源，不更新安装/批准、不授权副作用。后续executor在该入口内先编译再reserve并提交，随后重新进入单次读取+保存Ingress；存在claim无Ingress不可重读。测试覆盖exact材料进入compiler、缺声明/改hash拒绝、回调耗时过期拒绝；PG验证新入口仍拒绝superseded control。所有fake资产fixture明确不是实际批准证明。

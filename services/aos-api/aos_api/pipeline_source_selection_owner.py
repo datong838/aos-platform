@@ -130,7 +130,14 @@ class PipelineSourceSelectionOwner:
                 return decode_selection_row(row).ref
         return self._guarded(conn,draft,actor,persist)
 
+    def run_current_snapshot(self, conn, *, scope, ref, actor, execute):
+        """Consume a compiled verified mapping only inside the current transaction."""
+        return self._run_current(conn,scope=scope,ref=ref,actor=actor,execute=execute,snapshot=True)
+
     def run_current(self, conn, *, scope, ref, actor, execute):
+        return self._run_current(conn,scope=scope,ref=ref,actor=actor,execute=execute,snapshot=False)
+
+    def _run_current(self, conn, *, scope, ref, actor, execute, snapshot):
         """Consume the latest exact selection inside current locks, never a permit.
 
         The callback is trusted host code, not request-supplied execution logic.
@@ -170,14 +177,16 @@ class PipelineSourceSelectionOwner:
             revision=ref.revision,previous_hash=saved.previous_hash)
 
         def consume(spec):
-            if spec != saved.read_spec:
+            read_spec=spec.read_spec if snapshot else spec
+            if read_spec != saved.read_spec:
                 raise RuntimeConflict('current source selection specification differs')
             result = execute(saved.draft,spec)
             _reject_deferred(result)
             return result
+        if snapshot:return self._guarded(conn,saved.draft,actor,consume,snapshot=True)
         return self._guarded(conn,saved.draft,actor,consume)
 
-    def _guarded(self, conn, draft, actor, callback):
+    def _guarded(self, conn, draft, actor, callback, *, snapshot=False):
         scope = TenantScope(draft.org_id,draft.project_id)
         if self._artifacts.scope != scope:
             raise PermissionError('artifact tenant differs')
@@ -237,7 +246,16 @@ class PipelineSourceSelectionOwner:
             check_policy(conn,baseline)
             if not draft.not_before <= _now(conn) < draft.expires_at:
                 raise PermissionError('selection approval window is not current')
-            return callback(spec)
+            if snapshot:
+                from aos_api.pipeline_snapshot_materialization import compile_snapshot_mapping
+                value=compile_snapshot_mapping(documents[0],spec)
+            else:
+                value=spec
+            result=callback(value)
+            _reject_deferred(result)
+            if not draft.not_before <= _now(conn) < draft.expires_at:
+                raise PermissionError('selection approval window elapsed during execution')
+            return result
         return run_guarded(conn,installation_store=self._store,org_id=scope.org_id,project_id=scope.project_id,
             current_ref=current,generation=draft.generation,request_epoch=draft.execution_epoch,selected=selected,
             check_current_policy=check_policy,execute=execute)
