@@ -306,6 +306,52 @@ class AutomationOccurrenceStore:
             status="pending",
         )
 
+    def record_event_batch(
+        self,
+        scope: TenantScope,
+        binding: ScheduleBinding,
+        *,
+        events: list[tuple[str, datetime]] | tuple[tuple[str, datetime], ...],
+    ) -> tuple[OccurrenceWrite, ...]:
+        """Commit a bounded batch and its outbox atomically, without a watermark.
+
+        Trusted callers authenticate source identities and freeze deadlines
+        before this call. Replays must reuse those deadlines. Sequence numbers
+        are not commit-order cursors: late committed events remain eligible.
+        """
+        if binding.cadence != "event":
+            raise ValueError("only an event binding can consume source events")
+        if not isinstance(events, (list, tuple)) or not 1 <= len(events) <= 100:
+            raise ValueError("event batch must contain 1 to 100 items")
+        checked: list[tuple[str, datetime]] = []
+        seen: set[str] = set()
+        for item in events:
+            if not isinstance(item, (list, tuple)) or len(item) != 2:
+                raise ValueError("event batch item must contain identity and deadline")
+            source_event_id, deadline = item
+            if (not isinstance(source_event_id, str) or not source_event_id.strip()
+                    or source_event_id.strip() != source_event_id or len(source_event_id) > 240
+                    or source_event_id in seen or not isinstance(deadline, datetime)):
+                raise ValueError("event batch identity or deadline is invalid")
+            checked.append((source_event_id, _utc_seconds(deadline, "deadline")))
+            seen.add(source_event_id)
+        with self._connect_factory(scope) as conn:
+            self._lock_binding(conn, scope, binding)
+            writes = tuple(
+                self._insert_occurrence(
+                    conn, scope, binding,
+                    occurrence_id=uuid5(
+                        OCCURRENCE_NAMESPACE,
+                        f"event:{scope.org_id}:{scope.project_id}:{binding.policy_id}:{source_event_id}",
+                    ),
+                    scheduled_at=None, local_slot=None, source_event_id=source_event_id,
+                    trigger_source="event", deadline=deadline, status="pending",
+                )
+                for source_event_id, deadline in checked
+            )
+            conn.commit()
+        return writes
+
     def _record(
         self,
         scope: TenantScope,

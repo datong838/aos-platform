@@ -1,0 +1,9 @@
+# 源事件批次原子登记方案
+
+基线7421f843。projection_outbox序号分配不等于事务提交顺序；后续消费者不能以最大已见input_revision排除晚提交事件。优先依赖既有Occurrence的tenant/policy/sourceEventId确定性身份去重，无新增消费者表，本波不实现源扫描或调度。
+
+修改services/aos-api/aos_api/automation_occurrence_store.py：新增record_event_batch，显式事件列表1至100项，同一scope/binding；所有事件格式、UTC秒级deadline和重复ID先验证，持久化时锁一次当前approved/enabled绑定，复用既有_insert_occurrence及事件ID算法，一次事务提交。任何冲突回滚整批，禁止吞错或更新watermark。原record_event和schedule API保持不变。deadline由调用者从同一源事件/策略冻结，不以每次重试的当前时间生成。
+
+在services/aos-api/tests/extension_runtime/test_automation_occurrences_pg.py增加专用18432隔离schema验收：双写者批次去重、重放、第二项漂移导致第一项回滚、禁用/租户拒绝、空/超限/重复/非法事件拒绝且无写。测试身份沿用现有fixture，不在主库迁移或授权。记录登记成功不能冒充Case/Run执行成功。
+
+后续源扫描必须以独立事件存在性/Receipt防漏，保持原projected标记归投影器；当前安装epoch/fence和业务SourceReadiness在Admission继续重校验。新增生产读权限不在本波实施。

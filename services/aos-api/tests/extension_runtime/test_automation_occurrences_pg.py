@@ -145,6 +145,48 @@ def _seed(database, scope):
     )
 
 
+def test_event_batch_atomic_replay_and_concurrency(database):
+    scope = TenantScope("org-org", "dev-project")
+    binding = replace(_seed(database, scope), cadence="event", weekly_day=None, local_time=None)
+    store = AutomationOccurrenceStore(_runtime_connection(database, scope), schema=database.schema)
+    store.put_binding(scope, binding)
+    deadline = datetime(2026, 9, 13, tzinfo=UTC)
+    events = [("source-1", deadline), ("source-2", deadline)]
+    barrier = Barrier(2)
+    def record():
+        barrier.wait()
+        return store.record_event_batch(scope, binding, events=events)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: record(), range(2)))
+    assert sorted(sum(write.replayed for write in batch) for batch in results) == [0, 2]
+    assert [r.occurrence_id for r in results[0]] == [r.occurrence_id for r in results[1]]
+    with pytest.raises(AutomationOccurrenceConflict, match="replay drifted"):
+        store.record_event_batch(scope, binding, events=[("must-rollback", deadline), ("source-2", deadline + timedelta(seconds=1))])
+    assert database.owner.execute("SELECT count(*) AS n FROM automation_occurrence").fetchone()["n"] == 2
+    assert database.owner.execute("SELECT count(*) AS n FROM automation_occurrence_outbox").fetchone()["n"] == 2
+    assert database.owner.execute("SELECT watermark FROM automation_schedule_binding").fetchone()["watermark"] is None
+    with pytest.raises(AutomationOccurrenceNotReady):
+        store.record_event_batch(TenantScope("dev-org", "dev-project"), binding, events=[("wrong-tenant", deadline)])
+    database.owner.execute("UPDATE automation_schedule_binding SET enabled=false")
+    with pytest.raises(AutomationOccurrenceNotReady):
+        store.record_event_batch(scope, binding, events=[("disabled", deadline)])
+
+
+@pytest.mark.parametrize("kind", ["empty", "too_many", "duplicate", "blank", "naive", "non_string"])
+def test_event_batch_invalid_input_has_no_writes(database, kind):
+    scope = TenantScope("org-org", "dev-project")
+    binding = replace(_seed(database, scope), cadence="event", weekly_day=None, local_time=None)
+    store = AutomationOccurrenceStore(_runtime_connection(database, scope), schema=database.schema)
+    store.put_binding(scope, binding)
+    deadline = datetime(2026, 9, 13, tzinfo=UTC)
+    events = {"empty": [], "too_many": [(str(i), deadline) for i in range(101)],
+              "duplicate": [("same", deadline), ("same", deadline)], "blank": [(" ", deadline)],
+              "naive": [("one", deadline.replace(tzinfo=None))], "non_string": [(None, deadline)]}[kind]
+    with pytest.raises(ValueError):
+        store.record_event_batch(scope, binding, events=events)
+    assert database.owner.execute("SELECT count(*) AS n FROM automation_occurrence").fetchone()["n"] == 0
+
+
 def test_occurrence_authority_rls_concurrency_and_reconcile_only(database):
     positive = TenantScope("org-org", "dev-project")
     canary = TenantScope("dev-org", "dev-project")
