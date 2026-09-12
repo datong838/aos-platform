@@ -18,7 +18,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 class PreparedJob:
-    def __init__(self, plan, owner, finalize, verify=None, enable=None, *, tenant_scope=None):
+    def __init__(self, plan, owner, finalize, verify=None, enable=None, *, tenant_scope=None, renew=None):
         self.plan=plan
         self._tenant_scope=tenant_scope
         self._owner=owner
@@ -26,6 +26,9 @@ class PreparedJob:
         self._finalize=finalize
         self._verify=verify
         self._enable=enable
+        self._renew=renew
+        self._verified=False
+        self._next_renewal=0.0
         self._closed=asyncio.create_task(self._watch())
         self._closed.add_done_callback(_observe)
 
@@ -105,7 +108,23 @@ class PreparedJob:
                 self._verify,operation_id,expected_revision,observed)))
             if cancelled:raise asyncio.CancelledError
             return result
-        return await self._owner.verify(commit)
+        result = await self._owner.verify(commit)
+        self._verified = True
+        return result
+
+    async def renew_if_due(self):
+        if not self._verified or self._renew is None:
+            return None
+        now = asyncio.get_running_loop().time()
+        if now < self._next_renewal:
+            return None
+        async def commit(observed):
+            result, cancelled = await _settle(asyncio.create_task(asyncio.to_thread(self._renew, observed)))
+            if cancelled: raise asyncio.CancelledError
+            return result
+        expires = await self._owner.renew(commit)
+        self._next_renewal = asyncio.get_running_loop().time() + 60
+        return expires
 
     async def enable(self, *, operation_id, expected_revision):
         if self._enable is None:
@@ -170,6 +189,15 @@ class PreparationWorker:
                     **scope,operation_id=operation_id,expected_revision=expected_revision,
                     preparation_operation_id=plan.operation_id,generation=plan.generation,
                     health_checked_at=observed)
+
+    def _renew(self, scope, plan, observed):
+        from .lease_renewal import renew_verified_lease
+        with self._connection(scope) as conn:
+            with conn.transaction():
+                return renew_verified_lease(conn, installation_store=self.store, revalidator=self.revalidator,
+                    check_current_permission=self.permission, check_current_conditions=self.conditions,
+                    **scope, installation_id=plan.installation_id, operation_id=plan.operation_id,
+                    generation=plan.generation, health_checked_at=observed)
 
     def _claim(self,scope,operation_id,expected_revision):
         with self._connection(scope) as conn:
@@ -249,7 +277,8 @@ class PreparationWorker:
             verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.verification_permission) else None
             enable=(lambda operation_id,revision,observed:self._enable(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.configuration_authorize) and callable(self.enable_permission) else None
             return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify,enable,
-                tenant_scope=TenantScope(**scope))
+                tenant_scope=TenantScope(**scope),
+                renew=(lambda observed:self._renew(scope,plan,observed)) if verify is not None else None)
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))
             raise

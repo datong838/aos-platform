@@ -11,3 +11,5 @@
 状态误报修复完成：有任务的空闲轮询先 check_health，29 项 owner/scheduler/取消/清理测试通过。旧宿主 PID 38645 已有序停止，状态记录 SAFE_BLOCKED/TimeoutError；未拉起新宿主冒充资源恢复。当前真实读回见 ecommerce-1.6-owner-expired.json。AR2-7 闭包检查通过。
 
 后续续租细则：准备阶段仍最多 300 秒；仅成功 verify 的原 owner 能申请短续租。每次续租先真实健康检查，再在同一事务锁 Installation、操作、绑定、资源，核对当前权限、签名发布、exact generation、全部未到期且未释放，才能延长资源租约。DB 提交后才重设进程内计时器。过期或取消时不能复活，清理仍使绑定 unknown/fenced。新续租方法需覆盖未 verify、到期、权限撤回、generation 变化、DB 失败、取消中的提交与清理；落库证明与进程内期限必须同源。
+
+续租实现检查点：新增 `extension_runtime/lease_renewal.py`，原 owner 经健康和 durable expiry 成功后重设计时器；PreparedJob 仅成功 verify 后每 60 秒续约 180 秒。43 项单元/异步回归测试通过，包括权限拒绝、unknown binding、条件失效、提交时过期、资源集合漂移、未 verify 和已关闭 owner 拒绝。当前仍缺真实 PostgreSQL + OCI 超过初始五分钟的连续观测，不能标为长期运行完成。已到期 active@7 不可用续租复活；下一项需正式 active runtime recovery 或规范卸载重装。

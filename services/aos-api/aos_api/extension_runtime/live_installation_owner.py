@@ -46,6 +46,7 @@ class LiveInstallationLifecycleOwner:
         # Idle outboxes do not imply that the retained process owner is alive.
         # Health failure settles cleanup before the host reports failure.
         await _settled(job.check_health())
+        await _settled(job.renew_if_due())
 
         verifier = self._owned("runtime-verify", job)
         verification = await _settled(verifier.run_once())

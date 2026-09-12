@@ -54,6 +54,8 @@ def install_owned(monkeypatch, calls, results=None, *, fail_kind=None):
 class HealthyJob:
     async def check_health(self):
         return None
+    async def renew_if_due(self):
+        return None
 
 
 expected_job = HealthyJob()

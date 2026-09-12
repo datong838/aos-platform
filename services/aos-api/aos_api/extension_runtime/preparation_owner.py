@@ -35,6 +35,7 @@ class PreparationOwner:
         self._invocation_lock = asyncio.Lock()
         self._verification = None
         self._control = None
+        self._lease_timer = None
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))
         self._task.add_done_callback(_observe)
         self._stopping = False
@@ -47,7 +48,8 @@ class PreparationOwner:
                 raise asyncio.CancelledError
             async with AsyncExitStack() as stack:
                 try:
-                    async with asyncio.timeout(lease_seconds):
+                    async with asyncio.timeout(lease_seconds) as lease_timer:
+                        self._lease_timer = lease_timer
                         for factory in factories:
                             session = await stack.enter_async_context(factory())
                             self._sessions.append(session)
@@ -176,6 +178,27 @@ class PreparationOwner:
 
         task.add_done_callback(supervised)
         return await asyncio.shield(task)
+
+    async def renew(self, commit):
+        """Extend only after verified ownership and a settled durable lease commit.
+
+        The trusted callback returns the DB expiry, never a requested duration.
+        A cancelled/expired owner cannot be revived by a late database result.
+        """
+        if not callable(commit):
+            raise TypeError('trusted lease commit required')
+        async def execute(observed):
+            expires = await commit(observed)
+            if not isinstance(expires, datetime) or expires.utcoffset() is None:
+                raise ValueError('durable lease expiry required')
+            remaining = (expires - datetime.now(timezone.utc)).total_seconds()
+            timer = self._lease_timer
+            if (not 0 < remaining <= 300 or timer is None or timer.expired()
+                    or self._stopping or self._cleaning or self._task.done()):
+                raise RuntimeError('lease cannot renew a closed or expired owner')
+            timer.reschedule(asyncio.get_running_loop().time() + remaining)
+            return expires
+        return await self.control(execute)
 
     async def invoke_once(self, session_index, operation, payload):
         """Invoke one operation through an owned live session without exporting it."""
