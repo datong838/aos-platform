@@ -59,3 +59,10 @@ def test_create_cli_forwards_new_version_and_requires_retired_predecessor(tmp_pa
     assert calls[0]['idempotency_prefix'] == 'a0v-niushop-1.4-first-install-v1'
     assert 'a0fd8e25-cb6f-49e5-aa77-7faddae12099' in predecessors
     assert json.loads((tmp_path / 'state/niushop-1.4-first-install.json').read_text())['installationId'] == 'fixture-only'
+
+
+def test_reset_is_fixed_to_observed_unbound_installation():
+    actual='afd792de-e85e-4680-86d0-c83404824fb3'
+    assert M.reset_target(niushop_1_4=True,installation_id=actual)==(actual,'"4"','a0v-niushop-1.4-preparation-reset-r4')
+    with pytest.raises(ValueError):M.reset_target(installation_id=actual)
+    with pytest.raises(ValueError):M.reset_target(niushop_1_4=True,installation_id='a0fd8e25-cb6f-49e5-aa77-7faddae12099')

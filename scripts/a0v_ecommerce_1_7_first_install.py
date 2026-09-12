@@ -35,9 +35,16 @@ def installation_target(*, after_config_recovery=False, after_sleep_recovery=Fal
     return STATE, 'a0v-ecommerce-1.7', '1.3.0', None
 
 
+def reset_target(*, niushop_1_4=False, installation_id=None):
+    expected='afd792de-e85e-4680-86d0-c83404824fb3'
+    if niushop_1_4 is not True or installation_id!=expected:
+        raise ValueError('reset requires exact observed unbound Niushop 1.4 installation')
+    return expected, '"4"', 'a0v-niushop-1.4-preparation-reset-r4'
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--action", choices=("create", "apply", "verify", "observe"), required=True)
+    parser.add_argument("--action", choices=("create", "apply", "verify", "observe", "reset"), required=True)
     parser.add_argument("--output", type=Path, required=True)
     group=parser.add_mutually_exclusive_group()
     group.add_argument("--after-config-recovery", action="store_true")
@@ -83,6 +90,16 @@ def main():
             bindings = conn.execute("""SELECT generation,desired_state,observed_state,enabled,operation_fence FROM extension_runtime_binding
                 WHERE org_id='org-org' AND project_id='dev-project' AND installation_id=%s""", (installation_id,)).fetchall()
         result.update(operations=[dict(row) for row in operations], bindings=[dict(row) for row in bindings])
+        if args.action == 'reset':
+            exact, etag, key = reset_target(niushop_1_4=args.niushop_1_4, installation_id=installation_id)
+            command = dict(installation_id=exact, org_id='org-org', project_id='dev-project',
+                actor=activation.ACTOR, roles=activation.ROLES, markings=activation.MARKINGS,
+                idempotency_key=key, if_match=etag)
+            receipt = lifecycle.reset_preparation(**command)
+            replay = lifecycle.reset_preparation(**command)
+            result.update(receipt=receipt.response_json, firstReplayed=receipt.replayed, secondReplayed=replay.replayed)
+            after = store.get_installation(org_id='org-org', project_id='dev-project', installation_id=exact)
+            result['afterReset'] = dict(state=after.state, revision=after.current_revision, activeRevision=after.active_revision)
         if args.action in {"apply", "verify"}:
             kind = "runtime-" + args.action
             prior = [row for row in operations if row["kind"] == kind]

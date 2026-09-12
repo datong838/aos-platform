@@ -7,3 +7,5 @@
 实现仅在无binding且当前installation applied、无active指针、revision/lock与唯一原准备证明一致、无已提交verify、全资源精确确认released时收口。保留apply原始提交语义，追加unbound_preparation_released并清除已解决清理故障，不恢复任何资源或启用binding。已有绑定路径继续failed/PREPARED_RUNTIME_RELEASED。幂等回读强校验终结事件，事务回滚、跨租户、运行身份、原资源hash门仍保留。
 
 计划一致性：只补清理后可正常reset的缺口；reset仍由原Owner独立复核权限/锁/资源。尚未实测新Host恢复和reset，尚未配置/启用，源读取和八工作台真实闭环未完成。API仍旧进程，后续必须明确重载。
+
+实际恢复：e904c438后Host v15于14:10:08Z启动，PID98435，唯一运行；14:10:32Z正常宿主恢复批次已将原操作清理故障收口，applied@4保持，无binding、canary0。观察文件niushop-1.4-after-unbound-cleanup.json。新增reset_target固定该UUID、If-Match 4与唯一reset-r4键，拒绝旧profile/旧UUID；RED1失败/3通过，实现后与原reset守卫18通过。仅调用既有LifecycleService.reset_preparation并同键回放，未手工修改主库。
