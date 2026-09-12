@@ -1,0 +1,29 @@
+{
+  "at": "2026-09-12T20:48:05.728876+00:00",
+  "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "scheduleId": "sch-p02-qyh-controlled-20260913-v1",
+  "request": {},
+  "httpStatus": 200,
+  "response": {
+    "id": "scr-bc63f0d8437d4eed",
+    "scheduleId": "sch-p02-qyh-controlled-20260913-v1",
+    "status": "succeeded",
+    "lastRun": {
+      "id": "scr-bc63f0d8437d4eed",
+      "at": "2026-09-12T20:48:18.546805+00:00",
+      "status": "succeeded",
+      "trigger": "manual",
+      "rowsWritten": 65,
+      "durationMs": 12555,
+      "errorCode": ""
+    },
+    "result": {
+      "ok": true,
+      "executor_stopped": true,
+      "rows_written": 65,
+      "duration_ms": 12555,
+      "error_code": "",
+      "error_message": ""
+    }
+  }
+}

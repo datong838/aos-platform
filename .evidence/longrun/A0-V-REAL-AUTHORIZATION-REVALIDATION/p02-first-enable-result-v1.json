@@ -1,0 +1,23 @@
+{
+  "at": "2026-09-12T20:48:05.686188+00:00",
+  "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "scheduleId": "sch-p02-qyh-controlled-20260913-v1",
+  "request": {
+    "enabled": true
+  },
+  "httpStatus": 200,
+  "response": {
+    "id": "sch-p02-qyh-controlled-20260913-v1",
+    "cron": "0 * * * *",
+    "pipelineId": "P02-product-qyh",
+    "enabled": true,
+    "name": "栖月汇商品真实数据受控接入",
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P02-product-qyh"
+    },
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "lastRun": null
+  }
+}
