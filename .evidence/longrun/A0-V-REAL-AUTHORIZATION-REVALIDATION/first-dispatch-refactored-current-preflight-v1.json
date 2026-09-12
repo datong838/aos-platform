@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "aos.ecommerce.first-dispatch-registration-preview/v1",
+  "executable": false,
+  "authorityValidated": false,
+  "requestHash": "sha256:6f0a4d2201978642f2bd33a45981d9c7fab61a991973706b1d262390907f7c68",
+  "request": {
+    "schemaVersion": "aos.ecommerce.first-dispatch-registration/v1",
+    "installationRef": {
+      "installationId": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+      "revision": 5,
+      "lockHash": "sha256:26e8189ca75d124fe49b27c5e6922a5115071e8f2a7e126c904e3949e4539f59",
+      "overlayRevision": "a0v-canonical-ecommerce-v1"
+    },
+    "generation": "23afd05b-762c-406a-adfb-247a14412b9f",
+    "bindingRevision": 4,
+    "executionEpoch": 3,
+    "configRef": {
+      "configurationId": "f134da1e-69bf-4406-917a-c0e665e12e02",
+      "revision": 1,
+      "hash": "sha256:af72d785cb326f4ac28b0f768402c2b7f6beaf0507f14490640b3713ccba8adf"
+    },
+    "groupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+    "idempotencyKey": "a0v-first-dispatch-preview-20260913-v1"
+  },
+  "proposedDispatchSnapshot": [
+    {
+      "operationId": "ecommerce_growth_analysis_advance",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_case_put",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_content_generate",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_content_review",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_data_fulfill",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_investigation_describe",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_review_advance",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_schedule_put",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    },
+    {
+      "operationId": "ecommerce_growth_schedule_trigger",
+      "handlerKind": "legacy",
+      "installationId": null,
+      "generation": null,
+      "executionEpoch": null,
+      "operationFence": true,
+      "revision": 1,
+      "cutoverGroupId": "890964c6-7c9f-478f-8557-4c449b55e4ff",
+      "cutoverGroupRevision": 1
+    }
+  ],
+  "currentConfigurationValidated": true,
+  "businessWrites": 0,
+  "checkedAt": "2026-09-12T22:46:30.521974+00:00"
+}

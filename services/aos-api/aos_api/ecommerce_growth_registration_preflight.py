@@ -31,7 +31,7 @@ def require_registration_runtime(binding, request: FirstDispatchRegistrationRequ
         raise ValueError(error)
 
 
-def registration_preflight(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
+def validate_current_registration_target(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
                            actor: str, installation_store, configuration_authorize) -> dict:
     if (type(scope) is not TenantScope or type(request) is not FirstDispatchRegistrationRequest
             or type(installation_store) is not PostgresInstallationStore
@@ -62,12 +62,19 @@ def registration_preflight(conn, *, scope: TenantScope, request: FirstDispatchRe
     read_configuration(conn,org_id=scope.org_id,project_id=scope.project_id,
         installation_id=target.installation_id,generation=request.generation,actor=actor,
         ref=request.configRef,authorize=configuration_authorize)
+    result = preview_registration(request)
+    result.update(currentConfigurationValidated=True,businessWrites=0,
+        checkedAt=installation_store.read_control_clock_in_transaction(conn).isoformat())
+    return result
+
+
+def registration_preflight(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
+                           actor: str, installation_store, configuration_authorize) -> dict:
+    result = validate_current_registration_target(conn,scope=scope,request=request,actor=actor,
+        installation_store=installation_store,configuration_authorize=configuration_authorize)
     count = conn.execute('''SELECT count(*) AS n FROM extension_operation_dispatch_binding
         WHERE org_id=%s AND project_id=%s AND operation_id=ANY(%s)''',
         (*scope.key,list(ECOMMERCE_GROWTH_OPERATIONS))).fetchone()['n']
     if count:
         raise ValueError('REGISTRATION_DISPATCH_ALREADY_EXISTS')
-    result = preview_registration(request)
-    result.update(currentConfigurationValidated=True,businessWrites=0,
-        checkedAt=installation_store.read_control_clock_in_transaction(conn).isoformat())
     return result
