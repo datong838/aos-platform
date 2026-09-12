@@ -110,7 +110,7 @@ def test_capability_job_media_pipeline_apollo(client, auth_headers):
         headers=auth_headers,
         json={"id": "p1", "sourceId": "file-1"},
     )
-    assert pipe.json()["lastBuild"]["status"] == "SUCCEEDED"
+    assert pipe.json()["lastBuild"] is None
     spoke = client.get("/v1/apollo/spokes/local", headers=auth_headers)
     assert spoke.json()["heartbeatOk"] is True
     bundle = client.post(

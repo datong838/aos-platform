@@ -228,16 +228,21 @@ async def _lifespan_body(_app: FastAPI):
                         canonical_qyh_source_for_pipeline,
                     )
 
+                    _wx._hydrate_data_os_scope(_scope)
                     for _p in _items:
                         _dataset_rid = f"ri.aos.main.dataset.{_p.id}"
                         _dkey = _wx._resource_key(_scope, _dataset_rid)
+                        _wx._assert_mutation_scope(
+                            _wx._pipelines.get(_p.id), _scope,
+                            resource="pipeline", resource_id=_p.id,
+                        )
                         _canonical_source = canonical_qyh_source_for_pipeline(_p.id)
-                        _wx._datasets[_dkey] = {
+                        _wx._datasets.setdefault(_dkey, {
                             "rid": _dataset_rid,
                             "name": _p.name,
                             "pipelineId": _p.id,
                             "sourceId": "niushop-qyh",
-                            "status": "READY",
+                            "status": "PENDING",
                             "createdAt": _now,
                             "updatedAt": _now,
                             "objectTypeHint": (
@@ -246,8 +251,8 @@ async def _lifespan_body(_app: FastAPI):
                             "displayName": _p.name,
                             "orgId": _scope.org_id,
                             "projectId": _scope.project_id,
-                        }
-                        _wx._pipelines[_p.id] = {
+                        })
+                        _wx._pipelines.setdefault(_p.id, {
                             "id": _p.id,
                             "sourceId": "niushop-qyh",
                             "target": "dataset",
@@ -258,19 +263,8 @@ async def _lifespan_body(_app: FastAPI):
                             "status": _p.status,
                             "tags": _p.tags,
                             "description": _p.description,
-                            "lastBuild": {
-                                "id": f"seed-build-{_p.id}",
-                                "status": "SUCCEEDED",
-                                "pipelineId": _p.id,
-                                "tasks": [
-                                    {"name": "ingest", "status": "SUCCEEDED"},
-                                    {"name": "transform", "status": "SUCCEEDED"},
-                                    {"name": "sink", "status": "SUCCEEDED"},
-                                ],
-                                "startedAt": _now,
-                                "finishedAt": _now,
-                            },
-                        }
+                            "lastBuild": None,
+                        })
                     # 标记 scope 已加载，避免 _hydrate_data_os_scope 清空上述数据
                     _wx._data_os_loaded_scopes.add(_scope.key)
                     # 持久化到 PG（确保重启后 _hydrate_data_os_scope 能从 PG 恢复）

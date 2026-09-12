@@ -26,7 +26,7 @@ ScheduleBinding绑定policy revision/hash、operation、installation、generatio
 
 ## 当前需外部信息的两个入口
 
-1. 栖月汇SSH原身份认证曾返回Permission denied；需要此前成功连接的工具/配置路径或由用户恢复可用隧道。无需发送密码或私钥。
+1. 已于2026-09-12恢复原SSH密码认证及AOS托管数据源，重启后只读探测302表成功。SSH不再阻塞，详见managed-qyh-source-restore-verification.md；表目录可访问不等于业务数据已同步。
 2. 固定九项正式调度登记的具体新增访问范围仍待答复，范围见dispatch-registration-access-review.md。不借高权限凭据、包装函数或fixture绕过已经发现的访问限制。
 
 当前只有技术生命周期部分实证，首链与八业务场景均未完成。不push，230 L0挂起。后续施工必须沿本方案先补配置合同，不用临时开发者接线替代产品能力。

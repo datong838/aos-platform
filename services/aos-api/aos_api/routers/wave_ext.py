@@ -1769,7 +1769,6 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
     _assert_mutation_scope(
         _pipelines.get(body.id), scope, resource="pipeline", resource_id=body.id
     )
-    build_id = f"build-{uuid.uuid4().hex[:8]}"
     dataset_rid = body.datasetRid or f"ri.dataset.{body.id}"
     dataset_key = _resource_key(scope, dataset_rid)
     _assert_mutation_scope(
@@ -1781,7 +1780,8 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
     item = {
         **body.model_dump(),
         "datasetRid": dataset_rid,
-        "lastBuild": {"id": build_id, "status": "SUCCEEDED", "tasks": [{"name": "ingest", "ok": True}]},
+        # Registering configuration does not execute the pipeline.
+        "lastBuild": (_pipelines.get(body.id) or {}).get("lastBuild"),
         "orgId": principal.org_id,
         "projectId": principal.project_id,
     }
@@ -1795,7 +1795,7 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
         "name": display,
         "pipelineId": body.id,
         "sourceId": body.sourceId,
-        "status": "READY",
+        "status": prev.get("status") or "PENDING",
         "createdAt": prev.get("createdAt") or now,
         "updatedAt": now,
         "objectTypeHint": hint or prev.get("objectTypeHint"),
@@ -1804,18 +1804,8 @@ def create_pipeline(body: PipelineIn, principal: Principal = Depends(require_pri
         "projectId": principal.project_id,
     }
     _datasets[dataset_key] = ds
-    hist = _dataset_history.setdefault(dataset_key, [])
-    hist.append(
-        {
-            "version": len(hist) + 1,
-            "buildId": build_id,
-            "status": "SUCCEEDED",
-            "at": now,
-        }
-    )
     _persist_safe("persist_pipeline", scope, item)
     _persist_safe("persist_dataset", scope, ds)
-    _persist_safe("persist_dataset_history", scope, dataset_rid, hist)
     return item
 
 
@@ -2090,6 +2080,8 @@ def list_builds(principal: Principal = Depends(require_principal)):
         # 启动阶段的 seed-build 只是兼容缓存，不是一次真实执行；一旦存在
         # 当前租户的持久化 Cron 记录，必须由后者覆盖，不能被 seed 时间戳抢占。
         is_seed_build = str(build.get("id") or "").startswith("seed-build-")
+        if not authoritative and (is_seed_build or not build.get("id")):
+            continue
         if authoritative and (
             is_seed_build
             or authoritative.get("startedAt", 0) >= float(build.get("startedAt") or 0)

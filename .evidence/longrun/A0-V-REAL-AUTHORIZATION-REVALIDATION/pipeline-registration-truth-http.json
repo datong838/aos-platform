@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-12T07:03:17.848079+00:00",
+  "tenant": "org-org/dev-project",
+  "health": {
+    "http": 200,
+    "status": "ok"
+  },
+  "pipelines": {
+    "http": 200,
+    "count": 0
+  },
+  "schedules": {
+    "http": 200,
+    "count": 0
+  },
+  "builds": {
+    "http": 200,
+    "count": 0
+  },
+  "sources": {
+    "http": 200,
+    "count": 1
+  },
+  "ontologyHttp": 200
+}
