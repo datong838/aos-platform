@@ -35,6 +35,12 @@
 
 迁移文件名为设计预留，实施时仍需核对最新迁移head，不能因预留号覆盖既有文件。独立的权限评审结果与真实部署结果必须分开记录。
 
+### 首个代码切片：请求与预览
+
+Request复用CurrentInstallationRef、ConfigurationRef；generation、groupId为严格规范UUID字符串；bindingRevision、executionEpoch为正的严格bigint；幂等键复用安装控制校验。extra forbid，不接受operationIds、handlerKind、actor、SQL、credentials等任意注入字段。固定schemaVersion区分未来版本。
+
+preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/revision1的拟登记snapshot，明确executable=false、authorityValidated=false；组内installation/generation/epoch保持null，真正目标仅在请求中记录，不能绕过切换。输出是分离字典，修改预览不会改变请求或后续hash。验证未知字段、UUID/数值拒绝、同请求hash稳定及任一exact字段变化hash变化；不声称本切片完成登记持久化。
+
 - 无既有路由→一次完整九路由fenced登记，CanonicalRouter仍拒绝；同请求重放无重复。
 - 双写者同scope、不同组ID竞争只允许一个完整组；任意已有部分组拒绝且不补齐。
 - 跨租户、错店铺配置/安装版本/lock/generation/epoch、无当前角色/markings、未知操作及普通runtime/Web身份均拒绝登记。
