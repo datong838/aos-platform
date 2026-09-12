@@ -1037,3 +1037,9 @@ enable、经营首链与八工作台。全部任务未完成；m1 串行、不 p
 重复执行 227 个 AIP 表零新增，223 个租户 AIP 表 canary 内容摘要保持（存在 50 行历史测试数据，不能宣称全库 canary=0）。当前累计 3/37 个 Published Skill、3/37 个 Frozen EvalContract，六数字同事未激活、责任计划未冻结。健康观测时间已过期，需要在正式 Binding/调用时独立刷新；不重复借健康成功宣称业务就绪。
 
 下一权威入口 A0-V/firstchain-binding-dependencies-plan.md：内部用途许可 EvidenceBundle→首链 Capability/Skill Binding→职责计划→源配置启用→自然首链与八场景。m1 串行、不 push、230 L0 挂起；全部目标未完成，继续 Loop。
+
+### 9.54 持续运行失效实证及 SDK 心跳修复
+
+2026-09-12T01:52:29Z Host 退出，35 次续租后三资源释放，安装仍禁用且隔离。9.52 的 Running 仅为历史观测，当前不可经营。发现并复现 SDK 1024 帧额度误计心跳，修复及 24 项验证见 A0-V/ecommerce-sdk-heartbeat-budget-verification.md；真实根异常链不完整，不把时间吻合当成完全归因。
+
+下一步是三包不可变新版本及超过 1024 心跳的真实镜像资格，然后正式卸载重装、持续运行观测，再恢复 firstchain-binding-dependencies-plan.md。不覆盖旧制品，不复活旧 generation。首链内部许可 EvidenceBundle 已正式完成，但数字同事及业务首链仍未完成。

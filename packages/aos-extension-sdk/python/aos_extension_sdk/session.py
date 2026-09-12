@@ -4,6 +4,7 @@ import math
 import re
 import struct
 import sys
+from collections import deque
 
 from .client import RegistrationContext, _pairs
 
@@ -58,16 +59,19 @@ def serve_session(register, handle, *, source=None, target=None):
     source = source if source is not None else sys.stdin.buffer
     target = target if target is not None else sys.stdout.buffer
     methods, seen = set(), set()
+    heartbeat_ids, heartbeat_order = set(), deque()
     context = RegistrationContext()
-    for sequence in range(1024):
+    sequence = 0
+    business_requests = 0
+    while sequence <= 2**53-1:
         message = _read(source)
         if message is None:
             if sequence == 0:
                 raise ValueError("registration required")
             return
-        if message["sequence"] != sequence or message["requestId"] in seen:
+        if (message["sequence"] != sequence or message["requestId"] in seen
+                or message["requestId"] in heartbeat_ids):
             raise ValueError("replayed or out-of-order request")
-        seen.add(message["requestId"])
         if sequence == 0:
             if message["type"] != "register" or message["method"] != "register" or message["payload"] != {}:
                 raise ValueError("registration required first")
@@ -95,6 +99,18 @@ def serve_session(register, handle, *, source=None, target=None):
             result = handle(message["method"], message["payload"], context)
             if type(result) is not dict:
                 raise ValueError("handler result must be an object")
+        if message['type'] == 'heartbeat':
+            # Heartbeats cannot invoke handlers. Keep recent correlation IDs
+            # bounded; strict sequence numbers reject replays of old frames.
+            if len(heartbeat_order) == 1024:
+                heartbeat_ids.remove(heartbeat_order.popleft())
+            heartbeat_order.append(message['requestId'])
+            heartbeat_ids.add(message['requestId'])
+        else:
+            # Preserve all business IDs for this generation and its existing
+            # request budget, without spending that budget on health checks.
+            seen.add(message['requestId'])
+            business_requests += 1
         response = {**message, "type": "result", "payload": result}
         _value(response)
         raw = json.dumps(response, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -102,4 +118,7 @@ def serve_session(register, handle, *, source=None, target=None):
             raise ValueError("response limit exceeded")
         target.write(struct.pack(">I", len(raw))+raw)
         target.flush()
-    raise ValueError("session request budget exhausted")
+        if business_requests == 1024:
+            raise ValueError("session request budget exhausted")
+        sequence += 1
+    raise ValueError("session sequence exhausted")

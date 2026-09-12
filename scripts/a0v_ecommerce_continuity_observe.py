@@ -9,6 +9,19 @@ ROOT = Path(__file__).resolve().parents[1]
 RECOVERY = ROOT.parent/'.aos-recovery-20260912'
 
 
+def container_observation(container_id):
+    if not isinstance(container_id,str) or not container_id:
+        return 'unavailable'
+    try:
+        result=subprocess.run(['docker','--context','colima-aos-extension','inspect',
+            '--format','{{.State.Running}}',container_id],capture_output=True,text=True,timeout=15)
+    except (subprocess.TimeoutExpired,OSError):
+        return 'unavailable'
+    if result.returncode != 0:
+        return 'unavailable'
+    return {'true':'running','false':'stopped'}.get(result.stdout.strip(),'unavailable')
+
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
@@ -25,9 +38,8 @@ def main():
         resources=conn.execute("SELECT resource_id,generation,container_id,cleanup_state,observed_release,expires_at FROM extension_runtime_resource_lease WHERE operation_id=%s ORDER BY resource_id",(operation['operation_id'],)).fetchall()
         bindings=conn.execute("SELECT generation,observed_state,desired_state,enabled,operation_fence FROM extension_runtime_binding WHERE installation_id=%s",(installation,)).fetchall()
         canary=conn.execute("SELECT count(*) AS n FROM bundle_installation WHERE org_id='dev-org' AND project_id='dev-project'").fetchone()['n']
-    alive=[]
-    for row in resources:
-        alive.append(subprocess.check_output(['docker','--context','colima-aos-extension','inspect','--format','{{.State.Running}}',row['container_id']],text=True,timeout=15).strip()=='true')
+    observations=[container_observation(row['container_id']) for row in resources]
+    alive=[value=='running' for value in observations]
     valid=(len(resources)==3 and all(alive) and canary==0 and len(bindings)==1
         and bindings[0]['observed_state']=='ready' and all(row['generation']==bindings[0]['generation']
         and not row['observed_release'] and row['cleanup_state']=='pending' and row['expires_at']>now for row in resources))
@@ -35,7 +47,8 @@ def main():
     outcome='CONTINUITY_CROSS_INITIAL_DEADLINE_GREEN' if valid and crossed and len(events)>=3 else 'CONTINUITY_OBSERVING' if valid else 'CONTINUITY_FAILED'
     result=dict(outcome=outcome,installationId=installation,observedAt=now,originalDeadline=operation['deadline'],
         elapsedSeconds=(now-operation['created_at']).total_seconds(),renewalCount=len(events),renewals=events,
-        resources=resources,containersRunning=alive,bindings=bindings,canaryInstallationCount=canary)
+        resources=resources,containersRunning=alive,containerObservations=observations,
+        bindings=bindings,canaryInstallationCount=canary)
     args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(result,default=str,indent=2)+'\n')
     print(json.dumps({k:v for k,v in result.items() if k not in {'resources','renewals'}},default=str,indent=2))
 

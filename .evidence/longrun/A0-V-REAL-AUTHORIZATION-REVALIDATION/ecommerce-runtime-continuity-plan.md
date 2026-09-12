@@ -31,3 +31,11 @@
 新安装 efc4e640-1b15-403f-9d06-4c6d1a5330a7 已 active@5，generation 7b3ebc06-6340-4462-b07d-1476d2a1fb17。独立 Host PID 41365；`scripts/a0v_ecommerce_continuity_observe.py` 仅读取资源租约、续租事件和逐容器真实 Running，不续租、不调用业务。原始期限 2026-09-12T01:20:49.777917Z，跨期限观测后归档。
 
 下一波依赖：当前 Provider healthy=0、六个 AgentInstance=provisioning、37 skills=evaluated、0 published/frozen plan。先在 `scripts/a0v_real_text_provider_health.py` 加入显式新 attempt 标识，默认旧标识/旧日志路径保持兼容；每个标识独立一次调用，已消耗或未知结果禁止重发。刷新既有 agnes-2.5-flash 的元数据健康证据，然后推进正式 Skill 发布、绑定和责任计划；不把历史健康时间改成当前。
+
+## 2026-09-12 半小时运行退出
+
+在业务权威准备期间，Host v8 于 01:52:29Z 退出；资源全部于 01:52:27Z 规范释放。最后续租 01:51:29Z，DB 有效期仍至 01:54:29Z，因此不能归因为租约已经到期。旧跨五分钟观测为真实历史，但现在没有活宿主。安装仍未配置/启用，应保持禁用/fenced，不能续租复活已释放 generation。
+
+代码定位 packages/aos-extension-sdk/python/aos_extension_sdk/session.py：serve_session 使用 for sequence in range(1024)，注册、业务调用和每2秒心跳共享预算，退出语句为 session request budget exhausted，时间与约36分钟退出吻合。先用超过1024心跳的确定性测试复现，再修改SDK：心跳不消耗原业务请求上限，序号仍严格递增，业务请求ID保留防重放集合且受1024预算限制，心跳最近ID使用有界1024窗口。旧心跳ID跨窗口可作为新序号新心跳，不执行业务，旧业务ID永远不得重用。每帧字节/深度限制保持。
+
+具体文件 packages/aos-extension-sdk/python/aos_extension_sdk/session.py 及 services/aos-api/tests/extension_runtime/ 对应测试。scripts/a0v_ecommerce_continuity_observe.py 遇容器不存在应归档 CONTINUITY_FAILED 而非未写输出就异常退出。修复后不可替换旧签名OCI内容；需新SDK镜像和包后继版本，规范卸载当前从未启用安装，再重装并跨原退出窗口连续观察。根因修复、后继包、真实恢复为下一波优先项，既有技能/模型/许可证据不回滚。

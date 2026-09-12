@@ -49,6 +49,50 @@ def test_heartbeat_is_bounded_and_never_calls_business_handler():
     assert result[1]['payload']=={'nonce':nonce,'protocol':'aos-extension/1','status':'alive'}
 
 
+def test_4096_heartbeats_keep_business_session_alive():
+    messages=[frame('register','register',0)]
+    messages.extend(frame('heartbeat','heartbeat',n,{'nonce':'a'*32}) for n in range(1,4097))
+    messages.append(frame('invoke','example_read',4097,{'value':'after-heartbeats'}))
+    calls=[];target=io.BytesIO()
+    sdk()(registration,lambda op,payload,ctx:calls.append(payload) or {'ok':True},
+        source=io.BytesIO(b''.join(encode_frame(m) for m in messages)),target=target)
+    assert calls==[{'value':'after-heartbeats'}]
+    decoder=FrameSession(allowed_methods={'register','heartbeat','example_read'})
+    raw=target.getvalue();results=[]
+    for offset in range(0,len(raw),65536): results.extend(decoder.feed(raw[offset:offset+65536]))
+    decoder.finish()
+    assert len(results)==4098 and results[-1]['payload']=={'ok':True}
+
+
+def test_business_request_id_stays_protected_after_heartbeat_window_rotates():
+    messages=[frame('register','register',0),frame('invoke','example_read',1)]
+    messages.extend(frame('heartbeat','heartbeat',n,{'nonce':'a'*32}) for n in range(2,2050))
+    messages.append({**frame('invoke','example_read',2050),'requestId':'request-1'})
+    calls=[]
+    with pytest.raises(ValueError,match='replayed'):
+        sdk()(registration,lambda *args:calls.append(True) or {},
+            source=io.BytesIO(b''.join(encode_frame(m) for m in messages)),target=io.BytesIO())
+    assert len(calls)==1
+
+
+def test_business_request_budget_stays_bounded():
+    messages=[frame('register','register',0)]
+    messages.extend(frame('invoke','example_read',n) for n in range(1,1025))
+    calls=[]
+    with pytest.raises(ValueError,match='request budget exhausted'):
+        sdk()(registration,lambda *args:calls.append(True) or {},
+            source=io.BytesIO(b''.join(encode_frame(m) for m in messages)),target=io.BytesIO())
+    assert len(calls)==1023
+
+
+def test_recent_heartbeat_request_id_cannot_repeat_with_new_sequence():
+    messages=[frame('register','register',0),frame('heartbeat','heartbeat',1,{'nonce':'a'*32}),
+        {**frame('heartbeat','heartbeat',2,{'nonce':'b'*32}),'requestId':'request-1'}]
+    with pytest.raises(ValueError,match='replayed'):
+        sdk()(registration,lambda *args:pytest.fail('heartbeat invoked handler'),
+            source=io.BytesIO(b''.join(encode_frame(m) for m in messages)),target=io.BytesIO())
+
+
 @pytest.mark.parametrize('method,payload', [('other',{'nonce':'a'*32}),('heartbeat',{}),
     ('heartbeat',{'nonce':'a'*31}),('heartbeat',{'nonce':'A'*32}),
     ('heartbeat',{'nonce':'a'*32,'extra':True}),('heartbeat',{'nonce':1})])
