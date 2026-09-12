@@ -1,0 +1,11 @@
+# 管道运行控制草稿合同验证
+
+2026-09-12，基线9d8ceacf。新增PipelineRuntimeControlDraft及冻结的安装、包、用途引用；只接受prepared/readOnly=true。绑定租户、管道图版本与摘要、安装与generation/configuration、真实源配置版本、来源选择及映射/Schema/脱敏引用，限制读取预算和时间窗。不注册生产接口、不产生授权、不启用执行器、不调用源库。
+
+初始RED为新模块缺失；实现后两项摘要测试揭示别名安装引用在实例重验时使用内部字段名的问题，局部子类允许内部字段名并保持原合同不变。追加嵌套未验证复制对象的四类拒绝案例。最终本次独立测试库运行52 passed（新合同39、SourceConfigurationRevision 8、共享引用5），10.11秒，7项既有警告。命令：AOS_DATABASE_URL指向独立18432测试PG，pytest test_pipeline_runtime_control_contracts.py test_source_configuration_revision.py test_business_investigation_shared_contracts.py -q。
+
+关联检查曾出现42 passed/1 failed：旧空库迁移测试从head回退，撞到a0v_021仅前进保护。测试初始版本改为它实际负责的ar2_010，保留真实ar2_010→ar2_009→ar2_010；生产迁移未修改。没有跳过测试或放开回退保护。
+
+AR2 ar2-7闭包：1791 scanned、158 classified、93 migrated；hashErrors、unclassifiedForwardDependencies、unclassifiedReverseCallers、bundleCrossLayerImports、dynamicReferenceErrors全部为空。方案与实现逐项核对：图摘要使用raw64，其他现有引用使用sha256:格式；UTC等价时间摘要一致，预算变化摘要变化，配置和所有嵌套引用冻结，错误文本隐藏输入。摘要是完整性证据，不是权限。
+
+本波尚未实现SourceSelectionRevision Owner或持久运行控制Store，未让P01读源，未产生业务Receipt，不能宣称首链完成。下一波先完成来源选择Owner的平台/店铺/对象/方法版本和批准字段范围设计，并复用当前安装权限与包资产校验，再实现事务持久化及执行时重验。保持m1串行、不push、230 L0挂起。

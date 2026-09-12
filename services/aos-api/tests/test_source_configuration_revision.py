@@ -174,6 +174,6 @@ def test_migration_backfills_current_identity_and_refuses_nonempty_downgrade():
 def test_empty_migration_can_downgrade_and_upgrade():
     from alembic import command
     from tests.aip._migration_test_support import isolated_aip_migration_database
-    with isolated_aip_migration_database("source_empty") as (config, _):
+    with isolated_aip_migration_database("source_empty", migration_target="ar2_010") as (config, _):
         command.downgrade(config, "ar2_009")
         command.upgrade(config, "ar2_010")
