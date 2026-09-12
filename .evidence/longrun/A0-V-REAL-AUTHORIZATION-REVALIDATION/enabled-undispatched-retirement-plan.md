@@ -1,0 +1,13 @@
+# 已启用但从未接入业务调度的卸载恢复
+
+基线c838c164；当前af1992e8 active@5，禁用6286f967 succeeded，binding disabled/unknown/fenced@7 epoch5，三资源confirmed released，准备操作已按真实释放证明收尾。旧enable保持succeeded，不能伪装never_enabled。现有a0v_020覆盖configured_unactivated，对此状态没有卸载路径。
+
+新增a0v_021_enabled_undispatched_retirement迁移，使用原有InstallationService→RuntimeUninstallGuard→既有卸载命令，新增严格retirementKind=enabled_undispatched。不增加角色、成员关系、GRANT或路由登记接口，不实施待批dispatch-registration权限扩展。旧a0v_019/020及Receipt保留不变。
+
+必须同时满足：原卸载命令的非特权应用身份、tenant、active安装revision/etag、唯一disabled/fenced binding；同generation exact配置版本/hash存在；所有运行操作终态；唯一成功enable及完整enabled_committed哈希，指向当前generation/config、binding revision和epoch严格早于当前；唯一成功disable和当前binding revision/epoch的disabled_committed哈希；无任何cutover、dispatch绑定、occurrence、execution attempt历史；至少一个资源且全部confirmed released。新Receipt使用单独runtime_enable_operation_id和runtime_disable_operation_id外键，不能借旧dispatch外键填错类型。原三个retirementKind要求新字段为空，兼容性回归。
+
+实施文件：services/aos-api/alembic/versions/a0v_021_enabled_undispatched_retirement.py；scripts/a0v_enabled_retirement_acceptance.py（只允许新完整clone aos_enabled_retirement_20260912 和本地main，所有命令固定af1992e8）；tests/extension_runtime/test_enabled_undispatched_retirement_pg.py。新增备份/clone不得覆盖已有库或历史备份；日志不包含凭据或业务明细。
+
+先在完整020 clone验证原命令拒绝，再迁移并做正向及负向：未释放、未决、enable/config/disable证明缺失、跨tenant、CAS、binding revision/epoch、业务历史；全部事务回滚后用正式InstallationService完成clone卸载及同键重放，canary表摘要前后相同。通过后才主库迁移和正式卸载。无push、230 L0挂起。然后新命令空间重装，不能复活旧generation。
+
+主库执行入口延用scripts/a0v_ecommerce_never_enabled_retire.py（历史文件名，内部为统一InstallationService），增加互斥--enabled-undispatched-1-7固定af1992e8/etag5/独立幂等键。旧三目标保持原分支，不通过可任意传入的安装id扩大执行范围。clone验证完成后才运行。

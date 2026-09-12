@@ -1,0 +1,14 @@
+{
+  "installationId": "af1992e8-89c2-406a-816d-01e61d7bf982",
+  "before": {
+    "state": "active",
+    "revision": 5
+  },
+  "after": {
+    "state": "uninstalled",
+    "revision": 6
+  },
+  "firstReplayed": false,
+  "secondReplayed": true,
+  "unchangedCanaryTables": 454
+}

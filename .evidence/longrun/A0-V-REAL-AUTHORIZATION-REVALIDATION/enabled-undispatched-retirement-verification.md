@@ -1,0 +1,11 @@
+# 已启用未调度实例卸载恢复验证
+
+基线c838c164；新增a0v_021仅扩展原卸载命令的严格状态合同，未新增角色、GRANT或dispatch登记权限。保留旧三个retirementKind和原Receipt；新kind独立记录runtime enable/disable外键。
+
+新完整clone aos_enabled_retirement_20260912来自main@020；私有备份/tmp/aos-enabled-retirement-20260912.dump，未覆盖旧clone。旧命令正向案例先失败。clone迁移021后11项实际PG回滚验证通过：valid、unreleased、unresolved、missing_enable、wrong_config、wrong_tenant、wrong_revision、missing_proof、binding_revision、epoch、dispatch_history。负向数据仅在clone事务内且回滚，无真实业务调度。
+
+clone通过InstallationService正式卸载af1992e8→uninstalled@6，首次非重放、再次重放，524张表摘要不变、454张canary表摘要不变。主库随后021迁移成功，通过相同InstallationService及原私有应用身份卸载，af1992e8 active@5→uninstalled@6，secondReplayed=true，卸载前后454张canary表摘要一致。旧enable/configure/prepare与资源释放历史保持，不复活旧generation。
+
+证据：enabled-retirement-clone-upgrade/clone-acceptance/main-upgrade/main-acceptance/main-canary.json；测试文件test_enabled_undispatched_retirement_pg.py。未执行模型、源端写入、消息、发布或业务链，不push，230 L0仍挂起。
+
+下一波：使用独立sleep-recovered命令/安装状态文件完成新安装apply/verify，配置和enable，再跨deadline持续观察。Host v12仍ACTIVE。真实SSH连接及路由登记权限仍待外部信息，不把技术恢复当经营闭环完成。

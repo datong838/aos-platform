@@ -25,6 +25,7 @@ def main():
     group=parser.add_mutually_exclusive_group()
     group.add_argument('--reinstall-generation', action='store_true')
     group.add_argument('--configured-1-7', action='store_true')
+    group.add_argument('--enabled-undispatched-1-7', action='store_true')
     args = parser.parse_args()
     installation = 'efc4e640-1b15-403f-9d06-4c6d1a5330a7' if args.reinstall_generation else INSTALLATION
     etag = '"5"' if args.reinstall_generation else '"7"'
@@ -33,6 +34,10 @@ def main():
         installation='e42e042b-1fe7-4cfa-bb83-469ff256081d'
         etag='"5"'
         key='a0v-ecommerce-1.7-configured-disabled-retire-v1'
+    if args.enabled_undispatched_1_7:
+        installation='af1992e8-89c2-406a-816d-01e61d7bf982'
+        etag='"5"'
+        key='a0v-ecommerce-1.7-enabled-undispatched-retire-v1'
     if not args.apply: raise ValueError('explicit retirement required')
     host = load('a0v_ecommerce_runtime_host')
     credential_path = RECOVERY/'state/installation-control-identity.json'
