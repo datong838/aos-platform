@@ -87,3 +87,7 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 本切片先独立测试并用当前真实安装执行只读资格检查；随后 Owner 必须在同一登记事务接入它，正式 API 仍需完成连接配置、权限评审、fenced 切换和未激活撤销。此切片不迁移主库、不调用登记函数。测试含缺失/重复/替换接口、错误方法路径、不同包类别、无 backend、签名摘要不符和当前发布检查拒绝。未修改任何已签名候选包。
 
 真实只读检查发现安装锁会重排 contributions：23 项与签名 manifest 集合一致、顺序不同。不能用原始列表摘要作语义等价判断。补充修改 extension_runtime/registration.py，基于既有 _index（拒绝重复 conflict key）生成顺序无关摘要；release_revalidation.py 的 RuntimeReleaseCheck 追加 backend_claim_fingerprints，保留既有 backend_claims 原值与消费者行为。登记资格只比较新语义摘要；发布签名本身仍按原始 descriptor 完整核验，不放松密码学验证。测试补充重排一致与重复声明拒绝。
+
+### Owner 强制签名资格接入
+
+修改 services/aos-api/aos_api/ecommerce_growth_registration.py 与 tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py。构造 Owner 必须提供 exact ReleasePolicy，不给默认绕过；当前安装/四来源检查后，在同一连接和 serializable 事务重新取已锁定安装 baseline，执行 qualify_registration_release 后才切换 maintainer 并调用 027。资格结果须锁摘要一致、固定 schema/包ID/九项、executable=false；缺失、失效、异常结果一律零写回滚。历史读取仍只做当前访问权限检查，不重新授予资格。隔离 PG 编排测试替换资格节点并核对与实际写回执相同 backend pid/tx，另测拒绝无写；真实签名验证沿用上一波当前主库只读证据，不以编排替身冒充全依赖正式 API 验收。

@@ -1,0 +1,22 @@
+{
+  "requestHash": "sha256:6f0a4d2201978642f2bd33a45981d9c7fab61a991973706b1d262390907f7c68",
+  "currentConfigurationValidated": true,
+  "qualification": {
+    "schemaVersion": "aos.ecommerce.registration-release-qualification/v1",
+    "lockHash": "sha256:26e8189ca75d124fe49b27c5e6922a5115071e8f2a7e126c904e3949e4539f59",
+    "packageId": "solution.ecommerce.growth",
+    "version": "1.7.0",
+    "contentHash": "sha256:3d8561e780d4bd5e2cc2ca3fba0ed8971afa8702e0badc1cd4c0d7dd6fa1922c",
+    "declarationHash": "sha256:034be7c39b6e53f382cb1b0d49340d08adc5bf69e13ae05b8f75f27b8cfb4f82",
+    "operationCount": 9,
+    "checkedAt": "2026-09-12T23:15:36.756436+00:00",
+    "executable": false
+  },
+  "transaction": {
+    "isolation": "serializable",
+    "role": "aos_runtime"
+  },
+  "dispatchRows": 0,
+  "businessWrites": 0,
+  "registrationExecuted": false
+}

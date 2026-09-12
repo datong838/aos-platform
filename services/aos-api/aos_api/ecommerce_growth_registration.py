@@ -7,6 +7,8 @@ from psycopg.types.json import Jsonb
 
 from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, validate_idempotency_key
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.release_policy import ReleasePolicy
+from aos_api.ecommerce_growth_registration_qualification import qualify_registration_release
 from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
 from aos_api.ecommerce_growth_registration_preflight import validate_current_registration_target
 from aos_api.ecommerce_growth_registration_receipt import decode_registration_receipt
@@ -17,13 +19,15 @@ from aos_api.tenant_scope import TenantScope
 
 
 class FirstDispatchRegistrationService:
-    def __init__(self, *, connect, installation_store, configuration_authorize):
+    def __init__(self, *, connect, installation_store, configuration_authorize, release_policy):
         if (not callable(connect) or type(installation_store) is not PostgresInstallationStore
-                or type(configuration_authorize) is not CurrentFourSourceConfigurationAuthorization):
+                or type(configuration_authorize) is not CurrentFourSourceConfigurationAuthorization
+                or type(release_policy) is not ReleasePolicy):
             raise TypeError('current production registration dependencies required')
         self._connect=connect
         self._store=installation_store
         self._authorize=configuration_authorize
+        self._release_policy=release_policy
 
     @contextmanager
     def _serializable_connection(self):
@@ -63,6 +67,16 @@ class FirstDispatchRegistrationService:
             if (type(checked) is not dict or checked.get('currentConfigurationValidated') is not True
                     or checked.get('requestHash')!=request.request_hash()):
                 raise PermissionError('current registration target was not validated')
+            baseline=self._store.load_active_baseline_in_transaction(conn,org_id=scope.org_id,
+                project_id=scope.project_id,requested_ref=request.installationRef)
+            qualified=qualify_registration_release(conn,lock=baseline.lock,release_policy=self._release_policy)
+            if (type(qualified) is not dict
+                    or qualified.get('schemaVersion')!='aos.ecommerce.registration-release-qualification/v1'
+                    or qualified.get('lockHash')!=request.installationRef.lock_hash
+                    or qualified.get('packageId')!='solution.ecommerce.growth'
+                    or type(qualified.get('operationCount')) is not int or qualified['operationCount']!=9
+                    or qualified.get('executable') is not False):
+                raise PermissionError('current signed registration release was not validated')
             conn.execute('SET LOCAL ROLE aos_extension_maintainer')
             response=conn.execute('SELECT extension_dispatch_register_a0v_027(%s,%s) AS receipt',
                 (Jsonb(request.model_dump(mode='json',by_alias=True)),actor)).fetchone()['receipt']

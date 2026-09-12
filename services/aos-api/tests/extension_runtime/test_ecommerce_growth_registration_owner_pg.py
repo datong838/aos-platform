@@ -8,6 +8,7 @@ from psycopg.rows import dict_row
 
 from test_dispatch_first_registration_atomic_pg import registered_db, receipt_db, database, pytestmark
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.configuration_authorization import CurrentFourSourceConfigurationAuthorization
 from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
 from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
@@ -34,7 +35,17 @@ def owner_case(registered_db,monkeypatch):
             yield conn
     service=FirstDispatchRegistrationService(connect=connect,
         installation_store=object.__new__(PostgresInstallationStore),
-        configuration_authorize=object.__new__(CurrentFourSourceConfigurationAuthorization))
+        configuration_authorize=object.__new__(CurrentFourSourceConfigurationAuthorization),
+        release_policy=ReleasePolicy(trust_roots=None))
+    qualification_calls=[]
+    monkeypatch.setattr(service._store,'load_active_baseline_in_transaction',
+        lambda *a,**kw:SimpleNamespace(lock=SimpleNamespace(lock_hash=case.request['installationRef']['lockHash'])))
+    def qualify(conn,**kwargs):
+        qualification_calls.append(conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx,current_user AS role').fetchone())
+        return dict(schemaVersion='aos.ecommerce.registration-release-qualification/v1',
+            lockHash=kwargs['lock'].lock_hash,packageId='solution.ecommerce.growth',operationCount=9,executable=False)
+    monkeypatch.setattr('aos_api.ecommerce_growth_registration.qualify_registration_release',qualify)
+    case.qualification_calls=qualification_calls
     def check(conn,**kwargs):
         calls.append(conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx,current_user AS role').fetchone())
         return dict(currentConfigurationValidated=True,requestHash=kwargs['request'].request_hash())
@@ -49,6 +60,7 @@ def test_real_transaction_registration_and_replay(owner_case):
     second=service.register(scope=scope,request=request,actor='actor')
     assert first['receiptId']==second['receiptId'] and second['replayed'] is True
     assert len(calls)==2 and all(v['role']=='aos_runtime' for v in calls)
+    assert case.qualification_calls==calls
     observed=case.db.owner.execute('SELECT * FROM registration_tx_probe').fetchone()
     assert (observed['pid'],observed['tx'])==(calls[0]['pid'],calls[0]['tx'])
     assert observed['role']=='aos_extension_maintainer'
@@ -101,3 +113,27 @@ def test_history_requires_current_permission_after_runtime_drift(owner_case,monk
         with pytest.raises(PermissionError):service.read_receipt(scope=scope,idempotency_key=request.idempotencyKey,actor='actor')
     assert seen==['actor']
     assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==1
+
+
+@pytest.mark.parametrize('answer',[None,False,{},dict(operationCount=9,executable=False),
+    dict(schemaVersion='aos.ecommerce.registration-release-qualification/v1',lockHash='sha256:'+'f'*64,
+         packageId='solution.ecommerce.growth',operationCount=9,executable=False)])
+def test_qualification_failure_has_no_writes(owner_case,monkeypatch,answer):
+    case,service,_=owner_case
+    monkeypatch.setattr('aos_api.ecommerce_growth_registration.qualify_registration_release',lambda *a,**kw:answer)
+    with pytest.raises(PermissionError):
+        service.register(scope=TenantScope('org-a','project-a'),
+            request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_operation_dispatch_binding').fetchone()['n']==0
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==0
+
+
+def test_revoked_signature_has_no_writes(owner_case,monkeypatch):
+    case,service,_=owner_case
+    def reject(*a,**kw):raise PermissionError('release revoked')
+    monkeypatch.setattr('aos_api.ecommerce_growth_registration.qualify_registration_release',reject)
+    with pytest.raises(PermissionError,match='release revoked'):
+        service.register(scope=TenantScope('org-a','project-a'),
+            request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_operation_dispatch_binding').fetchone()['n']==0
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==0
