@@ -97,14 +97,14 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
     enabled = os.getenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "").strip() == "1"
     runtime_dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
     directory_dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
+    credential_reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
     oci_context = os.getenv("AOS_EXTENSION_OCI_CONTEXT", "").strip()
     runtime_platform = os.getenv("AOS_EXTENSION_RUNTIME_PLATFORM", "").strip()
     dependencies = None
     if (
         enabled
         and type(control_plane) is RuntimeControlPlane
-        and runtime_dsn
-        and directory_dsn
+        and (credential_reference or (runtime_dsn and directory_dsn))
         and oci_context
         and runtime_platform
     ):

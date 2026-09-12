@@ -82,24 +82,28 @@ def _load_credentials(path: Path) -> dict[str, dict[str, str]]:
 
 
 def _configure_environment(
-    credentials: dict[str, dict[str, str]], *, bundle_root: Path,
+    credential_file: Path, *, bundle_root: Path,
     trust_roots_file: Path,
 ) -> None:
+    if not credential_file.is_absolute():
+        raise HostBlocked("CREDENTIAL_FILE_INVALID")
+    _load_credentials(credential_file)
     if not bundle_root.is_dir():
         raise HostBlocked("BUNDLE_ROOT_INVALID")
     if not trust_roots_file.is_file():
         raise HostBlocked("TRUST_ROOTS_INVALID")
     values = {
         "AOS_DOTENV_DISABLED": "1",
-        "AOS_DATABASE_URL": credentials["web"]["dsn"],
-        "AOS_EXTENSION_RUNTIME_DATABASE_URL": credentials["runtime"]["dsn"],
-        "AOS_EXTENSION_DIRECTORY_DATABASE_URL": credentials["directory"]["dsn"],
+        "AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE": str(credential_file),
         "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "1",
         "AOS_EXTENSION_OCI_CONTEXT": "colima-aos-extension",
         "AOS_EXTENSION_RUNTIME_PLATFORM": "linux/arm64",
         "AOS_BUNDLE_ROOT": str(bundle_root.resolve()),
         "AOS_BUNDLE_TRUST_ROOTS_FILE": str(trust_roots_file.resolve()),
     }
+    for name in ("AOS_DATABASE_URL", "AOS_EXTENSION_RUNTIME_DATABASE_URL",
+                 "AOS_EXTENSION_DIRECTORY_DATABASE_URL"):
+        os.environ.pop(name, None)
     os.environ.update(values)
 
 
@@ -122,9 +126,8 @@ def _build_host():
 
 
 async def _serve(args: argparse.Namespace) -> None:
-    credentials = _load_credentials(args.credential_file.resolve())
     _configure_environment(
-        credentials,
+        args.credential_file,
         bundle_root=args.bundle_root.resolve(),
         trust_roots_file=args.trust_roots_file.resolve(),
     )

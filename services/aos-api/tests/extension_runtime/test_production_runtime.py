@@ -424,10 +424,16 @@ def test_environment_wiring_rejects_unsupported_platform(monkeypatch):
     )
 
 
-def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch):
+@pytest.mark.parametrize('use_reference', [False, True])
+def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch, use_reference):
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
     monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
+    monkeypatch.delenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', raising=False)
+    if use_reference:
+        monkeypatch.delenv('AOS_EXTENSION_RUNTIME_DATABASE_URL')
+        monkeypatch.delenv('AOS_EXTENSION_DIRECTORY_DATABASE_URL')
+        monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', '/fixture/path/validated-by-identity-selector')
     monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PLATFORM", "linux/arm64")
     captured = {}

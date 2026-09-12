@@ -18,6 +18,11 @@ HOST = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(HOST)
 
 
+@pytest.fixture(autouse=True)
+def isolated_environment(monkeypatch):
+    monkeypatch.setattr(os, 'environ', dict(os.environ))
+
+
 def _credential_file(path: Path) -> tuple[Path, dict[str, dict[str, str]]]:
     value = {
         plane: {"role": role, "password": f"secret-{plane}", "dsn": f"dsn-{plane}"}
@@ -37,7 +42,7 @@ def test_credentials_require_private_exact_roles(tmp_path: Path) -> None:
     assert captured.value.code == "CREDENTIAL_FILE_INVALID"
 
 
-def test_environment_uses_three_distinct_planes(tmp_path: Path, monkeypatch) -> None:
+def test_environment_uses_reference_without_secret_dsns(tmp_path: Path, monkeypatch) -> None:
     path, credentials = _credential_file(tmp_path / "identities.json")
     bundle = tmp_path / "bundles"
     bundle.mkdir()
@@ -47,15 +52,15 @@ def test_environment_uses_three_distinct_planes(tmp_path: Path, monkeypatch) -> 
         "AOS_DATABASE_URL", "AOS_EXTENSION_RUNTIME_DATABASE_URL",
         "AOS_EXTENSION_DIRECTORY_DATABASE_URL",
     ):
-        monkeypatch.delenv(key, raising=False)
+        monkeypatch.setenv(key, 'inherited-secret-must-be-removed')
 
     HOST._configure_environment(
-        HOST._load_credentials(path), bundle_root=bundle, trust_roots_file=trust
+        path, bundle_root=bundle, trust_roots_file=trust
     )
 
-    assert os.environ["AOS_DATABASE_URL"] == credentials["web"]["dsn"]
-    assert os.environ["AOS_EXTENSION_RUNTIME_DATABASE_URL"] == credentials["runtime"]["dsn"]
-    assert os.environ["AOS_EXTENSION_DIRECTORY_DATABASE_URL"] == credentials["directory"]["dsn"]
+    assert os.environ['AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE'] == str(path)
+    for key in ('AOS_DATABASE_URL', 'AOS_EXTENSION_RUNTIME_DATABASE_URL', 'AOS_EXTENSION_DIRECTORY_DATABASE_URL'):
+        assert key not in os.environ
     assert os.environ["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] == "1"
     assert os.environ["AOS_DOTENV_DISABLED"] == "1"
 
@@ -101,6 +106,18 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     assert result["outcome"] == "RUNTIME_HOST_STOPPED"
     assert result["tenantCount"] == 1
     assert result["canaryTenantCount"] == 0
+
+
+def test_serve_rejects_symlink_before_build(tmp_path, monkeypatch):
+    path, _ = _credential_file(tmp_path / 'identities.json')
+    link = tmp_path / 'link'
+    link.symlink_to(path)
+    monkeypatch.setattr(HOST, '_build_host', lambda: pytest.fail('symlink reached host construction'))
+    with pytest.raises(HOST.HostBlocked):
+        asyncio.run(HOST._serve(argparse.Namespace(
+            credential_file=link, bundle_root=tmp_path, trust_roots_file=path,
+            status_file=tmp_path / 'status.json', interval_seconds=2,
+        )))
 
 
 def test_runtime_failure_records_private_safe_exception_chain(tmp_path, monkeypatch):

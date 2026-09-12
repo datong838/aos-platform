@@ -5,6 +5,11 @@ import pytest
 from psycopg.pq import TransactionStatus
 
 
+@pytest.fixture(autouse=True)
+def no_inherited_credential_reference(monkeypatch):
+    monkeypatch.delenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', raising=False)
+
+
 class _Connection:
     def __init__(self):
         self.info = SimpleNamespace(transaction_status=TransactionStatus.IDLE)
@@ -98,3 +103,50 @@ def test_bad_credential_reference_never_connects(monkeypatch,tmp_path,mode):
     with pytest.raises(RuntimeError) as error:
         with runtime_connections.runtime_worker_connection():pass
     assert 'fixture-secret' not in str(error.value)
+
+
+@pytest.mark.parametrize('plane', ['runtime', 'directory', 'web'])
+def test_all_planes_use_protected_reference(monkeypatch, tmp_path, plane):
+    from aos_api.extension_runtime import runtime_connections as module
+    path = credential_file(tmp_path)
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', str(path))
+    monkeypatch.setattr(module, 'get_dsn', lambda: pytest.fail('legacy web fallback'))
+    for name in ['AOS_EXTENSION_RUNTIME_DATABASE_URL', 'AOS_EXTENSION_DIRECTORY_DATABASE_URL']:
+        monkeypatch.setenv(name, 'legacy-must-not-be-used')
+    connection = _Connection()
+    calls = []
+    monkeypatch.setattr(module.psycopg, 'connect', lambda *a, **kw: calls.append(a) or connection)
+    connector = {'runtime': module.runtime_worker_connection,
+                 'directory': module.runtime_directory_connection,
+                 'web': module.runtime_web_identity_connection}[plane]
+    with connector() as opened:
+        assert opened is connection
+        assert opened.read_only is (plane == 'directory')
+    assert calls == [(plane,)]
+
+
+@pytest.mark.parametrize('plane', ['runtime', 'directory', 'web'])
+@pytest.mark.parametrize('defect', ['bad_json', 'directory_role_equals_runtime', 'directory_dsn_equals_runtime'])
+def test_bad_file_denies_every_plane_without_fallback(monkeypatch, tmp_path, plane, defect):
+    import json
+    from aos_api.extension_runtime import runtime_connections as module
+    path = credential_file(tmp_path)
+    value = json.loads(path.read_text())
+    if defect == 'bad_json':
+        path.write_text('private-fixture-invalid')
+    else:
+        key = 'role' if 'role' in defect else 'dsn'
+        value['directory'][key] = value['runtime'][key]
+        path.write_text(json.dumps(value))
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', str(path))
+    monkeypatch.setenv('AOS_EXTENSION_DIRECTORY_DATABASE_URL', 'legacy-directory')
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_DATABASE_URL', 'legacy-runtime')
+    monkeypatch.setattr(module, 'get_dsn', lambda: 'legacy-web')
+    monkeypatch.setattr(module.psycopg, 'connect', lambda *a, **kw: pytest.fail('invalid file connected'))
+    connector = {'runtime': module.runtime_worker_connection,
+                 'directory': module.runtime_directory_connection,
+                 'web': module.runtime_web_identity_connection}[plane]
+    with pytest.raises(RuntimeError) as error:
+        with connector():
+            pass
+    assert 'private-fixture' not in str(error.value)

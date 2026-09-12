@@ -32,9 +32,9 @@ def _runtime_file_dsns(reference):
             if (type(item) is not dict or set(item) != {'dsn','password','role'}
                     or any(type(v) is not str or not v or '\x00' in v for v in item.values())):
                 raise ValueError('host identity entry differs')
-        if value['runtime']['role'] == value['web']['role']:
-            raise ValueError('runtime identity must differ')
-        return value['runtime']['dsn'], value['web']['dsn']
+        if any(len({item[key] for item in value.values()}) != 3 for key in ('role', 'dsn')):
+            raise ValueError('three distinct identities required')
+        return {plane: item['dsn'] for plane, item in value.items()}
     except Exception:
         raise RuntimeError('runtime credential reference is invalid') from None
 
@@ -44,7 +44,8 @@ def runtime_worker_connection():
     """Return an unscoped IDLE connection; the concrete worker owns each transaction."""
     reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
     if reference:
-        dsn, web_dsn = _runtime_file_dsns(reference)
+        identities = _runtime_file_dsns(reference)
+        dsn, web_dsn = identities['runtime'], identities['web']
     else:
         dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
         web_dsn = get_dsn()
@@ -61,10 +62,16 @@ def runtime_worker_connection():
 @contextmanager
 def runtime_directory_connection():
     """Use a separately provisioned, host-bound, read-only database identity."""
-    dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
+    reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
+    if reference:
+        identities = _runtime_file_dsns(reference)
+        dsn, web_dsn = identities['directory'], identities['web']
+    else:
+        dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
+        web_dsn = get_dsn()
     if not dsn:
         raise RuntimeError("runtime directory database identity is not configured")
-    if dsn == get_dsn():
+    if dsn == web_dsn:
         raise RuntimeError("runtime directory identity must differ from the web database identity")
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
         conn.read_only = True
@@ -77,7 +84,9 @@ def runtime_directory_connection():
 @contextmanager
 def runtime_web_identity_connection():
     """Open the Web principal without request scope solely for identity preflight."""
-    with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+    reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
+    dsn = _runtime_file_dsns(reference)['web'] if reference else get_dsn()
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
         if conn.info.transaction_status != TransactionStatus.IDLE:
             raise RuntimeError("web identity connection must start idle")
         yield conn
