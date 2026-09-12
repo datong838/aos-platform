@@ -60,4 +60,37 @@ describe("R41 data health current truth", () => {
     act(() => root.unmount());
     host.remove();
   });
+
+  it("hides the previous score after a failed refresh and recovers with a new observation", async () => {
+    const summary = {
+      overallScore: 100, completeness: 1, consistency: null, timeliness: 1,
+      totalRules: 12, passingRules: 12, openIssues: 0, criticalIssues: 0,
+      rules: [], issues: [], trend: [],
+    };
+    apiMocks.apiGet.mockResolvedValueOnce(summary)
+      .mockRejectedValueOnce(new Error("当前数据暂时无法核验，请稍后重试"))
+      .mockResolvedValueOnce({ ...summary, overallScore: 71 });
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => root.render(<MemoryRouter><DataHealthPage /></MemoryRouter>));
+      expect(host.textContent).toContain("100/100");
+      const button = Array.from(host.querySelectorAll("button")).find((item) => item.textContent === "刷新检查结果")!;
+      await act(async () => { button.click(); });
+      expect(host.textContent).toContain("当前数据暂时无法核验");
+      expect(host.textContent).not.toContain("总体评分");
+      expect(host.textContent).not.toContain("通过规则");
+      expect(host.textContent).not.toContain("暂无健康数据");
+      expect(button.disabled).toBe(false);
+      await act(async () => { button.click(); });
+      expect(host.textContent).toContain("71/100");
+      expect(host.textContent).not.toContain("当前数据暂时无法核验");
+      expect(apiMocks.apiGet).toHaveBeenCalledTimes(3);
+      expect(apiMocks.apiPost).not.toHaveBeenCalled();
+    } finally {
+      act(() => root.unmount());
+      host.remove();
+    }
+  });
 });

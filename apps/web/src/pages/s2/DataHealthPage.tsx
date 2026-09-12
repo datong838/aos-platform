@@ -168,7 +168,7 @@ export function sortIssuesBySeverity(issues: HealthIssue[]): HealthIssue[] {
 
 export function DataHealthPage() {
   const { data, err, loading, setData, setErr } = useJsonGet<HealthSummary>("/v1/data-health/summary");
-  const hs = data;
+  const hs = err ? null : data;
 
   const [tab, setTab] = useState("overview");
   const [issueFilter, setIssueFilter] = useState<Severity | "all">("all");

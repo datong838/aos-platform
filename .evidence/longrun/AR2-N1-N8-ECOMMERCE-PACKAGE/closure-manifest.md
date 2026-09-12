@@ -1055,3 +1055,7 @@ e3f8daab 修复 SDK 心跳占用额度，7ec6f4e0 构建 core/Niushop 1.3、grow
 ### 9.57 配置续租与未接入卸载恢复
 
 b5b25f80 修复配置期续租和延迟启用截止时间；d53d9584 新增 exact disabled proof 的 configured_unactivated 卸载。主库 e42 已卸载@6。新 af1992e8 安装 apply/verify，配置后03:54:15Z续租成功，仍禁用/待核验。下一步跨03:56:43Z原准备deadline执行enable，再准备正式调度接入与业务链。未声称业务验收完成。
+
+### 9.58 延迟启用、API重载及健康当前性
+
+62d28bc7已确认新af1992e8实例在原准备deadline之后正式enable succeeded。04:27:18Z复查持续2134秒、35次续租、3容器running，ready/enabled/unfenced。439f5abe之后API已重载且实际读取200；本波修复刷新失败仍显示旧健康结论，31页面测试及类型检查通过。真实源/流水线仍缺、原SSH隧道未恢复，路由登记权限确认待答复。下一波禁止健康检查回退离线快照；未宣称业务首链或八场景完成。
