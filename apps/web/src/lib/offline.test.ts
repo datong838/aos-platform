@@ -77,6 +77,24 @@ describe("TWC.8 offline queue & snapshot", () => {
     expect(readOfflineSnapshot("/v1/modules")).toEqual({ items: [1] });
   });
 
+  it.each(["offline", "network-failure"])("never substitutes cached health for a current observation during %s", async (mode) => {
+    const path = "/v1/data-health/summary";
+    saveOfflineSnapshot(path, { overallScore: 100 });
+    const { apiGetAuthoritative } = await import("../api/client");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"));
+    try {
+      if (mode === "offline") setConnectivity("offline", "test");
+      await expect(apiGetAuthoritative(path)).rejects.toMatchObject({
+        body: { code: mode === "offline" ? "OFFLINE_AUTHORITATIVE_READ_REQUIRED" : "NETWORK" },
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(mode === "offline" ? 0 : 1);
+      expect(listOfflineQueue()).toHaveLength(0);
+      expect(readOfflineSnapshot(path)).toEqual({ overallScore: 100 });
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("workspace switch clears offline keys", () => {
     enqueueOfflineWrite({ method: "POST", path: "/v1/x", body: {} });
     saveOfflineSnapshot("/v1/y", { ok: true });

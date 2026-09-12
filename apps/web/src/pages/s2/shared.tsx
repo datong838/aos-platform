@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { apiGet, apiPost, apiPut, apiDelete } from "../../api/client";
+import { apiGet, apiGetAuthoritative, apiPost, apiPut, apiDelete } from "../../api/client";
 import { PageChrome } from "../../components/PageChrome";
 import { BpDebugPanel } from "./blueprintUi";
 
@@ -8,7 +8,7 @@ export function JsonBlock({ value }: { value: unknown }) {
   return <BpDebugPanel value={value} title="完整 JSON" />;
 }
 
-export function useJsonGet<T>(path: string | null) {
+export function useJsonGet<T>(path: string | null, { authoritative = false }: { authoritative?: boolean } = {}) {
   const [data, setData] = useState<T | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(Boolean(path));
@@ -17,7 +17,7 @@ export function useJsonGet<T>(path: string | null) {
     if (!path) return;
     setLoading(true);
     setErr(null);
-    apiGet<T>(path)
+    (authoritative ? apiGetAuthoritative<T>(path) : apiGet<T>(path))
       .then(setData)
       .catch((e) => setErr(String((e as Error).message || e)))
       .finally(() => setLoading(false));
@@ -25,8 +25,8 @@ export function useJsonGet<T>(path: string | null) {
 
   useEffect(() => {
     reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- path-keyed
-  }, [path]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- path and read-policy keyed
+  }, [path, authoritative]);
 
   return { data, err, loading, reload, setData, setErr };
 }

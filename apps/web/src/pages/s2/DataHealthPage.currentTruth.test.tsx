@@ -9,14 +9,14 @@ import { DataHealthPage } from "./DataHealthPage";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const apiMocks = vi.hoisted(() => ({ apiGet: vi.fn(), apiPost: vi.fn() }));
+const apiMocks = vi.hoisted(() => ({ apiGet: vi.fn(), apiGetAuthoritative: vi.fn(), apiPost: vi.fn() }));
 vi.mock("../../api/client", () => apiMocks);
 
 describe("R41 data health current truth", () => {
   afterEach(() => vi.clearAllMocks());
 
   it("renders unavailable consistency as unknown instead of a perfect score", async () => {
-    apiMocks.apiGet.mockResolvedValue({
+    apiMocks.apiGetAuthoritative.mockResolvedValue({
       overallScore: 100,
       completeness: 1,
       consistency: null,
@@ -46,7 +46,7 @@ describe("R41 data health current truth", () => {
       totalRules: 12, passingRules: 9, openIssues: 3, criticalIssues: 3,
       rules: [], issues: [], trend: [{ date: "2026-08-29", score: 67 }],
     };
-    apiMocks.apiGet.mockResolvedValue(summary);
+    apiMocks.apiGetAuthoritative.mockResolvedValue(summary);
     const host = document.createElement("div");
     document.body.appendChild(host);
     const root = createRoot(host);
@@ -54,7 +54,7 @@ describe("R41 data health current truth", () => {
     await act(async () => { await Promise.resolve(); await Promise.resolve(); });
     const button = Array.from(host.querySelectorAll("button")).find((item) => item.textContent === "刷新检查结果")!;
     await act(async () => { button.click(); await Promise.resolve(); await Promise.resolve(); });
-    expect(apiMocks.apiGet).toHaveBeenLastCalledWith("/v1/data-health/summary");
+    expect(apiMocks.apiGetAuthoritative).toHaveBeenLastCalledWith("/v1/data-health/summary");
     expect(apiMocks.apiPost).not.toHaveBeenCalled();
     expect(host.textContent).toContain("检查结果已刷新");
     act(() => root.unmount());
@@ -67,7 +67,7 @@ describe("R41 data health current truth", () => {
       totalRules: 12, passingRules: 12, openIssues: 0, criticalIssues: 0,
       rules: [], issues: [], trend: [],
     };
-    apiMocks.apiGet.mockResolvedValueOnce(summary)
+    apiMocks.apiGetAuthoritative.mockResolvedValueOnce(summary)
       .mockRejectedValueOnce(new Error("当前数据暂时无法核验，请稍后重试"))
       .mockResolvedValueOnce({ ...summary, overallScore: 71 });
     const host = document.createElement("div");
@@ -86,11 +86,36 @@ describe("R41 data health current truth", () => {
       await act(async () => { button.click(); });
       expect(host.textContent).toContain("71/100");
       expect(host.textContent).not.toContain("当前数据暂时无法核验");
-      expect(apiMocks.apiGet).toHaveBeenCalledTimes(3);
+      expect(apiMocks.apiGetAuthoritative).toHaveBeenCalledTimes(3);
       expect(apiMocks.apiPost).not.toHaveBeenCalled();
     } finally {
       act(() => root.unmount());
       host.remove();
     }
   });
+  it("rejects offline cached success when the current observation is unavailable", async () => {
+    apiMocks.apiGet.mockResolvedValue({
+      overallScore: 100, completeness: 1, consistency: 1, timeliness: 1,
+      totalRules: 12, passingRules: 12, openIssues: 0, criticalIssues: 0,
+      rules: [], issues: [], trend: [],
+    });
+    apiMocks.apiGetAuthoritative.mockRejectedValue(new Error("当前离线，无法校验权威状态"));
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => root.render(<MemoryRouter><DataHealthPage /></MemoryRouter>));
+      expect(host.textContent).toContain("当前离线");
+      expect(host.textContent).not.toContain("总体评分");
+      const button = Array.from(host.querySelectorAll("button")).find((item) => item.textContent === "刷新检查结果")!;
+      await act(async () => { button.click(); });
+      expect(host.textContent).not.toContain("检查结果已刷新");
+      expect(apiMocks.apiGet).not.toHaveBeenCalled();
+      expect(apiMocks.apiGetAuthoritative).toHaveBeenCalledTimes(2);
+    } finally {
+      act(() => root.unmount());
+      host.remove();
+    }
+  });
+
 });

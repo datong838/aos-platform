@@ -1,0 +1,9 @@
+# 健康检查必须实时读取
+
+基线287ca790。上波浏览器旧页面显示离线横幅；源码apiGet在离线或网络异常时返回已有快照，DataHealthPage会把它作为本次检查成功。该语义不符合真实当前观测，不能靠上波err门禁解决没有抛错的缓存回退。
+
+文件：apps/web/src/pages/s2/shared.tsx给useJsonGet增加默认false的authoritative选项，复用已有apiGetAuthoritative，保持所有旧调用默认行为；DataHealthPage.tsx初始加载启用该选项，手动刷新同样使用权威读取。原错误门禁保留。不给全局apiGet加路径特判，不改变权限、数据和离线写队列。
+
+测试：DataHealthPage.currentTruth.test.tsx改为分别模拟普通与权威读取，普通读取返回旧成功快照而权威读取失败时必须显示错误、不显示评分或成功提示；成功/失败/恢复仍复测。底层已有apiGetAuthoritative离线和网络失败的测试一起运行。类型检查及真实在线页面读验收，离线现场以隔离测试覆盖，不主动中断主API/Host。
+
+风险：共享hook选项必须加入effect依赖，不能影响默认读取。错误页保留重试入口，不自动刷新/调用源库。完成后31项旧页面行为回归、新增离线案例和现有网络策略回归，记录实际数量。复核当前Host连续性，继续经营首链缺口清单。

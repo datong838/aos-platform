@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiGet } from "../../api/client";
+import { apiGetAuthoritative } from "../../api/client";
 import {
   BpBanner,
   BpMetricGrid,
@@ -167,7 +167,7 @@ export function sortIssuesBySeverity(issues: HealthIssue[]): HealthIssue[] {
 // ── Page Component ─────────────────────────────────────────────
 
 export function DataHealthPage() {
-  const { data, err, loading, setData, setErr } = useJsonGet<HealthSummary>("/v1/data-health/summary");
+  const { data, err, loading, setData, setErr } = useJsonGet<HealthSummary>("/v1/data-health/summary", { authoritative: true });
   const hs = err ? null : data;
 
   const [tab, setTab] = useState("overview");
@@ -201,7 +201,7 @@ export function DataHealthPage() {
     setMsg("");
     setRefreshing(true);
     try {
-      const next = await apiGet<HealthSummary>("/v1/data-health/summary");
+      const next = await apiGetAuthoritative<HealthSummary>("/v1/data-health/summary");
       setData(next);
       setErr(null);
       setMsg("检查结果已刷新");
