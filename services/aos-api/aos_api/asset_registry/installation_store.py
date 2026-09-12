@@ -930,6 +930,7 @@ class PostgresInstallationStore:
         reason: str | None = None,
         evidence: InstallationEventEvidence | None = None,
         runtime_preparation: bool = False,
+        preparation_reset: bool = False,
     ) -> InstallationRecord:
         actor = _normalized_text(actor, "actor")
         current = locked.record.current
@@ -943,6 +944,10 @@ class PostgresInstallationStore:
             "uninstalled": ("active", "uninstall"),
         }
         expected_from, evidence_type = allowed[to_state]
+        if preparation_reset:
+            if to_state != "approved" or runtime_preparation or decision is not None:
+                raise InstallationStateConflictError("invalid preparation reset")
+            expected_from, evidence_type = "applied", "preparation_reset"
         if runtime_preparation:
             if to_state != "applied":
                 raise InstallationStateConflictError("runtime preparation cannot activate")

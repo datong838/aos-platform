@@ -1317,6 +1317,7 @@ INSTALLATION_STATE_TRANSITIONS = frozenset(
         ("approved", "applied"),
         ("approved", "uninstalled"),
         ("applied", "active"),
+        ("applied", "approved"),
         ("active", "rolled_back"),
         ("active", "uninstalled"),
     }
@@ -1532,7 +1533,7 @@ class InstallationDecision(StrictContract):
 
 
 class InstallationEventEvidence(StrictContract):
-    type: Literal["dry_apply", "runtime_preparation", "verification", "rollback", "uninstall"]
+    type: Literal["dry_apply", "runtime_preparation", "preparation_reset", "verification", "rollback", "uninstall"]
     evidence_ref: str = Field(
         alias="evidenceRef",
         min_length=1,

@@ -21,7 +21,7 @@ def load(name):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--action", choices=("create", "apply", "verify", "observe"), required=True)
+    parser.add_argument("--action", choices=("create", "apply", "verify", "reset", "observe"), required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     first = load("a0v_canonical_ecommerce_first_install")
@@ -53,6 +53,14 @@ def main():
             bindings = conn.execute("""SELECT generation,desired_state,observed_state,enabled,operation_fence FROM extension_runtime_binding
                 WHERE org_id='org-org' AND project_id='dev-project' AND installation_id=%s""", (installation_id,)).fetchall()
         result.update(operations=[dict(row) for row in operations], bindings=[dict(row) for row in bindings])
+        if args.action == "reset":
+            command = dict(installation_id=installation_id, org_id="org-org", project_id="dev-project",
+                actor=activation.ACTOR, roles=activation.ROLES, markings=activation.MARKINGS,
+                idempotency_key="a0v-ecommerce-1.6-preparation-reset-v1", if_match='"4"')
+            receipt = lifecycle.reset_preparation(**command)
+            replay = lifecycle.reset_preparation(**command)
+            result.update(receipt=receipt.response_json, firstReplayed=receipt.replayed,
+                          secondReplayed=replay.replayed)
         if args.action in {"apply", "verify"}:
             kind = "runtime-" + args.action
             if any(row["kind"] == kind for row in operations):
