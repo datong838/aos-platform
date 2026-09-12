@@ -56,6 +56,14 @@ preview只输出请求hash、exact安装/配置引用及九项legacy/fence=true/
 
 用18432独立测试数据库（沿用description PG fixture）验证真实迁移、哈希漂移拒绝、不可变历史、唯一组/幂等键、runtime不可写和跨租户不可见；测试Owner种入回执仅验证存储，不称真实登记成功。主库本波不迁移、不授权。
 
+### 原子登记入口切片（隔离实现，尚不部署）
+
+新增alembic/versions/a0v_027_dispatch_first_registration.py及tests/extension_runtime/test_dispatch_first_registration_atomic_pg.py。提供固定签名JSON请求+actor的受限登记函数；仅非superuser、非bypassrls的专用maintainer登录在serializable事务并采用maintainer角色时可调用，runtime与PUBLIC无EXECUTE。函数不接受调用者的操作集合、handler/fence或SQL。
+
+在同事务内按tenant锁定登记命名空间，核对persisted安装角色/markings、安装active/etag/lock/overlay、唯一当前generation/epoch/binding/configRef及不可变配置来源行，再登记固定九项legacy/fenced路由及a0v_026回执。请求hash由既有canonical JSON函数生成；payload绑定actor，重放须同key同请求同actor；不同请求/已有组/部分组拒绝，不补齐。普通runtime不获得dispatch表INSERT权限。
+
+安全边界：maintainer是受信任的控制服务身份，不对浏览器或业务模型开放；正式Owner必须先运行既有四来源配置预检并保留锁，函数本身仅复核存储目标与安装角色/markings，不把元数据登记当业务执行权。完整四来源与签名声明的正式Owner接线、首次fenced切换和未激活撤销未完成前不部署或真实调用。该函数增加受限访问范围，权限评审须与隔离测试结果一起审阅，不因代码完成自动授予主库权限。
+
 ### 当前安装登记前检查切片
 
 新增services/aos-api/aos_api/ecommerce_growth_registration_preflight.py与services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_preflight.py。复用PostgresInstallationStore和CurrentFourSourceConfigurationAuthorization，不接受假权限callback或调用方路由列表。先锁安装CAS，再读取active lock，检查resolved内solution.ecommerce.growth唯一存在；精确锁定runtime generation/bindingRevision/epoch/configRef并要求enabled/ready/unfenced。调用既有read_configuration完成当前角色、markings及四来源核验。当前tenant存在任一九项路由就标记不满足首次登记条件，不能预览为可补齐。
