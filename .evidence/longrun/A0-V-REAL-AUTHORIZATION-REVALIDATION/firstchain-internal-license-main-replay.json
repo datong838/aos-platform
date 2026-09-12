@@ -1,0 +1,18 @@
+{
+  "authorityTablesCompared": 227,
+  "replayChanges": {},
+  "canaryTablesCompared": 223,
+  "canaryContentChanges": [],
+  "result": {
+    "database": "aos_meta_head",
+    "governanceTaskId": "task-4e0a77a4cf61469f81e8",
+    "governanceRunId": "run-ad4f00a37bc44953b8ac",
+    "bundleId": "evidence-bundle-e4e1e551b83c4c8983d4",
+    "revision": 1,
+    "contentHash": "00c4fe32420b3a7fd49c9d89cfe0dc217d19f9b359508251eb553673415e8da0",
+    "coverage": "complete",
+    "freshness": "fresh",
+    "providerCalls": 0,
+    "businessRuns": 0
+  }
+}

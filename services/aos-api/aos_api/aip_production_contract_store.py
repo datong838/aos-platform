@@ -2907,6 +2907,13 @@ class AipProductionContractStore:
         value = json.loads(payload) if isinstance(payload, str) else payload
         if not isinstance(value, dict):
             return []
+        if (set(value) == {"stepRunId", "stepKey", "payload"}
+                and isinstance(value["stepRunId"], str) and value["stepRunId"].strip()
+                and isinstance(value["stepKey"], str) and value["stepKey"].strip()
+                and isinstance(value["payload"], dict)):
+            # TaskStore.record_step_phase wraps the original fact payload.
+            # Only unwrap its exact canonical envelope, never arbitrary nesting.
+            value = value["payload"]
         raw = value.get("factIds")
         if raw is None:
             raw = value.get("facts")
