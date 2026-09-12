@@ -24,6 +24,10 @@ class SnapshotMapping:
 
 def compile_snapshot_mapping(mapping, read_spec):
     """No file reads or implicit defaults. A compiled value is not authorization."""
+    if (type(mapping) is dict and type(mapping.get('snapshot_materialization')) is dict
+            and mapping['snapshot_materialization'].get('schema_version')=='aos.snapshot-materialization/v2'):
+        from aos_api.pipeline_snapshot_materialization_v2 import compile_v2
+        return compile_v2(mapping,read_spec)
     try:
         if type(mapping) is not dict or type(read_spec) is not MappingReadSpec:
             raise ValueError('mapping and exact read specification required')
@@ -97,6 +101,9 @@ def _convert(value, kind):
 
 def materialize_snapshot(rows, mapping, *, observed_at):
     """Produce one whole immutable-observation batch or reject it; no partial output."""
+    from aos_api.pipeline_snapshot_materialization_v2 import SnapshotMappingV2, materialize_v2
+    if type(mapping) is SnapshotMappingV2:
+        return materialize_v2(rows,mapping,observed_at=observed_at)
     try:
         if type(mapping) is not SnapshotMapping or type(rows) is not list or len(rows)>1000:
             raise ValueError('bounded declared snapshot required')

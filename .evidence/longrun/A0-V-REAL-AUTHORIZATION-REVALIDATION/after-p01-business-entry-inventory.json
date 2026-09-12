@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-09-12T18:41:09.521423+00:00",
+  "publishedRuntimePackages": [
+    {
+      "bundle_id": "domain.ecommerce.core",
+      "version": "1.3.0",
+      "has_frontend": false
+    },
+    {
+      "bundle_id": "platform.ecommerce.niushop",
+      "version": "1.4.0",
+      "has_frontend": false
+    },
+    {
+      "bundle_id": "solution.ecommerce.growth",
+      "version": "1.7.0",
+      "has_frontend": false
+    }
+  ],
+  "businessDispatchBindings": 0,
+  "businessSchedules": 0,
+  "businessOccurrences": 0,
+  "graphInventory": [
+    {
+      "pipeline_id": "P01-shop-qyh",
+      "revision": 1
+    }
+  ]
+}
