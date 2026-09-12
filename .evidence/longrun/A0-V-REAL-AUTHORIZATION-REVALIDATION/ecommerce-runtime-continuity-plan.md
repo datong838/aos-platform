@@ -39,3 +39,9 @@
 代码定位 packages/aos-extension-sdk/python/aos_extension_sdk/session.py：serve_session 使用 for sequence in range(1024)，注册、业务调用和每2秒心跳共享预算，退出语句为 session request budget exhausted，时间与约36分钟退出吻合。先用超过1024心跳的确定性测试复现，再修改SDK：心跳不消耗原业务请求上限，序号仍严格递增，业务请求ID保留防重放集合且受1024预算限制，心跳最近ID使用有界1024窗口。旧心跳ID跨窗口可作为新序号新心跳，不执行业务，旧业务ID永远不得重用。每帧字节/深度限制保持。
 
 具体文件 packages/aos-extension-sdk/python/aos_extension_sdk/session.py 及 services/aos-api/tests/extension_runtime/ 对应测试。scripts/a0v_ecommerce_continuity_observe.py 遇容器不存在应归档 CONTINUITY_FAILED 而非未写输出就异常退出。修复后不可替换旧签名OCI内容；需新SDK镜像和包后继版本，规范卸载当前从未启用安装，再重装并跨原退出窗口连续观察。根因修复、后继包、真实恢复为下一波优先项，既有技能/模型/许可证据不回滚。
+
+## 不可变修复版本实施
+
+新增 bundles/candidates/ecommerce/domain.ecommerce.core/1.3.0、platform.ecommerce.niushop/1.3.0、solution.ecommerce.growth/1.7.0，复制对应旧候选且仅调整版本；operations-base/1.2.0 保持。scripts/build_ecommerce_runtime_candidates.py 默认坐标切到新三包，SDK 构建来源为已提交 e3f8daab 修复。真实资格在每个容器执行 2048 次健康检查，记入 heartbeatChecks，注册必须完全匹配且清理成功。新 scripts/a0v_ecommerce_1_7_registry_successor.py 要求该检查数量，历史根 v6 八坐标扩到 v7 十一坐标，历史字节不变。业务请求额度及现有授权边界保持。
+
+候选新版本还必须同步工作台资产的自引用 bundleRef；首轮资格测试准确拒绝了旧版自引用。仅更新新候选的自身坐标，不改依赖版本范围或历史策略版本。

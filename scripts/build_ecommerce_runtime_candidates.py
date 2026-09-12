@@ -55,17 +55,17 @@ SCHEMA_COMPATIBILITY_RELATIONS = (
     "public.extension_schema_installation",
 )
 RUNTIME_CASES = (
-    ("domain.ecommerce.core/1.2.0", "domain.ecommerce.core", "1.2.0", "ecommerce_core"),
+    ("domain.ecommerce.core/1.3.0", "domain.ecommerce.core", "1.3.0", "ecommerce_core"),
     (
-        "platform.ecommerce.niushop/1.2.0",
+        "platform.ecommerce.niushop/1.3.0",
         "platform.ecommerce.niushop",
-        "1.2.0",
+        "1.3.0",
         "ecommerce_niushop",
     ),
     (
-        "solution.ecommerce.growth/1.6.0",
+        "solution.ecommerce.growth/1.7.0",
         "solution.ecommerce.growth",
-        "1.6.0",
+        "1.7.0",
         "ecommerce_growth",
     ),
 )
@@ -849,7 +849,8 @@ def _qualify_session(*, driver, image_id, contributions, journal_root: Path):
         async def run():
             async with open_session(driver, image_id=image_id, declared=declared,
                                     resource_identity=identity) as session:
-                await session.check_health()
+                for _ in range(2048):
+                    await session.check_health()
                 record("registered_and_alive")
         try:
             asyncio.run(run())
@@ -858,7 +859,7 @@ def _qualify_session(*, driver, image_id, contributions, journal_root: Path):
             raise
         record("released")
     return {"registration": "exact", "heartbeat": "alive", "cleanup": "released",
-            "contributionCount": len(declared.contributions), "journal": str(journal)}
+            "contributionCount": len(declared.contributions), "heartbeatChecks": 2048, "journal": str(journal)}
 
 
 def qualify(

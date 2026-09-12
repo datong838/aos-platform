@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aos://solution.ecommerce.growth/content/content-pipeline.schema.json",
+  "title": "ContentPipelineRefs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "briefRef",
+    "stageTemplateRef",
+    "responsibilityPlanRef",
+    "evalContractRef",
+    "modelRouteRef",
+    "runtimePolicyRef",
+    "capabilityRefs",
+    "toolBindingRefs",
+    "budgetRef",
+    "readiness",
+    "blockers"
+  ],
+  "properties": {
+    "briefRef": { "$ref": "#/$defs/taskBriefRef" },
+    "stageTemplateRef": { "$ref": "#/$defs/stageTemplateRef" },
+    "responsibilityPlanRef": { "$ref": "#/$defs/responsibilityPlanRef" },
+    "evalContractRef": { "$ref": "#/$defs/evalContractRef" },
+    "modelRouteRef": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/modelRouteRef" }]
+    },
+    "runtimePolicyRef": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/runtimePolicyRef" }]
+    },
+    "capabilityRefs": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/capabilityRef" }
+    },
+    "toolBindingRefs": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/toolBindingRef" }
+    },
+    "budgetRef": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/exactRevisionRef" }]
+    },
+    "readiness": { "enum": ["ready", "blocked", "stale", "unknown"] },
+    "blockers": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/blocker" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "readiness": { "const": "ready" } } },
+      "then": {
+        "properties": {
+          "blockers": { "maxItems": 0 },
+          "modelRouteRef": { "$ref": "#/$defs/modelRouteRef" },
+          "runtimePolicyRef": { "$ref": "#/$defs/runtimePolicyRef" },
+          "capabilityRefs": { "minItems": 1 },
+          "budgetRef": { "$ref": "#/$defs/budgetRef" }
+        }
+      },
+      "else": { "properties": { "blockers": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "modelRouteRef": { "type": "null" } } },
+      "then": { "properties": { "runtimePolicyRef": { "type": "null" } } },
+      "else": { "properties": { "runtimePolicyRef": { "$ref": "#/$defs/runtimePolicyRef" } } }
+    }
+  ],
+  "$defs": {
+    "exactRevisionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceType", "resourceId", "revision", "contentHash"],
+      "properties": {
+        "resourceType": { "type": "string", "minLength": 1 },
+        "resourceId": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 },
+        "contentHash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "taskBriefRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "TaskBriefRevision" } } }
+      ]
+    },
+    "stageTemplateRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "StageTemplateRevision" } } }
+      ]
+    },
+    "responsibilityPlanRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "ResponsibilityPlanRevision" } } }
+      ]
+    },
+    "evalContractRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "EvalContractRevision" } } }
+      ]
+    },
+    "modelRouteRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "ModelRouteRevision" } } }
+      ]
+    },
+    "runtimePolicyRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "RuntimePolicyRevision" } } }
+      ]
+    },
+    "capabilityRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "CapabilityRevision" } } }
+      ]
+    },
+    "budgetRef": {
+      "allOf": [
+        { "$ref": "#/$defs/exactRevisionRef" },
+        { "properties": { "resourceType": { "const": "BudgetRevision" } } }
+      ]
+    },
+    "toolBindingRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceType", "resourceId", "version"],
+      "properties": {
+        "resourceType": { "const": "ToolBinding" },
+        "resourceId": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "resourceRef": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/exactRevisionRef" }]
+        }
+      }
+    }
+  }
+}
