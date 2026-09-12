@@ -11,15 +11,14 @@ sys.path.insert(0, str(ROOT / 'services/aos-api'))
 os.environ['AOS_DOTENV_DISABLED'] = '1'
 
 
-def run(args):
+def database_connect(database_name):
     from a0v_real_text_provider_health import _load_first_installer, _scoped_factory
-    from a0v_formal_text_model import freeze_plan, apply_plan
-    if args.database_name not in {'aos_meta_head', 'aos_text_renewal_20260912'}:
+    if database_name not in {'aos_meta_head', 'aos_text_renewal_20260912'}:
         raise ValueError('TEXT_RENEWAL_DATABASE_NOT_ALLOWED')
     base_connect = _load_first_installer().container_database_connect_factory(
         context='colima-aos-extension', container='aos-a0v-recovery-pg',
         database_name='aos_meta_head')
-    if args.database_name == 'aos_meta_head':
+    if database_name == 'aos_meta_head':
         connect = base_connect
     else:
         # Reuse the already verified local container endpoint, with an exact
@@ -33,10 +32,15 @@ def run(args):
         @contextmanager
         def connect():
             with psycopg.connect(**parameters, row_factory=dict_row) as conn:
-                if conn.info.dbname != args.database_name:
+                if conn.info.dbname != database_name:
                     raise ValueError('TEXT_RENEWAL_DATABASE_DRIFT')
                 yield conn
-    factory = _scoped_factory(connect)
+    return _scoped_factory(connect)
+
+
+def run(args):
+    from a0v_formal_text_model import freeze_plan, apply_plan
+    factory = database_connect(args.database_name)
     plan = freeze_plan(factory, args.state_dir, evidence_dir=args.evidence_dir, renew=True)
     if not args.apply:
         return {'outcome': 'TEXT_RENEWAL_PLAN_FROZEN', 'planHash': plan['planHash'],

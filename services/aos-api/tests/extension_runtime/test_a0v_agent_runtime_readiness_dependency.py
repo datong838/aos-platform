@@ -80,6 +80,7 @@ def test_canary_authority_fails_closed():
 
 def test_all_real_layers_green_routes_to_four_source_revalidation():
     result = AUDIT.summarize(snapshot(
+        evaluatedSkillCount=0,
         publishedSkillCount=37,
         capabilityDefinitionBlockers=[],
         capabilityEvalAndW0bReadyCount=10,
@@ -100,3 +101,12 @@ def test_all_real_layers_green_routes_to_four_source_revalidation():
     assert result["outcome"] == "A0V_AGENT_RUNTIME_READINESS_GREEN"
     assert result["firstUnsatisfiedGate"] is None
     assert result["nextAction"] == "REVALIDATE_CURRENT_FOUR_SOURCE_CONFIGURATION"
+
+
+def test_publication_advances_definition_without_hiding_missing_skills():
+    result = AUDIT.summarize(snapshot(evaluatedSkillCount=34, publishedSkillCount=3))
+    assert result['layers']['evaluatedSkills']['status'] == 'ready'
+    assert result['layers']['publishedSkills']['status'] == 'blocked'
+    assert result['firstUnsatisfiedGate'] == 'capabilityEvalAndW0b'
+    missing = AUDIT.summarize(snapshot(evaluatedSkillCount=33, publishedSkillCount=3))
+    assert missing['firstUnsatisfiedGate'] == 'evaluatedSkills'

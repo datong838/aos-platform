@@ -107,7 +107,9 @@ def summarize(snapshot: dict[str, Any]) -> dict[str, Any]:
         )
     layers = {
         "agentTemplates": _layer(6, snapshot["publishedAgentTemplateCount"]),
-        "evaluatedSkills": _layer(37, snapshot["evaluatedSkillCount"]),
+        # Inventory is one latest revision per skill; publication advances
+        # that revision beyond evaluated instead of removing its definition.
+        "evaluatedSkills": _layer(37, snapshot["evaluatedSkillCount"] + snapshot["publishedSkillCount"]),
         "capabilityDefinitions": _layer(10, snapshot["publishedCapabilityCount"]),
         "configurationPolicies": _layer(7, snapshot["configurationPolicyCount"]),
         "capabilityEvalAndW0b": _layer(

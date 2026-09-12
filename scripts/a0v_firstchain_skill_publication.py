@@ -100,7 +100,12 @@ def _logic(connect, logic_id, model):
 
 
 def prepare_contracts(connect):
-    require_clone(connect)
+    return materialize_contracts(connect, require_target=require_clone,
+        database=ALLOWED_CLONE, authority_scope='clone-only-contract-preparation')
+
+
+def materialize_contracts(connect, *, require_target, database, authority_scope):
+    require_target(connect)
     runtime = AipModelRuntimeStore(connect)
     model = runtime.get_model(SCOPE, MODEL_ID)
     route = runtime.get_route(SCOPE, ROUTE_ID)
@@ -114,7 +119,7 @@ def prepare_contracts(connect):
         raise ValueError('FIRSTCHAIN_MODEL_ROUTE_DRIFT')
     result = []
     for logic_id in ('D01', 'D02', 'D03'):
-        require_clone(connect)
+        require_target(connect)
         graph, logic_publication = _logic(connect, logic_id, model)
         source = AipSkillRegistry(connect).get_skill('ecommerce.skill.'+logic_id, 1)
         if source.lifecycle.value != 'evaluated':
@@ -130,7 +135,7 @@ def prepare_contracts(connect):
             idempotencyKey=key+'-gate'))
         event = release.publish(SCOPE, actor=ACTOR, request=PublishReleaseRequest(
             releaseGateDecisionId=gate.decision_id,
-            reasonHash=canonical_hash({'authority': 'AOS-000573', 'scope': 'clone-only-contract-preparation'}),
+            reasonHash=canonical_hash({'authority': 'AOS-000573', 'scope': authority_scope}),
             idempotencyKey=key+'-publication'))
         from aos_api.aip_agent_registry_contracts import VersionedAssetRef
         skill, _ = AipSkillPublicationService(connect, route_authority=route_authority).publish_evaluated_revision(SCOPE,
@@ -141,5 +146,5 @@ def prepare_contracts(connect):
                     revision=graph.revision, contentHash=graph.graph_hash), idempotencyKey=key+'-skill'), actor=ACTOR)
         result.append({'skill': exact('SkillTemplateRevision', skill, 'skill_id').model_dump(mode='json'),
             'logicPublicationId': logic_publication.publication_id, 'contractCasesPassed': report.passed})
-    return {'database': ALLOWED_CLONE, 'skills': result, 'providerCalls': 0, 'businessPlansGenerated': 0,
+    return {'database': database, 'skills': result, 'providerCalls': 0, 'businessPlansGenerated': 0,
         'readiness': 'CONTRACT_PREPARATION_ONLY', 'bindingsActivated': 0}
