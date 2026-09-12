@@ -1,0 +1,9 @@
+# 已耗尽源调用额度的安全提示
+
+2026-09-13，ec63cb64，主A0-V Lease。实际重复Run scr-21a34d9c8a4a40df因一次额度已耗尽而拒绝，无新SourceClaim/Journal，但只给PIPELINE_EXECUTOR_FAILED。原成功Run、Receipt均未变化，验收计划已停用。
+
+最小改动：新增aos_api/pipeline_control_errors.py的封闭SourceCallBudgetExhausted(RuntimeConflict)类型；pipeline_source_claim_owner.py仅在既有持锁count检查耗尽时抛该类型；phase5_pipeline_engine.py只识别该exact类型输出PIPELINE_SOURCE_CALL_BUDGET_EXHAUSTED与固定中文提示。其他异常仍通用，不传播自由文本/秘密，不通过字符串匹配认定额度错误。不改变并发锁、计数、审批、源调用、原Run恢复或HTTP状态。
+
+Red：真实线程执行抛专用类型仍应失败且0行，但得到可读固定码/提示；任意异常和伪造相同文本仍通用。PG真实两连接/额度检查保留并确认精确异常类型。Green后检查既有管道异常/受控执行兼容；实际API重载后如需验证，不新授权读源，只使用既有耗尽控制在有效窗口内，若过期则等待下一合理验收机会，不伪造当下验证。
+
+工作台入口调查：旧目录按legacy_content_predicate排除runtime包，禁止取消过滤；已存在RuntimeUiSessionView/ProductionUiSessionResolver/ExtensionHost，应先核对资源origin、签名frontend、当前UI会话和菜单路线，不能另造不受运行状态约束的目录。

@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-09-12T18:30:00.963513+00:00",
+  "originalParentHashUnchanged": true,
+  "originalDatasetReceiptUnchanged": true,
+  "sourceClaims": 1,
+  "rejectedRunHasParent": false,
+  "runs": [
+    {
+      "id": "scr-21a34d9c8a4a40df",
+      "status": "failed",
+      "rows_written": 0,
+      "executor_stopped": true
+    },
+    {
+      "id": "scr-4a7626db8f3d436e",
+      "status": "succeeded",
+      "rows_written": 1,
+      "executor_stopped": true
+    }
+  ],
+  "scheduleEnabled": false,
+  "verified": true
+}

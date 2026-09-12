@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-09-12T18:26:36.673528+00:00",
+  "httpStatus": 200,
+  "response": {
+    "id": "sch-p01-qyh-controlled-20260913-v1",
+    "cron": "0 * * * *",
+    "pipelineId": "P01-shop-qyh",
+    "enabled": false,
+    "name": "栖月汇门店真实数据受控接入",
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P01-shop-qyh"
+    },
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "lastRun": {
+      "id": "scr-21a34d9c8a4a40df",
+      "at": "2026-09-12T18:26:36.635585+00:00",
+      "status": "failed",
+      "trigger": "manual",
+      "rowsWritten": 0,
+      "durationMs": 729,
+      "errorCode": "PIPELINE_EXECUTOR_FAILED"
+    }
+  }
+}

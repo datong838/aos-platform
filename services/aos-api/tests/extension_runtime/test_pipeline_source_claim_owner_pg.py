@@ -59,7 +59,8 @@ def test_claim_replay_does_not_consume_again_and_budget_is_bounded(claim_case):
     first=reserve(claim_case);second=reserve(claim_case)
     assert first.created is True and second.created is False
     assert first.record==second.record and first.record.call_ordinal==1
-    with pytest.raises(RuntimeConflict,match='budget'):reserve(claim_case,run_id='run-two')
+    from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
+    with pytest.raises(SourceCallBudgetExhausted,match='budget'):reserve(claim_case,run_id='run-two')
     conn,owner,args,*_=claim_case
     with conn.transaction():assert owner.read_current(conn,**args)==first.record
     assert conn.execute('SELECT count(*) FROM pipeline_controlled_source_claim').fetchone()=={'count':1}

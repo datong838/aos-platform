@@ -1253,6 +1253,9 @@ class PipelineEngine:
 
     @staticmethod
     def _safe_error(_exc: Exception) -> str:
+        from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
+        if type(_exc) is SourceCallBudgetExhausted:
+            return '本次授权的源调用次数已用完；请查看原运行结果，需要重新读取时先更新审批。'
         redacted = str(redact_sensitive(str(_exc)))
         # Even redacted arbitrary exception text can contain business data. Only a
         # bounded generic message crosses the execution boundary.
@@ -1261,6 +1264,9 @@ class PipelineEngine:
     @staticmethod
     def _safe_error_code(exc: Exception) -> str:
         """Return a bounded transport/runtime classification without raw details."""
+        from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
+        if type(exc) is SourceCallBudgetExhausted:
+            return 'PIPELINE_SOURCE_CALL_BUDGET_EXHAUSTED'
         exc_module = type(exc).__module__
         exc_name = type(exc).__name__
         if exc_module.startswith("pymysql") and exc_name == "OperationalError":

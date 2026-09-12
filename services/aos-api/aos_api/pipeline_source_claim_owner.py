@@ -6,6 +6,7 @@ from psycopg.rows import dict_row
 
 from aos_api.ec_ingress_journal import IngressJournal
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner, _ref_identity, decode_control_row
 from aos_api.tenant_scope import TenantScope
@@ -102,7 +103,7 @@ class PipelineSourceClaimOwner:
                     if count['count'] != (count['last'] or 0):
                         raise RuntimeConflict('source claim ordinal history differs')
                     if count['count'] >= draft.max_source_calls:
-                        raise RuntimeConflict('source call budget exhausted')
+                        raise SourceCallBudgetExhausted('source call budget exhausted')
                     cursor.execute('''INSERT INTO pipeline_controlled_source_claim
                         (org_id,project_id,run_id,installation_id,generation,pipeline_id,control_id,control_revision,control_hash,call_ordinal,actor)
                         VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
