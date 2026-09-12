@@ -48,7 +48,7 @@ def main():
         result = {"installationId": installation_id, "state": record.state,
                   "revision": record.current_revision, "activeRevision": record.active_revision}
         with connect() as conn:
-            operations = conn.execute("""SELECT operation_id,kind,status,phase,failure_code FROM extension_runtime_operation
+            operations = conn.execute("""SELECT operation_id,kind,status,phase,failure_code,expected_installation_etag FROM extension_runtime_operation
                 WHERE org_id='org-org' AND project_id='dev-project' AND installation_id=%s ORDER BY created_at""", (installation_id,)).fetchall()
             bindings = conn.execute("""SELECT generation,desired_state,observed_state,enabled,operation_fence FROM extension_runtime_binding
                 WHERE org_id='org-org' AND project_id='dev-project' AND installation_id=%s""", (installation_id,)).fetchall()
@@ -61,9 +61,15 @@ def main():
             replay = lifecycle.reset_preparation(**command)
             result.update(receipt=receipt.response_json, firstReplayed=receipt.replayed,
                           secondReplayed=replay.replayed)
+            after = store.get_installation(org_id="org-org", project_id="dev-project", installation_id=installation_id)
+            result["afterReset"] = {"state": after.state, "revision": after.current_revision,
+                                    "activeRevision": after.active_revision}
         if args.action in {"apply", "verify"}:
             kind = "runtime-" + args.action
-            if any(row["kind"] == kind for row in operations):
+            prior = [row for row in operations if row["kind"] == kind]
+            recovered = any(event.evidence is not None and event.evidence.type == "preparation_reset"
+                            for event in record.events)
+            if prior and (not recovered or any(row["expected_installation_etag"] >= record.etag_version for row in prior)):
                 raise ValueError("operation already exists; observe its result before further action")
             expected = "approved" if args.action == "apply" else "applied"
             if record.state != expected:
@@ -72,7 +78,8 @@ def main():
             receipt = lifecycle.request_preparation(installation_id=installation_id, kind=kind,
                 org_id="org-org", project_id="dev-project", actor=activation.ACTOR,
                 roles=activation.ROLES, markings=activation.MARKINGS,
-                idempotency_key="a0v-ecommerce-1.6-" + kind + "-v1", if_match=f'"{record.etag_version}"')
+                idempotency_key="a0v-ecommerce-1.6-" + kind + (f"-after-reset-r{record.etag_version}" if recovered else "-v1"),
+                if_match=f'"{record.etag_version}"')
             result["receipt"] = receipt.response_json
     result["canaryInstallationCount"] = canary
     args.output.parent.mkdir(parents=True, exist_ok=True)

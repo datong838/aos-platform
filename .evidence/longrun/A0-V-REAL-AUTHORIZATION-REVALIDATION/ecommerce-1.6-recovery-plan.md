@@ -27,3 +27,7 @@
 数据库迁移前备份。回滚采用停止新控制操作和保留历史，不删除已追加修订。原安装未恢复前不发第二次 apply。
 
 第 2/3 步实现：增加 preparation_reset 守卫与事务入口、生命周期幂等命令、规范证据和 a0v_017 数据库迁移。维护命令新增 reset，只针对现有安装 @4 的固定幂等键。30 项针对性测试通过，AR2-7 闭包验证无错误。尚未执行迁移/真实 reset，尚未开放浏览器恢复操作。下一步先备份，再验证数据库约束和真实回放。
+
+第 4 步：已备份 4,617,753 bytes，SHA256 5c0056da78fdb996fe92d8805b703814eca3c19b5eb510c1496ee5804e85fdc5，并迁移到 a0v_017。首次 reset 被 ensure_bundle_installation_revision_decision 的 submitted-parent 约束拒绝，事务回滚。新增 a0v_018，仅对 applied 父修订且同 decision 的 approved 恢复豁免“紧接 submitted”；其余审批绑定、计划哈希、职责分离、清洁资源约束全部保留。
+
+第 4 步完成：a0v_018 后 reset 首次写入 approved@5，同键 replay=true。独立读回旧 apply succeeded 不变、旧 verify failed/PREPARATION_OWNER_LOST、activeRevision=null、bindings=[]、canary=0。见 ecommerce-1.6-reset-v1.json（顶层是命令前快照，receipt 是结果）与 ecommerce-1.6-after-reset.json（命令后权威读回）。后续新 apply/verify 仅允许存在 preparation_reset 事件且未在当前 etag 发过同种操作，幂等键含恢复后修订号。
