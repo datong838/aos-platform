@@ -44,6 +44,8 @@ def test_service_rechecks_current_authority_and_plan(runtime_case, change):
             owner.bind(db, **bind_args, idempotency_key='rebind', previous_ref=binding.ref)
     with pytest.raises((RuntimeConflict, RuntimeRevisionConflict, PermissionError)):
         execution.validate_current()
+    with pytest.raises((RuntimeConflict, RuntimeRevisionConflict, PermissionError)):
+        execution.snapshot()
     assert state['calls'] == 0
 
 
@@ -70,3 +72,16 @@ def test_service_recovery_claim_keeps_original_input_and_stopped_gate(runtime_ca
             execution.claim_recovery(run_id=args['run_id'], claim_id=claim_id)
         assert conn.execute('SELECT count(*) FROM ecommerce_ingress_recovery_claim').fetchone()=={'count':0}
     assert state['calls'] == 1
+
+
+def test_current_plan_snapshot_has_exact_graph_and_no_source(runtime_case):
+    execution, _, _, conn, args, state, _, _, _ = runtime_case
+    pipeline, nodes = execution.snapshot()
+    assert pipeline.id == execution.binding.pipeline_id
+    assert pipeline.execution_mode == 'controlled' and pipeline.write_mode == 'SNAPSHOT'
+    assert 0 < pipeline.execution_timeout_seconds <= 300
+    assert len(nodes) == 1 and nodes[0].pipeline_id == pipeline.id
+    assert state['calls'] == 0
+    conn.execute('UPDATE phase5_pipeline_graph SET revision=revision+1')
+    with pytest.raises((RuntimeConflict, RuntimeRevisionConflict, IngressJournalConflict)):
+        execution.snapshot()

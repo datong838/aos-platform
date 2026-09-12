@@ -1,5 +1,6 @@
 """Server-owned schedule execution using independent runtime database identities."""
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from functools import partial
 
@@ -41,7 +42,7 @@ class ControlledScheduleExecution:
             raise TypeError('exact server-owned controlled schedule dependencies required')
         if self.service.scope!=self.binding.scope:raise PermissionError('schedule execution tenant differs')
 
-    def validate_current(self):
+    def _with_current_schedule(self, execute):
         scope=self.service.scope
         owner=PipelineScheduleControlOwner(controls=self.service.controls)
         with consumer_connection(runtime_worker_connection,dict(org_id=scope.org_id,project_id=scope.project_id)) as conn:
@@ -56,7 +57,38 @@ class ControlledScheduleExecution:
                         or type(ingest) is not dict or ingest.get('kind')!='pipeline-live-v1'
                         or ingest.get('pipelineId')!=self.binding.pipeline_id):
                     raise RuntimeConflict('schedule is not currently enabled and bound')
-            self.service.controls.run_current(conn,scope=scope,ref=self.binding.control_ref,actor=self.binding.actor,execute=check)
+                return execute(conn, draft)
+            return self.service.controls.run_current(conn,scope=scope,ref=self.binding.control_ref,actor=self.binding.actor,execute=check)
+
+    def validate_current(self):
+        return self._with_current_schedule(lambda conn, draft: None)
+
+    def snapshot(self):
+        from aos_api.ec_ingress_journal import _digest
+        from aos_api.phase5_pipeline_engine import Pipeline, PipelineNode
+
+        def build(conn, draft):
+            row = conn.execute("""SELECT payload, revision FROM phase5_pipeline_graph
+                WHERE org_id=%s AND project_id=%s AND pipeline_id=%s FOR SHARE""",
+                (*self.service.scope.key, self.binding.pipeline_id)).fetchone()
+            if row is None:
+                raise LookupError('approved pipeline graph unavailable')
+            graph = row['payload']
+            if (type(graph) is not dict or row['revision'] != draft.graph_revision
+                    or _digest(graph) != draft.graph_hash or graph.get('pipeline_id') != draft.pipeline_id
+                    or graph.get('write_mode') != 'SNAPSHOT'):
+                raise RuntimeRevisionConflict('approved execution graph differs')
+            nodes = [PipelineNode.model_validate(node) for node in graph.get('nodes', [])]
+            if not nodes or any(node.pipeline_id != draft.pipeline_id for node in nodes):
+                raise RuntimeConflict('approved execution nodes differ')
+            timeout = min(300.0, (draft.expires_at - datetime.now(timezone.utc)).total_seconds())
+            if timeout <= 0:
+                raise RuntimeConflict('approved execution window expired')
+            pipeline = Pipeline(id=draft.pipeline_id, name=str(graph.get('name') or draft.pipeline_id),
+                pipeline_type=str(graph.get('pipeline_type') or 'Batch'), write_mode='SNAPSHOT',
+                executor_id='ec-live-v1', execution_mode='controlled', execution_timeout_seconds=timeout)
+            return pipeline, nodes
+        return self._with_current_schedule(build)
 
     def _executor(self,store):
         return ControlledSnapshotExecutor(claims=self.service.claims,store=store,connect=runtime_worker_connection,
@@ -75,7 +107,7 @@ class ControlledScheduleExecution:
     def invoke(self,*,pipeline,nodes,node_id,sample_input,execution_kind,scope,run_id,
                deadline,cancel_event,run_started_at,durable_ingress=False):
         if (scope!=self.service.scope or pipeline.id!=self.binding.pipeline_id
-                or pipeline.executor_id!='ec-live-v1' or pipeline.execution_mode!='live'
+                or pipeline.executor_id!='ec-live-v1' or pipeline.execution_mode!='controlled'
                 or pipeline.write_mode!='SNAPSHOT' or durable_ingress is not True
                 or node_id is not None or sample_input!={} or execution_kind!='direct_sync'):
             raise ValueError('controlled schedule dispatch context differs')

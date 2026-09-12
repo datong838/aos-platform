@@ -35,7 +35,7 @@ def configured(monkeypatch):
         return SimpleNamespace(execute=execute,resume_saved=lambda **kw:execute(**kw,resumed=True))
     monkeypatch.setattr(module,'ControlledSnapshotExecutor',build)
     execution=module.ControlledScheduleExecution(service=service,binding=binding,eng=object())
-    args=dict(pipeline=SimpleNamespace(id='pipeline',executor_id='ec-live-v1',execution_mode='live',write_mode='SNAPSHOT'),
+    args=dict(pipeline=SimpleNamespace(id='pipeline',executor_id='ec-live-v1',execution_mode='controlled',write_mode='SNAPSHOT'),
         nodes=[],node_id=None,sample_input={},execution_kind='direct_sync',scope=scope,run_id='run',
         deadline=None,cancel_event=None,run_started_at=1,durable_ingress=True)
     return module,execution,args,events,state
@@ -70,11 +70,13 @@ def test_recovery_mode_selects_only_saved_execution(configured):
 def _dispatch_engine(monkeypatch, args):
     from aos_api.phase5_pipeline_engine import Pipeline, PipelineEngine
     engine = object.__new__(PipelineEngine)
-    pipeline = Pipeline(id='pipeline', name='controlled', executor_id='ec-live-v1', execution_mode='live')
+    pipeline = Pipeline(id='pipeline', name='controlled', executor_id='ec-live-v1', execution_mode='controlled')
     engine._evidence_resolvers = {'dataset': lambda ref: ref == 'dataset://catalog/fixture'}
     engine._executors = {'ec-live-v1': lambda **kw: pytest.fail('legacy executor must not run')}
     monkeypatch.setattr(engine, 'get_pipeline', lambda scope, identifier: pipeline)
     monkeypatch.setattr(engine, 'list_nodes', lambda scope, identifier: [])
+    import aos_api.pipeline_controlled_runtime as module
+    monkeypatch.setattr(module.ControlledScheduleExecution, 'snapshot', lambda self: (pipeline.model_copy(deep=True), []))
     return engine, pipeline
 
 
@@ -85,7 +87,7 @@ def test_engine_dispatch_uses_controlled_worker_and_preserves_disabled_gate(conf
     blocked = engine.execute_pipeline_once(args['scope'], pipeline.id, run_id='run', durable_ingress=True,
         controlled_execution=execution)
     assert blocked['ok'] is False and events == []
-    pipeline.execution_mode = 'live'
+    pipeline.execution_mode = 'controlled'
     result = engine.execute_pipeline_once(args['scope'], pipeline.id, run_id='run', durable_ingress=True,
         controlled_execution=execution)
     assert result['ok'] is True and result['executor_stopped'] is True
@@ -146,3 +148,34 @@ def test_unbound_schedule_needs_no_control_factory(configured, monkeypatch):
     monkeypatch.setattr(claims, 'read_schedule_binding', lambda *a: None)
     assert module.resolve_schedule_execution(args['scope'], 'schedule', 'pipeline', control_factory=None, recovery=False) is None
     assert events == []
+
+
+def test_controlled_plan_executes_without_enabling_public_pipeline(configured, monkeypatch):
+    module, execution, args, events, _ = configured
+    engine, public = _dispatch_engine(monkeypatch, args)
+    public.execution_mode = 'disabled'
+    approved = public.model_copy(update={'execution_mode':'controlled'})
+    monkeypatch.setattr(module.ControlledScheduleExecution, 'snapshot', lambda self: (approved, []), raising=False)
+    result = engine.execute_pipeline_once(args['scope'], public.id, run_id='run', durable_ingress=True,
+        controlled_execution=execution)
+    assert result['ok'] is True
+    assert public.execution_mode == 'disabled'
+    assert engine.execute_pipeline_once(args['scope'], public.id)['ok'] is False
+
+
+def test_old_executor_refuses_controlled_snapshot_before_resources(configured, monkeypatch):
+    import aos_api.ec_live_executor as legacy
+    _, _, args, events, _ = configured
+    args['pipeline'].execution_mode = 'controlled'
+    monkeypatch.setattr(legacy, 'ensure_store_assembled', lambda *a: pytest.fail('legacy resources opened'))
+    with pytest.raises(ValueError, match='controlled'):
+        legacy.ec_live_executor(**args)
+    assert events == []
+
+
+def test_public_direct_call_cannot_use_controlled_mode(configured, monkeypatch):
+    _, _, args, events, _ = configured
+    engine, pipeline = _dispatch_engine(monkeypatch, args)
+    assert pipeline.execution_mode == 'controlled'
+    result = engine.execute_pipeline_once(args['scope'], pipeline.id)
+    assert result['ok'] is False and events == []

@@ -19,7 +19,7 @@ from aos_api.tenant_scope import TenantScope
 @pytest.fixture
 def claim_case(owner_case):
     conn,selections,selection,calls=owner_case
-    graph={'pipeline_id':selection.pipeline_id,'nodes':[{'node_type':'source','config':{'source_id':selection.source_id}}]}
+    graph={'pipeline_id':selection.pipeline_id,'write_mode':'SNAPSHOT','nodes':[{'id':'source-node','name':'source','pipeline_id':selection.pipeline_id,'node_type':'source','config':{'source_id':selection.source_id}}]}
     selection=selection.model_copy(update={'graph_hash':_digest(graph)})
     conn,controls,draft,_,_,_=control_case.__wrapped__((conn,selections,selection,calls))
     ref=approve_control(conn,controls,draft)

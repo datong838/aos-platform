@@ -87,6 +87,8 @@ def ec_live_executor(
     scope: Any = None,
     **kwargs: Any,
 ) -> dict[str, Any]:
+    if getattr(pipeline, "execution_mode", None) == "controlled":
+        raise ValueError("controlled snapshots require the approved schedule executor")
     eng = get_engine()
     run_id = str(kwargs.get("run_id") or "").strip()
 

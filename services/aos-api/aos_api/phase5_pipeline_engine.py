@@ -58,7 +58,7 @@ class Pipeline(BaseModel):
     executor_id: str = ""
     write_mode: str = "SNAPSHOT"  # SNAPSHOT|APPEND|MERGE|UPDATE|DELETE|UPSERT
     # Internal control plane only. Public create/update requests do not expose it.
-    execution_mode: str = "disabled"  # disabled|live|demo
+    execution_mode: str = "disabled"  # disabled|live|controlled|demo
     execution_timeout_seconds: float = 30.0
     created_at: float = Field(default_factory=lambda: time.time())
     updated_at: float = Field(default_factory=lambda: time.time())
@@ -1019,7 +1019,18 @@ class PipelineEngine:
         """
         started = time.time()
         with _LOCK:
-            pipeline = self.get_pipeline(scope, pipeline_id)
+            controlled_nodes = None
+            if controlled_execution is not None:
+                from .pipeline_controlled_runtime import ControlledScheduleExecution
+                if type(controlled_execution) is not ControlledScheduleExecution:
+                    raise TypeError("exact controlled schedule execution required")
+                if durable_ingress is not True:
+                    raise ValueError("controlled execution requires durable dispatch")
+                if controlled_execution.service.scope != scope or controlled_execution.binding.pipeline_id != pipeline_id:
+                    raise PermissionError("controlled dispatch scope differs")
+                pipeline, controlled_nodes = controlled_execution.snapshot()
+            else:
+                pipeline = self.get_pipeline(scope, pipeline_id)
             if pipeline is None:
                 return {
                     "ok": False,
@@ -1028,7 +1039,8 @@ class PipelineEngine:
                     "error_code": "PIPELINE_NOT_FOUND",
                     "error_message": f"Pipeline {pipeline_id} not found in scope {scope.key}",
                 }
-            preflight = self._preflight(scope, pipeline, started)
+            preflight = self._preflight(scope, pipeline, started, nodes=controlled_nodes,
+                controlled=controlled_execution is not None)
             if preflight is not None:
                 return {
                     "ok": False,
@@ -1047,6 +1059,7 @@ class PipelineEngine:
                 run_id=run_id,
                 durable_ingress=durable_ingress,
                 controlled_execution=controlled_execution,
+                controlled_nodes=controlled_nodes,
             )
         evidence, _ = self._collect_dispatch(dispatch)
         # ScheduleRun status 用 "succeeded"，SyncRun 用 "success"；两者都算成功。
@@ -1328,8 +1341,9 @@ class PipelineEngine:
         except Exception:
             return False
 
-    def _preflight(self, scope: TenantScope, pipeline: Pipeline, started_at: float) -> dict[str, Any] | None:
-        nodes = self.list_nodes(scope, pipeline.id)
+    def _preflight(self, scope: TenantScope, pipeline: Pipeline, started_at: float, *,
+                   nodes=None, controlled=False) -> dict[str, Any] | None:
+        nodes = self.list_nodes(scope, pipeline.id) if nodes is None else nodes
         supported_node_types = {"source", "transform", "filter", "sink", "llm"}
         if any(
             n.node_type.strip().lower() not in supported_node_types
@@ -1339,7 +1353,7 @@ class PipelineEngine:
             return self._unsupported_evidence(started_at, "PIPELINE_NODE_UNSUPPORTED")
         if not pipeline.executor_id or pipeline.executor_id not in self._executors:
             return self._unsupported_evidence(started_at, "PIPELINE_EXECUTOR_MISSING")
-        if pipeline.execution_mode != "live":
+        if pipeline.execution_mode != ("controlled" if controlled else "live"):
             return self._unsupported_evidence(started_at, "PIPELINE_MODE_UNSUPPORTED")
         if pipeline.execution_timeout_seconds <= 0 or pipeline.execution_timeout_seconds > 300:
             return self._unsupported_evidence(started_at, "PIPELINE_TIMEOUT_INVALID")
@@ -1357,6 +1371,7 @@ class PipelineEngine:
         run_id: str | None = None,
         durable_ingress: bool = False,
         controlled_execution: Any = None,
+        controlled_nodes=None,
     ) -> tuple[threading.Thread, queue.Queue, threading.Event, float, str, float]:
         executor_id = pipeline.executor_id
         executor = self._executors[executor_id]
@@ -1369,7 +1384,8 @@ class PipelineEngine:
                 raise ValueError("controlled execution requires durable ec-live-v1 dispatch")
             executor = controlled_execution.invoke
         pipeline_snapshot = pipeline.model_copy(deep=True)
-        nodes_snapshot = [copy.deepcopy(n) for n in self.list_nodes(scope, pipeline.id)]
+        selected_nodes = self.list_nodes(scope, pipeline.id) if controlled_nodes is None else controlled_nodes
+        nodes_snapshot = [copy.deepcopy(n) for n in selected_nodes]
         result_queue: queue.Queue = queue.Queue(maxsize=1)
         cancel_event = threading.Event()
         deadline = time.monotonic() + pipeline.execution_timeout_seconds
