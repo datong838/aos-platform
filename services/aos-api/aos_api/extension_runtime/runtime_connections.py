@@ -1,6 +1,9 @@
 """Separate production connections for the cross-tenant directory and tenant workers."""
 from contextlib import contextmanager
 import os
+import json
+import stat
+from pathlib import Path
 
 import psycopg
 from psycopg import IsolationLevel
@@ -10,13 +13,44 @@ from psycopg.pq import TransactionStatus
 from aos_api.db import get_dsn
 
 
+def _runtime_file_dsns(reference):
+    """Read existing host identities in memory; never export secrets to env."""
+    try:
+        path = Path(reference)
+        if not path.is_absolute():
+            raise ValueError('absolute credential reference required')
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(descriptor, 'r', encoding='utf-8') as handle:
+            metadata = os.fstat(handle.fileno())
+            if (not stat.S_ISREG(metadata.st_mode) or stat.S_IMODE(metadata.st_mode) != 0o600
+                    or metadata.st_uid != os.getuid() or not 0 < metadata.st_size <= 65536):
+                raise ValueError('protected credential file required')
+            value = json.loads(handle.read(65537))
+        if type(value) is not dict or set(value) != {'web','runtime','directory'}:
+            raise ValueError('host identity file shape differs')
+        for item in value.values():
+            if (type(item) is not dict or set(item) != {'dsn','password','role'}
+                    or any(type(v) is not str or not v or '\x00' in v for v in item.values())):
+                raise ValueError('host identity entry differs')
+        if value['runtime']['role'] == value['web']['role']:
+            raise ValueError('runtime identity must differ')
+        return value['runtime']['dsn'], value['web']['dsn']
+    except Exception:
+        raise RuntimeError('runtime credential reference is invalid') from None
+
+
 @contextmanager
 def runtime_worker_connection():
     """Return an unscoped IDLE connection; the concrete worker owns each transaction."""
-    dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
+    reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
+    if reference:
+        dsn, web_dsn = _runtime_file_dsns(reference)
+    else:
+        dsn = os.getenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "").strip()
+        web_dsn = get_dsn()
     if not dsn:
         raise RuntimeError("runtime worker database identity is not configured")
-    if dsn == get_dsn():
+    if dsn == web_dsn:
         raise RuntimeError("runtime worker identity must differ from the web database identity")
     with psycopg.connect(dsn, row_factory=dict_row) as conn:
         if conn.info.transaction_status != TransactionStatus.IDLE:

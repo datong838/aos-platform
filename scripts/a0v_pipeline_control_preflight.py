@@ -12,10 +12,12 @@ os.environ['AOS_DOTENV_DISABLED']='1'
 
 
 def run():
-    from a0v_ecommerce_runtime_host import _load_credentials, _configure_environment, DEFAULT_CREDENTIALS, _safe_error_chain
+    from a0v_ecommerce_runtime_host import DEFAULT_CREDENTIALS, _safe_error_chain
     bundle=ROOT.parent/'.aos-recovery-20260912/state/ecommerce-1.7-registry/signed-bundles-v7'
     trust=ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json'
-    _configure_environment(_load_credentials(DEFAULT_CREDENTIALS),bundle_root=bundle,trust_roots_file=trust)
+    os.environ['AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE']=str(DEFAULT_CREDENTIALS)
+    os.environ['AOS_BUNDLE_ROOT']=str(bundle)
+    os.environ['AOS_BUNDLE_TRUST_ROOTS_FILE']=str(trust)
     os.environ['AOS_EXTENSION_RUNTIME_HOST_ENABLED']='0'
     from aos_api.asset_registry.control_wiring import build_runtime_control_plane
     from aos_api.asset_registry.composition_contracts import CurrentInstallationRef
