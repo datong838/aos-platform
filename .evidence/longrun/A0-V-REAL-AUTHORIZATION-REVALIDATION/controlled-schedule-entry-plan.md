@@ -1,0 +1,15 @@
+# 正式受控调度入口接入方案
+
+2026-09-13，1a99dbf1，m1主A0-V Lease。现有qyh_cron_scheduler仍调用旧durable executor；不能把隔离组件完成当成真实入口已接线。产品继续沿用计划的运行/恢复/定时入口，所需当前批准关联由服务保存。
+
+切片1：新增不可变pipeline_schedule_control_binding历史（a0v_025），每租户/计划有连续revision、exact前序、exact ControlRef、actor及幂等键/请求hash。外键绑定已有计划与批准家族、范围。强制RLS、禁止UPDATE/DELETE/TRUNCATE，runtime仅SELECT/INSERT。避免把授权只放入普通可编辑ingest JSON，防止计划编辑/初始化抹掉关联后回退旧执行路径。main仍024；先隔离验证，未来部署另行备份恢复。
+
+切片2：PipelineScheduleControlOwner.bind在当前Control与安装锁内锁计划、核对pipeline/ingest既有live绑定；可先为disabled计划关联，执行仍检查enabled。actor来自HTTP principal。CAS追加并验证原幂等请求。读取当前关联不是执行授权，运行时每段仍消费exact CurrentControl。服务/HTTP新增明确绑定入口，旧普通计划操作不获得写此历史权限。
+
+切片3：qyh_cron_scheduler在领取执行前发现关联则必须使用受控服务，无factory/当前拒绝不回退旧路径；manual/recovery从app.state传入服务器factory，cron loop同样传递。普通未关联计划保持旧行为。旧pipeline预检（尤其禁用）保留，运行记录仍由现有Schedule事实Owner写。恢复采用关联当前ref构造saved_recovery journal，再经claim_failed_run检查stopped/failed后恢复原run。
+
+切片4：运行服务使用独立runtime身份装配真实ConsistencyStore，禁用legacy root DSN fallback。复用ControlledSnapshotExecutor；当前授权、源调用次数、原记录恢复和提交前当前性继续有效。调度完成可读结果按现有协议返回；不能仅因内部函数返回就宣称自然Case/Run业务首链已完成。
+
+具体新文件：services/aos-api/alembic/versions/a0v_025_pipeline_schedule_control_binding.py、aos_api/pipeline_schedule_control_owner.py；测试tests/extension_runtime/test_pipeline_schedule_control_binding_pg.py。后续服务/路由/调度/前端变更逐切片补具体清单与验收，再编码。技术上无新增外部发送授权，230 L0仍挂起，不push。
+
+Owner细化：新增绑定不把随机binding_id计入请求hash，避免首次幂等重放生成随机id导致冲突；content_hash含实际binding_id和revision，decode以数据库字段重新构造验证。previousRef使用PipelineScheduleControlBinding/schedule-control-UUID，版本需连续，request_hash含exact前序。read_latest只读关联事实，不等于当前授权；bind必须CurrentControl成功且锁定计划核对pipeline-live-v1关联。主库暂无025，未接入口之前不能触发查询不存在表的路径。
