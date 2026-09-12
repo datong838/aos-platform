@@ -3395,8 +3395,12 @@ def _pg_ot_row_count(scope: TenantScope, ot_name: str) -> int:
                 (*scope.key, ot_name),
             ).fetchone()
             return int(row["c"] if row else 0)
-    except Exception:
-        return 0
+    except Exception as exc:
+        raise ApiError(
+            code="DATA_OBSERVATION_UNAVAILABLE",
+            message="当前数据暂时无法核验，请稍后重试",
+            status_code=503,
+        ) from exc
 
 
 @router.get("/v1/data-lineage/graph")
