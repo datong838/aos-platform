@@ -9,3 +9,5 @@ services/aos-api/aos_api/asset_registry/control_wiring.py 允许已配置文件�
 测试为 tests/extension_runtime/test_runtime_connections.py、test_production_runtime.py、test_a0v_ecommerce_runtime_host.py。先证明 directory/web 未消费引用及启动入口泄漏环境的失败，再补实现。覆盖三身份精确连接、只读、坏引用/角色混用/DSN混用时全体拒绝且无fallback、路径模式依赖构造、旧无文件路径兼容、serve不绕过symlink检查。合成凭据不得复制真实值。
 
 实现通过后启动原签名根的独立 Host 新状态文件，先确认唯一进程，再回读恢复/禁入状态。已释放原代际不可复活；若缺正式恢复入口，继续按方案补齐正常控制路径，不直接改数据库。API 保持旧进程，主库不迁移。230 L0 挂起，不 push。
+
+接续复核补充：scripts/a0v_ecommerce_1_7_configure.py 的 setup 是唯一其他 _configure_environment 调用者，仍传旧内存 dict，必须改传 DEFAULT_CREDENTIALS 路径。新增无 DB 动作的 setup 回归，保留原四来源服务构造。此处遗漏在启动 Host 后、执行任何实际配置前发现，原配置数据未动；补齐后再收尾。

@@ -9,6 +9,34 @@ import a0v_ecommerce_1_7_configure as executor
 import a0v_ecommerce_1_7_disable as disable
 
 
+def test_setup_uses_file_reference_without_connecting(tmp_path, monkeypatch):
+    import os
+    from types import SimpleNamespace
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+    from aos_api.extension_runtime import runtime_connections
+    host = executor.load('a0v_ecommerce_runtime_host')
+    path = tmp_path / 'identities.json'
+    path.write_text(json.dumps({plane: {'role': role, 'dsn': plane, 'password': 'fixture-only'}
+                               for plane, role in host.EXPECTED_ROLES.items()}))
+    path.chmod(0o600)
+    host.DEFAULT_CREDENTIALS = path
+    trust = tmp_path / 'signing'
+    trust.mkdir()
+    (trust / 'trust-roots.json').write_text('{}')
+    monkeypatch.setattr(os, 'environ', dict(os.environ))
+    monkeypatch.setattr(executor, 'BUNDLE_ROOT', tmp_path)
+    monkeypatch.setattr(executor, 'TRUST_STATE', tmp_path)
+    store = PostgresInstallationStore()
+    activation = SimpleNamespace(_services=lambda *a: (store, SimpleNamespace(_reader=object(), _revalidator=object())))
+    monkeypatch.setattr(executor, 'load', lambda name: host if name == 'a0v_ecommerce_runtime_host' else activation)
+    monkeypatch.setattr(runtime_connections.psycopg, 'connect', lambda *a, **kw: pytest.fail('setup connected'))
+    connect, selected, authorize, service = executor.setup()
+    assert connect is runtime_connections.runtime_worker_connection
+    assert selected is activation and callable(authorize) and service._store is store
+    assert os.environ['AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE'] == str(path)
+    assert all(name not in os.environ for name in ('AOS_DATABASE_URL', 'AOS_EXTENSION_RUNTIME_DATABASE_URL', 'AOS_EXTENSION_DIRECTORY_DATABASE_URL'))
+
+
 def test_original_target_is_unchanged():
     installation,state,key,command=executor.configuration_target()
     assert installation==executor.INSTALLATION and state==executor.STATE

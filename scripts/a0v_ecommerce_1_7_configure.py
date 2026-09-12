@@ -12,8 +12,7 @@ BUNDLE_ROOT=RECOVERY/'state/ecommerce-1.7-registry/signed-bundles-v7'
 
 def setup():
     host=load('a0v_ecommerce_runtime_host')
-    credentials=host._load_credentials(host.DEFAULT_CREDENTIALS)
-    host._configure_environment(credentials,bundle_root=BUNDLE_ROOT,trust_roots_file=TRUST_STATE/'signing/trust-roots.json')
+    host._configure_environment(host.DEFAULT_CREDENTIALS,bundle_root=BUNDLE_ROOT,trust_roots_file=TRUST_STATE/'signing/trust-roots.json')
     import sys
     sys.path.insert(0,str(ROOT/'services/aos-api'))
     from aos_api.extension_runtime.runtime_connections import runtime_worker_connection

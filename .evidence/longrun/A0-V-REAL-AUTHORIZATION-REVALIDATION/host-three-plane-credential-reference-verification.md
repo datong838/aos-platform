@@ -9,3 +9,5 @@
 真实只读预检：使用原受保护身份文件和原签名根，原生产 selector 返回 RuntimeHost，serve 未调用，三个 DSN 环境均不存在。归档 host-three-plane-reference-preflight.json。此项证明实际三身份隔离预检，不能证明过期安装已经恢复。
 
 下一步唯一进程检查后启动新 v13 Host 状态文件，观察原 disabled/fenced 实例。原资源已释放，不直接复活；继续正式 disable/卸载重装或受控恢复方案。新 Niushop 1.4 仍候选，主库 a0v_023，P01 禁用，业务闭环未完成。230 L0 挂起，不 push。
+
+12:44:53Z 新 Host v13 在 b8b38137 代码基线上启动，PID 93240；12:47Z 进程仍在，状态文件 RUNTIME_HOST_ACTIVE。这只代表控制进程运行，原业务容器没有重建。配置 setup 调用点遗漏另增 RED：1 failed/10 passed；改传文件路径后配置目标/Host/连接共 38 passed。原配置/启用实际动作尚未调用，无配置状态变化。脚本调用点已搜索核对，仅该 setup 与 Host 自身使用此函数。
