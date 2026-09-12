@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-09-12T18:20:58.084524+00:00",
+  "httpStatus": 200,
+  "response": {
+    "id": "sch-p01-qyh-controlled-20260913-v1",
+    "cron": "0 * * * *",
+    "pipelineId": "P01-shop-qyh",
+    "enabled": true,
+    "name": "栖月汇门店真实数据受控接入",
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P01-shop-qyh"
+    },
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "lastRun": null
+  }
+}

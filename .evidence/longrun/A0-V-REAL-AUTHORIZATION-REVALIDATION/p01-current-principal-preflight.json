@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-09-12T18:15:16.183075+00:00",
+  "currentChecksPassed": false,
+  "approvalsWritten": 0,
+  "sourceRowsRead": 0,
+  "businessWrites": 0,
+  "executionGranted": false,
+  "checkedActor": "user:dev",
+  "errorChain": [
+    {
+      "errorType": "AttributeError",
+      "relation": "raised",
+      "frames": [
+        {
+          "file": "<stdin>",
+          "function": "<module>",
+          "line": 31
+        }
+      ]
+    }
+  ]
+}

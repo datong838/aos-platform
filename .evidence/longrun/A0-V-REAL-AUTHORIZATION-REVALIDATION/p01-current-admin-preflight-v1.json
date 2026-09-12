@@ -1,0 +1,77 @@
+{
+  "observedAt": "2026-09-12T18:18:09.156341+00:00",
+  "currentChecksPassed": true,
+  "approvalsWritten": 0,
+  "sourceRowsRead": 0,
+  "businessWrites": 0,
+  "executionGranted": false,
+  "draft": {
+    "state": "prepared",
+    "readOnly": true,
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "pipelineId": "P01-shop-qyh",
+    "graphRevision": 1,
+    "graphHash": "d06f4bee366cd6d9061d69a7964378ce5ad3a5020c9a762ca2dd5415de3134ec",
+    "installationRef": {
+      "installationId": "afd792de-e85e-4680-86d0-c83404824fb3",
+      "revision": 7,
+      "lockHash": "sha256:539a2b9fc61adab875793153b92c5f7641049bc4dec01c44a6d5fae876c69404",
+      "overlayRevision": "a0v-canonical-ecommerce-v1"
+    },
+    "generation": "275e1941-2e87-4a75-aa3c-e0508be9e2ce",
+    "executionEpoch": 3,
+    "configurationRef": {
+      "configurationId": "33b282ed-dbc1-4442-ac16-f3ff97202fd2",
+      "revision": 1,
+      "hash": "sha256:687d33543f93db03a5a736c54d66ccd7ccf2b68434f4b90db049d30ffc655bba"
+    },
+    "packageRef": {
+      "publisher": "aos",
+      "id": "platform.ecommerce.niushop",
+      "version": "1.4.0",
+      "contentHash": "sha256:05dcca8fb3f28ef338f63118a753daabe91804aec2aa4cafc76756606735bad0"
+    },
+    "sourceId": "niushop-qyh",
+    "sourceConfigurationRef": {
+      "resourceType": "DataSourceConfigurationRevision",
+      "resourceId": "source-config-a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "revision": 1,
+      "contentHash": "sha256:1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+      "receiptId": null
+    },
+    "mappingRef": {
+      "resourceType": "Mapping",
+      "resourceId": "content/mappings/p01-shop.yaml",
+      "revision": "1.4.0",
+      "contentHash": "sha256:893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc",
+      "receiptId": null
+    },
+    "schemaRef": {
+      "resourceType": "SchemaFingerprint",
+      "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+      "revision": "1.4.0",
+      "contentHash": "sha256:6354875818d1d73db6630a525ba6de38b7f9cf68e864b22d7ad3420dd4e26bd7",
+      "receiptId": null
+    },
+    "maskingPolicyRef": {
+      "resourceType": "MaskingPolicy",
+      "resourceId": "content/mappings/_pii-exclusion.yaml",
+      "revision": "1.4.0",
+      "contentHash": "sha256:b0916014eaac3f714607f32d877c45978122f66276f89d88d51b9634c80bbbcd",
+      "receiptId": null
+    },
+    "rowLimit": 100,
+    "timeoutSeconds": 30,
+    "maxSourceCalls": 1,
+    "notBefore": "2026-09-12T18:18:09.201989Z",
+    "expiresAt": "2026-09-12T18:33:09.201989Z",
+    "schemaVersion": "aos.pipeline-source-selection-draft/v1"
+  },
+  "checkedActor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "spec": {
+    "table": "ns_site",
+    "columnCount": 11,
+    "objectType": "Shop"
+  }
+}

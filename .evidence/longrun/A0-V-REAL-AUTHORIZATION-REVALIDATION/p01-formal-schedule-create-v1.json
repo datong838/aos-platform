@@ -1,0 +1,30 @@
+{
+  "observedAt": "2026-09-12T18:19:51.848155+00:00",
+  "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "httpStatus": 200,
+  "request": {
+    "id": "sch-p01-qyh-controlled-20260913-v1",
+    "name": "栖月汇门店真实数据受控接入",
+    "cron": "0 * * * *",
+    "pipelineId": "P01-shop-qyh",
+    "enabled": false,
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P01-shop-qyh"
+    }
+  },
+  "response": {
+    "id": "sch-p01-qyh-controlled-20260913-v1",
+    "cron": "0 * * * *",
+    "pipelineId": "P01-shop-qyh",
+    "enabled": false,
+    "name": "栖月汇门店真实数据受控接入",
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P01-shop-qyh"
+    },
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "lastRun": null
+  }
+}

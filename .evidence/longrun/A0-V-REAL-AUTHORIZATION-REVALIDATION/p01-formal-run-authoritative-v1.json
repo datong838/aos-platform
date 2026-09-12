@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-09-12T18:23:39.013277+00:00",
+  "runId": "scr-4a7626db8f3d436e",
+  "parentHash": "5bf39dbf6f8cc9d7a856f31480eb1bf93d3ff042cd503c520d2d586a03a66648",
+  "datasetReceiptHash": "3382df7bc2da8036e419a1b1f0d7824fb6c4449d7c905ec4bedb829a3fc4e3c7",
+  "completion": {
+    "pending": 0,
+    "expected": 1,
+    "projected": 1
+  },
+  "datasetRid": "ri.aos.main.dataset.P01-shop-qyh",
+  "build": {
+    "id": "db-ingress-471d84cc58f7007ff530ac48fc36bc36",
+    "status": "success",
+    "started_at": 1789237268.559993,
+    "finished_at": 1789237268.559993,
+    "rows_written": 1
+  },
+  "claims": [
+    {
+      "call_ordinal": 1,
+      "control_revision": 1,
+      "actor": "a0v-ecommerce-growth-1.4-runtime-owner"
+    }
+  ],
+  "run": {
+    "status": "succeeded",
+    "rows_written": 1,
+    "executor_stopped": true,
+    "error_code": ""
+  },
+  "canonicalRows": 1,
+  "parentCommandKeys": [
+    "expected_checkpoint_version",
+    "idempotency_key",
+    "links",
+    "next_checkpoint",
+    "objects",
+    "scope"
+  ],
+  "canaryVisibleReceipts": 0,
+  "verified": true
+}

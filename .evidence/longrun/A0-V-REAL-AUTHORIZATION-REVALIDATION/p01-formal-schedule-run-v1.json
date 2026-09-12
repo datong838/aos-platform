@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-09-12T18:21:08.904631+00:00",
+  "httpStatus": 200,
+  "response": {
+    "id": "scr-4a7626db8f3d436e",
+    "scheduleId": "sch-p01-qyh-controlled-20260913-v1",
+    "status": "succeeded",
+    "lastRun": {
+      "id": "scr-4a7626db8f3d436e",
+      "at": "2026-09-12T18:21:08.889546+00:00",
+      "status": "succeeded",
+      "trigger": "manual",
+      "rowsWritten": 1,
+      "durationMs": 10504,
+      "errorCode": ""
+    },
+    "result": {
+      "ok": true,
+      "executor_stopped": true,
+      "rows_written": 1,
+      "duration_ms": 10504,
+      "error_code": "",
+      "error_message": ""
+    }
+  }
+}

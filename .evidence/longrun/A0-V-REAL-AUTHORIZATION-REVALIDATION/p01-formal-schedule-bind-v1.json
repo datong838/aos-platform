@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-09-12T18:19:52.117724+00:00",
+  "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "httpStatus": 200,
+  "request": {
+    "scheduleId": "sch-p01-qyh-controlled-20260913-v1",
+    "controlRef": {
+      "resourceType": "PipelineRuntimeControlRevision",
+      "resourceId": "pipeline-control-eadbe7e3-1fc9-4635-8b5c-4e08ef0cf81d",
+      "revision": 1,
+      "contentHash": "sha256:e1e0148690719591fc41f7421590d90b0906516978a7de62810435870595ac1c",
+      "receiptId": null
+    }
+  },
+  "response": {
+    "resourceType": "PipelineScheduleControlBinding",
+    "resourceId": "schedule-control-38b6c18d-7d32-4637-ad24-1c6b740698d7",
+    "revision": 1,
+    "contentHash": "sha256:149e883ce3a991d5c9c15c2083f8308c8d895ef435387f2ce874ab2305b523ea",
+    "receiptId": null
+  }
+}
