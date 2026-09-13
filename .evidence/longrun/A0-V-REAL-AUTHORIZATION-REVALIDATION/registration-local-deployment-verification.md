@@ -9,3 +9,10 @@
 测试：执行器/启动器/连接器首轮28通过、7个PG测试当时跳过，后独立启用PG补跑连接器测试；对应日志/tmp/a0v-registration-deploy-final-tests.log与/tmp/a0v-registration-connection-pg-final.log。启动前检查CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN。后续默认浏览器应403，不应假装未登记。真实首链、八场景、连续观察仍未完成。
 
 备份校验：5190796 bytes，sha256:f2ef3dab27525666630505bdf76da7fe4b41beb7f39d26a10a252f0b9b4cded0；指纹覆盖15个既有关系。
+
+
+## 受控API切换验收
+
+运行API已切至6201ea5b（18181，独立Host不重复拉起）。/v1/ready=200；当前97aeb2e7安装详情=200；新登记status使用默认Bearer dev为403/DUTY_SEPARATION_REQUIRED。浏览器刷新登记面板显示“当前身份无权读取此安装的登记状态”，无撤回动作；不是503未配置，也不是伪造未登记。已有安装详情和5条事件仍可见。当前默认开发登录的持久owner角色不适用于安装控制，下一波需复核正式身份/角色产品路径，不能改角色或扩大权限来做绿。
+
+数据库连接器独立PG补跑21项通过；部署/启动器等此前28通过中包含其中14非PG测试，不相加虚增总数。主库/clone030只读ACL复验通过。备份与凭据未提交；API output位于私有recovery日志目录。后续：首登记正式身份入口与现有角色模型核对；源事件自然触发桥；当前配置/预算过期及原文本调用unknown继续保留。BG-01只有基础部署/接口/UI切片完成，实际登记激活撤回与完整首链仍未验收。
