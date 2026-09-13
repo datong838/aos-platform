@@ -33,6 +33,13 @@ class ConfigurationStageRequest(BaseModel):
     policyRef: ConfigurationSourceRef
     previousRef: ConfigurationRef | None = None
 
+    @field_validator('roleRefs', mode='before')
+    @classmethod
+    def json_reference_array(cls, value):
+        # FastAPI decodes JSON before strict model validation; preserve the
+        # immutable internal tuple without coercing values inside the array.
+        return tuple(value) if type(value) is list else value
+
     @model_validator(mode='after')
     def exact_sources(self):
         if (any(ref.authority != 'aip.responsibility_plan_revision' for ref in self.roleRefs)

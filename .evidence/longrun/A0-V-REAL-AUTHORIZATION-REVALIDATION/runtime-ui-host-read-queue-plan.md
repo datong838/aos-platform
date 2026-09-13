@@ -358,3 +358,13 @@ enqueue：精确normalized ConfigurationStageRequest（含previousRef:null），
 query：当前成员重新核验，按scope+subject+requestId读取；不存在/他人请求返回null，存在再核当前安装标记，返回固定metadata与configRef/失败码。权限撤销不能读取旧结果。不存在Host启动、能力调用、配置/enable行为。远程OpenFGA模式必须在后续API连接层拒绝并等待相应adapter，不将本地SQL权限当远端授权。
 
 测试先构造隔离原表/锁引用和角色session，验证成功收件/重放/冲突/容量，原主体查询/其他subject/负租户/角色撤销/缺marking拒绝，直接表访问拒绝、特权session拒绝；随后运行036边界回归。新SQL权限检查是收件/读取门，不能替代Host完整当前授权。
+
+### D2d-3b 受保护连接与HTTP（基线72cd9a69，编码前）
+
+沿主A0-V租约。新增restricted_api_identity.py，把既有ui_read_connection.py的0600/无符号链接/无FIFO/重复JSON拒绝和数据库LOGIN/NOINHERIT/单一逻辑角色/无ADMIN权限校验抽为共用实现；旧UI保留入口和错误合同，跑原连接回归。新增configuration_stage_connection.py使用独立环境路径AOS_RUNTIME_CONFIGURATION_STAGE_CREDENTIAL_FILE、schema aos.runtime-configuration-api-identity/v1、固定逻辑角色aos_configuration_stage_api；不得读其他DSN或role兜底，OpenFGA远程配置时拒绝本地adapter。
+
+新增configuration_stage_http_service.py：调用037固定函数且在连接context提交后才返回；只接受当前scope/subject和原请求模型。查询不存在变404。SQL权限错误403、同键/目标冲突409、数据库或提交未知503且提示保留原请求键查询，不自动重投。HTTP返回固定schema和tenant、receipt字段，JSON no-store，不返回SQL/DSN/内部错误。
+
+新增routers/runtime_configuration_staging.py并作为原bundle_runtime_installations子路由纳入：POST /v1/bundle-runtime-installations/configuration-requests，GET同路径/{request_id}。body精确来源合同、不接客户端tenant/subject/roles/markings；require_principal与原APPLY角色门，数据层再核当前成员。缺凭据503，所有成功/拒绝/验证/异常均no-store。测试非法字段/匿名/角色、当前主体来源、受限身份文件及真实隔离LOGIN角色、旧UI连接回归；不部署API或主库，先完成受控组件。
+
+D2d-3b实施复核：FastAPI先把JSON解为Python数组，原严格tuple字段使合法roleRefs被400拒绝；只增加list→tuple的容器适配，引用值/上限/唯一性校验不放宽。另发现收件commit成功但响应丢失时客户端可能不知道服务器requestId，当前GET按ID无法找回；下一切片新增按原subject+Idempotency-Key只读找回入口，不重发POST，也不凭未知结果换键。

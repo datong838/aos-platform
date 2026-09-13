@@ -480,3 +480,7 @@ def execute_ecommerce_growth_cutover_phase(
 
 
 router.include_router(_cutover_read_router)
+
+# Registration remains a restricted asynchronous receipt transport.
+from .runtime_configuration_staging import router as configuration_staging_router
+router.include_router(configuration_staging_router)
