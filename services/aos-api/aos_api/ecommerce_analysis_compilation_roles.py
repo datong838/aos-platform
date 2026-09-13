@@ -64,3 +64,63 @@ class AnalysisCompilationRoleReader:
                 raise ValueError('analysis configuration changed during callback')
             return result
         return self._owner.run_current_snapshot(conn,scope=scope,ref=selection_ref,actor=actor,execute=current)
+
+    def run_with_stage(self, conn, *, scope, selection_ref, actor, domain_profile,
+                       compiler_profile, stage_ref, execute):
+        """Read a specified current template inside the configured-role boundary.
+
+        The caller must obtain stage_ref from its governed compilation selection.
+        This reader neither selects an arbitrary tenant template nor grants execution.
+        """
+        from aos_api.aip_production_contract_store import canonical_hash
+        from aos_api.aip_stage_template_authority import resolve_stage_template_source
+
+        if type(stage_ref) is not ExactRevisionRef or not callable(execute):
+            raise TypeError('exact stage reference and scoped callback required')
+        ref = ExactRevisionRef.model_validate(stage_ref.model_dump(mode='json', by_alias=True))
+        if ref.resource_type != 'StageTemplateRevision':
+            raise ValueError('stage reference type differs')
+        domain = EcommerceInvestigationProfileRevision.model_validate(
+            domain_profile.model_dump(mode='json', by_alias=True))
+        source = ExactRevisionRef(resourceType=domain.exact_ref.resource_type,
+            resourceId=domain.profile_id, revision=domain.revision,
+            contentHash=domain.content_hash.removeprefix('sha256:'))
+
+        def current(roles):
+            store = AipProductionContractStore(
+                TransactionBoundConnectFactory(HostTransaction(conn), scope),
+                stage_template_source_resolver=resolve_stage_template_source)
+            slot_ids = {slot['slotId'] for slot in roles['responsibilityPlan']['slots']}
+
+            def read():
+                # Read the head, not a superseded frozen revision selected by the caller.
+                stage = store.get_stage_template(scope, ref.resource_id, conn=conn).model_dump(
+                    mode='json', by_alias=True)
+                if (stage['tenant'] != dict(orgId=scope.org_id, projectId=scope.project_id)
+                        or stage['templateId'] != ref.resource_id or stage['revision'] != ref.revision
+                        or stage['contentHash'] != ref.content_hash
+                        or stage['lifecycle'] != 'frozen' or stage['readiness'] != 'ready'):
+                    raise ValueError('current stage template is unavailable or differs')
+                if (stage['profile'] != domain.profile_type
+                        or ExactRevisionRef.model_validate(stage['sourceBundleRef']) != source
+                        or not resolve_stage_template_source(scope, source)):
+                    raise ValueError('stage source differs from current domain intent')
+                body = {key: stage[key] for key in ('profile', 'sourceBundleRef', 'stages')}
+                if canonical_hash(body) != ref.content_hash:
+                    raise ValueError('stage template body hash differs')
+                if tuple(item['stageId'] for item in stage['stages']) != tuple(
+                        item.stage_id for item in domain.stages):
+                    raise ValueError('analysis stage order differs')
+                if any(not set(item['requiredSlotIds']).issubset(slot_ids) for item in stage['stages']):
+                    raise ValueError('stage responsibility slots are not configured')
+                return stage
+
+            before = read()
+            result = execute(dict(deepcopy(roles), stageTemplate=deepcopy(before)))
+            _reject_deferred(result)
+            if canonical_sha256(read()) != canonical_sha256(before):
+                raise ValueError('stage template changed during callback')
+            return result
+
+        return self.run_current(conn, scope=scope, selection_ref=selection_ref, actor=actor,
+            domain_profile=domain, compiler_profile=compiler_profile, execute=current)

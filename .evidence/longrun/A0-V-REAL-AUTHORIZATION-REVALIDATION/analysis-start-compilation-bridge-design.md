@@ -31,3 +31,7 @@ CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际
 修改 services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py 与 services/aos-api/tests/test_ecommerce_analysis_compilation_roles.py：按领域 responsibilityTemplateCode 约束 compiler_profile 与职责 templateRef；复用现有模板解析器验证 exact templateRef，继续要求配置内唯一、hash 一致、frozen/ready/complete，并在同一 Owner 回调后重读。不得用角色读取成功代替 Logic/Skill 对分析意图的覆盖，后者仍属 CF2 后续退出条件。
 
 测试用现有 build_responsibility_plan_request 构建真实合同形状的职责输入，覆盖错误模板、错误 profile、状态不足、配置漂移。此波不执行 materializer，不创造角色/冻结，不改主库。
+
+## CF2-3 当前 exact 阶段读取
+
+在 services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py 添加 run_with_stage，复用 run_current 的安装配置职责与SourceOwner边界。调用者给定阶段exactRef，不枚举租户模板；读取该template当前head，要求ref/version/hash匹配、租户一致、frozen/ready、sourceBundleRef等于当前L1 profile，复用既有来源解析器。三阶段顺序与L1一致，阶段所需slot均由当前职责提供；重算模板正文hash，回调后重读拒绝漂移与deferred。对应 tests/test_ecommerce_analysis_compilation_stages.py。此API是依赖读取器，不是安装模板选择器或执行许可。受安装约束的模板选择及Logic/Skill仍未完成。
