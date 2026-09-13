@@ -85,6 +85,64 @@ class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
         self._connect_factory = connect_factory or db_connect
 
+    @staticmethod
+    def _internal_control_binding(conn, scope, actor_id, action_snapshot, payload, policy,
+                                  *, task_id=None, run_id=None, impact_preview=None, checker=False):
+        from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        if action_snapshot.get('id') not in CONTROL_ACTION_TYPES:
+            return None, ()
+        from aos_api.ecommerce_growth_cutover_proposal_gate import require_internal_cutover_binding
+        from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION
+        from aos_api.asset_registry.errors import AssetRegistryError
+        from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+        if task_id is not None or run_id is not None or impact_preview is not None:
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_BUSINESS_BINDING_FORBIDDEN')
+        if (policy.get('makerChecker') is not True or policy.get('executionAllowed') is not True
+                or policy.get('draftOnly') is not False
+                or type(policy.get('minimumApprovals')) is not int or policy['minimumApprovals'] < 1):
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_REVIEW_POLICY_REQUIRED')
+        try:
+            return require_internal_cutover_binding(conn=conn, scope=scope, actor=actor_id,
+                action_snapshot=action_snapshot, payload=payload,
+                operation=APPROVE_INSTALLATION_OPERATION if checker else APPLY_INSTALLATION_OPERATION)
+        except (ValueError, TypeError, AssetRegistryError, RuntimeConflict) as exc:
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
+
+    def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        if body.action_type_id in CONTROL_ACTION_TYPES or action_snapshot.get('id') in CONTROL_ACTION_TYPES:
+            from aos_api.aip_action_policy import classify_action_risk
+            current_risk = classify_action_risk(body.action_type_id, action_snapshot, body.payload, body.risk_hint)
+            if (body.action_type_id != action_snapshot.get('id') or risk.level != current_risk.level
+                    or risk.floor != current_risk.floor or risk.approval_policy != current_risk.approval_policy):
+                raise AipActionTransitionBlocked('INTERNAL_CONTROL_RISK_OR_ACTION_DRIFTED')
+        return self._internal_control_binding(conn, scope, actor_id, action_snapshot, body.payload,
+            risk.approval_policy, task_id=body.task_id, run_id=body.run_id,
+            impact_preview=body.impact_preview_ref)[0]
+
+    def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        if (row['action_type_id'] in CONTROL_ACTION_TYPES
+                and row['action_type_snapshot'].get('id') != row['action_type_id']):
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_ACTION_DRIFTED')
+        binding, roles = self._internal_control_binding(conn, scope, actor_id,
+            row['action_type_snapshot'], row['payload'], row['policy_snapshot'],
+            task_id=row['task_id'], run_id=row['run_id'], impact_preview=row['impact_preview_id'], checker=checker)
+        if binding is None:
+            return None
+        draft = conn.execute('''SELECT snapshot FROM aip_action_draft
+            WHERE org_id=%s AND project_id=%s AND proposal_id=%s''',
+            (*scope.key, row['proposal_id'])).fetchone()
+        stable = draft['snapshot'] if draft else None
+        if (not isinstance(stable, dict) or canonical_hash(stable) != row['proposal_hash']
+                or binding != row['action_binding_hash'] or stable.get('actionBindingHash') != binding
+                or stable.get('actionType') != row['action_type_snapshot']
+                or stable.get('payload') != row['payload'] or stable.get('policy') != row['policy_snapshot']):
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_PROPOSAL_BINDING_DRIFTED')
+        if not checker and row['created_by'] != actor_id:
+            raise AipActionTransitionBlocked('INTERNAL_CONTROL_MAKER_REQUIRED')
+        return roles
+
     def action_type_snapshot(self, scope: TenantScope, action_type_id: str) -> dict[str, Any]:
         with self._connect(scope) as conn:
             row = conn.execute(
@@ -132,6 +190,7 @@ class AipActionStore:
         )
         draft_id = f"action-draft-{uuid.uuid4().hex[:20]}"
         with self._connect(scope) as conn:
+            self._internal_request_binding(conn, scope, actor_id, body, action_snapshot, risk)
             self._idempotency_lock(conn, scope, "explicit-draft", idempotency_key)
             replay = conn.execute(
                 """SELECT draft_id,request_hash FROM aip_action_draft_command
@@ -210,6 +269,7 @@ class AipActionStore:
             }
         )
         with self._connect(scope) as conn:
+            self._internal_request_binding(conn, scope, actor_id, body, action_snapshot, risk)
             self._idempotency_lock(conn, scope, "explicit-draft", idempotency_key)
             replay = conn.execute(
                 """SELECT draft_id,request_hash,result_revision FROM aip_action_draft_command
@@ -308,6 +368,13 @@ class AipActionStore:
                     raise AipActionIdempotencyConflict(
                         "idempotency key reused for different Action Draft submit"
                     )
+                proposal = conn.execute(
+                    "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
+                    (*scope.key, replay["result_proposal_id"]),
+                ).fetchone()
+                if proposal is None:
+                    raise AipActionNotFound("submitted proposal unavailable")
+                self._internal_proposal_guard(conn, scope, actor_id, proposal, checker=False)
                 return self._bundle(conn, scope, replay["result_proposal_id"])
             head = self._lock_action_draft_head(conn, scope, draft_id)
             if head["created_by"] != actor_id:
@@ -441,6 +508,7 @@ class AipActionStore:
         draft_id = f"action-draft-{uuid.uuid4().hex[:20]}"
         event_id = f"action-event-{uuid.uuid4().hex[:20]}"
         with self._connect(scope) as conn:
+            internal_binding = self._internal_request_binding(conn, scope, actor_id, body, action_snapshot, risk)
             self._idempotency_lock(conn, scope, "proposal", idempotency_key)
             replay = conn.execute(
                 "SELECT proposal_id,request_hash FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
@@ -449,6 +517,14 @@ class AipActionStore:
             if replay is not None:
                 if replay["request_hash"] != request_hash:
                     raise AipActionIdempotencyConflict("idempotency key reused for different proposal")
+                if internal_binding is not None:
+                    existing = conn.execute(
+                        "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
+                        (*scope.key, replay['proposal_id']),
+                    ).fetchone()
+                    if existing is None:
+                        raise AipActionNotFound('internal proposal unavailable')
+                    self._internal_proposal_guard(conn, scope, actor_id, existing, checker=False)
                 return self._bundle(conn, scope, replay["proposal_id"])
             self._validate_task_run(conn, scope, body.task_id, body.run_id)
             if (
@@ -460,7 +536,7 @@ class AipActionStore:
                 raise AipActionTransitionBlocked(
                     "EXTERNAL_ACTION_EXPLICIT_DRAFT_REQUIRED"
                 )
-            action_binding_hash = None
+            action_binding_hash = internal_binding
             if body.impact_preview_ref is not None:
                 self.assert_bound_impact_preview_current(
                     conn, scope, body.impact_preview_ref
@@ -611,7 +687,7 @@ class AipActionStore:
             and body.impact_preview_ref is None
         ):
             raise AipActionTransitionBlocked("EXTERNAL_ACTION_PREVIEW_REQUIRED")
-        action_binding_hash = None
+        action_binding_hash = self._internal_request_binding(conn, scope, actor_id, body, action_snapshot, risk)
         if body.impact_preview_ref is not None:
             self.assert_bound_impact_preview_current(conn, scope, body.impact_preview_ref)
             from aos_api.aip_production_contract_store import compute_action_binding_hash
@@ -926,6 +1002,9 @@ class AipActionStore:
             ).fetchone()
             if row is None:
                 raise AipActionNotFound("proposal not found in scope")
+            current_roles = self._internal_proposal_guard(conn, scope, actor_id, row, checker=True)
+            if current_roles is not None:
+                actor_roles = current_roles
             replay = conn.execute(
                 "SELECT proposal_id,request_hash FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
                 (*scope.key, idempotency_key),
