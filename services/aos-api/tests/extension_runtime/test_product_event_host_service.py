@@ -15,12 +15,6 @@ import aos_api.ecommerce_product_event_host_service as module
 @pytest.fixture
 def service_case(stored,monkeypatch):
     conn,binding=stored;p=binding.policy.authority_payload();c=binding.case.authority_payload()
-    ctx,_=context_fixture()
-    ctx.update(orgId=p['tenant']['orgId'],projectId=p['tenant']['projectId'],
-        policyId=p['schedulePolicyId'],sourceSelectionRef=p['sourceSelectionRef'],
-        objectTypes=tuple(p['objectTypes']),effectiveFrom=datetime.fromisoformat(p['effectiveFrom']),
-        effectiveUntil=datetime.fromisoformat(p['effectiveUntil']))
-    context=ProductEventPolicyDraft.model_validate(ctx)
     now=datetime.now(timezone.utc)
     approval=dict(approval_event_id='fixture-approval',proposal_id='fixture-proposal',proposal_version=1,
         proposal_hash='fixture-proposal-hash',decision='approved',actor_id='fixture-approver',reason='test only',
@@ -31,7 +25,7 @@ def service_case(stored,monkeypatch):
         proposal_hash='fixture-proposal-hash',status='approved',action_binding_hash='a'*64,
         version=1,expires_at=now+timedelta(days=1))
     command=dict(idempotencyKey='host-event',expectedPolicyRevision=0,expectedCaseVersion=c['revision']-1,
-        policy=p,caseAuthority=c,sourceContext=context.model_dump(by_alias=True,mode='json'),
+        policy={k:v for k,v in p.items() if k!='tenant'},caseAuthority={k:v for k,v in c.items() if k!='tenant'},
         approvalRef=dict(resourceType='ActionApprovalEvent',resourceId='fixture-approval',revision=1,
             contentHash=canonical_hash(approval,prefixed=True)))
     # Test-only admin seed. No live approval is created or claimed.
@@ -56,7 +50,7 @@ def service_case(stored,monkeypatch):
             if 'FROM aip_action_proposal' in query:return SimpleNamespace(fetchone=lambda:proposal)
             return conn.execute(query,params)
     def named_source(self,**kwargs):return kwargs['execute']()
-    monkeypatch.setattr(module.ProductEventPolicyGuard,'run',named_source)
+    monkeypatch.setattr(module.ProductEventPolicyGuard,'run_policy',named_source)
     monkeypatch.setattr(module.EcommerceInvestigationProfileCatalog,'read',lambda *_:(
         SimpleNamespace(exact_ref=SimpleNamespace(model_dump=lambda **kw:c['investigationProfileRef'])),
         SimpleNamespace(exact_ref=SimpleNamespace(model_dump=lambda **kw:c['scopeRef']))))
@@ -96,7 +90,7 @@ def test_guard_failure_never_writes(service_case,change):
 
 def test_owner_denial_prevents_any_case_write(service_case,monkeypatch):
     def denied(*a,**kw):raise PermissionError('named source rejection')
-    monkeypatch.setattr(module.ProductEventPolicyGuard,'run',denied)
+    monkeypatch.setattr(module.ProductEventPolicyGuard,'run_policy',denied)
     with pytest.raises(PermissionError):execute(service_case)
     assert service_case[0].execute('SELECT count(*) AS n FROM ecommerce_investigation_schedule_policy_head').fetchone()['n']==0
 

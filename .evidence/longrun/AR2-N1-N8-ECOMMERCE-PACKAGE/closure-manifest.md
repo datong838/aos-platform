@@ -1363,3 +1363,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 边界 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_product_event_host_service.py` | 原路径 | platform host port；当前来源事务、Case/Profile引用、审批及原子保存，不构造领域策略 | 4996c6919d3349bc340363693652a85d69d8405465fb6c9bf55802890a93c6c1 |
+
+## BG-02 无身份覆盖的事件命令（2026-09-14）
+
+| 文件 | 去向 | 边界 | preHash |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_command.py` | 原路径 | solution；仅组装包内已验证策略/Case及SDK引用，省略tenant，不授予运行权限 | 44b216eee44d4dceb6700e242c5630bd9b2320f4e8ef4f01ce973e7fcbb371d3 |

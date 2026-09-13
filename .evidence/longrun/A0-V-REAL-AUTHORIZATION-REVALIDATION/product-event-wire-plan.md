@@ -1,0 +1,9 @@
+# BG-02 事件命令接入正式路由前的身份边界
+
+基线701d01e1。实际复核LockedHostPort递归拒绝tenant/orgId/projectId/installationId/generation/executionEpoch。因此内部服务七字段测试载荷不能直接作为包wire command；不得降低全局禁止字段检查。
+
+新增包ecommerce_product_event_command.py：输入已验证EventCaseBinding、可信DispatchRef和Approval ExactRef，验证包租户匹配dispatch，仅生成六字段idempotencyKey/expectedPolicyRevision/expectedCaseVersion/policy/caseAuthority/approvalRef。policy和Case省略tenant；没有sourceContext。原contentHash不变，它仍覆盖完整权威载荷。
+
+Host事件服务从可信scope注入唯一tenant后验证原hash；来源Guard新增run_policy，从policy.sourceSelectionRef调用当前Owner，在其回调内根据Owner draft和实际mapping生成来源上下文、核对dispatch。wire不传安装/代次/配置，自然避免手工接线与自报身份。保留原内部run用于既有读取器；同一事务只调用Owner一次。
+
+修改ecommerce_product_event_guard.py、ecommerce_product_event_host_service.py与对应测试；新增包命令测试并更新AR2清册新文件/动态路径。旧Host递归保护和定时命令保持。服务/包命令尚未注册，下一片正式工厂按真实当前Host身份注入依赖，随后做事件绑定/消费。

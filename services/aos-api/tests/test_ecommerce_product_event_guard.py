@@ -83,3 +83,21 @@ def test_deferred_callback_rejected():
     data=fixture()
     async def deferred():return 'later'
     with pytest.raises(ValueError):run(data,deferred)
+
+
+def test_policy_only_reconstructs_context_from_owner_once():
+    data=fixture();context,policy,dispatch,conn,calls,owner=data
+    result=ProductEventPolicyGuard(owner).run_policy(transaction=HostTransaction(conn),
+        scope=TenantScope(context.org_id,context.project_id),policy=policy,dispatch=dispatch,
+        actor='fixture',execute=lambda:'current')
+    assert result=='current' and calls==['source-owner']
+
+
+def test_policy_only_cannot_change_owner_scope_or_dispatch():
+    data=fixture();context,policy,dispatch,conn,calls,owner=data
+    dispatch.execution_epoch+=1
+    with pytest.raises(ValueError):
+        ProductEventPolicyGuard(owner).run_policy(transaction=HostTransaction(conn),
+            scope=TenantScope(context.org_id,context.project_id),policy=policy,dispatch=dispatch,
+            actor='fixture',execute=lambda:pytest.fail('must not execute'))
+    assert calls==['source-owner']

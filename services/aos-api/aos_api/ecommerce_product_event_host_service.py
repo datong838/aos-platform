@@ -1,6 +1,5 @@
 """Event policy save under current source, Case, method and exact approval."""
 from copy import deepcopy
-import json
 
 from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore
@@ -8,13 +7,13 @@ from aos_api.business_investigation_shared_contracts import InvestigationExactRe
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileCatalog
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _validate_schedule_approval_rows
 from aos_api.ecommerce_product_event_guard import ProductEventPolicyGuard
-from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
+from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_product_event_store import ProductEventPolicyStore
 
 
-def _parse(command):
+def _parse(command, scope):
     keys = {'idempotencyKey', 'expectedPolicyRevision', 'expectedCaseVersion',
-            'policy', 'caseAuthority', 'sourceContext', 'approvalRef'}
+            'policy', 'caseAuthority', 'approvalRef'}
     if type(command) is not dict or set(command) != keys:
         raise ValueError('event save command envelope invalid')
     value = deepcopy(command)
@@ -24,15 +23,22 @@ def _parse(command):
     for name, minimum in (('expectedPolicyRevision', 0), ('expectedCaseVersion', 1)):
         if type(value[name]) is not int or not minimum <= value[name] < 2**63 - 1:
             raise ValueError('event save expected version invalid')
-    if any(type(value[name]) is not dict for name in ('policy', 'caseAuthority', 'sourceContext', 'approvalRef')):
+    if any(type(value[name]) is not dict for name in ('policy', 'caseAuthority', 'approvalRef')):
         raise ValueError('event save requires strict JSON objects')
-    context = ProductEventPolicyDraft.model_validate_json(json.dumps(value['sourceContext']))
-    context.validate_policy(value['policy'])
+    if type(scope) is not TenantScope:
+        raise TypeError('trusted Host scope required')
+    for name in ('policy','caseAuthority'):
+        if 'tenant' in value[name]:raise ValueError('wire cannot supply tenant')
+        value[name]['tenant']=dict(orgId=scope.org_id,projectId=scope.project_id)
+        if value[name].get('contentHash') != canonical_hash({k:v for k,v in value[name].items() if k!='contentHash'},prefixed=True):
+            raise ValueError('event wire authority digest differs')
+    if value['policy'].get('schemaVersion')!='aos.ecommerce.product-event-schedule-policy/v1':
+        raise ValueError('event wire schema invalid')
     approval = InvestigationExactRef.model_validate(value['approvalRef'])
     if (approval.resource_type != 'ActionApprovalEvent'
             or type(value['approvalRef'].get('revision')) is not int or approval.receipt_id is not None):
         raise ValueError('event save exact approval required')
-    return value, context, approval
+    return value, approval
 
 
 def _request_hash(command):
@@ -117,12 +123,12 @@ class ProductEventSchedulePutHostService:
             raise ValueError('event approval is not current')
 
     def revalidate(self, *, transaction, scope, dispatch, command):
-        command,context,approval = _parse(command)
-        self._guard.run(transaction=transaction,scope=scope,context=context,policy=command['policy'],
+        command,approval = _parse(command,scope)
+        self._guard.run_policy(transaction=transaction,scope=scope,policy=command['policy'],
             dispatch=dispatch,actor=self._actor,execute=lambda:self._check(transaction,scope,command,approval))
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
-        command,context,approval = _parse(command)
+        command,approval = _parse(command,scope)
         def save():
             self._check(transaction,scope,command,approval)
             result = ProductEventPolicyStore(transaction,scope).put(
@@ -133,11 +139,11 @@ class ProductEventSchedulePutHostService:
                     scope,command['policy']['schedulePolicyId'],keep_revision=None)
             self._check(transaction,scope,command,approval)
             return _response(command,result['replayed'])
-        return self._guard.run(transaction=transaction,scope=scope,context=context,policy=command['policy'],
+        return self._guard.run_policy(transaction=transaction,scope=scope,policy=command['policy'],
             dispatch=dispatch_ref,actor=self._actor,execute=save)
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
-        command,_context,_approval = _parse(command)
+        command,_approval = _parse(command,scope)
         saved = ProductEventPolicyStore(transaction,scope).find_receipt(command['idempotencyKey'],_request_hash(command))
         if (saved is None or type(receipt) is not dict or type(receipt.get('replayed')) is not bool
                 or saved['policy_authority'] != command['policy'] or saved['case_authority'] != command['caseAuthority']):
