@@ -1,0 +1,17 @@
+# BG-02 事件Host写入服务
+
+基线87cca430。新增aos_api/ecommerce_product_event_host_service.py与tests/extension_runtime/test_product_event_host_service.py。复核SchedulePutHostService、_lock_schedule_approval、原Case/Profile目录、事件Guard/Store和AutomationOccurrenceStore。
+
+服务构造要求当前来源Owner及可信Host注入actor（无默认、禁止从命令读取）。命令严格七字段：idempotencyKey、expectedPolicyRevision、expectedCaseVersion、policy、caseAuthority、sourceContext、approvalRef。包负责构造policy/Case，schema/摘要与来源上下文先关联。
+
+所有校验与写入在来源Owner原事务回调中：先锁策略调度advisory，再锁当前Case和policy；读取当前方法目录并核对Case/Profile/Scope和policy.methodRef。新命令校验当前两版本与原Case引用，原key重放使用原Receipt，仍需当前来源、方法和批准。复用_lock_schedule_approval，以数据库当前时刻检查原批准，policyHash覆盖完整策略载荷；额外验证proposal有效窗和版本及批准非未来。执行040后关闭旧调度绑定，保持事件策略disabled。原事务由Host提交。
+
+revalidate、execute重复守住当前来源和审批；verify_receipt按原key/组合摘要回读而非当前head。未注册进旧九操作封印；保存不生成运行绑定或Occurrence。既有定时服务不改。
+
+验证包含严格命令、缺批准/错策略hash/方法漂移/源拒绝导致不写、同事务成功与回读、后继/重放、审批过期；具名替身的来源与方法边界不算真实租户验收。随后接包命令路由与实际当前权限装配；真实发布身份仍从既有真实账号确定，不制造审批人。
+
+## 隔离PG发现后的修订
+
+运行角色对Case/策略表只有SELECT，普通FOR UPDATE会失败；批准表同样不能假设UPDATE权限。新增041受控锁函数（独立迁移租约）：仅按当前GUC租户锁Case、策略及原批准/Proposal，不修改业务行，PUBLIC无EXEC。Host先调用该函数，再执行普通SELECT；040继续负责最终两版本CAS。原审批校验提取成共用纯行验证，旧定时函数保留原加锁查询；新事件服务复用验证规则并使用041已持锁的行。禁止放宽表UPDATE或切到管理员角色。
+
+存储之后再次复核当前批准，若执行中到期，整个外层事务回滚。新增迁移services/aos-api/alembic/versions/a0v_041_product_event_authority_lock.py；同时修改ecommerce_growth_runtime_adapters.py，仅提取共享批准验证。真正批准表锁权限必须用实际PG验证，不能仅凭具名approval行替身。

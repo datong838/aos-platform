@@ -296,6 +296,20 @@ def _lock_schedule_approval(
             WHERE org_id=%s AND project_id=%s AND approval_event_id=%s FOR SHARE""",
         (*scope.key, approval_ref.resource_id),
     ).fetchone()
+    proposal = transaction.execute(
+        """SELECT proposal_id,action_type_id,payload,proposal_hash,status,action_binding_hash
+             FROM aip_action_proposal
+            WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR SHARE""",
+        (*scope.key, approval["proposal_id"]),
+    ).fetchone() if approval is not None else None
+    _validate_schedule_approval_rows(approval, proposal, approval_ref, checked_at=checked_at,
+        case_id=case_id, policy_id=policy_id, policy_hash=policy_hash,
+        expected_policy_revision=expected_policy_revision, expected_case_version=expected_case_version)
+
+
+def _validate_schedule_approval_rows(approval, proposal, approval_ref, *, checked_at,
+        case_id, policy_id, policy_hash, expected_policy_revision, expected_case_version):
+    """Shared value checks; caller must hold the current authority locks."""
     if (
         approval is None
         or int(approval["proposal_version"]) != approval_ref.revision
@@ -305,12 +319,6 @@ def _lock_schedule_approval(
         raise ValueError("active exact schedule ActionApprovalEvent is required")
     if budget_canonical_hash(dict(approval), prefixed=True) != approval_ref.content_hash:
         raise ValueError("schedule ActionApprovalEvent hash drifted")
-    proposal = transaction.execute(
-        """SELECT proposal_id,action_type_id,payload,proposal_hash,status,action_binding_hash
-             FROM aip_action_proposal
-            WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR SHARE""",
-        (*scope.key, approval["proposal_id"]),
-    ).fetchone()
     payload = _json_object(proposal["payload"]) if proposal is not None else {}
     expected_binding = {
         "caseId": case_id,
