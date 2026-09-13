@@ -125,3 +125,11 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 此外ecommerce_growth_host_ports.py在锁定dispatch组时直接SELECT FOR UPDATE，只有SELECT权限会失败；旧test_ecommerce_growth_host_ports_pg.py为自定义Host测试角色额外GRANT SELECT,UPDATE。因此禁止只做REVOKE就部署。先设计并实现固定租户/组的受限行锁读函数（不改dispatch数据、无任意SQL/表名），Host通过其持有同事务行锁，再精确撤销dispatch表普通角色DML。签名/审批/Receipt/隔离检查仍保留。runtime binding也存在FOR UPDATE依赖，必须列入权限矩阵，不能宣称整个运行控制表都只读化。
 
 本波新增tests/extension_runtime/test_dispatch_default_privileges_pg.py，用18432独立测试库复现历史DDL在默认DML存在时仍留下写权限，以及撤权后普通SELECT成功而直接FOR UPDATE失败；这是缺陷证据测试，不是权限修复GREEN。下一实施切片预留a0v_028（须重新核对head），新增受限行锁与权限收敛迁移，修改Host与真实非特权并发测试；全部通过前不应用主库ACL变更。
+
+### 受限路由组行锁迁移切片
+
+新增 alembic/versions/a0v_028_dispatch_read_lock.py 与 tests/extension_runtime/test_dispatch_read_lock_pg.py。固定public.extension_dispatch_lock_group_a0v_028(uuid)，返回既有Host所需九字段；只允许非super/bypass session采用aos_runtime、serializable且scope GUC非空，锁定本租户本组全部记录（上限10，必须恰好九个已知经营操作），以原排序FOR UPDATE持锁，不修改数据。错误/部分/额外组拒绝；函数不是执行授权，Host仍需逐项exact/fence/runtime/权限复核。
+
+同迁移对dispatch表PUBLIC/runtime/maintainer撤表级与列级直接权限，恢复runtime/maintainer SELECT；新函数PUBLIC/maintainer无EXEC，仅runtime。原受限027登记和既有切换函数仍作为写者；其他表和全schema默认ACL不变。历史迁移不编辑。
+
+隔离PG复现带默认DML的历史状态，执行新迁移后普通runtime INSERT/UPDATE/DELETE/TRUNCATE和列级UPDATE均失败，固定027仍能登记，合法加锁读取九项、canary/错组/部分组/非serializable/超管拒绝；双连接更新须被行锁阻塞，事务结束释放。此切片不切换Host生产读取、不部署主库，Host接入与回归完成前禁止部署，避免撤权造成现有直接FOR UPDATE失败。
