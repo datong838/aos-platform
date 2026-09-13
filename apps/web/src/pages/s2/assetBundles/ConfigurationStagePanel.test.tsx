@@ -12,7 +12,7 @@ const hash = 'sha256:' + 'a'.repeat(64);
 const runtime: RuntimeInstallation = { installationId: id, installationRevision: 1, installationEtag: 1, installationState: 'active', effectiveState: 'disabled', currentOperation: null, ui: null, allowedActions: ['configure'], reasons: [], binding: { generation: id, installationRevision: 1, profileRef: 'python', configRef: null, executionEpoch: 1, desiredState: 'disabled', observedState: 'disabled', enabled: false, operationFence: false, revision: 1 } };
 const role = { authority: 'aip.responsibility_plan_revision', id: 'role', revision: 1, hash };
 const policy = { ...role, authority: 'aip.runtime_policy_revision', id: 'policy' };
-const catalog = { target: { installationId: id, installationEtag: 1, generation: id, bindingRevision: 1 }, installationRevision: 1, roles: [{ label: '职责', ref: role }], policies: [{ label: '策略', ref: policy }], rolesHasMore: false, policiesHasMore: false };
+const catalog = { target: { installationId: id, installationEtag: 1, generation: id, bindingRevision: 1 }, installationRevision: 1, roles: [{ label: '职责', ref: role }], policies: [{ label: '策略', ref: policy }], rolesHasMore: false, policiesHasMore: false, submissionConfigured: true };
 const receipt: ConfigurationStageReceipt = { schemaVersion: 'aos.runtime-configuration-stage-status/v1', tenant: { orgId: 'org-org', projectId: 'dev-project' }, requestId: id, requestHash: hash, state: 'succeeded', revision: 2, deadline: '2026-09-14T01:00:00Z', result: { configurationId: id, revision: 1, hash }, failureCode: null };
 describe('configuration stage product flow', () => {
   let host: HTMLDivElement, root: Root;
@@ -25,6 +25,16 @@ describe('configuration stage product flow', () => {
   async function render(value = runtime) { await act(async () => root.render(<ConfigurationStagePanel state={{ data: value, status: 'ready', stale: false, refreshing: false, error: null, reload: vi.fn() }} offline={false} blocked={false} onRegistered={registered} />)); }
   function button(label: string) { return [...host.querySelectorAll('button')].find(item => item.textContent === label)!; }
   async function choose() { await act(async () => { for (const select of host.querySelectorAll('select')) { select.value = select.options[1]!.value; select.dispatchEvent(new Event('change', { bubbles: true })); } }); }
+  it('keeps sources visible but prevents submission when the channel is unconfigured', async () => {
+    vi.mocked(assetControlClient.getConfigurationSources).mockResolvedValue({ ...catalog, submissionConfigured: false });
+    const post = vi.spyOn(assetControlClient, 'stageConfiguration');
+    await render(); await choose();
+    expect(host.textContent).toContain('配置登记服务尚未启用');
+    expect(button('登记所选配置').disabled).toBe(true);
+    await act(async () => button('登记所选配置').click());
+    expect(post).not.toHaveBeenCalled();
+    expect(host.querySelectorAll('select option').length).toBe(4);
+  });
   it('never reposts an unknown outcome; looks up original key and refreshes registered choices', async () => {
     const post = vi.spyOn(assetControlClient, 'stageConfiguration').mockRejectedValue(new Error('lost response'));
     const find = vi.spyOn(assetControlClient, 'findConfigurationStage').mockResolvedValue(receipt);

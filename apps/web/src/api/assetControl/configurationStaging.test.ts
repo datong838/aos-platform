@@ -13,6 +13,11 @@ describe('configuration stage contracts', () => {
     expect(parseConfigurationSources(catalog)).toEqual(catalog);
     for (const value of [{ ...catalog, roles: [...catalog.roles, ...catalog.roles] }, { ...catalog, policyBody: {} }, { ...catalog, roles: catalog.policies }, { ...catalog, target: null }]) expect(() => parseConfigurationSources(value)).toThrow();
   });
+  it('accepts legacy omission and boolean channel metadata but rejects misleading values', () => {
+    expect(parseConfigurationSources(catalog).submissionConfigured).toBeUndefined();
+    for (const configured of [false, true]) expect(parseConfigurationSources({ ...catalog, submissionConfigured: configured }).submissionConfigured).toBe(configured);
+    for (const configured of ['true', 1, null]) expect(() => parseConfigurationSources({ ...catalog, submissionConfigured: configured })).toThrow();
+  });
   it('only accepts explicit source requests, without client identity or budget overrides', () => {
     const request = { schemaVersion: 'aos.runtime-configuration-stage/v1' as const, action: 'stage-configuration' as const, target, roleRefs: [role], policyRef: policy, previousRef: null };
     expect(serializeConfigurationStage(request)).toEqual(request);

@@ -6,7 +6,7 @@ export interface ConfigurationSourceCatalog {
   target: ConfigurationStageTarget | null; installationRevision: number;
   roles: { label: string; ref: ConfigurationSourceRef }[];
   policies: { label: string; ref: ConfigurationSourceRef }[];
-  rolesHasMore: boolean; policiesHasMore: boolean;
+  rolesHasMore: boolean; policiesHasMore: boolean; submissionConfigured?: boolean;
 }
 export interface ConfigurationStageRequest {
   schemaVersion: 'aos.runtime-configuration-stage/v1'; action: 'stage-configuration';
@@ -45,7 +45,9 @@ function configurationRef(value: unknown) {
   uuid(item.configurationId); positive(item.revision); hash(item.hash);
 }
 export function parseConfigurationSources(value: unknown): ConfigurationSourceCatalog {
-  const item = record(value, ['target', 'installationRevision', 'roles', 'policies', 'rolesHasMore', 'policiesHasMore']);
+  const configured = value !== null && typeof value === 'object' && Object.hasOwn(value, 'submissionConfigured');
+  const item = record(value, ['target', 'installationRevision', 'roles', 'policies', 'rolesHasMore', 'policiesHasMore', ...(configured ? ['submissionConfigured'] : [])]);
+  if (configured) check(typeof item.submissionConfigured === 'boolean');
   positive(item.installationRevision); if (item.target !== null) target(item.target);
   check(typeof item.rolesHasMore === 'boolean' && typeof item.policiesHasMore === 'boolean');
   for (const [field, authority] of [['roles', roleAuthority], ['policies', policyAuthority]]) {

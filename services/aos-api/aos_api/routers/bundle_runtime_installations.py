@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security, status
@@ -161,8 +163,11 @@ def list_bundle_runtime_configurations(installation_id: CanonicalUuidPath, respo
 def list_bundle_runtime_configuration_sources(installation_id: CanonicalUuidPath, response: Response,
         principal: PrincipalDependency, view_reader: RuntimeViewReaderDependency) -> ConfigurationSourceCatalog:
     response.headers['Cache-Control']='no-store'
-    return _invoke(lambda: view_reader.list_configuration_sources(installation_id=installation_id,
+    catalog = _invoke(lambda: view_reader.list_configuration_sources(installation_id=installation_id,
         org_id=principal.org_id,project_id=principal.project_id,roles=principal.roles,markings=principal.markings))
+    # Configuration presence is not identity validation, Host health, or authorization.
+    return catalog.model_copy(update={'submissionConfigured': bool(
+        os.environ.get('AOS_RUNTIME_CONFIGURATION_STAGE_CREDENTIAL_FILE', '').strip())})
 
 
 router.include_router(_configuration_catalog_router)

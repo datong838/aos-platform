@@ -66,7 +66,9 @@ def test_source_limit_is_honestly_reported(sources):
     assert len(result.roles)==50 and result.rolesHasMore is True
 
 
-def test_source_http_uses_current_principal(sources):
+@pytest.mark.parametrize('configured',(False,True))
+def test_source_http_uses_current_principal(sources,monkeypatch,configured):
+    monkeypatch.setenv('AOS_RUNTIME_CONFIGURATION_STAGE_CREDENTIAL_FILE','/not-read-here' if configured else '')
     result=read(sources)
     plane=_control_plane()
     calls=[]
@@ -75,6 +77,7 @@ def test_source_http_uses_current_principal(sources):
     response=TestClient(_app(plane)).get('/v1/bundle-runtime-installations/'+INSTALLATION_ID+'/configuration-sources?orgId=dev-org')
     assert response.status_code==200 and response.headers['cache-control']=='no-store'
     assert calls[0]['org_id']=='org-org'
+    assert response.json()['submissionConfigured'] is configured
 
 
 @pytest.mark.parametrize('kind', ('role_draft','policy_suspended','policy_kill'))

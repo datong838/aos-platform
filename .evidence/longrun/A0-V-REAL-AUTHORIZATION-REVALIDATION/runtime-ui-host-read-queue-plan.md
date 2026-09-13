@@ -434,3 +434,7 @@ D2e1真实浏览器发现既有协议遗漏：Niushop1.5版本GET 200，但regis
 当前登记面板需要手动查结果，补为原键/原ID GET有界跟踪，不增加任何POST重试。修改ConfigurationStagePanel.tsx及测试：未决请求每3秒尝试一次查询，最多10个轮次；已有查询仍进行时不叠加，达到边界停止自动查询并提示手工原键回读。成功自动刷新原配置列表，拒绝/过期显示真实终态。
 
 身份、离线、外部动作阻塞、卸载均停止定时器；旧身份晚到结果仍被原publish隔离。自动查询状态不得重置请求键或创建新请求，手工查询共用原互斥锁。测试先RED：成功自动回读、长时间未知只GET有界且不POST、身份切换后无旧请求查询。
+
+## D2d-9 登记通道配置提示（基线85cf130a，编码前）
+
+来源目录新增submissionConfigured布尔值，默认false；HTTP层仅按本进程登记凭据路径是否配置设置，不读取凭据、不宣称Host可用或执行获批。前端兼容旧响应缺字段但禁用新提交，非法值拒绝；当前目录仍可读，原键/原ID查询不受此提示阻止。修改configuration_source_catalog.py、bundle_runtime_installations.py、configurationStaging.ts、ConfigurationStagePanel.tsx及其测试。覆盖配置有/无、旧协议、非法值和禁止提交；API受控重载后真实页面核验。无迁移、无主库登记、不切Host。

@@ -21,6 +21,7 @@ class ConfigurationSourceCatalog(BaseModel):
     policies: tuple[ConfigurationSourceChoice,...]
     rolesHasMore: bool
     policiesHasMore: bool
+    submissionConfigured: bool = False
 
 
 def read_source_catalog(conn, *, org_id, project_id, view):
