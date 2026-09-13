@@ -69,3 +69,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 新增extension_runtime/ui_read_recovery.py及PG测试。原Host先执行既有ExpiredSignedReadAttemptRecovery；新存储函数每次最多100条，显式scope、FOR UPDATE SKIP LOCKED选取到期requested，或其Attempt已succeeded/failed/abandoned的到期claimed。仍running的Attempt不标成可重试或强制成功。封存expired/READ_DEADLINE_EXPIRED保留原claim，revision+1，无结果、无新Attempt、无重新入队；终态再次运行不改变。筛选跳过running而非让它占满整页阻塞其它过期请求。
 
 隔离PG验证到期前不变、requested到期终结、claimed在Attempt仍running时不终结、既有abandon恢复后队列终结、幂等、负租户和分页。该函数仍为宿主内部存储切片，无新授权或真实调用，随后在具体消费者/Host串接。
+
+## UQ3-C 运行角色的受限当前身份与队列更新（基线d35035a2，编码前补充）
+
+新增a0v_033_runtime_ui_read_worker.py。宿主独立principal函数保持当前subject/scope/非超级session/SET ROLE验证，角色仅aos_runtime、隔离级别仅REPEATABLE READ或SERIALIZABLE。与API函数分离，不扩大API入口权限。函数锁成员和bearer但不授成员表UPDATE。
+
+aos_runtime仅获请求状态、版本、claim/结果相关列UPDATE；不可插入/删除、改subject/target/deadline。既有trigger继续约束状态图与Attempt关联。真实非超级runtime账号测试读取当前事实、领取/封存，以及身份/target/deadline/DELETE禁止；API角色不能调用宿主函数。主库暂不部署。随后snapshot source使用宿主函数，具体消费者落实完整门禁。
