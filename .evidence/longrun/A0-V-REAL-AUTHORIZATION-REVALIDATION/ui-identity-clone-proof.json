@@ -1,0 +1,18 @@
+{
+  "outcome": "UI_READ_TRANSPORT_IDENTITY_VERIFIED",
+  "database": "aos_ui_read_20260913_test",
+  "role": "aos_ui_read_transport_20260913",
+  "identityFileHash": "sha256:b292d80292b84f6aee08e9a5a7c0dc5d409bb6e6c9c2ca80cf5b61a5903c9fff",
+  "reachableRole": "aos_ui_read_api",
+  "positiveSubjectVerified": true,
+  "absentRequestReturnedNull": true,
+  "denials": [
+    "subject-mismatch",
+    "negative-tenant",
+    "direct-table",
+    "host-function"
+  ],
+  "queueCount": 0,
+  "businessWrites": 0,
+  "at": "2026-09-13T14:39:39.628466+00:00"
+}
