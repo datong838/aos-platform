@@ -227,3 +227,9 @@ HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全�
 新增只读探针fixture与测试：fixture为明确测试Case/Run合同及对应投影，不是真实租户经营证据；profile仅为含analyst_workspace_view_v1声明的growth session附加probe，结果必须逐值等于已冻结预期，回执只记方法、payload/resultHash、Case/Run计数和executionAllowed=false。不调用九个业务方法，不读SSH或生产库，不新造业务Run。
 
 沿现有一次性资源journal、隔离OCI、临时本地镜像服务与签名篡改拒绝流程，构建输出放仓外新目录。修改前后测试默认builder不漂移、新profile准确、probe只在本会话且失败仍释放；再实际build/qualify。原运行三个容器/Host不重启，未知结果先查journal与资源，不盲重跑。
+
+### UQ5-B3d 永久签名准备与发布边界（基线8f533681，编码前）
+
+新增scripts/a0v_ecommerce_ui_signed_successor.py与对应tests/extension_runtime/test_ecommerce_ui_signed_successor.py，私有复用既有signature/verify_inputs/signed_tree流程，固定growth1.8构建回执与新profile，旧根为当前niushop1.5的13版本，新根只追加growth1.8成为14版本。require_sessions严格1/2/24、2048心跳、释放、精确fixture/payload/resultHash和只读标志；源保护加新profile与fixture，旧签名根和已有版本字节保持。
+
+本切片CLI只preflight或prepare签名，不调用旧publish/switch_root/main。代码核对发现RegistryService._assert_publish_duty_separation要求publisher区别creator/validator；旧helper按新名字拼接actor和固定roles不能证明真实主体职责分离，禁止照搬为当前真实验收。当前org-org/dev-project成员仍runtime-owner(admin)与user:dev(owner)，原独立审批身份待核验；不造新成员或假发布人。本波永久签名可独立完成，后继继续备份/迁移/服务升级准备。真正发布/安装要使用可核验现有主体及产品授权，不能靠资格fixture替代。
