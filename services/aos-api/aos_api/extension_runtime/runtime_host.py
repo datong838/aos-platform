@@ -13,6 +13,7 @@ from uuid import UUID
 from aos_api.tenant_scope import TenantScope
 
 from .configuration_consumer import ConfigurationConsumer
+from .configuration_stage_consumer import ConfigurationStageConsumer
 from .ui_read_consumer import RuntimeUiReadConsumer, PreparedUiRead, UiReadInvocation, UiReadConsumerResult
 from .disable_consumer import ClaimedDisableDelivery, DisableDeliveryResult, RuntimeDisableConsumer
 from .generation_attempts import ExpiredSignedReadAttemptRecovery
@@ -25,9 +26,9 @@ from .live_installation_scheduler import (
 )
 
 
-_SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer)
+_SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer, ConfigurationStageConsumer)
 _CONSUMERS = _SYNC_CONSUMERS + (RuntimeUiReadConsumer,)
-_CONSUMER_KINDS = {ConfigurationConsumer:'configure',RuntimeDisableConsumer:'disable',RuntimeUiReadConsumer:'ui-read'}
+_CONSUMER_KINDS = {ConfigurationStageConsumer:'stage-configuration',ConfigurationConsumer:'configure',RuntimeDisableConsumer:'disable',RuntimeUiReadConsumer:'ui-read'}
 
 
 @dataclass(frozen=True, slots=True)

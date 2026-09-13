@@ -186,6 +186,9 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 ui_markings=tuple(raw_markings)
                 ui_catalog=RuntimeWorkshopCatalog(source=PostgresWorkshopCatalogSource(),loader=loader,
                                                    view_reader=control_plane.view_reader)
+            stage_flag = os.getenv('AOS_EXTENSION_RUNTIME_CONFIGURATION_STAGE_ENABLED','0').strip()
+            if stage_flag not in {'0','1'}:
+                raise ValueError('exact configuration staging flag required')
             dependencies = RuntimeWorkerDependencies(
                 installation_store=control_plane.installation_store,
                 configuration_authorize=control_plane.configuration_authorize,
@@ -198,6 +201,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 preparation=preparation,
                 ui_read_catalog=ui_catalog,
                 ui_read_markings=ui_markings,
+                configuration_stage_enabled=stage_flag == '1',
             )
         except (TypeError, ValueError):
             dependencies = None

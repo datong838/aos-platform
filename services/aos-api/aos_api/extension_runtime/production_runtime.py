@@ -15,6 +15,8 @@ from .ui_read_preflight import runtime_ui_read_ready
 
 from .configuration_authorization import CurrentFourSourceConfigurationAuthorization
 from .configuration_consumer import ConfigurationConsumer
+from .configuration_stage_consumer import ConfigurationStageConsumer
+from .configuration_stage_preflight import configuration_stage_ready
 from .current_permission import CurrentControlPermission
 from .disable_consumer import RuntimeDisableConsumer
 from .generation_attempts import (
@@ -53,8 +55,11 @@ class RuntimeWorkerDependencies:
     preparation: ProductionPreparationDependencies
     ui_read_catalog: RuntimeWorkshopCatalog | None = None
     ui_read_markings: tuple[str, ...] = ()
+    configuration_stage_enabled: bool = False
 
     def __post_init__(self) -> None:
+        if type(self.configuration_stage_enabled) is not bool:
+            raise TypeError("exact configuration staging flag required")
         if type(self.installation_store) is not PostgresInstallationStore:
             raise TypeError("production runtime requires the PostgreSQL installation store")
         if (
@@ -178,6 +183,8 @@ def select_production_runtime_host(
             dependent=dependencies.disable_dependent,
         )
         consumers=(configure,disable)
+        if dependencies.configuration_stage_enabled:
+            consumers += (ConfigurationStageConsumer(connect=runtime_connect, authorize=dependencies.configuration_authorize),)
         if dependencies.ui_read_catalog is not None:
             consumers+=(RuntimeUiReadConsumer(scope=scope,connect=runtime_connect,catalog=dependencies.ui_read_catalog,
                 installation_store=dependencies.installation_store,live_directory=dependencies.preparation.live_directory,
@@ -207,6 +214,10 @@ def select_production_runtime_host(
             runtime_identity = probe_runtime_database_identity(
                 conn, protected_relations=_PROTECTED_RELATIONS
             )
+            if dependencies.configuration_stage_enabled:
+                try:
+                    if not configuration_stage_ready(conn):return _inactive('CONFIGURATION_STAGE_PREFLIGHT_FAILED')
+                except Exception:return _inactive('CONFIGURATION_STAGE_PREFLIGHT_FAILED')
             if dependencies.ui_read_catalog is not None:
                 try:
                     if not runtime_ui_read_ready(conn):return _inactive('UI_READ_PREFLIGHT_FAILED')

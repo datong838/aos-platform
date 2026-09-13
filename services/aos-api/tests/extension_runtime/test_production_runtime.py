@@ -425,7 +425,9 @@ def test_environment_wiring_rejects_unsupported_platform(monkeypatch):
 
 
 @pytest.mark.parametrize('use_reference', [False, True])
-def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch, use_reference):
+@pytest.mark.parametrize('stage_flag', ['0', '1', 'invalid'])
+def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch, use_reference, stage_flag):
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CONFIGURATION_STAGE_ENABLED', stage_flag)
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
     monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
@@ -462,6 +464,10 @@ def test_environment_wiring_constructs_exact_dependencies_without_starting(monke
     assert selected.error_code == "TEST_CAPTURE"
     assert captured["enabled"] is True
     dependencies = captured["dependencies"]
+    if stage_flag == "invalid":
+        assert dependencies is None
+        return
+    assert dependencies.configuration_stage_enabled is (stage_flag == "1")
     assert type(dependencies) is RuntimeWorkerDependencies
     assert dependencies.configuration_authorize is authorize
     assert type(dependencies.drain_reader) is GenerationDrainReader
