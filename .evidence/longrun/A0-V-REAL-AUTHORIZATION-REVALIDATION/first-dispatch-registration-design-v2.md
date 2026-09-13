@@ -140,3 +140,8 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 测试修改 tests/extension_runtime/test_ecommerce_growth_host_ports.py 和 test_ecommerce_growth_host_ports_pg.py：后者升级为独立数据库 public 表、真实非特权 LOGIN+aos_runtime、九项完整组和028迁移，测试生产连接路径、Receipt 回滚、权限拒绝和隔离；新增连接只读/提交/超级用户拒绝验证。先 RED 再实现再联合回归。主库不部署、不登记、不激活；回滚为代码回退，028仍未上主库。
 
 兼容回归补充：test_ecommerce_growth_canonical_router.py 更新 SQL 替身匹配；旧 test_ecommerce_growth_signed_lifecycle_pg.py 私有 schema fixture 增加028迁移，并仅对该历史测试的固定函数名映射 schema，使用真实非特权角色调用。它不是 public 部署证明；public 原始迁移/生产连接证明由本波独立数据库 Host 测试提供。
+
+
+### 首次激活登记来源核验切片
+新增 services/aos-api/aos_api/ecommerce_growth_registration_origin.py 与 tests/extension_runtime/test_ecommerce_growth_registration_origin.py。严格不可变 RegistrationReceiptRef 固定资源类型、canonical UUID、revision=1、sha256；verify_registration_origin 复用既有存储回执解码，绑定ref id/hash、scope、当前按operationId排序的完整九项快照、目标安装/generation/epoch/bindingRevision；严格拒绝bool伪整数、假对象、partial/mixed/revision漂移。返回重新验证且独立的原始登记请求，供后续同事务当前安装/配置/签名核验复用，不直接授予激活权。
+本波不放宽Cutover判断，不部署主库。后续接入需要：审批payload精确绑定registrationReceiptRef；旧请求无该字段时序列化/摘要必须保持原字节语义；prepare Receipt与重构请求保留新ref；prepare/commit/rollback分别复核来源和当前配置，rollback恢复旧snapshot的fence=true。撤销并发须与group/installation锁序一致，不能删除登记历史。现有SQL commit/rollback按exact snapshot比对/恢复，无需凭名称猜测放宽数据库检查。
