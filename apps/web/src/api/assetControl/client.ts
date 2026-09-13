@@ -1,3 +1,4 @@
+import { parseRegistrationStatus, type RegistrationStatus } from "./registrationStatus";
 import { isOffline } from "../../lib/offlineStore";
 import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
@@ -564,6 +565,16 @@ export class AssetControlClient {
       serializeUninstallInstallationRequest(body),
       options,
     );
+  }
+
+  getRegistrationStatus(installationId: string): Promise<RegistrationStatus> {
+    const operation = ASSET_CONTROL_OPERATIONS.getRegistrationStatus;
+    const path = fillPath(operation, { installation_id: canonicalUuid(installationId, "installation_id") });
+    return this.get<unknown>(operation.operationId, path).then((value) => {
+      const status = parseRegistrationStatus(value);
+      if (status.installationId !== installationId) throw new Error("Registration installation mismatch");
+      return status;
+    });
   }
 
   getRuntimeInstallation(installationId: string): Promise<RuntimeInstallation> {

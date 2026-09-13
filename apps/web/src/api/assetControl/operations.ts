@@ -25,6 +25,7 @@ export type AssetControlOperationId =
   | "verify_bundle_installation"
   | "rollback_bundle_installation"
   | "uninstall_bundle_installation"
+  | "get_ecommerce_growth_registration_status"
   | "get_bundle_runtime_installation"
   | "get_bundle_runtime_operation"
   | "create_bundle_runtime_operation";
@@ -157,6 +158,15 @@ export const ASSET_CONTROL_OPERATIONS = {
     requiresIfMatch: true,
     returnsEtag: true,
     errorStatuses: ACTION_ERRORS,
+  },
+  getRegistrationStatus: {
+    method: "GET",
+    pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-registrations/status",
+    operationId: "get_ecommerce_growth_registration_status",
+    requiresIdempotencyKey: false,
+    requiresIfMatch: false,
+    returnsEtag: false,
+    errorStatuses: [...COMMAND_ERRORS, 503],
   },
   getRuntimeInstallation: {
     method: "GET",

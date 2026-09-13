@@ -34,3 +34,6 @@ Owner切片（dc357b35之后）：新增ecommerce_growth_withdrawal_receipt.py�
 资格提示切片（07b8d17c之后）：在现有status发现唯一登记后，服务端读取当前安装etag及原登记对应9操作的实际快照、任何cutover历史、schedule/runtime command依赖。复用require_pristine_withdrawal，不在前端复制规则。返回expectedInstallationEtag与withdrawalReason（unused_origin、dependent_history、dispatch_changed或not_applicable）；只有未使用原始快照允许allowedActions=[withdraw]。此allowedActions是当前快照的UI提示，executable仍false，POST再次做权限/CAS/完整锁内检查；GET不接受执行参数、不写Receipt、不调能力。
 
 新增aos_api/ecommerce_growth_withdrawal_status.py封装固定只读查询；仅cutover历史使用已有专用连接的maintainer SELECT权限，随后恢复runtime读取调度/command/dispatch（已有授权），不新增GRANT或迁移。读取前require_runtime_role复验各关系FORCE RLS且session非owner/非super/bypass。当前权限检查先完成；无group协调锁，不形成安装→group锁倒置。查询异常整体503/409，不默认为unused。原登记解码错误继续拒绝，不以提示字段掩盖损坏。未登记/已撤回/多候选不允许动作。测试补真实隔离PG的cutover、依赖、快照漂移、RLS失效和新快照后再撤回的CAS拒绝；fixture需按源码ACL给最小读取权限并强制RLS，当前权限组合仍明确mock。仅展示层提示，未替代主库真实验收。
+
+
+前端合同切片（3e638c9f之后）：apps/web/src/api/assetControl/registrationStatus.ts严格解析status/v1（安装UUID/ref/hash/状态与动作组合/正安全整数etag）；不接受未知字段、不把任意允许动作透传。operations.ts登记GET，client.ts使用既有认证/错误/离线体系并校验响应installationId等于请求，不填造空态，不持久化权威数据。新增registrationStatus.test.ts及client.test.ts边界测试。后续独立面板复用既有读取状态管理，并明确租户切换立即清空旧状态，服务未部署显示不可用；本片先完成客户端合同，不提前增加不能执行的按钮。仅API适配，无后端规则复制，版本不匹配拒绝而不是静默降级。

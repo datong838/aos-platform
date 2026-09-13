@@ -325,3 +325,26 @@ describe("M3-1 asset-control SDK adapter", () => {
     });
   });
 });
+
+describe("registration discovery client", () => {
+  const status = {schemaVersion:"aos.ecommerce.first-dispatch-status/v1", installationId:INSTALLATION_ID,
+    state:"unregistered",registrationReceiptRef:null,withdrawalReceiptId:null,allowedActions:[],executable:false,
+    expectedInstallationEtag:null,withdrawalReason:"not_applicable"};
+  it("discovers without a manual idempotency key", async () => {
+    const fetch=vi.fn().mockResolvedValue(jsonResponse(status));
+    expect((await makeClient(fetch).getRegistrationStatus(INSTALLATION_ID)).state).toBe("unregistered");
+    const [url,init]=fetch.mock.calls[0];
+    expect(url).toContain(`/v1/bundle-runtime-installations/${INSTALLATION_ID}/ecommerce-growth-registrations/status`);
+    expect(new Headers(init.headers).get("X-Org-Id")).toBe("org-test");
+    expect(new Headers(init.headers).has("Idempotency-Key")).toBe(false);
+  });
+  it("rejects another installation even when the response is valid", async () => {
+    const fetch=vi.fn().mockResolvedValue(jsonResponse({...status,installationId:"22222222-2222-4222-8222-222222222222"}));
+    await expect(makeClient(fetch).getRegistrationStatus(INSTALLATION_ID)).rejects.toThrow("mismatch");
+  });
+  it("does not turn unavailable service into an empty state or retry", async () => {
+    const fetch=vi.fn().mockResolvedValue(jsonResponse({code:"UNAVAILABLE",message:"暂不可用"},503));
+    await expect(makeClient(fetch).getRegistrationStatus(INSTALLATION_ID)).rejects.toThrow();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
