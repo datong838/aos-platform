@@ -21,6 +21,8 @@ ACTOR='a0v-ecommerce-growth-1.4-runtime-owner'
 KEY='a0v-qyh-reboot-first-registration-acceptance-v1'
 STATE=ROOT.parent/'.aos-recovery-20260913/state/qyh-registration-acceptance-v1'
 SCOPE=TenantScope('org-org','dev-project')
+TASK_ID='A0V-QYH-REGISTRATION-CYCLE-20260913'
+PREDECESSOR_WITHDRAWAL_KEY=None
 
 
 def freeze(path,body):
@@ -41,6 +43,17 @@ def saved_request(state):
     if (request.installationRef.installation_id!=INSTALLATION or request.generation!=GENERATION
             or request.idempotencyKey!=KEY):raise ValueError('REGISTRATION_FIXED_TARGET_DRIFT')
     return request
+
+
+def require_predecessor(owner,status):
+    if PREDECESSOR_WITHDRAWAL_KEY is None:
+        if status['state']!='unregistered':raise ValueError('REGISTRATION_ALREADY_EXISTS')
+        return
+    if status['state']!='withdrawn':raise ValueError('REGISTRATION_PREDECESSOR_REQUIRED')
+    previous=owner.read_withdrawal_receipt(scope=SCOPE,installation_id=INSTALLATION,
+        idempotency_key=PREDECESSOR_WITHDRAWAL_KEY,actor=ACTOR)
+    if status['withdrawalReceiptId']!=previous['receiptId']:
+        raise ValueError('REGISTRATION_PREDECESSOR_DRIFT')
 
 
 def prepare(owner,state):
@@ -64,13 +77,13 @@ def prepare(owner,state):
             configRef=row['config_ref'],groupId=str(uuid4()),idempotencyKey=KEY)
         result=owner.validate_current_authority_in_transaction(conn,scope=SCOPE,request=request,actor=ACTOR)
     status=owner.registration_status(scope=SCOPE,installation_id=INSTALLATION,actor=ACTOR)
-    if status['state']!='unregistered':raise ValueError('REGISTRATION_ALREADY_EXISTS')
+    require_predecessor(owner,status)
     freeze(state/'request.json',request.model_dump(mode='json',by_alias=True))
     return result
 
 
-def execute(action,owner,state=STATE):
-    state=Path(state)
+def execute(action,owner,state=None):
+    state=Path(STATE if state is None else state)
     if action=='prepare':return prepare(owner,state)
     if action=='status':return owner.registration_status(scope=SCOPE,installation_id=INSTALLATION,actor=ACTOR)
     request=saved_request(state)
@@ -110,7 +123,7 @@ def main():
     parser.add_argument('action',choices=('prepare','register','read','status','withdraw','read-withdrawal'))
     args=parser.parse_args()
     leases=json.loads((ROOT.parent/'docs/palantier/AOS项目开发上下文/memory/leases.json').read_text())['leases']
-    lease=next(x for x in leases if x['task_id']=='A0V-QYH-REGISTRATION-CYCLE-20260913')
+    lease=next(x for x in leases if x['task_id']==TASK_ID)
     if (lease['owner']!='m1' or lease['status']!='ACTIVE'
             or datetime.fromisoformat(lease['lease_expires_at'])<=datetime.now(timezone.utc)
             or subprocess.check_output(['git','branch','--show-current'],cwd=ROOT,text=True).strip()!='m1'):
@@ -120,7 +133,7 @@ def main():
     from aos_api.ecommerce_growth_registration_connection import registration_connection
     from aos_api.asset_registry.control_wiring import build_runtime_control_plane
     owner=build_runtime_control_plane(registration_connect=registration_connection).first_dispatch_registration_service
-    print(json.dumps(execute(args.action,owner),ensure_ascii=False,default=str,indent=2))
+    print(json.dumps(execute(args.action,owner,state=STATE),ensure_ascii=False,default=str,indent=2))
 
 
 if __name__=='__main__':main()

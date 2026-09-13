@@ -1,0 +1,7 @@
+# 首次恢复验收后的正式运行登记
+
+基线997fcda0。原占位已经撤回、历史保留；不能复用旧key返回历史Receipt冒充新登记。新增固定profile脚本a0v_qyh_operating_registration.py以独立模块加载原cycle执行器，使用新KEY/STATE/TASK_ID；prepare除原当前权限/配置/Release检查外，必须按原验收withdrawal key回读，并与当前status的withdrawalReceiptId相同。不得把任意withdrawn状态当预期前驱。
+
+原a0v_qyh_registration_cycle.py只增加可配置常量和require_predecessor、main显式传STATE以避免Python默认参数仍指向旧目录。默认验收配置不变；新profile仍固定安装/代次/操作者，不接受任意参数，不复制提交/回读/撤回状态机。新请求生成新groupId；与原Group和key不等，旧记录不改。
+
+测试扩充test_qyh_registration_cycle.py：profile隔离、原先unregistered路径不变、缺少/错前驱拒绝、正确原withdrawal通过；联合既有一次提交测试。先测试再实际prepare/register/read，只建立legacy/fenced九条占位；本波不切换、不发Run。下一波检查API/Host运行版本与最新审批修复，再按既有cutover协议推进。

@@ -75,3 +75,26 @@ def test_unknown_withdrawal_never_resends(tmp_path):
     with pytest.raises(RuntimeError,match='unknown withdrawal'):cycle.execute('withdraw',owner,tmp_path)
     with pytest.raises(FileExistsError):cycle.execute('withdraw',owner,tmp_path)
     assert owner.writes==1
+
+
+def test_operating_profile_is_independent_and_requires_exact_predecessor():
+    from a0v_qyh_operating_registration import load_profile
+    other=load_profile()
+    assert other.KEY!=cycle.KEY and other.STATE!=cycle.STATE
+    assert other.PREDECESSOR_WITHDRAWAL_KEY==cycle.KEY+'-withdraw'
+    class Prior:
+        def read_withdrawal_receipt(self,**kwargs):
+            assert kwargs['idempotency_key']==cycle.KEY+'-withdraw'
+            return {'receiptId':'prior'}
+    with pytest.raises(ValueError):other.require_predecessor(Prior(),{'state':'unregistered'})
+    with pytest.raises(ValueError):other.require_predecessor(Prior(),{'state':'withdrawn','withdrawalReceiptId':'wrong'})
+    other.require_predecessor(Prior(),{'state':'withdrawn','withdrawalReceiptId':'prior'})
+    cycle.require_predecessor(Prior(),{'state':'unregistered'})
+    with pytest.raises(ValueError):cycle.require_predecessor(Prior(),{'state':'withdrawn','withdrawalReceiptId':'prior'})
+
+
+def test_profile_default_state_is_not_bound_to_acceptance_directory(monkeypatch):
+    from a0v_qyh_operating_registration import load_profile
+    other=load_profile()
+    monkeypatch.setattr(other,'prepare',lambda owner,state:state)
+    assert other.execute('prepare',object())==other.STATE
