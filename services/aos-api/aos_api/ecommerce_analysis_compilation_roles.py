@@ -101,7 +101,7 @@ class AnalysisCompilationRoleReader:
                         or stage['contentHash'] != ref.content_hash
                         or stage['lifecycle'] != 'frozen' or stage['readiness'] != 'ready'):
                     raise ValueError('current stage template is unavailable or differs')
-                if (stage['profile'] != domain.profile_type
+                if (stage['profile'] != compiler_profile
                         or ExactRevisionRef.model_validate(stage['sourceBundleRef']) != source
                         or not resolve_stage_template_source(scope, source)):
                     raise ValueError('stage source differs from current domain intent')

@@ -10,11 +10,12 @@ from aos_api.tenant_scope import TenantScope
 
 
 @pytest.mark.parametrize('fault', [None, 'source', 'hash', 'revision', 'tenant', 'lifecycle',
-                                  'readiness', 'slots', 'order', 'deferred', 'drift'])
+                                  'readiness', 'legacy-profile', 'slots', 'order', 'deferred', 'drift'])
 def test_stage_read_is_exact_and_inside_current_roles(monkeypatch, fault):
     scope = TenantScope('org-org', 'dev-project')
     request = build_stage_template_request()
     body = request.model_dump(mode='json', by_alias=True)
+    body['profile'] = INITIAL_STORE_PROFILE.responsibility_template_code
     stage = dict(body, tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
                  templateId='template', revision=2, contentHash=canonical_hash(body),
                  lifecycle='frozen', readiness='ready')
@@ -43,6 +44,10 @@ def test_stage_read_is_exact_and_inside_current_roles(monkeypatch, fault):
     elif fault == 'tenant': stage['tenant']['orgId'] = 'dev-org'
     elif fault == 'lifecycle': stage['lifecycle'] = 'draft'
     elif fault == 'readiness': stage['readiness'] = 'blocked'
+    elif fault == 'legacy-profile':
+        stage['profile'] = request.profile
+        stage['contentHash'] = canonical_hash({key:stage[key] for key in ('profile','sourceBundleRef','stages')})
+        ref = ref.model_copy(update={'content_hash':stage['contentHash']})
     elif fault == 'slots': role['responsibilityPlan']['slots'] = []
     elif fault == 'order': stage['stages'].reverse()
     def consume(value):

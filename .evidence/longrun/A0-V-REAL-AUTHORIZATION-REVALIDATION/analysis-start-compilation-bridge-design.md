@@ -35,3 +35,9 @@ CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际
 ## CF2-3 当前 exact 阶段读取
 
 在 services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py 添加 run_with_stage，复用 run_current 的安装配置职责与SourceOwner边界。调用者给定阶段exactRef，不枚举租户模板；读取该template当前head，要求ref/version/hash匹配、租户一致、frozen/ready、sourceBundleRef等于当前L1 profile，复用既有来源解析器。三阶段顺序与L1一致，阶段所需slot均由当前职责提供；重算模板正文hash，回调后重读拒绝漂移与deferred。对应 tests/test_ecommerce_analysis_compilation_stages.py。此API是依赖读取器，不是安装模板选择器或执行许可。受安装约束的模板选择及Logic/Skill仍未完成。
+
+## CF2-4 实库依赖与编译兼容性
+
+2026-09-14 07:20 CST只读主恢复库：D01/D02/D03发布技能均r2，对应Logic r1；active绑定TTL均已过期。stage-template-ea53ff98fc1644c392ff@2 frozen使用profile ecommerce.business-investigation；职责方案responsibility-plan-63c82d2a75614e1b95f1@2 frozen使用ecommerce.business-investigation.readonly。正式compile_stage_template要求模板、职责、context、请求profile相同。CF2-3应补拒绝旧不一致模板，修改run_with_stage按compiler_profile检验，测试补legacy-profile拒绝。保留旧冻结记录，后续通过产品准备API创建受治理的新模板，不做原记录改写。
+
+此外SkillBindingSetRevision目前只有编译合同引用，没有实体Store/生产resolver；37技能拆分映射明确planned_not_published，不能作为覆盖证明。CF2后续必须补版本化L1-L2技能映射与绑定集合权威，再进入CF3；不能伪造exact resolver成功。
