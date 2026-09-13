@@ -1,0 +1,9 @@
+# 首次切换 prepare 原键回读
+
+基线135eec2f。生产连接已装配，业务仍禁入。既有Store仅有写方法的幂等返回，不能在请求结果未知时把重发作为查询。先增read_prepare_receipt(scope, installation_id, idempotency_key, actor)，不接写HTTP。
+
+输入必须真TenantScope、规范UUID字符串、规范非空key/actor；缺少真实registration服务时在连接前拒绝。事务复用维护连接；切至runtime复用当前注册Owner安装APPLY权限校验，再恢复maintainer读取同租户、同安装、原key且kind=activate的prepare回执。当前权限检查在数据查询前，不能靠历史审批或请求自带角色授权。复用_receipt核验完整权威哈希，返回historical=true、executable=false及receipt。历史读不验证已过期审批是否仍可执行，不推进任何阶段、不自动重试。
+
+文件：services/aos-api/aos_api/ecommerce_growth_cutover.py、tests/extension_runtime/test_ecommerce_growth_cutover_receipt_pg.py。PG夹具验证同原Receipt、未知键和错安装无结果、跨租户不可见、权限拒绝、篡改hash拒绝以及查询前后切换状态不变；现有cutover合同回归。主库只读验证已授权操作员无回执、默认账号拒绝，禁止为测试造真实审批或切换。
+
+下一项：把其余阶段的回执校验器组成只读恢复快照，然后再增加产品阶段接口和界面。风险：本波只有prepare回读，不能宣称全阶段恢复就绪。

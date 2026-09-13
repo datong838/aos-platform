@@ -1,0 +1,14 @@
+{
+  "outcome": "CURRENT_CUTOVER_RECEIPT_ACCESS_VERIFIED",
+  "results": [
+    {
+      "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "errorType": "LookupError"
+    },
+    {
+      "actor": "user:dev",
+      "errorType": "DutySeparationRequiredError"
+    }
+  ],
+  "businessWrites": 0
+}

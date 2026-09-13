@@ -318,6 +318,39 @@ class EcommerceGrowthCutoverStore:
             raise TypeError("production registration service required")
         self._registration_service = registration_service
 
+    def read_prepare_receipt(
+        self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str,
+    ) -> dict[str, Any]:
+        """Read historical evidence by its original key; never replay a write."""
+        from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
+        FirstDispatchRegistrationService._identity(scope, actor)
+        if (type(installation_id) is not str or str(UUID(installation_id)) != installation_id
+                or type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 240
+                or idempotency_key != idempotency_key.strip() or not idempotency_key.isprintable()):
+            raise ValueError("canonical cutover receipt identity required")
+        if self._registration_service is None:
+            raise EcommerceGrowthCutoverBlocked("current receipt authorization is not wired")
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            self._registration_service._authorize_receipt_access(conn, scope, installation_id, actor)
+            conn.execute("SET LOCAL ROLE aos_extension_maintainer")
+            row = conn.execute(
+                f"""SELECT o.*,r.receipt_id,r.request_hash AS receipt_request_hash,
+                            r.authority_data,r.content_hash,r.created_at AS receipt_created_at
+                     FROM {self._schema}.extension_dispatch_cutover_operation o
+                     JOIN {self._schema}.extension_dispatch_cutover_receipt r
+                       USING(org_id,project_id,cutover_operation_id)
+                    WHERE o.org_id=%s AND o.project_id=%s AND o.target_installation_id=%s
+                      AND o.idempotency_key=%s AND o.kind='activate' AND r.phase='prepare'""",
+                (*scope.key, installation_id, idempotency_key),
+            ).fetchone()
+            if row is None:
+                raise LookupError("cutover prepare receipt unavailable")
+            receipt = self._receipt(scope, row, replayed=True)
+            return {"receipt": receipt.model_dump(mode="json", by_alias=True),
+                    "historical": True, "executable": False}
+
     def prepare_activation(
         self,
         scope: TenantScope,
