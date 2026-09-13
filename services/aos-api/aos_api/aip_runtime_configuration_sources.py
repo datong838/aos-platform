@@ -42,6 +42,43 @@ BUDGET_POLICY_AUTHORITY = "aip.budget_policy_revision"
 ROLE_AUTHORITY = "aip.responsibility_plan_revision"
 
 
+def assemble_current_configuration(conn, *, org_id, project_id, policy_ref, role_refs):
+    """Assemble current source references; never persist or grant execution.
+
+    The caller owns the short runtime transaction and must reauthorize any
+    subsequent registration or execution. No policy identifiers are inferred.
+    """
+    scope = _current_scope(conn, org_id, project_id)
+    if type(role_refs) is not tuple or not 1 <= len(role_refs) <= 64:
+        raise ValueError("one to sixty-four exact responsibility references required")
+    roles = tuple(_exact_ref(ref, purpose="role", expected_purpose="role",
+                             authority=ROLE_AUTHORITY) for ref in role_refs)
+    if len({ref.id for ref in roles}) != len(roles):
+        raise ValueError("duplicate responsibility reference")
+    value = _exact_ref(policy_ref, purpose="policy", expected_purpose="policy",
+                       authority=POLICY_AUTHORITY)
+    for ref in roles:
+        read_current_responsibility_plan_ref(
+            conn, org_id=org_id, project_id=project_id, purpose="role", ref=ref,
+        )
+    policy = _load_runtime_policy(conn, scope, value)
+    budget_policy = _load_governance_policy(
+        conn, scope, _asset_ref(policy.budget_policy_ref, BUDGET_POLICY_AUTHORITY),
+        kind="budget", model=BudgetPolicyRevision,
+    )
+    document = ConfigurationDocument(
+        roleRefs=roles,
+        dataRefs=(_asset_ref(policy.data_classification_policy_ref, DATA_AUTHORITY),),
+        budgetRef=_asset_ref(budget_policy.budget_revision_ref, "aip.budget_revision"),
+        policyRef=value,
+    )
+    read_current_runtime_policy_ref(
+        conn, org_id=org_id, project_id=project_id, purpose="policy", ref=value,
+        configuration=document,
+    )
+    return document
+
+
 def _current_scope(conn, org_id, project_id):
     _require_transaction(conn)
     expected = (org_id, project_id)

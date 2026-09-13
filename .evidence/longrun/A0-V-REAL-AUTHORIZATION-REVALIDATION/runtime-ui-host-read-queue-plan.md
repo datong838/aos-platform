@@ -293,3 +293,11 @@ GET /v1/bundle-runtime-installations/{id}/configurations：当前Principal角色
 D2b实施核对修正：原通用useAssetRead仅有请求序号、无完整身份失效保护；本切片不扩改全部旧读取，新增配置读取封装，携带租户/subject/roles/authRevision本地key并监听身份变化，响应前后重新比较；返回旧key的数据立即隐藏，确认按钮提交前再次isCurrent检查。新增operations.ts接口合同条目。
 
 D2b浏览器验收补充：当前真实实例ready，只允许disable，因此不应为打开configure对话框而停用。补运行面板只读的已登记配置概览，使运行中也能看到列表读取成功/无权/为空/待刷新及当前绑定标记；不增加动作。
+
+## UQ6-D2c 四来源装配组件（基线45e6211f，编码前）
+
+沿用A0-V主任务租约。修改services/aos-api/aos_api/aip_runtime_configuration_sources.py，新增services/aos-api/tests/extension_runtime/test_configuration_assembly_pg.py。复核231-9与D2恢复顺序：配置来源装配只是正式登记的前置组件，不等于配置审批、安装恢复或真实首链完成。
+
+输入为当前租户、精确runtime policy引用及非空、最多64个精确职责计划引用；不得硬编码租户、策略ID、角色profile或自动选“唯一角色”。从当前runtime policy派生data引用，从其当前budget policy派生budget revision引用。复用本模块原权威加载器和四来源校验，包括职责冻结、完整摘要、当前head、生命周期、数据库时间有效窗、network/egress绑定及预算规则。要求原aos_runtime事务和租户GUC；无写入、无commit、无权限授予，不创建配置记录。返回原ConfigurationDocument，后续登记和configure/enable必须重新授权，不能缓存本次结果当执行许可。
+
+测试真实隔离PG：正确装配与原四引用精确一致；职责/策略头变动、各依赖过期/撤销/摘要错误拒绝；跨租户、特权连接、空/重复职责拒绝。只读装配仍会持有原权威共享锁直到调用者事务结束，调用者必须短事务且不跨外部调用。产品登记命令、Receipt和Host承接留下一切片，不让API直写配置表。本波次不重启Host、不改变当前实例配置。
