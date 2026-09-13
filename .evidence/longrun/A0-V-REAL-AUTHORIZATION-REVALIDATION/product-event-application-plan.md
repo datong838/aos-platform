@@ -1,0 +1,11 @@
+# BG-02 事件策略的业务应用入口与不确定结果恢复
+
+基线a35c544a。产品缺口：包已有成对策略/Case构建器和Host写入口，但EcommerceGrowthApplication只有通用dict入口；业务调用仍需手工串联命令，且没有核对返回的原策略/Case是否就是本次批准对象。
+
+本波修改 bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_application.py，增加save_event_policy(binding,dispatch_ref,approval_ref,idempotency_key,occurred_at)。复用既有build_event_policy_command和commit_case_or_schedule，不另造写端口。调用一次；网络异常原样抛出、不换key、不自动重发。恢复由调用者保留同一binding/approval/key再次调用，Host原Receipt判定replayed；应用不能宣称重新保存或已启用。
+
+返回必须是Host现有五字段结果，authority与Case完整内容/规范hash等于输入绑定，approvalRef等于输入，receiptRef为精确策略，replayed必须bool。失败响应不被转成成功，不能因bool/int弱比较接受污染。构建在调用之前、回执校验在调用之后；无提交重试，不对外作副作用。
+
+新增 tests/extension_runtime/test_product_event_application.py：有效保存、同key恢复、未知结果只调用一次、错误回执/跨租户/错误dispatch拒绝、旧通用入口保持。使用具名端口替身只证明编排；真实网络/业务仍待发布后验证。
+
+后续产品UI/经营参谋应持久化准备好的业务意图与同key命令，经现有Proposal评审选中exact批准后调用本入口；不得浏览器自由编辑权威JSON。接着实施事件绑定/原批次消费者、首链/八场景/观察。本波不算全量产品UI已完成。

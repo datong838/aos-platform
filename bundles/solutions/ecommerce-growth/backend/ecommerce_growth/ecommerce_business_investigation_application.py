@@ -63,6 +63,52 @@ class EcommerceGrowthApplication:
             occurred_at=occurred_at,
         )
 
+    def save_event_policy(
+        self,
+        *,
+        binding,
+        dispatch_ref: DispatchRef,
+        approval_ref,
+        idempotency_key: str,
+        occurred_at: datetime,
+    ) -> Mapping[str, Any]:
+        """Save once; recovery must supply the same prepared binding and key."""
+        from copy import deepcopy
+        import json
+        from .ecommerce_product_event_command import build_event_policy_command
+        from .ecommerce_business_investigation_case import canonical_hash
+
+        command = build_event_policy_command(
+            binding, dispatch_ref=dispatch_ref, approval_ref=approval_ref,
+            idempotency_key=idempotency_key,
+        )
+        expected = {
+            "receiptRef": {
+                "resourceType": "SchedulePolicyRevision",
+                "resourceId": binding.policy.policy_id,
+                "revision": binding.policy.revision,
+                "contentHash": binding.policy.content_hash,
+            },
+            "authority": binding.policy.authority_payload(),
+            "caseAuthority": binding.case.authority_payload(),
+            "approvalRef": deepcopy(command["approvalRef"]),
+        }
+        expected_hash = canonical_hash(expected)
+        result = self.commit_case_or_schedule(
+            dispatch_ref=dispatch_ref, command=command, occurred_at=occurred_at,
+        )
+        if (not isinstance(result, Mapping) or set(result) != {*expected, "replayed"}
+                or type(result["replayed"]) is not bool):
+            raise ValueError("event save receipt envelope differs; outcome requires reconciliation")
+        try:
+            json.dumps(dict(result), allow_nan=False)
+            matches = canonical_hash({key: result[key] for key in expected}) == expected_hash
+        except (TypeError, ValueError) as exc:
+            raise ValueError("event save receipt invalid; outcome requires reconciliation") from exc
+        if not matches:
+            raise ValueError("event save receipt differs; outcome requires reconciliation")
+        return deepcopy(dict(result))
+
     def advance_analysis(
         self,
         *,
