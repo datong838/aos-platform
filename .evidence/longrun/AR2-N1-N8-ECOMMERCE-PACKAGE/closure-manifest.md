@@ -1385,3 +1385,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_start_operation.py` | 原路径 | 包内启动命令构造，无运行权威 | `c324568193aab81ef5cb2495ec332d22b77e842c7c7433a2e6e17f0cd4684d48` |
+
+### CF1 当前分析编译绑定守卫（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_compilation_binding.py` | Host原路径 | 当前租户安装与Case/Run精确编译绑定，不授予执行权限 | `14146500be745591ba99fd18d01fd1b87fa7445b11fa48f09e02ab26f6ed0cd3` |
