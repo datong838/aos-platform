@@ -91,3 +91,24 @@ class PipelineControlServiceFactory:
         selections,artifacts=self._source_dependencies(scope)
         return ProductEventControlQualifiedOwner(selections=selections,installation_store=self.installation_store,
             artifacts=artifacts,release_policy=self.policy)
+
+    def build_event_consumer(self,scope,*,actor,run_id,control_ref,installation_id,generation,
+                             live_directory,markings,store):
+        """Build saved-input consumption only; construction performs no source call."""
+        from aos_api.ecommerce_product_event_consumer import ProductEventConsumptionService
+        from aos_api.ecommerce_product_event_control_qualified_owner import ProductEventControlQualifiedOwner
+        from aos_api.ecommerce_product_event_reader import ProductEventCandidateReader
+        from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
+        from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
+        from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+        selections,artifacts=self._source_dependencies(scope)
+        owner=ProductEventControlQualifiedOwner(selections=selections,installation_store=self.installation_store,
+            artifacts=artifacts,release_policy=self.policy)
+        claims=PipelineSourceClaimOwner(controls=PipelineRuntimeControlOwner(selections=selections))
+        journal=ControlledIngressJournal(claims=claims,scope=scope,run_id=run_id,control_ref=control_ref,
+            actor=actor,saved_recovery=True)
+        reader=ProductEventCandidateReader(selections,journal=journal,store=store)
+        invoker=CurrentInstalledPackageInvoker(scope=scope,installation_id=installation_id,generation=generation,
+            package_id='domain.ecommerce.core',markings=markings,connect_factory=connect_serializable,
+            installation_store=self.installation_store,live_directory=live_directory)
+        return ProductEventConsumptionService(scope=scope,actor=actor,owner=owner,reader=reader,invoker=invoker)

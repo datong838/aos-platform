@@ -1,0 +1,5 @@
+# BG-02 消费器平台装配
+
+基线d4c4b47d。PipelineControlServiceFactory新增build_event_consumer，参数限当前scope、actor、原run/control ref、安装/generation、平台live directory/markings与精确EcomConsistencyStore。工厂只构造，不启动/读取/提交。共享一次_source_dependencies的selection Owner给ControlQualifiedOwner及CandidateReader，防止混合来源上下文；RuntimeControlOwner+ClaimOwner构造固定ControlledIngressJournal(saved_recovery=True)，只许读取已保存原输入，不能再次claim/source call。CurrentInstalledPackageInvoker固定core，使用原installation_store与平台runtime连接；不接受任意invocation callback。
+
+修改services/aos-api/aos_api/pipeline_control_service.py，新增test_product_event_consumer_factory.py。测试依赖装配使用明确替身，验证scope/actor/run/ref透传、共享Owner、core固定、懒构造和旧build不变。后继受治理调度器接线：原调度是同步线程、安装IPC是异步，不能在同步source executor里临时asyncio.run，也不能改成裸常驻脚本；应由现有应用runtime生命周期调度异步消费，并保持数据库去重与当前准入。
