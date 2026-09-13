@@ -40,7 +40,7 @@ function HostState({
   );
 }
 
-export function EcommerceWorkshopHost() {
+export function EcommerceWorkshopHost({ onCatalogReload }: { onCatalogReload?: () => void } = {}) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const contextId = searchParams.get("context");
@@ -68,7 +68,7 @@ export function EcommerceWorkshopHost() {
   if (catalog.phase === "loading") return <HostState state="loading" />;
   if (catalog.phase === "forbidden") return <HostState state="forbidden" />;
   if (catalog.phase === "failed") {
-    return <HostState state="failed" onRetry={catalog.reload} />;
+    return <HostState state="failed" onRetry={onCatalogReload ?? catalog.reload} />;
   }
-  return <HostState state="empty" onRetry={catalog.reload} />;
+  return <HostState state="empty" onRetry={onCatalogReload ?? catalog.reload} />;
 }

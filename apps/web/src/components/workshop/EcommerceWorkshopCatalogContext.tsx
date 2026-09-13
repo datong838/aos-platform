@@ -15,7 +15,7 @@ import {
   type EcommerceWorkshopModule,
   type EcommerceWorkshopModuleListResponse,
 } from "../../api/ecommerceWorkshop";
-import { getTenant } from "../../api/tenant";
+import { getTenant, getAuthRevision } from "../../api/tenant";
 import type { WorkshopRouteRetirementDecision } from "./workshopLifecycleAcceptance";
 
 export type EcommerceWorkshopCatalogPhase =
@@ -50,6 +50,11 @@ function currentTenantKey(): string {
   return `${tenant.orgId}:${tenant.projectId}`;
 }
 
+function currentIdentityKey(): string {
+  const tenant = getTenant();
+  return JSON.stringify([currentTenantKey(), tenant.subject, tenant.roles, getAuthRevision()]);
+}
+
 function errorPhase(error: EcommerceWorkshopClientError): EcommerceWorkshopCatalogPhase {
   return error.status === 401 || error.status === 403 ? "forbidden" : "failed";
 }
@@ -79,6 +84,7 @@ export function EcommerceWorkshopCatalogProvider({
   }));
   const stateRef = useRef(state);
   const requestRevision = useRef(0);
+  const identityRef = useRef(currentIdentityKey());
 
   const commitState = useCallback((next: EcommerceWorkshopCatalogState) => {
     stateRef.current = next;
@@ -88,6 +94,9 @@ export function EcommerceWorkshopCatalogProvider({
   const load = useCallback(
     (tenantKey: string, preserveCurrent: boolean) => {
       const requestId = ++requestRevision.current;
+      const identity = currentIdentityKey();
+      preserveCurrent = preserveCurrent && identityRef.current === identity;
+      identityRef.current = identity;
       const previous = stateRef.current;
       commitState({
         phase:
@@ -100,7 +109,7 @@ export function EcommerceWorkshopCatalogProvider({
         (response) => {
           if (requestId !== requestRevision.current) return;
           const responseKey = `${response.tenant.orgId}:${response.tenant.projectId}`;
-          if (responseKey !== tenantKey || currentTenantKey() !== tenantKey) {
+          if (responseKey !== tenantKey || currentTenantKey() !== tenantKey || currentIdentityKey() !== identity) {
             const mismatch = new EcommerceWorkshopClientError(
               "工作台目录租户与当前会话不一致",
               {
@@ -153,13 +162,15 @@ export function EcommerceWorkshopCatalogProvider({
     load(initialKey, false);
     const onTenantChanged = () => {
       const nextKey = currentTenantKey();
-      if (nextKey === stateRef.current.tenantKey) return;
+      if (nextKey === stateRef.current.tenantKey && currentIdentityKey() === identityRef.current) return;
       load(nextKey, false);
     };
+    window.addEventListener("aos-auth-updated", onTenantChanged);
     window.addEventListener("aos-workspace-changed", onTenantChanged);
     window.addEventListener("aos-tenant-updated", onTenantChanged);
     return () => {
       requestRevision.current += 1;
+      window.removeEventListener("aos-auth-updated", onTenantChanged);
       window.removeEventListener("aos-workspace-changed", onTenantChanged);
       window.removeEventListener("aos-tenant-updated", onTenantChanged);
     };

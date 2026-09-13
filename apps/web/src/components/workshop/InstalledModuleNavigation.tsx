@@ -1,10 +1,14 @@
 import { NavLink } from "react-router-dom";
 
 import { useEcommerceWorkshopCatalog } from "./EcommerceWorkshopCatalogContext";
+import { useOptionalRuntimeWorkshopCatalog } from '../extensions/RuntimeWorkshopCatalog';
 
 export function InstalledModuleNavigation() {
   const catalog = useEcommerceWorkshopCatalog();
-  const notice = {
+  const runtime = useOptionalRuntimeWorkshopCatalog();
+  const runtimeModules = runtime?.phase === 'ready'
+    ? runtime.items.filter(entry => !catalog.modules.some(module => module.route === entry.module.route)) : [];
+  const notice = runtimeModules.length && catalog.phase === 'empty' ? null : {
     loading: "正在读取工作台目录",
     empty: "暂无可见工作台入口",
     failed: "工作台目录读取失败",
@@ -22,7 +26,7 @@ export function InstalledModuleNavigation() {
       {notice ? (
         <div className="aos-nav-label" role="status">
           <span>{notice}</span>
-          {canReload ? <button type="button" onClick={catalog.reload}>重新读取目录</button> : null}
+          {canReload ? <button type="button" onClick={() => { catalog.reload(); runtime?.reload(); }}>重新读取目录</button> : null}
         </div>
       ) : null}
       {catalog.modules.map((module) => (
@@ -38,6 +42,12 @@ export function InstalledModuleNavigation() {
           <span className="aos-nav-label">{module.menuLabel}</span>
         </NavLink>
       ))}
+      {runtimeModules.map(entry => <NavLink key={`runtime:${entry.installationId}:${entry.module.moduleId}:${entry.ui.resourceHash}`}
+        to={entry.module.route} data-workshop-module-id={entry.module.moduleId}
+        className={({ isActive }) => `aos-nav-link ecommerce-workshop-nav-link${isActive ? ' is-active' : ''}`}>
+        <span className="ecommerce-workshop-nav-glyph" aria-hidden="true" />
+        <span className="aos-nav-label">{entry.module.menuLabel}</span>
+      </NavLink>)}
     </div>
   );
 }

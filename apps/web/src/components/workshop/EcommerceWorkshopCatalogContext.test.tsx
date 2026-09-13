@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { EcommerceWorkshopModuleListResponse } from "../../api/ecommerceWorkshop";
-import { setTenant } from "../../api/tenant";
+import { setTenant, setAccessToken } from "../../api/tenant";
 import {
   EcommerceWorkshopCatalogProvider,
   findInstalledWorkshopRoute,
@@ -71,6 +71,17 @@ describe("EcommerceWorkshopCatalogContext", () => {
     act(() => root.unmount());
     host.remove();
     setTenant({ orgId: "org-org", projectId: "dev-project", workspaceName: "real" });
+  });
+
+  it.each(['subject', 'token'])('同租户%s变化立即清空旧入口', async (change) => {
+    const next = deferred<EcommerceWorkshopModuleListResponse>();
+    const listModules = vi.fn().mockResolvedValueOnce(workshopCatalogFixture()).mockReturnValue(next.promise);
+    await act(async () => root.render(<EcommerceWorkshopCatalogProvider client={{ listModules }}><Probe /></EcommerceWorkshopCatalogProvider>));
+    expect(host.querySelector("[data-testid='modules']")?.textContent).toBe('ecommerce.operations');
+    await act(async () => change === 'subject' ? setTenant({ subject: 'switched-reader' }) : setAccessToken('changed-token'));
+    expect(host.querySelector("[data-testid='modules']")?.textContent).toBe('');
+    expect(host.querySelector("[data-testid='phase']")?.textContent).toBe('loading');
+    expect(listModules).toHaveBeenCalledTimes(2);
   });
 
   it("切换租户立即清空旧目录，晚到响应不能污染新租户", async () => {

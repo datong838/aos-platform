@@ -42,7 +42,7 @@ export function findNavPage(pathname: string): NavPage | undefined {
 }
 
 export function workshopModuleNavPage(
-  module: EcommerceWorkshopModule,
+  module: Pick<EcommerceWorkshopModule, "moduleId" | "route" | "menuLabel">,
 ): NavPage {
   return {
     id: `workshop-module:${module.moduleId}`,

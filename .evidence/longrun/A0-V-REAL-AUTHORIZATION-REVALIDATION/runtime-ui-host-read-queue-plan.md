@@ -155,3 +155,15 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 随后修改App.tsx全局挂RuntimeWorkshopCatalogProvider、pages/s2/ecommerce/routes.tsx选择已声明runtime页面与原legacy fallback。同canonical route双声明拒绝；runtime路径需当前目录ready且旧目录确定无同路径声明，未知不选。legacy路径按原逻辑继续，无runtime Provider的独立旧组件测试兼容。新增运行目录导航并接AppShell；运行页面使用通用导航头，不借用旧页面专属按钮。上述后续文件在宿主验证后直接衔接。
 
 验证宿主固定桥接/原pending续查/未知不重发/换身份换revision卸载取消，旧ExtensionHost和目录回归；路由/导航验证冲突、无UI、目录未知、旧8页回归。实际浏览器仍需后继签名资源UQ5-B及主库UQ6部署，不以测试iframe证明真实业务。
+
+### UQ5-A2 路由落地细化（基线c9f32927，编码前）
+
+具体修改App.tsx、pages/s2/ecommerce/routes.tsx、shell/AppShell.tsx、nav.ts、components/workshop/InstalledModuleNavigation.tsx及EcommerceWorkshopCatalogContext.tsx。运行目录ready的精确canonical路径选择签名宿主，legacy目录必须ready/empty且无同canonical声明；冲突提示且两个宿主都不加载。没有RuntimeProvider的既有独立组件保持原行为。侧栏沿现有样式追加真实运行条目，不构造假legacy权限DTO；通用NavPage仅需要moduleId/route/menuLabel。签名页面不启用旧八页面专属头部动作。
+
+旧目录保留scope tenantKey合同，但另外捕获subject/roles/authRevision，身份变化清空并重读、拒绝迟到响应；同身份显式reload继续原stale快照行为。所有凭据内容不进key/日志。当前仅canonical入口，legacy别名的runtime映射须由后继签名声明明确后验证，不能硬编码8页假映射。
+
+新增runtime route/navigation测试及旧目录同租户身份变化测试，回归旧8页AppShell/Host/导航/目录；类型检查及真实浏览器检查当前未配置UI时的诚实空态。主库与API仍旧部署，新UI仅在后继签名资源有效后出现。
+
+A2回归核实：基线c9f32927的EcommerceWorkshopHost已使用“当前工作台入口不可用”，但AppShell三处测试仍断言旧“模块未安装”。空目录可能来自未授权或无UI，不能误断卸载；仅修正这些过时文案断言，产品文案不倒退。
+
+A2浏览器复核补充：运行目录空态会复用旧Host，原主区域刷新只更新legacy目录。EcommerceWorkshopHost新增可选onCatalogReload回调，运行路由传入双目录reload，默认不传保持既有行为；增加空态按钮同时刷新两目录验证。

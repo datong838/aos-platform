@@ -1,3 +1,4 @@
+import { useOptionalRuntimeWorkshopCatalog } from '../components/extensions/RuntimeWorkshopCatalog';
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   useCallback,
@@ -347,22 +348,25 @@ export function AppShell() {
   const contentRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLElement>(null);
   const workshopCatalog = useEcommerceWorkshopCatalog();
+  const runtimeCatalog = useOptionalRuntimeWorkshopCatalog();
+  const runtimeWorkshop = runtimeCatalog?.phase === 'ready'
+    ? runtimeCatalog.items.find(entry => entry.module.route === location.pathname) : undefined;
   const activeWorkshop = findInstalledWorkshopRoute(
     workshopCatalog.modules,
     location.pathname,
   );
   const staticActive = findNavPage(location.pathname);
   const unresolvedWorkshopRoute =
-    !activeWorkshop &&
+    !activeWorkshop && !runtimeWorkshop &&
     location.pathname.startsWith("/workshop/") &&
     staticActive?.path === "/workshop";
-  const active = activeWorkshop
+  const active = runtimeWorkshop ? workshopModuleNavPage(runtimeWorkshop.module) : activeWorkshop
     ? workshopModuleNavPage(activeWorkshop.module)
     : unresolvedWorkshopRoute
       ? undefined
       : staticActive;
   const onApolloRoute = location.pathname.startsWith("/apollo");
-  const hasActiveWorkshop = Boolean(activeWorkshop);
+  const hasActiveWorkshop = Boolean(activeWorkshop) && !runtimeWorkshop;
   const onAnalystVisualRoute = hasActiveWorkshop && location.pathname === "/workshop/analyst";
   const onTaskCockpitVisualRoute = hasActiveWorkshop && location.pathname === "/workshop/cockpit";
   const onWorkshopPrimaryVisualRoute = hasActiveWorkshop && ["/workshop/cockpit", "/workshop/operations", "/workshop/content-campaign", "/workshop/creator-growth", "/workshop/media-studio", "/workshop/analyst", "/workshop/price-governance", "/workshop/customer"].includes(location.pathname);

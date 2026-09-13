@@ -136,7 +136,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelectorAll("main")).toHaveLength(1);
   });
 
-  it("没有 active replacement 时旧入口只显示未安装宿主状态", async () => {
+  it("没有 active replacement 时旧入口只显示入口不可用宿主状态", async () => {
     const client = { listModules: async () => workshopCatalogFixture({ items: [] }) };
     await act(async () => root.render(
       <MemoryRouter initialEntries={["/workshop/orders"]}>
@@ -155,7 +155,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
     expect(host.querySelector("[data-testid='location']")?.textContent).toBe("/workshop/orders");
     const hostState = host.querySelector(".ecommerce-workshop-host-state");
     expect(hostState?.textContent).toContain("电商工作台");
-    expect(hostState?.textContent).toContain("模块未安装");
+    expect(hostState?.textContent).toContain("当前工作台入口不可用");
     expect(hostState?.textContent).not.toContain("订单管理");
     expect(host.querySelector('a[href="/workshop/orders"]')).toBeNull();
     expect(host.querySelector('a[href="/workshop/inventory"]')).toBeNull();
@@ -184,7 +184,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
   });
 
   it.each([
-    ["空目录", { listModules: async () => workshopCatalogFixture({ items: [] }) }, "模块未安装"],
+    ["空目录", { listModules: async () => workshopCatalogFixture({ items: [] }) }, "当前工作台入口不可用"],
     ["目录读取失败", { listModules: async () => { throw new Error("catalog unavailable"); } }, "读取失败"],
     ["目录无权", { listModules: async () => { throw new EcommerceWorkshopClientError("forbidden", {
       status: 403,
@@ -203,7 +203,7 @@ describe("AppShell · ecommerce Workshop route and focus", () => {
         menuLabel: "内容与活动工作台",
         legacyRoutes: [],
       })],
-    }) }, "模块未安装"],
+    }) }, "当前工作台入口不可用"],
   ] as const)("%s 时 canonical 深链保持通用壳且不暴露专用业务控制", async (_caseName, client, expectedState) => {
     await act(async () => root.render(
       <MemoryRouter initialEntries={["/workshop/operations"]}>
