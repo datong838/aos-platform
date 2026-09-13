@@ -1,0 +1,79 @@
+{
+  "at": "2026-09-13T10:11:07.146592+00:00",
+  "deployedCommit": "cfad7903",
+  "requests": [
+    {
+      "name": "health",
+      "status": 200,
+      "cacheControl": null,
+      "body": {
+        "status": "ok"
+      }
+    },
+    {
+      "name": "qyh-catalog",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "schemaVersion": "aos.runtime-workshop-catalog/v1",
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-09-13T10:11:07.123275Z",
+        "dataCutoff": "2026-09-13T02:59:03.052296Z",
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "canary-catalog",
+      "status": 200,
+      "cacheControl": "no-store",
+      "body": {
+        "schemaVersion": "aos.runtime-workshop-catalog/v1",
+        "tenant": {
+          "orgId": "dev-org",
+          "projectId": "dev-project"
+        },
+        "evaluatedAt": "2026-09-13T10:11:07.144181Z",
+        "dataCutoff": null,
+        "items": [],
+        "count": 0
+      }
+    },
+    {
+      "name": "anonymous",
+      "status": 401,
+      "cacheControl": null,
+      "body": {
+        "code": "AUTH_REQUIRED",
+        "message": "Bearer [REDACTED] required",
+        "details": null,
+        "traceId": "2cfa0f66-153c-450b-821a-77620e7864e3"
+      }
+    }
+  ],
+  "currentInstallation": {
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "installationRevision": 5,
+    "effectiveState": "ready",
+    "binding": {
+      "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+      "installationRevision": 5,
+      "profileRef": "internal-python-v1",
+      "configRef": {
+        "hash": "sha256:dc25c6c047776b90681b33f82a089145692417afd5c7e8c0120c315d27f9241a",
+        "revision": 1,
+        "configurationId": "721433ba-5256-4b12-9043-0bcfab658bf0"
+      },
+      "executionEpoch": 3,
+      "desiredState": "enabled",
+      "observedState": "ready",
+      "enabled": true,
+      "operationFence": false,
+      "revision": 4
+    },
+    "ui": null
+  }
+}
