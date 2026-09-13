@@ -283,6 +283,7 @@ def _seed(
     target_runtime_revision: int = 13,
     target_installation_id=None,
     target_generation=None,
+    registration_ref=None,
 ):
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
@@ -334,8 +335,9 @@ def _seed(
                 """INSERT INTO extension_operation_dispatch_binding(
                      org_id,project_id,operation_id,handler_kind,operation_fence,revision,
                      cutover_group_id,cutover_group_revision,updated_by)
-                   VALUES(%s,%s,%s,'legacy',false,5,%s,%s,'legacy-owner')""",
-                (*scope.key, operation_id, group, expected_group_revision),
+                   VALUES(%s,%s,%s,'legacy',%s,%s,%s,%s,'legacy-owner')""",
+                (*scope.key, operation_id, registration_ref is not None,
+                 1 if registration_ref is not None else 5, group, expected_group_revision),
             )
     policy_ref = CutoverExactRef(
         resourceType="RuntimeCutoverPolicyRevision", resourceId="cutover-policy", revision=4,
@@ -351,6 +353,8 @@ def _seed(
         "operationIds": sorted(ECOMMERCE_GROWTH_OPERATIONS),
         "policyRef": policy_ref.model_dump(mode="json", by_alias=True),
     }
+    if registration_ref is not None:
+        payload["registrationReceiptRef"] = registration_ref.model_dump(mode="json")
     now = datetime.now(timezone.utc)
     action_type = {"id": "ecommerce_growth_cutover", "revisionHash": "sha256:" + "3" * 64}
     policy = {"mode": "manual-reviewed"}
@@ -421,6 +425,7 @@ def _seed(
         targetExecutionEpoch=target_execution_epoch,
         targetRuntimeRevision=target_runtime_revision,
         policyRef=policy_ref, approvalRef=approval_ref,
+        registrationReceiptRef=registration_ref,
         checkpoint={"legacyEntry": "canonical-router", "version": 1},
         occurrenceWatermark=now,
         pendingTargetReceiptRefs=([{

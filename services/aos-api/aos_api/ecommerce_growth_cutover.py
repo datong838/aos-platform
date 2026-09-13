@@ -306,13 +306,17 @@ def _snapshot(row: dict[str, Any]) -> dict[str, Any]:
 class EcommerceGrowthCutoverStore:
     """Prepare exact group snapshots without changing the active dispatch pointer."""
 
-    def __init__(self, connect_factory: ConnectFactory, *, schema: str = "public") -> None:
+    def __init__(self, connect_factory: ConnectFactory, *, schema: str = "public", registration_service=None) -> None:
         if not callable(connect_factory):
             raise TypeError("dedicated cutover maintainer connection is required")
         if re.fullmatch(r"[a-z_][a-z0-9_]*", schema) is None:
             raise ValueError("cutover schema is invalid")
         self._connect_factory = connect_factory
         self._schema = schema
+        from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
+        if registration_service is not None and type(registration_service) is not FirstDispatchRegistrationService:
+            raise TypeError("production registration service required")
+        self._registration_service = registration_service
 
     def prepare_activation(
         self,
@@ -328,7 +332,7 @@ class EcommerceGrowthCutoverStore:
         )
         if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
             raise ValueError("canonical cutover actor is required")
-        if request.registration_receipt_ref is not None:
+        if request.registration_receipt_ref is not None and self._registration_service is None:
             raise EcommerceGrowthCutoverBlocked("first registration activation is not wired")
         request_hash = request.request_hash()
         with self._connect_factory(scope) as conn:
@@ -367,7 +371,8 @@ class EcommerceGrowthCutoverStore:
                 raise EcommerceGrowthCutoverBlocked("cutover group must contain the exact nine operations")
             if any(
                 row["handler_kind"] != "legacy"
-                or row["operation_fence"] is not False
+                or row["operation_fence"] is not (request.registration_receipt_ref is not None)
+                or (request.registration_receipt_ref is not None and row["revision"] != 1)
                 or int(row["cutover_group_revision"]) != request.expected_group_revision
                 for row in rows
             ):
@@ -402,6 +407,7 @@ class EcommerceGrowthCutoverStore:
             ):
                 raise EcommerceGrowthCutoverConflict("target runtime binding is not exact and ready")
 
+            self._registration_assets(conn,scope,request,[_snapshot(dict(row)) for row in rows],actor)
             conn.execute(
                 f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
                 (request.approval_ref.resource_id,),
@@ -537,7 +543,7 @@ class EcommerceGrowthCutoverStore:
                 if existing["request_hash"] != request_hash:
                     raise EcommerceGrowthCutoverConflict("cutover pause idempotency payload drifted")
                 return self._phase_receipt(scope, existing, replayed=True)
-            self._lock_current_prepare_authority(conn, scope, operation, prepare)
+            self._lock_current_prepare_authority(conn, scope, operation, prepare, actor=actor)
             try:
                 paused_at = conn.execute(
                     f"SELECT {self._schema}.extension_dispatch_cutover_pause_claims_ar2_014(%s,%s) AS paused_at",
@@ -602,7 +608,7 @@ class EcommerceGrowthCutoverStore:
             if operation["status"] != "draining":
                 raise EcommerceGrowthCutoverConflict("cutover operation is not draining")
             self._lock_current_prepare_authority(
-                conn, scope, operation, prepare, runtime_draining=True
+                conn, scope, operation, prepare, runtime_draining=True, actor=actor
             )
             facts = self._execution_facts(conn, scope, prepare)
             if prepare.pending_target_receipt_refs:
@@ -696,7 +702,7 @@ class EcommerceGrowthCutoverStore:
                 return self._finalize_receipt(scope, existing, replayed=True)
             if operation["status"] != "committed":
                 raise EcommerceGrowthCutoverConflict("cutover operation is not committed")
-            self._lock_final_authority(conn, scope, operation, prepare, resumed=False)
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=False, actor=actor)
             facts = self._execution_facts(conn, scope, prepare)
             if prepare.pending_target_receipt_refs:
                 raise EcommerceGrowthCutoverBlocked(
@@ -791,7 +797,7 @@ class EcommerceGrowthCutoverStore:
                 raise EcommerceGrowthCutoverConflict("validate Receipt reference drifted")
             if operation["status"] != "validated":
                 raise EcommerceGrowthCutoverConflict("cutover operation is not validated")
-            self._lock_final_authority(conn, scope, operation, prepare, resumed=False)
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=False, actor=actor)
             facts = self._execution_facts(conn, scope, prepare)
             if (
                 facts["claimedOccurrences"]
@@ -806,7 +812,7 @@ class EcommerceGrowthCutoverStore:
                 ).fetchone()["resumed_at"]
             except psycopg.Error as exc:
                 raise EcommerceGrowthCutoverBlocked(str(exc).splitlines()[0]) from exc
-            self._lock_final_authority(conn, scope, operation, prepare, resumed=True)
+            self._lock_final_authority(conn, scope, operation, prepare, resumed=True, actor=actor)
             final_facts = self._execution_facts(conn, scope, prepare)
             authority = self._finalize_authority(
                 scope,
@@ -1201,6 +1207,7 @@ class EcommerceGrowthCutoverStore:
         prepare: CutoverPrepareReceipt,
         *,
         runtime_draining: bool = False,
+        actor: str,
     ) -> None:
         conn.execute(
             "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
@@ -1256,6 +1263,7 @@ class EcommerceGrowthCutoverStore:
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
             registrationReceiptRef=prepare.registration_receipt_ref,
         )
+        self._registration_assets(conn,scope,prepare,list(prepare.old_dispatch_snapshot),actor)
         self._approval_authority(conn, scope, reconstructed)
 
     def _dispatch_rows(
@@ -1559,6 +1567,7 @@ class EcommerceGrowthCutoverStore:
         *,
         resumed: bool,
         check_activation_approval: bool = True,
+        actor: str | None = None,
     ) -> None:
         conn.execute(
             "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
@@ -1629,6 +1638,7 @@ class EcommerceGrowthCutoverStore:
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
             registrationReceiptRef=prepare.registration_receipt_ref,
         )
+        self._registration_assets(conn,scope,prepare,list(prepare.old_dispatch_snapshot),actor)
         self._approval_authority(conn, scope, reconstructed)
 
     @staticmethod
@@ -2087,6 +2097,25 @@ class EcommerceGrowthCutoverStore:
         ):
             raise EcommerceGrowthCutoverBlocked("cutover approval is not bound to this exact group")
         return checked_at
+
+    def _registration_assets(self,conn,scope,target,old_snapshot,actor):
+        ref=target.registration_receipt_ref
+        if ref is None:
+            return
+        if self._registration_service is None:
+            raise EcommerceGrowthCutoverBlocked("first registration activation is not wired")
+        conn.execute("SET LOCAL ROLE aos_runtime")
+        result=self._registration_service.validate_cutover_registration_assets_in_transaction(
+            conn,scope=scope,actor=actor,receipt_ref=ref,dispatch_snapshot=old_snapshot,
+            installation_id=str(target.target_installation_id),generation=str(target.target_generation),
+            execution_epoch=target.target_execution_epoch,binding_revision=target.target_runtime_revision)
+        if (type(result) is not dict or result.get("receiptRef")!=ref.model_dump(mode="json")
+                or result.get("currentConfigurationValidated") is not True
+                or result.get("currentReleaseValidated") is not True
+                or result.get("runtimeStateValidated") is not False
+                or result.get("executable") is not False):
+            raise EcommerceGrowthCutoverBlocked("current registration assets were not validated")
+        conn.execute("SET LOCAL ROLE aos_extension_maintainer")
 
     @staticmethod
     def _require_maintainer(conn: Any) -> None:

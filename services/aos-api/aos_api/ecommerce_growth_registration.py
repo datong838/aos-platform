@@ -11,7 +11,7 @@ from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.ecommerce_growth_registration_qualification import qualify_registration_release
 from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
-from aos_api.ecommerce_growth_registration_preflight import validate_current_registration_target
+from aos_api.ecommerce_growth_registration_preflight import validate_current_registration_target, validate_current_registration_assets
 from aos_api.ecommerce_growth_registration_receipt import decode_registration_receipt
 from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef, verify_registration_origin
 from aos_api.extension_runtime.configuration_authorization import CurrentFourSourceConfigurationAuthorization
@@ -70,7 +70,14 @@ class FirstDispatchRegistrationService:
         require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
             protected_tables=('public.extension_runtime_binding','public.extension_dispatch_registration_receipt'))
 
-    def validate_registration_origin_in_transaction(self,conn,*,scope: TenantScope,actor: str,
+    def validate_registration_origin_in_transaction(self,conn,**kwargs):
+        return self._validate_origin(conn,require_ready=True,**kwargs)
+
+    def validate_cutover_registration_assets_in_transaction(self,conn,**kwargs):
+        """Assets and origin only; the cutover Owner validates the exact runtime phase."""
+        return self._validate_origin(conn,require_ready=False,**kwargs)
+
+    def _validate_origin(self,conn,*,scope: TenantScope,actor: str,require_ready: bool,
             receipt_ref: RegistrationReceiptRef,dispatch_snapshot: list[dict],installation_id: str,
             generation: str,execution_epoch: int,binding_revision: int) -> dict:
         """Compose stored provenance and current authority; caller retains transaction ownership."""
@@ -88,10 +95,13 @@ class FirstDispatchRegistrationService:
         request=verify_registration_origin(row=row,scope=scope,receipt_ref=receipt_ref,
             dispatch_snapshot=dispatch_snapshot,installation_id=installation_id,generation=generation,
             execution_epoch=execution_epoch,binding_revision=binding_revision)
-        result=self.validate_current_authority_in_transaction(conn,scope=scope,request=request,actor=actor)
+        result=self._validate_current_authority(conn,scope=scope,request=request,actor=actor,require_ready=require_ready)
         return dict(result,receiptRef=receipt_ref.model_dump(mode='json'))
 
-    def validate_current_authority_in_transaction(self, conn, *, scope: TenantScope,
+    def validate_current_authority_in_transaction(self,conn,**kwargs):
+        return self._validate_current_authority(conn,require_ready=True,**kwargs)
+
+    def _validate_current_authority(self, conn, *, scope: TenantScope,require_ready: bool,
             request: FirstDispatchRegistrationRequest, actor: str) -> dict:
         """Revalidate current authority without owning or committing the caller's transaction."""
         self._identity(scope,actor)
@@ -99,7 +109,7 @@ class FirstDispatchRegistrationService:
             raise TypeError('validated first registration request required')
         request=FirstDispatchRegistrationRequest.model_validate(request.model_dump(mode='python',by_alias=True))
         self._require_current_transaction(conn,scope)
-        checked=validate_current_registration_target(conn,scope=scope,request=request,actor=actor,
+        checked=(validate_current_registration_target if require_ready else validate_current_registration_assets)(conn,scope=scope,request=request,actor=actor,
             installation_store=self._store,configuration_authorize=self._authorize)
         if (type(checked) is not dict or checked.get('currentConfigurationValidated') is not True
                 or checked.get('requestHash')!=request.request_hash()):
@@ -115,7 +125,7 @@ class FirstDispatchRegistrationService:
                 or qualified.get('executable') is not False):
             raise PermissionError('current signed registration release was not validated')
         return dict(requestHash=request.request_hash(),currentConfigurationValidated=True,
-                    currentReleaseValidated=True,executable=False)
+                    currentReleaseValidated=True,runtimeStateValidated=require_ready,executable=False)
 
     def register(self, *, scope: TenantScope, request: FirstDispatchRegistrationRequest, actor: str) -> dict:
         self._identity(scope,actor)

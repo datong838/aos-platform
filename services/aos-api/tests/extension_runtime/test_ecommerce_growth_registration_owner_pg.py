@@ -223,3 +223,19 @@ def test_stored_origin_drift_or_current_denial_cannot_validate(owner_case,monkey
         with pytest.raises((LookupError,ValueError,PermissionError)):
             service.validate_registration_origin_in_transaction(conn,scope=scope,actor='actor',**args)
     assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==1
+
+
+def test_cutover_assets_entry_keeps_signature_check_while_not_claiming_runtime_readiness(owner_case,monkeypatch):
+    case,service,calls=owner_case;scope=TenantScope('org-a','project-a')
+    first=service.register(scope=scope,request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    seen=[]
+    def assets(conn,**kw):
+        seen.append(conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx,current_user AS role').fetchone())
+        return dict(currentConfigurationValidated=True,requestHash=kw['request'].request_hash(),runtimeStateValidated=False)
+    monkeypatch.setattr('aos_api.ecommerce_growth_registration.validate_current_registration_assets',assets)
+    case.db.owner.execute('UPDATE extension_runtime_binding SET revision=5,enabled=false,operation_fence=true')
+    with service._transaction(scope) as conn:
+        result=service.validate_cutover_registration_assets_in_transaction(conn,scope=scope,actor='actor',**origin_args(case,first))
+        assert result['runtimeStateValidated'] is False and result['currentReleaseValidated'] is True
+        assert result['executable'] is False
+    assert len(seen)==1 and seen[0]==case.qualification_calls[-1]
