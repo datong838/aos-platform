@@ -45,3 +45,49 @@ class InstalledProductEventAnalysisPort:
         if any(result[name] != snapshot[name] for name in fields - {'kind'}):
             raise ValueError('analysis command differs from current request')
         return deepcopy(result)
+
+    async def build_compilation_blueprint(self, domain_profile):
+        from aos_api.asset_registry.canonical_json import canonical_sha256
+        from aos_api.aip_production_contracts import CreateStageTemplateRequest, ExactRevisionRef
+        from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileRevision
+
+        if type(domain_profile) is not EcommerceInvestigationProfileRevision:
+            raise TypeError('exact domain investigation profile required')
+        domain = EcommerceInvestigationProfileRevision.model_validate(domain_profile.model_dump(mode='json', by_alias=True))
+        request = dict(kind='build_analysis_compilation_blueprint',
+            profileRef=domain.exact_ref.model_dump(mode='json', by_alias=True, exclude_none=True))
+        if self._invoker.package_id != 'solution.ecommerce.growth':
+            raise ValueError('analysis package changed')
+        result = await self._invoker('ecommerce_growth_analysis_advance', deepcopy(request))
+        if self._invoker.package_id != 'solution.ecommerce.growth':
+            raise ValueError('analysis package changed')
+        fields = {'schemaVersion','profileRef','compilerProfile','stageTemplateRequest','stageSkills','contentHash'}
+        if type(result) is not dict or set(result) != fields:
+            raise ValueError('strict compilation blueprint response required')
+        canonical_json(result)
+        if (result['schemaVersion'] != 'aos.ecommerce.analysis-compilation-blueprint/v1'
+                or canonical_json(result['profileRef']) != canonical_json(request['profileRef'])
+                or result['compilerProfile'] != domain.responsibility_template_code
+                or canonical_sha256({k:v for k,v in result.items() if k != 'contentHash'}) != result['contentHash']):
+            raise ValueError('compilation blueprint differs from current domain request')
+        stage = CreateStageTemplateRequest.model_validate(result['stageTemplateRequest'])
+        source = ExactRevisionRef(resourceType=domain.exact_ref.resource_type,resourceId=domain.profile_id,
+            revision=domain.revision,contentHash=domain.content_hash.removeprefix('sha256:'))
+        order = tuple(item.stage_id for item in domain.stages)
+        if (canonical_json(stage.model_dump(mode='json',by_alias=True)) != canonical_json(result['stageTemplateRequest'])
+                or stage.profile != result['compilerProfile'] or stage.source_bundle_ref != source
+                or tuple(item.stage_id for item in stage.stages) != order):
+            raise ValueError('compilation stage definition differs from domain contract')
+        selections = result['stageSkills']
+        if (type(selections) is not list or len(selections) != len(order)
+                or any(type(item) is not dict or set(item) != {'stageId','skillId','canonicalLogicId'} for item in selections)):
+            raise ValueError('strict stage skill selection required')
+        if tuple(item['stageId'] for item in selections) != order:
+            raise ValueError('skill stage order differs')
+        for key in ('skillId','canonicalLogicId'):
+            values = [item[key] for item in selections]
+            if (any(type(value) is not str or not 1 <= len(value) <= 200
+                    or value != value.strip() or not value.isprintable() for value in values)
+                    or len(values) != len(set(values))):
+                raise ValueError('canonical unique stage dependency identities required')
+        return deepcopy(result)

@@ -1397,3 +1397,10 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py` | Host原路径 | 当前安装配置职责与能力覆盖读取，不产生权限或方案 | `7f2f972197070a3938c8debd98cb0ed746aa8a8e129aa97d49c610b1e997111c` |
+
+
+### CF2 installed 编译蓝图合同读取（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_product_event_analysis_port.py` | Host原路径 | 当前安装蓝图与领域合同一致性核验，不创造权限 | `212e56adab414c987784be5572b992d355c3e877e13ee233351204c920db6f5a` |
