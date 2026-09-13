@@ -55,3 +55,11 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 新增extension_runtime/ui_read_api_database.py，修改ui_read_admission.py。应用当前主体读取/入队均调用public限定的a0v_032函数，先核调用者事务及TenantScope GUC，拒绝remote OpenFGA的本地降级；校验返回摘要等于本次规范请求、终态枚举/UUID/期限类型，返回固定投递合同。既有ui_read_store暂保留内部端口与其并发测试，不对API授予直接表权限。
 
 接入PG测试改为aos_ui_read_api非超级LOGIN，通过测试专用schema连接转发仅重定位public函数名，实际事务/行锁/权限均由PG执行。目录输出替身仍只验证门禁顺序，真实签名目录验证沿用独立测试。合法读取贯穿当前身份→签名声明门禁→固定函数；拒绝无新行。同键旧资源或撤权仍拒绝。下一步UQ3原宿主消费者，不凭队列接受触发任意操作。
+
+## UQ3-A 单次领取与封存存储（基线a8707a06，编码前补充）
+
+新增extension_runtime/ui_read_worker_store.py与PG测试。只处理调用者事务内指定request_id；请求行FOR UPDATE锁使双消费者至多一个取得claim。核固定合同摘要、未过期、精确当前binding后创建既有signed_read Attempt（operation_key=ui-read:requestUUID），随机owner token仅留内存且不出现在repr。snapshot_hash进入Attempt请求摘要；队列claim和Attempt同事务提交。已领取/终态请求不重新返回执行claim。
+
+封存精确claim、版本、token、Attempt；先settle Attempt再更新队列，同一事务原子提交。成功前再核binding；过期或失效转失败/expired，无自动重发。未知结果由后续恢复器收束，不创建第二次Attempt。代码不调用包、不读取业务表、不授予新角色权限；具体宿主消费者仍负责当前成员、签名声明、快照及同一PreparedJob校验。
+
+固定UI读取operationId直接保留analyst_workspace_view_v1，后继包注册独立只读方法；不能把读取塞进analysis_advance等九项业务命令。新包交付前只做隔离验证。UQ3后续补具体消费者及角色/关闭/恢复接入。
