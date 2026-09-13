@@ -2,6 +2,8 @@
 from copy import deepcopy
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileRevision
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
@@ -23,7 +25,8 @@ class AnalysisCompilationRoleReader:
         domain=EcommerceInvestigationProfileRevision.model_validate(domain_profile.model_dump(mode='json',by_alias=True))
         if type(compiler_profile) is not str or not 1<=len(compiler_profile)<=80 or compiler_profile!=compiler_profile.strip():
             raise ValueError('exact compiler profile required')
-        required={cap for stage in domain.stages for cap in stage.required_capability_ids}
+        if compiler_profile != domain.responsibility_template_code:
+            raise ValueError('compiler responsibility profile differs from domain template')
         def current(draft,_mapping):
             if (draft.org_id,draft.project_id)!=scope.key:
                 raise ValueError('analysis source tenant differs')
@@ -43,9 +46,14 @@ class AnalysisCompilationRoleReader:
                 if len(selected)!=1:
                     raise ValueError('analysis responsibility must be uniquely configured')
                 plan=selected[0]
-                capabilities={cap for slot in plan['slots'] for cap in slot['requiredCapabilityIds']}
-                if (plan['lifecycle']!='frozen' or plan['readiness']!='ready' or plan['coverage']!='complete'
-                        or not required.issubset(capabilities)):
+                template = ExactRevisionRef.model_validate(plan['templateRef'])
+                if (template.resource_type != 'ResponsibilityTemplateRevision'
+                        or template.resource_id != domain.responsibility_template_code
+                        or not resolve_responsibility_template(scope, template)):
+                    raise ValueError('domain responsibility template differs or is unavailable')
+                # L1 analysis intent IDs are resolved by the Logic/Skill compiler;
+                # responsibility slots cover concrete operational capabilities.
+                if (plan['lifecycle']!='frozen' or plan['readiness']!='ready' or plan['coverage']!='complete'):
                     raise ValueError('current analysis responsibility is not ready')
                 return dict(configuration=document.model_dump(mode='json'),responsibilityPlan=plan,
                             domainProfileRef=domain.exact_ref.model_dump(mode='json',by_alias=True))

@@ -23,3 +23,11 @@
 ## 退出条件与边界
 
 CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际表血缘，不能仅mock编译器。CF5仍需要新签名候选和独立真实发布账号；尚未部署。当前主库未039–043迁移，不push，230 L0挂起。任何缺失角色或配置不能用测试替身/全true resolver/假批准补齐。真实业务目标仍未完成。
+
+## CF2-2 合同复核修正
+
+已有 ecommerce_business_investigation_aip_authority 定义职责模板 ecommerce.business-investigation.readonly，槽位运行能力为 strategy.plan/material.collect/content.review；L1 profile 的 frame-problem 等是分析意图，两者不能按同一命名空间做集合包含。CF2-1 的该比较会误拒绝真实职责，必须修正。
+
+修改 services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py 与 services/aos-api/tests/test_ecommerce_analysis_compilation_roles.py：按领域 responsibilityTemplateCode 约束 compiler_profile 与职责 templateRef；复用现有模板解析器验证 exact templateRef，继续要求配置内唯一、hash 一致、frozen/ready/complete，并在同一 Owner 回调后重读。不得用角色读取成功代替 Logic/Skill 对分析意图的覆盖，后者仍属 CF2 后续退出条件。
+
+测试用现有 build_responsibility_plan_request 构建真实合同形状的职责输入，覆盖错误模板、错误 profile、状态不足、配置漂移。此波不执行 materializer，不创造角色/冻结，不改主库。
