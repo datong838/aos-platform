@@ -7,6 +7,7 @@ from aos_api.business_investigation_shared_contracts import InvestigationExactRe
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileCatalog
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _validate_schedule_approval_rows
 from aos_api.ecommerce_product_event_guard import ProductEventPolicyGuard
+from aos_api.ecommerce_product_event_approval import require_current_event_approval
 from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_product_event_store import ProductEventPolicyStore
 
@@ -121,6 +122,8 @@ class ProductEventSchedulePutHostService:
         if (event['created_at'] > now or proposal is None or proposal['version'] != approval.revision
                 or proposal['expires_at'] is None or proposal['expires_at'] <= now):
             raise ValueError('event approval is not current')
+        require_current_event_approval(transaction=transaction,scope=scope,case_id=case['caseId'],
+            policy_id=policy['schedulePolicyId'],approval_ref=approval,executor=self._actor)
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         command,approval = _parse(command,scope)

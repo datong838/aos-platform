@@ -1,0 +1,15 @@
+# BG-02 当前批准资格与正式身份装配计划
+
+基线c50ef275。复核HTTP require_principal：可取得真实已认证subject，不必写死actor。现有全局无参registry不能承载每租户SourceOwner及当前actor；其旧九操作封印不覆盖新事件schema。先闭合当前批准资格，再新增按可信principal与PipelineControlServiceFactory构造的事件分派，缺依赖时明确拒绝事件schema，不改变旧定时路径。
+
+发现现有classify_action_risk对schedule_put默认R1/draftOnly；真实保存执行需要独立评审。对ecommerce_growth_schedule_put指定内部状态变更R2 floor，允许提示升到R3/R4但不降级。共用AIP批准角色集合，不新造角色。当前事件批准消费者校验当前Action快照、重新计算风险/审批策略、policy hash、有效独立人数、maker/checker分离与批准人不得执行，以及当前持久化membership/markings。全在来源Owner事务内，执行后再校验。过期旧票不计入有效人数。
+
+实施文件：aos_api/aip_action_policy.py（风险floor与批准角色常量）、aos_api/aip_action_service.py（复用角色常量）、新增aos_api/ecommerce_product_event_approval.py、相应测试；后继修改事件Host服务调用此门禁。旧cutover/provider及普通Action风险必须回归。真实账号/权限不由测试seed产生；本轮仅隔离测试。
+
+下一片依赖装配：从HTTP已认证principal传递subject与scope，SourceOwner由现有PipelineControlServiceFactory生成；后台执行则要求真实配置/批准所持有的执行委托，不借用批准人身份。事件特定资格不能由旧注册记录继承，正式注册前仍不启用事件入口。主库保持038，代码041，不在本轮重启Host或部署迁移。
+
+## 本片修改基线hash（c50ef275）
+
+- services/aos-api/aos_api/aip_action_policy.py: a8efd83b97dc7145ebbbdfb05fb5fb46ea5bc653e7112825f37e81854e002afc
+- services/aos-api/aos_api/aip_action_service.py: 75b98659e6703fd4aaaadd83e38a3296fc9ae6204874fcc462fae41815dc939b
+- services/aos-api/aos_api/ecommerce_product_event_host_service.py: ab1e7a981a6c57870f3ac6f9987f1304a939fb189a6eb250e8873d7654b82902

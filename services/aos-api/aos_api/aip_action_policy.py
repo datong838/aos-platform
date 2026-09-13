@@ -9,6 +9,8 @@ from aos_api.aip_provider_health_action import (
     PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID,
 )
 
+ACTION_APPROVAL_ROLES = frozenset({'admin', 'approver', 'aip_approver'})
+
 _ORDER = {level: index for index, level in enumerate(ActionRiskLevel)}
 
 
@@ -39,6 +41,9 @@ def classify_action_risk(
     if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback"}:
         floor = ActionRiskLevel.R2
         reasons.append("internal_runtime_cutover")
+    elif action_type_id == 'ecommerce_growth_schedule_put':
+        floor = ActionRiskLevel.R2
+        reasons.append('internal_schedule_authority_change')
     elif action_type_id == PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID:
         floor = ActionRiskLevel.R2
         reasons.append("provider_external_health_probe")

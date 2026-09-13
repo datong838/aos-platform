@@ -11,7 +11,7 @@ from aos_api.aip_action_models import (
     SubmitActionDraftRequest,
     WithdrawActionProposalRequest,
 )
-from aos_api.aip_action_policy import classify_action_risk
+from aos_api.aip_action_policy import ACTION_APPROVAL_ROLES, classify_action_risk
 from aos_api.aip_action_store import AipActionStore
 from aos_api.auth import Principal
 from aos_api.db import connect
@@ -139,7 +139,7 @@ class AipActionService:
         body: DecideActionProposalRequest,
     ) -> ActionDraftBundle:
         if not {role.lower() for role in principal.roles}.intersection(
-            {"admin", "approver", "aip_approver"}
+            ACTION_APPROVAL_ROLES
         ):
             raise ApiError(
                 code="AIP_SCOPE_FORBIDDEN",

@@ -49,6 +49,8 @@ def service_case(stored,monkeypatch):
             if 'FROM aip_action_approval_event' in query:return SimpleNamespace(fetchone=lambda:approval)
             if 'FROM aip_action_proposal' in query:return SimpleNamespace(fetchone=lambda:proposal)
             return conn.execute(query,params)
+    # Older storage boundary cases isolate current reviewer eligibility; its real PG suite restores it.
+    monkeypatch.setattr(module,'require_current_event_approval',lambda **kwargs:None)
     def named_source(self,**kwargs):return kwargs['execute']()
     monkeypatch.setattr(module.ProductEventPolicyGuard,'run_policy',named_source)
     monkeypatch.setattr(module.EcommerceInvestigationProfileCatalog,'read',lambda *_:(
