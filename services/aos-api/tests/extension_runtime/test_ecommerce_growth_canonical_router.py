@@ -248,3 +248,47 @@ def test_canonical_router_legacy_without_compat_service_is_blocked():
         )
     assert connection.lock_queries == 0
     assert not connection.committed
+
+
+@pytest.mark.parametrize('mismatch', ['none', 'installation', 'generation', 'epoch', 'legacy'])
+def test_expected_runtime_target_cannot_dispatch_into_another_generation(mismatch):
+    from aos_api.ecommerce_growth_canonical_router import ExpectedRuntimeTarget
+    rows, runtime = _fixture()
+    expected = ExpectedRuntimeTarget(str(rows[0]['installation_id']), str(rows[0]['generation']), 7)
+    if mismatch == 'installation': expected = ExpectedRuntimeTarget(str(uuid4()), expected.generation, 7)
+    if mismatch == 'generation': expected = ExpectedRuntimeTarget(expected.installation_id, str(uuid4()), 7)
+    if mismatch == 'epoch': expected = ExpectedRuntimeTarget(expected.installation_id, expected.generation, 6)
+    if mismatch == 'legacy': rows[0].update(handler_kind='legacy',installation_id=None,generation=None,execution_epoch=None)
+    connection = FakeConnection(rows, runtime)
+    executions = []
+    def execute(**kwargs):
+        executions.append(kwargs)
+        return RECEIPT
+    router = EcommerceGrowthCanonicalRouter(_runtime_registry(execute), connect_factory=_factory(connection))
+    if mismatch == 'none':
+        assert router.dispatch(scope=TenantScope('org-org','dev-project'), operation_id='ecommerce_growth_case_put', command={}, expected_runtime=expected) == RECEIPT
+        assert len(executions) == 1 and connection.committed
+    else:
+        with pytest.raises(EcommerceGrowthHostBlocked, match='caller target'):
+            router.dispatch(scope=TenantScope('org-org','dev-project'), operation_id='ecommerce_growth_case_put', command={}, expected_runtime=expected)
+        assert not executions and not connection.committed and connection.lock_queries == 0
+
+
+def test_expected_target_does_not_bypass_transaction_revalidation_after_issue():
+    from aos_api.ecommerce_growth_canonical_router import ExpectedRuntimeTarget
+    rows, runtime = _fixture()
+    expected = ExpectedRuntimeTarget(str(rows[0]['installation_id']), str(rows[0]['generation']), 7)
+    connection = FakeConnection(rows, runtime)
+    calls = []
+    @contextmanager
+    def racing_connect(_scope):
+        calls.append('connect')
+        if len(calls) == 2:
+            rows[0]['execution_epoch'] = 8
+        yield connection
+    executed = []
+    router = EcommerceGrowthCanonicalRouter(_runtime_registry(lambda **kw: executed.append(kw)), connect_factory=racing_connect)
+    from aos_api.ecommerce_growth_host_ports import EcommerceGrowthHostConflict
+    with pytest.raises(EcommerceGrowthHostConflict):
+        router.dispatch(scope=TenantScope('org-org','dev-project'),operation_id='ecommerce_growth_case_put',command={},expected_runtime=expected)
+    assert not executed and not connection.committed

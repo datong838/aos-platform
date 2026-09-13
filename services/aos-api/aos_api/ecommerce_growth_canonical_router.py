@@ -45,6 +45,22 @@ LegacyCompatService = Callable[..., Mapping[str, Any]]
 
 
 @dataclass(frozen=True, slots=True)
+class ExpectedRuntimeTarget:
+    """Caller precondition only; the locked host port remains authoritative."""
+
+    installation_id: str
+    generation: str
+    execution_epoch: int
+
+    def __post_init__(self):
+        for value in (self.installation_id, self.generation):
+            if type(value) is not str or str(UUID(value)) != value:
+                raise ValueError('canonical runtime identity required')
+        if type(self.execution_epoch) is not int or self.execution_epoch < 1:
+            raise ValueError('positive runtime epoch required')
+
+
+@dataclass(frozen=True, slots=True)
 class IssuedDispatchRef:
     org_id: str
     project_id: str
@@ -98,6 +114,7 @@ class EcommerceGrowthCanonicalRouter:
         operation_id: str,
         command: Mapping[str, Any],
         occurred_at: datetime | None = None,
+        expected_runtime: ExpectedRuntimeTarget | None = None,
     ) -> Mapping[str, Any]:
         if type(scope) is not TenantScope:
             raise TypeError("canonical router requires a trusted TenantScope")
@@ -105,7 +122,16 @@ class EcommerceGrowthCanonicalRouter:
             raise EcommerceGrowthHostBlocked("unknown operation")
         if type(command) is not dict:
             raise TypeError("command must be a strict mapping")
+        if expected_runtime is not None and type(expected_runtime) is not ExpectedRuntimeTarget:
+            raise TypeError('exact runtime target required')
         dispatch_ref = self._issue(scope, operation_id)
+        if expected_runtime is not None and (
+            dispatch_ref.handler_kind != 'extension'
+            or dispatch_ref.installation_id != expected_runtime.installation_id
+            or dispatch_ref.generation != expected_runtime.generation
+            or dispatch_ref.execution_epoch != expected_runtime.execution_epoch
+        ):
+            raise EcommerceGrowthHostBlocked('current dispatch runtime differs from caller target')
         if dispatch_ref.handler_kind == "legacy":
             compat = self._legacy_compat.get(operation_id)
             if compat is None:
@@ -160,4 +186,5 @@ class EcommerceGrowthCanonicalRouter:
 __all__ = [
     "EcommerceGrowthCanonicalRouter",
     "IssuedDispatchRef",
+    "ExpectedRuntimeTarget",
 ]
