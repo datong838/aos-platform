@@ -495,8 +495,10 @@ def test_startup_selects_explicit_registration_connector_without_opening_it(monk
             if configured:
                 assert service._connect is connect
                 assert cutover._registration_service is service
+                assert main.app.state.extension_runtime_control_plane.ecommerce_growth_cutover_control._store is cutover
             else:
                 assert service is None
                 assert cutover is None
+                assert main.app.state.extension_runtime_control_plane.ecommerce_growth_cutover_control is None
         assert main.app.state.extension_runtime_control_plane is None
     asyncio.run(probe())

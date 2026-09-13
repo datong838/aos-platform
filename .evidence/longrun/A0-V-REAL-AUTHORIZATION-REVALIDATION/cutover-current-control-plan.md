@@ -1,0 +1,9 @@
+# 切换产品写控制层当前权限
+
+基线3577c7d5。Store的幂等阶段返回可先于当前资产权限，不能裸露给Web。新增EcommerceGrowthCutoverControl，仅接受真实Store及其真实FirstDispatchRegistrationService；在同一受限serializable连接中，规范Scope/actor、强类型阶段请求→确定当前安装→runtime角色执行已有安装APPLY当前权限→恢复maintainer→将同一连接借给既有Store阶段方法。Store的exact审批、注册源、hash、CAS与显式commit全部保留，外层不重试不隐式提交。旧无注册服务fixture Store行为不变，生产控制层不接受它。
+
+文件：services/aos-api/aos_api/ecommerce_growth_cutover_control.py、asset_registry/control_wiring.py、tests/extension_runtime/test_ecommerce_growth_cutover_control_pg.py、test_runtime_startup_composition.py。控制面新增ecommerce_growth_cutover_control，与已存在只读Store分开装配；未配置受保护注册连接时两者都None。
+
+prepare请求直接绑定targetInstallation；其他阶段只读当前activate operation确定目标安装，rollback通过activationOperationId，不使用客户端任意安装。阶段白名单prepare/pause/commit/validate/resume/rollback-prepare/rollback-commit；resume额外强类型validateReceiptRef，其他阶段不得携带。借用连接只允许一次和原Scope，无新身份连接；所有生产操作一致采用安装权限锁→既有阶段锁顺序，数据库死锁/序列化冲突作为未知结果查询，不重发。
+
+退出：PG证明当前授权与阶段执行同pid/tx；允许的prepare和已完成回放正常，撤权后原请求回放拒绝且Receipt/状态不变，未授权首次调用无写入，未知阶段/错类型/缺少真实服务不连接；既有完整切换回归与启动懒装配。控制层本波不HTTP暴露、不真实切换；下一波接强类型写接口，随后原正式注册的exact审批与真实切换。

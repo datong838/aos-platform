@@ -45,6 +45,7 @@ class RuntimeControlPlane:
     pipeline_control_factory: Any = None
     first_dispatch_registration_service: Any = None
     ecommerce_growth_cutover_service: Any = None
+    ecommerce_growth_cutover_control: Any = None
 
 
 class _LazyRuntimeViewReader:
@@ -347,6 +348,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
     )
     registration = None
     cutover = None
+    cutover_control = None
     if registration_connect is not None:
         from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
         registration = FirstDispatchRegistrationService(
@@ -358,9 +360,12 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         cutover = EcommerceGrowthCutoverStore(
             scoped_cutover_connection(registration_connect), registration_service=registration,
         )
+        from aos_api.ecommerce_growth_cutover_control import EcommerceGrowthCutoverControl
+        cutover_control = EcommerceGrowthCutoverControl(cutover)
     return RuntimeControlPlane(
         first_dispatch_registration_service=registration,
         ecommerce_growth_cutover_service=cutover,
+        ecommerce_growth_cutover_control=cutover_control,
         installation_store=store,
         installation_reader=installation,
         revalidator=planning,
