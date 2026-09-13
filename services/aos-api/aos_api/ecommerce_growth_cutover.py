@@ -2140,6 +2140,10 @@ class EcommerceGrowthCutoverStore:
             or any(canonical_hash(payload.get(key)) != canonical_hash(value) for key, value in expected.items())
         ):
             raise EcommerceGrowthCutoverBlocked("cutover approval is not bound to this exact group")
+        if self._registration_service is not None:
+            from aos_api.ecommerce_growth_cutover_current_approval import require_current_cutover_approval
+            require_current_cutover_approval(conn=conn, scope=scope, proposal=proposal,
+                approval_id=approval['approval_event_id'], checked_at=checked_at, schema=self._schema)
         return checked_at
 
     def _registration_assets(self,conn,scope,target,old_snapshot,actor):

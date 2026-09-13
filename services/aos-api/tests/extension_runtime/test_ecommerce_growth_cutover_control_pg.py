@@ -17,6 +17,9 @@ def test_control_requires_real_registration_service():
 
 @pytest.mark.parametrize('revoke_after_first',[False,True])
 def test_current_permission_precedes_new_or_replayed_phase(database,monkeypatch,revoke_after_first):
+    # This historical protocol fixture isolates the product caller gate.
+    # Current approval consumption has separate rejection and authority tests.
+    monkeypatch.setattr('aos_api.ecommerce_growth_cutover_current_approval.require_current_cutover_approval', lambda **kw: None)
     scope=TenantScope('org-org','dev-project');request=_seed(database,scope,pending_receipt=False)
     service=object.__new__(FirstDispatchRegistrationService);checks=[];denied=[]
     def permission(conn,current_scope,installation_id,actor):
@@ -51,6 +54,8 @@ def test_current_permission_precedes_new_or_replayed_phase(database,monkeypatch,
 
 @pytest.mark.parametrize('finish',['resume','rollback'])
 def test_control_all_phases(database,monkeypatch,finish):
+    # Phase orchestration with historical approval material, not real approval acceptance.
+    monkeypatch.setattr('aos_api.ecommerce_growth_cutover_current_approval.require_current_cutover_approval', lambda **kw: None)
     from test_ecommerce_growth_cutover_pg import _commit_request,_finalize_request,_validate_ref,_rollback_request
     scope=TenantScope('org-org','dev-project');request=_seed(database,scope,pending_receipt=False)
     service=object.__new__(FirstDispatchRegistrationService);checks=[]

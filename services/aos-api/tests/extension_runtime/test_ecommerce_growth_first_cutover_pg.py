@@ -12,6 +12,8 @@ from test_ecommerce_growth_cutover_pg import (database,pytestmark,_seed,_connect
 
 @pytest.mark.parametrize('finish',['resume','rollback','prepare_denied','pause_denied','commit_denied'])
 def test_first_fenced_origin_is_checked_at_each_forward_stage(database,monkeypatch,finish):
+    # Isolate registration-asset checks from the independently tested current approval gate.
+    monkeypatch.setattr('aos_api.ecommerce_growth_cutover_current_approval.require_current_cutover_approval', lambda **kw: None)
     scope=TenantScope('org-org','dev-project')
     ref=RegistrationReceiptRef(resourceType='FirstDispatchRegistrationReceipt',resourceId=str(uuid4()),
         revision=1,contentHash='sha256:'+'b'*64)
