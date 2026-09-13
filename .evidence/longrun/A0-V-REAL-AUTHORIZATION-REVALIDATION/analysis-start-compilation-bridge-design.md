@@ -61,3 +61,7 @@ CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advanc
 ## CF2-9 installed 蓝图 Port
 
 修改 services/aos-api/aos_api/ecommerce_product_event_analysis_port.py，增加build_compilation_blueprint(domain_profile)，及tests/extension_runtime/test_analysis_compilation_blueprint_port.py。复用精确CurrentInstalledPackageInvoker与analysis_advance，调用在事务外；前后包身份保持growth，领域profile先重解析hash，响应严格外层字段/hash/schema，profileRef等于原请求，compilerProfile等于领域职责模板。CreateStageTemplateRequest解析后要求规范JSON无隐式类型转换/缺字段，sourceBundleRef为原L1 exact，三阶段顺序一致，stageSkills字段/数量/唯一性/规范ID校验。返回元数据不是运行授权；后续Host当前读取与模板选择仍必须完成。
+
+## CF2-10 蓝图精确依赖选择
+
+新增 services/aos-api/aos_api/ecommerce_analysis_compilation_selection.py、tests/test_ecommerce_analysis_compilation_selection.py。将Port蓝图规范验证提取为同模块纯函数供组合器重用。选择在AnalysisCompilationRoleReader.run_current内部：当前head模板必须profile和完整正文hash匹配蓝图且frozen，LIMIT2多义拒绝；active SkillBinding只在当前职责agent_instance与蓝图skill IDs交集中，逐技能唯一。调用既有AnalysisSkillSetReader完成当前来源/阶段/绑定/发布重验，再检查每个技能LogicRef对应蓝图固定LogicId。回调后重查选择集，拒绝新多义/版本漂移。无全租户猜测、无创建、无新的运行权限。缺少兼容模板由CF3准备流程处理。
