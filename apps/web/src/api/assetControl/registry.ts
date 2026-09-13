@@ -95,6 +95,7 @@ export interface RegistryManifestConflict {
 }
 
 export interface RegistryManifestExports {
+  knowledge?: string[];
   ontology: string[];
   links: string[];
   metrics: string[];
@@ -143,6 +144,7 @@ export interface RegistryManifest {
     // Pydantic excludes this field when the list is empty. Contribution claim
     // variants remain server-owned JSON until M3 needs to render them.
     contributions?: Record<string, unknown>[];
+    runtime?: { apiVersion: "aos.dev/bundle-runtime/v1alpha1"; backend?: { entrypoint: string; pythonPackage: string; schemaNamespace: string; profileId: "internal-python-v1"; imageIndex: string }; frontend?: { manifest: string; artifactHash: string } };
   };
 }
 
@@ -319,6 +321,33 @@ function versionSummary(value: unknown, index = 0): void {
   timestamp(item.updatedAt, "Registry version summary.updatedAt");
 }
 
+/** Read-only declaration projection; execution validation remains server-owned. */
+function runtimeDeclaration(value: unknown): void {
+  const item = record(value, "Registry runtime");
+  exactKeys(item, ["apiVersion"], ["backend", "frontend"], "Registry runtime");
+  if (item.apiVersion !== "aos.dev/bundle-runtime/v1alpha1" || (!item.backend && !item.frontend)) throw new Error("Registry runtime is invalid");
+  const path = (value: unknown, root: string, suffix: string) => {
+    string(value, "runtime path");
+    const checked = value as string;
+    if (checked.length > 1024 || !checked.startsWith(root + "/") || !checked.endsWith(suffix)
+      || /[\\%?#:~\s\x00-\x1f\x7f]/.test(checked) || checked.split("/").some(part => ["", ".", ".."].includes(part))) throw new Error("Registry runtime path is invalid");
+  };
+  if (item.backend !== undefined) {
+    const backend = record(item.backend, "runtime backend");
+    exactKeys(backend, ["entrypoint", "pythonPackage", "schemaNamespace", "profileId", "imageIndex"], [], "runtime backend");
+    string(backend.entrypoint, "runtime entrypoint");
+    if (!backend.entrypoint.endsWith(":register")) throw new Error("Registry runtime entrypoint is invalid");
+    path(backend.entrypoint.slice(0, -9), "backend", ".py"); path(backend.imageIndex, "artifacts", ".json");
+    string(backend.pythonPackage, "runtime pythonPackage"); string(backend.schemaNamespace, "runtime schemaNamespace");
+    if (backend.pythonPackage.length > 160 || backend.schemaNamespace.length > 63 || !/^[a-z][a-z0-9_]*$/.test(backend.schemaNamespace) || backend.profileId !== "internal-python-v1") throw new Error("Registry runtime profile is invalid");
+  }
+  if (item.frontend !== undefined) {
+    const frontend = record(item.frontend, "runtime frontend");
+    exactKeys(frontend, ["manifest", "artifactHash"], [], "runtime frontend");
+    path(frontend.manifest, "frontend", ".json"); sha256(frontend.artifactHash, "runtime artifactHash");
+  }
+}
+
 function manifest(value: unknown): void {
   const item = record(value, "Registry manifest");
   exactKeys(item, ["apiVersion", "kind", "metadata", "spec"], [], "Registry manifest");
@@ -330,7 +359,8 @@ function manifest(value: unknown): void {
   ["id", "version", "displayName", "publisher", "license"].forEach((key) => string(metadata[key], `Registry manifest.metadata.${key}`));
 
   const spec = record(item.spec, "Registry manifest.spec");
-  exactKeys(spec, ["platformApi", "dependencies", "optionalDependencies", "conflicts", "exports", "capabilities", "permissions", "migrations", "preflight", "regression", "rollback"], ["contributions"], "Registry manifest.spec");
+  exactKeys(spec, ["platformApi", "dependencies", "optionalDependencies", "conflicts", "exports", "capabilities", "permissions", "migrations", "preflight", "regression", "rollback"], ["contributions", "runtime"], "Registry manifest.spec");
+  if (spec.runtime !== undefined) runtimeDeclaration(spec.runtime);
   string(spec.platformApi, "Registry manifest.spec.platformApi");
   for (const key of ["dependencies", "optionalDependencies"] as const) {
     if (!Array.isArray(spec[key])) throw new Error(`Registry manifest.spec.${key} must be an array`);
@@ -348,7 +378,8 @@ function manifest(value: unknown): void {
   });
   const exports = record(spec.exports, "Registry manifest.spec.exports");
   const exportKeys = ["ontology", "links", "metrics", "agents", "logic", "workshops", "evals", "policies", "connectors", "schemas", "mappings", "backend", "ui"];
-  exactKeys(exports, exportKeys, [], "Registry manifest.spec.exports");
+  exactKeys(exports, exportKeys, ["knowledge"], "Registry manifest.spec.exports");
+  if (exports.knowledge !== undefined) stringArray(exports.knowledge, "exports.knowledge");
   exportKeys.forEach((key) => stringArray(exports[key], `exports.${key}`));
   const capabilities = record(spec.capabilities, "Registry manifest.spec.capabilities");
   exactKeys(capabilities, ["provides", "requires"], [], "capabilities");

@@ -1,3 +1,5 @@
+import { prepareReplacement, replaceRequestedVersion, ReplacementPreparationError } from "./assetBundles/replacementPreparation";
+import { configurationIdentity } from "./assetBundles/readHooks";
 import { ConfigurationStagePanel } from "./assetBundles/ConfigurationStagePanel";
 import { RegistrationPanel } from "./assetBundles/RegistrationPanel";
 import { useEffect, useRef, useState } from "react";
@@ -181,6 +183,10 @@ function resolveReadState(
 
 /** `/apollo/assets` compatibility entry for the canonical asset control plane. */
 export function AssetBundlesPage() {
+  const [replacementBusy, setReplacementBusy] = useState(false);
+  const [replacementError, setReplacementError] = useState<string | null>(null);
+  const [replacementIdentity, setReplacementIdentity] = useState<string | null>(null);
+  const replacementLock = useRef(false);
   const [activeView, setActiveView] = useState<AssetView>("registry");
   const [bundleSelection, setBundleSelection] =
     useState<RegistryBundleSelection | null>(null);
@@ -189,6 +195,8 @@ export function AssetBundlesPage() {
   const [installationRequest, setInstallationRequest] =
     useState<InstallationPageRequest>(DEFAULT_INSTALLATION_PAGE);
   const [installationId, setInstallationId] = useState<string | null>(null);
+  const selectedInstallationRef = useRef(installationId);
+  selectedInstallationRef.current = installationId;
   const [compositionRequest, setCompositionRequest] =
     useState<CompositionRequest>(DEFAULT_COMPOSITION_REQUEST);
   const [createDraft, setCreateDraft] =
@@ -346,14 +354,25 @@ export function AssetBundlesPage() {
   function selectVersion(selection: RegistryVersionSelection) {
     if (!commands.markInputChanged()) return;
     setVersionSelection(selection);
-    setCompositionRequest((current) => ({
-      ...current,
-      requested: [{
-        publisher: selection.publisher,
-        id: selection.bundleId,
-        version: selection.version,
-      }],
+    setCompositionRequest(current => replaceRequestedVersion(current, {
+      publisher: selection.publisher, id: selection.bundleId, version: selection.version,
     }));
+  }
+
+  async function prepareCurrentReplacement() {
+    if (!installationId || replacementLock.current || actionRuntime.offline || actionPending || runtimePending || !commands.markInputChanged()) return;
+    replacementLock.current = true; setReplacementBusy(true); setReplacementError(null);
+    try {
+      const value = await prepareReplacement(installationId);
+      if (selectedInstallationRef.current !== installationId || value.identity !== configurationIdentity() || !commands.markInputChanged()) return;
+      const first = value.request.requested[0];
+      if (!first) throw new Error("当前安装没有可恢复根资产");
+      setCompositionRequest(value.request); setCreateDraft(value.draft); setReplacementIdentity(value.identity);
+      setBundleSelection({ publisher: first.publisher, bundleId: first.id });
+      setVersionSelection({ publisher: first.publisher, bundleId: first.id, version: first.version });
+      setActiveView("composition");
+    } catch (error) { setReplacementError(error instanceof ReplacementPreparationError ? error.message : "恢复替换计划暂未准备好，请刷新安装状态和资产目录后重试。"); }
+    finally { replacementLock.current = false; setReplacementBusy(false); }
   }
 
   function changeCompositionRequest(request: CompositionRequest) {
@@ -381,7 +400,9 @@ export function AssetBundlesPage() {
     runtimeRetry.etagVersion === runtimeInstallationState.data?.installationEtag &&
     runtimeRetry.bindingIdentity === runtimeBindingIdentity(runtimeInstallationState.data),
   );
-  const resolveDisabledReason = !versionSelection
+  const resolveDisabledReason = compositionRequest.currentInstallationRef && replacementIdentity !== configurationIdentity()
+    ? "身份已变化，请从当前安装重新准备替换计划"
+    : !versionSelection
     ? "请先从 Registry 选择一个版本"
     : versionDetailState.status === "loading"
       ? "正在核验版本事实"
@@ -425,7 +446,7 @@ export function AssetBundlesPage() {
             resolving={commands.resolveState.phase === "running" || commands.resolveState.phase === "reconciling"}
             disabledReason={resolveDisabledReason}
             onRequestChange={changeCompositionRequest}
-            onResolve={() => { void commands.resolve(compositionRequest); }}
+            onResolve={() => { if (!resolveDisabledReason && (!compositionRequest.currentInstallationRef || replacementIdentity === configurationIdentity())) void commands.resolve(compositionRequest); }}
           />
           <CompositionLockDetail state={lockReadState} />
           {commands.resolveState.phase === "succeeded" && commands.resolveState.data && !commands.resolveState.stale && (
@@ -481,6 +502,12 @@ export function AssetBundlesPage() {
             onSelectedActionChange={setSelectedAction}
             onConfirm={(command) => { void confirmInstallationAction(command); }}
           />
+          <section aria-label="恢复与替换计划">
+            <h3>恢复与替换计划</h3>
+            <p>从当前安装准备后继计划，保留现有实例；预检和审批完成后再安排切换。</p>
+            <button type="button" className="btn" disabled={!actionInstallation || actionInstallation.state !== "active" || replacementBusy || actionPending || runtimePending !== null || actionRuntime.offline} onClick={() => void prepareCurrentReplacement()}>{replacementBusy ? "正在准备…" : "准备恢复/替换计划"}</button>
+            {replacementError && <p role="alert">{replacementError}</p>}
+          </section>
           <RegistrationPanel installationId={installationId} offline={actionRuntime.offline} />
           <ConfigurationStagePanel state={runtimeInstallationState} offline={actionRuntime.offline} blocked={runtimePending !== null} onRegistered={runtimeConfigurationsState.reload} />
           <RuntimeInstallationPanel

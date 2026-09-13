@@ -134,3 +134,12 @@ describe("D2.6 ecommerce.core bundle fixture", () => {
     expect(paths).toContain("content/policies/pii-exclusion.json");
   });
 });
+
+it('accepts signed runtime metadata but rejects unknown fields and unsafe paths', () => {
+  const runtime = { apiVersion: 'aos.dev/bundle-runtime/v1alpha1', backend: { profileId: 'internal-python-v1', entrypoint: 'backend/ecommerce_niushop/__init__.py:register', imageIndex: 'artifacts/runtime-image-index.json', pythonPackage: 'ecommerce_niushop', schemaNamespace: 'ecommerce_niushop' } };
+  const project = (value: unknown) => ({ ...REGISTRY_VERSION_DETAIL_FIXTURE, manifest: { ...REGISTRY_VERSION_DETAIL_FIXTURE.manifest, spec: { ...REGISTRY_VERSION_DETAIL_FIXTURE.manifest.spec, exports: { ...REGISTRY_VERSION_DETAIL_FIXTURE.manifest.spec.exports, knowledge: [] }, runtime: value } } });
+  expect(parseRegistryVersionDetail(project(runtime))).toEqual(project(runtime));
+  expect(() => parseRegistryVersionDetail(project({ ...runtime, execute: true }))).toThrow();
+  expect(() => parseRegistryVersionDetail(project({ ...runtime, backend: { ...runtime.backend, imageIndex: 'artifacts/../secrets.json' } }))).toThrow();
+  expect(() => parseRegistryVersionDetail(project({ apiVersion: runtime.apiVersion }))).toThrow();
+});

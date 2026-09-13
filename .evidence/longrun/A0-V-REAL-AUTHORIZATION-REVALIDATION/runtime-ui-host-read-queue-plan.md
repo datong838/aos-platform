@@ -412,3 +412,13 @@ prepare先导出当前主库、恢复新副本，只有恢复后业务指纹与�
 任务A0V-CONFIGURATION-STAGE-API-IDENTITY-20260914。新增a0v_configuration_stage_identity.py沿用现有私有凭据落盘、先克隆后主库规约；唯一LOGIN角色aos_configuration_stage_transport_20260914，NOINHERIT且仅成员aos_configuration_stage_api，不能成为业务成员或审批者。凭据只存在0600文件，日志/共享证据仅哈希和权限结果。
 
 复用restricted_api_identity与configuration_stage_connection，不复制身份验证逻辑。核验当前实际runtime-owner在正租户可以通过当前安装标记检查，查询不存在ID/key返回NULL；错subject、负租户、直接队列/配置表、Host函数拒绝。所有访问只读，前后19业务指纹相同且队列0。主库identity完成后暂不写入API启动配置，必须先解决唯一Host消费接管再开放。
+
+## UQ6-D2e1 从当前安装准备正式恢复/替换计划（基线32b98051，编码前）
+
+发现原CompositionRequest已支持currentInstallationRef，预检/安装服务已有前驱CAS与替代激活守卫，但网页没有从当前安装构建该请求的入口；手工脚本承接违背无需开发者接线目标。
+
+新增apps/web/src/pages/s2/assetBundles/replacementPreparation.ts及对应测试，修改AssetBundlesPage.tsx：显式准备按钮只读当前安装→对应CompositionLock→当前发布签名版本→再次回读安装。匹配安装ID、current revision/etag/lock/overlay及锁全部摘要；请求的各根资产固定到原锁实际解析版本，不沿用历史浮动范围或旧registrySnapshotHash。当前身份/租户在每次读后重核，漂移不给计划。输出前驱exact ref和原overlay的新draft建议，进入已有预检页，不调用resolve/create/approve/disable。
+
+替换模式选择新版本须只替换同ID根项、保留其他请求根；不能将多包请求隐式变单包。初始版本均核验published+signature，服务端resolve再次核验所有实际来源。页面身份变化禁止旧准备结果用于resolve，重建前先使旧命令输入失效。后继真实注册仍需签名1.8目录切换与真实exact评审，不能复用旧审批。
+
+D2e1真实浏览器发现既有协议遗漏：Niushop1.5版本GET 200，但registry.ts manifest解析器不允许服务端合法spec.runtime字段，导致现有运行包详情无法读取。新增只读runtime声明结构解析（apiVersion、backend固定字段/入口及镜像索引路径、frontend清单路径/hash；不执行任何代码），保留extra拒绝；更新registry.ts类型与测试。先加入实际Niushop声明回归使旧解析器RED，再修复，再浏览器重读。
