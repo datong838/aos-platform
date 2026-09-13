@@ -1,0 +1,7 @@
+# 安装事件读取兼容修复方案｜2026-09-13
+
+基线2b9627b0。真实97aeb2e7安装详情HTTP200；现有前端parseInstallationDetail失败于runtime_preparation。源码后端composition_contracts.InstallationEventEvidence及installation_evidence明确六类：dry_apply/runtime_preparation/preparation_reset/verification/rollback/uninstall。前端仅三类，造成真实安装详情整体拒绝。
+
+修改apps/web/src/api/assetControl/types.ts、installations.ts、installations.test.ts：精确补三类，仍拒绝未知值，保留hash/时间/字段/当前revision/decision/事件连续性检查。恢复转换applied→approved只接受valid preparation_reset证据；approved→uninstalled只接受valid uninstall证据。既有active→uninstalled行为保持，不能把applied直接卸载当合法恢复。前端只展示服务端已存在事件，不因此授予执行动作。InstallationDetail.tsx为新增证据类型提供中文名称，原证据Ref/Hash仍可核查。
+
+先测RED；再最小改动及累计前端测试/tsc；用当前真实API返回重放原parser确认修复后通过，浏览器重新读取同一安装确认详情恢复。只读不改数据库、不重启服务、不改原Receipt、不改变业务批准。发现更多合法合同差异继续按后端真源精确对齐，禁止宽松any-string。

@@ -304,7 +304,7 @@ function validateEvidence(value: unknown): InstallationEventEvidence | null {
     ["type", "evidenceRef", "evidenceHash", "status", "observedAt"],
     label,
   );
-  if (!new Set(["dry_apply", "verification", "rollback"]).has(item.type as string)) {
+  if (!new Set(["dry_apply", "runtime_preparation", "preparation_reset", "verification", "rollback", "uninstall"]).has(item.type as string)) {
     throw new Error(`${label}.type is invalid`);
   }
   normalizedString(item.evidenceRef, `${label}.evidenceRef`);
@@ -440,7 +440,11 @@ export function parseInstallationDetail(value: unknown): InstallationResponse {
       event.fromRevision !== previous.toRevision ||
       event.fromState !== previous.toState ||
       event.toRevision !== previous.toRevision + 1 ||
-      !TRANSITIONS.has(`${previous.toState}:${event.toState}`)
+      !(TRANSITIONS.has(`${previous.toState}:${event.toState}`) ||
+        (event.evidence?.status === "valid" && (
+          (previous.toState === "applied" && event.toState === "approved" && event.evidence.type === "preparation_reset") ||
+          (previous.toState === "approved" && event.toState === "uninstalled" && event.evidence.type === "uninstall")
+        )))
     ) {
       throw new Error("Installation detail event history is not continuous");
     }

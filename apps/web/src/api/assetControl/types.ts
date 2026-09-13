@@ -269,7 +269,7 @@ export interface InstallationDecision {
 }
 
 export interface InstallationEventEvidence {
-  type: "dry_apply" | "verification" | "rollback";
+  type: "dry_apply" | "runtime_preparation" | "preparation_reset" | "verification" | "rollback" | "uninstall";
   evidenceRef: string;
   evidenceHash: Sha256;
   status: "valid" | "invalid";

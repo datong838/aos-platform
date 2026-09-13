@@ -142,3 +142,33 @@ describe("M3-2 installation read contracts", () => {
     );
   });
 });
+
+describe("runtime installation evidence compatibility",()=>{
+  it("reads actual runtime preparation evidence",()=>{
+    const value=structuredClone(INSTALLATION_DETAIL_FIXTURE);
+    (value.events[3].evidence as unknown as {type:string}).type="runtime_preparation";
+    expect(parseInstallationDetail(value)).toBe(value);
+  });
+  it("reads a receipt-backed preparation reset but refuses an unsupported rewind",()=>{
+    const value=structuredClone(INSTALLATION_DETAIL_FIXTURE);
+    value.state="approved";value.activeRevision=null;value.current.state="approved";
+    value.events[4].toState="approved";
+    (value.events[4].evidence as unknown as {type:string}).type="preparation_reset";
+    expect(parseInstallationDetail(value)).toBe(value);
+    const invalid=structuredClone(value);
+    invalid.events[4].evidence!.status="invalid";
+    expect(()=>parseInstallationDetail(invalid)).toThrow("event history is not continuous");
+    value.events[4].evidence=null;
+    expect(()=>parseInstallationDetail(value)).toThrow("event history is not continuous");
+  });
+  it("reads approved uninstall only with its canonical evidence",()=>{
+    const value=structuredClone(INSTALLATION_DETAIL_FIXTURE);
+    value.state="uninstalled";value.activeRevision=null;value.currentRevision=4;value.etagVersion=4;
+    value.current={...value.current,state:"uninstalled",revision:4,parentRevision:3};
+    value.events=value.events.slice(0,4);value.events[3].toState="uninstalled";
+    (value.events[3].evidence as unknown as {type:string}).type="uninstall";
+    expect(parseInstallationDetail(value)).toBe(value);
+    value.events[3].evidence=null;
+    expect(()=>parseInstallationDetail(value)).toThrow("event history is not continuous");
+  });
+});

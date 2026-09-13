@@ -18,11 +18,16 @@ function Retry({ reload }: { reload: () => void }) {
   return <button type="button" className="btn" onClick={reload}>重试读取</button>;
 }
 
+const evidenceLabels: Record<NonNullable<InstallationEvent["evidence"]>["type"], string> = {
+  dry_apply: "安装预演", runtime_preparation: "运行资源准备", preparation_reset: "运行准备重置",
+  verification: "安装验证", rollback: "安装回滚", uninstall: "安装卸载",
+};
+
 function EventEvidence({ event }: { event: InstallationEvent }) {
   if (!event.evidence) return <span>无服务端 evidence</span>;
   return (
     <dl>
-      <div><dt>Evidence 类型</dt><dd>{event.evidence.type}</dd></div>
+      <div><dt>Evidence 类型</dt><dd>{evidenceLabels[event.evidence.type]}</dd></div>
       <div><dt>状态</dt><dd>{event.evidence.status}</dd></div>
       <div><dt>引用</dt><dd><code>{event.evidence.evidenceRef}</code></dd></div>
       <div><dt>Hash</dt><dd><code>{event.evidence.evidenceHash}</code></dd></div>
