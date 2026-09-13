@@ -219,3 +219,11 @@ HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全�
 保留1.7静态14贡献，候选注册共14+10=24且manifest一致。生成frontend/manifest.json，精确analyst路由、只读方法、空commandClaims；runtime.frontend绑定manifest SHA256，包内HTML由artifact索引签名。permissions.dataScopes新增ecommerce.workshop.read，是安装时需要明确授予的数据范围而非自动给用户授权。更新8个既有workshop/template self bundleRef到1.8，其他文件不改。源package1.3开发manifest不冒充新候选。
 
 验证目标不可覆盖、基线/源hash漂移拒绝、精确文件diff允许列表、六数字同事/模板保持、7+1边界、ManifestLoader读取合同、真实SDK注册与声明一致及投影调用。候选此时未构建/签名/发布；下一波新版本实际镜像构建与资格验证，不运行旧脚本内1.7/niushop1.3常量覆盖当前niushop1.5。
+
+### UQ5-B3c 真实OCI构建/资格验证（基线ab072a46，编码前）
+
+修改scripts/build_ecommerce_runtime_candidates.py：原固定12操作计数提为默认12常量，资格会话可选probe回调在2048心跳后同一session调用；默认无probe保持既有行为/回执。新增scripts/build_ecommerce_ui_candidates.py固定profile选择core1.3、niushop1.5、growth1.8、operations-base1.2，期待13 API/8模块；不能任意跳过清单校验。
+
+新增只读探针fixture与测试：fixture为明确测试Case/Run合同及对应投影，不是真实租户经营证据；profile仅为含analyst_workspace_view_v1声明的growth session附加probe，结果必须逐值等于已冻结预期，回执只记方法、payload/resultHash、Case/Run计数和executionAllowed=false。不调用九个业务方法，不读SSH或生产库，不新造业务Run。
+
+沿现有一次性资源journal、隔离OCI、临时本地镜像服务与签名篡改拒绝流程，构建输出放仓外新目录。修改前后测试默认builder不漂移、新profile准确、probe只在本会话且失败仍释放；再实际build/qualify。原运行三个容器/Host不重启，未知结果先查journal与资源，不盲重跑。

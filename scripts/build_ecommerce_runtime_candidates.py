@@ -39,6 +39,7 @@ RUNTIME_LOCK = b"aos-extension-sdk=repository-source-tree\n"
 QUALIFICATION_KEY_ID = "a0v-ephemeral-candidate-qualification"
 SCHEMA_REQUIREMENT_VERSION = "aos-platform-a0v-001"
 SCHEMA_COMPATIBILITY_REVISION = "a0v_001"
+EXPECTED_RUNTIME_OPERATION_COUNT = 12
 SCHEMA_COMPATIBILITY_RELATIONS = (
     "public.asset_bundle",
     "public.asset_bundle_artifact",
@@ -269,7 +270,7 @@ def preflight() -> dict[str, Any]:
                 "schemaCompatibilityHash": schema_compatibility_hash,
             }
         )
-    if len(module_ids) != 8 or len(routes) != 8 or len(operation_ids) != 12:
+    if len(module_ids) != 8 or len(routes) != 8 or len(operation_ids) != EXPECTED_RUNTIME_OPERATION_COUNT:
         raise CandidateBuildBlocked(
             "CANDIDATE_INVENTORY_MISMATCH",
             f"modules={len(module_ids)} routes={len(routes)} operations={len(operation_ids)}",
@@ -280,7 +281,7 @@ def preflight() -> dict[str, Any]:
         "bundleCount": 4,
         "runtimeMemberCount": 3,
         "moduleCount": 8,
-        "operationCount": 12,
+        "operationCount": EXPECTED_RUNTIME_OPERATION_COUNT,
         "bundles": bundles,
     }
 
@@ -828,7 +829,7 @@ def _assert_signed_tampering_rejected(
     return rejected
 
 
-def _qualify_session(*, driver, image_id, contributions, journal_root: Path):
+def _qualify_session(*, driver, image_id, contributions, journal_root: Path, probe=None):
     """Persist a one-use diagnostic resource identity before any container create."""
     from aos_api.extension_runtime.contracts import RegistrationDescription
     from aos_api.extension_runtime.session_supervisor import open_session
@@ -846,20 +847,28 @@ def _qualify_session(*, driver, image_id, contributions, journal_root: Path):
             stream.flush()
             os.fsync(stream.fileno())
         record("claimed")
+        probe_result = None
         async def run():
+            nonlocal probe_result
             async with open_session(driver, image_id=image_id, declared=declared,
                                     resource_identity=identity) as session:
                 for _ in range(2048):
                     await session.check_health()
                 record("registered_and_alive")
+                if probe is not None:
+                    probe_result = await probe(session)
+                    record("probe_verified")
         try:
             asyncio.run(run())
         except BaseException:
             record("failed_requires_observation")
             raise
         record("released")
-    return {"registration": "exact", "heartbeat": "alive", "cleanup": "released",
+    result = {"registration": "exact", "heartbeat": "alive", "cleanup": "released",
             "contributionCount": len(declared.contributions), "heartbeatChecks": 2048, "journal": str(journal)}
+    if probe is not None:
+        result["readProbe"] = probe_result
+    return result
 
 
 def qualify(

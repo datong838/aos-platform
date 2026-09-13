@@ -1,0 +1,175 @@
+{
+  "expected": {
+    "caseCount": 1,
+    "cases": [
+      {
+        "analysisType": "initial_store_analysis",
+        "caseRef": {
+          "contentHash": "sha256:df3c0eef9001229cd8a95c21ef3526dd8ae348724dca29991336926648b347ca",
+          "resourceId": "case-1",
+          "resourceType": "BusinessInvestigationCaseRevision",
+          "revision": 2
+        },
+        "lifecycle": "ACTIVE",
+        "runs": [
+          {
+            "caseRef": {
+              "contentHash": "sha256:df3c0eef9001229cd8a95c21ef3526dd8ae348724dca29991336926648b347ca",
+              "receiptId": null,
+              "resourceId": "case-1",
+              "resourceType": "BusinessInvestigationCaseRevision",
+              "revision": 2
+            },
+            "control": "RUNNING",
+            "lifecycle": "PREPARING",
+            "runRef": {
+              "contentHash": "sha256:95cc90f0ccaec1d0f1c7c707fd2751a3351679641fdc329dd2fd803631972166",
+              "resourceId": "run-1",
+              "resourceType": "BusinessInvestigationRun",
+              "revision": 1
+            },
+            "stateRef": {
+              "contentHash": "sha256:8807b780e0fe9c6beeb4719ca3cdf6f40b32f7d38af2edf4a42189a0e7b5c07a",
+              "resourceId": "run-1",
+              "resourceType": "BusinessInvestigationRunStateRevision",
+              "revision": 1
+            }
+          }
+        ],
+        "title": "首次全店经营分析"
+      }
+    ],
+    "cutoffAt": "2026-09-13T13:56:33.039449Z",
+    "executionAllowed": false,
+    "runCount": 1,
+    "schemaVersion": "aos.analyst-workspace-view/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "truncated": false
+  },
+  "method": "analyst_workspace_view_v1",
+  "payload": {
+    "snapshot": {
+      "cases": [
+        {
+          "case": {
+            "analysisType": "initial_store_analysis",
+            "businessEntityRef": {
+              "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "receiptId": null,
+              "resourceId": "store-1",
+              "resourceType": "BusinessEntityRevision",
+              "revision": 1
+            },
+            "caseId": "case-1",
+            "channelRef": {
+              "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "receiptId": null,
+              "resourceId": "private-mall",
+              "resourceType": "ChannelRevision",
+              "revision": 1
+            },
+            "contentHash": "sha256:df3c0eef9001229cd8a95c21ef3526dd8ae348724dca29991336926648b347ca",
+            "createdAt": "2026-09-13T13:56:33.039449Z",
+            "createdBy": "business-owner",
+            "entityChannelBindingRef": {
+              "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "receiptId": null,
+              "resourceId": "binding-store-1",
+              "resourceType": "BusinessEntityChannelBindingRevision",
+              "revision": 1
+            },
+            "investigationProfileRef": {
+              "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "receiptId": null,
+              "resourceId": "profile-initial",
+              "resourceType": "InvestigationProfileRevision",
+              "revision": 1
+            },
+            "lifecycle": "ACTIVE",
+            "priorRef": {
+              "contentHash": "sha256:c1975a2d851f7091f8f62fcfaf6719e7818743f76da5416b5a2296d746fa9432",
+              "receiptId": null,
+              "resourceId": "case-1",
+              "resourceType": "BusinessInvestigationCaseRevision",
+              "revision": 1
+            },
+            "purposeCode": "business.investigation.initial",
+            "revision": 2,
+            "schedulePolicyRef": null,
+            "schemaVersion": "aos.ecommerce.business-investigation-case/v1",
+            "scopeRef": {
+              "contentHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "receiptId": null,
+              "resourceId": "scope-1",
+              "resourceType": "InvestigationScopeRevision",
+              "revision": 1
+            },
+            "tenant": {
+              "orgId": "org-org",
+              "projectId": "dev-project"
+            },
+            "title": "首次全店经营分析",
+            "version": 2
+          },
+          "runs": [
+            {
+              "authority": {
+                "analysisType": "initial_store_analysis",
+                "caseRef": {
+                  "contentHash": "sha256:df3c0eef9001229cd8a95c21ef3526dd8ae348724dca29991336926648b347ca",
+                  "receiptId": null,
+                  "resourceId": "case-1",
+                  "resourceType": "BusinessInvestigationCaseRevision",
+                  "revision": 2
+                },
+                "contentHash": "sha256:95cc90f0ccaec1d0f1c7c707fd2751a3351679641fdc329dd2fd803631972166",
+                "control": "RUNNING",
+                "createdAt": "2026-09-13T13:56:33.041723Z",
+                "createdBy": "business-owner",
+                "lifecycle": "PREPARING",
+                "runId": "run-1",
+                "schemaVersion": "aos.ecommerce.business-investigation-run/v1",
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "triggerKey": "manual-2026-08-26-1",
+                "triggerKind": "manual",
+                "version": 1
+              },
+              "state": {
+                "contentHash": "sha256:8807b780e0fe9c6beeb4719ca3cdf6f40b32f7d38af2edf4a42189a0e7b5c07a",
+                "control": "RUNNING",
+                "createdAt": "2026-09-13T13:56:33.039449Z",
+                "createdBy": "owner",
+                "eventSequence": 1,
+                "lifecycle": "PREPARING",
+                "pendingRequirementRef": null,
+                "priorRef": null,
+                "runId": "run-1",
+                "schemaVersion": "aos.ecommerce.business-investigation-run-state/v1",
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "uncertainCommand": null,
+                "version": 1
+              }
+            }
+          ]
+        }
+      ],
+      "cutoffAt": "2026-09-13T13:56:33.039449Z",
+      "schemaVersion": "aos.analyst-workspace-snapshot/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "truncated": false
+    }
+  },
+  "purpose": "qualification-fixture-only-not-real-business"
+}
