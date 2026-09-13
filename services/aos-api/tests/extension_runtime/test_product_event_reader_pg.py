@@ -1,5 +1,7 @@
 """Candidate SQL semantics only; this fixture is not live source authorization."""
 import psycopg
+import hashlib
+import json
 from psycopg import sql
 from psycopg.types.json import Jsonb
 import pytest
@@ -11,8 +13,14 @@ from aos_api.ecom_consistency_store import ProjectionEventEvidence
 from aos_api.ecommerce_product_event_reader import ProductEventCandidateReader, _read_candidates
 
 
+def payload_hash():
+    raw,_=case()
+    return hashlib.sha256(json.dumps({'record':{'source_updated_at':raw['effectiveFrom'].isoformat(),
+        'properties':{'private':'never returned'}}},ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+
 def proof(*numbers):
-    return tuple(ProjectionEventEvidence(str(n).zfill(64),'a'*64,n,False) for n in numbers)
+    return tuple(ProjectionEventEvidence(str(n).zfill(64),payload_hash(),n,False) for n in numbers)
 
 
 @pytest.fixture
@@ -28,7 +36,7 @@ def events(database):
         row = dict(outbox_id=number,input_revision=number,org_id=policy.org_id,project_id=policy.project_id,
             workspace_id=policy.project_id,platform=policy.platform,shop_or_marketplace_id=policy.shop_or_marketplace_id,
             object_type='Product',event_source='authoritative_store',change_kind='objects_written',
-            event_key=str(number).zfill(64),payload_hash='a'*64,authority_tx_id='b'*64,external_id=str(number),
+            event_key=str(number).zfill(64),payload_hash=payload_hash(),authority_tx_id='b'*64,external_id=str(number),
             created_at=policy.effective_from,payload=Jsonb({'record':{'source_updated_at':policy.effective_from.isoformat(),
                 'properties':{'private':'never returned'}}}),projected=False)
         row.update(changes)
@@ -72,3 +80,12 @@ def test_wrong_original_digest_is_rejected(events):
     conn,_,policy,insert=events;insert(conn,1)
     with pytest.raises(ValueError,match='evidence differs'):
         _read_candidates(conn,policy,100,(ProjectionEventEvidence(str(1).zfill(64),'c'*64,1,False),))
+
+
+def test_payload_drift_cannot_hide_behind_original_hash(events):
+    conn,_,policy,insert=events
+    insert(conn,1)
+    conn.execute("UPDATE projection_outbox SET payload=jsonb_set(payload,'{record,properties,private}',%s)",
+                 (Jsonb('tampered'),))
+    with pytest.raises(ValueError,match='payload integrity'):
+        _read_candidates(conn,policy,100,proof(1))

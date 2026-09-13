@@ -1,4 +1,6 @@
 """Current-source candidate metadata. No policy approval, payload export or ACK."""
+import hashlib
+import json
 from psycopg.rows import dict_row
 from aos_api.extension_runtime.runtime_gate import _reject_deferred
 
@@ -26,7 +28,7 @@ def _read_candidates(conn, policy, limit, evidence):
     if not refs:return ()
     with conn.cursor(row_factory=dict_row) as cursor:
         rows = tuple(cursor.execute('''SELECT e.outbox_id,e.input_revision,e.event_key,e.payload_hash,
-            e.authority_tx_id,e.object_type,e.external_id,e.change_kind,e.created_at,
+            e.authority_tx_id,e.object_type,e.external_id,e.change_kind,e.created_at,e.payload,
             e.payload->'record'->>'source_updated_at' AS source_updated_at
             FROM projection_outbox e
             WHERE e.org_id=%s AND e.project_id=%s AND e.workspace_id=%s
@@ -45,6 +47,16 @@ def _read_candidates(conn, policy, limit, evidence):
         ref=refs[row['event_key']]
         if (row['payload_hash'],row['input_revision'])!=(ref.payload_hash,ref.input_revision):
             raise ValueError('original batch event evidence differs')
+        payload = row.pop('payload')
+        try:
+            if type(payload) is not dict:
+                raise ValueError('payload must be an object')
+            encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True,
+                                 separators=(',', ':'), allow_nan=False).encode('utf-8')
+        except (TypeError, ValueError, UnicodeError, RecursionError):
+            raise ValueError('original batch payload integrity differs') from None
+        if hashlib.sha256(encoded).hexdigest() != ref.payload_hash:
+            raise ValueError('original batch payload integrity differs')
     return rows
 
 

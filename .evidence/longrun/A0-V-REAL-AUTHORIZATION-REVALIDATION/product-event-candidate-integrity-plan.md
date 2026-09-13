@@ -1,0 +1,7 @@
+# BG-02 候选事件完整性
+
+基线db9448d9。前序消费方案第3项：Reader目前对照原batch proof检查payload_hash/input_revision，却未重新计算数据库payload哈希。写任务前须证实payload未漂移。此切片只补读取Owner的存储完整性，不复制核心包的业务时间语义，也不冒充生产消费者已经连接。
+
+修改services/aos-api/aos_api/ecommerce_product_event_reader.py内部SQL带payload，仅在内部按与EcomConsistencyStore相同的规范JSON计算SHA256，与原凭据和行hash一致；计算通过后删除payload才返回原metadata。记录source_updated_at与载荷同源。拒绝不可JSON、NaN等，不输出载荷。空观察不变；错误在SourceOwner回调内抛出，防止后续写入。更新test_product_event_reader_pg.py使用真实计算hash的测试载荷，并新增“内容被改而hash保持”拒绝，保留晚提交、跨租户、店铺、对象和不暴露payload测试。回归原Reader和callback。无DDL/新执行入口/主库动作。
+
+下一步仍是域时间计算与受控Occurrence消费，不能将本项独立green当作自然触发完成。
