@@ -19,13 +19,15 @@ class PreparationOwner:
     Factories must be signed, journaled contexts. commit must settle any database
     thread before propagating cancellation. No session escapes this owner.
     """
-    def __init__(self, factories, commit, *, lease_seconds):
+    def __init__(self, factories, commit, *, lease_seconds, health_clock=None):
         factories = tuple(factories)
         if (not 1 <= len(factories) <= 64 or not all(callable(f) for f in factories)
-                or not callable(commit) or isinstance(lease_seconds, bool)
+                or not callable(commit) or (health_clock is not None and not callable(health_clock))
+                or isinstance(lease_seconds, bool)
                 or not isinstance(lease_seconds, (int, float))
                 or not math.isfinite(lease_seconds) or not 0 < lease_seconds <= 300):
             raise ValueError("bounded trusted preparation inputs required")
+        self._health_clock = health_clock
         self._ready = asyncio.get_running_loop().create_future()
         self._ready.add_done_callback(_observe)
         self._started = False
@@ -121,6 +123,17 @@ class PreparationOwner:
                 raise uncertain from original
             raise
 
+    async def _health_observation(self):
+        if self._health_clock is None:
+            await self._check_health()
+            return datetime.now(timezone.utc)
+        # Anchor before probing: probe and transaction latency consume freshness.
+        observed = await self._health_clock()
+        if not isinstance(observed, datetime) or observed.utcoffset() is None:
+            raise ValueError('trusted database health clock required')
+        await self._check_health()
+        return observed
+
     async def verify(self, commit):
         """Trusted callback must settle DB work before propagating cancellation."""
         await self.prepared()
@@ -130,8 +143,8 @@ class PreparationOwner:
         if not callable(commit):
             raise TypeError('trusted verification callback required')
         async def execute():
-            await self._check_health()
-            return await commit(datetime.now(timezone.utc))
+            observed = await self._health_observation()
+            return await commit(observed)
         # No await between admission check and registration. Closing sees this
         # task and settles it before the resource contexts leave.
         self._verification = asyncio.create_task(execute())
@@ -162,8 +175,8 @@ class PreparationOwner:
             raise TypeError('trusted control callback required')
 
         async def execute():
-            await self._check_health()
-            return await commit(datetime.now(timezone.utc))
+            observed = await self._health_observation()
+            return await commit(observed)
 
         # Admission and registration are indivisible on this event loop. Keep
         # only the latest task; failed tasks can never be replaced.

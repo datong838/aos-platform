@@ -1,0 +1,8 @@
+# 重启后健康观测时钟修复
+
+问题：宿主与VM数据库时钟不完全同步，PreparationOwner在健康成功后使用宿主datetime.now，而verification_commit要求数据库时间减观测时间在[0,3]秒，真实重启后DB落后约72ms，OCI验证连续拒绝future。不能扩大窗口、允许未来时间或改测试时钟。
+
+修改services/aos-api/aos_api/extension_runtime/preparation_owner.py：可选可信异步health_clock；提供时先取权威锚点，再检查全部会话健康，随后把探测前锚点交commit。因此慢探测/排队会消耗原3秒窗口，不会刷新或延长健康有效期。verify和control共用，enable/renew覆盖；默认无clock的其他内部调用保持原行为。失败、取消和uncertain清理保持原语义。
+修改preparation_worker.py：固定通过已有租户runtime连接SELECT clock_timestamp读取锚点，以settled asyncio线程回调供Owner使用；没有包/用户控制的clock选择、没有secret/DSN回退，不修改数据库时间。
+测试test_preparation_owner.py添加先clock后health后commit顺序、verify/control均传DB锚点、错误/失败clock无提交、慢观测仍被_fresh_health拒绝；回归owner/worker和signed lifecycle实际OCI。若全套通过再关闭84ca5d1e遗留失败。主库恢复只能使用当前安装状态与新运行权威，不能复用已释放代次。
+风险边界：本切片修健康观测来源，租约deadline和其他跨时钟比较不声称已全部收敛；严格3秒窗口保持不变。

@@ -181,6 +181,10 @@ class PreparationWorker:
                     raise RuntimeConflict('worker requires adopted runtime control role')
                 yield conn
 
+    def _read_health_clock(self,scope):
+        with self._connection(scope) as conn:
+            return _values(conn.execute('SELECT clock_timestamp() AS now').fetchone(),('now',))[0]
+
     def _verify(self,scope,plan,operation_id,expected_revision,observed):
         with self._connection(scope) as conn:
             with conn.transaction():
@@ -276,7 +280,12 @@ class PreparationWorker:
                 result,was_cancelled=await _settle(asyncio.create_task(asyncio.to_thread(self._commit,scope,plan)))
                 if was_cancelled:raise asyncio.CancelledError
                 return result
-            owner=PreparationOwner([factory(member) for member in plan.members],commit,lease_seconds=remaining)
+            async def health_clock():
+                observed,was_cancelled=await _settle(asyncio.create_task(asyncio.to_thread(self._read_health_clock,scope)))
+                if was_cancelled:raise asyncio.CancelledError
+                return observed
+            owner=PreparationOwner([factory(member) for member in plan.members],commit,
+                lease_seconds=remaining,health_clock=health_clock)
             verify=(lambda operation_id,revision,observed:self._verify(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.verification_permission) else None
             enable=(lambda operation_id,revision,observed:self._enable(scope,plan,operation_id,revision,observed)) if callable(self.conditions) and callable(self.configuration_authorize) and callable(self.enable_permission) else None
             return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),verify,enable,

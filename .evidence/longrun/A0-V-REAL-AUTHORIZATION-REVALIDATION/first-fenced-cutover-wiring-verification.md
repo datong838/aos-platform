@@ -12,3 +12,6 @@ Cutover构造可选exact登记Owner，缺配置继续拒绝首次ref；prepare�
 ## 重启恢复实况
 原Colima/数据库已启动。18181/v1/health、/v1/ready及5173/ontology均200。API保持迁移禁用、业务Cron/自动模型关闭。运行Host已启动PID4753，但当前generation23afd05b-762c-406a-adfb-247a14412b9f实际变为revision5/epoch4/disabled/fenced/unknown；租约30条全部released。主库仍a0v_025，经营dispatch0。旧generation/配置授权不复用；不能声称全系统业务就绪。8434旧入口未恢复。
 当前实现提交仅供接续，未部署主库迁移或首次激活。下一波健康时钟修复和真实实例受控恢复优先，再未激活撤销与完整依赖首次登记激活。
+
+
+2026-09-13T10:38:42.255491+08:00后续复验：数据库健康锚点修复后完整联合132通过（33.81秒），之前OCI失败已消除；仍不是主库首次激活或全依赖经营链通过。详见health-clock-recovery-verification.md。

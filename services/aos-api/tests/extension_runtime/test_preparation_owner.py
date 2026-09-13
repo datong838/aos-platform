@@ -265,3 +265,58 @@ def test_owner_failure_is_observable_and_cleanup_is_not_lost(failure):
         assert closed == ([] if failure == 'startup' else [True])
         assert not [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
     asyncio.run(run())
+
+
+def test_database_health_anchor_precedes_probe_for_verify_and_control():
+    from datetime import datetime,timezone,timedelta
+    from types import SimpleNamespace
+    from aos_api.extension_runtime.verification_commit import _fresh_health
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    async def run():
+        order=[];anchor=datetime(2001,1,1,tzinfo=timezone.utc)
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process=Process()
+                async def check_health(self):order.append('health')
+            yield Session()
+        async def prepared():return 'ready'
+        async def clock():order.append('clock');return anchor
+        async def commit(observed):
+            order.append('commit');assert observed==anchor
+            return 'checked'
+        owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock)
+        await owner.prepared()
+        assert await owner.verify(commit)=='checked'
+        assert await owner.control(commit)=='checked'
+        assert order==['clock','health','commit']*2
+        class Connection:
+            def execute(self,query):return SimpleNamespace(fetchone=lambda:{'now':anchor+timedelta(seconds=4)})
+        with pytest.raises(RuntimeConflict,match='stale'):_fresh_health(Connection(),anchor)
+        await owner.stop()
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('mode',['naive','missing','error'])
+def test_bad_authority_clock_never_probes_or_commits(mode):
+    from datetime import datetime
+    async def run():
+        seen=[]
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process=Process()
+                async def check_health(self):seen.append('health')
+            yield Session()
+        async def prepared():return 'ready'
+        async def clock():
+            if mode=='error':raise RuntimeError('clock unavailable')
+            return datetime(2001,1,1) if mode=='naive' else None
+        async def commit(observed):seen.append('commit')
+        owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock)
+        await owner.prepared()
+        with pytest.raises((ValueError,RuntimeError)):await owner.verify(commit)
+        try:await owner.wait_closed()
+        except (ValueError,RuntimeError):pass
+        assert not seen
+    asyncio.run(run())
