@@ -161,10 +161,18 @@ class HostTransaction:
         """Trusted source Owner uses this same connection without exposing it."""
         from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
         from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
-        if type(owner) not in (PipelineSourceSelectionOwner, ProductEventQualifiedOwner):
+        from aos_api.ecommerce_product_event_control_qualified_owner import ProductEventControlQualifiedOwner
+        if type(owner) not in (PipelineSourceSelectionOwner, ProductEventQualifiedOwner, ProductEventControlQualifiedOwner):
             raise TypeError('exact current source Owner required')
         return owner.run_current_snapshot(self.__connection, scope=scope, ref=ref,
             actor=actor, execute=execute)
+
+    def run_current_event_control(self,owner,*,scope,dispatch,execute):
+        """Current control qualification without exporting the connection."""
+        from aos_api.ecommerce_product_event_control_qualified_owner import ProductEventControlQualifiedOwner
+        if type(owner) is not ProductEventControlQualifiedOwner:
+            raise TypeError('exact current control Owner required')
+        return owner.run_without_source(self.__connection,scope=scope,dispatch=dispatch,execute=execute)
 
 
 def _normalized_key(value: str) -> str:

@@ -36,6 +36,9 @@ class ProductEventQualifiedOwner:
 
     def _qualify(self, conn, scope, draft):
         current=CurrentInstallationRef.model_validate(draft.installation_ref.model_dump(by_alias=True))
+        return self._qualify_contract(conn,scope,current,CONTRACT_PATH,EVENT_CONTRACT)
+
+    def _qualify_contract(self,conn,scope,current,contract_path,expected_contract):
         baseline=self._store.load_active_baseline_in_transaction(conn,org_id=scope.org_id,
             project_id=scope.project_id,requested_ref=current)
         selected=[item for item in baseline.lock.payload.resolved if item.id=='solution.ecommerce.growth']
@@ -48,11 +51,11 @@ class ProductEventQualifiedOwner:
         if any(qualification.get(key)!=value for key,value in expected.items()):
             raise ValueError('current growth qualification differs')
         record=self._artifacts.load_record(selected)
-        if not ManifestLoader._is_exported_path(CONTRACT_PATH,record.manifest.spec.exports.schemas):
+        if not ManifestLoader._is_exported_path(contract_path,record.manifest.spec.exports.schemas):
             raise PermissionError('current growth package does not export event save contract')
-        raw=self._artifacts.read_artifact(selected,CONTRACT_PATH,16384)
+        raw=self._artifacts.read_artifact(selected,contract_path,16384)
         contract=json.loads(raw,object_pairs_hook=_pairs,parse_constant=_constant)
-        if type(contract) is not dict or canonical_sha256(contract)!=canonical_sha256(EVENT_CONTRACT):
+        if type(contract) is not dict or canonical_sha256(contract)!=canonical_sha256(expected_contract):
             raise ValueError('signed growth event save contract differs')
 
     def run_current_snapshot(self, conn, *, scope, ref, actor, execute):

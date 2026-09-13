@@ -47,6 +47,8 @@
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_command.py",
         "bundles/solutions/ecommerce-growth/content/schemas/product-event-save.contract.v1.json",
         "services/aos-api/aos_api/ecommerce_product_event_qualified_owner.py",
+        "services/aos-api/aos_api/ecommerce_product_event_control_qualified_owner.py",
+        "bundles/solutions/ecommerce-growth/content/schemas/product-event-control.contract.v1.json",
         "services/aos-api/aos_api/ecommerce_product_event_dispatch.py",
         "services/aos-api/aos_api/ecommerce_product_event_host_service.py",
         "services/aos-api/tests/extension_runtime/test_product_event_binding.py",

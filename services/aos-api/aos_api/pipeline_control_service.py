@@ -85,3 +85,9 @@ class PipelineControlServiceFactory:
         selections,artifacts=self._source_dependencies(scope)
         return ProductEventQualifiedOwner(selections=selections,installation_store=self.installation_store,
             artifacts=artifacts,release_policy=self.policy)
+
+    def build_event_control_owner(self,scope):
+        from aos_api.ecommerce_product_event_control_qualified_owner import ProductEventControlQualifiedOwner
+        selections,artifacts=self._source_dependencies(scope)
+        return ProductEventControlQualifiedOwner(selections=selections,installation_store=self.installation_store,
+            artifacts=artifacts,release_policy=self.policy)

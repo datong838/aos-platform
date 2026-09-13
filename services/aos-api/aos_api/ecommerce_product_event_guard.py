@@ -6,6 +6,7 @@ from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
 from aos_api.extension_runtime.runtime_gate import _reject_deferred
 from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
 from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
+from aos_api.ecommerce_product_event_control_qualified_owner import ProductEventControlQualifiedOwner
 from aos_api.pipeline_source_selection_store import SourceSelectionRecord
 from aos_api.pipeline_snapshot_materialization import SnapshotMapping
 from aos_api.pipeline_snapshot_materialization_v2 import SnapshotMappingV2
@@ -14,7 +15,7 @@ from aos_api.tenant_scope import TenantScope
 
 class ProductEventPolicyGuard:
     def __init__(self, owner):
-        if type(owner) not in (PipelineSourceSelectionOwner, ProductEventQualifiedOwner):
+        if type(owner) not in (PipelineSourceSelectionOwner, ProductEventQualifiedOwner, ProductEventControlQualifiedOwner):
             raise TypeError('current source Owner required')
         self._owner = owner
 
