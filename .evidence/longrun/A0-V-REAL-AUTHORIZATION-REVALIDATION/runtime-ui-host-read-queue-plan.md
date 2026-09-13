@@ -233,3 +233,15 @@ HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全�
 新增scripts/a0v_ecommerce_ui_signed_successor.py与对应tests/extension_runtime/test_ecommerce_ui_signed_successor.py，私有复用既有signature/verify_inputs/signed_tree流程，固定growth1.8构建回执与新profile，旧根为当前niushop1.5的13版本，新根只追加growth1.8成为14版本。require_sessions严格1/2/24、2048心跳、释放、精确fixture/payload/resultHash和只读标志；源保护加新profile与fixture，旧签名根和已有版本字节保持。
 
 本切片CLI只preflight或prepare签名，不调用旧publish/switch_root/main。代码核对发现RegistryService._assert_publish_duty_separation要求publisher区别creator/validator；旧helper按新名字拼接actor和固定roles不能证明真实主体职责分离，禁止照搬为当前真实验收。当前org-org/dev-project成员仍runtime-owner(admin)与user:dev(owner)，原独立审批身份待核验；不造新成员或假发布人。本波永久签名可独立完成，后继继续备份/迁移/服务升级准备。真正发布/安装要使用可核验现有主体及产品授权，不能靠资格fixture替代。
+
+## UQ6-A 031~035本地主库增量迁移（基线d7c56562，编码前）
+
+部署租约A0V-UI-READ-LOCAL-DEPLOYMENT-20260913-V2，owner m1，至2026-09-17；首次登记文件名校对后已无变更关闭并换正确V2，不篡改旧Receipt。项目强一致投影CURRENT，parent authority仍AOS-000573；不升级总门。
+
+新增scripts/a0v_ui_read_deploy.py与tests/extension_runtime/test_ui_read_deploy.py，复用已验证固定本地连接/指纹/0600写入辅助。固定MAIN aos_meta_head，克隆aos_ui_read_20260913_test，a0v_030→a0v_035精确五迁移链，5秒DDL锁超时/30秒语句超时及迁移advisory lock。只新增读队列/NOLOGIN角色/固定函数及队列最小ACL，不改原表数据和默认ACL，不重启Host。
+
+prepare先备份主库到0700仓外目录中的0600 dump，再新建拒绝PUBLIC CONNECT的恢复副本，核对迁移前版本及关键业务表指纹，升级副本并复核相同数据指纹、空队列、FORCE RLS、11状态列UPDATE/禁INSERT DELETE TRUNCATE及身份列UPDATE、API无表权限、5个固定函数精确EXECUTE角色且PUBLIC拒绝。保留备份/副本/prepare证据，既有目标拒绝覆盖。
+
+apply仅接受完整prepare证明（dump/migrations/script hash一致），主库与克隆仍处于预期版本/数据基线并复核ACL；先落不可覆盖apply-intent再升级主库，读回版本/数据/ACL。已有意图不重跑，须独立readback判断提交结果。API独立登录身份、Host升级、签名包发布安装、浏览器真实读不在此迁移动作内。测试精确版本链/证据防篡改、已有意图拒绝和数据库ACL verifier；再实际prepare/clone验证才apply。
+
+UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件及父目录fsync；备份完成后fsync。保留旧辅助不改，防止崩溃丢失执行意图；已有意图只能readback。
