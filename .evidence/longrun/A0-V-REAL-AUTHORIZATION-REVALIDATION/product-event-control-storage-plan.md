@@ -1,0 +1,7 @@
+# BG-02 控制回执存储与CAS
+
+基线c39c6bb7。先新增a0v_042迁移，只添加不可变ecommerce_product_event_control_receipt审计表，运行状态仍唯一来自automation_schedule_binding。字段org/project/idempotency_key/request_hash/policy_id/policy_revision/binding_revision/actor/command/authority/created_at，key唯一；引用现有binding精确policy revision，正版本/摘要/JSON约束，FORCE RLS，runtime仅SELECT/INSERT，禁止UPDATE/DELETE。没有新启用函数或路由，表不能当启用许可。
+
+本波同时提供HostTransaction绑定ProductEventControlReceiptStore：put先校验scope/严格命令/摘要、读取并核对当前binding快照，再插入原回执；重复key必须命令摘要一致，返回原authority；不创建连接、不commit。后续CAS Owner将binding更新与此put放同一事务，任一步失败回滚。当前片不执行binding变更，不能声称原子启用已完成。
+
+代码：services/aos-api/alembic/versions/a0v_042_product_event_control_receipt.py；services/aos-api/aos_api/ecommerce_product_event_control_receipt.py；测试services/aos-api/tests/extension_runtime/test_product_event_control_receipt_pg.py。隔离18432全迁移升级/真实runtime插入读取、重复冲突、immutable/双tenant/外层回滚。主库038不动。下一波在当前Owner/批准资格内连接binding CAS，再注册控制操作和产品入口。
