@@ -12,7 +12,7 @@ def test_role_reader_is_current_and_callback_bound(monkeypatch,fault):
     owner=object.__new__(PipelineSourceSelectionOwner);owner._authorization=object()
     scope=TenantScope('org-org','dev-project');events=[]
     draft=SimpleNamespace(org_id=scope.org_id,project_id=scope.project_id,
-        installation_ref=SimpleNamespace(installation_id='installation'),generation='generation',configuration_ref={})
+        installation_ref=SimpleNamespace(installation_id='installation'),generation='generation',execution_epoch=3,configuration_ref={})
     def current(self,conn,**kw):
         events.append('owner-enter');result=kw['execute'](draft,object());events.append('owner-exit');return result
     monkeypatch.setattr(PipelineSourceSelectionOwner,'run_current_snapshot',current)

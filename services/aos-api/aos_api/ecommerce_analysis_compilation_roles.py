@@ -56,6 +56,8 @@ class AnalysisCompilationRoleReader:
                 if (plan['lifecycle']!='frozen' or plan['readiness']!='ready' or plan['coverage']!='complete'):
                     raise ValueError('current analysis responsibility is not ready')
                 return dict(configuration=document.model_dump(mode='json'),responsibilityPlan=plan,
+                            currentInstallation=dict(installationId=str(draft.installation_ref.installation_id),
+                                generation=str(draft.generation),executionEpoch=draft.execution_epoch),
                             domainProfileRef=domain.exact_ref.model_dump(mode='json',by_alias=True))
             before=read();fingerprint=canonical_sha256(before)
             result=execute(deepcopy(before))

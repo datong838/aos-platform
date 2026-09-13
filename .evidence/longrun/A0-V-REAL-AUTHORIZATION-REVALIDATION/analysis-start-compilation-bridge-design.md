@@ -45,3 +45,7 @@ CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际
 ## CF2-5 派生技能集合合同
 
 新增 services/aos-api/aos_api/ecommerce_analysis_skill_set.py、tests/test_ecommerce_analysis_skill_set.py。SkillBindingSetRevision采用当前SkillBinding权威行的内容寻址派生快照，含tenant、installation/generation/epoch、exact职责方案与稳定按binding_id排序的完整绑定。集合ref用内容hash寻址、revision固定1，不另建可写权限表。合法性检查租户一致、唯一binding/skill、SkillTemplate类型、正文hash；validate_current对当前重读行和当前安装/职责exact比较，校验active/available、无阻断原因、已评估、依赖快照存在及TTL未过期。此合同不证明Logic发布或能力可执行；后续读取器须在原Owner回调内读真实绑定与发布，并保存集合正文到编译桥证据。无DDL/主库写。
+
+## CF2-6 当前技能集合读取
+
+新增 services/aos-api/aos_api/ecommerce_analysis_skill_reader.py 与tests/test_ecommerce_analysis_skill_reader.py；职责读取结果补currentInstallation（由SourceOwner draft给出installation/generation/epoch）。读取器复用run_with_stage边界，只按调用者明确给出的唯一binding IDs（最多128）取当前绑定，并要求每个instance归属当前职责agent_instance槽。复用AipSkillRegistry读绑定/技能、AipSkillBindingReadinessService.evaluate只读重验；要求现存TTL有效、评估结果available且依赖hash与存储一致；检查发布租户与exact技能hash，再解析LogicRevision与原发布记录。回调前后重复读取，输出派生集合正文/ref及技能/Logic元数据；不产生权限、不自动刷新、不选最新版。此层仍不是安装模板/意图映射选择权威。
