@@ -1260,3 +1260,10 @@ IAB tab10 5173/data真实显示1数据源、栖月汇微商城、MySQL SSH隧道
 | 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
 | --- | --- | --- | --- |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analyst_workspace_view.py` | 原路径 | solution；只复用包内Case枚举，输入canonical快照、输出精确来源展示，无I/O或授权；未接生产读取与运行注册 | 2103a547d5a20f234980ae63be00ea599beadc978e86ed201df137218ea3c38a |
+
+
+## 2026-09-13 N8 canonical 读取端口
+
+| 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/extension_runtime/analyst_workspace_snapshot.py` | 原路径 | platform canonical read port；固定scope读取原有Case/Run/State、当前主体事实及截断边界，不包含领域展示逻辑，不直接公开HTTP | 17b33bacaea0706457895b55d52159597ae1fc8c73cad960159bdfb714ec771d |
