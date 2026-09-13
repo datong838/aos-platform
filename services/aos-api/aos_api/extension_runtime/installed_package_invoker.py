@@ -9,11 +9,12 @@ from aos_api.asset_registry.composition_contracts import CurrentInstallationRef
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
 from .live_job_directory import LivePreparedJobDirectory
+from .preparation_worker import PreparedJob
 
 
 class CurrentInstalledPackageInvoker:
     def __init__(self, *, scope, installation_id, generation, package_id, markings,
-                 connect_factory, installation_store, live_directory):
+                 connect_factory, installation_store, live_directory, expected_job=None):
         if type(scope) is not TenantScope:
             raise TypeError("installed invocation requires TenantScope")
         if not callable(connect_factory) or inspect.iscoroutinefunction(connect_factory):
@@ -37,6 +38,12 @@ class CurrentInstalledPackageInvoker:
         self.connect = connect_factory
         self.store = installation_store
         self.directory = live_directory
+        if expected_job is not None:
+            if not isinstance(expected_job,PreparedJob):
+                raise TypeError('exact expected PreparedJob required')
+            if live_directory.resolve(scope=scope,installation_id=self.installation_id,generation=self.generation) is not expected_job:
+                raise PermissionError('expected PreparedJob is not current')
+        self.expected_job = expected_job
 
     def read_current_in_transaction(self, transaction):
         if type(transaction) is not HostTransaction:
@@ -134,11 +141,16 @@ class CurrentInstalledPackageInvoker:
             scope=self.scope, installation_id=self.installation_id,
             generation=self.generation,
         )
+        if self.expected_job is not None and job is not self.expected_job:
+            raise PermissionError('expected PreparedJob changed')
         result = await job.invoke_selected_once(
             package_id=self.package_id, package_hash=package_hash,
             operation=operation, payload=payload,
         )
         after = self._read_current()
+        if self.expected_job is not None and self.directory.resolve(
+                scope=self.scope,installation_id=self.installation_id,generation=self.generation) is not self.expected_job:
+            raise PermissionError('expected PreparedJob changed')
         if after != before:
             raise PermissionError("installed invocation authority changed")
         return result

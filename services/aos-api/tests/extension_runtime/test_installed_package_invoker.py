@@ -203,3 +203,25 @@ def test_stage_review_factory_binds_one_concrete_invoker_to_call_and_snapshot():
     )
     assert isinstance(service.invoke.__self__, CurrentInstalledPackageInvoker)
     assert service.installed_snapshot.__self__ is service.invoke.__self__
+
+
+@pytest.mark.parametrize('replacement',['none','before','during'])
+def test_expected_job_is_exact_before_and_after_ipc(replacement):
+    state,calls,observations=_state(),[],[]
+    directory=_directory(calls)
+    job=directory.resolve(scope=SCOPE,installation_id=INSTALLATION,generation=GENERATION)
+    other=_directory([]).resolve(scope=SCOPE,installation_id=INSTALLATION,generation=GENERATION)
+    def replace_job():
+        directory.unregister(job);directory.register(other)
+    if replacement=='during':
+        async def invoke_selected_once(**kwargs):
+            calls.append(kwargs);replace_job();return {'ok':True}
+        job.invoke_selected_once=invoke_selected_once
+    invoker=CurrentInstalledPackageInvoker(scope=SCOPE,installation_id=INSTALLATION,generation=GENERATION,
+        package_id='solution.ecommerce.growth',markings=('internal',),connect_factory=_connect(state,observations),
+        installation_store=_Store(state),live_directory=directory,expected_job=job)
+    if replacement=='before':replace_job()
+    if replacement=='none':assert asyncio.run(invoker('analyst_workspace_view_v1',{}))=={'ok':True}
+    else:
+        with pytest.raises(PermissionError,match='PreparedJob changed'):asyncio.run(invoker('analyst_workspace_view_v1',{}))
+    assert len(calls)==(0 if replacement=='before' else 1)

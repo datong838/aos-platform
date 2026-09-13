@@ -81,3 +81,7 @@ aos_runtime仅获请求状态、版本、claim/结果相关列UPDATE；不可插
 修改ui_read_api_database.py抽取仅两个固定函数名的内部principal调用，API包装保持032，新增host包装仅033。analyst_workspace_snapshot.py机械提取现有范围/隔离预检和查询组装，保留旧入口，新增read_host_analyst_workspace_snapshot调用宿主principal包装后复用相同SQL/组装。无可注入查询或跳过权限的参数。
 
 新增非超级host PG快照测试：角色只有canonical表SELECT和受限principal函数，无成员UPDATE；真实canonical Case/Run/State输入包纯投影有效，第二连接新Case在同一事务不可见、下事务可见。API角色不能使用宿主入口，未知主体拒绝。旧入口原测试保留，避免影响已有诊断行为。
+
+## UQ3-E 共享读取门禁与精确实例（基线772200b0，编码前补充）
+
+从ui_read_admission机械抽取require_current_catalog_read，用于API及宿主准备/完成前一致校验，返回签名资源条目而非执行许可。CurrentInstalledPackageInvoker新增可选expected_job，构造时必须是当前目录同租户/安装/代次的真实PreparedJob；IPC前后核同一对象。既有调用不传参数保持原行为。新增调用前被替换零invoke、调用中被替换不返回结果、合法实例成功的测试。后续具体消费者必须传领取时选中的job。

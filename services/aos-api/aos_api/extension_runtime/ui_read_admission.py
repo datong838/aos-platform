@@ -22,25 +22,32 @@ class RuntimeUiReadAdmission:
                                               required_markings=required_markings)
         catalog = self._catalog.list_modules(org_id=scope.org_id, project_id=scope.project_id,
                                             roles=principal.roles, markings=principal.markings)
-        if ((catalog.tenant.orgId, catalog.tenant.projectId) != scope.key
-                or catalog.count != len(catalog.items)):
-            raise RuntimeConflict('current UI catalog scope differs')
-        matches = [entry for entry in catalog.items if entry.module.module_id == request.moduleId]
-        if len(matches) != 1:
-            raise RuntimeConflict('current signed UI module unavailable')
-        entry = matches[0]
-        target = request.target
-        if (entry.module.route != target.route or entry.ui.initialRoute != target.route
-                or target.route not in entry.ui.routeClaims
-                or request.operationId not in entry.ui.readOperationClaims
-                or not set(entry.module.permissions.roles).issubset(principal.roles)
-                or not set(entry.module.permissions.markings).issubset(principal.markings)
-                or entry.installationId != target.installationId
-                or entry.installationRevision != target.installationRevision
-                or entry.generation != target.generation
-                or entry.executionEpoch != target.executionEpoch
-                or entry.bindingRevision != target.bindingRevision
-                or entry.ui.resourceHash != target.resourceHash):
-            raise RuntimeConflict('current signed UI read declaration differs')
+        require_current_catalog_read(catalog=catalog,principal=principal,request=request)
         return enqueue_api_ui_read(conn=conn, scope=scope, subject=subject,
                                idempotency_key=idempotency_key, request=request)
+
+
+def require_current_catalog_read(*,catalog,principal,request):
+    """Validate freshly loaded resources; the returned entry is not an execution grant."""
+    scope=principal.scope
+    if ((catalog.tenant.orgId, catalog.tenant.projectId) != scope.key
+            or catalog.count != len(catalog.items)):
+        raise RuntimeConflict('current UI catalog scope differs')
+    matches = [entry for entry in catalog.items if entry.module.module_id == request.moduleId]
+    if len(matches) != 1:
+        raise RuntimeConflict('current signed UI module unavailable')
+    entry = matches[0]
+    target = request.target
+    if (entry.module.route != target.route or entry.ui.initialRoute != target.route
+            or target.route not in entry.ui.routeClaims
+            or request.operationId not in entry.ui.readOperationClaims
+            or not set(entry.module.permissions.roles).issubset(principal.roles)
+            or not set(entry.module.permissions.markings).issubset(principal.markings)
+            or entry.installationId != target.installationId
+            or entry.installationRevision != target.installationRevision
+            or entry.generation != target.generation
+            or entry.executionEpoch != target.executionEpoch
+            or entry.bindingRevision != target.bindingRevision
+            or entry.ui.resourceHash != target.resourceHash):
+        raise RuntimeConflict('current signed UI read declaration differs')
+    return entry
