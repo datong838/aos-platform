@@ -1,0 +1,5 @@
+# UQ6-C API读取身份启动配置
+
+基线4c226874；修改scripts/a0v_product_controlled_api.py、services/aos-api/tests/test_a0v_controlled_api.py，方案先行，11项测试通过，git diff --check通过。实际check返回CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN，专用会话aos_ui_read_transport_20260913、当前角色aos_ui_read_api、数据库aos_meta_head；035缺失请求元数据返回空。
+
+显式资源来源18181及父来源5173；沿用原13版本签名根。productionWebIdentityComplete仍false，不能把专用读取身份检查扩展为全生产身份就绪。Host、迁移、定时写者禁用标志不变。下一步替换现有18181 API进程并验证健康/页面，不重启原Host。

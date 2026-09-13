@@ -253,3 +253,11 @@ UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件�
 先clone：核035、当前空队列/权限，持久化clone身份文件后创建角色并只授所需角色/CONNECT，用真正ui_read_connection验证当前正租户runtime-owner成员、受限metadata空结果、同连接篡改subject拒绝、canary主体不存在拒绝、直接表SELECT与宿主函数EXECUTE拒绝。已有角色无对应私有身份文件时拒绝重置，未知凭据不重发生成。
 
 再main：要求clone成功证明与035部署证明、当前clone/main核验，通过后仅派生dbname为aos_meta_head的私有文件并真实重复上述读/拒绝检查。前后19关键业务指纹与队列0保持；不发送业务请求，不修改meta_membership/authz_tuple、不造独立审批人、不启动另一个Host。现阶段没有已成功的真实队列请求，不能声称主库跨用户结果交付已验收；该项留真实安装后验证。
+
+## UQ6-C 既有API启动配置接入（基线4c226874，编码前）
+
+租约A0V-UI-READ-API-PROFILE-20260913；修改scripts/a0v_product_controlled_api.py及services/aos-api/tests/test_a0v_controlled_api.py。沿用现有受控API启动/端口租约，Host关闭标志与其他后台写者禁用不变，旧13版本签名根不变。
+
+专用读取身份必须与主库实测证明的数据库、角色、四项拒绝、空请求及文件摘要一致，并用现有严格0600身份解析器核验。文件/证明均缺失时兼容旧未部署场景并清理遗留环境；单边缺失或篡改则拒绝启动。证明齐备后显式设置资源来源http://127.0.0.1:18181及父页面来源http://127.0.0.1:5173。启动preflight用专用连接实测角色、数据库及035缺失请求返回空，输出仅安全元数据。不得将该结果表述为完整生产Web身份或业务安装完成。
+
+测试缺失兼容、不完整拒绝、摘要/权限/证明错误拒绝、环境清理及现有关闭标志；然后实际check通过才以原API租约更换18181进程，不碰原Host，验证健康和页面。
