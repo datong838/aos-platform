@@ -1,0 +1,9 @@
+# BG-02 绑定CAS与控制回执原子连接
+
+基线95e57894。新增ProductEventBindingControlStore（services/aos-api/aos_api/ecommerce_product_event_control_store.py），只接HostTransaction和TenantScope，不注册API，不授予来源/审批资格。apply接严格command、actor和enable时必须由上层Owner构造的精确ScheduleBinding。锁顺序policy→原key→binding，先查原Receipt；命令冲突不触碰binding，原Receipt存在直接返回。
+
+无binding时只允许enable+expected0，复用既有put_binding和TransactionBoundConnectFactory（commit被抑制）建立首版本。已有binding必须policy/hash/event cadence/expected revision一致；enable额外核对当前dispatch与Owner提供的运行身份/窗口不漂移，随后revision+1和enabled/approved变化；disable不依赖当前来源/dispatch可用性，但必须精确现有binding版本。调用既有ReceiptStore.put核验写后状态，整个外部Owner事务负责commit或rollback。此存储片的approved来自可信Owner调用约定，不对请求公开；真正Owner资格和审批未接好前禁止注册。
+
+修改ProductEventControlReceiptStore增find复用原命令/角色/scope/锁/摘要校验，不在miss时新增回执。测试新增tests/extension_runtime/test_product_event_control_cas_pg.py：已有enable→disable→原enableReceipt重放仍disabled；新key+stale CAS拒绝；回执写失败整事务回滚；新enable当前dispatch漂移拒绝；隔离失败。后继Owner仍须校验真实成员/独立批准/签名合同/当前Case/来源，才能开放运行。
+
+运行权限复核：dispatch表仅SELECT，不能直接FOR SHARE。与既有put_binding一致，存储只读比对派发；上层Host Owner必须先通过既有受控派发锁入口保持当前dispatch锁，存储不扩大UPDATE权限。本片尚未注册，不把单独调用存储测试当并发切换授权证明。

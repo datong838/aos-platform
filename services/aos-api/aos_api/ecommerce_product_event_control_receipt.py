@@ -19,7 +19,13 @@ class ProductEventControlReceiptStore:
             raise TypeError('exact Host transaction and scope required')
         self._transaction,self._scope=transaction,scope
 
+    def find(self,command,*,actor):
+        return self._access(command,actor=actor,read_only=True)
+
     def put(self,command,*,actor):
+        return self._access(command,actor=actor,read_only=False)
+
+    def _access(self,command,*,actor,read_only):
         checked=ProductEventControlCommand.model_validate(command)
         command=checked.model_dump(by_alias=True,mode='json')
         if type(actor) is not str or not 1<=len(actor)<=240 or actor!=actor.strip() or not actor.isprintable():
@@ -38,6 +44,8 @@ class ProductEventControlReceiptStore:
         row=tx.execute('SELECT * FROM ecommerce_product_event_control_receipt '
             'WHERE org_id=%s AND project_id=%s AND idempotency_key=%s',(*scope.key,checked.idempotency_key)).fetchone()
         replayed=row is not None
+        if row is None and read_only:
+            return None
         if row is None:
             binding=tx.execute('SELECT to_jsonb(b) AS authority FROM automation_schedule_binding b '
                 'WHERE org_id=%s AND project_id=%s AND policy_id=%s AND policy_revision=%s FOR UPDATE',
