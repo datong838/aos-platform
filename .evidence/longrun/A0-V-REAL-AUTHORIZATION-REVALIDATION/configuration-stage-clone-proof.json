@@ -1,0 +1,192 @@
+{
+  "outcome": "CONFIGURATION_STAGE_RESTORE_VERIFIED",
+  "source": "a0v_035",
+  "target": "a0v_038",
+  "main": "aos_meta_head",
+  "clone": "aos_configuration_stage_20260914_test",
+  "migrations": {
+    "a0v_036_runtime_configuration_stage.py": "sha256:8394a8ab403752f86101237a42995b76377a828d468e0beb2698980991319959",
+    "a0v_037_configuration_stage_api.py": "sha256:d831196bf4024c2ef74a744fd940fb6901886d64a8f4f9281726cacbe7bbfb94",
+    "a0v_038_configuration_stage_lookup.py": "sha256:506c177ce25e83cd7a598cd6d25687604bfd89bffa7f7f6590e951e994f4e617"
+  },
+  "executors": {
+    "a0v_configuration_stage_deploy.py": "sha256:819d14a868a3491d03c5710bcd712132adc32f0eb98fe52edc318ba034f48916",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2"
+  },
+  "backup": {
+    "path": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260913/state/configuration-stage-deployment/aos_meta_head-before-a0v_038.dump",
+    "sha256": "sha256:cc127a9daa8ec97c00a67b348103b991e48ca003d60b52ed9b9a486fea6dc293",
+    "bytes": 5367271
+  },
+  "before": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 2,
+      "digest": "5ffd828bc45906b883559605a035adb7"
+    },
+    "meta_pipeline": {
+      "count": 2,
+      "digest": "107e3b7d7e3b46a183ccc3bf17538ee4"
+    },
+    "meta_schedule": {
+      "count": 2,
+      "digest": "0e36fd25b1743c4ff7d1200b239e1860"
+    },
+    "meta_schedule_run": {
+      "count": 3,
+      "digest": "1202a8ee1c74f96630bc1dc91e71b3ed"
+    },
+    "meta_dataset": {
+      "count": 2,
+      "digest": "a2c19965973f9e5fc10f4c9113cd01ab"
+    },
+    "bundle_installation": {
+      "count": 9,
+      "digest": "2dbebe3a61c25d03dbd41baa16aa674c"
+    },
+    "extension_runtime_configuration": {
+      "count": 6,
+      "digest": "d6c67593d07650f07b19c743a6fd93f9"
+    },
+    "pipeline_source_selection_revision": {
+      "count": 2,
+      "digest": "c7384e81ceaf7b10ec0787c628e7e4c7"
+    },
+    "pipeline_runtime_control_revision": {
+      "count": 2,
+      "digest": "ddd737a35f3c809b008340362092b50f"
+    },
+    "bundle_installation_revision": {
+      "count": 53,
+      "digest": "0faec267177278b19c5429e454ca1e0d"
+    },
+    "extension_operation_dispatch_binding": {
+      "count": 9,
+      "digest": "9567ede2187e288e8966598566c4e518"
+    },
+    "extension_dispatch_registration_receipt": {
+      "count": 2,
+      "digest": "823139b0387bbe32cc88d5e6a77b352c"
+    },
+    "extension_dispatch_withdrawal_receipt": {
+      "count": 1,
+      "digest": "5410a31845b8e6b3ea9bc9b42d919f30"
+    },
+    "ecommerce_investigation_case_head": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_case_revision": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_run": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_run_state_head": {
+      "count": 0,
+      "digest": null
+    }
+  },
+  "after": {
+    "meta_source": {
+      "count": 5,
+      "digest": "96e241c4be37c374cf57a1da0859d090"
+    },
+    "data_source_configuration_revision": {
+      "count": 5,
+      "digest": "7e75b0a186e3bbfe05640bd4924fc687"
+    },
+    "phase5_pipeline_graph": {
+      "count": 2,
+      "digest": "5ffd828bc45906b883559605a035adb7"
+    },
+    "meta_pipeline": {
+      "count": 2,
+      "digest": "107e3b7d7e3b46a183ccc3bf17538ee4"
+    },
+    "meta_schedule": {
+      "count": 2,
+      "digest": "0e36fd25b1743c4ff7d1200b239e1860"
+    },
+    "meta_schedule_run": {
+      "count": 3,
+      "digest": "1202a8ee1c74f96630bc1dc91e71b3ed"
+    },
+    "meta_dataset": {
+      "count": 2,
+      "digest": "a2c19965973f9e5fc10f4c9113cd01ab"
+    },
+    "bundle_installation": {
+      "count": 9,
+      "digest": "2dbebe3a61c25d03dbd41baa16aa674c"
+    },
+    "extension_runtime_configuration": {
+      "count": 6,
+      "digest": "d6c67593d07650f07b19c743a6fd93f9"
+    },
+    "pipeline_source_selection_revision": {
+      "count": 2,
+      "digest": "c7384e81ceaf7b10ec0787c628e7e4c7"
+    },
+    "pipeline_runtime_control_revision": {
+      "count": 2,
+      "digest": "ddd737a35f3c809b008340362092b50f"
+    },
+    "bundle_installation_revision": {
+      "count": 53,
+      "digest": "0faec267177278b19c5429e454ca1e0d"
+    },
+    "extension_operation_dispatch_binding": {
+      "count": 9,
+      "digest": "9567ede2187e288e8966598566c4e518"
+    },
+    "extension_dispatch_registration_receipt": {
+      "count": 2,
+      "digest": "823139b0387bbe32cc88d5e6a77b352c"
+    },
+    "extension_dispatch_withdrawal_receipt": {
+      "count": 1,
+      "digest": "5410a31845b8e6b3ea9bc9b42d919f30"
+    },
+    "ecommerce_investigation_case_head": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_case_revision": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_run": {
+      "count": 0,
+      "digest": null
+    },
+    "ecommerce_investigation_run_state_head": {
+      "count": 0,
+      "digest": null
+    }
+  },
+  "schema": {
+    "queueCount": 0,
+    "forceRls": true,
+    "runtimeUpdateColumns": [
+      "state",
+      "revision",
+      "completed_at",
+      "result_json",
+      "failure_code"
+    ],
+    "apiDirectTableAccess": false,
+    "restrictedFunctionCount": 4
+  },
+  "businessWrites": 0,
+  "at": "2026-09-13T17:01:43.931259+00:00"
+}

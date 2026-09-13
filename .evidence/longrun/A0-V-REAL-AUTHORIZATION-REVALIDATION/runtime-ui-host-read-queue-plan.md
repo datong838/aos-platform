@@ -398,3 +398,11 @@ HTTP新增GET /v1/bundle-runtime-installations/configuration-requests/lookup，I
 先运行既有a0v_product_controlled_api.py check，核对独立运行角色、原13版本签名根、UI专用身份和所有后台开关关闭。记录Host PID/启动时刻与三OCI ID；只向已核实18181监听API PID发送TERM，使用同一既有启动器启动当前代码。显式清除未部署配置登记凭据、保持stage开关0，不迁移主库，不切Host，不修改运行实例。
 
 完成条件：健康接口正常、浏览器原安装配置列表仍在、真实来源候选可读；没有登记POST，Host与三OCI基线未变。失败则用已提交旧代码隔离路径恢复原API，不修改主checkout历史，不创建第二Host。源目录不等于来源完整授权。
+
+## D2d-5 配置登记结构部署（基线257b9a4e，编码前）
+
+迁移租约A0V-CONFIGURATION-STAGE-LOCAL-DEPLOYMENT-20260914，单人m1。新增scripts/a0v_configuration_stage_deploy.py，保持既有UI部署执行器不变。沿用其可核验备份/恢复、精确链校验、业务指纹、一次apply-intent和只读readback规约；本次固定035→036→037→038，隔离库aos_configuration_stage_20260914_test，私有备份目录configuration-stage-deployment。
+
+prepare先导出当前主库、恢复新副本，只有恢复后业务指纹与主库基线一致才迁移副本。verify校验队列FORCE RLS、runtime仅SELECT与五个完成字段UPDATE、API角色仅固定4函数EXEC且无表权；请求表必须空。不得创造请求、配置、用户、grant或审批业务对象。固定函数PUBLIC EXEC禁用；状态/原ID/原键访问权仍由既有SQL执行。
+
+演练通过并保存迁移/执行器哈希后，apply必须核对当前副本、主库与备份一致，先写不可覆盖intent，然后仅新增结构；未知执行结果只能readback。保留备份和副本，不执行删除或自动downgrade。配置登记身份、API启用和Host接管为后续波次，当前不打开stage消费者。
