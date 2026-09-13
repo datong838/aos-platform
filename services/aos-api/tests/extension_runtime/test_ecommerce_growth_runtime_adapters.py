@@ -394,7 +394,8 @@ def test_case_host_service_returns_and_rereads_exact_case_authority(monkeypatch)
     ) == response
 
 
-def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch):
+@pytest.mark.parametrize("mutation", [None, "missing_hash", "wrong_hash", "policy_drift", "bool_version"])
+def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch, mutation):
     command = schedule_put_command()
     scope = TenantScope("org-org", "dev-project")
     checked_at = datetime(2026, 9, 8, 12, tzinfo=UTC)
@@ -426,6 +427,18 @@ def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch):
         "status": "approved",
         "action_binding_hash": "binding-hash",
     }
+
+    parsed_policy = runtime_adapters.PutBusinessInvestigationSchedulePolicyRequest.model_validate(command["policy"])
+    proposal_row["payload"]["policyHash"] = runtime_adapters.budget_canonical_hash(
+        parsed_policy.model_dump(by_alias=True, mode="json"), prefixed=True)
+    if mutation == "missing_hash":
+        del proposal_row["payload"]["policyHash"]
+    elif mutation == "wrong_hash":
+        proposal_row["payload"]["policyHash"] = "sha256:" + "b" * 64
+    elif mutation == "policy_drift":
+        command["policy"]["enabled"] = not command["policy"].get("enabled", False)
+    elif mutation == "bool_version":
+        proposal_row["payload"]["expectedCaseVersion"] = True
 
     class Cursor:
         def __init__(self, row):
@@ -461,6 +474,11 @@ def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch):
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
     service = runtime_adapters.SchedulePutHostService()
     dispatch = SimpleNamespace(checked_at=checked_at)
+    if mutation is not None:
+        with pytest.raises(ValueError, match="schedule approval"):
+            service.revalidate(transaction=HostTransaction(Connection()), scope=scope,
+                               dispatch=dispatch, command=command)
+        return
     service.revalidate(
         transaction=HostTransaction(Connection()), scope=scope, dispatch=dispatch, command=command
     )

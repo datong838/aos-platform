@@ -285,6 +285,7 @@ def _lock_schedule_approval(
     checked_at: datetime,
     case_id: str,
     policy_id: str,
+    policy_hash: str,
     expected_policy_revision: int,
     expected_case_version: int,
 ) -> None:
@@ -316,6 +317,7 @@ def _lock_schedule_approval(
         "schedulePolicyId": policy_id,
         "expectedPolicyRevision": expected_policy_revision,
         "expectedCaseVersion": expected_case_version,
+        "policyHash": policy_hash,
     }
     if (
         proposal is None
@@ -324,7 +326,8 @@ def _lock_schedule_approval(
         or proposal["proposal_hash"] != approval["proposal_hash"]
         or not proposal["action_binding_hash"]
         or proposal["action_binding_hash"] != approval["action_binding_hash"]
-        or any(payload.get(key) != value for key, value in expected_binding.items())
+        or any(type(payload.get(key)) is not type(value) or payload.get(key) != value
+               for key, value in expected_binding.items())
     ):
         raise ValueError("schedule approval is not bound to this exact Case and Policy revision")
 
@@ -3200,6 +3203,9 @@ class SchedulePutHostService:
             checked_at=dispatch.checked_at,
             case_id=case_id,
             policy_id=policy.schedule_policy_id,
+            policy_hash=budget_canonical_hash(
+                policy.model_dump(by_alias=True, mode="json"), prefixed=True
+            ),
             expected_policy_revision=expected_policy_revision,
             expected_case_version=expected_case_version,
         )

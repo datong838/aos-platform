@@ -1,0 +1,9 @@
+# 调度审批精确策略内容绑定修复
+
+基线0ae2ac80。SchedulePutHostService.revalidate调用_lock_schedule_approval只对caseId/policyId/expected版本进行payload匹配，没有核对完整策略。审批后同ID/版本更改enabled等字段可通过该门。此问题直接影响exact方案评审，应在新事件策略接线前修复。
+
+最小改动services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py：从已经解析的PutBusinessInvestigationSchedulePolicyRequest.model_dump(by_alias=True,mode=json)用现有budget_canonical_hash计算policyHash，作为期望绑定加入当前Proposal payload核验；审批仍须当前approved、未过期、原approvalRef hash、proposalHash/actionBinding一致。expected版本也要求严格整数，不接受bool相等。Hash包含所有默认值和完整caseRef，不能只hash部分输入。幂等键不属于业务策略语义，不加入policyHash。
+
+缺少或错policyHash的旧审批拒绝，不替用户补审批、不更新持久历史；原Receipt回读由既有逻辑处理。本地尚无真实业务路由，不重新部署API作为本片动作。后续审批发起方须生成该精确hash并走原人工/授权Owner审批流程；本片不制造审批记录。
+
+测试修改services/aos-api/tests/extension_runtime/test_ecommerce_growth_runtime_adapters.py：正确policyHash可过，缺失/错hash、审批后enabled漂移、payload bool版本拒绝；先RED再修复，运行相关Host/adapter回归与AR2校验。不改DB/权限/周期类型，不新增调用。

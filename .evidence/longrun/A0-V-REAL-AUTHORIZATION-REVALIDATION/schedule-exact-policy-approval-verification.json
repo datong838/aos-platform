@@ -1,0 +1,21 @@
+{
+  "baseline": "0ae2ac80",
+  "red": "4 failed, 1 passed",
+  "green": "54 passed",
+  "closure": {
+    "phase": "ar2-7",
+    "scannedPythonModules": 1824,
+    "classifiedModules": 159,
+    "migratedModules": 93,
+    "hashErrors": [],
+    "unclassifiedForwardDependencies": [],
+    "unclassifiedReverseCallers": [],
+    "bundleCrossLayerImports": [],
+    "dynamicReferenceErrors": []
+  },
+  "hashes": {
+    "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py": "16c28a59a7aa19fc5bc4b8c23a206ba765af8ab0e6f422912742cf06976b6386",
+    "services/aos-api/tests/extension_runtime/test_ecommerce_growth_runtime_adapters.py": "a1fa3d54fc097eada422285e81aa3cb02a1818902917f69137e0951099d5a8af"
+  },
+  "deployed": false
+}
