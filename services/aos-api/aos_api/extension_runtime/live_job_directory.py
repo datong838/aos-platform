@@ -45,6 +45,15 @@ class LivePreparedJobDirectory:
             raise LookupError("live prepared job unavailable")
         return job
 
+    def jobs_for_scope(self, scope):
+        if type(scope) is not TenantScope:
+            raise TypeError('live directory enumeration requires TenantScope')
+        jobs=tuple(job for key,job in sorted(self._jobs.items(),key=lambda pair:tuple(map(str,pair[0])))
+                   if key[:2]==scope.key)
+        if len(jobs)>1000 or any(self._job_key(job)[:2]!=scope.key for job in jobs):
+            raise RuntimeError('bounded current live directory required')
+        return jobs
+
     def unregister(self, job):
         key = self._job_key(job)
         if self._jobs.get(key) is not job:

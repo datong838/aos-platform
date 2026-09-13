@@ -85,3 +85,15 @@ aos_runtime仅获请求状态、版本、claim/结果相关列UPDATE；不可插
 ## UQ3-E 共享读取门禁与精确实例（基线772200b0，编码前补充）
 
 从ui_read_admission机械抽取require_current_catalog_read，用于API及宿主准备/完成前一致校验，返回签名资源条目而非执行许可。CurrentInstalledPackageInvoker新增可选expected_job，构造时必须是当前目录同租户/安装/代次的真实PreparedJob；IPC前后核同一对象。既有调用不传参数保持原行为。新增调用前被替换零invoke、调用中被替换不返回结果、合法实例成功的测试。后续具体消费者必须传领取时选中的job。
+
+## UQ3-F 具体宿主消费者（基线c630ece6，编码前补充）
+
+新增extension_runtime/ui_read_consumer.py与测试，LivePreparedJobDirectory新增仅同scope的实例快照枚举。消费者固定scope、PostgresInstallationStore、RuntimeWorkshopCatalog、同LivePreparedJobDirectory和可信markings；独立idle连接→REPEATABLE READ→绑定scope/运行角色→核7张请求/Attempt/binding/canonical表FORCE RLS。不使用API连接或任意SQL回调。
+
+prepare_once先收束已终态Attempt的过期队列，仅查本进程持有的精确安装/代次请求，最多25条。锁候选，嵌套事务内当前主体/签名门禁→canonical快照→当前安装包hash比对→claim+Attempt；拒绝回滚局部准备后固定denied/expired，不保留半个Attempt。包固定solution.ecommerce.growth、方法analyst_workspace_view_v1，独立于九命令。
+
+invoke_prepared只调用绑定expected_job的原invoker，IPC在事务外；快照摘要不可变。finish_prepared在新事务重查当前主体/签名资源，核结果固定schema/tenant/cutoff/count/无执行授权后原子封存；异常/未知不重发。Host下一切片在prepare/invoke/finish边界检查assignment身份并负责关闭等待，消费者不自行创建后台轮询或包实例。
+
+测试将真实数据库边界与生命周期编排分开记录：已有非超级PG验证复用；新增编排测试证明事务外一次调用、撤权后不交付、结果错scope/快照或实例变更拒绝。实际OCI只读方法仍待UQ5后继签名交付。
+
+UQ3-F复核补充：仅DB单次claim不足以防止同一Prepared对象被重复调用。消费者维护带线程锁的本进程签发登记，prepare事务提交后登记，invoke原子消费一次，finish要求已消费并在成功提交后移除；旧对象/其他消费者对象/重复invoke全部拒绝，结果不明也不释放重试机会。

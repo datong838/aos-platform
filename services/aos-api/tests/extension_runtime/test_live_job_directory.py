@@ -103,3 +103,13 @@ def test_preparation_consumer_registers_then_unregisters_the_owned_job():
 
     import asyncio
     asyncio.run(run())
+
+
+def test_job_enumeration_is_scoped_and_does_not_admit_other_tenants():
+    directory=LivePreparedJobDirectory()
+    positive=_job();negative=_job(TenantScope('dev-org','dev-project'))
+    directory.register(positive);directory.register(negative)
+    assert directory.jobs_for_scope(positive.tenant_scope)==(positive,)
+    assert directory.jobs_for_scope(negative.tenant_scope)==(negative,)
+    directory.unregister(positive)
+    assert directory.jobs_for_scope(positive.tenant_scope)==()

@@ -69,7 +69,7 @@ def complete_ui_read(*,conn,scope:TenantScope,claim:UiReadClaim,result=None,fail
         raise RuntimeConflict('exact UI read completion required')
     if (result is None)==(failure_code is None) or (result is not None and type(result) is not dict):
         raise RuntimeConflict('one UI read result or failure required')
-    if failure_code is not None and failure_code not in {'READ_ACCESS_REVOKED','READ_FAILED','READ_RESULT_INVALID'}:
+    if failure_code is not None and failure_code not in {'READ_ACCESS_REVOKED','READ_FAILED','READ_RESULT_INVALID','READ_OUTCOME_UNKNOWN'}:
         raise RuntimeConflict('fixed UI read failure required')
     _scope(conn,*scope.key)
     row=conn.execute('''SELECT state,revision,attempt_id,owner_token_hash,deadline<=clock_timestamp() AS expired,target_json
