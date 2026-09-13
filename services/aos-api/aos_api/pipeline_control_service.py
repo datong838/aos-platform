@@ -66,12 +66,22 @@ class PipelineControlServiceFactory:
             raise TypeError('server-owned asset roots required')
         object.__setattr__(self,'allowlist_roots',MappingProxyType(dict(self.allowlist_roots)))
 
-    def build(self,scope):
+    def _source_dependencies(self,scope):
         if type(scope) is not TenantScope:raise TypeError('exact pipeline tenant required')
         # Invalid roots fail here without taking unrelated lifecycle controls down.
         loader=ManifestLoader(self.allowlist_roots,trust_roots=self.policy._trust_roots)
         artifacts=CurrentRuntimeReleaseArtifacts(connect=runtime_worker_connection,scope=scope,loader=loader)
         selections=PipelineSourceSelectionOwner(installation_store=self.installation_store,
             artifacts=artifacts,release_policy=self.policy)
+        return selections,artifacts
+
+    def build(self,scope):
+        selections,_artifacts=self._source_dependencies(scope)
         controls=PipelineRuntimeControlOwner(selections=selections)
         return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls))
+
+    def build_event_owner(self,scope):
+        from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
+        selections,artifacts=self._source_dependencies(scope)
+        return ProductEventQualifiedOwner(selections=selections,installation_store=self.installation_store,
+            artifacts=artifacts,release_policy=self.policy)

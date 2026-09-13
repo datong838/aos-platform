@@ -160,7 +160,8 @@ class HostTransaction:
     def run_current_source_snapshot(self, owner, *, scope, ref, actor, execute):
         """Trusted source Owner uses this same connection without exposing it."""
         from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
-        if type(owner) is not PipelineSourceSelectionOwner:
+        from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
+        if type(owner) not in (PipelineSourceSelectionOwner, ProductEventQualifiedOwner):
             raise TypeError('exact current source Owner required')
         return owner.run_current_snapshot(self.__connection, scope=scope, ref=ref,
             actor=actor, execute=execute)

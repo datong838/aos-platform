@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "aos.ecommerce.product-event-save-contract/v1",
+  "operationId": "ecommerce_growth_schedule_put",
+  "policySchema": "aos.ecommerce.product-event-schedule-policy/v1",
+  "wireFields": [
+    "idempotencyKey",
+    "expectedPolicyRevision",
+    "expectedCaseVersion",
+    "policy",
+    "caseAuthority",
+    "approvalRef"
+  ],
+  "tenantAuthority": "trusted-host-scope",
+  "sourceAuthority": "current-source-selection-owner",
+  "approvalAuthority": "current-independent-action-approval",
+  "saveEnabled": false
+}

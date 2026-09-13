@@ -6,7 +6,7 @@ from test_product_event_write_pg import stored,pair,body
 from tests.test_ecommerce_product_event_policy import case as context_fixture
 from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
+from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_budget_reservation_store import canonical_hash
 import aos_api.ecommerce_product_event_host_service as module
@@ -56,7 +56,7 @@ def service_case(stored,monkeypatch):
     monkeypatch.setattr(module.EcommerceInvestigationProfileCatalog,'read',lambda *_:(
         SimpleNamespace(exact_ref=SimpleNamespace(model_dump=lambda **kw:c['investigationProfileRef'])),
         SimpleNamespace(exact_ref=SimpleNamespace(model_dump=lambda **kw:c['scopeRef']))))
-    service=module.ProductEventSchedulePutHostService(object.__new__(PipelineSourceSelectionOwner),actor='fixture-host')
+    service=module.ProductEventSchedulePutHostService(object.__new__(ProductEventQualifiedOwner),actor='fixture-host')
     return conn,service,HostTransaction(Connection()),command,approval,proposal
 
 

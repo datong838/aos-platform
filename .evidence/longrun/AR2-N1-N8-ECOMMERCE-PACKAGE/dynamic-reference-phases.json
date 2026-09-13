@@ -45,6 +45,8 @@
         "services/aos-api/tests/extension_runtime/test_product_event_schedule.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_command.py",
+        "bundles/solutions/ecommerce-growth/content/schemas/product-event-save.contract.v1.json",
+        "services/aos-api/aos_api/ecommerce_product_event_qualified_owner.py",
         "services/aos-api/aos_api/ecommerce_product_event_host_service.py",
         "services/aos-api/tests/extension_runtime/test_product_event_binding.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py",
@@ -59,6 +61,7 @@
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-final-verification.md"
       ],
       "contains": {
+        "services/aos-api/aos_api/ecommerce_product_event_qualified_owner.py": ["qualify_registration_release", "pg_advisory_xact_lock(228,1)", "canonical_sha256(contract)"],
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_command.py": ["DispatchRef.from_payload", "p.pop('tenant');c.pop('tenant')"],
         "services/aos-api/aos_api/ecommerce_product_event_host_service.py": ["ProductEventPolicyGuard", "_validate_schedule_approval_rows", "ecommerce_product_event_lock_a0v_041"],
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py": ["from .ecommerce_product_event_schedule import", "successor.validate_successor(current_case)"],
