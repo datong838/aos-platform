@@ -1,0 +1,9 @@
+# 内部切换动作绑定合同（原N7的真实审批接线）
+
+基线3f215f3c，主库actionTypes/proposals均为空。普通AIP Proposal只有绑定ImpactPreview时生成action_binding_hash，而切换要求非空该字段。ImpactPreview绑定Task/Plan/Brief/Eval/Responsibility/Stage，不应为安装控制伪造经营任务。
+
+增量方案：只针对ecommerce_growth_cutover与ecommerce_growth_cutover_rollback，使用服务端内部控制绑定合同；沿用现有ActionProposal/Approval/Event账本，无新审批账本、无伪造ImpactPreview。绑定hash由完整可信ActionType snapshot（校验revisionHash）、TenantScope和严格阶段payload生成。它只是审批材料的内容绑定，不授予执行权限；实际阶段仍逐次检查当前安装、注册源、配置/Release、当前操作员、精确Proposal/Approval与版本。
+
+本切片文件：services/aos-api/aos_api/ecommerce_growth_cutover_action_binding.py、tests/extension_runtime/test_cutover_action_binding.py。纯函数只接收两种固定动作，prepare要求9项精确有序操作和真实注册Receipt形状；rollback要求真实commitReceipt形状与父activation/组/代次；拒绝未知字段、bool版本、错误操作集、非规范UUID和伪造ActionType revisionHash。hash含完整snapshot及payload，类型/租户/组/登记/策略变动均改变结果。其返回值不叫审批通过或preview ready。
+
+后续同清单切片：AIP Owner只在这两个内部动作且没有业务ImpactPreview时采用该绑定；为该族固定服务端风险底线和当前maker/checker权限，不放宽其他动作尤其外部动作preview/draft门。切换Owner对本族实际注册来源重算绑定，原fixture证据不能作为真实绑定。之后通过受控ActionType发布、proposal、独立checker decision生成当前审批，原键恢复，不手改approved字段。当前切片不改AIP行为或真实表。

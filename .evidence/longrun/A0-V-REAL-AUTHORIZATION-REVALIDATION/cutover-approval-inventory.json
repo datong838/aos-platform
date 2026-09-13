@@ -1,0 +1,9 @@
+{
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "actionTypes": [],
+  "proposals": [],
+  "writes": 0
+}
