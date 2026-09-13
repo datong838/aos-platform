@@ -1,0 +1,18 @@
+{
+  "codeRevision": "c3e57bf9",
+  "results": [
+    {
+      "path": "/v1/health",
+      "status": 200
+    },
+    {
+      "path": "/v1/bundle-runtime-installations/97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+      "status": 200
+    },
+    {
+      "path": "/v1/bundle-runtime-installations/97aeb2e7-59ba-40f6-89a3-fb0293bc0497/ecommerce-growth-cutovers/history",
+      "status": 403
+    }
+  ],
+  "businessWrites": 0
+}
