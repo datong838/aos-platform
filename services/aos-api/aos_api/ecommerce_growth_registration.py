@@ -17,6 +17,7 @@ from aos_api.extension_runtime.configuration_authorization import CurrentFourSou
 from aos_api.extension_runtime.consumer_connection import consumer_connection
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
 from aos_api.tenant_scope import TenantScope
+from aos_api.extension_runtime.storage_ports import require_runtime_role
 
 
 class FirstDispatchRegistrationService:
@@ -58,27 +59,45 @@ class FirstDispatchRegistrationService:
         if row is None:raise LookupError('registration receipt unavailable')
         return decode_registration_receipt(row,scope=scope)
 
+    def validate_current_authority_in_transaction(self, conn, *, scope: TenantScope,
+            request: FirstDispatchRegistrationRequest, actor: str) -> dict:
+        """Revalidate current authority without owning or committing the caller's transaction."""
+        self._identity(scope,actor)
+        if type(request) is not FirstDispatchRegistrationRequest:
+            raise TypeError('validated first registration request required')
+        request=FirstDispatchRegistrationRequest.model_validate(request.model_dump(mode='python',by_alias=True))
+        if conn.info.transaction_status != TransactionStatus.INTRANS:
+            raise PermissionError('current registration authority requires an active transaction')
+        state=conn.execute("SELECT current_user AS role, current_setting('transaction_isolation') AS isolation").fetchone()
+        if state['role']!='aos_runtime' or state['isolation']!='serializable':
+            raise PermissionError('current registration authority requires serializable runtime scope')
+        require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
+            protected_tables=('public.extension_runtime_binding','public.extension_dispatch_registration_receipt'))
+        checked=validate_current_registration_target(conn,scope=scope,request=request,actor=actor,
+            installation_store=self._store,configuration_authorize=self._authorize)
+        if (type(checked) is not dict or checked.get('currentConfigurationValidated') is not True
+                or checked.get('requestHash')!=request.request_hash()):
+            raise PermissionError('current registration target was not validated')
+        baseline=self._store.load_active_baseline_in_transaction(conn,org_id=scope.org_id,
+            project_id=scope.project_id,requested_ref=request.installationRef)
+        qualified=qualify_registration_release(conn,lock=baseline.lock,release_policy=self._release_policy)
+        if (type(qualified) is not dict
+                or qualified.get('schemaVersion')!='aos.ecommerce.registration-release-qualification/v1'
+                or qualified.get('lockHash')!=request.installationRef.lock_hash
+                or qualified.get('packageId')!='solution.ecommerce.growth'
+                or type(qualified.get('operationCount')) is not int or qualified['operationCount']!=9
+                or qualified.get('executable') is not False):
+            raise PermissionError('current signed registration release was not validated')
+        return dict(requestHash=request.request_hash(),currentConfigurationValidated=True,
+                    currentReleaseValidated=True,executable=False)
+
     def register(self, *, scope: TenantScope, request: FirstDispatchRegistrationRequest, actor: str) -> dict:
         self._identity(scope,actor)
         if type(request) is not FirstDispatchRegistrationRequest:
             raise TypeError('validated first registration request required')
         request=FirstDispatchRegistrationRequest.model_validate(request.model_dump(mode='python',by_alias=True))
         with self._transaction(scope) as conn:
-            checked=validate_current_registration_target(conn,scope=scope,request=request,actor=actor,
-                installation_store=self._store,configuration_authorize=self._authorize)
-            if (type(checked) is not dict or checked.get('currentConfigurationValidated') is not True
-                    or checked.get('requestHash')!=request.request_hash()):
-                raise PermissionError('current registration target was not validated')
-            baseline=self._store.load_active_baseline_in_transaction(conn,org_id=scope.org_id,
-                project_id=scope.project_id,requested_ref=request.installationRef)
-            qualified=qualify_registration_release(conn,lock=baseline.lock,release_policy=self._release_policy)
-            if (type(qualified) is not dict
-                    or qualified.get('schemaVersion')!='aos.ecommerce.registration-release-qualification/v1'
-                    or qualified.get('lockHash')!=request.installationRef.lock_hash
-                    or qualified.get('packageId')!='solution.ecommerce.growth'
-                    or type(qualified.get('operationCount')) is not int or qualified['operationCount']!=9
-                    or qualified.get('executable') is not False):
-                raise PermissionError('current signed registration release was not validated')
+            self.validate_current_authority_in_transaction(conn,scope=scope,request=request,actor=actor)
             conn.execute('SET LOCAL ROLE aos_extension_maintainer')
             response=conn.execute('SELECT extension_dispatch_register_a0v_027(%s,%s) AS receipt',
                 (Jsonb(request.model_dump(mode='json',by_alias=True)),actor)).fetchone()['receipt']

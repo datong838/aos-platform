@@ -18,6 +18,11 @@ from aos_api.tenant_scope import TenantScope
 @pytest.fixture
 def owner_case(registered_db,monkeypatch):
     case=registered_db;db=case.db.owner
+    db.execute("ALTER TABLE extension_runtime_binding ENABLE ROW LEVEL SECURITY")
+    db.execute("ALTER TABLE extension_runtime_binding FORCE ROW LEVEL SECURITY")
+    db.execute("""CREATE POLICY tenant_scope_origin_runtime ON extension_runtime_binding
+        USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))
+        WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))""")
     db.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(case.login)))
     for table in ('extension_runtime_operation','extension_runtime_outbox','extension_runtime_event','bundle_composition'):
         db.execute(sql.SQL('CREATE TABLE {}(org_id text,project_id text)').format(sql.Identifier(table)))
@@ -146,3 +151,31 @@ def test_history_cannot_read_another_installation(owner_case):
     with pytest.raises(LookupError):
         service.read_receipt(scope=scope,installation_id='99999999-9999-4999-8999-999999999999',
             idempotency_key=request.idempotencyKey,actor='actor')
+
+
+def test_external_transaction_current_gate_is_read_only_and_stays_owned_by_caller(owner_case):
+    case,service,calls=owner_case;scope=TenantScope('org-a','project-a')
+    request=FirstDispatchRegistrationRequest.model_validate(case.request)
+    with service._transaction(scope) as conn:
+        before=conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx').fetchone()
+        result=service.validate_current_authority_in_transaction(conn,scope=scope,request=request,actor='actor')
+        after=conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx').fetchone()
+        assert before==after
+        assert result['requestHash']==request.request_hash() and result['executable'] is False
+        assert conn.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==0
+    assert case.qualification_calls==calls and len(calls)==1
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_operation_dispatch_binding').fetchone()['n']==0
+
+
+@pytest.mark.parametrize('mode',['isolation','role','scope'])
+def test_external_transaction_current_gate_rejects_untrusted_context(owner_case,mode):
+    case,service,calls=owner_case;scope=TenantScope('org-a','project-a')
+    with psycopg.connect(**{**case.db.pg,'user':case.login},row_factory=dict_row) as conn:
+        conn.isolation_level=psycopg.IsolationLevel.READ_COMMITTED if mode=='isolation' else psycopg.IsolationLevel.SERIALIZABLE
+        conn.execute('SET LOCAL ROLE '+('aos_extension_maintainer' if mode=='role' else 'aos_runtime'))
+        conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",
+            ('other' if mode=='scope' else scope.org_id,scope.project_id))
+        with pytest.raises((PermissionError,RuntimeError)):
+            service.validate_current_authority_in_transaction(conn,scope=scope,
+                request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    assert not calls

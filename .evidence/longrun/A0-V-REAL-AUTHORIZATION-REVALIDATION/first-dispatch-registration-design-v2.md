@@ -152,3 +152,8 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 分阶段安全措施：本切片prepare_activation在连接前明确拒绝非None registrationReceiptRef；只有下一切片同事务当前安装/配置/签名及撤销状态核验完成后才能移除此拒绝。旧legacy路径继续执行原逻辑。新增tests/extension_runtime/test_ecommerce_growth_cutover_registration_contract.py验证旧hash兼容、新hash绑定、严格ref、重构保留、未完成接线零连接拒绝。复验既有cutover PG/签名生命周期；主库不动。
 
 完整cutover回归发现另一处旧私有schema重装测试仍调用旧Host直接锁；补改test_ecommerce_growth_cutover_pg.py，仅在该用例Host检查前应用028至隔离schema，改用非特权身份并映射固定函数名。其余降级测试不加载028；public生产证明沿用独立Host数据库验收。
+
+
+### 当前权威同事务复用切片
+修改 services/aos-api/aos_api/ecommerce_growth_registration.py，将register现有四来源预检与签名资格代码抽取为validate_current_authority_in_transaction(conn,scope,request,actor)，供后续Cutover复用。该方法不建立连接、不切角色、不commit、不调用登记SQL；要求当前事务SERIALIZABLE/current_user=aos_runtime并复用require_runtime_role验证双租户/RLS/非特权。保留原exact依赖和结果拒绝规则，返回非执行授权摘要。register调用此方法后继续原027/Receipt事务。
+扩展tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py：外部拥有的真实非特权事务调用成功、同backend pid/tx、零登记、调用后事务仍在；错误隔离级别/role/scope拒绝；原登记/重放/拒绝/回滚回归。编排测试中的当前预检及签名节点依旧替身，不冒充全依赖真实验收。主库不动，新方法尚未连接Cutover。
