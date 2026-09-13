@@ -1,0 +1,32 @@
+{
+  "outcome": "GROWTH_1_8_REVIEW_PACKET_READY",
+  "registryStatus": "not_registered",
+  "oldFilesUnchanged": 577,
+  "targetContentHash": "sha256:ac3b80551ca9325b69853d10f41d61134fe4c0a3f8ebcf83c0343deb0147bd5f",
+  "requested": [
+    {
+      "publisher": "aos",
+      "id": "platform.ecommerce.niushop",
+      "version": "1.5.0"
+    },
+    {
+      "publisher": "aos",
+      "id": "solution.ecommerce.growth",
+      "version": "1.8.0"
+    },
+    {
+      "publisher": "aos",
+      "id": "solution.ecommerce.operations-base",
+      "version": "1.2.0"
+    }
+  ],
+  "currentInstallationRef": {
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "revision": 5,
+    "lockHash": "sha256:a4441a4383783cb2a2f32171c52eb2718f526a5f56102dc5c0e12bf79299a42b",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "registryMutationCount": 0,
+  "independentPublisherVerified": false,
+  "installationApprovalGranted": false
+}
