@@ -1,0 +1,9 @@
+# BG-02 事件策略输入合同
+
+基线78ad29e2，编码前。新增aos_api/ecommerce_product_event_policy.py及tests/test_ecommerce_product_event_policy.py。仅输入合同，不创建策略、批准、绑定、Occurrence或读取数据。
+
+复用PipelineExactRef、PipelineInstallationRef、ConfigurationRef与规范JSON hash。字段：schemaVersion、policyId、orgId/projectId、installationRef、generation/executionEpoch、configurationRef、sourceSelectionRef、sourceConfigurationRef、platform/shopOrMarketplaceId、objectTypes（Product/ProductSku非空唯一）、methodVersion、effectiveFrom/effectiveUntil、maxSourceAgeSeconds/recoveryWindowSeconds。所有字段严格不可变，未知字段拒绝。方法版本固定aos.product-source-event/v1；策略时间正向且最多24小时，两个窗口正整数且不超过一天，不用客户端now延长。
+
+提供validate_selection(record)：只验证调用者给出的既有SourceSelectionRecord与策略的来源精确ref、来源配置、租户、安装、代际、epoch、配置一致，策略窗口在来源窗口内。它不是数据库认证或执行授权；可信Owner仍需当前锁定回读、QueryCapability、数据分级、平台店铺与对象范围核验。不可把mapping-snapshot方法当作事件方法。
+
+本片不为现有SchedulePolicy添加event、不改已签名包、旧迁移或批准记录。后继片才设计可信事件读取的权限与事务。测试覆盖来源换租户/版本/代际/配置、超出有效窗、字段篡改hash变化、过长/重复范围、未知授权字段、不可变与model_copy重核。
