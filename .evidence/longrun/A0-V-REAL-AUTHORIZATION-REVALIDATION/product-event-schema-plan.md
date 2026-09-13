@@ -1,0 +1,7 @@
+# BG-02 事件存储约束片
+
+基线76966614，租约A0V-PRODUCT-EVENT-SCHEMA-20260914。新增a0v_039_product_event_schedule_schema.py，下游038；仅扩大既有策略revision表的类型/节奏约束，事件分支必须product_event/event且authority_data的schema严格为事件schema。原三种类型/节奏保持原准入，不改biw8_001函数、ACL、RLS、Case或Receipt表，不新增事件写函数或执行入口。
+
+主库目录只读已核实原两个约束名及定义。upgrade先验证原定义，再在同事务替换；不使用IF EXISTS掩盖漂移。downgrade遇到任意event历史拒绝，不删除数据，零事件时恢复原两约束。代码head会领先主库，主库保持038，不重启基于新head做强预检的API，后续完整功能与隔离恢复演练通过后另行部署。
+
+测试路径services/aos-api/tests/extension_runtime/test_product_event_schedule_schema_pg.py：18432临时schema安装原biw8_001表/函数，验证旧数据保持、原写函数定义不变、新合法事件/非法交叉组合、缺schema拒绝、零数据回退与有事件拒绝回退。最小Case外键父表为测试装配，不是完整首链验证。
