@@ -19,13 +19,20 @@ export interface ExtensionHostProps extends ExtensionBridgeHandlers {
   unavailableReason?: string | null;
 }
 
-function resourceUrlWithNonce(resourceUrl: string, resourceHash: string, nonce: string): string | null {
+function resourceUrlWithBootstrap(spec: ExtensionHostSpec, nonce: string): string | null {
   try {
-    const url = new URL(resourceUrl);
+    const url = new URL(spec.signedResourceUrl);
     if (url.protocol !== "https:" && !(url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname))) return null;
     const contentHashes = url.searchParams.getAll("contentHash");
-    if (contentHashes.length !== 1 || contentHashes[0] !== resourceHash) return null;
-    url.hash = `aosNonce=${encodeURIComponent(nonce)}`;
+    if (contentHashes.length !== 1 || contentHashes[0] !== spec.resourceHash) return null;
+    // Public handshake identity stays in the fragment, outside the resource request.
+    url.hash = new URLSearchParams({
+      aosNonce: nonce,
+      installationId: spec.installationId,
+      generation: spec.generation,
+      executionEpoch: String(spec.executionEpoch),
+      initialRoute: spec.initialRoute,
+    }).toString();
     return url.toString();
   } catch {
     return null;
@@ -44,7 +51,7 @@ export function ExtensionHost({ spec, effectiveState, unavailableReason, ...hand
   ]) : "none";
   const bridgeSpec = useMemo(() => spec, [securityFingerprint]);
   const nonce = useMemo(() => createExtensionNonce(), [securityFingerprint]);
-  const src = spec ? resourceUrlWithNonce(spec.signedResourceUrl, spec.resourceHash, nonce) : null;
+  const src = spec ? resourceUrlWithBootstrap(spec, nonce) : null;
   const ready = spec !== null && effectiveState === "ready" && src !== null && /^sha256:[a-f0-9]{64}$/.test(spec.resourceHash);
 
   useEffect(() => {

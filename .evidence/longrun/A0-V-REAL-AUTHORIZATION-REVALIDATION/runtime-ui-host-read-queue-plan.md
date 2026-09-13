@@ -167,3 +167,13 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 A2回归核实：基线c9f32927的EcommerceWorkshopHost已使用“当前工作台入口不可用”，但AppShell三处测试仍断言旧“模块未安装”。空目录可能来自未授权或无UI，不能误断卸载；仅修正这些过时文案断言，产品文案不倒退。
 
 A2浏览器复核补充：运行目录空态会复用旧Host，原主区域刷新只更新legacy目录。EcommerceWorkshopHost新增可选onCatalogReload回调，运行路由传入双目录reload，默认不传保持既有行为；增加空态按钮同时刷新两目录验证。
+
+## UQ5-B 后继签名包交付拆分（基线bac0a89a，编码前）
+
+发现现有ExtensionHost仅传nonce，但协议hello要求installationId/generation/executionEpoch；签名子页面不能取得父组件props，必须补公开启动合同。另当前只存在签名资源URL解析器，未发现对应资源HTTP服务，不能把有URL当作能加载。
+
+B1先修改apps/web/src/components/extensions/ExtensionHost.tsx和ExtensionHost.test.tsx：URL fragment精确传aosNonce、installationId、generation、executionEpoch、initialRoute，替换原fragment。不得传token、subject、roles或业务数据，不把公开身份当权限；原桥接继续核对来源窗口、nonce、代次和声明。身份/路由变化重建iframe及nonce，测试URL查询摘要保持、fragment可组成合法hello、旧nonce和旧身份不复用。
+
+B2新增签名资源只读服务设计与实现：按已发布且签名验证通过的不可变包清单解析frontend入口，仅允许声明HTML与精确packageHash/contentHash；拒绝路径穿越、后端文件、未知版本、签名或摘要不符。响应限制脚本网络能力，页面通过原MessagePort读取，不携带API凭据。先完成适配现有Registry/签名加载器的具体方案再编码。
+
+B3为growth 1.7.0制作独立1.8.0候选，保留旧版本原字节与既有数字同事配置，注册analyst_workspace_view_v1纯投影方法；首个真实UI仅声明经营参谋canonical路由，保留七模块贡献和独立operations-base，不用假数据填充另六页。补包协议/页面测试、实际OCI资格验证及新不可变签名树，后继UQ6备份迁移与原宿主部署。B1/B2/B3各自落证据与提交，代码通过不算主库安装或真实业务链完成。

@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { ExtensionHost, type ExtensionHostSpec } from "./ExtensionHost";
+import { parseExtensionHandshake } from "./extensionBridge";
 
 const spec: ExtensionHostSpec = {
   installationId: "11111111-1111-4111-8111-111111111111",
@@ -45,6 +46,34 @@ describe("ExtensionHost", () => {
     expect(host.querySelector("iframe")).toBeNull();
   });
 
+  it("签名子页面仅凭公开启动片段可组成合法握手，资源请求不携带身份", () => {
+    act(() => root.render(<ExtensionHost spec={{ ...spec, signedResourceUrl: `${spec.signedResourceUrl}#obsolete=discard` }} effectiveState="ready" />));
+    const url = new URL((host.querySelector("iframe") as HTMLIFrameElement).src);
+    const bootstrap = new URLSearchParams(url.hash.slice(1));
+    expect([...bootstrap.keys()].sort()).toEqual(["aosNonce", "executionEpoch", "generation", "initialRoute", "installationId"]);
+    expect(url.search).toBe(new URL(spec.signedResourceUrl).search);
+    expect(bootstrap.get("initialRoute")).toBe(spec.initialRoute);
+    expect(parseExtensionHandshake({
+      version: 1, type: "aos:hello", nonce: bootstrap.get("aosNonce"),
+      installationId: bootstrap.get("installationId"), generation: bootstrap.get("generation"),
+      executionEpoch: Number(bootstrap.get("executionEpoch")),
+    })).toMatchObject({ installationId: spec.installationId, generation: spec.generation, executionEpoch: spec.executionEpoch });
+  });
+
+  it("运行身份更新后新页面只收到新代次且nonce轮换", () => {
+    act(() => root.render(<ExtensionHost spec={spec} effectiveState="ready" />));
+    const oldFrame = host.querySelector("iframe") as HTMLIFrameElement;
+    const oldBootstrap = new URLSearchParams(new URL(oldFrame.src).hash.slice(1));
+    const next = { ...spec, generation: "33333333-3333-4333-8333-333333333333", executionEpoch: 4 };
+    act(() => root.render(<ExtensionHost spec={next} effectiveState="ready" />));
+    const newFrame = host.querySelector("iframe") as HTMLIFrameElement;
+    const bootstrap = new URLSearchParams(new URL(newFrame.src).hash.slice(1));
+    expect(newFrame).not.toBe(oldFrame);
+    expect(bootstrap.get("generation")).toBe(next.generation);
+    expect(bootstrap.get("executionEpoch")).toBe("4");
+    expect(bootstrap.get("aosNonce")).not.toBe(oldBootstrap.get("aosNonce"));
+  });
+
   it("任一安全元数据变化都会废弃旧通道并重建隔离页面", () => {
     act(() => root.render(<ExtensionHost spec={spec} effectiveState="ready" />));
     const firstIframe = host.querySelector("iframe") as HTMLIFrameElement;
@@ -54,6 +83,7 @@ describe("ExtensionHost", () => {
     const routeChangedIframe = host.querySelector("iframe") as HTMLIFrameElement;
     expect(routeChangedIframe).not.toBe(firstIframe);
     expect(routeChangedIframe.src).not.toBe(firstSrc);
+    expect(new URLSearchParams(new URL(routeChangedIframe.src).hash.slice(1)).get("initialRoute")).toBe("/workshop/tasks");
 
     act(() => root.render(<ExtensionHost spec={{ ...spec, readOperationClaims: ["read.orders", "read.products"] }} effectiveState="ready" />));
     const claimsChangedIframe = host.querySelector("iframe") as HTMLIFrameElement;
