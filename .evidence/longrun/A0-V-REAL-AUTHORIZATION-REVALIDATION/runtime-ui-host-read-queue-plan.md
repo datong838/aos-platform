@@ -37,3 +37,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 方法要求现有 READ COMMITTED 事务与同租户GUC，当前成员读锁；按租户 advisory transaction lock 串行所有入队，先核同主体同键记录：同摘要原样返回、不同摘要拒绝。新请求限制同租户未过期requested/claimed最多64条、同主体最多8条；期限固定数据库时间后60秒，UUID由服务端生成。过期请求不自动重放也不改历史。所有拒绝在INSERT前发生，数据库trigger再次核当前绑定版本。该端口不执行包、无成员修改、无自建事务commit。
 
 验证使用隔离真实PG，核同键回读、冲突、主体隔离、成员撤销、并发额度、调用者回滚。规范请求摘要须与UQ1数据库算法一致。未集成签名门禁前不增加角色INSERT/函数EXECUTE授权。
+
+## UQ2-B 当前签名资源接入（基线e4da3721，编码前补充）
+
+新增 extension_runtime/ui_read_admission.py 和对应测试。具体服务依赖既有 RuntimeWorkshopCatalog；不得接收Web提供的目录条目/权限标志。调用者事务内锁住当前成员及所需markings，使用这些当前事实重新加载已验hash的目录。只接受唯一ecommerce.analyst模块、完全相同的七字段target、固定readOperationClaim；目录角色/markings再明确比对，才进入UQ2-A存储。相同键回读同样先重新校验资源和当前权限。目录自身读取使用独立只读快照；最后INSERT的binding guard核epoch/revision，宿主领取仍必须重新做全部门禁，因此入队不是执行授权。暂不新增HTTP或数据库写角色授权。
+
+退出：门禁拒绝时存储调用为零，旧资源/撤权/command-only声明/错模块/错scope/重复模块均拒绝，合法固定读取交给原存储。该切片完成仍需受限数据库接点及UQ3消费者后才能真实调用。
