@@ -1,0 +1,9 @@
+# BG-02 消费worker发现与生命周期
+
+基线f9783003。进程已持有LivePreparedJobDirectory；新增current_targets只枚举该目录自有身份，返回冻结的(scope,installation,generation)元组快照，最多1000；逐项比对当前job identity与登记key，漂移拒绝，不暴露job对象/业务数据，不将存在性当成Admission。旧scope查询/注册/解绑不变。修改extension_runtime/live_job_directory.py及对应测试。
+
+后继worker仍须对每一target建立TenantScope运行时连接，核对当前enabled策略和当前来源/控制；候选不能来自Web默认身份或跨租户SELECT。原controlled source claim可能早于当前续期control，发现时必须用当前ScheduleControlBinding的controlRef，经read_saved_current重验原run身份，不能拿过期原ref无限重放。发现列表是候选而非授权。
+
+持续消费必须避免永久MAX(input_revision)游标，也不能永远重复前100条历史run造成后项饥饿；需要按照当前policy和原批次的未消费event存在性筛选，且为失败/空批次给出有界轮转或明确对账记录。实现前完成SQL与晚提交/超过批量上限测试，不先启动占位worker。
+
+当前本片只提供受控目录发现能力；后继候选选择、异步生命周期挂接、Occurrence到Run、签名新包和真实首链保持未完成。无启动/停止现有进程动作。

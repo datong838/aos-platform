@@ -113,3 +113,25 @@ def test_job_enumeration_is_scoped_and_does_not_admit_other_tenants():
     assert directory.jobs_for_scope(negative.tenant_scope)==(negative,)
     directory.unregister(positive)
     assert directory.jobs_for_scope(positive.tenant_scope)==()
+
+
+def test_current_targets_are_detached_and_do_not_expose_jobs():
+    directory=LivePreparedJobDirectory();first=_job();second=_job(TenantScope('other-org','other-project'))
+    directory.register(first);directory.register(second)
+    targets=directory.current_targets()
+    assert type(targets) is tuple
+    assert set(targets)=={(job.tenant_scope,job.plan.installation_id,job.plan.generation) for job in (first,second)}
+    directory.unregister(first)
+    assert len(targets)==2 and len(directory.current_targets())==1
+
+
+def test_current_targets_reject_mutated_registered_identity():
+    directory=LivePreparedJobDirectory();job=_job();directory.register(job)
+    job.plan.generation=uuid4()
+    with pytest.raises(RuntimeError,match='identity'):directory.current_targets()
+
+
+def test_current_targets_are_bounded():
+    directory=LivePreparedJobDirectory()
+    for _ in range(1001):directory.register(_job())
+    with pytest.raises(RuntimeError,match='bounded'):directory.current_targets()

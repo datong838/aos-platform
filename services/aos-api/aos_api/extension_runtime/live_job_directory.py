@@ -54,6 +54,16 @@ class LivePreparedJobDirectory:
             raise RuntimeError('bounded current live directory required')
         return jobs
 
+    def current_targets(self):
+        """Detached process-owned identities only; every action needs admission."""
+        entries=tuple(self._jobs.items())
+        if len(entries)>1000:
+            raise RuntimeError('bounded current live directory required')
+        if any(self._job_key(job)!=key for key,job in entries):
+            raise RuntimeError('registered live identity changed')
+        return tuple((TenantScope(key[0],key[1]),key[2],key[3])
+                     for key,_job in sorted(entries,key=lambda item:tuple(map(str,item[0]))))
+
     def unregister(self, job):
         key = self._job_key(job)
         if self._jobs.get(key) is not job:
