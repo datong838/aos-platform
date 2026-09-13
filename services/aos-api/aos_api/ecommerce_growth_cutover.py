@@ -19,6 +19,7 @@ from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
+from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef
 
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -64,6 +65,7 @@ class CutoverPrepareRequest(AipContractModel):
     checkpoint: dict[str, Any]
     occurrence_watermark: datetime | None = None
     pending_target_receipt_refs: tuple[CutoverExactRef, ...] = ()
+    registration_receipt_ref: RegistrationReceiptRef | None = None
 
     @field_validator("idempotency_key")
     @classmethod
@@ -88,7 +90,10 @@ class CutoverPrepareRequest(AipContractModel):
         return self
 
     def request_hash(self) -> str:
-        return canonical_sha256(self.model_dump(mode="json", by_alias=True))
+        payload = self.model_dump(mode="json", by_alias=True)
+        if self.registration_receipt_ref is None:
+            payload.pop("registrationReceiptRef", None)
+        return canonical_sha256(payload)
 
 
 class CutoverPrepareReceipt(AipContractModel):
@@ -109,6 +114,7 @@ class CutoverPrepareReceipt(AipContractModel):
     checkpoint: dict[str, Any]
     occurrence_watermark: datetime | None
     pending_target_receipt_refs: tuple[CutoverExactRef, ...]
+    registration_receipt_ref: RegistrationReceiptRef | None = None
     policy_ref: CutoverExactRef
     approval_ref: CutoverExactRef
     request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
@@ -322,6 +328,8 @@ class EcommerceGrowthCutoverStore:
         )
         if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
             raise ValueError("canonical cutover actor is required")
+        if request.registration_receipt_ref is not None:
+            raise EcommerceGrowthCutoverBlocked("first registration activation is not wired")
         request_hash = request.request_hash()
         with self._connect_factory(scope) as conn:
             self._require_maintainer(conn)
@@ -446,6 +454,8 @@ class EcommerceGrowthCutoverStore:
                 "requestedBy": actor,
                 "createdAt": checked_at.isoformat(),
             }
+            if request.registration_receipt_ref is not None:
+                authority["registrationReceiptRef"] = request.registration_receipt_ref.model_dump(mode="json")
             content_hash = canonical_sha256(authority)
             receipt_id, event_id = uuid4(), uuid4()
             conn.execute(
@@ -1177,6 +1187,7 @@ class EcommerceGrowthCutoverStore:
             checkpoint=prepare.checkpoint,
             occurrenceWatermark=prepare.occurrence_watermark,
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+            registrationReceiptRef=prepare.registration_receipt_ref,
         )
         if reconstructed.request_hash() != operation["request_hash"]:
             raise EcommerceGrowthCutoverConflict("prepared request authority drifted")
@@ -1243,6 +1254,7 @@ class EcommerceGrowthCutoverStore:
             checkpoint=prepare.checkpoint,
             occurrenceWatermark=prepare.occurrence_watermark,
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+            registrationReceiptRef=prepare.registration_receipt_ref,
         )
         self._approval_authority(conn, scope, reconstructed)
 
@@ -1615,6 +1627,7 @@ class EcommerceGrowthCutoverStore:
             checkpoint=prepare.checkpoint,
             occurrenceWatermark=prepare.occurrence_watermark,
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+            registrationReceiptRef=prepare.registration_receipt_ref,
         )
         self._approval_authority(conn, scope, reconstructed)
 
@@ -2025,6 +2038,8 @@ class EcommerceGrowthCutoverStore:
             "operationIds": list(sorted(ECOMMERCE_GROWTH_OPERATIONS)),
             "policyRef": request.policy_ref.model_dump(mode="json", by_alias=True),
         }
+        if expected_payload is None and request.registration_receipt_ref is not None:
+            expected["registrationReceiptRef"] = request.registration_receipt_ref.model_dump(mode="json")
         if (
             proposal is None
             or proposal["action_type_id"] != action_type_id
@@ -2158,6 +2173,7 @@ class EcommerceGrowthCutoverStore:
             "checkpoint": _object(authority["checkpoint"]),
             "occurrenceWatermark": authority["occurrenceWatermark"],
             "pendingTargetReceiptRefs": tuple(_array(authority["pendingTargetReceiptRefs"])),
+            "registrationReceiptRef": authority.get("registrationReceiptRef"),
             "policyRef": authority["policyRef"],
             "approvalRef": authority["approvalRef"],
             "requestHash": authority["requestHash"],

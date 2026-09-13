@@ -2421,8 +2421,9 @@ def test_reinstall_uses_new_authority_and_preserves_old_audit_history(database):
         and row["cutover_group_revision"] > old_dispatch_ref.cutover_group_revision
         for row in current_dispatch
     )
+    _migration(database.root, "a0v_028_dispatch_read_lock.py", database.owner, schema=database.schema)
     with psycopg.connect(
-        **PG, autocommit=False, row_factory=dict_row
+        **{**PG, "user": database.role}, autocommit=False, row_factory=dict_row
     ) as conn:
         conn.isolation_level = IsolationLevel.SERIALIZABLE
         conn.execute(
@@ -2433,8 +2434,15 @@ def test_reinstall_uses_new_authority_and_preserves_old_audit_history(database):
         with pytest.raises(
             EcommerceGrowthHostConflict, match="exact dispatch authority drifted"
         ):
+            conn.execute("SET LOCAL ROLE aos_runtime")
+            class SchemaLockConnection:
+                def execute(self, query, params=()):
+                    return conn.execute(query.replace(
+                        "public.extension_dispatch_lock_group_a0v_028",
+                        database.schema + ".extension_dispatch_lock_group_a0v_028",
+                    ), params)
             LockedEcommerceGrowthHostPort._lock_and_revalidate(
-                conn, scope, old_dispatch_ref
+                SchemaLockConnection(), scope, old_dispatch_ref
             )
 
     same_key_operations = database.owner.execute(

@@ -145,3 +145,10 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 ### 首次激活登记来源核验切片
 新增 services/aos-api/aos_api/ecommerce_growth_registration_origin.py 与 tests/extension_runtime/test_ecommerce_growth_registration_origin.py。严格不可变 RegistrationReceiptRef 固定资源类型、canonical UUID、revision=1、sha256；verify_registration_origin 复用既有存储回执解码，绑定ref id/hash、scope、当前按operationId排序的完整九项快照、目标安装/generation/epoch/bindingRevision；严格拒绝bool伪整数、假对象、partial/mixed/revision漂移。返回重新验证且独立的原始登记请求，供后续同事务当前安装/配置/签名核验复用，不直接授予激活权。
 本波不放宽Cutover判断，不部署主库。后续接入需要：审批payload精确绑定registrationReceiptRef；旧请求无该字段时序列化/摘要必须保持原字节语义；prepare Receipt与重构请求保留新ref；prepare/commit/rollback分别复核来源和当前配置，rollback恢复旧snapshot的fence=true。撤销并发须与group/installation锁序一致，不能删除登记历史。现有SQL commit/rollback按exact snapshot比对/恢复，无需凭名称猜测放宽数据库检查。
+
+
+### Cutover 登记引用兼容契约
+修改 services/aos-api/aos_api/ecommerce_growth_cutover.py：PrepareRequest/PrepareReceipt追加可选registration_receipt_ref（别名registrationReceiptRef），复用严格RegistrationReceiptRef。request_hash仅在该字段非None时纳入，保留所有旧字段及旧None字段语义；prepare authority也只在非None时追加。所有prepare重构、Receipt解码与激活审批expected payload传播该ref。不得将ref塞入checkpoint代替正式契约。
+分阶段安全措施：本切片prepare_activation在连接前明确拒绝非None registrationReceiptRef；只有下一切片同事务当前安装/配置/签名及撤销状态核验完成后才能移除此拒绝。旧legacy路径继续执行原逻辑。新增tests/extension_runtime/test_ecommerce_growth_cutover_registration_contract.py验证旧hash兼容、新hash绑定、严格ref、重构保留、未完成接线零连接拒绝。复验既有cutover PG/签名生命周期；主库不动。
+
+完整cutover回归发现另一处旧私有schema重装测试仍调用旧Host直接锁；补改test_ecommerce_growth_cutover_pg.py，仅在该用例Host检查前应用028至隔离schema，改用非特权身份并映射固定函数名。其余降级测试不加载028；public生产证明沿用独立Host数据库验收。
