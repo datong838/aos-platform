@@ -476,3 +476,33 @@ def test_exact_claim_target_does_not_consume_other_targets(database):
     claimed = store.claim_next(scope, owner='exact-worker', now=now, target=target)
     assert claimed.occurrence_id == written.occurrence_id
     assert store.claim_next(scope, owner='exact-worker', now=now, target=target) is None
+
+
+@pytest.mark.parametrize('fault', ['expiry', 'accepted', 'deadline'])
+def test_lock_claim_revalidates_current_attempt_and_database_time(database, fault):
+    scope = TenantScope('org-org', 'dev-project')
+    binding = replace(_seed(database, scope), cadence='event', weekly_day=None, local_time=None)
+    factory = _runtime_connection(database, scope)
+    store = AutomationOccurrenceStore(factory, schema=database.schema)
+    store.put_binding(scope, binding)
+    now = database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0) + timedelta(seconds=1)
+    store.record_event(scope, binding, source_event_id='claim-revalidation', deadline=now + timedelta(hours=1))
+    claimed = store.claim_next(scope, owner='exact-worker', now=now)
+    with factory(scope) as conn:
+        assert store._lock_claim(conn, scope, claimed)['status'] == 'claimed'
+    for invalid in (replace(claimed, claim_owner='other'), replace(claimed, target_idempotency_key='other'),
+                    replace(claimed, execution_epoch=claimed.execution_epoch + 1),
+                    replace(claimed, attempt_id=uuid4())):
+        with factory(scope) as conn, pytest.raises(AutomationOccurrenceConflict):
+            store._lock_claim(conn, scope, invalid)
+    with factory(scope) as conn, pytest.raises(AutomationOccurrenceConflict):
+        store._lock_claim(conn, TenantScope('dev-org', 'dev-project'), claimed)
+    if fault == 'accepted':
+        store.record_target_receipt(scope, occurrence_id=claimed.occurrence_id,
+                                   owner=claimed.claim_owner, receipt_ref={'resourceId': 'original'}, occurred_at=now)
+    elif fault == 'deadline':
+        database.owner.execute("UPDATE automation_occurrence SET deadline=clock_timestamp()-interval '1 second'")
+    else:
+        database.owner.execute("UPDATE automation_occurrence SET claim_until=clock_timestamp()-interval '1 second'")
+    with factory(scope) as conn, pytest.raises(AutomationOccurrenceConflict):
+        store._lock_claim(conn, scope, claimed)

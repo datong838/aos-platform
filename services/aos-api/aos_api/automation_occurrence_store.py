@@ -664,6 +664,39 @@ class AutomationOccurrenceStore:
             target_idempotency_key=target_key,
         )
 
+    @staticmethod
+    def _lock_claim(conn, scope: TenantScope, claimed: ClaimedOccurrence) -> dict[str, Any]:
+        """Keep the current attempt locked in the caller's write transaction."""
+        if type(scope) is not TenantScope or type(claimed) is not ClaimedOccurrence:
+            raise TypeError("exact scope and claimed occurrence required")
+        row = conn.execute(
+            """SELECT o.*,a.attempt_id,a.target_idempotency_key,
+                      a.claim_owner AS attempt_owner,a.claim_until AS attempt_until,
+                      a.status AS attempt_status
+                 FROM automation_occurrence o
+                 JOIN automation_occurrence_dispatch_attempt a
+                   USING(org_id,project_id,occurrence_id)
+                WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=%s
+                  AND a.attempt_id=%s FOR UPDATE OF o,a""",
+            (*scope.key, claimed.occurrence_id, claimed.attempt_id),
+        ).fetchone()
+        # Read time after lock acquisition, including time spent waiting for another writer.
+        now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+        if row is None or any((
+            row['status'] != 'claimed', row['attempt_status'] != 'claimed',
+            row['claim_owner'] != claimed.claim_owner, row['attempt_owner'] != claimed.claim_owner,
+            row['claim_until'] != claimed.claim_until, row['attempt_until'] != claimed.claim_until,
+            row['claim_until'] is None or row['claim_until'] <= now,
+            row['deadline'] <= now,
+            row['policy_id'] != claimed.policy_id, row['policy_revision'] != claimed.policy_revision,
+            row['operation_id'] != claimed.operation_id,
+            row['installation_id'] != claimed.installation_id, row['generation'] != claimed.generation,
+            row['execution_epoch'] != claimed.execution_epoch,
+            row['target_idempotency_key'] != claimed.target_idempotency_key,
+        )):
+            raise AutomationOccurrenceConflict("current claim or dispatch attempt changed")
+        return dict(row)
+
     def record_target_receipt(
         self,
         scope: TenantScope,
