@@ -41,6 +41,7 @@
     },
     "ar2-7": {
       "requiredPaths": [
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_compilation_blueprint.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_start_operation.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py",
         "services/aos-api/tests/extension_runtime/test_product_event_schedule.py",

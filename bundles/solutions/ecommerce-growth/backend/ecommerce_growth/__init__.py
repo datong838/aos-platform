@@ -32,6 +32,11 @@ def handle(operation_id, _payload, _context):
         from .analysis_start_operation import build_analysis_start
 
         return build_analysis_start(_payload)
+    if (operation_id == "ecommerce_growth_analysis_advance"
+            and type(_payload) is dict and _payload.get("kind") == "build_analysis_compilation_blueprint"):
+        from .analysis_compilation_blueprint import build_analysis_compilation_blueprint
+
+        return build_analysis_compilation_blueprint(_payload)
     if operation_id == "analyst_workspace_view_v1":
         if type(_payload) is not dict or set(_payload) != {"snapshot"}:
             raise ValueError("invalid analyst workspace read payload")
