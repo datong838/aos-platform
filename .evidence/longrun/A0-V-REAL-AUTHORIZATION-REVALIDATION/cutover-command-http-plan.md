@@ -1,0 +1,9 @@
+# 首次正式切换阶段写接口
+
+基线4eaf0bab。新增安装下POST /ecommerce-growth-cutovers/commands，body为phase + request + 可选validateReceiptRef。phase固定七种，request必须匹配既有强类型；prepare必需FirstDispatchRegistrationReceipt，resume必需CutoverValidateReceipt，其余阶段拒绝非空validateReceiptRef。Idempotency-Key必须等于内部阶段请求原键，If-Match为安装etag；scope/actor来自Principal，不从body读取。
+
+控制层增加可选expected_installation_id/expected_installation_etag成对参数，仅用于产品path/CAS；调用前验证类型，事务中目标来源确认后对照path，当前权限先行，锁定安装后核对etag，之后才借同事务执行原Store。旧可信调用不传二者仍保留既有行为。HTTP必须传两者。错path409/etag412及当前撤权不执行阶段，原key历史查询不受写CAS影响。
+
+文件：services/aos-api/aos_api/ecommerce_growth_cutover_command.py、ecommerce_growth_cutover_control.py、routers/bundle_runtime_installations.py；对应extension_runtime测试。复用只读错误封装为通用受控调用，安全422/403/404/409/412/503，不透传SQL或请求正文。201为新阶段Receipt，200为原键回放；结果不明不自动重发。无改表或真实切换。
+
+测试：七种正确映射、阶段错型、首次缺origin、resume缺ref、header/key/etag、path与当前版本CAS、服务未配置、权限拒绝、OpenAPI只读接口仍在。通过后提交并按原受控API方案重载；真正切换前仍需当前真实Proposal/Approval，不能用fixture回执。

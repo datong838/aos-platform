@@ -1,8 +1,9 @@
 """Current product authority around existing receipt-first cutover phases."""
 from contextlib import contextmanager
+from uuid import UUID
 
 from aos_api.ecommerce_growth_cutover import (
-    EcommerceGrowthCutoverStore, CutoverPrepareRequest, CutoverCommitRequest,
+    EcommerceGrowthCutoverStore, EcommerceGrowthCutoverConflict, CutoverPrepareRequest, CutoverCommitRequest,
     CutoverFinalizeRequest, CutoverRollbackRequest, CutoverExactRef,
 )
 from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
@@ -25,8 +26,14 @@ class EcommerceGrowthCutoverControl:
             raise TypeError('current production cutover and registration services required')
         self._store = store
 
-    def execute(self, *, scope, phase, request, actor, validate_receipt_ref=None):
+    def execute(self, *, scope, phase, request, actor, validate_receipt_ref=None,
+                expected_installation_id=None, expected_installation_etag=None):
         FirstDispatchRegistrationService._identity(scope, actor)
+        if expected_installation_id is not None or expected_installation_etag is not None:
+            if (type(expected_installation_id) is not str
+                    or str(UUID(expected_installation_id)) != expected_installation_id
+                    or type(expected_installation_etag) is not int or expected_installation_etag < 1):
+                raise ValueError('exact installation precondition required')
         if type(phase) is not str or phase not in _PHASES:
             raise ValueError('explicit cutover phase required')
         request_type, method = _PHASES[phase]
@@ -53,8 +60,17 @@ class EcommerceGrowthCutoverControl:
                 if row is None:
                     raise LookupError('current activation unavailable')
                 installation_id = str(row['target_installation_id'])
+            if expected_installation_id is not None and installation_id != expected_installation_id:
+                raise EcommerceGrowthCutoverConflict('cutover installation differs from product target')
             conn.execute('SET LOCAL ROLE aos_runtime')
             source._registration_service._authorize_receipt_access(conn, scope, installation_id, actor)
+            if expected_installation_etag is not None:
+                row = conn.execute(f"""SELECT etag_version FROM {source._schema}.bundle_installation
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s""",
+                    (*scope.key, installation_id)).fetchone()
+                if row is None or row['etag_version'] != expected_installation_etag:
+                    from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict
+                    raise RuntimeRevisionConflict('installation precondition changed')
             conn.execute('SET LOCAL ROLE aos_extension_maintainer')
             borrowed = False
             @contextmanager

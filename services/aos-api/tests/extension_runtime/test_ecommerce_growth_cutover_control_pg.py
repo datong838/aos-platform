@@ -80,3 +80,21 @@ def test_invalid_call_never_opens_connection(phase,invalid_request):
     control=control_type()(EcommerceGrowthCutoverStore(lambda scope:pytest.fail('invalid call connected'),registration_service=service))
     with pytest.raises((ValueError,TypeError)):
         control.execute(scope=TenantScope('org-org','dev-project'),phase=phase,request=invalid_request,actor='runtime-owner')
+
+
+@pytest.mark.parametrize('defect',['path','etag'])
+def test_product_target_and_etag_block_before_phase(database,monkeypatch,defect):
+    from uuid import uuid4
+    from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict
+    from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict
+    scope=TenantScope('org-org','dev-project');request=_seed(database,scope,pending_receipt=False)
+    database.owner.execute('UPDATE bundle_installation SET etag_version=5')
+    database.owner.execute('GRANT SELECT ON bundle_installation TO aos_runtime')
+    service=object.__new__(FirstDispatchRegistrationService)
+    monkeypatch.setattr(service,'_authorize_receipt_access',lambda *args:None)
+    control=control_type()(EcommerceGrowthCutoverStore(_connection(database),schema=database.schema,registration_service=service))
+    with pytest.raises(EcommerceGrowthCutoverConflict if defect=='path' else RuntimeRevisionConflict):
+        control.execute(scope=scope,phase='prepare',request=request,actor='runtime-owner',
+            expected_installation_id=str(uuid4()) if defect=='path' else str(request.target_installation_id),
+            expected_installation_etag=5 if defect=='path' else 6)
+    assert database.owner.execute('SELECT count(*) AS n FROM extension_dispatch_cutover_operation').fetchone()['n']==0

@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from psycopg import errors
 from test_ecommerce_growth_registration_http import harness
-from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict
+from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict, EcommerceGrowthCutoverBlocked
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_read_principal_and_original_key(cutover_http,kind):
 
 
 @pytest.mark.parametrize('error,code',[(LookupError('private-sentinel'),404),(PermissionError('private-sentinel'),403),
-    (EcommerceGrowthCutoverConflict('private-sentinel'),409),(errors.SerializationFailure('private-sentinel'),409),
+    (EcommerceGrowthCutoverConflict('private-sentinel'),409),(EcommerceGrowthCutoverBlocked('private-sentinel'),409),(errors.SerializationFailure('private-sentinel'),409),
     (errors.InsufficientPrivilege('private-sentinel'),403),(RuntimeError('private-sentinel'),503)])
 def test_safe_errors(cutover_http,error,code):
     h=cutover_http;h.service.error=error
@@ -72,3 +72,35 @@ def test_invalid_path_is_not_echoed(cutover_http):
     assert response.status_code==422
     assert 'private-sentinel' not in response.text
     assert not cutover_http.calls
+
+
+@pytest.mark.parametrize('phase',['prepare','pause','commit','validate','resume','rollback-prepare','rollback-commit'])
+@pytest.mark.parametrize('replayed',[False,True])
+def test_product_phase_current_target(cutover_http,phase,replayed):
+    from test_ecommerce_growth_cutover_command import phase_payload
+    h=cutover_http;body=phase_payload(phase)
+    def execute(**kwargs):
+        h.calls.append(kwargs)
+        return SimpleNamespace(replayed=replayed,model_dump=lambda **kw:dict(replayed=replayed))
+    h.app.state.extension_runtime_control_plane.ecommerce_growth_cutover_control=SimpleNamespace(execute=execute)
+    response=h.client.post(url('commands'),json=body,headers={'Idempotency-Key':body['request']['idempotencyKey'],'If-Match':'"5"'})
+    assert response.status_code==(200 if replayed else 201),response.text
+    call=h.calls[0]
+    assert call['phase']==phase and call['actor']=='signed-user' and call['scope'].key==('org-org','dev-project')
+    assert call['expected_installation_id']=='97aeb2e7-59ba-40f6-89a3-fb0293bc0497'
+    assert call['expected_installation_etag']==5
+
+
+@pytest.mark.parametrize('defect',['origin','key','missing-match','duplicate-match','actor'])
+def test_bad_product_write_never_calls(cutover_http,defect):
+    from test_ecommerce_growth_cutover_command import phase_payload
+    h=cutover_http;body=phase_payload('prepare');headers={'Idempotency-Key':body['request']['idempotencyKey'],'If-Match':'"5"'}
+    h.app.state.extension_runtime_control_plane.ecommerce_growth_cutover_control=SimpleNamespace(execute=lambda **kw:pytest.fail('invalid write executed'))
+    if defect=='origin':body['request'].pop('registrationReceiptRef')
+    elif defect=='key':headers['Idempotency-Key']='different'
+    elif defect=='missing-match':headers.pop('If-Match')
+    elif defect=='duplicate-match':headers=list(headers.items())+[('If-Match','"6"')]
+    else:body['actor']='private-sentinel'
+    response=h.client.post(url('commands'),json=body,headers=headers)
+    assert response.status_code in (400,409,412,422,428),response.text
+    assert 'private-sentinel' not in response.text

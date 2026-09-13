@@ -350,7 +350,7 @@ class _CutoverReadRoute(APIRoute):
             try:
                 return await handler(request)
             except RequestValidationError:
-                raise ApiError(code='CUTOVER_REQUEST_INVALID', message='切换查询格式不符合要求。', status_code=422) from None
+                raise ApiError(code='CUTOVER_REQUEST_INVALID', message='切换请求格式不符合要求。', status_code=422) from None
         return safe_handler
 
 
@@ -358,14 +358,20 @@ _cutover_read_router = APIRouter(route_class=_CutoverReadRoute)
 
 
 def _cutover_read(control_plane, principal, installation_id, key, *, history):
-    from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict
     service = getattr(control_plane, 'ecommerce_growth_cutover_service', None)
     if service is None:
         raise ApiError(code='CUTOVER_UNAVAILABLE', message='经营入口切换查询服务尚未配置。', status_code=503)
     read = service.read_activation_history if history else service.read_prepare_receipt
+    return _invoke_cutover_operation(lambda: read(scope=TenantScope(principal.org_id, principal.project_id),
+        installation_id=installation_id, idempotency_key=key, actor=principal.subject))
+
+
+def _invoke_cutover_operation(operation):
+    from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict, EcommerceGrowthCutoverBlocked
     try:
-        return _invoke(lambda: read(scope=TenantScope(principal.org_id, principal.project_id),
-            installation_id=installation_id, idempotency_key=key, actor=principal.subject))
+        return _invoke(operation)
+    except EcommerceGrowthCutoverBlocked:
+        raise ApiError(code='CUTOVER_BLOCKED', message='当前切换条件不满足，请核对审批和运行状态。', status_code=409) from None
     except (EcommerceGrowthCutoverConflict, ValueError):
         raise ApiError(code='CUTOVER_HISTORY_CONFLICT', message='切换证据不完整或已变化，请核对原回执。', status_code=409) from None
     except DatabaseError as error:
@@ -402,6 +408,34 @@ def get_ecommerce_growth_cutover_history(
 ) -> dict:
     key = _invoke(lambda: require_idempotency_key(request))
     return _cutover_read(control_plane, principal, installation_id, key, history=True)
+
+
+from aos_api.ecommerce_growth_cutover_command import CutoverProductCommand
+
+
+@_cutover_read_router.post(
+    '/{installation_id}/ecommerce-growth-cutovers/commands',
+    operation_id='execute_ecommerce_growth_cutover_phase', responses={201: {'description': 'New cutover phase receipt'}, **_ERRORS},
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER, _IF_MATCH_PARAMETER]},
+)
+def execute_ecommerce_growth_cutover_phase(
+    installation_id: CanonicalUuidPath, body: CutoverProductCommand,
+    request: Request, response: Response, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    match = _invoke(lambda: require_if_match(request))
+    if key != body.request.idempotency_key:
+        raise ApiError(code='CUTOVER_REFERENCE_MISMATCH', message='切换请求编号不一致。', status_code=409)
+    control = getattr(control_plane, 'ecommerce_growth_cutover_control', None)
+    if control is None:
+        raise ApiError(code='CUTOVER_UNAVAILABLE', message='经营入口切换控制服务尚未配置。', status_code=503)
+    result = _invoke_cutover_operation(lambda: control.execute(
+        scope=TenantScope(principal.org_id, principal.project_id), phase=body.phase,
+        request=body.request, actor=principal.subject, validate_receipt_ref=body.validate_receipt_ref,
+        expected_installation_id=installation_id, expected_installation_etag=int(match[1:-1])))
+    response.status_code = 200 if result.replayed else 201
+    return result.model_dump(mode='json', by_alias=True)
 
 
 router.include_router(_cutover_read_router)
