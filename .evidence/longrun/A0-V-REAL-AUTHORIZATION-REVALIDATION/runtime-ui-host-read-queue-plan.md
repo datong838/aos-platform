@@ -346,3 +346,15 @@ D2d-2b入口补充：同模块新增ConfigurationStageConsumer正式包装，构
 修改runtime_host.py、production_runtime.py、asset_registry/control_wiring.py，新增configuration_stage_preflight.py及测试。RuntimeWorkerDependencies增加严格bool configuration_stage_enabled=False；环境AOS_EXTENSION_RUNTIME_CONFIGURATION_STAGE_ENABLED仅缺省/0/1，异常配置拒绝组装。原租户assignment有开关才加入唯一ConfigurationStageConsumer；保留旧configure/disable/UI consumer顺序与行为。
 
 开关打开前检查public交接表/原配置表存在且FORCE RLS/非owner，runtime无INSERT/DELETE/TRUNCATE及身份列UPDATE，只允许五个终态UPDATE字段；配置表保持原INSERT权，守卫触发器完整启用，guard为非SECURITY DEFINER。missing/expanded ACL拒绝Host选择，固定CONFIGURATION_STAGE_PREFLIGHT_FAILED。不让开关自动迁移或开户，不启动另一个Host。原Host未替换、主库035不能开启；测试只构造/隔离SQL验收。
+
+### D2d-3a 受限收件与原主体查询（基线87ec28bf，2026-09-14编码前）
+
+迁移租约A0V-CONFIGURATION-STAGE-API-SCHEMA-20260914：新增a0v_037_configuration_stage_api.py及tests/extension_runtime/test_configuration_stage_api_pg.py。主库不应用，先隔离验证。
+
+新增NOLOGIN技术角色aos_configuration_stage_api，无其他角色继承，不授任何配置/队列表直接权限。仅执行固定principal/enqueue/query函数，固定search_path，拒绝PUBLIC。调用者须非特权session_member且SET LOCAL ROLE精确技术角色、READ COMMITTED、scope/subject GUC一致；当前成员唯一且admin/asset-installer，不能以owner替代安装权限。入口不接受客户端roles/markings。原当前installation revision与composition lock读回permissionDiff；核对diff摘要与lock payload中的副本、installation锁引用，逐一读当前marking授予。Host仍做原完整lock/source/权限核验。
+
+enqueue：精确normalized ConfigurationStageRequest（含previousRef:null），当前成员/安装标记后按租户advisory lock串行限制64个tenant/8个subject未决请求。subject+key唯一，同key异内容拒绝，同内容只返回原receipt；不得因旧target变化重新排队。服务生成UUID与数据库3分钟deadline，原036守卫校验JSON/目标/摘要。返回requestId/requestHash/state/revision/deadline，不返回配置正文。
+
+query：当前成员重新核验，按scope+subject+requestId读取；不存在/他人请求返回null，存在再核当前安装标记，返回固定metadata与configRef/失败码。权限撤销不能读取旧结果。不存在Host启动、能力调用、配置/enable行为。远程OpenFGA模式必须在后续API连接层拒绝并等待相应adapter，不将本地SQL权限当远端授权。
+
+测试先构造隔离原表/锁引用和角色session，验证成功收件/重放/冲突/容量，原主体查询/其他subject/负租户/角色撤销/缺marking拒绝，直接表访问拒绝、特权session拒绝；随后运行036边界回归。新SQL权限检查是收件/读取门，不能替代Host完整当前授权。
