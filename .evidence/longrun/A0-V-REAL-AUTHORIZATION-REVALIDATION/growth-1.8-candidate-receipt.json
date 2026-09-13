@@ -1,0 +1,19 @@
+{
+  "coordinate": "aos/solution.ecommerce.growth@1.8.0",
+  "treeHash": "sha256:718548ad92a3715891b4b84060f0a2f22ad4baf6e492195573738e49c40ac8c4",
+  "updatedSelfReferences": [
+    "content/workshops/ecommerce-analyst-query-templates.json",
+    "content/workshops/ecommerce.analyst.json",
+    "content/workshops/ecommerce.content-campaign.json",
+    "content/workshops/ecommerce.creator-growth.json",
+    "content/workshops/ecommerce.customer.json",
+    "content/workshops/ecommerce.media-studio.json",
+    "content/workshops/ecommerce.price-governance.json",
+    "content/workshops/ecommerce.task-cockpit.json"
+  ],
+  "sourceHashes": {
+    "backend/ecommerce_growth/__init__.py": "7e3439197836e0275d343c5a70e25adc7318307ad1d184d2644bf453444423b3",
+    "backend/ecommerce_growth/analyst_workspace_view.py": "2103a547d5a20f234980ae63be00ea599beadc978e86ed201df137218ea3c38a",
+    "frontend/index.html": "43c779eff6ec959f51b06452a146d96754ef65907c3e2681a656707832b78d77"
+  }
+}

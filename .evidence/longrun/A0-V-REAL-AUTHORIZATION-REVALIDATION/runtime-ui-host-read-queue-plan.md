@@ -211,3 +211,11 @@ HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全�
 从fragment解析exact五字段启动合同，校验nonce/UUID/epoch/初始路由。仅接收parent来源且nonce/身份一致的connected与唯一端口；一次握手10秒。连接后首次只读，固定operation+limits；最多一个在途请求，sequence严格递增，响应仅匹配该requestId。成功/失败状态显示；通道错误或90秒无响应封闭本页面不重发，原宿主报告读取未完成时仅允许显式继续查看原会话。pagehide关闭端口/定时器，不接迟到消息。
 
 用真实页面脚本+DOM、受控父窗口/端口测试握手、错误身份零读、在途不重复、安全文本、空态、错误/超时、pagehide；不把DOM替身当浏览器CSP或实际读取证据。后B3b2再冻结frontend manifest摘要、完整候选API贡献/数据范围授权要求，实际OCI与浏览器仍后继。
+
+### UQ5-B3b2 不可变1.8候选（基线b0bd07fe，编码前）
+
+新增scripts/prepare_ecommerce_growth_1_8_candidate.py、tests/extension_runtime/test_prepare_ecommerce_growth_1_8_candidate.py和bundles/candidates/ecommerce/solution.ecommerce.growth/1.8.0/。基线1.7树hash固定2ba9ed424307ca1d4bf379656714705429a3efa93b9657d0a3976bd5fbd3a1b1；只复制当前entry、analyst_workspace_view.py、frontend/index.html，三份源hash固定，目标必须不存在。
+
+保留1.7静态14贡献，候选注册共14+10=24且manifest一致。生成frontend/manifest.json，精确analyst路由、只读方法、空commandClaims；runtime.frontend绑定manifest SHA256，包内HTML由artifact索引签名。permissions.dataScopes新增ecommerce.workshop.read，是安装时需要明确授予的数据范围而非自动给用户授权。更新8个既有workshop/template self bundleRef到1.8，其他文件不改。源package1.3开发manifest不冒充新候选。
+
+验证目标不可覆盖、基线/源hash漂移拒绝、精确文件diff允许列表、六数字同事/模板保持、7+1边界、ManifestLoader读取合同、真实SDK注册与声明一致及投影调用。候选此时未构建/签名/发布；下一波新版本实际镜像构建与资格验证，不运行旧脚本内1.7/niushop1.3常量覆盖当前niushop1.5。
