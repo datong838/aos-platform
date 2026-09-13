@@ -161,3 +161,8 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 
 ### 存储来源与当前权威组合门
 修改 services/aos-api/aos_api/ecommerce_growth_registration.py 和 tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py。抽取固定事务上下文检查，新增validate_registration_origin_in_transaction：先核对scope/role/isolation/RLS，按public表tenant+receipt_id读不可变Receipt，复用verify_registration_origin比对exact ref、九项快照、安装/代次/epoch/revision，再调用当前权威同事务方法。调用方只提供ref与锁内读取快照，不提供历史正文；返回ref和requestHash及executable=false，不提交、不登记、不切换。新增组合事务、错ref/hash/scope/target、当前配置拒绝测试。仍不接Cutover放行，draining与撤销后续单独实现。
+
+
+### 当前资产与切换运行阶段分离
+修改 services/aos-api/aos_api/ecommerce_growth_registration_preflight.py，提取require_registration_runtime_identity（安装revision/generation/epoch/configRef），原require_registration_runtime继续额外要求exact bindingRevision/ready/enabled/unfenced。新增validate_current_registration_assets复用同一安装CAS、锁、配置权限路径，仅验证运行身份和配置，不声称运行状态可执行；返回runtimeStateValidated=false。原validate_current_registration_target仍走完整就绪检查、返回runtimeStateValidated=true。共用私有实现参数仅由两个固定入口决定，不增加HTTP或请求可控的绕过开关。
+扩展tests/extension_runtime/test_ecommerce_growth_registration_preflight.py，验证正常draining的身份仍可核验、登记ready门继续拒绝；config/epoch/generation/installation drift两入口拒绝；当前配置授权拒绝仍传播。后续Cutover必须先用现有exact阶段Receipt验证runtime revision/fence/enabled，再使用资产入口并复验签名，不能将资产入口结果作执行权。主库不动、首次激活仍关闭。

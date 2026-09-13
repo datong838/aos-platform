@@ -12,16 +12,14 @@ from aos_api.extension_runtime.lifecycle_store import _require_transaction
 from aos_api.tenant_scope import TenantScope
 
 
-def require_registration_runtime(binding, request: FirstDispatchRegistrationRequest) -> None:
+def require_registration_runtime_identity(binding, request: FirstDispatchRegistrationRequest) -> None:
     error = 'REGISTRATION_RUNTIME_TARGET_INVALID'
     if not isinstance(binding, Mapping):
         raise ValueError(error)
-    expected = dict(revision=request.bindingRevision, execution_epoch=request.executionEpoch,
+    expected = dict(execution_epoch=request.executionEpoch,
                     installation_revision=request.installationRef.revision)
     if (any(type(binding.get(key)) is not int or binding[key] != value for key,value in expected.items())
-            or str(binding.get('generation')) != request.generation
-            or binding.get('enabled') is not True or binding.get('operation_fence') is not False
-            or binding.get('desired_state') != 'enabled' or binding.get('observed_state') != 'ready'):
+            or str(binding.get('generation')) != request.generation):
         raise ValueError(error)
     try:
         config = ConfigurationRef.model_validate(binding.get('config_ref'))
@@ -31,8 +29,29 @@ def require_registration_runtime(binding, request: FirstDispatchRegistrationRequ
         raise ValueError(error)
 
 
+def require_registration_runtime(binding, request: FirstDispatchRegistrationRequest) -> None:
+    require_registration_runtime_identity(binding,request)
+    if (type(binding.get('revision')) is not int or binding['revision']!=request.bindingRevision
+            or binding.get('enabled') is not True or binding.get('operation_fence') is not False
+            or binding.get('desired_state')!='enabled' or binding.get('observed_state')!='ready'):
+        raise ValueError('REGISTRATION_RUNTIME_TARGET_INVALID')
+
+
 def validate_current_registration_target(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
                            actor: str, installation_store, configuration_authorize) -> dict:
+    return _validate_current_assets(conn,scope=scope,request=request,actor=actor,
+        installation_store=installation_store,configuration_authorize=configuration_authorize,require_ready=True)
+
+
+def validate_current_registration_assets(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
+                           actor: str, installation_store, configuration_authorize) -> dict:
+    """Current assets only; the cutover Owner must independently validate exact runtime phase."""
+    return _validate_current_assets(conn,scope=scope,request=request,actor=actor,
+        installation_store=installation_store,configuration_authorize=configuration_authorize,require_ready=False)
+
+
+def _validate_current_assets(conn, *, scope: TenantScope, request: FirstDispatchRegistrationRequest,
+                           actor: str, installation_store, configuration_authorize, require_ready: bool) -> dict:
     if (type(scope) is not TenantScope or type(request) is not FirstDispatchRegistrationRequest
             or type(installation_store) is not PostgresInstallationStore
             or type(configuration_authorize) is not CurrentFourSourceConfigurationAuthorization):
@@ -58,12 +77,15 @@ def validate_current_registration_target(conn, *, scope: TenantScope, request: F
         (*scope.key,target.installation_id)).fetchall()
     if len(rows) != 1:
         raise ValueError('REGISTRATION_RUNTIME_TARGET_INVALID')
-    require_registration_runtime(rows[0],request)
+    if require_ready:
+        require_registration_runtime(rows[0],request)
+    else:
+        require_registration_runtime_identity(rows[0],request)
     read_configuration(conn,org_id=scope.org_id,project_id=scope.project_id,
         installation_id=target.installation_id,generation=request.generation,actor=actor,
         ref=request.configRef,authorize=configuration_authorize)
     result = preview_registration(request)
-    result.update(currentConfigurationValidated=True,businessWrites=0,
+    result.update(currentConfigurationValidated=True,runtimeStateValidated=require_ready,businessWrites=0,
         checkedAt=installation_store.read_control_clock_in_transaction(conn).isoformat())
     return result
 
