@@ -1,5 +1,6 @@
 """Current-source candidate metadata. No policy approval, payload export or ACK."""
 from psycopg.rows import dict_row
+from aos_api.extension_runtime.runtime_gate import _reject_deferred
 
 from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
 from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
@@ -56,7 +57,22 @@ class ProductEventCandidateReader:
         self._journal,self._store=journal,store
 
     def read(self, conn, *, policy, actor, run_id):
+        return self.run_candidates(conn, policy=policy, actor=actor, run_id=run_id,
+                                   execute=lambda rows: rows)
+
+    def run_candidates(self, conn, *, policy, actor, run_id, execute):
+        """Trusted synchronous callback under the original current-source Owner.
+
+        The caller retains transaction ownership. This supplies metadata, not
+        permission to enable a policy or consume an unauthenticated source.
+        """
+        if not callable(execute):
+            raise TypeError('synchronous candidate consumer required')
         policy = ProductEventPolicyDraft.model_validate(policy)
+        def consume(rows):
+            result = execute(rows)
+            _reject_deferred(result)
+            return result
         scope = TenantScope(policy.org_id,policy.project_id)
 
         def current(draft, mapping):
@@ -74,10 +90,10 @@ class ProductEventCandidateReader:
                 raise PermissionError('original ingress does not match selected source')
             saved=self._journal.read_derived(conn,scope,run_id)
             if saved is None:raise ValueError('complete original derived preparation required')
-            if parent.get('kind')=='empty_observation_v1':return ()
+            if parent.get('kind')=='empty_observation_v1':return consume(())
             evidence=self._store.read_batch_projection_evidence(BatchCommand.model_validate(parent['command']),
                 [DerivedMetricCommand.model_validate(raw) for raw in saved['commands']])
-            return _read_candidates(conn,policy,min(100,draft.row_limit),evidence)
+            return consume(_read_candidates(conn,policy,min(100,draft.row_limit),evidence))
 
         return self._owner.run_current_snapshot(conn,scope=scope,ref=policy.source_selection_ref,
             actor=actor,execute=current)
