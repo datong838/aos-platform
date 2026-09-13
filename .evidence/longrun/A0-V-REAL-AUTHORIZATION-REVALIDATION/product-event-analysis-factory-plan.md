@@ -1,0 +1,11 @@
+# 分析工厂和原批次候选定位
+
+基线59f1fb17，父任务Host/tests。
+
+修改 pipeline_control_service.py：build_event_analysis复用build_event_consumer的同SourceOwner/原批次journal/core invoker，再创建同scope/install/gen/markings的growth invoker并返回正式服务，构造不执行。
+
+修改 ecommerce_product_event_discovery.py：discover_claim_origin读取不可变origin，在既有当前候选SQL中精确限制policy/run/actor，而非内存扫描前100条。只返回唯一当前候选，不具执行授权；不存在拒绝。原分页路径不变。
+
+修改 ecommerce_product_event_analysis_service.py：每次prepare/commit入口核对origin.runId/actor与自身journal/source一致，并加入完整快照；原始sourceEvent由origin提供，Reader和lock_claim仍重验。
+
+测试factory具名构造替身、locator精确SQL/拒绝，既有PG候选及分析准备回归；实际worker接线下一波。无主库迁移/重启/push。

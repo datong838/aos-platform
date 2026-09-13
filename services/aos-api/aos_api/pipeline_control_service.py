@@ -112,3 +112,16 @@ class PipelineControlServiceFactory:
             package_id='domain.ecommerce.core',markings=markings,connect_factory=connect_serializable,
             installation_store=self.installation_store,live_directory=live_directory)
         return ProductEventConsumptionService(scope=scope,actor=actor,owner=owner,reader=reader,invoker=invoker)
+
+    def build_event_analysis(self,scope,*,actor,run_id,control_ref,installation_id,generation,
+                             live_directory,markings,store):
+        from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+        from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
+        from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+        source=self.build_event_consumer(scope,actor=actor,run_id=run_id,control_ref=control_ref,
+            installation_id=installation_id,generation=generation,live_directory=live_directory,
+            markings=markings,store=store)
+        growth=CurrentInstalledPackageInvoker(scope=scope,installation_id=installation_id,generation=generation,
+            package_id='solution.ecommerce.growth',markings=markings,connect_factory=connect_serializable,
+            installation_store=self.installation_store,live_directory=live_directory)
+        return ProductEventAnalysisService(source_context=source,invoker=growth)

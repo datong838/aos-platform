@@ -10,6 +10,7 @@ from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerce
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _occurrence_payload, _occurrence_ref
 from aos_api.ecommerce_product_event_analysis_port import InstalledProductEventAnalysisPort
 from aos_api.ecommerce_product_event_consumer import ProductEventConsumptionService
+from aos_api.ecommerce_product_event_origin import ProductEventOriginStore
 from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
 
 
@@ -45,12 +46,11 @@ class ProductEventAnalysisService:
         if type(claimed) is not ClaimedOccurrence or claimed.operation_id!='ecommerce_growth_analysis_advance':
             raise ValueError('exact analysis claim required')
         scope=self.scope;tx=HostTransaction(conn)
-        # Routing lead only. The locked callback below rechecks this exact identity.
-        lead=tx.execute('SELECT source_event_id FROM automation_occurrence WHERE org_id=%s AND project_id=%s AND occurrence_id=%s',
-                        (*scope.key,claimed.occurrence_id)).fetchone()
-        if lead is None or not lead['source_event_id']:
-            raise ValueError('original event claim unavailable')
-        event_key=lead['source_event_id']
+        origin=ProductEventOriginStore(tx,scope).read(claimed.occurrence_id)
+        if (origin is None or origin['runId']!=self.source.reader._journal._run_id
+                or origin['actor']!=self.source.actor):
+            raise ValueError('analysis source differs from original event batch')
+        event_key=origin['sourceEventId']
         def current(snapshot,_window,binding):
             row=AutomationOccurrenceStore._lock_claim(conn,scope,claimed)
             if (row['trigger_source']!='event' or row['source_event_id']!=event_key
@@ -76,7 +76,7 @@ class ProductEventAnalysisService:
                 profileRef={key:value for key,value in case['investigationProfileRef'].items() if value is not None},
                 cutoffAt=row['created_at'].astimezone(UTC).replace(microsecond=0).isoformat(),
                 idempotencyKey=claimed.target_idempotency_key)
-            stable=dict(source=snapshot,growth=installed,occurrence=occurrence,request=request,
+            stable=dict(source=snapshot,growth=installed,occurrence=occurrence,origin=origin,request=request,
                         dispatchRevision=routing['revision'],groupRevision=routing['cutover_group_revision'])
             result=execute(stable,request,issued)
             AutomationOccurrenceStore._lock_claim(conn,scope,claimed)

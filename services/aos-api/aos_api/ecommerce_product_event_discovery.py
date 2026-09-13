@@ -3,6 +3,8 @@ from uuid import UUID
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.tenant_scope import TenantScope
+from aos_api.automation_occurrence_store import ClaimedOccurrence
+from aos_api.ecommerce_product_event_origin import ProductEventOriginStore
 
 _QUERY = '''SELECT h.schedule_policy_id AS policy_id,c.run_id,c.actor,
     sb.control_id,sb.control_revision,sb.control_hash
@@ -39,14 +41,19 @@ WHERE h.org_id=%s AND h.project_id=%s AND b.installation_id=%s AND b.generation=
 ORDER BY h.schedule_policy_id,c.run_id LIMIT %s'''
 
 
-def _query_candidates(tx,scope,installation_id,generation,*,after=None,limit=100):
+def _query_candidates(tx,scope,installation_id,generation,*,after=None,limit=100,exact=None):
     if type(scope) is not TenantScope or type(limit) is not int or not 1<=limit<=100:
         raise ValueError('bounded scoped event discovery required')
     if after is not None and (type(after) is not tuple or len(after)!=2 or any(
             type(value) is not str or not 1<=len(value)<=200 or value!=value.strip() or not value.isprintable() for value in after)):
         raise ValueError('event discovery cursor invalid')
     installation_id,generation=UUID(str(installation_id)),UUID(str(generation))
-    rows=tx.execute(_QUERY,(*scope.key,installation_id,generation,*(after or ('','')),limit)).fetchall()
+    if exact is not None and (type(exact) is not tuple or len(exact)!=3 or any(
+            type(value) is not str or not 1<=len(value)<=240 or value!=value.strip() or not value.isprintable() for value in exact)):
+        raise ValueError('exact original event route invalid')
+    query=_QUERY if exact is None else _QUERY.replace('ORDER BY h.schedule_policy_id,c.run_id',
+        'AND (h.schedule_policy_id,c.run_id,c.actor)=(%s,%s,%s) ORDER BY h.schedule_policy_id,c.run_id')
+    rows=tx.execute(query,(*scope.key,installation_id,generation,*(after or ('','')),*(exact or ()),limit)).fetchall()
     results=[];seen=set()
     for row in rows:
         key=(row['policy_id'],row['run_id'])
@@ -69,3 +76,16 @@ def discover_event_candidates(transaction,scope,installation_id,generation,*,aft
     if identity is None or (identity['role'],identity['org_id'],identity['project_id'])!=('aos_runtime',*scope.key):
         raise PermissionError('current event discovery runtime scope required')
     return _query_candidates(transaction,scope,installation_id,generation,after=after,limit=limit)
+
+
+def discover_claim_origin(transaction,scope,claimed):
+    if type(claimed) is not ClaimedOccurrence or claimed.operation_id!='ecommerce_growth_analysis_advance':
+        raise ValueError('exact analysis claim required for origin routing')
+    origin=ProductEventOriginStore(transaction,scope).read(claimed.occurrence_id)
+    if origin is None:
+        raise ValueError('claimed event has no original batch origin')
+    rows=_query_candidates(transaction,scope,claimed.installation_id,claimed.generation,
+        exact=(claimed.policy_id,origin['runId'],origin['actor']),limit=2)
+    if len(rows)!=1:
+        raise PermissionError('original event batch is not uniquely current')
+    return rows[0]

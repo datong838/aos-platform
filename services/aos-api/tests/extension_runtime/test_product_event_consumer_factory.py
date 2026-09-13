@@ -33,3 +33,22 @@ def test_factory_shares_source_owner_and_only_uses_saved_input(monkeypatch):
     assert service.invoker.package_id=='domain.ecommerce.core'
     assert service.invoker.installation_store is factory.installation_store
     assert service.invoker.markings==('internal',)
+
+
+def test_analysis_factory_reuses_exact_source_context(monkeypatch):
+    from aos_api.ecommerce_product_event_consumer import ProductEventConsumptionService
+    from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+    scope=TenantScope('org-org','dev-project');factory=object.__new__(PipelineControlServiceFactory)
+    object.__setattr__(factory,'installation_store',object())
+    source=object.__new__(ProductEventConsumptionService)
+    source.scope=scope;source.connect=lambda scope:None
+    source.invoker=SimpleNamespace(scope=scope,installation_id=UUID(int=1),generation=UUID(int=2))
+    calls=[]
+    monkeypatch.setattr(PipelineControlServiceFactory,'build_event_consumer',lambda self,s,**kw:calls.append((s,kw)) or source)
+    monkeypatch.setattr(CurrentInstalledPackageInvoker,'__init__',lambda self,**kw:self.__dict__.update(kw))
+    service=factory.build_event_analysis(scope,actor='actor',run_id='original',control_ref={},
+        installation_id=UUID(int=1),generation=UUID(int=2),live_directory=object(),markings=('internal',),store=object())
+    assert type(service) is ProductEventAnalysisService and service.source is source
+    assert service.invoker.package_id=='solution.ecommerce.growth'
+    assert service.invoker.markings==('internal',)
+    assert calls[0][1]['run_id']=='original' and len(calls)==1

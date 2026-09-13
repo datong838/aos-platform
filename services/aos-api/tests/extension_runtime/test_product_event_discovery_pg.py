@@ -88,3 +88,25 @@ def test_public_discovery_rejects_owner_connection(discovery):
     from aos_api.ecommerce_product_event_discovery import discover_event_candidates
     conn,_=discovery
     with pytest.raises(PermissionError):discover_event_candidates(HostTransaction(conn),SCOPE,INSTALL,GEN)
+
+
+def test_exact_origin_is_filtered_before_page_limit(discovery):
+    conn,_=discovery
+    assert [row['runId'] for row in read(conn,exact=('policy','run-2','actor'),limit=1)]==['run-2']
+    for exact in [('policy','missing','actor'),('policy','run-2','other'),('other','run-2','actor')]:
+        assert read(conn,exact=exact,limit=1)==()
+
+
+def test_claim_origin_routes_only_original_current_batch(discovery,monkeypatch):
+    from aos_api import ecommerce_product_event_discovery as module
+    from aos_api.automation_occurrence_store import ClaimedOccurrence
+    from types import SimpleNamespace
+    conn,_=discovery
+    # Origin read is a named double; its real RLS/hash coverage lives in origin_pg.
+    origin={'runId':'run-2','actor':'actor'}
+    monkeypatch.setattr(module,'ProductEventOriginStore',lambda *args:SimpleNamespace(read=lambda occurrence_id:origin))
+    claimed=ClaimedOccurrence(UUID(int=11),'policy',1,'ecommerce_growth_analysis_advance',INSTALL,GEN,3,
+                             'worker',datetime.now(timezone.utc),UUID(int=12),'key')
+    assert module.discover_claim_origin(conn,SCOPE,claimed)['runId']=='run-2'
+    origin['actor']='other'
+    with pytest.raises(PermissionError):module.discover_claim_origin(conn,SCOPE,claimed)

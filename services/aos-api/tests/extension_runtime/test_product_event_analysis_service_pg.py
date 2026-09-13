@@ -53,3 +53,12 @@ def test_withdrawn_current_control_blocks_analysis_preparation(analysis_case):
     conn.execute('SET LOCAL ROLE aos_runtime')
     with pytest.raises(PermissionError):
         service._phase(conn,claimed,lambda *args:pytest.fail('revoked control reached analysis'))
+
+
+@pytest.mark.parametrize('fault',['run','actor'])
+def test_analysis_cannot_substitute_another_original_batch(analysis_case,fault):
+    conn,service,claimed=analysis_case
+    if fault=='run':service.source.reader._journal._run_id='another-run'
+    else:service.source.actor='another-actor'
+    with pytest.raises(ValueError,match='original event batch'):
+        service._phase(conn,claimed,lambda *args:pytest.fail('different batch admitted'))
