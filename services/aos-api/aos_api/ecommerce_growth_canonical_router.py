@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from aos_api.db import connect_read_only, connect_serializable
+from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
     EcommerceGrowthHostAdapterRegistry,

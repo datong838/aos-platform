@@ -28,16 +28,22 @@ PG = {"host": "127.0.0.1", "port": 18432, "user": "postgres", "dbname": "postgre
 
 
 @pytest.fixture
-def database():
-    schema = "ar2_host_" + uuid4().hex
+def database(monkeypatch):
+    schema = "public"
+    dbname = "ar2_host_" + uuid4().hex
     host_role = "ar2_host_" + uuid4().hex[:16]
-    owner = psycopg.connect(**PG, autocommit=True, row_factory=dict_row)
+    admin = psycopg.connect(**PG, autocommit=True, row_factory=dict_row)
+    admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(dbname)))
+    owner = psycopg.connect(**{**PG, "dbname": dbname}, autocommit=True, row_factory=dict_row)
     created_runtime = owner.execute("SELECT 1 FROM pg_roles WHERE rolname='aos_runtime'").fetchone() is None
     if created_runtime:
         owner.execute("CREATE ROLE aos_runtime NOSUPERUSER NOBYPASSRLS NOLOGIN")
-    owner.execute(sql.SQL("CREATE ROLE {} NOSUPERUSER NOBYPASSRLS NOLOGIN").format(sql.Identifier(host_role)))
+    created_maintainer = owner.execute("SELECT 1 FROM pg_roles WHERE rolname='aos_extension_maintainer'").fetchone() is None
+    if created_maintainer:
+        owner.execute("CREATE ROLE aos_extension_maintainer NOLOGIN NOSUPERUSER NOBYPASSRLS")
+    owner.execute(sql.SQL("CREATE ROLE {} NOSUPERUSER NOBYPASSRLS NOINHERIT LOGIN").format(sql.Identifier(host_role)))
+    owner.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(host_role)))
     try:
-        owner.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
         owner.execute(
             "CREATE TABLE bundle_installation(org_id text,project_id text,installation_id uuid,"
@@ -47,6 +53,7 @@ def database():
         for filename in (
             "ar1_001_extension_runtime_authority.py",
             "ar2_001_ecommerce_dispatch_authority.py",
+            "a0v_028_dispatch_read_lock.py",
         ):
             spec = importlib.util.spec_from_file_location(filename, root / "alembic/versions" / filename)
             migration = importlib.util.module_from_spec(spec)
@@ -76,46 +83,39 @@ def database():
             )
         owner.execute(
             sql.SQL(
-                "GRANT SELECT,UPDATE ON extension_operation_dispatch_binding,"
-                "extension_runtime_binding TO {}"
-            ).format(sql.Identifier(host_role))
+                "GRANT SELECT,UPDATE ON extension_runtime_binding TO {}"
+            ).format(sql.Identifier("aos_runtime"))
         )
         owner.execute(
-            sql.SQL("GRANT SELECT,INSERT ON host_test_receipt TO {}").format(sql.Identifier(host_role))
+            sql.SQL("GRANT SELECT,INSERT ON host_test_receipt TO {}").format(sql.Identifier("aos_runtime"))
         )
         owner.execute(
-            sql.SQL("GRANT SELECT ON host_test_authority TO {}").format(sql.Identifier(host_role))
+            sql.SQL("GRANT SELECT ON host_test_authority TO {}").format(sql.Identifier("aos_runtime"))
         )
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
-            sql.Identifier(schema), sql.Identifier(host_role)
+            sql.Identifier(schema), sql.Identifier("aos_runtime")
         ))
-        yield SimpleNamespace(owner=owner, schema=schema, role=host_role)
+        from aos_api import ecommerce_growth_runtime_connection as connections
+        @contextmanager
+        def worker():
+            with psycopg.connect(**{**PG, "dbname": dbname, "user": host_role}, row_factory=dict_row) as conn:
+                yield conn
+        monkeypatch.setattr(connections, "runtime_worker_connection", worker)
+        yield SimpleNamespace(owner=owner, schema=schema, role=host_role, dbname=dbname)
     finally:
-        owner.execute("RESET ROLE")
-        owner.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
-        owner.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(host_role)))
-        if created_runtime:
-            owner.execute("DROP ROLE aos_runtime")
         owner.close()
+        admin.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(dbname)))
+        admin.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(host_role)))
+        if created_runtime:
+            admin.execute("DROP ROLE aos_runtime")
+        if created_maintainer:
+            admin.execute("DROP ROLE aos_extension_maintainer")
+        admin.close()
 
 
 def _runtime_connection(database):
-    @contextmanager
-    def connection(scope):
-        conn = psycopg.connect(**PG, autocommit=False, row_factory=dict_row)
-        try:
-            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
-            conn.execute(sql.SQL("SET ROLE {}").format(sql.Identifier(database.role)))
-            conn.execute("SELECT set_config('aos.org_id',%s,false)", (scope.org_id,))
-            conn.execute("SELECT set_config('aos.project_id',%s,false)", (scope.project_id,))
-            yield conn
-        except Exception:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
-
-    return connection
+    from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+    return connect_serializable
 
 
 def _seed(database, scope):
@@ -133,7 +133,8 @@ def _seed(database, scope):
            VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1',3,'enabled','ready',true,false,'{}')""",
         (*scope.key, installation, generation),
     )
-    for operation_id in ("ecommerce_growth_case_put", "ecommerce_growth_schedule_put"):
+    from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+    for operation_id in ECOMMERCE_GROWTH_OPERATIONS:
         owner.execute(
             """INSERT INTO extension_operation_dispatch_binding(
                  org_id,project_id,operation_id,handler_kind,installation_id,generation,
@@ -277,3 +278,30 @@ def test_locked_host_rejects_inactive_authority_and_forged_receipt(database):
     )
     with pytest.raises(EcommerceGrowthHostBlocked, match="business authority"):
         port.commit(dispatch_ref=ref, command={})
+
+
+def test_production_connection_read_only_and_identity_guards(database, monkeypatch):
+    from aos_api import ecommerce_growth_runtime_connection as connections
+    from aos_api.extension_runtime.storage_ports import StorageRoleDenied
+    scope = TenantScope("org-org", "dev-project")
+    _seed(database, scope)
+    with connections.connect_read_only(scope) as conn:
+        row = conn.execute("SELECT session_user AS login, current_user AS adopted, current_setting('transaction_isolation') AS isolation").fetchone()
+        assert row == {"login": database.role, "adopted": "aos_runtime", "isolation": "repeatable read"}
+        assert len(conn.execute("SELECT * FROM extension_operation_dispatch_binding").fetchall()) == 9
+        with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+            conn.execute("INSERT INTO host_test_receipt VALUES ('org-org','dev-project','read-only')")
+        conn.rollback()
+    with connections.connect_read_only(TenantScope("dev-org", "dev-project")) as conn:
+        assert conn.execute("SELECT * FROM extension_operation_dispatch_binding").fetchall() == []
+    with pytest.raises(TypeError, match="TenantScope"):
+        with connections.connect_serializable(SimpleNamespace(org_id="org-org", project_id="dev-project")):
+            pytest.fail("untrusted scope reached connection")
+    @contextmanager
+    def privileged():
+        with psycopg.connect(**{**PG, "dbname": database.dbname}, row_factory=dict_row) as conn:
+            yield conn
+    monkeypatch.setattr(connections, "runtime_worker_connection", privileged)
+    with pytest.raises(StorageRoleDenied, match="privileged"):
+        with connections.connect_serializable(scope):
+            pytest.fail("privileged session accepted")

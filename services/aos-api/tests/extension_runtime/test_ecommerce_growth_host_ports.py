@@ -66,7 +66,8 @@ class FakeConnection:
 
     def execute(self, query, params=()):
         compact = " ".join(query.split())
-        if "FROM extension_operation_dispatch_binding" in compact:
+        if "FROM public.extension_dispatch_lock_group_a0v_028(%s)" in compact:
+            assert len(params) == 1
             return Result(all_rows=deepcopy(self.dispatch_rows))
         if "FROM extension_runtime_binding" in compact:
             return Result(one=deepcopy(self.runtime_rows.get((params[-2], params[-1]))))

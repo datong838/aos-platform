@@ -56,7 +56,7 @@ class FakeConnection:
             operation_id = params[-1]
             row = next((item for item in self.dispatch_rows if item["operation_id"] == operation_id), None)
             return Result(one=deepcopy(row))
-        if "FROM extension_operation_dispatch_binding" in compact:
+        if "FROM public.extension_dispatch_lock_group_a0v_028(%s)" in compact:
             self.lock_queries += 1
             return Result(all_rows=deepcopy(self.dispatch_rows))
         if "FROM extension_runtime_binding" in compact:

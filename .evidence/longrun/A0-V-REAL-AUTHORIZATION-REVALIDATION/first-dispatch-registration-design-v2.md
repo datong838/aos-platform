@@ -133,3 +133,10 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 同迁移对dispatch表PUBLIC/runtime/maintainer撤表级与列级直接权限，恢复runtime/maintainer SELECT；新函数PUBLIC/maintainer无EXEC，仅runtime。原受限027登记和既有切换函数仍作为写者；其他表和全schema默认ACL不变。历史迁移不编辑。
 
 隔离PG复现带默认DML的历史状态，执行新迁移后普通runtime INSERT/UPDATE/DELETE/TRUNCATE和列级UPDATE均失败，固定027仍能登记，合法加锁读取九项、canary/错组/部分组/非serializable/超管拒绝；双连接更新须被行锁阻塞，事务结束释放。此切片不切换Host生产读取、不部署主库，Host接入与回归完成前禁止部署，避免撤权造成现有直接FOR UPDATE失败。
+
+
+### Host 受限锁与专用 runtime 连接接入
+修改 services/aos-api/aos_api/ecommerce_growth_host_ports.py，将路由组直接 FOR UPDATE 替换为固定 public.extension_dispatch_lock_group_a0v_028(uuid)，保留 exact、fence、runtime binding 行锁、权限与 Receipt 同事务校验。新增 aos_api/ecommerce_growth_runtime_connection.py，复用 runtime_worker_connection，要求空闲非 autocommit 连接、exact TenantScope，设置事务隔离与作用域，复用 require_runtime_role 验证非特权、非表拥有者和 FORCE RLS；读引用使用只读 REPEATABLE READ，Host 使用 SERIALIZABLE。不包显式 transaction()，保留 Host 最后显式 commit 的语义。CanonicalRouter 与 LockedHost 默认使用此连接，不回退 Web。
+测试修改 tests/extension_runtime/test_ecommerce_growth_host_ports.py 和 test_ecommerce_growth_host_ports_pg.py：后者升级为独立数据库 public 表、真实非特权 LOGIN+aos_runtime、九项完整组和028迁移，测试生产连接路径、Receipt 回滚、权限拒绝和隔离；新增连接只读/提交/超级用户拒绝验证。先 RED 再实现再联合回归。主库不部署、不登记、不激活；回滚为代码回退，028仍未上主库。
+
+兼容回归补充：test_ecommerce_growth_canonical_router.py 更新 SQL 替身匹配；旧 test_ecommerce_growth_signed_lifecycle_pg.py 私有 schema fixture 增加028迁移，并仅对该历史测试的固定函数名映射 schema，使用真实非特权角色调用。它不是 public 部署证明；public 原始迁移/生产连接证明由本波独立数据库 Host 测试提供。

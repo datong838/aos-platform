@@ -174,6 +174,7 @@ def database():
             "ar2_013_ecommerce_growth_cutover.py", "ar2_014_ecommerce_growth_cutover_commit.py",
             "ar2_015_ecommerce_growth_cutover_finalize.py", "ar2_016_ecommerce_growth_cutover_rollback.py",
             "ar2_017_ecommerce_growth_disable_detach.py", "ar2_018_runtime_uninstall_authority.py",
+            "a0v_028_dispatch_read_lock.py",
         ):
             _migration(root, migration, owner, schema=schema)
         for granted in ("aos_app", "aos_runtime", "aos_extension_maintainer"):
@@ -511,13 +512,21 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
             second_cutover = activate(second, existing_group=first_cutover[0].cutover_group_id,
                 expected_group_revision=legacy_revision,
                 stale_validate_ref=_validate_ref(first_cutover[3]))
-            with psycopg.connect(**PG, row_factory=dict_row) as conn:
+            with psycopg.connect(**{**PG, "user": database.role}, row_factory=dict_row) as conn:
                 conn.isolation_level = IsolationLevel.SERIALIZABLE
                 conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
                 conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
                 conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                conn.execute("SET LOCAL ROLE aos_runtime")
+                class SchemaLockConnection:
+                    # Only this historical private-schema fixture relocates the fixed function.
+                    def execute(self, query, params=()):
+                        return conn.execute(query.replace(
+                            "public.extension_dispatch_lock_group_a0v_028",
+                            database.schema + ".extension_dispatch_lock_group_a0v_028",
+                        ), params)
                 with pytest.raises(EcommerceGrowthHostConflict, match="exact dispatch authority drifted"):
-                    LockedEcommerceGrowthHostPort._lock_and_revalidate(conn, scope, old_ref)
+                    LockedEcommerceGrowthHostPort._lock_and_revalidate(SchemaLockConnection(), scope, old_ref)
             rows = database.owner.execute("""SELECT installation_id,generation,handler_kind,operation_fence,
                     cutover_group_revision FROM extension_operation_dispatch_binding ORDER BY operation_id""").fetchall()
             assert len(rows) == len(ECOMMERCE_GROWTH_OPERATIONS)

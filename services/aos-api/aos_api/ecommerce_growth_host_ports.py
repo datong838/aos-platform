@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Any, Protocol
 from uuid import UUID
 
-from aos_api.db import connect_serializable
+from aos_api.ecommerce_growth_runtime_connection import connect_serializable
 from aos_api.tenant_scope import TenantScope
 
 
@@ -309,14 +309,8 @@ class LockedEcommerceGrowthHostPort:
         if type(dispatch_ref.execution_epoch) is not int or dispatch_ref.execution_epoch <= 0:
             raise EcommerceGrowthHostConflict("dispatch execution epoch is invalid")
         group_rows = conn.execute(
-            """SELECT operation_id,handler_kind,installation_id,generation,
-                      execution_epoch,operation_fence,revision,cutover_group_id,
-                      cutover_group_revision
-                 FROM extension_operation_dispatch_binding
-                WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
-                ORDER BY operation_id,installation_id,generation
-                FOR UPDATE""",
-            (*scope.key, group_id),
+            "SELECT * FROM public.extension_dispatch_lock_group_a0v_028(%s)",
+            (group_id,),
         ).fetchall()
         target = next(
             (row for row in group_rows if row["operation_id"] == dispatch_ref.operation_id),
