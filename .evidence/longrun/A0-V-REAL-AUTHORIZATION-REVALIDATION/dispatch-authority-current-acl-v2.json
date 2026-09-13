@@ -1,0 +1,522 @@
+{
+  "observation": {
+    "at": "2026-09-13 00:03:43.148280+00:00",
+    "adopted_role": "aos_runtime",
+    "login_role": "aos_a0v_runtime_20260912"
+  },
+  "tables": [
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_operation_dispatch_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_app",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "relname": "extension_runtime_binding",
+      "owner": "aos_app",
+      "rls": true,
+      "force_rls": true,
+      "grantee": "aos_runtime",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    }
+  ],
+  "columnAcls": [],
+  "functions": [
+    {
+      "proname": "extension_dispatch_cutover_commit_ar2_014",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_commit_ar2_014",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_fence_rollback_ar2_016",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_fence_rollback_ar2_016",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_history_guard_ar2_014",
+      "arguments": "",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "PUBLIC",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_history_guard_ar2_014",
+      "arguments": "",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_lock_approval_ar2_013",
+      "arguments": "p_approval_event_id text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_lock_approval_ar2_013",
+      "arguments": "p_approval_event_id text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_pause_claims_ar2_014",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_pause_claims_ar2_014",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_resume_ar2_015",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_resume_ar2_015",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_rollback_ar2_016",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_cutover_rollback_ar2_016",
+      "arguments": "p_cutover_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_extension_maintainer",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_detach_ar2_017",
+      "arguments": "p_runtime_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_detach_ar2_017",
+      "arguments": "p_runtime_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_runtime",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_fence_ar2_017",
+      "arguments": "p_runtime_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_fence_ar2_017",
+      "arguments": "p_runtime_operation_id uuid, p_actor text",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_runtime",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_history_guard_ar2_017",
+      "arguments": "",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "PUBLIC",
+      "privilege_type": "EXECUTE"
+    },
+    {
+      "proname": "extension_dispatch_lifecycle_history_guard_ar2_017",
+      "arguments": "",
+      "owner": "aos_app",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "grantee": "aos_app",
+      "privilege_type": "EXECUTE"
+    }
+  ],
+  "roles": [
+    {
+      "rolname": "aos_a0v_runtime_20260912",
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolinherit": false
+    },
+    {
+      "rolname": "aos_app",
+      "rolsuper": true,
+      "rolbypassrls": true,
+      "rolcreaterole": true,
+      "rolcreatedb": true,
+      "rolcanlogin": true,
+      "rolinherit": true
+    },
+    {
+      "rolname": "aos_extension_maintainer",
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": false,
+      "rolinherit": false
+    },
+    {
+      "rolname": "aos_runtime",
+      "rolsuper": false,
+      "rolbypassrls": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": false,
+      "rolinherit": false
+    }
+  ],
+  "dispatchRows": 0,
+  "mutations": 0,
+  "tableDefaultPrivileges": [
+    {
+      "creator": "aos_app",
+      "schema": "public",
+      "defaclobjtype": "r",
+      "grantee": "aos_runtime",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "creator": "aos_app",
+      "schema": "public",
+      "defaclobjtype": "r",
+      "grantee": "aos_runtime",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "creator": "aos_app",
+      "schema": "public",
+      "defaclobjtype": "r",
+      "grantee": "aos_runtime",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "creator": "aos_app",
+      "schema": "public",
+      "defaclobjtype": "r",
+      "grantee": "aos_runtime",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    }
+  ]
+}

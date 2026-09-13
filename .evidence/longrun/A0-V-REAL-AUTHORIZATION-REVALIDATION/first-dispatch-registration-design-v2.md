@@ -115,3 +115,13 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 连接建立后先在独立短事务核验：session_user/current_user 等于文件声明的独立登录名，登录非super/bypass/createrole/createdb/replication、NOINHERIT；可达角色仅 aos_runtime 与 aos_extension_maintainer，禁止多余继承链、缺角色或admin_option。两组角色须非登录、非super/bypass/createrole/createdb/replication。检查结束恢复IDLE后才交给已有Owner；每次连接重新验证，无权限授予/迁移。默认selector返回None，显式配置才提供固定连接函数，启动只组装不执行登记。
 
 测试安全文件坏权限/相对路径/符号链接/错误结构/未知字段无连接，异常不回显；隔离PG真实非特权双角色连接通过，超管、单角色、额外角色/管理权限拒绝，交付IDLE；已有启动/HTTP/Owner回归。正式主库身份创建和026/027迁移需随后依据权限审查与完整验收部署，本切片不改主库身份。
+
+### 登记前权限审查与受限行锁缺口
+
+08:03主库只读目录审查：dispatchRows=0；aos_runtime仍有dispatch表SELECT/INSERT/UPDATE/DELETE；aos_app为superuser/bypassrls且拥有表；列级ACL为空；026表及027函数未部署。新身份连接的角色图检查不能解决表默认授权与原Web超级用户问题。
+
+早期228ti2e6rls的ALTER DEFAULT PRIVILEGES授予未来表runtime DML；ar2_001只REVOKE PUBLIC再GRANT runtime SELECT，没有撤销runtime已继承的默认DML。需结合本次pg_default_acl证据和隔离重演判断机制，不能把历史实际执行归因写成已查明日志事实。
+
+此外ecommerce_growth_host_ports.py在锁定dispatch组时直接SELECT FOR UPDATE，只有SELECT权限会失败；旧test_ecommerce_growth_host_ports_pg.py为自定义Host测试角色额外GRANT SELECT,UPDATE。因此禁止只做REVOKE就部署。先设计并实现固定租户/组的受限行锁读函数（不改dispatch数据、无任意SQL/表名），Host通过其持有同事务行锁，再精确撤销dispatch表普通角色DML。签名/审批/Receipt/隔离检查仍保留。runtime binding也存在FOR UPDATE依赖，必须列入权限矩阵，不能宣称整个运行控制表都只读化。
+
+本波新增tests/extension_runtime/test_dispatch_default_privileges_pg.py，用18432独立测试库复现历史DDL在默认DML存在时仍留下写权限，以及撤权后普通SELECT成功而直接FOR UPDATE失败；这是缺陷证据测试，不是权限修复GREEN。下一实施切片预留a0v_028（须重新核对head），新增受限行锁与权限收敛迁移，修改Host与真实非特权并发测试；全部通过前不应用主库ACL变更。
