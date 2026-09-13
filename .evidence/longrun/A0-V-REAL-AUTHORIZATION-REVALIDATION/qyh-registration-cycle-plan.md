@@ -1,0 +1,11 @@
+# 栖月汇首次登记及原始占位撤回实证
+
+基线3fe9def9；新安装97aeb2e7-59ba-40f6-89a3-fb0293bc0497，新代3a445eee-aa28-4459-9e5a-f12a806a94b1已ready/enabled/unfenced rev4/epoch3。真实只读注册校验currentConfiguration/currentRelease/runtimeState均true；尚无写入。本任务在用户全权本地开发验收授权内，沿原BG-01合同验证已实现Owner，非发布/路由切换/外部动作授权。
+
+新增scripts/a0v_qyh_registration_cycle.py固定scope org-org/dev-project、安装与现有服务操作者a0v-ecommerce-growth-1.4-runtime-owner；复用product controlled配置、专用registration连接及build_runtime_control_plane。不得改成员、借Web高权限或伪装浏览器身份。真实Owner验收与默认用户UI角色缺口分开记。
+
+prepare在同一Owner事务读当前安装ref及binding/config并复验完整权威，冻结随机group与固定幂等键；stage只落本地0600元数据。register必须先创建不可覆盖意图，再调用Owner，异常不重发，下一动作只能原键read。得到原Receipt后status必须unused_origin；withdraw同样冻结原ref/当前etag/独立key和意图，再调用现有原子撤回Owner。read-withdrawal仅回读。旧Receipt和安装/业务数据保留；确认仅9条legacy/fenced占位被释放；本周期不重新登记运行组，不prepare cutover、不派发业务Run。
+
+测试services/aos-api/tests/extension_runtime/test_qyh_registration_cycle.py以假Owner验证一次提交/未知不重发/原键回读与固定目标，不作为数据库权限证据；随后当前主库真实Owner完整成功/回读/撤回/状态及旧历史验证单独留证。原service已独立PG验证并部署030，本片无迁移/新角色。回滚不删历史；若任何结果未知保留意图并只读回执。
+
+复核补充：撤回前用本周期固定key回读原登记，要求当前status ref等于原receiptId/contentHash，且原groupId/requestHash等于冻结请求。防止同安装后来新登记被误撤。新增负例先1 failed/4 passed，再补此校验。
