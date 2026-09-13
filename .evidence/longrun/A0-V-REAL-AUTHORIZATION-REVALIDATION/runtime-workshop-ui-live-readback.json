@@ -1,0 +1,46 @@
+{
+  "codeRevision": "959e4788",
+  "at": "2026-09-13T09:19:59.721415+00:00",
+  "checks": [
+    {
+      "check": "health",
+      "status": 200,
+      "result": {}
+    },
+    {
+      "check": "route",
+      "status": 200,
+      "result": {
+        "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+        "installationEtag": 5,
+        "effectiveState": "ready",
+        "ui": null,
+        "binding": {
+          "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+          "executionEpoch": 3,
+          "revision": 4,
+          "enabled": true,
+          "operationFence": false
+        }
+      }
+    },
+    {
+      "check": "duplicate",
+      "status": 422,
+      "result": {
+        "code": "RUNTIME_UI_ROUTE_INVALID",
+        "message": "请提供唯一、有效的工作台路径。"
+      }
+    },
+    {
+      "check": "canary",
+      "status": 404,
+      "result": {
+        "code": "NOT_FOUND",
+        "message": "bundle installation not found"
+      }
+    }
+  ],
+  "writes": 0,
+  "sourceCalls": 0
+}
