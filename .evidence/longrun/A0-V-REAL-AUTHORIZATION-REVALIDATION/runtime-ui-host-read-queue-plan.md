@@ -406,3 +406,9 @@ HTTP新增GET /v1/bundle-runtime-installations/configuration-requests/lookup，I
 prepare先导出当前主库、恢复新副本，只有恢复后业务指纹与主库基线一致才迁移副本。verify校验队列FORCE RLS、runtime仅SELECT与五个完成字段UPDATE、API角色仅固定4函数EXEC且无表权；请求表必须空。不得创造请求、配置、用户、grant或审批业务对象。固定函数PUBLIC EXEC禁用；状态/原ID/原键访问权仍由既有SQL执行。
 
 演练通过并保存迁移/执行器哈希后，apply必须核对当前副本、主库与备份一致，先写不可覆盖intent，然后仅新增结构；未知执行结果只能readback。保留备份和副本，不执行删除或自动downgrade。配置登记身份、API启用和Host接管为后续波次，当前不打开stage消费者。
+
+## D2d-6 配置登记专用身份（基线84135029，编码前）
+
+任务A0V-CONFIGURATION-STAGE-API-IDENTITY-20260914。新增a0v_configuration_stage_identity.py沿用现有私有凭据落盘、先克隆后主库规约；唯一LOGIN角色aos_configuration_stage_transport_20260914，NOINHERIT且仅成员aos_configuration_stage_api，不能成为业务成员或审批者。凭据只存在0600文件，日志/共享证据仅哈希和权限结果。
+
+复用restricted_api_identity与configuration_stage_connection，不复制身份验证逻辑。核验当前实际runtime-owner在正租户可以通过当前安装标记检查，查询不存在ID/key返回NULL；错subject、负租户、直接队列/配置表、Host函数拒绝。所有访问只读，前后19业务指纹相同且队列0。主库identity完成后暂不写入API启动配置，必须先解决唯一Host消费接管再开放。

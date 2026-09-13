@@ -1,0 +1,21 @@
+{
+  "outcome": "CONFIGURATION_STAGE_TRANSPORT_IDENTITY_VERIFIED",
+  "database": "aos_meta_head",
+  "role": "aos_configuration_stage_transport_20260914",
+  "identityFileHash": "sha256:ed21ece5a4187cc681fd74f6a6585310a3ef259caf51cae2032a877c98947ec7",
+  "reachableRole": "aos_configuration_stage_api",
+  "positiveSubjectVerified": true,
+  "installationVisibilityVerified": true,
+  "absentRequestReturnedNull": true,
+  "absentKeyReturnedNull": true,
+  "denials": [
+    "subject-mismatch",
+    "negative-tenant",
+    "direct-queue",
+    "direct-configuration",
+    "host-function"
+  ],
+  "queueCount": 0,
+  "businessWrites": 0,
+  "at": "2026-09-13T17:06:06.260418+00:00"
+}
