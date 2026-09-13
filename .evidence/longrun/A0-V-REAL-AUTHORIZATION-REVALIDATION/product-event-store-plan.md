@@ -1,0 +1,9 @@
+# BG-02 Host事件存储适配片
+
+基线8e2d7b6c。复核集成方案、040、包prepare_event_case_binding和HostTransaction。新增services/aos-api/aos_api/ecommerce_product_event_store.py及tests/extension_runtime/test_product_event_store_pg.py；既有定时Store不改。
+
+Host不导入部署包：包侧先用唯一领域合同生成完整policy/Case；存储适配只核对事件schema、tenant、摘要和精确传输返回，040负责原子存储校验。显式HostTransaction作为唯一连接，无新连接、无commit，无自动注册。get仅返回事件schema；原定时schema明确拒绝，不让事件流隐式解释旧policy。find_receipt按原key和request hash回读原结果，并验证策略/Case/组合摘要，不以当前head替代原Receipt。
+
+方法put接scope、期望两版本、原key、policy、case。每次查询先验证当前DB role与scope，调用040后严格比对返回载荷/replayed类型和再次读取原Receipt。任何异常抛出让外层Host事务回滚；调用者不得吞异常继续提交。此片不构成当前来源、审批、运行准入或正式Host操作绑定。
+
+验证：真实隔离PG+HostTransaction；原key重放/后继后旧Receipt、丢scope/跨租户拒绝、返回摘要拒绝、外层回滚、存储适配不独立提交。后续由正式HostService复核当前来源和exact批准再调用，不建立裸脚本执行入口。主库仍038。
