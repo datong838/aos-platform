@@ -1,0 +1,22 @@
+{
+  "outcome": "CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN",
+  "at": "2026-09-13T14:44:58.332761+00:00",
+  "uiReadTransport": {
+    "session_user": "aos_ui_read_transport_20260913",
+    "current_user": "aos_ui_read_api",
+    "current_database": "aos_meta_head"
+  },
+  "origins": {
+    "AOS_EXTENSION_UI_RESOURCE_ORIGIN": "http://127.0.0.1:18181",
+    "AOS_EXTENSION_UI_PARENT_ORIGIN": "http://127.0.0.1:5173"
+  },
+  "productionWebIdentityComplete": false,
+  "apiPid": 61503,
+  "originalHostPid": 6606,
+  "health": {
+    "status": "ok"
+  },
+  "browserPath": "/workshop/analyst",
+  "browserObserved": "当前工作台入口不可用",
+  "packagePublishedOrInstalled": false
+}
