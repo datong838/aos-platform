@@ -129,3 +129,11 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 新增extension_runtime/ui_read_query.py：当前主体/markings→metadata请求摘要复核→当前签名目录和exact target/dataScopes→受限result函数→结果hash与固定合同复核。拒绝不调用结果函数；同租户他人、负租户、已撤销成员、旧资源和旧绑定不能读取。请求不存在统一LookupError，不暴露是否归属他人。该波先实现数据库及应用查询，HTTP连接身份装配和Web属UQ4-B/C。无写入、重发、新Attempt。
 
 新增tests/extension_runtime/test_ui_read_query_pg.py，复用真实非超级API角色和宿主成功封存；校验未完成/成功/错误绑定、撤权、他人/负租户、直接表SELECT拒绝。完整迁移库回归保障新增函数不改变既有ACL。主库部署仍UQ6。
+
+## UQ4-B HTTP与独立API事务（基线c5a4bfe2，编码前补充）
+
+新增extension_runtime/ui_read_connection.py：仅AOS_RUNTIME_UI_READ_CREDENTIAL_FILE绝对0600本用户普通文件，严格schemaVersion/role/dsn、无软链接/FIFO/重复字段；不回退Web/runtime身份。连接后校验真实NOINHERIT非超级LOGIN、唯一可达aos_ui_read_api且不可ADMIN；固定READ COMMITTED事务SET LOCAL role/scope/subject，成功提交、异常回滚。新身份实际置备待UQ6。
+
+新增extension_runtime/ui_read_http_service.py将同一受限事务与既有admission/query组合；当前签名catalog由现有lazy reader resolve_catalog提供。修改routers/runtime_workshop.py增加POST /reads（固定UiReadRequest、Idempotency-Key）与GET /reads/{request_id}，仅Principal提供scope/subject/markings，无角色或租户覆盖。仅显式凭据文件配置后装配，无后台任务；提交202、查询200，业务异常固定脱敏，全部响应no-store。匿名及严格请求拒绝在服务前完成。
+
+新增HTTP/独立连接测试：真实非超级身份与回滚、错误文件/角色拒绝；路由固定参数/tenant/injection/匿名/错误脱敏，无有效连接配置503。旧目录入口回归，规范路由聚合无需新增router模块；实际主库/API尚不升级。

@@ -127,3 +127,27 @@ def test_query_functions_retain_session_identity_boundary(query_case, kind):
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             conn.execute('SELECT extension_ui_read_metadata_a0v_035(%s,%s)',
                          ('reader', UUID(case[-1]['requestId'])))
+
+
+def test_http_service_composes_existing_admission_and_query_transactions(query_case):
+    from contextlib import contextmanager
+    from aos_api.extension_runtime.ui_read_http_service import RuntimeUiReadHttpService
+    case, role, _ = query_case
+    transactions = []
+    @contextmanager
+    def connect(*, scope, subject):
+        assert scope == SCOPE and subject == 'reader'
+        with caller(role, subject=subject) as conn:
+            transactions.append(conn)
+            yield SchemaConnection(conn, role[2])
+    service = RuntimeUiReadHttpService(catalog_provider=lambda: case[0].catalog, connect=connect)
+    delivered = service.enqueue(scope=SCOPE, subject='reader', markings=('public',),
+                                 idempotency_key='key', request=role[1])
+    assert delivered['requestId'] == case[-1]['requestId']
+    assert delivered['tenant'] == {'orgId': 'org-org', 'projectId': 'dev-project'}
+    queried = service.get(scope=SCOPE, subject='reader', markings=('public',),
+                          request_id=UUID(delivered['requestId']))
+    assert queried['state'] == 'requested' and queried['result'] is None
+    assert queried['schemaVersion'] == 'aos.runtime-ui-read-status/v1'
+    assert all(conn.closed for conn in transactions)
+    assert role[0].execute('SELECT count(*) FROM extension_runtime_ui_read_request').fetchone() == (1,)

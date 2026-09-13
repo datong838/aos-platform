@@ -57,7 +57,7 @@ class _LazyRuntimeWorkshopCatalog:
         self._view_reader = view_reader
         self._catalog = None
 
-    def list_modules(self, **kwargs):
+    def resolve_catalog(self):
         if self._catalog is None:
             from aos_api.asset_registry.workshop_catalog_source import PostgresWorkshopCatalogSource
             from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
@@ -70,7 +70,10 @@ class _LazyRuntimeWorkshopCatalog:
                 ),
                 view_reader=self._view_reader,
             )
-        return self._catalog.list_modules(**kwargs)
+        return self._catalog
+
+    def list_modules(self, **kwargs):
+        return self.resolve_catalog().list_modules(**kwargs)
 
 
 def build_runtime_workshop_catalog_reader(*, view_reader):
