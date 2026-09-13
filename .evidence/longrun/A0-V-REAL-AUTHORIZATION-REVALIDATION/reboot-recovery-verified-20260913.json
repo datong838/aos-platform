@@ -1,0 +1,138 @@
+{
+  "parent": {
+    "at": "2026-09-13T03:01:30.854467+00:00",
+    "head": {
+      "installation_id": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+      "etag_version": 5,
+      "state": "active"
+    },
+    "bindings": [
+      {
+        "generation": "23afd05b-762c-406a-adfb-247a14412b9f",
+        "revision": 7,
+        "execution_epoch": 5,
+        "enabled": false,
+        "operation_fence": true,
+        "observed_state": "unknown",
+        "desired_state": "disabled"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "2c1e04e4-a917-4a1c-9dce-61fc22c8c102",
+        "kind": "runtime-apply",
+        "status": "failed",
+        "phase": "succeeded",
+        "revision": 352,
+        "failure_code": "PREPARED_RUNTIME_RELEASED"
+      },
+      {
+        "operation_id": "7a731a57-7a99-4edc-9edd-65ec7772e58a",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null
+      },
+      {
+        "operation_id": "96bdc8a4-f218-4fec-8946-58fbce7971fa",
+        "kind": "configure",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 6,
+        "failure_code": null
+      },
+      {
+        "operation_id": "8e1af8d1-523c-4207-a6b7-dbb341e555c7",
+        "kind": "enable",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null
+      },
+      {
+        "operation_id": "bed965ec-c701-4514-92e9-41885b1d0353",
+        "kind": "disable",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 6,
+        "failure_code": null
+      }
+    ],
+    "schedules": [
+      {
+        "id": "sch-p02-qyh-controlled-20260913-v1",
+        "enabled": false,
+        "unstopped": 0
+      }
+    ],
+    "businessRoutes": 0
+  },
+  "candidate": {
+    "at": "2026-09-13T03:01:30.882058+00:00",
+    "head": {
+      "installation_id": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+      "etag_version": 5,
+      "state": "active"
+    },
+    "bindings": [
+      {
+        "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+        "revision": 1,
+        "execution_epoch": 1,
+        "enabled": false,
+        "operation_fence": true,
+        "observed_state": "ready",
+        "desired_state": "disabled"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "5afad4dd-9172-4a3f-a9d1-fdb66d3d9ecf",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 14,
+        "failure_code": null
+      },
+      {
+        "operation_id": "f0b58850-456c-4ec0-b541-7cb8e496dee6",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null
+      }
+    ],
+    "schedules": [],
+    "businessRoutes": 0
+  }
+}

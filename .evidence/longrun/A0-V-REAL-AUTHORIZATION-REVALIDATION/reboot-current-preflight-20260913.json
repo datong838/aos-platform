@@ -1,0 +1,52 @@
+{
+  "at": "2026-09-13T02:44:19.622027+00:00",
+  "parent": "eda57424-b8cb-401e-a6f7-94220cb4f9ef",
+  "binding": [
+    {
+      "generation": "23afd05b-762c-406a-adfb-247a14412b9f",
+      "revision": 5,
+      "execution_epoch": 4,
+      "enabled": false,
+      "operation_fence": true,
+      "observed_state": "unknown"
+    }
+  ],
+  "operations": [
+    {
+      "kind": "runtime-apply",
+      "status": "failed",
+      "n": 1
+    },
+    {
+      "kind": "runtime-verify",
+      "status": "succeeded",
+      "n": 1
+    },
+    {
+      "kind": "enable",
+      "status": "succeeded",
+      "n": 1
+    },
+    {
+      "kind": "configure",
+      "status": "succeeded",
+      "n": 1
+    }
+  ],
+  "resources": [
+    {
+      "cleanup_state": "released",
+      "observed_release": true,
+      "n": 3
+    }
+  ],
+  "schedules": [
+    {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "enabled": false,
+      "unstopped": 0
+    }
+  ],
+  "businessRoutes": 0,
+  "mutations": 0
+}
