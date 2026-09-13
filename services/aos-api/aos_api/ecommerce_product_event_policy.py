@@ -76,6 +76,27 @@ class ProductEventPolicyDraft(AipContractModel):
         checked = type(self).model_validate(self)
         return canonical_sha256(checked.model_dump(mode='json', by_alias=True))
 
+    def validate_policy(self, policy: dict) -> None:
+        """Correlation only; package parsing and storage validation remain required."""
+        checked = type(self).model_validate(self)
+        expected = dict(
+            schemaVersion='aos.ecommerce.product-event-schedule-policy/v1',
+            tenant=dict(orgId=checked.org_id, projectId=checked.project_id),
+            schedulePolicyId=checked.policy_id,
+            sourceSelectionRef=checked.source_selection_ref.model_dump(mode='json', by_alias=True),
+            platform=checked.platform, shopId=checked.shop_or_marketplace_id,
+            objectTypes=list(checked.object_types),
+            effectiveFrom=checked.effective_from.isoformat(),
+            effectiveUntil=checked.effective_until.isoformat(),
+            maxSourceAgeSeconds=checked.max_source_age_seconds,
+            recoveryWindowSeconds=checked.recovery_window_seconds,
+        )
+        if type(policy) is not dict or any(type(policy.get(key)) is not type(value)
+                or policy.get(key) != value for key, value in expected.items()):
+            raise ValueError('package policy differs from source context')
+        if policy.get('contentHash') != canonical_sha256({k:v for k,v in policy.items() if k!='contentHash'}):
+            raise ValueError('package policy digest differs')
+
     def validate_selection(self, record: SourceSelectionRecord) -> None:
         """Check correlation only; the caller must authenticate and re-read the Owner."""
         checked = type(self).model_validate(self)

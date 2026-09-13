@@ -157,6 +157,14 @@ class HostTransaction:
             raise TypeError("host transaction query is required")
         return self.__connection.execute(query, params)
 
+    def run_current_source_snapshot(self, owner, *, scope, ref, actor, execute):
+        """Trusted source Owner uses this same connection without exposing it."""
+        from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
+        if type(owner) is not PipelineSourceSelectionOwner:
+            raise TypeError('exact current source Owner required')
+        return owner.run_current_snapshot(self.__connection, scope=scope, ref=ref,
+            actor=actor, execute=execute)
+
 
 def _normalized_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", value.casefold())

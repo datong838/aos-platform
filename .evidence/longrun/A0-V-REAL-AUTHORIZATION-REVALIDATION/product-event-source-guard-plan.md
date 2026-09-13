@@ -1,0 +1,16 @@
+# BG-02 当前来源事务桥与策略关联
+
+基线f4452f00。复核正式SchedulePut、PipelineSourceSelectionOwner及当前Profile来源。事件Host接入分成来源事务桥和精确审批执行两片，禁止用另开连接的来源查询替代Owner原事务。
+
+本片修改ecommerce_growth_host_ports.py：HostTransaction新增专用run_current_source_snapshot，传递原私有连接给精确PipelineSourceSelectionOwner；不公开connection/cursor/commit。增加ecommerce_product_event_policy.py.validate_policy，只关联包事件policy与Host来源上下文的schema/摘要、租户、policyId、SourceSelectionRef、对象、店铺、窗口；不复刻领域策略状态机。
+
+新增ecommerce_product_event_guard.py：精确Owner、HostTransaction、scope及dispatch安装/generation/epoch匹配；在Owner回调内复核compiled mapping与SourceSelectionRecord及关联字段，按数据库当前时刻校验事件窗口，在同步执行前后检查；仅同步回调、不接受延迟结果。actor由可信Host提供，不能取自包命令中的自报actor/approved。此类不注册运行操作，不自行授予权限。
+
+测试tests/test_ecommerce_product_event_guard.py覆盖同一原连接、先拒绝后不调用、scope/dispatch/policy drift、回调过期及异步拒绝；用具名fake来源Owner验证调用边界，不标记真实授权通过。真实PG适配累计与AR2回归。
+
+下一片在桥内复用当前Case/Profile与_lock_schedule_approval，批准hash绑定完整策略语义，执行仍调用040并返回原Receipt。正式Host身份来源和批准人必须来自现有真实权限，不能硬编码测试actor；未连通不加入RUNTIME_WIRING_PROVEN_OPERATIONS。
+
+## preHash
+
+- services/aos-api/aos_api/ecommerce_growth_host_ports.py: 95d700984758ab8a44aa493bf41fafc453df959b6cf3e39bf48a0bbaa77dcb60
+- services/aos-api/aos_api/ecommerce_product_event_policy.py: 14fcc9976fa4e8bd0a5aa45db233a49917e26a28237936dbf27398e669b91108
