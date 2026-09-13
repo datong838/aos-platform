@@ -24,7 +24,9 @@ def _scope(conn, scope):
         raise RuntimeConflict('UI database scope differs')
 
 
-def read_api_ui_principal(*, conn, scope, subject, required_markings):
+def _read_locked_principal(*, conn, scope, subject, required_markings, function):
+    if function not in {'extension_ui_read_principal_a0v_032','extension_ui_read_host_principal_a0v_033'}:
+        raise RuntimeConflict('fixed current principal function required')
     _scope(conn, scope)
     if (not _exact(subject) or type(required_markings) is not tuple
             or len(required_markings)>500 or any(not _exact(x) for x in required_markings)
@@ -34,7 +36,7 @@ def read_api_ui_principal(*, conn, scope, subject, required_markings):
         raise RuntimeConflict('remote authorization requires its current authority adapter')
     markings = tuple(sorted(required_markings))
     try:
-        row = conn.execute('SELECT public.extension_ui_read_principal_a0v_032(%s,%s) AS role',
+        row = conn.execute('SELECT public.'+function+'(%s,%s) AS role',
                            (subject, list(markings))).fetchone()
     except InsufficientPrivilege as exc:
         raise RuntimeConflict('current UI principal unavailable') from exc
@@ -42,6 +44,17 @@ def read_api_ui_principal(*, conn, scope, subject, required_markings):
     if not _exact(role):
         raise RuntimeConflict('current UI role unavailable')
     return CurrentUiPrincipal(scope=scope, subject=subject, roles=(role,), markings=markings)
+
+
+
+def read_api_ui_principal(*,conn,scope,subject,required_markings):
+    return _read_locked_principal(conn=conn,scope=scope,subject=subject,required_markings=required_markings,
+                                  function='extension_ui_read_principal_a0v_032')
+
+
+def read_host_ui_principal(*,conn,scope,subject,required_markings):
+    return _read_locked_principal(conn=conn,scope=scope,subject=subject,required_markings=required_markings,
+                                  function='extension_ui_read_host_principal_a0v_033')
 
 
 def enqueue_api_ui_read(*, conn, scope, subject, idempotency_key, request):

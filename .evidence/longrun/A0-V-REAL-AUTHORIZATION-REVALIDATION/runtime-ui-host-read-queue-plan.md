@@ -75,3 +75,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 新增a0v_033_runtime_ui_read_worker.py。宿主独立principal函数保持当前subject/scope/非超级session/SET ROLE验证，角色仅aos_runtime、隔离级别仅REPEATABLE READ或SERIALIZABLE。与API函数分离，不扩大API入口权限。函数锁成员和bearer但不授成员表UPDATE。
 
 aos_runtime仅获请求状态、版本、claim/结果相关列UPDATE；不可插入/删除、改subject/target/deadline。既有trigger继续约束状态图与Attempt关联。真实非超级runtime账号测试读取当前事实、领取/封存，以及身份/target/deadline/DELETE禁止；API角色不能调用宿主函数。主库暂不部署。随后snapshot source使用宿主函数，具体消费者落实完整门禁。
+
+## UQ3-D 宿主快照受限身份接入（基线9aaaef66，编码前补充）
+
+修改ui_read_api_database.py抽取仅两个固定函数名的内部principal调用，API包装保持032，新增host包装仅033。analyst_workspace_snapshot.py机械提取现有范围/隔离预检和查询组装，保留旧入口，新增read_host_analyst_workspace_snapshot调用宿主principal包装后复用相同SQL/组装。无可注入查询或跳过权限的参数。
+
+新增非超级host PG快照测试：角色只有canonical表SELECT和受限principal函数，无成员UPDATE；真实canonical Case/Run/State输入包纯投影有效，第二连接新Case在同一事务不可见、下事务可见。API角色不能使用宿主入口，未知主体拒绝。旧入口原测试保留，避免影响已有诊断行为。

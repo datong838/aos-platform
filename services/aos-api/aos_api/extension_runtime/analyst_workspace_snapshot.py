@@ -4,6 +4,7 @@ from copy import deepcopy
 from aos_api.tenant_scope import TenantScope
 from aos_api.extension_runtime.lifecycle_store import _require_transaction
 from aos_api.extension_runtime.ui_current_principal import read_current_ui_principal
+from aos_api.extension_runtime.ui_read_api_database import read_host_ui_principal
 
 _QUERY = '''WITH selected_cases AS (
     SELECT h.org_id,h.project_id,h.case_id,h.updated_at,r.authority_data AS case_authority
@@ -26,15 +27,30 @@ LEFT JOIN ecommerce_investigation_run_state_head s
 ORDER BY c.updated_at DESC,c.case_id ASC,r.created_at DESC,r.run_id ASC'''
 
 
-def read_analyst_workspace_snapshot(*, conn, scope: TenantScope, subject: str,
-                                    required_markings: tuple[str, ...], case_limit=20, run_limit=5):
+def _validate_snapshot_read(conn,case_limit,run_limit):
     _require_transaction(conn)
     if type(case_limit) is not int or not 1 <= case_limit <= 50 or type(run_limit) is not int or not 1 <= run_limit <= 10:
         raise ValueError('bounded workspace page required')
     isolation=conn.execute('SHOW transaction_isolation').fetchone()
     if isolation is None or isolation['transaction_isolation'] not in {'repeatable read','serializable'}:
         raise ValueError('workspace snapshot requires repeatable transaction')
+
+
+def read_analyst_workspace_snapshot(*,conn,scope:TenantScope,subject:str,
+                                    required_markings:tuple[str,...],case_limit=20,run_limit=5):
+    _validate_snapshot_read(conn,case_limit,run_limit)
     read_current_ui_principal(conn=conn,scope=scope,subject=subject,required_markings=required_markings)
+    return _read_snapshot_rows(conn,scope,case_limit,run_limit)
+
+
+def read_host_analyst_workspace_snapshot(*,conn,scope:TenantScope,subject:str,
+                                         required_markings:tuple[str,...],case_limit=20,run_limit=5):
+    _validate_snapshot_read(conn,case_limit,run_limit)
+    read_host_ui_principal(conn=conn,scope=scope,subject=subject,required_markings=required_markings)
+    return _read_snapshot_rows(conn,scope,case_limit,run_limit)
+
+
+def _read_snapshot_rows(conn,scope,case_limit,run_limit):
     clock=conn.execute('SELECT clock_timestamp() AS cutoff_at').fetchone()
     if clock is None:
         raise ValueError('workspace snapshot clock unavailable')
