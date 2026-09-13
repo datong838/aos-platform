@@ -84,3 +84,41 @@ def test_receipt_is_original_after_successor(stored):
     assert store.get(first.policy.policy_id)['revision']==2
     assert store.find_receipt('event-store',first.request_hash)['policy_authority']['revision']==1
     assert write(store,first)['replayed'] is True
+
+
+def test_current_event_binding_reads_saved_policy_and_current_case(stored):
+    conn,binding=stored;store=store_for(conn)
+    assert store.get_current_binding(binding.policy.policy_id) is None
+    write(store,binding)
+    assert store.get_current_binding(binding.policy.policy_id)=={
+        'policy':binding.policy.authority_payload(),'caseAuthority':binding.case.authority_payload()}
+
+
+@pytest.mark.parametrize('fault',['head_hash','case_closed','case_policy'])
+def test_current_event_binding_rejects_drift(stored,fault):
+    from psycopg.types.json import Jsonb
+    from aos_api.aip_budget_reservation_store import canonical_hash
+    conn,binding=stored;store=store_for(conn);write(store,binding)
+    with conn.transaction():
+        conn.execute('RESET ROLE')
+        if fault=='head_hash':
+            conn.execute('UPDATE ecommerce_investigation_schedule_policy_head SET content_hash=%s',('sha256:'+'0'*64,))
+        else:
+            raw=binding.case.authority_payload()
+            if fault=='case_closed':raw['lifecycle']='CLOSED'
+            else:raw['schedulePolicyRef']['resourceId']='other'
+            raw['revision']=raw['version']=binding.case.revision+1
+            raw['priorRef']=dict(resourceType='BusinessInvestigationCaseRevision',resourceId=binding.case.case_id,
+                revision=binding.case.revision,contentHash=binding.case.content_hash,receiptId=None)
+            raw['contentHash']=canonical_hash({k:v for k,v in raw.items() if k!='contentHash'},prefixed=True)
+            changes=dict(revision=raw['revision'],version=raw['version'],prior_revision=binding.case.revision,
+                authority_data=raw,content_hash=raw['contentHash'],lifecycle=raw['lifecycle'],idempotency_key='successor-fixture')
+            conn.execute('''INSERT INTO ecommerce_investigation_case_revision
+                SELECT (jsonb_populate_record(NULL::ecommerce_investigation_case_revision,to_jsonb(r)||%s)).*
+                FROM ecommerce_investigation_case_revision r WHERE revision=%s''',
+                (Jsonb(changes),binding.case.revision))
+            conn.execute('UPDATE ecommerce_investigation_case_head SET current_revision=%s,version=%s,lifecycle=%s',
+                (raw['revision'],raw['version'],raw['lifecycle']))
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(ValueError,match='current event binding'):
+            store.get_current_binding(binding.policy.policy_id)

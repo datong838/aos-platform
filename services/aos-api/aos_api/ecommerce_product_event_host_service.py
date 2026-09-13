@@ -95,17 +95,15 @@ class ProductEventSchedulePutHostService:
         if (policy.get('methodRef') != profile_ref or current.get('investigationProfileRef') != profile_ref
                 or current.get('scopeRef') != scope_ref):
             raise ValueError('current event Case or method drifted')
-        head = transaction.execute(
-            'SELECT current_revision FROM ecommerce_investigation_schedule_policy_head '
-            'WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s',
-            (*scope.key,policy['schedulePolicyId']),
-        ).fetchone()
+        bound = store.get_current_binding(policy['schedulePolicyId'])
+        if bound is not None and bound['caseAuthority'] != current:
+            raise ValueError('current event binding Case differs')
         if original is None:
             expected_ref = dict(resourceType='BusinessInvestigationCaseRevision',resourceId=current['caseId'],
                 revision=current['revision'],contentHash=current['contentHash'],receiptId=None)
             if (current['version'] != command['expectedCaseVersion']
                     or policy.get('caseRef') != expected_ref
-                    or (0 if head is None else head['current_revision']) != command['expectedPolicyRevision']):
+                    or (0 if bound is None else bound['policy']['revision']) != command['expectedPolicyRevision']):
                 raise ValueError('current event Case or policy version differs')
         now = transaction.execute('SELECT clock_timestamp() AS now').fetchone()['now']
         event = transaction.execute(

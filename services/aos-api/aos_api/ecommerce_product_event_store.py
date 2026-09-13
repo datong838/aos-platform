@@ -64,6 +64,54 @@ class ProductEventPolicyStore:
             raise ValueError('event storage returned another policy')
         return result
 
+    def get_current_binding(self, policy_id):
+        """Current read only; callers still need locked execution authority."""
+        _key(policy_id)
+        self._current_scope()
+        row = self._transaction.execute(
+            """SELECT h.current_revision,h.content_hash,h.authority_data,
+                r.content_hash AS history_hash,r.authority_data AS history_authority,
+                ch.case_id,ch.current_revision AS case_revision,ch.version AS case_version,
+                ch.lifecycle AS case_lifecycle,c.content_hash AS case_hash,c.authority_data AS case_authority
+                FROM ecommerce_investigation_schedule_policy_head h
+                LEFT JOIN ecommerce_investigation_schedule_policy_revision r
+                  ON (r.org_id,r.project_id,r.schedule_policy_id,r.revision)=
+                     (h.org_id,h.project_id,h.schedule_policy_id,h.current_revision)
+                LEFT JOIN ecommerce_investigation_case_head ch
+                  ON (ch.org_id,ch.project_id,ch.case_id)=(h.org_id,h.project_id,h.case_id)
+                LEFT JOIN ecommerce_investigation_case_revision c
+                  ON (c.org_id,c.project_id,c.case_id,c.revision)=
+                     (ch.org_id,ch.project_id,ch.case_id,ch.current_revision)
+                WHERE h.org_id=%s AND h.project_id=%s AND h.schedule_policy_id=%s""",
+            (*self._scope.key, policy_id),
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            policy = self._authority(row['authority_data'], policy=True)
+            case = self._authority(row['case_authority'])
+            expected_ref = dict(resourceType='SchedulePolicyRevision',resourceId=policy_id,
+                revision=row['current_revision'],contentHash=row['content_hash'],receiptId=None)
+            if (policy.get('schedulePolicyId') != policy_id
+                    or type(policy.get('revision')) is not int or policy['revision'] != row['current_revision']
+                    or policy['contentHash'] != row['content_hash'] or row['history_hash'] != row['content_hash']
+                    or _digest(row['history_authority']) != _digest(policy)
+                    or case.get('schemaVersion') != 'aos.ecommerce.business-investigation-case/v1'
+                    or type(policy['caseRef'].get('revision')) is not int
+                    or row['case_revision'] <= policy['caseRef']['revision']
+                    or case.get('caseId') != row['case_id'] or policy['caseRef']['resourceId'] != row['case_id']
+                    or type(case.get('revision')) is not int or case['revision'] != row['case_revision']
+                    or type(case.get('version')) is not int or case['version'] != row['case_version']
+                    or row['case_revision'] != row['case_version']
+                    or case['contentHash'] != row['case_hash']
+                    or case.get('lifecycle') != 'ACTIVE' or row['case_lifecycle'] != 'ACTIVE'
+                    or _digest(case.get('schedulePolicyRef')) != _digest(expected_ref)
+                    or _digest(case.get('investigationProfileRef')) != _digest(policy.get('methodRef'))):
+                raise ValueError('authority drift')
+        except (ValueError, TypeError, KeyError) as exc:
+            raise ValueError('current event binding authority differs') from exc
+        return dict(policy=policy,caseAuthority=case)
+
     def find_receipt(self, idempotency_key, request_hash):
         _key(idempotency_key)
         if type(request_hash) is not str or re.fullmatch(r'sha256:[0-9a-f]{64}', request_hash) is None:
