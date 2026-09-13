@@ -74,6 +74,14 @@ def submit(request: ConfigurationStageRequest,
                  subject=principal.subject, idempotency_key=idempotency_key, request=request)
 
 
+@router.get('/configuration-requests/lookup', operation_id='lookup_runtime_configuration_stage')
+def lookup(principal: Annotated[Principal, Depends(stage_principal)],
+           service: Annotated[ConfigurationStageHttpService, Depends(get_stage_service)],
+           idempotency_key: Annotated[str, Header(alias='Idempotency-Key', min_length=1, max_length=160)]):
+    return _call(service.find, scope=TenantScope(principal.org_id,principal.project_id),
+                 subject=principal.subject, idempotency_key=idempotency_key)
+
+
 @router.get('/configuration-requests/{request_id}', operation_id='get_runtime_configuration_stage')
 def get(request_id: UUID, principal: Annotated[Principal, Depends(stage_principal)],
         service: Annotated[ConfigurationStageHttpService, Depends(get_stage_service)]):

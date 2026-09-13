@@ -72,6 +72,16 @@ class ConfigurationStageHttpService:
             if UUID(value.requestId) != identity: raise ValueError('configuration receipt identity differs')
         return self._response(scope, value)
 
+    def find(self, *, scope, subject, idempotency_key):
+        key = validate_idempotency_key(idempotency_key)
+        with self.connect(scope=scope, subject=subject) as conn:
+            row = conn.execute('SELECT public.extension_configuration_stage_lookup_a0v_038(%s,%s) AS receipt',
+                               (subject, key)).fetchone()
+            result = _values(row, ('receipt',))[0]
+            if result is None: raise LookupError('configuration request unavailable')
+            value = StageStatus.model_validate_json(json.dumps(result))
+        return self._response(scope, value)
+
     @staticmethod
     def _response(scope, value):
         return dict(schemaVersion='aos.runtime-configuration-stage-status/v1',

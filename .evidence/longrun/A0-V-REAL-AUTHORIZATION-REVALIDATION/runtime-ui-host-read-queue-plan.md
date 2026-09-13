@@ -368,3 +368,9 @@ query：当前成员重新核验，按scope+subject+requestId读取；不存在/
 新增routers/runtime_configuration_staging.py并作为原bundle_runtime_installations子路由纳入：POST /v1/bundle-runtime-installations/configuration-requests，GET同路径/{request_id}。body精确来源合同、不接客户端tenant/subject/roles/markings；require_principal与原APPLY角色门，数据层再核当前成员。缺凭据503，所有成功/拒绝/验证/异常均no-store。测试非法字段/匿名/角色、当前主体来源、受限身份文件及真实隔离LOGIN角色、旧UI连接回归；不部署API或主库，先完成受控组件。
 
 D2d-3b实施复核：FastAPI先把JSON解为Python数组，原严格tuple字段使合法roleRefs被400拒绝；只增加list→tuple的容器适配，引用值/上限/唯一性校验不放宽。另发现收件commit成功但响应丢失时客户端可能不知道服务器requestId，当前GET按ID无法找回；下一切片新增按原subject+Idempotency-Key只读找回入口，不重发POST，也不凭未知结果换键。
+
+### D2d-3c 未知提交的只读找回（基线7d07a361，编码前）
+
+迁移租约A0V-CONFIGURATION-STAGE-LOOKUP-SCHEMA-20260914：新增a0v_038_configuration_stage_lookup.py，按原scope+subject+key读request_id后复用037 query权限与结果。不存在返回null，不INSERT/UPDATE，不调用enqueue；查到请求仍需当前成员及当前安装marking通过。
+
+HTTP新增GET /v1/bundle-runtime-installations/configuration-requests/lookup，Idempotency-Key请求头（不把key写URL），静态路由必须在/{request_id}之前登记。Service.find只读lookup函数，返回原固定status；无记录404仍不重发，连接未知503继续查询原key。测试已收件模拟响应丢失后找回同ID/请求数不增加、不同subject不可查、撤权拒绝、未知key不写入，HTTP静态路由/当前身份与no-store；未部署主库。

@@ -26,6 +26,7 @@ class Service:
         if self.error: raise self.error
         return dict(requestId=str(uuid4()),state='requested')
     get=enqueue
+    find=enqueue
 
 
 def client(service=None,role='admin'):
@@ -87,3 +88,16 @@ def test_success_is_not_returned_when_transaction_commit_is_unknown():
         service.enqueue(scope=TenantScope('org-org','dev-project'),subject='actor',idempotency_key='same',
                         request=ConfigurationStageRequest.model_validate_json(json.dumps(request())))
     assert len(calls)==1
+
+
+def test_lookup_static_route_uses_header_and_never_calls_submit():
+    class ReadService:
+        def __init__(self): self.calls=[]
+        def enqueue(self, **kwargs): raise AssertionError('lookup must not submit')
+        def get(self, **kwargs): raise AssertionError('lookup must not parse as UUID')
+        def find(self, **kwargs): self.calls.append(kwargs); return dict(state='requested')
+    service=ReadService()
+    response=client(service).get(URL+'/lookup?subject=other',headers={'Idempotency-Key':'lost-key'})
+    assert response.status_code==200 and response.headers['cache-control']=='no-store'
+    assert service.calls[0]['subject']=='actor' and service.calls[0]['idempotency_key']=='lost-key'
+    assert service.calls[0]['scope'].key==('org-org','dev-project')
