@@ -26,7 +26,7 @@ from .ui_read_contracts import UiReadRequest
 from .ui_read_recovery import expire_ui_read_deliveries
 from .ui_read_worker_store import UiReadClaim, claim_ui_read, complete_ui_read
 
-_PROTECTED=('extension_runtime_ui_read_request','extension_runtime_execution_attempt','extension_runtime_binding',
+UI_READ_PROTECTED_RELATIONS=('extension_runtime_ui_read_request','extension_runtime_execution_attempt','extension_runtime_binding',
             'ecommerce_investigation_case_head','ecommerce_investigation_case_revision',
             'ecommerce_investigation_run','ecommerce_investigation_run_state_head')
 
@@ -77,7 +77,7 @@ class RuntimeUiReadConsumer:
                 apply_asset_transaction_scope(conn,org_id=scope.org_id,project_id=scope.project_id)
                 if _values(conn.execute('SELECT current_user AS role').fetchone(),('role',))[0]!='aos_runtime':
                     raise RuntimeConflict('UI read consumer requires adopted runtime role')
-                require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,protected_tables=_PROTECTED)
+                require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,protected_tables=UI_READ_PROTECTED_RELATIONS)
                 conn.execute("SET LOCAL lock_timeout='1s'")
                 conn.execute("SET LOCAL statement_timeout='10s'")
                 yield conn

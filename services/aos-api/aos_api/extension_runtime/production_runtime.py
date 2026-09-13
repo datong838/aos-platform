@@ -7,7 +7,11 @@ import inspect
 
 from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.workshop_catalog_source import PostgresWorkshopCatalogSource
 from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
+from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+from .ui_read_consumer import RuntimeUiReadConsumer
+from .ui_read_preflight import runtime_ui_read_ready
 
 from .configuration_authorization import CurrentFourSourceConfigurationAuthorization
 from .configuration_consumer import ConfigurationConsumer
@@ -47,6 +51,8 @@ class RuntimeWorkerDependencies:
     cleanup_driver: CleanupOnlyOciDriver
     disable_dependent: EcommerceGrowthDisableDependent
     preparation: ProductionPreparationDependencies
+    ui_read_catalog: RuntimeWorkshopCatalog | None = None
+    ui_read_markings: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if type(self.installation_store) is not PostgresInstallationStore:
@@ -76,6 +82,17 @@ class RuntimeWorkerDependencies:
             or self.preparation.driver.context != self.cleanup_driver.context
         ):
             raise TypeError("production runtime dependency graph is inconsistent")
+
+        if self.ui_read_catalog is not None and (type(self.ui_read_catalog) is not RuntimeWorkshopCatalog
+                or self.ui_read_catalog._loader is not self.preparation.loader
+                or type(self.ui_read_catalog._source) is not PostgresWorkshopCatalogSource
+                or not callable(getattr(self.ui_read_catalog._view_reader,'get_installation',None))):
+            raise TypeError('UI catalog must share the preparation loader')
+        if (type(self.ui_read_markings) is not tuple or len(self.ui_read_markings)>500
+                or any(type(x) is not str or not x or x!=x.strip() or not x.isprintable() for x in self.ui_read_markings)
+                or len(set(self.ui_read_markings))!=len(self.ui_read_markings)
+                or (self.ui_read_catalog is None and self.ui_read_markings)):
+            raise ValueError('exact configured UI read markings required')
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,12 +177,17 @@ def select_production_runtime_host(
             check_drained=dependencies.drain_reader,
             dependent=dependencies.disable_dependent,
         )
+        consumers=(configure,disable)
+        if dependencies.ui_read_catalog is not None:
+            consumers+=(RuntimeUiReadConsumer(scope=scope,connect=runtime_connect,catalog=dependencies.ui_read_catalog,
+                installation_store=dependencies.installation_store,live_directory=dependencies.preparation.live_directory,
+                markings=dependencies.ui_read_markings),)
         return RuntimeTenantAssignment(
             scope=scope,
             recovery=recovery,
             attempt_recovery=ExpiredSignedReadAttemptRecovery(connect=runtime_connect),
             lifecycle=dependencies.preparation.build_scheduler(scope),
-            consumers=(configure, disable),
+            consumers=consumers,
         )
 
     directory = PostgresRuntimeTenantDirectory(
@@ -185,6 +207,10 @@ def select_production_runtime_host(
             runtime_identity = probe_runtime_database_identity(
                 conn, protected_relations=_PROTECTED_RELATIONS
             )
+            if dependencies.ui_read_catalog is not None:
+                try:
+                    if not runtime_ui_read_ready(conn):return _inactive('UI_READ_PREFLIGHT_FAILED')
+                except Exception:return _inactive('UI_READ_PREFLIGHT_FAILED')
         with web_connect() as conn:
             web_identity = probe_runtime_database_identity(
                 conn, protected_relations=_PROTECTED_RELATIONS

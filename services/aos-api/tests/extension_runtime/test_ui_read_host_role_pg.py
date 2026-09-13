@@ -20,6 +20,10 @@ def host_role(api_role):
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
     migration.op=SimpleNamespace(execute=lambda q:owner.execute(q.replace('public.',schema+'.').replace('pg_catalog,public,pg_temp',f'pg_catalog,{schema},pg_temp')))
     migration.upgrade()
+    acl_path=Path(__file__).resolve().parents[2]/'alembic/versions/a0v_034_runtime_ui_read_acl.py'
+    acl_spec=importlib.util.spec_from_file_location('ui_host_acl',acl_path)
+    acl=importlib.util.module_from_spec(acl_spec);acl_spec.loader.exec_module(acl)
+    acl.op=migration.op;acl.upgrade()
     owner.execute(sql.SQL('GRANT USAGE ON SCHEMA {} TO aos_runtime').format(sql.Identifier(schema)))
     owner.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(login)))
     return api_role

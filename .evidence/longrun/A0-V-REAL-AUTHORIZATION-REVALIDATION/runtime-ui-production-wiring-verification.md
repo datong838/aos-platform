@@ -1,0 +1,11 @@
+# UQ3-H 生产装配、完整库权限验证
+
+2026-09-13，基线0f3855e2。RuntimeWorkerDependencies可选具体UI目录，必须共享preparation.loader和既有安装store/实例directory/runtime connector。显式环境开关与严格JSON markings列表；默认关闭。新增只读启动预检：7表FORCE RLS/非主体所有、宿主033函数与隔离EXECUTE、队列SELECT和精确11列UPDATE、禁止INSERT/DELETE及身份字段修改。失败返回UI_READ_PREFLIGHT_FAILED，不装配读取消费者。
+
+完整迁移库首次真实非超级预检发现过宽ACL：228ti2e6_module_rls.py在public设置运行角色未来表默认增删改。031只追加GRANT SELECT、033只追加列GRANT并不足以移除该默认表级ACL；早期临时schema没有public默认权限，不能作为生产ACL达标证据。
+
+新增a0v_034，仅撤销新请求表PUBLIC/runtime/UI/maintainer旧表级/列级ACL，再精确授予runtime SELECT与状态/结果列UPDATE。全局默认权限及其他表不改。完整head库验证实际安装迁移成功，正确ACL通过，RLS缺失/新增INSERT/主体UPDATE/API误获宿主函数/缺少结果列UPDATE均拒绝，恢复后通过。
+
+最终44 passed、7项既有warning：8项新增装配/配置、6项完整迁移库角色预检、19项旧生产selector及11项消费者贯穿。主库仍未部署031~034，原宿主和API不变；未做真实OCI读取或业务首链。
+
+合同复核的下一项：模块permissions.dataScopes由当前CompositionLock授予（沿用既有DATA_SCOPE_NOT_GRANTED语义），需要贯穿API入队和宿主安装快照检查，不能只检查角色/markings。接续补齐后再开放HTTP及后继签名UI，UQ4~UQ7未完成。

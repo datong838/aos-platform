@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -167,6 +168,18 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 platform=runtime_platform,
                 live_directory=control_plane.live_job_directory,
             )
+            ui_catalog=None
+            ui_markings=()
+            if os.getenv('AOS_EXTENSION_RUNTIME_UI_READ_ENABLED','').strip()=='1':
+                from aos_api.asset_registry.workshop_catalog_source import PostgresWorkshopCatalogSource
+                from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+                if not callable(getattr(control_plane.view_reader,'get_installation',None)):
+                    raise ValueError('current runtime UI view reader required')
+                raw_markings=json.loads(os.getenv('AOS_EXTENSION_UI_READ_MARKINGS_JSON','[]'))
+                if type(raw_markings) is not list:raise ValueError('UI markings must be a JSON list')
+                ui_markings=tuple(raw_markings)
+                ui_catalog=RuntimeWorkshopCatalog(source=PostgresWorkshopCatalogSource(),loader=loader,
+                                                   view_reader=control_plane.view_reader)
             dependencies = RuntimeWorkerDependencies(
                 installation_store=control_plane.installation_store,
                 configuration_authorize=control_plane.configuration_authorize,
@@ -177,6 +190,8 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 cleanup_driver=CleanupOnlyOciDriver(driver),
                 disable_dependent=control_plane.disable_dependent,
                 preparation=preparation,
+                ui_read_catalog=ui_catalog,
+                ui_read_markings=ui_markings,
             )
         except (TypeError, ValueError):
             dependencies = None
