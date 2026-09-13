@@ -49,3 +49,11 @@ CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际
 ## CF2-6 当前技能集合读取
 
 新增 services/aos-api/aos_api/ecommerce_analysis_skill_reader.py 与tests/test_ecommerce_analysis_skill_reader.py；职责读取结果补currentInstallation（由SourceOwner draft给出installation/generation/epoch）。读取器复用run_with_stage边界，只按调用者明确给出的唯一binding IDs（最多128）取当前绑定，并要求每个instance归属当前职责agent_instance槽。复用AipSkillRegistry读绑定/技能、AipSkillBindingReadinessService.evaluate只读重验；要求现存TTL有效、评估结果available且依赖hash与存储一致；检查发布租户与exact技能hash，再解析LogicRevision与原发布记录。回调前后重复读取，输出派生集合正文/ref及技能/Logic元数据；不产生权限、不自动刷新、不选最新版。此层仍不是安装模板/意图映射选择权威。
+
+## CF2-7 执行路径核查与安装蓝图
+
+实库D01/D02/D03旧Logic图为input/use_llm/固定契约transform；该观察不能推断真实生成产物丢失，LogicDryRunExecutor有意不留原文。真正经营产物路径是ecommerce_analyst_portrait_generation/service/worker、diagnosis对应服务及growth_plan_generation，复用AipAgentRunExecutor的产物留存、来源披露、method/Eval校验及canonical TAOR，不改这些正常逻辑。
+
+CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advance下增加build_analysis_compilation_blueprint纯计算kind。输出固定领域profile exactRef、兼容readonly compiler profile、三阶段职责模板定义与D01/D02/D03操作性选择。它不声明当前Skill版本/Binding ID/READY，不使用planned_not_published拆分表，也不声明L1全部意图已验收。Host须验证当前安装返回、按蓝图正文hash寻找/通过产品准备接口创建新模板，再读唯一当前绑定与原发布，最终仍需现有业务生成服务的真实产物联合验收。蓝图引用不授权运行。
+
+具体文件：bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_compilation_blueprint.py、__init__.py；tests/extension_runtime/test_ecommerce_analysis_compilation_blueprint.py；清册阶段dynamic-reference-phases.json。先申请该包路径子Lease，保留旧签名候选。之后CF2-9安装invoker与exact选择，CF3事务任务准备。
