@@ -243,6 +243,18 @@ class RuntimeViewReader:
             conn.commit()
         return result
 
+    def list_configuration_sources(self, *, installation_id, org_id, project_id, roles, markings):
+        from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, require_control_role
+        from .configuration_source_catalog import read_source_catalog
+        require_control_role(roles=roles, operation=APPLY_INSTALLATION_OPERATION)
+        view=self.get_installation(installation_id=installation_id,org_id=org_id,
+            project_id=project_id,roles=roles,markings=markings)
+        with self._connect_factory() as conn:
+            apply_asset_transaction_scope(conn,org_id=org_id,project_id=project_id)
+            result=read_source_catalog(conn,org_id=org_id,project_id=project_id,view=view)
+            conn.commit()
+        return result
+
     def get_operation(
         self,
         *,

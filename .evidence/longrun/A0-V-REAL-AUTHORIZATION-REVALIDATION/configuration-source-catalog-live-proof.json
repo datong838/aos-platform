@@ -1,0 +1,38 @@
+{
+  "outcome": "CURRENT_CONFIGURATION_SOURCE_CATALOG_READ_VERIFIED",
+  "catalog": {
+    "target": {
+      "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+      "installationEtag": 5,
+      "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+      "bindingRevision": 4
+    },
+    "installationRevision": 5,
+    "roles": [
+      {
+        "label": "职责计划 · ecommerce.business-investigation.readonly",
+        "ref": {
+          "authority": "aip.responsibility_plan_revision",
+          "id": "responsibility-plan-63c82d2a75614e1b95f1",
+          "revision": 2,
+          "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+        }
+      }
+    ],
+    "policies": [
+      {
+        "label": "运行策略 · a0v-ecommerce-runtime-policy-v1",
+        "ref": {
+          "authority": "aip.runtime_policy_revision",
+          "id": "a0v-ecommerce-runtime-policy-v1",
+          "revision": 4,
+          "hash": "sha256:e26926bfaeb245c4f381064bd2fd33f41c938c4489183770523b086cfa85c7c6"
+        }
+      }
+    ],
+    "rolesHasMore": false,
+    "policiesHasMore": false
+  },
+  "businessFingerprintUnchanged": true,
+  "executionAuthorized": false
+}

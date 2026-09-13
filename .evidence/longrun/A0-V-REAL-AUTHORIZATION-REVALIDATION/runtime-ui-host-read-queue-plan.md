@@ -374,3 +374,11 @@ D2d-3b实施复核：FastAPI先把JSON解为Python数组，原严格tuple字段�
 迁移租约A0V-CONFIGURATION-STAGE-LOOKUP-SCHEMA-20260914：新增a0v_038_configuration_stage_lookup.py，按原scope+subject+key读request_id后复用037 query权限与结果。不存在返回null，不INSERT/UPDATE，不调用enqueue；查到请求仍需当前成员及当前安装marking通过。
 
 HTTP新增GET /v1/bundle-runtime-installations/configuration-requests/lookup，Idempotency-Key请求头（不把key写URL），静态路由必须在/{request_id}之前登记。Service.find只读lookup函数，返回原固定status；无记录404仍不重发，连接未知503继续查询原key。测试已收件模拟响应丢失后找回同ID/请求数不增加、不同subject不可查、撤权拒绝、未知key不写入，HTTP静态路由/当前身份与no-store；未部署主库。
+
+### D2d-4a 只读来源目录（基线14a8186e，编码前）
+
+复用原RuntimeViewReader只读连接及installation可见性/APPLY角色门，不给037技术角色增授源表权限。新增extension_runtime/configuration_source_catalog.py；修改configuration_catalog.py抽出同代际目标核验供两个目录共用，runtime_view.py、control_wiring.py、bundle_runtime_installations.py追加GET /{installation_id}/configuration-sources。
+
+返回精确当前installation/etag/generation/bindingRevision，以及本租户当前frozen职责计划和active且未kill的运行策略各最多50项+各自hasMore。每项仅原sourceRef和来源标签（职责profile、策略原标识），不返回策略正文、模型凭据、预算金额或授予任何执行权。目录是候选，不承诺全部依赖有效；登记时原四来源/权限重新验证。无binding返回空；目标前后核对，变化409，所有响应no-store。目录摘要形状非法拒绝而非替换；只读候选不能被当成审批。
+
+验证原目录回归、真实隔离PG当前head/生命周期/租户/有界目录，HTTP当前Principal及无缓存，主库只读目录核验后再接前端来源选择。当前功能不修改主库来源、配置或绑定。

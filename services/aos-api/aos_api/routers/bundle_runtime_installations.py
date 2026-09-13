@@ -21,6 +21,7 @@ from aos_api.errors import ApiError, ErrorBody
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
 from aos_api.extension_runtime.runtime_view import RuntimeInstallationView, RuntimeOperationView
 from aos_api.extension_runtime.configuration_catalog import ConfigurationCatalog
+from aos_api.extension_runtime.configuration_source_catalog import ConfigurationSourceCatalog
 from aos_api.routers.asset_control_headers import require_idempotency_key, require_if_match
 
 
@@ -152,6 +153,15 @@ def list_bundle_runtime_configurations(installation_id: CanonicalUuidPath, respo
         principal: PrincipalDependency, view_reader: RuntimeViewReaderDependency) -> ConfigurationCatalog:
     response.headers['Cache-Control']='no-store'
     return _invoke(lambda: view_reader.list_configurations(installation_id=installation_id,
+        org_id=principal.org_id,project_id=principal.project_id,roles=principal.roles,markings=principal.markings))
+
+
+@_configuration_catalog_router.get('/{installation_id}/configuration-sources' , response_model=ConfigurationSourceCatalog,
+    operation_id='list_bundle_runtime_configuration_sources', responses=_ERRORS)
+def list_bundle_runtime_configuration_sources(installation_id: CanonicalUuidPath, response: Response,
+        principal: PrincipalDependency, view_reader: RuntimeViewReaderDependency) -> ConfigurationSourceCatalog:
+    response.headers['Cache-Control']='no-store'
+    return _invoke(lambda: view_reader.list_configuration_sources(installation_id=installation_id,
         org_id=principal.org_id,project_id=principal.project_id,roles=principal.roles,markings=principal.markings))
 
 
