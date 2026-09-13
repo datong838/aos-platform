@@ -1,3 +1,4 @@
+import { RegistrationPanel } from "./assetBundles/RegistrationPanel";
 import { useEffect, useRef, useState } from "react";
 
 import { getTenant } from "../../api/tenant";
@@ -477,6 +478,7 @@ export function AssetBundlesPage() {
             onSelectedActionChange={setSelectedAction}
             onConfirm={(command) => { void confirmInstallationAction(command); }}
           />
+          <RegistrationPanel installationId={installationId} offline={actionRuntime.offline} />
           <RuntimeInstallationPanel
             state={runtimeInstallationState}
             offline={actionRuntime.offline}

@@ -348,3 +348,18 @@ describe("registration discovery client", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("registration withdrawal transport", () => {
+  it("uses the same key for command and readback, with CAS only on POST", async () => {
+    const key=idempotencyKeyFor(createIdempotentCommand());
+    const intent={installationId:INSTALLATION_ID,registrationReceiptRef:{resourceType:"FirstDispatchRegistrationReceipt" as const,resourceId:INSTALLATION_ID,revision:1 as const,contentHash:"sha256:"+"a".repeat(64)},expectedInstallationEtag:5,idempotencyKey:key};
+    const receipt={schemaVersion:"aos.ecommerce.first-dispatch-withdrawal-receipt/v1",receiptId:INSTALLATION_ID,installationId:INSTALLATION_ID,idempotencyKey:key,registrationReceiptRef:intent.registrationReceiptRef,executable:false,releasedOperationCount:9,contentHash:"sha256:"+"b".repeat(64)};
+    const fetch=vi.fn().mockImplementation(async()=>jsonResponse(receipt));
+    const client=makeClient(fetch);await client.withdrawRegistration(intent);await client.readRegistrationWithdrawal(intent);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const post=fetch.mock.calls[0][1] as RequestInit, get=fetch.mock.calls[1][1] as RequestInit;
+    expect(post.method).toBe("POST");expect(new Headers(post.headers).get("If-Match")).toBe('"5"');
+    expect(JSON.parse(post.body as string).idempotencyKey).toBe(key);
+    expect(get.method).toBe("GET");expect(new Headers(get.headers).get("Idempotency-Key")).toBe(key);expect(new Headers(get.headers).has("If-Match")).toBe(false);
+  });
+});

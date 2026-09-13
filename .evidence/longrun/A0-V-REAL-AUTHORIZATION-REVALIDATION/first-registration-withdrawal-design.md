@@ -37,3 +37,6 @@ Owner切片（dc357b35之后）：新增ecommerce_growth_withdrawal_receipt.py�
 
 
 前端合同切片（3e638c9f之后）：apps/web/src/api/assetControl/registrationStatus.ts严格解析status/v1（安装UUID/ref/hash/状态与动作组合/正安全整数etag）；不接受未知字段、不把任意允许动作透传。operations.ts登记GET，client.ts使用既有认证/错误/离线体系并校验响应installationId等于请求，不填造空态，不持久化权威数据。新增registrationStatus.test.ts及client.test.ts边界测试。后续独立面板复用既有读取状态管理，并明确租户切换立即清空旧状态，服务未部署显示不可用；本片先完成客户端合同，不提前增加不能执行的按钮。仅API适配，无后端规则复制，版本不匹配拒绝而不是静默降级。
+
+
+页面切片（6861693b之后）：新增RegistrationPanel.tsx及测试，嵌入AssetBundlesPage。当前安装状态从服务端读取；身份更新/安装切换清空显示，忽略晚到响应。错误不可伪装空态。只有服务端withdraw提示且在线/非刷新/非执行/非未知时允许确认撤回。只释放准备占位并保留业务数据。生成一次内存key，POST成功须校验回执与原安装/ref/key；错误不重发，只保留原命令GET回读。身份改变后旧响应不得显示。客户端增加withdrawRegistration/readRegistrationWithdrawal及匹配解析，复用headers，不做业务资格判断。测试含未知不重发、回读、身份切换、晚到响应、离线与503；浏览器验证不冒充主库业务验收。

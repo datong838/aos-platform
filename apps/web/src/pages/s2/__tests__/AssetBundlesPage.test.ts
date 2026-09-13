@@ -90,6 +90,11 @@ describe("M3-4/M3-5 AssetBundlesPage integration", () => {
     document.body.appendChild(host);
     root = createRoot(host);
     hooks.installationData = null;
+    vi.spyOn(assetControlClient, "getRegistrationStatus").mockImplementation(async installationId => ({
+      schemaVersion: "aos.ecommerce.first-dispatch-status/v1", installationId,
+      state: "unregistered", registrationReceiptRef: null, withdrawalReceiptId: null,
+      allowedActions: [], executable: false, expectedInstallationEtag: null, withdrawalReason: "not_applicable",
+    }));
     setTenant({
       orgId: "dev-org",
       projectId: "dev-project",

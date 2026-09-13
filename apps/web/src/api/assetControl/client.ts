@@ -1,3 +1,4 @@
+import { withdrawalBody, parseWithdrawalReceipt, type WithdrawalIntent, type WithdrawalReceipt } from "./registrationWithdrawal";
 import { parseRegistrationStatus, type RegistrationStatus } from "./registrationStatus";
 import { isOffline } from "../../lib/offlineStore";
 import { getApiBase } from "../apiBase";
@@ -565,6 +566,24 @@ export class AssetControlClient {
       serializeUninstallInstallationRequest(body),
       options,
     );
+  }
+
+  withdrawRegistration(intent: WithdrawalIntent): Promise<WithdrawalReceipt> {
+    const op = ASSET_CONTROL_OPERATIONS.withdrawRegistration;
+    if (isOffline()) offlineMutationDisabled(op.operationId);
+    const path = fillPath(op, { installation_id: canonicalUuid(intent.installationId, "installation_id") });
+    return this.request<unknown>(op.operationId, path, {method: "POST",
+      headers: this.headers({idempotencyKey: idempotencyKey(intent.idempotencyKey), ifMatch: strongIfMatch(intent.expectedInstallationEtag)}),
+      body: JSON.stringify(withdrawalBody(intent)),
+    }).then(value => parseWithdrawalReceipt(value, intent));
+  }
+
+  readRegistrationWithdrawal(intent: WithdrawalIntent): Promise<WithdrawalReceipt> {
+    const op = ASSET_CONTROL_OPERATIONS.readRegistrationWithdrawal;
+    const path = fillPath(op, { installation_id: canonicalUuid(intent.installationId, "installation_id") });
+    return this.request<unknown>(op.operationId, path, {method: "GET",
+      headers: this.headers({idempotencyKey: idempotencyKey(intent.idempotencyKey)}),
+    }).then(value => parseWithdrawalReceipt(value, intent));
   }
 
   getRegistrationStatus(installationId: string): Promise<RegistrationStatus> {

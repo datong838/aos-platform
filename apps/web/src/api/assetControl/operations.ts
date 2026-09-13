@@ -25,6 +25,8 @@ export type AssetControlOperationId =
   | "verify_bundle_installation"
   | "rollback_bundle_installation"
   | "uninstall_bundle_installation"
+  | "withdraw_ecommerce_growth_registration"
+  | "get_ecommerce_growth_withdrawal_receipt"
   | "get_ecommerce_growth_registration_status"
   | "get_bundle_runtime_installation"
   | "get_bundle_runtime_operation"
@@ -158,6 +160,16 @@ export const ASSET_CONTROL_OPERATIONS = {
     requiresIfMatch: true,
     returnsEtag: true,
     errorStatuses: ACTION_ERRORS,
+  },
+  withdrawRegistration: {
+    method: "POST", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-registrations/withdrawals",
+    operationId: "withdraw_ecommerce_growth_registration", requiresIdempotencyKey: true,
+    requiresIfMatch: true, returnsEtag: false, errorStatuses: [...ACTION_ERRORS, 503],
+  },
+  readRegistrationWithdrawal: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/ecommerce-growth-registrations/withdrawals/receipt",
+    operationId: "get_ecommerce_growth_withdrawal_receipt", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
   },
   getRegistrationStatus: {
     method: "GET",
