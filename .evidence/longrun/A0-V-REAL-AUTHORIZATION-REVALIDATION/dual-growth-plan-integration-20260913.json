@@ -1,0 +1,37 @@
+{
+  "at": "2026-09-13T11:28:45.917803+08:00",
+  "baseline": "86c099b4",
+  "files": [
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/231-9-栖月汇双侧增长技术合同与原计划增量清单.md",
+      "sha256": "724bbf41c773416f70dc16d490dbde05d1f27d5f6873d1e049875b4f7dfabd2e"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/231-工作台业务闭环长程开发路径与波次实施计划.md",
+      "sha256": "16338848d9cc6cf42cec44591b73594600d62323a44cf9aca7c56749de693805"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/228-电商增长参谋长实施文档索引与分波路线图.md",
+      "sha256": "a104f8ee1548396a8b54c723f5cae139d067684dc35d17a6e5de1b90934c927a"
+    },
+    {
+      "path": "/Users/ddt/work/projects/ai_agent/docs/palantier/20_tech/电商平台接入/12-工作台层方案/产品方案v2/12-栖月汇数字同事驱动的双侧增长与职业销售组织方案.md",
+      "sha256": "4a34300fd8e24e0e446a1c8d9f101ca0d1d5c464d0038e454e63a670c63a4d86"
+    }
+  ],
+  "mappingKeys": [
+    "BG-00",
+    "BG-01",
+    "BG-02",
+    "BG-03",
+    "BG-04",
+    "BG-05",
+    "BG-06",
+    "BG-07",
+    "BG-08",
+    "BG-09",
+    "BG-10",
+    "BG-11"
+  ],
+  "businessAccepted": false
+}
