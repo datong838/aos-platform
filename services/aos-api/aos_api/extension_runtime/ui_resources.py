@@ -89,8 +89,13 @@ class ProductionUiSessionResolver:
         execution_epoch: int,
         roles: list[str],
         markings: list[str],
+        requested_route: str | None = None,
     ) -> RuntimeUiSessionView | None:
         del generation, execution_epoch, roles, markings
+        if requested_route is not None and (
+            type(requested_route) is not str or not _canonical_route(requested_route)
+        ):
+            return None
         if self._resource_origin is None:
             return None
         if not isinstance(installation, InstallationResponse):
@@ -119,6 +124,7 @@ class ProductionUiSessionResolver:
                     return None
                 indexed[key] = row
             candidates: list[tuple[Any, Any]] = []
+            route_owner_count = 0
             for selected in lock.payload.resolved:
                 row = indexed.get((selected.publisher, selected.id, selected.version))
                 if row is None:
@@ -132,9 +138,14 @@ class ProductionUiSessionResolver:
                     expected_signature_fingerprint=selected.signature_fingerprint,
                     expected_evidence_revision=selected.release_evidence_revision,
                 )
+                owns_route = requested_route is not None and requested_route in _owned_navigation_routes(record.manifest)
+                if owns_route:
+                    route_owner_count += 1
                 if record.manifest.spec.runtime and record.manifest.spec.runtime.frontend:
+                    if requested_route is not None and not owns_route:
+                        continue
                     candidates.append((selected, record))
-            if len(candidates) != 1:
+            if len(candidates) != 1 or (requested_route is not None and route_owner_count != 1):
                 return None
             selected, record = candidates[0]
             frontend = record.manifest.spec.runtime.frontend
@@ -155,6 +166,12 @@ class ProductionUiSessionResolver:
                 limit=65_536,
             )
             ui = FrontendUiManifest.model_validate_json(raw)
+            if requested_route is not None:
+                owned_routes = _owned_navigation_routes(record.manifest)
+                # A routed Workshop may claim only its package's exact navigation entries.
+                # Wildcards cannot silently absorb another installed package's routes.
+                if requested_route not in ui.routeClaims or not set(ui.routeClaims).issubset(owned_routes):
+                    return None
             entry = artifacts.get(ui.entrypoint)
             if entry is None:
                 return None
@@ -171,13 +188,20 @@ class ProductionUiSessionResolver:
                 title=ui.title,
                 signedResourceUrl=resource_url,
                 resourceHash=entry.digest,
-                initialRoute=ui.initialRoute,
+                initialRoute=requested_route if requested_route is not None else ui.initialRoute,
                 routeClaims=tuple(ui.routeClaims),
                 readOperationClaims=tuple(ui.readOperationClaims),
                 commandOperationClaims=tuple(ui.commandOperationClaims),
             )
         except (AssetRegistryError, ManifestInvalidError, TypeError, ValueError, KeyError):
             return None
+
+
+def _owned_navigation_routes(manifest: Any) -> set[str]:
+    return {
+        claim.route for claim in manifest.spec.contributions
+        if claim.kind == 'navigation' and _canonical_route(claim.route)
+    }
 
 
 def _unsafe_path(value: str) -> bool:
