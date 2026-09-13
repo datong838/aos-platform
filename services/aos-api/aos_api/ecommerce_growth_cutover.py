@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -322,6 +322,18 @@ class EcommerceGrowthCutoverStore:
         self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str,
     ) -> dict[str, Any]:
         """Read historical evidence by its original key; never replay a write."""
+        with self._prepare_read_context(scope, installation_id, idempotency_key, actor) as (_, _, receipt):
+            return {"receipt": receipt.model_dump(mode="json", by_alias=True),
+                    "historical": True, "executable": False}
+
+    def read_activation_history(self, *, scope: TenantScope, installation_id: str,
+                                idempotency_key: str, actor: str) -> dict[str, Any]:
+        from aos_api.ecommerce_growth_cutover_history import activation_history
+        with self._prepare_read_context(scope, installation_id, idempotency_key, actor) as (conn, row, receipt):
+            return activation_history(self, conn, scope, row, receipt)
+
+    @contextmanager
+    def _prepare_read_context(self, scope, installation_id, idempotency_key, actor):
         from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
         FirstDispatchRegistrationService._identity(scope, actor)
         if (type(installation_id) is not str or str(UUID(installation_id)) != installation_id
@@ -348,8 +360,7 @@ class EcommerceGrowthCutoverStore:
             if row is None:
                 raise LookupError("cutover prepare receipt unavailable")
             receipt = self._receipt(scope, row, replayed=True)
-            return {"receipt": receipt.model_dump(mode="json", by_alias=True),
-                    "historical": True, "executable": False}
+            yield conn, row, receipt
 
     def prepare_activation(
         self,

@@ -1,0 +1,5 @@
+# 全阶段切换历史恢复视图
+
+基线19aeae36。复用prepare原键查询的输入、当前权限及同一serializable事务，抽取共享读取上下文；新增read_activation_history，不重复开连接。独立history模块复用Store现有phase/finalize/rollback解码器。校验prepare事件、各阶段receipt集合与读取集合一致、阶段前缀连续、pause/commit精确引用prepare、validate/resume和rollback精确引用commit、回滚父子同一安装同一组；原始status仅作为观测信息，historical=true/executable=false，不产生allowedActions或续跑授权。
+
+文件：services/aos-api/aos_api/ecommerce_growth_cutover.py、ecommerce_growth_cutover_history.py、tests/extension_runtime/test_ecommerce_growth_cutover_receipt_pg.py。已存在无事件的回执不能静默漏掉，未知phase或重复回滚归为冲突。prepare到resume五阶段及回滚fence/drain/rollback读回全覆盖；现有prepare回读回归。测试仅隔离PG；当前真实主库未prepare，不构造真实切换。下一波产品GET接口，然后设计写接口的当前权限与exact审批门，不直接把Store全部暴露。
