@@ -301,3 +301,24 @@ D2b浏览器验收补充：当前真实实例ready，只允许disable，因此�
 输入为当前租户、精确runtime policy引用及非空、最多64个精确职责计划引用；不得硬编码租户、策略ID、角色profile或自动选“唯一角色”。从当前runtime policy派生data引用，从其当前budget policy派生budget revision引用。复用本模块原权威加载器和四来源校验，包括职责冻结、完整摘要、当前head、生命周期、数据库时间有效窗、network/egress绑定及预算规则。要求原aos_runtime事务和租户GUC；无写入、无commit、无权限授予，不创建配置记录。返回原ConfigurationDocument，后续登记和configure/enable必须重新授权，不能缓存本次结果当执行许可。
 
 测试真实隔离PG：正确装配与原四引用精确一致；职责/策略头变动、各依赖过期/撤销/摘要错误拒绝；跨租户、特权连接、空/重复职责拒绝。只读装配仍会持有原权威共享锁直到调用者事务结束，调用者必须短事务且不跨外部调用。产品登记命令、Receipt和Host承接留下一切片，不让API直写配置表。本波次不重启Host、不改变当前实例配置。
+
+## UQ6-D2d 产品配置命令交接合同（基线df1804a8，编码前）
+
+### 已核实缺口与边界
+
+RuntimeConfigurationService.request只接受configure/enable且依赖已登记configRef；build_runtime_control_plane使用默认PostgresInstallationStore连接，而原四来源适配器要求current_user=aos_runtime。因此仅加网页登记按钮不能闭环，禁止给网页复用Host凭据绕过。append_configuration已有原不可变记录、幂等、exact代际/CAS、当前权限校验；保留为唯一配置记录写入实现。
+
+### 实施切片与原任务映射
+
+仍属原D2恢复与BG00/BG01前置，不新增总进度分母。
+
+1. D2d-1：配置登记请求合同。新增extension_runtime/configuration_stage_contracts.py及对应测试。固定stage-configuration动作、精确安装ID/etag、generation/bindingRevision、非空有界roleRefs和policyRef、可选previousRef；只接受原AIP职责/策略authority。客户端不能传subject/tenant、任意data/budget或payload、权限、deadline、requestId、状态。凭当前服务身份写subject/scope，服务生成请求ID/数据库deadline。拒绝重复职责ID（即使revision不同）、布尔版本号、非法UUID、未知字段。绑定目标和来源整体成为请求摘要，不自动刷新后重投。
+2. D2d-2：新增隔离交接队列及原宿主消费者；迁移需另列精确文件与DDL评审后实施。状态requested→succeeded/rejected/expired，不引入跨事务外部Attempt：宿主锁请求后，在同一短事务锁installation/binding→重新查当前成员/markings→装配四来源→append_configuration→写固定configRef结果。数据库事务回滚可安全重新领取，commit后结果读取不重复登记。无法确定commit结果时只读原请求；不创建第二key。请求到期或目标漂移直接终态拒绝，不能自动换目标。请求及结果只属于原租户原subject。
+3. D2d-3：专用API技术身份/固定SECURITY DEFINER提交与查询函数，API无配置表/队列表直接权限、无Host身份可达。受当前Principal控制，当前成员/markings检查须在SQL入口或可信权威事务执行；限制有界待处理量、固定期限，所有响应no-store。调用成功202只表示收件，结果仅固定ref，不能配置/启用实例。
+4. D2d-4：正式配置来源选择与登记UI，旧配置列表立即可回读新ref。提交后GET同请求，不靠前端重发；身份/安装/代际/etag改变清空选择，失效后不展示旧结果。网页给用户可读职责/策略名称，不要求手填hash。真实配置/enable仍需单独命令，不合并自动启用。
+5. D2d-5：当前configure/enable从Web到Host的同类身份交接。不得给旧service注入伪连接劫持commit以强拼事务。必须保留原execute_idempotent Receipt，证明同请求Host重入复用结果且授权撤销后不返回旧执行许可；另写具体事务设计再编码。
+6. D2d-6：部署前克隆/备份/ACL否定验证，维护原Host单写者。Host实际替换必须结合D2的新代际恢复与当前exact评审，不盲停6606。真实浏览器完成登记→选配置→configure→enable→读工作台才算该产品流程验收。
+
+### 退出条件与风险
+
+D2d-1合同或D2d-2隔离PG测试不算D2d产品流程完成。禁止提前启用迁移或flag，不改当前安装/旧13包根/业务路由。API排队拒绝、身份撤销、旧generation、过期、重复key冲突、事务中断/提交未知、同租户不同subject结果隔离都须有数据库证据。实际权限来自当前成员记录，不能用材料中的角色名或历史脚本伪造审批人。
