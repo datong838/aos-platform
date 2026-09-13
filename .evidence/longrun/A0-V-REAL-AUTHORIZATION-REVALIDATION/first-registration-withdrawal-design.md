@@ -1,0 +1,15 @@
+# BG-01 未激活首次登记撤回技术合同
+
+基线b5f2611c。首次登记当前原子写9条legacy/fenced占位和不可变登记Receipt；路由以tenant+operation主键占位。ScheduleBinding/Invocation通过FK引用路由，不能直接删历史或无条件DELETE。当前主库尚无业务路由，不执行真实撤回。
+
+第一切片只冻结严格请求及“原始未启用”资格核验，新增aos_api/ecommerce_growth_registration_withdrawal.py与tests/extension_runtime/test_ecommerce_growth_registration_withdrawal.py。请求含原RegistrationReceiptRef、expectedInstallationEtag、idempotencyKey、固定schemaVersion；当前角色不从请求接收。纯核验复用原Receipt来源校验，要求9条当前路由仍与登记快照完全一致、无任何cutover操作、无schedule/invocation依赖。返回原登记请求用于下一切片Owner校验，不授予执行权。拒绝少/多行、任一rev/hash/组/handler/fence漂移、跨租户、布尔计数、已有切换及依赖。避免出现已prepare还可偷偷撤掉目标。此切片通过不等于撤回功能完成。
+
+后续数据库切片：当前安装etag/当前APPLY控制权限在同一SERIALIZABLE事务核验；预算/Provider失效不应阻断撤回（只减执行范围），但不跳过当前操作者权限。保持同tenant first-registration advisory锁；按安装→路由组锁序核验实际原Receipt及原始快照。写不可变withdrawal Receipt记录原ReceiptRef、旧9行快照hash、操作者、requestHash及新状态，再移除无引用的9条当前占位，事务原子提交；原登记/安装/业务历史均保留。独立受限SECURITY DEFINER入口只供专用maintainer，不给予直接DML，FORCE RLS与Receipt一致性trigger。新的registration需新group/key，旧登记key只能回读历史，不复活已撤销占位。
+
+必须测试并发登记/撤回/prepare只允许一个合法结果；unknown只按同key回读；跨租户/恶意request/权限/直接SQL拒绝；已发生切换或有FK依赖时保持全部记录。若需要撤回已prepare或rollback过的组，单列扩大范围设计，走现有切换取消/回滚和排空合同，不能降低本切片原始状态检查。任何真实启用后的路由退役仍归现有lifecycle，不由首次登记撤回代替。
+
+后续HTTP/UI：显示登记中、待激活、已撤回与阻断原因；撤回是安装准备恢复的一部分，不是业务数据删除。包卸载/重装验收必须覆盖此路径。本切片不部署迁移、不改变主库角色、不完成BG-01。
+
+并发复查补充：Cutover prepare先取得tenant/group advisory锁，再取得installation和generation advisory锁；撤回须复用完全相同group锁标识，在锁内查询cutover_count并重读9行。新增登记用first-registration锁；撤回顺序为first-registration→group→installation/generation协调锁→安装/组行锁，不允许Owner在取得group锁前先持有可能倒置的安装行锁。SERIALIZABLE出现40001回滚后由调用者按原key回读，不自动重试。未来SQL直接入口也要实施同一锁协议，不能只依赖Python先检查。
+
+当前纯契约的expectedInstallationEtag只被哈希绑定，实际CAS必须由后续Owner/SQL验证；纯函数明确不声称已经验证当前权限或释放占位。首次80项通过含2个新增key空白/换行负例，旧validate_idempotency_key会清理空白，故本合同先拒绝非canonical key再复用公共校验。
