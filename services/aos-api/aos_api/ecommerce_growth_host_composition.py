@@ -205,6 +205,18 @@ def build_runtime_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegis
     return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)
 
 
+def build_scoped_ecommerce_growth_registry(principal, pipeline_factory) -> EcommerceGrowthHostAdapterRegistry:
+    """Add event dispatch using only the authenticated request and server factory."""
+    from aos_api.ecommerce_product_event_dispatch import EventAwareSchedulePutHostService
+    from aos_api.ecommerce_growth_runtime_adapters import SchedulePutAdapter
+
+    service = EventAwareSchedulePutHostService(principal, pipeline_factory)
+    baseline = build_runtime_ecommerce_growth_registry()
+    bindings = {operation: baseline._binding(operation) for operation in baseline.operation_ids}
+    bindings["ecommerce_growth_schedule_put"] = SchedulePutAdapter(service).binding()
+    return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)
+
+
 def select_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegistry:
     """Use runtime wiring only after the complete nine-service factory succeeds."""
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Mapping
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Request, Security
 from fastapi.security import HTTPBearer
 
 from aos_api.auth import Principal, require_principal
@@ -12,6 +12,7 @@ from aos_api.ecommerce_growth_canonical_router import EcommerceGrowthCanonicalRo
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
     select_ecommerce_growth_registry,
+    build_scoped_ecommerce_growth_registry,
 )
 from aos_api.ecommerce_growth_host_ports import (
     EcommerceGrowthHostBlocked,
@@ -38,8 +39,16 @@ _ERRORS = {
 PrincipalDependency = Annotated[Principal, Depends(require_principal)]
 
 
-def get_canonical_router() -> EcommerceGrowthCanonicalRouter:
-    return EcommerceGrowthCanonicalRouter(select_ecommerce_growth_registry())
+def get_canonical_router(request: Request, principal: PrincipalDependency) -> EcommerceGrowthCanonicalRouter:
+    from aos_api.pipeline_control_service import PipelineControlServiceFactory
+
+    control_plane = getattr(request.app.state, "extension_runtime_control_plane", None)
+    factory = getattr(control_plane, "pipeline_control_factory", None)
+    if type(factory) is PipelineControlServiceFactory:
+        registry = build_scoped_ecommerce_growth_registry(principal, factory)
+    else:
+        registry = select_ecommerce_growth_registry()
+    return EcommerceGrowthCanonicalRouter(registry)
 
 
 def _scope(principal: Principal) -> TenantScope:

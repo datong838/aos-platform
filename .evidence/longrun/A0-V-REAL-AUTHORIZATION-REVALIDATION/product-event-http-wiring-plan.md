@@ -1,0 +1,11 @@
+# BG-02 按已认证身份装配事件保存
+
+基线f98a1551。新增ecommerce_product_event_dispatch.py的EventAwareSchedulePutHostService：固定scope/actor来自HTTP Principal，SourceOwner来自精确PipelineControlServiceFactory；依赖延迟构造，仅缓存服务依赖，不缓存权限结论。policy.schemaVersion精确等于事件schema才分派事件服务；未给schema的旧定时命令走原SchedulePutHostService；未知schema拒绝。每个回调验证scope不漂移。
+
+修改ecommerce_growth_host_composition.py：原build_runtime_ecommerce_growth_registry()无参行为不变；增加按Principal与PipelineFactory的受控工厂，仅把schedule_put包装为事件/定时分派，其余8操作不改。仍通过同一Host registry token构造，不接收请求传入的回调。
+
+修改routers/ecommerce_growth_dispatch.py：get_canonical_router注入当前require_principal和Request，使用app现有control_plane.pipeline_control_factory；没有该工厂时保持原registry，新事件仍由原严格合同拒绝。无需重启后台Host或自动注册/切换。
+
+测试新增tests/extension_runtime/test_product_event_dispatch.py：旧模式不构造新依赖、事件模式只使用已认证subject/scope、跨scope和未知schema拒绝、旧服务未被覆盖；原HTTP/registry/Host回归。实际发布包必须通过运行时qualified Owner，新增模式不能继承旧包同名操作资格。
+
+具体文件均在services/aos-api/aos_api及tests，主库038/代码041。下一波完善产品命令生产与原key恢复入口、事件绑定/消费；准备新候选须重新签名和真实独立评审，不使用旧1.8批准承接新代码。
