@@ -3284,10 +3284,16 @@
       "order": 546
     },
     {
+      "domain": "infra",
+      "module": "aos_api.routers.runtime_workshop",
+      "attribute": "router",
+      "order": 547
+    },
+    {
       "domain": "data",
       "module": "aos_api.routers.pipeline_controls",
       "attribute": "router",
-      "order": 547
+      "order": 548
     }
   ]
 }

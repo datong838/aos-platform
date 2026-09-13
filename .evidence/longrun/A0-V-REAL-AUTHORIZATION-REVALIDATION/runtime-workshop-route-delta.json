@@ -1,0 +1,19 @@
+{
+  "baselineCount": 4492,
+  "currentCount": 4493,
+  "added": [
+    [
+      "/v1/runtime-workshop/modules",
+      "GET",
+      "list_modules",
+      [
+        "Infra",
+        "asset-control"
+      ]
+    ]
+  ],
+  "removed": [],
+  "duplicatesUnchanged": true,
+  "currentSha": "ee8640c2464ddef2fbd7f88a88f40e06bd76c09bc964b4543beae23a4bb349fc",
+  "currentPaths": 2694
+}

@@ -37,6 +37,7 @@ ROUTER_SPECS: dict[str, tuple[tuple[str, str], ...]] = {
         ('aos_api.routers.bundle_installations', 'router'),
         ('aos_api.routers.integration_cases', 'router'),
         ('aos_api.routers.bundle_runtime_installations', 'router'),
+        ('aos_api.routers.runtime_workshop', 'router'),
     ),
     "admin": (
         ('aos_api.routers.auth_oidc', 'router'),

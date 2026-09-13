@@ -46,6 +46,34 @@ class RuntimeControlPlane:
     first_dispatch_registration_service: Any = None
     ecommerce_growth_cutover_service: Any = None
     ecommerce_growth_cutover_control: Any = None
+    workshop_catalog: Any = None
+
+
+class _LazyRuntimeWorkshopCatalog:
+    """Read-only catalog dependencies are resolved only when requested."""
+
+    def __init__(self, *, view_reader):
+        self._view_reader = view_reader
+        self._catalog = None
+
+    def list_modules(self, **kwargs):
+        if self._catalog is None:
+            from aos_api.asset_registry.workshop_catalog_source import PostgresWorkshopCatalogSource
+            from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
+
+            self._catalog = RuntimeWorkshopCatalog(
+                source=PostgresWorkshopCatalogSource(),
+                loader=ManifestLoader(
+                    _allowlist_roots(repository_root=_REPOSITORY_ROOT),
+                    trust_roots=_configured_trust_roots(),
+                ),
+                view_reader=self._view_reader,
+            )
+        return self._catalog.list_modules(**kwargs)
+
+
+def build_runtime_workshop_catalog_reader(*, view_reader):
+    return _LazyRuntimeWorkshopCatalog(view_reader=view_reader)
 
 
 class _LazyRuntimeViewReader:
@@ -362,7 +390,12 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         )
         from aos_api.ecommerce_growth_cutover_control import EcommerceGrowthCutoverControl
         cutover_control = EcommerceGrowthCutoverControl(cutover)
+    view_reader = RuntimeViewReader(
+        installation_reader=_build_read_only_installation_service(),
+        ui_session_resolver=_build_runtime_ui_session_resolver(),
+    )
     return RuntimeControlPlane(
+        workshop_catalog=build_runtime_workshop_catalog_reader(view_reader=view_reader),
         first_dispatch_registration_service=registration,
         ecommerce_growth_cutover_service=cutover,
         ecommerce_growth_cutover_control=cutover_control,
@@ -372,10 +405,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         lifecycle_service=lifecycle,
         configuration_service=configuration,
         disable_service=disable,
-        view_reader=RuntimeViewReader(
-            installation_reader=_build_read_only_installation_service(),
-            ui_session_resolver=_build_runtime_ui_session_resolver(),
-        ),
+        view_reader=view_reader,
         configuration_authorize=authorize,
         disable_dependent=disable_dependent,
         live_job_directory=LivePreparedJobDirectory(),

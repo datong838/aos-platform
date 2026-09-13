@@ -593,11 +593,14 @@ async def lifespan(_app: FastAPI):
 
 def create_app() -> FastAPI:
     application = FastAPI(title="aos-api", version="0.3.0", lifespan=lifespan)
-    from aos_api.asset_registry.control_wiring import build_runtime_view_reader
+    from aos_api.asset_registry.control_wiring import build_runtime_view_reader, build_runtime_workshop_catalog_reader
 
     # Lifespan-free audit processes can read runtime facts, while command
     # dependencies remain absent and therefore fail closed.
     application.state.extension_runtime_view_reader = build_runtime_view_reader()
+    application.state.extension_runtime_workshop_catalog = build_runtime_workshop_catalog_reader(
+        view_reader=application.state.extension_runtime_view_reader,
+    )
     application.add_middleware(
         CORSMiddleware,
         # Web :5173 · 桌面 Tauri dev :1420 · 打包壳 tauri://
