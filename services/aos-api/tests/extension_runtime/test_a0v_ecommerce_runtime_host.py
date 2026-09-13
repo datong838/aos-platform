@@ -19,7 +19,8 @@ SPEC.loader.exec_module(HOST)
 
 
 @pytest.fixture(autouse=True)
-def isolated_environment(monkeypatch):
+def isolated_environment(monkeypatch,tmp_path):
+    monkeypatch.setattr(HOST, "HOST_LOCK_PATHS", (tmp_path/"canonical.lock",tmp_path/"legacy.lock"))
     monkeypatch.setattr(os, 'environ', dict(os.environ))
 
 
@@ -152,3 +153,33 @@ def test_error_chain_context_cycle_and_bound():
         current.__cause__ = RuntimeError()
         current = current.__cause__
     assert len(HOST._safe_error_chain(first)) == 16
+
+
+@pytest.mark.parametrize('lock_kind',['canonical','legacy','status'])
+@pytest.mark.parametrize('interval',['2','0'])
+def test_competing_host_cannot_overwrite_status_or_reach_serve(tmp_path,monkeypatch,capsys,lock_kind,interval):
+    import fcntl
+    status=tmp_path/'status.json'; status.write_text('original-active-status')
+    path={'canonical':HOST.HOST_LOCK_PATHS[0],'legacy':HOST.HOST_LOCK_PATHS[1],'status':status.with_suffix('.lock')}[lock_kind]
+    monkeypatch.setattr(HOST,'_serve',lambda _:pytest.fail('second host reached serve'))
+    with path.open('a+') as held:
+        fcntl.flock(held,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        assert HOST.main(['--bundle-root',str(tmp_path),'--trust-roots-file',str(tmp_path/'missing'),
+                          '--status-file',str(status),'--interval-seconds',interval])==2
+    assert status.read_text()=='original-active-status'
+    assert json.loads(capsys.readouterr().out)['reasonCode']=='HOST_ALREADY_RUNNING'
+
+
+def test_all_locks_held_during_serve_and_released_after(tmp_path,monkeypatch):
+    import fcntl
+    status=tmp_path/'custom-status.json'
+    paths=(*HOST.HOST_LOCK_PATHS,status.with_suffix('.lock'))
+    async def serve(_):
+        for path in paths:
+            with path.open('a+') as competing:
+                with pytest.raises(BlockingIOError):fcntl.flock(competing,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    monkeypatch.setattr(HOST,'_serve',serve)
+    assert HOST.main(['--bundle-root',str(tmp_path),'--trust-roots-file',str(tmp_path/'missing'),
+                      '--status-file',str(status)])==0
+    for path in paths:
+        with path.open('a+') as free:fcntl.flock(free,fcntl.LOCK_EX|fcntl.LOCK_NB)

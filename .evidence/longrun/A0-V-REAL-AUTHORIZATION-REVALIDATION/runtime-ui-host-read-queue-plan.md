@@ -261,3 +261,11 @@ UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件�
 专用读取身份必须与主库实测证明的数据库、角色、四项拒绝、空请求及文件摘要一致，并用现有严格0600身份解析器核验。文件/证明均缺失时兼容旧未部署场景并清理遗留环境；单边缺失或篡改则拒绝启动。证明齐备后显式设置资源来源http://127.0.0.1:18181及父页面来源http://127.0.0.1:5173。启动preflight用专用连接实测角色、数据库及035缺失请求返回空，输出仅安全元数据。不得将该结果表述为完整生产Web身份或业务安装完成。
 
 测试缺失兼容、不完整拒绝、摘要/权限/证明错误拒绝、环境清理及现有关闭标志；然后实际check通过才以原API租约更换18181进程，不碰原Host，验证健康和页面。
+
+## UQ6-D1 宿主单写者启动锁修复（基线80dddbea，编码前）
+
+检查原Host main发现锁由可自定义status-file派生，可用不同状态文件启动第二Host；锁冲突分支还覆盖正在运行Host状态。修改scripts/a0v_ecommerce_runtime_host.py及services/aos-api/tests/extension_runtime/test_a0v_ecommerce_runtime_host.py，租约A0V-HOST-SINGLETON-RECOVERY-20260913。
+
+本地固定canonical锁为原RECOVERY/state/ecommerce-runtime-host/singleton.lock；兼容锁包括旧默认状态锁和当前运行runtime-host-aa3010c4.lock，额外保留调用者状态锁。稳定排序去重、ExitStack持锁覆盖完整serve。任何锁冲突仅stdout返回HOST_ALREADY_RUNNING，不触碰任何状态文件；参数错误也须先拿锁才写状态。保留原停止排空逻辑、凭据、范围、Host身份、flags，不重启原6606、不启动新OCI。
+
+测试同状态/不同状态、旧运行锁、参数错误冲突均在_build_host/serve之前拒绝且原状态字节不变；测试全部锁直到serve结束持有。实际使用受控空目标状态路径尝试启动，必须在原旧锁处拒绝，不能新建状态文件或第二Host。该拒绝验证通过后再安排真实宿主升级，不能将资格测试等同业务链路。

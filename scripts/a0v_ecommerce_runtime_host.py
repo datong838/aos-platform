@@ -2,6 +2,7 @@
 """Run the isolated A0-V ecommerce Runtime Host as one fail-closed process."""
 from __future__ import annotations
 
+from contextlib import ExitStack
 import argparse
 import asyncio
 import fcntl
@@ -19,6 +20,11 @@ API = ROOT / "services/aos-api"
 RECOVERY = ROOT.parent / ".aos-recovery-20260912"
 DEFAULT_CREDENTIALS = RECOVERY / "state/ecommerce-runtime-host/runtime-host-identities.json"
 DEFAULT_STATUS = RECOVERY / "logs/ecommerce-runtime-host-status.json"
+HOST_LOCK_PATHS = (
+    RECOVERY / "state/ecommerce-runtime-host/singleton.lock",
+    DEFAULT_STATUS.with_suffix(".lock"),
+    ROOT.parent / ".aos-recovery-20260913/logs/runtime-host-aa3010c4.lock",
+)
 EXPECTED_ROLES = {
     "web": "aos_a0v_web_20260912",
     "runtime": "aos_a0v_runtime_20260912",
@@ -167,16 +173,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    if not 1 <= args.interval_seconds <= 300:
-        _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "INTERVAL_INVALID"})
-        return 2
-    lock_path = args.status_file.resolve().with_suffix(".lock")
-    lock_path.parent.mkdir(parents=True, exist_ok=True)
-    with lock_path.open("a+") as lock:
+    paths = sorted({path.resolve() for path in (*HOST_LOCK_PATHS, args.status_file.resolve().with_suffix(".lock"))})
+    with ExitStack() as locks:
         try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            for path in paths:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                lock = locks.enter_context(path.open("a+"))
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
-            _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "HOST_ALREADY_RUNNING"})
+            # A competing launcher must not replace the owner's active status.
+            print(json.dumps({"outcome": "SAFE_BLOCKED", "reasonCode": "HOST_ALREADY_RUNNING"}), flush=True)
+            return 2
+        if not 1 <= args.interval_seconds <= 300:
+            _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "INTERVAL_INVALID"})
             return 2
         try:
             asyncio.run(_serve(args))
