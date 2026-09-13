@@ -245,3 +245,11 @@ prepare先备份主库到0700仓外目录中的0600 dump，再新建拒绝PUBLIC
 apply仅接受完整prepare证明（dump/migrations/script hash一致），主库与克隆仍处于预期版本/数据基线并复核ACL；先落不可覆盖apply-intent再升级主库，读回版本/数据/ACL。已有意图不重跑，须独立readback判断提交结果。API独立登录身份、Host升级、签名包发布安装、浏览器真实读不在此迁移动作内。测试精确版本链/证据防篡改、已有意图拒绝和数据库ACL verifier；再实际prepare/clone验证才apply。
 
 UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件及父目录fsync；备份完成后fsync。保留旧辅助不改，防止崩溃丢失执行意图；已有意图只能readback。
+
+## UQ6-B 专用UI读取身份（基线90e89719，编码前）
+
+租约A0V-UI-READ-API-IDENTITY-20260913。新增scripts/a0v_ui_read_identity.py与tests/extension_runtime/test_ui_read_identity_deploy.py，生成唯一技术LOGIN aos_ui_read_transport_20260913（不是业务成员/审批人），NOINHERIT/非超级/无BYPASS/无创建角色数据库/无复制，仅MEMBER aos_ui_read_api，无ADMIN。复用固定受控本地管理连接；密码只在内存与0700目录的0600文件，不能输出或进环境/共享证据。环境仅设置凭据文件路径。
+
+先clone：核035、当前空队列/权限，持久化clone身份文件后创建角色并只授所需角色/CONNECT，用真正ui_read_connection验证当前正租户runtime-owner成员、受限metadata空结果、同连接篡改subject拒绝、canary主体不存在拒绝、直接表SELECT与宿主函数EXECUTE拒绝。已有角色无对应私有身份文件时拒绝重置，未知凭据不重发生成。
+
+再main：要求clone成功证明与035部署证明、当前clone/main核验，通过后仅派生dbname为aos_meta_head的私有文件并真实重复上述读/拒绝检查。前后19关键业务指纹与队列0保持；不发送业务请求，不修改meta_membership/authz_tuple、不造独立审批人、不启动另一个Host。现阶段没有已成功的真实队列请求，不能声称主库跨用户结果交付已验收；该项留真实安装后验证。
