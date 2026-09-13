@@ -187,3 +187,13 @@ Registry记录读取和返回前发布状态/当前策略再核验使用新只�
 本切片只交付读取核心；B2b随后挂匿名静态代码资源HTTP（不可包含租户业务数据），设置no-store/nosniff/sandbox CSP/connect-src none，校验重复query/路径以及错误脱敏，资源origin显式配置才开启。匿名资源访问不是业务读取授权，业务仍由宿主原身份受限队列核验。
 
 B2a测试落到tests/asset_registry/test_ui_resource_reader.py，以复用该包现有真实Ed25519签名/ManifestLoader fixture；Registry查询用精确SQL与行替身，文件、签名和ReleasePolicy为真实实现，明确不冒充主库发布验收。
+
+### UQ5-B2b 资源HTTP与显式配置（基线2b7a060e，编码前）
+
+新增routers/runtime_ui_resources.py和tests/asset_registry/test_ui_resource_http.py；修改asset_registry/control_wiring.py新增只读Reader builder（connect_read_only inherit_scope=False，仅全局Registry发布资源），domain_manifest.json追加infra路由并运行现有生成器更新domain_aggregates.py。
+
+固定GET /v1/bundles/{publisher}/{bundle_id}/{version}/{entrypoint:path}，仅允许精确两个查询参数packageHash/contentHash各一次。没有tenant/subject参数，没有运行或写入路径。AOS_EXTENSION_UI_RESOURCE_ORIGIN与AOS_EXTENSION_UI_PARENT_ORIGIN必须是无凭据/query/fragment/path的HTTPS或本地HTTP origin；配置缺失拒绝503，不改既有resolver支持外部资源前缀的合同，但本API自身资源服务只支持根origin。
+
+响应text/html UTF-8，no-store/nosniff/no-referrer、CSP sandbox allow-scripts/default-src none/connect-src none/base-uri none/form-action none/object-src none/frame-ancestors精确父origin；仅允许签名HTML内联脚本和样式，不允许外部脚本/媒体/iframe/eval。保留原iframe allow-scripts沙箱，不暴露cookie/token。所有该路由错误脱敏且no-store；未知异常统一503，未声明资源404，格式400。
+
+HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全头、未配置零读取、重复/额外参数、路径后端/穿越、摘要错误、已撤销和未知内部异常不泄漏。检查路由生成无漂移及原资源/读取回归。主API部署仍UQ6，不在本波重启原Host或解封九条业务路由。

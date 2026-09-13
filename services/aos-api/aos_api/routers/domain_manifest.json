@@ -3294,6 +3294,12 @@
       "module": "aos_api.routers.pipeline_controls",
       "attribute": "router",
       "order": 548
+    },
+    {
+      "domain": "infra",
+      "module": "aos_api.routers.runtime_ui_resources",
+      "attribute": "router",
+      "order": 549
     }
   ]
 }

@@ -319,6 +319,20 @@ def _build_runtime_ui_session_resolver():
     )
 
 
+def build_runtime_ui_resource_reader():
+    """Read published static frontend code without inheriting tenant scope."""
+    from aos_api.db import connect_read_only
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.extension_runtime.ui_resource_reader import PublishedUiResourceReader
+
+    roots = _configured_trust_roots()
+    return PublishedUiResourceReader(
+        connect_factory=lambda: connect_read_only(inherit_scope=False),
+        release_policy=ReleasePolicy(trust_roots=roots),
+        loader=ManifestLoader(_allowlist_roots(repository_root=_REPOSITORY_ROOT), trust_roots=roots),
+    )
+
+
 def build_runtime_lifecycle_service():
     """Wire preparation commands, without exposing routes or starting workers."""
     return build_runtime_control_plane().lifecycle_service
