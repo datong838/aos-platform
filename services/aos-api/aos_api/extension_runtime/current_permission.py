@@ -1,6 +1,6 @@
 """Current local-PG control authorization; never grants or bootstraps members."""
 from aos_api.asset_registry.control_policy import (
-    APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION,
+    APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION,
     CONFIGURE_RUNTIME_OPERATION, ENABLE_RUNTIME_OPERATION, DISABLE_RUNTIME_OPERATION,
     require_control_role, require_target_markings,
 )
@@ -11,7 +11,7 @@ from .lifecycle_store import _require_transaction, _values, RuntimeConflict
 
 class CurrentControlPermission:
     def __init__(self, *, operation):
-        if operation not in {APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION,
+        if operation not in {APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION,
                              CONFIGURE_RUNTIME_OPERATION, ENABLE_RUNTIME_OPERATION, DISABLE_RUNTIME_OPERATION}:
             raise ValueError('unsupported current control permission')
         self.operation=operation

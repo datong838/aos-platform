@@ -1,0 +1,12 @@
+# 内部切换绑定接入Proposal Owner
+
+基线b2874ad2。沿用AIP ActionProposal/Approval账本，只为固定cutover和rollback两动作增加内部控制绑定。原外部动作preview/draft门、其他动作绑定保持原状。
+
+实施切片：aip_action_policy.py为本族设置R2最低风险（maker/checker、至少一名独立审批人，客户提示只能提高风险）；ecommerce_growth_cutover_action_binding.py提供识别和内容校验；新增ecommerce_growth_cutover_proposal_gate.py在事务内检查当前安装、持久角色、marking及ActionType snapshot，发起用APPLY权限、决定用APPROVE权限；extension_runtime/current_permission.py仅扩充可信APPROVE操作白名单。aip_action_store.py在直接Proposal生成及显式Draft提交生成stable内容时接入绑定，create/decide旧键回放之前也做当前门；本族不接受业务Task/Run或ImpactPreview混入。已存在旧无绑定记录不升级为有绑定，不改历史。
+
+当前权限门复用PostgresInstallationStore.lock_for_transition_in_transaction和CurrentControlPermission，不自行授予角色。审批绑定必须与存储原Proposal hash匹配，风险policy必须允许执行且非draftOnly；existing maker≠checker/CAS/时效/最低审批数继续由Owner执行。绑定只是内容证据，最终切换仍重验所有当前条件。
+
+验证：固定风险底线和其他动作不变；当前maker/checker角色、租户、marking与版本；错误snapshot/缺注册形状拒绝；不伪造Task/ImpactPreview。切换端重算绑定与ActionType实际发布为后续切片，本波完成也不直接启动真实切换。测试、主库只读权限探针、证据与提交后继续。
+
+## 串行细分退出条件
+先以权限/风险基础切片验证 APPROVE 当前持久权限及两固定动作 R2 底线，单独留证提交；随后立即进入事务内 Proposal gate 与 Store 接线切片。前一切片不得称为 Proposal Owner 已接通；所有正式提案和切换动作等待完整链路验证。此细分不删减上文范围。

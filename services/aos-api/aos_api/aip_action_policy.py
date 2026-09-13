@@ -36,7 +36,10 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if action_type_id == PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID:
+    if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback"}:
+        floor = ActionRiskLevel.R2
+        reasons.append("internal_runtime_cutover")
+    elif action_type_id == PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID:
         floor = ActionRiskLevel.R2
         reasons.append("provider_external_health_probe")
     elif any(word in text for word in ("refund", "payment", "pay_", "inventory", "permission", "退款", "支付", "库存", "权限")):
