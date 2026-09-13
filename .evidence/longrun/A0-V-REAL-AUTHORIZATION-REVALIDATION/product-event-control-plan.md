@@ -1,0 +1,11 @@
+# BG-02 事件控制与消费技术方案
+
+基线eef0062f。必须补显式事件控制，不能用保存成功代替启用；旧schedule_trigger只承接定时并返回Occurrence，不把启用伪装成一次Occurrence。
+
+控制操作拟独立ecommerce_growth_event_control，返回单一控制Receipt。当前9项注册/封印保持，新增操作待完整Owner、签名合同及候选资格后再注册。命令schema=aos.ecommerce.product-event-control-command/v1，只有idempotencyKey、policyRef、expectedBindingRevision、intent(enable/disable)、approvalRef；scope/actor/installation/epoch来自Host。enable必需精确批准，disable不依赖已失效的来源或模型，但仍验证当前调用者/租户和目标绑定，不能越权停用。解析不能授予执行许可。
+
+存储沿用automation_schedule_binding（policy revision + binding revision CAS），新增控制Receipt是写入审计，不新建第二份可执行状态。真正开启前：锁当前安装/dispatch/策略/Case/来源，核对当前独立批准绑定完整enable意图和policyRef，建立或更新binding并原子写Receipt。停用将binding.enabled=false且revision递增，原幂等命令回放返回原Receipt；恢复不能重用enable批准创造另一指令。当前Case已关闭或来源失效不应妨碍授权停用。任何开启与禁入竞态由同一Owner锁范围处理。
+
+消费操作必须另有当前签名合同资格；来源run出自原ingress journal，内部核对payload完整性，仅向领域方法提供必需metadata和冻结deadline。当前policy/binding/dispatch核验后，在来源Owner回调内批量写Occurrence/outbox；后继Run按原事件Receipt承接，不创建手工临时链路。晚提交不丢失，过期missed，不推进最大序号游标。
+
+本波先实施严格Host命令合同（services/aos-api/aos_api/ecommerce_product_event_control_contracts.py）及tests/extension_runtime/test_product_event_control_contracts.py：未知/自授权字段拒绝，禁止bool当版本、非canonical ID、错误ref用途，enable无批准拒绝，disable保留无批准停止意图；不注册/执行。下一波实现控制Receipt/CAS Owner与受控数据库函数，再接注册/产品准备审批入口和消费者。新签名发布与真实独立评审必须覆盖这些完整功能，旧1.8不适用。真实首链/八工作台/持续观察仍未完成。
