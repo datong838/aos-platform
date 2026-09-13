@@ -1267,3 +1267,7 @@ IAB tab10 5173/data真实显示1数据源、栖月汇微商城、MySQL SSH隧道
 | 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/extension_runtime/analyst_workspace_snapshot.py` | 原路径 | platform canonical read port；固定scope读取原有Case/Run/State、当前主体事实及截断边界，不包含领域展示逻辑，不直接公开HTTP | 17b33bacaea0706457895b55d52159597ae1fc8c73cad960159bdfb714ec771d |
+
+## 2026-09-13 N8 跨进程UI读取增量清单
+
+承接同目录清册与A0-V/runtime-ui-host-read-queue-plan.md。UQ1合同/隔离库迁移→UQ2当前权限入队→UQ3原宿主/既有signed_read Attempt消费→UQ4API/Web→UQ5 7+1后继包→UQ6真实安装与读取→UQ7真实首链、八场景与观察。UQ1合同与隔离账本切片已验证（16 passed），UQ2~UQ7未完成；主库尚未迁移，不取代原N1~N8退出条件，不扩大230 L0授权，不push。队列仅投递事实，原宿主与现有Attempt是执行/排空接点；禁止API另起实例。
