@@ -1,0 +1,25 @@
+{
+  "outcome": "UI_READ_LOCAL_SCHEMA_DEPLOYED",
+  "revision": "a0v_035",
+  "schema": {
+    "queueCount": 0,
+    "forceRls": true,
+    "runtimeUpdateColumns": [
+      "state",
+      "revision",
+      "claimed_at",
+      "completed_at",
+      "owner_token_hash",
+      "attempt_id",
+      "snapshot_hash",
+      "attempt_request_hash",
+      "result_json",
+      "result_hash",
+      "failure_code"
+    ],
+    "apiDirectTableAccess": false,
+    "restrictedFunctionCount": 5
+  },
+  "businessWrites": 0,
+  "at": "2026-09-13T14:22:33.932906+00:00"
+}
