@@ -10,6 +10,7 @@ _OPERATIONS = (
     ("ecommerce_growth_review_advance", "POST", "/ecommerce/growth/investigations/review/advance"),
     ("ecommerce_growth_content_generate", "POST", "/ecommerce/growth/content/generate"),
     ("ecommerce_growth_content_review", "POST", "/ecommerce/growth/content/review"),
+    ("analyst_workspace_view_v1", "POST", "/ecommerce/growth/workspace/view"),
 )
 
 
@@ -25,6 +26,12 @@ def register(_context):
 def handle(operation_id, _payload, _context):
     if operation_id not in {item[0] for item in _OPERATIONS}:
         raise ValueError("unregistered ecommerce growth operation")
+    if operation_id == "analyst_workspace_view_v1":
+        if type(_payload) is not dict or set(_payload) != {"snapshot"}:
+            raise ValueError("invalid analyst workspace read payload")
+        from .analyst_workspace_view import project_workspace
+
+        return project_workspace(_payload["snapshot"])
     if (
         operation_id == "ecommerce_growth_analysis_advance"
         and type(_payload) is dict

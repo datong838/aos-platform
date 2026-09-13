@@ -197,3 +197,9 @@ B2a测试落到tests/asset_registry/test_ui_resource_reader.py，以复用该包
 响应text/html UTF-8，no-store/nosniff/no-referrer、CSP sandbox allow-scripts/default-src none/connect-src none/base-uri none/form-action none/object-src none/frame-ancestors精确父origin；仅允许签名HTML内联脚本和样式，不允许外部脚本/媒体/iframe/eval。保留原iframe allow-scripts沙箱，不暴露cookie/token。所有该路由错误脱敏且no-store；未知异常统一503，未声明资源404，格式400。
 
 HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全头、未配置零读取、重复/额外参数、路径后端/穿越、摘要错误、已撤销和未知内部异常不泄漏。检查路由生成无漂移及原资源/读取回归。主API部署仍UQ6，不在本波重启原Host或解封九条业务路由。
+
+### UQ5-B3a 包内固定只读方法（基线ea88508f，编码前）
+
+修改bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py，额外注册analyst_workspace_view_v1（POST /ecommerce/growth/workspace/view），仅接受exact {snapshot}并调用已有analyst_workspace_view.project_workspace。九个业务operation行为不改，不修改旧1.7候选或已安装签名树；新方法注册不解封业务dispatch。
+
+新增tests/extension_runtime/test_analyst_workspace_runtime.py，使用现有真实合同fixture和SDK serve_session register→invoke长度帧贯穿，检查来源引用/只读标志/不变输入，拒绝额外字段和伪造快照，九个原方法保持受限，无上下文business port调用。SDK RegistrationContext没有tenant字段，不新增身份协议；宿主承担当前主体和数据范围，包验证快照内部一致性。后B3b生成1.8候选时仅覆盖已审查entry/projector、加入签名frontend并保留旧1.7其他字节；不把可变source1.3当作当前安装。
