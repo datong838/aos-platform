@@ -121,3 +121,11 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 修改extension_runtime/installed_package_invoker.py增加默认空tuple的required_data_scopes；非空时要求当前baseline锁内授权包含全部范围，IPC前后均复核，保持旧调用和snapshot形状。修改ui_read_consumer.py，从签名entry绑定范围，将安装/包hash/范围检查前移到canonical快照读取之前。当前权限不够不得读源、建Attempt或调用包；调用后撤权不交付且不重试。
 
 验证当前锁有/无范围的目录可见性；invoker缺权零调用、完整授权成功、中途撤权无结果；真实PG消费者缺权无快照/无Attempt/零IPC。目录与baseline替身测试明确其证据边界，主库真实授权和OCI运行仍待UQ6，不凭测试修改现实授权。
+
+## UQ4-A 原请求人受限查询（基线1ab80639，编码前补充）
+
+新增a0v_035_runtime_ui_read_query.py，两项固定SECURITY DEFINER函数只授aos_ui_read_api EXECUTE。metadata函数先调用032当前主体函数，再按精确scope/subject/request UUID返回固定请求合同，不含业务结果；result函数重复主体校验、精确requestHash与当前binding有效性，只返回固定状态及成功结果/摘要，失败不泄露原始异常。API无队列表SELECT或DML。
+
+新增extension_runtime/ui_read_query.py：当前主体/markings→metadata请求摘要复核→当前签名目录和exact target/dataScopes→受限result函数→结果hash与固定合同复核。拒绝不调用结果函数；同租户他人、负租户、已撤销成员、旧资源和旧绑定不能读取。请求不存在统一LookupError，不暴露是否归属他人。该波先实现数据库及应用查询，HTTP连接身份装配和Web属UQ4-B/C。无写入、重发、新Attempt。
+
+新增tests/extension_runtime/test_ui_read_query_pg.py，复用真实非超级API角色和宿主成功封存；校验未完成/成功/错误绑定、撤权、他人/负租户、直接表SELECT拒绝。完整迁移库回归保障新增函数不改变既有ACL。主库部署仍UQ6。
