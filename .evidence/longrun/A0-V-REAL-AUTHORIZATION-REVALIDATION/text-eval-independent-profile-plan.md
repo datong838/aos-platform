@@ -1,0 +1,11 @@
+# 当前模型独立复核批次（非原未决请求重发）
+
+基线67d5f161。用户已授权开发自测模型使用、不按成本限制，并明确慢响应可等待/多试。原qyh-reboot-text-eval/instruction意图和unknown结论保持不变，不重新发送旧prompt/requestHash，不改旧记录，不用新结果宣称旧调用成功。
+
+新增固定profile text-readiness-v2：三条全新的公开合成材料，分别验证指令遵从、来源编号、缺失信息不编造；prompt/expectedText均不同于legacy-v1。maxOutputTokens=256（既有Probe上限内），避免仅32的过小输出额度成为当前复核的人为限制；不将该调整声称为旧失败原因。每条最多一次，最多三次，任一失败立即停止，不自动重试/换渠道。新独立state目录与精确profile一起冻结；先journal后调用，未知仍只读，不创建成功证据。无真实客户数据或外部业务动作。
+
+代码scripts/a0v_text_eval_profiles.py固定不可变目录；a0v_exact_text_live_eval.py接受显式profile并保留默认legacy-v1和旧CASES导出；a0v_text_eval_evidence.py按profile重算requestHash及token上限，不能将v2结果冒充v1或混用三案例；formal_text_model/renewal将profile纳入planHash并在当前证据复验时固定。原计划/原hash默认路径不变。profile无任意prompt/任意maxTokens输入。
+
+测试先覆盖profile隔离、未知拒绝、原未决目录不可覆盖、v2全部exact/24小时/用量约束、计划profile漂移拒绝；通过后按既有Probe的当前Provider/Network/Secret校验开展至多三条独立复核，不绕过Owner。新证据通过后才另波恢复正式模型和预算策略；本波不伪造价格或跳过预算治理。
+
+事件策略数据库扩展留在原BG-02清单：biw8表/写函数只认旧kind/cadence，不改已部署旧迁移；新schema同表存储必须显式新迁移与受限Owner，尚未开码。先恢复当前真实验收环境，避免只积累未装配的合同。

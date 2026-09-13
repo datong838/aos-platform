@@ -12,11 +12,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT.parent / '.aos-recovery-20260910/state/a0v-exact-text-live-eval'
-CASES = (
-    ('instruction', '仅回复四个汉字：指令通过。不要标点或解释。', '指令通过'),
-    ('source', '这是合成评测材料：[S1] 商品甲颜色为蓝色。问题：商品甲颜色的来源编号是什么？只回复 S1，不要解释。', 'S1'),
-    ('missing', '这是合成评测材料：商品甲颜色为蓝色，未提供销量。问题：销量是多少？只回复 UNKNOWN，不得猜测数字。', 'UNKNOWN'),
-)
+from a0v_text_eval_profiles import get_profile
+CASES = get_profile('legacy-v1').cases
 
 
 def digest(value):
@@ -99,9 +96,10 @@ def require_passed(prior):
         raise RuntimeError('EVAL_CASE_NOT_PASSED')
 
 
-def run(apply=False, *, state_dir=STATE):
+def run(apply=False, *, state_dir=STATE, profile_name="legacy-v1"):
+    profile = get_profile(profile_name)
     if not apply:
-        return {'mode': 'preflight', 'cases': [c[0] for c in CASES], 'providerCalls': 0}
+        return {'mode': 'preflight', 'cases': [c[0] for c in profile.cases], 'providerCalls': 0}
     sys.path.insert(0, str(ROOT / 'services/aos-api'))
     os.environ['AOS_DOTENV_DISABLED'] = '1'
     from a0v_real_text_provider_health import _load_first_installer, _scoped_factory, _exact_ref, APPROVAL_REF
@@ -124,13 +122,13 @@ def run(apply=False, *, state_dir=STATE):
         logging.getLogger(name).setLevel(logging.WARNING)
     results = []
     calls = 0
-    for case_id, prompt, expected in CASES:
+    for case_id, prompt, expected in profile.cases:
         request = R1BootstrapProbeRequest(
             provider=_exact_ref('ProviderInstanceRevision', provider, 'provider_instance_id'),
             networkPolicy=_exact_ref('NetworkPolicyRevision', network, 'policy_id'),
             providerModelId='agnes-2.5-flash', dataClassification='public_catalog',
             prompt=prompt, expectedResponseBehavior='exact_text', expectedText=expected,
-            approvalRef=APPROVAL_REF, maxOutputTokens=32)
+            approvalRef=APPROVAL_REF, maxOutputTokens=profile.max_output_tokens)
         identity = {'caseId': case_id, 'requestHash': digest(request.model_dump(mode='json')),
             'provider': request.provider.model_dump(mode='json'),
             'network': request.network_policy.model_dump(mode='json')}
@@ -146,11 +144,12 @@ def run(apply=False, *, state_dir=STATE):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--profile', default='legacy-v1', choices=('legacy-v1', 'text-readiness-v2'))
     parser.add_argument('--output', type=Path)
     parser.add_argument('--state-dir', type=Path, default=STATE)
     args = parser.parse_args()
     try:
-        rendered = json.dumps(run(args.apply, state_dir=args.state_dir), ensure_ascii=False, indent=2)
+        rendered = json.dumps(run(args.apply, state_dir=args.state_dir, profile_name=args.profile), ensure_ascii=False, indent=2)
         if args.output:
             args.output.write_text(rendered + '\n', encoding='utf-8')
         print(rendered)

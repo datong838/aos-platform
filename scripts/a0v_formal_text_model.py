@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from a0v_text_eval_evidence import read_verified_text_evidence
+from a0v_text_eval_profiles import get_profile
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_contracts import ArtifactRef
 from aos_api.aip_eval_contracts import (
@@ -48,7 +49,7 @@ def rehash(model, body):
     return model.model_validate(value)
 
 
-def evidence(connect, *, checked_at=None, evidence_dir=EVIDENCE_DIR):
+def evidence(connect, *, checked_at=None, evidence_dir=EVIDENCE_DIR, profile_name="legacy-v1"):
     runtime = AipModelRuntimeStore(connect)
     provider = runtime.get_provider(SCOPE, PROVIDER_ID)
     network = AipNetworkPolicyStore(connect).get(SCOPE, NETWORK_ID)
@@ -60,22 +61,25 @@ def evidence(connect, *, checked_at=None, evidence_dir=EVIDENCE_DIR):
         provider=exact('ProviderInstanceRevision', provider, 'provider_instance_id'),
         network=exact('NetworkPolicyRevision', network, 'policy_id'),
         provider_model_id=PROVIDER_MODEL, approval_ref=PROBE_APPROVAL,
-        checked_at=now)
+        checked_at=now, profile_name=profile_name)
 
 
-def freeze_plan(connect, state_dir, *, evidence_dir=EVIDENCE_DIR, renew=False):
+def freeze_plan(connect, state_dir, *, evidence_dir=EVIDENCE_DIR, renew=False, profile_name="legacy-v1"):
+    get_profile(profile_name)
     state_dir = Path(state_dir)
     path = state_dir / 'plan.json'
     if path.exists():
         plan = json.loads(path.read_text())
         if canonical_hash({k: v for k, v in plan.items() if k != 'planHash'}) != plan['planHash']:
             raise ValueError('FORMAL_MODEL_PLAN_DRIFT')
+        if plan.get('evidenceProfile', 'legacy-v1') != profile_name:
+            raise ValueError('FORMAL_MODEL_PLAN_PROFILE_DRIFT')
         if renew != bool(plan.get('renewal')) or (renew and
                 plan.get('evidenceDirectory') != str(Path(evidence_dir).resolve())):
             raise ValueError('FORMAL_MODEL_PLAN_CONTEXT_DRIFT')
         return plan
     now = datetime.now(UTC)
-    source = evidence(connect, checked_at=now, evidence_dir=evidence_dir)
+    source = evidence(connect, checked_at=now, evidence_dir=evidence_dir, profile_name=profile_name)
     runtime = AipModelRuntimeStore(connect)
     governance = AipModelGovernancePolicyStore(connect)
     current_policy = runtime.get_policy(SCOPE, POLICY_ID)
@@ -134,6 +138,8 @@ def freeze_plan(connect, state_dir, *, evidence_dir=EVIDENCE_DIR, renew=False):
                 if row is None:
                     raise ValueError('FORMAL_RENEWAL_HEAD_MISSING')
                 plan[name] = int(row['version'])
+    if profile_name != 'legacy-v1':
+        plan['evidenceProfile'] = profile_name
     plan['planHash'] = canonical_hash(plan)
     state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(state_dir, 0o700)
@@ -238,7 +244,7 @@ def apply_plan(connect, plan):
     price = ModelPriceSnapshotRevision.model_validate(plan['price'])
     policy = RuntimePolicyRevision.model_validate(plan['policy'])
     source_dir = plan.get('evidenceDirectory', EVIDENCE_DIR)
-    source = evidence(connect, evidence_dir=source_dir)
+    source = evidence(connect, evidence_dir=source_dir, profile_name=plan.get('evidenceProfile', 'legacy-v1'))
     if source['sourceHash'] != plan['source']['sourceHash']:
         raise ValueError('FORMAL_MODEL_EVIDENCE_DRIFT')
     price.development_cost_authorization.require_scope(scope=SCOPE, provider=model.provider,
@@ -251,7 +257,7 @@ def apply_plan(connect, plan):
         expected_version=plan.get('priceExpectedVersion', 0))
     runtime.publish_policy(SCOPE, ACTOR, key+'-policy-v1', policy, expected_version=plan['policyExpectedVersion'])
     def check_current():
-        current = evidence(connect, evidence_dir=source_dir)
+        current = evidence(connect, evidence_dir=source_dir, profile_name=plan.get('evidenceProfile', 'legacy-v1'))
         if current['sourceHash'] != plan['source']['sourceHash']:
             raise ValueError('FORMAL_MODEL_EVIDENCE_DRIFT')
         runtime.require_model_governance(SCOPE, model, price)

@@ -41,7 +41,8 @@ def database_connect(database_name):
 def run(args):
     from a0v_formal_text_model import freeze_plan, apply_plan
     factory = database_connect(args.database_name)
-    plan = freeze_plan(factory, args.state_dir, evidence_dir=args.evidence_dir, renew=True)
+    plan = freeze_plan(factory, args.state_dir, evidence_dir=args.evidence_dir, renew=True,
+                       profile_name=getattr(args, "profile", "legacy-v1"))
     if not args.apply:
         return {'outcome': 'TEXT_RENEWAL_PLAN_FROZEN', 'planHash': plan['planHash'],
                 'providerCalls': 0, 'databaseWrites': 0}
@@ -55,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--evidence-dir', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--apply', action='store_true')
+    parser.add_argument('--profile', default='legacy-v1', choices=('legacy-v1', 'text-readiness-v2'))
     args = parser.parse_args()
     result = run(args)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')

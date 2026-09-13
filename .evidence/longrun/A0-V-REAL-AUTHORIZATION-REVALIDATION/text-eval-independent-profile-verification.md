@@ -1,0 +1,5 @@
+# 独立评测profile验证
+
+先RED缺新profile模块；实现后包括旧证据/正式续期/未知意图保护的联合35 passed。新profile三条prompt均与legacy不同，token上限256在现有Probe合同内；v2不可冒充v1，混合案例拒绝，原submitted目录不得覆盖或触发invoke；固定计划不得切profile。旧profile默认内容与证据输出形状保留。前置模式providerCalls=0。
+
+准备按已授权新独立批次在text-readiness-v2目录运行，最多3次公开合成调用、单条失败停止；此文件此时只证明代码自测，不宣称模型通过。原qyh-reboot-text-eval不改。后续实际结果另记，不用fixture充当真实证据。

@@ -4,7 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from a0v_exact_text_live_eval import CASES, digest
+from a0v_exact_text_live_eval import digest
+from a0v_text_eval_profiles import get_profile
 from aos_api.aip_r1_bootstrap_probe import R1BootstrapProbeRequest
 
 
@@ -12,13 +13,13 @@ class TextEvidenceBlocked(ValueError):
     pass
 
 
-def expected_identity(case, provider, network, provider_model_id, approval_ref):
+def expected_identity(case, provider, network, provider_model_id, approval_ref, *, max_output_tokens=32):
     case_id, prompt, expected = case
     request = R1BootstrapProbeRequest(
         provider=provider, networkPolicy=network, providerModelId=provider_model_id,
         dataClassification='public_catalog', prompt=prompt,
         expectedResponseBehavior='exact_text', expectedText=expected,
-        approvalRef=approval_ref, maxOutputTokens=32,
+        approvalRef=approval_ref, maxOutputTokens=max_output_tokens,
     )
     return dict(caseId=case_id, requestHash=digest(request.model_dump(mode='json')),
                 provider=provider.model_dump(mode='json'), network=network.model_dump(mode='json'))
@@ -34,12 +35,13 @@ def _unique_object(pairs):
 
 
 def read_verified_text_evidence(state_dir, *, provider, network, provider_model_id,
-                                approval_ref, checked_at):
+                                approval_ref, checked_at, profile_name="legacy-v1"):
+    profile = get_profile(profile_name)
     if not isinstance(checked_at, datetime) or checked_at.utcoffset() is None:
         raise TextEvidenceBlocked('EVAL_EVIDENCE_CHECK_TIME_REQUIRED')
     checked_at = checked_at.astimezone(UTC)
     cases = []
-    for case in CASES:
+    for case in profile.cases:
         path = Path(state_dir) / (case[0] + '.json')
         try:
             if path.is_symlink():
@@ -51,7 +53,8 @@ def read_verified_text_evidence(state_dir, *, provider, network, provider_model_
             body = json.loads(raw, object_pairs_hook=_unique_object)
         except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             raise TextEvidenceBlocked('EVAL_EVIDENCE_UNREADABLE') from None
-        identity = expected_identity(case, provider, network, provider_model_id, approval_ref)
+        identity = expected_identity(case, provider, network, provider_model_id, approval_ref,
+                                     max_output_tokens=profile.max_output_tokens)
         if (not isinstance(body, dict) or set(body) != {'identity', 'status', 'result'}
                 or body['status'] != 'completed' or digest(body['identity']) != digest(identity)):
             raise TextEvidenceBlocked('EVAL_EVIDENCE_IDENTITY_OR_STATE_DRIFT')
@@ -68,7 +71,7 @@ def read_verified_text_evidence(state_dir, *, provider, network, provider_model_
             if type(result[key]) is not int or result[key] < 0:
                 raise TextEvidenceBlocked('EVAL_EVIDENCE_USAGE_INVALID')
         if (result['total_tokens'] != result['prompt_tokens'] + result['completion_tokens']
-                or result['completion_tokens'] > 32):
+                or result['completion_tokens'] > profile.max_output_tokens):
             raise TextEvidenceBlocked('EVAL_EVIDENCE_USAGE_INVALID')
         try:
             observed = datetime.fromisoformat(result['observed_at'])
@@ -86,5 +89,7 @@ def read_verified_text_evidence(state_dir, *, provider, network, provider_model_
     evidence = dict(schemaVersion='a0v.verified-text-evidence/v1',
         provider=provider.model_dump(mode='json'), network=network.model_dump(mode='json'),
         providerModelId=provider_model_id, cases=cases)
+    if profile_name != 'legacy-v1':
+        evidence['profile'] = profile_name
     return {**evidence, 'sourceHash': digest(evidence), 'checkedAt': checked_at.isoformat(),
             'providerCalls': 0, 'databaseWrites': 0}
