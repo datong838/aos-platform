@@ -52,6 +52,10 @@ def test_control_host_enable_and_disable(host_case):
     result=call(host_case)
     assert result['authority']['binding']['operation_id']=='ecommerce_growth_analysis_advance'
     assert result['authority']['binding']['enabled'] is True
+    from ecommerce_growth.ecommerce_product_event_control import verify_event_control_receipt
+    from types import SimpleNamespace
+    assert verify_event_control_receipt(result,command=command,dispatch_ref=SimpleNamespace(
+        org_id=SCOPE.org_id,project_id=SCOPE.project_id))==result
     assert service.verify_receipt(transaction=transaction,scope=SCOPE,dispatch=dispatch,command=command,receipt=result)==result
     stop=dict(command,intent='disable',approvalRef=None,idempotencyKey='stop',expectedBindingRevision=1)
     assert call(host_case,stop)['authority']['binding']['enabled'] is False

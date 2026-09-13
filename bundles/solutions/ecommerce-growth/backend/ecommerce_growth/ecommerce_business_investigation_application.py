@@ -34,12 +34,14 @@ class EcommerceGrowthApplication:
         review_port: GrowthReviewPort | None = None,
         capability_port: GrowthCapabilityPort | None = None,
         content_review_port: GrowthContentReviewPort | None = None,
+        control_port: GrowthRuntimePort | None = None,
     ) -> None:
         self._write_port = write_port
         self._runtime_port = runtime_port
         self._review_port = review_port
         self._capability_port = capability_port
         self._content_review_port = content_review_port
+        self._control_port = control_port
 
     def commit_case_or_schedule(
         self,
@@ -108,6 +110,17 @@ class EcommerceGrowthApplication:
         if not matches:
             raise ValueError("event save receipt differs; outcome requires reconciliation")
         return deepcopy(dict(result))
+
+    def control_event_policy(self, *, policy, dispatch_ref, approval_ref, idempotency_key,
+                             expected_binding_revision, intent):
+        from copy import deepcopy
+        from .ecommerce_product_event_control import build_event_control_command, verify_event_control_receipt
+        if self._control_port is None:
+            raise RuntimeError("event control port is not configured")
+        command = build_event_control_command(policy, dispatch_ref=dispatch_ref, approval_ref=approval_ref,
+            idempotency_key=idempotency_key, expected_binding_revision=expected_binding_revision, intent=intent)
+        result = self._control_port.commit(dispatch_ref=dispatch_ref, command=deepcopy(command))
+        return verify_event_control_receipt(result, command=command, dispatch_ref=dispatch_ref)
 
     def advance_analysis(
         self,
