@@ -1,9 +1,10 @@
+import { parseConfigurationSources, serializeConfigurationStage, parseConfigurationStageReceipt, type ConfigurationStageRequest } from "./configurationStaging";
 import { withdrawalBody, parseWithdrawalReceipt, type WithdrawalIntent, type WithdrawalReceipt } from "./registrationWithdrawal";
 import { parseRegistrationStatus, type RegistrationStatus } from "./registrationStatus";
 import { isOffline } from "../../lib/offlineStore";
 import { getApiBase } from "../apiBase";
 import { getDesktopClientVersion } from "../desktopClient";
-import { tenantAuthHeaders } from "../tenant";
+import { getTenant, tenantAuthHeaders } from "../tenant";
 import type { IdempotencyKey } from "./idempotency";
 import {
   parseStoredCompositionLock,
@@ -596,6 +597,35 @@ export class AssetControlClient {
       if (status.installationId !== installationId) throw new Error("Registration installation mismatch");
       return status;
     });
+  }
+
+  getConfigurationSources(installationId: string) {
+    const op = ASSET_CONTROL_OPERATIONS.getConfigurationSources;
+    return this.get<unknown>(op.operationId, fillPath(op, { installation_id: canonicalUuid(installationId, "installation_id") })).then(parseConfigurationSources);
+  }
+
+  stageConfiguration(request: ConfigurationStageRequest, key: IdempotencyKey) {
+    const op = ASSET_CONTROL_OPERATIONS.stageConfiguration;
+    if (isOffline()) offlineMutationDisabled(op.operationId);
+    const tenant = getTenant();
+    return this.request<unknown>(op.operationId, op.pathTemplate, { method: "POST",
+      headers: this.headers({ idempotencyKey: idempotencyKey(key) }), body: JSON.stringify(serializeConfigurationStage(request)),
+    }).then(value => parseConfigurationStageReceipt(value, tenant, false));
+  }
+
+  findConfigurationStage(key: IdempotencyKey) {
+    const op = ASSET_CONTROL_OPERATIONS.findConfigurationStage;
+    const tenant = getTenant();
+    return this.request<unknown>(op.operationId, op.pathTemplate, { method: "GET",
+      headers: this.headers({ idempotencyKey: idempotencyKey(key) }),
+    }).then(value => parseConfigurationStageReceipt(value, tenant, true));
+  }
+
+  getConfigurationStage(requestId: string) {
+    const op = ASSET_CONTROL_OPERATIONS.getConfigurationStage;
+    const tenant = getTenant();
+    return this.get<unknown>(op.operationId, fillPath(op, { request_id: canonicalUuid(requestId, "request_id") }))
+      .then(value => parseConfigurationStageReceipt(value, tenant, true, requestId));
   }
 
   getRuntimeConfigurations(installationId: string): Promise<RuntimeConfigurationCatalog> {

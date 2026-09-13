@@ -1,3 +1,4 @@
+import { ConfigurationStagePanel } from "./assetBundles/ConfigurationStagePanel";
 import { RegistrationPanel } from "./assetBundles/RegistrationPanel";
 import { useEffect, useRef, useState } from "react";
 
@@ -481,6 +482,7 @@ export function AssetBundlesPage() {
             onConfirm={(command) => { void confirmInstallationAction(command); }}
           />
           <RegistrationPanel installationId={installationId} offline={actionRuntime.offline} />
+          <ConfigurationStagePanel state={runtimeInstallationState} offline={actionRuntime.offline} blocked={runtimePending !== null} onRegistered={runtimeConfigurationsState.reload} />
           <RuntimeInstallationPanel
             state={runtimeInstallationState}
             configurations={runtimeConfigurationsState}

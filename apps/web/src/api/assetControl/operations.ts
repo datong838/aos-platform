@@ -28,6 +28,10 @@ export type AssetControlOperationId =
   | "withdraw_ecommerce_growth_registration"
   | "get_ecommerce_growth_withdrawal_receipt"
   | "get_ecommerce_growth_registration_status"
+  | "list_bundle_runtime_configuration_sources"
+  | "submit_runtime_configuration_stage"
+  | "lookup_runtime_configuration_stage"
+  | "get_runtime_configuration_stage"
   | "list_bundle_runtime_configurations"
   | "get_bundle_runtime_installation"
   | "get_bundle_runtime_operation"
@@ -180,6 +184,26 @@ export const ASSET_CONTROL_OPERATIONS = {
     requiresIfMatch: false,
     returnsEtag: false,
     errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  getConfigurationSources: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/configuration-sources",
+    operationId: "list_bundle_runtime_configuration_sources", requiresIdempotencyKey: false,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  stageConfiguration: {
+    method: "POST", pathTemplate: "/v1/bundle-runtime-installations/configuration-requests",
+    operationId: "submit_runtime_configuration_stage", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  findConfigurationStage: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/configuration-requests/lookup",
+    operationId: "lookup_runtime_configuration_stage", requiresIdempotencyKey: true,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  getConfigurationStage: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/configuration-requests/{request_id}",
+    operationId: "get_runtime_configuration_stage", requiresIdempotencyKey: false,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...COMMAND_ERRORS, 503],
   },
   getRuntimeConfigurations: {
     method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/configurations",

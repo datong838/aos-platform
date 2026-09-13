@@ -7,18 +7,18 @@ import {
 } from "./operations";
 
 describe("asset-control M2-B operation contract", () => {
-  it("freezes the 19 unique operation ids and paths", () => {
+  it("freezes the 23 unique operation ids and paths", () => {
     const operations = Object.values(ASSET_CONTROL_OPERATIONS);
 
-    expect(operations).toHaveLength(19);
-    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(19);
+    expect(operations).toHaveLength(23);
+    expect(new Set(operations.map((operation) => operation.operationId)).size).toBe(23);
     expect(
       new Set(
         operations.map(
           (operation) => `${operation.method} ${operation.pathTemplate}`,
         ),
       ).size,
-    ).toBe(19);
+    ).toBe(23);
   });
 
   it("requires idempotency for commands and If-Match for state actions", () => {
@@ -42,6 +42,8 @@ describe("asset-control M2-B operation contract", () => {
       "uninstall_bundle_installation",
       "withdraw_ecommerce_growth_registration",
       "get_ecommerce_growth_withdrawal_receipt",
+      "submit_runtime_configuration_stage",
+      "lookup_runtime_configuration_stage",
       "create_bundle_runtime_operation",
     ]);
     expect(conditionalActions).toEqual([

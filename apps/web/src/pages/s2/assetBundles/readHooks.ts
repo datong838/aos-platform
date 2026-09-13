@@ -1,3 +1,4 @@
+import type { ConfigurationSourceCatalog } from "../../../api/assetControl/configurationStaging";
 import { getAuthRevision, getTenant } from "../../../api/tenant";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { assetControlClient } from "../../../api/assetControl/client";
@@ -227,11 +228,12 @@ export function useRuntimeInstallation(
 }
 
 export type ConfigurationReadState = AssetReadState<RuntimeConfigurationCatalog> & { isCurrent: () => boolean };
-function configurationIdentity(): string {
+export function configurationIdentity(): string {
   const tenant = getTenant();
   return JSON.stringify([tenant.orgId, tenant.projectId, tenant.subject, tenant.roles, (tenant as { markings?: string[] }).markings, getAuthRevision()]);
 }
-export function useRuntimeConfigurations(runtime: RuntimeInstallation | null): ConfigurationReadState {
+type ScopedConfigurationRead<T> = AssetReadState<T> & { isCurrent: () => boolean };
+function useScopedConfigurationRead<T>(runtime: RuntimeInstallation | null, read: (id: string) => Promise<T>, empty: (value: T) => boolean): ScopedConfigurationRead<T> {
   const [identity, setIdentity] = useState(configurationIdentity);
   useEffect(() => {
     const refresh = () => setIdentity(configurationIdentity());
@@ -242,12 +244,19 @@ export function useRuntimeConfigurations(runtime: RuntimeInstallation | null): C
   const key = runtime ? JSON.stringify([identity, runtime.installationId, runtime.installationRevision, runtime.installationEtag, runtime.binding?.generation, runtime.binding?.revision]) : null;
   const state = useAssetRead(key, async () => {
     if (!runtime || !key || identity !== configurationIdentity()) throw new Error("当前配置读取已失效");
-    const value = await assetControlClient.getRuntimeConfigurations(runtime.installationId);
+    const value = await read(runtime.installationId);
     if (identity !== configurationIdentity()) throw new Error("当前配置读取已失效");
     return { key, value };
-  }, item => item.value.items.length === 0);
+  }, item => empty(item.value));
   const matching = state.data?.key === key && identity === configurationIdentity();
   return { ...state, data: matching ? state.data!.value : null,
     status: !matching && state.data ? "loading" : state.status,
     isCurrent: () => matching && identity === configurationIdentity() };
+}
+
+export function useRuntimeConfigurations(runtime: RuntimeInstallation | null): ConfigurationReadState {
+  return useScopedConfigurationRead(runtime, id => assetControlClient.getRuntimeConfigurations(id), value => value.items.length === 0);
+}
+export function useConfigurationSources(runtime: RuntimeInstallation | null): ScopedConfigurationRead<ConfigurationSourceCatalog> {
+  return useScopedConfigurationRead(runtime, id => assetControlClient.getConfigurationSources(id), value => value.roles.length === 0 || value.policies.length === 0);
 }
