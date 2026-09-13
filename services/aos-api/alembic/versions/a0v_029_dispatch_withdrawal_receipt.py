@@ -46,6 +46,7 @@ def upgrade():
         OR NEW.payload->'tenant' IS DISTINCT FROM jsonb_build_object('orgId',NEW.org_id,'projectId',NEW.project_id)
         OR NEW.payload->>'receiptId' IS DISTINCT FROM NEW.receipt_id::text
         OR NEW.payload->'registrationReceiptRef' IS DISTINCT FROM v_ref
+        OR (NEW.payload#>'{registrationReceiptRef,revision}')::text IS DISTINCT FROM '1'
         OR NEW.payload->>'installationId' IS DISTINCT FROM v_origin.installation_id::text
         OR NEW.payload->>'generation' IS DISTINCT FROM v_origin.generation::text
         OR NEW.payload->>'groupId' IS DISTINCT FROM v_origin.group_id::text
@@ -67,6 +68,7 @@ def upgrade():
         OR v_request-ARRAY['schemaVersion','registrationReceiptRef','expectedInstallationEtag','idempotencyKey'] <> '{}'::jsonb
         OR v_request->>'schemaVersion' IS DISTINCT FROM 'aos.ecommerce.first-dispatch-withdrawal/v1'
         OR v_request->'registrationReceiptRef' IS DISTINCT FROM v_ref
+        OR (v_request#>'{registrationReceiptRef,revision}')::text IS DISTINCT FROM '1'
         OR jsonb_typeof(v_request->'idempotencyKey') IS DISTINCT FROM 'string'
         OR v_request->>'idempotencyKey' IS DISTINCT FROM NEW.idempotency_key
         OR jsonb_typeof(v_request->'expectedInstallationEtag') IS DISTINCT FROM 'number'

@@ -100,3 +100,10 @@ def test_invalid_request_revision_even_with_fresh_hash(withdrawal_db,revision):
     body=deepcopy(withdrawal_db[1]);body['request']['expectedInstallationEtag']=revision
     body['requestHash']=canonical_sha256(body['request'])
     with pytest.raises(psycopg.Error):insert(withdrawal_db,body)
+
+
+def test_fractional_origin_ref_rejected_even_with_new_hash(withdrawal_db):
+    body=deepcopy(withdrawal_db[1]);body['registrationReceiptRef']['revision']=1.0
+    body['request']['registrationReceiptRef']['revision']=1.0
+    body['requestHash']=canonical_sha256(body['request'])
+    with pytest.raises(psycopg.Error):insert(withdrawal_db,body)

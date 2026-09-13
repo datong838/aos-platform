@@ -1,0 +1,139 @@
+from copy import deepcopy
+from types import SimpleNamespace
+import importlib.util
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+from uuid import uuid4
+import psycopg
+import pytest
+from psycopg.types.json import Jsonb
+from test_dispatch_first_registration_atomic_pg import registered_db, receipt_db, database, pytestmark, ROOT, run as register, connection
+from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
+
+
+@pytest.fixture
+def withdrawal_case(registered_db):
+    case=registered_db;first=register(case)
+    case.db.owner.execute('''CREATE TABLE extension_dispatch_cutover_operation(org_id text,project_id text,cutover_group_id uuid);
+      CREATE TABLE automation_schedule_binding(org_id text,project_id text,operation_id text);
+      CREATE TABLE ecommerce_growth_runtime_command_receipt(org_id text,project_id text,operation_id text);''')
+    for filename in ('a0v_029_dispatch_withdrawal_receipt.py','a0v_030_dispatch_pristine_withdrawal.py'):
+        path=ROOT/'alembic/versions'/filename
+        spec=importlib.util.spec_from_file_location(filename,path);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+        m.op=SimpleNamespace(execute=case.db.owner.execute);m.upgrade()
+    case.withdraw=RegistrationWithdrawalRequest(registrationReceiptRef=dict(resourceType='FirstDispatchRegistrationReceipt',
+        resourceId=first['receiptId'],revision=1,contentHash=first['contentHash']),expectedInstallationEtag=5,idempotencyKey='withdraw-1').model_dump(mode='json')
+    return case
+
+
+def withdraw(case,request=None,actor='actor',scope=('org-a','project-a')):
+    with connection(case,scope=scope) as c:
+        return c.execute('SELECT extension_dispatch_withdraw_a0v_030(%s,%s)',(Jsonb(request or case.withdraw),actor)).fetchone()[0]
+
+
+def counts(case):
+    return tuple(case.db.owner.execute('SELECT count(*) AS n FROM '+table).fetchone()['n'] for table in
+        ('extension_operation_dispatch_binding','extension_dispatch_registration_receipt','extension_dispatch_withdrawal_receipt'))
+
+
+def test_atomic_release_keeps_history_and_replays(withdrawal_case):
+    c=withdrawal_case;first=withdraw(c);second=withdraw(c)
+    assert counts(c)==(0,1,1)
+    assert first['receiptId']==second['receiptId'] and second['replayed'] is True
+    assert first['releasedOperationCount']==9 and first['executable'] is False
+    request=deepcopy(c.withdraw);request['idempotencyKey']='different'
+    with pytest.raises(psycopg.Error):withdraw(c,request)
+    assert counts(c)==(0,1,1)
+
+
+@pytest.mark.parametrize('change',['actor','tenant','etag','ref','partial','revision','unfenced','cutover','schedule','command','marking','extra','bool_etag'])
+def test_invalid_or_used_target_leaves_no_partial_write(withdrawal_case,change):
+    c=withdrawal_case;request=deepcopy(c.withdraw);kwargs={}
+    if change=='actor':kwargs['actor']='other'
+    elif change=='tenant':kwargs['scope']=('other','project-a')
+    elif change=='etag':request['expectedInstallationEtag']=6
+    elif change=='bool_etag':request['expectedInstallationEtag']=True
+    elif change=='ref':request['registrationReceiptRef']['contentHash']='sha256:'+'0'*64
+    elif change=='partial':c.db.owner.execute("DELETE FROM extension_operation_dispatch_binding WHERE operation_id='ecommerce_growth_case_put'")
+    elif change=='revision':c.db.owner.execute('UPDATE extension_operation_dispatch_binding SET revision=2')
+    elif change=='unfenced':c.db.owner.execute('UPDATE extension_operation_dispatch_binding SET operation_fence=false')
+    elif change=='cutover':c.db.owner.execute("INSERT INTO extension_dispatch_cutover_operation VALUES('org-a','project-a',%s)",(c.request['groupId'],))
+    elif change in ('schedule','command'):
+        table='automation_schedule_binding' if change=='schedule' else 'ecommerce_growth_runtime_command_receipt'
+        c.db.owner.execute("INSERT INTO "+table+" VALUES('org-a','project-a','ecommerce_growth_case_put')")
+    elif change=='marking':c.db.owner.execute('UPDATE bundle_composition_lock SET permission_diff_json=%s',(Jsonb(dict(target=dict(markings=['secret']))),))
+    else:request['force']=True
+    before=counts(c)
+    with pytest.raises(psycopg.Error):withdraw(c,request,**kwargs)
+    assert counts(c)==before
+
+
+def test_caller_rollback_restores_both_occupancy_and_receipt(withdrawal_case):
+    c=withdrawal_case
+    with pytest.raises(RuntimeError):
+        with connection(c) as conn:
+            conn.execute('SELECT extension_dispatch_withdraw_a0v_030(%s,%s)',(Jsonb(c.withdraw),'actor'))
+            raise RuntimeError('simulated caller interruption')
+    assert counts(c)==(9,1,0)
+
+
+def test_concurrent_same_intent_is_single_release(withdrawal_case):
+    c=withdrawal_case;barrier=Barrier(2)
+    def attempt():
+        barrier.wait()
+        try:return withdraw(c)['receiptId']
+        except psycopg.errors.SerializationFailure:return 'serialization-abort'
+    with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(lambda _:attempt(),range(2)))
+    ids=[r for r in results if r!='serialization-abort']
+    assert len(ids)>=1 and len(set(ids))==1 and counts(c)==(0,1,1)
+
+
+def test_runtime_cannot_execute_write_entry(withdrawal_case):
+    with psycopg.connect(**withdrawal_case.db.pg,autocommit=True) as c:
+        c.execute('SET ROLE aos_runtime')
+        assert c.execute("SELECT has_function_privilege(current_user,'extension_dispatch_withdraw_a0v_030(jsonb,text)','EXECUTE')").fetchone()[0] is False
+
+
+def test_new_registration_after_withdrawal_and_old_replay_cannot_remove_it(withdrawal_case):
+    c=withdrawal_case;old=withdraw(c)
+    replacement=deepcopy(c.request);replacement['groupId']=str(uuid4());replacement['idempotencyKey']='replacement-first'
+    new=register(c,replacement)
+    assert counts(c)==(9,2,1) and new['groupId']!=old['groupId']
+    assert withdraw(c)['receiptId']==old['receiptId']
+    assert counts(c)==(9,2,1)
+    assert register(c)['groupId']==old['groupId']
+    assert counts(c)==(9,2,1)
+
+
+def test_replay_still_checks_current_actor_permission(withdrawal_case):
+    c=withdrawal_case;withdraw(c)
+    c.db.owner.execute("DELETE FROM meta_membership WHERE subject='actor'")
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):withdraw(c)
+    assert counts(c)==(0,1,1)
+
+
+def test_fractional_ref_revision_is_not_a_strict_integer(withdrawal_case):
+    c=withdrawal_case;request=deepcopy(c.withdraw);request['registrationReceiptRef']['revision']=1.0
+    with pytest.raises(psycopg.Error):withdraw(c,request)
+    assert counts(c)==(9,1,0)
+
+
+def test_privileged_session_cannot_use_entry_even_after_role_adoption(withdrawal_case):
+    c=withdrawal_case
+    with psycopg.connect(**c.db.pg) as conn:
+        conn.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+        conn.execute('SET LOCAL ROLE aos_extension_maintainer')
+        conn.execute("SELECT set_config('aos.org_id','org-a',true),set_config('aos.project_id','project-a',true)")
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute('SELECT extension_dispatch_withdraw_a0v_030(%s,%s)',(Jsonb(c.withdraw),'actor'))
+    assert counts(c)==(9,1,0)
+
+
+def test_nonserializable_session_is_rejected(withdrawal_case):
+    c=withdrawal_case
+    with psycopg.connect(**{**c.db.pg,'user':c.login}) as conn:
+        conn.execute('SET LOCAL ROLE aos_extension_maintainer')
+        conn.execute("SELECT set_config('aos.org_id','org-a',true),set_config('aos.project_id','project-a',true)")
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute('SELECT extension_dispatch_withdraw_a0v_030(%s,%s)',(Jsonb(c.withdraw),'actor'))
+    assert counts(c)==(9,1,0)
