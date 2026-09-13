@@ -1,0 +1,13 @@
+# 原始事件到分析Run承接服务
+
+基线5aa0b277，父任务Host/tests范围。
+
+修改 services/aos-api/aos_api/ecommerce_product_event_consumer.py：_phase增加可选exact_event_key，复用现有当前控制批准/SourceOwner/原批次/安装前后复核，只把读取方式切到run_event，普通consume保持不变。
+
+新增 services/aos-api/aos_api/ecommerce_product_event_analysis_service.py：精确ProductEventConsumptionService（core当前来源上下文）+CurrentInstalledPackageInvoker（同租户安装/代次growth）。prepare阶段在原事件callback锁claim，匹配policy/revision/hash、sourceevent与当前analysis dispatch，生成exact请求和快照；事务退出后installed port计算；第二同上下文事务比较完整快照和请求，再通过sealed runtime registry的runtime_port（TransactionBoundConnectFactory）执行并回读Receipt，末尾再次lock_claim，最外层唯一提交。
+
+不直接执行AnalysisAdvanceHostService绕过注册门。START只创建PREPARING Run及运行血缘，不执行外部能力；后续预算/审批由原业务步骤继续约束。异常不重试；Receipt保存与Occurrence accepted仍由dispatcher分阶段确认，崩溃后对账。
+
+新增 tests/extension_runtime/test_product_event_analysis_service.py 编排替身覆盖prepare/compute/commit顺序、无事务跨await、快照漂移拒绝、异常无commit、scope漂移拒绝。实际数据库Host端后继验证；本波不声称真实Run验收，不部署/push。
+
+后继：factory/已领取事件原批次定位/worker接线及隔离真实Host事务验证，不能按任意run承接别的原批次。

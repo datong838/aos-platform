@@ -59,7 +59,7 @@ class ProductEventConsumptionService:
         return store.record_event_batch(self.scope,binding,events=[
             (row['eventKey'],datetime.fromisoformat(row['deadline'])) for row in result['events']])
 
-    def _phase(self,conn,policy_id,consume):
+    def _phase(self,conn,policy_id,consume,*,exact_event_key=None):
         scope=self.scope;tx=HostTransaction(conn)
         row=tx.execute('''SELECT * FROM extension_operation_dispatch_binding
             WHERE org_id=%s AND project_id=%s AND operation_id='ecommerce_growth_event_control' ''',scope.key).fetchone()
@@ -115,6 +115,10 @@ class ProductEventConsumptionService:
                 if self.invoker.read_current_in_transaction(tx)!=installed:
                     raise PermissionError('current core installation changed')
                 return result
+            if exact_event_key is not None:
+                return self.reader.run_event(conn,policy=context,actor=self.actor,
+                    run_id=self.reader._journal._run_id,event_key=exact_event_key,
+                    execute=lambda row:candidates((row,)))
             return self.reader.run_candidates(conn,policy=context,actor=self.actor,
                 run_id=self.reader._journal._run_id,execute=candidates)
         return self.guard.run_policy_context(transaction=tx,scope=scope,policy=policy,
