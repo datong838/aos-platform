@@ -113,3 +113,11 @@ Host.stop保持原先等待current tick然后停止生命周期的顺序，无�
 测试原生产selector回归、显式UI装配、错误共享loader/配置/预检失败，独立完整迁移数据库的真实非超级角色预检。主库和原服务暂不改变，真实升级仍UQ6。
 
 UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_runtime默认SELECT/INSERT/UPDATE/DELETE。031/033仅追加GRANT不能移除继承的宽ACL，临时schema测试没有该public默认权限。修正为新增a0v_034_runtime_ui_read_acl.py，仅对新请求表撤销PUBLIC/runtime/UI/maintainer表级与列级旧ACL，然后精确授runtime SELECT及11个状态列UPDATE。全局默认权限和其他表不改。该发现不以放宽预检解决；完整head数据库正负ACL验证必须通过。
+
+## UQ3-I 当前安装数据范围门禁（基线9b6aef11，编码前补充）
+
+修改ecommerce_runtime_workshop_catalog.py，在已核验当前安装/锁和签名模块后，将模块permissions.data_scopes与当前CompositionLock permission_diff.target.data_scopes比较；未授权模块不投影。API入队和宿主prepare/finish已有fresh catalog调用共同继承该门禁，避免另造权限DTO或二次目录查询。
+
+修改extension_runtime/installed_package_invoker.py增加默认空tuple的required_data_scopes；非空时要求当前baseline锁内授权包含全部范围，IPC前后均复核，保持旧调用和snapshot形状。修改ui_read_consumer.py，从签名entry绑定范围，将安装/包hash/范围检查前移到canonical快照读取之前。当前权限不够不得读源、建Attempt或调用包；调用后撤权不交付且不重试。
+
+验证当前锁有/无范围的目录可见性；invoker缺权零调用、完整授权成功、中途撤权无结果；真实PG消费者缺权无快照/无Attempt/零IPC。目录与baseline替身测试明确其证据边界，主库真实授权和OCI运行仍待UQ6，不凭测试修改现实授权。

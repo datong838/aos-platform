@@ -27,13 +27,13 @@ def test_runtime_candidates_do_not_reopen_legacy_catalog(monkeypatch, legacy_fla
     assert len(runtime) == (1 if legacy_flag is False else 0)
 
 
-@pytest.mark.parametrize('state', ['ready','no-ui','disabled','old-revision','wrong-route','fenced','binding-disabled','no-role','no-marking'])
+@pytest.mark.parametrize('state', ['ready','no-ui','disabled','old-revision','wrong-route','fenced','binding-disabled','no-role','no-marking','no-data-scope'])
 def test_runtime_catalog_requires_current_ready_signed_route(state):
     from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
     from aos_api.extension_runtime.runtime_view import RuntimeUiSessionView
     persisted = _persisted(_loaded_growth())
     from aos_api.asset_registry.manifest_loader import ManifestLoader
-    source = SimpleNamespace(read_runtime_candidate_bundles=lambda **kw:(_active(persisted),))
+    source = SimpleNamespace(read_runtime_candidate_bundles=lambda **kw:(_active(persisted, target_data_scopes=() if state=='no-data-scope' else ('ecommerce.workshop.read',)),))
     calls=[]
     class Reader:
         def get_installation(self, **kwargs):
@@ -50,6 +50,9 @@ def test_runtime_catalog_requires_current_ready_signed_route(state):
     result=RuntimeWorkshopCatalog(source=source,loader=ManifestLoader({'catalog':REPOSITORY_ROOT/'bundles'}),view_reader=Reader()).list_modules(
         org_id='org-org',project_id='dev-project',roles=[] if state=='no-role' else ['operator'],markings=[] if state=='no-marking' else ['public'])
     expected = 7 if state == 'ready' else 0
+    if state=='no-data-scope':
+        expected=sum(not m.permissions.data_scopes for m in _loaded_growth().workshop_modules)
+        assert all(not item.module.permissions.data_scopes for item in result.items)
     if state in {'no-role', 'no-marking'}:
         expected = sum(not (m.permissions.roles if state == 'no-role' else m.permissions.markings)
                        for m in _loaded_growth().workshop_modules)

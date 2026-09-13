@@ -14,7 +14,8 @@ from .preparation_worker import PreparedJob
 
 class CurrentInstalledPackageInvoker:
     def __init__(self, *, scope, installation_id, generation, package_id, markings,
-                 connect_factory, installation_store, live_directory, expected_job=None):
+                 connect_factory, installation_store, live_directory, expected_job=None,
+                 required_data_scopes=()):
         if type(scope) is not TenantScope:
             raise TypeError("installed invocation requires TenantScope")
         if not callable(connect_factory) or inspect.iscoroutinefunction(connect_factory):
@@ -30,6 +31,13 @@ class CurrentInstalledPackageInvoker:
             for value in markings
         ):
             raise ValueError("exact caller markings required")
+        if (type(required_data_scopes) is not tuple
+                or len(required_data_scopes) > 500
+                or len(set(required_data_scopes)) != len(required_data_scopes)
+                or any(type(value) is not str or not value or value != value.strip()
+                       for value in required_data_scopes)):
+            raise ValueError("exact required data scopes required")
+        self.required_data_scopes = required_data_scopes
         self.scope = scope
         self.installation_id = UUID(str(installation_id))
         self.generation = UUID(str(generation))
@@ -98,6 +106,12 @@ class CurrentInstalledPackageInvoker:
                 type(value) is not str or not value for value in target_markings
         ) or not set(target_markings).issubset(self.markings):
             raise PermissionError("current installed package markings are not admitted")
+        if self.required_data_scopes:
+            granted_scopes = baseline.lock.payload.permission_diff.target.data_scopes
+            if (type(granted_scopes) is not list
+                    or any(type(value) is not str or not value for value in granted_scopes)
+                    or not set(self.required_data_scopes).issubset(granted_scopes)):
+                raise PermissionError("current installed package data scopes are not admitted")
         selected = tuple(
                 value for value in baseline.lock.payload.resolved
                 if value.id == self.package_id

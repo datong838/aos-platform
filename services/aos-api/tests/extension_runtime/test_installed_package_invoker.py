@@ -77,7 +77,7 @@ class _Store:
                                           model_dump=lambda **_: {"id": "solution.ecommerce.growth",
                                                                    "contentHash": PACKAGE_HASH})
                           for _ in range(self.state.get("package_count", 1))],
-                permission_diff=SimpleNamespace(target=SimpleNamespace(markings=["internal"])),
+                permission_diff=SimpleNamespace(target=SimpleNamespace(markings=["internal"], data_scopes=self.state.get("data_scopes", []))),
             ),
         ))
 
@@ -225,3 +225,36 @@ def test_expected_job_is_exact_before_and_after_ipc(replacement):
     else:
         with pytest.raises(PermissionError,match='PreparedJob changed'):asyncio.run(invoker('analyst_workspace_view_v1',{}))
     assert len(calls)==(0 if replacement=='before' else 1)
+
+
+@pytest.mark.parametrize('grants', [[], ['other.read'], ['ecommerce.workshop.read']])
+def test_current_lock_data_scope_required_before_ipc(grants):
+    state, calls, observations = _state(), [], []
+    state['data_scopes'] = grants
+    invoker = CurrentInstalledPackageInvoker(
+        scope=SCOPE, installation_id=INSTALLATION, generation=GENERATION,
+        package_id='solution.ecommerce.growth', markings=('internal',),
+        required_data_scopes=('ecommerce.workshop.read',),
+        connect_factory=_connect(state, observations), installation_store=_Store(state),
+        live_directory=_directory(calls))
+    if 'ecommerce.workshop.read' in grants:
+        assert asyncio.run(invoker('analyst_workspace_view_v1', {})) == {'ok': True}
+        assert len(calls) == 1
+    else:
+        with pytest.raises(PermissionError, match='data scopes'):
+            asyncio.run(invoker('analyst_workspace_view_v1', {}))
+        assert calls == []
+
+
+def test_data_scope_revoked_during_ipc_discards_result_without_retry():
+    state, calls, observations = _state(), [], []
+    state['data_scopes'] = ['ecommerce.workshop.read']
+    invoker = CurrentInstalledPackageInvoker(
+        scope=SCOPE, installation_id=INSTALLATION, generation=GENERATION,
+        package_id='solution.ecommerce.growth', markings=('internal',),
+        required_data_scopes=('ecommerce.workshop.read',),
+        connect_factory=_connect(state, observations), installation_store=_Store(state),
+        live_directory=_directory(calls, mutate=lambda: state.update(data_scopes=[])))
+    with pytest.raises(PermissionError, match='data scopes'):
+        asyncio.run(invoker('analyst_workspace_view_v1', {}))
+    assert len(calls) == 1

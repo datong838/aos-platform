@@ -42,7 +42,7 @@ def consumer_case(host_snapshot,projector,monkeypatch):
     target=request.target
     entry=SimpleNamespace(installationId=target.installationId,installationRevision=target.installationRevision,
         generation=target.generation,executionEpoch=target.executionEpoch,bindingRevision=target.bindingRevision,
-        module=SimpleNamespace(module_id=request.moduleId,route=target.route,permissions=SimpleNamespace(roles=('reader',),markings=('public',))),
+        module=SimpleNamespace(module_id=request.moduleId,route=target.route,permissions=SimpleNamespace(roles=('reader',),markings=('public',),data_scopes=('ecommerce.workshop.read',))),
         moduleRef=SimpleNamespace(bundleId='solution.ecommerce.growth',bundleContentHash=target.resourceHash),
         ui=SimpleNamespace(initialRoute=target.route,resourceHash=target.resourceHash,routeClaims=(target.route,),
                            readOperationClaims=(request.operationId,),commandOperationClaims=()))
@@ -149,3 +149,17 @@ def test_lost_source_rls_stops_consumer_before_claim(consumer_case):
     owner.execute('ALTER TABLE ecommerce_investigation_case_head NO FORCE ROW LEVEL SECURITY')
     with pytest.raises(PermissionError,match='isolation'):prepare(consumer_case)
     assert calls==[] and owner.execute('SELECT count(*) FROM extension_runtime_execution_attempt').fetchone()==(0,)
+
+
+def test_missing_current_scope_denies_before_business_snapshot(consumer_case, monkeypatch):
+    _, owner, _, calls, *_ = consumer_case
+    reads = []
+    def reject(invoker, transaction):
+        assert invoker.required_data_scopes == ('ecommerce.workshop.read',)
+        raise PermissionError('current installed package data scopes are not admitted')
+    monkeypatch.setattr(CurrentInstalledPackageInvoker, 'read_current_in_transaction', reject)
+    monkeypatch.setattr('aos_api.extension_runtime.ui_read_consumer.read_host_analyst_workspace_snapshot',
+                        lambda **kwargs: reads.append(kwargs))
+    assert prepare(consumer_case).state == 'denied'
+    assert reads == [] and calls == []
+    assert owner.execute('SELECT count(*) FROM extension_runtime_execution_attempt').fetchone() == (0,)

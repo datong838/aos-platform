@@ -125,16 +125,17 @@ class RuntimeUiReadConsumer:
                         if not any(job is owned for owned in jobs):
                             raise RuntimeConflict('selected live job changed')
                         entry=self._gate(conn,row['subject'],request)
+                        invoker=CurrentInstalledPackageInvoker(scope=self.scope,installation_id=request.target.installationId,
+                            generation=request.target.generation,package_id='solution.ecommerce.growth',markings=self.markings,
+                            connect_factory=self._connection,installation_store=self.store,live_directory=self.directory,expected_job=job,
+                            required_data_scopes=tuple(entry.module.permissions.data_scopes))
+                        current=invoker.read_current_in_transaction(HostTransaction(conn))
+                        if current['package']['contentHash']!=entry.moduleRef.bundleContentHash:
+                            raise RuntimeConflict('signed module package differs from installed package')
                         snapshot=read_host_analyst_workspace_snapshot(conn=conn,scope=self.scope,subject=row['subject'],
                             required_markings=self.markings,case_limit=request.caseLimit,run_limit=request.runLimit)
                         if len(canonical_json(snapshot))>900000:raise ValueError('bounded UI read snapshot required')
                         snapshot_hash=canonical_sha256(snapshot)
-                        invoker=CurrentInstalledPackageInvoker(scope=self.scope,installation_id=request.target.installationId,
-                            generation=request.target.generation,package_id='solution.ecommerce.growth',markings=self.markings,
-                            connect_factory=self._connection,installation_store=self.store,live_directory=self.directory,expected_job=job)
-                        current=invoker.read_current_in_transaction(HostTransaction(conn))
-                        if current['package']['contentHash']!=entry.moduleRef.bundleContentHash:
-                            raise RuntimeConflict('signed module package differs from installed package')
                         claim=claim_ui_read(conn=conn,scope=self.scope,request_id=row['request_id'],snapshot_hash=snapshot_hash)
                         if claim is None:raise RuntimeConflict('UI read already claimed')
                         prepared=PreparedUiRead(claim,snapshot_hash,snapshot,invoker)

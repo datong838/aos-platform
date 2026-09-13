@@ -75,7 +75,8 @@ class RuntimeWorkshopCatalog:
                     raise RegistryIntegrityCorruptError()
                 seen_ids.add(module.module_id)
                 seen_routes.add(module.route)
-                if not set(module.permissions.roles).issubset(roles) or not set(module.permissions.markings).issubset(markings):
+                if (not set(module.permissions.roles).issubset(roles) or not set(module.permissions.markings).issubset(markings)
+                        or not set(module.permissions.data_scopes).issubset(installed.lock.payload.permission_diff.target.data_scopes)):
                     continue
                 view = self._view_reader.get_installation(installation_id=installed.installation_id,
                     org_id=scope.org_id, project_id=scope.project_id, roles=list(roles), markings=list(markings), requested_route=module.route)
