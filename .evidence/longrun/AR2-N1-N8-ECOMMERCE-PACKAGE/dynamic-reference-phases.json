@@ -41,6 +41,8 @@
     },
     "ar2-7": {
       "requiredPaths": [
+        "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py",
+        "services/aos-api/tests/extension_runtime/test_product_source_event_window.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py",
         "bundles/platforms/ecommerce-niushop/backend/ecommerce_niushop/__init__.py",
@@ -51,6 +53,7 @@
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-final-verification.md"
       ],
       "contains": {
+        "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py": ["from .product_source_event import", "validate_product_source_event("],
         "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],
         "bundles/solutions/ecommerce-growth/bundle.yaml": ["runtime:", "backend/ecommerce_growth/__init__.py:register"],
         "bundles/platforms/ecommerce-niushop/bundle.yaml": ["runtime:", "backend/ecommerce_niushop/__init__.py:register"],

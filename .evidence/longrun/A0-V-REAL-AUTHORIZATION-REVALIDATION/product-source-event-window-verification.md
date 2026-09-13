@@ -1,0 +1,7 @@
+# BG-02 时间合同验证
+
+先RED：新增模块不存在，ModuleNotFoundError。实现后专项与商品事件/正式一致性Owner联合90 passed。AR2-7扫描1823模块，158分类/93迁移，五类错误空。原product_source_event.py哈希保持d61d673f42084354f9b7b740b114d6ead585cbd1fdd0360049846e9ab3d4537e；没有改变已有调用方或运行注册。
+
+本片处理时间、不授予消费权：可信Owner负责created_at真实性；来源payload时间仍经完整性校验；没有now输入或重新延长截止时间。测试明确使用隔离SQLite正式Owner造事件并设置合成时间，不是栖月汇真实自然变化。已有7项框架警告未新增；日志/tmp/a0v-event-window-green.log。
+
+方案一致性复核：有限策略区间、正整数时长、UTC与向下取整、未来来源拒绝、区间外拒绝、过期截止保留均有测试。风险和未完成：SourceSelection精确授权/生产读取/事件策略版本/过期missed持久化/Case自动创建尚未接线；默认owner角色入口和旧评测结果未明保持原结论；真实首链及八场景仍未完成。下一波冻结SourceSelection与事件型策略的兼容合同，沿现有Owner/Occurrence完成装配。

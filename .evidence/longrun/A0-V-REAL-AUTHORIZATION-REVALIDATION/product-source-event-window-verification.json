@@ -1,0 +1,23 @@
+{
+  "baseline": "740a602d",
+  "tests": "90 passed",
+  "providerCalls": 0,
+  "businessWrites": 0,
+  "productionConsumerConnected": false,
+  "closure": {
+    "phase": "ar2-7",
+    "scannedPythonModules": 1823,
+    "classifiedModules": 158,
+    "migratedModules": 93,
+    "hashErrors": [],
+    "unclassifiedForwardDependencies": [],
+    "unclassifiedReverseCallers": [],
+    "bundleCrossLayerImports": [],
+    "dynamicReferenceErrors": []
+  },
+  "hashes": {
+    "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py": "34b430c7da8afd3460ce90e218f9d6770e52e692bcee07d6356192243baf5a0f",
+    "services/aos-api/tests/extension_runtime/test_product_source_event_window.py": "b7134cf4977639ec90d90db898cf3c073d684c0d7149e4d307c7e8610f29499f",
+    "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event.py": "d61d673f42084354f9b7b740b114d6ead585cbd1fdd0360049846e9ab3d4537e"
+  }
+}

@@ -1,0 +1,13 @@
+# BG-02 商品事件时间合同切片
+
+基线740a602d；承接231-9和source-event-consumer-authority-plan。本片是事件策略配置的前置时间语义，不提前实现生产消费者。原先必须先补SourceSelection/current配置的要求保留；此函数输出不能授权登记或执行。
+
+新增核心包product_source_event_window.py：先复用validate_product_source_event校验可信Owner的整条Outbox；再读取payload.record.source_updated_at（哈希内来源更新时间）和created_at（可信Owner的入库事件时间）。两个时间必须有时区。created_at来自Owner数据库字段，不能认为payloadHash证明该列可信。拒绝来源时间晚于入库时间，禁止用观察时间修正。保留UTC微秒原时间，deadline向下取整为UTC秒以匹配Occurrence合同且不延长有效期。
+
+输入策略effective_from、effective_until（必填有限区间）、max_source_age_seconds、recovery_window_seconds。正整数不接受bool；区间必须非空且有时区。created_at须在[from,until)；区间外拒绝且由后续Owner记录不适用原因，不能默认消费历史全量。deadline=min(source_updated_at+max_source_age_seconds,created_at+recovery_window_seconds,effective_until)，溢出固定错误拒绝。这些值必须由调用Owner从精确受权配置读取，不接浏览器自报。
+
+返回冻结事件元数据、来源时间、入库时间和deadline；不接now，不产生pending成功或授予admission。调用Owner下一片比较当前时刻，过期必须按原deadline记missed，不能now+TTL。新鲜度和处理窗口分别约束：停机恢复不让过时数据变新；初装历史截面走既有周期/首次体检合同，不能造更新事件。
+
+兼容：不改原校验器返回形状，不改schedule入口、通用record_event_batch或数据库；不改变原签名包/安装版本。新增模块未登记为运行操作。没有网络、SQL、outbox ACK或Case写入。本片测试实际Owner产生事件（SQLite只验证载荷合同），时间注入明确为测试截面；覆盖重放稳定、来源陈旧、微秒取整、边界、错租户、哈希漂移、无时区、未来时间、布尔/负数窗口、溢出、输入不修改。后续PG认证读取、SourceSelection、事件策略、missed存储和真实自然触发仍未完成。
+
+文件：bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py；services/aos-api/tests/extension_runtime/test_product_source_event_window.py。测试及证据使用现有m1 A0-V任务租约，核心文件新Task登记；未启动第二写者。回滚仅撤销未接线新增模块，无数据迁移。
