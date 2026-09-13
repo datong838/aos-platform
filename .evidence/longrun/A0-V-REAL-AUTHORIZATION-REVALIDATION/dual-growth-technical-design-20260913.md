@@ -122,7 +122,7 @@
 当前只冻结最紧邻的三个切片，防止一次承诺巨大未查明改造：
 
 1. BG-00：现有恢复计划与脚本完成真实四源配置；将“过期原因→正式更新→影响预览→恢复”缺口进入产品入口。脚本阶段证据不能关闭产品入口验收项。
-2. BG-01：沿`services/aos-api/aos_api/extension_runtime/ecommerce_growth_cutover.py`、`ecommerce_growth_registration.py`收尾正式组装、激活和未激活撤回；先写撤回合同及迁移/ACL差异，隔离PG和实际主库分别验证，保留Receipt。
+2. BG-01：沿`services/aos-api/aos_api/ecommerce_growth_cutover.py`、`ecommerce_growth_registration.py`收尾正式组装、激活和未激活撤回；先写撤回合同及迁移/ACL差异，隔离PG和实际主库分别验证，保留Receipt。
 3. BG-02：复核上述product_source_event与automation_occurrence_store、growth schedule入口，补可信消费桥与去重/截止面规则；开码前扩充AR2 dynamic-reference清册，更新实际修改文件哈希及反向调用者。
 
 BG-03～09逐片补字段、Owner接口、索引/约束、错误码、权限、UI、兼容和迁移回滚细化后开码。本文已给出架构与验收约束，不假装所有对象的字段级设计已经完成。无需再重启一个全项目审计波。

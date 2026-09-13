@@ -1,0 +1,7 @@
+# 重启新代四源配置与启用
+
+只接续86c099b4确认的新安装97aeb2e7-59ba-40f6-89a3-fb0293bc0497、新代3a445eee-aa28-4459-9e5a-f12a806a94b1。新增scripts/a0v_qyh_reboot_configuration.py，复用a0v_ecommerce_1_7_configure的四源当前权限校验/append_configuration/RuntimeConfigurationService；独立state和幂等前缀，不复用旧代配置ref或命令。每个动作先创建不可覆写意图，再调用Owner；未知结果只读回执。固定当前state/etag/generation/bindingRevision、全旧操作终态、3新资源未释放、旧代仍drained。stage/configure预计新代rev1/epoch1；enable须配置已成功后rev3/epoch2、disabled/fenced/unknown。正式Owner重新执行CAS、签名及前代drain检查。
+
+现有测试证明权限/前代drain/CAS，新增固定目标保护测试验证错代/阶段漂移拒绝。实际验收以configure/enable终态回执、新代rev4/epoch3 enabled/ready、旧代禁入、业务路由0为准。主库仍025，不开启旧计划，不将本波等同业务链贯通。下一波回到首登记激活及未激活撤回产品缺口。
+
+真实preflight发现budget policy is not effective；stage/configure/enable均未提交。按既有formal-text-renewal流程处理：在新独立evidence目录执行三个固定合成文字评测（不读取商城数据、不发送外部消息），用新健康证据冻结正式续期计划，经现有Budget/Price/RuntimePolicy/Model/Route Owner和EvalGate发布新版本；不延长旧证据有效期、不绕过过期检查、不改变成本暂不计价授权。之后重新执行四源preflight。数据库已有本波创建前备份，续期依赖完整PlanHash/CAS与幂等回执，未知结果禁止重新发起新计划覆盖。

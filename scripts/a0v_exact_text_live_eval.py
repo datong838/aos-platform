@@ -55,6 +55,43 @@ def complete(path, value):
     os.replace(temporary, path)
 
 
+def execute_case(path, identity, invoke):
+    """One immutable attempt; failed/unknown results are never implicit retries."""
+    failure_path = path.with_suffix('.failure.json')
+    if failure_path.exists():
+        raise RuntimeError('EVAL_ATTEMPT_UNRESOLVED')
+    prior = claim(path, identity)
+    if prior is not None:
+        return prior, False
+    try:
+        result = invoke()
+        prior = {'identity': identity, 'status': 'completed',
+                 'result': result.model_dump(mode='json')}
+        complete(path, prior)
+    except Exception as exc:
+        # Keep submitted intent intact. Never serialize arbitrary exception text.
+        known = frozenset({'provider_http_error', 'provider_response_invalid',
+            'provider_response_model_drifted', 'provider_response_answer_missing',
+            'provider_response_contract_failed', 'provider_response_usage_invalid'})
+        code = str(exc) if type(exc).__name__ == 'R1BootstrapProbeBlocked' else ''
+        failure = {'identity': identity, 'status': 'failed_unresolved',
+            'code': code if code in known else 'UNCLASSIFIED_FAILURE',
+            'errorType': 'R1BootstrapProbeBlocked' if type(exc).__name__ == 'R1BootstrapProbeBlocked' else 'UnexpectedError',
+            'outcomeUnknown': True, 'retryAllowed': False}
+        fd = os.open(failure_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, 'w') as stream:
+            json.dump(failure, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        directory = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        raise
+    return prior, True
+
+
 def require_passed(prior):
     if (prior.get('status') != 'completed'
             or prior['result'].get('status') != 'healthy'
@@ -98,13 +135,8 @@ def run(apply=False, *, state_dir=STATE):
             'provider': request.provider.model_dump(mode='json'),
             'network': request.network_policy.model_dump(mode='json')}
         path = Path(state_dir) / (case_id + '.json')
-        prior = claim(path, identity)
-        if prior is None:
-            result = probe.run(scope, request)
-            calls += 1
-            prior = {'identity': identity, 'status': 'completed',
-                'result': result.model_dump(mode='json')}
-            complete(path, prior)
+        prior, called = execute_case(path, identity, lambda: probe.run(scope, request))
+        calls += int(called)
         results.append(prior)
         require_passed(prior)
     return {'mode': 'apply', 'providerCalls': calls, 'businessMutationCount': 0,

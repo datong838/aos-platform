@@ -1,0 +1,5 @@
+# 文字评测异常留证补强
+
+真实重启批次instruction.json停在submitted；脚本只输出异常类型，丢失具体安全错误分类，因此不能判定未发送或可重试，保持未决不重发。该批次不会被补写成功或猜测失败。只读禁止传输诊断当前preflight通过，不是旧请求未发送的证明。
+
+修改scripts/a0v_exact_text_live_eval.py：将单次调用封装为execute_case，先冻结intent；异常写独立不可覆写failure JSON（errorType仅类名，安全枚举code白名单，outcomeUnknown=true，retryAllowed=false，不保存异常正文/密钥/回答），原submitted保留。后续读取只要存在failure即拒绝重发；成功仍走原completed契约。异常结果不作为健康证据。新增test_a0v_exact_text_attempts.py错误持久化、敏感信息不落盘、未知结果不重发及成功一次后回读测试。此修复不修改AIP执行权、不自动调用模型；本次已未决旧请求仍须对账，配置恢复任务继续未完成。
