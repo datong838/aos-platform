@@ -1,0 +1,7 @@
+# CF2-1 当前配置职责读取
+
+基线c8ab2818。新增services/aos-api/aos_api/ecommerce_analysis_compilation_roles.py及tests/test_ecommerce_analysis_compilation_roles.py。
+
+在精确PipelineSourceSelectionOwner.run_current_snapshot回调中复用read_configuration和Owner现有四源授权；配置的roleRefs是唯一候选集合，不枚举租户全部计划。AipProductionContractStore绑定同事务读取当前责任方案的能力/技能覆盖。按可信编译模板的compiler_profile匹配唯一角色方案，校验hash/ref、frozen/READY/COMPLETE、L1意图所需能力均覆盖；回调后重读同一快照并拒绝deferred。
+
+仅提供当前配置依赖，不生成/freeze方案，不赋予权限。CF2后继仍需当前安装StageTemplate/Logic/Skill精确解析；CF4真实START缺编译回执保持未完成。无主库迁移/部署/push。
