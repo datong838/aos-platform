@@ -203,3 +203,11 @@ HTTP验证使用真实B2a签名读取fixture贯穿；检查正常HTML、安全�
 修改bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py，额外注册analyst_workspace_view_v1（POST /ecommerce/growth/workspace/view），仅接受exact {snapshot}并调用已有analyst_workspace_view.project_workspace。九个业务operation行为不改，不修改旧1.7候选或已安装签名树；新方法注册不解封业务dispatch。
 
 新增tests/extension_runtime/test_analyst_workspace_runtime.py，使用现有真实合同fixture和SDK serve_session register→invoke长度帧贯穿，检查来源引用/只读标志/不变输入，拒绝额外字段和伪造快照，九个原方法保持受限，无上下文business port调用。SDK RegistrationContext没有tenant字段，不新增身份协议；宿主承担当前主体和数据范围，包验证快照内部一致性。后B3b生成1.8候选时仅覆盖已审查entry/projector、加入签名frontend并保留旧1.7其他字节；不把可变source1.3当作当前安装。
+
+### UQ5-B3b1 包内经营参谋页面（基线88949cc2，编码前）
+
+新增bundles/solutions/ecommerce-growth/frontend/index.html（单文件签名页面）和apps/web/src/components/extensions/AnalystSignedPage.test.ts。仅声明经营参谋，页面内容由原MessagePort读取状态中的result生成；无fetch/数据库/外部脚本/图片/存储/命令，所有数据用textContent写入。显示读取时间、真实事项标题、分析类型、Case/Run状态、来源引用与截断提示；空数据诚实呈现。
+
+从fragment解析exact五字段启动合同，校验nonce/UUID/epoch/初始路由。仅接收parent来源且nonce/身份一致的connected与唯一端口；一次握手10秒。连接后首次只读，固定operation+limits；最多一个在途请求，sequence严格递增，响应仅匹配该requestId。成功/失败状态显示；通道错误或90秒无响应封闭本页面不重发，原宿主报告读取未完成时仅允许显式继续查看原会话。pagehide关闭端口/定时器，不接迟到消息。
+
+用真实页面脚本+DOM、受控父窗口/端口测试握手、错误身份零读、在途不重复、安全文本、空态、错误/超时、pagehide；不把DOM替身当浏览器CSP或实际读取证据。后B3b2再冻结frontend manifest摘要、完整候选API贡献/数据范围授权要求，实际OCI与浏览器仍后继。
