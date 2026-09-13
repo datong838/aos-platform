@@ -54,7 +54,15 @@ def test_bundle_runtime_registration_is_exact_and_inactive(base, package, operat
     module = _module(base, package)
     registration = module.register(object())
     RegistrationDescription.model_validate(registration)
-    assert tuple(item["operationId"] for item in registration["contributions"]) == operations
+    additions = {
+        "ecommerce_core": ("ecommerce_core_product_event_windows",),
+        "ecommerce_growth": ("ecommerce_growth_event_control",),
+    }
+    suffix = ("analyst_workspace_view_v1",) if package == "ecommerce_growth" else ()
+    assert tuple(item["operationId"] for item in registration["contributions"]) == (
+        *additions.get(package, ()), *operations, *suffix)
+    # The original operations retain their empty-command fence. New read-only
+    # contracts and event-control rejection are exercised in dedicated tests.
     for operation in operations:
         with pytest.raises(PermissionError, match="registration-only"):
             module.handle(operation, {}, object())

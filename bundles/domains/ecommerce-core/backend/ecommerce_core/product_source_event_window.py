@@ -34,16 +34,25 @@ def product_source_event_window(
     max_source_age_seconds: int, recovery_window_seconds: int,
 ) -> ProductSourceEventWindow:
     event = validate_product_source_event(row, org_id=org_id, project_id=project_id)
+    source, recorded, deadline = _event_window_times(
+        recorded_at=row.get('created_at'), source_updated_at=row['payload']['record'].get('source_updated_at'),
+        effective_from=effective_from, effective_until=effective_until,
+        max_source_age_seconds=max_source_age_seconds, recovery_window_seconds=recovery_window_seconds)
+    return ProductSourceEventWindow(event, source, recorded, deadline.replace(microsecond=0))
+
+
+def _event_window_times(*, recorded_at, source_updated_at, effective_from, effective_until,
+                        max_source_age_seconds, recovery_window_seconds):
     start, end = _aware(effective_from), _aware(effective_until)
     if start >= end:
         raise ValueError('PRODUCT_SOURCE_EVENT_WINDOW_POLICY_INVALID')
     if any(type(value) is not int or value <= 0
            for value in (max_source_age_seconds, recovery_window_seconds)):
         raise ValueError('PRODUCT_SOURCE_EVENT_WINDOW_DURATION_INVALID')
-    recorded = _aware(row.get('created_at'))
+    recorded = _aware(recorded_at)
     if not start <= recorded < end:
         raise ValueError('PRODUCT_SOURCE_EVENT_WINDOW_OUTSIDE_POLICY')
-    source_value = row['payload']['record'].get('source_updated_at')
+    source_value = source_updated_at
     if not isinstance(source_value, str):
         raise ValueError('PRODUCT_SOURCE_EVENT_WINDOW_TIME_INVALID')
     try:
@@ -57,4 +66,4 @@ def product_source_event_window(
                        recorded + timedelta(seconds=recovery_window_seconds), end)
     except OverflowError:
         raise ValueError('PRODUCT_SOURCE_EVENT_WINDOW_DURATION_INVALID') from None
-    return ProductSourceEventWindow(event, source, recorded, deadline.replace(microsecond=0))
+    return source, recorded, deadline.replace(microsecond=0)

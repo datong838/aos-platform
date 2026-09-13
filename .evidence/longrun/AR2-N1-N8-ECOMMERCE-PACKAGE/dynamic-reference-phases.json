@@ -55,6 +55,7 @@
         "services/aos-api/aos_api/ecommerce_product_event_host_service.py",
         "services/aos-api/tests/extension_runtime/test_product_event_binding.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py",
+        "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window_operation.py",
         "services/aos-api/tests/extension_runtime/test_product_source_event_window.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/__init__.py",

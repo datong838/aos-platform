@@ -1,0 +1,9 @@
+# BG-02 商品事件窗口运行时合同
+
+基线0cc7f353。目标是在核心包内执行既有时间语义，后继Host通过当前安装的运行时调用，禁止import本地包源码替代签名安装。新增纯计算operation ecommerce_core_product_event_windows，不写数据、不做Admission、不返回approved/enabled。当前源码变化不发布、不安装、不使现有进程可执行。
+
+固定输入schemaVersion、effectiveFrom、effectiveUntil、maxSourceAgeSeconds、recoveryWindowSeconds、events。events至多100且至少1，仅eventKey（64hex）、sourceUpdatedAt、recordedAt；拒绝多余字段、重复key、无时区、bool时长，时长最多86400秒，策略窗口最多一天。源hash/原批次/租户/对象由Host读取Owner核验，不在这个纯函数内假装已核验。输出固定schemaVersion、输入canonicalHash及events对应eventKey/deadline；无当前时钟，重放固定。过期结果不延长，由Host当前DB时间落missed。
+
+重构核心product_source_event_window.py抽出同一内部时间算法（原row校验和返回结构保持）；新增product_source_event_window_operation.py；核心__init__.py添加独立只读操作分支。测试原载荷计算与元数据计算同值、严格信封、重复/越界/未知操作、重放稳定。修改目录bundles/domains/ecommerce-core/backend/ecommerce_core及services/aos-api/tests/extension_runtime，新包文件另登记租约；补AR2清册。后继仍需受控Host运行时桥与消费者，不宣称本项即自然触发。
+
+注册兼容补充：test_ecommerce_package_skeleton.py按固定新增操作更新当前源码注册预期，保留原操作空命令禁入检查。历史candidate源码相等测试当前已不成立，不改历史快照或放宽比较；留作后继新候选构建门槛。
