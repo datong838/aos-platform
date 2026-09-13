@@ -1243,3 +1243,13 @@ IAB tab10 5173/data真实显示1数据源、栖月汇微商城、MySQL SSH隧道
 | 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
 | --- | --- | --- | --- |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py` | 原路径 | solution；只复用包内ExactRef/TenantRef和canonical_hash，不导入平台实现；反向调用当前仅专项测试，运行注册未接入 | 07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed |
+
+
+## 2026-09-13 N7/N8 运行时目录共享读取接点
+
+| sourcePath | target | decision | 接续基线摘要 |
+|---|---|---|---|
+| `services/aos-api/aos_api/asset_registry/workshop_catalog_source.py` | 原路径 | platform read-only Registry/Installation port；从原目录机械提取替换图、候选/锁/制品校验，保留 legacy 排除并单独提供 runtime candidates，不含业务就绪判断 | NEW after cc21830d |
+| `services/aos-api/aos_api/ecommerce_runtime_workshop_catalog.py` | 原路径 | platform signed-resource projection；仅通用签名模块声明与当前 RuntimeView/UI，不导入旧领域目录，不授业务执行权限 | NEW after cc21830d |
+
+该登记不改变旧迁移文件的历史 preHash/去向。目录当前只读代码切片，尚无新 frontend 正式交付与自然业务首链完成证据；见 A0-V/runtime-workshop-catalog-plan.md。
