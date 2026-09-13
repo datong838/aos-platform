@@ -1,0 +1,9 @@
+# BG-02 原入库来源复核与修正
+
+2026-09-14，基线268104f8。本波审批查重发现包内已有ProductEventSchedulePolicy，必须复用；新Host draft仅做来源上下文，不能建立另一调度权威。现有SchedulePut通过ActionProposal/ActionApprovalEvent绑定caseId、policyHash、expectedPolicyRevision/CaseVersion，后续优先同Owner按schema分派，旧定时trigger不放宽。
+
+历史product-event-schedule-policy-plan明确原批次溯源。上一片只按店铺/对象查询不足以排除其他管道同范围写入。未部署、未对主库使用。现在读取器要求ControlledIngressJournal/EcomConsistencyStore，锁定原run并_bound_parent，核对pipeline/sourceRevision/graphHash，读取完整saved derived列表，复用原批次read_batch_projection_evidence；SQL仅在精确事件集合内选未消费项，并核对摘要和inputRevision。无全店fallback，空观察不造事件。
+
+回归32项通过：晚提交、跨范围、同店非原批次排除、摘要漂移、当前Owner拒绝、原来源漂移、事件上下文合同。PG使用临时schema；Owner边界fake不代表实际权限。diff通过、memory-validate GREEN。主库/Host/真实首链未改变。
+
+下一波明确现有SchedulePolicy Owner的schema兼容范围及SQL约束，先补复用设计与逐文件preHash，再实现事件策略读写分派；不要注册尚未完成的runtime操作，不把已有九操作封印当新事件能力已通过。

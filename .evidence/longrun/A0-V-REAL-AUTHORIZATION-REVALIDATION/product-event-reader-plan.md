@@ -5,3 +5,7 @@
 固定SQL只选projection_outbox元数据及source_updated_at字符串，不输出payload/客户数据。固定authoritative_store、Product/ProductSku、租户/工作区/平台/店铺/策略生效窗、objects_written/objects_tombstoned；不按projected过滤，不按MAX序号截断。NOT EXISTS同租户/policyId/sourceEventId的Occurrence；按input_revision,outbox_id排序，最多100且不超过来源rowLimit。候选不等于验证过的完整事件，不提供授权或写入。后续消费仍需源事件完整性校验和批准的事件策略。
 
 测试使用18432临时schema，最小表验证查询语义：两个连接低序号事务晚提交后仍被下一次查询选中；已消费排除而其他租户/策略不误排；投影状态不影响候选；错店铺/类型/来源/窗口拒选；无payload返回。另测Owner依赖拒绝和当前映射范围漂移。无迁移、主库ACL、后台启用或主库查询演示。
+
+## 268104f8后复核补强，编码前
+
+既有product-event-schedule-policy-plan要求原入库批次来源证明；上一片同店对象过滤不足，尚未部署。构造器增加精确ControlledIngressJournal和EcomConsistencyStore依赖，read必须提供原runId。在现有来源锁内复用journal.lock_run、_bound_parent及完整saved derived list；原pipeline/sourceRevision/graphHash必须与当前来源选择相同。复用read_batch_projection_evidence获取原批次事件集合，仅在该集合内查未消费项并逐行匹配eventKey/hash/inputRevision。空观察只返回空，不自行造事件。生产读取缺少原批次证明直接拒绝；不存在全店扫描fallback。测试增加同店同对象但非原批次事件拒选，以及错证据摘要拒绝。本次不改旧提交，不隐藏这次发现。

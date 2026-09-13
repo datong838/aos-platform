@@ -7,7 +7,12 @@ import pytest
 from test_lifecycle_pg import database, pytestmark
 from tests.test_ecommerce_product_event_policy import case
 from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
+from aos_api.ecom_consistency_store import ProjectionEventEvidence
 from aos_api.ecommerce_product_event_reader import ProductEventCandidateReader, _read_candidates
+
+
+def proof(*numbers):
+    return tuple(ProjectionEventEvidence(str(n).zfill(64),'a'*64,n,False) for n in numbers)
 
 
 @pytest.fixture
@@ -38,26 +43,32 @@ def test_late_committing_smaller_sequence_is_not_lost(events):
         late.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(schema)))
         insert(late,1)
         insert(conn,2,projected=True)
-        assert [item['outbox_id'] for item in _read_candidates(conn,policy,100)]==[2]
+        assert [item['outbox_id'] for item in _read_candidates(conn,policy,100,proof(1,2))]==[2]
         conn.execute('INSERT INTO automation_occurrence VALUES (%s,%s,%s,%s)',
             (policy.org_id,policy.project_id,policy.policy_id,str(2).zfill(64)))
         late.commit()
-        assert [item['outbox_id'] for item in _read_candidates(conn,policy,100)]==[1]
+        assert [item['outbox_id'] for item in _read_candidates(conn,policy,100,proof(1,2))]==[1]
 
 
 def test_scope_and_existing_occurrence_are_exact(events):
     conn,_,policy,insert=events
-    insert(conn,1);insert(conn,2,projected=True)
+    insert(conn,1);insert(conn,2,projected=True);insert(conn,99)
     for number,change in enumerate([{'org_id':'other'},{'workspace_id':'other'},
         {'shop_or_marketplace_id':'2'},{'object_type':'Order'},{'event_source':'projection'},
         {'created_at':policy.effective_until}],start=3):insert(conn,number,**change)
     conn.execute('INSERT INTO automation_occurrence VALUES (%s,%s,%s,%s)',
         ('other',policy.project_id,policy.policy_id,str(1).zfill(64)))
-    rows=_read_candidates(conn,policy,100)
+    rows=_read_candidates(conn,policy,100,proof(*range(1,9)))
     assert [row['outbox_id'] for row in rows]==[1,2]
     assert all('payload' not in row and 'private' not in str(row) for row in rows)
-    assert len(_read_candidates(conn,policy,1))==1
+    assert len(_read_candidates(conn,policy,1,proof(1,2)))==1
 
 
 def test_candidate_reader_rejects_untrusted_owner():
-    with pytest.raises(TypeError): ProductEventCandidateReader(object())
+    with pytest.raises(TypeError): ProductEventCandidateReader(object(),journal=object(),store=object())
+
+
+def test_wrong_original_digest_is_rejected(events):
+    conn,_,policy,insert=events;insert(conn,1)
+    with pytest.raises(ValueError,match='evidence differs'):
+        _read_candidates(conn,policy,100,(ProjectionEventEvidence(str(1).zfill(64),'c'*64,1,False),))
