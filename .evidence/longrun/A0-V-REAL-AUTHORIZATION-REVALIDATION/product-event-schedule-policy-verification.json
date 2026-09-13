@@ -1,0 +1,21 @@
+{
+  "baseline": "67e62508",
+  "tests": "68 passed",
+  "red": "1 failed, 27 passed: backdated successor accepted before repair",
+  "closure": {
+    "phase": "ar2-7",
+    "scannedPythonModules": 1824,
+    "classifiedModules": 159,
+    "migratedModules": 93,
+    "hashErrors": [],
+    "unclassifiedForwardDependencies": [],
+    "unclassifiedReverseCallers": [],
+    "bundleCrossLayerImports": [],
+    "dynamicReferenceErrors": []
+  },
+  "productionConnected": false,
+  "hashes": {
+    "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py": "07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed",
+    "services/aos-api/tests/extension_runtime/test_product_event_schedule.py": "761fbbbc9f2343a5ba1e527fccf16e5510e7f05a42f02c3a623b53149bfa5f70"
+  }
+}

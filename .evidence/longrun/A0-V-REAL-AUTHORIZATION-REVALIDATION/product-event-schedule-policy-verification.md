@@ -1,0 +1,9 @@
+# BG-02 事件策略合同验证
+
+新增包内ProductEventSchedulePolicy，复用SchedulePolicyRevision逻辑资源、ExactRef/TenantRef和canonical_hash；当前旧Owner/handler不接收新schema，未写策略或登记Occurrence。精确来源选择、方法和Case引用，店铺/对象范围以及有限时间窗口可序列化回读；字段或hash漂移拒绝，不含自报执行权。
+
+最初测试漏SDK路径是装配错误；修复后新增版本时间倒退专项真实RED为1 failed/27 passed。禁止后继创建/生效时间倒退后，联合新策略、原周期调度、源事件时间与三包注册测试68 passed。AR2首次报告新增反向调用者未归类；补清册的实际包归属与当前hash后，1824扫描/159分类/93迁移，五类错误空。未删除检查或放宽旧schedule校验。
+
+代码方案复核：旧SchedulePolicy未改，新schema仅描述事件需求，不是许可；实际来源解析/当前权威、跨引用匹配、事件策略存储和触发Owner仍待实现。读取方案补原受控run/batch来源约束，不能只按同店/同对象扫全Outbox。ControlledIngressJournal及精确批次事件证据可复用。真实首链/八场景/持续观察未完成，无外部或主库业务动作。
+
+下一波沿现有SchedulePutHostService/BusinessInvestigationScheduleStore研究新schema的兼容存储和审批，不新造第二调度真源；实现前冻结迁移/锁序/Receipt与事务接线。

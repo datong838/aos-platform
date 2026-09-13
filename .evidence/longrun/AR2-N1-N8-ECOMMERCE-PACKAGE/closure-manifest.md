@@ -1222,3 +1222,24 @@ IAB tab10 5173/data真实显示1数据源、栖月汇微商城、MySQL SSH隧道
 兼容：不改原校验器返回形状，不改schedule入口、通用record_event_batch或数据库；不改变原签名包/安装版本。新增模块未登记为运行操作。没有网络、SQL、outbox ACK或Case写入。本片测试实际Owner产生事件（SQLite只验证载荷合同），时间注入明确为测试截面；覆盖重放稳定、来源陈旧、微秒取整、边界、错租户、哈希漂移、无时区、未来时间、布尔/负数窗口、溢出、输入不修改。后续PG认证读取、SourceSelection、事件策略、missed存储和真实自然触发仍未完成。
 
 文件：bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py；services/aos-api/tests/extension_runtime/test_product_source_event_window.py。测试及证据使用现有m1 A0-V任务租约，核心文件新Task登记；未启动第二写者。回滚仅撤销未接线新增模块，无数据迁移。
+
+
+## BG-02事件策略后续切片
+# BG-02 事件策略与可信来源接线
+
+基线67e62508。复用PipelineSourceSelectionOwner.run_current_snapshot：同事务检查当前安装/代次/配置/精确来源映射和时间；SnapshotMapping/V2带platform/shop_id/object_type。只有编译范围不够：同店同对象可能由其他管道写入。后续读取必须从ControlledIngressJournal锁定原run/control，_bound_parent核对原批次，复用EcomConsistencyStore.read_batch_projection_evidence的精确事件集合，关联authority_tx_id/request_hash；不按全店Outbox猜来源。该读证据不能替代当前来源/事件策略/Dispatch授权，也不能把projected当经营消费ACK。
+
+本片新增包内ecommerce_product_event_schedule.py，独立ProductEventSchedulePolicy严格载荷，不放宽旧SchedulePolicy。schemaVersion=aos.ecommerce.product-event-schedule-policy/v1；逻辑资源仍SchedulePolicyRevision，后续现有Owner按schema显式分派，不新建第二套调度表。本片不注册API/handler、不修改旧Owner接受列表。
+
+字段：tenant、schedulePolicyId、revision、priorRef、caseRef（BusinessInvestigationCaseRevision）、sourceSelectionRef（SourceSelectionRevision）、methodRef（InvestigationProfileRevision）、platform、shopId、objectTypes（排序且不重复的Product/ProductSku）、effectiveFrom/Until、maxSourceAgeSeconds/recoveryWindowSeconds、createdBy/At、contentHash。所有字段必填；初版priorRef=null；后继精确引用前版。无enabled/approved自报权力，当前执行资格留在现有ScheduleBinding与Admission。无SQL/表名/任意过滤器。
+
+严格类型和canonical文本/UTC日期；有限时间区间、正整数窗口最大有界86400秒，与SourceSelection现有24小时批准上限一致；createdAt不得晚于策略开始。hash复用包canonical_hash。反序列化拒绝未知字段、类型强转、bool revision、错ref用途、receipt替代、ref空白、不匹配hash。版本继承保持tenant/policy/case稳定，source selection和方法可更新但必须绑定前版hash、连续revision；相同policy/sourceEventId去重仍由现有Occurrence保证，不因为改版重新处理旧事件。
+
+下片Owner必须当前解析SourceSelection与方法、case引用，交叉检查tenant/安装代次/有效期与编译平台店铺类型完全覆盖；旧配置不允许新策略自报范围扩大。QueryCapability在现有当前数据读取准入处验证；不能为凑字段造一个未存在的凭证引用。过期源事件保留missed，分页最多100并以Occurrence存在性去重；处理全部分片前不能把原入库run的经营交接标为完成。需设计与现有SQL事务/Receipt的原子接线后才开生产消费者。
+
+代码：bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py；测试services/aos-api/tests/extension_runtime/test_product_event_schedule.py。先RED再合同测试、原schedule回归、AR2扫描；本片不做数据库、Provider或业务写入，不计自然触发通过。原商品时间模块不改。回滚为删除未接线新增模块。
+
+
+| 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
+| --- | --- | --- | --- |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py` | 原路径 | solution；只复用包内ExactRef/TenantRef和canonical_hash，不导入平台实现；反向调用当前仅专项测试，运行注册未接入 | 07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed |

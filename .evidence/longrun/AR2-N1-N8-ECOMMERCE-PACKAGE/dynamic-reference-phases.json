@@ -41,6 +41,8 @@
     },
     "ar2-7": {
       "requiredPaths": [
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py",
+        "services/aos-api/tests/extension_runtime/test_product_event_schedule.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py",
         "services/aos-api/tests/extension_runtime/test_product_source_event_window.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
