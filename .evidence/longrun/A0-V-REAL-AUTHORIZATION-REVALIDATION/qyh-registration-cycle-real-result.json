@@ -1,0 +1,303 @@
+{
+  "outcome": "PRISTINE_REGISTRATION_WITHDRAWAL_REAL_OWNER_VERIFIED",
+  "registration": {
+    "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "groupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+    "request": {
+      "groupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+      "configRef": {
+        "hash": "sha256:dc25c6c047776b90681b33f82a089145692417afd5c7e8c0120c315d27f9241a",
+        "revision": 1,
+        "configurationId": "721433ba-5256-4b12-9043-0bcfab658bf0"
+      },
+      "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+      "schemaVersion": "aos.ecommerce.first-dispatch-registration/v1",
+      "executionEpoch": 3,
+      "idempotencyKey": "a0v-qyh-reboot-first-registration-acceptance-v1",
+      "bindingRevision": 4,
+      "installationRef": {
+        "lockHash": "sha256:a4441a4383783cb2a2f32171c52eb2718f526a5f56102dc5c0e12bf79299a42b",
+        "revision": 5,
+        "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+        "overlayRevision": "a0v-canonical-ecommerce-v1"
+      }
+    },
+    "createdAt": "2026-09-13T07:21:03.216249+00:00",
+    "receiptId": "c0eba9c8-afde-4fc3-b9cf-f83044e0dccf",
+    "executable": false,
+    "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+    "requestHash": "sha256:5053385f6f322dd81adf425fdfbafbaf973829980834898c4e7f4f0bbd8af020",
+    "schemaVersion": "aos.ecommerce.first-dispatch-registration-receipt/v1",
+    "idempotencyKey": "a0v-qyh-reboot-first-registration-acceptance-v1",
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "dispatchSnapshot": [
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_analysis_advance",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_case_put",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_content_generate",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_content_review",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_data_fulfill",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_investigation_describe",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_review_advance",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_schedule_put",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_schedule_trigger",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      }
+    ],
+    "contentHash": "sha256:e7f1eab61133a6ae3ea0dd2efa5d5ae975688d0a9d5ee400eb55bd4b2ba8d2f8",
+    "historical": true
+  },
+  "withdrawal": {
+    "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "groupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+    "request": {
+      "schemaVersion": "aos.ecommerce.first-dispatch-withdrawal/v1",
+      "idempotencyKey": "a0v-qyh-reboot-first-registration-acceptance-v1-withdraw",
+      "registrationReceiptRef": {
+        "revision": 1,
+        "resourceId": "c0eba9c8-afde-4fc3-b9cf-f83044e0dccf",
+        "contentHash": "sha256:e7f1eab61133a6ae3ea0dd2efa5d5ae975688d0a9d5ee400eb55bd4b2ba8d2f8",
+        "resourceType": "FirstDispatchRegistrationReceipt"
+      },
+      "expectedInstallationEtag": 5
+    },
+    "createdAt": "2026-09-13T07:22:07.435613+00:00",
+    "receiptId": "6eb4bebb-1dfd-4453-bfd5-797531e1f683",
+    "executable": false,
+    "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+    "requestHash": "sha256:f911fa0702213b9df92d0234d7803575a96a0c6c36bd3e28bf721c75b3e473bf",
+    "schemaVersion": "aos.ecommerce.first-dispatch-withdrawal-receipt/v1",
+    "idempotencyKey": "a0v-qyh-reboot-first-registration-acceptance-v1-withdraw",
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "oldDispatchSnapshot": [
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_analysis_advance",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_case_put",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_content_generate",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_content_review",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_data_fulfill",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_investigation_describe",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_review_advance",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_schedule_put",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      },
+      {
+        "revision": 1,
+        "generation": null,
+        "handlerKind": "legacy",
+        "operationId": "ecommerce_growth_schedule_trigger",
+        "cutoverGroupId": "7ef2d562-0040-4fc1-8afc-d9850fb0fe05",
+        "executionEpoch": null,
+        "installationId": null,
+        "operationFence": true,
+        "cutoverGroupRevision": 1
+      }
+    ],
+    "registrationReceiptRef": {
+      "revision": 1,
+      "resourceId": "c0eba9c8-afde-4fc3-b9cf-f83044e0dccf",
+      "contentHash": "sha256:e7f1eab61133a6ae3ea0dd2efa5d5ae975688d0a9d5ee400eb55bd4b2ba8d2f8",
+      "resourceType": "FirstDispatchRegistrationReceipt"
+    },
+    "releasedOperationCount": 9,
+    "contentHash": "sha256:486272de8fdb062d79e20cf84d72e4b720e9a4bc9e72dc22ba0335e8d18e0806",
+    "historical": true
+  },
+  "status": {
+    "schemaVersion": "aos.ecommerce.first-dispatch-status/v1",
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "state": "withdrawn",
+    "registrationReceiptRef": null,
+    "withdrawalReceiptId": "6eb4bebb-1dfd-4453-bfd5-797531e1f683",
+    "allowedActions": [],
+    "executable": false,
+    "expectedInstallationEtag": null,
+    "withdrawalReason": "not_applicable"
+  },
+  "businessRoutes": 0,
+  "bindings": [
+    {
+      "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+      "revision": 4,
+      "execution_epoch": 3,
+      "enabled": true,
+      "operation_fence": false,
+      "observed_state": "ready",
+      "desired_state": "enabled"
+    }
+  ],
+  "businessRunsCreated": 0,
+  "externalActions": 0
+}
