@@ -1,0 +1,11 @@
+# 登记角色与旧评测恢复复核
+
+基线582f19b7，2026-09-13。当前登记库结构030和专用身份已部署，不等于真实登记、启用或经营首链完成。
+
+现有CurrentControlPermission读取持久成员角色；user:dev为owner，不在APPLY允许角色中，403符合既有职责分离测试。成员页面只能分配owner/admin/editor/viewer，细分安装角色配置入口仍缺失。保留此产品缺口，不降级权限规则、不改变成员、不伪装浏览器身份。
+
+旧qyh-reboot-text-eval目录仅instruction.json；历史记录为submitted且只保留R1BootstrapProbeBlocked类型。复核aip_r1_bootstrap_probe.run：响应解析后直接返回，无独立持久化响应/请求对账接口；exact_text_live_eval在结果返回后才写completed。现存日志目录没有该批次结果文件。故本地未发现可恢复结果；不是证明远端未收到。旧意图不修改、不重发，不能作为健康或Eval通过证据。
+
+下一波按231-9 BG-02及source-event-consumer-authority-plan补自然事件合同。现有商品完整性校验器无生产消费者；通用record_event_batch已具备批次原子登记，但growth SchedulePolicy只支持once/weekly/on_demand。现有schedule触发Receipt要求sourceEventId为空是该入口的正确约束，应保留并增加独立事件合同，不能删除校验冒充接通。
+
+memory-status强投影CURRENT；memory-validate GREEN。没有Provider调用、成员变更、业务登记、源库写入。BG-01实现已有测试和部署证据，真实有占位撤回验收仍待首装配置和真实登记；保持未完成。
