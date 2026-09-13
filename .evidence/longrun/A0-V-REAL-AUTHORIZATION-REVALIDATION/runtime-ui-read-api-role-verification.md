@@ -1,0 +1,7 @@
+# UQ2-C 专用数据库投递入口验证
+
+2026-09-13，基线e0d84563。a0v_032新增aos_ui_read_api受限角色、当前主体/marking行锁函数和固定请求入队函数。角色NOLOGIN/NOSUPERUSER/NOBYPASSRLS/NOCREATEDB/NOCREATEROLE/NOREPLICATION，已有角色属性异常或继承其他角色则迁移拒绝。函数固定search_path、显式scope，验证真实非超级session_user、SET ROLE、READ COMMITTED和aos.subject一致；撤销PUBLIC执行权。
+
+15 passed、7项既有warning，使用真实隔离PG非超级LOGIN身份。验证规范摘要/回读，成员与Attempt及队列表直接访问拒绝，主体不符/负租户/超级账号/旧快照隔离拒绝，marking行锁直到事务结束、撤销后拒绝，同键冲突、任意payload拒绝、固定函数8条额度与成员撤销后回读拒绝。最初一个失败是测试在SELECT后设置隔离级别，已在事务开始时设置并重跑通过。
+
+未迁移主库、未变更已有身份授权、未向HTTP开放函数；隔离schema仅重定位public限定名，生产迁移保留public。下一波应用层使用这两个固定入口，移除API路径对直接成员行锁与直接INSERT的依赖，再继续原宿主signed_read消费。UQ2整体及真实业务链尚未完成。

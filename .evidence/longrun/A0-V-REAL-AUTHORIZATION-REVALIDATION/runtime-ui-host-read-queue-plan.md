@@ -43,3 +43,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 新增 extension_runtime/ui_read_admission.py 和对应测试。具体服务依赖既有 RuntimeWorkshopCatalog；不得接收Web提供的目录条目/权限标志。调用者事务内锁住当前成员及所需markings，使用这些当前事实重新加载已验hash的目录。只接受唯一ecommerce.analyst模块、完全相同的七字段target、固定readOperationClaim；目录角色/markings再明确比对，才进入UQ2-A存储。相同键回读同样先重新校验资源和当前权限。目录自身读取使用独立只读快照；最后INSERT的binding guard核epoch/revision，宿主领取仍必须重新做全部门禁，因此入队不是执行授权。暂不新增HTTP或数据库写角色授权。
 
 退出：门禁拒绝时存储调用为零，旧资源/撤权/command-only声明/错模块/错scope/重复模块均拒绝，合法固定读取交给原存储。该切片完成仍需受限数据库接点及UQ3消费者后才能真实调用。
+
+## UQ2-C 专用数据库接点（基线e0d84563，编码前补充）
+
+新增a0v_032_runtime_ui_read_admission.py。角色aos_ui_read_api为NOLOGIN/NOSUPERUSER/NOBYPASSRLS，仅固定函数EXECUTE；不授予成员表UPDATE、队列表DML、Attempt权限。固定SECURITY DEFINER函数限定search_path、显式租户条件，要求实际session_user为非超级/非bypass且属于该角色、SET ROLE正确、READ COMMITTED。subject必须匹配aos.subject GUC。函数一锁定当前membership及指定bearer markings，函数二只接收严格固定请求并调用函数一，按租户锁、同键摘要、8/64额度入队，返回无业务result的投递摘要。公开函数均撤销PUBLIC。
+
+隔离PG用真实非超级LOGIN身份+SET ROLE验证；错误GUC/subject/角色/直接DML/Attempt访问均拒绝，正常请求摘要与UQ1一致。应用接入下一切片切换到这些固定函数；当前UQ2-A/B存储代码不因迁移自动获得权限。主库部署待UQ6。数据库入队仍不是signed UI授权，宿主必须重新校验；HTTP接入服务必须先运行UQ2-B。
