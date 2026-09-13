@@ -1,0 +1,31 @@
+{
+  "preflight": "CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "memberships": [
+    {
+      "subject": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "role": "admin"
+    },
+    {
+      "subject": "user:dev",
+      "role": "owner"
+    }
+  ],
+  "definitions": [],
+  "installations": [
+    {
+      "installation_id": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+      "etag_version": 5
+    }
+  ],
+  "writes": 0,
+  "currentEligibleReviewers": [
+    {
+      "subject": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "role": "admin"
+    }
+  ]
+}

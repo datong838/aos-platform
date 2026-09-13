@@ -1,0 +1,26 @@
+[
+  {
+    "bundle": "solution.ecommerce.growth",
+    "version": "1.7.0",
+    "manifestFileHash": "sha256:87625ccd3d1a1fa7b380f29551c9e88090cc061d41116a5b0699972439643703",
+    "navigation": [
+      "/workshop/cockpit",
+      "/workshop/content-campaign",
+      "/workshop/creator-growth",
+      "/workshop/media-studio",
+      "/workshop/analyst",
+      "/workshop/price-governance",
+      "/workshop/customer"
+    ],
+    "frontendDeclared": false
+  },
+  {
+    "bundle": "solution.ecommerce.operations-base",
+    "version": "1.2.0",
+    "manifestFileHash": "sha256:1f04b6b934a334d073dc42608c5b0a9ace2270f2a860a7d8fccb0653d4062644",
+    "navigation": [
+      "/workshop/operations"
+    ],
+    "frontendDeclared": false
+  }
+]
