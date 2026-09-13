@@ -136,6 +136,8 @@ class _ReadyRuntimeConnection:
         return False
 
     def execute(self, query, _params):
+        if "FROM extension_runtime_resource_lease" in query:
+            return _Result({"resource_count": 3, "live": True})
         if "FROM extension_runtime_binding" in query:
             return _Result({
                 "generation": GENERATION,

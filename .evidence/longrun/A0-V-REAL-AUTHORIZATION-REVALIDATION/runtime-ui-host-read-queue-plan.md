@@ -269,3 +269,11 @@ UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件�
 本地固定canonical锁为原RECOVERY/state/ecommerce-runtime-host/singleton.lock；兼容锁包括旧默认状态锁和当前运行runtime-host-aa3010c4.lock，额外保留调用者状态锁。稳定排序去重、ExitStack持锁覆盖完整serve。任何锁冲突仅stdout返回HOST_ALREADY_RUNNING，不触碰任何状态文件；参数错误也须先拿锁才写状态。保留原停止排空逻辑、凭据、范围、Host身份、flags，不重启原6606、不启动新OCI。
 
 测试同状态/不同状态、旧运行锁、参数错误冲突均在_build_host/serve之前拒绝且原状态字节不变；测试全部锁直到serve结束持有。实际使用受控空目标状态路径尝试启动，必须在原旧锁处拒绝，不能新建状态文件或第二Host。该拒绝验证通过后再安排真实宿主升级，不能将资格测试等同业务链路。
+
+## UQ6-D2 重启恢复技术分解与D2a真实资源投影（基线5fe8069d，编码前）
+
+原协议证据：preparation_reset只允许applied且无binding、所有资源confirmed released、无已提交verify；当前active实例不可调用。RuntimeHost.stop会关闭preparation owner，资源恢复器不会重建会话。恢复顺序应为：当前exact目标禁入/排空→确认资源释放与未决Attempt结果→依据当前真实权限创建新安装/替代计划并评审→新的runtime-apply/verify/configure/enable→旧新路由切换验证。不得回写旧outbox delivered_at、复活旧owner或继承旧审批覆盖新锁。自动恢复的产品请求与审批承接需后续独立实现，当前不假称已完成。
+
+D2a先修真实状态显示：新增services/aos-api/aos_api/extension_runtime/runtime_resource_health.py，修改runtime_view.py及相关tests/extension_runtime。读取同租户、安装及绑定generation的已提交runtime-apply资源租约；数据库时钟核过期、已释放、cleanup异常、container缺失，空集也不视为可用。该检查只是否定资源存活证明，不代替IPC前后权限与session核验。
+
+RuntimeViewReader在原租户只读事务内为binding收集健康，仅当原推导ready而资源证据不足时输出needs_attention、ui=None、只保留disable并说明需要禁入对账；不改绑定/安装数据库状态，不自动重建、不允许enable绕过。原非ready流程及停用入口保持。资源表缺失依既有runtime_storage_unavailable处理。测试失去资源不调用UI resolver、已释放/过期/缺失/跨租户/其他generation不能撑起ready，健康资源维持原路径，真实PG验证查询。

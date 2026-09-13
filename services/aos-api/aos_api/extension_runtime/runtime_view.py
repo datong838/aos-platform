@@ -136,6 +136,7 @@ class RuntimeViewReader:
             markings=markings,
         )
         runtime_storage_available = True
+        resources_live = False
         try:
             with self._connect_factory() as conn:
                 apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
@@ -167,6 +168,11 @@ class RuntimeViewReader:
                     (org_id, project_id, UUID(installation_id)),
                 ).fetchone()
                 operation = self._operation_from_row(conn, org_id, project_id, operation_row)
+                binding = self._binding_from_row(binding_row)
+                if binding is not None:
+                    from .runtime_resource_health import current_resources_live
+                    resources_live = current_resources_live(conn, org_id=org_id, project_id=project_id,
+                        installation_id=installation_id, generation=binding.generation)
                 conn.commit()
         except psycopg.errors.UndefinedTable:
             # A read-only audit process must describe an environment that has
@@ -186,6 +192,10 @@ class RuntimeViewReader:
             operation=operation,
             runtime_storage_available=runtime_storage_available,
         )
+        if effective_state == "ready" and not resources_live:
+            effective_state, actions, reasons = "needs_attention", ("disable",), (
+                "运行资源已释放、租约已过期或存活证据不足；请先禁入并完成恢复对账。",
+            )
         ui = None
         if effective_state == "ready" and binding is not None:
             if self._ui_session_resolver is None:

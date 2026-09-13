@@ -1325,3 +1325,11 @@ UQ6-A真实备份/恢复/主库031~035部署与独立读回通过：主库现a0v
 代码79ac8277；38项测试通过；真实旧锁冲突返回HOST_ALREADY_RUNNING，原6606状态摘要不变，未写探针状态、未启动新Host。只读构造预检实测当前035/身份/正租户分配可装配ConfigurationConsumer、RuntimeDisableConsumer、RuntimeUiReadConsumer，未调用run_once/serve、业务表指纹不变。
 
 发现接续关键限制：RuntimeHost.stop会经scheduler/owner/preparation关闭原OCI会话；PostgresPendingPreparationDirectory只读未投递runtime-apply，不能把进程内已消失的旧PreparedJob凭旧active状态重建；resource_recovery明确只清理、不重建或启用。所以暂不重启6606，避免先破坏原会话再补救。下一波UQ6-D2核对现有禁用/重申请协议，补宿主重启恢复技术步骤与真实验收条件；必要代码纳入同一原清册，不用手工改已投递outbox或伪造新审批。真实包发布安装/业务首链/八工作台仍待完成。
+
+## UQ6-D2a 资源丢失不再假显示就绪（2026-09-13）
+
+新增runtime_resource_health.py，RuntimeViewReader在同租户只读事务中核对当前generation资源的成功准备记录、容器创建观察、清理状态及数据库时钟租约。原ready但资源证据不足变needs_attention，关闭UI并保留disable；不改任何安装/绑定事实、不重建会话。原非ready流程保持。
+
+43项测试通过，其中实际PG覆盖释放/过期/清理未知/容器或创建记录缺失/NULL期限/混合NULL/失败操作/空集/跨租户项目安装generation拒绝。当前真实安装97aeb2e7-59ba-40f6-89a3-fb0293bc0497的generation3a445eee-aa28-4459-9e5a-f12a806a94b1仍resourcesLive=true，19业务指纹未变；不把租约存活证明当作真实IPC业务成功。
+
+下一切片继续恢复路径：保留当前6606会话，处理active实例恢复/替代计划在产品中的承接；现有preparation-reset不足以覆盖active重启，禁止手工复活旧已投递消息。实际growth1.8发布安装仍需可核验独立审批主体。m1不push、230 L0挂起、总目标未完成。

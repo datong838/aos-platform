@@ -1,0 +1,8 @@
+{
+  "outcome": "CURRENT_GENERATION_RESOURCE_EVIDENCE_LIVE",
+  "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+  "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+  "resourcesLive": true,
+  "businessFingerprintUnchanged": true,
+  "limitations": "Durable lease evidence is not proof of real business execution or current IPC success"
+}
