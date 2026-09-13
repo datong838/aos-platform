@@ -97,3 +97,9 @@ invoke_prepared只调用绑定expected_job的原invoker，IPC在事务外；快�
 测试将真实数据库边界与生命周期编排分开记录：已有非超级PG验证复用；新增编排测试证明事务外一次调用、撤权后不交付、结果错scope/快照或实例变更拒绝。实际OCI只读方法仍待UQ5后继签名交付。
 
 UQ3-F复核补充：仅DB单次claim不足以防止同一Prepared对象被重复调用。消费者维护带线程锁的本进程签发登记，prepare事务提交后登记，invoke原子消费一次，finish要求已消费并在成功提交后移除；旧对象/其他消费者对象/重复invoke全部拒绝，结果不明也不释放重试机会。
+
+## UQ3-G 原RuntimeHost调度（基线e321f1c1，编码前补充）
+
+修改runtime_host.py允许具体RuntimeUiReadConsumer，要求consumer.scope与assignment一致，同类仅一个，排序configure→disable→ui-read。prepare在线程内提交后检查同一assignment；invoke事务外等待完成后再次检查；仅仍当前者finish。撤销时仅丢弃本进程签发对象，不重写claim或创建新调用，现有Attempt/过期恢复保留未知事实。新增consumer.discard_prepared只清理签发登记。
+
+Host.stop保持原先等待current tick然后停止生命周期的顺序，无独立UI轮询或新宿主。真实非超级PG消费者配原Host验证正常调度、prepare后撤销零调用、invoke后撤销无结果、stop等待调用/封存。旧Host测试回归保证configure/disable/恢复顺序不变。生产依赖显式装配与主库升级仍属后继切片。

@@ -13,6 +13,7 @@ from uuid import UUID
 from aos_api.tenant_scope import TenantScope
 
 from .configuration_consumer import ConfigurationConsumer
+from .ui_read_consumer import RuntimeUiReadConsumer, PreparedUiRead, UiReadInvocation, UiReadConsumerResult
 from .disable_consumer import ClaimedDisableDelivery, DisableDeliveryResult, RuntimeDisableConsumer
 from .generation_attempts import ExpiredSignedReadAttemptRecovery
 from .owned_control_consumer import _settled
@@ -25,6 +26,8 @@ from .live_installation_scheduler import (
 
 
 _SYNC_CONSUMERS = (ConfigurationConsumer, RuntimeDisableConsumer)
+_CONSUMERS = _SYNC_CONSUMERS + (RuntimeUiReadConsumer,)
+_CONSUMER_KINDS = {ConfigurationConsumer:'configure',RuntimeDisableConsumer:'disable',RuntimeUiReadConsumer:'ui-read'}
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,13 +54,12 @@ class RuntimeTenantAssignment:
         ):
             raise TypeError("runtime assignment requires same-scope lifecycle scheduler")
         if type(self.consumers) is not tuple or any(
-            type(consumer) not in _SYNC_CONSUMERS for consumer in self.consumers
+            type(consumer) not in _CONSUMERS for consumer in self.consumers
         ):
             raise TypeError("runtime assignment requires concrete consumers")
-        kinds = tuple(
-            "configure" if type(consumer) is ConfigurationConsumer else "disable"
-            for consumer in self.consumers
-        )
+        if any(type(consumer) is RuntimeUiReadConsumer and consumer.scope!=self.scope for consumer in self.consumers):
+            raise TypeError('UI read consumer must share assignment scope')
+        kinds = tuple(_CONSUMER_KINDS[type(consumer)] for consumer in self.consumers)
         if len(kinds) != len(set(kinds)):
             raise ValueError("duplicate runtime consumer kind")
         object.__setattr__(
@@ -66,9 +68,7 @@ class RuntimeTenantAssignment:
             tuple(
                 sorted(
                     self.consumers,
-                    key=lambda consumer: 0
-                    if type(consumer) is ConfigurationConsumer
-                    else 1,
+                    key=lambda consumer: _CONSUMERS.index(type(consumer)),
                 )
             ),
         )
@@ -170,6 +170,22 @@ class RuntimeHost:
                 self._lifecycles[id(assignment)]=(assignment,assignment.lifecycle)
 
     async def _consume(self, assignment: RuntimeTenantAssignment, consumer: object):
+        if type(consumer) is RuntimeUiReadConsumer:
+            prepared=await _settled(asyncio.to_thread(consumer.prepare_once,
+                org_id=assignment.scope.org_id,project_id=assignment.scope.project_id))
+            if prepared is None or type(prepared) is UiReadConsumerResult:return prepared
+            if type(prepared) is not PreparedUiRead:raise TypeError('UI consumer returned invalid preparation')
+            if not await self._still_current(assignment):
+                consumer.discard_prepared(prepared)
+                return None
+            invocation=await _settled(consumer.invoke_prepared(prepared))
+            if type(invocation) is not UiReadInvocation:raise TypeError('UI consumer returned invalid invocation')
+            if not await self._still_current(assignment):
+                consumer.discard_prepared(prepared)
+                return None
+            result=await _settled(asyncio.to_thread(consumer.finish_prepared,prepared,invocation))
+            if type(result) is not UiReadConsumerResult:raise TypeError('UI consumer returned invalid completion')
+            return result
         if type(consumer) is RuntimeDisableConsumer and assignment.lifecycle is not None:
             claimed=await _settled(asyncio.to_thread(
                 consumer.claim_once,org_id=assignment.scope.org_id,

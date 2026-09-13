@@ -178,6 +178,11 @@ class RuntimeUiReadConsumer:
             return UiReadInvocation(failure_code='READ_OUTCOME_UNKNOWN')
         return UiReadInvocation(result=result) if type(result) is dict else UiReadInvocation(failure_code='READ_RESULT_INVALID')
 
+    def discard_prepared(self,prepared):
+        self._check_prepared(prepared)
+        with self._issued_lock:
+            self._issued.pop(prepared.claim.request_id,None)
+
     def finish_prepared(self,prepared,invocation):
         self._check_prepared(prepared)
         if type(invocation) is not UiReadInvocation:

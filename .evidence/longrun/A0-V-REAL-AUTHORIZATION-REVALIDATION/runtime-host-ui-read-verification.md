@@ -1,0 +1,7 @@
+# UQ3-G 原RuntimeHost读取调度验证
+
+2026-09-13，基线e321f1c1。原RuntimeTenantAssignment接纳具体同scope UiReadConsumer，同类仅一个，configure/disable/UI顺序固定。prepare线程提交后与invoke返回后都复核同一assignment；被撤销仅discard内存签发资格，不继续调用/结果交付、不伪造claim终态。stop沿用等待当前tick和生命周期停止。
+
+29 passed、7项既有warning：5项Host+非超级PG消费者贯穿与24项旧Host回归。正常调度1次调用并封存；prepare后撤销0次调用，invoke后撤销1次但无结果，均保留claimed/running待原恢复机制处理；stop等待已开始调用和成功封存；错scope/重复消费者拒绝。实际包调用仍协议替身执行纯投影，不能作为OCI交付证据。AR2扫描1845模块、163分类、93迁移，错误集合为空。
+
+未启动第二宿主、未改主库。下一波生产RuntimeWorkerDependencies/控制装配增加显式UI读取配置、共享loader/实例目录及新关系预检；默认旧配置不启用，待迁移/包交付齐备后再进行真实升级读取。
