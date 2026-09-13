@@ -89,3 +89,20 @@ def test_payload_drift_cannot_hide_behind_original_hash(events):
                  (Jsonb('tampered'),))
     with pytest.raises(ValueError,match='payload integrity'):
         _read_candidates(conn,policy,100,proof(1))
+
+
+def test_exact_original_event_remains_readable_after_occurrence(events):
+    conn,_,policy,insert=events
+    insert(conn,1);insert(conn,2)
+    key=str(1).zfill(64)
+    conn.execute('INSERT INTO automation_occurrence VALUES (%s,%s,%s,%s)',
+                 (policy.org_id,policy.project_id,policy.policy_id,key))
+    assert [row['outbox_id'] for row in _read_candidates(conn,policy,100,proof(1,2))]==[2]
+    rows=_read_candidates(conn,policy,100,proof(1,2),event_key=key)
+    assert [row['outbox_id'] for row in rows]==[1]
+    assert 'payload' not in rows[0]
+    with pytest.raises(ValueError):
+        _read_candidates(conn,policy,100,proof(2),event_key=key)
+    conn.execute("UPDATE projection_outbox SET payload='{}' WHERE event_key=%s",(key,))
+    with pytest.raises(ValueError,match='payload integrity'):
+        _read_candidates(conn,policy,100,proof(1,2),event_key=key)

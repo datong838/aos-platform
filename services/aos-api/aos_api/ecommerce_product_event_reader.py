@@ -1,6 +1,7 @@
 """Current-source candidate metadata. No policy approval, payload export or ACK."""
 import hashlib
 import json
+import re
 from psycopg.rows import dict_row
 from aos_api.extension_runtime.runtime_gate import _reject_deferred
 
@@ -16,7 +17,7 @@ from aos_api.ec_ingress_recovery import _bound_parent
 from aos_api.ecom_core_models import BatchCommand, DerivedMetricCommand
 
 
-def _read_candidates(conn, policy, limit, evidence):
+def _read_candidates(conn, policy, limit, evidence, *, event_key=None):
     """Internal SQL primitive; only call inside the current source Owner callback."""
     policy = ProductEventPolicyDraft.model_validate(policy)
     if type(limit) is not int or not 1 <= limit <= 100:
@@ -25,9 +26,17 @@ def _read_candidates(conn, policy, limit, evidence):
         raise ValueError('bounded original batch evidence required')
     refs = {item.event_key:item for item in evidence}
     if len(refs)!=len(evidence):raise ValueError('ambiguous original batch evidence')
+    if event_key is not None:
+        if type(event_key) is not str or re.fullmatch('[0-9a-f]{64}',event_key) is None or event_key not in refs:
+            raise ValueError('exact event must belong to original batch evidence')
+        refs={event_key:refs[event_key]}
     if not refs:return ()
+    unconsumed = '''AND NOT EXISTS (SELECT 1 FROM automation_occurrence o
+                WHERE o.org_id=e.org_id AND o.project_id=e.project_id
+                  AND o.policy_id=%s AND o.source_event_id=e.event_key)''' if event_key is None else ''
+    policy_params = (policy.policy_id,) if event_key is None else ()
     with conn.cursor(row_factory=dict_row) as cursor:
-        rows = tuple(cursor.execute('''SELECT e.outbox_id,e.input_revision,e.event_key,e.payload_hash,
+        rows = tuple(cursor.execute(f'''SELECT e.outbox_id,e.input_revision,e.event_key,e.payload_hash,
             e.authority_tx_id,e.object_type,e.external_id,e.change_kind,e.created_at,e.payload,
             e.payload->'record'->>'source_updated_at' AS source_updated_at
             FROM projection_outbox e
@@ -37,12 +46,10 @@ def _read_candidates(conn, policy, limit, evidence):
               AND e.change_kind IN ('objects_written','objects_tombstoned')
               AND e.created_at>=%s AND e.created_at<%s
               AND e.event_key=ANY(%s)
-              AND NOT EXISTS (SELECT 1 FROM automation_occurrence o
-                WHERE o.org_id=e.org_id AND o.project_id=e.project_id
-                  AND o.policy_id=%s AND o.source_event_id=e.event_key)
+              {unconsumed}
             ORDER BY e.input_revision,e.outbox_id LIMIT %s''',
             (policy.org_id,policy.project_id,policy.project_id,policy.platform,policy.shop_or_marketplace_id,
-             list(policy.object_types),policy.effective_from,policy.effective_until,list(refs),policy.policy_id,limit)).fetchall())
+             list(policy.object_types),policy.effective_from,policy.effective_until,list(refs),*policy_params,limit)).fetchall())
     for row in rows:
         ref=refs[row['event_key']]
         if (row['payload_hash'],row['input_revision'])!=(ref.payload_hash,ref.input_revision):
@@ -73,6 +80,20 @@ class ProductEventCandidateReader:
                                    execute=lambda rows: rows)
 
     def run_candidates(self, conn, *, policy, actor, run_id, execute):
+        return self._run(conn,policy=policy,actor=actor,run_id=run_id,execute=execute)
+
+    def run_event(self, conn, *, policy, actor, run_id, event_key, execute):
+        if type(event_key) is not str or re.fullmatch('[0-9a-f]{64}',event_key) is None:
+            raise ValueError('canonical original event key required')
+        if not callable(execute):
+            raise TypeError('synchronous event consumer required')
+        def one(rows):
+            if len(rows)!=1 or rows[0]['event_key']!=event_key:
+                raise ValueError('unique original event required')
+            return execute(rows[0])
+        return self._run(conn,policy=policy,actor=actor,run_id=run_id,execute=one,event_key=event_key)
+
+    def _run(self, conn, *, policy, actor, run_id, execute, event_key=None):
         """Trusted synchronous callback under the original current-source Owner.
 
         The caller retains transaction ownership. This supplies metadata, not
@@ -105,7 +126,8 @@ class ProductEventCandidateReader:
             if parent.get('kind')=='empty_observation_v1':return consume(())
             evidence=self._store.read_batch_projection_evidence(BatchCommand.model_validate(parent['command']),
                 [DerivedMetricCommand.model_validate(raw) for raw in saved['commands']])
-            return consume(_read_candidates(conn,policy,min(100,draft.row_limit),evidence))
+            options={} if event_key is None else {'event_key':event_key}
+            return consume(_read_candidates(conn,policy,min(100,draft.row_limit),evidence,**options))
 
         return self._owner.run_current_snapshot(conn,scope=scope,ref=policy.source_selection_ref,
             actor=actor,execute=current)
