@@ -361,7 +361,7 @@ export function AssetBundlesPage() {
 
   async function prepareCurrentReplacement() {
     if (!installationId || replacementLock.current || actionRuntime.offline || actionPending || runtimePending || !commands.markInputChanged()) return;
-    replacementLock.current = true; setReplacementBusy(true); setReplacementError(null);
+    replacementLock.current = true; setReplacementBusy(true); setReplacementError(null); setReplacementIdentity(null);
     try {
       const value = await prepareReplacement(installationId);
       if (selectedInstallationRef.current !== installationId || value.identity !== configurationIdentity() || !commands.markInputChanged()) return;
@@ -400,8 +400,10 @@ export function AssetBundlesPage() {
     runtimeRetry.etagVersion === runtimeInstallationState.data?.installationEtag &&
     runtimeRetry.bindingIdentity === runtimeBindingIdentity(runtimeInstallationState.data),
   );
-  const resolveDisabledReason = compositionRequest.currentInstallationRef && replacementIdentity !== configurationIdentity()
-    ? "身份已变化，请从当前安装重新准备替换计划"
+  const resolveDisabledReason = replacementBusy
+    ? "正在重新准备替换计划，请等待当前核验完成"
+    : compositionRequest.currentInstallationRef && replacementIdentity !== configurationIdentity()
+    ? "替换计划尚未完成当前核验，请从当前安装重新准备"
     : !versionSelection
     ? "请先从 Registry 选择一个版本"
     : versionDetailState.status === "loading"
@@ -446,7 +448,7 @@ export function AssetBundlesPage() {
             resolving={commands.resolveState.phase === "running" || commands.resolveState.phase === "reconciling"}
             disabledReason={resolveDisabledReason}
             onRequestChange={changeCompositionRequest}
-            onResolve={() => { if (!resolveDisabledReason && (!compositionRequest.currentInstallationRef || replacementIdentity === configurationIdentity())) void commands.resolve(compositionRequest); }}
+            onResolve={() => { if (!replacementLock.current && !resolveDisabledReason && (!compositionRequest.currentInstallationRef || replacementIdentity === configurationIdentity())) void commands.resolve(compositionRequest); }}
           />
           <CompositionLockDetail state={lockReadState} />
           {commands.resolveState.phase === "succeeded" && commands.resolveState.data && !commands.resolveState.stale && (

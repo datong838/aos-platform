@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import * as replacementPreparation from "../assetBundles/replacementPreparation";
 import { assetControlClient } from "../../../api/assetControl/client";
 import { setTenant } from "../../../api/tenant";
 import { STORED_COMPOSITION_LOCK_FIXTURE } from "../../../api/assetControl/compositionFixtures";
@@ -189,6 +190,33 @@ describe("M3-4/M3-5 AssetBundlesPage integration", () => {
     }
     await act(async () => button(`确认${actionLabel}`).click());
   }
+
+  it("invalidates an old replacement while a new preparation is pending or fails", async () => {
+    hooks.installationData = INSTALLATION_ACTIVE_FIXTURE;
+    const { configurationIdentity } = await import("../assetBundles/readHooks");
+    const prepared = vi.spyOn(replacementPreparation, "prepareReplacement").mockResolvedValue({
+      identity: configurationIdentity(),
+      request: { ...STORED_COMPOSITION_LOCK_FIXTURE.payload.request,
+        currentInstallationRef: { installationId: INSTALLATION_ACTIVE_FIXTURE.installationId, revision: 5,
+          lockHash: INSTALLATION_ACTIVE_FIXTURE.current.lockHash, overlayRevision: "test" } },
+      draft: { displayName: "replacement", overlayRevision: "test" },
+    });
+    try {
+      await renderPage(); await openInstallation();
+      await act(async () => button("准备恢复/替换计划").click());
+      expect(button("解析并生成不可变 Lock").disabled).toBe(false);
+      await act(async () => button("安装管理").click());
+      let reject!: (error: Error) => void;
+      prepared.mockImplementation(() => new Promise((_resolve, fail) => { reject = fail; }));
+      await act(async () => button("准备恢复/替换计划").click());
+      await act(async () => button("组合预检与创建").click());
+      expect(button("解析并生成不可变 Lock").disabled).toBe(true);
+      await act(async () => reject(new Error("unavailable")));
+      expect(button("解析并生成不可变 Lock").disabled).toBe(true);
+      await act(async () => button("解析并生成不可变 Lock").click());
+      expect(assetControlClient.resolveComposition).not.toHaveBeenCalled();
+    } finally { prepared.mockRestore(); }
+  });
 
   it("renders canonical Registry facts without the legacy demo bundles", async () => {
     await renderPage();

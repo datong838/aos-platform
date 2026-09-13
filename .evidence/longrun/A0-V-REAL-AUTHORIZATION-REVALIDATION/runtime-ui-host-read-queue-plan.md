@@ -438,3 +438,7 @@ D2e1真实浏览器发现既有协议遗漏：Niushop1.5版本GET 200，但regis
 ## D2d-9 登记通道配置提示（基线85cf130a，编码前）
 
 来源目录新增submissionConfigured布尔值，默认false；HTTP层仅按本进程登记凭据路径是否配置设置，不读取凭据、不宣称Host可用或执行获批。前端兼容旧响应缺字段但禁用新提交，非法值拒绝；当前目录仍可读，原键/原ID查询不受此提示阻止。修改configuration_source_catalog.py、bundle_runtime_installations.py、configurationStaging.ts、ConfigurationStagePanel.tsx及其测试。覆盖配置有/无、旧协议、非法值和禁止提交；API受控重载后真实页面核验。无迁移、无主库登记、不切Host。
+
+## D2e3 替换计划准备失败后的旧输入失效（基线7092f61e，编码前）
+
+AssetBundlesPage.tsx在开始重新准备时立即清除replacementIdentity，等待期间禁止resolve；失败保留旧输入供查看但不能提交，成功才赋新身份。同步回调检查replacementLock，避免同事件周期竞态。增加页面回归：准备成功→重新准备挂起→切预检禁止resolve→读取失败后仍禁止旧计划。服务端CAS/审批不变，不生成新Lock、安装或主库业务写。
