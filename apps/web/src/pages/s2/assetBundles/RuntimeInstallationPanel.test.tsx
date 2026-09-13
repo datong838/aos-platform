@@ -153,4 +153,26 @@ describe("RuntimeInstallationPanel", () => {
     expect(host.querySelector('iframe[title="隔离测试扩展"]')).not.toBeNull();
     expect(host.textContent).toContain("隔离测试扩展");
   });
+  it("选择已登记配置提交exact引用且失效后不能复用", async () => {
+    const execute = vi.fn();
+    const ref = { configurationId: "77777777-7777-4777-8777-777777777777", revision: 1, hash: "sha256:" + "a".repeat(64) };
+    const catalog = { installationId: runtime.installationId, installationRevision: 5, installationEtag: 5,
+      generation: runtime.binding!.generation, bindingRevision: 2, items: [{ ref, isCurrent: false }], hasMore: false };
+    const configurations = { data: catalog, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn(), isCurrent: () => true };
+    const props = { state: { data: runtime, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn() }, configurations,
+      offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: false, canRetrySameCommand: false, onRetrySameCommand: vi.fn(), onExecute: execute };
+    await act(async () => root.render(<RuntimeInstallationPanel {...props} />));
+    const open = async () => act(async () => Array.from(host.querySelectorAll("button")).find(b => b.textContent === "更新运行配置")!.click());
+    await open();
+    expect(host.querySelector('input[aria-label="配置 Hash"]')).toBeNull();
+    const select = host.querySelector('select')!;
+    await act(async () => { select.value = JSON.stringify(ref); select.dispatchEvent(new Event("change", { bubbles: true })); });
+    await act(async () => Array.from(host.querySelectorAll("button")).find(b => b.textContent === "确认更新运行配置")!.click());
+    expect(execute).toHaveBeenCalledWith("configure", { generation: runtime.binding!.generation, bindingRevision: 2, configRef: ref });
+    await open();
+    await act(async () => root.render(<RuntimeInstallationPanel {...props} configurations={{ ...configurations, stale: true }} />));
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
 });

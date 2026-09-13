@@ -20,6 +20,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
 from aos_api.extension_runtime.runtime_view import RuntimeInstallationView, RuntimeOperationView
+from aos_api.extension_runtime.configuration_catalog import ConfigurationCatalog
 from aos_api.routers.asset_control_headers import require_idempotency_key, require_if_match
 
 
@@ -123,6 +124,38 @@ def _invoke(operation):
     except LookupError as exc:
         raise ApiError(code="RUNTIME_NOT_FOUND", message="未找到当前租户可见的运行记录。", status_code=404) from exc
 
+
+class _ConfigurationCatalogRoute(APIRoute):
+    def get_route_handler(self):
+        handler=super().get_route_handler()
+        async def safe(request):
+            from starlette.responses import JSONResponse
+            try:
+                response=await handler(request)
+            except ApiError as exc:
+                response=JSONResponse({'code':exc.code,'message':exc.message},status_code=exc.status_code)
+            except RequestValidationError:
+                response=JSONResponse({'code':'CONFIGURATION_CATALOG_INVALID','message':'配置列表请求不符合要求。'},status_code=422)
+            except Exception:
+                response=JSONResponse({'code':'CONFIGURATION_CATALOG_UNAVAILABLE','message':'配置列表暂不可用，请刷新后重试。'},status_code=503)
+            response.headers['Cache-Control']='no-store'
+            return response
+        return safe
+
+
+_configuration_catalog_router=APIRouter(route_class=_ConfigurationCatalogRoute)
+
+
+@_configuration_catalog_router.get('/{installation_id}/configurations' , response_model=ConfigurationCatalog,
+    operation_id='list_bundle_runtime_configurations', responses=_ERRORS)
+def list_bundle_runtime_configurations(installation_id: CanonicalUuidPath, response: Response,
+        principal: PrincipalDependency, view_reader: RuntimeViewReaderDependency) -> ConfigurationCatalog:
+    response.headers['Cache-Control']='no-store'
+    return _invoke(lambda: view_reader.list_configurations(installation_id=installation_id,
+        org_id=principal.org_id,project_id=principal.project_id,roles=principal.roles,markings=principal.markings))
+
+
+router.include_router(_configuration_catalog_router)
 
 @router.get(
     "/{installation_id}",

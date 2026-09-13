@@ -1,0 +1,23 @@
+{
+  "outcome": "CURRENT_CONFIGURATION_CATALOG_READ_VERIFIED",
+  "catalog": {
+    "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+    "installationRevision": 5,
+    "installationEtag": 5,
+    "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+    "bindingRevision": 4,
+    "items": [
+      {
+        "ref": {
+          "configurationId": "721433ba-5256-4b12-9043-0bcfab658bf0",
+          "revision": 1,
+          "hash": "sha256:dc25c6c047776b90681b33f82a089145692417afd5c7e8c0120c315d27f9241a"
+        },
+        "isCurrent": true
+      }
+    ],
+    "hasMore": false
+  },
+  "businessFingerprintUnchanged": true,
+  "executionAuthorized": false
+}

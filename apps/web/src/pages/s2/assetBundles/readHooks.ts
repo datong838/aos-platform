@@ -1,3 +1,4 @@
+import { getAuthRevision, getTenant } from "../../../api/tenant";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { assetControlClient } from "../../../api/assetControl/client";
 import { normalizeAssetControlError } from "../../../api/assetControl/errors";
@@ -10,6 +11,7 @@ import type {
   InstallationListResponse,
   InstallationResponse,
   RuntimeInstallation,
+  RuntimeConfigurationCatalog,
 } from "../../../api/assetControl/types";
 import type {
   AssetReadState,
@@ -222,4 +224,30 @@ export function useRuntimeInstallation(
     },
     resourceIsNeverEmpty,
   );
+}
+
+export type ConfigurationReadState = AssetReadState<RuntimeConfigurationCatalog> & { isCurrent: () => boolean };
+function configurationIdentity(): string {
+  const tenant = getTenant();
+  return JSON.stringify([tenant.orgId, tenant.projectId, tenant.subject, tenant.roles, (tenant as { markings?: string[] }).markings, getAuthRevision()]);
+}
+export function useRuntimeConfigurations(runtime: RuntimeInstallation | null): ConfigurationReadState {
+  const [identity, setIdentity] = useState(configurationIdentity);
+  useEffect(() => {
+    const refresh = () => setIdentity(configurationIdentity());
+    const events = ["aos-auth-updated", "aos-tenant-updated", "aos-workspace-changed"];
+    events.forEach(event => window.addEventListener(event, refresh));
+    return () => events.forEach(event => window.removeEventListener(event, refresh));
+  }, []);
+  const key = runtime ? JSON.stringify([identity, runtime.installationId, runtime.installationRevision, runtime.installationEtag, runtime.binding?.generation, runtime.binding?.revision]) : null;
+  const state = useAssetRead(key, async () => {
+    if (!runtime || !key || identity !== configurationIdentity()) throw new Error("当前配置读取已失效");
+    const value = await assetControlClient.getRuntimeConfigurations(runtime.installationId);
+    if (identity !== configurationIdentity()) throw new Error("当前配置读取已失效");
+    return { key, value };
+  }, item => item.value.items.length === 0);
+  const matching = state.data?.key === key && identity === configurationIdentity();
+  return { ...state, data: matching ? state.data!.value : null,
+    status: !matching && state.data ? "loading" : state.status,
+    isCurrent: () => matching && identity === configurationIdentity() };
 }

@@ -1,6 +1,7 @@
 import type {
   JsonValue,
   RuntimeAction,
+  RuntimeConfigurationCatalog,
   RuntimeBinding,
   RuntimeInstallation,
   RuntimeOperation,
@@ -98,4 +99,24 @@ export function serializeRuntimeOperationRequest(value: RuntimeOperationRequest)
   const needsTarget = value.kind === "configure" || value.kind === "enable" || value.kind === "disable";
   if (needsTarget !== (value.target !== undefined)) throw new TypeError(needsTarget ? "runtime control requires an exact target" : "runtime preparation does not accept a target");
   return value.target === undefined ? { kind: value.kind } : { kind: value.kind, target: value.target };
+}
+
+export function parseRuntimeConfigurationCatalog(value: unknown): RuntimeConfigurationCatalog {
+  const item = object(value, "Configuration catalog");
+  keys(item, ["installationId", "installationRevision", "installationEtag", "generation", "bindingRevision", "items", "hasMore"], "Configuration catalog");
+  uuid(item.installationId, "installationId"); integer(item.installationRevision, "installationRevision"); integer(item.installationEtag, "installationEtag");
+  if (item.generation !== null) uuid(item.generation, "generation");
+  nullableInteger(item.bindingRevision, "bindingRevision");
+  if ((item.generation === null) !== (item.bindingRevision === null) || typeof item.hasMore !== "boolean" || !Array.isArray(item.items) || item.items.length > 50) throw new Error("Configuration catalog shape differs");
+  const seen = new Set<string>();
+  for (const value of item.items) {
+    const choice = object(value, "choice"); keys(choice, ["ref", "isCurrent"], "choice");
+    const ref = object(choice.ref, "ref"); keys(ref, ["configurationId", "revision", "hash"], "ref");
+    uuid(ref.configurationId, "configurationId"); integer(ref.revision, "revision"); text(ref.hash, "hash");
+    const key = `${ref.configurationId}:${ref.revision}`;
+    if (!/^sha256:[0-9a-f]{64}$/.test(ref.hash) || typeof choice.isCurrent !== "boolean" || seen.has(key)) throw new Error("Configuration choice differs");
+    seen.add(key);
+  }
+  if (item.generation === null && (item.items.length || item.hasMore)) throw new Error("Unbound configuration choices");
+  return item as unknown as RuntimeConfigurationCatalog;
 }

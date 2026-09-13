@@ -99,6 +99,9 @@ class _LazyRuntimeViewReader:
     def get_installation(self, **kwargs: Any) -> Any:
         return self._resolve().get_installation(**kwargs)
 
+    def list_configurations(self, **kwargs: Any) -> Any:
+        return self._resolve().list_configurations(**kwargs)
+
     def get_operation(self, **kwargs: Any) -> Any:
         return self._resolve().get_operation(**kwargs)
 

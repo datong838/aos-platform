@@ -277,3 +277,17 @@ UQ6-A实现补充：新执行器自身protected_write使用0600/O_EXCL、文件�
 D2a先修真实状态显示：新增services/aos-api/aos_api/extension_runtime/runtime_resource_health.py，修改runtime_view.py及相关tests/extension_runtime。读取同租户、安装及绑定generation的已提交runtime-apply资源租约；数据库时钟核过期、已释放、cleanup异常、container缺失，空集也不视为可用。该检查只是否定资源存活证明，不代替IPC前后权限与session核验。
 
 RuntimeViewReader在原租户只读事务内为binding收集健康，仅当原推导ready而资源证据不足时输出needs_attention、ui=None、只保留disable并说明需要禁入对账；不改绑定/安装数据库状态，不自动重建、不允许enable绕过。原非ready流程及停用入口保持。资源表缺失依既有runtime_storage_unavailable处理。测试失去资源不调用UI resolver、已释放/过期/缺失/跨租户/其他generation不能撑起ready，健康资源维持原路径，真实PG验证查询。
+
+## UQ6-D2b 当前代际配置选择（基线5f9161c5，编码前）
+
+产品缺口：RuntimeInstallationPanel要求用户手填配置ID/revision/hash。改为从原extension_runtime_configuration不可变记录读取当前安装、当前binding generation的登记配置ref，前端只选择，不手输摘要。该列表是已登记元数据，不是当前四类来源或执行审批已通过；configure/enable仍走原RuntimeConfigurationService当前四来源/权限/CAS/Receipt校验。
+
+文件：新增extension_runtime/configuration_catalog.py；修改runtime_view.py、asset_registry/control_wiring.py、routers/bundle_runtime_installations.py；前端api/assetControl/types.ts、runtimeInstallations.ts、client.ts，pages/s2/assetBundles/readHooks.ts及RuntimeInstallationPanel.tsx、pages/s2/AssetBundlesPage.tsx和相应测试。不得增加新的配置权威或复制策略正文。
+
+GET /v1/bundle-runtime-installations/{id}/configurations：当前Principal角色须原APPLY权限并通过现有installation_reader权限/markings；在同租户读事务重核当前binding代际及revision，参数不允许用户指定租户或generation。按configuration_id/revision稳定取最多51条，返回50条+hasMore真实截断；完整_decode验证摘要但响应只含ref、isCurrent。返回安装revision/etag、generation/bindingRevision供前端选择与确认绑定；无绑定为空列表、不能伪造选项；漂移409。所有返回no-store。
+
+前端复用既有带租户/身份失效保护的readHooks，当前选择仅在列表与运行状态的安装/代际/修订匹配且不stale/refreshing/offline时提交。切换安装/身份/代际清空；选择不可在新列表里匹配时关闭确认。无配置显示需先登记配置，不暴露手输Hash替代。配置创建与四来源自动装配另切片，不能声称此列表已完成全配置流程。
+
+测试：真实SQL隔离/摘要篡改/有界列表；HTTP只用当前主体/角色与no-store；前端选择带exact ref、列表失效不提交、跨代际清空及原disable/enable路径回归；最后主库只读核对现有已登记配置，API部署后浏览器验收。
+
+D2b实施核对修正：原通用useAssetRead仅有请求序号、无完整身份失效保护；本切片不扩改全部旧读取，新增配置读取封装，携带租户/subject/roles/authRevision本地key并监听身份变化，响应前后重新比较；返回旧key的数据立即隐藏，确认按钮提交前再次isCurrent检查。新增operations.ts接口合同条目。

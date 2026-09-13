@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   parseRuntimeInstallation,
+  parseRuntimeConfigurationCatalog,
   parseRuntimeOperation,
   serializeRuntimeOperationRequest,
 } from "./runtimeInstallations";
@@ -119,4 +120,13 @@ describe("runtime installation canonical contract", () => {
     expect(() => serializeRuntimeOperationRequest({ kind: "enable" })).toThrow("requires an exact target");
     expect(() => serializeRuntimeOperationRequest({ kind: "runtime-verify", target: {} })).toThrow("does not accept a target");
   });
+});
+
+it("configuration catalog keeps exact refs and rejects malformed choices", () => {
+  const item = { installationId: INSTALLATION_ID, installationRevision: 1, installationEtag: 1, generation: GENERATION, bindingRevision: 1,
+    items: [{ ref: { configurationId: OPERATION_ID, revision: 1, hash: "sha256:" + "a".repeat(64) }, isCurrent: true }], hasMore: false };
+  expect(parseRuntimeConfigurationCatalog(item)).toEqual(item);
+  expect(() => parseRuntimeConfigurationCatalog({ ...item, items: [...item.items, ...item.items] })).toThrow();
+  expect(() => parseRuntimeConfigurationCatalog({ ...item, generation: null })).toThrow();
+  expect(() => parseRuntimeConfigurationCatalog({ ...item, policyBody: "private" })).toThrow();
 });

@@ -401,3 +401,10 @@ export interface ApiErrorBody {
   details: { [key: string]: JsonValue } | null;
   traceId: string;
 }
+
+export interface RuntimeConfigurationRef { configurationId: string; revision: number; hash: string; }
+export interface RuntimeConfigurationCatalog {
+  installationId: string; installationRevision: number; installationEtag: number;
+  generation: string | null; bindingRevision: number | null;
+  items: { ref: RuntimeConfigurationRef; isCurrent: boolean }[]; hasMore: boolean;
+}

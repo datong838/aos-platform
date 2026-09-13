@@ -9,6 +9,7 @@ import type {
 import type { AssetControlError } from "../../../api/assetControl/errors";
 import { ExtensionHost, type ExtensionHostSpec } from "../../../components/extensions/ExtensionHost";
 import type { AssetReadState } from "./model";
+import type { ConfigurationReadState } from "./readHooks";
 
 const LABELS: Record<RuntimeAction, string> = {
   "runtime-apply": "准备运行资源",
@@ -40,6 +41,7 @@ function eventLabel(type: string): string {
 
 export interface RuntimeInstallationPanelProps {
   state: AssetReadState<RuntimeInstallation>;
+  configurations?: ConfigurationReadState;
   offline: boolean;
   pending: RuntimeAction | null;
   error: AssetControlError | null;
@@ -52,12 +54,18 @@ export interface RuntimeInstallationPanelProps {
 
 const panelStyle = { border: "1px solid var(--aos-border)", borderRadius: 3, padding: 12 } as const;
 
-export function RuntimeInstallationPanel({ state, offline, pending, error, receipt, hasRetrySameCommand, canRetrySameCommand, onRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
+export function RuntimeInstallationPanel({ state, configurations, offline, pending, error, receipt, hasRetrySameCommand, canRetrySameCommand, onRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
   const runtime = state.data;
   const [selected, setSelected] = useState<RuntimeAction | null>(null);
-  const [configurationId, setConfigurationId] = useState("");
-  const [configurationRevision, setConfigurationRevision] = useState("1");
-  const [configurationHash, setConfigurationHash] = useState("");
+  const [configurationChoice, setConfigurationChoice] = useState("");
+  const catalog = configurations?.data;
+  const configurationReady = Boolean(runtime?.binding && catalog && configurations?.isCurrent()
+    && !configurations.stale && !configurations.refreshing && configurations.status === "ready"
+    && catalog.installationId === runtime.installationId && catalog.installationRevision === runtime.installationRevision
+    && catalog.installationEtag === runtime.installationEtag && catalog.generation === runtime.binding.generation
+    && catalog.bindingRevision === runtime.binding.revision);
+  const selectedConfiguration = configurationReady ? catalog?.items.find(item => JSON.stringify(item.ref) === configurationChoice)?.ref : undefined;
+  useEffect(() => { if (!configurationReady || !selectedConfiguration) { if (configurationChoice && selected === "configure") setSelected(null); setConfigurationChoice(""); } }, [configurationReady, selectedConfiguration, configurationChoice, selected]);
   const hostSpec = useMemo<ExtensionHostSpec | null>(() => {
     if (!runtime?.ui || !runtime.binding) return null;
     return {
@@ -85,16 +93,13 @@ export function RuntimeInstallationPanel({ state, offline, pending, error, recei
     const existing = runtime.binding.configRef;
     const configRef = kind === "enable" && existing
       ? existing
-      : { configurationId: configurationId.trim(), revision: Number(configurationRevision), hash: configurationHash.trim() };
+      : selectedConfiguration ? { ...selectedConfiguration } : undefined;
+    if (!configRef) return undefined;
     return { generation: runtime.binding.generation, bindingRevision: runtime.binding.revision, configRef };
   }
 
   const selectedTarget = selected ? target(selected) : undefined;
-  const configureValid = selected !== "configure" || (
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(configurationId.trim()) &&
-    Number.isSafeInteger(Number(configurationRevision)) && Number(configurationRevision) >= 1 &&
-    /^sha256:[0-9a-f]{64}$/.test(configurationHash.trim())
-  );
+  const configureValid = selected !== "configure" || Boolean(selectedConfiguration);
   const targetValid = selected === null || selected === "runtime-apply" || selected === "runtime-verify" || Boolean(selectedTarget);
 
   return (
@@ -149,16 +154,21 @@ export function RuntimeInstallationPanel({ state, offline, pending, error, recei
               <h4>{LABELS[selected]}确认</h4>
               {selected === "configure" && (
                 <div style={{ display: "grid", gap: 8 }}>
-                  <label>配置 ID<input aria-label="配置 ID" value={configurationId} onChange={(event) => setConfigurationId(event.target.value)} /></label>
-                  <label>配置 revision<input aria-label="配置 revision" inputMode="numeric" value={configurationRevision} onChange={(event) => setConfigurationRevision(event.target.value)} /></label>
-                  <label>配置 Hash<input aria-label="配置 Hash" placeholder="sha256:…" value={configurationHash} onChange={(event) => setConfigurationHash(event.target.value)} /></label>
+                  <label>选择已登记配置<select aria-label="选择已登记配置" value={configurationChoice} disabled={!configurationReady || interactionBlocked} onChange={event => setConfigurationChoice(event.target.value)}>
+                    <option value="">请选择配置</option>
+                    {(configurationReady ? catalog?.items ?? [] : []).map((item, index) => <option key={JSON.stringify(item.ref)} value={JSON.stringify(item.ref)}>配置 {index + 1} · 版本 {item.ref.revision}{item.isCurrent ? " · 当前绑定" : ""}</option>)}
+                  </select></label>
+                  <p>提交时会重新校验配置来源和当前权限。</p>
+                  {!configurationReady && <p role="status">{configurations?.status === "empty" ? "当前代际尚未登记配置，请先完成配置登记。" : "配置列表尚未就绪或已失效，请重新读取。"}</p>}
+                  {catalog?.hasMore && <p role="status">当前显示前50条配置；列表尚未全部展示。</p>}
+                  <button className="btn" type="button" disabled={offline || pending !== null || !configurations} onClick={configurations?.reload}>重新读取配置</button>
                 </div>
               )}
               {(selected === "enable" || selected === "disable") && <p>目标代次与 binding revision 已锁定为当前服务端值；状态变化时服务端会拒绝执行。</p>}
               {(selected === "runtime-apply" || selected === "runtime-verify") && <p>该操作只提交运行准备回执，不会由浏览器直接执行外部副作用。</p>}
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="btn" type="button" disabled={pending !== null} onClick={() => setSelected(null)}>取消</button>
-                <button className="btn btn-primary" type="button" disabled={interactionBlocked || !runtime.allowedActions.includes(selected) || !configureValid || !targetValid} onClick={() => { onExecute(selected, selectedTarget); setSelected(null); }}>确认{LABELS[selected]}</button>
+                <button className="btn btn-primary" type="button" disabled={interactionBlocked || !runtime.allowedActions.includes(selected) || !configureValid || !targetValid} onClick={() => { if (selected === "configure" && (!selectedConfiguration || !configurations?.isCurrent())) return; onExecute(selected, selectedTarget); setSelected(null); }}>确认{LABELS[selected]}</button>
               </div>
             </section>
           )}

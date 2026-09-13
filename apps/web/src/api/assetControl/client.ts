@@ -13,6 +13,7 @@ import {
 import { parseInstallationDetail, parseInstallationList } from "./installations";
 import {
   parseRuntimeInstallation,
+  parseRuntimeConfigurationCatalog,
   parseRuntimeOperation,
   parseRuntimeOperationAccepted,
   serializeRuntimeOperationRequest,
@@ -48,6 +49,7 @@ import type {
   RejectInstallationRequest,
   RollbackInstallationRequest,
   RuntimeInstallation,
+  RuntimeConfigurationCatalog,
   RuntimeOperation,
   RuntimeOperationAccepted,
   RuntimeOperationRequest,
@@ -594,6 +596,12 @@ export class AssetControlClient {
       if (status.installationId !== installationId) throw new Error("Registration installation mismatch");
       return status;
     });
+  }
+
+  getRuntimeConfigurations(installationId: string): Promise<RuntimeConfigurationCatalog> {
+    const operation = ASSET_CONTROL_OPERATIONS.getRuntimeConfigurations;
+    const path = fillPath(operation, { installation_id: canonicalUuid(installationId, "installation_id") });
+    return this.get<unknown>(operation.operationId, path).then(parseRuntimeConfigurationCatalog);
   }
 
   getRuntimeInstallation(installationId: string): Promise<RuntimeInstallation> {

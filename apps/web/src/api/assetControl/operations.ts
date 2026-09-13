@@ -28,6 +28,7 @@ export type AssetControlOperationId =
   | "withdraw_ecommerce_growth_registration"
   | "get_ecommerce_growth_withdrawal_receipt"
   | "get_ecommerce_growth_registration_status"
+  | "list_bundle_runtime_configurations"
   | "get_bundle_runtime_installation"
   | "get_bundle_runtime_operation"
   | "create_bundle_runtime_operation";
@@ -179,6 +180,11 @@ export const ASSET_CONTROL_OPERATIONS = {
     requiresIfMatch: false,
     returnsEtag: false,
     errorStatuses: [...COMMAND_ERRORS, 503],
+  },
+  getRuntimeConfigurations: {
+    method: "GET", pathTemplate: "/v1/bundle-runtime-installations/{installation_id}/configurations",
+    operationId: "list_bundle_runtime_configurations", requiresIdempotencyKey: false,
+    requiresIfMatch: false, returnsEtag: false, errorStatuses: [...BASE_ERRORS, 409, 503],
   },
   getRuntimeInstallation: {
     method: "GET",
