@@ -63,3 +63,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 封存精确claim、版本、token、Attempt；先settle Attempt再更新队列，同一事务原子提交。成功前再核binding；过期或失效转失败/expired，无自动重发。未知结果由后续恢复器收束，不创建第二次Attempt。代码不调用包、不读取业务表、不授予新角色权限；具体宿主消费者仍负责当前成员、签名声明、快照及同一PreparedJob校验。
 
 固定UI读取operationId直接保留analyst_workspace_view_v1，后继包注册独立只读方法；不能把读取塞进analysis_advance等九项业务命令。新包交付前只做隔离验证。UQ3后续补具体消费者及角色/关闭/恢复接入。
+
+## UQ3-B 过期投递收束（基线20231663，编码前补充）
+
+新增extension_runtime/ui_read_recovery.py及PG测试。原Host先执行既有ExpiredSignedReadAttemptRecovery；新存储函数每次最多100条，显式scope、FOR UPDATE SKIP LOCKED选取到期requested，或其Attempt已succeeded/failed/abandoned的到期claimed。仍running的Attempt不标成可重试或强制成功。封存expired/READ_DEADLINE_EXPIRED保留原claim，revision+1，无结果、无新Attempt、无重新入队；终态再次运行不改变。筛选跳过running而非让它占满整页阻塞其它过期请求。
+
+隔离PG验证到期前不变、requested到期终结、claimed在Attempt仍running时不终结、既有abandon恢复后队列终结、幂等、负租户和分页。该函数仍为宿主内部存储切片，无新授权或真实调用，随后在具体消费者/Host串接。

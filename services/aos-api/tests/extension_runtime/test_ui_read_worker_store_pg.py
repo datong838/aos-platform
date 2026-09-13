@@ -78,7 +78,7 @@ def test_two_connections_only_one_claim(queue):
     assert conn.execute('SELECT count(*) FROM extension_runtime_execution_attempt').fetchone()==(1,)
 
 
-def test_expired_claim_discards_result(queue):
+def short_request(queue):
     conn,*_=queue;original=insert(queue);short=uuid4()
     conn.execute('''INSERT INTO extension_runtime_ui_read_request
         (org_id,project_id,request_id,subject,idempotency_key,request_hash,installation_id,generation,execution_epoch,
@@ -86,6 +86,11 @@ def test_expired_claim_discards_result(queue):
         SELECT org_id,project_id,%s,subject,%s,request_hash,installation_id,generation,execution_epoch,
          operation_id,module_id,target_json,case_limit,run_limit,'requested',clock_timestamp()+interval '500 milliseconds'
         FROM extension_runtime_ui_read_request WHERE request_id=%s''',(short,str(short),original))
+    return short
+
+
+def test_expired_claim_discards_result(queue):
+    conn,*_=queue;short=short_request(queue)
     value=claim(conn,short)
     conn.execute('SELECT pg_sleep(0.6)')
     assert complete(conn,value,result={})=='expired'
