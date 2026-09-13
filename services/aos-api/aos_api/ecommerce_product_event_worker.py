@@ -1,8 +1,11 @@
 """Lifecycle-owned bounded discovery and current-authority event consumption."""
 import asyncio
+from uuid import uuid4
+from aos_api.automation_dispatcher import dispatch_one_occurrence_async
+from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ClaimTarget
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_connection import connect_serializable
-from aos_api.ecommerce_product_event_discovery import discover_event_candidates
+from aos_api.ecommerce_product_event_discovery import discover_event_candidates, discover_claim_origin
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 from aos_api.pipeline_control_service import PipelineControlServiceFactory
 from aos_api.pipeline_controlled_runtime import _authoritative_store
@@ -17,6 +20,25 @@ class ProductEventConsumptionWorker:
             raise TypeError('exact lifecycle event worker dependencies required')
         self.factory,self.directory=factory,directory
         self._cursors={};self._target_offset=0
+        self._claim_owner='product-event-'+uuid4().hex
+
+    def _origin(self,scope,claimed):
+        with connect_serializable(scope) as conn:
+            return discover_claim_origin(HostTransaction(conn),scope,claimed)
+
+    async def _dispatch(self,target):
+        scope,installation,generation=target
+        async def handle(claimed):
+            route=self._origin(scope,claimed)
+            markings=self._markings(scope,route['actor'])
+            with _authoritative_store() as store:
+                service=self.factory.build_event_analysis(scope,actor=route['actor'],run_id=route['runId'],
+                    control_ref=route['controlRef'],installation_id=installation,generation=generation,
+                    live_directory=self.directory,markings=markings,store=store)
+                return await service.handle(claimed)
+        return await dispatch_one_occurrence_async(scope,owner=self._claim_owner,
+            target=ClaimTarget('ecommerce_growth_analysis_advance',installation,generation,trigger_source='event'),
+            handler=handle,store=AutomationOccurrenceStore(connect_serializable))
 
     def _discover(self,target,after):
         scope,installation,generation=target
@@ -42,7 +64,7 @@ class ProductEventConsumptionWorker:
     async def tick(self):
         targets=self.directory.current_targets()
         self._cursors={key:value for key,value in self._cursors.items() if key in targets}
-        stats=dict(targetsChecked=0,candidates=0,occurrences=0,failed=0)
+        stats=dict(targetsChecked=0,candidates=0,occurrences=0,analysesAccepted=0,failed=0)
         if not targets:return stats
         start=self._target_offset%len(targets)
         selected=(targets[start:]+targets[:start])[:4]
@@ -57,7 +79,6 @@ class ProductEventConsumptionWorker:
                 continue
             if not rows:
                 self._cursors.pop(target,None)
-                continue
             scope,installation,generation=target
             for row in rows:
                 stats['candidates']+=1
@@ -76,15 +97,20 @@ class ProductEventConsumptionWorker:
                 finally:
                     self._cursors[target]=(row['policyId'],row['runId'])
             if len(rows)<5:self._cursors.pop(target,None)
+            try:
+                stats['analysesAccepted']+=int(await self._dispatch(target))
+            except Exception as exc:
+                stats['failed']+=1
+                log.warning('product_event_analysis_dispatch_failed target=%s error=%s',target,type(exc).__name__)
         return stats
 
     async def serve(self,stop,*,host_ready):
         while not stop.is_set() and host_ready():
             try:
                 result=await self.tick()
-                if result['occurrences'] or result['failed']:
-                    log.info('product_event_tick targets=%s candidates=%s occurrences=%s failed=%s',
-                        result['targetsChecked'],result['candidates'],result['occurrences'],result['failed'])
+                if result['occurrences'] or result['analysesAccepted'] or result['failed']:
+                    log.info('product_event_tick targets=%s candidates=%s occurrences=%s analyses=%s failed=%s',
+                        result['targetsChecked'],result['candidates'],result['occurrences'],result['analysesAccepted'],result['failed'])
             except Exception:
                 log.exception('product_event_tick_failed_closed')
             try:

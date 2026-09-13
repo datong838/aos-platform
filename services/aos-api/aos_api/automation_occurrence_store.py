@@ -81,12 +81,15 @@ class ClaimTarget:
     operation_id: str
     installation_id: UUID
     generation: UUID
+    trigger_source: Literal['event', 'schedule'] | None = None
 
     def __post_init__(self) -> None:
         if type(self.operation_id) is not str or not OPERATION_ID.fullmatch(self.operation_id):
             raise ValueError("claim target operation is invalid")
         if type(self.installation_id) is not UUID or type(self.generation) is not UUID:
             raise ValueError("claim target requires exact runtime UUIDs")
+        if self.trigger_source is not None and self.trigger_source not in ('event', 'schedule'):
+            raise ValueError("claim target trigger source is invalid")
 
 
 @dataclass(frozen=True, slots=True)
@@ -603,6 +606,9 @@ class AutomationOccurrenceStore:
         if target is not None:
             target_filter = "AND o.operation_id=%s AND o.installation_id=%s AND o.generation=%s"
             target_params = (target.operation_id, target.installation_id, target.generation)
+            if target.trigger_source is not None:
+                target_filter += " AND o.trigger_source=%s"
+                target_params += (target.trigger_source,)
         with self._connect_factory(scope) as conn:
             row = conn.execute(
                 f"""WITH candidate AS (

@@ -470,6 +470,7 @@ def test_exact_claim_target_does_not_consume_other_targets(database):
         replace(target, operation_id='another_operation'),
         replace(target, installation_id=uuid4()),
         replace(target, generation=uuid4()),
+        replace(target, trigger_source='schedule'),
     ):
         assert store.claim_next(scope, owner='exact-worker', now=now, target=mismatch) is None
     assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_dispatch_attempt').fetchone()['n'] == 0
@@ -506,3 +507,24 @@ def test_lock_claim_revalidates_current_attempt_and_database_time(database, faul
         database.owner.execute("UPDATE automation_occurrence SET claim_until=clock_timestamp()-interval '1 second'")
     with factory(scope) as conn, pytest.raises(AutomationOccurrenceConflict):
         store._lock_claim(conn, scope, claimed)
+
+
+def test_async_dispatch_default_clock_records_real_receipt(database):
+    import asyncio
+    from aos_api.automation_dispatcher import dispatch_one_occurrence_async
+    from aos_api.automation_occurrence_store import ClaimTarget
+    scope=TenantScope('org-org','dev-project')
+    binding=replace(_seed(database,scope),cadence='event',weekly_day=None,local_time=None)
+    store=AutomationOccurrenceStore(_runtime_connection(database,scope),schema=database.schema)
+    store.put_binding(scope,binding)
+    store.record_event(scope,binding,source_event_id='async-clock',deadline=datetime.now(UTC).replace(microsecond=0)+timedelta(minutes=10))
+    database.owner.execute("UPDATE automation_occurrence SET created_at=clock_timestamp()-interval '2 seconds'")
+    calls=[]
+    async def handler(claimed):
+        calls.append(claimed.occurrence_id)
+        return {'resourceId':'fixture-receipt'}
+    target=ClaimTarget(binding.operation_id,binding.installation_id,binding.generation)
+    assert asyncio.run(dispatch_one_occurrence_async(scope,owner='worker',target=target,handler=handler,store=store))
+    assert not asyncio.run(dispatch_one_occurrence_async(scope,owner='worker',target=target,handler=handler,store=store))
+    assert len(calls)==1
+    assert database.owner.execute('SELECT status FROM automation_occurrence').fetchone()['status']=='accepted'

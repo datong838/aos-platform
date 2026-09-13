@@ -1,0 +1,11 @@
+# 生命周期事件任务到分析回执接线
+
+基线7873e6d6。父任务Host/tests范围。
+
+修改 ecommerce_product_event_worker.py：每轮已就绪target消费发现后至多领取1个analysis任务（总≤4），即使发现页空也检查已持久任务。每进程固定唯一claim owner；显式runtime作用域Store、精确ClaimTarget；handler按origin定位→当前membership/markings→factory→await analysis.handle。取消传播，失败沿现有needs_attention/对账，无自动重发。计数analysesAccepted，沿现有生命周期停机。
+
+修改 automation_dispatcher.py 默认时钟为UTC整秒，符合原OccurrenceStore协议；等待后仍取新时间。新增真实18432测试证明默认异步入口能领取并记录Receipt，不仅mock。
+
+修改test_product_event_worker.py原消费测试显式隔离新增dispatch，新增dispatch顺序/空页仍检查/取消测试。主库未043迁移，当前安装未新候选，不启动本代码；真实Host创建Run集成仍下一波。
+
+补充领取边界：ClaimTarget增加可选trigger_source（event/schedule），默认不变；worker固定event，避免错误消费同操作定时任务。修改automation_occurrence_store.py并增加对应真实PG错类型不领取验证。

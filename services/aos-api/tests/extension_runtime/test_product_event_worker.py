@@ -13,6 +13,8 @@ def setup(monkeypatch,*,fail=False):
     directory=LivePreparedJobDirectory();directory.register(_job())
     factory=object.__new__(PipelineControlServiceFactory)
     worker=ProductEventConsumptionWorker(factory,directory)
+    async def no_dispatch(target):return False
+    monkeypatch.setattr(worker,'_dispatch',no_dispatch)
     discovered=[];called=[]
     def candidates(target,after):
         discovered.append(after)
@@ -104,3 +106,46 @@ def test_worker_is_owned_by_application_lifecycle(monkeypatch):
             assert {t.get_name() for t in main.app.state.runtime_background_tasks}=={'extension-runtime-host','product-event-consumption'}
         assert stopped.is_set() and main.app.state.runtime_background_tasks==[]
     asyncio.run(run())
+
+
+def test_empty_discovery_still_checks_persisted_analysis_tasks(monkeypatch):
+    worker,directory,_,_=setup(monkeypatch)
+    monkeypatch.setattr(worker,'_discover',lambda *args:())
+    calls=[]
+    async def dispatch(target):calls.append(target);return True
+    monkeypatch.setattr(worker,'_dispatch',dispatch)
+    result=asyncio.run(worker.tick())
+    assert result['candidates']==0 and result['analysesAccepted']==1
+    assert calls==list(directory.current_targets())
+
+
+def test_worker_dispatches_exact_event_with_original_route(monkeypatch):
+    import aos_api.ecommerce_product_event_worker as module
+    worker,directory,_,_=setup(monkeypatch)
+    target=directory.current_targets()[0];claimed=object();calls=[]
+    monkeypatch.setattr(worker,'_origin',lambda scope,claim:{'runId':'original','actor':'controller','controlRef':{'exact':1}})
+    def build(self,scope,**kwargs):
+        calls.append(kwargs)
+        async def handle(claim):
+            assert claim is claimed
+            return {'resourceId':'receipt'}
+        return SimpleNamespace(handle=handle)
+    monkeypatch.setattr(PipelineControlServiceFactory,'build_event_analysis',build)
+    async def dispatch(scope,**kwargs):
+        assert kwargs['target'].trigger_source=='event'
+        assert kwargs['target'].installation_id==target[1] and kwargs['target'].generation==target[2]
+        assert kwargs['store']._connect_factory is module.connect_serializable
+        assert kwargs['owner']==worker._claim_owner
+        assert await kwargs['handler'](claimed)=={'resourceId':'receipt'}
+        return True
+    monkeypatch.setattr(module,'dispatch_one_occurrence_async',dispatch)
+    assert asyncio.run(ProductEventConsumptionWorker._dispatch(worker,target))
+    assert calls[0]['run_id']=='original' and calls[0]['actor']=='controller'
+
+
+def test_analysis_dispatch_cancellation_propagates(monkeypatch):
+    worker,_,_,_=setup(monkeypatch)
+    monkeypatch.setattr(worker,'_discover',lambda *args:())
+    async def cancel(target):raise asyncio.CancelledError()
+    monkeypatch.setattr(worker,'_dispatch',cancel)
+    with pytest.raises(asyncio.CancelledError):asyncio.run(worker.tick())

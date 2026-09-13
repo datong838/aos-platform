@@ -56,7 +56,7 @@ async def dispatch_one_occurrence_async(
     target: ClaimTarget,
     handler: Callable[[ClaimedOccurrence], Awaitable[dict[str, Any]]],
     store: AutomationOccurrenceStore,
-    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC).replace(microsecond=0),
 ) -> bool:
     """Await one exact target; unknown outcomes remain reconcile-only."""
     if type(target) is not ClaimTarget:
