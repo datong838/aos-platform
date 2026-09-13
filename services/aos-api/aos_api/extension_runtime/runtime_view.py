@@ -121,7 +121,12 @@ class RuntimeViewReader:
         project_id: str,
         roles: list[str],
         markings: list[str],
+        requested_route: str | None = None,
     ) -> RuntimeInstallationView:
+        if requested_route is not None:
+            from aos_api.extension_runtime.ui_resources import _canonical_route
+            if type(requested_route) is not str or len(requested_route) > 512 or not _canonical_route(requested_route):
+                raise ValueError('canonical runtime UI route required')
         installation_id = str(UUID(str(installation_id)))
         installation = self._installation_reader.get(
             installation_id=installation_id,
@@ -197,6 +202,7 @@ class RuntimeViewReader:
                         execution_epoch=binding.executionEpoch,
                         roles=roles,
                         markings=markings,
+                        **({'requested_route': requested_route} if requested_route is not None else {}),
                     )
                 except Exception:
                     reasons = (*reasons, "前端扩展资源会话校验失败；扩展页面保持关闭。")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Path, Request, Response, Security, status
+from fastapi import APIRouter, Depends, Path, Query, Request, Response, Security, status
 from fastapi.security import HTTPBearer
 from fastapi.routing import APIRoute
 from fastapi.exceptions import RequestValidationError
@@ -132,15 +132,23 @@ def _invoke(operation):
 )
 def get_bundle_runtime_installation(
     installation_id: CanonicalUuidPath,
+    request: Request,
     principal: PrincipalDependency,
     view_reader: RuntimeViewReaderDependency,
+    requested_route: Annotated[str | None, Query(alias='route', description='唯一工作台路径，长度 1 到 512 字符。')] = None,
 ) -> RuntimeInstallationView:
+    if requested_route is not None:
+        from aos_api.extension_runtime.ui_resources import _canonical_route
+        if (len(request.query_params.getlist('route')) != 1 or len(requested_route) > 512
+                or not _canonical_route(requested_route)):
+            raise ApiError(code='RUNTIME_UI_ROUTE_INVALID', message='请提供唯一、有效的工作台路径。', status_code=422)
     return _invoke(lambda: view_reader.get_installation(
         installation_id=installation_id,
         org_id=principal.org_id,
         project_id=principal.project_id,
         roles=principal.roles,
         markings=principal.markings,
+        **({'requested_route': requested_route} if requested_route is not None else {}),
     ))
 
 
