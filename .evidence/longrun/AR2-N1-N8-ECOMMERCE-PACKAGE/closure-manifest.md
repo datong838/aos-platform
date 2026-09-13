@@ -1301,3 +1301,5 @@ UQ5-B3b1包内经营参谋页面及原桥接共24项验证、类型检查通过�
 UQ5-B3b2正式growth1.8候选treeHash sha256:718548ad92a3715891b4b84060f0a2f22ad4baf6e492195573738e49c40ac8c4，23项验证与AR2阶段通过。旧1.7保持，7+1不变；尚未OCI构建/签名/安装，下一波真实容器资格验证。
 
 UQ5-B3c固定构建profile及同会话探针准备完成16项回归；待紧接实际构建/OCI资格验证，不把fixture当真实经营数据。
+
+UQ5-B3c真实BUILD_GREEN/QUALIFICATION_GREEN（HEAD1b03336c）：3个OCI各2048心跳并释放，growth24注册且同会话只读fixture1Case/1Run通过。旧3成员包hash保持，Registry/安装/Provider/外部副作用0。接续永久签名与UQ6，不等于真实经营验收。
