@@ -1,0 +1,9 @@
+# BG-02 事件截止时间与错过记录
+
+基线0ed00d02。消费准备审查发现record_event/record_event_batch目前不看截止时间，一律pending；过期事件直到claim才可能被纠正。商品事件时间合同要求冻结原截止时间，不用重试时间延长窗口。
+
+本波修改services/aos-api/aos_api/automation_occurrence_store.py：事件插入前在持有binding锁的同一事务读取clock_timestamp，deadline<=now记missed，未来deadline仍pending；原_id/截止时间/Receipt不变。回放按原存储状态返回，不修改既有状态，不自动重排。定时调用路径不改。批量逐项使用当前数据库时间，防止长批次跨截止仍pending。
+
+测试services/aos-api/tests/extension_runtime/test_automation_occurrences_pg.py新增真实隔离18432证明：过期单事件missed、混合批次pending/missed、原键回放保持missed且不重复outbox。复用并发/原子回滚/隔离负例。无迁移，不调用主库。
+
+后续：当前来源/当前批准下显式启用绑定；Reader仅返回原批次metadata，事件完整性与deadline计算须在Owner内部完成，禁止调用者供应权威行；消费者同事务写Occurrence再承接Run。现有save合同不覆盖启用或消费，新增运行合同须重新签名发布。产品入口/真实首链/八场景/观察继续未完成。

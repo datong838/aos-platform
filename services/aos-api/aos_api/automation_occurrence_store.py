@@ -433,6 +433,12 @@ class AutomationOccurrenceStore:
         deadline: datetime,
         status: str,
     ) -> OccurrenceWrite:
+        if trigger_source == "event" and status == "pending":
+            # Use current database time after the binding lock. Never renew a
+            # source deadline merely because ingestion or recovery was delayed.
+            now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            if deadline <= now:
+                status = "missed"
         payload = {
             "occurrenceId": str(occurrence_id),
             "policyId": binding.policy_id,

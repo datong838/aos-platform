@@ -394,3 +394,31 @@ def test_schedule_binding_rollover_disables_old_revision_and_old_occurrence(data
             "SELECT count(*) AS count FROM automation_schedule_binding WHERE enabled"
         ).fetchone()["count"] == 0
         conn.rollback()
+
+
+def test_expired_event_is_missed_and_replay_preserves_deadline(database):
+    scope=TenantScope('org-org','dev-project')
+    binding=replace(_seed(database,scope),cadence='event',weekly_day=None,local_time=None)
+    store=AutomationOccurrenceStore(_runtime_connection(database,scope),schema=database.schema)
+    store.put_binding(scope,binding)
+    now=database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
+    deadline=now-timedelta(seconds=10)
+    first=store.record_event(scope,binding,source_event_id='expired',deadline=deadline)
+    replay=store.record_event(scope,binding,source_event_id='expired',deadline=deadline)
+    assert first.status==replay.status=='missed'
+    assert not first.replayed and replay.replayed
+    assert first.occurrence_id==replay.occurrence_id
+    row=database.owner.execute('SELECT deadline,status FROM automation_occurrence').fetchone()
+    assert row==dict(deadline=deadline,status='missed')
+    assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_outbox').fetchone()['n']==1
+
+
+def test_event_batch_records_mixed_current_and_expired_deadlines(database):
+    scope=TenantScope('org-org','dev-project')
+    binding=replace(_seed(database,scope),cadence='event',weekly_day=None,local_time=None)
+    store=AutomationOccurrenceStore(_runtime_connection(database,scope),schema=database.schema)
+    store.put_binding(scope,binding)
+    now=database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
+    writes=store.record_event_batch(scope,binding,events=[('expired',now),('fresh',now+timedelta(hours=1))])
+    assert [row.status for row in writes]==['missed','pending']
+    assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_outbox').fetchone()['n']==2
