@@ -1,0 +1,7 @@
+# BG-02 当前来源事件候选只读入口
+
+基线de6efc2f，编码前。新增ecommerce_product_event_reader.py与隔离PG测试。构造仅接受真实类型PipelineSourceSelectionOwner；read复用run_current_snapshot，在原事务/原锁内关联精确来源合同，再核对已编译映射的platform/shop_id/object_type。拒绝范围漂移，查询前后都由原Owner执行有效期/配置核验。
+
+固定SQL只选projection_outbox元数据及source_updated_at字符串，不输出payload/客户数据。固定authoritative_store、Product/ProductSku、租户/工作区/平台/店铺/策略生效窗、objects_written/objects_tombstoned；不按projected过滤，不按MAX序号截断。NOT EXISTS同租户/policyId/sourceEventId的Occurrence；按input_revision,outbox_id排序，最多100且不超过来源rowLimit。候选不等于验证过的完整事件，不提供授权或写入。后续消费仍需源事件完整性校验和批准的事件策略。
+
+测试使用18432临时schema，最小表验证查询语义：两个连接低序号事务晚提交后仍被下一次查询选中；已消费排除而其他租户/策略不误排；投影状态不影响候选；错店铺/类型/来源/窗口拒选；无payload返回。另测Owner依赖拒绝和当前映射范围漂移。无迁移、主库ACL、后台启用或主库查询演示。
