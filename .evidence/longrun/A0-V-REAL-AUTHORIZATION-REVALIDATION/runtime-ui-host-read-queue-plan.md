@@ -137,3 +137,11 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 新增extension_runtime/ui_read_http_service.py将同一受限事务与既有admission/query组合；当前签名catalog由现有lazy reader resolve_catalog提供。修改routers/runtime_workshop.py增加POST /reads（固定UiReadRequest、Idempotency-Key）与GET /reads/{request_id}，仅Principal提供scope/subject/markings，无角色或租户覆盖。仅显式凭据文件配置后装配，无后台任务；提交202、查询200，业务异常固定脱敏，全部响应no-store。匿名及严格请求拒绝在服务前完成。
 
 新增HTTP/独立连接测试：真实非超级身份与回滚、错误文件/角色拒绝；路由固定参数/tenant/injection/匿名/错误脱敏，无有效连接配置503。旧目录入口回归，规范路由聚合无需新增router模块；实际主库/API尚不升级。
+
+## UQ4-C Web固定读取会话（基线91bb1053，编码前补充）
+
+新增apps/web/src/api/runtimeWorkshopRead.ts和测试。由已解析RuntimeWorkshopEntry构造固定analyst_workspace_view_v1及七字段target，仅caseLimit/runLimit有界可选。捕获当前org/project/subject/roles与内存token，仅比较不输出；调用方必须提供当前资源检查和AbortSignal，前后都核身份/资源/取消。
+
+一个会话至多POST一次，服务端Idempotency-Key固定随机值；POST结果未知不自动重发。已得到requestId后只GET该原请求，响应严格校验schema/scope/requestId/hash/revision/状态/时间/成功结果或失败码，不把客户端校验当执行授权。等待窗口最多60秒、每次HTTP最多10秒；超时保留原requestId，允许继续查询而不创建新请求。调用方离开/切scope/资源撤下必须abort，迟到结果丢弃。
+
+验证单次提交、GET不重发、错误租户/主体/凭据/target/hash/状态拒绝、未知提交不重发、有界等待后同ID继续查询、取消丢弃。本波不挂静态八页面或改变原ExtensionBridge；后继签名UI与实际资源挂载属UQ5。
