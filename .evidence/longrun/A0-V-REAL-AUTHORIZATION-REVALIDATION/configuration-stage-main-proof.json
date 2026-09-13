@@ -1,0 +1,19 @@
+{
+  "outcome": "CONFIGURATION_STAGE_LOCAL_SCHEMA_DEPLOYED",
+  "revision": "a0v_038",
+  "schema": {
+    "queueCount": 0,
+    "forceRls": true,
+    "runtimeUpdateColumns": [
+      "state",
+      "revision",
+      "completed_at",
+      "result_json",
+      "failure_code"
+    ],
+    "apiDirectTableAccess": false,
+    "restrictedFunctionCount": 4
+  },
+  "businessWrites": 0,
+  "at": "2026-09-13T17:03:03.753415+00:00"
+}
