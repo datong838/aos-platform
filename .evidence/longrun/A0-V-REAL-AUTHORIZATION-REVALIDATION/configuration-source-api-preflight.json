@@ -1,0 +1,47 @@
+{
+  "outcome": "CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN",
+  "at": "2026-09-13T16:56:23.939094+00:00",
+  "identities": {
+    "localDiagnosticMetadata": {
+      "session_user": "aos_app",
+      "current_user": "aos_app",
+      "current_database": "aos_meta_head",
+      "rolsuper": true,
+      "rolbypassrls": true
+    },
+    "hostWebIsolationProbe": {
+      "session_user": "aos_a0v_web_20260912",
+      "current_user": "aos_a0v_web_20260912",
+      "current_database": "aos_meta_head",
+      "runtime_member": false
+    },
+    "runtime": {
+      "session_user": "aos_a0v_runtime_20260912",
+      "current_user": "aos_runtime",
+      "current_database": "aos_meta_head"
+    },
+    "uiReadTransport": {
+      "session_user": "aos_ui_read_transport_20260913",
+      "current_user": "aos_ui_read_api",
+      "current_database": "aos_meta_head"
+    }
+  },
+  "bundleRoot": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260913/state/niushop-1.5-registry/signed-bundles-niushop-1.5",
+  "trustRoots": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json",
+  "flags": {
+    "AOS_DB_MIGRATION_MODE": "disabled",
+    "AOS_QYH_CRON_ENABLED": "false",
+    "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
+    "AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED": "false",
+    "AOS_EXTENSION_RUNTIME_HOST_ENABLED": "0",
+    "AOS_JDBC_SSH_PREBUILD_ENABLED": "false"
+  },
+  "localDiagnostic": true,
+  "productionWebIdentityComplete": false,
+  "sourceCalls": 0,
+  "runsCreated": 0,
+  "uiReadResourceOrigins": {
+    "AOS_EXTENSION_UI_RESOURCE_ORIGIN": "http://127.0.0.1:18181",
+    "AOS_EXTENSION_UI_PARENT_ORIGIN": "http://127.0.0.1:5173"
+  }
+}
