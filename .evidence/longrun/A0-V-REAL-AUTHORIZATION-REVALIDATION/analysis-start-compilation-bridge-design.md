@@ -41,3 +41,7 @@ CF4须让本次真实PG复现用例从已知失败转为成功，并读取实际
 2026-09-14 07:20 CST只读主恢复库：D01/D02/D03发布技能均r2，对应Logic r1；active绑定TTL均已过期。stage-template-ea53ff98fc1644c392ff@2 frozen使用profile ecommerce.business-investigation；职责方案responsibility-plan-63c82d2a75614e1b95f1@2 frozen使用ecommerce.business-investigation.readonly。正式compile_stage_template要求模板、职责、context、请求profile相同。CF2-3应补拒绝旧不一致模板，修改run_with_stage按compiler_profile检验，测试补legacy-profile拒绝。保留旧冻结记录，后续通过产品准备API创建受治理的新模板，不做原记录改写。
 
 此外SkillBindingSetRevision目前只有编译合同引用，没有实体Store/生产resolver；37技能拆分映射明确planned_not_published，不能作为覆盖证明。CF2后续必须补版本化L1-L2技能映射与绑定集合权威，再进入CF3；不能伪造exact resolver成功。
+
+## CF2-5 派生技能集合合同
+
+新增 services/aos-api/aos_api/ecommerce_analysis_skill_set.py、tests/test_ecommerce_analysis_skill_set.py。SkillBindingSetRevision采用当前SkillBinding权威行的内容寻址派生快照，含tenant、installation/generation/epoch、exact职责方案与稳定按binding_id排序的完整绑定。集合ref用内容hash寻址、revision固定1，不另建可写权限表。合法性检查租户一致、唯一binding/skill、SkillTemplate类型、正文hash；validate_current对当前重读行和当前安装/职责exact比较，校验active/available、无阻断原因、已评估、依赖快照存在及TTL未过期。此合同不证明Logic发布或能力可执行；后续读取器须在原Owner回调内读真实绑定与发布，并保存集合正文到编译桥证据。无DDL/主库写。
