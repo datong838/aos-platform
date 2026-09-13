@@ -1,0 +1,32 @@
+{
+  "outcome": "CLONE_CONFIGURATION_STAGE_OBSERVED",
+  "database": "aos_configuration_stage_20260914_test",
+  "receipt": {
+    "schemaVersion": "aos.runtime-configuration-stage-status/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "requestId": "28998ff0-9079-4e6f-9b44-45d7c7c434c3",
+    "requestHash": "sha256:7260732b5a94f104bde9df3629b3e0280a28ae0ab850ed344f39668108277933",
+    "state": "succeeded",
+    "revision": 2,
+    "deadline": "2026-09-13T17:35:40.415831Z",
+    "result": {
+      "configurationId": "2c850d02-3095-4036-a5af-dea450f08b2c",
+      "revision": 1,
+      "hash": "sha256:40a3e6d1e704a7b6ca1f21df9ba89b5f13b2458bfd944121c1b91bb3ab73fe67"
+    },
+    "failureCode": null
+  },
+  "configurationDelta": 1,
+  "queueCount": 1,
+  "repeatTickConsumed": false,
+  "originalKeyReadbackMatches": true,
+  "mainBusinessFingerprintUnchanged": true,
+  "mainQueueCount": 0,
+  "liveBusinessAcceptance": false,
+  "at": "2026-09-13T17:32:40.705329+00:00",
+  "exactConfigurationReadbackVerified": true,
+  "bindingUnchanged": true
+}

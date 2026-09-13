@@ -1,0 +1,9 @@
+# D2d-7 真实恢复副本配置交接验证
+
+2026-09-14，基线7108fe91，专用副本执行租约。固定aos_configuration_stage_20260914_test，无主库消费者和生命周期/OCI worker。
+
+实际调用ConfigurationStageHttpService受限传输提交真实副本来源，再由RuntimeHost原调度器+ConfigurationStageConsumer+CurrentFourSourceConfigurationAuthorization完成登记。request28998ff0-9079-4e6f-9b44-45d7c7c434c3 succeeded@2，新配置2c850d02-3095-4036-a5af-dea450f08b2c@1；精确_decode回读通过，绑定修订保持4。原ID与原键查询相同；第二tick无消费，新增配置恰好1条。
+
+主库19业务指纹不变、stage队列0；未重启当前Host。初次执行在intent之前因执行器漏填必填schema/action被合同拒绝，确认无intent后补齐再执行，未重发已受理请求。副本已保留1条成功演练请求，不再是空队列部署基线，禁止复用为新apply。
+
+这是实际恢复数据上的服务→Host集成验证，没有HTTP浏览器提交，不能计为主租户业务完成。主库API提交身份仍未配置，独立发布账号仍待核验。下一波D2d-8自动有界只读跟踪登记结果，避免需反复手动查回执；不自动重新POST。

@@ -422,3 +422,9 @@ prepare先导出当前主库、恢复新副本，只有恢复后业务指纹与�
 替换模式选择新版本须只替换同ID根项、保留其他请求根；不能将多包请求隐式变单包。初始版本均核验published+signature，服务端resolve再次核验所有实际来源。页面身份变化禁止旧准备结果用于resolve，重建前先使旧命令输入失效。后继真实注册仍需签名1.8目录切换与真实exact评审，不能复用旧审批。
 
 D2e1真实浏览器发现既有协议遗漏：Niushop1.5版本GET 200，但registry.ts manifest解析器不允许服务端合法spec.runtime字段，导致现有运行包详情无法读取。新增只读runtime声明结构解析（apiVersion、backend固定字段/入口及镜像索引路径、frontend清单路径/hash；不执行任何代码），保留extra拒绝；更新registry.ts类型与测试。先加入实际Niushop声明回归使旧解析器RED，再修复，再浏览器重读。
+
+## D2d-7 真实副本配置交接验收（基线7108fe91，编码前）
+
+新增scripts/a0v_configuration_stage_clone_acceptance.py，固定副本aos_configuration_stage_20260914_test。主库只取前后指纹，禁止主库入队/配置写入。原runtime登录仅增加副本CONNECT；复用既有0600凭据在内存中固定改dbname，连接后必须验证当前库为副本；API使用已验证clone专用身份。不得导出原密码，不创建业务actor/审批或放宽source校验。
+
+真实来源读取当前head后一次入队，先持久化原键/目标intent，未知结果只查原键。使用RuntimeHost原调度器、单一ConfigurationStageConsumer和CurrentFourSourceConfigurationAuthorization处理副本；无lifecycle/OCI/定时器/业务调度，无main Host连接或资源管理。最多一个消费tick加一次重放tick，随后stop。成功必须回读精确配置、原ID/key一致、第二tick零新增；拒绝如实落固定原因，不改来源以冒充成功。保留副本演练结果，迁移prepare快照此后不得复用作新apply。
