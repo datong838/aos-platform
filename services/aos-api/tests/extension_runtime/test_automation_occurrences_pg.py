@@ -422,3 +422,35 @@ def test_event_batch_records_mixed_current_and_expired_deadlines(database):
     writes=store.record_event_batch(scope,binding,events=[('expired',now),('fresh',now+timedelta(hours=1))])
     assert [row.status for row in writes]==['missed','pending']
     assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_outbox').fetchone()['n']==2
+
+
+def test_event_without_scheduled_time_is_claimable_once(database):
+    scope=TenantScope('org-org','dev-project')
+    binding=replace(_seed(database,scope),cadence='event',weekly_day=None,local_time=None)
+    store=AutomationOccurrenceStore(_runtime_connection(database,scope),schema=database.schema)
+    store.put_binding(scope,binding)
+    now=database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0)+timedelta(seconds=1)
+    written=store.record_event(scope,binding,source_event_id='source-current',deadline=now+timedelta(hours=1))
+    assert store.claim_next(TenantScope('dev-org','dev-project'),owner='fixture',now=now) is None
+    claimed=store.claim_next(scope,owner='fixture',now=now)
+    assert claimed is not None and claimed.occurrence_id==written.occurrence_id
+    assert store.claim_next(scope,owner='fixture',now=now) is None
+    assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_dispatch_attempt').fetchone()['n']==1
+
+
+@pytest.mark.parametrize('fault',['future-created','future-binding','expired-binding','disabled','fenced','epoch'])
+def test_event_claim_still_respects_current_bounds_and_fences(database,fault):
+    scope=TenantScope('org-org','dev-project')
+    binding=replace(_seed(database,scope),cadence='event',weekly_day=None,local_time=None)
+    store=AutomationOccurrenceStore(_runtime_connection(database,scope),schema=database.schema)
+    store.put_binding(scope,binding)
+    now=database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0)+timedelta(seconds=1)
+    store.record_event(scope,binding,source_event_id='source-current',deadline=now+timedelta(hours=1))
+    if fault=='future-created':database.owner.execute('UPDATE automation_occurrence SET created_at=%s',(now+timedelta(seconds=10),))
+    elif fault=='future-binding':database.owner.execute('UPDATE automation_schedule_binding SET effective_from=%s',(now+timedelta(seconds=10),))
+    elif fault=='expired-binding':database.owner.execute('UPDATE automation_schedule_binding SET effective_until=%s',(now,))
+    elif fault=='disabled':database.owner.execute('UPDATE automation_schedule_binding SET enabled=false')
+    elif fault=='fenced':database.owner.execute('UPDATE extension_operation_dispatch_binding SET operation_fence=true')
+    else:database.owner.execute('UPDATE extension_runtime_binding SET execution_epoch=execution_epoch+1')
+    assert store.claim_next(scope,owner='fixture',now=now) is None
+    assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_dispatch_attempt').fetchone()['n']==0

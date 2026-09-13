@@ -594,7 +594,10 @@ class AutomationOccurrenceStore:
                       AND r.installation_id=o.installation_id AND r.generation=o.generation
                     WHERE o.org_id=%s AND o.project_id=%s
                       AND o.status='pending'
-                      AND o.scheduled_at<=%s AND o.deadline>%s AND b.approved AND b.enabled
+                      AND ((o.trigger_source='schedule' AND o.scheduled_at<=%s)
+                        OR (o.trigger_source='event' AND o.created_at<=%s AND b.effective_from<=%s
+                            AND (b.effective_until IS NULL OR b.effective_until>%s)))
+                      AND o.deadline>%s AND b.approved AND b.enabled
                       AND d.handler_kind='extension' AND NOT d.operation_fence
                       AND d.installation_id=o.installation_id AND d.generation=o.generation
                       AND d.execution_epoch=o.execution_epoch
@@ -610,7 +613,7 @@ class AutomationOccurrenceStore:
                     FROM candidate c
                    WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=c.occurrence_id
                    RETURNING o.*""",
-                (*scope.key, now, now, owner, claim_until, *scope.key),
+                (*scope.key, now, now, now, now, now, owner, claim_until, *scope.key),
             ).fetchone()
             if row is not None:
                 attempt_id = uuid5(OCCURRENCE_NAMESPACE, f"dispatch:{row['occurrence_id']}")
