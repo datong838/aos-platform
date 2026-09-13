@@ -65,3 +65,7 @@ CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advanc
 ## CF2-10 蓝图精确依赖选择
 
 新增 services/aos-api/aos_api/ecommerce_analysis_compilation_selection.py、tests/test_ecommerce_analysis_compilation_selection.py。将Port蓝图规范验证提取为同模块纯函数供组合器重用。选择在AnalysisCompilationRoleReader.run_current内部：当前head模板必须profile和完整正文hash匹配蓝图且frozen，LIMIT2多义拒绝；active SkillBinding只在当前职责agent_instance与蓝图skill IDs交集中，逐技能唯一。调用既有AnalysisSkillSetReader完成当前来源/阶段/绑定/发布重验，再检查每个技能LogicRef对应蓝图固定LogicId。回调后重查选择集，拒绝新多义/版本漂移。无全租户猜测、无创建、无新的运行权限。缺少兼容模板由CF3准备流程处理。
+
+## CF3-1 模板事务准备
+
+新增 services/aos-api/aos_api/ecommerce_analysis_template_preparation.py、tests/extension_runtime/test_analysis_template_preparation_pg.py。内部辅助仅供已获当前分析控制/claim权限的Host事务调用，不另暴露HTTP授权入口。在当前职责SourceOwner内，以tenant+blueprint正文hash加事务锁，复用唯一当前冻结模板；不存在时以tenant+正文hash稳定幂等键调用既有create_stage_template/get_current/freeze_stage_template，TransactionBoundConnectFactory禁止内层提交，外层统一提交/回滚。避免按actor/安装代次重复造模板；实际安装与配置仍在Owner前后验证。遇多义/漂移拒绝，不改旧冻结模板。使用隔离18432真实PG验证实际两修订/两回执、重复不增、外层异常回滚；SourceOwner/当前角色部分显式替身，不冒充安装权限验收。
