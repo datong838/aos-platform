@@ -1377,3 +1377,11 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | `services/aos-api/aos_api/ecommerce_product_event_control_host_service.py` | 原路径 | platform host port；当前来源/合同/审批与整组派发、绑定CAS及控制Receipt，领域策略仍在包内 | c5349df4b09164420e8aee149a94cfa279f06aa6fbd0d26670e29dc387f3bda2 |
 
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_control.py` | 原路径 | solution；包内控制意图及历史回执校验，仅复用领域合同和SDK，不构造授权 | b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b |
+
+### 事件分析启动纯命令入口（2026-09-14）
+
+复用既有AnalysisRuntimeRequest；仅命令计算，后续新候选安装后方可调用。
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_start_operation.py` | 原路径 | 包内启动命令构造，无运行权威 | `c324568193aab81ef5cb2495ec332d22b77e842c7c7433a2e6e17f0cd4684d48` |
