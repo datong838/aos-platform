@@ -330,3 +330,13 @@ D2d-1合同或D2d-2隔离PG测试不算D2d产品流程完成。禁止提前启�
 表extension_runtime_configuration_stage_request存原scope/subject/key、精确installation/generation/etag/bindingRevision、固定请求JSON与canonical请求摘要、created/deadline、state/revision/completed/result/failure。租户FORCE RLS，scope+subject+key唯一，绑定FK。requested只能一次转succeeded/rejected/expired，终态/身份不可变。初始精确target须与当前binding/installation一致；成功结果须引用同租户/安装/代际、同actor的原configuration确切ID/revision/hash，不能用其他主体记录装成功。SQL边界验证JSON固定字段与原AIP引用；canonical函数复用原Asset Registry定义。TTL最多5分钟，未到期不能expired，到期不能成功。API收件权限、限流、原主体查询和宿主授权承接下一切片；本表成功guard不是权限授予，不能单独发布。
 
 验证：隔离PG原配置记录成功关联、伪结果拒绝、跨主体拒绝、CAS漂移初始拒绝、身份/终态/DELETE/TRUNCATE不可变、输入JSON/摘要篡改拒绝、RLS负租户和最小列级权限。数据库单事务登记与回执回滚由消费者切片另验。
+
+### D2d-2b 原子登记消费者（基线b0f780fc，编码前）
+
+新增extension_runtime/configuration_stage_consumer.py及对应隔离PG测试，沿用主A0-V租约。第一步实现可由原Host调用的process_one事务组件，不立即改Host装配或重启。入口要求aos_runtime当前scope事务、可信ConfigurationAuthorization对象；不能从HTTP注入回调。只处理本租户requested最早请求；先读候选，再依原锁顺序锁installation，最后FOR UPDATE SKIP LOCKED重取候选且确认仍requested。源document由D2c固定装配，不接受客户端data/budget。
+
+使用子事务装配+append_configuration+成功结果，任何可解释的来源/权限/目标拒绝回滚子事务中的配置并在外层标记固定REJECTED代码；未知数据库错误直接抛出、整个事务由调用者回滚，不自动映射成功/不吞掉故障。到期直接expired；配置幂等键固定configuration-stage:<requestId>；成功结果只原configRef，revision从1到2。同事务数据和结果确保中断可重领、成功不重复。组件不自行commit、不调用外部系统、不启用运行。测试回滚中断、成功后不重领、权限拒绝/来源失效/CAS变化无配置、篡改请求摘要拒绝，真实四来源与原append_configuration均参与。
+
+这一步测试许可使用隔离测试权限表，必须标为隔离权限夹具而非真实用户授权；当前正式CurrentConfigurationPermission的真实安装锁集成以及Host装配另验，不能据此宣称真实登记功能上线。
+
+D2d-2b入口补充：同模块新增ConfigurationStageConsumer正式包装，构造仅接受原CurrentFourSourceConfigurationAuthorization精确类型，不能用测试callback替代。run_once复用consumer_connection独立IDLE/事务/当前runtime非特权身份校验，并对新增队列与原配置表检查FORCE RLS、非owner身份。底层process_one仅为已持事务组件；正式包装不做任意权限注入。先验证构造拒绝，再另切片接原Host类型白名单/feature flag。

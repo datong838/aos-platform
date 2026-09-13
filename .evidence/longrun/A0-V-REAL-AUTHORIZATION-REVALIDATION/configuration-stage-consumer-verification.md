@@ -1,0 +1,13 @@
+# D2d-2b 原子登记组件
+
+基线b0f780fc，m1原A0-V租约。新增configuration_stage_consumer.py及两份测试。
+
+process_one_configuration_stage在调用者短事务中按installation→request顺序锁定，重新解析固定合同和摘要，以原AIP装配器生成document并调用原append_configuration。成功记录与请求结果在同一子事务；已知来源/权限/CAS拒绝回滚记录后标固定rejected。数据库故障不吞掉，外层事务回滚，原请求保留requested；已提交终态不再领取。无commit、IPC、启用或外部操作。
+
+正式ConfigurationStageConsumer包装只接受原CurrentFourSourceConfigurationAuthorization精确类型；run_once复用独立IDLE连接、当前runtime身份及非特权/非owner/FORCE RLS检查，且额外检查新增队列和原配置表。未接入现有Host类型白名单或启动装配，未重启Host。
+
+验证：消费者8项实际隔离PG测试，涵盖成功唯一记录/不重领、外层故障全回滚后可重领、权限删除、职责/策略换版、安装和binding CAS变化无配置，结果写入数据库异常不留下部分记录。两项正式包装边界检查拒绝任意授权回调及调用者已有事务。联合schema/assembly总63 passed、7既有warning。
+
+限制：隔离消费者测试用测试权限表，真实AIP来源与原配置存储参与；不等于当前真人安装权限完整集成验收。未部署036、未开放API、未写主库配置，真实登记流程尚未完成。
+
+下一项：原Host受控装配和默认关闭开关、036健康检查，再做受限API收件/原主体结果读取及来源选择UI；当前真实安装和原Host继续保持原状态。
