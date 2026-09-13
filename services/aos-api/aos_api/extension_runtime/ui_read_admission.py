@@ -1,9 +1,9 @@
 """Current signed-resource admission; a delivery is never execution authority."""
 from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
-from aos_api.extension_runtime.ui_current_principal import read_current_ui_principal
+from aos_api.extension_runtime.ui_read_api_database import read_api_ui_principal, enqueue_api_ui_read
 from aos_api.extension_runtime.ui_read_contracts import UiReadRequest
-from aos_api.extension_runtime.ui_read_store import enqueue_ui_read, UiReadDelivery
+from aos_api.extension_runtime.ui_read_store import UiReadDelivery
 from aos_api.tenant_scope import TenantScope
 
 
@@ -18,7 +18,7 @@ class RuntimeUiReadAdmission:
                 request: UiReadRequest) -> UiReadDelivery:
         if type(request) is not UiReadRequest:
             raise RuntimeConflict('fixed UI read request required')
-        principal = read_current_ui_principal(conn=conn, scope=scope, subject=subject,
+        principal = read_api_ui_principal(conn=conn, scope=scope, subject=subject,
                                               required_markings=required_markings)
         catalog = self._catalog.list_modules(org_id=scope.org_id, project_id=scope.project_id,
                                             roles=principal.roles, markings=principal.markings)
@@ -42,5 +42,5 @@ class RuntimeUiReadAdmission:
                 or entry.bindingRevision != target.bindingRevision
                 or entry.ui.resourceHash != target.resourceHash):
             raise RuntimeConflict('current signed UI read declaration differs')
-        return enqueue_ui_read(conn=conn, scope=scope, subject=subject,
+        return enqueue_api_ui_read(conn=conn, scope=scope, subject=subject,
                                idempotency_key=idempotency_key, request=request)

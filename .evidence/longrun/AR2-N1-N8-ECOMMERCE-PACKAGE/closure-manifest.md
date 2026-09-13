@@ -1271,3 +1271,5 @@ IAB tab10 5173/data真实显示1数据源、栖月汇微商城、MySQL SSH隧道
 ## 2026-09-13 N8 跨进程UI读取增量清单
 
 承接同目录清册与A0-V/runtime-ui-host-read-queue-plan.md。UQ1合同/隔离库迁移→UQ2当前权限入队→UQ3原宿主/既有signed_read Attempt消费→UQ4API/Web→UQ5 7+1后继包→UQ6真实安装与读取→UQ7真实首链、八场景与观察。UQ1合同与隔离账本切片已验证（16 passed），UQ2~UQ7未完成；主库尚未迁移，不取代原N1~N8退出条件，不扩大230 L0授权，不push。队列仅投递事实，原宿主与现有Attempt是执行/排空接点；禁止API另起实例。
+
+UQ2接入代码进展：A内部幂等/额度、B当前签名目录门禁、C专用角色固定函数、D非超级应用贯穿均已验证；最新28 passed，主库未部署、HTTP未开放。接续UQ3原宿主消费，不视为真实调用完成。

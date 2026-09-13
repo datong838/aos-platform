@@ -3,14 +3,15 @@ from types import SimpleNamespace
 import pytest
 
 from test_ui_read_store_pg import admission, queue, attempt_case, database, SCOPE, pytestmark
+from test_ui_read_api_role_pg import api_role, caller
 from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
 from aos_api.extension_runtime.ui_read_admission import RuntimeUiReadAdmission
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 
 
 @pytest.fixture
-def signed_admission(admission, monkeypatch):
-    conn, request = admission
+def signed_admission(api_role, monkeypatch):
+    conn, request, _, _ = api_role
     target = request.target
     entry = SimpleNamespace(installationId=target.installationId,
         installationRevision=target.installationRevision, generation=target.generation,
@@ -30,27 +31,34 @@ def signed_admission(admission, monkeypatch):
         facts.append(kwargs)
         return response
     monkeypatch.setattr(catalog,'list_modules',current_catalog)
-    return conn,request,RuntimeUiReadAdmission(catalog=catalog),response,entry,facts
+    return conn,request,RuntimeUiReadAdmission(catalog=catalog),response,entry,facts,api_role
+
+
+class SchemaConnection:
+    def __init__(self, conn, schema):self.conn,self.schema=conn,schema
+    def __getattr__(self,name):return getattr(self.conn,name)
+    def execute(self,query,params=None):
+        return self.conn.execute(query.replace('public.extension_ui_read_',self.schema+'.extension_ui_read_'),params)
 
 
 def accept(case):
-    conn,request,service,*_=case
-    with conn.transaction():
-        return service.enqueue(conn=conn,scope=SCOPE,subject='reader',required_markings=(),
+    _,request,service,_,_,_,role_case=case
+    with caller(role_case) as conn:
+        return service.enqueue(conn=SchemaConnection(conn,role_case[2]),scope=SCOPE,subject='reader',required_markings=(),
                                idempotency_key='page-read',request=request)
 
 
 def test_current_read_is_enqueued_once_with_persisted_principal(signed_admission):
     first = accept(signed_admission)
     assert accept(signed_admission) == first
-    conn,_,_,_,_,facts=signed_admission
+    conn,_,_,_,_,facts,_=signed_admission
     assert facts[0] == dict(org_id=SCOPE.org_id,project_id=SCOPE.project_id,roles=('reader',),markings=())
     assert conn.execute('SELECT count(*) FROM extension_runtime_ui_read_request').fetchone()==(1,)
 
 
 @pytest.mark.parametrize('failure',['scope','missing','duplicate','role','marking','hash','epoch','route','read-claim','command-only'])
 def test_invalid_current_catalog_never_persists(signed_admission,failure):
-    conn,request,_,response,entry,_=signed_admission
+    conn,request,_,response,entry,_,_=signed_admission
     if failure=='scope':response.tenant.orgId='dev-org'
     if failure=='missing':response.items=[];response.count=0
     if failure=='duplicate':response.items.append(entry);response.count=2
@@ -67,16 +75,16 @@ def test_invalid_current_catalog_never_persists(signed_admission,failure):
 
 def test_revocation_denies_replay_before_catalog_read(signed_admission):
     accept(signed_admission)
-    conn,_,_,_,_,facts=signed_admission
+    conn,_,_,_,_,facts,_=signed_admission
     conn.execute("DELETE FROM meta_membership WHERE subject='reader'")
-    with pytest.raises(RuntimeConflict,match='membership'):accept(signed_admission)
+    with pytest.raises(RuntimeConflict,match='principal'):accept(signed_admission)
     assert len(facts)==1
     assert conn.execute('SELECT count(*) FROM extension_runtime_ui_read_request').fetchone()==(1,)
 
 
 def test_resource_change_denies_existing_key(signed_admission):
     accept(signed_admission)
-    conn,_,_,_,entry,_=signed_admission
+    conn,_,_,_,entry,_,_=signed_admission
     entry.ui.resourceHash='sha256:'+'b'*64
     with pytest.raises(RuntimeConflict):accept(signed_admission)
     assert conn.execute('SELECT count(*) FROM extension_runtime_ui_read_request').fetchone()==(1,)

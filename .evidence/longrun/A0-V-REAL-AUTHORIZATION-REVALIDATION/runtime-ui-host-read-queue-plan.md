@@ -49,3 +49,9 @@ UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，
 新增a0v_032_runtime_ui_read_admission.py。角色aos_ui_read_api为NOLOGIN/NOSUPERUSER/NOBYPASSRLS，仅固定函数EXECUTE；不授予成员表UPDATE、队列表DML、Attempt权限。固定SECURITY DEFINER函数限定search_path、显式租户条件，要求实际session_user为非超级/非bypass且属于该角色、SET ROLE正确、READ COMMITTED。subject必须匹配aos.subject GUC。函数一锁定当前membership及指定bearer markings，函数二只接收严格固定请求并调用函数一，按租户锁、同键摘要、8/64额度入队，返回无业务result的投递摘要。公开函数均撤销PUBLIC。
 
 隔离PG用真实非超级LOGIN身份+SET ROLE验证；错误GUC/subject/角色/直接DML/Attempt访问均拒绝，正常请求摘要与UQ1一致。应用接入下一切片切换到这些固定函数；当前UQ2-A/B存储代码不因迁移自动获得权限。主库部署待UQ6。数据库入队仍不是signed UI授权，宿主必须重新校验；HTTP接入服务必须先运行UQ2-B。
+
+## UQ2-D 应用使用受限入口（基线4952795e，编码前补充）
+
+新增extension_runtime/ui_read_api_database.py，修改ui_read_admission.py。应用当前主体读取/入队均调用public限定的a0v_032函数，先核调用者事务及TenantScope GUC，拒绝remote OpenFGA的本地降级；校验返回摘要等于本次规范请求、终态枚举/UUID/期限类型，返回固定投递合同。既有ui_read_store暂保留内部端口与其并发测试，不对API授予直接表权限。
+
+接入PG测试改为aos_ui_read_api非超级LOGIN，通过测试专用schema连接转发仅重定位public函数名，实际事务/行锁/权限均由PG执行。目录输出替身仍只验证门禁顺序，真实签名目录验证沿用独立测试。合法读取贯穿当前身份→签名声明门禁→固定函数；拒绝无新行。同键旧资源或撤权仍拒绝。下一步UQ3原宿主消费者，不凭队列接受触发任意操作。
