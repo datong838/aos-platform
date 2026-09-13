@@ -1,0 +1,9 @@
+# BG-02 领域包事件策略与Case组合
+
+基线fed65f62，编码前。新增包内ecommerce_product_event_binding.py与extension_runtime/test_product_event_binding.py；在AR2动态清单登记。复用ProductEventSchedulePolicy、BusinessInvestigationCase，不复制其状态机/哈希。纯prepare函数，无SQL/注册/写端口。
+
+输入是已由Owner回读的当前Case、新事件策略及可选前版事件策略。函数再次严格重建合同，要求当前Case ACTIVE、策略caseRef和methodRef分别精确绑定当前Case与其Profile、tenant一致、创建时间不倒退。首版Case不得已有另一策略；后继必须匹配Case当前schedulePolicyRef及连续策略prior。不允许把旧定时策略隐式转成事件。
+
+输出下一版Case，仅修改revision/version/priorRef/schedulePolicyRef/createdBy/createdAt/contentHash；复用validate_successor。返回不可变policy+case组合及规范请求hash，供后续同事务写入。重复相同输入得到同一组合。输入不产生批准/启用，旧Case和已签名候选不改。
+
+验证：真实包合同构造正例，错Case/hash/profile/tenant、非ACTIVE、缺前版、乱序时间、重复输入与不变字段。修改后AR2阶段验证器核验，不关闭真实自然首链。

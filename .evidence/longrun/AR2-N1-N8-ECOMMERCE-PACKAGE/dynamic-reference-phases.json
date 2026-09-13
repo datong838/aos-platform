@@ -43,6 +43,8 @@
       "requiredPaths": [
         "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py",
         "services/aos-api/tests/extension_runtime/test_product_event_schedule.py",
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py",
+        "services/aos-api/tests/extension_runtime/test_product_event_binding.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py",
         "services/aos-api/tests/extension_runtime/test_product_source_event_window.py",
         "bundles/domains/ecommerce-core/backend/ecommerce_core/__init__.py",
@@ -55,6 +57,7 @@
         ".evidence/longrun/AR2-N1-N8-ECOMMERCE-PACKAGE/ar2-7e-final-verification.md"
       ],
       "contains": {
+        "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py": ["from .ecommerce_product_event_schedule import", "successor.validate_successor(current_case)"],
         "bundles/domains/ecommerce-core/backend/ecommerce_core/product_source_event_window.py": ["from .product_source_event import", "validate_product_source_event("],
         "bundles/domains/ecommerce-core/bundle.yaml": ["runtime:", "backend/ecommerce_core/__init__.py:register"],
         "bundles/solutions/ecommerce-growth/bundle.yaml": ["runtime:", "backend/ecommerce_growth/__init__.py:register"],

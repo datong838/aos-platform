@@ -1349,3 +1349,9 @@ UQ6-A真实备份/恢复/主库031~035部署与独立读回通过：主库现a0v
 API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原1号标签，进入/apollo/assets→安装管理→当前97aeb2e7安装。实际显示active@5、ready、generation3a445eee/epoch3/binding@4；新增只读概览明确显示“配置1 · 版本1 · 当前绑定”。没有打开停用确认、没有提交configure/enable/disable。原登记状态仍提示当前身份无权读取，未掩盖。
 
 为避免测试界面而停用运行实例，补配置只读概览（方案先行、面板7项回归通过）；配置选择确认已由前端测试覆盖，真实已激活实例不允许configure，因此未把实际选择提交记为完成。下一波D2c补产品配置来源装配/登记流程；不造审批或修改现有绑定。
+
+## BG-02 事件策略与Case组合新增登记
+
+| 文件 | 去向 | 归属与调用边界 | 当前哈希（新增无preHash） |
+|---|---|---|---|
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py` | 原路径 | solution；只复用包内Case、事件策略与SDK引用；当前仅专项测试调用，无执行注册 | f5daff339d18214864a78a01767d6dc7b8f2a6fdd9edfb8ad6d40e45e6abe011 |
