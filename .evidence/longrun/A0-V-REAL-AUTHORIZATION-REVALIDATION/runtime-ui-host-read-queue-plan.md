@@ -29,3 +29,11 @@ DB隔离沿用现有org_id/project_id GUC+FORCE RLS。API不能更新claim/结�
 ## 文件计划
 
 UQ1修改services/aos-api/alembic/versions/a0v_031_runtime_ui_read_request.py，新增extension_runtime/ui_read_contracts.py与tests/extension_runtime对应合同/PG测试。其后文件在每个分片开工前细化，所有结果补入closure-manifest与项目两份接续文档。任何单元GREEN都不把UQ6/UQ7标完成。
+
+## UQ2-A 入队存储切片（基线6ca66615，编码前补充）
+
+新增 extension_runtime/ui_read_store.py 与 tests/extension_runtime/test_ui_read_store_pg.py；复用当前成员事实与canonical_sha256。仅内部事务端口，暂不授予API写入权限或暴露接口。签名模块和当前UI门禁由UQ2-B具体接入服务完成，在此之前不能宣布UQ2完成。
+
+方法要求现有 READ COMMITTED 事务与同租户GUC，当前成员读锁；按租户 advisory transaction lock 串行所有入队，先核同主体同键记录：同摘要原样返回、不同摘要拒绝。新请求限制同租户未过期requested/claimed最多64条、同主体最多8条；期限固定数据库时间后60秒，UUID由服务端生成。过期请求不自动重放也不改历史。所有拒绝在INSERT前发生，数据库trigger再次核当前绑定版本。该端口不执行包、无成员修改、无自建事务commit。
+
+验证使用隔离真实PG，核同键回读、冲突、主体隔离、成员撤销、并发额度、调用者回滚。规范请求摘要须与UQ1数据库算法一致。未集成签名门禁前不增加角色INSERT/函数EXECUTE授权。
