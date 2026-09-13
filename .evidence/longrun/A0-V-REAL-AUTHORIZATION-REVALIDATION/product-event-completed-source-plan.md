@@ -1,0 +1,9 @@
+# BG-02 已完成原批次只读消费
+
+基线c13c7b4d。发现真实阻断：ControlledIngressJournal(saved_recovery=True)仍通过verify_schedule_binding要求meta_schedule_run.running；同步成功后succeeded，异步消费必拒绝。不能放宽原写入/恢复门。
+
+IngressJournal新增verify_completed_schedule_binding：复用当前schedule/source/graph校验但固定succeeded，额外要求ec-live-v1、executor_stopped=true、finished_at非空；读取原parent/derived及不可变dataset receipt，复算receipt hash并匹配parentHash/derivedHash，completion pending=0且expected=projected，dataset pipeline/source和build success。此路径无claim/状态修改。
+
+PipelineSourceClaimOwner新增read_completed_current：仅create=False，允许与既有saved recovery相同的精确续期控制家族校验，改用上述已完成读门；原read_current/read_saved_current仍running。ControlledIngressJournal新增completed_read显式模式，与saved_recovery互斥；该模式save原批次/save_derived均拒绝，只供Reader。工厂消费器改为completed_read=True。修改ec_ingress_journal.py、pipeline_source_claim_owner.py、pipeline_controlled_ingress_journal.py、pipeline_control_service.py；相关PG与工厂测试。验证completed只能读、旧写仍拒绝、缺receipt/错hash/未停止拒绝、当前权限撤销拒绝。仅18432临时schema测试，不改主库已完成记录。
+
+之后再接候选SQL和worker；此修复是消费器从内部测试走向真实同步完成后的必要前置。

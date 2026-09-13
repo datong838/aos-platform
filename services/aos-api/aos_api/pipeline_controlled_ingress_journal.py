@@ -7,11 +7,14 @@ from aos_api.tenant_scope import TenantScope
 
 
 class ControlledIngressJournal(IngressJournal):
-    def __init__(self, *, claims, scope, run_id, control_ref, actor, saved_recovery=False):
+    def __init__(self, *, claims, scope, run_id, control_ref, actor, saved_recovery=False, completed_read=False):
         if type(claims) is not PipelineSourceClaimOwner or type(scope) is not TenantScope:
             raise TypeError('exact claim Owner and tenant required')
         if type(saved_recovery) is not bool:
             raise TypeError('explicit saved recovery mode required')
+        if type(completed_read) is not bool or (saved_recovery and completed_read):
+            raise ValueError('distinct completed read mode required')
+        self._completed_read = completed_read
         self._saved_recovery = saved_recovery
         self._scope = scope
         self._run_id = _text(run_id,200)
@@ -34,10 +37,12 @@ class ControlledIngressJournal(IngressJournal):
 
     def verify_running_schedule(self, conn, scope, **args):
         self._fixed(scope,args['run_id'])
-        read = self._claims.read_saved_current if self._saved_recovery else self._claims.read_current
+        read = self._claims.read_completed_current if self._completed_read else (
+            self._claims.read_saved_current if self._saved_recovery else self._claims.read_current)
         read(conn,scope=scope,run_id=self._run_id,control_ref=self._ref,actor=self._actor)
         # Also bind the supplied original batch, not only the current draft.
-        super().verify_schedule_binding(conn,scope,**args)
+        verify=super().verify_completed_schedule_binding if self._completed_read else super().verify_schedule_binding
+        verify(conn,scope,**args)
 
     def read(self, conn, scope, run_id):
         self._fixed(scope,run_id)
@@ -52,10 +57,12 @@ class ControlledIngressJournal(IngressJournal):
             source_id=envelope['sourceId'],source_revision=envelope['sourceRevision'],pipeline_hash=envelope['pipelineHash'])
 
     def _save_envelope(self, conn, scope, envelope):
+        if self._completed_read:raise PermissionError('completed input is read only')
         self._verify_parent(conn,scope,envelope)
         return super()._save_envelope(conn,scope,envelope)
 
     def save_derived(self, conn, scope, run_id, commands):
+        if self._completed_read:raise PermissionError('completed input is read only')
         parent = self.read(conn,scope,run_id)
         if parent is None:
             raise IngressJournalConflict('INGRESS_PARENT_REQUIRED')

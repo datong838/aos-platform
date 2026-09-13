@@ -28,7 +28,7 @@ def test_factory_shares_source_owner_and_only_uses_saved_input(monkeypatch):
     assert calls==[scope]
     assert service.reader._owner is selection is service.control._owner._source
     journal=service.reader._journal
-    assert journal._saved_recovery is True and journal._run_id=='original-run'
+    assert journal._completed_read is True and journal._saved_recovery is False and journal._run_id=='original-run'
     assert journal._scope==scope and journal._actor=='fixture-actor'
     assert service.invoker.package_id=='domain.ecommerce.core'
     assert service.invoker.installation_store is factory.installation_store

@@ -75,7 +75,13 @@ class PipelineSourceClaimOwner:
         return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,
             actor=actor,create=False,saved_recovery=True).record
 
-    def _operate(self, conn, *, scope, run_id, control_ref, actor, create, saved_recovery=False):
+    def read_completed_current(self,conn,*,scope,run_id,control_ref,actor):
+        """Current authorization over a completed immutable input, never a source call."""
+        return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,actor=actor,
+            create=False,saved_recovery=True,completed_read=True).record
+
+    def _operate(self, conn, *, scope, run_id, control_ref, actor, create, saved_recovery=False, completed_read=False):
+        if completed_read and create:raise ValueError('completed input cannot reserve source calls')
         run_id,actor = _text(run_id,200),_text(actor,240)
         ref = PipelineExactRef.model_validate(control_ref)
         identity = UUID(_ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-'))
@@ -83,7 +89,8 @@ class PipelineSourceClaimOwner:
         def current(draft, spec):
             # Global lock order: current installation first, then immutable run.
             self._journal.lock_run(conn,scope,run_id)
-            self._journal.verify_schedule_binding(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,
+            verify=self._journal.verify_completed_schedule_binding if completed_read else self._journal.verify_schedule_binding
+            verify(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,
                 source_id=draft.source_id,source_revision=draft.source_configuration_ref.resource_id.removeprefix('source-config-'),
                 pipeline_hash=draft.graph_hash,graph_revision=draft.graph_revision)
             with conn.cursor(row_factory=dict_row) as cursor:

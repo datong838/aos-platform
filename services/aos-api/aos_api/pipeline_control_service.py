@@ -106,7 +106,7 @@ class PipelineControlServiceFactory:
             artifacts=artifacts,release_policy=self.policy)
         claims=PipelineSourceClaimOwner(controls=PipelineRuntimeControlOwner(selections=selections))
         journal=ControlledIngressJournal(claims=claims,scope=scope,run_id=run_id,control_ref=control_ref,
-            actor=actor,saved_recovery=True)
+            actor=actor,completed_read=True)
         reader=ProductEventCandidateReader(selections,journal=journal,store=store)
         invoker=CurrentInstalledPackageInvoker(scope=scope,installation_id=installation_id,generation=generation,
             package_id='domain.ecommerce.core',markings=markings,connect_factory=connect_serializable,

@@ -1,0 +1,7 @@
+# BG-02 已完成输入只读门验证
+
+基线c13c7b4d。真实接线阻断为同步完成后run=succeeded，而原saved recovery仍要求running。新增独立read_completed_current与completed_read Journal，要求succeeded/ec-live-v1/executor_stopped/finished_at及原Dataset receipt hash、parent/derived哈希和完成计数；当前Source/Control仍完整重验。原read_current/read_saved_current与保存路径不放宽；completed_read拒绝原批次和derived保存，不能reserve新source call。消费器工厂切换为completed_read（前波saved_recovery方案被本项纠正）。
+
+RED缺方法。首轮33通过1失败，失败是测试在事务外调用写拒绝断言，先被既有显式事务门拒绝；按实际事务方式重跑并新增撤权/互斥模式后40项通过（7条既有依赖警告）。PG原始/derived/dataset receipt实际落临时schema；缺失/哈希错误的receipt读取用明确proxy模拟，不修改不可变历史。当前资产权限仍命名替身。原Claim/恢复测试及消费PG回归通过。
+
+AR2-7扫描1881/分类168/迁移93，所有错误数组空；diff通过。未修改主库运行状态/完成回执，未重启、部署或push。后继候选选择与生命周期worker、Occurrence到分析Run、新包独立发布与真实首链仍待完成。

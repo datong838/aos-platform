@@ -145,13 +145,42 @@ class IngressJournal:
                 raise IngressJournalConflict('INGRESS_CURRENT_CONTROL_REQUIRED')
 
     def verify_schedule_binding(self, conn, scope, **args):
+        return self._verify_schedule_binding(conn,scope,expected_status='running',**args)
+
+    def verify_completed_schedule_binding(self,conn,scope,**args):
+        """Read completed input only; never reopen its write/recovery gate."""
+        self._verify_schedule_binding(conn,scope,expected_status='succeeded',**args)
+        run_id=args['run_id']
+        run=conn.execute(sql.SQL('SELECT executor_id,executor_stopped,finished_at FROM {} '
+            'WHERE org_id=%s AND project_id=%s AND id=%s FOR SHARE').format(
+                sql.Identifier(self.schema,'meta_schedule_run')),(*scope.key,run_id)).fetchone()
+        if (run is None or run['executor_id']!='ec-live-v1' or run['executor_stopped'] is not True
+                or run['finished_at'] is None):
+            raise IngressJournalConflict('INGRESS_COMPLETED_RUN_REQUIRED')
+        parent=self.read(conn,scope,run_id);derived=self.read_derived(conn,scope,run_id)
+        row=conn.execute(sql.SQL('SELECT payload,payload_hash FROM {} WHERE org_id=%s AND project_id=%s AND run_id=%s').format(
+            sql.Identifier(self.schema,'ecommerce_ingress_dataset_receipt')),(*scope.key,run_id)).fetchone()
+        result=None if row is None else row['payload']
+        if (parent is None or derived is None or type(result) is not dict
+                or _digest(result)!=row['payload_hash'] or result.get('parentHash')!=_digest(parent)
+                or result.get('derivedHash')!=_digest(derived)):
+            raise IngressJournalConflict('INGRESS_COMPLETED_RECEIPT_REQUIRED')
+        completion=result.get('completion');dataset=result.get('dataset');build=result.get('build')
+        if (type(completion) is not dict or any(type(completion.get(k)) is not int or completion[k]<0
+                for k in ('expected','projected','pending')) or completion['pending']!=0
+                or completion['expected']!=completion['projected'] or type(dataset) is not dict
+                or (dataset.get('pipelineId'),dataset.get('sourceId'))!=(args['pipeline_id'],args['source_id'])
+                or type(build) is not dict or build.get('status')!='success'):
+            raise IngressJournalConflict('INGRESS_COMPLETED_RECEIPT_INVALID')
+
+    def _verify_schedule_binding(self, conn, scope, *, expected_status, **args):
         """Structural binding only; does not grant execution or bypass control checks."""
         def read(table, identity_column, identity, columns):
             return conn.execute(sql.SQL('SELECT {} FROM {} WHERE org_id=%s AND project_id=%s AND {}=%s FOR SHARE').format(
                 sql.SQL(columns), sql.Identifier(self.schema, table), sql.Identifier(identity_column)),
                 (*scope.key, identity)).fetchone()
         run = read('meta_schedule_run', 'id', args['run_id'], 'schedule_id,status')
-        if run is None or run['status'] != 'running':
+        if run is None or run['status'] != expected_status:
             raise IngressJournalConflict('INGRESS_RUNNING_SCHEDULE_REQUIRED')
         schedule = read('meta_schedule', 'id', run['schedule_id'], 'pipeline_id,enabled,ingest')
         if (schedule is None or schedule['enabled'] is not True or schedule['pipeline_id'] != args['pipeline_id']
