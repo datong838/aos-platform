@@ -437,3 +437,13 @@ def test_occurrence_migration_is_rls_scoped_atomic_outbox_and_retain_only():
     assert "automation_occurrence_event_unique" in sql
     with pytest.raises(RuntimeError, match="must be retained"):
         migration.downgrade()
+
+
+def test_claim_target_rejects_noncanonical_identity_before_database():
+    from uuid import uuid4
+    from aos_api.automation_occurrence_store import ClaimTarget
+
+    for args in (('', uuid4(), uuid4()), ('operation ', uuid4(), uuid4()),
+                 ('operation', str(uuid4()), uuid4()), ('operation', uuid4(), None)):
+        with pytest.raises(ValueError):
+            ClaimTarget(*args)

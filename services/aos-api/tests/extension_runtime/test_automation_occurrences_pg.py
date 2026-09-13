@@ -454,3 +454,25 @@ def test_event_claim_still_respects_current_bounds_and_fences(database,fault):
     else:database.owner.execute('UPDATE extension_runtime_binding SET execution_epoch=execution_epoch+1')
     assert store.claim_next(scope,owner='fixture',now=now) is None
     assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_dispatch_attempt').fetchone()['n']==0
+
+
+def test_exact_claim_target_does_not_consume_other_targets(database):
+    from aos_api.automation_occurrence_store import ClaimTarget
+
+    scope = TenantScope('org-org', 'dev-project')
+    binding = replace(_seed(database, scope), cadence='event', weekly_day=None, local_time=None)
+    store = AutomationOccurrenceStore(_runtime_connection(database, scope), schema=database.schema)
+    store.put_binding(scope, binding)
+    now = database.owner.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0) + timedelta(seconds=1)
+    written = store.record_event(scope, binding, source_event_id='exact-target', deadline=now + timedelta(hours=1))
+    target = ClaimTarget(binding.operation_id, binding.installation_id, binding.generation)
+    for mismatch in (
+        replace(target, operation_id='another_operation'),
+        replace(target, installation_id=uuid4()),
+        replace(target, generation=uuid4()),
+    ):
+        assert store.claim_next(scope, owner='exact-worker', now=now, target=mismatch) is None
+    assert database.owner.execute('SELECT count(*) AS n FROM automation_occurrence_dispatch_attempt').fetchone()['n'] == 0
+    claimed = store.claim_next(scope, owner='exact-worker', now=now, target=target)
+    assert claimed.occurrence_id == written.occurrence_id
+    assert store.claim_next(scope, owner='exact-worker', now=now, target=target) is None

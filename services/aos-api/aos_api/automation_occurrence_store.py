@@ -77,6 +77,19 @@ class ScheduleBinding:
 
 
 @dataclass(frozen=True, slots=True)
+class ClaimTarget:
+    operation_id: str
+    installation_id: UUID
+    generation: UUID
+
+    def __post_init__(self) -> None:
+        if type(self.operation_id) is not str or not OPERATION_ID.fullmatch(self.operation_id):
+            raise ValueError("claim target operation is invalid")
+        if type(self.installation_id) is not UUID or type(self.generation) is not UUID:
+            raise ValueError("claim target requires exact runtime UUIDs")
+
+
+@dataclass(frozen=True, slots=True)
 class OccurrenceWrite:
     occurrence_id: UUID
     status: str
@@ -577,11 +590,19 @@ class AutomationOccurrenceStore:
         owner: str,
         now: datetime,
         lease: timedelta = timedelta(minutes=5),
+        target: ClaimTarget | None = None,
     ) -> ClaimedOccurrence | None:
         now = _utc_seconds(now, "now")
         if not owner.strip() or lease <= timedelta(0) or lease > timedelta(minutes=30):
             raise ValueError("bounded claim owner and lease are required")
         claim_until = now + lease
+        if target is not None and type(target) is not ClaimTarget:
+            raise ValueError("claim target must be a ClaimTarget")
+        target_filter = ""
+        target_params = ()
+        if target is not None:
+            target_filter = "AND o.operation_id=%s AND o.installation_id=%s AND o.generation=%s"
+            target_params = (target.operation_id, target.installation_id, target.generation)
         with self._connect_factory(scope) as conn:
             row = conn.execute(
                 f"""WITH candidate AS (
@@ -593,6 +614,7 @@ class AutomationOccurrenceStore:
                        ON r.org_id=o.org_id AND r.project_id=o.project_id
                       AND r.installation_id=o.installation_id AND r.generation=o.generation
                     WHERE o.org_id=%s AND o.project_id=%s
+                      {target_filter}
                       AND o.status='pending'
                       AND ((o.trigger_source='schedule' AND o.scheduled_at<=%s)
                         OR (o.trigger_source='event' AND o.created_at<=%s AND b.effective_from<=%s
@@ -613,7 +635,7 @@ class AutomationOccurrenceStore:
                     FROM candidate c
                    WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=c.occurrence_id
                    RETURNING o.*""",
-                (*scope.key, now, now, now, now, now, owner, claim_until, *scope.key),
+                (*scope.key, *target_params, now, now, now, now, now, owner, claim_until, *scope.key),
             ).fetchone()
             if row is not None:
                 attempt_id = uuid5(OCCURRENCE_NAMESPACE, f"dispatch:{row['occurrence_id']}")
