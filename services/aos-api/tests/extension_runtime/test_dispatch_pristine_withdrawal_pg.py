@@ -137,3 +137,98 @@ def test_nonserializable_session_is_rejected(withdrawal_case):
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             conn.execute('SELECT extension_dispatch_withdraw_a0v_030(%s,%s)',(Jsonb(c.withdraw),'actor'))
     assert counts(c)==(9,1,0)
+
+
+@pytest.fixture
+def withdrawal_owner(withdrawal_case,monkeypatch):
+    from contextlib import contextmanager
+    from psycopg import sql
+    from psycopg.rows import dict_row
+    from aos_api.ecommerce_growth_registration import FirstDispatchRegistrationService
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+    from aos_api.asset_registry.release_policy import ReleasePolicy
+    from aos_api.extension_runtime.configuration_authorization import CurrentFourSourceConfigurationAuthorization
+    c=withdrawal_case;db=c.db.owner
+    db.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(c.login)))
+    db.execute('ALTER TABLE extension_runtime_binding ENABLE ROW LEVEL SECURITY; ALTER TABLE extension_runtime_binding FORCE ROW LEVEL SECURITY')
+    db.execute("CREATE POLICY tenant_scope_binding_owner ON extension_runtime_binding USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
+    for table in ('extension_runtime_operation','extension_runtime_outbox','extension_runtime_event','bundle_composition'):
+        db.execute(sql.SQL('CREATE TABLE {}(org_id text,project_id text)').format(sql.Identifier(table)))
+        db.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        db.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+    db.execute("CREATE POLICY tenant_scope_bundle_composition_ti6 ON bundle_composition USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))")
+    @contextmanager
+    def connect():
+        with psycopg.connect(**{**c.db.pg,'user':c.login},autocommit=True,row_factory=dict_row) as conn:yield conn
+    service=FirstDispatchRegistrationService(connect=connect,installation_store=object.__new__(PostgresInstallationStore),
+        configuration_authorize=object.__new__(CurrentFourSourceConfigurationAuthorization),release_policy=ReleasePolicy(trust_roots=None))
+    # SQL entry checks actual membership/markings/CAS. Owner permission composition
+    # below is an explicit fixture because this DB has only minimal installation columns.
+    db.execute('''CREATE TABLE withdrawal_tx_probe(pid integer,tx bigint,role text);
+        CREATE FUNCTION withdrawal_probe() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN INSERT INTO withdrawal_tx_probe VALUES(pg_backend_pid(),txid_current(),current_setting('role'));RETURN NEW;END $$;
+        CREATE TRIGGER withdrawal_probe AFTER INSERT ON extension_dispatch_withdrawal_receipt FOR EACH ROW EXECUTE FUNCTION withdrawal_probe();''')
+    checks=[]
+    def permission(self,conn,scope,installation_id,actor):
+        checks.append(conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx,current_user AS role').fetchone())
+    monkeypatch.setattr(FirstDispatchRegistrationService,'_authorize_receipt_access',permission)
+    return c,service,checks
+
+
+def test_owner_withdraws_and_reads_same_receipt(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,checks=withdrawal_owner;scope=TenantScope('org-a','project-a')
+    first=service.withdraw(installation_id=c.request['installationRef']['installationId'],scope=scope,request=RegistrationWithdrawalRequest.model_validate(c.withdraw),actor='actor')
+    second=service.read_withdrawal_receipt(scope=scope,installation_id=c.request['installationRef']['installationId'],idempotency_key='withdraw-1',actor='actor')
+    assert first['receiptId']==second['receiptId'] and second['historical'] is True
+    assert counts(c)==(0,1,1) and all(check['role']=='aos_runtime' for check in checks)
+    probe=c.db.owner.execute('SELECT * FROM withdrawal_tx_probe').fetchone()
+    assert (probe['pid'],probe['tx'])==(checks[0]['pid'],checks[0]['tx'])
+    assert probe['role']=='aos_extension_maintainer'
+
+
+def test_owner_corrupt_readback_rolls_back_everything(withdrawal_owner,monkeypatch):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    def corrupt(*a,**kw):raise ValueError('corrupt readback')
+    monkeypatch.setattr('aos_api.ecommerce_growth_registration.decode_withdrawal_receipt',corrupt)
+    with pytest.raises(ValueError):service.withdraw(installation_id=c.request['installationRef']['installationId'],scope=TenantScope('org-a','project-a'),request=RegistrationWithdrawalRequest.model_validate(c.withdraw),actor='actor')
+    assert counts(c)==(9,1,0)
+
+
+def test_owner_permission_denial_prevents_sql_mutation(withdrawal_owner,monkeypatch):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    def denied(*a,**kw):raise PermissionError('current authority denied')
+    monkeypatch.setattr(service,'_authorize_receipt_access',denied)
+    with pytest.raises(PermissionError):service.withdraw(installation_id=c.request['installationRef']['installationId'],scope=TenantScope('org-a','project-a'),request=RegistrationWithdrawalRequest.model_validate(c.withdraw),actor='actor')
+    assert counts(c)==(9,1,0)
+
+
+def test_owner_installation_path_cannot_select_another_origin(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,checks=withdrawal_owner
+    with pytest.raises(ValueError,match='path differs'):
+        service.withdraw(installation_id=str(uuid4()),scope=TenantScope('org-a','project-a'),request=RegistrationWithdrawalRequest.model_validate(c.withdraw),actor='actor')
+    assert counts(c)==(9,1,0) and checks==[]
+
+
+def test_http_to_real_owner_and_atomic_receipt(withdrawal_owner):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from aos_api.auth import Principal,require_principal
+    from aos_api.errors import register_exception_handlers
+    from aos_api.routers.bundle_runtime_installations import router
+    c,service,_=withdrawal_owner
+    app=FastAPI();register_exception_handlers(app);app.include_router(router)
+    app.state.extension_runtime_control_plane=SimpleNamespace(first_dispatch_registration_service=service)
+    app.dependency_overrides[require_principal]=lambda:Principal(subject='actor',org_id='org-a',project_id='project-a',roles=['admin'],markings=[])
+    path='/v1/bundle-runtime-installations/'+c.request['installationRef']['installationId']+'/ecommerce-growth-registrations/withdrawals'
+    with TestClient(app) as client:
+        response=client.post(path,json=c.withdraw,headers={'Idempotency-Key':'withdraw-1','If-Match':'"5"'})
+        assert response.status_code==201,response.text
+        history=client.get(path+'/receipt',headers={'Idempotency-Key':'withdraw-1'})
+        assert history.status_code==200,history.text
+        assert history.json()['receiptId']==response.json()['receiptId']
+        assert history.json()['historical'] is True
+    assert counts(c)==(0,1,1)

@@ -21,3 +21,7 @@
 测试使用真实PG与最小权威fixture明确分层，不声称完整生产Owner联验：成功删除9占位保留登记/撤回历史、同key回读、新key同原登记拒绝、错actor/tenant/etag/ref/快照/依赖/切换全部无部分写入、事务回滚恢复占位与回执、runtime无EXECUTE、两个并发撤回至多一次提交。主库仍025不部署。本切片完成后下一波Owner当前控制权限与HTTP回读组装。
 
 原子测试复查补充：19通过后新增严格ref revision=1.0负例为RED；PostgreSQL jsonb数值比较将1.0等同1，需同时检查原JSON数值文本为'1'。在尚未部署主库的029存储trigger和030入口补同一约束，并验证重哈希伪造也拒绝。增加撤回后新group重登记、旧撤回/登记重放不得移除或复活新占位，及撤回回读仍受当前成员权限约束。历史未决调用/预算不被本变更触及。
+
+Owner切片（dc357b35之后）：新增ecommerce_growth_withdrawal_receipt.py严格回读（tenant/列与payload、原登记ref、requestHash、9行原快照、actor、时间及contentHash）。扩展现有FirstDispatchRegistrationService.withdraw/read_withdrawal_receipt，不新造维护身份：同现有专用连接/SERIALIZABLE/runtime事务，读取并验证原登记，按030锁序取协调锁，再用现有CurrentControlPermission+安装store读当前权限；后切maintainer调用030、切回runtime严格回读，失败整笔回滚，拒绝使用返回JSON当唯一成功证据。旧read_receipt权限逻辑提取复用且行为不变。撤回不调用配置/模型/签名准入，因为只撤销无执行占位；数据库仍复验当前权限及CAS。未知结果可同key调用回读接口，但历史回读也要求当前权限。测试明确安装store/当前权限组合的fixture与真实SQL执行边界，不声称主库已配置或UI完成。
+
+同波次HTTP接线：在既有bundle_runtime_installations.py注册POST /{installation_id}/ecommerce-growth-registrations/withdrawals和GET同路径/receipt，复用安全错误映射、可信principal与唯一header校验。POST的If-Match严格匹配expectedInstallationEtag、Idempotency-Key匹配body；installation_id交Owner与原登记ref比对，不能仅信URL。新撤回Receipt返回201，重放200，未配置服务503。GET只读历史回执且需当前权限；不添加自动重试、Owner旁路或直接SQL接口。新增test_ecommerce_growth_withdrawal_http.py验证消息脱敏、headers/Principal/extra字段/未配置拒绝。前端入口、主库迁移、真实业务验收仍下一项。

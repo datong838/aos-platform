@@ -17,6 +17,8 @@ from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef,
 from aos_api.extension_runtime.configuration_authorization import CurrentFourSourceConfigurationAuthorization
 from aos_api.extension_runtime.consumer_connection import consumer_connection
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
+from aos_api.ecommerce_growth_withdrawal_receipt import decode_withdrawal_receipt
 from aos_api.tenant_scope import TenantScope
 from aos_api.extension_runtime.storage_ports import require_runtime_role
 
@@ -153,14 +155,87 @@ class FirstDispatchRegistrationService:
             raise ValueError('canonical receipt installation required')
         with self._transaction(scope) as conn:
             result=self._read(conn,scope,key,installation_id)
-            row=conn.execute('''SELECT etag_version FROM bundle_installation
-                WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
-                (*scope.key,result['installationId'])).fetchone()
-            if row is None:raise LookupError('receipt installation unavailable')
-            locked=self._store.lock_for_transition_in_transaction(conn,org_id=scope.org_id,
-                project_id=scope.project_id,installation_id=result['installationId'],expected_etag_version=row['etag_version'])
-            permission=CurrentControlPermission(operation=APPLY_INSTALLATION_OPERATION)
-            if permission(conn=conn,locked=locked,actor=actor) is not True:
-                raise PermissionError('current receipt access denied')
+            self._authorize_receipt_access(conn,scope,result['installationId'],actor)
+            result['historical']=True
+        return result
+
+    def _authorize_receipt_access(self,conn,scope,installation_id,actor):
+        row=conn.execute('''SELECT etag_version FROM bundle_installation
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
+            (*scope.key,installation_id)).fetchone()
+        if row is None:raise LookupError('receipt installation unavailable')
+        locked=self._store.lock_for_transition_in_transaction(conn,org_id=scope.org_id,
+            project_id=scope.project_id,installation_id=installation_id,expected_etag_version=row['etag_version'])
+        permission=CurrentControlPermission(operation=APPLY_INSTALLATION_OPERATION)
+        if permission(conn=conn,locked=locked,actor=actor) is not True:
+            raise PermissionError('current receipt access denied')
+
+    @staticmethod
+    def _withdrawal_origin(conn,scope,receipt_id):
+        row=conn.execute("""SELECT org_id,project_id,receipt_id,installation_id,generation,group_id,
+            idempotency_key,request_hash,payload,content_hash FROM public.extension_dispatch_registration_receipt
+            WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",(*scope.key,receipt_id)).fetchone()
+        if row is None:raise LookupError('withdrawal origin unavailable')
+        return row
+
+    def _read_withdrawal(self,conn,scope,key,installation_id):
+        row=conn.execute("""SELECT w.org_id,w.project_id,w.receipt_id,w.registration_receipt_id,
+            w.idempotency_key,w.request_hash,w.payload,w.content_hash
+            FROM public.extension_dispatch_withdrawal_receipt w
+            JOIN public.extension_dispatch_registration_receipt r
+              ON r.org_id=w.org_id AND r.project_id=w.project_id AND r.receipt_id=w.registration_receipt_id
+            WHERE w.org_id=%s AND w.project_id=%s AND w.idempotency_key=%s AND r.installation_id=%s""",
+            (*scope.key,key,installation_id)).fetchone()
+        if row is None:raise LookupError('withdrawal receipt unavailable')
+        origin=self._withdrawal_origin(conn,scope,row['registration_receipt_id'])
+        return decode_withdrawal_receipt(row,registration_row=origin,scope=scope)
+
+    def withdraw(self, *, scope: TenantScope, installation_id: str, request: RegistrationWithdrawalRequest, actor: str):
+        self._identity(scope,actor)
+        if type(installation_id) is not str or str(UUID(installation_id))!=installation_id:
+            raise ValueError('canonical withdrawal installation required')
+        if type(request) is not RegistrationWithdrawalRequest:
+            raise TypeError('strict withdrawal request required')
+        request=RegistrationWithdrawalRequest.model_validate(request.model_dump())
+        with self._transaction(scope) as conn:
+            self._require_current_transaction(conn,scope)
+            require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
+                protected_tables=('public.extension_dispatch_withdrawal_receipt',))
+            row=self._withdrawal_origin(conn,scope,request.registrationReceiptRef.resourceId)
+            origin=decode_registration_receipt(row,scope=scope)
+            if origin['installationId']!=installation_id:
+                raise ValueError('withdrawal installation path differs')
+            if origin['contentHash']!=request.registrationReceiptRef.contentHash:
+                raise ValueError('withdrawal origin hash differs')
+            # Same ordering as the restricted SQL entry; permission readers may
+            # lock installation rows only after the shared cutover group lock.
+            prefix=scope.org_id+chr(31)+scope.project_id+chr(31)
+            for suffix in ('ecommerce-first-registration',origin['groupId'],origin['installationId'],
+                    origin['installationId']+chr(31)+origin['generation']):
+                conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',(prefix+suffix,))
+            self._authorize_receipt_access(conn,scope,origin['installationId'],actor)
+            conn.execute('SET LOCAL ROLE aos_extension_maintainer')
+            response=conn.execute('SELECT public.extension_dispatch_withdraw_a0v_030(%s,%s) AS receipt',
+                (Jsonb(request.model_dump(mode='json')),actor)).fetchone()['receipt']
+            conn.execute('SET LOCAL ROLE aos_runtime')
+            result=self._read_withdrawal(conn,scope,request.idempotencyKey,origin['installationId'])
+            if (result['requestHash']!=request.request_hash() or result['actor']!=actor
+                    or result['receiptId']!=response.get('receiptId')
+                    or result['contentHash']!=response.get('contentHash')
+                    or type(response.get('replayed')) is not bool):
+                raise ValueError('withdrawal readback differs')
+            result['replayed']=response['replayed']
+        return result
+
+    def read_withdrawal_receipt(self, *, scope: TenantScope,installation_id: str,idempotency_key: str,actor: str):
+        self._identity(scope,actor);key=validate_idempotency_key(idempotency_key)
+        if type(installation_id) is not str or str(UUID(installation_id))!=installation_id:
+            raise ValueError('canonical withdrawal installation required')
+        with self._transaction(scope) as conn:
+            self._require_current_transaction(conn,scope)
+            require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
+                protected_tables=('public.extension_dispatch_withdrawal_receipt',))
+            result=self._read_withdrawal(conn,scope,key,installation_id)
+            self._authorize_receipt_access(conn,scope,installation_id,actor)
             result['historical']=True
         return result

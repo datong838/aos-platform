@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from psycopg import Error as DatabaseError
 
 from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
+from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
 from aos_api.tenant_scope import TenantScope
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -282,6 +283,45 @@ def get_ecommerce_growth_registration_receipt(
     key = _invoke(lambda: require_idempotency_key(request))
     service = _registration_service(control_plane)
     return _invoke_registration(lambda: service.read_receipt(
+        scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
+        idempotency_key=key, actor=principal.subject))
+
+
+@_registration_router.post(
+    '/{installation_id}/ecommerce-growth-registrations/withdrawals',
+    operation_id='withdraw_ecommerce_growth_registration',
+    responses={201: {'description': 'Immutable registration withdrawal receipt'}, **_ERRORS},
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER, _IF_MATCH_PARAMETER]},
+)
+def withdraw_ecommerce_growth_registration(
+    installation_id: CanonicalUuidPath, body: RegistrationWithdrawalRequest,
+    request: Request, response: Response, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    match = _invoke(lambda: require_if_match(request))
+    if key != body.idempotencyKey or match != f'"{body.expectedInstallationEtag}"':
+        raise ApiError(code='REGISTRATION_REFERENCE_MISMATCH', message='撤回版本或请求编号不一致。', status_code=409)
+    service = _registration_service(control_plane)
+    result = _invoke_registration(lambda: service.withdraw(
+        scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
+        request=body, actor=principal.subject))
+    response.status_code = 200 if result.get('replayed') is True else 201
+    return result
+
+
+@_registration_router.get(
+    '/{installation_id}/ecommerce-growth-registrations/withdrawals/receipt',
+    operation_id='get_ecommerce_growth_withdrawal_receipt', responses=_ERRORS,
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def get_ecommerce_growth_withdrawal_receipt(
+    installation_id: CanonicalUuidPath, request: Request, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    service = _registration_service(control_plane)
+    return _invoke_registration(lambda: service.read_withdrawal_receipt(
         scope=TenantScope(principal.org_id, principal.project_id), installation_id=installation_id,
         idempotency_key=key, actor=principal.subject))
 
