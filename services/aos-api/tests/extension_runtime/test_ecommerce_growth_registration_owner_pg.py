@@ -179,3 +179,47 @@ def test_external_transaction_current_gate_rejects_untrusted_context(owner_case,
             service.validate_current_authority_in_transaction(conn,scope=scope,
                 request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
     assert not calls
+
+
+def origin_args(case, first):
+    from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef
+    return dict(receipt_ref=RegistrationReceiptRef(resourceType='FirstDispatchRegistrationReceipt',
+        resourceId=first['receiptId'],revision=1,contentHash=first['contentHash']),
+        dispatch_snapshot=first['dispatchSnapshot'],installation_id=first['installationId'],
+        generation=first['generation'],execution_epoch=case.request['executionEpoch'],
+        binding_revision=case.request['bindingRevision'])
+
+
+def test_stored_origin_and_current_authority_share_caller_transaction(owner_case):
+    case,service,calls=owner_case;scope=TenantScope('org-a','project-a')
+    first=service.register(scope=scope,request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    with service._transaction(scope) as conn:
+        before=conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx').fetchone()
+        result=service.validate_registration_origin_in_transaction(conn,scope=scope,actor='actor',**origin_args(case,first))
+        assert result['receiptRef']['resourceId']==first['receiptId'] and result['executable'] is False
+        assert result['requestHash']==first['requestHash']
+        assert conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx').fetchone()==before
+    assert calls[-1]==case.qualification_calls[-1]
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==1
+
+
+@pytest.mark.parametrize('drift',['id','hash','target','scope','current'])
+def test_stored_origin_drift_or_current_denial_cannot_validate(owner_case,monkeypatch,drift):
+    from uuid import uuid4
+    from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef
+    case,service,calls=owner_case;scope=TenantScope('org-a','project-a')
+    first=service.register(scope=scope,request=FirstDispatchRegistrationRequest.model_validate(case.request),actor='actor')
+    args=origin_args(case,first)
+    if drift in ('id','hash'):
+        ref=args['receipt_ref'].model_dump()
+        ref['resourceId' if drift=='id' else 'contentHash']=str(uuid4()) if drift=='id' else 'sha256:'+'0'*64
+        args['receipt_ref']=RegistrationReceiptRef.model_validate(ref)
+    elif drift=='target':args['generation']=str(uuid4())
+    elif drift=='scope':scope=TenantScope('other','project-a')
+    else:
+        def reject(*a,**kw):raise PermissionError('current configuration denied')
+        monkeypatch.setattr('aos_api.ecommerce_growth_registration.validate_current_registration_target',reject)
+    with service._transaction(scope) as conn:
+        with pytest.raises((LookupError,ValueError,PermissionError)):
+            service.validate_registration_origin_in_transaction(conn,scope=scope,actor='actor',**args)
+    assert case.db.owner.execute('SELECT count(*) AS n FROM extension_dispatch_registration_receipt').fetchone()['n']==1

@@ -157,3 +157,7 @@ HTTP RED 发现两项需修复：通用 FastAPI 校验错误回显 unknown input
 ### 当前权威同事务复用切片
 修改 services/aos-api/aos_api/ecommerce_growth_registration.py，将register现有四来源预检与签名资格代码抽取为validate_current_authority_in_transaction(conn,scope,request,actor)，供后续Cutover复用。该方法不建立连接、不切角色、不commit、不调用登记SQL；要求当前事务SERIALIZABLE/current_user=aos_runtime并复用require_runtime_role验证双租户/RLS/非特权。保留原exact依赖和结果拒绝规则，返回非执行授权摘要。register调用此方法后继续原027/Receipt事务。
 扩展tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py：外部拥有的真实非特权事务调用成功、同backend pid/tx、零登记、调用后事务仍在；错误隔离级别/role/scope拒绝；原登记/重放/拒绝/回滚回归。编排测试中的当前预检及签名节点依旧替身，不冒充全依赖真实验收。主库不动，新方法尚未连接Cutover。
+
+
+### 存储来源与当前权威组合门
+修改 services/aos-api/aos_api/ecommerce_growth_registration.py 和 tests/extension_runtime/test_ecommerce_growth_registration_owner_pg.py。抽取固定事务上下文检查，新增validate_registration_origin_in_transaction：先核对scope/role/isolation/RLS，按public表tenant+receipt_id读不可变Receipt，复用verify_registration_origin比对exact ref、九项快照、安装/代次/epoch/revision，再调用当前权威同事务方法。调用方只提供ref与锁内读取快照，不提供历史正文；返回ref和requestHash及executable=false，不提交、不登记、不切换。新增组合事务、错ref/hash/scope/target、当前配置拒绝测试。仍不接Cutover放行，draining与撤销后续单独实现。
