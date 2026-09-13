@@ -14,6 +14,7 @@ from aos_api.ecommerce_product_event_control_receipt import ProductEventControlR
 from aos_api.ecommerce_product_event_guard import ProductEventPolicyGuard
 from aos_api.ecommerce_product_event_reader import ProductEventCandidateReader
 from aos_api.ecommerce_product_event_store import ProductEventPolicyStore
+from aos_api.ecommerce_product_event_origin import ProductEventOriginStore
 from aos_api.ecommerce_product_event_window_port import InstalledProductEventWindowPort
 from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
 from aos_api.tenant_scope import TenantScope
@@ -56,8 +57,13 @@ class ProductEventConsumptionService:
 
     def _write(self,conn,binding,result):
         store=AutomationOccurrenceStore(TransactionBoundConnectFactory(HostTransaction(conn),self.scope))
-        return store.record_event_batch(self.scope,binding,events=[
+        writes=store.record_event_batch(self.scope,binding,events=[
             (row['eventKey'],datetime.fromisoformat(row['deadline'])) for row in result['events']])
+        origins=ProductEventOriginStore(HostTransaction(conn),self.scope)
+        for write,event in zip(writes,result['events'],strict=True):
+            origins.put(write.occurrence_id,event_key=event['eventKey'],run_id=self.reader._journal._run_id,
+                        actor=self.actor,replayed=write.replayed)
+        return writes
 
     def _phase(self,conn,policy_id,consume,*,exact_event_key=None):
         scope=self.scope;tx=HostTransaction(conn)
