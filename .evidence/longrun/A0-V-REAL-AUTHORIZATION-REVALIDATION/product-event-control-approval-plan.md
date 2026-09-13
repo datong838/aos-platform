@@ -1,0 +1,7 @@
+# BG-02 控制批准与停用身份
+
+基线6fdabd94。新增require_current_event_control_approval，enable命令须匹配独立ecommerce_growth_event_control Action；Proposal payload精确为caseId/schedulePolicyId/controlIntent（完整命令去掉approvalRef），因此旧保存批准、不同key/版本/意图不能替代。控制action风险底线R2，复用现有当前Action快照、风险策略、真实成员/标记、独立审批quorum与期限规则，不复制一套审批判断。
+
+ecommerce_product_event_approval.py内部抽取受控参数化公共实现；原require_current_event_approval固定schedule_put行为不变。新入口固定event_control类型和完整payload摘要，没有HTTP可传的action类型或回调。源Case/策略仍由041锁住。停用独立require_current_event_disable_actor：当前HostTransaction/双tenant/runtime GUC、真实meta_membership的admin或owner角色；不引用来源/模型/过期批准，remote OpenFGA配置则待相应当前适配而拒绝，禁止伪造actor或grant。
+
+修改services/aos-api/aos_api/aip_action_policy.py、ecommerce_product_event_approval.py；新增ecommerce_product_event_control_approval.py。tests/extension_runtime/test_product_event_control_approval_pg.py + 既有审批/风险测试。隔离PG测不同action/完整意图/角色撤销/跨租户拒绝，旧保存入口回归。真正Host与新注册下一步，解析和当前检查不能让未注册操作获得执行权。

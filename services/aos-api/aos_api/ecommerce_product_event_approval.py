@@ -13,6 +13,13 @@ _HASH_FIELDS=('approval_event_id','proposal_id','proposal_version','proposal_has
 
 def require_current_event_approval(*,transaction,scope,case_id,policy_id,approval_ref,executor):
     """No role grants; all current checks stay in the owning Host transaction."""
+    return _require_current_event_approval(transaction=transaction,scope=scope,case_id=case_id,
+        policy_id=policy_id,approval_ref=approval_ref,executor=executor,
+        action_type='ecommerce_growth_schedule_put',expected_payload=None)
+
+
+def _require_current_event_approval(*,transaction,scope,case_id,policy_id,approval_ref,executor,
+                                    action_type,expected_payload):
     if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
         raise TypeError('current Host transaction and scope required')
     if openfga_api_url():
@@ -25,10 +32,12 @@ def require_current_event_approval(*,transaction,scope,case_id,policy_id,approva
         (*scope.key,approval_ref.resource_id)).fetchone()
     now=transaction.execute('SELECT clock_timestamp() AS now').fetchone()['now']
     if (proposal is None or proposal['status']!='approved' or proposal['expires_at']<=now
-            or proposal['action_type_id']!='ecommerce_growth_schedule_put'
+            or proposal['action_type_id']!=action_type
             or proposal['payload'].get('caseId')!=case_id or proposal['payload'].get('schedulePolicyId')!=policy_id
             or not proposal['action_binding_hash']):
         raise ValueError('current executable event proposal required')
+    if expected_payload is not None and canonical_hash(proposal['payload'])!=canonical_hash(expected_payload):
+        raise ValueError('current event control intent differs')
     row=transaction.execute('''SELECT id,name,object_type,parameters,required_markings,submission_criteria
         FROM meta_action_type WHERE id=%s FOR SHARE''',(proposal['action_type_id'],)).fetchone()
     if row is None or action_snapshot_from_row(row)!=proposal['action_type_snapshot']:

@@ -41,6 +41,9 @@ def classify_action_risk(
     if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback"}:
         floor = ActionRiskLevel.R2
         reasons.append("internal_runtime_cutover")
+    elif action_type_id == 'ecommerce_growth_event_control':
+        floor = ActionRiskLevel.R2
+        reasons.append('internal_event_binding_control')
     elif action_type_id == 'ecommerce_growth_schedule_put':
         floor = ActionRiskLevel.R2
         reasons.append('internal_schedule_authority_change')
