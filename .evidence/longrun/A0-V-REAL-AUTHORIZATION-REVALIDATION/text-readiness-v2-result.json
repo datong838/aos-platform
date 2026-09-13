@@ -1,0 +1,98 @@
+{
+  "mode": "apply",
+  "providerCalls": 3,
+  "businessMutationCount": 0,
+  "outcome": "FIXED_TEXT_CASES_PASSED",
+  "cases": [
+    {
+      "identity": {
+        "caseId": "instruction",
+        "requestHash": "aaea25068aff3c1437a8724581227d3e10aac8e190b74a75cd320b355005778e",
+        "provider": {
+          "asset_type": "ProviderInstanceRevision",
+          "asset_id": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "content_hash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "network": {
+          "asset_type": "NetworkPolicyRevision",
+          "asset_id": "a0v-ecommerce-network-v1",
+          "revision": 1,
+          "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+        }
+      },
+      "status": "completed",
+      "result": {
+        "status": "healthy",
+        "response_model": "agnes-2.5-flash",
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "total_tokens": 77,
+        "latency_ms": 1090,
+        "answer_present": true,
+        "response_contract_passed": true,
+        "observed_at": "2026-09-13T07:02:28.449303Z"
+      }
+    },
+    {
+      "identity": {
+        "caseId": "source",
+        "requestHash": "7cc8bc339bead3a3659e800ba03c3a113aa906397e7b06c5f24721e85ec17de4",
+        "provider": {
+          "asset_type": "ProviderInstanceRevision",
+          "asset_id": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "content_hash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "network": {
+          "asset_type": "NetworkPolicyRevision",
+          "asset_id": "a0v-ecommerce-network-v1",
+          "revision": 1,
+          "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+        }
+      },
+      "status": "completed",
+      "result": {
+        "status": "healthy",
+        "response_model": "agnes-2.5-flash",
+        "prompt_tokens": 77,
+        "completion_tokens": 3,
+        "total_tokens": 80,
+        "latency_ms": 465,
+        "answer_present": true,
+        "response_contract_passed": true,
+        "observed_at": "2026-09-13T07:02:29.000651Z"
+      }
+    },
+    {
+      "identity": {
+        "caseId": "missing",
+        "requestHash": "44e5a04514d34d3168d967141a3b1e29bb4e6bbb20b646a7ba64350891f0d14a",
+        "provider": {
+          "asset_type": "ProviderInstanceRevision",
+          "asset_id": "a0v-agnes-text-readonly-dev",
+          "revision": 1,
+          "content_hash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+        },
+        "network": {
+          "asset_type": "NetworkPolicyRevision",
+          "asset_id": "a0v-ecommerce-network-v1",
+          "revision": 1,
+          "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+        }
+      },
+      "status": "completed",
+      "result": {
+        "status": "healthy",
+        "response_model": "agnes-2.5-flash",
+        "prompt_tokens": 81,
+        "completion_tokens": 3,
+        "total_tokens": 84,
+        "latency_ms": 375,
+        "answer_present": true,
+        "response_contract_passed": true,
+        "observed_at": "2026-09-13T07:02:29.461332Z"
+      }
+    }
+  ]
+}

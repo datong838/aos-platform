@@ -1,0 +1,30 @@
+{
+  "planHash": "7ec9752ee02c9c33708b45a0f1a58279e8556ead4fd69fdd37036df82ebb552b",
+  "model": {
+    "asset_type": "RegisteredModelRevision",
+    "asset_id": "a0v-agnes-2-5-flash-readonly-dev",
+    "revision": 3,
+    "content_hash": "048fbb80457cde2f959fa7e53557efbbaa7674efb82811e67b84f32b0fbc2559"
+  },
+  "route": {
+    "asset_type": "ModelRouteRevision",
+    "asset_id": "a0v-ecommerce-text-readonly-v1",
+    "revision": 3,
+    "content_hash": "0f8f2250c803dc38c5662b8bef36054873b0142ef8591721f1989a46b6393d28"
+  },
+  "modelGate": {
+    "asset_type": "EvalGateDecision",
+    "asset_id": "gate-67e7fb3628dc6aa719dda362112f85ec",
+    "revision": 1,
+    "content_hash": "1c667e48aca2027da8137822a493d06e7c05b0a0cbe5641872ea199b5057a96c"
+  },
+  "routeGate": {
+    "asset_type": "EvalGateDecision",
+    "asset_id": "gate-acc9a7922cd34bff33c55b5970a1410a",
+    "revision": 1,
+    "content_hash": "4a62fd38eec8fad58f95c5ac18ff735eff48f9c5a7dd66a282533e24a97dccd7"
+  },
+  "providerCalls": 0,
+  "businessRuns": 0,
+  "readiness": "NOT_CHECKED"
+}

@@ -1,0 +1,9 @@
+# 独立实测与当前安装配置恢复
+
+代码9946efaf；独立text-readiness-v2批次三条实际调用全部exact通过，耗时1090/465/375ms。真实结果只含来源引用/请求hash/用量/时间与合同结果，无prompt、answer或凭证正文。原qyh-reboot-text-eval/instruction仍submitted，hash保持9323e93b477ada1b006741ca34d198165792c0e03085c06def0c1313408e4870。没有重发或改写原未决请求。
+
+使用新证据冻结计划7ec9752ee02c9c33708b45a0f1a58279e8556ead4fd69fdd37036df82ebb552b，通过原正式Owner将模型和路由续期至revision3，生成两个新的EvalGate；该发布步骤providerCalls=0/businessRuns=0，实际Provider调用只发生于前述新三案例。费用走已批准开发成本授权，未捏造商业单价。
+
+固定新安装97aeb2e7-59ba-40f6-89a3-fb0293bc0497的四源配置预检authorized=true；stage/configure/enable依序通过。配置引用721433ba-5256-4b12-9043-0bcfab658bf0@1，运行策略revision4。configure操作b4d7ffc0-4f1d-46a9-ae8b-0a98775d578b与enable操作01a4f29f-d829-439d-808e-6cf213d47037均回读succeeded。新代3a445eee-aa28-4459-9e5a-f12a806a94b1为revision4/epoch3、ready/enabled/unfenced。Docker现场三个aos-ext容器均Up；旧parent仍通过drained校验。详见reboot-v2-configured-enabled-20260913.json。
+
+这是配置恢复，非全业务完成：尚未真实首次登记/切换路由、自然首链或八场景验收；短期ProviderHealth观察与真实业务准入还须当前复核。API仍运行6201ea5b，Host仍aa3010c4；新提交的事件合同/审批修复尚未整体受控重载。下一波继续首次登记当前条件和BG-02装配，不以本波GREEN作发布依据。

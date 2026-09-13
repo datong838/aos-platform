@@ -1,0 +1,74 @@
+{
+  "installationId": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+  "snapshot": {
+    "at": "2026-09-13T07:08:46.048271+00:00",
+    "head": {
+      "installation_id": "97aeb2e7-59ba-40f6-89a3-fb0293bc0497",
+      "etag_version": 5,
+      "state": "active"
+    },
+    "bindings": [
+      {
+        "generation": "3a445eee-aa28-4459-9e5a-f12a806a94b1",
+        "revision": 4,
+        "execution_epoch": 3,
+        "enabled": true,
+        "operation_fence": false,
+        "observed_state": "ready",
+        "desired_state": "enabled"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "5afad4dd-9172-4a3f-a9d1-fdb66d3d9ecf",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 253,
+        "failure_code": null
+      },
+      {
+        "operation_id": "f0b58850-456c-4ec0-b541-7cb8e496dee6",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null
+      },
+      {
+        "operation_id": "b4d7ffc0-4f1d-46a9-ae8b-0a98775d578b",
+        "kind": "configure",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 6,
+        "failure_code": null
+      },
+      {
+        "operation_id": "01a4f29f-d829-439d-808e-6cf213d47037",
+        "kind": "enable",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null
+      }
+    ],
+    "schedules": [],
+    "businessRoutes": 0
+  },
+  "oldParentDrained": true,
+  "oldEvalHash": "9323e93b477ada1b006741ca34d198165792c0e03085c06def0c1313408e4870"
+}
