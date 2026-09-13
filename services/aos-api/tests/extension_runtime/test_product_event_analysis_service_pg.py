@@ -8,6 +8,7 @@ from aos_api.automation_occurrence_store import AutomationOccurrenceStore
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory,_strict_analysis_start_command
 from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompileConflict
 
 
 @pytest.fixture
@@ -62,3 +63,15 @@ def test_analysis_cannot_substitute_another_original_batch(analysis_case,fault):
     else:service.source.actor='another-actor'
     with pytest.raises(ValueError,match='original event batch'):
         service._phase(conn,claimed,lambda *args:pytest.fail('different batch admitted'))
+
+
+@pytest.mark.xfail(strict=True, raises=BusinessInvestigationCompileConflict,
+                  reason="CF4: real START has no compilation bridge; remove only after actual lineage passes")
+def test_real_host_start_creates_compilation_and_task_lineage(analysis_case):
+    from aos_api.ecommerce_growth_runtime_adapters import AnalysisAdvanceHostService
+    from test_product_event_analysis_port import command
+    conn,service,claimed=analysis_case
+    _,request=service._phase(conn,claimed,lambda snap,request,dispatch:(snap,request))
+    lineage=AnalysisAdvanceHostService()._start_lineage(transaction=HostTransaction(conn),scope=service.scope,
+        command=command(request),occurred_at=datetime.now(UTC))
+    assert set(lineage)=={'runRef','compilationRef','planRef','taskRunRef'}

@@ -1,0 +1,9 @@
+# Analysis Host真实落库集成检查
+
+基线7be853c4，父任务Host/tests范围。
+
+代码复核发现 AnalysisAdvanceHostService._start_lineage 创建Run后直接get_for_run读取CompilationReceipt，尚未看到触发编译Saga的调用。旧test_ecommerce_analysis_advance_host把_start_lineage整体替换，不能证明真实编译血缘。
+
+先在现有隔离PG事件/Case/claim夹具下直接执行真实_start_lineage，定位首个真实缺口，不以替换编译结果通过。测试文件services/aos-api/tests/extension_runtime/test_product_event_analysis_service_pg.py。确认后补充具体编译绑定技术方案再改Host代码。
+
+仍不部署主安装、不用虚构真实角色/责任方案/能力预算、不push。新测试的Source/installed/group-lock仍是具名fixture，验证范围仅真实Run及Compilation存储。

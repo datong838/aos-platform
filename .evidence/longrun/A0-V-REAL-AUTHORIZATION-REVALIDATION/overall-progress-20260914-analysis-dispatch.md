@@ -12,3 +12,5 @@
 | 连续观察/发布 | 尚未进入，发布决策未作 |
 
 本轮新验证含真实隔离PG领取/回执/不可变来源、当前控制撤销拒绝及源码编排。Source/installed/部分Host用具名测试替身的地方均在各波证据中标明。下一步正式AnalysisHost的Run/Compilation/TaskRun/Receipt真实库集成；随后新候选评审安装，主库仍未应用039–043。不push，230 L0仍挂起。
+
+后续真实Host验证发现：_start_lineage新Run后未调用编译Saga，缺CompilationReceipt，现有4通过1严格已知失败。新增analysis-start-compilation-bridge-design.md的CF1–CF6，当前进入CF1；这一发现是实际缺口，不是模型/SSH问题，不计首链完成。
