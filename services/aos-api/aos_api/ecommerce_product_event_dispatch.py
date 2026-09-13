@@ -45,3 +45,33 @@ class EventAwareSchedulePutHostService:
 
     def verify_receipt(self, *, scope, command, **kwargs):
         return self._select(scope, command).verify_receipt(scope=scope, command=command, **kwargs)
+
+
+class EventControlRequestHostService:
+    executor_identity='ecommerce-growth-event-control-host'
+
+    def __init__(self,principal,factory):
+        if type(principal) is not Principal or type(factory) is not PipelineControlServiceFactory:
+            raise TypeError('exact authenticated principal and pipeline factory required')
+        actor=principal.subject
+        if type(actor) is not str or not 1<=len(actor)<=240 or actor!=actor.strip() or not actor.isprintable():
+            raise ValueError('authenticated control actor required')
+        self._scope=TenantScope(principal.org_id,principal.project_id)
+        self._actor,self._factory,self._service=actor,factory,None
+
+    def _get(self,scope):
+        if type(scope) is not TenantScope or scope!=self._scope:
+            raise ValueError('request control scope drifted')
+        if self._service is None:
+            from aos_api.ecommerce_product_event_control_host_service import ProductEventControlHostService
+            self._service=ProductEventControlHostService(self._factory.build_event_control_owner(scope),actor=self._actor)
+        return self._service
+
+    def revalidate(self,*,scope,**kwargs):
+        return self._get(scope).revalidate(scope=scope,**kwargs)
+
+    def execute(self,*,scope,**kwargs):
+        return self._get(scope).execute(scope=scope,**kwargs)
+
+    def verify_receipt(self,*,scope,**kwargs):
+        return self._get(scope).verify_receipt(scope=scope,**kwargs)

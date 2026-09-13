@@ -11,6 +11,7 @@ from aos_api.auth import Principal, require_principal
 from aos_api.ecommerce_growth_canonical_router import EcommerceGrowthCanonicalRouter
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
+    EVENT_CONTROL_OPERATION,
     select_ecommerce_growth_registry,
     build_scoped_ecommerce_growth_registry,
 )
@@ -108,7 +109,7 @@ def dispatch_operation(
     principal: PrincipalDependency,
     canonical: EcommerceGrowthCanonicalRouter = Depends(get_canonical_router),
 ) -> Mapping[str, Any]:
-    if operation_id not in ECOMMERCE_GROWTH_OPERATIONS:
+    if operation_id not in (*ECOMMERCE_GROWTH_OPERATIONS, EVENT_CONTROL_OPERATION):
         raise ApiError(
             code="ECOMMERCE_GROWTH_UNKNOWN_OPERATION",
             message="unknown ecommerce growth operation",

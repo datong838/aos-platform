@@ -11,6 +11,7 @@ from uuid import UUID
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.ecommerce_growth_host_composition import (
     ECOMMERCE_GROWTH_OPERATIONS,
+    EVENT_CONTROL_OPERATION,
     EcommerceGrowthHostAdapterRegistry,
     EcommerceGrowthHostPorts,
     build_ecommerce_growth_host_ports,
@@ -30,6 +31,7 @@ _ISSUE_SQL = """SELECT operation_id, handler_kind, installation_id, generation,
                 WHERE org_id=%s AND project_id=%s AND operation_id=%s"""
 
 _PORT_ATTRS = {
+    EVENT_CONTROL_OPERATION: "control_port",
     "ecommerce_growth_investigation_describe": "describe_port",
     "ecommerce_growth_case_put": "write_port",
     "ecommerce_growth_schedule_put": "write_port",
@@ -106,6 +108,7 @@ class EcommerceGrowthCanonicalRouter:
             connect_factory=host_connect,
         )
         self._legacy_compat = dict(legacy_compat) if legacy_compat else {}
+        self._operation_ids = registry.operation_ids
 
     def dispatch(
         self,
@@ -118,7 +121,7 @@ class EcommerceGrowthCanonicalRouter:
     ) -> Mapping[str, Any]:
         if type(scope) is not TenantScope:
             raise TypeError("canonical router requires a trusted TenantScope")
-        if type(operation_id) is not str or operation_id not in ECOMMERCE_GROWTH_OPERATIONS:
+        if type(operation_id) is not str or operation_id not in self._operation_ids:
             raise EcommerceGrowthHostBlocked("unknown operation")
         if type(command) is not dict:
             raise TypeError("command must be a strict mapping")
@@ -133,6 +136,8 @@ class EcommerceGrowthCanonicalRouter:
         ):
             raise EcommerceGrowthHostBlocked('current dispatch runtime differs from caller target')
         if dispatch_ref.handler_kind == "legacy":
+            if operation_id == EVENT_CONTROL_OPERATION:
+                raise EcommerceGrowthHostBlocked("event control has no legacy fallback")
             compat = self._legacy_compat.get(operation_id)
             if compat is None:
                 raise EcommerceGrowthHostBlocked("legacy dispatch has no registered compatibility service")

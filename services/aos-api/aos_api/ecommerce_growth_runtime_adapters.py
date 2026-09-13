@@ -5659,6 +5659,11 @@ class SchedulePutAdapter(_ExplicitRuntimeAdapter):
     SPEC = _AdapterSpec("ecommerce_growth_schedule_put", ("case", "schedule_policy", "approval"), ("receiptRef",))
 
 
+class EventControlAdapter(_ExplicitRuntimeAdapter):
+    # Separate optional operation; never inherits the original nine-operation seal.
+    SPEC = _AdapterSpec("ecommerce_growth_event_control", ("schedule_policy", "case", "source_selection", "approval", "runtime"), ("receiptRef",))
+
+
 class ScheduleTriggerAdapter(_ExplicitRuntimeAdapter):
     SPEC = _AdapterSpec("ecommerce_growth_schedule_trigger", ("schedule_policy", "occurrence", "execution_epoch"), ("occurrenceRef",))
 

@@ -71,8 +71,8 @@ def test_scoped_registry_preserves_other_eight_services():
         build_scoped_ecommerce_growth_registry, build_runtime_ecommerce_growth_registry)
     baseline = build_runtime_ecommerce_growth_registry()
     scoped = build_scoped_ecommerce_growth_registry(principal(), factory())
-    assert scoped.operation_ids == baseline.operation_ids
-    for operation in scoped.operation_ids:
+    assert scoped.operation_ids == (*baseline.operation_ids, "ecommerce_growth_event_control")
+    for operation in baseline.operation_ids:
         service = scoped._binding(operation).revalidate.__self__
         original = baseline._binding(operation).revalidate.__self__
         if operation == 'ecommerce_growth_schedule_put':
@@ -81,7 +81,8 @@ def test_scoped_registry_preserves_other_eight_services():
             assert type(service) is type(original)
 
 
-def test_http_dependency_takes_identity_from_authentication(monkeypatch):
+@pytest.mark.parametrize("operation", ["ecommerce_growth_schedule_put", "ecommerce_growth_event_control"])
+def test_http_dependency_takes_identity_from_authentication(monkeypatch, operation):
     from types import SimpleNamespace
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
@@ -101,9 +102,10 @@ def test_http_dependency_takes_identity_from_authentication(monkeypatch):
         def __init__(self, registry): assert registry is sentinel
         def dispatch(self, *, scope, operation_id, command):
             assert scope == SCOPE
+            assert operation_id == operation
             return {'routed': True}
     monkeypatch.setattr(route, 'build_scoped_ecommerce_growth_registry', build)
     monkeypatch.setattr(route, 'EcommerceGrowthCanonicalRouter', FakeCanonical)
-    response = TestClient(app).post('/v1/ecommerce-growth/operations/ecommerce_growth_schedule_put', json=EVENT)
+    response = TestClient(app).post(f'/v1/ecommerce-growth/operations/{operation}', json=EVENT)
     assert response.status_code == 200
     assert seen == [('authenticated-user', production_factory)]

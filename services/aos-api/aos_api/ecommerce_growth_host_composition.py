@@ -14,6 +14,8 @@ from aos_api.ecommerce_growth_host_ports import (
 )
 
 
+EVENT_CONTROL_OPERATION = "ecommerce_growth_event_control"
+
 ECOMMERCE_GROWTH_OPERATIONS = (
     "ecommerce_growth_investigation_describe",
     "ecommerce_growth_case_put",
@@ -110,6 +112,18 @@ _OPERATION_SPECS = tuple(
 )
 
 
+_CONTROL_SPEC = _OperationSpec(EVENT_CONTROL_OPERATION,
+    ("schedule_policy", "case", "source_selection", "approval", "runtime"), ("receiptRef",))
+
+
+def _registry_specs(operation_ids):
+    if operation_ids == ECOMMERCE_GROWTH_OPERATIONS:
+        return _OPERATION_SPECS
+    if operation_ids == (*ECOMMERCE_GROWTH_OPERATIONS, EVENT_CONTROL_OPERATION):
+        return (*_OPERATION_SPECS, _CONTROL_SPEC)
+    raise ValueError("ecommerce growth registry operation order drifted")
+
+
 class EcommerceGrowthHostAdapterRegistry:
     """Sealed host-owned registry; callers cannot inject executable callbacks."""
 
@@ -126,10 +140,8 @@ class EcommerceGrowthHostAdapterRegistry:
     ) -> "EcommerceGrowthHostAdapterRegistry":
         if token is not _REGISTRY_TOKEN:
             raise TypeError("registry construction is host-internal")
-        expected = tuple(spec.operation_id for spec in _OPERATION_SPECS)
-        if tuple(bindings) != expected:
-            raise ValueError("ecommerce growth registry operation order drifted")
-        for spec in _OPERATION_SPECS:
+        specs = _registry_specs(tuple(bindings))
+        for spec in specs:
             binding = bindings[spec.operation_id]
             if (
                 binding.operation_id != spec.operation_id
@@ -207,13 +219,14 @@ def build_runtime_ecommerce_growth_registry() -> EcommerceGrowthHostAdapterRegis
 
 def build_scoped_ecommerce_growth_registry(principal, pipeline_factory) -> EcommerceGrowthHostAdapterRegistry:
     """Add event dispatch using only the authenticated request and server factory."""
-    from aos_api.ecommerce_product_event_dispatch import EventAwareSchedulePutHostService
-    from aos_api.ecommerce_growth_runtime_adapters import SchedulePutAdapter
+    from aos_api.ecommerce_product_event_dispatch import EventAwareSchedulePutHostService, EventControlRequestHostService
+    from aos_api.ecommerce_growth_runtime_adapters import SchedulePutAdapter, EventControlAdapter
 
     service = EventAwareSchedulePutHostService(principal, pipeline_factory)
     baseline = build_runtime_ecommerce_growth_registry()
     bindings = {operation: baseline._binding(operation) for operation in baseline.operation_ids}
     bindings["ecommerce_growth_schedule_put"] = SchedulePutAdapter(service).binding()
+    bindings[EVENT_CONTROL_OPERATION] = EventControlAdapter(EventControlRequestHostService(principal, pipeline_factory)).binding()
     return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)
 
 
@@ -255,6 +268,7 @@ class EcommerceGrowthHostPorts:
     review_port: LockedEcommerceGrowthHostPort
     capability_port: LockedEcommerceGrowthHostPort
     content_review_port: LockedEcommerceGrowthHostPort
+    control_port: LockedEcommerceGrowthHostPort | None = None
 
 
 def build_ecommerce_growth_host_ports(
@@ -264,8 +278,7 @@ def build_ecommerce_growth_host_ports(
 ) -> EcommerceGrowthHostPorts:
     if type(registry) is not EcommerceGrowthHostAdapterRegistry:
         raise TypeError("ecommerce growth host requires its sealed adapter registry")
-    if registry.operation_ids != ECOMMERCE_GROWTH_OPERATIONS:
-        raise ValueError("ecommerce growth host registry drifted")
+    _registry_specs(registry.operation_ids)
 
     def port(*operation_ids: str) -> LockedEcommerceGrowthHostPort:
         return LockedEcommerceGrowthHostPort(
@@ -282,6 +295,7 @@ def build_ecommerce_growth_host_ports(
         review_port=port("ecommerce_growth_review_advance"),
         capability_port=port("ecommerce_growth_content_generate"),
         content_review_port=port("ecommerce_growth_content_review"),
+        control_port=port(EVENT_CONTROL_OPERATION) if EVENT_CONTROL_OPERATION in registry.operation_ids else None,
     )
 
 

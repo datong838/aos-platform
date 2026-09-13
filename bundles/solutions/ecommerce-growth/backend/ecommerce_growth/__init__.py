@@ -1,6 +1,7 @@
 """Ecommerce growth registration; inactive until an authorized cutover."""
 
 _OPERATIONS = (
+    ("ecommerce_growth_event_control", "POST", "/ecommerce/growth/investigations/events/control"),
     ("ecommerce_growth_investigation_describe", "POST", "/ecommerce/growth/investigations/describe"),
     ("ecommerce_growth_case_put", "POST", "/ecommerce/growth/investigations/cases"),
     ("ecommerce_growth_schedule_put", "POST", "/ecommerce/growth/investigations/schedules"),
