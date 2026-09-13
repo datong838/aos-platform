@@ -1,0 +1,7 @@
+# BG-02 三阶段受控事件消费
+
+基线93ed6def，延续原批次消费序列。新增Host ProductEventConsumptionService，精确ControlQualifiedOwner、CandidateReader（共享SourceOwner）、CurrentInstalledPackageInvoker(core)及固定actor/run。第一事务锁当前control dispatch整组、读取当前策略/Case、当前enabled binding及该binding revision的原enable receipt；重验原批准/角色/方法/当前source，读取限定原ingress批次的完整性合格metadata及当前core安装快照，形成稳定快照。无事件直接返回空，不调用计算。
+
+事务外只调用固定core窗口纯计算；第二事务完整重读并比较policy/Case、binding revision、原控制receipt、dispatch epoch/group、core安装、原候选metadata的规范hash。只有完全相同才在SourceOwner回调内部复用record_event_batch，同一事务写Occurrence/outbox；结束前再次核验批准与SourceOwner，之后commit。异常回滚，无网络重试、无source ACK、水位推进、启用变更或直接Run写入。expired由现有Store DBclock写missed。
+
+新增services/aos-api/aos_api/ecommerce_product_event_consumer.py；修改ecommerce_product_event_guard.py新增run_policy_context共用既有guard（原run_policy回调签名不变）。测试优先验证快照漂移、单次IPC、空批次、原批准撤销/停用与事务失败不落任务；命名Source/签名/IPC替身明确记录。下一步平台工厂装配与受治理worker连接、Occurrence到分析Run，仍不能把此内部类当真实首链完成。

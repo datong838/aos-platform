@@ -20,6 +20,14 @@ class ProductEventPolicyGuard:
         self._owner = owner
 
     def run_policy(self, *, transaction, scope, policy, dispatch, actor, execute):
+        return self._run_policy(transaction=transaction, scope=scope, policy=policy,
+            dispatch=dispatch, actor=actor, execute=lambda _context: execute())
+
+    def run_policy_context(self, *, transaction, scope, policy, dispatch, actor, execute):
+        return self._run_policy(transaction=transaction, scope=scope, policy=policy,
+            dispatch=dispatch, actor=actor, execute=execute)
+
+    def _run_policy(self, *, transaction, scope, policy, dispatch, actor, execute):
         if type(transaction) is not HostTransaction or type(scope) is not TenantScope or type(policy) is not dict:
             raise TypeError('trusted Host transaction, scope and policy required')
         ref = PipelineExactRef.model_validate(policy['sourceSelectionRef'])
@@ -34,7 +42,7 @@ class ProductEventPolicyGuard:
                 recoveryWindowSeconds=policy['recoveryWindowSeconds'])
             context = ProductEventPolicyDraft.model_validate_json(json.dumps(values))
             self._correlate(scope,context,policy,dispatch)
-            return self._during_current(transaction,context,draft,mapping,actor,execute)
+            return self._during_current(transaction,context,draft,mapping,actor,lambda:execute(context))
         return transaction.run_current_source_snapshot(self._owner,scope=scope,ref=ref,actor=actor,execute=current)
 
     @staticmethod
