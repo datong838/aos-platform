@@ -326,4 +326,18 @@ def get_ecommerce_growth_withdrawal_receipt(
         idempotency_key=key, actor=principal.subject))
 
 
+@_registration_router.get(
+    '/{installation_id}/ecommerce-growth-registrations/status',
+    operation_id='get_ecommerce_growth_registration_status', responses=_ERRORS,
+)
+def get_ecommerce_growth_registration_status(
+    installation_id: CanonicalUuidPath, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    service = _registration_service(control_plane)
+    return _invoke_registration(lambda: service.registration_status(
+        scope=TenantScope(principal.org_id, principal.project_id),
+        installation_id=installation_id, actor=principal.subject))
+
+
 router.include_router(_registration_router)

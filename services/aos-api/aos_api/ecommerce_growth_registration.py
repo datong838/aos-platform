@@ -239,3 +239,44 @@ class FirstDispatchRegistrationService:
             self._authorize_receipt_access(conn,scope,installation_id,actor)
             result['historical']=True
         return result
+
+
+    def registration_status(self, *, scope: TenantScope, installation_id: str, actor: str) -> dict:
+        """Discover immutable history for display; never grants an action."""
+        self._identity(scope,actor)
+        if type(installation_id) is not str or str(UUID(installation_id))!=installation_id:
+            raise ValueError('canonical registration installation required')
+        with self._transaction(scope) as conn:
+            self._require_current_transaction(conn,scope)
+            require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
+                protected_tables=('public.extension_dispatch_withdrawal_receipt',))
+            self._authorize_receipt_access(conn,scope,installation_id,actor)
+            rows=conn.execute("""SELECT r.receipt_id FROM public.extension_dispatch_registration_receipt r
+                WHERE r.org_id=%s AND r.project_id=%s AND r.installation_id=%s
+                AND NOT EXISTS (SELECT 1 FROM public.extension_dispatch_withdrawal_receipt w
+                    WHERE w.org_id=r.org_id AND w.project_id=r.project_id AND w.registration_receipt_id=r.receipt_id)
+                ORDER BY r.created_at DESC,r.receipt_id LIMIT 2""",(*scope.key,installation_id)).fetchall()
+            result=dict(schemaVersion='aos.ecommerce.first-dispatch-status/v1',
+                installationId=installation_id,state='unregistered',registrationReceiptRef=None,
+                withdrawalReceiptId=None,allowedActions=[],executable=False)
+            if len(rows)>1:
+                result['state']='needs_attention'
+            elif rows:
+                origin=decode_registration_receipt(self._withdrawal_origin(conn,scope,rows[0]['receipt_id']),scope=scope)
+                if origin['installationId']!=installation_id:
+                    raise ValueError('registration discovery installation differs')
+                result['state']='registered'
+                result['registrationReceiptRef']=RegistrationReceiptRef(
+                    resourceType='FirstDispatchRegistrationReceipt',resourceId=origin['receiptId'],
+                    revision=1,contentHash=origin['contentHash']).model_dump(mode='json')
+            else:
+                row=conn.execute("""SELECT w.idempotency_key FROM public.extension_dispatch_withdrawal_receipt w
+                    JOIN public.extension_dispatch_registration_receipt r ON r.org_id=w.org_id
+                      AND r.project_id=w.project_id AND r.receipt_id=w.registration_receipt_id
+                    WHERE w.org_id=%s AND w.project_id=%s AND r.installation_id=%s
+                    ORDER BY w.created_at DESC,w.receipt_id LIMIT 1""",(*scope.key,installation_id)).fetchone()
+                if row:
+                    receipt=self._read_withdrawal(conn,scope,row['idempotency_key'],installation_id)
+                    result['state']='withdrawn'
+                    result['withdrawalReceiptId']=receipt['receiptId']
+        return result

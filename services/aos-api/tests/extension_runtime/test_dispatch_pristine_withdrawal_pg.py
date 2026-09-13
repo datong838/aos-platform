@@ -232,3 +232,51 @@ def test_http_to_real_owner_and_atomic_receipt(withdrawal_owner):
         assert history.json()['receiptId']==response.json()['receiptId']
         assert history.json()['historical'] is True
     assert counts(c)==(0,1,1)
+
+
+def test_status_discovers_registration_and_withdrawal_without_key(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,checks=withdrawal_owner
+    kw=dict(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    status=service.registration_status(**kw)
+    assert status['state']=='registered'
+    assert status['registrationReceiptRef']==c.withdraw['registrationReceiptRef']
+    assert status['allowedActions']==[] and status['executable'] is False
+    assert 'request' not in status and 'dispatchSnapshot' not in status
+    assert counts(c)==(9,1,0)
+    receipt=service.withdraw(**kw,request=RegistrationWithdrawalRequest.model_validate(c.withdraw))
+    status=service.registration_status(**kw)
+    assert status['state']=='withdrawn' and status['registrationReceiptRef'] is None
+    assert status['withdrawalReceiptId']==receipt['receiptId']
+    assert counts(c)==(0,1,1)
+
+
+def test_status_checks_current_permission_before_discovery(withdrawal_owner,monkeypatch):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    def denied(*args):raise PermissionError('denied')
+    monkeypatch.setattr(service,'_authorize_receipt_access',denied)
+    with pytest.raises(PermissionError):
+        service.registration_status(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert counts(c)==(9,1,0)
+
+
+def test_status_after_reregistration_uses_new_origin(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    withdraw(c)
+    replacement=deepcopy(c.request);replacement['groupId']=str(uuid4());replacement['idempotencyKey']='status-replacement'
+    receipt=register(c,replacement)
+    status=service.registration_status(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert status['state']=='registered' and status['registrationReceiptRef']['resourceId']==receipt['receiptId']
+    assert status['withdrawalReceiptId'] is None and counts(c)==(9,2,1)
+
+
+def test_status_scope_does_not_discover_other_tenant_history(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    # Permission composition is mocked by this fixture; the database scope still
+    # must hide all other tenant history even after that permission gate passes.
+    status=service.registration_status(scope=TenantScope('org-b','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert status['state']=='unregistered' and status['registrationReceiptRef'] is None
+    assert status['withdrawalReceiptId'] is None and counts(c)==(9,1,0)
