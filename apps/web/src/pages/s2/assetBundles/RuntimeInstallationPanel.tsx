@@ -125,6 +125,13 @@ export function RuntimeInstallationPanel({ state, configurations, offline, pendi
             <div><dt>执行纪元 / binding revision</dt><dd>{runtime.binding ? `${runtime.binding.executionEpoch} / ${runtime.binding.revision}` : "—"}</dd></div>
           </dl>
           {runtime.reasons.map((reason) => <p role="status" key={reason}>{reason}</p>)}
+          <section aria-label="已登记配置">
+            <h4>已登记配置</h4>
+            {configurationReady ? <ul>{catalog?.items.map((item, index) => <li key={JSON.stringify(item.ref)}>配置 {index + 1} · 版本 {item.ref.revision}{item.isCurrent ? " · 当前绑定" : ""}</li>)}</ul>
+              : <p role="status">{configurations?.status === "forbidden" ? "当前账号无权查看配置列表。" : configurations?.status === "empty" ? "当前代际尚未登记配置。" : "配置列表正在读取或需要刷新。"}</p>}
+            {catalog?.hasMore && <p>当前显示前50条配置。</p>}
+            <button type="button" className="btn" disabled={offline || pending !== null || !configurations} onClick={configurations?.reload}>刷新配置列表</button>
+          </section>
           {runtime.currentOperation && (
             <section aria-label="最近运行操作" style={{ margin: "10px 0" }}>
               <p role="status">最近操作：{LABELS[runtime.currentOperation.kind]} · {runtime.currentOperation.phase} / {runtime.currentOperation.status} · revision {runtime.currentOperation.revision}</p>

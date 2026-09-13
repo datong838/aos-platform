@@ -291,3 +291,5 @@ GET /v1/bundle-runtime-installations/{id}/configurations：当前Principal角色
 测试：真实SQL隔离/摘要篡改/有界列表；HTTP只用当前主体/角色与no-store；前端选择带exact ref、列表失效不提交、跨代际清空及原disable/enable路径回归；最后主库只读核对现有已登记配置，API部署后浏览器验收。
 
 D2b实施核对修正：原通用useAssetRead仅有请求序号、无完整身份失效保护；本切片不扩改全部旧读取，新增配置读取封装，携带租户/subject/roles/authRevision本地key并监听身份变化，响应前后重新比较；返回旧key的数据立即隐藏，确认按钮提交前再次isCurrent检查。新增operations.ts接口合同条目。
+
+D2b浏览器验收补充：当前真实实例ready，只允许disable，因此不应为打开configure对话框而停用。补运行面板只读的已登记配置概览，使运行中也能看到列表读取成功/无权/为空/待刷新及当前绑定标记；不增加动作。
