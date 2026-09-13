@@ -1,0 +1,7 @@
+# BG-02 生命周期消费worker
+
+基线41a7e40e。新增ProductEventConsumptionWorker，由精确平台Factory和LiveDirectory构造；每tick最多4个target、每target最多5个候选，目标与候选按轮转公平扫描，末页回绕，移除target清理游标。无跨租户全库枚举。候选经runtime scoped连接发现；从当前meta_membership唯一成员及authz_tuple bearer读取现有markings，最多1000，不能把安装要求标记当作自己拥有的标记。消费器仍重新验证当前Source/Control/批准/安装。
+
+每候选原actor/run/current controlRef透传，固定安装/generation，以已有_authoritative_store生命周期持有Engine，仅消费已完成输入。单次失败仅记录计数并推进本轮扫描；不在未知结果后立即重发，后继轮转仍凭当前读取与Occurrence唯一身份处理。CancelledError不吞。当前target卸载后不再发现，消费前后CurrentInvoker/Owner分别准入。
+
+serve随现有extension runtime stop事件及host_ready存活条件退出，每15秒一轮；main.py仅ACTIVE runtime host且有完整Factory/Directory时挂接到runtime_background_tasks，无额外env开关或写死租户。源码接入不重启现有服务。新增ecommerce_product_event_worker.py、修改main.py，测试worker边界/公平轮转/失败隔离/取消及原startup检查；无真实provider/业务副作用。

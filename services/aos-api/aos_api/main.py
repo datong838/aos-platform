@@ -405,6 +405,13 @@ async def _lifespan_body(_app: FastAPI):
                 _app.state.extension_runtime_host_error_code = "HOST_TASK_FAILED"
                 raise RuntimeError("extension runtime host failed during startup") from error
         log.info("startup_extension_runtime_host_started")
+        from aos_api.ecommerce_product_event_worker import build_product_event_worker
+        product_event_worker=build_product_event_worker(_app.state.extension_runtime_control_plane)
+        if product_event_worker is not None:
+            event_task=asyncio.create_task(product_event_worker.serve(extension_runtime_stop,
+                host_ready=lambda:not extension_runtime_task.done()),name="product-event-consumption")
+            _app.state.runtime_background_tasks.append(event_task)
+
     else:
         log.info(
             "startup_extension_runtime_host_inactive code=%s",
