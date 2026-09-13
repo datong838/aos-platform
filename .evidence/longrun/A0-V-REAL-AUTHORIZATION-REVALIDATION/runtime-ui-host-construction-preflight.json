@@ -1,0 +1,23 @@
+{
+  "outcome": "UI_HOST_READ_ONLY_CONSTRUCTION_PREFLIGHT_GREEN",
+  "consumers": [
+    [
+      "ConfigurationConsumer",
+      "RuntimeDisableConsumer",
+      "RuntimeUiReadConsumer"
+    ]
+  ],
+  "tenants": [
+    "org-org/dev-project"
+  ],
+  "runOnceCalled": false,
+  "serveCalled": false,
+  "newHostProcess": false,
+  "businessFingerprintUnchanged": true,
+  "activeHostPid": 6606,
+  "limitations": [
+    "New UI package not installed",
+    "Original live Host not upgraded",
+    "No real read request consumed"
+  ]
+}

@@ -5,3 +5,9 @@
 38项启动器和RuntimeHost停止/生命周期测试通过，7项既有警告；git diff --check通过。兼容当前旧runtime-host-aa3010c4.lock，避免修改源码后启动新版本绕过仍运行旧版本。此为本地固定部署配置，不主张跨机器分布式排他；数据库租户分配与Lease约束继续生效。
 
 下一步实际持锁拒绝验证。拒绝探针使用interval=0，若原锁意外缺失也会在Host构造前停止；成功标准必须HOST_ALREADY_RUNNING且原状态摘要不变、探针状态文件不存在。
+
+## UQ6-D1 单写者修复与宿主接续检查（2026-09-13）
+
+代码79ac8277；38项测试通过；真实旧锁冲突返回HOST_ALREADY_RUNNING，原6606状态摘要不变，未写探针状态、未启动新Host。只读构造预检实测当前035/身份/正租户分配可装配ConfigurationConsumer、RuntimeDisableConsumer、RuntimeUiReadConsumer，未调用run_once/serve、业务表指纹不变。
+
+发现接续关键限制：RuntimeHost.stop会经scheduler/owner/preparation关闭原OCI会话；PostgresPendingPreparationDirectory只读未投递runtime-apply，不能把进程内已消失的旧PreparedJob凭旧active状态重建；resource_recovery明确只清理、不重建或启用。所以暂不重启6606，避免先破坏原会话再补救。下一波UQ6-D2核对现有禁用/重申请协议，补宿主重启恢复技术步骤与真实验收条件；必要代码纳入同一原清册，不用手工改已投递outbox或伪造新审批。真实包发布安装/业务首链/八工作台仍待完成。

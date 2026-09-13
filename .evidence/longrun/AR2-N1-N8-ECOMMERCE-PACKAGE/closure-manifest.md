@@ -1319,3 +1319,9 @@ UQ6-A真实备份/恢复/主库031~035部署与独立读回通过：主库现a0v
 代码b0c0591a，11项测试通过。真实preflight专用UI角色/主库/035查询成功。18181原API40254正常退出，新API61503健康status=ok；原Host6606持续运行未重启。IAB真实重新加载5173/workshop/analyst，页面正常返回“当前工作台入口不可用”，与当前尚未发布安装UI包的状态一致，不声称经营参谋真实页面已验收。
 
 下一波UQ6-D核对原Host启用读取消费者所需前置条件及受控升级方案，保留当前3OCI/原会话和单写者约束；真正更换宿主前须解决原运行会话恢复及UI包真实安装条件。实际业务首链/8工作台/连续观察仍未完成；独立真实审批身份待核验，不造审批人；不push、230 L0挂起。
+
+## UQ6-D1 单写者修复与宿主接续检查（2026-09-13）
+
+代码79ac8277；38项测试通过；真实旧锁冲突返回HOST_ALREADY_RUNNING，原6606状态摘要不变，未写探针状态、未启动新Host。只读构造预检实测当前035/身份/正租户分配可装配ConfigurationConsumer、RuntimeDisableConsumer、RuntimeUiReadConsumer，未调用run_once/serve、业务表指纹不变。
+
+发现接续关键限制：RuntimeHost.stop会经scheduler/owner/preparation关闭原OCI会话；PostgresPendingPreparationDirectory只读未投递runtime-apply，不能把进程内已消失的旧PreparedJob凭旧active状态重建；resource_recovery明确只清理、不重建或启用。所以暂不重启6606，避免先破坏原会话再补救。下一波UQ6-D2核对现有禁用/重申请协议，补宿主重启恢复技术步骤与真实验收条件；必要代码纳入同一原清册，不用手工改已投递outbox或伪造新审批。真实包发布安装/业务首链/八工作台仍待完成。

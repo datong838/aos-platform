@@ -1,0 +1,10 @@
+{
+  "outcome": "HOST_SINGLETON_REAL_LEGACY_LOCK_REJECTION_VERIFIED",
+  "codeRevision": "79ac8277faa2088cad1e61bb112ce8ef90df4252",
+  "reasonCode": "HOST_ALREADY_RUNNING",
+  "originalPid": 6606,
+  "originalStatusHash": "sha256:27e0684a71f3a0d3d2282dd42e565b63704212702d6e42f8d3d6b504b84d0875",
+  "originalStatusUnchanged": true,
+  "newStatusAbsent": true,
+  "newHostStarted": false
+}
