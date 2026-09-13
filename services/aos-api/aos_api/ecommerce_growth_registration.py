@@ -19,6 +19,7 @@ from aos_api.extension_runtime.consumer_connection import consumer_connection
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
 from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
 from aos_api.ecommerce_growth_withdrawal_receipt import decode_withdrawal_receipt
+from aos_api.ecommerce_growth_withdrawal_status import withdrawal_hint
 from aos_api.tenant_scope import TenantScope
 from aos_api.extension_runtime.storage_ports import require_runtime_role
 
@@ -258,17 +259,21 @@ class FirstDispatchRegistrationService:
                 ORDER BY r.created_at DESC,r.receipt_id LIMIT 2""",(*scope.key,installation_id)).fetchall()
             result=dict(schemaVersion='aos.ecommerce.first-dispatch-status/v1',
                 installationId=installation_id,state='unregistered',registrationReceiptRef=None,
-                withdrawalReceiptId=None,allowedActions=[],executable=False)
+                withdrawalReceiptId=None,allowedActions=[],executable=False,
+                expectedInstallationEtag=None,withdrawalReason='not_applicable')
             if len(rows)>1:
                 result['state']='needs_attention'
             elif rows:
-                origin=decode_registration_receipt(self._withdrawal_origin(conn,scope,rows[0]['receipt_id']),scope=scope)
+                row=self._withdrawal_origin(conn,scope,rows[0]['receipt_id'])
+                origin=decode_registration_receipt(row,scope=scope)
                 if origin['installationId']!=installation_id:
                     raise ValueError('registration discovery installation differs')
                 result['state']='registered'
                 result['registrationReceiptRef']=RegistrationReceiptRef(
                     resourceType='FirstDispatchRegistrationReceipt',resourceId=origin['receiptId'],
                     revision=1,contentHash=origin['contentHash']).model_dump(mode='json')
+                result.update(withdrawal_hint(conn,scope=scope,row=row,origin=origin,
+                    receipt_ref=result['registrationReceiptRef']))
             else:
                 row=conn.execute("""SELECT w.idempotency_key FROM public.extension_dispatch_withdrawal_receipt w
                     JOIN public.extension_dispatch_registration_receipt r ON r.org_id=w.org_id

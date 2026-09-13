@@ -168,6 +168,14 @@ def withdrawal_owner(withdrawal_case,monkeypatch):
         CREATE FUNCTION withdrawal_probe() RETURNS trigger LANGUAGE plpgsql AS $$
         BEGIN INSERT INTO withdrawal_tx_probe VALUES(pg_backend_pid(),txid_current(),current_setting('role'));RETURN NEW;END $$;
         CREATE TRIGGER withdrawal_probe AFTER INSERT ON extension_dispatch_withdrawal_receipt FOR EACH ROW EXECUTE FUNCTION withdrawal_probe();''')
+    db.execute('GRANT SELECT ON bundle_installation TO aos_runtime')
+    for table,role in [('extension_dispatch_cutover_operation','aos_extension_maintainer'),
+            ('automation_schedule_binding','aos_runtime'),('ecommerce_growth_runtime_command_receipt','aos_runtime'),
+            ('extension_operation_dispatch_binding','aos_runtime')]:
+        db.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        db.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(table)))
+        db.execute(sql.SQL("CREATE POLICY status_scope ON {} USING(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(sql.Identifier(table)))
+        db.execute(sql.SQL('GRANT SELECT ON {} TO {}').format(sql.Identifier(table),sql.Identifier(role)))
     checks=[]
     def permission(self,conn,scope,installation_id,actor):
         checks.append(conn.execute('SELECT pg_backend_pid() AS pid,txid_current() AS tx,current_user AS role').fetchone())
@@ -241,7 +249,8 @@ def test_status_discovers_registration_and_withdrawal_without_key(withdrawal_own
     status=service.registration_status(**kw)
     assert status['state']=='registered'
     assert status['registrationReceiptRef']==c.withdraw['registrationReceiptRef']
-    assert status['allowedActions']==[] and status['executable'] is False
+    assert status['allowedActions']==['withdraw'] and status['executable'] is False
+    assert status['expectedInstallationEtag']==5 and status['withdrawalReason']=='unused_origin'
     assert 'request' not in status and 'dispatchSnapshot' not in status
     assert counts(c)==(9,1,0)
     receipt=service.withdraw(**kw,request=RegistrationWithdrawalRequest.model_validate(c.withdraw))
@@ -280,3 +289,58 @@ def test_status_scope_does_not_discover_other_tenant_history(withdrawal_owner):
     status=service.registration_status(scope=TenantScope('org-b','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
     assert status['state']=='unregistered' and status['registrationReceiptRef'] is None
     assert status['withdrawalReceiptId'] is None and counts(c)==(9,1,0)
+
+
+@pytest.mark.parametrize('defect',['cutover','schedule','command','partial','revision','unfenced'])
+def test_status_never_offers_withdrawal_for_used_or_changed_origin(withdrawal_owner,defect):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    if defect=='cutover':
+        c.db.owner.execute("INSERT INTO extension_dispatch_cutover_operation VALUES('org-a','project-a',%s)",(c.request['groupId'],))
+    elif defect in ('schedule','command'):
+        table='automation_schedule_binding' if defect=='schedule' else 'ecommerce_growth_runtime_command_receipt'
+        c.db.owner.execute("INSERT INTO "+table+" VALUES('org-a','project-a','ecommerce_growth_case_put')")
+    elif defect=='partial':c.db.owner.execute("DELETE FROM extension_operation_dispatch_binding WHERE operation_id='ecommerce_growth_case_put'")
+    elif defect=='revision':c.db.owner.execute('UPDATE extension_operation_dispatch_binding SET revision=2')
+    else:c.db.owner.execute('UPDATE extension_operation_dispatch_binding SET operation_fence=false')
+    before=counts(c)
+    result=service.registration_status(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert result['allowedActions']==[] and result['executable'] is False
+    assert result['withdrawalReason']==('dependent_history' if defect in ('cutover','schedule','command') else 'dispatch_changed')
+    assert counts(c)==before
+
+
+def test_status_refuses_unprotected_dependency_table(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    c.db.owner.execute('ALTER TABLE automation_schedule_binding NO FORCE ROW LEVEL SECURITY')
+    with pytest.raises(PermissionError):
+        service.registration_status(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert counts(c)==(9,1,0)
+
+
+def test_status_hint_cannot_bypass_later_installation_cas(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    kw=dict(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    hint=service.registration_status(**kw)
+    assert hint['allowedActions']==['withdraw']
+    c.db.owner.execute('UPDATE bundle_installation SET etag_version=6')
+    request=RegistrationWithdrawalRequest(registrationReceiptRef=hint['registrationReceiptRef'],
+        expectedInstallationEtag=hint['expectedInstallationEtag'],idempotencyKey='stale-hint')
+    with pytest.raises(psycopg.errors.SerializationFailure):service.withdraw(**kw,request=request)
+    assert counts(c)==(9,1,0)
+
+
+def test_ambiguous_registration_history_does_not_choose_latest(withdrawal_owner):
+    from aos_api.tenant_scope import TenantScope
+    c,service,_=withdrawal_owner
+    # Deliberately simulate inconsistent occupancy with the fixture owner, not
+    # through a production repair path or by rewriting immutable receipts.
+    c.db.owner.execute('DELETE FROM extension_operation_dispatch_binding')
+    replacement=deepcopy(c.request);replacement['groupId']=str(uuid4());replacement['idempotencyKey']='ambiguous-second'
+    register(c,replacement)
+    result=service.registration_status(scope=TenantScope('org-a','project-a'),installation_id=c.request['installationRef']['installationId'],actor='actor')
+    assert result['state']=='needs_attention' and result['registrationReceiptRef'] is None
+    assert result['allowedActions']==[] and result['expectedInstallationEtag'] is None
+    assert counts(c)==(9,2,0)

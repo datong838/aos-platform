@@ -29,3 +29,8 @@ Owner切片（dc357b35之后）：新增ecommerce_growth_withdrawal_receipt.py�
 
 登记发现切片（a8f078a9之后）：先补GET /{installation_id}/ecommerce-growth-registrations/status，避免用户输入历史key/ref/hash。复用专用SERIALIZABLE/runtime连接和当前安装权限，显式租户过滤；查未被撤回的原登记最多2条，唯一项严格解码返回exact ref；多项返回needs_attention且不挑最新；无活动项查最近撤回并严格解码，无历史才返回unregistered。状态registered只表示存在未撤回登记，不等于待激活、健康或可执行；所有allowedActions为空，executable=false，后续资格切片另行实现。返回历史回执不含配置正文和原请求；无当前权限403，服务未配置503，不假装空态。只读接口不取得group写锁、不执行maintainer角色或变更数据；现有权限读取可能锁安装行，但本接口之后不请求任何组锁。快照只用于显示，所有后续写请求继续由Owner重新验证。
 文件：aos_api/ecommerce_growth_registration.py、routers/bundle_runtime_installations.py；测试tests/extension_runtime/test_dispatch_pristine_withdrawal_pg.py及test_ecommerce_growth_registration_status_http.py。覆盖登记前/登记后/撤回后、当前权限拒绝、跨租户、服务缺失、错误脱敏、响应不泄露完整请求；不部署主库、不声称UI完成。回滚代码只移除新GET，保留所有历史Receipt。该片属于BG-01，后续为资格状态→前端→主库独立连接及真实验收。
+
+
+资格提示切片（07b8d17c之后）：在现有status发现唯一登记后，服务端读取当前安装etag及原登记对应9操作的实际快照、任何cutover历史、schedule/runtime command依赖。复用require_pristine_withdrawal，不在前端复制规则。返回expectedInstallationEtag与withdrawalReason（unused_origin、dependent_history、dispatch_changed或not_applicable）；只有未使用原始快照允许allowedActions=[withdraw]。此allowedActions是当前快照的UI提示，executable仍false，POST再次做权限/CAS/完整锁内检查；GET不接受执行参数、不写Receipt、不调能力。
+
+新增aos_api/ecommerce_growth_withdrawal_status.py封装固定只读查询；仅cutover历史使用已有专用连接的maintainer SELECT权限，随后恢复runtime读取调度/command/dispatch（已有授权），不新增GRANT或迁移。读取前require_runtime_role复验各关系FORCE RLS且session非owner/非super/bypass。当前权限检查先完成；无group协调锁，不形成安装→group锁倒置。查询异常整体503/409，不默认为unused。原登记解码错误继续拒绝，不以提示字段掩盖损坏。未登记/已撤回/多候选不允许动作。测试补真实隔离PG的cutover、依赖、快照漂移、RLS失效和新快照后再撤回的CAS拒绝；fixture需按源码ACL给最小读取权限并强制RLS，当前权限组合仍明确mock。仅展示层提示，未替代主库真实验收。
