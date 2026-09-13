@@ -341,3 +341,67 @@ def get_ecommerce_growth_registration_status(
 
 
 router.include_router(_registration_router)
+
+
+class _CutoverReadRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+        async def safe_handler(request):
+            try:
+                return await handler(request)
+            except RequestValidationError:
+                raise ApiError(code='CUTOVER_REQUEST_INVALID', message='切换查询格式不符合要求。', status_code=422) from None
+        return safe_handler
+
+
+_cutover_read_router = APIRouter(route_class=_CutoverReadRoute)
+
+
+def _cutover_read(control_plane, principal, installation_id, key, *, history):
+    from aos_api.ecommerce_growth_cutover import EcommerceGrowthCutoverConflict
+    service = getattr(control_plane, 'ecommerce_growth_cutover_service', None)
+    if service is None:
+        raise ApiError(code='CUTOVER_UNAVAILABLE', message='经营入口切换查询服务尚未配置。', status_code=503)
+    read = service.read_activation_history if history else service.read_prepare_receipt
+    try:
+        return _invoke(lambda: read(scope=TenantScope(principal.org_id, principal.project_id),
+            installation_id=installation_id, idempotency_key=key, actor=principal.subject))
+    except (EcommerceGrowthCutoverConflict, ValueError):
+        raise ApiError(code='CUTOVER_HISTORY_CONFLICT', message='切换证据不完整或已变化，请核对原回执。', status_code=409) from None
+    except DatabaseError as error:
+        if error.sqlstate == '42501':
+            raise ApiError(code='CUTOVER_ACCESS_DENIED', message='当前账号无权查询此经营入口。', status_code=403) from None
+        if error.sqlstate in ('40001', '40P01', '55000'):
+            raise ApiError(code='CUTOVER_READ_CONFLICT', message='切换状态正在变化，请稍后查询。', status_code=409) from None
+        raise ApiError(code='CUTOVER_UNAVAILABLE', message='切换记录暂时无法查询。', status_code=503) from None
+    except (RuntimeError, OSError):
+        raise ApiError(code='CUTOVER_UNAVAILABLE', message='切换查询服务暂不可用。', status_code=503) from None
+
+
+@_cutover_read_router.get(
+    '/{installation_id}/ecommerce-growth-cutovers/receipt',
+    operation_id='get_ecommerce_growth_cutover_prepare_receipt', responses=_ERRORS,
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def get_ecommerce_growth_cutover_prepare_receipt(
+    installation_id: CanonicalUuidPath, request: Request, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    return _cutover_read(control_plane, principal, installation_id, key, history=False)
+
+
+@_cutover_read_router.get(
+    '/{installation_id}/ecommerce-growth-cutovers/history',
+    operation_id='get_ecommerce_growth_cutover_history', responses=_ERRORS,
+    openapi_extra={'parameters': [_IDEMPOTENCY_PARAMETER]},
+)
+def get_ecommerce_growth_cutover_history(
+    installation_id: CanonicalUuidPath, request: Request, principal: PrincipalDependency,
+    control_plane: ControlPlaneDependency,
+) -> dict:
+    key = _invoke(lambda: require_idempotency_key(request))
+    return _cutover_read(control_plane, principal, installation_id, key, history=True)
+
+
+router.include_router(_cutover_read_router)
