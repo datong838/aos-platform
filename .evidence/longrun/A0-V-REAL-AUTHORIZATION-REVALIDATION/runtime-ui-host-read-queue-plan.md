@@ -177,3 +177,13 @@ B1先修改apps/web/src/components/extensions/ExtensionHost.tsx和ExtensionHost.
 B2新增签名资源只读服务设计与实现：按已发布且签名验证通过的不可变包清单解析frontend入口，仅允许声明HTML与精确packageHash/contentHash；拒绝路径穿越、后端文件、未知版本、签名或摘要不符。响应限制脚本网络能力，页面通过原MessagePort读取，不携带API凭据。先完成适配现有Registry/签名加载器的具体方案再编码。
 
 B3为growth 1.7.0制作独立1.8.0候选，保留旧版本原字节与既有数字同事配置，注册analyst_workspace_view_v1纯投影方法；首个真实UI仅声明经营参谋canonical路由，保留七模块贡献和独立operations-base，不用假数据填充另六页。补包协议/页面测试、实际OCI资格验证及新不可变签名树，后继UQ6备份迁移与原宿主部署。B1/B2/B3各自落证据与提交，代码通过不算主库安装或真实业务链完成。
+
+### UQ5-B2a 可信资源读取核心（基线e88cc76e，编码前）
+
+先新增extension_runtime/ui_resource_reader.py与tests/extension_runtime/test_ui_resource_reader.py。固定按publisher/id/version查询已发布Registry记录（参数化），使用现有ReleasePolicy快照校验当前信任根及发布证据。请求packageHash必须等于记录；仅采用记录内唯一content_hash sourceRef加载allowlist包，复核manifest/contentHash/signature一致；前端manifest自身摘要、入口HTML摘要和请求contentHash均必须一致。只允许manifest声明的单一frontend HTML入口，最大1MiB UTF-8；不读后端、任意资源或数据库业务对象。
+
+Registry记录读取和返回前发布状态/当前策略再核验使用新只读事务，拒绝读期间撤销或更换发布事实，不持长事务跨文件读取。复用已有read_verified_artifact防软链接/换文件/摘要失配，不引入普通路径读取。加载器会记录无效签名而非统一抛错，因此明确要求已发布策略验证以及加载签名与记录相等，不依赖“load成功”。
+
+本切片只交付读取核心；B2b随后挂匿名静态代码资源HTTP（不可包含租户业务数据），设置no-store/nosniff/sandbox CSP/connect-src none，校验重复query/路径以及错误脱敏，资源origin显式配置才开启。匿名资源访问不是业务读取授权，业务仍由宿主原身份受限队列核验。
+
+B2a测试落到tests/asset_registry/test_ui_resource_reader.py，以复用该包现有真实Ed25519签名/ManifestLoader fixture；Registry查询用精确SQL与行替身，文件、签名和ReleasePolicy为真实实现，明确不冒充主库发布验收。
