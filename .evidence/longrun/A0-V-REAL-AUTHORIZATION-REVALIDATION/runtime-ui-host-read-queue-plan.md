@@ -428,3 +428,9 @@ D2e1真实浏览器发现既有协议遗漏：Niushop1.5版本GET 200，但regis
 新增scripts/a0v_configuration_stage_clone_acceptance.py，固定副本aos_configuration_stage_20260914_test。主库只取前后指纹，禁止主库入队/配置写入。原runtime登录仅增加副本CONNECT；复用既有0600凭据在内存中固定改dbname，连接后必须验证当前库为副本；API使用已验证clone专用身份。不得导出原密码，不创建业务actor/审批或放宽source校验。
 
 真实来源读取当前head后一次入队，先持久化原键/目标intent，未知结果只查原键。使用RuntimeHost原调度器、单一ConfigurationStageConsumer和CurrentFourSourceConfigurationAuthorization处理副本；无lifecycle/OCI/定时器/业务调度，无main Host连接或资源管理。最多一个消费tick加一次重放tick，随后stop。成功必须回读精确配置、原ID/key一致、第二tick零新增；拒绝如实落固定原因，不改来源以冒充成功。保留副本演练结果，迁移prepare快照此后不得复用作新apply。
+
+## D2d-8 登记结果有界自动跟踪（基线71883c3d，编码前）
+
+当前登记面板需要手动查结果，补为原键/原ID GET有界跟踪，不增加任何POST重试。修改ConfigurationStagePanel.tsx及测试：未决请求每3秒尝试一次查询，最多10个轮次；已有查询仍进行时不叠加，达到边界停止自动查询并提示手工原键回读。成功自动刷新原配置列表，拒绝/过期显示真实终态。
+
+身份、离线、外部动作阻塞、卸载均停止定时器；旧身份晚到结果仍被原publish隔离。自动查询状态不得重置请求键或创建新请求，手工查询共用原互斥锁。测试先RED：成功自动回读、长时间未知只GET有界且不POST、身份切换后无旧请求查询。

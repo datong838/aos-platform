@@ -21,7 +21,7 @@ describe('configuration stage product flow', () => {
     host = document.createElement('div'); root = createRoot(host); registered.mockClear();
     vi.spyOn(assetControlClient, 'getConfigurationSources').mockResolvedValue(catalog);
   });
-  afterEach(async () => { await act(async () => root.unmount()); vi.restoreAllMocks(); setAccessToken(null); });
+  afterEach(async () => { await act(async () => root.unmount()); vi.restoreAllMocks(); vi.useRealTimers(); setAccessToken(null); });
   async function render(value = runtime) { await act(async () => root.render(<ConfigurationStagePanel state={{ data: value, status: 'ready', stale: false, refreshing: false, error: null, reload: vi.fn() }} offline={false} blocked={false} onRegistered={registered} />)); }
   function button(label: string) { return [...host.querySelectorAll('button')].find(item => item.textContent === label)!; }
   async function choose() { await act(async () => { for (const select of host.querySelectorAll('select')) { select.value = select.options[1]!.value; select.dispatchEvent(new Event('change', { bubbles: true })); } }); }
@@ -59,4 +59,46 @@ describe('configuration stage product flow', () => {
     expect(get).toHaveBeenCalledWith(id); expect(registered).not.toHaveBeenCalled();
     expect(host.textContent).toContain(state === 'expired' ? '登记已过期' : '登记被拒绝');
   });
+  it('automatically reads a known receipt and refreshes choices without resubmitting', async () => {
+    vi.useFakeTimers();
+    const post = vi.spyOn(assetControlClient, 'stageConfiguration').mockResolvedValue({ ...receipt, state: 'requested', result: undefined, failureCode: undefined });
+    const get = vi.spyOn(assetControlClient, 'getConfigurationStage').mockResolvedValue(receipt);
+    await render(); await choose(); await act(async () => button('登记所选配置').click());
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    expect(get).toHaveBeenCalledTimes(1); expect(registered).toHaveBeenCalledTimes(1);
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(get).toHaveBeenCalledTimes(1); expect(post).toHaveBeenCalledTimes(1);
+  });
+  it('bounds unknown-result polling and never creates a replacement key', async () => {
+    vi.useFakeTimers();
+    const post = vi.spyOn(assetControlClient, 'stageConfiguration').mockRejectedValue(new Error('lost'));
+    const find = vi.spyOn(assetControlClient, 'findConfigurationStage').mockRejectedValue(new Error('unavailable'));
+    await render(); await choose(); await act(async () => button('登记所选配置').click());
+    await act(async () => { await vi.advanceTimersByTimeAsync(120000); });
+    expect(find).toHaveBeenCalledTimes(10); expect(post).toHaveBeenCalledTimes(1);
+    expect(new Set(find.mock.calls.map(call => call[0])).size).toBe(1);
+    expect(host.textContent).toContain('自动查询已暂停');
+  });
+  it('stops automatic queries when the identity changes', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(assetControlClient, 'stageConfiguration').mockRejectedValue(new Error('lost'));
+    const find = vi.spyOn(assetControlClient, 'findConfigurationStage').mockResolvedValue(receipt);
+    await render(); await choose(); await act(async () => button('登记所选配置').click());
+    await act(async () => setAccessToken('changed-before-poll'));
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(find).not.toHaveBeenCalled();
+  });
+
+  it('does not overlap queries when readback is slow', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(assetControlClient, 'stageConfiguration').mockRejectedValue(new Error('lost'));
+    let resolve!: (value: ConfigurationStageReceipt) => void;
+    const find = vi.spyOn(assetControlClient, 'findConfigurationStage').mockImplementation(() => new Promise(done => { resolve = done; }));
+    await render(); await choose(); await act(async () => button('登记所选配置').click());
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000); });
+    expect(find).toHaveBeenCalledTimes(1); expect(button('查询原请求结果').disabled).toBe(true);
+    expect(host.textContent).toContain(`原登记安装：${id}`);
+    await act(async () => resolve(receipt)); expect(registered).toHaveBeenCalledTimes(1);
+  });
+
 });

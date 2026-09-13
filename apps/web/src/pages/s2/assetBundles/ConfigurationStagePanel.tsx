@@ -6,7 +6,7 @@ import type { RuntimeInstallation } from '../../../api/assetControl/types';
 import type { AssetReadState } from './model';
 import { configurationIdentity, useConfigurationSources } from './readHooks';
 
-type Attempt = { identity: string; key: IdempotencyKey; receipt?: ConfigurationStageReceipt; message: string };
+type Attempt = { identity: string; installationId?: string; key: IdempotencyKey; receipt?: ConfigurationStageReceipt; message: string };
 export function ConfigurationStagePanel({ state, offline, blocked, onRegistered }: {
   state: AssetReadState<RuntimeInstallation>; offline: boolean; blocked: boolean; onRegistered: () => void;
 }) {
@@ -17,6 +17,8 @@ export function ConfigurationStagePanel({ state, offline, blocked, onRegistered 
   const [recoveryKey, setRecoveryKey] = useState('');
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [busy, setBusy] = useState(false);
+  const [autoPaused, setAutoPaused] = useState(false);
+  const pollBudget = useRef({ key: '', used: 0 });
   const lock = useRef(false);
   const currentAttempt = useRef<Attempt | null>(null);
   const mounted = useRef(true);
@@ -56,7 +58,7 @@ export function ConfigurationStagePanel({ state, offline, blocked, onRegistered 
   async function submit() {
     if (lock.current || unavailable || !ready || !sources.isCurrent() || !selectedRole || !selectedPolicy || !catalog?.target
       || (currentAttempt.current?.identity === identity && !terminal(currentAttempt.current))) return;
-    const value: Attempt = { identity, key: createIdempotentCommand().idempotencyKey, message: '正在提交登记请求…' };
+    const value: Attempt = { identity, installationId: runtime!.installationId, key: createIdempotentCommand().idempotencyKey, message: '正在提交登记请求…' };
     lock.current = true; setBusy(true); publish(value);
     try {
       const receipt = await assetControlClient.stageConfiguration({ schemaVersion: 'aos.runtime-configuration-stage/v1', action: 'stage-configuration',
@@ -66,7 +68,26 @@ export function ConfigurationStagePanel({ state, offline, blocked, onRegistered 
       publish({ ...value, message: '提交结果尚未确认。请保留原请求键并查询结果，不要重复登记。' });
     } finally { lock.current = false; if (mounted.current) setBusy(false); }
   }
-  if (!runtime?.binding) return null;
+  const queryRef = useRef(query);
+  queryRef.current = query;
+  useEffect(() => {
+    if (!visible || !unresolved || offline || blocked) return;
+    const budgetKey = JSON.stringify([identity, visible.key]);
+    if (pollBudget.current.key !== budgetKey) pollBudget.current = { key: budgetKey, used: 0 };
+    setAutoPaused(pollBudget.current.used >= 10);
+    if (pollBudget.current.used >= 10) return;
+    const timer = window.setInterval(() => {
+      const value = currentAttempt.current;
+      if (!value || value.identity !== configurationIdentity() || value.key !== visible.key) {
+        window.clearInterval(timer); return;
+      }
+      pollBudget.current.used += 1;
+      void queryRef.current(value);
+      if (pollBudget.current.used >= 10) { window.clearInterval(timer); setAutoPaused(true); }
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [visible?.key, identity, unresolved, offline, blocked]);
+  if (!runtime?.binding && !visible) return null;
   return <section aria-label="登记运行配置">
     <h3>登记运行配置</h3>
     <p>选择职责计划与运行策略；系统校验其预算、数据范围和当前权限后登记配置。</p>
@@ -81,7 +102,7 @@ export function ConfigurationStagePanel({ state, offline, blocked, onRegistered 
     {(catalog?.rolesHasMore || catalog?.policiesHasMore) && <p>当前仅显示前50项来源，未显示全部来源。</p>}
     <button type="button" className="btn" disabled={unavailable} onClick={sources.reload}>刷新配置来源</button>
     <button type="button" className="btn btn-primary" disabled={unavailable || unresolved || !selectedRole || !selectedPolicy} onClick={() => void submit()}>登记所选配置</button>
-    {visible && <div><p role="status">{visible.message}</p><p>原请求键：<code>{visible.key}</code>。离开页面前请保存，用于找回结果。</p>
+    {visible && <div><p>{visible.installationId ? `原登记安装：${visible.installationId}` : "找回的原请求，请按原登记记录核对所属安装。"}</p><p role="status">{visible.message}</p>{unresolved && <p>{autoPaused ? "自动查询已暂停；结果仍待确认，可使用原请求键手工查询。" : "正在自动跟踪登记结果，最多查询10轮。"}</p>}<p>原请求键：<code>{visible.key}</code>。离开页面前请保存，用于找回结果。</p>
       {visible.receipt?.failureCode && <details><summary>拒绝原因代码</summary>{visible.receipt.failureCode}</details>}
       <button type="button" className="btn" disabled={unavailable} onClick={() => void query(visible)}>查询原请求结果</button></div>}
     {!unresolved && <details><summary>找回已有登记请求</summary><label>原请求键<input aria-label="原请求键" value={recoveryKey} maxLength={160} onChange={event => setRecoveryKey(event.target.value)} /></label>

@@ -28,7 +28,8 @@ const hooks = vi.hoisted(() => ({
 
 const reload = vi.fn();
 
-vi.mock("../assetBundles/readHooks", () => ({
+vi.mock("../assetBundles/readHooks", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../assetBundles/readHooks")>(),
   useRegistryBundles: () => ({
     data: hooks.registryStatus === "ready" ? REGISTRY_BUNDLE_LIST_FIXTURE : [],
     status: hooks.registryStatus,
