@@ -395,7 +395,7 @@ def _occurrence_payload(transaction: HostTransaction, scope: TenantScope, occurr
         "installationId": str(row["installation_id"]),
         "generation": str(row["generation"]),
         "executionEpoch": int(row["execution_epoch"]),
-        "scheduledAt": row["scheduled_at"].isoformat(),
+        "scheduledAt": row["scheduled_at"].isoformat() if row["scheduled_at"] is not None else None,
         "localSlot": row["local_slot"],
         "triggerSource": row["trigger_source"],
         "sourceEventId": row["source_event_id"],

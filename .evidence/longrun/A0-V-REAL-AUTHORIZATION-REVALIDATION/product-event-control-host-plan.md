@@ -1,0 +1,9 @@
+# BG-02 控制Host组合与后继分析目标
+
+基线c2004db3。事件binding目标固定ecommerce_growth_analysis_advance（已有分析入口能以原Occurrence/Case/Profile建立Run），控制operation为ecommerce_growth_event_control。二者必须同当前cutover group/revision/installation/generation/epoch且未fence；外层LockedHostPort已锁整组，Host只读复核analysis目标，不能指向任意handler。
+
+新增ecommerce_product_event_control_host_service.py。构造器只收精确ProductEventControlQualifiedOwner与已认证actor。enable：严格命令→当前事件policy/Case→041锁→当前policy+profile+scope→完整控制批准→当前analysis目标→Guard.run_policy内CAS+Receipt→重新检查。disable：无来源资格桥→当前tenant管理成员→精确已有binding CAS→再次成员检查，不要求Case仍ACTIVE/来源可读；控制签名/安装/runtime资格仍由桥和外层Host保持。verify_receipt读取原回执核对，不能伪造成功。尚未注册新operation。
+
+顺手修复实际后继断点：_occurrence_payload当前无条件scheduled_at.isoformat()使event的NULL时间报错；按event保留None，定时输出不变。代码ecommerce_growth_runtime_adapters.py对应一行，追加实际读取测试。
+
+测试新增extension_runtime/test_product_event_control_host_service.py：隔离PG实际策略/Case/审批/绑定/控制Receipt，来源资格使用具名替身，证明组合写/停用/旧key及目标漂移拒绝，不算真实发布/SourceOwner验收；原控制/保存/调度回归。下一波新operation registry、HTTP与包注册声明（受新合同封印）及完整Gate，然后候选/真实评审、产品命令持久化、原批次消费者/Run承接与真实业务观察。
