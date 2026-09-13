@@ -68,7 +68,7 @@ function stringList(value: unknown, label: string): string[] {
   return value as string[];
 }
 
-function parseUiSession(value: unknown): RuntimeUiSession | null {
+export function parseUiSession(value: unknown): RuntimeUiSession | null {
   if (value === null) return null;
   const item = object(value, "Runtime UI session");
   keys(item, ["title", "signedResourceUrl", "resourceHash", "initialRoute", "routeClaims", "readOperationClaims", "commandOperationClaims"], "Runtime UI session");
