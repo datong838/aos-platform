@@ -145,3 +145,13 @@ UQ3-H完整库验证发现：228ti2e6_module_rls.py为public未来表设置aos_r
 一个会话至多POST一次，服务端Idempotency-Key固定随机值；POST结果未知不自动重发。已得到requestId后只GET该原请求，响应严格校验schema/scope/requestId/hash/revision/状态/时间/成功结果或失败码，不把客户端校验当执行授权。等待窗口最多60秒、每次HTTP最多10秒；超时保留原requestId，允许继续查询而不创建新请求。调用方离开/切scope/资源撤下必须abort，迟到结果丢弃。
 
 验证单次提交、GET不重发、错误租户/主体/凭据/target/hash/状态拒绝、未知提交不重发、有界等待后同ID继续查询、取消丢弃。本波不挂静态八页面或改变原ExtensionBridge；后继签名UI与实际资源挂载属UQ5。
+
+## UQ5-A 运行签名页面宿主与路由（基线3d3975db，编码前补充）
+
+新增apps/web/src/components/extensions/RuntimeWorkshopHost.tsx及测试，复用ExtensionHost/ExtensionBridge，不另造消息安全协议。宿主key涵盖安装revision、binding revision和原签名身份，变化整页卸载并abort。只接固定analyst读取和有界input；同页已知pending继续GET原会话，未知提交保留原会话不可重发，终态后显式新read才新会话；并发read拒绝。命令/产物下载不提供。
+
+修改api/tenant.ts在token改变/清除时仅派发无敏感内容aos-auth-updated事件；RuntimeWorkshopCatalog.tsx监听并清空重读，key包括当前token的内存比较；迟到旧身份目录丢弃。
+
+随后修改App.tsx全局挂RuntimeWorkshopCatalogProvider、pages/s2/ecommerce/routes.tsx选择已声明runtime页面与原legacy fallback。同canonical route双声明拒绝；runtime路径需当前目录ready且旧目录确定无同路径声明，未知不选。legacy路径按原逻辑继续，无runtime Provider的独立旧组件测试兼容。新增运行目录导航并接AppShell；运行页面使用通用导航头，不借用旧页面专属按钮。上述后续文件在宿主验证后直接衔接。
+
+验证宿主固定桥接/原pending续查/未知不重发/换身份换revision卸载取消，旧ExtensionHost和目录回归；路由/导航验证冲突、无UI、目录未知、旧8页回归。实际浏览器仍需后继签名资源UQ5-B及主库UQ6部署，不以测试iframe证明真实业务。

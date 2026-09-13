@@ -1,5 +1,5 @@
 import { getApiBase } from './apiBase';
-import { getAccessToken, getTenant, tenantAuthHeaders } from './tenant';
+import { getAccessToken, getAuthRevision, getTenant, tenantAuthHeaders } from './tenant';
 import type { RuntimeWorkshopEntry } from './runtimeWorkshop';
 
 type State = 'requested' | 'claimed' | 'succeeded' | 'denied' | 'failed' | 'expired';
@@ -18,7 +18,7 @@ const states = ['requested', 'claimed', 'succeeded', 'denied', 'failed', 'expire
 const failures = ['READ_ACCESS_REVOKED', 'READ_FAILED', 'READ_RESULT_INVALID', 'READ_OUTCOME_UNKNOWN',
   'READ_DEADLINE_EXPIRED', 'READ_RUNTIME_CHANGED', 'READ_ADMISSION_DENIED'];
 const invalid = () => new Error('工作台读取响应无效，请刷新当前工作台。');
-const identityKey = () => { const t = getTenant(); return JSON.stringify([t.orgId, t.projectId, t.subject, t.roles]); };
+const identityKey = () => { const t = getTenant(); return JSON.stringify([t.orgId, t.projectId, t.subject, t.roles, getAuthRevision()]); };
 function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw invalid();
   return value as Record<string, unknown>;

@@ -1,7 +1,7 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, expect, it, vi } from 'vitest';
-import { setTenant } from '../../api/tenant';
+import { setTenant, setAccessToken } from '../../api/tenant';
 import { parseRuntimeWorkshopCatalog, type RuntimeWorkshopCatalog } from '../../api/runtimeWorkshop';
 import { fixture, tenant } from '../../api/runtimeWorkshop.testFixtures';
 import { RuntimeWorkshopCatalogProvider, useRuntimeWorkshopCatalog } from './RuntimeWorkshopCatalog';
@@ -51,4 +51,16 @@ it('clears cached resources when display lifetime expires', async () => {
   expect(host.textContent).toContain('1:ready');
   await act(async () => vi.advanceTimersByTime(60_000));
   expect(host.textContent).toContain('0:loading');
+});
+
+it('withdraws resources immediately after credentials change and rejects the old reply', async () => {
+  const next = deferred();
+  const client = vi.fn().mockResolvedValueOnce(parseRuntimeWorkshopCatalog(fixture(), tenant)).mockReturnValueOnce(next.promise).mockReturnValue(new Promise(() => {}));
+  const host = await setup(client);
+  expect(host.textContent).toContain('1:ready');
+  await act(async () => setAccessToken('test-replacement-token'));
+  expect(host.textContent).toContain('0:loading');
+  await act(async () => setAccessToken(null));
+  await act(async () => next.resolve(parseRuntimeWorkshopCatalog(fixture(), tenant)));
+  expect(host.textContent).not.toContain('1:ready');
 });

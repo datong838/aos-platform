@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { listRuntimeWorkshops, type RuntimeWorkshopCatalog, type RuntimeWorkshopEntry } from '../../api/runtimeWorkshop';
-import { getTenant } from '../../api/tenant';
+import { getTenant, getAuthRevision } from '../../api/tenant';
 
 type State = { phase: 'loading' | 'ready' | 'empty' | 'failed'; items: RuntimeWorkshopEntry[] };
 type Value = State & { reload: () => void };
 const Context = createContext<Value | null>(null);
-const tenantKey = () => { const t = getTenant(); return JSON.stringify([t.orgId,t.projectId,t.subject,t.roles]); };
+const tenantKey = () => { const t = getTenant(); return JSON.stringify([t.orgId,t.projectId,t.subject,t.roles,getAuthRevision()]); };
 
 export function RuntimeWorkshopCatalogProvider({ children, client = listRuntimeWorkshops }: {
   children: ReactNode; client?: (signal?: AbortSignal) => Promise<RuntimeWorkshopCatalog>;
@@ -37,12 +37,14 @@ export function RuntimeWorkshopCatalogProvider({ children, client = listRuntimeW
   }, [client]);
   useEffect(() => {
     reload();
+    window.addEventListener('aos-auth-updated',reload);
     window.addEventListener('aos-tenant-updated',reload);
     window.addEventListener('aos-workspace-changed',reload);
     return () => {
       ++revision.current;
       pending.current?.abort();
       if (expires.current !== null) clearTimeout(expires.current);
+      window.removeEventListener('aos-auth-updated',reload);
       window.removeEventListener('aos-tenant-updated',reload);
       window.removeEventListener('aos-workspace-changed',reload);
     };
@@ -54,4 +56,8 @@ export function useRuntimeWorkshopCatalog(): Value {
   const value = useContext(Context);
   if (value === null) throw new Error('RuntimeWorkshopCatalogProvider is required');
   return value;
+}
+
+export function useOptionalRuntimeWorkshopCatalog(): Value | null {
+  return useContext(Context);
 }

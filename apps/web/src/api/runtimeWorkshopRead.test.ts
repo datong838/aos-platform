@@ -150,3 +150,14 @@ it('cancels the polling pause without a second query', async () => {
   await vi.advanceTimersByTimeAsync(10_000);
   expect(fetch).toHaveBeenCalledTimes(2);
 });
+
+
+it('does not revive an old session if credentials change and then return', async () => {
+  setAccessToken('first-token');
+  const read = session();
+  setAccessToken('second-token');
+  setAccessToken('first-token');
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  await expect(read.submit()).rejects.toThrow();
+  expect(fetch).not.toHaveBeenCalled();
+});

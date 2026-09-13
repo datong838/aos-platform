@@ -23,9 +23,17 @@ let current: TenantContext = loadStored() ?? { ...DEFAULT_TENANT };
 
 /** Access token 覆盖（桌面登录 TWC.3；Web 默认仍 Bearer dev） */
 let accessTokenOverride: string | null = null;
+let authRevision = 0;
+export function getAuthRevision(): number { return authRevision; }
 
 export function setAccessToken(token: string | null) {
-  accessTokenOverride = token && token.trim() ? token.trim() : null;
+  const next = token && token.trim() ? token.trim() : null;
+  const changed = next !== accessTokenOverride;
+  accessTokenOverride = next;
+  if (changed) {
+    authRevision += 1;
+    if (typeof window !== "undefined") window.dispatchEvent(new Event("aos-auth-updated"));
+  }
   console.info("[aos-tenant]", {
     event: "access_token_set",
     present: Boolean(accessTokenOverride),
@@ -37,7 +45,7 @@ export function getAccessToken(): string | null {
 }
 
 export function clearAccessToken() {
-  accessTokenOverride = null;
+  setAccessToken(null);
 }
 
 function loadStored(): TenantContext | null {
