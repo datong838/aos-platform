@@ -491,7 +491,12 @@ def test_startup_selects_explicit_registration_connector_without_opening_it(monk
     async def probe():
         async with main.lifespan(main.app):
             service=main.app.state.extension_runtime_control_plane.first_dispatch_registration_service
-            if configured:assert service._connect is connect
-            else:assert service is None
+            cutover=main.app.state.extension_runtime_control_plane.ecommerce_growth_cutover_service
+            if configured:
+                assert service._connect is connect
+                assert cutover._registration_service is service
+            else:
+                assert service is None
+                assert cutover is None
         assert main.app.state.extension_runtime_control_plane is None
     asyncio.run(probe())

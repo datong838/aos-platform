@@ -1,0 +1,25 @@
+{
+  "outcome": "CUTOVER_CONNECTION_READ_ONLY_VERIFIED",
+  "results": [
+    {
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "role": "aos_extension_maintainer",
+      "isolation": "serializable",
+      "visibleDispatchCount": 9
+    },
+    {
+      "tenant": {
+        "orgId": "dev-org",
+        "projectId": "dev-project"
+      },
+      "role": "aos_extension_maintainer",
+      "isolation": "serializable",
+      "visibleDispatchCount": 0
+    }
+  ],
+  "businessWrites": 0,
+  "cutoverPhasesExecuted": 0
+}

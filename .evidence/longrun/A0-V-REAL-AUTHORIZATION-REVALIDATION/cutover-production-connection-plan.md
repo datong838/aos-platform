@@ -1,0 +1,11 @@
+# 正式切换生产连接装配
+
+基线 a9dc8744；沿用原 AR2 切换协议，不新增切换状态机。当前真实运行登记9项禁入，切换 Store 尚无生产装配；本波只补受保护连接与控制面依赖，下一波再补产品接口及原键回读。遵守231-9业务主线，登记或装配不算真实经营闭环完成。
+
+文件：services/aos-api/aos_api/ecommerce_growth_cutover_connection.py；asset_registry/control_wiring.py；tests/extension_runtime/test_ecommerce_growth_cutover_connection.py；test_runtime_startup_composition.py。
+
+连接复用现有 registration_connect 受保护身份，不另读凭据、不回退普通Web连接。工厂构建无连接；调用前要求真正TenantScope；独立IDLE连接、SERIALIZABLE、SET LOCAL ROLE maintainer、事务内设置双租户和固定public search_path。复用Store角色校验，要求非特权角色。Store现有显式commit保持；退出清理剩余事务，异常回滚，恢复原隔离级别。不在连接层重试未知提交。禁止在此层改dispatch或授权。
+
+控制面无registration_connect时cutover_service=None；配置时Store与同一个真实FirstDispatchRegistrationService相连。尚无HTTP入口，因此装配不发生任何切换。测试先失败再实现；真PG证明scope/role/isolation、跨租户隔离、异常回滚、显式commit后连接正常结束；已有身份拒绝与启动无副作用回归。生产只读连接探针可验证，禁止借探针启动切换。
+
+风险：旧API进程尚未加载最新审批修复；后续接口部署前统一重载。真实cutover必须有精确Approval及真实registrationReceiptRef，不得用测试seed。保留原Store SQL控制函数，028禁直接dispatch DML约束不放宽。回滚是移除新增装配，无数据库迁移。
