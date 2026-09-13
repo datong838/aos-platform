@@ -322,3 +322,11 @@ RuntimeConfigurationService.request只接受configure/enable且依赖已登记co
 ### 退出条件与风险
 
 D2d-1合同或D2d-2隔离PG测试不算D2d产品流程完成。禁止提前启用迁移或flag，不改当前安装/旧13包根/业务路由。API排队拒绝、身份撤销、旧generation、过期、重复key冲突、事务中断/提交未知、同租户不同subject结果隔离都须有数据库证据。实际权限来自当前成员记录，不能用材料中的角色名或历史脚本伪造审批人。
+
+### D2d-2a 空交接表与不可变边界（基线16a144ec，编码前）
+
+新增alembic/versions/a0v_036_runtime_configuration_stage.py，专用租约A0V-CONFIGURATION-STAGE-SCHEMA-20260913；新增tests/extension_runtime/test_configuration_stage_schema_pg.py。只在隔离PG装载，主库仍035。本切片只创建空表与守卫，不授Web/API提交权限，aos_runtime仅SELECT及固定终态字段UPDATE；无DELETE/TRUNCATE/身份修改权。
+
+表extension_runtime_configuration_stage_request存原scope/subject/key、精确installation/generation/etag/bindingRevision、固定请求JSON与canonical请求摘要、created/deadline、state/revision/completed/result/failure。租户FORCE RLS，scope+subject+key唯一，绑定FK。requested只能一次转succeeded/rejected/expired，终态/身份不可变。初始精确target须与当前binding/installation一致；成功结果须引用同租户/安装/代际、同actor的原configuration确切ID/revision/hash，不能用其他主体记录装成功。SQL边界验证JSON固定字段与原AIP引用；canonical函数复用原Asset Registry定义。TTL最多5分钟，未到期不能expired，到期不能成功。API收件权限、限流、原主体查询和宿主授权承接下一切片；本表成功guard不是权限授予，不能单独发布。
+
+验证：隔离PG原配置记录成功关联、伪结果拒绝、跨主体拒绝、CAS漂移初始拒绝、身份/终态/DELETE/TRUNCATE不可变、输入JSON/摘要篡改拒绝、RLS负租户和最小列级权限。数据库单事务登记与回执回滚由消费者切片另验。
