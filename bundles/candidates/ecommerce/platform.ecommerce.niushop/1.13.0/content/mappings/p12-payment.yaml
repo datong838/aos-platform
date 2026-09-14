@@ -1,0 +1,104 @@
+pipeline_id: P12
+source_table: ns_pay
+target_ot: Payment
+primary_key: id
+site_filter: site_id=1 AND event='OrderPayNotify'
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  required:
+  - id
+  - site_id
+  - relate_id
+  - out_trade_no
+  - event
+  non_negative:
+  - pay_money
+field_mappings:
+- source: id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: out_trade_no
+  target: outTradeNo
+  type: string
+- source: pay_type
+  target: payType
+  type: string
+- source: pay_money
+  target: payMoney
+  type: decimal
+- source: pay_status
+  target: payStatus
+  type: int
+- source: event
+  target: event
+  type: string
+- source: member_id
+  target: memberId
+  type: int
+- source: relate_id
+  target: orderId
+  type: int
+- source: is_delete
+  target: isDelete
+  type: int
+- source: create_time
+  target: createTime
+  type: timestamp
+- source: pay_time
+  target: payTime
+  type: timestamp
+pii_exclusion:
+- pay_body
+- pay_detail
+- pay_addon
+- pay_voucher
+- pay_json
+- mch_info
+notes:
+- Only site 1 OrderPayNotify payments; member-card payment IDs belong to another order
+  namespace and are excluded.
+- relate_id is ordinary order_id in this event namespace; actual parent relationship
+  validation remains required.
+- Closed historical retries remain included; current order trade number alone is not
+  payment identity.
+- Source payment times remain source fields, including unknown zero time; updatedAt
+  is observation only.
+- No pay-duration metric, parent relation Receipt or payment effect is produced.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults:
+    currency: CNY
+  time_basis: observation
+  deletion_basis:
+    field: is_delete
+    live_value: 0
+    deleted_value: 1
+  status:
+    field: pay_status
+    property_target: status
+    values:
+      '-2': ACTIVE
+      '-1': ACTIVE
+      '0': ACTIVE
+      '1': ACTIVE
+      '2': ACTIVE
+  public_projection:
+    schema_version: 1
+    properties:
+    - orderId
+    - outTradeNo
+    - payType
+    - payMoney
+    - payStatus
+    - memberId
+    - createTime
+    - payTime
+    - currency
+    - status

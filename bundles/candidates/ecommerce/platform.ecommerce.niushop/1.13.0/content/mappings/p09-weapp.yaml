@@ -1,0 +1,53 @@
+pipeline_id: P09
+source_table: ns_weapp
+target_ot: Weapp
+primary_key: weapp_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  required:
+  - weapp_id
+  - site_id
+  - weapp_name
+field_mappings:
+- source: weapp_id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: weapp_name
+  target: name
+  type: string
+- source: appid
+  target: appId
+  type: string
+- source: status
+  target: sourceStatus
+  type: int
+pii_exclusion:
+- appsecret
+- encodingaeskey
+- token
+notes:
+- Explicit minimal snapshot with observation provenance; no source modification time
+  claim.
+- Configuration values, customer free text/media and secrets are excluded before source
+  read.
+- Configuration inventory is not configuration-value interpretation; review scores
+  are not review-text diagnosis.
+- Relationships and downstream data quality/Fulfillment remain pending.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults: {}
+  time_basis: observation
+  deletion_basis: row-presence-only
+  status:
+    field: status
+    property_target: status
+    values:
+      '1': ACTIVE

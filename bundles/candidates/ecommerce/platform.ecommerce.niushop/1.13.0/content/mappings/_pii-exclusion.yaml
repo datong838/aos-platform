@@ -1,0 +1,107 @@
+version: 1
+source_ref:
+  frozen_01: docs/palantier/20_tech/电商平台接入/微商城电商接入方案/frozen/01-schema-fingerprint.md#L551
+  frozen_02: docs/palantier/20_tech/电商平台接入/微商城电商接入方案/frozen/02-pipeline-manifest.yaml#L129
+policy:
+  pii_direct: drop
+  pii_quasi: drop_or_mask
+tables:
+  ns_site:
+    pii_direct:
+    - site_tel
+    pii_quasi: []
+  ns_goods:
+    pii_direct: []
+    pii_quasi: []
+  ns_goods_sku:
+    pii_direct: []
+    pii_quasi: []
+  ns_goods_category:
+    pii_direct: []
+    pii_quasi: []
+  ns_order:
+    pii_direct:
+    - mobile
+    - telephone
+    - address
+    - full_address
+    - invoice_full_address
+    pii_quasi:
+    - invoice_email
+  ns_order_goods:
+    pii_direct:
+    - refund_address
+    - refund_address_id
+    pii_quasi: []
+  ns_express_delivery_package:
+    pii_direct: []
+    pii_quasi: []
+    sensitive_mask:
+    - delivery_no
+  ns_member:
+    pii_direct:
+    - mobile
+    - wx_openid
+    - nickname
+    - avatar
+    - reg_address
+    - last_login_ip
+    - password
+    - pay_password
+    pii_quasi: []
+    note: frozen/02 P08 隐私最小化 8 字段排除清单（D1.5 落地）
+  ns_weapp:
+    pii_direct:
+    - appsecret
+    - token
+    - encodingaeskey
+    pii_quasi: []
+  ns_config:
+    pii_direct:
+    - value
+    - config_desc
+    pii_quasi: []
+  ns_goods_evaluate:
+    pii_direct:
+    - member_name
+    - member_headimg
+    - content
+    - images
+    - videos
+    - explain_first
+    - again_content
+    - again_images
+    - again_explain
+    pii_quasi: []
+  ns_pay:
+    pii_direct:
+    - pay_body
+    - pay_detail
+    - pay_addon
+    - pay_voucher
+    - pay_json
+    - mch_info
+    - return_url
+    - mch_id
+    - trade_no
+    - pay_no
+    pii_quasi: []
+    conditional_only:
+      event: OrderPayNotify
+global_drop_on_project_node:
+- mobile
+- telephone
+- address
+- full_address
+- invoice_full_address
+- invoice_email
+- refund_address
+- refund_address_id
+- site_tel
+- wx_openid
+- nickname
+- avatar
+- reg_address
+- last_login_ip
+- password
+- pay_password

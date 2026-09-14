@@ -246,3 +246,9 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 源码app/model/system/Pay.php:addPay将notify事件和relate_id保存；普通OrderCreate/OrderPay/OrderCommon传OrderPayNotify与order_id，SuperCardOrderService传SuperCardOrderPayNotify与会员卡订单ID。普通订单重新支付会关闭旧支付并更换out_trade_no。真实只读聚合211条=普通203+会员卡8；普通203父订单/会员不匹配均0，94条关闭状态-2中22条不再匹配当前交易号，其他1条状态1/108条状态2交易号匹配。不能使用全表relate_id直接归普通订单。
 先新增原源政策可选conditional_only={字段:固定字符串}：字段在选列时必须有完全相同的等值scope（名称/类型/值精确），否则拒绝；同时与原pii_direct/quasi/sensitive/global/mapping exclusion仍相交禁止，不能覆盖直接隐私排除。声明必须有界字典、唯一大小写无冲突标识符、值为非空有界字符串。原政策不含此声明行为不变。原MappingReadSpec携带精确filters，原参数化读取和逐行scope校验继续使用，不扩展SQL语法。
 修改pipeline_source_selection.py及test_pipeline_source_selection.py，Lease A0-V-SC4-CONDITIONAL-SOURCE-FIELDS；测试缺过滤/错值/大小写混淆/原PII仍拒绝、声明形状错误、精确范围可通过以及旧回归。下一支付候选把event从无条件禁止改为conditional_only(event=OrderPayNotify)，实际只读出已固定公开枚举，不读取未知事件URL。source public projection不公开event。普通订单支付范围203/211有明确排除会员卡8，不能称211普通订单。正式关系/窗口/质量仍待原Owner执行。
+
+### SC4-5e9b 普通订单支付快照候选
+
+新增prepare_niushop_payment_candidate.py、test_niushop_payment_candidate.py与1.13.0，Lease A0-V-SC4-PAYMENT-SNAPSHOT-CANDIDATE。从1.12.0精确树7d0eaeb6c99da59f8e9f08f78607da60320f97bdaab881184c4f7e6a47fd9587生成，只改bundle/p12/masking/evals。P12范围site_id=1 AND event='OrderPayNotify'；masking将event从pii_direct移到conditional_only，其他禁止项原样保留；未知事件不读取，不混入会员卡表ID。
+字段仅id/site_id/out_trade_no/pay_type/pay_money/pay_status/member_id/relate_id/is_delete/create_time/pay_time/event，relate_id→orderId、pay_money→payMoney、create_time→createTime/pay_time→payTime（零值保持未知，不是来源修改时间）。去掉原重复pay_type映射，公开投影保留orderId/outTradeNo/payType/payMoney/payStatus/memberId/createTime/payTime/currency/status与必需来源标记，不公开event或内部id/site/delete字段。显式is_delete，pay_status按源码[-2,-1,0,1,2]均表示存在ACTIVE，业务状态原样保留。金额非负，不计算pay_duration_min；真实父订单/会员/窗口/派生仍需原Owner后续验证。
+静态测试每种源码支付状态、零支付时间、软删、负金额、错误事件、跨店、敏感附加字段拒绝，验证相对源树不变与全部十二类静态评估。普通订单总体当前203，会员卡8明确排除，不称全支付表可用；下游质量/查询必须沿用同一范围，后续待办登记。
