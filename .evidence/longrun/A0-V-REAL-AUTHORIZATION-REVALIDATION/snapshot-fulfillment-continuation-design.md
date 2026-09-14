@@ -14,7 +14,7 @@
 2. `business_investigation_hydration.py`具备job/receipt合同与Store，当前aos_api中OwnerWriteReceiptRevision这两类名称只在该合同出现，未找到可直接复用的对应实际写执行器。不能只调用record制造“已水合”。
 3. `aip_production_contract_store.py:_evidence_fact_ids`只从显式factIds/facts统计覆盖。当前source/quality Evidence刻意factIds=[]；把12个名称塞进去只能骗覆盖，不能生成经营参谋所需的实际事实内容。
 4. 原EvidenceBundle评估将freshness_at<cutoff判stale。完整组保守观察时间是read_started_at，cutoff是read_completed_at，因此原通用规则不能直接表达“在要求年龄内的一次完整观察”。禁止把freshness_at改成query生成时刻或抹掉读取区间来通关。
-5. `source_readiness.py:SourceReadinessService`仍按原固定映射/策略路径、12源与能力等检查；不能由质量Query宣称全部READY。旧目录P11名称ProductReview与当前包Review亦须以版本化映射/事实合同核对，禁止临时别名遮盖。
+5. `source_readiness.py:SourceReadinessService`仍按原固定映射/策略路径、12源与能力等检查；不能由质量Query宣称全部READY。当前1.20候选包mapping、关系/字段策略与旧目录P11均使用ProductReview（l6b1实际文件核对）；此前Review简称不构成类型差异证据。安装后仍核对精确版本，禁止临时别名。
 6. `DataFulfillmentStore.bind`绑定完成回执；它本身不会生产有内容事实、完整bundle或当前就绪证明。原Outbox claim/ack/fail/unknown/reconcile是投递权威，不能用进程内“完成”替代。
 
 ## 3. 选定设计
@@ -49,3 +49,11 @@
 ## 6. 验收与回滚
 
 每一阶段都要可读产物、精确引用、当前拒绝与原流程回归；无模型也可验证固定执行契约，真实经营分析仍须真实模型+可读产物+人工评审续跑。部署前接口默认不暴露、不切换主运行；候选失败保留旧路径。无数据删除/重置/强推。新安装版本退出条件包括禁用/卸载阻断、重装恢复和Tenant隔离，最终再以栖月汇真实任务覆盖八工作台并连续观察。
+
+### l6b1 可配置事实内容计算
+
+l6b分纯计算l6b1、领域包策略l6b2、原当前Owner事实Evidence l6b3。本波新增aos_api/pipeline_snapshot_business_facts.py和tests/test_pipeline_snapshot_business_facts.py。业务策略绑定原fieldPolicyHash/purpose，完整覆盖该策略全部objectTypes，每类显式records或group-counts模式，1..16字段，字段必须来自绑定的质量策略；无默认全字段导出。group-counts仅enum/boolean/非负整数，防自由文本泄漏；records仅策略显式选中的公开字段。正式策略需签名安装授权，不能由调用者即席提供。
+
+纯函数复用原完整cohort与quality重算；未知cohort保留、字段不合格输出null而非原值，excluded只报告数量/原因。records按稳定source key排序并输出稳定sourceKeyHash作为定位线索（不声明匿名化）（不是伪造的领域ref）；所有范围内行完整输出，超过1000行/2MB拒绝，不截断。group-counts把已知/未知cohort分别分组，值严格类型、未知值独立计数，最多256组拒绝不截断。保留field/relationship issue计量，不输出原source_pk、external_id或未选字段。结果明确未验证成交/利润、未认证来源，无factIds授权；l6b3完成当前源绑定后才进入正式Evidence。
+
+验证真实商品名等内容保留、历史/删除排除、unknown保留、不可选字段/自由文本分组/多余字段/篡改hash/超限拒绝，空事实明确零而非通过。原quality/cohort回归。无需模型、源读取或数据库写。
