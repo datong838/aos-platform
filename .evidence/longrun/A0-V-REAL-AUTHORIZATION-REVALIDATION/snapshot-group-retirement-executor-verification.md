@@ -1,0 +1,7 @@
+### SC4-5h9 条件清退执行与最终核验验证
+
+ControlledSnapshotGroupRetirementExecutor接通原候选组执行、已提交清退准备、原条件Store、精确清退事件投影及最终残留Audit。每阶段重新核当前原准备，Store提交后故障保留原Receipt恢复；仅current_present_rows范围，仍有missing/extra/unknown返回requires_attention，不创建Readiness/Fulfillment或完成schedule。
+
+5项完整隔离PG恢复测试通过88.63秒；再补较新残留/空清退2项通过39.84秒（共7覆盖）。夹具旧父关系先由原Projector投影为历史状态，之后仅旧边从权威活跃集与graph清退，正确边保留；最终5个Receipt无重复、源始终一次。准备ack丢失不执行，清退ack丢失凭原条件Receipt恢复，图删除异常回滚图和标记，阶段撤权停止。较新额外边保留并返回requires_attention，未被本组消费的更新事件仍pending；空清退不增加Receipt。
+
+AR2扫描1925/187/93五类错误为空。主系统数据/安装仍未改变；这只是完整隔离原Owner链路的代码验证，未冒称真实经营首链完成。下一波回到真实数据质量：只读核查现有32笔订单+1条评价客户引用缺口的实际来源，区分注册站点不一致、源记录不存在、软删除等事实，输出不含客户标识的计数与证据，随后决定领域包参与客户范围与业务Readiness要求，不能盲目扩大商户范围或伪造客户。
