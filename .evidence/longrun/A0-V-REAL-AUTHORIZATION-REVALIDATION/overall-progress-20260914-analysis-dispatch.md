@@ -72,3 +72,5 @@ SC4-5c3b：专用当前数据恢复Session与原Task/BusinessRun组合已接，5
 SC4-5d0：主租户只读数据差距已核实：Shop1/Product57有效，2/12物化种类、两条调度关闭，需求/补齐/观察/Readiness/Query回执均0，主库a0v_038。已按自动政策→12类受控采集→Outbox真实补齐→完整恢复/Worker→主安装业务观察重排执行顺序。首链与八场景未完成；下一安装内数据政策与自动请求承接。详见analysis-real-data-gap-verification.md。
 
 SC4-5d1：自动首装需求入口已接现有安装配置与预算权威，原事件前30天/全事实/稳定重放；40项回归通过。配置预算在自动组合测试中明确fixture，主租户未运行。下一现有事件Worker连接自动需求及失败重试，再12类受控采集和Outbox实际补齐。
+
+SC4-5d2：生产事件Worker已固定连接自动需求，START+DataRequirement原子提交；40项回归通过（零Run首次、已有START补接、重放、失败全回滚）。来源/配置fixture未计主租户完成。下一12类受控映射采集、Outbox实际补齐，再恢复/Worker全链及八场景。

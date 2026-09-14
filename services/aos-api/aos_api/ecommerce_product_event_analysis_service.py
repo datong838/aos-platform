@@ -28,6 +28,13 @@ class ProductEventAnalysisService:
         self.port=InstalledProductEventAnalysisPort(invoker)
 
     async def handle(self, claimed):
+        return await self._handle(claimed,prepare_data=False)
+
+    async def handle_with_data(self, claimed):
+        """Worker entry: commit initialization and pending data as one outcome."""
+        return await self._handle(claimed,prepare_data=True)
+
+    async def _handle(self, claimed, *, prepare_data):
         with self.connect(self.scope) as conn:
             prepared,request=self._phase(conn,claimed,lambda snapshot,request,dispatch:(deepcopy(snapshot),deepcopy(request)))
         fingerprint=canonical_sha256(prepared)
@@ -48,7 +55,11 @@ class ProductEventAnalysisService:
             existing = _HostAnalysisReceiptStore(HostTransaction(conn), self.scope).read(command['idempotencyKey'])
             if existing is None:
                 self._initialize(conn, claimed=claimed, command=command, domain=domain, blueprint=blueprint)
-            return self._write(conn,claimed,dispatch,command)
+            receipt = self._write(conn,claimed,dispatch,command)
+            if prepare_data:
+                from aos_api.ecommerce_analysis_data_preparation import AnalysisDataRequirementPreparation
+                AnalysisDataRequirementPreparation(self)._during_automatic(conn,snapshot,current_request,dispatch)
+            return receipt
         with self.connect(self.scope) as conn:
             receipt=self._phase(conn,claimed,commit)
             conn.commit()

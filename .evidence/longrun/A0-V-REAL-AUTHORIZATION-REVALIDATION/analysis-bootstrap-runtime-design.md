@@ -167,3 +167,11 @@ SC4-5d按五项推进：安装内首装数据政策自动派生→当前受控�
 该固定业务口径由服务端版本代码承载，配置继续引用现有四类权威；后续领域包候选须纳入此口径，当前不声称用户可配置任意业务窗口。原显式手动入口保留兼容。两种自动入口均复用原sealed请求和稳定key，不生成第二需求。此子项先完成自动入口与真实DataRequirement持久化验证，正式事件worker调度连接随后处理，不能把可调用入口当作已自动调度。
 
 测试文件test_analysis_data_preparation_pg.py增加：无调用者参数创建/重放、完成事件创建、实际保存窗口/事实/预算、配置或预算读取失败无需求。当前来源/安装fixture沿用既有隔离测试，新增配置与预算fixture必须明确，另用原配置/预算权威测试回归。主租户不运行此fixture。
+
+### SC4-5d2 事件Worker原子准备数据
+
+现有dispatcher对未知结果保留对账状态，因此不能先提交START再在第二事务请求数据，随后用START回执提前确认。新增ProductEventAnalysisService.handle_with_data，内部共用原handle流程，原_phase提交回调在_write取得原START Receipt后、同一事务内调用自动数据准备，再一次提交并返回原Receipt。任何配置/预算/需求失败回滚该次初始化与请求；旧已有START只补同一需求。原handle保留低层初始化兼容，生产ecommerce_product_event_worker.py固定改用handle_with_data，无调用者授权开关。重复分派验证同一Run/Requirement/Receipt；dispatcher依然收到有效目标回执后才确认。
+
+文件：ecommerce_product_event_analysis_service.py、ecommerce_product_event_worker.py；测试test_analysis_data_preparation_pg.py和test_product_event_worker.py。测试完整从无Run的初始化+需求事务、数据失败全部回滚、原START重试、队列使用自动入口；不改变未知结果策略，不直接调用数据源。
+
+交付登记纠正：上一只读波task-complete释放父Lease，e5b3f225施工时未及时续登记；已在A0-V-SC4-DATA-AUTOMATION交付回执如实记录，未倒填时间。本波开工已持有A0-V-SC4-EVENT-AUTOMATIC-DATA串行Lease。

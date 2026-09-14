@@ -129,7 +129,7 @@ def test_worker_dispatches_exact_event_with_original_route(monkeypatch):
         async def handle(claim):
             assert claim is claimed
             return {'resourceId':'receipt'}
-        return SimpleNamespace(handle=handle)
+        return SimpleNamespace(handle_with_data=handle)
     monkeypatch.setattr(PipelineControlServiceFactory,'build_event_analysis',build)
     async def dispatch(scope,**kwargs):
         assert kwargs['target'].trigger_source=='event'

@@ -35,7 +35,7 @@ class ProductEventConsumptionWorker:
                 service=self.factory.build_event_analysis(scope,actor=route['actor'],run_id=route['runId'],
                     control_ref=route['controlRef'],installation_id=installation,generation=generation,
                     live_directory=self.directory,markings=markings,store=store)
-                return await service.handle(claimed)
+                return await service.handle_with_data(claimed)
         return await dispatch_one_occurrence_async(scope,owner=self._claim_owner,
             target=ClaimTarget('ecommerce_growth_analysis_advance',installation,generation,trigger_source='event'),
             handler=handle,store=AutomationOccurrenceStore(connect_serializable))

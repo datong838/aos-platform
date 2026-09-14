@@ -146,6 +146,10 @@ def test_completed_event_can_request_or_replay_same_data(data_case,already_reque
 
 @pytest.fixture
 def automatic_data_case(data_case, monkeypatch):
+    return _automatic_readers(data_case,monkeypatch)
+
+
+def _automatic_readers(data_case,monkeypatch):
     """Configuration/budget readers are explicit doubles; pending data Store is real."""
     from types import SimpleNamespace
     from aos_api import aip_runtime_configuration_authority as budget_module
@@ -158,13 +162,15 @@ def automatic_data_case(data_case, monkeypatch):
     analysis.source.reader._owner=SimpleNamespace(_authorization=authorization)
     calls=[]
     def configuration(db,**kw):
-        assert db is conn and kw['authorize'] is authorization
+        assert db.execute('SELECT pg_backend_pid() AS pid').fetchone()==conn.execute('SELECT pg_backend_pid() AS pid').fetchone()
+        assert kw['authorize'] is authorization
         assert (kw['org_id'],kw['project_id'])==analysis.scope.key
         assert kw['actor']==analysis.source.actor and kw['ref']==installed['binding']['configRef']
         calls.append('configuration')
         return SimpleNamespace(budgetRef='fixture-budget-ref')
     def budget(db,**kw):
-        assert db is conn and kw['ref']=='fixture-budget-ref'
+        assert db.execute('SELECT pg_backend_pid() AS pid').fetchone()==conn.execute('SELECT pg_backend_pid() AS pid').fetchone()
+        assert kw['ref']=='fixture-budget-ref'
         assert (kw['org_id'],kw['project_id'])==analysis.scope.key
         calls.append('budget')
         return SimpleNamespace(daily_limit_minor=123456,effective_until=spec.expires_at)
@@ -234,3 +240,43 @@ def test_automatic_budget_change_cannot_rewrite_original_requirement(automatic_d
         service.run_automatic_current(conn,claimed=claimed)
     assert conn.execute('SELECT count(*) AS n FROM data_requirement_head WHERE org_id=%s AND project_id=%s',analysis.scope.key).fetchone()['n']==1
     assert original['requirementRef']['resourceType']=='DataRequirementRevision'
+
+
+@pytest.fixture
+def automatic_formal_case(formal_case,monkeypatch):
+    from types import SimpleNamespace
+    conn,analysis,claimed=formal_case
+    snapshot,original=analysis._phase(conn,claimed,lambda snap,original,dispatch:(snap,original))
+    spec=SimpleNamespace(expires_at=datetime.fromisoformat(snapshot['source']['policy']['effectiveUntil']))
+    _automatic_readers((conn,analysis,claimed,spec),monkeypatch)
+    return formal_case
+
+
+def test_formal_automatic_entry_creates_data_and_replays(automatic_formal_case):
+    conn,analysis,claimed=automatic_formal_case
+    assert conn.execute('SELECT count(*) AS n FROM data_requirement_head').fetchone()['n']==0
+    receipt=asyncio.run(analysis.handle_with_data(claimed))
+    assert asyncio.run(analysis.handle_with_data(claimed))==receipt
+    assert conn.execute('SELECT count(*) AS n FROM data_requirement_head').fetchone()['n']==1
+    assert conn.execute('SELECT count(*) AS n FROM aip_task_run').fetchone()['n']==1
+    assert conn.execute('SELECT status FROM aip_task_run').fetchone()['status']=='paused'
+
+
+def test_formal_automatic_data_failure_rolls_back_initialization(automatic_formal_case,monkeypatch):
+    from aos_api import aip_runtime_configuration_authority as budget_module
+    conn,analysis,claimed=automatic_formal_case
+    def deny(*a,**kw):raise PermissionError('data budget unavailable')
+    monkeypatch.setattr(budget_module,'read_current_budget_ref',deny)
+    with pytest.raises(PermissionError,match='data budget unavailable'),conn.transaction():
+        asyncio.run(analysis.handle_with_data(claimed))
+    for table in ('data_requirement_head','aip_task_run','aip_business_investigation_compile_receipt'):
+        assert conn.execute(f'SELECT count(*) AS n FROM {table} WHERE org_id=%s AND project_id=%s',analysis.scope.key).fetchone()['n']==0
+
+
+def test_formal_automatic_entry_reuses_existing_start(automatic_data_case):
+    data,_=automatic_data_case
+    conn,analysis,claimed,_=data
+    receipt=asyncio.run(analysis.handle_with_data(claimed))
+    assert receipt['resourceType']=='AnalysisRuntimeReceipt'
+    assert conn.execute('SELECT count(*) AS n FROM data_requirement_head').fetchone()['n']==1
+    assert conn.execute('SELECT count(*) AS n FROM aip_task_run').fetchone()['n']==1
