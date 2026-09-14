@@ -344,3 +344,12 @@ SC4-5g3：通用SnapshotRelationshipPolicy编译及有界assessment完成，不�
 
 SC4-5g4：领域包1.16.0十四关系声明完成，树be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93；源1.15保持，仅bundle/evals变更新增原policies导出目录snapshot-relationships.v1.json。策略hash e5ca449b179b17e3ee7c24f657dab3393a57c1111dbcded2246c91b805c3b366。34测试通过4.40秒，12对象+14规范关系静态评估通过；每个引用字段核对实际映射公开输出，旧goodsId别名反例拒绝。
 真实09:29:16.419390Z–09:29:17.966551Z同事务12类：通用策略核验1162条两端未软删候选关系，全部原_normalize_rows规范通过；missingReference/invalidReference全0；客户缺父33（32订单+1评价），软删端点独立报告；不推断删除或补造对象，主关系写入0、formalFulfillment=false。证据real-relationship-policy-20260914.json只存数量/哈希。下一项：当前包策略资产与原组输入manifest绑定、持久化关系准备，再按原Owner应用与质量/Fulfillment接通。
+
+### SC4-5g5 当前组规则资产边界
+
+新增pipeline_snapshot_group_policy_owner.py及test_pipeline_snapshot_group_policy_owner.py，不改原单表SourceSelectionOwner。精确原RuntimeControlOwner组成GroupOwner持有全部当前控制；在同步回调内复用其selections的原installation_store/current artifacts/release policy，加载同租户当前installation baseline，唯一匹配原package_ref全四元组。policy_ref限定SnapshotRelationshipPolicy exact ref、revision等于已安装selected.version、必须原exports.policies内JSON，读上限256KiB并核对原字节SHA256、JSON重复键/非常数拒绝，再编译通用策略。
+策略对象类型必须与本组实际mapping的唯一类型集合完全相同；每个引用字段在当前compiled mapping公开输出中（v3 public projection显式约束，v1/v2 fields及defaults）。当前发行签名fingerprint/evidence revision走原ReleasePolicy.evaluate，不自行信任标签。callback返回后重读并比较完整策略，再由GroupOwner重验原当前控制，拒绝策略文件/安装/发行漂移或延迟执行。只是当前资产资格，仍不读源/认领/写关系/Readiness；后继组输入Owner将policyRef/rawhash/canonical hash与原input manifest一起存证。
+测试真实机制配合明确的installation/artifact/release doubles，验证跨租户、错版本/包/路径/原字节hash/重复JSON、缺对象/缺公开字段、发行否决、回调漂移/异步拒绝；不把doubles称真实发行身份通过。
+
+
+SC4-5g5：PipelineSnapshotGroupPolicyOwner完成，全部当前控制内按原installation/artifacts/release policy验证同包导出JSON exact ref、文件字节哈希、公开字段及完整对象集合；执行后再查策略再由GroupOwner复验控制。59组合测试通过3.89秒，补public projection隐匿反例后新文件16项通过3.47秒（合计覆盖60项）；AR2扫描1916五类错误空，AOS-000573 validate GREEN。测试安装/签名资产为明确doubles，不宣称主真实发行资格通过。本波无源调用或业务写入。下一项：只读消费已持久化组原输入，绑定manifest/规则hash和原时间后生成关系assessment，缺input不主动读取源，再关系持久化与原应用Owner。
