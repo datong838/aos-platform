@@ -1,0 +1,7 @@
+### SC4-5i8 分析原始快照上下文验证
+
+AnalysisSnapshotContext复用原AnalysisContinuationContext，固定原completed journal的scope/actor/run/control；运行编号和cutoff只从原上下文取，Locator回读原组，GroupQuality完成态当前守卫计量。绑定analysis context+quality payload hash，防消费方修改。case analysisType须在安装用途策略中。不接手工group/run/cutoff参数，不创建DataRequirement/Fulfillment，不调用模型。
+
+组合10场景与原AnalysisContinuationContext5项合计15项覆盖。首次规范JSON拒绝计量用途tuple，修复为证据载荷数组而保留Owner原计量不变；重跑14 passed/1测试夹具失败29.21秒（list iterator不属于原生成器延迟合同），将夹具改成真正generator后该项5.78秒通过；未修改原全局guard。正常、原组不符、cutoff差1微秒、actor/control/purpose不符、结果改动、release撤权均验证。实际完成组用PG原对象/图/Dataset回执；分析源上下文为明确named double，另跑原上下文5项门禁；不能合称真实完整首链验收。
+
+AR2扫描1929/187/93五类错误为空，无主数据/安装或外部动作。下一波SC4-5i9：真实只读聚合核对当前30日订单/订单行群体、删除/未知/未来时间及客户缺口分布，输出无客户标识计数；决定首个正式业务事实计划用实际经营统计还是启动计划研究，不能先假定有近期样本，更不能改legacy initial_store_analysis v1的空分母和100%阈值。其后固定事实查询、原DataRequirementOutbox消费者与Fulfillment仍需组合。
