@@ -1,0 +1,112 @@
+pipeline_id: P06
+source_table: ns_order_goods
+target_ot: OrderLine
+primary_key: order_goods_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  non_negative:
+  - num
+  - goods_money
+  - cost_money
+  required:
+  - order_goods_id
+  - order_id
+  - site_id
+  - sku_id
+field_mappings:
+- source: order_goods_id
+  target: id
+  type: int
+- source: order_id
+  target: orderId
+  type: int
+- source: order_no
+  target: orderNo
+  type: string
+- source: site_id
+  target: siteId
+  type: int
+- source: member_id
+  target: memberId
+  type: int
+- source: goods_id
+  target: productId
+  type: int
+- source: sku_id
+  target: skuId
+  type: int
+- source: sku_name
+  target: skuName
+  type: string
+- source: sku_no
+  target: skuNo
+  type: string
+- source: goods_name
+  target: goodsName
+  type: string
+- source: price
+  target: unitPrice
+  type: decimal
+- source: cost_price
+  target: costPrice
+  type: decimal
+- source: num
+  target: quantity
+  type: decimal
+- source: goods_money
+  target: lineAmount
+  type: decimal
+- source: cost_money
+  target: costMoney
+  type: decimal
+- source: delivery_status
+  target: deliveryStatus
+  type: int
+- source: refund_status
+  target: refundStatus
+  type: int
+- source: refund_type
+  target: refundType
+  type: int
+- source: refund_apply_money
+  target: refundApplyMoney
+  type: decimal
+- source: refund_real_money
+  target: refundRealMoney
+  type: decimal
+- source: refund_action_time
+  target: refundActionTime
+  type: timestamp
+- source: create_time
+  target: createTime
+  type: timestamp
+pii_exclusion:
+- refund_address
+- refund_address_id
+notes:
+- Complete-site OrderLine observation snapshot; source zero creation/refund timestamps
+  remain unknown.
+- Business windows require verified parent Order creation time through actual relationship
+  materialization.
+- lineAmount is declared source goods_money, not an inferred net revenue or paid amount.
+- Refund states are preserved independently from record presence; absence does not
+  imply deletion.
+- Order/Product/SKU relationships and parent deletion semantics remain pending.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults:
+    currency: CNY
+  time_basis: observation
+  deletion_basis: row-presence-only
+  status:
+    field: refund_status
+    property_target: status
+    values:
+      '-3': ACTIVE
+      '0': ACTIVE
+      '3': ACTIVE

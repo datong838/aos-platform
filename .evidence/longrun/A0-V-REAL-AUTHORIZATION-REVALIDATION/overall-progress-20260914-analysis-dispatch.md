@@ -314,3 +314,11 @@ Order185：active125=历史120+近30日5，deleted60均历史；近30日5笔客�
 先Red模块不存在，后样本/原关系质量/原正式需求质量共61项4.55秒通过（8warnings）。5近期/120历史/60删除订单、39上架/18下架/8删除商品为真实聚合规模构造的单测，非再读source；父订单时间替代未知行时间仅用于业务归窗，未写回伪造createTime；缺父与非法ref仍保留质量分母。编译hash/漏类型/重复规则/未知父/未声明关联/状态集合/窗口边界拒绝。AR2扫描1930/187/93五类错误为空，无主数据/安装或新外部调用。
 
 下一波SC4-5j2：冻结1.18基础上生成1.19候选，新增initial_store_analysis业务群体策略：Product在售子集，Order创建时间窗，OrderLine/Shipment/Payment用已声明Order关联与其创建时间；Shop/SKU/Category/CustomerLite/Weapp/SystemConfig/ProductReview是当前观察维度（Review明确不代表近30日评价统计）。保留全raw供关联/历史；规则不改旧DataRequirement语义或替代逐事实字段质量。SC4-5j3再从原analysis上下文读取实际pending DataRequirement，绑定其window/purpose/current head/生命周期与安装导出cohort策略，使窗口不是调用方手填；随后正式测量与消费者。
+
+### SC4-5j2 Niushop 1.19业务样本策略候选验证
+
+新增1.19候选，仅修改bundle版本和静态eval，增加business-cohort.v1.json；12映射及原关系/用途质量策略保持字节不变。目标树sha256:dd15e696a3962610e88bf2fef3cb1f843d97d3760be8aeafe0a8e035ba49957f；cohort策略sha256:1b59787c347ca02b382fa0823956c403664e8638eac75926a1cb5c0998a83274。
+
+静态核验公开字段、12类声明、历史订单范围、未知时间保留、缺父保留、下架分离通过；原14关联候选与5项用途质量检查通过。重复生成在目标存在检查处拒绝，未覆盖原候选。旧1.18树保持sha256:5f3c6c00002c184429ceaaeca626f62107e7a4ae54d64b3a34c57a6d70b9b4db。没有重跑对象映射eval，没有构建签名、发布、安装、source读取、主库修改或正式Fulfillment。
+
+下一波SC4-5j3：从原分析上下文的实际Run读取当前pending DataRequirement，绑定真实窗口/用途/生命周期与安装导出的业务样本策略，禁止调用方手填运行或窗口；继续保持legacy阈值和空分母约束。主系统真实首链及八场景仍待正式计量、安装切换、续跑和连续观察。
