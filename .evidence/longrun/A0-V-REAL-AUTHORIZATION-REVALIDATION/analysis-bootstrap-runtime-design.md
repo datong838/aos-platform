@@ -36,3 +36,13 @@
 5. SC4-4：把blueprint IPC、编译和上述初始化接回ProductEventAnalysisService及sealed AnalysisAdvanceHostService；完整PG START原严格xfail真正通过后移除。之后新候选、主安装迁移/恢复及栖月汇真实首链/八场景/观察。
 
 验收以当前实证为准，不按合同数量、测试数或页面数计完成。m1单写者，不push，230 L0挂起。
+
+### SC4-3c2 预览准备细化
+
+新增services/aos-api/aos_api/ecommerce_analysis_startup_preview.py及tests/extension_runtime/test_analysis_startup_preview_pg.py。构造必须为精确AnalysisCompilationPreparation；在其回调内再次进入原analysis._phase，使用当下request.occurrenceRef和source.controlReceipt生成BootstrapIntent。将完整意图保存为独立analysis-bootstrap-intent Evidence（run_id=NULL，实际业务Run subject，稳定身份和完整hash，撤销/内容不符拒绝），作为Impact各分区的可回读来源，不复用启动关联Evidence类型。
+
+Preview精确绑定本Task/Plan/Context/Brief/Bundle/Eval/职责/Stage，绑定当前选中SkillBinding、归属AgentInstance及CapabilityBinding的真实版本；不存在/失效拒绝。初始化范围的object/channel/cost/budget/risk/reversibility/approvalChain/rateCapacityKill分区引用实际意图Evidence，明确未授权任何经营步骤；不把初始化零provider调用当商业成本。expiresAt固定为业务Run.createdAt+10分钟与当下来源审批/SkillBinding截止的最小值，过期拒绝，不以now滑动延长旧意图。
+
+通过原create_impact_preview/freeze；同事务回读正文hash/生命周期/动态依赖；回调后核对意图Evidence、当前来源和Preview不变，错误回滚编译/上下文/预览。当前Source/selection/能力仍有测试fixture，测试改为真正存储的选中Binding行，让Preview不接受虚构ID。此波不创建或批准Action，不启动TaskRun。专用当前授权守卫仍为后续c3。
+
+预览版本复核补充：同一AgentInstance在职责槽位必须只有一个配置版本，且与实际当前版本相等；禁止读取新版本并悄悄替代Plan已经绑定的旧版本。增加当前Agent版本漂移的隔离库拒绝验证。
