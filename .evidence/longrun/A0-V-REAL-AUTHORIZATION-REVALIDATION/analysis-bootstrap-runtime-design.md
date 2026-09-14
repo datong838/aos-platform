@@ -52,3 +52,7 @@ Preview精确绑定本Task/Plan/Context/Brief/Bundle/Eval/职责/Stage，绑定�
 先实现并验证通用生产启动入口对初始化动作/初始化预览的拒绝（c3a），再实现当前来源授权及专用原子暂停入口（c3b）。检查点完成前不得启用风险例外。通用入口须同时识别 action_type_id、Action快照id、Preview impact分区 details.purpose=analysis-bootstrap-only，避免换动作名复用初始化预览获得queued运行。修改 aip_production_start_service.py 与 tests/aip/test_w2d_start_gate.py；既有正常生产启动保留。
 
 已复核原decide无条件禁止maker自批，初始化不得绕过。合格当前独立身份和实际审批记录仍为必要条件，后续专用入口必须验证而非虚构；独立源事件审批不能冒充本Task的审批。此波不注册Action、不启用R1例外、不授予任何当前身份权限。
+
+### SC4-3c3b 当前审批身份子项
+
+先补齐services/aos-api/aos_api/ecommerce_analysis_bootstrap_authority.py的当前身份读取器及tests/extension_runtime/test_analysis_bootstrap_authority_pg.py：只接受精确HostTransaction/TenantScope，核验事务租户、当前注册Action快照、maker与checker的当前唯一membership及全部marking。checker必须不同于maker并具有原ACTION_APPROVAL_ROLES资格，maker路径只允许原maker身份。不接受调用者提供roles，不写入或授予角色；远端OpenFGA缺当前适配器时拒绝。该读取器仅给后续ActionStore提供实时资格，不证明源事件/Task/Plan授权，也不启用执行。独立校验Action快照和事务scope避免使用他租户或陈旧角色投影。

@@ -1447,3 +1447,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_startup_preview.py` | Host原路径 | 当前编译初始化意图Evidence与冻结预览，不授予经营执行权 | `300c67aa2e7bada9118c0062c10f6215a65524811d6e8e7a176ade37fcfcd7f8` |
+
+## SC4-3c3b 当前初始化审批资格
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_bootstrap_authority.py` | Host原路径 | 当前事务租户和初始化审批资格读取，不授予身份或运行权 | `8572b35296cd0e0279c0df44d6c0e321abd1401953a604ad06ed881fa7c01fa5` |
