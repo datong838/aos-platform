@@ -1,0 +1,37 @@
+{
+  "outcome": "NIUSHOP_PRESENT_ROW_RETIREMENT_POLICY_CANDIDATE_PREPARED",
+  "sourceTreeHash": "sha256:be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93",
+  "targetTreeHash": "sha256:9cb8cd7c54fee2dd1f9e490b0d9f6e735045002f4b5d3164d6c1cd7ce83f89d3",
+  "changedFiles": [
+    "bundle.yaml",
+    "content/policies/snapshot-relationships.v1.json",
+    "evidence/bundle-evals.json"
+  ],
+  "evaluation": {
+    "status": "passed",
+    "failed": 0,
+    "scope": "static-retirement-policy-and-fourteen-canonical-links",
+    "relationships": {
+      "status": "passed",
+      "candidateLinks": 14,
+      "policyHash": "sha256:03cd5157f54ed2c7156d82bf4903cff96c2c83459ce3e91b4637cdf59ee86ae6",
+      "relationshipWritten": false,
+      "checks": [
+        "current-public-fields",
+        "core-directions",
+        "canonical-links",
+        "missing-customer-visible",
+        "soft-delete-visible"
+      ]
+    },
+    "realFulfillment": false,
+    "retirementExecuted": false,
+    "inheritedObjectMappings": {
+      "sourceTreeHash": "sha256:be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93",
+      "unchanged": true,
+      "objectEvaluationsRerun": false
+    }
+  },
+  "published": false,
+  "installed": false
+}

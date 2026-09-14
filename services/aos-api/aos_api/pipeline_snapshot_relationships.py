@@ -22,6 +22,7 @@ class SnapshotRelationshipPolicy:
     object_types: tuple[str,...]
     rules: tuple[RelationshipRule,...]
     content_hash: str
+    retirement_mode: str = 'disabled'
 
 
 @dataclass(frozen=True)
@@ -32,8 +33,23 @@ class SnapshotRelationshipAssessment:
 
 
 def compile_relationship_policy(document):
-    if (type(document) is not dict or set(document)!={'schemaVersion','objectTypes','rules'}
-            or document['schemaVersion']!='aos.snapshot-relationships/v1'):
+    if type(document) is not dict:
+        raise ValueError('exact relationship policy required')
+    version=document.get('schemaVersion')
+    required={'schemaVersion','objectTypes','rules'}
+    mode='disabled'
+    if version=='aos.snapshot-relationships/v2':
+        required.add('retirement')
+        retirement=document.get('retirement')
+        expected=dict(mode='present-rows-only',requireCompleteReferences=True,
+                      rejectNewerThanObservation=True,allowMissingRowDeletion=False)
+        if (type(retirement) is not dict or retirement!=expected
+                or any(type(retirement.get(key)) is not bool for key in expected if key!='mode')):
+            raise ValueError('exact present-row retirement boundaries required')
+        mode='present-rows-only'
+    elif version!='aos.snapshot-relationships/v1':
+        raise ValueError('exact relationship policy version required')
+    if set(document)!=required:
         raise ValueError('exact relationship policy required')
     types=document['objectTypes'];rules=document['rules']
     if type(types) is not list or not 1<=len(types)<=12 or type(rules) is not list or not 1<=len(rules)<=32:
@@ -56,7 +72,7 @@ def compile_relationship_policy(document):
         source_type=row_type if rule['direction']=='row-to-parent' else parent_type
         if name.split('.')[0]!=source_type:raise ValueError('link direction and namespace differ')
         compiled.append(RelationshipRule(name,row_type,parent_type,prop,rule['direction'],rule['encoding'],rule['allowUnset']))
-    return SnapshotRelationshipPolicy(types,tuple(compiled),'sha256:'+_digest(document))
+    return SnapshotRelationshipPolicy(types,tuple(compiled),'sha256:'+_digest(document),mode)
 
 
 def _key(value):
@@ -93,6 +109,12 @@ def assess_snapshot_relationships(outputs,policy,*,observed_at):
     document={'schemaVersion':'aos.snapshot-relationships/v1','objectTypes':list(policy.object_types),'rules':[
         dict(linkType=r.link_type,rowType=r.row_type,parentType=r.parent_type,referenceProperty=r.reference_property,
             direction=r.direction,encoding=r.encoding,allowUnset=r.allow_unset) for r in policy.rules]}
+    if policy.retirement_mode=='present-rows-only':
+        document.update(schemaVersion='aos.snapshot-relationships/v2',retirement=dict(
+            mode='present-rows-only',requireCompleteReferences=True,
+            rejectNewerThanObservation=True,allowMissingRowDeletion=False))
+    elif policy.retirement_mode!='disabled':
+        raise ValueError('exact compiled retirement mode required')
     if compile_relationship_policy(document)!=policy:raise ValueError('compiled relationship policy differs')
     observed_at=observed_at.astimezone(timezone.utc)
     indexed={}

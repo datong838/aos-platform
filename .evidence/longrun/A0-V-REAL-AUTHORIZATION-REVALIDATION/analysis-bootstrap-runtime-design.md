@@ -471,3 +471,19 @@ AR2扫描1922/187/93、五类错误为空。主部署/数据库未改变，测�
 58项组合测试通过35.78秒（Store51+新PG7）；新增缺父引用场景首次测试误解析empty parent的null command，修正夹具筛选后单例通过8.21秒，当前新PG覆盖8项。真实隔离库验证正确边无残留；旧父边只报告不删；未出现子行和tombstone边排除；新于快照的关系保留不确定；父对象缺失时额外边不得被列为清退；回调篡改/撤权拒绝、跨workspace/shop空结果、超界拒绝。源调用均一次。
 
 AR2扫描1923/187/93五类错误为空，AOS-000573 memory-validate GREEN。主库和真实关系未改。当前发现不等于业务质量绿色。下一波：在领域包规则中明确选择性启用present-row清退语义，旧v1保持候选关系语义；随后固定原残留payload的清退命令及原严格Store/投影恢复，禁止缺行推断和清退较新关系。
+
+### SC4-5h6 包显式清退策略
+
+SnapshotRelationshipPolicy保持v1默认retirement_mode=disabled。新增aos.snapshot-relationships/v2，顶层额外retirement严格固定为 mode=present-rows-only、requireCompleteReferences=true、rejectNewerThanObservation=true、allowMissingRowDeletion=false；拒绝缺字段/弱化/数字冒充bool/未知模式。模式进入原完整策略hash，assess重编译验证同样覆盖，不因增加清退策略而自动产生tombstone。
+
+Niushop候选1.17.0继承1.16.0不可变tree，仅修改bundle版本、同导出路径策略内容及静态eval，12个mapping完全不变。沿用原12类型/14关系canonical评估；新增v1禁用、v2固定约束、篡改模式hash拒绝及当前签名策略Owner读取v2测试。该模式是后续清退Owner的必要条件，不是独立业务写入授权；仍需当前原组/对象/命令/残留核验、固定旧payload、提交确认和原严格Store。此波只准备静态候选，无镜像重建签名发布安装或删除。
+
+### SC4-5h6 显式清退策略候选验证
+
+关系策略v2增加固定present-rows-only retirement约束：引用完整、拒绝晚于观察关系、禁止缺行删除；v1 retirement_mode默认disabled，原候选生成行为不变，模式纳入原完整hash且assess重新编译核对。当前PolicyOwner继续exact artifact/current release/public fields检查，v2不绕过原资格。
+
+56项策略/Owner单测通过4.97秒；原关系执行+残留核验15项隔离PG回归通过77.48秒。新策略本身不生成tombstone。候选1.17.0相对1.16.0仅版本/策略/evals三文件变化，12映射逐字不变；静态14canonical关系、公开字段、缺客户/软删除可见性通过。对象mapping旧评估明确继承未重跑，不宣称新12类真实应用。
+
+候选tree sha256:9cb8cd7c54fee2dd1f9e490b0d9f6e735045002f4b5d3164d6c1cd7ce83f89d3，policy sha256:03cd5157f54ed2c7156d82bf4903cff96c2c83459ce3e91b4637cdf59ee86ae6。未重建OCI镜像/签名/发布/安装，未删除真实关系。AR2扫描1923/187/93五类错误为空。
+
+下一波：原Store增加显式tombstone的旧payload前置校验，必须在同事务持有端点/关系锁时比较准备时hash，避免清退覆盖期间更新；原Receipt成功重放校验自己的当前tombstone不再要求旧hash。随后在v2当前包策略门内固定残留清退命令、提交确认、原严格应用及精确投影。32+1客户引用缺口、正式Readiness/Fulfillment、真实首链和八场景仍待完成。

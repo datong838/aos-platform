@@ -93,3 +93,38 @@ def test_reference_list_is_bounded_and_not_partially_accepted():
     data=rows();data['OrderLine'][0]['properties']['orderId']=','.join(str(i) for i in range(1,34))
     result=assess(data,p)
     assert not result.candidate_links and result.counts['Order.lines']['invalidReference']==1
+
+
+def retirement_policy():
+    return policy() | {'schemaVersion':'aos.snapshot-relationships/v2', 'retirement': {
+        'mode':'present-rows-only', 'requireCompleteReferences':True,
+        'rejectNewerThanObservation':True, 'allowMissingRowDeletion':False}}
+
+
+def test_retirement_requires_explicit_versioned_policy():
+    assert compile_relationship_policy(policy()).retirement_mode == 'disabled'
+    compiled = compile_relationship_policy(retirement_policy())
+    assert compiled.retirement_mode == 'present-rows-only'
+    assert len(assess(definition=retirement_policy()).candidate_links) == 1
+    assert not any(link['is_deleted'] for link in assess(definition=retirement_policy()).candidate_links)
+
+
+@pytest.mark.parametrize('fault', ['missing', 'mode', 'missing_rows', 'incomplete', 'future', 'numeric_bool', 'extra'])
+def test_retirement_policy_cannot_relax_required_boundaries(fault):
+    definition = retirement_policy()
+    if fault == 'missing': definition.pop('retirement')
+    elif fault == 'mode': definition['retirement']['mode'] = 'all-absent-links'
+    elif fault == 'missing_rows': definition['retirement']['allowMissingRowDeletion'] = True
+    elif fault == 'incomplete': definition['retirement']['requireCompleteReferences'] = False
+    elif fault == 'future': definition['retirement']['rejectNewerThanObservation'] = False
+    elif fault == 'numeric_bool': definition['retirement']['rejectNewerThanObservation'] = 1
+    else: definition['retirement']['skipApproval'] = True
+    with pytest.raises(ValueError): compile_relationship_policy(definition)
+
+
+def test_forged_retirement_mode_cannot_keep_original_policy_hash():
+    from dataclasses import replace
+    original = compile_relationship_policy(policy())
+    forged = replace(original, retirement_mode='present-rows-only')
+    with pytest.raises(ValueError):
+        assess_snapshot_relationships(rows(), forged, observed_at=datetime.now(timezone.utc))

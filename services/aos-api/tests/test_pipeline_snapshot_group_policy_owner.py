@@ -75,3 +75,14 @@ def test_public_projection_hides_underlying_reference_field(bound):
     state['maps'][1]=SnapshotMappingV3(base=state['maps'][1],conversions=(),non_negative=(),status_field='site_id',status_target='status',statuses=((1,'ACTIVE'),),public_projection=(2,('status',)))
     with pytest.raises(ValueError,match='public output'):
         owner.run_current(conn,**args,execute=lambda current:pytest.fail('hidden field used'))
+
+
+def test_versioned_retirement_policy_remains_current_export_checked(bound):
+    owner,conn,args,state,_=bound
+    state['doc']['schemaVersion']='aos.snapshot-relationships/v2'
+    state['doc']['retirement']={'mode':'present-rows-only','requireCompleteReferences':True,
+        'rejectNewerThanObservation':True,'allowMissingRowDeletion':False}
+    state['raw']=json.dumps(state['doc']).encode()
+    args['policy_ref']=args['policy_ref'].model_copy(update={'content_hash':'sha256:'+hashlib.sha256(state['raw']).hexdigest()})
+    result=owner.run_current(conn,**args,execute=lambda current:current.policy.retirement_mode)
+    assert result=='present-rows-only' and state['release_calls']==2
