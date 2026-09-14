@@ -1099,3 +1099,18 @@ def test_retirement_mixed_batch_prior_mismatch_preserves_every_link(store):
     assert all(row['deleted_at'] is None for row in links_for_default_shop(store))
     assert store.read_committed_batch(mixed) is None
     assert store.get_checkpoint(mixed)['version'] == 1
+
+
+def test_retirement_receipt_read_does_not_apply_and_requires_guard(store):
+    command = retirement_command(store)
+    assert store.read_committed_link_retirement(command) is None
+    store.apply_strict_link_retirement_batch(command)
+    assert store.read_committed_link_retirement(command).links_tombstoned == 1
+    assert store.get_checkpoint(command)['version'] == 2
+
+
+def test_regular_tombstone_has_no_readable_retirement_receipt(store):
+    command = retirement_command(store)
+    store.apply_strict_link_batch(command)
+    with pytest.raises(EcomConsistencyError, match='retirement precondition evidence'):
+        store.read_committed_link_retirement(command)

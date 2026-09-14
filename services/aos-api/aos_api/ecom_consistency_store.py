@@ -468,6 +468,13 @@ class EcomConsistencyStore:
 
     def read_committed_batch(self, command: BatchCommand) -> BatchResult | None:
         """Read exact committed evidence without replaying a batch or advancing it."""
+        return self._read_committed_batch(command, retirement=False)
+
+    def read_committed_link_retirement(self, command: BatchCommand) -> BatchResult | None:
+        """Read a proven conditional retirement, never replay or write it."""
+        return self._read_committed_batch(command, retirement=True)
+
+    def _read_committed_batch(self, command: BatchCommand, *, retirement: bool) -> BatchResult | None:
         command = BatchCommand.model_validate(command.model_dump(mode="python"))
         with self._engine.begin() as conn:
             _apply_transaction_scope(conn, org_id=command.scope.org_id, workspace_id=command.scope.workspace_id)
@@ -476,6 +483,10 @@ class EcomConsistencyStore:
                 return None
             if not self._receipt_matches_request(command=command, receipt=receipt, request_hash=command.request_hash()):
                 raise EcomConsistencyError("IDEMPOTENCY_CONFLICT", "stored receipt does not match the original command")
+            if retirement:
+                if receipt["result"].get("retirementPreconditionChecked") != command.request_hash():
+                    raise EcomConsistencyError("RETIREMENT_EVIDENCE_REQUIRED", "original retirement precondition evidence required")
+                self._reconcile_base_events(conn, command, receipt)
             return BatchResult.model_validate(receipt["result"])
 
     def read_committed_batch_revision(self, command: BatchCommand) -> int:

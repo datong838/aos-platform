@@ -503,3 +503,23 @@ Niushop候选1.17.0继承1.16.0不可变tree，仅修改bundle版本、同导出
 59项Store回归通过4.99秒；10项隔离PG关系核验通过（前一组合69项中唯一失败在新增单测夹具，PG10全部通过）。首次混合清退夹具给第二商品构造倒退checkpoint，被原Store正确拒绝；修正夹具时间后全Store通过，未改checkpoint规则。验证旧payload变化整批拒绝，无部分tombstone/Receipt/检查点推进；纯tombstone及哈希必需、同幂等键修改旧hash冲突；PG旧父边精确清退后正确边仍活跃，期间更新则旧边保留且无新Receipt。
 
 AR2扫描1923/187/93五类错误为空。主数据未清退，实际策略/当前组授权仍需后继Owner。下一波：a0v048不可变清退准备，绑定当前v2包策略、原命令、原残留audit和固定旧hash/观察时间；支持已应用后旧边消失时以原条件清退Receipt回读恢复，不能重新猜旧边或生成新命令。随后原精确投影和最终残留复核。
+
+### SC4-5h8 不可变条件清退准备及回读
+
+新增a0v048，父047，仅隔离库：原link command加exact commandHash唯一键；新pipeline_snapshot_group_retirement FK tenant/group/parentCommandHash，不可变保存原audit payload/hash、准备观察时间、完整tombstone command或null、整体preparationHash。FORCE RLS和runtime SELECT/INSERT only，SQL验证parent/assessment/audit绑定、candidate count/命令scope/纯tombstone形状和体积界限。
+
+RetirementJournal只在原当前Assessment/PolicyOwner v2 retirement_mode=present-rows-only中工作，原LinkCommandJournal和候选投影须合格。新prepare在原Audit同步回调/savepoint内保存；清退时间取DB clock并晚于原源观察，明确是内部关系清退观察时间，不冒充源修改时间。每条tombstone properties绑定原input manifest、assessment、audit hash及旧payload hash。scope/stream/key服务端固定，复用原_build_batch_command但重放不重建checkpoint。
+
+重放解析完整canonical与保存hash，按原policy方向、原已出现行、原candidate集合及完整引用重新检验每个旧关系身份，拒绝缺行范围、当前应保留边和晚于原源观察的边。未应用时原Audit必须仍与保存body/hash一致；已应用时旧边消失属正常，使用新增Store只读read_committed_link_retirement验证原request、retirementPreconditionChecked标记、当前tombstone/原权威事件，不能重算后重造命令。保存不是apply，独立commit确认和执行留下一波。
+
+验证prepare/replay/rollback/后置撤权、未保存read不创建、v1拒绝、旧边变更拒绝、已清退Receipt回读、普通删除不能冒充、null无fakeReceipt、数据库外键/不可变/租户及命令篡改。引用完整要求对每个被清退规则成立，其他规则的不确定项仍保留并阻止最终业务Readiness宣绿。
+
+### SC4-5h8 不可变清退准备验证
+
+a0v048及PipelineSnapshotGroupRetirementJournal完成。新prepare须当前v2显式策略、原组input/候选命令和对象/候选投影合格，在原Audit回调保存exact audit、父commandHash、DB观察时间、完整条件tombstone与preparationHash；FK/SQL绑定、FORCE RLS、SELECT/INSERT only和不可变历史。每条清退重新验证原已出现行/规则完整引用、非wanted关系、旧时间不晚于原source，命令属性绑定manifest/assessment/audit/旧payload。
+
+Store新增只读read_committed_link_retirement。清退前重放要求原Audit未变；清退已成功后按原Receipt的前置校验标记、当前tombstone和权威事件核验，不因旧边消失重造命令/检查点。空残留保存null，不造Receipt。已应用回读仍核当前v2及原行范围，不能删除wanted边。
+
+61项Store回归通过4.76秒；14项完整隔离PG清退准备测试通过87.05秒。覆盖原命令清退后精确重放、缺记录read不写、回滚和后置撤权savepoint、旧边变更、普通删除Receipt冒充拒绝、v1拒绝、空残留、tenant/不可变、FK/assessment/count/active/time五类数据库反例，以及形状/hash合法但改成当前wanted边的准备被原Owner拒绝。
+
+AR2扫描1924/187/93五类错误为空。主库仍未执行048或其他待升级迁移，主业务没有清退。下一波：独立提交确认后执行原条件清退及精确投影，验证commit ack丢失/图写入失败/撤权恢复；最后再次做完整关系残留核验，明确尚存数据缺口，再接业务Readiness/Fulfillment。
