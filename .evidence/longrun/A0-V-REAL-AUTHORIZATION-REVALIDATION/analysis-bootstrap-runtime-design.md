@@ -233,3 +233,10 @@ SC4-5e4候选：新增scripts/prepare_niushop_order_candidate.py及1.8.0目录�
 修改pipeline_snapshot_materialization_v3.py及其测试，独立Lease A0-V-SC4-SNAPSHOT-PUBLIC-PROJECTION。验证schema版本、投影隐藏内部键但保留身份和时间来源、未知字段/重复/非整数版本/丢状态拒绝及旧版回归。CustomerLite随后只公开memberLevel/status/createdAt加必需观察来源标记，版本2；status源0/1语义需明确策略，is_delete显式处理，不加入身份解析/派生指标/关系。
 
 SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac128350c1623b9181540d06d57558cb生成，仅bundle/p08/evals。公开业务字段memberLevel/status/createdAt加强制观察标记，schema_version=2；实际选择member_id/member_level/reg_time/status/site_id/is_delete，全部在原public_source_allowlist内。只接受已实际观察的status=1→ACTIVE，其余状态拒绝待新明确映射，不猜测0语义。is_delete=0/1显式覆盖删除；不公开源删除标志和内部作用域字段。reg_time直接映射createdAt，零值不能补观察时间。去掉旧derived_metrics和links，仅作为待后续权威派生/关联清单，不生成伪指标。脚本/测试文件为prepare_niushop_customer_candidate.py与test_niushop_customer_candidate.py，原客户Lease仍ACTIVE。
+
+### SC4-5e8 后四类显式声明与三类最小快照
+
+新增scripts/prepare_niushop_extended_candidate.py、对应test_niushop_extended_candidate.py与1.12.0，Lease A0-V-SC4-EXTENDED-SOURCE-CANDIDATE；基于精确1.11.0树f2bc7069f564af79dbef3feb14da9ba64a7b6fd767cef4a2879421caf71cb7f5。schema追加P09..P12四个身份/主键/真实结构记录，来源绑定本地只读聚合证据哈希；原前八条历史记录不伪造刷新。masking追加明确表政策：小程序密钥禁止；配置value/config_desc禁止；评价会员姓名头像、自由文本/图片/视频/回复禁止；支付原六秘密列加return_url/event/mch_id/trade_no/pay_no等无画像必要载荷禁止。默认旧映射在新增政策下仍拒绝越界选列，不能只增加空政策放行。
+小程序最小id/site/name/appid/status；配置仅id/site/weapp/module/key/is_use（不解释配置值）；评价仅id/site/order/line/product/sku/member/scores/is_show/is_audit/create_time，公开score/productId/memberId和必要来源字段，不读取评论内容。均v3 observation，原源业务字段保留，状态只接受显式0/1声明（小程序只实测1），不生成任何关系。SystemConfig映射module/key，评价score/productId依原Canonical。
+真实聚合：小程序3条status1；配置37启用/1停用；评价5条is_show1/is_audit1且scores均5。Payment211条relate_id非零且命中同店订单，但out_trade_no仅181匹配，不能据此宣称211支付归属已验证。P12映射本波不声称完成；下一只读核对业务事件/关系与订单副交易号/拆单口径，再实现明确映射。
+候选变更范围bundle、schema、masking、P09/P10/P11、eval共7文件，前八对象回归及三类新对象规范/隐私/跨店测试；静态最多11/12，主数据与正式Fulfillment仍待后续。
