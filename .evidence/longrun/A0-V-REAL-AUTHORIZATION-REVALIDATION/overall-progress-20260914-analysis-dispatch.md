@@ -564,3 +564,15 @@ AR2 ar2-7 1947/190/93全部错误列表为空（/tmp/sc4-d6-final-closure.log）
 只读主库核对：既有容器aos-a0v-recovery-pg内部用户连接aos_meta_head，READ ONLY/ROLLBACK，schema a0v_038；业务Requirement在payload。指定org-org/dev-project后原head关联查询未返回当前需求，不能据此判断别的DB或服务任务，不假设真实requestedOutputs。首次直连无密码/默认postgres不存在及SQL引用错误均未执行写入；后续复用既有容器用户完成只读核对，未索要/输出口令。尚需主联调验证实际服务连接。
 
 方案检查：14个引用权威文件存在，git diff --check通过；设计波无新增业务代码、无主库/任务/商城/Provider变化。下一波l6e2从原Bundle/Readiness生成exact Fulfillment并验证完整12实际PG幂等/current/rollback；旧用户文档和Playwright依赖改动保留。
+
+## SC4-5l6e2 原快照Fulfillment交付（2026-09-15）
+
+基线a26e4d0d，AOS-000573，m1单写者。新增ecommerce_analysis_snapshot_fulfillment.py及对应extension_runtime PG测试；方案snapshot-resume-design.md，验证sc4-5l6e2-snapshot-fulfillment-verification.md。原完整十二源Projection外层，串行回读原Bundle/Readiness/当前Requirement，实际原DataFulfillmentStore绑定与exact回读，首次DBclock、稳定身份与重放时间、原事务回滚；保持Task paused，不转换Run。
+
+当前需求必须完整匹配原Pending来源、未过期且无blockers、仅请求EvidenceBundleRevision，完整覆盖/质量/就绪及当前授权均满足。需求创建者与交付者属于不同原Owner，原需求创建者不改写，交付者绑定Source/Business/Bundle；原Head锁由原bind拥有，不扩大运行角色写权限。保存后重查全部依据，并在外层守卫退出、提交之前再核原最早期限；历史回执当前失效拒绝。
+
+最终8项完整12隔离PG全部passed /434.41s（/tmp/sc4-e2-final.log），覆盖保存/幂等/原暂停Task保持、绑定失效回滚、附加输出拒绝、canary、证据撤销、错误Receipt、原需求CAS取消，以及保存后最后期限变化回滚。原Fulfillment Store与TransactionBound连接15项pure回归passed /5.96s（/tmp/sc4-e2-original-regression.log；1个不属本轮的PG用例明确deselected）。共23唯一相关用例，7项既有框架warnings。中间7通过/395.59s不重复计数；原测试在取证后修改runtime/重复Query、直接Head加锁与错误同actor假设的Red均在验证文档记录并修复，没有放宽原引用hash。
+
+AR2 ar2-7：1948模块/190分类/93迁移，五类错误列表空；py_compile与git diff --check通过，memory strong CURRENT/validate GREEN。全部数据库写只在18432隔离ar1c_* schema，实际原Store/SQL/Receipt与12投影；源样本、初始化暂停Task/runtime、签名安装及Provider仍为明示named fixtures，非真实首链。未改主库a0v_038，代码迁移仍a0v_048；无商城/模型/主Run/Task/发布安装动作，不push，230 L0挂起。原用户进度与Playwright依赖改动保留。
+
+下一波l6e3：严格runtime.analysis.resume_snapshot命令与独立结果合同，复用原hash/exact类型，保留旧水合分支，不构造假mapping/hydration，不提前开放运行入口；文件与拒绝测试已补snapshot-resume-design.md。随后e4两阶段同事务守卫、e5原Task/业务Run CAS和统一Receipt、e6原起点PG链，再Outbox自然触发、主升级安装、真实首链/八场景/观察。整体目标未完成，自动接续。
