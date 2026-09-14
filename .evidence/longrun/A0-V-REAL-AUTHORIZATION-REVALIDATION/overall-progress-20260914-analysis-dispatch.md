@@ -420,3 +420,11 @@ Red缺新增类型；新合同与原质量/存证51 passed/15.17秒，旧Canonic
 Red新增模块缺失。初始5 PG passed/68.05秒；追加实际缺失Weapp字段导致QUALITY_BELOW_THRESHOLD并可存失败证据、写后质量撤销回滚后，新7+原Source11+Query13合31 PG passed/89.17秒，7既有warnings。全部Query/Evidence/Store为18432隔离schema真实原DDL，analysis/pending与artifact为named fixtures，人口与两类saved row是真实原测试完成组；不是12类892行真实租户链路验收。source calls仍1。AR2扫描1938/188/93五类错误空；memory strong CURRENT/validate GREEN。无主库/安装/源/模型或外部业务写。
 
 下一波SC4-5l6a先补原Outbox/Fulfillment真实连接方案：现有AnalysisAdvanceHostService._resume_authorities和BusinessInvestigationFulfillmentResumeSaga明确依赖真实SemanticHydrationReceipt、SourceReadiness、EvidenceBundle与原mapping；Query/QualityEvidence不能冒充这些凭据。核对原语义水合、数据产物与原完成回执的可复用路径，登记精确桥接缺口；保留原Run/TaskRun/Checkpoint、Outbox/Receipt幂等、取消/unknown与当前授权。readonly pending callback不得包住预期resume状态变化。未完成此桥接/主环境039–048升级/签名安装/真实首链/八场景观察，不得宣告长程完成。
+
+### SC4-5l6a 原完成与快照续跑连接方案
+
+新增snapshot-fulfillment-continuation-design.md，复习双侧增长产品方案4/12/13/16节与原Outbox、hydration、FulfillmentResumeSaga、AnalysisAdvance、SourceReadiness、EvidenceBuilder。6项代码指针核对通过；无生产代码变化，不声称自动续跑已完成。原水合路径强制真实OwnerWriteReceipt；当前Source/Quality Evidence factIds空，不能充当实际经营事实。原bundle freshness_at<cutoff会把read_started<read_completed的整组观察判stale，必须显式适配政策，不能伪造观察时刻。P11旧ProductReview与包Review须版本化核对。
+
+选定保留旧水合路径、新增显式snapshot completion并继续由原dispatch/Run/TaskRun/Receipt执行，不造水合回执。已补入同一清单l6b实际业务事实产物、l6c原bundle覆盖/新鲜度适配、l6d安装映射/原SourceReadiness、l6e原状态Owner预期续跑、l6f原Outbox自然串接、l6g完整12类组合及主环境候选部署验收。逐波先精确方案/Lease/Red，代码与实际经营验收分开。
+
+下一波l6b首先明确商品供给、订单窗口、会员关联、渠道资料等真实可读内容及隐私边界，从原saved完整来源/cohort生产事实；不把质量计数冒充经营输入。若真实某类业务为零使旧v1要求不满足，另行定义新Profile/事实版本与新任务，不改旧hash/阈值/cutoff。主环境升级/安装/真实首链/八场景/观察未完成，继续串行推进。
