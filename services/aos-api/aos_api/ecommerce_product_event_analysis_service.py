@@ -32,15 +32,60 @@ class ProductEventAnalysisService:
             prepared,request=self._phase(conn,claimed,lambda snapshot,request,dispatch:(deepcopy(snapshot),deepcopy(request)))
         fingerprint=canonical_sha256(prepared)
         request_hash=canonical_sha256(request)
+        from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileCatalog
+        resolved = EcommerceInvestigationProfileCatalog().read(prepared['source']['case']['analysisType'])
+        if resolved is None:
+            raise ValueError('current event analysis profile is unsupported')
+        domain = resolved[0]
+        if domain.exact_ref.model_dump(mode='json', by_alias=True, exclude_none=True) != request['profileRef']:
+            raise ValueError('current event profile differs from catalog')
         command=await self.port.build_start(request)
+        blueprint=await self.port.build_compilation_blueprint(domain)
         def commit(snapshot,current_request,dispatch):
             if canonical_sha256(snapshot)!=fingerprint or canonical_sha256(current_request)!=request_hash:
                 raise ValueError('analysis current preparation changed')
+            from aos_api.ecommerce_growth_runtime_adapters import _HostAnalysisReceiptStore
+            existing = _HostAnalysisReceiptStore(HostTransaction(conn), self.scope).read(command['idempotencyKey'])
+            if existing is None:
+                self._initialize(conn, claimed=claimed, command=command, domain=domain, blueprint=blueprint)
             return self._write(conn,claimed,dispatch,command)
         with self.connect(self.scope) as conn:
             receipt=self._phase(conn,claimed,commit)
             conn.commit()
         return receipt
+
+    def _initialize(self, conn, *, claimed, command, domain, blueprint):
+        from aos_api.aip_production_contracts import ProductionStartRequest, ActionProposalExactRef
+        from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+        from aos_api.ecommerce_growth_runtime_adapters import AnalysisAdvanceHostService
+        from aos_api.ecommerce_analysis_context_preparation import AnalysisContextPreparation
+        from aos_api.ecommerce_analysis_compilation_preparation import AnalysisCompilationPreparation
+        from aos_api.ecommerce_analysis_startup_preview import AnalysisStartupPreviewPreparation
+        from aos_api.ecommerce_analysis_bootstrap_authority import AnalysisBootstrapCurrentBinding
+        from aos_api.ecommerce_analysis_bootstrap_action import AnalysisBootstrapActionPreparation, _BootstrapActionGuard
+        from aos_api.ecommerce_analysis_bootstrap_start import _BootstrapProductionStartService
+        tx = HostTransaction(conn)
+        run = AnalysisAdvanceHostService()._prepare_start_run(transaction=tx, scope=self.scope, command=command,
+            occurred_at=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+        run_ref = InvestigationExactRef(resourceType='BusinessInvestigationRun', resourceId=run.authority.run_id,
+            revision=run.authority.version, contentHash=run.authority.content_hash)
+        prepared = AnalysisStartupPreviewPreparation(AnalysisCompilationPreparation(AnalysisContextPreparation(self))).run_current(
+            conn, claimed=claimed, run_ref=run_ref, domain_profile=domain, blueprint=blueprint, execute=lambda value:value)
+        current = AnalysisBootstrapCurrentBinding(self)
+        action = AnalysisBootstrapActionPreparation(current).run_current(conn, claimed=claimed,
+            intent=prepared['bootstrapIntent'], preview_ref=prepared['startupPreviewRef'], execute=lambda value:value)
+        guard = _BootstrapActionGuard(current, conn, claimed, prepared['bootstrapIntent'], prepared['startupPreviewRef'])
+        receipt = guard.intent.compilation_receipt
+        task = conn.execute('SELECT version FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s',
+                            (*self.scope.key, receipt.task_id)).fetchone()
+        body = ProductionStartRequest(taskId=receipt.task_id, expectedTaskVersion=task['version'],
+            productionContextRef=guard.intent.compilation_binding.request.profile.production_context_ref,
+            planRef=receipt.plan_ref, previewRef=guard.preview_ref,
+            actionProposalRef=ActionProposalExactRef(proposalId=action.proposal.id, version=action.proposal.version,
+                proposalHash=action.proposal.proposal_hash), logicGraphId=receipt.logic_ref.resource_id,
+            logicRevision=receipt.logic_ref.revision, logicGraphHash=receipt.logic_ref.content_hash)
+        key = 'analysis-bootstrap-start-' + canonical_sha256([*self.scope.key, command['idempotencyKey']]).removeprefix('sha256:')
+        return _BootstrapProductionStartService(guard).start(self.scope, self.source.actor, key, body)
 
     def _phase(self,conn,claimed,execute):
         if type(claimed) is not ClaimedOccurrence or claimed.operation_id!='ecommerce_growth_analysis_advance':

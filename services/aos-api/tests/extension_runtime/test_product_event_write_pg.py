@@ -12,9 +12,11 @@ from ecommerce_growth.ecommerce_business_investigation_case import canonical_has
 
 
 @pytest.fixture
-def stored(pair):
+def stored(pair,request):
     current,policy=pair
     with psycopg.connect(os.environ['AOS_DATABASE_URL'],row_factory=dict_row) as conn:
+        if getattr(request,'param',None)=='qualified-runtime':
+            conn.isolation_level=psycopg.IsolationLevel.SERIALIZABLE
         assert conn.execute('SELECT current_database() AS db').fetchone()['db'].endswith('_ti4_test')
         raw=current.authority_payload()
         conn.execute('''INSERT INTO ecommerce_investigation_case_head

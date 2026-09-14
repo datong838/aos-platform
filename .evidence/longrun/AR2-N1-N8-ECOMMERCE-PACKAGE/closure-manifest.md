@@ -1465,3 +1465,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_bootstrap_start.py` | Host原路径 | 当前独立审批下经原启动门建立唯一首步未执行暂停链，拒绝通用外部执行 | `05dc6f8ad58928ce74913cec32364064b1ba60952b395c611c95d7ceea3f7980` |
+
+## SC4-4b2 正式事件初始化编排
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_product_event_analysis_service.py` | Host原路径 | 原事件当前事务内组合准备与初始暂停并提交原sealed Host，不授予后续经营运行权 | `9c099fd9b1d96788451ad77f76838a6a23bd922910f2e5c5bbcb15994d7a5739` |

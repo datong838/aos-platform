@@ -6,8 +6,12 @@ import pytest
 
 
 @pytest.mark.parametrize('fault',[None,'drift','compute','write'])
-def test_analysis_prepare_compute_commit_without_transaction_across_await(fault):
+def test_analysis_prepare_compute_commit_without_transaction_across_await(fault,monkeypatch):
     from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+    from aos_api.ecommerce_business_investigation_profile_catalog import INITIAL_STORE_PROFILE
+    from aos_api.ecommerce_growth_runtime_adapters import _HostAnalysisReceiptStore
+    monkeypatch.setattr(_HostAnalysisReceiptStore,'read',lambda self,key:None)
+    profile=INITIAL_STORE_PROFILE.exact_ref.model_dump(mode='json',by_alias=True,exclude_none=True)
     events=[];active=[];phases=[]
     @contextmanager
     def connect(scope):
@@ -19,15 +23,21 @@ def test_analysis_prepare_compute_commit_without_transaction_across_await(fault)
     service.scope=object();service.connect=connect
     def phase(conn,claimed,callback):
         phases.append(True)
-        snapshot={'revision':2 if fault=='drift' and len(phases)==2 else 1}
-        return callback(snapshot,{'request':'exact'},'dispatch')
+        snapshot={'revision':2 if fault=='drift' and len(phases)==2 else 1,
+                  'source':{'case':{'analysisType':INITIAL_STORE_PROFILE.analysis_type}}}
+        return callback(snapshot,{'profileRef':profile},'dispatch')
     service._phase=phase
     async def build(request):
         assert not active
         events.append('compute')
         if fault=='compute':raise TimeoutError()
-        return {'command':'exact'}
-    service.port=SimpleNamespace(build_start=build)
+        return {'command':'exact','idempotencyKey':'fixture'}
+    async def blueprint(domain):
+        assert not active and domain==INITIAL_STORE_PROFILE
+        events.append('blueprint')
+        return {}
+    service.port=SimpleNamespace(build_start=build,build_compilation_blueprint=blueprint)
+    service._initialize=lambda *args,**kwargs:events.append('initialize')
     def write(conn,claimed,dispatch,command):
         assert active
         events.append('write')
@@ -41,7 +51,7 @@ def test_analysis_prepare_compute_commit_without_transaction_across_await(fault)
         if fault=='drift':assert 'write' not in events
     else:
         assert asyncio.run(service.handle(object()))=={'resourceId':'receipt'}
-        assert events==['open','close','compute','open','write','commit','close']
+        assert events==['open','close','compute','blueprint','open','initialize','write','commit','close']
     assert events.count('compute')==1
 
 

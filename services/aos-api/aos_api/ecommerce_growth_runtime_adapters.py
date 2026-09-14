@@ -3501,7 +3501,13 @@ class _ExplicitRuntimeAdapter:
         ]
         if len(targets) != 1 or type(targets[0]) is not dict:
             return {}
-        request_hash = _request_hash(command)
+        if self.SPEC.operation_id == "ecommerce_growth_analysis_advance":
+            # The analysis owner has already persisted this canonical protocol hash.
+            # Rehashing the envelope (including requestHash) would drift the same Receipt.
+            _strict_analysis_command(command)
+            request_hash = command["requestHash"]
+        else:
+            request_hash = _request_hash(command)
         idempotency_key = command.get("idempotencyKey")
         if type(idempotency_key) is not str or not idempotency_key.strip():
             idempotency_key = "read:" + request_hash.removeprefix("sha256:")

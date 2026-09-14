@@ -12,7 +12,7 @@ from aos_api.business_investigation_shared_contracts import InvestigationExactRe
 from aos_api.ecommerce_business_investigation_application import (
     EcommerceBusinessInvestigationApplication, CreateBusinessInvestigationRunRequest,
 )
-from aos_api.ecommerce_business_investigation_profile_catalog import INITIAL_STORE_PROFILE
+from aos_api.ecommerce_business_investigation_profile_catalog import INITIAL_STORE_PROFILE, INITIAL_STORE_SCOPE
 from aos_api.ecommerce_business_investigation_run import (
     BusinessInvestigationRunStore, BusinessInvestigationTriggerKind, BusinessInvestigationRunConflict,
 )
@@ -28,6 +28,7 @@ def pair(body):
     from test_product_event_schedule import seal
     current,policy=original_pair.__wrapped__(body)
     raw=current.authority_payload()
+    raw['scopeRef']=INITIAL_STORE_SCOPE.exact_ref.model_dump(mode='json',by_alias=True)
     raw['analysisType']=INITIAL_STORE_PROFILE.analysis_type
     raw['investigationProfileRef']=INITIAL_STORE_PROFILE.exact_ref.model_dump(mode='json',by_alias=True)
     raw['contentHash']=canonical_hash({k:v for k,v in raw.items() if k!='contentHash'})
@@ -39,9 +40,18 @@ def pair(body):
 
 
 @pytest.fixture
-def startup_case(analysis_case):
+def startup_case(analysis_case,request):
     conn,service,claimed=analysis_case
     snapshot,command=service._phase(conn,claimed,lambda snapshot,request,dispatch:(snapshot,request))
+    original=service.source.reader.run_event
+    event_at=conn.execute('SELECT transaction_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
+    def event(*args,**kw):
+        callback=kw.pop('execute')
+        return original(*args,**kw,execute=lambda row:callback(dict(row,payload_hash='d'*64,
+            created_at=event_at,source_updated_at=event_at.isoformat())))
+    service.source.reader.run_event=event
+    if getattr(request,'param',None)=='defer-host':
+        return conn,service,claimed,None
     factory=TransactionBoundConnectFactory(HostTransaction(conn),service.scope)
     runs=BusinessInvestigationRunStore(factory)
     result=EcommerceBusinessInvestigationApplication(run_store=runs).create_run(
@@ -61,13 +71,6 @@ def startup_case(analysis_case):
     assert datetime.fromisoformat(command['cutoffAt'])<=run.created_at<=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
     ref=InvestigationExactRef(resourceType='BusinessInvestigationRun',resourceId=run.run_id,
         revision=run.version,contentHash=run.content_hash)
-    original=service.source.reader.run_event
-    event_at=conn.execute('SELECT transaction_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
-    def event(*args,**kw):
-        callback=kw.pop('execute')
-        return original(*args,**kw,execute=lambda row:callback(dict(row,payload_hash='d'*64,
-            created_at=event_at,source_updated_at=event_at.isoformat())))
-    service.source.reader.run_event=event
     return conn,service,claimed,ref
 
 
