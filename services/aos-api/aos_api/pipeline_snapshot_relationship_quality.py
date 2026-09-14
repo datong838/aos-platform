@@ -67,6 +67,23 @@ def compile_relationship_quality_policy(document, *, relationship_policy):
         'sha256:' + _digest(document))
 
 
+def reference_row_issues(row, rule, indexed):
+    """Original row reference semantics over an already validated complete index."""
+    value = row['properties'].get(rule.reference_property)
+    if value is None:
+        return ('missingReferenceRows',)
+    if rule.allow_unset and type(value) in (int, str) and value in (0, '0', ''):
+        return ()
+    try:
+        keys = _keys(value, rule.encoding)
+    except ValueError:
+        return ('invalidReferenceRows',)
+    parents = [indexed[rule.parent_type].get(key) for key in keys]
+    return tuple(name for name, present in (
+        ('missingParentRows', any(parent is None for parent in parents)),
+        ('deletedParentRows', any(parent is not None and parent['is_deleted'] for parent in parents))) if present)
+
+
 def measure_relationship_quality(outputs, relationship_policy, quality_policy, *, observed_at):
     # Retain original full-cohort, key, duplication, size and policy hash checks.
     assess_snapshot_relationships(outputs, relationship_policy, observed_at=observed_at)
@@ -92,26 +109,14 @@ def measure_relationship_quality(outputs, relationship_policy, quality_policy, *
             invalidReferenceRows=0, missingParentRows=0, deletedParentRows=0)
         for row in active:
             value = row['properties'].get(rule.reference_property)
-            if value is None:
-                count['missingReferenceRows'] += 1
-                count['incompleteRows'] += 1
-                continue
             if rule.allow_unset and type(value) in (int, str) and value in (0, '0', ''):
                 count['allowedUnsetRows'] += 1
                 continue
-            try:
-                keys = _keys(value, rule.encoding)
-            except ValueError:
-                count['invalidReferenceRows'] += 1
-                count['incompleteRows'] += 1
-                continue
-            parents = [indexed[rule.parent_type].get(key) for key in keys]
-            missing = any(parent is None for parent in parents)
-            deleted = any(parent is not None and parent['is_deleted'] for parent in parents)
-            count['missingParentRows'] += int(missing)
-            count['deletedParentRows'] += int(deleted)
-            count['incompleteRows'] += int(missing or deleted)
-            count['completeRows'] += int(not (missing or deleted))
+            issues = reference_row_issues(row, rule, indexed)
+            for issue in issues:
+                count[issue] += 1
+            count['incompleteRows'] += int(bool(issues))
+            count['completeRows'] += int(not issues)
         counts[rule.link_type] = count
     purposes = {}
     for purpose in quality_policy.purposes:

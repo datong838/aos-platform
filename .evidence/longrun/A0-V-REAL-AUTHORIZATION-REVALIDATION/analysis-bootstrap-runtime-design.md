@@ -739,3 +739,19 @@ AnalysisBusinessCohortContext以原pending Owner包裹原snapshot Owner，两ana
 Red模块缺失，Green新增10 PG 36.09秒，原pending11+snapshot10回归21 PG 34.85秒通过（7warnings）。新增测试使用实际completed组/对象/Dataset回执，分析与pending为named doubles；原pending独立PG真实请求/暂停/取消及原snapshot10检查补充，不能合称真实完整首链。验证上下文/cutoff/purpose/策略类型和字节不符、消费中撤权/改策略/改输出/延迟被拒绝，重放source calls仍1。AR2扫描1932/188/93五类错误为空。
 
 主库/安装/运行服务未变，未调用模型或外部业务能力。下一波SC4-5k1：设计并实现声明式逐事实字段联合计量，按业务cohort保留unknown分母，将每类必需公开字段与该用途required关系共同判定，分别输出12类事实观察/排除/有效计数，维度和近期统计明确区别；不能以type存在/行存在冒充有效事实，不将披露关系提升为强必需，不改legacy阈值。随后安装候选/Owner计量/正式QualityEvidence及Outbox消费者衔接。
+
+### SC4-5k1 逐事实联合字段计量方案
+
+新增pipeline_snapshot_fact_quality.py及test_pipeline_snapshot_fact_quality.py；小改pipeline_snapshot_relationship_quality.py抽取原逐行引用问题helper，旧关联计量语义不变。声明式aos.snapshot-fact-quality/v1绑定cohortPolicyHash、relationshipQualityPolicyHash、purposeCode，每个原cohort对象各一fact，必需字段1至32项且名称唯一。字段只允许nonblank-string、positive-id、nonnegative-integer、nonnegative-number、boolean、timestamp、enum固定纯谓词；无表达式/SQL/模型判断。enum显式有界唯一str/int且不接受bool，数值排除bool/NaN/Infinity，timestamp有时区、正Unix且不晚于观察。identity由原cohort唯一正主键校验，不能自报有效身份。
+
+执行重用原完整关系质量校验和cohort selector，再重编译校验field policy hash。对每类eligible(included+unknown)分别计量，unknown必定不能计valid；所有必需字段及该用途required关系必须同时成立，disclose关系保留诊断但不降低本用途valid。每行至多计一次valid，多个坏字段/坏关系分别诊断，observed=eligible+excluded+duplicate(原唯一键校验使duplicate为0)，空类保持0，绝不自动pass或跨对象求总population。raw不改、历史范围外不进入近期质量分母，缺父/未知时间仍在。
+
+本波只输出确定性计数及策略hash/缺口，不生成正式QualityEvidence/Fulfillment；Niushop具体字段配置下一波根据公开映射和业务口径独立复核后版本化，不能为通过测试临时删必需字段。测试覆盖各字段类型、联合而非平均、范围外与unknown、required/disclose差异、空事实、policy篡改与缺类，旧关联/业务cohort/正式quality回归。
+
+### SC4-5k1 逐事实联合字段计量验证
+
+新增pipeline_snapshot_fact_quality.py，显式绑定cohort/relationshipQuality/purpose，每对象一组非空必需字段，固定7类严格谓词。执行复用完整cohort/关系校验与原选择器；每行所有必需字段及required关系联合成立且非unknown才有效，disclose关联仅诊断；各fact独立observed/eligible/valid/excluded/duplicate计数，空分母仍零，不跨类合并population。数值不接受bool/NaN/Infinity、身份不接受非规范前导零、时间不接受无时区/非正Unix/晚于观察。原raw不改。
+
+原关系计量仅抽取reference_row_issues共用函数，allowedUnset/缺引用/坏引用/缺父/删除父的旧计数语义保留。Red模块不存在，初轮81 passed/5.28秒；增加互补坏字段不能平均、required/disclose用途差异后84 passed/5.38秒（8warnings），覆盖新23项及原关系18/业务cohort18/正式quality25。AR2扫描1933/188/93，五类错误为空。无主库/源读取/安装/模型调用。
+
+下一波SC4-5k2：复核12映射的实际公开字段和业务含义，为Niushop新增版本化逐事实字段策略候选（预计1.20）；CustomerLite/Payment按public_projection，不要求已脱敏PII；金额/支付状态/商品上下架区分，Shipment跟踪号脱敏占位不能冒充真实物流信息，Review维度不冒充近30日评价。具体字段不能为通过而删改，旧initial_store_analysis阈值不动，空事实仍需原正式规则处理。随后把字段策略接入当前Owner及QueryResult/QualityEvidence/原Outbox消费者，主环境迁移安装和真实首链/八场景尚待完成。
