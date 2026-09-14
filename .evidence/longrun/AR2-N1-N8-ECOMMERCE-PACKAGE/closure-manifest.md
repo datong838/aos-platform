@@ -1429,3 +1429,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_context_preparation.py` | Host原路径 | 当前原事件下自动准备模板/任务/启动证据/Eval与Context，统一事务不授予运行权 | `462fdbf09fadb79f99b42c3eecabcd8e47b54eae9e3e1d8c11753925245a0635` |
+
+## SC4-2 当前Context内真实编译桥接
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_compilation_preparation.py` | Host原路径 | 原事件当前Context内读取exact权威并调用原CompileSaga，统一事务不授予运行权 | `9cccca399f11ba23b912ccd0e167e502655b0703bf10aa7e70a49bf7e4e7a445` |

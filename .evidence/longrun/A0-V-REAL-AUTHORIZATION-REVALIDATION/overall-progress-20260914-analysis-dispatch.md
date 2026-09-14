@@ -28,3 +28,5 @@ SC3-1：首阶段当前技能发布血缘派生Eval合同已实现；真实PG评
 SC3-2：同一原事件事务内自动准备StageTemplate、Task/Brief、启动Evidence/Bundle、当前发布Eval与Context；累计29 passed，AR2 1898/176/93无错误。配置职责/安装依赖仍为明确fixture；尚未连接正式CompileSaga/TaskRun。下一波SC4，主安装真实首链、八场景及观察均未完成。
 
 SC4-1：编译输入按当前蓝图组装三阶段Skill/职责/模板/本任务Context，41项累计回归通过；纯组装不授予执行权。下一SC4-2真实exact解析器与CompileSaga，随后TaskRun和sealed Host接入，首链仍未完成。
+
+SC4-2：当前Context内真实Store exact解析与原CompileSaga已接，隔离PG可生成实际Plan/CompilationReceipt，累计37 passed，撤销和下游故障回滚。配置/模型/能力fixture边界保留；Plan仍需启动门，未创建实际TaskRun。下一SC4-3，主安装首链未完成。

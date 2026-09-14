@@ -318,7 +318,7 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None):
+def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None, logic_revision_ref=None):
     suffix = uuid.uuid4().hex[:12]
     scope = scope or TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
     with connect() as conn:
@@ -444,7 +444,7 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
         release_gate_decision_id=gate.decision_id,
         model_route_ref=ref("ModelRouteRevision", f"route-{suffix}"),
         runtime_policy_ref=ref("RuntimePolicyRevision", f"policy-{suffix}"),
-        logic_revision_ref=ref("LogicRevision", source.canonical_logic_id),
+        logic_revision_ref=logic_revision_ref or ref("LogicRevision", source.canonical_logic_id),
         idempotency_key=f"publish-skill-{suffix}",
     )
     service = AipSkillPublicationService(
