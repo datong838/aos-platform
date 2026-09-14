@@ -1,0 +1,7 @@
+# 领域包关系声明与真实核验
+
+
+SC4-5g4：领域包1.16.0十四关系声明完成，树be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93；源1.15保持，仅bundle/evals变更新增原policies导出目录snapshot-relationships.v1.json。策略hash e5ca449b179b17e3ee7c24f657dab3393a57c1111dbcded2246c91b805c3b366。34测试通过4.40秒，12对象+14规范关系静态评估通过；每个引用字段核对实际映射公开输出，旧goodsId别名反例拒绝。
+真实09:29:16.419390Z–09:29:17.966551Z同事务12类：通用策略核验1162条两端未软删候选关系，全部原_normalize_rows规范通过；missingReference/invalidReference全0；客户缺父33（32订单+1评价），软删端点独立报告；不推断删除或补造对象，主关系写入0、formalFulfillment=false。证据real-relationship-policy-20260914.json只存数量/哈希。下一项：当前包策略资产与原组输入manifest绑定、持久化关系准备，再按原Owner应用与质量/Fulfillment接通。
+
+候选规则不等于发布/安装，exports.policies目录虽已声明，正式group消费仍需当前签名资产核验。部分有效关系并不保证完整客户场景，历史关系回收没有实施，不宣告Readiness整体绿色。

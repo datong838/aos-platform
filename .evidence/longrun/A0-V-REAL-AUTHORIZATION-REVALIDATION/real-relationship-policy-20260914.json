@@ -1,0 +1,195 @@
+{
+  "schemaVersion": "aos.developer-relationship-policy-observation/v1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "candidateTreeHash": "sha256:be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93",
+  "policyHash": "sha256:e5ca449b179b17e3ee7c24f657dab3393a57c1111dbcded2246c91b805c3b366",
+  "readStartedAt": "2026-09-14T09:29:16.419390+00:00",
+  "readCompletedAt": "2026-09-14T09:29:17.966551+00:00",
+  "snapshotBasis": "innodb-repeatable-read",
+  "rawRowsPersisted": false,
+  "mainObjectsWritten": false,
+  "relationshipsWritten": false,
+  "formalFulfillment": false,
+  "candidateLinkCount": 1162,
+  "counts": {
+    "ProductSku.ofProduct": {
+      "rows": 73,
+      "matched": 62,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 11,
+      "allowedUnset": 0
+    },
+    "Product.inCategory": {
+      "rows": 65,
+      "matched": 80,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 12,
+      "allowedUnset": 0
+    },
+    "Shop.sellsProduct": {
+      "rows": 65,
+      "matched": 57,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 8,
+      "allowedUnset": 0
+    },
+    "Order.lines": {
+      "rows": 235,
+      "matched": 166,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 69,
+      "allowedUnset": 0
+    },
+    "OrderLine.ofProduct": {
+      "rows": 235,
+      "matched": 199,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 36,
+      "allowedUnset": 0
+    },
+    "OrderLine.ofSku": {
+      "rows": 235,
+      "matched": 199,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 36,
+      "allowedUnset": 0
+    },
+    "Order.fulfilledBy": {
+      "rows": 19,
+      "matched": 19,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 0,
+      "allowedUnset": 0
+    },
+    "Order.placedByLite": {
+      "rows": 185,
+      "matched": 98,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 32,
+      "deletedEndpoint": 55,
+      "allowedUnset": 0
+    },
+    "Shop.hasWeapp": {
+      "rows": 3,
+      "matched": 3,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 0,
+      "allowedUnset": 0
+    },
+    "Product.hasReview": {
+      "rows": 5,
+      "matched": 4,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 1,
+      "allowedUnset": 0
+    },
+    "ProductReview.ofSku": {
+      "rows": 5,
+      "matched": 4,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 1,
+      "allowedUnset": 0
+    },
+    "ProductReview.byMember": {
+      "rows": 5,
+      "matched": 4,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 1,
+      "deletedEndpoint": 0,
+      "allowedUnset": 0
+    },
+    "Order.hasPayment": {
+      "rows": 203,
+      "matched": 142,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 61,
+      "allowedUnset": 0
+    },
+    "Order.fromWeapp": {
+      "rows": 185,
+      "matched": 125,
+      "missingReference": 0,
+      "invalidReference": 0,
+      "missingParent": 0,
+      "deletedEndpoint": 60,
+      "allowedUnset": 0
+    }
+  },
+  "tables": {
+    "ns_site": {
+      "rows": 1,
+      "rowsHash": "sha256:9d7f64ff5d177ad1a639b04d67e1c98119b4b8ccff24eea10cbef8d8e8e4c6fa"
+    },
+    "ns_goods": {
+      "rows": 65,
+      "rowsHash": "sha256:b95c48e7d3db07f687caec64659628822b74ae5bb0bcab5b220f1939ca717c2b"
+    },
+    "ns_goods_sku": {
+      "rows": 73,
+      "rowsHash": "sha256:db5d87a1c9b9e2cf4ae12dd1fce1edce6c5eed4895316ef7eb37b7fcff872b24"
+    },
+    "ns_goods_category": {
+      "rows": 11,
+      "rowsHash": "sha256:1a72caeb84eeb21e0e695a67ab81330394c2446de177a28d838f3fc1e3c40c44"
+    },
+    "ns_order": {
+      "rows": 185,
+      "rowsHash": "sha256:630fee8d87b140ea4c699f0917fb41ffbc2fb34583948afacf2b34a1f948dd49"
+    },
+    "ns_order_goods": {
+      "rows": 235,
+      "rowsHash": "sha256:38b0a89d6692db3e8ad51bc99e7da6fa0b6c37826897dc3d8318127f13aaac29"
+    },
+    "ns_express_delivery_package": {
+      "rows": 19,
+      "rowsHash": "sha256:6d691df38261d2bb3935de6c1cadd87a2a5e21ad9ab82f4c0386527e7a4b301e"
+    },
+    "ns_member": {
+      "rows": 54,
+      "rowsHash": "sha256:8c1a9d82dfa3a760c0fa4e77ead38dfe397200ae89e540d8781d0cc4e65d2c8c"
+    },
+    "ns_weapp": {
+      "rows": 3,
+      "rowsHash": "sha256:96027e97ab0428fd9fbb8d9e5784231c0eb5f869ab36d85aa654f90903c5bd9c"
+    },
+    "ns_config": {
+      "rows": 38,
+      "rowsHash": "sha256:5f79d84beebd40b0ac731ef9996914deb004536ed02146e4aa9da7560fd7aa08"
+    },
+    "ns_goods_evaluate": {
+      "rows": 5,
+      "rowsHash": "sha256:24c4ae9c7e8cc34901916ae4be4b68cc0f67c7c4b5f0040b1ac10904fdaf1704"
+    },
+    "ns_pay": {
+      "rows": 203,
+      "rowsHash": "sha256:4d348ec9b3fe721dd4c8bea85f9991fc20031c58b43271a315c9b932d13d5149"
+    }
+  }
+}

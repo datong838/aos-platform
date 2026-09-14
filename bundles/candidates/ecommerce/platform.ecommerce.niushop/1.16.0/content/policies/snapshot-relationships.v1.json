@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "aos.snapshot-relationships/v1",
+  "objectTypes": [
+    "Shop",
+    "Product",
+    "ProductSku",
+    "Category",
+    "Order",
+    "OrderLine",
+    "Shipment",
+    "CustomerLite",
+    "Weapp",
+    "SystemConfig",
+    "ProductReview",
+    "Payment"
+  ],
+  "rules": [
+    {
+      "linkType": "ProductSku.ofProduct",
+      "rowType": "ProductSku",
+      "parentType": "Product",
+      "referenceProperty": "productId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Product.inCategory",
+      "rowType": "Product",
+      "parentType": "Category",
+      "referenceProperty": "categoryId",
+      "direction": "row-to-parent",
+      "encoding": "wrapped-csv-positive-id",
+      "allowUnset": true
+    },
+    {
+      "linkType": "Shop.sellsProduct",
+      "rowType": "Product",
+      "parentType": "Shop",
+      "referenceProperty": "shopId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Order.lines",
+      "rowType": "OrderLine",
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "OrderLine.ofProduct",
+      "rowType": "OrderLine",
+      "parentType": "Product",
+      "referenceProperty": "productId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "OrderLine.ofSku",
+      "rowType": "OrderLine",
+      "parentType": "ProductSku",
+      "referenceProperty": "skuId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": true
+    },
+    {
+      "linkType": "Order.fulfilledBy",
+      "rowType": "Shipment",
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Order.placedByLite",
+      "rowType": "Order",
+      "parentType": "CustomerLite",
+      "referenceProperty": "memberId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Shop.hasWeapp",
+      "rowType": "Weapp",
+      "parentType": "Shop",
+      "referenceProperty": "siteId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Product.hasReview",
+      "rowType": "ProductReview",
+      "parentType": "Product",
+      "referenceProperty": "productId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "ProductReview.ofSku",
+      "rowType": "ProductReview",
+      "parentType": "ProductSku",
+      "referenceProperty": "skuId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": true
+    },
+    {
+      "linkType": "ProductReview.byMember",
+      "rowType": "ProductReview",
+      "parentType": "CustomerLite",
+      "referenceProperty": "memberId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Order.hasPayment",
+      "rowType": "Payment",
+      "parentType": "Order",
+      "referenceProperty": "orderId",
+      "direction": "parent-to-row",
+      "encoding": "positive-id",
+      "allowUnset": false
+    },
+    {
+      "linkType": "Order.fromWeapp",
+      "rowType": "Order",
+      "parentType": "Weapp",
+      "referenceProperty": "weappId",
+      "direction": "row-to-parent",
+      "encoding": "positive-id",
+      "allowUnset": true
+    }
+  ]
+}

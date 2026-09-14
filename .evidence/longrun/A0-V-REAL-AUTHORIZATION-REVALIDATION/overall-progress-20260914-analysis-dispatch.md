@@ -123,3 +123,7 @@ SC4-5g2：分类源逗号格式严格支持、Order关联键候选1.15.0完成�
 
 
 SC4-5g3：通用SnapshotRelationshipPolicy编译及有界assessment完成，不含Niushop业务字段硬编码。只输出两端真实未软删的candidate link，missingReference/invalidReference/missingParent/deletedEndpoint/allowedUnset分别计数，不补对象、不推断删除、不授予Readiness。严格1..12对象、1..32规则、每类<1000、每引用<=32、总候选<=24000；canonical policy hash重验防dataclass绕过。77项组合测试通过4.25秒（新30+原核心模型+既有诊断）；哈希伪造反例先1失败29通过，修复后全通过。AR2扫描1915模块五类错误为空。下一项：不可变领域包14条规则声明及实际同批核验，再接原组输入/应用Owner与质量门。
+
+
+SC4-5g4：领域包1.16.0十四关系声明完成，树be89c813a9185c05a4c923016977f8ac09df387c78c059ef10bfc800083e9c93；源1.15保持，仅bundle/evals变更新增原policies导出目录snapshot-relationships.v1.json。策略hash e5ca449b179b17e3ee7c24f657dab3393a57c1111dbcded2246c91b805c3b366。34测试通过4.40秒，12对象+14规范关系静态评估通过；每个引用字段核对实际映射公开输出，旧goodsId别名反例拒绝。
+真实09:29:16.419390Z–09:29:17.966551Z同事务12类：通用策略核验1162条两端未软删候选关系，全部原_normalize_rows规范通过；missingReference/invalidReference全0；客户缺父33（32订单+1评价），软删端点独立报告；不推断删除或补造对象，主关系写入0、formalFulfillment=false。证据real-relationship-policy-20260914.json只存数量/哈希。下一项：当前包策略资产与原组输入manifest绑定、持久化关系准备，再按原Owner应用与质量/Fulfillment接通。
