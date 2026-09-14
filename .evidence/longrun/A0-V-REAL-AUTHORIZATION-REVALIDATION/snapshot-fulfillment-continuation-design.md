@@ -57,3 +57,11 @@ l6b分纯计算l6b1、领域包策略l6b2、原当前Owner事实Evidence l6b3。
 纯函数复用原完整cohort与quality重算；未知cohort保留、字段不合格输出null而非原值，excluded只报告数量/原因。records按稳定source key排序并输出稳定sourceKeyHash作为定位线索（不声明匿名化）（不是伪造的领域ref）；所有范围内行完整输出，超过1000行/2MB拒绝，不截断。group-counts把已知/未知cohort分别分组，值严格类型、未知值独立计数，最多256组拒绝不截断。保留field/relationship issue计量，不输出原source_pk、external_id或未选字段。结果明确未验证成交/利润、未认证来源，无factIds授权；l6b3完成当前源绑定后才进入正式Evidence。
 
 验证真实商品名等内容保留、历史/删除排除、unknown保留、不可选字段/自由文本分组/多余字段/篡改hash/超限拒绝，空事实明确零而非通过。原quality/cohort回归。无需模型、源读取或数据库写。
+
+### l6b2 Niushop 1.21业务内容策略候选
+
+新增scripts/prepare_niushop_business_facts_candidate.py和bundles/candidates/ecommerce/platform.ecommerce.niushop/1.21.0。源1.20固定tree hash sha256:0a5d0b369f701e5aee68d5b3692fc0b6a89b1d89d195ccd4b549f7388d5a423b；只新增content/policies/business-facts.v1.json、更新bundle版本与静态eval证据，原mapping/策略逐字节保持。目标已存在即拒绝，源hash不符即拒绝，无源读取/build/sign/install/publish。
+
+records：Shop(name/status/currency/timezone)、Product(title/status/price/stock/currency/createdAt)、ProductSku(name/status/price/stock/currency)、Category(name/status/level)、OrderLine(goodsName/quantity/unitPrice/lineAmount/refundStatus/currency)、Weapp(name/status)、SystemConfig(key/status/isUse)。group-counts：Order(orderStatus/payStatus)、Shipment(status/deliveryType)、CustomerLite(memberLevel/status)、ProductReview(status/score/isAudit)、Payment(status/payStatus)。Product/SKU价格仅当前标价，OrderLine行金额非成交GMV，评分数字不解释量表，渠道配置记录不证明外部服务可用。
+
+静态eval复用原12类字段fixture与cohort/关系约束，确认内容/12类型/敏感字段排除/未知与缺口/确定性、不修改旧候选、重复拒绝。新增脚本本身为确定性生成器，不将fixture报告作为真实经营验收。1.21尚未构建签名，继承OCI/SBOM元数据须正式构建阶段再生成。

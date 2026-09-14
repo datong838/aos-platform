@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "aos.snapshot-relationship-quality/v1",
+  "relationshipPolicyHash": "sha256:03cd5157f54ed2c7156d82bf4903cff96c2c83459ce3e91b4637cdf59ee86ae6",
+  "purposes": [
+    {
+      "purposeCode": "initial_store_analysis",
+      "rules": [
+        {
+          "linkType": "ProductSku.ofProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Product.inCategory",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Shop.sellsProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.lines",
+          "requirement": "required"
+        },
+        {
+          "linkType": "OrderLine.ofProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "OrderLine.ofSku",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.fulfilledBy",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.placedByLite",
+          "requirement": "disclose"
+        },
+        {
+          "linkType": "Shop.hasWeapp",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Product.hasReview",
+          "requirement": "required"
+        },
+        {
+          "linkType": "ProductReview.ofSku",
+          "requirement": "required"
+        },
+        {
+          "linkType": "ProductReview.byMember",
+          "requirement": "disclose"
+        },
+        {
+          "linkType": "Order.hasPayment",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.fromWeapp",
+          "requirement": "required"
+        }
+      ]
+    },
+    {
+      "purposeCode": "customer_cohort_analysis",
+      "rules": [
+        {
+          "linkType": "ProductSku.ofProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Product.inCategory",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Shop.sellsProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.lines",
+          "requirement": "required"
+        },
+        {
+          "linkType": "OrderLine.ofProduct",
+          "requirement": "required"
+        },
+        {
+          "linkType": "OrderLine.ofSku",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.fulfilledBy",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.placedByLite",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Shop.hasWeapp",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Product.hasReview",
+          "requirement": "required"
+        },
+        {
+          "linkType": "ProductReview.ofSku",
+          "requirement": "required"
+        },
+        {
+          "linkType": "ProductReview.byMember",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.hasPayment",
+          "requirement": "required"
+        },
+        {
+          "linkType": "Order.fromWeapp",
+          "requirement": "required"
+        }
+      ]
+    }
+  ]
+}
