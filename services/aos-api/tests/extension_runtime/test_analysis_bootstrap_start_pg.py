@@ -8,7 +8,7 @@ from test_analysis_bootstrap_action_pg import (
 
 
 @pytest.fixture
-def start_case(preview_case,review_identity):
+def start_case(preview_case,review_identity,request):
     from aos_api.ecommerce_analysis_bootstrap_start import _BootstrapProductionStartService
     from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard
     from aos_api.ecommerce_analysis_bootstrap_authority import AnalysisBootstrapCurrentBinding
@@ -23,9 +23,12 @@ def start_case(preview_case,review_identity):
     draft=create(preview_case,value)
     guard=_BootstrapActionGuard(AnalysisBootstrapCurrentBinding(analysis),conn,claimed,value['bootstrapIntent'],value['startupPreviewRef'])
     actions=AipActionStore(TransactionBoundConnectFactory(HostTransaction(conn),analysis.scope),bootstrap_guard=guard)
-    approved=actions.decide(analysis.scope,'fixture-approver',draft.proposal.id,uuid4().hex,
-        DecideActionProposalRequest(expectedProposalVersion=draft.proposal.version,
-            expectedProposalHash=draft.proposal.proposal_hash,decision=ApprovalDecision.APPROVED)).proposal
+    if getattr(request, 'param', 'independent') == 'source-controlled':
+        approved=draft.proposal
+    else:
+        approved=actions.decide(analysis.scope,'fixture-approver',draft.proposal.id,uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=draft.proposal.version,
+                expectedProposalHash=draft.proposal.proposal_hash,decision=ApprovalDecision.APPROVED)).proposal
     receipt=guard.intent.compilation_receipt
     current=conn.execute('SELECT version FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s',
                          (*analysis.scope.key,receipt.task_id)).fetchone()
@@ -127,3 +130,52 @@ def test_bootstrap_approval_cannot_acquire_external_action_lease(start_case,monk
         execution.AipActionExecutionService(service._actions,ACTION_ADAPTERS).acquire_lease(
             executor,request.action_proposal_ref.proposal_id,key+'-external',AcquireExecutionLeaseRequest(
                 expectedProposalVersion=request.action_proposal_ref.version,expectedProposalHash=request.action_proposal_ref.proposal_hash))
+
+
+@pytest.mark.parametrize('start_case',['source-controlled'],indirect=True)
+def test_current_event_control_initializes_without_fabricating_human_review(start_case):
+    conn,analysis,service,request,key=start_case
+    result=service.start(analysis.scope,analysis.source.actor,key,request)
+    assert result['run'].status.value=='paused'
+    proposal=request.action_proposal_ref.proposal_id
+    assert conn.execute('SELECT count(*) AS n FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                        (*analysis.scope.key,proposal)).fetchone()['n']==0
+    assert conn.execute('SELECT status FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                        (*analysis.scope.key,proposal)).fetchone()['status']=='drafted'
+    evidence=conn.execute("SELECT payload FROM aip_evidence WHERE org_id=%s AND project_id=%s AND evidence_type='analysis-initialization-authority' AND source_ref=%s",(*analysis.scope.key,service._guard.intent.content_hash)).fetchall()
+    assert len(evidence)==1 and evidence[0]['payload']['proof']['kind']=='current-event-control-initialization'
+    assert evidence[0]['payload']['proof']['businessExecutionAuthorized'] is False
+    assert service.start(analysis.scope,analysis.source.actor,key,request)==result
+
+
+@pytest.mark.parametrize('start_case',['source-controlled'],indirect=True)
+@pytest.mark.parametrize('fault',['rejected','source-revoked','action-snapshot'])
+def test_source_derivation_cannot_bypass_current_denial(start_case,fault):
+    from aos_api.aip_action_models import DecideActionProposalRequest
+    from aos_api.aip_contracts import ApprovalDecision
+    conn,analysis,service,request,key=start_case
+    if fault=='rejected':
+        service._actions.decide(analysis.scope,'fixture-approver',request.action_proposal_ref.proposal_id,uuid4().hex,
+            DecideActionProposalRequest(expectedProposalVersion=request.action_proposal_ref.version,
+                expectedProposalHash=request.action_proposal_ref.proposal_hash,decision=ApprovalDecision.REJECTED))
+    else:
+        conn.execute('RESET ROLE')
+        if fault=='source-revoked':conn.execute("DELETE FROM meta_membership WHERE subject='fixture-approver'")
+        else:conn.execute("UPDATE meta_action_type SET name='changed' WHERE id='ecommerce_analysis_bootstrap'")
+        conn.execute('SET LOCAL ROLE aos_runtime')
+    with pytest.raises((ValueError,PermissionError)):
+        service.start(analysis.scope,analysis.source.actor,key,request)
+    assert conn.execute('SELECT count(*) AS n FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s',(*analysis.scope.key,request.task_id)).fetchone()['n']==0
+
+
+@pytest.mark.parametrize('start_case',['source-controlled'],indirect=True)
+def test_revoked_initialization_authority_blocks_replay(start_case):
+    conn,analysis,service,request,key=start_case
+    first=service.start(analysis.scope,analysis.source.actor,key,request)
+    ref=conn.execute("SELECT evidence_id,content_hash FROM aip_evidence WHERE org_id=%s AND project_id=%s AND evidence_type='analysis-initialization-authority' AND source_ref=%s",
+                      (*analysis.scope.key,service._guard.intent.content_hash)).fetchone()
+    conn.execute("""INSERT INTO aip_evidence_revoke_event(org_id,project_id,event_id,evidence_id,revision,content_hash,reason,actor)
+        VALUES(%s,%s,%s,%s,1,%s,'fixture revoke','fixture')""",(*analysis.scope.key,uuid4().hex,ref['evidence_id'],ref['content_hash']))
+    with pytest.raises(ValueError,match='authority Evidence differs'):
+        service.start(analysis.scope,analysis.source.actor,key,request)
+    assert service._tasks.get_run(analysis.scope,first['run'].id)==first['run']

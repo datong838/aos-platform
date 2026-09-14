@@ -80,3 +80,11 @@ SC4-3c4实测发现：原LogicPublicationStore发布只更新published_version�
 暂停后边界：补改aip_task_store.py的普通resume_run，在原ProductionStartDecision关联初始化Action时拒绝恢复（ANALYSIS_BOOTSTRAP_CONTINUATION_AUTHORITY_REQUIRED）。原开始决定存在但Action权威丢失也拒绝，不能因缺记录而降级放行。普通TaskRun恢复不变。后续DataRequirement/分析执行须实现明确当前续跑承接，不以初始化Action当经营许可。新增actual初始化后普通resume拒绝用例；本波结束仍不能声称完整业务链已运行。
 
 初始化策略启用前同时封住外部Action执行入口：aip_action_execution.py在申请租约和准备Provider请求两处拒绝初始化Action/快照id，早于重放和适配器调用。初始化批准只用于专用暂停门，不得取得外部能力执行租约。补充实际已批准初始化Proposal被普通租约入口拒绝测试。
+
+## SC4-4 衔接校正：受控事件可派生仅初始化许可
+
+正式入口核对发现，强制每个原事件再等待一次人工初始化审批，会使已批准的自动事件策略停在分析前，偏离产品目标。SC4-3c4的独立审批入口仍可用，但新增更窄的受控来源派生路径：仅固定初始化动作、当前源enable独立审批仍有效、原Occurrence/Case/Run/安装/编译/Preview全对应、动作未拒绝/未撤回且没有任何已发生审批事件时，允许专用暂停门从当前来源派生初始化许可。该能力在服务端专用policy的controlledSourceInitialization字段明确声明，不是通用R1授权。
+
+不创建ActionApprovalEvent，不冒充任何人批准本Task；ActionProposal保持drafted，启动决定的依赖快照记录InitializationAuthority(kind=current-event-control-initialization)、原控制Receipt、Occurrence、意图hash及真实执行身份。通用StartGate仍拒绝draft Proposal和初始化类型，普通恢复/外部租约仍拒绝。只有专用原子暂停门能使用该来源许可，且最终仍零步骤/零外部作用。现存人工拒绝、撤回或已开始的评审不能被派生路径绕过；真实经营方案的人工评审不变。
+
+先实现/验证该派生路径（SC4-4a），再接事件自动准备/封闭Host（SC4-4b）。修改aip_action_policy.py及ecommerce_analysis_bootstrap_start.py，新增/扩充实际PG测试。既有SC4-3c4独立审批验证作为一种受支持路径保留，不把其fixture视作主租户审批。

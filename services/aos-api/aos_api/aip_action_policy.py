@@ -78,5 +78,5 @@ def classify_action_risk(
         "draftOnly": level in {ActionRiskLevel.R1, ActionRiskLevel.R4},
     }
     if action_type_id == 'ecommerce_analysis_bootstrap' and level is ActionRiskLevel.R1:
-        approval_policy.update(makerChecker=True, draftOnly=False)
+        approval_policy.update(makerChecker=True, draftOnly=False, controlledSourceInitialization=True)
     return RiskDecision(level, floor, tuple(reasons), approval_policy)
