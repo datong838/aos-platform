@@ -263,3 +263,9 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 
 真实整组首次转换发现relate_id实际字符串，旧P12声明int使203行全拒绝。新v3可选validation.positive_integer_strings=[已映射string列]，值必须ASCII规范正整数字符串[1-9][0-9]{0,18}且<=9223372036854775807；不自动strip、不允许前导零/加号/小数/布尔/整数代替，不改变原字符串。整个批次失败保护保持。修改v3与测试；旧声明无此项兼容。
 新增prepare_niushop_payment_key_candidate.py、对应测试与1.14.0，从1.13.0精确树07478676ef5be20e10d185fe98113932a16a0b41d973248729285eaf4879015b，仅bundle/p12/evals更新。relate_id类型string并声明上述校验；公开orderId保留源规范字符串，原Pay五状态/事件范围/隐私保持。新eval不得重写旧1.13.0评估器的假设，独立以真实类型构造正负用例；前11对象回归。随后真实12类同事务重验，新证据另文件，不覆盖首次失败证据。后续关系/质量Owner仍未完成。
+
+### SC4-5f3 当前快照组权限边界
+
+新增pipeline_snapshot_group_owner.py、单测和隔离PG组合测试，Lease A0-V-SC4-CURRENT-SNAPSHOT-GROUP。只接受精确PipelineRuntimeControlOwner、TenantScope、1..12个唯一exact control refs与固定actor；按control resource ID排序递归进入原run_current_snapshot，使所有成员原安装/配置/签名资产/来源选择/当前控制锁同时持有。禁止不同tenant/installationRef/generation/executionEpoch/configurationRef/packageRef/sourceId/sourceConfigurationRef/schemaRef/maskingPolicyRef或platform/shopId混组；pipeline/table必须唯一。
+共同窗口max(notBefore)..min(expiresAt)，共同rowLimit/timeout取最小；最深处用原DB时钟确认窗口仍有效才调用同步可信Host回调。回调返回后重新读取全部原当前控制并比较完整组绑定，拒绝中途变更；原_reject_deferred拒绝异步/生成器，不允许把权限带出事务。无自建授权表、不创建审批/Receipt、不发起源读取/不reserve；下一认领和组输入持久化才组合本边界。
+验证成功与独立资源错组、重复控制/pipeline/table、任一成员拒绝、前后漂移/超时/异步；隔离PG复用真实控制与选择历史/当前role与事务，签名资产依既有fixture明确替身，不称真实安装权限已通过。
