@@ -272,3 +272,11 @@ ProductEventCandidateReader和ProductEventPolicyGuard补充明确SnapshotMapping
 Red5 failed/15 passed（5.26秒）证明当前v3被旧类型白名单拒绝；修复后连原callback测试31 passed（9.00秒）。覆盖v3正常、错shop、错parent与执行前/中到期。上述是明确Owner fake的接线测试，不是主系统端到端验收。AR2扫描1927/187/93五类错误为空；已有客户与数据库未变。
 
 后继SC4-5i6：根据原事件Origin的runId查找唯一原组manifest成员，验证same cutoff而不是仅按时间拼组；定位返回只是路由，仍须原组当前Owner和原Store/投影证据验证。当前组控制为运行中守卫，未来完成态回读必须专门实现生命周期合同；不得为让分析继续而把已完成schedule假装running。正式12事实/人群计量与Outbox消费继续待做。主安装仍旧版本，不能将兼容代码等同线上恢复完成。
+
+### SC4-5i6 原运行快照组定位验证
+
+PipelineSnapshotGroupLocator复用原member唯一键联查claim/input，要求runtime租户事务；精确验证原binding/requestHash、manifestHash、run成员顺序和cutoff，返回原group/actor/control-run bindings。缺原input/未知run返回None，不按时间猜组、不读source、不赋予当前执行或Readiness权限。
+
+隔离PG10项覆盖：逐成员定位同组、准备前None、未知run不替换、差1微秒拒绝、错tenant/非法输入拒绝、原唯一约束、原binding/manifest损坏拒绝。首次测试误按调用顺序比较，修正为原Owner的control resource_id排序；后一次9过1夹具失败，原FK正确禁止修改已引用requestHash，改为测试专用破坏binding body而保留原FK。最终损坏反例2项5.11秒通过，其余9项在前组合通过；未放宽产品约束。AR2扫描1928/187/93五类错误为空。主库/数据未变。
+
+下一波SC4-5i7：给原GroupClaim/Input/Assessment/Quality增设独立completed-current只读入口，复用原单run read_completed_current和ControlledIngressJournal(completed_read=True)，要求组内全部成功/执行器已停/原Dataset Receipt与完整投影记录合格；默认running写路径不变。定位到组后仍需此当前只读守卫。暂不支持换控制代次的组续期，不把完成态历史变成新写许可。
