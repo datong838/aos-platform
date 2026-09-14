@@ -79,3 +79,9 @@ CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advanc
 ## CF3-3 Task与意图简报准备
 
 新增services/aos-api/aos_api/ecommerce_analysis_task_preparation.py及tests/extension_runtime/test_analysis_task_preparation_pg.py。内部prepare只接受HostTransaction、TenantScope、调用者同事务已读的Case/Run和领域profile；验证原租户/当前ACTIVE Case/hash/Run状态hash与Case/profile绑定，创建稳定tenant+Run key的Task（目标正文为v2意图），同键语义变化不得另造Task。复用AipTaskStore和ProductionContractStore的创建/冻结，内层不commit；Brief当前head必须正文/hash/Task一致。返回Task快照与frozen Brief exactRef/spec供Context使用，不产生执行授权。不直接暴露API；必须由外层claim/current installed/SourceOwner组合调用。测试Task/Brief/Receipt用隔离PG，Case/Run输入用明确合同fixture；验证重放及外层回滚。
+
+## CF3-4 Context 的本任务证据关联门
+
+复核freeze_production_context发现只验证四份exact合同各自存在/冻结，没有检查Brief.task_id等于请求taskId、EvidenceBundle.brief_ref等于请求briefRef。同租户其他任务的完整冻结包可能误接，违反本方案第3条。先修该公共冻结入口再准备电商Context，不以临时造完整包避开真实证据要求。
+
+修改services/aos-api/aos_api/aip_production_contract_store.py：在已有同事务brief/bundle读取中加入task_id、brief_ref；分别检查本任务和完整exact Brief引用，错误为BRIEF_TASK_MISMATCH、EVIDENCE_BUNDLE_BRIEF_MISMATCH；复用原blocker处理，写Context/Receipt之前拒绝。保持正常依赖snapshot/hash形状及历史同键Receipt回读，不回写旧不可变记录。测试services/aos-api/tests/aip/test_w_l11_production_context.py：隔离PG内两个任务合同fixture交叉拼接必须失败、不落新Context；匹配路径及原撤销/来源验证继续通过。fixture仅证明关联约束，不证明真实业务证据完整性。CF3-5仍需解决本次启动证据/Eval来源及现行重验，不能宣称START桥接已完成。

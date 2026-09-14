@@ -16,3 +16,5 @@
 后续真实Host验证发现：_start_lineage新Run后未调用编译Saga，缺CompilationReceipt，现有4通过1严格已知失败。新增analysis-start-compilation-bridge-design.md的CF1–CF6，当前进入CF1；这一发现是实际缺口，不是模型/SSH问题，不计首链完成。
 
 CF1已完成exact桥接输入合同；CF2已实现当前配置职责及显式阶段引用读取，正在核对Logic/Skill与安装模板选择。CF3–CF6仍未完成；Run缺编译回执的真实PG已知失败仍保留。职责/阶段单测结果不折算业务完成率。
+
+2026-09-14 CF2依赖链已补蓝图、当前职责/技能/Logic选择，CF3已完成兼容阶段模板与本任务Task/frozen v2 Brief准备。CF3-4修复公共Context冻结允许同租户跨任务/跨Brief证据错接：真实隔离PG先复现两项失败，修复后Context/Impact/Task准备14 passed，追加无Receipt断言Context6 passed。仍未解决启动证据/Eval与Context组合、Compilation/TaskRun连接；真实START严格xfail仍保留。上述代码未部署主安装，不折算经营闭环完成比例。

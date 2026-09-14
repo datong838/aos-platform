@@ -3368,9 +3368,12 @@ class AipProductionContractStore:
                 )
             snapshot: list[dict[str, Any]] = []
             blockers: list[ContractBlocker] = []
-            self._assert_context_brief(conn, scope, body.brief_ref, snapshot, blockers)
+            self._assert_context_brief(
+                conn, scope, body.brief_ref, snapshot, blockers, task_id=body.task_id
+            )
             self._assert_context_bundle(
-                conn, scope, body.evidence_bundle_ref, snapshot, blockers
+                conn, scope, body.evidence_bundle_ref, snapshot, blockers,
+                brief_ref=body.brief_ref,
             )
             self._assert_context_eval(
                 conn, scope, body.eval_contract_ref, snapshot, blockers
@@ -3551,9 +3554,11 @@ class AipProductionContractStore:
         ref: ExactRevisionRef,
         snapshot: list[dict[str, Any]],
         blockers: list[ContractBlocker],
+        *,
+        task_id: str,
     ) -> None:
         row = conn.execute(
-            """SELECT revision,content_hash,lifecycle FROM aip_task_brief_revision
+            """SELECT revision,content_hash,lifecycle,task_id FROM aip_task_brief_revision
                WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
             (*scope.key, ref.resource_id, ref.revision),
         ).fetchone()
@@ -3593,6 +3598,14 @@ class AipProductionContractStore:
                     resource_ref=ref,
                 )
             )
+        if row["task_id"] != task_id:
+            blockers.append(
+                ContractBlocker(
+                    code="BRIEF_TASK_MISMATCH",
+                    message="TaskBrief 不属于当前任务",
+                    resource_ref=ref,
+                )
+            )
 
     def _assert_context_bundle(
         self,
@@ -3601,9 +3614,11 @@ class AipProductionContractStore:
         ref: ExactRevisionRef,
         snapshot: list[dict[str, Any]],
         blockers: list[ContractBlocker],
+        *,
+        brief_ref: ExactRevisionRef,
     ) -> None:
         row = conn.execute(
-            """SELECT revision,content_hash,lifecycle,coverage,freshness
+            """SELECT revision,content_hash,lifecycle,coverage,freshness,brief_ref
                FROM aip_evidence_bundle_revision
                WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
             (*scope.key, ref.resource_id, ref.revision),
@@ -3639,6 +3654,14 @@ class AipProductionContractStore:
                 ContractBlocker(
                     code="EVIDENCE_BUNDLE_NOT_FROZEN",
                     message="EvidenceBundle 未冻结",
+                    resource_ref=ref,
+                )
+            )
+        if self._load(row["brief_ref"]) != brief_ref.model_dump(mode="json", by_alias=True):
+            blockers.append(
+                ContractBlocker(
+                    code="EVIDENCE_BUNDLE_BRIEF_MISMATCH",
+                    message="EvidenceBundle 不属于当前 exact TaskBrief",
                     resource_ref=ref,
                 )
             )

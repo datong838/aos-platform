@@ -14,7 +14,41 @@ from aos_api.aip_production_contracts import (
     FreezeProductionContextRequest,
     RevokeEvidenceBundleRequest,
 )
+from aos_api.db import connect
 from test_w2d_store import SCOPE, HASHES, _seed
+
+
+@pytest.mark.parametrize("mismatch", ["task", "bundle"])
+def test_freeze_rejects_contracts_from_another_task(mismatch: str) -> None:
+    """Real PG contract fixtures; no claim of real business evidence coverage."""
+    first, _ = _seed()
+    other, _ = _seed()
+    request = FreezeProductionContextRequest(
+        task_id=other.task_id if mismatch == "task" else first.task_id,
+        brief_ref=first.brief_ref,
+        evidence_bundle_ref=(
+            other.evidence_bundle_ref if mismatch == "bundle" else first.evidence_bundle_ref
+        ),
+        eval_contract_ref=first.eval_contract_ref,
+        responsibility_plan_ref=first.responsibility_plan_ref,
+    )
+    actor = f"test:context-lineage-{uuid.uuid4().hex}"
+    code = "BRIEF_TASK_MISMATCH" if mismatch == "task" else "EVIDENCE_BUNDLE_BRIEF_MISMATCH"
+    with pytest.raises(ProductionContractDependencyBlocked, match=code):
+        AipProductionContractStore().freeze_production_context(
+            SCOPE, actor, actor, request
+        )
+    with connect() as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_production_context_revision "
+            "WHERE org_id=%s AND project_id=%s AND created_by=%s",
+            (*SCOPE.key, actor),
+        ).fetchone()["n"] == 0
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_production_contract_receipt "
+            "WHERE org_id=%s AND project_id=%s AND created_by=%s",
+            (*SCOPE.key, actor),
+        ).fetchone()["n"] == 0
 
 
 def test_freeze_production_context_cas_and_rejects_drifted_bundle() -> None:
