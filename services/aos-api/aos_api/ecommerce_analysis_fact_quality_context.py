@@ -18,6 +18,12 @@ class AnalysisFactQualityContext:
 
     def run_current(self, conn, *, receipt_ref, policy_ref, quality_ref, cohort_ref, field_ref, execute):
         if not callable(execute):raise TypeError('synchronous fact quality consumer required')
+        return self._run(conn,receipt_ref=receipt_ref,policy_ref=policy_ref,quality_ref=quality_ref,
+            cohort_ref=cohort_ref,field_ref=field_ref,execute=lambda current,snapshot:execute(current))
+
+    def _run(self, conn, *, receipt_ref, policy_ref, quality_ref, cohort_ref, field_ref, execute):
+        """Internal provenance composition keeps original input inside its guard."""
+        if not callable(execute):raise TypeError('synchronous fact quality consumer required')
         field_ref=PipelineExactRef.model_validate(field_ref)
         def consume(business,snapshot):
             source=snapshot.quality.assessment.input
@@ -46,7 +52,7 @@ class AnalysisFactQualityContext:
                 businessCohortHash=canonical_sha256(business),fieldPolicyRef=field_ref.model_dump(mode='json',by_alias=True),
                 sourceObservedAt=source.read_completed_at.isoformat(),requirement=deepcopy(requirement),measurement=measurement)
             digest=canonical_sha256(current)
-            result=execute(current)
+            result=execute(current,snapshot)
             _reject_deferred(result)
             if load()!=fields or canonical_sha256(current)!=digest:
                 raise ValueError('original field quality changed during consumption')
