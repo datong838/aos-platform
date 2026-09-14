@@ -240,3 +240,9 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 小程序最小id/site/name/appid/status；配置仅id/site/weapp/module/key/is_use（不解释配置值）；评价仅id/site/order/line/product/sku/member/scores/is_show/is_audit/create_time，公开score/productId/memberId和必要来源字段，不读取评论内容。均v3 observation，原源业务字段保留，状态只接受显式0/1声明（小程序只实测1），不生成任何关系。SystemConfig映射module/key，评价score/productId依原Canonical。
 真实聚合：小程序3条status1；配置37启用/1停用；评价5条is_show1/is_audit1且scores均5。Payment211条relate_id非零且命中同店订单，但out_trade_no仅181匹配，不能据此宣称211支付归属已验证。P12映射本波不声称完成；下一只读核对业务事件/关系与订单副交易号/拆单口径，再实现明确映射。
 候选变更范围bundle、schema、masking、P09/P10/P11、eval共7文件，前八对象回归及三类新对象规范/隐私/跨店测试；静态最多11/12，主数据与正式Fulfillment仍待后续。
+
+### SC4-5e9 支付归属与条件判别列
+
+源码app/model/system/Pay.php:addPay将notify事件和relate_id保存；普通OrderCreate/OrderPay/OrderCommon传OrderPayNotify与order_id，SuperCardOrderService传SuperCardOrderPayNotify与会员卡订单ID。普通订单重新支付会关闭旧支付并更换out_trade_no。真实只读聚合211条=普通203+会员卡8；普通203父订单/会员不匹配均0，94条关闭状态-2中22条不再匹配当前交易号，其他1条状态1/108条状态2交易号匹配。不能使用全表relate_id直接归普通订单。
+先新增原源政策可选conditional_only={字段:固定字符串}：字段在选列时必须有完全相同的等值scope（名称/类型/值精确），否则拒绝；同时与原pii_direct/quasi/sensitive/global/mapping exclusion仍相交禁止，不能覆盖直接隐私排除。声明必须有界字典、唯一大小写无冲突标识符、值为非空有界字符串。原政策不含此声明行为不变。原MappingReadSpec携带精确filters，原参数化读取和逐行scope校验继续使用，不扩展SQL语法。
+修改pipeline_source_selection.py及test_pipeline_source_selection.py，Lease A0-V-SC4-CONDITIONAL-SOURCE-FIELDS；测试缺过滤/错值/大小写混淆/原PII仍拒绝、声明形状错误、精确范围可通过以及旧回归。下一支付候选把event从无条件禁止改为conditional_only(event=OrderPayNotify)，实际只读出已固定公开枚举，不读取未知事件URL。source public projection不公开event。普通订单支付范围203/211有明确排除会员卡8，不能称211普通订单。正式关系/窗口/质量仍待原Owner执行。

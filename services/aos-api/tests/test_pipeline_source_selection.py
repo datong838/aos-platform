@@ -65,3 +65,49 @@ def test_inconsistent_or_unbounded_assets_are_rejected(case):
     else: policy['tables']['ns_site']['pii_direct'] = 'site_tel'
     with pytest.raises(ValueError):
         derive_mapping_read_spec(mapping, schema, policy)
+
+
+@pytest.mark.parametrize('case',['missing','wrong','case','direct','global','shape','bool','empty','duplicate'])
+def test_conditional_source_fields_fail_closed(case):
+    mapping,schema,policy=assets()
+    mapping['field_mappings'].append({'source':'event','target':'event','type':'string'})
+    policy['tables']['ns_site']['conditional_only']={'event':'OrderPayNotify'}
+    mapping['site_filter']="site_id=1 AND event='OrderPayNotify'"
+    if case=='missing':mapping['site_filter']='site_id=1'
+    elif case=='wrong':mapping['site_filter']="site_id=1 AND event='Other'"
+    elif case=='case':mapping['field_mappings'][-1]['source']='EVENT'
+    elif case=='direct':policy['tables']['ns_site']['pii_direct'].append('event')
+    elif case=='global':policy['global_drop_on_project_node'].append('event')
+    elif case=='shape':policy['tables']['ns_site']['conditional_only']=[]
+    elif case=='bool':policy['tables']['ns_site']['conditional_only']={'event':True}
+    elif case=='empty':policy['tables']['ns_site']['conditional_only']={'event':''}
+    else:policy['tables']['ns_site']['conditional_only']={'event':'OrderPayNotify','EVENT':'Other'}
+    with pytest.raises(ValueError):derive_mapping_read_spec(mapping,schema,policy)
+
+
+def test_conditional_source_field_preserves_exact_parameterized_scope():
+    mapping,schema,policy=assets()
+    mapping['field_mappings'].append({'source':'event','target':'event','type':'string'})
+    policy['tables']['ns_site']['conditional_only']={'event':'OrderPayNotify'}
+    mapping['site_filter']="site_id=1 AND event='OrderPayNotify'"
+    result=derive_mapping_read_spec(mapping,schema,policy)
+    assert dict(result.filters)=={'site_id':1,'event':'OrderPayNotify'}
+    assert result.columns[-1]=='event'
+
+
+def test_conditional_row_cannot_cross_declared_business_namespace():
+    from datetime import datetime,timezone
+    from aos_api.pipeline_snapshot_materialization import compile_snapshot_mapping,materialize_snapshot
+    root=Path(__file__).resolve().parents[3]/'bundles/candidates/ecommerce/platform.ecommerce.niushop/1.12.0/content'
+    mapping=yaml.safe_load((root/'mappings/p09-weapp.yaml').read_text())
+    schema=json.loads((root/'schemas/niushop-schema-fingerprint.json').read_text())
+    policy=yaml.safe_load((root/'mappings/_pii-exclusion.yaml').read_text())
+    mapping['field_mappings'].append({'source':'event','target':'sourceEvent','type':'string'})
+    mapping['site_filter']="site_id=1 AND event='OrderPayNotify'"
+    policy['tables']['ns_weapp']['conditional_only']={'event':'OrderPayNotify'}
+    plan=compile_snapshot_mapping(mapping,derive_mapping_read_spec(mapping,schema,policy))
+    raw={'weapp_id':1,'site_id':1,'weapp_name':'synthetic','appid':'synthetic','status':1,'event':'OrderPayNotify'}
+    at=datetime(2026,9,14,tzinfo=timezone.utc)
+    assert len(materialize_snapshot([raw],plan,observed_at=at))==1
+    with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
+        materialize_snapshot([raw|{'event':'SuperCardOrderPayNotify'}],plan,observed_at=at)

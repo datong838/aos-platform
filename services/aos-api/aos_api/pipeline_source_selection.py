@@ -109,4 +109,16 @@ def derive_mapping_read_spec(mapping, schema, masking) -> MappingReadSpec:
                 or (type(value) is float and not math.isfinite(value))
                 or (type(value) is str and len(value) > 160)):
             raise ValueError('bounded scalar scope value required')
+    conditional = policy.get('conditional_only', {})
+    if type(conditional) is not dict or len(conditional)>32:
+        raise ValueError('bounded conditional source policy required')
+    names = _fields(list(conditional))
+    selected = {name.casefold():name for name in columns}
+    for name in names:
+        expected = conditional[name]
+        if type(expected) is not str or not expected.strip() or len(expected)>160:
+            raise ValueError('fixed bounded conditional source value required')
+        if name.casefold() in selected and (
+                selected[name.casefold()]!=name or type(filters.get(name)) is not str or filters.get(name)!=expected):
+            raise ValueError('conditional source field requires its exact equality scope')
     return MappingReadSpec(table, object_type, primary_key, columns, tuple(sorted(filters.items())))
