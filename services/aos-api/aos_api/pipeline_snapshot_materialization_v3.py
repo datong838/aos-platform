@@ -22,6 +22,7 @@ class SnapshotMappingV3:
     statuses: tuple[tuple[int,str],...]
     hierarchy: tuple[str,int] | None = None
     tombstone: tuple[str,int,int] | None = None
+    public_projection: tuple[int,tuple[str,...]] | None = None
 
     @property
     def read_spec(self):return self.base.read_spec
@@ -38,7 +39,7 @@ def compile_v3(mapping,read_spec):
     try:
         value=deepcopy(mapping);config=value['snapshot_materialization']
         base_keys={'schema_version','platform','shop_key','source_timezone','property_defaults'}
-        if (type(config) is not dict or set(config)!=base_keys|{'time_basis','deletion_basis','status'}
+        if (type(config) is not dict or set(config)-{'public_projection'}!=base_keys|{'time_basis','deletion_basis','status'}
                 or config['schema_version']!='aos.snapshot-materialization/v3'
                 or config['time_basis']!='observation'
                 or value.get('links') or 'soft_delete' in value or 'incremental_cursor' in value):
@@ -51,6 +52,18 @@ def compile_v3(mapping,read_spec):
             raise ValueError('explicit source state required')
         target=_identifier(status['property_target'])
         if target.casefold() in targets|_RESERVED:raise ValueError('state target collision')
+        projection=None
+        if 'public_projection' in config:
+            rule=config['public_projection']
+            if (type(rule) is not dict or set(rule)!={'schema_version','properties'}
+                    or type(rule['schema_version']) is not int or not 1<=rule['schema_version']<=100
+                    or type(rule['properties']) is not list or not 1<=len(rule['properties'])<=100):
+                raise ValueError('explicit bounded public projection required')
+            names=tuple(_identifier(name) for name in rule['properties'])
+            declared={f['target'] for f in fields}|set(defaults)|{target}
+            if len({name.casefold() for name in names})!=len(names) or not set(names)<=declared or target not in names:
+                raise ValueError('public projection must preserve declared state')
+            projection=(rule['schema_version'],names)
         kinds={f['source']:f['type'] for f in fields}
         tombstone=None
         deletion=config['deletion_basis']
@@ -92,7 +105,7 @@ def compile_v3(mapping,read_spec):
         value['snapshot_materialization']={key:config[key] for key in base_keys}
         value['snapshot_materialization']['schema_version']='aos.snapshot-materialization/v1'
         base=compile_snapshot_mapping(value,read_spec)
-        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy,tombstone)
+        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy,tombstone,projection)
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
         raise ValueError('SNAPSHOT_MAPPING_INVALID') from None
 
@@ -142,6 +155,11 @@ def materialize_v3(rows,mapping,*,observed_at):
             item['properties'].update(updatedAt=observed,observedAt=observed,
                 sourceUpdatedAtBasis='observation',sourceModificationTimeKnown=False)
             item['properties'][mapping.status_target]=status
+            if mapping.public_projection is not None:
+                version,names=mapping.public_projection
+                keep=set(names)|{'updatedAt','observedAt','sourceUpdatedAtBasis','sourceModificationTimeKnown'}
+                item['properties']={key:value for key,value in item['properties'].items() if key in keep}
+                item['schema_version']=version
         return output
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError,OSError):
         raise ValueError('SNAPSHOT_MATERIALIZATION_INVALID') from None

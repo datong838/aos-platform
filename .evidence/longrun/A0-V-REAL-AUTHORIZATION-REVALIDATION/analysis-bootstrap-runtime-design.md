@@ -225,3 +225,9 @@ SC4-5e4候选：新增scripts/prepare_niushop_order_candidate.py及1.8.0目录�
 复习frozen/02-pipeline-manifest P07：物流号按敏感级别遮罩、包裹必须有订单头。候选1.10.0选择完全遮罩，delivery_no不出库；规范trackingNo固定显示[REDACTED]且trackingNoRedacted=true、trackingNoSourceRead=false，不能用于物流追踪或证明原号存在。去掉member_name与trace，纳入pii_exclusion，不读取轨迹自由文本或会员姓名。主键与order_id保留；真实Order.fulfilledBy关系待后续完整批次验证，不生成假关系。
 新增scripts/prepare_niushop_shipment_candidate.py与对应测试、候选1.10.0，精确1.9.0树b52f6a76334528d7c8cde06e802252e6934dd4ead29c35219f976d3f55413e01，旧版不改。仅bundle/p07/evals变化。使用v3 observation和row-presence-only，scope site_id=1的存在行标识ACTIVE，不解释delivery_type为物流生命周期状态。express_company_name→carrier，delivery_time→shippedAt显式绑定，零值保持未知并由规范时间契约拒绝，绝不落入旧writer缺字段时的观察时间回填。保留原deliveryType等源字段。
 测试规范对象、全遮罩字段未被选择、源时间不随观察变化、零时间不能伪造、跨店/额外原物流号/姓名/轨迹拒绝；前六对象回归。完整源采集、父订单约束及物流追踪均不在本静态候选完成声明内。
+
+### SC4-5e7 CustomerLite投影前置
+
+实际核对ns_member无create_time/modify_time，54行status=1且reg_time均有效；物流19行delivery_time均有效（2026-09-14只读聚合，无客户行数据）。CustomerLite v2不应将选列的内部字段全部公开；通用v3目前也不携带对象schema_version，不能默认为v1后声称v2完成。
+先扩展v3可选public_projection={schema_version,properties}，对象版本为严格1..100整数、属性为有界唯一已声明属性名列表，必须含显式状态属性；原配置无此键行为不变。执行仍先完整校验选列/租户/状态/删除，再只保留指定公开业务属性；updatedAt/observedAt/sourceUpdatedAtBasis/sourceModificationTimeKnown四个来源标记始终保留，不能投影掉观察事实。规范writer可附加时间时区，其他隐私规则原样。不是允许读取PII，只减少已准许选列后的公开属性。
+修改pipeline_snapshot_materialization_v3.py及其测试，独立Lease A0-V-SC4-SNAPSHOT-PUBLIC-PROJECTION。验证schema版本、投影隐藏内部键但保留身份和时间来源、未知字段/重复/非整数版本/丢状态拒绝及旧版回归。CustomerLite随后只公开memberLevel/status/createdAt加必需观察来源标记，版本2；status源0/1语义需明确策略，is_delete显式处理，不加入身份解析/派生指标/关系。

@@ -160,3 +160,27 @@ def test_explicit_deletion_declaration_is_bound_to_selected_integer(fault):
     elif fault=='boolean':rule['live_value']=False
     else:rule['execute']='unsafe'
     with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)
+
+
+def test_public_projection_preserves_provenance_identity_and_schema_version():
+    value=mapping()
+    value['snapshot_materialization']['public_projection']={'schema_version':2,'properties':['status','parentCategoryId']}
+    obj=materialize_snapshot([row()],compiled(value),observed_at=NOW)[0]
+    assert obj['schema_version']==2 and obj['source_pk']=='1'
+    assert set(obj['properties'])=={'status','parentCategoryId','updatedAt','observedAt','sourceUpdatedAtBasis','sourceModificationTimeKnown'}
+    assert obj['properties']['sourceModificationTimeKnown'] is False
+    assert 'id' not in obj['properties']
+
+
+@pytest.mark.parametrize('projection',[
+    {'schema_version':True,'properties':['status']},
+    {'schema_version':0,'properties':['status']},
+    {'schema_version':101,'properties':['status']},
+    {'schema_version':2,'properties':['status','privateField']},
+    {'schema_version':2,'properties':['status','status']},
+    {'schema_version':2,'properties':['parentCategoryId']},
+    {'schema_version':2,'properties':['status'],'extra':True},
+])
+def test_invalid_public_projection_rejected(projection):
+    value=mapping();value['snapshot_materialization']['public_projection']=projection
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)
