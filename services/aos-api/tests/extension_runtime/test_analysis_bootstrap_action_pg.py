@@ -25,7 +25,7 @@ def test_bootstrap_creates_actual_draft_and_replays(preview_case,review_identity
     conn,analysis,_,_,_=preview_case
     row=conn.execute('SELECT status,risk_level,policy_snapshot FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
                      (*analysis.scope.key,result.proposal.id)).fetchone()
-    assert row['status']=='drafted' and row['risk_level']=='R1' and row['policy_snapshot']['draftOnly'] is True
+    assert row['status']=='drafted' and row['risk_level']=='R1' and row['policy_snapshot']['draftOnly'] is False and row['policy_snapshot']['makerChecker'] is True
 
 
 @pytest.mark.parametrize('fault',['callback','maker-revoked'])
@@ -57,14 +57,14 @@ def test_bootstrap_action_cannot_bypass_guard_or_policy(preview_case,review_iden
     def prepared(value):
         guard=_BootstrapActionGuard(AnalysisBootstrapCurrentBinding(analysis),conn,claimed,value['bootstrapIntent'],value['startupPreviewRef'])
         store=AipActionStore(TransactionBoundConnectFactory(HostTransaction(conn),analysis.scope),
-                             bootstrap_guard=None if fault=='generic' else guard)
+                             bootstrap_guard=None if fault in {'generic','approve'} else guard)
         snapshot=store.action_type_snapshot(analysis.scope,'ecommerce_analysis_bootstrap')
         body=CreateActionProposalRequest(actionTypeId='ecommerce_analysis_bootstrap',taskId=value['compilationReceipt']['taskId'],
             purpose='fixture guarded initialization',payload={'bootstrapIntent':value['bootstrapIntent']},
             impactPreviewRef=value['startupPreviewRef'],expiresAt=value['startupPreview']['expiresAt'])
         if fault=='approve':
             bundle=create(preview_case,value)
-            with pytest.raises(AipActionTransitionBlocked,match='EXECUTION_POLICY_NOT_ENABLED'):
+            with pytest.raises(AipActionTransitionBlocked,match='CURRENT_GUARD_REQUIRED'):
                 store.decide(analysis.scope,'fixture-approver',bundle.proposal.id,uuid4().hex,
                     DecideActionProposalRequest(expectedProposalVersion=bundle.proposal.version,
                         expectedProposalHash=bundle.proposal.proposal_hash,decision=ApprovalDecision.APPROVED))

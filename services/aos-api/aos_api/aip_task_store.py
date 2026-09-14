@@ -736,6 +736,17 @@ class AipTaskStore:
     ) -> RunControlResult:
         with self._connect(scope) as conn:
             run, task = self._locked_run_and_task(conn, scope, run_id)
+            bootstrap = conn.execute(
+                """SELECT d.decision_id FROM aip_production_start_decision d
+                   LEFT JOIN aip_action_proposal p ON p.org_id=d.org_id AND p.project_id=d.project_id
+                     AND p.proposal_id=d.action_proposal_ref->>'proposalId'
+                   WHERE d.org_id=%s AND d.project_id=%s AND d.task_run_ref->>'resourceId'=%s
+                     AND (p.proposal_id IS NULL OR p.action_type_id='ecommerce_analysis_bootstrap'
+                          OR p.action_type_snapshot->>'id'='ecommerce_analysis_bootstrap')
+                   FOR SHARE OF d""", (*scope.key, run_id),
+            ).fetchone()
+            if bootstrap is not None:
+                raise AipTaskTransitionBlocked("ANALYSIS_BOOTSTRAP_CONTINUATION_AUTHORITY_REQUIRED")
             request = self._control_request("resume", expected_run_version, expected_task_version, reason)
             replay = self._control_replay(conn, scope, run_id, str(task["task_id"]), "resume", idempotency_key, request)
             if replay is not None:

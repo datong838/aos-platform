@@ -60,8 +60,8 @@ class AnalysisBootstrapActionPreparation:
             bundle = store.create_proposal(scope, actor, key, body, snapshot, risk)
             before = conn.execute('SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
                                   (*scope.key, bundle.proposal.id)).fetchone()
-            if before is None or before['status'] != 'drafted' or before['policy_snapshot'].get('draftOnly') is not True:
-                raise ValueError('bootstrap initialization draft must remain non-executable')
+            if before is None or before['status'] != 'drafted' or before['policy_snapshot'].get('makerChecker') is not True:
+                raise ValueError('bootstrap initialization must await independent approval')
             result = execute(bundle)
             _reject_deferred(result)
             guard.check(conn, scope, actor, action_snapshot=snapshot, payload=body.payload,

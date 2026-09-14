@@ -583,7 +583,7 @@ class AipProductionStartService:
         blockers: list[ContractBlocker],
     ) -> None:
         graph = conn.execute(
-            """SELECT status FROM aip_logic_graph
+            """SELECT status,published_version FROM aip_logic_graph
                WHERE org_id=%s AND project_id=%s AND graph_id=%s
                  AND deleted_at IS NULL FOR SHARE""",
             (*scope.key, body.logic_graph_id),
@@ -612,8 +612,23 @@ class AipProductionStartService:
                     message="LogicGraph revision/hash 与权威不一致",
                 )
             )
-        if graph["status"] != "published":
-            blockers.append(ContractBlocker(code="LOGIC_GRAPH_NOT_PUBLISHED", message="LogicGraph 尚未发布"))
+        publications = conn.execute(
+            "SELECT * FROM aip_logic_publication WHERE org_id=%s AND project_id=%s AND graph_id=%s FOR SHARE",
+            (*scope.key, body.logic_graph_id),
+        ).fetchall()
+        published = graph["status"] == "published" and graph["published_version"] == body.logic_revision
+        if publications:
+            from aos_api.aip_logic_publication_store import LogicPublicationStore, LogicPublicationStoreError
+            exact = [row for row in publications if row["graph_revision"] == body.logic_revision]
+            published = False
+            if len(exact) == 1 and graph["status"] != "archived" and graph["published_version"] == body.logic_revision:
+                try:
+                    publication = LogicPublicationStore._publication_from_row(exact[0])
+                    published = publication.graph_hash == body.logic_graph_hash
+                except LogicPublicationStoreError:
+                    published = False
+        if not published:
+            blockers.append(ContractBlocker(code="LOGIC_GRAPH_NOT_PUBLISHED", message="LogicGraph 当前发布权威不匹配"))
         payload = revision["snapshot"]
         if isinstance(payload, str):
             payload = json.loads(payload)

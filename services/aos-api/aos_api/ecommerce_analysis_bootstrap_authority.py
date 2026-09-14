@@ -80,7 +80,7 @@ class AnalysisBootstrapCurrentBinding:
             return result
         return self.analysis._phase(conn, claimed, current)
 
-    def _read(self, conn, snapshot, intent, preview_ref):
+    def _read(self, conn, snapshot, intent, preview_ref, *, initialized_run_id=None):
         from uuid import UUID
         from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
         from aos_api.aip_production_contract_store import AipProductionContractStore
@@ -112,15 +112,21 @@ class AnalysisBootstrapCurrentBinding:
                           (*scope.key, receipt.task_id)).fetchone()
         plan = tx.execute('''SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s FOR UPDATE''',
                           (*scope.key, receipt.plan_ref.resource_id)).fetchone()
-        if (task is None or task['status'] not in {'planning', 'awaiting_approval'}
+        statuses = {'paused'} if initialized_run_id is not None else {'planning', 'awaiting_approval'}
+        approval_status = 'approved' if initialized_run_id is not None else 'draft'
+        if (task is None or task['status'] not in statuses
                 or task['current_plan_revision_id'] != receipt.plan_ref.resource_id
-                or plan is None or plan['task_id'] != receipt.task_id or plan['approval_status'] != 'draft'
+                or plan is None or plan['task_id'] != receipt.task_id or plan['approval_status'] != approval_status
                 or plan['revision'] != receipt.plan_ref.revision or plan['content_hash'] != receipt.plan_ref.content_hash
                 or not plan['risk'].get('productionContract', {}).get('productionStartGateRequired')):
             raise ValueError('bootstrap current draft Task Plan differs')
-        if tx.execute('SELECT 1 FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s LIMIT 1',
-                      (*scope.key, receipt.task_id)).fetchone() is not None:
+        runtime = tx.execute('SELECT * FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s ORDER BY run_id',
+                             (*scope.key, receipt.task_id)).fetchall()
+        if initialized_run_id is None and runtime:
             raise ValueError('bootstrap Task already has runtime lineage')
+        if initialized_run_id is not None and (len(runtime) != 1 or runtime[0]['run_id'] != initialized_run_id
+                or runtime[0]['status'] != 'paused' or runtime[0]['plan_revision_id'] != receipt.plan_ref.resource_id):
+            raise ValueError('bootstrap exact initial paused runtime required')
         preview = AipProductionContractStore(factory).assert_frozen_preview_current(conn, scope, preview_ref)
         profile = intent.compilation_binding.request.profile
         expected = {'plan_ref': receipt.plan_ref, 'production_context_ref': profile.production_context_ref,

@@ -41,6 +41,9 @@ def classify_action_risk(
     if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback"}:
         floor = ActionRiskLevel.R2
         reasons.append("internal_runtime_cutover")
+    elif action_type_id == 'ecommerce_analysis_bootstrap':
+        floor = ActionRiskLevel.R1
+        reasons.append('internal_analysis_initial_pause_only')
     elif action_type_id == 'ecommerce_growth_event_control':
         floor = ActionRiskLevel.R2
         reasons.append('internal_event_binding_control')
@@ -74,4 +77,6 @@ def classify_action_risk(
         "executionAllowed": level is not ActionRiskLevel.R4,
         "draftOnly": level in {ActionRiskLevel.R1, ActionRiskLevel.R4},
     }
+    if action_type_id == 'ecommerce_analysis_bootstrap' and level is ActionRiskLevel.R1:
+        approval_policy.update(makerChecker=True, draftOnly=False)
     return RiskDecision(level, floor, tuple(reasons), approval_policy)

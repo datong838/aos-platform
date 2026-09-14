@@ -67,6 +67,14 @@ class AipActionExecutionService:
         self._adapters = adapters
 
     @staticmethod
+    def _reject_bootstrap_action(proposal) -> None:
+        if proposal is None:
+            raise AipActionNotFound("proposal not found in scope")
+        if (proposal["action_type_id"] == "ecommerce_analysis_bootstrap"
+                or (proposal["action_type_snapshot"] or {}).get("id") == "ecommerce_analysis_bootstrap"):
+            raise AipActionTransitionBlocked("ANALYSIS_BOOTSTRAP_NOT_EXTERNAL_ACTION")
+
+    @staticmethod
     def _require_executor(principal: Principal) -> None:
         if not {role.lower() for role in principal.roles}.intersection({"admin", "executor", "aip_executor"}):
             raise AipActionForbidden("Action executor role required")
@@ -86,8 +94,7 @@ class AipActionExecutionService:
                 "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR UPDATE",
                 (*scope.key, proposal_id),
             ).fetchone()
-            if proposal is None:
-                raise AipActionNotFound("proposal not found in scope")
+            self._reject_bootstrap_action(proposal)
             existing = conn.execute(
                 "SELECT * FROM aip_action_execution_lease WHERE org_id=%s AND project_id=%s AND proposal_id=%s AND attempt=1",
                 (*scope.key, proposal_id),
@@ -300,6 +307,7 @@ class AipActionExecutionService:
                 "SELECT * FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND proposal_id=%s FOR UPDATE",
                 (*scope.key, lease["proposal_id"]),
             ).fetchone()
+            self._reject_bootstrap_action(proposal)
             attempt = conn.execute(
                 "SELECT * FROM aip_action_execution_attempt WHERE org_id=%s AND project_id=%s AND lease_id=%s FOR UPDATE",
                 (*scope.key, lease_id),
