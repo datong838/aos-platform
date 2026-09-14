@@ -60,3 +60,5 @@ SC4-5a：原正式初始化链经当前sealed data Host创建真实待数据需�
 SC4-5b：原START Receipt可组合实际WAITING_DATA/Requirement作为恢复前置，无需伪造中间回执；63项回归通过，无真实Fulfillment仍拒绝。下一SC4-5c经营事实执行上下文与专用当前恢复门，再自动政策/真实补齐；首链未完成。
 
 SC4-5c1：实际事件accepted后通过完成attempt+原Receipt验证历史Occurrence引用，修复status变化误拒绝；51项回归通过，篡改完成回执/元数据拒绝。下一c2已完成原事件当前来源上下文，再专用恢复门与真实Worker，主首链未完成。
+
+SC4-5c2：完成事件当前来源上下文已接，29项回归通过；不构造旧Claim，漂移/异步回调拒绝。AR2 1906/185/93无错误。下一完成事件数据需求连接与专用恢复，之后自动政策/真实补齐/业务Worker；主首链未完成。
