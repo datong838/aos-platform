@@ -348,3 +348,13 @@ Red模块缺失，Green新增10 PG 36.09秒，原pending11+snapshot10回归21 PG
 原关系计量仅抽取reference_row_issues共用函数，allowedUnset/缺引用/坏引用/缺父/删除父的旧计数语义保留。Red模块不存在，初轮81 passed/5.28秒；增加互补坏字段不能平均、required/disclose用途差异后84 passed/5.38秒（8warnings），覆盖新23项及原关系18/业务cohort18/正式quality25。AR2扫描1933/188/93，五类错误为空。无主库/源读取/安装/模型调用。
 
 下一波SC4-5k2：复核12映射的实际公开字段和业务含义，为Niushop新增版本化逐事实字段策略候选（预计1.20）；CustomerLite/Payment按public_projection，不要求已脱敏PII；金额/支付状态/商品上下架区分，Shipment跟踪号脱敏占位不能冒充真实物流信息，Review维度不冒充近30日评价。具体字段不能为通过而删改，旧initial_store_analysis阈值不动，空事实仍需原正式规则处理。随后把字段策略接入当前Owner及QueryResult/QualityEvidence/原Outbox消费者，主环境迁移安装和真实首链/八场景尚待完成。
+
+### SC4-5k2 Niushop 1.20字段候选验证
+
+新增1.20仅版本/eval/fact-quality.v1.json，冻结1.19与12映射/原cohort/关系/用途质量策略字节不变。新树sha256:0a5d0b369f701e5aee68d5b3692fc0b6a89b1d89d195ccd4b549f7388d5a423b，字段策略sha256:79c6a340984fb2e3b2e4cd918476da5378a70ca06c2ae00b771bdaebd0ba697d。全部字段在实际public projection或公开映射，CustomerLite无PII、Shipment无跟踪号要求、未付款Payment无payTime要求。
+
+Order.payStatus与Review.score仅非负整数字段结构检查，不解释未知业务枚举/分值含义；记录ACTIVE不代表成交/签收。数量新增严格positive-integer拒绝0或字符串；旧predicate行为不变。Red2失败/23通过4.75秒，Green新25+原关联18/业务cohort18/正式quality25=86 passed/4.63秒（8warnings）。候选静态7检查及原14关系/5用途/6cohort检查通过；重复prepare在目标存在门拒绝，未覆盖。AR2扫描1933/188/93五类错误为空。
+
+没有构建签名、发布、安装、源读取、主库修改或正式Fulfillment；静态完整行是构造fixture，未声称真实12类字段全合格，金额对账/跨字段一致性/业务解释仍由后续事实与查询规则负责。
+
+下一波SC4-5k3：在原business cohort当前事务内读取SnapshotFactQualityPolicy安装导出，核exact ref/hash/purpose/两前置策略hash，完整原snapshot rows执行计量，绑定真实requirement与上下文hash，消费前后重读策略并校验载荷；沿用原pending/source守卫。仅计数输入不直接签发quality pass，后续原QueryResult/QualityEvidence及Outbox消费者和主环境切换仍待完成。

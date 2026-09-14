@@ -9,7 +9,7 @@ from aos_api.pipeline_snapshot_relationships import _key
 from aos_api.pipeline_snapshot_relationship_quality import measure_relationship_quality, reference_row_issues
 from aos_api.pipeline_snapshot_business_cohort import select_business_cohort
 
-KINDS = {'nonblank-string','positive-id','nonnegative-integer','nonnegative-number','boolean','timestamp','enum'}
+KINDS = {'nonblank-string','positive-id','positive-integer','nonnegative-integer','nonnegative-number','boolean','timestamp','enum'}
 
 
 @dataclass(frozen=True)
@@ -75,6 +75,7 @@ def _valid(value, field, observed_at):
         try: _key(value); return True
         except ValueError: return False
     if field.kind == 'nonnegative-integer': return type(value) is int and 0<=value<=9_223_372_036_854_775_807
+    if field.kind == 'positive-integer': return type(value) is int and 0<value<=9_223_372_036_854_775_807
     if field.kind == 'nonnegative-number':
         return type(value) in (int,float) and 0<=value<=9_223_372_036_854_775_807 and math.isfinite(value)
     if field.kind == 'boolean': return type(value) is bool

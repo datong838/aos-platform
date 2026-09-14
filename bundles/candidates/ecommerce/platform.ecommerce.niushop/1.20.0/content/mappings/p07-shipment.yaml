@@ -1,0 +1,70 @@
+pipeline_id: P07
+source_table: ns_express_delivery_package
+target_ot: Shipment
+primary_key: id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+field_mappings:
+- source: id
+  target: id
+  type: int
+- source: site_id
+  target: siteId
+  type: int
+- source: order_id
+  target: orderId
+  type: int
+- source: package_name
+  target: packageName
+  type: string
+- source: delivery_type
+  target: deliveryType
+  type: int
+- source: express_company_id
+  target: expressCompanyId
+  type: int
+- source: express_company_name
+  target: carrier
+  type: string
+- source: delivery_time
+  target: shippedAt
+  type: timestamp
+- source: member_id
+  target: memberId
+  type: int
+pii_exclusion:
+- delivery_no
+- member_name
+- trace
+notes:
+- Tracking number is fully redacted and never selected; no source number availability
+  or tracking capability is claimed.
+- Member name and free-form trace are excluded from source selection.
+- shippedAt is source delivery_time; observation time never substitutes for missing
+  shipment time.
+- ACTIVE denotes presence in the selected site, not a delivery lifecycle state; deliveryType
+  remains a source field.
+- Parent Order relationship and completeness validation remain pending.
+validation:
+  required:
+  - id
+  - site_id
+  - order_id
+  - delivery_time
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  time_basis: observation
+  deletion_basis: row-presence-only
+  property_defaults:
+    trackingNo: '[REDACTED]'
+    trackingNoRedacted: true
+    trackingNoSourceRead: false
+  status:
+    field: site_id
+    property_target: status
+    values:
+      '1': ACTIVE

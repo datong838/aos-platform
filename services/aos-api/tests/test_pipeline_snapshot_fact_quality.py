@@ -46,6 +46,7 @@ def test_joint_counts_preserve_unknown_and_historical_exclusions():
 @pytest.mark.parametrize('kind,good,bad',[
     ('nonblank-string','abc','  '),('positive-id','123','001'),
     ('nonnegative-integer',0,True),('nonnegative-number',1.5,True),
+    ('positive-integer',1,0),('positive-integer',2,'2'),
     ('nonnegative-number',0,float('nan')),('nonnegative-number',1,float('inf')),
     ('boolean',False,0),('timestamp',START.isoformat(),'1970-01-01T00:00:00+00:00'),
     ('timestamp',START.isoformat(),'2026-01-01T00:00:00'),('enum','PAID','UNKNOWN'),
