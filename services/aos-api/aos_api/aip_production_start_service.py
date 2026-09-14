@@ -9,6 +9,7 @@ from typing import Any
 from aos_api.aip_action_store import AipActionStore
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
+    ConnectFactory,
     ProductionContractConflict,
     ProductionContractDependencyBlocked,
     ProductionContractIdempotencyConflict,
@@ -32,13 +33,15 @@ class AipProductionStartService:
     def __init__(
         self,
         *,
+        connect_factory: ConnectFactory | None = None,
         contract_store: AipProductionContractStore | None = None,
         action_store: AipActionStore | None = None,
         task_store: AipTaskStore | None = None,
     ) -> None:
-        self._contracts = contract_store or AipProductionContractStore()
-        self._actions = action_store or AipActionStore()
-        self._tasks = task_store or AipTaskStore()
+        self._connect_factory = connect_factory or connect
+        self._contracts = contract_store or AipProductionContractStore(self._connect_factory)
+        self._actions = action_store or AipActionStore(self._connect_factory)
+        self._tasks = task_store or AipTaskStore(self._connect_factory)
 
     def start(
         self,
@@ -49,7 +52,7 @@ class AipProductionStartService:
     ) -> ProductionStartDecision:
         request_hash = canonical_hash(body.model_dump(mode="json", by_alias=True))
         decision_id = f"start-decision-{uuid.uuid4().hex[:20]}"
-        with connect(scope) as conn:
+        with self._connect_factory(scope) as conn:
             conn.execute(
                 "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
                 (f"aip-w2d-start:{scope.org_id}:{scope.project_id}:{idempotency_key}",),
@@ -140,7 +143,7 @@ class AipProductionStartService:
     def get(
         self, scope: TenantScope, decision_id: str
     ) -> ProductionStartDecision:
-        with connect(scope) as conn:
+        with self._connect_factory(scope) as conn:
             row = conn.execute(
                 """SELECT * FROM aip_production_start_decision
                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
@@ -151,7 +154,7 @@ class AipProductionStartService:
         return self._decision(scope, row)
 
     def list(self, scope: TenantScope) -> ProductionStartDecisionListResponse:
-        with connect(scope) as conn:
+        with self._connect_factory(scope) as conn:
             rows = conn.execute(
                 """SELECT * FROM aip_production_start_decision
                    WHERE org_id=%s AND project_id=%s

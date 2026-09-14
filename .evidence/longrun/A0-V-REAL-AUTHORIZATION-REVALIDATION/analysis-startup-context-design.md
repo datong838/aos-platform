@@ -71,3 +71,9 @@ SC3-2组合复核补充：Context入口在原事件边界中先调用已实现An
 统一TransactionBoundConnectFactory使原Store内部commit无效，由原事件外层持有提交权。Saga后再次核验原依赖和实际Plan/Receipt；对下游同步回调使用同一边界，失败整笔回滚。Saga Receipt本身runtimeAuthorized=false，Plan仍需production start gate；不调用普通create_run绕过门禁。完整START成功后按原Host Receipt-first重放，不能重新生成新任务规避冲突。
 
 新增tests/extension_runtime/test_analysis_compilation_preparation_pg.py，复用SC3真实Context及实际Skill发布；Logic图/成功dryrun/Publication通过原Store，评估来源和安装配置明确fixture。验证实际Plan/CompilationReceipt、Saga同请求重放、未知/跨租户引用拒绝、编译后故障回滚，原正式START严格xfail暂不移除。
+
+## SC4-3a 启动门事务接入前置
+
+复核发现AipProductionStartService.start/get/list直接使用全局connect，与已绑定的Context/Saga不共享事务，正式事件内调用会看不到未提交Plan或发生锁等待，且启动后外层失败不能回滚。先修改services/aos-api/aos_api/aip_production_start_service.py增加可选connect_factory，默认保持原connect，内部默认Contract/Action/Task Store复用同factory；所有start/get/list使用factory。原门禁、审批要求和状态机不改变，不直接调用底层create_run_from_production_start_gate。
+
+在services/aos-api/tests/aip/test_w2d_start_gate.py追加原有隔离候选fixture的事务绑定测试（legacy fixture scope，与真实租户无关）：实际approved Proposal经原StartGate产生TaskRun，同事务get/list可见，同键重放一致；外层故障后StartDecision/TaskRun/Plan审批和Task状态完全回滚。未批准候选仍拒绝，保留原测试累计。SC4-3b随后准备启动ImpactPreview与当前受控Proposal；不能伪造审批或编造预算，经营建议exact评审仍独立。

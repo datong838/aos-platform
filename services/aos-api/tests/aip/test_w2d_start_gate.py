@@ -305,3 +305,39 @@ def test_w3_05_context_drift_is_visible_in_plan_preview_and_decision() -> None:
     assert decision.production_context_ref == drifted_context
     assert decision.task_run_ref is None
     assert _runtime_counts(request.task_id) == before
+
+
+def test_transaction_bound_start_gate_rolls_back_with_outer_owner() -> None:
+    """Legacy isolated candidate fixture; no real tenant or business execution."""
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+    request, actions = _seed_start_candidate()
+    proposal = actions.decide(SCOPE, "checker:w2d-start", request.action_proposal_ref.proposal_id,
+        f"approval-{uuid.uuid4().hex}", DecideActionProposalRequest(
+            expected_proposal_version=request.action_proposal_ref.version,
+            expected_proposal_hash=request.action_proposal_ref.proposal_hash,
+            decision=ApprovalDecision.APPROVED)).proposal
+    request = request.model_copy(update={"action_proposal_ref":ActionProposalExactRef(
+        proposal_id=proposal.id,version=proposal.version,proposal_hash=proposal.proposal_hash)})
+    key = f"bound-start-{uuid.uuid4().hex}"
+    with connect(SCOPE) as conn:
+        before = conn.execute('SELECT status,version FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s',
+            (*SCOPE.key,request.task_id)).fetchone()
+        with pytest.raises(RuntimeError,match='outer start rollback'),conn.transaction():
+            service = AipProductionStartService(connect_factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE))
+            started=service.start(SCOPE,'checker:w2d-start',key,request)
+            assert started.status is ProductionStartDecisionStatus.STARTED
+            assert service.get(SCOPE,started.decision_id)==started
+            assert any(item.decision_id==started.decision_id for item in service.list(SCOPE).items)
+            assert service.start(SCOPE,'checker:w2d-start',key,request)==started
+            assert conn.execute('SELECT count(*) AS n FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s',
+                (*SCOPE.key,request.task_id)).fetchone()['n']==1
+            raise RuntimeError('outer start rollback')
+        assert conn.execute('SELECT status,version FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s',
+            (*SCOPE.key,request.task_id)).fetchone()==before
+        assert conn.execute('SELECT count(*) AS n FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s',
+            (*SCOPE.key,request.task_id)).fetchone()['n']==0
+        assert conn.execute('SELECT count(*) AS n FROM aip_production_start_decision WHERE org_id=%s AND project_id=%s AND idempotency_key=%s',
+            (*SCOPE.key,key)).fetchone()['n']==0
+        assert conn.execute('SELECT approval_status FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s',
+            (*SCOPE.key,request.plan_ref.resource_id)).fetchone()['approval_status']=='draft'
