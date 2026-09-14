@@ -97,3 +97,11 @@ PG测试使用原w2_001 DDL及现有aip_task行；分析/pending/runtime仍明�
 原BusinessInvestigationEvidenceBuilder要求的license_summary保持pending-policy-review。请求含原brief、唯一业务Evidence、原requiredFacts/cutoff/markings。幂等键绑定scope、请求、策略版本；原Receipt重放后也必须重算coverage与exact原bundle全部字段和内容hash并检查撤销。读取复用同一当前Owner和原get，不以历史已fresh绕过当前过期。源/质量/策略/Task写后漂移由外层原守卫回滚。该入口不供旧通用resume直接认可；l6e必须显式snapshot恢复分支验证。
 
 测试使用原w2_001和w2_005隔离DDL、原实际Brief/Bundle/Receipt：完整与部分事实、保留源时间、旧默认Store仍stale、幂等、错误ref/撤销、当前质量过期、写后变化回滚。分析pending/runtime/安装仍named fixtures，不能称主真实首链已过。追加AR2 Host分类；无需迁移或主环境动作。失败回滚本波代码即可，不修改旧默认Store。
+
+### SC4-5l6d1 当前安装SourceReadiness方案
+
+基线42e2e4cc；新增snapshot-readiness-design.md，复核原9权威文件与产品双侧增长目标。明确旧固定文件/逐表cron/元数据质量不能冒充当前安装完整观察；新安装策略适用原requirement年龄与逐fact质量，SourceReadiness原P01-P12合同、状态算法和Receipt保持。查询结果不改名能力健康，源记录数不以基础加衍生投影事件数替代；完整保存Batch及原Store当前证明提供基础身份计数。跨连接投影仅前后复验，不声称跨库原子性。
+
+计划已登记l6d2纯策略、d3候选1.22、d4当前事实读取、d5原就绪算法专用输入、d6原Receipt当前保存回读；随后l6e恢复/l6f Outbox/l6g主升级真实经营链保持。文档对账检查9文件存在且相关逻辑已阅读，diff check通过，memory strong CURRENT/validate GREEN。本波无代码修改、测试执行或运行功能GREEN声明，无源/模型/主库/安装/外部动作。
+
+下一波SC4-5l6d2新增pipeline_snapshot_readiness_policy.py与tests/test_pipeline_snapshot_readiness_policy.py：严格完整12源、绑定原field/relationship-quality hash和purpose，固定新鲜度/对账模式，原query binding显式选择；纯解析不授予ready，先Red再Green并回归原policy。m1串行、不push、230 L0挂起。
