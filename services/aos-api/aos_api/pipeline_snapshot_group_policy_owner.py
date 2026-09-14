@@ -44,6 +44,29 @@ class PipelineSnapshotGroupPolicyOwner:
         return self._groups.run_current(conn,scope=scope,refs=refs,actor=actor,execute=consume)
 
     def _load(self,conn,scope,group,ref):
+        document=self._load_exported_document(conn,scope,group,ref,resource_type='SnapshotRelationshipPolicy')
+        policy=compile_relationship_policy(document)
+        mappings={mapping.read_spec.object_type:mapping for _,_,mapping in group.members}
+        if len(mappings)!=len(group.members) or set(mappings)!=set(policy.object_types):
+            raise ValueError('policy requires exactly this complete object group')
+        for rule in policy.rules:
+            mapping=mappings[rule.row_type]
+            if type(mapping) is SnapshotMappingV3 and mapping.public_projection is not None:
+                fields=set(mapping.public_projection[1])
+            else:
+                base=mapping if type(mapping) is SnapshotMapping else mapping.base
+                fields={target for _,target,_ in base.fields}|{key for key,_ in base.defaults}
+            if rule.reference_property not in fields:raise ValueError('policy reference missing from current public output')
+        return policy
+
+    def _load_exported_document(self,conn,scope,group,ref,*,resource_type):
+        """Internal loader: caller must remain inside this Owner's current group guard."""
+        ref=PipelineExactRef.model_validate(ref)
+        path=PurePosixPath(ref.resource_id)
+        if (ref.resource_type!=resource_type or path.is_absolute()
+                or any(part in {'.','..'} for part in path.parts) or str(path)!=ref.resource_id
+                or path.suffix!='.json'):
+            raise ValueError('exact exported JSON policy required')
         selections=self._selections;draft=group.members[0][1]
         if selections._artifacts.scope!=scope:raise PermissionError('artifact tenant differs')
         current=CurrentInstallationRef.model_validate(draft.installation_ref.model_dump(mode='json',by_alias=True))
@@ -59,16 +82,4 @@ class PipelineSnapshotGroupPolicyOwner:
         raw=selections._artifacts.read_artifact(selected,ref.resource_id,256*1024)
         if type(raw) is not bytes or len(raw)>256*1024 or 'sha256:'+hashlib.sha256(raw).hexdigest()!=ref.content_hash:
             raise ValueError('policy artifact digest differs')
-        policy=compile_relationship_policy(json.loads(raw,object_pairs_hook=_pairs,parse_constant=_constant))
-        mappings={mapping.read_spec.object_type:mapping for _,_,mapping in group.members}
-        if len(mappings)!=len(group.members) or set(mappings)!=set(policy.object_types):
-            raise ValueError('policy requires exactly this complete object group')
-        for rule in policy.rules:
-            mapping=mappings[rule.row_type]
-            if type(mapping) is SnapshotMappingV3 and mapping.public_projection is not None:
-                fields=set(mapping.public_projection[1])
-            else:
-                base=mapping if type(mapping) is SnapshotMapping else mapping.base
-                fields={target for _,target,_ in base.fields}|{key for key,_ in base.defaults}
-            if rule.reference_property not in fields:raise ValueError('policy reference missing from current public output')
-        return policy
+        return json.loads(raw,object_pairs_hook=_pairs,parse_constant=_constant)

@@ -254,3 +254,13 @@ Red先确认模块不存在；18项新增测试5.20秒通过；连同原关系�
 静态原14关系public字段/方向/规范化评测及新5类质量评测通过：全引用、缺客户用途区分、有效行分母保留、客户删除可见、空总体不造样本。重复生成在写入前报immutable candidate target already exists。证据niushop-purpose-quality-candidate-20260914.json；无源调用/业务写入。继承对象映射不称本波重测；OCI/签名未构建更新，不具新版本发布安装资格；customer_cohort_analysis只有用途规则，尚未注册新业务Profile。
 
 下一波SC4-5i4：原PipelineSnapshotGroupPolicyOwner抽取共用exact安装导出文件加载，保持原关系检查；新原组质量读取器在CurrentSnapshotGroupInput和原关系policy的同一当前守卫内加载exact质量策略、计算并绑定tenant/group/manifest/两个policyRef及hash，回调后重新读策略和计量防变更。只读、无数据库表、无Readiness/Fulfillment。隔离PG覆盖撤权、错版本/导出/hash、双租户、计数篡改以及旧Owner回归。
+
+### SC4-5i4 当前组用途计量Owner验证
+
+PipelineSnapshotGroupPolicyOwner抽取原_load_exported_document；原关系加载仍执行完整类型组与public字段检查。新增PipelineSnapshotGroupQualityOwner只在原Assessment/Input当前守卫中读取安装导出的exact质量策略，绑定原关系policy hash，计算原parents.outputRows计数；payload/hash含tenant、group、manifest、assessment、两策略ref/hash、源观察起止与全部计数/用途。同步消费后重读策略与核hash，外层继续重查权限和原输入；离开当前回调的结果是证据而非授权。
+
+新Owner13项及旧Assessment7项隔离PG共20项12.43秒通过；补2项真实artifact hash但错误关系policy/重复JSON键拒绝4.47秒通过。测试是PG原控制/输入＋明确source/签名fixture，不冒称真实安装验收。计数/用途/源input改动，后置文件变化或release撤权拒绝；缺input不触源，错tenant/version/export/type/hash拒绝，重读始终一次源。AR2扫描1927/187/93五类错误为空。无迁移、主库、源数据或安装变化。
+
+上一候选精确提交c4329f32：该波Receipt误写符号HEAD，随后尝试重新task-complete被已释放Lease拒绝，历史未改；本记录与新交付引用exact c4329f32澄清。当前波使用真实SHA，避免重复。
+
+下一波SC4-5i5：核对完整首链时间/事实契约，明确业务30日窗口、当前源观察与历史cutoff的差异，以及12事实的有效行/空总体含义；形成可执行版本化方案。不能用引用覆盖取代字段/业务事实质量，不能把后来读的当前状态冒充事件时刻历史快照，也不能直接放宽现有v1。随后按原Outbox/Readiness/Fulfillment接口接消费与sealed续跑，停止继续扩充无消费者的旁路诊断。
