@@ -175,3 +175,13 @@ SC4-5d按五项推进：安装内首装数据政策自动派生→当前受控�
 文件：ecommerce_product_event_analysis_service.py、ecommerce_product_event_worker.py；测试test_analysis_data_preparation_pg.py和test_product_event_worker.py。测试完整从无Run的初始化+需求事务、数据失败全部回滚、原START重试、队列使用自动入口；不改变未知结果策略，不直接调用数据源。
 
 交付登记纠正：上一只读波task-complete释放父Lease，e5b3f225施工时未及时续登记；已在A0-V-SC4-DATA-AUTOMATION交付回执如实记录，未倒填时间。本波开工已持有A0-V-SC4-EVENT-AUTOMATIC-DATA串行Lease。
+
+### SC4-5e1 SKU完整快照候选
+
+12类核对后先落实可复用v2的SKU：原1.5.0的p03仍watermark且过滤下架/软删，不能当全店总体。新增scripts/prepare_niushop_sku_candidate.py，从精确1.5.0 tree hash sha256:e25d7e781db3b03b72cf8443167d9536b2b1e9aad01aa385e4cd96d0ad4edfec生成不覆盖的platform.ecommerce.niushop/1.6.0。子Lease A0-V-SC4-SKU-SNAPSHOT-CANDIDATE。
+
+只改新候选bundle版本、p03映射、bundle-evals。site_id=1全状态快照，沿用v2源modify_time/create_time、明确is_delete和goods_state；保留原非负约束/脱敏规则，保留goods_id为productId。移除旧watermark/soft_delete执行描述，旧links声明不在v2执行能力内，因此候选明确只规范SKU对象并保留关联键，不宣称hasSku关系已经物化。关联生成和孤儿质量另列后续任务，不能以本候选宣称SKU业务链完整。
+
+新增test_niushop_sku_candidate.py验证原树不可变/不能覆盖已有目标、实际编译与canonical normalize、下架/删除/精确金额/稳定源时间、跨店/负数/额外字段拒绝。所有记录为合成测试，不调用SSH，不发布/安装；当前真实主库仍2/12。其余9类时间缺省/关联/脱敏约束逐项处理，尤其OrderLine不能把全0创建时间伪造为有效历史时间。
+
+SC4-5e1自测修正：原Canonical ProductSku必需barcode，而旧bundle映射sku_no→skuNo不满足。已核对ec_normalizer.py既有normalize_product_sku以及ontology.py字段对应均为sku_no→barcode，新候选沿用原平台语义映射，直接保留源字符串，不生成条码、不补常量。
