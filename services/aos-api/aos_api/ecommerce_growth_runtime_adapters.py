@@ -1302,6 +1302,10 @@ class _AnalysisRunAndTaskResumer:
         self.run_state = None
 
     def resume_run(self, scope, task_run_id, **kwargs):
+        # Only the scoped initialization continuation needs its data check before
+        # changing WAITING_DATA. Preserve the existing order for ordinary resumes.
+        guarded = type(self._tasks) is AipTaskStore and self._tasks._analysis_resume_session is not None
+        result = self._tasks.resume_run(scope, task_run_id, **kwargs) if guarded else None
         self.run_state = self._runs.resume_after_data(
             scope,
             self._run_id,
@@ -1311,7 +1315,7 @@ class _AnalysisRunAndTaskResumer:
             actor=kwargs["actor"],
             occurred_at=self._occurred_at,
         ).authority
-        return self._tasks.resume_run(scope, task_run_id, **kwargs)
+        return result if guarded else self._tasks.resume_run(scope, task_run_id, **kwargs)
 
 
 class AnalysisAdvanceHostService:
@@ -2015,6 +2019,9 @@ class AnalysisAdvanceHostService:
         if not key:
             raise ValueError("analysis idempotencyKey is invalid")
 
+    def _task_store_for_resume(self, transaction, scope):
+        return AipTaskStore(TransactionBoundConnectFactory(transaction, scope))
+
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         parsed = _strict_analysis_command(command)
         key = parsed["key"]
@@ -2057,7 +2064,7 @@ class AnalysisAdvanceHostService:
                 prior=receipts.read_exact(command["priorReceiptRef"]),
             )
             event_time = occurred_at or checked_at
-            tasks = AipTaskStore(TransactionBoundConnectFactory(transaction, scope))
+            tasks = self._task_store_for_resume(transaction, scope)
             resumer = _AnalysisRunAndTaskResumer(
                 runs,
                 tasks,

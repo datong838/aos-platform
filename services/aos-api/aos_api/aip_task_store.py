@@ -56,7 +56,12 @@ def _canonical_hash(value: Any) -> str:
 
 
 class AipTaskStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, _analysis_resume_session=None) -> None:
+        if _analysis_resume_session is not None:
+            from aos_api.ecommerce_analysis_data_resume import _AnalysisDataResumeSession
+            if type(_analysis_resume_session) is not _AnalysisDataResumeSession:
+                raise TypeError("exact internal analysis resume session required")
+        self._analysis_resume_session = _analysis_resume_session
         self._connect_factory = connect_factory or db_connect
 
     def create_task(
@@ -745,8 +750,13 @@ class AipTaskStore:
                           OR p.action_type_snapshot->>'id'='ecommerce_analysis_bootstrap')
                    FOR SHARE OF d""", (*scope.key, run_id),
             ).fetchone()
-            if bootstrap is not None:
-                raise AipTaskTransitionBlocked("ANALYSIS_BOOTSTRAP_CONTINUATION_AUTHORITY_REQUIRED")
+            if bootstrap is not None or self._analysis_resume_session is not None:
+                if self._analysis_resume_session is None:
+                    raise AipTaskTransitionBlocked("ANALYSIS_BOOTSTRAP_CONTINUATION_AUTHORITY_REQUIRED")
+                self._analysis_resume_session.authorize_task_resume(
+                    conn, scope, run, task, actor=actor, idempotency_key=idempotency_key, reason=reason,
+                    expected_run_version=expected_run_version, expected_task_version=expected_task_version,
+                )
             request = self._control_request("resume", expected_run_version, expected_task_version, reason)
             replay = self._control_replay(conn, scope, run_id, str(task["task_id"]), "resume", idempotency_key, request)
             if replay is not None:

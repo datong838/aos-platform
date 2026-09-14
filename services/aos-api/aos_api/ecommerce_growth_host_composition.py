@@ -310,3 +310,15 @@ __all__ = [
     "select_ecommerce_growth_registry",
     "build_ecommerce_growth_host_ports",
 ]
+
+
+def build_analysis_resume_registry(session) -> EcommerceGrowthHostAdapterRegistry:
+    """Only the exact current internal session may specialize the analysis owner."""
+    from aos_api.ecommerce_analysis_data_resume import _AnalysisDataResumeSession, _CurrentAnalysisResumeHost
+    from aos_api.ecommerce_growth_runtime_adapters import AnalysisAdvanceAdapter
+    if type(session) is not _AnalysisDataResumeSession:
+        raise TypeError("exact internal analysis continuation session required")
+    original = build_runtime_ecommerce_growth_registry()
+    bindings = {operation: original._binding(operation) for operation in original.operation_ids}
+    bindings["ecommerce_growth_analysis_advance"] = AnalysisAdvanceAdapter(_CurrentAnalysisResumeHost(session)).binding()
+    return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)

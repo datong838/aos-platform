@@ -1489,3 +1489,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_continuation_origin.py` | Host原路径 | 当前来源内复验原启动决定与初始化证据，不授予恢复或Provider许可 | `269421b1f0722819a3375b5c58f856f6f5727b3327db24b6639e7493ccdeb161` |
+
+## SC4-5c3b 专用数据恢复事务
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_data_resume.py` | Host原路径 | 原来源事务内逐次验证数据并恢复内部分析，不授予Provider许可 | `b8f7c39b86225c0f137dc20e4ac3443d2f9fe63e5e7598109101fe6ca47fa603` |
