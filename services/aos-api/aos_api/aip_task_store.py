@@ -629,10 +629,17 @@ class AipTaskStore:
         actor: str,
         idempotency_key: str,
         reason: str = "",
+        checkpoint_before_first_step: bool = False,
     ) -> RunControlResult:
+        if type(checkpoint_before_first_step) is not bool:
+            raise ValueError("initial checkpoint option must be boolean")
         with self._connect(scope) as conn:
             run, task = self._locked_run_and_task(conn, scope, run_id)
             request = self._control_request("pause", expected_run_version, expected_task_version, reason)
+            if checkpoint_before_first_step:
+                material = {key: value for key, value in request.items() if key != "requestHash"}
+                material["checkpointPolicy"] = "before-first-step"
+                request = {**material, "requestHash": _canonical_hash(material)}
             replay = self._control_replay(conn, scope, run_id, str(task["task_id"]), "pause", idempotency_key, request)
             if replay is not None:
                 return replay
@@ -645,6 +652,8 @@ class AipTaskStore:
                    AND run_id=%s AND status='running' AND lease_expires_at>NOW() LIMIT 1""",
                 (*scope.key, run_id),
             ).fetchone()
+            if checkpoint_before_first_step:
+                self._initial_input_checkpoint(conn, scope, run, task, actor)
             run_status = "pausing" if active is not None else "paused"
             target = transition_task_status(TaskStatus.EXECUTING, TaskStatus.PAUSED)
             conn.execute(
@@ -662,6 +671,57 @@ class AipTaskStore:
             result = self._control_result(conn, scope, run_id, str(task["task_id"]))
             conn.commit()
             return result
+
+    def _initial_input_checkpoint(self, conn: Any, scope: TenantScope, run: Any, task: Any, actor: str) -> str:
+        """Save the pending first input, never a successful business step."""
+        existing = conn.execute(
+            """SELECT 1 FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s
+               UNION ALL SELECT 1 FROM aip_checkpoint WHERE org_id=%s AND project_id=%s AND run_id=%s LIMIT 1""",
+            (*scope.key, run["run_id"], *scope.key, run["run_id"]),
+        ).fetchone()
+        if existing is not None or run["last_checkpoint_id"] is not None:
+            raise AipTaskTransitionBlocked("initial checkpoint requires an unexecuted run")
+        plan = conn.execute(
+            """SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s
+               AND plan_revision_id=%s FOR SHARE""",
+            (*scope.key, run["plan_revision_id"]),
+        ).fetchone()
+        if (plan is None or plan["task_id"] != task["task_id"] or plan["approval_status"] != "approved"
+                or task["current_plan_revision_id"] != plan["plan_revision_id"] or not plan["steps"]):
+            raise AipTaskTransitionBlocked("initial checkpoint requires current approved plan")
+        first = plan["steps"][0]
+        if first.get("applicability", "applicable") != "applicable" or any(
+                item.get("to") == first["stepKey"] for item in plan["dependencies"]):
+            raise AipTaskTransitionBlocked("initial checkpoint requires applicable first root step")
+        dependency = self._runtime_dependency_snapshot(run, plan)
+        dependency_hash = _canonical_hash(dependency)
+        if dependency_hash != run["dependency_snapshot_hash"]:
+            raise AipTaskTransitionBlocked("initial checkpoint dependencies drifted")
+        input_hash = self._step_input_hash(run, plan, first, 1)
+        lineage = {
+            "taskRunRef": {"resourceType": "TaskRun", "resourceId": run["run_id"], "version": int(run["version"]) + 1},
+            "planRevisionRef": {"resourceType": "PlanRevision", "resourceId": plan["plan_revision_id"],
+                "revision": int(plan["revision"]), "contentHash": plan["content_hash"]},
+        }
+        state = {"schemaVersion": "aos.aip.initial-input-checkpoint/v1", "kind": "initial-input",
+            "status": "not-started", "stepKey": first["stepKey"], "attempt": 1,
+            "inputHash": input_hash, "dependencySnapshotHash": dependency_hash, "lineage": lineage,
+            "artifactRefs": [], "completedStepIds": []}
+        checkpoint_id = f"checkpoint-{uuid.uuid4().hex[:20]}"
+        conn.execute(
+            """INSERT INTO aip_checkpoint
+               (org_id,project_id,checkpoint_id,run_id,sequence,schema_version,step_key,state_hash,
+                state_snapshot_ref,artifact_refs,attempt,plan_revision_id,input_hash,
+                dependency_snapshot,dependency_snapshot_hash,checkpoint_policy,usage_refs,receipt_refs,lineage,created_by)
+               VALUES(%s,%s,%s,%s,1,2,%s,%s,%s::jsonb,'[]',1,%s,%s,%s::jsonb,%s,%s::jsonb,'[]','[]',%s::jsonb,%s)""",
+            (*scope.key, checkpoint_id, run["run_id"], first["stepKey"], _canonical_hash(state),
+             self._json(state), plan["plan_revision_id"], input_hash, self._json(dependency), dependency_hash,
+             self._json({**dict(first.get("checkpointPolicy") or {}), "position": "before-first-step"}),
+             self._json(lineage), actor),
+        )
+        conn.execute("UPDATE aip_task_run SET last_checkpoint_id=%s WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                     (checkpoint_id, *scope.key, run["run_id"]))
+        return checkpoint_id
 
     def resume_run(
         self,

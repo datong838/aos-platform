@@ -77,3 +77,9 @@ SC3-2组合复核补充：Context入口在原事件边界中先调用已实现An
 复核发现AipProductionStartService.start/get/list直接使用全局connect，与已绑定的Context/Saga不共享事务，正式事件内调用会看不到未提交Plan或发生锁等待，且启动后外层失败不能回滚。先修改services/aos-api/aos_api/aip_production_start_service.py增加可选connect_factory，默认保持原connect，内部默认Contract/Action/Task Store复用同factory；所有start/get/list使用factory。原门禁、审批要求和状态机不改变，不直接调用底层create_run_from_production_start_gate。
 
 在services/aos-api/tests/aip/test_w2d_start_gate.py追加原有隔离候选fixture的事务绑定测试（legacy fixture scope，与真实租户无关）：实际approved Proposal经原StartGate产生TaskRun，同事务get/list可见，同键重放一致；外层故障后StartDecision/TaskRun/Plan审批和Task状态完全回滚。未批准候选仍拒绝，保留原测试累计。SC4-3b随后准备启动ImpactPreview与当前受控Proposal；不能伪造审批或编造预算，经营建议exact评审仍独立。
+
+## SC4-3b 初始输入检查点（先于启动审批组合）
+
+复核RuntimeBinder允许尚无Checkpoint，但DataRequirementSaga明确要求暂停Checkpoint。现有AipTaskStore仅complete_step生成检查点，不能为准备取数伪造portrait完成。因此先改services/aos-api/aos_api/aip_task_store.py：pause_run增加默认False的checkpoint_before_first_step选项；仅首次、无任何StepRun/Checkpoint、当前approved Plan及running TaskRun可使用。锁内按首个适用步骤和attempt=1计算原_step_input_hash、原运行依赖hash；保存显式initial-input、status=not-started的Checkpoint（不建StepRun、无TAOR、无产物、无使用量），再与原暂停/控制Receipt原子提交。普通pause行为及请求hash不变；特殊选项进入幂等hash，不能与普通暂停互换重放。
+
+初始Checkpoint继承原resume输入/依赖对账协议，正确输入可复用，Plan或输入漂移必须invalidated。新增services/aos-api/tests/extension_runtime/test_analysis_initial_checkpoint_pg.py，真实TaskStore创建/批准/启动的隔离运行fixture，验证暂停和恢复、同键唯一、已执行步骤拒绝、外层回滚，明确不代表经营步骤完成。数据门只获得可恢复位置；真正指标取证和画像生成仍待后续。SC4-3c再继续独立内部初始化Action/Preview/授权组合，完整审批方案未实现前不放行正式START。

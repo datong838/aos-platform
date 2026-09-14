@@ -32,3 +32,5 @@ SC4-1：编译输入按当前蓝图组装三阶段Skill/职责/模板/本任务C
 SC4-2：当前Context内真实Store exact解析与原CompileSaga已接，隔离PG可生成实际Plan/CompilationReceipt，累计37 passed，撤销和下游故障回滚。配置/模型/能力fixture边界保留；Plan仍需启动门，未创建实际TaskRun。下一SC4-3，主安装首链未完成。
 
 SC4-3a：原生产启动门支持Host外层事务，9项累计回归通过，TaskRun/启动决定/Plan审批可随外层故障全部回滚。下一启动Preview/审批承接与实际TaskRun流程，然后接回正式事件START。主安装首链仍未完成。
+
+SC4-3b：TaskRun可在首步未执行时保存真实初始输入检查点并暂停，15项累计回归通过，输入漂移拒绝恢复，不伪造画像完成。下一启动Preview/审批组合及sealed Host接线；首链与八场景尚未完成。
