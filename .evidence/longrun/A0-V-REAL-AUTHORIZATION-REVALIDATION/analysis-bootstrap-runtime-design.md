@@ -193,3 +193,11 @@ SC4-5e1自测修正：原Canonical ProductSku必需barcode，而旧bundle映射s
 输出source_updated_at仅为当前观测版本，properties.updatedAt/observedAt同为观测时间，并明确sourceUpdatedAtBasis=observation、sourceModificationTimeKnown=false；不生成sourceModifiedAt/不伪造历史源时间，已有业务源字段原样保留。CoreObjectRecord现有updatedAt兼容保留，所有使用此版本的质量/分析必须读明示时间语义，不能当源历史修改证明。物理缺失不推断删除；这一版本不支持带软删状态或关系声明的映射（有此类字段需另选明确v2/后继），先用于Category。
 
 拒绝占用上述保留属性、默认状态/调用者嵌套任意对象、不合法时间基准/删除基准、未知状态、跨店/重复/额外字段；输出直接通过原canonical normalize验证。此波只实现纯映射机制，不改主库或安装、不生成业务Fulfillment。Category候选紧接其后补入下一静态候选，原Product事件只认v1/v2边界保持，v3不借此扩展事件触发权限。
+
+### SC4-5e3 分类完整层级校验
+
+修改pipeline_snapshot_materialization_v3.py及test_pipeline_snapshot_materialization_v3.py。在v3 validation增加可选且严格的hierarchy声明（parent_field为已选int列，root_value为显式int哨兵；当前主键列也必须int），原声明无hierarchy兼容。完整有界快照先经过原行/作用域/唯一性校验，再以主键→父键构图：根哨兵不能占用为真实主键，父键必须是根或同一批中的节点，拒绝自环/多节点环，顺序无关、支持多个根。迭代遍历+已验证缓存，避免递归深度问题；失败整批无输出。原source读取仍必须证明完整快照，不能拿一页进行此校验后声称全店完整。
+
+测试根/多层/乱序/森林/孤儿/自环/多节点环、深链1000无递归溢出、错误列/根类型/主键类型拒绝。该机制只验证已读全量分类层级，不生成Product.inCategory或任何关系Receipt。新候选Category将pid→parentCategoryId并采用本声明，再完成静态候选。
+
+SC4-5e3候选落地：新增scripts/prepare_niushop_category_candidate.py，独立子Lease A0-V-SC4-CATEGORY-SNAPSHOT-CANDIDATE；从1.6.0精确树891b9312ecd040d19388e624fc40d636f08e2c567e56487650283a38aab6b0c6生成1.7.0，只变bundle版本、p04、静态eval。pid映射原Canonical parentCategoryId；is_show明确0/1→INACTIVE/ACTIVE，同时保留原isShow；未获新源数据，未知值拒绝。旧custom循环/孤儿说明替换为可执行hierarchy规则；去除旧未执行的Product.inCategory声明并明确关系仍未物化，保留分类原字段。未发布/安装；已有三类静态评估再次使用实际新候选目录运行。

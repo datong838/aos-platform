@@ -97,3 +97,35 @@ def test_observation_snapshot_keeps_exact_decimal_and_rejects_lossy_float():
     for invalid in (1.23,Decimal('-1'),Decimal('NaN')):
         with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
             materialize_snapshot([raw|{'synthetic_quantity':invalid}],plan,observed_at=NOW)
+
+
+def hierarchy_mapping():
+    value=mapping()
+    value['validation']['hierarchy']={'parent_field':'pid','root_value':0}
+    return value
+
+
+def test_category_hierarchy_accepts_shuffled_forest_and_deep_chain():
+    plan=compiled(hierarchy_mapping())
+    rows=[row()|{'category_id':3,'pid':2},row()|{'category_id':1,'pid':0},
+          row()|{'category_id':4,'pid':0},row()|{'category_id':2,'pid':1}]
+    assert len(materialize_snapshot(rows,plan,observed_at=NOW))==4
+    deep=[row()|{'category_id':i,'pid':i-1} for i in range(1000,0,-1)]
+    assert len(materialize_snapshot(deep,plan,observed_at=NOW))==1000
+
+
+@pytest.mark.parametrize('parents',[{1:9},{1:1},{1:2,2:1},{0:0},{1:0,2:3,3:2}])
+def test_category_hierarchy_rejects_orphans_cycles_and_root_collision(parents):
+    rows=[row()|{'category_id':key,'pid':parent} for key,parent in parents.items()]
+    with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
+        materialize_snapshot(rows,compiled(hierarchy_mapping()),observed_at=NOW)
+
+
+@pytest.mark.parametrize('fault',['missing_parent','text_parent','bool_root','extra_rule'])
+def test_category_hierarchy_declaration_is_exact(fault):
+    value=hierarchy_mapping();rule=value['validation']['hierarchy']
+    if fault=='missing_parent':rule['parent_field']='not_selected'
+    elif fault=='text_parent':rule['parent_field']='category_name'
+    elif fault=='bool_root':rule['root_value']=False
+    else:rule['custom']='unsafe'
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)

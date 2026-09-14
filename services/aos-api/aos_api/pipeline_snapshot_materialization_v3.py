@@ -20,6 +20,7 @@ class SnapshotMappingV3:
     status_field: str
     status_target: str
     statuses: tuple[tuple[int,str],...]
+    hierarchy: tuple[str,int] | None = None
 
     @property
     def read_spec(self):return self.base.read_spec
@@ -50,6 +51,15 @@ def compile_v3(mapping,read_spec):
         target=_identifier(status['property_target'])
         if target.casefold() in targets|_RESERVED:raise ValueError('state target collision')
         kinds={f['source']:f['type'] for f in fields}
+        hierarchy=None
+        if 'hierarchy' in value['validation']:
+            rule=value['validation'].pop('hierarchy')
+            if (type(rule) is not dict or set(rule)!={'parent_field','root_value'}
+                    or type(rule['root_value']) is not int
+                    or kinds.get(rule['parent_field'])!='int'
+                    or kinds.get(read_spec.primary_key)!='int'):
+                raise ValueError('selected integer hierarchy required')
+            hierarchy=(_identifier(rule['parent_field']),rule['root_value'])
         if kinds.get(status['field'])!='int':raise ValueError('selected integer state required')
         states=status['values']
         if type(states) is not dict or not 1<=len(states)<=32:raise ValueError('bounded states required')
@@ -72,7 +82,7 @@ def compile_v3(mapping,read_spec):
         value['snapshot_materialization']={key:config[key] for key in base_keys}
         value['snapshot_materialization']['schema_version']='aos.snapshot-materialization/v1'
         base=compile_snapshot_mapping(value,read_spec)
-        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)))
+        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy)
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
         raise ValueError('SNAPSHOT_MAPPING_INVALID') from None
 
@@ -92,6 +102,19 @@ def materialize_v3(rows,mapping,*,observed_at):
                     raise ValueError('bounded text required')
             converted.append(row)
         output=materialize_snapshot(converted,mapping.base,observed_at=observed_at)
+        if mapping.hierarchy is not None:
+            parent_field,root=mapping.hierarchy
+            parents={row[mapping.read_spec.primary_key]:row[parent_field] for row in rows}
+            if root in parents or any(parent!=root and parent not in parents for parent in parents.values()):
+                raise ValueError('hierarchy root collision or missing parent')
+            verified=set()
+            for node in parents:
+                trail=set()
+                while node!=root and node not in verified:
+                    if node in trail:raise ValueError('hierarchy cycle')
+                    trail.add(node)
+                    node=parents[node]
+                verified.update(trail)
         observed=observed_at.astimezone(timezone.utc).isoformat(timespec='microseconds').replace('+00:00','Z')
         states=dict(mapping.statuses)
         for source,item in zip(rows,output):
