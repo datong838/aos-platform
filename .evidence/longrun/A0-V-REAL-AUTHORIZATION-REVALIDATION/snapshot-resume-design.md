@@ -63,6 +63,12 @@ Fulfillment稳定时间的具体规则：身份由上述固定exact引用派生�
 
 若l6e2等暴露原接口或requestedOutputs缺口，先在本表登记最小修复与测试，再改代码。大步骤不因测试变绿提前完成。测试同tenant即使schema不同也共享原投影advisory锁，PG执行串行；纯校验可独立进行。
 
+## e6 原生全结构组合验收
+
+e6a先新增tests/extension_runtime/test_analysis_snapshot_native_claims_pg.py：在原pytest一次性完整迁移数据库public中，复用原host_case的安装/执行代次，创建显式命名的来源和十二路调度输入。meta_source由原触发器分配configuration_revision并生成不可变历史，不手填版本、不复制源历史。使用原SourceSelection/RuntimeControl/GroupClaim Owner保存和复验，actor统一fixture-host；仅安装资产/映射当前性保留显式测试替身。不得重写SQL public前缀、创建影子Task表、修改权限或放松约束来使测试通过。所有设置都在一次性数据库，既有stored事务最终回滚，不执行主库迁移。
+
+e6a退出条件：完整12许可一次保留、同组重放不再消耗、任一路原来源版本改变或租户改变均拒绝、外层失败不留下半组。此段不读取源、不生成快照、不宣称首链完成。若发现原生权限/结构冲突，先形成Red证据并判断是否原产品缺陷，不能用fixture加权绕过。e6b继续同底座原GroupIngress和投影；随后接真实初始化、原Pending、Evidence/Readiness/Fulfillment和统一恢复。准备源读取需要独立提交许可，不能提前提交原Task事务，跨库Store仅前后复验而非跨库原子性。
+
 ## 本次只读主库核对的限制
 
 ### l6e2实施约束

@@ -656,3 +656,13 @@ Red重建Session仍进入Pending，1失败7.57s（/tmp/sc4-e5c-red.log）。隔�
 一次并行累计回归在autouse迁移ALTER ROLE aos_runtime发生tuple concurrently updated，138项断言均未执行（/tmp/sc4-e5c-regression.log）；检查无其他pytest后串行重跑，138 passed /4.76s（/tmp/sc4-e5c-regression-final.log）。方案已更正为同一PG实例所有pytest串行，包括纯合同（默认亦初始化一次性库）；没有用产品改动掩盖环境错误。各正常组7项既有warnings。AR2 1951/192/93错误列表空（/tmp/sc4-e5c-closure.log），编译/diff和memory validate通过。
 
 全部业务测试18432隔离；主库未升级、未真实读取商城或调用Provider，未push，230 L0挂起，用户原改动保护。真实原初始化/状态/统一Store已组合，完整十二源交付stage仍named；不能称真实首链完成。下一波e6组合实际完整十二源Owner与原初始化Task/Run/Checkpoint/Requirement，先核对两组fixture的同连接/命名空间和原Owner边界，不能跨连接伪造原子性或复制任务状态。之后Outbox自然自动消费、主升级安装、真实首链/八场景/连续观察及发布判断继续。
+
+## 2026-09-15 SC4-5l6e6a 原生十二路许可组合
+
+基线3aa77d274c4743e132b87ed77d0290dd229fd755，m1串行。新增test_analysis_snapshot_native_claims_pg.py，在18432实例一次性完整迁移数据库public中使用原SourceSelection/RuntimeControl/GroupClaim Owner、原meta_source版本触发器和原调度/来源外键。无替换SQL表名前缀、影子Task、临时DDL或权限扩张。actor统一fixture-host；安装资产/映射当前校验仍为明确named fixture，不是安装授权验收。原host_case提供测试安装/代次，stored最终整体回滚。
+
+首次测试因fixture遗漏meta_pipeline父记录触发原fk_meta_schedule_pipeline_ti4d7：1 setup error/4.84s（/tmp/sc4-e6a-first.log）。按原约束补齐测试父记录，没有修改产品约束。原生四项首次通过4 passed/7.06s（/tmp/sc4-e6a-second.log）；补充断言来源触发器确实生成不同revision与第二份历史后，最终4 passed/9.91s（/tmp/sc4-e6a-final.log）。证明完整12保留和exact重放不多耗、来源版本更新及租户漂移拒绝、外层失败12组整体回滚。七项既有警告未影响断言。
+
+AR2 phase ar2-7：1951 scanned/192 classified/93 migrated，五类错误均为空（/tmp/sc4-e6a-closure.log）。新增测试不产生反向产品依赖，无新增分类或改旧preHash。主库未迁移，未读真实源/调用模型/创建真实Task/安装发布；保留用户三份已有修改，不push，230 L0挂起。不是首链完成或跨库原子性证明。
+
+下一波e6b：在同原生结构中建立独立提交的十二源GroupIngress准备与原投影，明确源读取替身；保留原许可先提交再读源的事务规则，不提交原stored Task事务。其后将原初始化产生的Task/Run/Checkpoint/Requirement与上述实际快照组合，删除named Pending/stage边界，再推进自然调度首链、八工作台、连续观察及发布判断。
