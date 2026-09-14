@@ -553,3 +553,21 @@ AR2扫描1925/187/93五类错误为空。主系统数据/安装仍未改变；�
 185=125+60、32=27+5和Review缺口1与此前关系assessment精确对账。结论：不能把问题归因SSH或P08 site过滤；保持P08现有范围，不扩大站点读取，不伪造CustomerLite。订单经营事实仍真实存在，不应为关联缺口删掉27条有效订单。缺口须按业务用途披露/约束：全店汇总与商品经营分析可保留其订单事实并标注客户关联未知；客户分群/客户动作不能将未知关联计作可定向客户。该处仅确定后续方案方向，没有放宽正式Readiness门禁。
 
 现有source-quality.v1.json只声明元数据可观察质量，不包含行级关系用途规则，因此下一波先补显式用途质量方案与包策略，再从原组质量证据接实际Readiness/Fulfillment；不能用pipeline成功代替业务数据完整。主库/安装未变，无正式Fulfillment。AR2继续按ar2-7核验；脚本输出存在时在任何源调用前拒绝，避免重复诊断覆盖原证据。
+
+### SC4-5i2 用途显式关系质量计量方案
+
+保持现有 initial_store_analysis v1 的12事实、qualityThreshold=1、acceptableDegradation=[]不变。新增纯计量模块 pipeline_snapshot_relationship_quality.py 与对应测试，不授予Readiness/Fulfillment。声明式 aos.snapshot-relationship-quality/v1 策略绑定 exact relationshipPolicyHash，逐用途列出全部关系的 required/disclose；不得漏项、重复、未知规则或全disclose。原关系策略决定引用编码、方向和allowUnset，计量不得自行修改。
+
+每规则以原cohort的rowType行计量：observed=deletedExcluded+eligible；先排除显式is_deleted=true源行，其余全部保留分母，未知/缺失父对象不能从分母剔除。每行多个引用全部指向存在且未删除父对象才complete；原allowUnset允许的空值另计unset，不伪称已关联。missingReference/invalidReference/missingParent/deletedParent按行诊断，可交叉但incompleteRows只计一次；complete+allowedUnset+incomplete=eligible。输出每用途requiredIncomplete和disclosedIncomplete规则，不生成ready/satisfied、分数、FactQualityMeasurement或空分母通过。
+
+复用原关系assessment的完整cohort、canonical key、重复键、限制和策略hash验证，禁止查询、写库和推断缺行删除。保持不可变编译policy并在执行时重编译核验，防止dataclass伪造。测试：有效订单不丢、显式删除分母、缺失/删除父、多个分类联合完整、允许unset、空表、方向对称、错hash/漏规则/全disclose/伪造policy/非法cohort拒绝，以及输入不变。
+
+后续登记：SC4-5i3 构造新候选包显式用途策略（旧1.17不改、无安装资格）；SC4-5i4 当前安装导出策略与原组Owner绑定；SC4-5i5 明确30日事件窗与source observation时间、逐事实字段质量/总体单位及版本化Profile/DataRequirement，不把当下读数冒充历史快照；SC4-5i6 原Outbox消费、原Readiness/Fulfillment与sealed续跑组合。用途计量不能单独关闭真实首链缺口。回滚仅停用新增入口，原写者、质量阈值、主库不变。
+
+### SC4-5i2 用途关系质量计量验证
+
+新增 pipeline_snapshot_relationship_quality.py：策略exact绑定原关系policyHash，逐用途完整列出required/disclose，禁止漏项/重复/未知/全disclose；执行时重编译防篡改。复用原完整cohort/key/重复/容量/关系策略检查。每规则observed=excluded+eligible，仅显式删除行排除；活跃行缺客户仍保留分母。多个引用全部存在且父未删除才complete，allowUnset单列；缺失/非法/删除按行计数并仅一次incomplete。返回用途所需缺口、应披露缺口、空分母规则，不产生ready/Fulfillment或改旧阈值。
+
+Red先确认模块不存在；18项新增测试5.20秒通过；连同原关系和正式DataRequirement质量测试共82项4.85秒通过（8个既有运行警告）。订单185/有效125/客户完整98/缺27是基于已核验聚合计数构造的测试，不冒充再次源读。AR2 ar2-7扫描1926/187/93，五类错误为空。无源连接、数据库、安装或业务副作用；主库仍未升级。保护9月13日进度用户改动。
+
+下一波SC4-5i3：从冻结1.17生成1.18候选，新增声明式用途关系质量策略及静态执行评测。initial_store_analysis对Order.placedByLite与ProductReview.byMember披露但不剔除事实，其他12关系必需；customer_cohort_analysis要求全部14关系，不代表该业务Profile已注册或允许动作。旧1.17、12映射、原source-quality元数据策略与首装DataRequirement保持不变；没有签名安装/正式就绪资格。随后SC4-5i4从当前包Owner绑定该导出策略和原快照，避免外部自报计数。
