@@ -1517,3 +1517,11 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_bundle.py` | Host原路径 | Original current Brief and Bundle orchestration; no Run resume authority | `061c9dc09ac2c5a0877e6cf8f033dbd8ebf33a98c43fafffb3947dcd71921479` |
+
+### SC4-5l6e3 Snapshot resume contract Host
+
+Original runtime DTO consumer only; no dispatch acceptance, state transition, or external authority. Append-only classification; existing preHash and verifier rules unchanged.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_resume_contracts.py` | Host原路径 | Strict snapshot command/result and tenant lineage; no runtime execution | `167c2287eb5670d1dae6ce7e9caaa218f34cd87a0506ac921bbd3321ad8dd170` |

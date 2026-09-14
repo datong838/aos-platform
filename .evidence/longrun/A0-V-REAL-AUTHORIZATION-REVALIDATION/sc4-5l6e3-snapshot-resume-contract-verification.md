@@ -1,0 +1,9 @@
+## SC4-5l6e3 快照续跑命令与结果合同（2026-09-15）
+
+基线5ca445a8，m1/AOS-000573。新增ecommerce_analysis_snapshot_resume_contracts.py、tests/test_analysis_snapshot_resume_contracts.py；原snapshot-resume-design.md已先补严格字段、TenantScope和对象复制边界。新runtime.analysis.resume_snapshot固定字段，复用原hash/exact解析；明确一份EvidenceBundle、原BusinessEvidence和语义版本ReadinessPolicy，不接收mappingRef/假hydration/额外授权，不改变旧_strict_analysis_command运行入口。独立SnapshotFulfillmentResumeResult保留原Task/TaskRun类型与受限计数，绑定命令hash、exact引用与显式Host TenantScope。
+
+Red：新增模块缺失；新增scope接口9失败；合法DTO重验最初因receiptId:null被拒绝；改为不输出空值后又暴露Unchecked Union模型把bool revision序列化为1。最终保留嵌套原始值进入before校验，所有Task/Bundle重新解析，零版本model_copy补Red后拒绝。未放宽原exact解析。54新pure+20原可恢复分析运行合同回归，最终74 passed /4.82s（/tmp/sc4-e3-final3.log），7项既有warnings；覆盖模式/字段/hash/版本/期限/同命令血缘、tenant、bool/字符串强制转换、对象拷贝绕过及合法DTO重验。纯合同不是实际状态转换证明。
+
+原架构验证识别新模块是原CanonicalRuntimeRef兼容合同的反向调用者；已另登记非重叠分类Lease，追加Host原路径及初始hash 167c2287eb5670d1dae6ce7e9caaa218f34cd87a0506ac921bbd3321ad8dd170。未改旧preHash或验证器。AR2 1949扫描/191分类/93迁移，五类错误列表空（/tmp/sc4-e3-final-closure.log）；编译/diff通过，memory validate GREEN。本波无数据库/商城/模型/主环境写；不push，230 L0挂起，用户原改动保留。
+
+下一波l6e4：新增ecommerce_analysis_snapshot_resume_context.py与extension_runtime/test_analysis_snapshot_resume_context_pg.py，先细化同事务两阶段守卫：原初始化/dispatch与完整投影包住全程；阶段A完成原Pending/Bundle/Readiness/Fulfillment检查后退出只读状态守卫，再由仍有效的安装/Binding/原事务限定内部阶段B；防止把变更后状态错误地当成旧paused复验。随后e5原Task/业务Run CAS和统一Receipt，e6原起点全链、Outbox自动触发、主升级安装、真实首链八场景与观察继续。整体业务目标未完成，自动接续。
