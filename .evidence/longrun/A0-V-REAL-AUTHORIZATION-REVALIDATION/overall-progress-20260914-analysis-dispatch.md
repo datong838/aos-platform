@@ -147,4 +147,3 @@ SC4-5g8：a0v046 隔离 schema 与 PipelineSnapshotGroupRelationshipJournal 完�
 AR2 ar2-7 扫描 1919 模块，五类错误为空。主库仍未迁移，关系未应用，无正式 Fulfillment。代码 head 为 a0v046，主库此前确认 a0v038 未改。来源发行资产仍为测试 fixture；准备记录不能当已应用 Receipt。
 
 下一项：独立提交确认后按原 ConsistencyStore 应用原对象批次与关系，验证 Receipt 完整性、忽略项、失败恢复和旧关系处理，再接业务 Readiness。
-
