@@ -1,0 +1,77 @@
+pipeline_id: P08
+source_table: ns_member
+target_ot: CustomerLite
+primary_key: member_id
+site_filter: "site_id=1"
+incremental_strategy: watermark
+incremental_cursor:
+  fields: [modify_time, member_id]
+  fallback: create_time
+unique_key_pattern: "niushop:{site_id}:{pk}"
+wave: D1.5
+links:
+  - {name: placedByLite, from: Order, to: CustomerLite, source_field: member_id}
+derived_metrics:
+  - {name: order_count_delta, source: "P05 反向聚合 by member_id"}
+  - {name: last_order_days_delta, source: "now - max(Order.create_time)，按天"}
+field_mappings:
+  # CustomerLite v2 公开投影；联系方式、身份资料和地址不进入 Dataset/OT。
+  - {source: member_id, target: id, type: int}
+  - {source: member_level, target: memberLevel, type: int}
+  - {source: reg_time, target: createdAt, type: timestamp}
+  - {source: last_visit_time, target: updatedAt, type: timestamp}
+  - {source: status, target: status, type: int}
+public_source_allowlist:
+  - member_id
+  - member_level
+  - status
+  - site_id
+  - is_delete
+  - reg_time
+  - create_time
+  - modify_time
+  - last_visit_time
+  - login_time
+  - last_login_time
+customer_lite_schema_version: 2
+pii_exclusion:
+  # 绝对敏感 - 绝不展示
+  - password
+  - pay_password
+  # OpenID 类 - 微信/支付宝/百度/头条/抖音/QQ
+  - wx_openid
+  - weapp_openid
+  - wx_unionid
+  - ali_openid
+  - baidu_openid
+  - toutiao_openid
+  - douyin_openid
+  - qq_openid
+  # IP 地址类
+  - login_ip
+  - last_login_ip
+  # 内部账号标识
+  - source_member
+  - fenxiao_id
+  - share_member
+  # 工作台可解析但 CustomerLite 绝不公开的受保护身份字段
+  - username
+  - member_code
+  - nickname
+  - mobile
+  - email
+  - headimg
+  - realname
+  - sex
+  - birthday
+  - province_id
+  - city_id
+  - district_id
+  - address
+  - full_address
+source_field_count: 77
+notes:
+  - "ns_member 表共 77 个字段，site_id=1 会员数=53"
+  - "CustomerLite v2 只公开 id/memberLevel/status/createdAt/updatedAt；updatedAt 可由 OTWriter 水位补齐"
+  - "public_source_allowlist 必须与 ec_source_adapter._PUBLIC_FIELDS_BY_TABLE['ns_member'] 一致"
+  - "手机号、OpenID、邮箱、昵称、头像、姓名和地址仅能在 W6-08 获批执行边界由受控 resolver 解析，不进入本映射"

@@ -213,3 +213,9 @@ SC4-5e3候选落地：新增scripts/prepare_niushop_category_candidate.py，独�
 修改pipeline_snapshot_materialization_v3.py和tests/test_pipeline_snapshot_materialization_v3.py，覆盖显式删除/未知删除值/错误声明/跨店、以及旧三版回归；纯映射仍无源读取或AOS主写入。候选另开脚本与目录子Lease。
 
 SC4-5e4候选：新增scripts/prepare_niushop_order_candidate.py及1.8.0目录，子Lease A0-V-SC4-ORDER-SNAPSHOT-CANDIDATE。固定1.7.0树5641f4890a2198fd92d6eefc4e68400d90ce7030c8e8e8059a657c09de4ba069，只改新版本bundle/p05/evals；保留原所有非负与隐私约束，并主动去掉画像无必要的name。映射状态以is_delete列的0/1存在值生成ACTIVE，再由显式删除覆盖DELETED；业务order_status原样保留，不依赖猜测枚举（本次真实值-1/0/1/2/10）。金额和createdAt直接取源字段，sourceUpdatedAtBasis明确observation；关闭订单保留。关联placedByLite尚未落关系Receipt，保留memberId不计关系完成。后4类源表虽可读，旧schema/masking只覆盖前8类，必须后续补齐显式声明后才能选列采集。
+
+### SC4-5e5 订单明细观察快照
+
+新增scripts/prepare_niushop_orderline_candidate.py、tests/extension_runtime/test_niushop_orderline_candidate.py与1.9.0静态候选；Lease A0-V-SC4-ORDERLINE-SNAPSHOT-CANDIDATE。固定1.8.0源树d0f2a557e0749a4bc753e18954a2dce368f632d7be8bd3247cece69d04e0c575，旧候选不可改写。仅bundle/p06/evals更新。
+原refund_status枚举[-3,0,3]由v3显式状态映射执行，全部表示记录存在ACTIVE，业务退款值另行保留，未知值拒绝；原non_negative保留。去掉无执行器的links和旧cursor，关系仍待真实Owner物化。price→unitPrice、goods_money→lineAmount遵循声明的货品金额口径，不声称实付或净收入；保留cost/refund金额，不计算推断值。create_time=0保留为未知createTime，禁止补成观察时刻；经营窗口需原orderId→真实父订单创建时间关联。v3 row-presence-only不推断缺失删除或父订单删除。
+合成规范对象/零创建时间/退款全枚举/未知退款/负值/跨店/PII拒绝及前5类回归。源结构和实际数量已只读核实，测试不是正式采集或Fulfillment。后续关联必须识别父订单缺失/删除和跨店，不靠本候选放宽质量门。
