@@ -22,6 +22,13 @@ class AnalysisBusinessCohortContext:
     def run_current(self, conn, *, receipt_ref, policy_ref, quality_ref, cohort_ref, execute):
         if not callable(execute):
             raise TypeError('synchronous business cohort consumer required')
+        return self._run(conn,receipt_ref=receipt_ref,policy_ref=policy_ref,quality_ref=quality_ref,
+            cohort_ref=cohort_ref,execute=lambda current,snapshot:execute(current))
+
+    def _run(self, conn, *, receipt_ref, policy_ref, quality_ref, cohort_ref, execute):
+        """Internal composition retains the original snapshot inside its guard."""
+        if not callable(execute):
+            raise TypeError('synchronous business cohort consumer required')
         cohort_ref = PipelineExactRef.model_validate(cohort_ref)
         def consume_pending(pending):
             def consume_snapshot(snapshot):
@@ -57,7 +64,7 @@ class AnalysisBusinessCohortContext:
                     cohortPolicyRef=cohort_ref.model_dump(mode='json',by_alias=True),
                     cohortPolicyHash=selection.policy_hash,cohorts=cohorts)
                 digest = canonical_sha256(current)
-                result = execute(current)
+                result = execute(current,snapshot)
                 _reject_deferred(result)
                 if load() != policy or canonical_sha256(current) != digest:
                     raise ValueError('original business cohort changed during consumption')
