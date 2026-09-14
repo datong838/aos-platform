@@ -677,3 +677,19 @@ Order185：active125=历史120+近30日5，deleted60均历史；近30日5笔客�
 计数与先前185/235/65以及客户32=27+5对账。脚本重复执行在任何source调用前ValueError拒绝，原证据未覆盖。固定业务计量必须按用途和窗口先确定范围：历史客户缺口不能污染近期订单群体，也不能被抹掉；订单行用真实父订单时间而非造本行时间；商品在售、未删除两口径分列。5笔样本只能支持描述和经营假设，不能作强统计结论。
 
 下一波SC4-5j1：实现受控快照的声明式业务群体选择（维度/自身时间/父订单时间）及计数分区，保留unknown行，不把缺父/坏时间从质量分母消失；完整raw cohort保持用于关联和溯源，业务窗口不物理删数据。以5笔近期/历史客户缺口、39上架/18下架、订单行未知自身时间作为测试案例。随后字段质量/人群政策与正式QualityEvidence、原DataRequirementOutbox消费合并；legacy v1阈值不动。主库/安装未变。
+
+### SC4-5j1 声明式业务样本选择方案
+
+新增pipeline_snapshot_business_cohort.py及test_pipeline_snapshot_business_cohort.py。策略aos.snapshot-business-cohort/v1绑定原relationshipPolicyHash和purposeCode，全部对象类型各一条规则：snapshot维度、own-time自身业务时间、parent-time一跳真实父记录时间。可选statusFilter须显式known/accepted字符串状态集合，未知/缺状态留unknown。窗口明确[start,end)，end<=原observedAt；与前波诊断含end口径区分，正式选择不复用诊断分数。
+
+原cohort完整校验/唯一主键/大小限制复用关系assessment，raw输入不改。显式删除源行排除；parent-time父显式删除排除，缺父/非法引用不得排除，保留unknown。无/非法/无时区/非正Unix时点/晚于观察的业务时间为unknown，已知早于start或不早于end才按业务范围排除。status明确不入选可排除；状态未知但时间明确范围外可排除。统计observed=excluded+eligible，eligible=included+unknown，后续有效质量不得把unknown计valid。多对象总体不相加冒充population，结果仅样本选择，不授予quality/readiness。
+
+输出每对象included keys、unknown(key/reasons)、excluded(key/reason)并绑定策略hash；身份仅供受控进程内计量，不导出客户键到诊断文档。编译后执行重编译核hash防dataclass篡改；原原始组用于全部关联/溯源，选择不物理删除数据。测试5近期/120历史/60删除订单，订单行自身时间未知但父时间有效，39上架/18下架/8删除分区，未知父/时间保留，窗口边界、错policy/缺类型/重复键拒绝。
+
+### SC4-5j1 业务样本选择验证
+
+新增纯业务群体selector：完整声明12类（通用规则也可用于较小已验证组）的snapshot/own-time/parent-time；绑定原关系hash，父时间必须使用原策略已声明positive-id关联。可选known/accepted状态明确，原始快照/历史不改；known范围外或显式删除才excluded，缺父/坏时间/未来时间/未知状态留unknown。observed=excluded+eligible，eligible=included+unknown，unknown不能当有效分数。窗口[start,end)，非历史状态重建。
+
+先Red模块不存在，后样本/原关系质量/原正式需求质量共61项4.55秒通过（8warnings）。5近期/120历史/60删除订单、39上架/18下架/8删除商品为真实聚合规模构造的单测，非再读source；父订单时间替代未知行时间仅用于业务归窗，未写回伪造createTime；缺父与非法ref仍保留质量分母。编译hash/漏类型/重复规则/未知父/未声明关联/状态集合/窗口边界拒绝。AR2扫描1930/187/93五类错误为空，无主数据/安装或新外部调用。
+
+下一波SC4-5j2：冻结1.18基础上生成1.19候选，新增initial_store_analysis业务群体策略：Product在售子集，Order创建时间窗，OrderLine/Shipment/Payment用已声明Order关联与其创建时间；Shop/SKU/Category/CustomerLite/Weapp/SystemConfig/ProductReview是当前观察维度（Review明确不代表近30日评价统计）。保留全raw供关联/历史；规则不改旧DataRequirement语义或替代逐事实字段质量。SC4-5j3再从原analysis上下文读取实际pending DataRequirement，绑定其window/purpose/current head/生命周期与安装导出cohort策略，使窗口不是调用方手填；随后正式测量与消费者。
