@@ -1525,3 +1525,4 @@ Original runtime DTO consumer only; no dispatch acceptance, state transition, or
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_resume_contracts.py` | Host原路径 | Strict snapshot command/result and tenant lineage; no runtime execution | `167c2287eb5670d1dae6ce7e9caaa218f34cd87a0506ac921bbd3321ad8dd170` |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_resume.py` | Host原路径 | Exact snapshot session for original TaskStore; transaction and fixed command checks; no public registration | `96a575c909df488e00a6f822d8ba8cb3ec65b45526215d2341b0bc61795c6627` |

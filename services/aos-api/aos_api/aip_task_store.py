@@ -59,7 +59,8 @@ class AipTaskStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, _analysis_resume_session=None) -> None:
         if _analysis_resume_session is not None:
             from aos_api.ecommerce_analysis_data_resume import _AnalysisDataResumeSession
-            if type(_analysis_resume_session) is not _AnalysisDataResumeSession:
+            from aos_api.ecommerce_analysis_snapshot_resume import _AnalysisSnapshotResumeSession
+            if type(_analysis_resume_session) not in (_AnalysisDataResumeSession, _AnalysisSnapshotResumeSession):
                 raise TypeError("exact internal analysis resume session required")
         self._analysis_resume_session = _analysis_resume_session
         self._connect_factory = connect_factory or db_connect

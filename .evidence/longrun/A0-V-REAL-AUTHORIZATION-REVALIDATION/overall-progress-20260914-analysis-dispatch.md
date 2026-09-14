@@ -604,3 +604,13 @@ Red为新迁移文件缺失；最终9项实际隔离PG通过/5.12s（/tmp/sc4-e4
 AR2验证1950扫描/191分类/93迁移，五类错误列表空（/tmp/sc4-e4-closure.log），未修改旧preHash或验证器。主库仍最后核得a0v_038，a0v_049只用于18432隔离schema；无主升级/安装/商城读取/真实任务/Provider变化，未push，230 L0挂起。用户原文档、package.json和package-lock.json改动保留。
 
 下一波l6e5：按已登记方案串行实现快照专属内部Session、原Task/Run单次恢复和统一Receipt、已提交只读回查及未知结果路径。原旧resume_data继续独立验证。已有成功不能再次通过Pending准备或再次恢复；查不到确定结果不盲目重发。之后e6原真实初始化起点+完整十二源组合、Outbox自然自动消费、主升级安装、真实首链与八场景/观察/发布判断。总业务目标未完成，自动接续。
+
+## SC4-5l6e5a 快照内部恢复会话（2026-09-15）
+
+基线27f93c5c，m1/AOS-000573。先补snapshot-resume-design.md再新增ecommerce_analysis_snapshot_resume.py、tests/test_analysis_snapshot_resume_session.py，仅在aip_task_store.py构造器显式增加exact新会话类型，旧_AnalysisDataResumeSession保留。新会话限定原Context/active stage、同backend/txid/scope、深复制严格命令hash、专属控制键与固定Host actor/reason、exact只读Profile、原Task/TaskRun所属关系/Plan/paused/精确整数版本；同步回调结束或异常均失活，重入/延迟执行拒绝。未修改普通注册表，普通_strict_analysis_command仍拒绝快照模式，尚无统一Host恢复入口。
+
+Red新增模块缺失（/tmp/sc4-e5a-red.log）；27项新纯会话边界测试通过5.37s（/tmp/sc4-e5a-green.log），连接、stage和其他数据权威明确是named fixture，不能作为实际PG续跑证明。原test_analysis_data_resume_pg.py四项实际原Task/Run状态Owner回归通过12.62s（/tmp/sc4-e5a-old-pg.log）；其成功组合仍标明旧数据就绪fixture，缺真实Fulfillment时原阻断仍有效。两组均7项既有warnings；无新运行SQL、主库升级、商城读取或Provider调用。
+
+另登记非重叠分类Lease追加Host原路径及初始hash 96a575c909df488e00a6f822d8ba8cb3ec65b45526215d2341b0bc61795c6627，旧preHash/验证器不变。AR2最终1951扫描/192分类/93迁移，五类错误空（/tmp/sc4-e5a-final-closure.log）；编译、diff检查、memory validate GREEN。原文档和Playwright依赖改动保护；不push，230 L0挂起。
+
+下一波e5b补当前会话的原Task/Run事务转换与统一AnalysisRuntimeReceipt，e5c已提交只读核对/未知结果/原路径回归；具体接口和验证先更新原方案，再编码。之后e6原初始化起点加完整十二源组合、Outbox自然触发、主升级安装、真实首链/八场景/观察和发布判断。当前只有内部会话许可检查，不宣称恢复闭环完成。
