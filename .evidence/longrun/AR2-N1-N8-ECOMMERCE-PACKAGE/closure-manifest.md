@@ -1511,3 +1511,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 边界 | 初始hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_brief.py` | Host原路径 | 当前原任务的内部只读分析简报，不授予Run恢复或经营执行 | `cc489e49d14d422e4329ee6478bef3c16b40042753a70c0ee69da7e526c27841` |
+
+### SC4-5l6c2 Snapshot Bundle Host
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_bundle.py` | Host原路径 | Original current Brief and Bundle orchestration; no Run resume authority | `061c9dc09ac2c5a0877e6cf8f033dbd8ebf33a98c43fafffb3947dcd71921479` |
