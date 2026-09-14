@@ -157,3 +157,13 @@ Session作用域约束：Task服务除精确Session类型和逐次当前数据�
 SC4-5d按五项推进：安装内首装数据政策自动派生→当前受控来源扩展12类及真实完整快照→原Outbox消费并由实际Owner生产观察/映射/Hydration/Readiness/Fulfillment→完整sealed恢复与D01/D02/D03→新候选主部署与真实业务观察。数据政策必须来自固定版本配置，不由开发者手填每个事件；预算沿用当前授权配置，不虚构价格、不用0冒充足额。
 
 下一最小实现范围为services/aos-api/aos_api/ecommerce_analysis_data_preparation.py及对应extension_runtime测试；先核实现有安装配置政策字段后确定是否需要新版本配置。12类映射涉及bundles时先登记独立子Lease；不修改已签候选，不直接写主库对象补造事实。每项有完整业务回执才计贯通，消费者存在不等于数据已补齐。
+
+### SC4-5d1 自动首装数据意图
+
+修改ecommerce_analysis_data_preparation.py，增加run_automatic_current和run_automatic_completed，不接受调用者request。只在原来源事务中，从当前安装binding.configRef经原read_configuration和原来源Owner._authorization读回实际配置，再经原read_current_budget_ref读取当前预算版本；不自写余额或授权规则。
+
+本轮首装固定L1业务口径v1：过去30天（原cutoff为终点）、store粒度、当前Profile全事实、quality=1/minPopulation=1/不允许降级、输出EvidenceBundleRevision；freshness沿用原源策略maxSourceAgeSeconds，markings取已验证安装targetMarkings，budgetMinor取当前预算日上限（只是需求上限，不是可用余额/花费许可），expiry=min(原源策略截止,预算截止)。不可使用当前时间滑动窗口或0预算默认。零总体的专门解释与完整数据质量由后续补齐Owner负责，不能伪称有事实。
+
+该固定业务口径由服务端版本代码承载，配置继续引用现有四类权威；后续领域包候选须纳入此口径，当前不声称用户可配置任意业务窗口。原显式手动入口保留兼容。两种自动入口均复用原sealed请求和稳定key，不生成第二需求。此子项先完成自动入口与真实DataRequirement持久化验证，正式事件worker调度连接随后处理，不能把可调用入口当作已自动调度。
+
+测试文件test_analysis_data_preparation_pg.py增加：无调用者参数创建/重放、完成事件创建、实际保存窗口/事实/预算、配置或预算读取失败无需求。当前来源/安装fixture沿用既有隔离测试，新增配置与预算fixture必须明确，另用原配置/预算权威测试回归。主租户不运行此fixture。

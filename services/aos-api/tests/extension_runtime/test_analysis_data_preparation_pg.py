@@ -142,3 +142,95 @@ def test_completed_event_can_request_or_replay_same_data(data_case,already_reque
     assert service.run_completed(conn,receipt_ref=root['receiptRef'],request=spec)==result
     if prior_request:assert prior_request==result
     with pytest.raises(AutomationOccurrenceConflict):prepare(data_case)
+
+
+@pytest.fixture
+def automatic_data_case(data_case, monkeypatch):
+    """Configuration/budget readers are explicit doubles; pending data Store is real."""
+    from types import SimpleNamespace
+    from aos_api import aip_runtime_configuration_authority as budget_module
+    from aos_api.extension_runtime import configuration_store
+    conn,analysis,claimed,spec=data_case
+    installed=dict(installationRef={'installationId':'fixture-installation'}, generation='fixture-generation',
+                   binding={'configRef':{'fixture':True}},targetMarkings=[])
+    analysis.invoker.read_current_in_transaction=lambda tx:installed
+    authorization=object()
+    analysis.source.reader._owner=SimpleNamespace(_authorization=authorization)
+    calls=[]
+    def configuration(db,**kw):
+        assert db is conn and kw['authorize'] is authorization
+        assert (kw['org_id'],kw['project_id'])==analysis.scope.key
+        assert kw['actor']==analysis.source.actor and kw['ref']==installed['binding']['configRef']
+        calls.append('configuration')
+        return SimpleNamespace(budgetRef='fixture-budget-ref')
+    def budget(db,**kw):
+        assert db is conn and kw['ref']=='fixture-budget-ref'
+        assert (kw['org_id'],kw['project_id'])==analysis.scope.key
+        calls.append('budget')
+        return SimpleNamespace(daily_limit_minor=123456,effective_until=spec.expires_at)
+    monkeypatch.setattr(configuration_store,'read_configuration',configuration)
+    monkeypatch.setattr(budget_module,'read_current_budget_ref',budget)
+    return data_case,calls
+
+
+@pytest.mark.parametrize('completed',[False,True])
+def test_automatic_data_intent_has_no_caller_parameters(automatic_data_case,completed):
+    from aos_api.ecommerce_analysis_data_preparation import AnalysisDataRequirementPreparation
+    from aos_api.ecommerce_growth_runtime_adapters import _HostAnalysisReceiptStore,TransactionBoundConnectFactory
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    from aos_api.data_requirement_store import DataRequirementStore
+    from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+    from aos_api.automation_occurrence_store import AutomationOccurrenceStore
+    data,calls=automatic_data_case
+    conn,analysis,claimed,spec=data
+    service=AnalysisDataRequirementPreparation(analysis)
+    tx=HostTransaction(conn)
+    root=_HostAnalysisReceiptStore(tx,analysis.scope).read(claimed.target_idempotency_key)
+    if completed:
+        AutomationOccurrenceStore(TransactionBoundConnectFactory(tx,analysis.scope)).record_target_receipt(
+            analysis.scope,occurrence_id=claimed.occurrence_id,owner=claimed.claim_owner,
+            receipt_ref=root['receiptRef'],occurred_at=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0))
+        run=lambda:service.run_automatic_completed(conn,receipt_ref=root['receiptRef'])
+    else:
+        run=lambda:service.run_automatic_current(conn,claimed=claimed)
+    result=run()
+    assert run()==result
+    saved=DataRequirementStore(TransactionBoundConnectFactory(tx,analysis.scope)).get_exact(
+        analysis.scope,InvestigationExactRef.model_validate(result['requirementRef']))
+    assert saved.budget_minor==123456
+    assert saved.time_window.end_at==spec.cutoff_at
+    assert saved.time_window.start_at==spec.cutoff_at-timedelta(days=30)
+    assert saved.required_facts==list(INITIAL_STORE_PROFILE.required_fact_profiles)
+    assert saved.quality_threshold==1 and saved.acceptable_degradation==[]
+    assert calls.count('configuration')>=2 and calls.count('budget')>=2
+
+
+@pytest.mark.parametrize('reader',['configuration','budget'])
+def test_automatic_data_fails_without_current_configuration(automatic_data_case,monkeypatch,reader):
+    from aos_api.ecommerce_analysis_data_preparation import AnalysisDataRequirementPreparation
+    from aos_api import aip_runtime_configuration_authority as budget_module
+    from aos_api.extension_runtime import configuration_store
+    data,_=automatic_data_case
+    conn,analysis,claimed,_=data
+    def deny(*a,**kw):raise PermissionError('current authority unavailable')
+    monkeypatch.setattr(configuration_store if reader=='configuration' else budget_module,
+        'read_configuration' if reader=='configuration' else 'read_current_budget_ref',deny)
+    with pytest.raises(PermissionError,match='current authority unavailable'),conn.transaction():
+        AnalysisDataRequirementPreparation(analysis).run_automatic_current(conn,claimed=claimed)
+    assert conn.execute('SELECT count(*) AS n FROM data_requirement_head WHERE org_id=%s AND project_id=%s',analysis.scope.key).fetchone()['n']==0
+
+
+def test_automatic_budget_change_cannot_rewrite_original_requirement(automatic_data_case,monkeypatch):
+    from types import SimpleNamespace
+    from aos_api import aip_runtime_configuration_authority as budget_module
+    from aos_api.ecommerce_analysis_data_preparation import AnalysisDataRequirementPreparation
+    data,_=automatic_data_case
+    conn,analysis,claimed,spec=data
+    service=AnalysisDataRequirementPreparation(analysis)
+    original=service.run_automatic_current(conn,claimed=claimed)
+    monkeypatch.setattr(budget_module,'read_current_budget_ref',lambda *a,**kw:
+        SimpleNamespace(daily_limit_minor=999999,effective_until=spec.expires_at))
+    with pytest.raises(ValueError,match='drifted'),conn.transaction():
+        service.run_automatic_current(conn,claimed=claimed)
+    assert conn.execute('SELECT count(*) AS n FROM data_requirement_head WHERE org_id=%s AND project_id=%s',analysis.scope.key).fetchone()['n']==1
+    assert original['requirementRef']['resourceType']=='DataRequirementRevision'

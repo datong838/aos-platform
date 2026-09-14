@@ -1,6 +1,6 @@
 """Current original analysis to canonical pending data; grants no data access."""
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
@@ -43,6 +43,48 @@ class AnalysisDataRequirementPreparation:
             return self._during_current(conn,dict(source=context['source']),original,
                                         IssuedDispatchRef(**context['dispatch']),request)
         return AnalysisContinuationContext(self._analysis).run_current(conn,receipt_ref=receipt_ref,execute=current)
+
+    def run_automatic_current(self, conn, *, claimed):
+        with conn.transaction():
+            return self._analysis._phase(conn,claimed,lambda snapshot,original,dispatch:
+                self._during_automatic(conn,snapshot,original,dispatch))
+
+    def run_automatic_completed(self, conn, *, receipt_ref):
+        from aos_api.ecommerce_analysis_continuation_context import AnalysisContinuationContext
+        def current(context):
+            root=context['analysisReceipt']
+            original={key:root[key] for key in ('occurrenceRef','caseRef','profileRef','cutoffAt')}
+            original['idempotencyKey']=context['originalIdempotencyKey']
+            return self._during_automatic(conn,context,original,IssuedDispatchRef(**context['dispatch']))
+        return AnalysisContinuationContext(self._analysis).run_current(conn,receipt_ref=receipt_ref,execute=current)
+
+    def _during_automatic(self, conn, snapshot, original, dispatch):
+        from aos_api.extension_runtime.configuration_store import read_configuration
+        from aos_api.aip_runtime_configuration_authority import read_current_budget_ref
+        installed=snapshot['growth']
+        configuration=read_configuration(conn,org_id=self._analysis.scope.org_id,
+            project_id=self._analysis.scope.project_id,
+            installation_id=installed['installationRef']['installationId'],
+            generation=installed['generation'],actor=self._analysis.source.actor,
+            ref=installed['binding']['configRef'],
+            authorize=self._analysis.source.reader._owner._authorization)
+        budget=read_current_budget_ref(conn,org_id=self._analysis.scope.org_id,
+            project_id=self._analysis.scope.project_id,ref=configuration.budgetRef)
+        domain=EcommerceInvestigationProfileCatalog().read(snapshot['source']['case']['analysisType'])
+        if domain is None:raise ValueError('current automatic data profile unavailable')
+        cutoff=datetime.fromisoformat(original['cutoffAt'])
+        policy=snapshot['source']['policy']
+        # Fixed initial-store data policy v1. This ceiling neither reserves funds
+        # nor authorizes reads; the original data/capability owners do that later.
+        request=RequestBusinessInvestigationMissingDataCommand(
+            purposeCode='initial_store_analysis',requiredFacts=list(domain[0].required_fact_profiles),
+            timeWindow=dict(startAt=cutoff-timedelta(days=30),endAt=cutoff),grain='store',
+            cutoffAt=cutoff,freshnessMaxAgeSeconds=policy['maxSourceAgeSeconds'],
+            qualityThreshold=1.0,markings=sorted(installed['targetMarkings']),minPopulation=1,
+            acceptableDegradation=[],requestedOutputs=['EvidenceBundleRevision'],
+            budgetMinor=budget.daily_limit_minor,
+            expiresAt=min(datetime.fromisoformat(policy['effectiveUntil']),budget.effective_until))
+        return self._during_current(conn,snapshot,original,dispatch,request)
 
     def _during_current(self, conn, snapshot, original, analysis_dispatch, request):
         scope=self._analysis.scope
