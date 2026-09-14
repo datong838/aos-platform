@@ -586,3 +586,11 @@ Red：新增模块缺失；新增scope接口9失败；合法DTO重验最初因re
 原架构验证识别新模块是原CanonicalRuntimeRef兼容合同的反向调用者；已另登记非重叠分类Lease，追加Host原路径及初始hash 167c2287eb5670d1dae6ce7e9caaa218f34cd87a0506ac921bbd3321ad8dd170。未改旧preHash或验证器。AR2 1949扫描/191分类/93迁移，五类错误列表空（/tmp/sc4-e3-final-closure.log）；编译/diff通过，memory validate GREEN。本波无数据库/商城/模型/主环境写；不push，230 L0挂起，用户原改动保留。
 
 下一波l6e4：新增ecommerce_analysis_snapshot_resume_context.py与extension_runtime/test_analysis_snapshot_resume_context_pg.py，先细化同事务两阶段守卫：原初始化/dispatch与完整投影包住全程；阶段A完成原Pending/Bundle/Readiness/Fulfillment检查后退出只读状态守卫，再由仍有效的安装/Binding/原事务限定内部阶段B；防止把变更后状态错误地当成旧paused复验。随后e5原Task/业务Run CAS和统一Receipt，e6原起点全链、Outbox自动触发、主升级安装、真实首链八场景与观察继续。整体业务目标未完成，自动接续。
+
+## SC4-5l6e4a 续跑前置：原需求Head锁（2026-09-15）
+
+基线5abe378e，属于进行中的l6e4上下文波次前置。方案已补snapshot-resume-design.md。新增a0v_049_data_requirement_current_lock.py，在原DataRequirementStore增加lock_current，新增test_data_requirement_current_lock_pg.py。旧bind已有回执重放会提前返回，不能提供恢复任务所需Head锁；新安全定义函数仅按当前GUC双租户和exact revision/hash锁原Head，无写表、无动态SQL、无租户override，原get_current完整回读。PUBLIC无执行权限，aos_runtime只有函数EXECUTE，表UPDATE仍拒绝。
+
+Red为新迁移文件缺失；最终9项实际隔离PG通过/5.12s（/tmp/sc4-e4a-green.log），实际双连接原cancel被150ms lock_timeout阻断，第一事务结束后原cancel成功、旧ref拒绝、事件只有原request/cancel两条；wrong hash/revision/kind/receipt/bool/canary/project及非运行角色/表写拒绝。13原Store pure回归passed /5.26s，1个独立PG明确deselected（/tmp/sc4-e4a-regression.log）。AR2 1949/191/93无错误；Alembic唯一代码head成为a0v_049（原a0v_048后追加），主库最后核对仍a0v_038，此处不执行主迁移。部署前必须包含新函数，缺失时续跑关闭，不能当作已上线。
+
+本前置只在18432 ar1c_*隔离schema使用原DDL/Store，未改变任何业务运行状态。未push，230 L0挂起；其余原改动保护。l6e4上下文仍在实施，接下来同事务原初始化、Stage A完整交付核验、Stage B当前Projection/Binding及新Head锁、不可变依据/期限后验；原Task/Run转换仍留e5。

@@ -165,6 +165,48 @@ class DataRequirementStore:
     ) -> DataRequirementApplyResult:
         return self._apply(scope, actor, idempotency_key, item, operation="cancel", expected_version=expected_version)
 
+    def lock_current(
+        self, scope: TenantScope, ref: InvestigationExactRef
+    ) -> DataRequirementRevisionRecord:
+        """Retain the exact Head lock for the caller's database transaction.
+
+        Resume owners use the original transaction-bound connection factory;
+        this method neither commits nor authorizes a business state transition.
+        """
+        if (type(scope) is not TenantScope or not isinstance(ref, InvestigationExactRef)
+                or type(ref.revision) is not int or ref.resource_type != "DataRequirementRevision"
+                or ref.revision < 1 or ref.receipt_id is not None):
+            raise DataRequirementValidationError("exact DataRequirementRevision and tenant are required")
+        try:
+            ref = InvestigationExactRef.model_validate(ref.model_dump(mode="python", by_alias=True))
+        except ValueError as exc:
+            raise DataRequirementValidationError("invalid requirement reference") from exc
+        try:
+            with self._connect_factory(scope) as conn:
+                actual = conn.execute(
+                    "SELECT current_setting('aos.org_id',true) AS org_id,"
+                    "current_setting('aos.project_id',true) AS project_id"
+                ).fetchone()
+                if actual is None or (actual["org_id"], actual["project_id"]) != scope.key:
+                    raise DataRequirementValidationError("current connection tenant differs")
+                row = conn.execute(
+                    "SELECT * FROM data_requirement_lock_current_a0v_049(%s,%s,%s)",
+                    (ref.resource_id, ref.revision, ref.content_hash),
+                ).fetchone()
+                if (row is None or (row["locked_requirement_id"], row["locked_revision"], row["locked_content_hash"])
+                        != (ref.resource_id, ref.revision, ref.content_hash)):
+                    raise DataRequirementStoreError("locked requirement identity drifted")
+                item = self.get_current(scope, ref.resource_id)
+                if item.revision != ref.revision or item.content_hash != ref.content_hash:
+                    raise DataRequirementStoreError("locked requirement readback drifted")
+                return item
+        except psycopg.Error as exc:
+            if exc.sqlstate == "DR001":
+                raise DataRequirementConflict("requirement exact ref is not current") from exc
+            if exc.sqlstate in {"DR003", "DR004"}:
+                raise DataRequirementValidationError("invalid current requirement lock") from exc
+            raise
+
     def get_current(
         self, scope: TenantScope, requirement_id: str
     ) -> DataRequirementRevisionRecord:
