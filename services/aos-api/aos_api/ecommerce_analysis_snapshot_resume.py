@@ -95,3 +95,79 @@ class _AnalysisSnapshotResumeSession:
                 or run['status'] != 'paused' or task['status'] != 'paused'
                 or run['plan_revision_id'] != runtime.plan_ref.resource_id):
             raise ValueError('snapshot session differs from the original paused Task and TaskRun')
+
+    def _resume_states(self):
+        """Internal first transition only; the caller must still save its unified Receipt."""
+        from aos_api.aip_task_store import AipTaskStore
+        from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
+        from aos_api.aip_business_investigation_runtime import BusinessInvestigationRuntimeBinder
+        from aos_api.aip_business_investigation_fulfillment_saga import BusinessInvestigationFulfillmentResumeSaga
+        from aos_api.data_requirement_store import DataRequirementStore
+        from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStore
+        from aos_api.ecommerce_growth_host_ports import HostTransaction
+        from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _AnalysisRunAndTaskResumer
+        from aos_api.ecommerce_analysis_snapshot_resume_contracts import validate_snapshot_resume_result
+
+        self._same_transaction(self.conn,self.scope)
+        if not self._active or type(self._stage) is not _CurrentSnapshotResumeStage:
+            raise PermissionError('state transition requires the enclosing snapshot session')
+        self._stage.assert_current(self.conn,self.scope)
+        parsed = strict_snapshot_resume_command(self.command)
+        requirement, runtime = self._stage.requirement, self._stage.runtime
+        tx = HostTransaction(self.conn)
+        factory = TransactionBoundConnectFactory(tx,self.scope)
+        runs = BusinessInvestigationRunStore(factory)
+        tasks = AipTaskStore(factory,_analysis_resume_session=self)
+        run = runs.get_verified(self.scope,requirement.run_ref.resource_id)
+        if (run.authority.version != requirement.run_ref.revision
+                or run.authority.content_hash != requirement.run_ref.content_hash
+                or run.authority.case_ref != parsed['caseRef']
+                or run.state.lifecycle.value != 'WAITING_DATA' or run.state.control.value != 'RUNNING'
+                or run.state.pending_requirement_ref != parsed['requirementRef']
+                or run.state.uncertain_command is not None
+                or DataRequirementStore(factory).get_current(self.scope,requirement.requirement_id) != requirement):
+            raise ValueError('snapshot state transition requires the original current waiting Run')
+        compilation = BusinessInvestigationCompilationReceiptStore(factory).get_for_run(self.scope,requirement.run_ref)
+        current_runtime = BusinessInvestigationRuntimeBinder(tasks).bind_receipt(self.scope,compilation,run)
+        checkpoint = current_runtime.checkpoint_ref
+        if (current_runtime != runtime or checkpoint is None
+                or checkpoint.resource_id != parsed['checkpointRef'].resource_id
+                or checkpoint.sequence != parsed['checkpointRef'].revision
+                or 'sha256:'+checkpoint.state_hash != parsed['checkpointRef'].content_hash
+                or runtime.plan_ref.resource_id != parsed['priorPlanRef'].resource_id
+                or runtime.plan_ref.revision != parsed['priorPlanRef'].revision
+                or 'sha256:'+runtime.plan_ref.content_hash != parsed['priorPlanRef'].content_hash):
+            raise ValueError('snapshot current runtime differs from its prepared original stage')
+        event_time = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        resumer = _AnalysisRunAndTaskResumer(runs,tasks,parsed['requirementRef'],
+            run.authority.run_id,run.state.version,event_time)
+        result = resumer.resume_run(self.scope,runtime.task_run_ref.resource_id,
+            expected_run_version=runtime.task_run_ref.version,expected_task_version=runtime.task_ref.version,
+            actor=AnalysisAdvanceHostService.executor_identity,idempotency_key=self.control_key,
+            reason=SNAPSHOT_RESUME_REASON)
+        BusinessInvestigationFulfillmentResumeSaga._validate_resume_result(result,runtime)
+        after = runs.get_verified(self.scope,run.authority.run_id)
+        domain_receipt = runs.read_data_resume_receipt(self.scope,run.authority.run_id,parsed['requirementRef'],
+            expected_version=run.state.version,idempotency_key=self.control_key+':domain')
+        timeline = tasks.timeline(self.scope,runtime.task_run_ref.resource_id)
+        if (after.authority != run.authority or domain_receipt is None or domain_receipt != after.state
+                or resumer.run_state != after.state or after.state.version != run.state.version+1
+                or timeline.run != result.run or timeline.task != result.task):
+            raise ValueError('snapshot original state transition receipts differ')
+        control = tasks._control_request('resume',runtime.task_run_ref.version,runtime.task_ref.version,SNAPSHOT_RESUME_REASON)
+        controls = tx.execute("""SELECT payload,created_by FROM aip_evidence
+            WHERE org_id=%s AND project_id=%s AND run_id=%s AND evidence_type='run.control' AND source_ref=%s""",
+            (*self.scope.key,runtime.task_run_ref.resource_id,'run-control:resume:'+self.control_key)).fetchall()
+        if (len(controls) != 1 or controls[0]['payload'] != control
+                or controls[0]['created_by'] != AnalysisAdvanceHostService.executor_identity):
+            raise ValueError('snapshot original Task control Receipt differs')
+        bundle = dict(self._command['evidenceRefs'][0])
+        bundle['contentHash'] = bundle['contentHash'][7:]
+        return validate_snapshot_resume_result(self.command,dict(
+            tenant=dict(orgId=self.scope.org_id,projectId=self.scope.project_id),
+            commandId=parsed['key'],requestHash=self._command['requestHash'],
+            dataRequirementRef=self._command['requirementRef'],fulfillmentReceiptRef=self._command['fulfillmentRef'],
+            sourceReadinessRef=self._command['sourceReadinessRef'],businessEvidenceRef=self._command['businessEvidenceRef'],
+            evidenceBundleRef=bundle,checkpointRef=self._command['checkpointRef'],
+            taskRef=dict(resourceType='Task',resourceId=result.task.id,version=result.task.version),
+            taskRunRef=dict(resourceType='TaskRun',resourceId=result.run.id,version=result.run.version)),scope=self.scope)
