@@ -799,3 +799,21 @@ Red模块缺失，新增8+原business10共18 PG passed/46.90秒；正例补充�
 任务补入原清单：l2当前completed组规范对象/投影只读证明；l3完整组来源Evidence；l4固定QueryResult；l5显式质量合同/适用性/人口政策和QualityEvidence；l6原Outbox/Fulfillment续跑组合。每波独立方案/Lease/测试/提交。保守freshness取整组read_started_at，不用测量时间冒充source更新时间；主环境升级/签名安装/当前权限/真实首链/八场景/观察另须落实。v1空事实仍失败，若业务需要“零发货”作为可验证事实则另行版本化，不改旧要求。
 
 本波仅方案，代码入口与字段上限人工及确定性核对完成；无新增源读取/主环境动作。下一波SC4-5l2新增pipeline_snapshot_group_projection_owner.py及PG测试，复用原ec_ingress_recovery的全部saved投影证明；如需抽取read_saved_projection_evidence先保留原completion接口语义并跑回归，禁止重新写入或恢复已completed源运行。
+
+### SC4-5l2 当前完成组规范投影证明方案
+
+新增pipeline_snapshot_group_projection_owner.py和extension_runtime/test_snapshot_group_projection_owner_pg.py；修改ec_ingress_recovery.py抽取read_saved_projection_evidence，原read_saved_projection_completion仍按原全部saved事件计算expected/projected/pending，empty原路径返回空事件，保留原接口与拒绝缺derived规则。
+
+新Owner要求原PipelineSourceClaimOwner及真实EcomConsistencyStore，在原InputOwner.run_completed_current里逐成员构造completed journal，通过原完整parent+derived调用Store.read_batch_projection_evidence，拒绝任何未projected、当前base被覆盖、缺原Receipt/事件等。绑定manifest/claim/read interval和各member control/run/objectType/原DatasetReceipt hash/全部事件key,payloadHash,inputRevision,projected；不得只取某些行或某些事件。source仍只原保存输入，无当前源调用。
+
+消费前后重读全部事件证明并核payloadhash，原Input/Claim/current installation继续复验。Store自有事务不声称和Host跨连接原子提交；这是当前只读证明而非经营执行许可。PG正例原完成组重放，source calls不变；原base被覆盖、未投影、缺事件、缺derived、Dataset hash不符、撤权、consumer修改/延迟等反例。原object executor及completion回归保留运行态写恢复规则，completed绝不重开。
+
+### SC4-5l2 当前完成组投影证明验证
+
+新增PipelineSnapshotGroupProjectionOwner复用原completed Input/Claim，逐成员原completed journal读取全部saved parent/derived，原Store核当前base/有效事件并拒绝未projected；返回绑定manifest/claim/read interval/member control与Dataset回执hash及完整事件证明，消费后再次读取并核hash。ec_ingress_recovery只抽私有共用读取；原completion继续调用原Store.read_batch_projection_completion，新增evidence分支调用原Store.read_batch_projection_evidence，empty与缺derived旧语义不改。
+
+Red模块缺失。首轮11 passed/5失败37.66秒：测试Store连接未设置租户导致RLS使故障注入0行、policy_denied标记属于未调用的字段策略fixture；修正为显式fixture租户并assert影响行数>0，撤权反例改为原控制Owner append实际新revision，加当前source denial named fixture。未降低RLS或改生产门禁。最终新增10+原object executor7共17 PG passed/38.72秒；原恢复/empty17 passed/5.63秒（7warnings）。实际base覆盖、事件缺失/未投影、消费中base覆盖及control superseded、Dataset坏hash、payload修改/延迟/当前拒绝均验证；source calls仍1。
+
+AR2扫描1935/188/93五类错误为空。Store自有事务与Host仍不声称跨连接原子快照；当前证明不是长期执行许可。没有主库/安装/源调用/模型或新业务写入，测试写仅隔离schema18432。
+
+下一波SC4-5l3：当前原字段上下文与projection proof同manifest绑定后，使用原aip_evidence表落完整组来源Evidence；内容含完整manifest/全部成员精确引用与事件证明，不保存raw客户行、不截断来源。精确hash/tenant/actor/撤销/当前重新计量验证，稳定重放无重复源读取；只有当前读取接口可供下一固定QueryResult消费，Evidence持久化本身不授予质量或Fulfillment。

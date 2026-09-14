@@ -1,0 +1,11 @@
+# 当前完成组投影证明验证
+
+### SC4-5l2 当前完成组投影证明验证
+
+新增PipelineSnapshotGroupProjectionOwner复用原completed Input/Claim，逐成员原completed journal读取全部saved parent/derived，原Store核当前base/有效事件并拒绝未projected；返回绑定manifest/claim/read interval/member control与Dataset回执hash及完整事件证明，消费后再次读取并核hash。ec_ingress_recovery只抽私有共用读取；原completion继续调用原Store.read_batch_projection_completion，新增evidence分支调用原Store.read_batch_projection_evidence，empty与缺derived旧语义不改。
+
+Red模块缺失。首轮11 passed/5失败37.66秒：测试Store连接未设置租户导致RLS使故障注入0行、policy_denied标记属于未调用的字段策略fixture；修正为显式fixture租户并assert影响行数>0，撤权反例改为原控制Owner append实际新revision，加当前source denial named fixture。未降低RLS或改生产门禁。最终新增10+原object executor7共17 PG passed/38.72秒；原恢复/empty17 passed/5.63秒（7warnings）。实际base覆盖、事件缺失/未投影、消费中base覆盖及control superseded、Dataset坏hash、payload修改/延迟/当前拒绝均验证；source calls仍1。
+
+AR2扫描1935/188/93五类错误为空。Store自有事务与Host仍不声称跨连接原子快照；当前证明不是长期执行许可。没有主库/安装/源调用/模型或新业务写入，测试写仅隔离schema18432。
+
+下一波SC4-5l3：当前原字段上下文与projection proof同manifest绑定后，使用原aip_evidence表落完整组来源Evidence；内容含完整manifest/全部成员精确引用与事件证明，不保存raw客户行、不截断来源。精确hash/tenant/actor/撤销/当前重新计量验证，稳定重放无重复源读取；只有当前读取接口可供下一固定QueryResult消费，Evidence持久化本身不授予质量或Fulfillment。

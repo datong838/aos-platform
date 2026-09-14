@@ -98,6 +98,16 @@ def recover_saved_authoritative_stages(connection_factory, scope: TenantScope, r
 def read_saved_projection_completion(conn, scope: TenantScope, run_id: str, *,
                                      journal: IngressJournal, store: EcomConsistencyStore):
     """Read completion for the complete saved preparation, never a caller subset."""
+    return _read_saved_projection(conn,scope,run_id,journal=journal,store=store,evidence=False)
+
+
+def read_saved_projection_evidence(conn, scope: TenantScope, run_id: str, *,
+                                   journal: IngressJournal, store: EcomConsistencyStore):
+    """Exact events for ALL saved inputs, under the original journal binding."""
+    return _read_saved_projection(conn,scope,run_id,journal=journal,store=store,evidence=True)
+
+
+def _read_saved_projection(conn, scope, run_id, *, journal, store, evidence):
     with conn.transaction():
         journal.lock_run(conn, scope, run_id)
         parent = _bound_parent(conn, scope, run_id, journal)
@@ -105,7 +115,8 @@ def read_saved_projection_completion(conn, scope: TenantScope, run_id: str, *,
         if saved is None:
             raise IngressJournalConflict('INGRESS_DERIVED_PREPARATION_REQUIRED')
         if parent.get('kind') == 'empty_observation_v1':
-            return {'expected':0,'projected':0,'pending':0}
-        return store.read_batch_projection_completion(
+            return () if evidence else {'expected':0,'projected':0,'pending':0}
+        read = store.read_batch_projection_evidence if evidence else store.read_batch_projection_completion
+        return read(
             BatchCommand.model_validate(parent['command']),
             [DerivedMetricCommand.model_validate(raw) for raw in saved['commands']])
