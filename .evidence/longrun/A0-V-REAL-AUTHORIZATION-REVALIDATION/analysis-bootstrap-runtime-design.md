@@ -219,3 +219,9 @@ SC4-5e4候选：新增scripts/prepare_niushop_order_candidate.py及1.8.0目录�
 新增scripts/prepare_niushop_orderline_candidate.py、tests/extension_runtime/test_niushop_orderline_candidate.py与1.9.0静态候选；Lease A0-V-SC4-ORDERLINE-SNAPSHOT-CANDIDATE。固定1.8.0源树d0f2a557e0749a4bc753e18954a2dce368f632d7be8bd3247cece69d04e0c575，旧候选不可改写。仅bundle/p06/evals更新。
 原refund_status枚举[-3,0,3]由v3显式状态映射执行，全部表示记录存在ACTIVE，业务退款值另行保留，未知值拒绝；原non_negative保留。去掉无执行器的links和旧cursor，关系仍待真实Owner物化。price→unitPrice、goods_money→lineAmount遵循声明的货品金额口径，不声称实付或净收入；保留cost/refund金额，不计算推断值。create_time=0保留为未知createTime，禁止补成观察时刻；经营窗口需原orderId→真实父订单创建时间关联。v3 row-presence-only不推断缺失删除或父订单删除。
 合成规范对象/零创建时间/退款全枚举/未知退款/负值/跨店/PII拒绝及前5类回归。源结构和实际数量已只读核实，测试不是正式采集或Fulfillment。后续关联必须识别父订单缺失/删除和跨店，不靠本候选放宽质量门。
+
+### SC4-5e6 物流全遮罩与时间保真
+
+复习frozen/02-pipeline-manifest P07：物流号按敏感级别遮罩、包裹必须有订单头。候选1.10.0选择完全遮罩，delivery_no不出库；规范trackingNo固定显示[REDACTED]且trackingNoRedacted=true、trackingNoSourceRead=false，不能用于物流追踪或证明原号存在。去掉member_name与trace，纳入pii_exclusion，不读取轨迹自由文本或会员姓名。主键与order_id保留；真实Order.fulfilledBy关系待后续完整批次验证，不生成假关系。
+新增scripts/prepare_niushop_shipment_candidate.py与对应测试、候选1.10.0，精确1.9.0树b52f6a76334528d7c8cde06e802252e6934dd4ead29c35219f976d3f55413e01，旧版不改。仅bundle/p07/evals变化。使用v3 observation和row-presence-only，scope site_id=1的存在行标识ACTIVE，不解释delivery_type为物流生命周期状态。express_company_name→carrier，delivery_time→shippedAt显式绑定，零值保持未知并由规范时间契约拒绝，绝不落入旧writer缺字段时的观察时间回填。保留原deliveryType等源字段。
+测试规范对象、全遮罩字段未被选择、源时间不随观察变化、零时间不能伪造、跨店/额外原物流号/姓名/轨迹拒绝；前六对象回归。完整源采集、父订单约束及物流追踪均不在本静态候选完成声明内。
