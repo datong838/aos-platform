@@ -322,3 +322,15 @@ SC4-5g2核查补充：旧schema指纹对前8表只有表/主键/索引摘要，�
 
 SC4-5g2：分类源逗号格式严格支持、Order关联键候选1.15.0完成。新树b09e20811f08b3d40e155406dd293d2642779acb6caed9ec8272f8337655779c；源1.14树不变，仅bundle/P05/masking/evals四文件改变。weapp_id与out_trade_no依实际结构证据增补，openid排除加固。33测试通过4.47秒，分类/Weapp首红2失败22通过后修正。新候选十二类静态评估通过，未发布安装。
 真实09:15:33.754126Z–09:15:35.178481Z同事务重验：65商品92分类引用全匹配，185订单Weapp全匹配；203普通支付181当前trade相同22不同，关系仍按原orderId，未错误删除历史支付。客户32订单/1评价缺失不变，软删端点不等于当前活跃关系。源行不持久化、不写主对象/Fulfillment。证据real-relationship-audit-20260914-order-keys.json保留此前失败审计。下一项：包内关系声明与通用有界物化，显式质量/软删边界，再接正式组输入Owner。
+
+### SC4-5g3 通用关系声明核验器
+
+新增pipeline_snapshot_relationships.py与test_pipeline_snapshot_relationships.py。本子项先实现纯有界声明解释器，下一子项将14条具体业务声明置于不可变领域包候选，主平台不硬编码Niushop表/字段或店ID。策略aos.snapshot-relationships/v1严格顶层schemaVersion/objectTypes/rules；对象类型1..12唯一，rule1..32唯一linkType（Type.name格式）、rowType/parentType/referenceProperty均显式标识符，方向row-to-parent或parent-to-row，键格式positive-id/csv-positive-id/wrapped-csv-positive-id，允许0/空未设仅由allowUnset显式bool决定。canonical policy hash返回，调用Owner后续核验真实签名资产，不以此纯对象代替权限。
+输入必须完整策略对象类型、每类小于1000行、纯Object/主键唯一/布尔is_deleted；不允许嵌入Link。正数ASCII规范64位键、列表最多32项/4096字符、重复/内部空项/单侧逗号/空白拒绝。输入错误整组拒绝；业务缺失按规则计数missingReference/invalidReference/missingParent/deletedEndpoint/allowedUnset，不自动补父、不默认shop、不改源时间。
+只对两端未软删且真实匹配的引用产生candidate link行，使用明确统一observedAt和sourceModificationTimeKnown=false，不生成删除Link、不推断来源缺失删除、不apply、不Readiness宣绿。每批至多24000候选关系，重复链接拒绝。报告policyHash/candidateLinks/逐规则计数；历史软删/缺失保留独立问题，正式当前视图和旧链接回收策略仍由后继Owner承接，不能把candidate列表当已安装关系。
+验证参数严格性/字段别名/方向/隐私无额外值回显/主键规范/多值格式/缺父/软删/不同规则/空集合/上限，规范候选行经原_normalize_rows检验；不修改旧ec_link_builder。
+
+SC4-5g3加固：assessment重新构造并编译不可变策略，要求完整等值及canonical hash一致，防止手工构造dataclass绕过数量/字段规则；observedAt转换UTC后声明+00:00。新增上限与手工hash漂移反例。
+
+
+SC4-5g3：通用SnapshotRelationshipPolicy编译及有界assessment完成，不含Niushop业务字段硬编码。只输出两端真实未软删的candidate link，missingReference/invalidReference/missingParent/deletedEndpoint/allowedUnset分别计数，不补对象、不推断删除、不授予Readiness。严格1..12对象、1..32规则、每类<1000、每引用<=32、总候选<=24000；canonical policy hash重验防dataclass绕过。77项组合测试通过4.25秒（新30+原核心模型+既有诊断）；哈希伪造反例先1失败29通过，修复后全通过。AR2扫描1915模块五类错误为空。下一项：不可变领域包14条规则声明及实际同批核验，再接原组输入/应用Owner与质量门。

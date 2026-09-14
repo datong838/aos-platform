@@ -120,3 +120,6 @@ SC4-5g1：同批真实关系审计完成。15测试通过（4.55秒）；真实0
 
 SC4-5g2：分类源逗号格式严格支持、Order关联键候选1.15.0完成。新树b09e20811f08b3d40e155406dd293d2642779acb6caed9ec8272f8337655779c；源1.14树不变，仅bundle/P05/masking/evals四文件改变。weapp_id与out_trade_no依实际结构证据增补，openid排除加固。33测试通过4.47秒，分类/Weapp首红2失败22通过后修正。新候选十二类静态评估通过，未发布安装。
 真实09:15:33.754126Z–09:15:35.178481Z同事务重验：65商品92分类引用全匹配，185订单Weapp全匹配；203普通支付181当前trade相同22不同，关系仍按原orderId，未错误删除历史支付。客户32订单/1评价缺失不变，软删端点不等于当前活跃关系。源行不持久化、不写主对象/Fulfillment。证据real-relationship-audit-20260914-order-keys.json保留此前失败审计。下一项：包内关系声明与通用有界物化，显式质量/软删边界，再接正式组输入Owner。
+
+
+SC4-5g3：通用SnapshotRelationshipPolicy编译及有界assessment完成，不含Niushop业务字段硬编码。只输出两端真实未软删的candidate link，missingReference/invalidReference/missingParent/deletedEndpoint/allowedUnset分别计数，不补对象、不推断删除、不授予Readiness。严格1..12对象、1..32规则、每类<1000、每引用<=32、总候选<=24000；canonical policy hash重验防dataclass绕过。77项组合测试通过4.25秒（新30+原核心模型+既有诊断）；哈希伪造反例先1失败29通过，修复后全通过。AR2扫描1915模块五类错误为空。下一项：不可变领域包14条规则声明及实际同批核验，再接原组输入/应用Owner与质量门。
