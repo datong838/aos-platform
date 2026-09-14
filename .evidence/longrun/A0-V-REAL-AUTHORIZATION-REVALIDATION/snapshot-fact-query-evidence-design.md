@@ -59,3 +59,13 @@ SC4-5l4实际最小权限PG发现原aip8事件表只GRANT SELECT,INSERT，而Aip
 ## SC4-5l5a 合同分段
 
 SC4-5l5拆为l5a显式合同/旧评估与存证兼容、l5b原当前Owner适用性+Shop人口+QualityEvidence存证。l5a修改services/aos-api/aos_api/data_requirement_quality.py，新增tests/test_snapshot_query_quality_measurement.py。新schema aos.data-requirement-snapshot-query-quality-measurement/v1，queryResultRevision精确ref，sourceRefs严格且仅一个完整组Evidence精确ref，id/hash前缀与revision=1/无receipt_id匹配。沿用原计数、时间、租户、逐fact/过期/人口独立校验。旧hydration/canonical query DTO字段与hash不变，联合判别器显式加入第三variant。DTO不验证源真实性、不授予执行权限；源Owner和固定查询重验在l5b。测试覆盖合法序列化、错误/重复/截断来源、伪造query ref、旧合同回归、空分母/弱fact/过期保留，以及原QualityEvidenceInput完整回读兼容；不改默认threshold或旧请求。
+
+## SC4-5l5b 当前质量适用性与存证
+
+新增services/aos-api/aos_api/ecommerce_analysis_snapshot_quality_evidence.py和tests/extension_runtime/test_analysis_snapshot_quality_evidence_pg.py；原ecommerce_analysis_snapshot_source_evidence.py仅抽内部成对回调，原公开接口/证据body/hash不变，使质量Owner在同一源守卫内取得原编译mapping与saved Shop行。无客户端rows/counts/人口参数。
+
+仅适用原grain=store、purpose=initial_store_analysis；Shop必须是原组唯一Shop成员且每个saved source_pk对应编译mapping.shop_id，最多一个源Shop行。有效人口是存在且未删除的该Shop数0或1；与Shop eligible计数一致且无unknown，否则适用性拒绝，不将其他事实行数相加。来源缺口不伪造人口，其他用途另行定义版本政策。原固定QueryResult当前精确验证、原完整requirement模型+hash与已有Source guards后，把实际逐fact counts转SnapshotQueryQualityMeasurement。query_version为固定metric hash；rule_version为绑定完整cohort/关系策略的fieldPolicyHash；人口固定执行规则版本hash。source_observed_at取原read_started_at，measured_at取query.created_at。
+
+为固定query稳定存证，QualityEvidenceInput.evaluated_at取原query.created_at，表示该查询时的评估；每次put/read另用DB当前时间调用原evaluate_quality，过期拒绝，不把历史评估当当前许可。正常字段缺口可保存失败assessment，不强行变绿；所有引用需当前重验。原QualityEvidenceStore存精确body/撤销，run_id=NULL不把BI Run伪装为AIP TaskRun。写后质量撤销/字段或投影变化整体回滚；外层当前源守卫保留。已有source/query/Evidence公开接口保持不变；当前适用性不是source readiness/hydration/Fulfillment替代。
+
+测试复用实际Query/Evidence/Store/schema，完整DataRequirement值为明确named pending fixture，Shop实际两类完成组；检查稳定重放、真实counts/freshness/population、错误grain/expired/低fact/来源与质量撤销/写后失效回滚。12类892行真实组合仍欠，l6原调度续跑与主环境真实首链不得据fixture完成。

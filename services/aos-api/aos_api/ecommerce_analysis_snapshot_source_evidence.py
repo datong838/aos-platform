@@ -42,6 +42,10 @@ class AnalysisSnapshotSourceEvidence:
         self._schema=self._claims._journal.schema
 
     def _bound(self, conn, *, execute, **refs):
+        return self._bound_pair(conn,execute=lambda body,snapshot:execute(body),**refs)
+
+    def _bound_pair(self, conn, *, execute, **refs):
+        """Internal composition; original snapshot stays under all current guards."""
         if set(refs)!=set(CALL_REFS):raise ValueError('exact original provenance selection required')
         def consume_fields(fields,snapshot):
             source=snapshot.quality.assessment.input
@@ -62,7 +66,7 @@ class AnalysisSnapshotSourceEvidence:
                         control=draft.model_dump(mode='json',by_alias=True)) for ref,draft,_ in source.group.members],
                     projection=deepcopy(projection.payload),purpose='complete-snapshot-source-provenance-only',factIds=[])
                 digest=_digest(body)
-                result=execute(body)
+                result=execute(body,snapshot)
                 _reject_deferred(result)
                 if _digest(body)!=digest:raise ValueError('source evidence changed during consumption')
                 return result
@@ -76,16 +80,20 @@ class AnalysisSnapshotSourceEvidence:
 
     def run_current(self, conn, *, evidence_ref, execute):
         if not callable(execute):raise TypeError('synchronous source evidence consumer required')
+        return self._run_current(conn,evidence_ref=evidence_ref,execute=lambda body,snapshot:execute(body))
+
+    def _run_current(self, conn, *, evidence_ref, execute):
+        if not callable(execute):raise TypeError('synchronous source evidence consumer required')
         with conn.transaction():
             saved=self._record(conn,evidence_ref)
             refs={name:saved['selection'][label] for name,label in CALL_REFS.items()}
-            def consume(body):
+            def consume(body,snapshot):
                 if body!=saved:raise ValueError('persisted source evidence differs from current original sources')
-                result=execute(body)
+                result=execute(body,snapshot)
                 _reject_deferred(result)
                 if self._record(conn,evidence_ref)!=saved:raise ValueError('source evidence changed')
                 return result
-            return self._bound(conn,**refs,execute=consume)
+            return self._bound_pair(conn,**refs,execute=consume)
 
     def _persist(self, conn, body):
         digest=_digest(body)[7:]

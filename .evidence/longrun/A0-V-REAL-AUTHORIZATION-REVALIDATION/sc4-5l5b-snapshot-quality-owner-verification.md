@@ -1,0 +1,11 @@
+# SC4-5l5b 验证证据
+
+基线72847b84；m1串行；不push；230 L0挂起。
+
+### SC4-5l5b 当前完整快照质量存证
+
+新增AnalysisSnapshotQualityEvidence，原SourceEvidence仅抽内部成对回调，公开接口与Evidence body/hash不变。当前原源/字段/投影守卫内重算固定query/完整requirement，仅store/initial_store_analysis适用；原Shop成员唯一、source_pk等于mapping.shop_id、最多1行，人口按未删除Shop数0/1且与cohort eligible一致，无跨fact加总。新测量绑定fieldPolicyHash/固定metric hash/固定人口规则，freshness取原read_started_at。原QualityEvidenceStore落精确证据并读后再核；query.created_at固定历史评估时间确保同query重放稳定，每次put/read另以DB时钟判当前过期。低字段质量保存失败assessment，来源/质量撤销、过期或漂移拒绝，不产生Fulfillment。
+
+Red新增模块缺失。初始5 PG passed/68.05秒；追加实际缺失Weapp字段导致QUALITY_BELOW_THRESHOLD并可存失败证据、写后质量撤销回滚后，新7+原Source11+Query13合31 PG passed/89.17秒，7既有warnings。全部Query/Evidence/Store为18432隔离schema真实原DDL，analysis/pending与artifact为named fixtures，人口与两类saved row是真实原测试完成组；不是12类892行真实租户链路验收。source calls仍1。AR2扫描1938/188/93五类错误空；memory strong CURRENT/validate GREEN。无主库/安装/源/模型或外部业务写。
+
+下一波SC4-5l6a先补原Outbox/Fulfillment真实连接方案：现有AnalysisAdvanceHostService._resume_authorities和BusinessInvestigationFulfillmentResumeSaga明确依赖真实SemanticHydrationReceipt、SourceReadiness、EvidenceBundle与原mapping；Query/QualityEvidence不能冒充这些凭据。核对原语义水合、数据产物与原完成回执的可复用路径，登记精确桥接缺口；保留原Run/TaskRun/Checkpoint、Outbox/Receipt幂等、取消/unknown与当前授权。readonly pending callback不得包住预期resume状态变化。未完成此桥接/主环境039–048升级/签名安装/真实首链/八场景观察，不得宣告长程完成。
