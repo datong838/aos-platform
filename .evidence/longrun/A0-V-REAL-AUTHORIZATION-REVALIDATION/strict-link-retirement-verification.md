@@ -1,0 +1,7 @@
+### SC4-5h7 条件清退原语验证
+
+原Store新增apply_strict_link_retirement_batch，命令tombstone属性绑定retirementExpectedPayloadHash；持有原端点/关系锁后，所有旧边必须仍活跃且hash相同才写入。Receipt.result额外retirementPreconditionChecked绑定完整requestHash，普通删除Receipt没有此证据不能重放为条件清退；自身成功重放核对当前tombstone和权威事件，旧hash不再与已经替换的记录比较。BatchCommand/BatchResult模型和其他入口不变。
+
+59项Store回归通过4.99秒；10项隔离PG关系核验通过（前一组合69项中唯一失败在新增单测夹具，PG10全部通过）。首次混合清退夹具给第二商品构造倒退checkpoint，被原Store正确拒绝；修正夹具时间后全Store通过，未改checkpoint规则。验证旧payload变化整批拒绝，无部分tombstone/Receipt/检查点推进；纯tombstone及哈希必需、同幂等键修改旧hash冲突；PG旧父边精确清退后正确边仍活跃，期间更新则旧边保留且无新Receipt。
+
+AR2扫描1923/187/93五类错误为空。主数据未清退，实际策略/当前组授权仍需后继Owner。下一波：a0v048不可变清退准备，绑定当前v2包策略、原命令、原残留audit和固定旧hash/观察时间；支持已应用后旧边消失时以原条件清退Receipt回读恢复，不能重新猜旧边或生成新命令。随后原精确投影和最终残留复核。

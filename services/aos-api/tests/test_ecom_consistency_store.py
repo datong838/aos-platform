@@ -1028,3 +1028,74 @@ def test_strict_links_support_explicit_tombstone(store):
                       key='delete-link', expected=1, batch_scope=command.scope)
     assert store.apply_strict_link_batch(tombstone).links_tombstoned == 1
     assert store.apply_strict_link_batch(tombstone).replayed
+
+
+def retirement_command(store):
+    original = _strict_link_setup(store)
+    store.apply_strict_link_batch(original)
+    old = original.links[0]
+    tombstone = old.model_copy(update={'is_deleted':True, 'source_updated_at':NOW+timedelta(seconds=2),
+        'properties':{'retirementExpectedPayloadHash':old.payload_hash()}})
+    return batch(links=[tombstone], key='retire', expected=1, batch_scope=original.scope)
+
+
+def test_strict_retirement_checks_prior_payload_and_replays_its_receipt(store):
+    command = retirement_command(store)
+    assert store.apply_strict_link_retirement_batch(command).links_tombstoned == 1
+    assert store.apply_strict_link_retirement_batch(command).replayed
+    with store._engine.begin() as conn:
+        receipt = conn.execute(select(ecom_ingest_receipt).where(ecom_ingest_receipt.c.idempotency_key=='retire')).mappings().one()
+    assert receipt['result']['retirementPreconditionChecked'] == command.request_hash()
+
+
+def test_strict_retirement_rejects_changed_original_payload(store):
+    command = retirement_command(store)
+    newer = batch(links=[shop_product_link(NOW+timedelta(seconds=1))], key='changed', expected=1, batch_scope=command.scope)
+    store.apply_batch(newer)
+    command = command.model_copy(update={'expected_checkpoint_version':2})
+    with pytest.raises(EcomConsistencyError, match='prior link payload'):
+        store.apply_strict_link_retirement_batch(command)
+    assert store.read_committed_batch(command) is None
+    assert links_for_default_shop(store)[0]['deleted_at'] is None
+
+
+@pytest.mark.parametrize('fault', ['active', 'missing_hash', 'bad_hash'])
+def test_strict_retirement_requires_bound_tombstones(store, fault):
+    command = retirement_command(store)
+    link = command.links[0]
+    if fault == 'active': link = link.model_copy(update={'is_deleted':False})
+    else: link = link.model_copy(update={'properties':{} if fault=='missing_hash' else {'retirementExpectedPayloadHash':'bad'}})
+    command = command.model_copy(update={'links':[link]})
+    with pytest.raises(EcomConsistencyError, match='bound prior payload'):
+        store.apply_strict_link_retirement_batch(command)
+    assert store.read_committed_batch(command) is None
+
+
+def test_regular_tombstone_receipt_cannot_claim_retirement_guard(store):
+    command = retirement_command(store)
+    store.apply_strict_link_batch(command)
+    with pytest.raises(EcomConsistencyError, match='retirement precondition evidence'):
+        store.apply_strict_link_retirement_batch(command)
+
+
+def test_retirement_prior_payload_hash_is_part_of_idempotency(store):
+    command = retirement_command(store)
+    store.apply_strict_link_retirement_batch(command)
+    changed = command.model_copy(update={'links':[command.links[0].model_copy(update={
+        'properties':{'retirementExpectedPayloadHash':'f'*64}})]})
+    with pytest.raises(EcomConsistencyError, match='different request'):
+        store.apply_strict_link_retirement_batch(changed)
+
+
+def test_retirement_mixed_batch_prior_mismatch_preserves_every_link(store):
+    first = retirement_command(store)
+    second = shop_product_link().model_copy(update={'target':ident('product-2'), 'cursor_external_id':'second-link'})
+    store.apply_batch(batch(obj('Product','product-2',when=NOW+timedelta(seconds=1)), links=[second], key='second-setup', expected=1))
+    wrong = second.model_copy(update={'is_deleted':True, 'source_updated_at':NOW+timedelta(seconds=2),
+                                     'properties':{'retirementExpectedPayloadHash':'f'*64}})
+    mixed = batch(links=[first.links[0], wrong], key='mixed-retirement', expected=1, batch_scope=first.scope)
+    with pytest.raises(EcomConsistencyError, match='prior link payload'):
+        store.apply_strict_link_retirement_batch(mixed)
+    assert all(row['deleted_at'] is None for row in links_for_default_shop(store))
+    assert store.read_committed_batch(mixed) is None
+    assert store.get_checkpoint(mixed)['version'] == 1

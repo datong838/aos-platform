@@ -299,7 +299,11 @@ class EcomConsistencyStore:
         """Commit only if every original link and authoritative event is current."""
         return self._apply_batch(command, strict_links=True)
 
-    def _apply_batch(self, command: BatchCommand, *, strict_links: bool) -> BatchResult:
+    def apply_strict_link_retirement_batch(self, command: BatchCommand) -> BatchResult:
+        """Retire exact active link payloads under the original transaction locks."""
+        return self._apply_batch(command, strict_links=True, retire_links=True)
+
+    def _apply_batch(self, command: BatchCommand, *, strict_links: bool, retire_links: bool = False) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
         # nested lists/dicts after construction and bypass the scope and shape
         # validators.  Rebuild a detached, validated snapshot before hashing or
@@ -309,6 +313,12 @@ class EcomConsistencyStore:
             raise EcomConsistencyError(
                 "LINK_ONLY_BATCH_REQUIRED", "strict application requires a nonempty link-only batch"
             )
+        if retire_links:
+            for link in command.links:
+                prior = link.properties.get("retirementExpectedPayloadHash")
+                if (not link.is_deleted or type(prior) is not str or len(prior) != 64
+                        or any(c not in "0123456789abcdef" for c in prior)):
+                    raise EcomConsistencyError("RETIREMENT_COMMAND_REQUIRED", "tombstone with bound prior payload required")
         request_hash = command.request_hash()
         lock_key = self._idempotency_lock_key(command)
         process_lock = _PROCESS_IDEMPOTENCY_LOCKS[
@@ -335,11 +345,21 @@ class EcomConsistencyStore:
                             "IDEMPOTENCY_CONFLICT",
                             "idempotency key was already used with a different request",
                         )
+                    if retire_links and replay["result"].get("retirementPreconditionChecked") != request_hash:
+                        raise EcomConsistencyError("RETIREMENT_EVIDENCE_REQUIRED", "original retirement precondition evidence required")
                     if strict_links:
                         self._reconcile_base_events(conn, command, replay)
                     saved = dict(replay["result"])
                     saved["replayed"] = True
                     return BatchResult.model_validate(saved)
+
+                if retire_links:
+                    for link in command.links:
+                        original = conn.execute(select(ecom_link.c.payload_hash, ecom_link.c.deleted_at)
+                            .where(_link_clause(link))).mappings().first()
+                        if (original is None or original["deleted_at"] is not None
+                                or original["payload_hash"] != link.properties["retirementExpectedPayloadHash"]):
+                            raise EcomConsistencyError("RETIREMENT_PRIOR_PAYLOAD_CHANGED", "exact active prior link payload required")
 
                 counters = {
                     "objects_written": 0,
@@ -398,6 +418,9 @@ class EcomConsistencyStore:
                     checkpoint_version=checkpoint_version,
                     checkpoint=command.next_checkpoint,
                 )
+                result_payload = result.model_dump(mode="json")
+                if retire_links:
+                    result_payload["retirementPreconditionChecked"] = request_hash
                 conn.execute(
                     insert(ecom_ingest_receipt).values(
                         org_id=command.scope.org_id,
@@ -407,7 +430,7 @@ class EcomConsistencyStore:
                         stream=command.scope.stream,
                         idempotency_key=command.idempotency_key,
                         request_hash=request_hash,
-                        result=result.model_dump(mode="json"),
+                        result=result_payload,
                         created_at=_utcnow(),
                     )
                 )
@@ -415,7 +438,7 @@ class EcomConsistencyStore:
                     # Validate inside the same transaction: ignored stale/dangling
                     # links must roll back the receipt, checkpoint and all writes.
                     self._reconcile_base_events(
-                        conn, command, {"result": result.model_dump(mode="json")}
+                        conn, command, {"result": result_payload}
                     )
                 return result
         except IntegrityError as exc:

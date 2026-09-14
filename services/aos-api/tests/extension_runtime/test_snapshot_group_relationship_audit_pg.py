@@ -172,3 +172,32 @@ def test_missing_parent_reference_keeps_extra_unresolved(assessment_case, monkey
     finally:
         try: next(generator)
         except StopIteration: pass
+
+
+@pytest.mark.parametrize('changed', [False, True])
+def test_original_store_retires_only_exact_prior_link_payload(audit_case, changed):
+    from datetime import timedelta
+    from aos_api.ecom_core_models import EcomConsistencyError
+    from aos_api.ec_ot_writer import _build_batch_command
+    executor, conn, args, _, owner = audit_case
+    executor.execute(**args)
+    command, old_link = add_extra(executor, args)
+    tombstone = old_link.model_copy(update={'is_deleted':True,
+        'source_updated_at':old_link.source_updated_at+timedelta(seconds=2),
+        'properties':old_link.properties | {'retirementExpectedPayloadHash':old_link.payload_hash()}})
+    retirement = _build_batch_command(sync_scope=command.scope.model_copy(update={'stream':'retirement-fixture'}),
+        objects=[], links=[tombstone], pipeline_id='retirement-fixture', store=executor._store)
+    if changed:
+        newer = old_link.model_copy(update={'source_updated_at':old_link.source_updated_at+timedelta(seconds=1)})
+        change = _build_batch_command(sync_scope=command.scope.model_copy(update={'stream':'old-parent-fixture'}),
+            objects=[], links=[newer], pipeline_id='old-parent-fixture', store=executor._store)
+        executor._store.apply_batch(change)
+        with pytest.raises(EcomConsistencyError, match='prior link payload'):
+            executor._store.apply_strict_link_retirement_batch(retirement)
+        assert executor._store.read_committed_batch(retirement) is None
+        assert conn.execute('SELECT count(*) AS n FROM ecom_link WHERE deleted_at IS NULL').fetchone()['n'] == 2
+    else:
+        assert executor._store.apply_strict_link_retirement_batch(retirement).links_tombstoned == 1
+        assert executor._store.apply_strict_link_retirement_batch(retirement).replayed
+        assert conn.execute('SELECT count(*) AS n FROM ecom_link WHERE deleted_at IS NULL').fetchone()['n'] == 1
+        assert executor._store.read_batch_projection_completion(command, [])['pending'] == 0
