@@ -148,3 +148,12 @@ AipTaskStore的初始化恢复阻断仍默认生效；仅精确内部Session能�
 Session作用域约束：Task服务除精确Session类型和逐次当前数据验证外，还要求Session正在其自身origin.run_current回调中执行；进入/退出由内部try/finally控制，不接受调用者bool参数，防止拿Session绕开外层来源前后复验。状态组合测试明确fixture sealed dispatch返回及数据就绪，真实缺数据用未替换Host验证。
 
 回归约束：原普通数据恢复仍保留domain→Task顺序和domain失败前不调用Task的既有行为；仅精确AipTaskStore持有已校验内部Session的初始化恢复采用Task→domain，并由Session外层保存点保证domain失败回滚Task。不得为新路径改变旧路径顺序。
+
+
+### SC4-5d0 真实数据核对后实施顺序
+
+2026-09-14主库实测：只有Shop和Product，管道2条且调度关闭；DataRequirement/Fulfillment/Observation/Readiness/AnalystQueryResult均0。详细证据见analysis-real-data-gap-verification.md。不能将302表目录或57条商品当作全店事实。
+
+SC4-5d按五项推进：安装内首装数据政策自动派生→当前受控来源扩展12类及真实完整快照→原Outbox消费并由实际Owner生产观察/映射/Hydration/Readiness/Fulfillment→完整sealed恢复与D01/D02/D03→新候选主部署与真实业务观察。数据政策必须来自固定版本配置，不由开发者手填每个事件；预算沿用当前授权配置，不虚构价格、不用0冒充足额。
+
+下一最小实现范围为services/aos-api/aos_api/ecommerce_analysis_data_preparation.py及对应extension_runtime测试；先核实现有安装配置政策字段后确定是否需要新版本配置。12类映射涉及bundles时先登记独立子Lease；不修改已签候选，不直接写主库对象补造事实。每项有完整业务回执才计贯通，消费者存在不等于数据已补齐。
