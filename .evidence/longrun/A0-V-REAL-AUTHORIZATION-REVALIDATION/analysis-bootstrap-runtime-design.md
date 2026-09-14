@@ -371,3 +371,21 @@ SC4-5g6：PipelineSnapshotGroupInputOwner完成。只消费已有原组claim+inp
 
 
 SC4-5g7：PipelineSnapshotGroupAssessmentOwner同事务组合完成，从原input取得唯一完整对象组，原policyOwner核验精确包策略后assess；assessment payload/hash绑定租户/group/claimRequest/manifest/精确policy/策略hash/源时间/counts/候选关系。consumer后重算hash且两原Owner再验，修改counts/links/input/发行否决均拒绝；无采集或apply。35组合测试通过10.98秒。首次夹具将Shop改Weapp但沿用旧SourceSelection规格被原RuntimeConflict正确拒绝；夹具改为通过原approve/append创建新精确mapping hash与控制版本，产品门禁没有放宽。下一项：同回调原事务不可变关系准备journal，再原对象/关系应用与业务质量/Fulfillment。
+
+### SC4-5g8 不可变关系准备journal
+
+新增a0v_046_snapshot_group_relationships.py（父045）、pipeline_snapshot_group_relationship_journal.py及隔离PG测试。迁移只运行隔离测试库，不升级主库。原group input增加tenant/group/manifestHash唯一键；新pipeline_snapshot_group_relationship按tenant/group唯一，FK原确切input manifest；记录policyRef/canonical policyHash/assessmentHash/JSON payload，8MiB上限。RLS FORCE、runtime SELECT/INSERT only、原不可变trigger拒绝UPDATE/DELETE/TRUNCATE。延迟trigger使用TG_TABLE_SCHEMA，核对完整顶层/tenant/group/input/claimRequest/读取起止/策略列一致，以及candidateLinks数组<=24000、无删除语义、来源观察时间标记正确；schema不冒称能验证应用typed canonical hash。
+保存Owner只接受原SourceClaimOwner，内部固定AssessmentOwner，在其原当前同步回调内自行取得body/hash，拒绝外部自报结果。prepare要求调用者已有事务，内层savepoint包围全部核验和insert；既有记录必须与本次重算body/hash/ref/manifest全部一致才零写重放。read_current同样重算核验但缺失不创建；返回prepared不是applied/Receipt。后续调用原ConsistencyStore前必须有独立提交确认，不能保存后未提交就应用。
+测试真实原claim/input/assessment组合，规范保存/精确重放、缺记录read不写、外层回滚、调用者捕获后置资格拒绝仍不泄漏半成准备、tenant/不可变/错manifest/错body绑定/删除Link负例。原current发行资产fixture仍明确，主真实权限/发布保持未验证；真实1162关系尚不应用。
+
+
+# 不可变关系准备 journal 验证
+
+SC4-5g8：a0v046 隔离 schema 与 PipelineSnapshotGroupRelationshipJournal 完成。原 input exact manifest 外键、严格 payload/时间/策略绑定、counts/link 形状、8 MiB 界限、tenant RLS FORCE 与不可变历史；准备在原 AssessmentOwner 同步回调及保存点内，原事务提交由调用方确认。
+
+48 项隔离 PG 组合测试通过，20.84 秒。首次迁移 SQL JSON 常量被 SQLAlchemy 识别为参数，改为 jsonb_build_object 后完整 head 迁移及测试通过。格式合法但虚假 counts 的记录，当前 Owner 重算后拒绝；外层回滚、捕获后置发行否决均无准备残留，精确重放不增加源调用。
+
+AR2 ar2-7 扫描 1919 模块，五类错误为空。主库仍未迁移，关系未应用，无正式 Fulfillment。代码 head 为 a0v046，主库此前确认 a0v038 未改。来源发行资产仍为测试 fixture；准备记录不能当已应用 Receipt。
+
+下一项：独立提交确认后按原 ConsistencyStore 应用原对象批次与关系，验证 Receipt 完整性、忽略项、失败恢复和旧关系处理，再接业务 Readiness。
+
