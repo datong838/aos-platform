@@ -484,3 +484,11 @@ Red新增模块缺失。首轮3失败为markings字段误写，已修正；第�
 Red为新增模块缺失；23新增+25原field+14原business共62 pure passed/5.64秒、7既有warnings。实际冻结1.21的12类策略经原编译器输入，覆盖缺失/重复/顺序/错误ProductReview名称、额外字段、模式/purpose/hash/空或非法binding及原输入不完整等拒绝。AR2扫描1943/190分类/93迁移五类错误空；memory strong CURRENT/validate GREEN。无DB/源/模型/主环境动作，非真实ready验证。
 
 下一波SC4-5l6d3：准备Niushop 1.22.0候选，源1.21冻结tree hash，新增content/policies/snapshot-readiness.v1.json及版本/静态eval。原文件逐字节保持，原已有queryBindingId配置仅作显式策略选择，真实当前绑定在d4核验；不build/sign/install/publish。随后d4当前事实、d5原就绪计算、d6原Receipt，原恢复/Outbox/真实业务闭环任务继续。m1、不push、230 L0挂起。
+
+### SC4-5l6d3 Niushop 1.22就绪策略候选
+
+基线49aa4b2d，生成器prepare_niushop_snapshot_readiness_candidate.py。源1.21 hash sha256:33b35f7fb8dd145c4cd9700b71e396505ee1cd9cd669953a860c96304e5a2844；目标1.22 hash sha256:f0ef69161dbae032fb29da036fa3cf9e9ef6dca1224027d9225d25df49eb8088；新SnapshotReadinessPolicy hash sha256:14506815d1a1da9e06937554eb6f193b314224bf8be3b33ff7ede18dc90b4b08。只新增content/policies/snapshot-readiness.v1.json，修改bundle版本和静态eval；其余旧文件逐字节保持。
+
+6项新就绪策略检查加7原field和7原business静态检查通过；完整12源、确定性、缺失来源/查询时间替代/事件计数替代/自报ready拒绝。重复生成实际拒绝，前后源与目标hash不变。AR2 1943/190/93五类错误空；memory strong CURRENT/validate GREEN。queryBindingId只是原配置选择，bindingCurrentlyValidated=false、formalReadiness=false；旧object eval未重跑，OCI/SBOM继承不代表本版构建签名。无build/sign/install/publish，无源/模型/主环境写。
+
+下一波SC4-5l6d4当前事实读取：先补基础对象计数证明和查询能力当前依据，再组成完整12安装快照输入；原SourceReadiness合同与Receipt不变，任何当前缺口阻断，不以两类fixture证明全12可用。随后d5/d6、恢复/Outbox、主升级安装与真实经营首链八场景继续。m1、不push、230 L0挂起。

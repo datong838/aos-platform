@@ -47,3 +47,7 @@ SourceReadinessService增加专用已安装快照计算入口，复用原_readin
 ### l6d2 编译合同细节
 
 编译函数接收原FactQualityPolicy和SnapshotRelationshipQualityPolicy，检查类型、两者quality hash相等、purpose已由原关系策略支持；文档字段集合严格为schemaVersion/fieldPolicyHash/relationshipQualityPolicyHash/purposeCode/freshnessMode/reconciliationMode/queryBindingId/sources。sources必须与原CANONICAL_QYH_SOURCES有序精确相等且原field facts唯一完整覆盖同12类。queryBindingId仅允许1..200位规范ASCII标识符，首字母或数字，后续字母数字._:-，不接受URL、空格或路径；这只是选择名称，不表示数据库绑定存在。输出frozen dataclass及规范hash，持有tuple，不含ready/pass字段。测试使用冻结1.21策略文件经原编译器得到输入，验证全12而非两类替代样本。
+
+### l6d3 候选生成约束
+
+新增scripts/prepare_niushop_snapshot_readiness_candidate.py，源1.21 tree hash固定sha256:33b35f7fb8dd145c4cd9700b71e396505ee1cd9cd669953a860c96304e5a2844；生成1.22.0只新增content/policies/snapshot-readiness.v1.json，修改bundle版本与静态eval。其余旧文件字节不变。queryBindingId沿用原SourceReadiness明示配置ecommerce.data_advisor.strategy.plan.r2，仅声明选择，不宣称当前存在/健康。复用原field/business静态eval并新增严格12源编译/缺失和错误模式拒绝；生成前后源hash校验、已有目标拒绝且不覆盖。保留候选未build/sign/install/publish声明，继承OCI/SBOM非新版本证明，正式构建阶段另生成。
