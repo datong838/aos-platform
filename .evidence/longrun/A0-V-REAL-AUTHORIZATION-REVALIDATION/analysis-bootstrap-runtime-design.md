@@ -46,3 +46,9 @@ Preview精确绑定本Task/Plan/Context/Brief/Bundle/Eval/职责/Stage，绑定�
 通过原create_impact_preview/freeze；同事务回读正文hash/生命周期/动态依赖；回调后核对意图Evidence、当前来源和Preview不变，错误回滚编译/上下文/预览。当前Source/selection/能力仍有测试fixture，测试改为真正存储的选中Binding行，让Preview不接受虚构ID。此波不创建或批准Action，不启动TaskRun。专用当前授权守卫仍为后续c3。
 
 预览版本复核补充：同一AgentInstance在职责槽位必须只有一个配置版本，且与实际当前版本相等；禁止读取新版本并悄悄替代Plan已经绑定的旧版本。增加当前Agent版本漂移的隔离库拒绝验证。
+
+### SC4-3c3 通用入口与专用入口隔离
+
+先实现并验证通用生产启动入口对初始化动作/初始化预览的拒绝（c3a），再实现当前来源授权及专用原子暂停入口（c3b）。检查点完成前不得启用风险例外。通用入口须同时识别 action_type_id、Action快照id、Preview impact分区 details.purpose=analysis-bootstrap-only，避免换动作名复用初始化预览获得queued运行。修改 aip_production_start_service.py 与 tests/aip/test_w2d_start_gate.py；既有正常生产启动保留。
+
+已复核原decide无条件禁止maker自批，初始化不得绕过。合格当前独立身份和实际审批记录仍为必要条件，后续专用入口必须验证而非虚构；独立源事件审批不能冒充本Task的审批。此波不注册Action、不启用R1例外、不授予任何当前身份权限。

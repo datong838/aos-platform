@@ -28,8 +28,10 @@ from test_w2d_action_binding import _action_snapshot, _risk
 from test_w2d_store import SCOPE, _seed
 
 
-def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
+def _seed_start_candidate(*, bootstrap_preview=False, action_type_id=None) -> tuple[ProductionStartRequest, AipActionStore]:
     preview_body, _ = _seed()
+    if bootstrap_preview:
+        preview_body.impact.risks.details = {"purpose": "analysis-bootstrap-only"}
     contracts = AipProductionContractStore()
     preview = contracts.create_impact_preview(
         SCOPE,
@@ -53,7 +55,7 @@ def _seed_start_candidate() -> tuple[ProductionStartRequest, AipActionStore]:
     assert preview_body.production_context_ref is not None
     context_ref = preview_body.production_context_ref
     action_store = AipActionStore()
-    action_id = f"send_w2d_start_{uuid.uuid4().hex}"
+    action_id = action_type_id or f"send_w2d_start_{uuid.uuid4().hex}"
     proposal = action_store.create_proposal(
         SCOPE,
         "maker:w2d-start",
@@ -341,3 +343,21 @@ def test_transaction_bound_start_gate_rolls_back_with_outer_owner() -> None:
             (*SCOPE.key,key)).fetchone()['n']==0
         assert conn.execute('SELECT approval_status FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s',
             (*SCOPE.key,request.plan_ref.resource_id)).fetchone()['approval_status']=='draft'
+
+
+@pytest.mark.parametrize('route',['action','preview'])
+def test_generic_start_rejects_bootstrap_even_with_approved_proposal(route):
+    request,store=_seed_start_candidate(bootstrap_preview=route=='preview',
+        action_type_id='ecommerce_analysis_bootstrap' if route=='action' else None)
+    proposal=store.decide(SCOPE,'checker:w2d-start',request.action_proposal_ref.proposal_id,
+        'approval-'+uuid.uuid4().hex,DecideActionProposalRequest(
+            expected_proposal_version=request.action_proposal_ref.version,
+            expected_proposal_hash=request.action_proposal_ref.proposal_hash,
+            decision=ApprovalDecision.APPROVED)).proposal
+    request=request.model_copy(update={'action_proposal_ref':ActionProposalExactRef(
+        proposal_id=proposal.id,version=proposal.version,proposal_hash=proposal.proposal_hash)})
+    before=_runtime_counts(request.task_id)
+    decision=AipProductionStartService().start(SCOPE,'executor:w2d-start','start-'+uuid.uuid4().hex,request)
+    assert decision.status is ProductionStartDecisionStatus.BLOCKED
+    assert 'ANALYSIS_BOOTSTRAP_SPECIALIZED_GATE_REQUIRED' in {item.code for item in decision.blockers}
+    assert decision.task_run_ref is None and _runtime_counts(request.task_id)==before

@@ -440,6 +440,27 @@ class AipProductionStartService:
         ).fetchone()
         if row is None:
             raise ProductionContractNotFound("action proposal not found in scope")
+        # Initialization authority cannot release a queued business run through
+        # the generic gate, even when attached to an otherwise approved action.
+        action_snapshot = row["action_type_snapshot"] or {}
+        if isinstance(action_snapshot, str):
+            action_snapshot = json.loads(action_snapshot)
+        impact = preview["impact"] if preview is not None else {}
+        if isinstance(impact, str):
+            impact = json.loads(impact)
+        bootstrap_preview = any(
+            isinstance(dimension, dict)
+            and isinstance(dimension.get("details"), dict)
+            and dimension["details"].get("purpose") == "analysis-bootstrap-only"
+            for dimension in (impact or {}).values()
+        )
+        if (row["action_type_id"] == "ecommerce_analysis_bootstrap"
+                or action_snapshot.get("id") == "ecommerce_analysis_bootstrap"
+                or bootstrap_preview):
+            blockers.append(ContractBlocker(
+                code="ANALYSIS_BOOTSTRAP_SPECIALIZED_GATE_REQUIRED",
+                message="初始化授权必须通过原子暂停专用入口，不能启动经营步骤",
+            ))
         snapshot.append(
             {
                 "resourceType": "ActionProposal",
