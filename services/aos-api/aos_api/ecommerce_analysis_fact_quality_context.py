@@ -27,19 +27,9 @@ class AnalysisFactQualityContext:
         field_ref=PipelineExactRef.model_validate(field_ref)
         def consume(business,snapshot):
             source=snapshot.quality.assessment.input
-            policies=self._business._snapshot._quality._assessments._policies
-            relationship=policies._load(conn,self.analysis.scope,source.group,snapshot.quality.assessment.policy_ref)
-            quality=compile_relationship_quality_policy(policies._load_exported_document(
-                conn,self.analysis.scope,source.group,snapshot.quality.quality_ref,
-                resource_type='SnapshotRelationshipQualityPolicy'),relationship_policy=relationship)
-            cohort=compile_business_cohort_policy(policies._load_exported_document(
-                conn,self.analysis.scope,source.group,PipelineExactRef.model_validate(business['cohortPolicyRef']),
-                resource_type='SnapshotBusinessCohortPolicy'),relationship_policy=relationship)
-            def load():
-                document=policies._load_exported_document(conn,self.analysis.scope,source.group,field_ref,
-                    resource_type='SnapshotFactQualityPolicy')
-                return compile_fact_quality_policy(document,relationship_policy=relationship,cohort_policy=cohort,quality_policy=quality)
-            fields=load();requirement=business['requirement']
+            relationship,quality,cohort,fields=self._load_policies(conn,snapshot,
+                cohort_ref=business['cohortPolicyRef'],field_ref=field_ref)
+            requirement=business['requirement']
             if (len(requirement['requiredFacts'])!=len(fields.facts)
                 or set(requirement['requiredFacts'])!={ot for ot,_ in fields.facts}):
                 raise ValueError('field facts differ from original requirement')
@@ -54,8 +44,25 @@ class AnalysisFactQualityContext:
             digest=canonical_sha256(current)
             result=execute(current,snapshot)
             _reject_deferred(result)
-            if load()!=fields or canonical_sha256(current)!=digest:
+            if (self._load_policies(conn,snapshot,cohort_ref=business['cohortPolicyRef'],field_ref=field_ref)
+                    !=(relationship,quality,cohort,fields) or canonical_sha256(current)!=digest):
                 raise ValueError('original field quality changed during consumption')
             return result
         return self._business._run(conn,receipt_ref=receipt_ref,policy_ref=policy_ref,quality_ref=quality_ref,
             cohort_ref=cohort_ref,execute=consume)
+
+    def _load_policies(self, conn, snapshot, *, cohort_ref, field_ref):
+        """Shared internal loader, called only inside the original current group."""
+        source=snapshot.quality.assessment.input
+        policies=self._business._snapshot._quality._assessments._policies
+        relationship=policies._load(conn,self.analysis.scope,source.group,snapshot.quality.assessment.policy_ref)
+        quality=compile_relationship_quality_policy(policies._load_exported_document(
+            conn,self.analysis.scope,source.group,snapshot.quality.quality_ref,
+            resource_type='SnapshotRelationshipQualityPolicy'),relationship_policy=relationship)
+        cohort=compile_business_cohort_policy(policies._load_exported_document(
+            conn,self.analysis.scope,source.group,PipelineExactRef.model_validate(cohort_ref),
+            resource_type='SnapshotBusinessCohortPolicy'),relationship_policy=relationship)
+        document=policies._load_exported_document(conn,self.analysis.scope,source.group,PipelineExactRef.model_validate(field_ref),
+            resource_type='SnapshotFactQualityPolicy')
+        fields=compile_fact_quality_policy(document,relationship_policy=relationship,cohort_policy=cohort,quality_policy=quality)
+        return relationship,quality,cohort,fields

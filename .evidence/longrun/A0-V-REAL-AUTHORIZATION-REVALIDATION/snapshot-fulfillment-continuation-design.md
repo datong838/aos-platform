@@ -65,3 +65,13 @@ l6b分纯计算l6b1、领域包策略l6b2、原当前Owner事实Evidence l6b3。
 records：Shop(name/status/currency/timezone)、Product(title/status/price/stock/currency/createdAt)、ProductSku(name/status/price/stock/currency)、Category(name/status/level)、OrderLine(goodsName/quantity/unitPrice/lineAmount/refundStatus/currency)、Weapp(name/status)、SystemConfig(key/status/isUse)。group-counts：Order(orderStatus/payStatus)、Shipment(status/deliveryType)、CustomerLite(memberLevel/status)、ProductReview(status/score/isAudit)、Payment(status/payStatus)。Product/SKU价格仅当前标价，OrderLine行金额非成交GMV，评分数字不解释量表，渠道配置记录不证明外部服务可用。
 
 静态eval复用原12类字段fixture与cohort/关系约束，确认内容/12类型/敏感字段排除/未知与缺口/确定性、不修改旧候选、重复拒绝。新增脚本本身为确定性生成器，不将fixture报告作为真实经营验收。1.21尚未构建签名，继承OCI/SBOM元数据须正式构建阶段再生成。
+
+### l6b3 当前业务事实Evidence
+
+新增aos_api/ecommerce_analysis_snapshot_business_evidence.py与tests/extension_runtime/test_analysis_snapshot_business_evidence_pg.py。修改ecommerce_analysis_fact_quality_context.py抽共享私有_load_policies，原公开回调/body不变；业务Owner在原SourceEvidence._run_current内复用此加载器取得同一安装的关系/cohort/质量/field策略，避免复制校验逻辑。加载SnapshotBusinessFactPolicy精确ref，编译绑定当前field hash，原saved rows经已实现纯内容函数产生完整公开内容。
+
+原SnapshotQuality Owner._value及QualityEvidenceStore精确回读必须相等且当前未过期；原Query/current source均有效。结果存原aip_evidence，稳定hash identity，来源/查询/质量/business policy全精确ref，内容+每类质量缺口。顶层factIds只列实际有范围内内容且通过原该fact阈值的类型，人口不足时不列任何类型；其他缺口保留，不把部分覆盖当Fulfillment。使用原评估reasons判每fact，不另写舍入评分。observed_at原cutoff/freshness_at原read_started_at，created_at为原query.created_at保持稳定重放，当前期限每次检查。
+
+记录/读取均检查原tenant/hash/type/actor/subject/timestamps/撤销；消费后再核质量证据与business policy。原source/quality Evidence factIds=[]保持。历史业务Evidence不能独立授予新执行；当前read重入所有原Owner。无新源读、无模型、无主环境/安装/Run转换。纯内容中的sourceKeyHash只是定位哈希，不替代匿名化或精确领域ref。
+
+PG测试复用原实际Query/Quality/Source/Store完成组与named pending/策略fixture：实际内容与逐fact覆盖、低fact仅部分覆盖、幂等、各类撤销、策略漂移/错误type、写后回滚/租户隔离、旧字段上下文回归。主环境12类真实业务链路仍l6g另验。
