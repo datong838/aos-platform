@@ -133,3 +133,6 @@ SC4-5g5：PipelineSnapshotGroupPolicyOwner完成，全部当前控制内按原in
 
 
 SC4-5g6：PipelineSnapshotGroupInputOwner完成。只消费已有原组claim+input，在全部原当前控制内核对manifest/request/逐原journal与rowCount/对象类型/原观察窗口；前后重新加载比较，callback改动或禁入均拒绝，缺输入不隐式采集。33组合测试通过13.37秒；再增越窗保存反例后新文件12测试通过7.68秒（共34覆盖）。AR2扫描1917模块五类错误为空。无真实源调用或主数据/安装变更。下一项：同事务组合当前策略和原输入，输出带manifest/精确policy双hash的关系核验，再关系准备持久化及原应用Owner。
+
+
+SC4-5g7：PipelineSnapshotGroupAssessmentOwner同事务组合完成，从原input取得唯一完整对象组，原policyOwner核验精确包策略后assess；assessment payload/hash绑定租户/group/claimRequest/manifest/精确policy/策略hash/源时间/counts/候选关系。consumer后重算hash且两原Owner再验，修改counts/links/input/发行否决均拒绝；无采集或apply。35组合测试通过10.98秒。首次夹具将Shop改Weapp但沿用旧SourceSelection规格被原RuntimeConflict正确拒绝；夹具改为通过原approve/append创建新精确mapping hash与控制版本，产品门禁没有放宽。下一项：同回调原事务不可变关系准备journal，再原对象/关系应用与业务质量/Fulfillment。

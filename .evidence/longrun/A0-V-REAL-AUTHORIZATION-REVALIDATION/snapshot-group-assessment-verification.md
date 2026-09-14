@@ -1,0 +1,6 @@
+# 当前原输入与规则关系核验组合
+
+
+SC4-5g7：PipelineSnapshotGroupAssessmentOwner同事务组合完成，从原input取得唯一完整对象组，原policyOwner核验精确包策略后assess；assessment payload/hash绑定租户/group/claimRequest/manifest/精确policy/策略hash/源时间/counts/候选关系。consumer后重算hash且两原Owner再验，修改counts/links/input/发行否决均拒绝；无采集或apply。35组合测试通过10.98秒。首次夹具将Shop改Weapp但沿用旧SourceSelection规格被原RuntimeConflict正确拒绝；夹具改为通过原approve/append创建新精确mapping hash与控制版本，产品门禁没有放宽。下一项：同回调原事务不可变关系准备journal，再原对象/关系应用与业务质量/Fulfillment。
+
+真实隔离PG输入/认领/当前控制，发行资产是明确fixture。正常/空组重放hash稳定，既有input manifest与policy ref匹配，源仅准备时一次；缺input零源调用。无主源数据读取、主安装或关系写入。用于后续原事务保存准备，不是现成Receipt或全业务Readiness结论。
