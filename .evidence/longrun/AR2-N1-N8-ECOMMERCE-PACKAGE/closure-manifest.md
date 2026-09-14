@@ -1404,3 +1404,10 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_product_event_analysis_port.py` | Host原路径 | 当前安装蓝图与领域合同一致性核验，不创造权限 | `212e56adab414c987784be5572b992d355c3e877e13ee233351204c920db6f5a` |
+
+
+### CF3 Task与意图简报Host事务准备（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_task_preparation.py` | Host原路径 | 原Case/Run绑定的Task与冻结简报事务准备，不授予执行权 | `63d802493705fc0f3eee06a35fd680672981c4799270f290d8f5307d9cd86288` |
