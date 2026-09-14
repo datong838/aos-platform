@@ -701,6 +701,15 @@ class DataRequirementRequestHostService:
         _cases, runs, _receipts, _binder, data, service = self._components(transaction, scope)
         original = self._original_response(data, runs, scope, command)
         if original is not None:
+            journal = BoundEcommerceGrowthRuntimeStore(transaction, scope).read(
+                operation_id="ecommerce_growth_data_fulfill", idempotency_key=key,
+            )
+            if journal is not None:
+                if {k: v for k, v in journal.items() if k != "replayed"} != {
+                    k: v for k, v in original.items() if k != "replayed"
+                }:
+                    raise ValueError("original data runtime journal drifted")
+                return journal
             return original
         result = service.request_missing_data(
             scope, refs["runRef"].resource_id, request, expected_version=version,

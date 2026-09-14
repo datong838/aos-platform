@@ -66,7 +66,11 @@ def test_data_host_checks_lineage_and_calls_existing_service(monkeypatch):
     parts, stored, calls = components(item)
     host = DataRequirementRequestHostService()
     monkeypatch.setattr(host, "_components", lambda *_: parts)
-    transaction = HostTransaction(SimpleNamespace())
+    def journal_not_yet_written(query, params):
+        assert "ecommerce_growth_runtime_command_receipt" in query
+        assert params == (*SCOPE.key, "ecommerce_growth_data_fulfill", "data-request-1")
+        return SimpleNamespace(fetchone=lambda: None)
+    transaction = HostTransaction(SimpleNamespace(execute=journal_not_yet_written))
     dispatch = SimpleNamespace(operation_id="ecommerce_growth_data_fulfill")
     host.revalidate(transaction=transaction, scope=SCOPE, dispatch=dispatch, command=command())
     response = host.execute(transaction=transaction, scope=SCOPE, dispatch_ref=dispatch,

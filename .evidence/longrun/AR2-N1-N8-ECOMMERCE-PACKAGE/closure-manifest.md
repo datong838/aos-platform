@@ -1471,3 +1471,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_product_event_analysis_service.py` | Host原路径 | 原事件当前事务内组合准备与初始暂停并提交原sealed Host，不授予后续经营运行权 | `9c099fd9b1d96788451ad77f76838a6a23bd922910f2e5c5bbcb15994d7a5739` |
+
+## SC4-5a 初始分析数据需求承接
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_data_preparation.py` | Host原路径 | 原事件当前事务与实际暂停链到规范数据需求，不授予源访问或经营执行权 | `2adeef8b860192985797bbf1c37015df775b14d72ea94d512505368894335f23` |
