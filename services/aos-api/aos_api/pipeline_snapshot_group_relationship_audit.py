@@ -39,10 +39,20 @@ class PipelineSnapshotGroupRelationshipAudit:
         return self.run_current(conn, **args, execute=lambda value: value)
 
     def run_current(self, conn, *, execute, **args):
+        return self._run(conn,execute=execute,completed_read=False,**args)
+
+    def read_completed_current(self, conn, **args):
+        return self.run_completed_current(conn,execute=lambda value:value,**args)
+
+    def run_completed_current(self, conn, *, execute, **args):
+        return self._run(conn,execute=execute,completed_read=True,**args)
+
+    def _run(self, conn, *, execute, completed_read, **args):
         if not callable(execute):
             raise TypeError('synchronous audit consumer required')
+        read_command = self._commands.read_completed_current if completed_read else self._commands.read_current
         def consume(current):
-            saved = self._commands.read_current(conn, **args)
+            saved = read_command(conn, **args)
             if saved.assessment_hash != current.content_hash:
                 raise IngressJournalConflict('GROUP_PREPARATION_CHANGED')
             if saved.command is not None:
@@ -100,10 +110,12 @@ class PipelineSnapshotGroupRelationshipAudit:
                     raise ValueError('relationship audit changed during consumption')
                 if self._store.read_active_links_for_rows(sync, selectors) != actual:
                     raise IngressJournalConflict('GROUP_RELATIONSHIP_AUDIT_CHANGED')
-                if self._commands.read_current(conn, **args) != saved:
+                if read_command(conn, **args) != saved:
                     raise IngressJournalConflict('GROUP_LINK_PREPARATION_CHANGED')
                 return value
             return self._commands._relationships._assessments._policies.run_current(conn, scope=args['scope'],
                 refs=tuple(ref for ref, _ in args['bindings']), actor=args['actor'], policy_ref=args['policy_ref'],
                 execute=with_policy)
-        return self._commands._relationships._assessments.run_current(conn, **args, execute=consume)
+        read = (self._commands._relationships._assessments.run_completed_current if completed_read
+                else self._commands._relationships._assessments.run_current)
+        return read(conn, **args, execute=consume)

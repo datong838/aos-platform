@@ -43,17 +43,21 @@ class PipelineSnapshotGroupAssessmentOwner:
     def _run(self,conn,*,scope,group_id,actor,bindings,policy_ref,execute,completed_read):
         if not callable(execute):raise TypeError('synchronous assessment consumer required')
         def consume_input(source):
-            def consume_policy(current):
-                if current.group!=source.group:raise ValueError('policy and original input groups differ')
-                outputs={mapping.read_spec.object_type:parent['outputRows'] for (_,_,mapping),parent in zip(source.group.members,source.parents)}
-                assessment=assess_snapshot_relationships(outputs,current.policy,observed_at=source.read_completed_at)
-                provisional=CurrentSnapshotGroupAssessment(source,current.policy_ref,assessment,'')
-                bound=replace(provisional,content_hash=observed_rows_hash([assessment_payload(provisional)]))
-                result=execute(bound);_reject_deferred(result)
-                if observed_rows_hash([assessment_payload(bound)])!=bound.content_hash:
-                    raise ValueError('bound relationship assessment changed during consumption')
-                return result
-            return self._policies.run_current(conn,scope=scope,refs=tuple(ref for ref,_ in bindings),actor=actor,
-                policy_ref=policy_ref,execute=consume_policy)
+            # Input already retains the complete current group/claim locks.
+            # Re-entering the same twelve guards for the policy at every layer
+            # exhausts the Python stack in Retirement -> Audit -> Link reads.
+            # Keep the original installed-policy loader and both revalidations.
+            ref=PipelineExactRef.model_validate(policy_ref)
+            policy=self._policies._load(conn,scope,source.group,ref)
+            outputs={mapping.read_spec.object_type:parent['outputRows'] for (_,_,mapping),parent in zip(source.group.members,source.parents)}
+            assessment=assess_snapshot_relationships(outputs,policy,observed_at=source.read_completed_at)
+            provisional=CurrentSnapshotGroupAssessment(source,ref,assessment,'')
+            bound=replace(provisional,content_hash=observed_rows_hash([assessment_payload(provisional)]))
+            result=execute(bound);_reject_deferred(result)
+            if observed_rows_hash([assessment_payload(bound)])!=bound.content_hash:
+                raise ValueError('bound relationship assessment changed during consumption')
+            if self._policies._load(conn,scope,source.group,ref)!=policy:
+                raise ValueError('current group policy changed during execution')
+            return result
         read=self._inputs.run_completed_current if completed_read else self._inputs.run_current
         return read(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=consume_input)

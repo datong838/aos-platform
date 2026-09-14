@@ -42,12 +42,20 @@ class PipelineSnapshotGroupRetirementJournal:
         _require_transaction(conn)
         return self._operate(conn, args, create=False)
 
-    def _operate(self, conn, args, *, create):
+    def read_completed_current(self, conn, **args):
+        _require_transaction(conn)
+        return self._operate(conn, args, create=False, completed_read=True)
+
+    def _operate(self, conn, args, *, create, completed_read=False):
+        if completed_read and create:
+            raise ValueError('completed input cannot prepare retirement')
+        read_command = self._commands.read_completed_current if completed_read else self._commands.read_current
+        read_audit = self._audit.run_completed_current if completed_read else self._audit.run_current
         def consume(current):
             def policy_guard(policy_current):
                 if policy_current.group != current.input.group or policy_current.policy.retirement_mode != 'present-rows-only':
                     raise PermissionError('current explicit retirement policy required')
-                parent = self._commands.read_current(conn, **args)
+                parent = read_command(conn, **args)
                 if parent.assessment_hash != current.content_hash:
                     raise IngressJournalConflict('GROUP_PREPARATION_CHANGED')
                 if parent.command is not None and self._store.read_batch_projection_completion(parent.command, [])['pending']:
@@ -76,7 +84,7 @@ class PipelineSnapshotGroupRetirementJournal:
                             cursor.execute(sql.SQL('INSERT INTO {} (org_id,project_id,group_id,parent_command_hash,audit_hash,audit,prepared_at,preparation_hash,command) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)').format(table),
                                 (*scope.key, group_id, parent.command_hash, audit.content_hash, Jsonb(body), at, digest, Jsonb(raw) if raw is not None else None))
                             return PreparedSnapshotGroupRetirement(audit.content_hash, digest, command, True, False)
-                        return self._audit.run_current(conn, **args, execute=save)
+                        return read_audit(conn, **args, execute=save)
                 body, audit_hash = row['audit'], row['audit_hash']
                 at = _db_time(row['prepared_at'])
                 raw = row['command']
@@ -97,11 +105,13 @@ class PipelineSnapshotGroupRetirementJournal:
                     def same_audit(audit):
                         if audit.content_hash != audit_hash or _payload(audit) != body:
                             raise IngressJournalConflict('RETIREMENT_PRIOR_AUDIT_CHANGED')
-                    self._audit.run_current(conn, **args, execute=same_audit)
+                    read_audit(conn, **args, execute=same_audit)
                 return PreparedSnapshotGroupRetirement(audit_hash, row['preparation_hash'], command, False, applied)
             return self._commands._relationships._assessments._policies.run_current(conn, scope=args['scope'],
                 refs=tuple(ref for ref, _ in args['bindings']), actor=args['actor'], policy_ref=args['policy_ref'], execute=policy_guard)
-        return self._commands._relationships._assessments.run_current(conn, **args, execute=consume)
+        read = (self._commands._relationships._assessments.run_completed_current if completed_read
+                else self._commands._relationships._assessments.run_current)
+        return read(conn, **args, execute=consume)
 
     @staticmethod
     def _key(group_id, audit_hash):

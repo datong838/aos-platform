@@ -29,7 +29,11 @@ class PipelineSnapshotGroupRelationshipJournal:
     def read_current(self,conn,**args):
         return self._operate(conn,args,create=False)
 
-    def _operate(self,conn,args,*,create):
+    def read_completed_current(self,conn,**args):
+        return self._operate(conn,args,create=False,completed_read=True)
+
+    def _operate(self,conn,args,*,create,completed_read=False):
+        if completed_read and create:raise ValueError('completed input cannot prepare relationships')
         def consume(current):
             payload=assessment_payload(current);digest=current.content_hash
             if observed_rows_hash([payload])!=digest:raise IngressJournalConflict('RELATIONSHIP_ASSESSMENT_HASH_DRIFT')
@@ -47,4 +51,5 @@ class PipelineSnapshotGroupRelationshipJournal:
                 cursor.execute(sql.SQL('INSERT INTO {} (org_id,project_id,group_id,input_manifest_hash,policy_ref,policy_hash,assessment_hash,assessment) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)').format(table),
                     (*scope.key,group_id,current.input.manifest_hash,Jsonb(payload['policyRef']),current.assessment.policy_hash,digest,Jsonb(payload)))
             return SnapshotRelationshipPreparation(digest,payload,True)
-        return self._assessments.run_current(conn,**args,execute=consume)
+        read=self._assessments.run_completed_current if completed_read else self._assessments.run_current
+        return read(conn,**args,execute=consume)

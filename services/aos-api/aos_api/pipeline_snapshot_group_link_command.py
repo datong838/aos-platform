@@ -40,15 +40,22 @@ class PipelineSnapshotGroupLinkCommandJournal:
         _require_transaction(conn)
         return self._operate(conn, args, create=False)
 
-    def _operate(self, conn, args, *, create):
+    def read_completed_current(self, conn, **args):
+        _require_transaction(conn)
+        return self._operate(conn, args, create=False, completed_read=True)
+
+    def _operate(self, conn, args, *, create, completed_read=False):
+        if completed_read and create:
+            raise ValueError('completed input cannot prepare link commands')
         def consume(current):
-            relationship = self._relationships.read_current(conn, **args)
+            read = self._relationships.read_completed_current if completed_read else self._relationships.read_current
+            relationship = read(conn, **args)
             if relationship.assessment_hash != current.content_hash:
                 raise IngressJournalConflict('GROUP_PREPARATION_CHANGED')
             scope = current.input.claim.scope
             for (ref, _, _), parent in zip(current.input.group.members, current.input.parents):
                 journal = ControlledIngressJournal(claims=self._claims, scope=scope,
-                    run_id=parent['runId'], control_ref=ref, actor=args['actor'])
+                    run_id=parent['runId'], control_ref=ref, actor=args['actor'],completed_read=completed_read)
                 completion = read_saved_projection_completion(conn, scope, parent['runId'], journal=journal, store=self._store)
                 if completion['pending'] != 0:
                     raise IngressJournalConflict('GROUP_OBJECT_PROJECTION_PENDING')
@@ -91,4 +98,6 @@ class PipelineSnapshotGroupLinkCommandJournal:
                 elif command is not None:
                     raise IngressJournalConflict('GROUP_EMPTY_LINK_COMMAND_DRIFT')
                 return PreparedSnapshotGroupLinkCommand(current.content_hash, row['command_hash'], command, False)
-        return self._relationships._assessments.run_current(conn, **args, execute=consume)
+        read = (self._relationships._assessments.run_completed_current if completed_read
+                else self._relationships._assessments.run_current)
+        return read(conn, **args, execute=consume)

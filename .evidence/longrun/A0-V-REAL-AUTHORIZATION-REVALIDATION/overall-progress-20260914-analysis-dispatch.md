@@ -686,3 +686,13 @@ AR2 1951/192/93，五类错误空（/tmp/sc4-e6b-closure.log）。主库未迁�
 AR2 1951/192/93五类错误为空（/tmp/sc4-e6c-closure.log）。主库未迁移、无真实源/模型/Task/安装发布动作，用户既有三份改动保留，不push，230 L0挂起。
 
 下一波e6d优先补真实接线缺口：原completed_group测试手工UPDATE succeeded/stopped，原GroupObject/Link/Retirement Executor没有统一调度完成入口。先设计原调度状态Owner与完整组当前证据/单写者的收尾组合，不能继续用手填状态绕过；组合后才能把原12完成组交给原初始化/Pending/证据/快照恢复。计划保留首链自然触发、八工作台、经营产物/人工评审续跑、连续观察和发布判断，不以PG测试替代这些目标。
+
+## 2026-09-15 SC4-5l6e6d1 完整组完成态回执只读
+
+基线a87ddc0ce3984db95674d0e022feb73490f42f97。按snapshot-resume-design.md修改Assessment/Relationship/LinkCommand/Audit/Retirement五个原Owner并新增完成态只读PG测试。十二成员完整链首次实际暴露重复进入同一完整组政策守卫导致RecursionError；最小修复为Assessment复用外层Input完整组锁并用原安装政策loader前后复验，没有缩组、扩权或提高递归上限。
+
+新鲜18432隔离PG：完成态空清退和实际非空清退2 passed/136.37s；六组相邻回归66 passed/190.63s；均7项既有warnings。完成态读取保持原不可变回执、源调用一次、计数不增长；缺原退休记录、当前政策禁入、租户canary及把完成态当prepare许可均拒绝。AR2 ar2-7闭包1951/192/93，五类错误空。
+
+重启后恢复Docker并重建约束角色齐全的aos-extension-pg测试容器；未接触真实商城库。主库未迁移，无真实源/模型/Task/安装发布；用户三份既有改动保护，不push，230 L0挂起。详细证据见sc4-5l6e6d1-completed-group-readback-verification.md。
+
+下一波e6d2实现固定完整组完成服务及原调度结果写入复用：同组单写者、全running执行、全完成只读、混合状态拒绝、十二路终态事务CAS与完成后Receipt后验。之后继续原初始化+Pending+完整快照+统一恢复、Outbox自然消费、主升级安装、真实首链、八工作台与连续观察。
