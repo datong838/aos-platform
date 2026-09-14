@@ -26,12 +26,28 @@ def project_saved_batch(conn,scope,run_id,*,journal,store,deadline=None,cancel_e
     if (command.scope.org_id,command.scope.workspace_id)!=scope.key:
         raise IngressJournalConflict('INGRESS_SCOPE_MISMATCH')
     derived=[DerivedMetricCommand.model_validate(item) for item in saved['commands']]
+    result=_project_exact_command(conn,scope,command,derived,store=store,
+        deadline=deadline,cancel_event=cancel_event)
+    _bound_parent(conn,scope,run_id,journal)
+    return result
+
+
+def _project_exact_command(conn,scope,command,derived,*,store,deadline=None,cancel_event=None,max_events=5000):
+    """Internal shared projection primitive; caller must hold original current guards."""
+    _require_transaction(conn)
+    if type(scope) is not TenantScope or type(store) is not EcomConsistencyStore or type(command) is not BatchCommand:
+        raise TypeError('exact original tenant, Store and command required')
+    if (command.scope.org_id,command.scope.workspace_id)!=scope.key:
+        raise IngressJournalConflict('INGRESS_SCOPE_MISMATCH')
+    if type(max_events) is not int or not 1<=max_events<=24000:
+        raise ValueError('bounded exact projection required')
+    _check_active(deadline,cancel_event)
     # Share the existing projector's tenant lock; never overtake its writes.
     lock_key=projection_order_lock_key(scope)
     if conn.execute('SELECT pg_try_advisory_xact_lock(%s) AS acquired',(lock_key,)).fetchone()['acquired'] is not True:
         raise IngressJournalConflict('PROJECTION_BUSY')
     evidence=store.read_batch_projection_evidence(command,derived)
-    if (type(evidence) is not tuple or not 1<=len(evidence)<=5000
+    if (type(evidence) is not tuple or not 1<=len(evidence)<=max_events
         or any(type(item) is not ProjectionEventEvidence for item in evidence)):
         raise IngressJournalConflict('PROJECTION_EVIDENCE_INVALID')
     expected={item.event_key:item for item in evidence}
@@ -66,5 +82,4 @@ def project_saved_batch(conn,scope,run_id,*,journal,store,deadline=None,cancel_e
             (*scope.key,row['outbox_id'],row['event_key'],row['payload_hash']))
         if result.rowcount!=1:raise IngressJournalConflict('PROJECTION_EVENT_UPDATE_DRIFT')
     _check_active(deadline,cancel_event)
-    _bound_parent(conn,scope,run_id,journal)
     return {'projected':len(pending),'pending':0}
