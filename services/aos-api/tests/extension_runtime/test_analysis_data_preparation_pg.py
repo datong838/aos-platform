@@ -79,7 +79,8 @@ def test_same_event_changed_data_policy_is_not_a_second_request(data_case):
     assert prepare(data_case)==receipt
 
 
-def test_original_start_receipt_is_resume_predecessor_but_not_fulfillment(data_case):
+@pytest.mark.parametrize('accepted',[False,True])
+def test_original_start_receipt_is_resume_predecessor_but_not_fulfillment(data_case,accepted):
     from aos_api.ecommerce_growth_runtime_adapters import (
         _HostAnalysisReceiptStore,_strict_analysis_command,_validate_prior_analysis_receipt,
         _analysis_command_hash,AnalysisAdvanceHostService,
@@ -101,6 +102,22 @@ def test_original_start_receipt_is_resume_predecessor_but_not_fulfillment(data_c
         checkpointRef=requirement.checkpoint_ref.model_dump(mode='json',by_alias=True,exclude_none=True))
     command['requestHash']=_analysis_command_hash({k:v for k,v in command.items() if k!='requestHash'})
     parsed=_strict_analysis_command(command)
+    if accepted:
+        from aos_api.automation_occurrence_store import AutomationOccurrenceStore
+        from types import SimpleNamespace
+        AutomationOccurrenceStore(TransactionBoundConnectFactory(tx,analysis.scope)).record_target_receipt(
+            analysis.scope,occurrence_id=claimed.occurrence_id,owner=claimed.claim_owner,
+            receipt_ref=prior['receiptRef'],occurred_at=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0))
+        AnalysisAdvanceHostService().revalidate(transaction=tx,scope=analysis.scope,
+            dispatch=SimpleNamespace(operation_id='ecommerce_growth_analysis_advance'),command=command)
+        for fault in ('attempt','deadline'):
+            with pytest.raises(ValueError),conn.transaction():
+                if fault=='attempt':
+                    conn.execute("UPDATE automation_occurrence_dispatch_attempt SET receipt_ref='{}' WHERE org_id=%s AND project_id=%s AND occurrence_id=%s",(*analysis.scope.key,claimed.occurrence_id))
+                else:
+                    conn.execute("UPDATE automation_occurrence SET deadline=deadline+interval '1 second' WHERE org_id=%s AND project_id=%s AND occurrence_id=%s",(*analysis.scope.key,claimed.occurrence_id))
+                AnalysisAdvanceHostService().revalidate(transaction=tx,scope=analysis.scope,
+                    dispatch=SimpleNamespace(operation_id='ecommerce_growth_analysis_advance'),command=command)
     _validate_prior_analysis_receipt(command,parsed,prior)
     with pytest.raises(ValueError,match='fulfillment authority drifted'):
         AnalysisAdvanceHostService()._resume_authorities(transaction=tx,scope=analysis.scope,

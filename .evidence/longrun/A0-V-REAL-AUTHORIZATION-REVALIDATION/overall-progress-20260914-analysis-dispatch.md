@@ -58,3 +58,5 @@ SC4-4b2：正式事件handle自动初始化到实际暂停TaskRun和Host Receipt
 SC4-5a：原正式初始化链经当前sealed data Host创建真实待数据需求和WAITING_DATA，TaskRun保持暂停；53项回归通过，AR2 1905/184/93无错误。修复数据Host重复响应与不可变journal冲突。显式数据政策仍待安装内自动计算，主租户未运行，下一SC4-5b恢复前置权威与专用续跑。
 
 SC4-5b：原START Receipt可组合实际WAITING_DATA/Requirement作为恢复前置，无需伪造中间回执；63项回归通过，无真实Fulfillment仍拒绝。下一SC4-5c经营事实执行上下文与专用当前恢复门，再自动政策/真实补齐；首链未完成。
+
+SC4-5c1：实际事件accepted后通过完成attempt+原Receipt验证历史Occurrence引用，修复status变化误拒绝；51项回归通过，篡改完成回执/元数据拒绝。下一c2已完成原事件当前来源上下文，再专用恢复门与真实Worker，主首链未完成。

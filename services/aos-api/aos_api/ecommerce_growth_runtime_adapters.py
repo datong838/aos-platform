@@ -1332,6 +1332,37 @@ class AnalysisAdvanceHostService:
     def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
+    @staticmethod
+    def _accepted_occurrence_reference(transaction, scope, authority):
+        """Prove the historical claimed reference from the actual completion Receipt."""
+        rows = transaction.execute(
+            """SELECT o.receipt_ref,a.target_idempotency_key,a.receipt_ref AS attempt_receipt
+                 FROM automation_occurrence o JOIN automation_occurrence_dispatch_attempt a
+                   USING(org_id,project_id,occurrence_id)
+                WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=%s
+                  AND o.status='accepted' AND o.claim_owner IS NULL AND o.claim_until IS NULL
+                  AND o.operation_id='ecommerce_growth_analysis_advance'
+                  AND a.status='receipt_recorded' AND a.resolved_at IS NOT NULL
+                FOR SHARE OF o,a""", (*scope.key, UUID(str(authority["occurrenceId"]))),
+        ).fetchall()
+        if len(rows) != 1 or rows[0]["receipt_ref"] != rows[0]["attempt_receipt"]:
+            raise ValueError("completed analysis occurrence Receipt is not unique")
+        row = rows[0]
+        store = _HostAnalysisReceiptStore(transaction, scope)
+        root = store.read_exact(row["receipt_ref"])
+        if (type(root) is not dict or set(root) != _ANALYSIS_RECEIPT_FIELDS
+                or root != store.read(row["target_idempotency_key"])
+                or root["receiptRef"] != row["receipt_ref"]
+                or root["phase"] != "PREPARING" or root["completed"] is not False
+                or root["receiptRef"]["contentHash"] != _analysis_command_hash(
+                    {k: v for k, v in root.items() if k != "receiptRef"})):
+            raise ValueError("completed original analysis Receipt drifted")
+        historical = dict(authority, status="claimed")
+        expected = _occurrence_ref(historical)
+        if root["occurrenceRef"] != expected:
+            raise ValueError("completed occurrence immutable lineage drifted")
+        return expected
+
     def _prepare_start_run(self, *, transaction, scope, command, occurred_at):
         _strict_analysis_start_command(command)
         from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunNotFound
@@ -1966,6 +1997,8 @@ class AnalysisAdvanceHostService:
             "revision": 1,
             "contentHash": self._occurrence_content_hash(authority),
         }
+        if parsed["operation"] == "runtime.analysis.resume_data" and authority["status"] == "accepted":
+            expected_occurrence = self._accepted_occurrence_reference(transaction, scope, authority)
         if command["occurrenceRef"] != expected_occurrence:
             raise ValueError("analysis occurrence lineage drifted")
         case = cases.get(scope, case_ref.resource_id)
