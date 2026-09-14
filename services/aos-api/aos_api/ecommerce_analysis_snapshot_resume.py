@@ -22,6 +22,7 @@ class _AnalysisSnapshotResumeSession:
         self._transaction = self._identity(conn)
         self._stage = None
         self._active = False
+        self._reading = False
 
     @staticmethod
     def _identity(conn):
@@ -39,6 +40,10 @@ class _AnalysisSnapshotResumeSession:
     def _same_transaction(self, conn, scope):
         if scope != self.scope or self._identity(conn) != self._transaction:
             raise PermissionError('snapshot session requires its original tenant transaction')
+        actual = conn.execute("SELECT current_setting('aos.org_id',true) AS org_id,"
+            "current_setting('aos.project_id',true) AS project_id").fetchone()
+        if (actual['org_id'],actual['project_id']) != scope.key:
+            raise PermissionError('snapshot session actual database tenant differs')
         if _analysis_command_hash(self._command) != self._command_hash:
             raise ValueError('snapshot session command changed')
         strict_snapshot_resume_command(self._command)
@@ -69,11 +74,40 @@ class _AnalysisSnapshotResumeSession:
         return self.context.run_current(self.conn,command=self.command,execute=current)
 
     def resume(self):
-        """First submission through the original locked port and unified Receipt."""
+        """Read a committed outcome first; only an unissued request may transition."""
         from aos_api.ecommerce_growth_host_composition import build_analysis_snapshot_resume_registry, build_ecommerce_growth_host_ports
         from aos_api.ecommerce_growth_canonical_router import IssuedDispatchRef
         from aos_api.ecommerce_growth_host_ports import HostTransaction
-        from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+        from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory,_HostAnalysisReceiptStore
+
+        if self._active or self._reading:
+            raise ValueError('snapshot session is already executing or checking a receipt')
+        self._same_transaction(self.conn,self.scope)
+
+        def probe(origin):
+            tx = HostTransaction(self.conn)
+            receipts = _HostAnalysisReceiptStore(tx,self.scope)
+            saved = receipts.read(self.command['idempotencyKey'])
+            if saved is not None:
+                if (saved.get('requestHash') != self.command['requestHash']
+                        or receipts.read_exact(saved.get('receiptRef')) != saved):
+                    raise ValueError('snapshot committed command or exact Receipt differs')
+                self._reading = True
+                try:
+                    return _CurrentSnapshotAnalysisHost(self)._verify_snapshot_commit(
+                        transaction=tx,scope=self.scope,command=self.command,receipt=saved,committed=True)
+                finally:
+                    self._reading = False
+            trace = tx.execute("""SELECT
+                EXISTS(SELECT 1 FROM aip_evidence WHERE org_id=%s AND project_id=%s
+                    AND evidence_type='run.control' AND source_ref=%s) AS task_trace,
+                EXISTS(SELECT 1 FROM public.ecommerce_investigation_run_state_transition_receipt
+                    WHERE org_id=%s AND project_id=%s AND operation='business_investigation_run.resume_after_data'
+                    AND idempotency_key=%s) AS domain_trace""",
+                (*self.scope.key,'run-control:resume:'+self.control_key,*self.scope.key,self.control_key+':domain')).fetchone()
+            if trace['task_trace'] or trace['domain_trace']:
+                raise ValueError('snapshot resume has transition traces; reconcile the missing unified Receipt before retrying')
+            return None
 
         def consume(current):
             def origin_current(origin):
@@ -81,7 +115,12 @@ class _AnalysisSnapshotResumeSession:
                     connect_factory=TransactionBoundConnectFactory(HostTransaction(self.conn),self.scope))
                 return ports.runtime_port.commit(dispatch_ref=IssuedDispatchRef(**origin['context']['dispatch']),command=self.command)
             return self.context.origin.run_current(self.conn,receipt_ref=self.command['priorReceiptRef'],execute=origin_current)
-        return self.run_current(consume)
+        with self.conn.transaction():
+            committed = self.context.origin.run_current(self.conn,
+                receipt_ref=self.command['priorReceiptRef'],execute=probe)
+            if committed is not None:
+                return committed
+            return self.run_current(consume)
 
     def authorize_task_resume(self, conn, scope, run, task, *, actor, idempotency_key, reason,
                               expected_run_version, expected_task_version):
@@ -210,22 +249,31 @@ class _CurrentSnapshotAnalysisHost(AnalysisAdvanceHostService):
         self._matches(transaction,scope,command)
         return super().revalidate(transaction=transaction,scope=scope,dispatch=dispatch,command=command)
 
-    def _read_successor(self, transaction, scope, command):
+    def _read_successor(self, transaction, scope, command, *, committed=False):
         from aos_api.aip_task_store import AipTaskStore
         from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
         from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStore
+        from aos_api.data_requirement_store import DataRequirementStore
         from aos_api.ecommerce_growth_runtime_adapters import (
             TransactionBoundConnectFactory,_HostAnalysisReceiptStore,_validate_prior_analysis_receipt,_analysis_plan_ref,
+            _strict_resume_control_receipt,
         )
-        self._matches(transaction,scope,command)
+        if committed:
+            self._session._same_transaction(transaction,scope)
+            if not self._session._reading or self._session._active or command != self._session.command:
+                raise PermissionError('committed snapshot verification requires the current read-only frame')
+        else:
+            self._matches(transaction,scope,command)
         parsed = self._parse_command(command)
         stage = self._session._stage
-        original = stage.runtime
+        original = None if committed else stage.runtime
         factory = TransactionBoundConnectFactory(transaction,scope)
         prior = _HostAnalysisReceiptStore(transaction,scope).read_exact(command['priorReceiptRef'])
         _validate_prior_analysis_receipt(command,parsed,prior)
-        requirement = stage.requirement
-        if requirement.run_ref.model_dump(mode='json',by_alias=True,exclude_none=True) != prior['runRef']:
+        requirement = DataRequirementStore(factory).get_exact(scope,parsed['requirementRef']) if committed else stage.requirement
+        if (requirement.run_ref.model_dump(mode='json',by_alias=True,exclude_none=True) != prior['runRef']
+                or requirement.case_ref != parsed['caseRef'] or requirement.checkpoint_ref != parsed['checkpointRef']
+                or requirement.cutoff_at != parsed['cutoff']):
             raise ValueError('snapshot successor Run differs from its original receipt')
         runs = BusinessInvestigationRunStore(factory)
         run = runs.get_verified(scope,requirement.run_ref.resource_id)
@@ -235,11 +283,24 @@ class _CurrentSnapshotAnalysisHost(AnalysisAdvanceHostService):
                 or _analysis_plan_ref(compilation.plan_ref) != command['priorPlanRef']):
             raise ValueError('snapshot successor original Run or compilation changed')
         tasks = AipTaskStore(factory)
-        timeline = tasks.timeline(scope,original.task_run_ref.resource_id)
-        if (timeline.run.id != original.task_run_ref.resource_id or timeline.run.task_id != original.task_ref.resource_id
-                or timeline.run.version != original.task_run_ref.version+1 or timeline.run.status.value != 'running'
-                or timeline.task.id != original.task_ref.resource_id or timeline.task.version != original.task_ref.version+1
-                or timeline.task.status.value != 'executing' or timeline.run.plan_revision_id != original.plan_ref.resource_id):
+        task_run_id = prior['taskRunRef']['resourceId']
+        controls = transaction.execute("""SELECT payload,created_by FROM aip_evidence
+            WHERE org_id=%s AND project_id=%s AND run_id=%s AND evidence_type='run.control' AND source_ref=%s""",
+            (*scope.key,task_run_id,'run-control:resume:'+self._session.control_key)).fetchall()
+        if (len(controls) != 1 or not _strict_resume_control_receipt(controls[0]['payload'])
+                or controls[0]['created_by'] != self.executor_identity):
+            raise ValueError('snapshot successor Task control Receipt differs')
+        control = controls[0]['payload']
+        if (control['reason'] != SNAPSHOT_RESUME_REASON or control['expectedRunVersion'] != prior['taskRunRef']['revision']
+                or (original is not None and (control['expectedRunVersion'] != original.task_run_ref.version
+                    or control['expectedTaskVersion'] != original.task_ref.version
+                    or original.task_run_ref.resource_id != task_run_id or original.task_ref.resource_id != compilation.task_id))):
+            raise ValueError('snapshot successor original control versions differ')
+        timeline = tasks.timeline(scope,task_run_id)
+        if (timeline.run.id != task_run_id or timeline.run.task_id != compilation.task_id
+                or timeline.run.version != control['expectedRunVersion']+1 or timeline.run.status.value != 'running'
+                or timeline.task.id != compilation.task_id or timeline.task.version != control['expectedTaskVersion']+1
+                or timeline.task.status.value != 'executing' or timeline.run.plan_revision_id != compilation.plan_ref.resource_id):
             raise ValueError('snapshot successor Task or TaskRun changed')
         state_prior = run.state.prior_ref
         if (state_prior is None or state_prior.resource_type != 'BusinessInvestigationRunStateRevision'
@@ -249,18 +310,12 @@ class _CurrentSnapshotAnalysisHost(AnalysisAdvanceHostService):
             expected_version=run.state.version-1,idempotency_key=self._session.control_key+':domain')
         if domain is None or domain != run.state:
             raise ValueError('snapshot successor domain Receipt differs')
-        control = tasks._control_request('resume',original.task_run_ref.version,original.task_ref.version,SNAPSHOT_RESUME_REASON)
-        controls = transaction.execute("""SELECT payload,created_by FROM aip_evidence
-            WHERE org_id=%s AND project_id=%s AND run_id=%s AND evidence_type='run.control' AND source_ref=%s""",
-            (*scope.key,original.task_run_ref.resource_id,'run-control:resume:'+self._session.control_key)).fetchall()
-        if (len(controls) != 1 or controls[0]['payload'] != control or controls[0]['created_by'] != self.executor_identity):
-            raise ValueError('snapshot successor Task control Receipt differs')
-        runtime = self._runtime_binding_for_task_run(scope,compilation,run,tasks,original.task_run_ref.resource_id)
+        runtime = self._runtime_binding_for_task_run(scope,compilation,run,tasks,task_run_id)
         return prior,runtime
 
-    def _verify_snapshot_commit(self, *, transaction, scope, command, receipt):
+    def _verify_snapshot_commit(self, *, transaction, scope, command, receipt, committed=False):
         from aos_api.ecommerce_growth_runtime_adapters import _analysis_json_equal
-        prior,runtime = self._read_successor(transaction,scope,command)
+        prior,runtime = self._read_successor(transaction,scope,command,committed=committed)
         expected = self._running_receipt(command,prior,runtime,scope,command['idempotencyKey'])
         if not _analysis_json_equal(receipt,expected):
             raise ValueError('snapshot unified Receipt differs from original successor states')
