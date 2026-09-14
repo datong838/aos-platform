@@ -85,3 +85,7 @@ CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advanc
 复核freeze_production_context发现只验证四份exact合同各自存在/冻结，没有检查Brief.task_id等于请求taskId、EvidenceBundle.brief_ref等于请求briefRef。同租户其他任务的完整冻结包可能误接，违反本方案第3条。先修该公共冻结入口再准备电商Context，不以临时造完整包避开真实证据要求。
 
 修改services/aos-api/aos_api/aip_production_contract_store.py：在已有同事务brief/bundle读取中加入task_id、brief_ref；分别检查本任务和完整exact Brief引用，错误为BRIEF_TASK_MISMATCH、EVIDENCE_BUNDLE_BRIEF_MISMATCH；复用原blocker处理，写Context/Receipt之前拒绝。保持正常依赖snapshot/hash形状及历史同键Receipt回读，不回写旧不可变记录。测试services/aos-api/tests/aip/test_w_l11_production_context.py：隔离PG内两个任务合同fixture交叉拼接必须失败、不落新Context；匹配路径及原撤销/来源验证继续通过。fixture仅证明关联约束，不证明真实业务证据完整性。CF3-5仍需解决本次启动证据/Eval来源及现行重验，不能宣称START桥接已完成。
+
+## CF3-5 启动证据与经营证据分阶段
+
+采用analysis-startup-context-design.md。DataRequirement需既有Compilation+Checkpoint，不能反向准备启动。新增SC1–SC4串行清单：显式安装蓝图启动政策→原事件/Case/Run启动证据→当前首阶段Eval与本任务Context→真实Saga/TaskRun接入。启动包仅证明启动关联，业务requiredFactProfiles仍待实际画像/诊断取证；不能让下游把启动complete冒充经营事实完整。先实现SC1，再继续SC2，不更改旧签名候选。
