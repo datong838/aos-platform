@@ -1,5 +1,6 @@
 """Current source context for an accepted original analysis, never an expired Claim."""
 from copy import deepcopy
+from dataclasses import asdict
 from uuid import UUID
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
@@ -50,7 +51,9 @@ class AnalysisContinuationContext:
         if occurrence['status']!='accepted':raise ValueError('completed original analysis event required')
         historical=AnalysisAdvanceHostService._accepted_occurrence_reference(tx,scope,occurrence)
         receipt=_HostAnalysisReceiptStore(tx,scope).read_exact(receipt_ref)
-        target=tx.execute('SELECT receipt_ref FROM automation_occurrence WHERE org_id=%s AND project_id=%s AND occurrence_id=%s',
+        target=tx.execute("""SELECT o.receipt_ref,a.target_idempotency_key FROM automation_occurrence o
+                          JOIN automation_occurrence_dispatch_attempt a USING(org_id,project_id,occurrence_id)
+                          WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=%s AND a.status='receipt_recorded'""",
                           (*scope.key,occurrence_id)).fetchone()
         if target is None or target['receipt_ref']!=receipt_ref:
             raise ValueError('continuation must use the recorded original target Receipt')
@@ -81,5 +84,4 @@ class AnalysisContinuationContext:
         installed=self.analysis.invoker.read_current_in_transaction(tx)
         return dict(source=deepcopy(source),growth=deepcopy(installed),origin=deepcopy(origin),
             occurrence=occurrence,analysisReceipt=deepcopy(receipt),
-            dispatch=dict(revision=dispatch.dispatch_revision,groupId=dispatch.cutover_group_id,
-                          groupRevision=dispatch.cutover_group_revision))
+            originalIdempotencyKey=target['target_idempotency_key'],dispatch=asdict(dispatch))

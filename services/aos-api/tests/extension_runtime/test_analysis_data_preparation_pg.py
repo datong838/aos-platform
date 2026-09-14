@@ -122,3 +122,23 @@ def test_original_start_receipt_is_resume_predecessor_but_not_fulfillment(data_c
     with pytest.raises(ValueError,match='fulfillment authority drifted'):
         AnalysisAdvanceHostService()._resume_authorities(transaction=tx,scope=analysis.scope,
             command=command,parsed=parsed,prior=prior)
+
+
+@pytest.mark.parametrize('already_requested',[False,True])
+def test_completed_event_can_request_or_replay_same_data(data_case,already_requested):
+    from aos_api.automation_occurrence_store import AutomationOccurrenceStore,AutomationOccurrenceConflict
+    from aos_api.ecommerce_growth_runtime_adapters import _HostAnalysisReceiptStore,TransactionBoundConnectFactory
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    from aos_api.ecommerce_analysis_data_preparation import AnalysisDataRequirementPreparation
+    conn,analysis,claimed,spec=data_case
+    prior_request=prepare(data_case) if already_requested else None
+    tx=HostTransaction(conn)
+    root=_HostAnalysisReceiptStore(tx,analysis.scope).read(claimed.target_idempotency_key)
+    AutomationOccurrenceStore(TransactionBoundConnectFactory(tx,analysis.scope)).record_target_receipt(
+        analysis.scope,occurrence_id=claimed.occurrence_id,owner=claimed.claim_owner,
+        receipt_ref=root['receiptRef'],occurred_at=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0))
+    service=AnalysisDataRequirementPreparation(analysis)
+    result=service.run_completed(conn,receipt_ref=root['receiptRef'],request=spec)
+    assert service.run_completed(conn,receipt_ref=root['receiptRef'],request=spec)==result
+    if prior_request:assert prior_request==result
+    with pytest.raises(AutomationOccurrenceConflict):prepare(data_case)
