@@ -292,11 +292,22 @@ class EcomConsistencyStore:
         self._last_dangling_links: list[CoreLinkRecord] = []
 
     def apply_batch(self, command: BatchCommand) -> BatchResult:
+        return self._apply_batch(command, strict_links=False)
+
+    def apply_strict_link_batch(self, command: BatchCommand) -> BatchResult:
+        """Commit only if every original link and authoritative event is current."""
+        return self._apply_batch(command, strict_links=True)
+
+    def _apply_batch(self, command: BatchCommand, *, strict_links: bool) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
         # nested lists/dicts after construction and bypass the scope and shape
         # validators.  Rebuild a detached, validated snapshot before hashing or
         # opening the transaction.
         command = BatchCommand.model_validate(command.model_dump(mode="python"))
+        if strict_links and (command.objects or not command.links):
+            raise EcomConsistencyError(
+                "LINK_ONLY_BATCH_REQUIRED", "strict application requires a nonempty link-only batch"
+            )
         request_hash = command.request_hash()
         lock_key = self._idempotency_lock_key(command)
         process_lock = _PROCESS_IDEMPOTENCY_LOCKS[
@@ -310,6 +321,8 @@ class EcomConsistencyStore:
                     workspace_id=command.scope.workspace_id,
                 )
                 self._lock_idempotency_key(conn, lock_key)
+                if strict_links:
+                    self._lock_strict_link_records(conn, command)
                 replay = self._get_receipt(conn, command)
                 if replay is not None:
                     if not self._receipt_matches_request(
@@ -321,6 +334,8 @@ class EcomConsistencyStore:
                             "IDEMPOTENCY_CONFLICT",
                             "idempotency key was already used with a different request",
                         )
+                    if strict_links:
+                        self._reconcile_base_events(conn, command, replay)
                     saved = dict(replay["result"])
                     saved["replayed"] = True
                     return BatchResult.model_validate(saved)
@@ -395,12 +410,37 @@ class EcomConsistencyStore:
                         created_at=_utcnow(),
                     )
                 )
+                if strict_links:
+                    # Validate inside the same transaction: ignored stale/dangling
+                    # links must roll back the receipt, checkpoint and all writes.
+                    self._reconcile_base_events(
+                        conn, command, {"result": result.model_dump(mode="json")}
+                    )
                 return result
         except IntegrityError as exc:
             raise EcomConsistencyError(
                 "CONCURRENT_WRITE_CONFLICT",
                 "a concurrent write changed the consistency state",
             ) from exc
+
+    @staticmethod
+    def _lock_strict_link_records(conn: Connection, command: BatchCommand) -> None:
+        # Preserve endpoint state until commit; lock endpoints before links,
+        # matching the original object's cascade-write order.
+        endpoints = {}
+        for link in command.links:
+            for identity, object_type in ((link.source, link.source_type), (link.target, link.target_type)):
+                key = (object_type, identity.platform, identity.shop_or_marketplace_id, identity.external_id)
+                endpoints[key] = (identity, object_type)
+        for key in sorted(endpoints):
+            identity, object_type = endpoints[key]
+            conn.execute(select(ecom_object.c.external_id).where(
+                _object_clause(identity, object_type)
+            ).with_for_update(read=True)).all()
+        for link in command.ordered_links():
+            conn.execute(select(ecom_link.c.payload_hash).where(
+                _link_clause(link)
+            ).with_for_update()).all()
 
     def read_committed_batch(self, command: BatchCommand) -> BatchResult | None:
         """Read exact committed evidence without replaying a batch or advancing it."""

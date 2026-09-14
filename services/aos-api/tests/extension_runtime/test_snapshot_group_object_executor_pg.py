@@ -93,3 +93,57 @@ def test_historical_dataset_success_cannot_hide_superseded_object(object_case):
     executor._store.apply_batch(command)
     with pytest.raises(EcomConsistencyError,match='missing or has been superseded'):executor.execute(**args)
     assert state['calls']==1
+
+
+@pytest.mark.parametrize('missing_endpoint', [False, True])
+def test_strict_group_candidate_links_commit_or_rollback(object_case, missing_endpoint, monkeypatch):
+    from aos_api.ecom_core_models import BatchCommand, EcomConsistencyError
+    from aos_api.ec_ot_writer import _normalize_rows, _build_batch_command
+    executor, conn, args, state = object_case
+    executor.execute(**args)
+    with executor._transaction(args['scope']) as db:
+        current = executor._journal._assessments.run_current(db, **args, execute=lambda v: v)
+    original = BatchCommand.model_validate(current.input.parents[0]['command'])
+    sync_scope = original.scope.model_copy(update={'stream': 'fixture-group-relationships'})
+    _, links = _normalize_rows(list(current.assessment.candidate_links), sync_scope)
+    assert len(links) == 1
+    if missing_endpoint:
+        missing = links[0].model_copy(update={
+            'target': links[0].target.model_copy(update={'external_id': 'niushop:1:999999'}),
+            'cursor_external_id': 'missing-fixture-endpoint',
+        })
+        links.append(missing)
+    command = _build_batch_command(sync_scope=sync_scope, objects=[], links=links,
+                                  pipeline_id=sync_scope.stream, store=executor._store)
+    if missing_endpoint:
+        with pytest.raises(EcomConsistencyError, match='original base record'):
+            executor._store.apply_strict_link_batch(command)
+        assert executor._store.read_committed_batch(command) is None
+        assert executor._store.get_checkpoint(command) is None
+        assert conn.execute('SELECT count(*) AS n FROM ecom_link').fetchone()['n'] == 0
+        assert conn.execute("SELECT count(*) AS n FROM projection_outbox WHERE change_kind='links_written'").fetchone()['n'] == 0
+    else:
+        from sqlalchemy import text
+        from sqlalchemy.exc import OperationalError
+        from aos_api.ecom_consistency_store import _apply_transaction_scope
+        original_reconcile = executor._store._reconcile_base_events
+        probes = []
+        def reconcile(db, original_command, receipt):
+            result = original_reconcile(db, original_command, receipt)
+            with pytest.raises(OperationalError) as failure:
+                with executor._store._engine.begin() as competing:
+                    _apply_transaction_scope(competing, org_id=sync_scope.org_id,
+                                             workspace_id=sync_scope.workspace_id)
+                    competing.execute(text("SET LOCAL lock_timeout='100ms'"))
+                    competing.execute(text('UPDATE ecom_object SET updated_at=updated_at'))
+            assert failure.value.orig.sqlstate == '55P03'
+            probes.append(True)
+            return result
+        monkeypatch.setattr(executor._store, '_reconcile_base_events', reconcile)
+        assert executor._store.apply_strict_link_batch(command).links_written == 1
+        assert executor._store.apply_strict_link_batch(command).replayed
+        assert len(probes) == 2
+        monkeypatch.setattr(executor._store, '_reconcile_base_events', original_reconcile)
+        assert executor._store.read_committed_batch_revision(command) > 0
+        assert conn.execute('SELECT count(*) AS n FROM ecom_link').fetchone()['n'] == 1
+    assert state['calls'] == 1

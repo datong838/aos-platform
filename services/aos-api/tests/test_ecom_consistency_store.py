@@ -940,3 +940,91 @@ def test_exact_projection_evidence_contains_only_effective_original_events(store
         rows=conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.payload_hash,projection_outbox.c.input_revision)
             .where(projection_outbox.c.event_key.in_([item.event_key for item in original]))).mappings().all()
     assert {(item.event_key,item.payload_hash,item.input_revision) for item in original}=={(row['event_key'],row['payload_hash'],row['input_revision']) for row in rows}
+
+
+def _strict_link_setup(store):
+    store.apply_batch(batch(obj('Shop', 'shop-object'), obj('Product', 'product-1')))
+    return batch(links=[shop_product_link()], key='strict-links',
+                 batch_scope=scope(stream='relationships'))
+
+
+def test_strict_links_apply_and_exact_replay(store):
+    command = _strict_link_setup(store)
+    assert store.apply_strict_link_batch(command).links_written == 1
+    assert store.apply_strict_link_batch(command).replayed
+    assert store.get_checkpoint(command)['version'] == 1
+    assert store.read_committed_batch_revision(command) > 0
+
+
+def test_strict_links_partial_batch_rolls_back_all_evidence(store):
+    command = _strict_link_setup(store)
+    missing = shop_product_link().model_copy(update={'target': ident('missing'),
+                                                    'cursor_external_id': 'missing'})
+    command = batch(links=[shop_product_link(), missing], key='mixed-links',
+                    batch_scope=scope(stream='relationships'))
+    with pytest.raises(EcomConsistencyError):
+        store.apply_strict_link_batch(command)
+    assert links_for_default_shop(store) == []
+    assert store.read_committed_batch(command) is None
+    assert store.get_checkpoint(command) is None
+    with store._engine.begin() as conn:
+        assert not conn.execute(select(projection_outbox).where(
+            projection_outbox.c.change_kind == 'links_written')).all()
+
+
+def test_strict_links_reject_old_permissive_receipt(store):
+    command = batch(links=[shop_product_link()], batch_scope=scope(stream='relationships'))
+    assert store.apply_batch(command).links_ignored == 1
+    with pytest.raises(EcomConsistencyError, match='original base record'):
+        store.apply_strict_link_batch(command)
+
+
+def test_strict_links_reject_superseded_replay_and_fresh_ignored_version(store):
+    command = _strict_link_setup(store)
+    store.apply_strict_link_batch(command)
+    newer = batch(links=[shop_product_link(NOW + timedelta(seconds=1))],
+                  key='newer-link', expected=1, batch_scope=command.scope)
+    store.apply_batch(newer)
+    with pytest.raises(EcomConsistencyError, match='original base record'):
+        store.apply_strict_link_batch(command)
+    stale = command.model_copy(update={'idempotency_key': 'stale-fresh',
+                                      'expected_checkpoint_version': 2,
+                                      'next_checkpoint': newer.next_checkpoint})
+    with pytest.raises(EcomConsistencyError, match='original base record'):
+        store.apply_strict_link_batch(stale)
+    assert store.read_committed_batch(stale) is None
+    assert store.get_checkpoint(command)['version'] == 2
+
+
+def test_strict_links_identical_existing_event_is_valid(store):
+    command = _strict_link_setup(store)
+    store.apply_strict_link_batch(command)
+    duplicate = command.model_copy(update={'idempotency_key': 'identical',
+                                          'expected_checkpoint_version': 1})
+    assert store.apply_strict_link_batch(duplicate).links_ignored == 1
+    assert store.read_committed_batch_revision(duplicate) == store.read_committed_batch_revision(command)
+
+
+def test_strict_links_reject_objects_before_writing(store):
+    command = batch(obj('Shop', 'shop-object'))
+    with pytest.raises(EcomConsistencyError, match='nonempty link-only'):
+        store.apply_strict_link_batch(command)
+    assert store.read_committed_batch(command) is None
+
+
+def test_strict_links_reject_replay_after_endpoint_deleted(store):
+    command = _strict_link_setup(store)
+    store.apply_strict_link_batch(command)
+    store.apply_batch(batch(obj('Product', 'product-1', deleted=True,
+                               when=NOW + timedelta(seconds=1)), key='delete', expected=1))
+    with pytest.raises(EcomConsistencyError, match='original base record'):
+        store.apply_strict_link_batch(command)
+
+
+def test_strict_links_support_explicit_tombstone(store):
+    command = _strict_link_setup(store)
+    store.apply_strict_link_batch(command)
+    tombstone = batch(links=[shop_product_link(NOW + timedelta(seconds=1), deleted=True)],
+                      key='delete-link', expected=1, batch_scope=command.scope)
+    assert store.apply_strict_link_batch(tombstone).links_tombstoned == 1
+    assert store.apply_strict_link_batch(tombstone).replayed

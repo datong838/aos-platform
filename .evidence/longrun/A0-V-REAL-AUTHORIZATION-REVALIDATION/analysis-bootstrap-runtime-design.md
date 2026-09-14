@@ -405,3 +405,19 @@ SC4-5h1：ControlledSnapshotGroupObjectExecutor 完成。先独立提交关系�
 AR2 扫描 1920 模块，五类错误为空。测试表为完整隔离 PG schema，源和发行资产仍是明确 fixture；主数据/安装未改变。对象阶段是逐成员可恢复提交，不声称整组对象原子事务，也不宣告整组 Readiness 或 Fulfillment。
 
 下一项：严格关系写入模式，拒绝悬挂或被新版本覆盖的关系，保留原通用写入行为；随后固定关系命令准备、提交确认、实际应用及 Receipt/投影核验。
+
+### SC4-5h2 严格关系原子应用
+
+保留 EcomConsistencyStore.apply_batch 既有悬挂关系忽略规则；新增 apply_strict_link_batch，只接受非空纯关系命令，不新增 BatchCommand 字段或改变历史请求哈希。共用原事务、租户、幂等锁、CAS、Receipt 与 outbox。严格入口在原事务内对新写入及重放均调用原 _reconcile_base_events，任何缺端点、旧版本忽略、当前payload或权威事件不符均回滚本次所有关系、checkpoint、Receipt和outbox。接受相同内容已存在且有唯一原权威事件；显式关系 tombstone 保留原语义，不能隐式推导删除。该入口只解决原 Store 原子一致性，不代替 current group/policy/输入 Owner；下一波固定关系命令准备后才能调用。
+
+新增反例先红后绿：缺端点混合批次无部分提交、旧命令被新版本覆盖拒绝、原宽松忽略Receipt不能严格重放、重复相同关系可复用原事件、带对象/空关系拒绝、删除端点重放拒绝；保留原全文件回归，再完整隔离PG组对象回归。无主库迁移或真实关系写入。
+
+SC4-5h2 concurrency addendum: strict mode locks referenced object rows FOR SHARE in stable identity order and existing link rows FOR UPDATE before replay/write; locks last through commit. This closes endpoint deletion between reconciliation and commit, without changing permissive mode. PostgreSQL lock_timeout probe must show the competing endpoint update blocked until strict transaction exits.
+
+### SC4-5h2 严格关系应用验证
+
+原 EcomConsistencyStore 增加 apply_strict_link_batch 非空纯关系入口，共用原事务、租户、幂等、CAS、Receipt/outbox；原 apply_batch 行为及 BatchCommand 序列化不变。严格模式在事务内锁住端点及已有关系，提交前和重放时均以原 _reconcile_base_events 核对当前关系与唯一权威事件。缺端点、被新版本替代及旧宽松忽略 Receipt 均拒绝；任意失败整批回滚。相同内容已有关系和显式 tombstone 可通过，未加入自动删除推断。
+
+新增8项SQLite反例先红后绿；62项组合回归通过20.21秒，包括完整Store51项、组对象7项、原单表4项。新增隔离PG直接消费组候选证明严格写入/重放和混合缺端点回滚；并发连接100ms lock_timeout 在新提交和重放核验时均拒绝端点更新，原事务退出才释放锁。源调用始终一次。AR2扫描1920/分类187/迁移93，五类错误为空。
+
+主库未迁移、真实关系未写入。当前严格入口是原Store一致性能力，不是绕过整组当前权限的授权入口。下一波：持久化精确关系 BatchCommand，绑定已有组准备及固定检查点，独立提交确认后才可严格应用；再接原投影和业务质量核验。旧关系清退及32+1客户引用缺口仍未解决，整组Readiness/Fulfillment未完成。
