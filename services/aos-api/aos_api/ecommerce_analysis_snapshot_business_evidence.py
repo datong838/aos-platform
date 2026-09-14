@@ -7,7 +7,7 @@ from psycopg.types.json import Jsonb
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.data_requirement_quality_evidence import QualityEvidenceStore
 from aos_api.ecommerce_analysis_snapshot_source_evidence import _digest,_subject
-from aos_api.ecommerce_analysis_snapshot_quality_evidence import AnalysisSnapshotQualityEvidence
+from aos_api.ecommerce_analysis_snapshot_quality_evidence import AnalysisSnapshotQualityEvidence,CurrentSnapshotQuality
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.pipeline_snapshot_business_facts import compile_business_fact_policy,build_business_facts
@@ -26,7 +26,7 @@ class AnalysisSnapshotBusinessEvidence:
         self.quality=AnalysisSnapshotQualityEvidence(source)
         self.source=source;self.scope=source.analysis.scope;self._schema=source._schema
 
-    def _during(self,conn,*,evidence_ref,query_ref,quality_ref,policy_ref,execute):
+    def _during(self,conn,*,evidence_ref,query_ref,quality_ref,policy_ref,execute,with_context=False):
         evidence=InvestigationExactRef.model_validate(evidence_ref);query=InvestigationExactRef.model_validate(query_ref)
         quality=InvestigationExactRef.model_validate(quality_ref);policy_ref=PipelineExactRef.model_validate(policy_ref)
         def consume(body,snapshot):
@@ -57,7 +57,8 @@ class AnalysisSnapshotBusinessEvidence:
                 observedAt=original.read_completed_at.isoformat(),freshnessAt=original.read_started_at.isoformat(),
                 createdAt=value.measurement.measured_at.isoformat())
             digest=_digest(result)
-            outcome=execute(result)
+            outcome=(execute(result,body,snapshot,CurrentSnapshotQuality(value,current))
+                if with_context else execute(result))
             if _digest(result)!=digest:raise ValueError('business content changed during consumption')
             if load()!=policy or store.read_exact(quality)!=value:raise ValueError('business dependencies changed during consumption')
             self.quality._assess_current(tx,value)
@@ -73,15 +74,21 @@ class AnalysisSnapshotBusinessEvidence:
 
     def run_current(self,conn,*,reference,execute):
         if not callable(execute):raise TypeError('synchronous business evidence consumer required')
+        return self._run_current_context(conn,reference=reference,
+            execute=lambda body,source,snapshot,quality:execute(body))
+
+    def _run_current_context(self,conn,*,reference,execute):
+        """Share already guarded inputs internally, avoiding recursive source re-entry."""
+        if not callable(execute):raise TypeError('synchronous business context consumer required')
         with conn.transaction():
             body=self._record(conn,reference);selection=body['selection']
-            def consume(current):
+            def consume(current,source,snapshot,quality):
                 if current!=body or self._record(conn,reference)!=body:raise ValueError('business evidence differs from current sources')
-                result=execute(current)
+                result=execute(current,source,snapshot,quality)
                 if self._record(conn,reference)!=body:raise ValueError('business Evidence changed during consumption')
                 return result
             return self._during(conn,evidence_ref=selection['evidenceRef'],query_ref=selection['queryRef'],
-                quality_ref=selection['qualityRef'],policy_ref=selection['policyRef'],execute=consume)
+                quality_ref=selection['qualityRef'],policy_ref=selection['policyRef'],execute=consume,with_context=True)
 
     def _persist(self,conn,body):
         digest=_digest(body)[7:]

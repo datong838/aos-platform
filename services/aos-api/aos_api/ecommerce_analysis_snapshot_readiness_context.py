@@ -90,47 +90,41 @@ class AnalysisSnapshotReadinessContext:
     def run_current(self, conn, *, business_ref, policy_ref, execute):
         if not callable(execute):
             raise TypeError('synchronous readiness consumer required')
-        def consume_business(business):
-            def consume_source(body, snapshot):
-                original = snapshot.quality.assessment.input
-                _members(original)
-                policy = PipelineExactRef.model_validate(policy_ref)
-                tx = HostTransaction(conn)
-                selection = business['selection']
-                quality = self.business.quality.read_current(conn,
-                    quality_ref=selection['qualityRef'], evidence_ref=selection['evidenceRef'],
-                    query_ref=selection['queryRef'])
-                fields_owner = self.source._fields
-                policies = fields_owner._business._snapshot._quality._assessments._policies
-                def load_policy():
-                    _, relationship_quality, _, fields = fields_owner._load_policies(conn, snapshot,
-                        cohort_ref=body['selection']['cohortPolicyRef'], field_ref=body['selection']['fieldPolicyRef'])
-                    document = policies._load_exported_document(conn, self.scope, original.group, policy,
-                        resource_type='SnapshotReadinessPolicy')
-                    return compile_snapshot_readiness_policy(document, field_policy=fields, quality_policy=relationship_quality)
-                compiled = load_policy()
-                bindings = tuple((ref, parent['runId']) for (ref, _, _), parent in zip(original.group.members, original.parents))
-                def consume_counts(current):
-                    if (current.projection.payload != body['projection']
-                            or current.projection.input.manifest_hash != original.manifest_hash):
-                        raise ValueError('base count projection differs from exact source evidence')
-                    def consume_binding(binding):
-                        runs = self._runs(conn, original)
-                        checked = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-                        value = _assemble(scope=self.scope, original=original, counts=current.payload, runs=runs,
-                            quality=quality, business=business, field_ref=body['selection']['fieldPolicyRef'],
-                            policy_ref=policy, binding=binding, checked_at=checked)
-                        before = value.model_dump(mode='json')
-                        result = execute(value)
-                        _reject_deferred(result)
-                        now = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-                        if (value.model_dump(mode='json') != before or self._runs(conn, original) != runs
-                                or load_policy() != compiled or any(now >= s.freshness_expires_at for s in value.sources)):
-                            raise ValueError('current readiness dependencies changed during consumption')
-                        return result
-                    return self.binding.run_current(conn, binding_id=compiled.query_binding_id, execute=consume_binding)
-                return self.source._projections.run_current_base_counts(conn, scope=self.scope,
-                    group_id=original.claim.group_id, actor=self.source.analysis.source.actor,
-                    bindings=bindings, execute=consume_counts)
-            return self.source._run_current(conn, evidence_ref=business['selection']['evidenceRef'], execute=consume_source)
-        return self.business.run_current(conn, reference=business_ref, execute=consume_business)
+        def consume_business(business, body, snapshot, quality):
+            original = snapshot.quality.assessment.input
+            _members(original)
+            policy = PipelineExactRef.model_validate(policy_ref)
+            tx = HostTransaction(conn)
+            fields_owner = self.source._fields
+            policies = fields_owner._business._snapshot._quality._assessments._policies
+            def load_policy():
+                _, relationship_quality, _, fields = fields_owner._load_policies(conn, snapshot,
+                    cohort_ref=body['selection']['cohortPolicyRef'], field_ref=body['selection']['fieldPolicyRef'])
+                document = policies._load_exported_document(conn, self.scope, original.group, policy,
+                    resource_type='SnapshotReadinessPolicy')
+                return compile_snapshot_readiness_policy(document, field_policy=fields, quality_policy=relationship_quality)
+            compiled = load_policy()
+            bindings = tuple((ref, parent['runId']) for (ref, _, _), parent in zip(original.group.members, original.parents))
+            def consume_counts(current):
+                if (current.projection.payload != body['projection']
+                        or current.projection.input.manifest_hash != original.manifest_hash):
+                    raise ValueError('base count projection differs from exact source evidence')
+                def consume_binding(binding):
+                    runs = self._runs(conn, original)
+                    checked = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+                    value = _assemble(scope=self.scope, original=original, counts=current.payload, runs=runs,
+                        quality=quality, business=business, field_ref=body['selection']['fieldPolicyRef'],
+                        policy_ref=policy, binding=binding, checked_at=checked)
+                    before = value.model_dump(mode='json')
+                    result = execute(value)
+                    _reject_deferred(result)
+                    now = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+                    if (value.model_dump(mode='json') != before or self._runs(conn, original) != runs
+                            or load_policy() != compiled or any(now >= s.freshness_expires_at for s in value.sources)):
+                        raise ValueError('current readiness dependencies changed during consumption')
+                    return result
+                return self.binding.run_current(conn, binding_id=compiled.query_binding_id, execute=consume_binding)
+            return self.source._projections.run_current_base_counts(conn, scope=self.scope,
+                group_id=original.claim.group_id, actor=self.source.analysis.source.actor,
+                bindings=bindings, execute=consume_counts)
+        return self.business._run_current_context(conn, reference=business_ref, execute=consume_business)
