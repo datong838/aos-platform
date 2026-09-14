@@ -634,3 +634,15 @@ Red为原生控制请求8项失败6.50s（/tmp/sc4-e5b2a-red.log）；修复后�
 测试环境补充：原tests/conftest.py的autouse为所有测试（包括纯合同断言）创建、升级并删除一次性aos_test_*数据库，纯指断言层级，不等于零数据库初始化。未显式指定基础连接的纯测试使用原默认本机测试服务，未升级共享aos_meta；业务PG回归明确18432隔离。后续测试统一显式18432基础连接。主运行库仍最后只读核得a0v_038；本波无主升级/安装/商城读取/模型调用，不push，230 L0挂起，用户原改动保留。
 
 AR2 1951扫描/192分类/93迁移，错误列表空（/tmp/sc4-e5b2a-closure.log），编译/diff与memory validate通过。下一波e5b2b接快照统一Host与AnalysisRuntimeReceipt，普通注册表仍不得直接授权快照；e5c已提交只读回查/未知结果，e6真实起点与完整十二源、Outbox自然消费、主升级安装、真实首链/八场景/观察和发布判断继续。
+
+## SC4-5l6e5b2b 快照统一Host与Receipt（2026-09-15）
+
+基线bf3364a4，m1/AOS-000573。先完善snapshot-resume-design.md，再修改ecommerce_analysis_snapshot_resume.py、ecommerce_growth_runtime_adapters.py、ecommerce_growth_host_composition.py，新增test_analysis_snapshot_unified_receipt_pg.py并补会话注册表测试。Session.resume在原current stage与原Origin/current dispatch内通过专属exact注册表进入原LockedHostPort，TransactionBoundConnectFactory阻止提前commit；原_resume_states转换后重读原Task/Run/Compilation/控制Receipt与domain Receipt，生成原统一AnalysisRuntimeReceipt，mappingRef仅快照模式为null，原_HostAnalysisReceiptStore保存并精确回读，原Adapter/BoundStore journal同一身份。
+
+普通Host解析和Adapter分析journal解析默认仍是旧strict，新快照仅exact内部Host/Adapter覆盖；普通注册表拒绝快照、非active会话拒绝调用、bool/任意Host不接受。原prior精确恢复分支支持快照，但原_strict_analysis_command不放开；旧水合字段保持。
+
+Red缺少Session.resume（1失败6.43s，/tmp/sc4-e5b2b-red.log）。18432隔离PG 4 passed /10.46s（/tmp/sc4-e5b2b-green.log），使用实际原初始化Task/Run、Origin/当前dispatch/LockedHostPort/统一Store，整个快照交付stage仍named：统一回执可按原key和exact ref读回，Task/Run各+1，mappingRef null且无模型步骤；保存失败、回读篡改、外层Origin后验失败时Task、Run和统一回执整体回滚。138项快照/会话/原分析/恢复合同回归通过4.93s（/tmp/sc4-e5b2b-regression.log），另4项旧恢复PG通过10.14s（/tmp/sc4-e5b2b-old-pg.log）。均7项既有warnings。
+
+AR2 1951/192/93错误列表空（/tmp/sc4-e5b2b-closure.log）；编译/diff、memory validate通过。主库未升级、没有真实商城读取/Provider执行/发布安装，不push，230 L0挂起，用户原改动保留。首次统一提交接口完成并不表示重启恢复或真实十二源首链完成。
+
+下一波e5c：原Scope/Origin/current dispatch下先读原统一Receipt，已有提交只核对严格命令hash、实际原Task/Run/control/domain/统一结果，不重新进入paused阶段或新造执行许可；缺统一Receipt但有原控制/domain转换痕迹时阻断重复提交，未知/已推进状态明确核对。再e6真实起点与完整十二源组合、Outbox自然消费、主升级安装、真实首链/八场景/连续观察后发布判断。继续自动接续。

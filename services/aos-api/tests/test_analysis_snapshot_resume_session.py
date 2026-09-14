@@ -132,3 +132,16 @@ def test_caller_cannot_mutate_session_command(session_case):
     assert session.command==cmd
     assert session.control_key.startswith('bi-snapshot-resume-')
     session.run_current(lambda active:active.authorize_task_resume(conn,SCOPE,run,task,**args))
+
+
+def test_snapshot_registry_and_adapter_remain_exact_and_scoped(session_case):
+    from aos_api.ecommerce_growth_host_composition import build_runtime_ecommerce_growth_registry, build_analysis_snapshot_resume_registry
+    from aos_api.ecommerce_analysis_snapshot_resume import _SnapshotAnalysisAdapter
+    conn,cmd,session,run,task,args,state=session_case
+    dispatch=SimpleNamespace(operation_id='ecommerce_growth_analysis_advance')
+    normal=build_runtime_ecommerce_growth_registry()._binding(dispatch.operation_id)
+    with pytest.raises(ValueError):normal.revalidate(transaction=conn,scope=SCOPE,dispatch=dispatch,command=cmd)
+    scoped=build_analysis_snapshot_resume_registry(session)._binding(dispatch.operation_id)
+    with pytest.raises(PermissionError):scoped.revalidate(transaction=conn,scope=SCOPE,dispatch=dispatch,command=cmd)
+    with pytest.raises(TypeError):build_analysis_snapshot_resume_registry(True)
+    with pytest.raises(TypeError):_SnapshotAnalysisAdapter(AnalysisAdvanceHostService())

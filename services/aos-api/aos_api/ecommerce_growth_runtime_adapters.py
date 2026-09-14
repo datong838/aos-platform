@@ -1163,7 +1163,7 @@ def _validate_prior_analysis_receipt(
         or datetime.fromisoformat(receipt["cutoffAt"]) != parsed["cutoff"]
     ):
         raise ValueError("analysis prior Receipt lineage drifted")
-    if parsed["operation"] == "runtime.analysis.resume_data":
+    if parsed["operation"] in {"runtime.analysis.resume_data", "runtime.analysis.resume_snapshot"}:
         waiting = (
             receipt["phase"] == "WAITING_DATA"
             and receipt["recoverableAction"] == "WAIT_FOR_DATA"
@@ -1324,6 +1324,9 @@ class AnalysisAdvanceHostService:
     """Recoverable analysis host with exact data-resume authority composition."""
 
     executor_identity = "ecommerce-growth-analysis-host"
+
+    def _parse_command(self, command):
+        return _strict_analysis_command(command)
 
     @staticmethod
     def _components(transaction, scope):
@@ -1521,7 +1524,7 @@ class AnalysisAdvanceHostService:
             "requirementRef": command["requirementRef"],
             "fulfillmentRef": command["fulfillmentRef"],
             "sourceReadinessRef": command["sourceReadinessRef"],
-            "mappingRef": command["mappingRef"],
+            "mappingRef": None if command["operation"] == "runtime.analysis.resume_snapshot" else command["mappingRef"],
             "evidenceRefs": command["evidenceRefs"],
             "observedAt": command["observedAt"],
             "targetReceiptRef": None,
@@ -1980,7 +1983,7 @@ class AnalysisAdvanceHostService:
         return expected
 
     def revalidate(self, *, transaction, scope, dispatch, command):
-        parsed = _strict_analysis_command(command)
+        parsed = self._parse_command(command)
         key = parsed["key"]
         occurrence_ref = parsed["occurrenceRef"]
         case_ref = parsed["caseRef"]
@@ -1999,7 +2002,7 @@ class AnalysisAdvanceHostService:
             "revision": 1,
             "contentHash": self._occurrence_content_hash(authority),
         }
-        if parsed["operation"] == "runtime.analysis.resume_data" and authority["status"] == "accepted":
+        if parsed["operation"] in {"runtime.analysis.resume_data", "runtime.analysis.resume_snapshot"} and authority["status"] == "accepted":
             expected_occurrence = self._accepted_occurrence_reference(transaction, scope, authority)
         if command["occurrenceRef"] != expected_occurrence:
             raise ValueError("analysis occurrence lineage drifted")
@@ -3532,6 +3535,9 @@ class _ExplicitRuntimeAdapter:
             verify_receipt=self._verify_and_journal,
         )
 
+    def _analysis_protocol_command(self, command):
+        return _strict_analysis_command(command)
+
     def _verify_and_journal(
         self,
         *,
@@ -3560,7 +3566,7 @@ class _ExplicitRuntimeAdapter:
         if self.SPEC.operation_id == "ecommerce_growth_analysis_advance":
             # The analysis owner has already persisted this canonical protocol hash.
             # Rehashing the envelope (including requestHash) would drift the same Receipt.
-            _strict_analysis_command(command)
+            self._analysis_protocol_command(command)
             request_hash = command["requestHash"]
         else:
             request_hash = _request_hash(command)

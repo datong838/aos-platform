@@ -322,3 +322,16 @@ def build_analysis_resume_registry(session) -> EcommerceGrowthHostAdapterRegistr
     bindings = {operation: original._binding(operation) for operation in original.operation_ids}
     bindings["ecommerce_growth_analysis_advance"] = AnalysisAdvanceAdapter(_CurrentAnalysisResumeHost(session)).binding()
     return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN, bindings)
+
+
+def build_analysis_snapshot_resume_registry(session) -> EcommerceGrowthHostAdapterRegistry:
+    """Snapshot mode stays inside its exact current internal session."""
+    from aos_api.ecommerce_analysis_snapshot_resume import (
+        _AnalysisSnapshotResumeSession,_CurrentSnapshotAnalysisHost,_SnapshotAnalysisAdapter,
+    )
+    if type(session) is not _AnalysisSnapshotResumeSession:
+        raise TypeError('exact internal snapshot session required')
+    original = build_runtime_ecommerce_growth_registry()
+    bindings = {operation:original._binding(operation) for operation in original.operation_ids}
+    bindings['ecommerce_growth_analysis_advance'] = _SnapshotAnalysisAdapter(_CurrentSnapshotAnalysisHost(session)).binding()
+    return EcommerceGrowthHostAdapterRegistry._from_host_factory(_REGISTRY_TOKEN,bindings)
