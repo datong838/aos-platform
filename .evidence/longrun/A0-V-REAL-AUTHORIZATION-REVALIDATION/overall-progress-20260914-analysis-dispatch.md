@@ -26,3 +26,5 @@ SC2：实现当前原事件启动Evidence存储并升级Task准备为真实PG Ru
 SC3-1：首阶段当前技能发布血缘派生Eval合同已实现；真实PG评测/发布/合同14测试通过（模型/安装依赖明确fixture）。回调中撤销/重复合同会回滚。下一SC3-2本任务Context冻结组合，之后SC4真实Compilation/TaskRun接入；首链未完成。
 
 SC3-2：同一原事件事务内自动准备StageTemplate、Task/Brief、启动Evidence/Bundle、当前发布Eval与Context；累计29 passed，AR2 1898/176/93无错误。配置职责/安装依赖仍为明确fixture；尚未连接正式CompileSaga/TaskRun。下一波SC4，主安装真实首链、八场景及观察均未完成。
+
+SC4-1：编译输入按当前蓝图组装三阶段Skill/职责/模板/本任务Context，41项累计回归通过；纯组装不授予执行权。下一SC4-2真实exact解析器与CompileSaga，随后TaskRun和sealed Host接入，首链仍未完成。
