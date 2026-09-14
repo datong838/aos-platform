@@ -258,3 +258,8 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 现有ControlledSnapshotIngress逐pipeline先认领后读、未知不重试、完整限额拒绝均保留；不能把独立12次读取当同一一致快照。先增加generic pipeline_snapshot_group_read.py（及test_pipeline_snapshot_group_read.py）：只接受已连接、非缓存JdbcConnectorRuntime和1..12个严格MappingReadSpec，同一次私有只读事务、显式下一事务REPEATABLE READ，核实全部表InnoDB后才读取业务行。每表参数化等值条件/显式列/主键排序/1..1000限额；达到上限拒绝整组、未知/跨scope/重复主键/字段不符拒绝整组；总时限1..120秒，失败无部分结果、无重试。连接由原Jdbc owner管理关闭，复用其lease和rollback，不修改旧read_rows语义。
 该读取原语不是权限或Receipt：调用方必须先核验当前所有精确选择/来源控制、同租户/同连接版本/共同时间窗并完成认领，再持久化实际输入与绑定；这些Owner组合同后续波次落实。本波允许开发者以用户既有真实只读授权验证新候选的12类完整数据，输出仅数量/哈希/验证结果，不保存源行或敏感凭据、不写主数据。源观察时间不能当历史修改时间，集合不是历史时间旅行快照。
 源引擎/一致快照要按实测结论，不只凭事务名字断言。正常业务Owner未接通前，不生成正式Observation/Hydration/Fulfillment。后续正式绑定完整集合后再处理关系/删除/时间/质量，再Outbox消费和恢复。
+
+### SC4-5f2 支付真实字符串关联键修复
+
+真实整组首次转换发现relate_id实际字符串，旧P12声明int使203行全拒绝。新v3可选validation.positive_integer_strings=[已映射string列]，值必须ASCII规范正整数字符串[1-9][0-9]{0,18}且<=9223372036854775807；不自动strip、不允许前导零/加号/小数/布尔/整数代替，不改变原字符串。整个批次失败保护保持。修改v3与测试；旧声明无此项兼容。
+新增prepare_niushop_payment_key_candidate.py、对应测试与1.14.0，从1.13.0精确树07478676ef5be20e10d185fe98113932a16a0b41d973248729285eaf4879015b，仅bundle/p12/evals更新。relate_id类型string并声明上述校验；公开orderId保留源规范字符串，原Pay五状态/事件范围/隐私保持。新eval不得重写旧1.13.0评估器的假设，独立以真实类型构造正负用例；前11对象回归。随后真实12类同事务重验，新证据另文件，不覆盖首次失败证据。后续关系/质量Owner仍未完成。

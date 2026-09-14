@@ -184,3 +184,25 @@ def test_public_projection_preserves_provenance_identity_and_schema_version():
 def test_invalid_public_projection_rejected(projection):
     value=mapping();value['snapshot_materialization']['public_projection']=projection
     with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)
+
+
+
+def test_positive_integer_string_is_validated_without_coercion():
+    value=mapping();value['field_mappings'].append({'source':'order_ref','target':'orderId','type':'string'})
+    value['validation']['positive_integer_strings']=['order_ref']
+    result=materialize_snapshot([row()|{'order_ref':'123'}],compiled(value),observed_at=NOW)
+    assert result[0]['properties']['orderId']=='123'
+
+
+@pytest.mark.parametrize('bad',['0','01',' 1','1 ','+1','-1','1.0','١','9223372036854775808',1,True,''])
+def test_noncanonical_integer_string_is_rejected(bad):
+    value=mapping();value['field_mappings'].append({'source':'order_ref','target':'orderId','type':'string'})
+    value['validation']['positive_integer_strings']=['order_ref']
+    with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
+        materialize_snapshot([row()|{'order_ref':bad}],compiled(value),observed_at=NOW)
+
+
+@pytest.mark.parametrize('rule',[['missing'],['category_id'],['category_name','category_name'],True])
+def test_invalid_string_key_declaration_rejected(rule):
+    value=mapping();value['validation']['positive_integer_strings']=rule
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)

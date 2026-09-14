@@ -23,6 +23,7 @@ class SnapshotMappingV3:
     hierarchy: tuple[str,int] | None = None
     tombstone: tuple[str,int,int] | None = None
     public_projection: tuple[int,tuple[str,...]] | None = None
+    positive_integer_strings: tuple[str,...] = ()
 
     @property
     def read_spec(self):return self.base.read_spec
@@ -92,6 +93,10 @@ def compile_v3(mapping,read_spec):
                     or type(raw) is not str or raw=='DELETED' or re.fullmatch(r'[A-Z][A-Z0-9_]{0,39}',raw) is None):
                 raise ValueError('canonical nondelete state required')
             parsed.append((int(key),raw))
+        positive_strings=value['validation'].pop('positive_integer_strings',[])
+        if (type(positive_strings) is not list or len(set(positive_strings))!=len(positive_strings)
+                or any(kinds.get(name)!='string' for name in positive_strings)):
+            raise ValueError('selected string identity constraints required')
         constraints=value['validation'].pop('non_negative',[])
         if (type(constraints) is not list or len(set(constraints))!=len(constraints)
                 or any(kinds.get(name) not in ('int','decimal') for name in constraints)):
@@ -105,7 +110,7 @@ def compile_v3(mapping,read_spec):
         value['snapshot_materialization']={key:config[key] for key in base_keys}
         value['snapshot_materialization']['schema_version']='aos.snapshot-materialization/v1'
         base=compile_snapshot_mapping(value,read_spec)
-        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy,tombstone,projection)
+        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy,tombstone,projection,tuple(positive_strings))
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
         raise ValueError('SNAPSHOT_MAPPING_INVALID') from None
 
@@ -118,6 +123,10 @@ def materialize_v3(rows,mapping,*,observed_at):
         converted=[]
         for source in rows:
             if type(source) is not dict:raise ValueError('source row required')
+            if any(type(source.get(field)) is not str
+                    or re.fullmatch(r'[1-9][0-9]{0,18}',source[field]) is None
+                    or int(source[field])>9223372036854775807 for field in mapping.positive_integer_strings):
+                raise ValueError('noncanonical positive integer string')
             row=dict(source)
             for field,kind in mapping.conversions:
                 if kind=='decimal':row[field]=_decimal(source[field])
