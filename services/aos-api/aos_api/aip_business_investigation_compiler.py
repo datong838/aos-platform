@@ -160,13 +160,30 @@ class BusinessInvestigationTaskBriefSpec(AipContractModel):
         return self
 
 
+class BusinessInvestigationTaskBriefIntentSpec(AipContractModel):
+    """A pre-context Brief binds domain intent, avoiding Profile/Context/Brief cycles."""
+    schema_version: Literal["aos.aip.business-investigation-task-brief-intent/v2"]
+    case_ref: ExactRevisionRef
+    run_ref: ExactRevisionRef
+    domain_profile_ref: ExactRevisionRef
+    analysis_type: AnalysisType
+    compiler_profile: str = Field(min_length=1, max_length=80)
+
+    @model_validator(mode="after")
+    def _exact_intent_refs(self):
+        _require_type(self.case_ref, "BusinessInvestigationCaseRevision", "caseRef")
+        _require_type(self.run_ref, "BusinessInvestigationRun", "runRef")
+        _require_type(self.domain_profile_ref, "InvestigationProfileRevision", "domainProfileRef")
+        return self
+
+
 class CompileBusinessInvestigationRequest(AipContractModel):
     task_id: str = Field(min_length=1, max_length=200)
     expected_task_version: int = Field(ge=1)
     case_ref: ExactRevisionRef
     run_ref: ExactRevisionRef
     task_brief_ref: ExactRevisionRef
-    task_brief_spec: BusinessInvestigationTaskBriefSpec
+    task_brief_spec: BusinessInvestigationTaskBriefSpec | BusinessInvestigationTaskBriefIntentSpec
     profile: BusinessInvestigationProfileRevision
 
     @model_validator(mode="after")
@@ -182,8 +199,12 @@ class CompileBusinessInvestigationRequest(AipContractModel):
             raise ValueError("TaskBrief caseRef mismatch")
         if self.task_brief_spec.run_ref != self.run_ref:
             raise ValueError("TaskBrief runRef mismatch")
-        if self.task_brief_spec.investigation_profile_ref != self.profile.exact_ref:
-            raise ValueError("TaskBrief investigationProfileRef mismatch")
+        if isinstance(self.task_brief_spec, BusinessInvestigationTaskBriefSpec):
+            if self.task_brief_spec.investigation_profile_ref != self.profile.exact_ref:
+                raise ValueError("TaskBrief investigationProfileRef mismatch")
+        elif (self.task_brief_spec.compiler_profile != self.profile.compiler_profile
+                or self.task_brief_spec.domain_profile_ref.resource_id == self.profile.profile_id):
+            raise ValueError("TaskBrief domain intent or compiler profile mismatch")
         if self.task_brief_spec.analysis_type != self.profile.analysis_type:
             raise ValueError("TaskBrief analysisType mismatch")
         return self
@@ -335,6 +356,8 @@ class BusinessInvestigationProfileCompiler:
             ("RUN", request.run_ref),
             ("TASK_BRIEF", request.task_brief_ref),
             ("PROFILE", profile.exact_ref),
+            *([("DOMAIN_PROFILE", request.task_brief_spec.domain_profile_ref)]
+              if isinstance(request.task_brief_spec, BusinessInvestigationTaskBriefIntentSpec) else []),
             ("LOGIC", profile.logic_ref),
             ("STAGE_TEMPLATE", profile.stage_template_ref),
             *[("SKILL", ref) for ref in profile.ordered_skill_refs],

@@ -69,3 +69,9 @@ CF2-8拟新增包内analysis_compilation_blueprint.py，在现有analysis_advanc
 ## CF3-1 模板事务准备
 
 新增 services/aos-api/aos_api/ecommerce_analysis_template_preparation.py、tests/extension_runtime/test_analysis_template_preparation_pg.py。内部辅助仅供已获当前分析控制/claim权限的Host事务调用，不另暴露HTTP授权入口。在当前职责SourceOwner内，以tenant+blueprint正文hash加事务锁，复用唯一当前冻结模板；不存在时以tenant+正文hash稳定幂等键调用既有create_stage_template/get_current/freeze_stage_template，TransactionBoundConnectFactory禁止内层提交，外层统一提交/回滚。避免按actor/安装代次重复造模板；实际安装与配置仍在Owner前后验证。遇多义/漂移拒绝，不改旧冻结模板。使用隔离18432真实PG验证实际两修订/两回执、重复不增、外层异常回滚；SourceOwner/当前角色部分显式替身，不冒充安装权限验收。
+
+## CF3-2 简报引用环修正（先于Task准备）
+
+发现旧v1简报spec含L2 Profile exactRef，而L2含ProductionContextRef，Context冻结又需要Brief exactRef，真实创建形成内容hash引用环。不能利用非LITE编译未比对context.briefRef的旧缺口，不能造两份语义不同简报或虚构引用。
+
+修改 services/aos-api/aos_api/aip_business_investigation_compiler.py、ecommerce_analysis_compilation_binding.py 及对应tests：保留旧BusinessInvestigationTaskBriefSpec；新增显式schemaVersion=aos.aip.business-investigation-task-brief-intent/v2，字段caseRef/runRef/domainProfileRef/analysisType/compilerProfile。CompileRequest接受v1或v2，v1原验证不变，v2校验Case/Run/analysisType/compilerProfile且领域ID不可冒充L2；编译exact resolver新增DOMAIN_PROFILE读取。桥接绑定进一步验证v2 domainProfileRef与原L1完全相等。后续真正Brief Store读取必须对照完整spec，不能只验证request自带投影。由此顺序为Task→L1意图Brief冻结→真实Context冻结→L2编译Profile→Compilation，无hash循环。

@@ -27,6 +27,13 @@ class AnalysisCompilationBinding(AipContractModel):
         if canonical_sha256(self.model_dump(mode='json',by_alias=True,exclude={'content_hash'}))!=self.content_hash:
             raise ValueError('analysis compilation binding hash drifted')
         domain,compiled=self.domain_profile,self.request.profile
+        from aos_api.aip_business_investigation_compiler import BusinessInvestigationTaskBriefIntentSpec
+        spec = self.request.task_brief_spec
+        if isinstance(spec, BusinessInvestigationTaskBriefIntentSpec):
+            ref = spec.domain_profile_ref
+            if (ref.resource_id, ref.revision, ref.content_hash) != (
+                    domain.profile_id, domain.revision, domain.content_hash.removeprefix('sha256:')):
+                raise ValueError('TaskBrief domain intent differs from original profile')
         if (domain.analysis_type!=compiled.analysis_type
                 or tuple(stage.stage_id for stage in domain.stages)!=tuple(stage.stage_id for stage in compiled.stages)
                 or (domain.profile_id,domain.revision)==(compiled.profile_id,compiled.revision)):
