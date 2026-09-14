@@ -269,3 +269,9 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 新增pipeline_snapshot_group_owner.py、单测和隔离PG组合测试，Lease A0-V-SC4-CURRENT-SNAPSHOT-GROUP。只接受精确PipelineRuntimeControlOwner、TenantScope、1..12个唯一exact control refs与固定actor；按control resource ID排序递归进入原run_current_snapshot，使所有成员原安装/配置/签名资产/来源选择/当前控制锁同时持有。禁止不同tenant/installationRef/generation/executionEpoch/configurationRef/packageRef/sourceId/sourceConfigurationRef/schemaRef/maskingPolicyRef或platform/shopId混组；pipeline/table必须唯一。
 共同窗口max(notBefore)..min(expiresAt)，共同rowLimit/timeout取最小；最深处用原DB时钟确认窗口仍有效才调用同步可信Host回调。回调返回后重新读取全部原当前控制并比较完整组绑定，拒绝中途变更；原_reject_deferred拒绝异步/生成器，不允许把权限带出事务。无自建授权表、不创建审批/Receipt、不发起源读取/不reserve；下一认领和组输入持久化才组合本边界。
 验证成功与独立资源错组、重复控制/pipeline/table、任一成员拒绝、前后漂移/超时/异步；隔离PG复用真实控制与选择历史/当前role与事务，签名资产依既有fixture明确替身，不称真实安装权限已通过。
+
+### SC4-5f4a 快照组持久化数据库约束
+
+新增a0v_045_snapshot_group_journal.py，父a0v_044；只执行隔离PG测试，不执行主/共享库迁移。三表：pipeline_snapshot_group_claim（tenant/group UUID/actor/request hash/member count1..12/有限binding JSON），pipeline_snapshot_group_member（group/ordinal/run_id，FK原pipeline_controlled_source_claim，run唯一禁止复用不同组），pipeline_snapshot_group_input（同group/request hash，读取起止时间、明确InnoDB可重复读、成员输入引用manifest/hash）。所有表RLS FORCE、runtime仅SELECT/INSERT、拒绝UPDATE/DELETE/TRUNCATE。
+延迟约束提交时核对group完整成员数/连续ordinal/原claim actor；输入manifest每成员runId/envelopeHash/rowsHash/rowCount严格形状、唯一且对应本组和原ecommerce_ingress_command真实哈希。函数使用TG_TABLE_SCHEMA限定原表，避免search_path替换。保存组输入必须已有所有原输入并与本组对应，失败整事务回滚。
+此schema是完整性约束，不是源读取授权或业务Fulfillment；应用Owner随后必须在组当前权限下同事务创建全部新原claim再创建组（禁止把旧无组claim追认为可重新读取），提交确认后只读一次、同事务保存全部原输入和组manifest；原应用Owner仍负责request/manifest canonical hash和当前权限复验。测试验证缺成员/重用run/错actor/错hash/部分输入/跨租户/不可变和正常提交，现有Ingress fixture只提供真实基础行，不证明组执行已接通。
