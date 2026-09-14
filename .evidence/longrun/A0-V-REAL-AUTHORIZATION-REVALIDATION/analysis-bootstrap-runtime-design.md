@@ -310,3 +310,15 @@ OrderLine业务窗口只继承匹配父Order.createdAt，并标注parent-order-c
 
 SC4-5g1：同批真实关系审计完成。15测试通过（4.55秒）；真实09:07:08.053263Z–09:07:09.575589Z同一InnoDB只读事务12类型，统计保存real-relationship-audit-20260914.json。235明细/203普通支付/19发货均匹配父订单；订单号和memberId交叉字段235/203/19无不一致。235明细自身时间均未知，但父订单创建时间均可用；其中69关联软删订单。32订单、1评价缺少当前范围客户，不得客户质量宣绿。65商品分类当前诊断解析拒绝，原源Goods.php:2120–2121使用前后逗号封装，下一波核实/严格支持该格式。源schema实际有weapp_id但P05未映射，后续候选需按原schema/masking补齐，不能推算或读取weapp_openid。
 正式关系写入/客户修复/窗口读模型/Fulfillment仍未完成；不跨店扩读、不补造客户、不以重复统计充当推进。下一项：分类分隔格式严格解析修正及对应真实重验，再包内关系声明及P05关联字段候选。
+
+### SC4-5g2 分类语法和订单关联键候选
+
+旧审计首轮保留不覆盖。诊断分类解析兼容普通CSV和源Goods.php显式逗号包围CSV（仅同时移除一个首尾逗号；不strip、不忽略内部空项/重复/非数字）。补测试规范包围/空项/单侧包围/重复/非规范数字。这是明确源语法支持，不能全量容错拆分。
+新增prepare_niushop_order_relation_candidate.py、候选测试和不可变1.15.0，从1.14.0精确树9cb6cd266571dfbe7725e3411229f307025beec6ea93380a995529aa610d4b76，P05新增weapp_id→weappId(int且非负，0仍未设置)、out_trade_no→outTradeNo(string原值)，原source schema须确有列；weapp_openid加入P05和masking明确禁止，其他映射及隐私不变。版本/evals更新，相对仅bundle/P05/masking/evals四文件。使用原12对象评估器及新增精确键/隐私/跨店反例，不签名/发布/安装。
+诊断存在weappId时以真实key审计Order.fromWeapp；未映射继续unsupported。支付当前交易号相等/不同/不可用单独计数，不把历史关闭交易号不等视作订单关系失效。真实重验另新文件，仍不写源或主对象；客户缺口按原范围保留不越租户修补。后续包内关系声明消费当前字段，诊断通过不授予Link写权限。
+
+SC4-5g2核查补充：旧schema指纹对前8表只有表/主键/索引摘要，不能声称其列已验证。新字段生成前必须验证full-store-source-structure-20260914.json精确哈希6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0，并要求ns_order列weapp_id=int(11)、out_trade_no=varchar(50)、均非空。候选notes记录证据哈希；旧摘要不重写为新观察。当前源实测仍需重新选列确认。
+
+
+SC4-5g2：分类源逗号格式严格支持、Order关联键候选1.15.0完成。新树b09e20811f08b3d40e155406dd293d2642779acb6caed9ec8272f8337655779c；源1.14树不变，仅bundle/P05/masking/evals四文件改变。weapp_id与out_trade_no依实际结构证据增补，openid排除加固。33测试通过4.47秒，分类/Weapp首红2失败22通过后修正。新候选十二类静态评估通过，未发布安装。
+真实09:15:33.754126Z–09:15:35.178481Z同事务重验：65商品92分类引用全匹配，185订单Weapp全匹配；203普通支付181当前trade相同22不同，关系仍按原orderId，未错误删除历史支付。客户32订单/1评价缺失不变，软删端点不等于当前活跃关系。源行不持久化、不写主对象/Fulfillment。证据real-relationship-audit-20260914-order-keys.json保留此前失败审计。下一项：包内关系声明与通用有界物化，显式质量/软删边界，再接正式组输入Owner。

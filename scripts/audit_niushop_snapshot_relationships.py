@@ -56,12 +56,17 @@ def audit(outputs):
             'Payment.currentTradeNumber: parent Order out_trade_no not selected',
             'Shipment.tracking: deliberately redacted','ProductReview.text: deliberately not selected',
             'SystemConfig.values: deliberately not selected']}
-    for name,child,field,parent_type in RELATIONS:
+    relations=RELATIONS
+    if outputs['Order'] and all('weappId' in row['properties'] for row in outputs['Order']):
+        relations=relations+(('Order.fromWeapp','Order','weappId','Weapp'),)
+    for name,child,field,parent_type in relations:
         counts=dict(rows=len(outputs[child]),references=0,matched=0,missingParent=0,missingKey=0,invalid=0,unset=0,deletedEndpoint=0)
         for row in outputs[child]:
             value=row['properties'].get(field)
             if value is None:counts['missingKey']+=1;continue
             if _unset(value):counts['unset']+=1;continue
+            if name=='Product.inCategory' and type(value) is str and value.startswith(',') and value.endswith(','):
+                value=value[1:-1]
             values=value.split(',') if name=='Product.inCategory' and type(value) is str else [value]
             try:
                 keys=[_key(item) for item in values]
@@ -75,7 +80,9 @@ def audit(outputs):
                     counts['matched']+=1
                     if row['is_deleted'] or parent['is_deleted']:counts['deletedEndpoint']+=1
         report['relations'][name]=counts
-    report['relations']['Order.fromWeapp']={'status':'unsupported-mapping','rows':len(outputs['Order'])}
+    if 'Order.fromWeapp' not in report['relations']:
+        report['relations']['Order.fromWeapp']={'status':'unsupported-mapping','rows':len(outputs['Order'])}
+    else:report['unsupportedChecks'].remove('Order.fromWeapp: no exact mapped source key')
     window=dict(rows=len(outputs['OrderLine']),parentTimeAvailable=0,parentMissing=0,parentTimeUnknown=0,parentDeleted=0,ownTimeUnknown=0)
     for row in outputs['OrderLine']:
         if not _timestamp(row['properties'].get('createTime')):window['ownTimeUnknown']+=1
@@ -94,4 +101,14 @@ def audit(outputs):
             if left is None or right is None:counts['unavailable']+=1
             else:counts['matched' if type(left) is type(right) and left==right else 'mismatch']+=1
         report['crossChecks'][child+'.'+field]=counts
+    trades=dict(same=0,different=0,unavailable=0,relationInvalidated=False)
+    for row in outputs['Payment']:
+        try:parent=indexed['Order'].get(_key(row['properties'].get('orderId')))
+        except ValueError:parent=None
+        left=row['properties'].get('outTradeNo');right=parent['properties'].get('outTradeNo') if parent else None
+        if type(left) is not str or not left or type(right) is not str or not right:trades['unavailable']+=1
+        else:trades['same' if left==right else 'different']+=1
+    report['paymentTradeComparison']=trades
+    if outputs['Order'] and all('outTradeNo' in row['properties'] for row in outputs['Order']):
+        report['unsupportedChecks'].remove('Payment.currentTradeNumber: parent Order out_trade_no not selected')
     return report

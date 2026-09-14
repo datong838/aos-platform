@@ -1,0 +1,145 @@
+pipeline_id: P05
+source_table: ns_order
+target_ot: Order
+primary_key: order_id
+site_filter: site_id=1
+incremental_strategy: snapshot
+unique_key_pattern: niushop:{site_id}:{pk}
+validation:
+  non_negative:
+  - goods_money
+  - delivery_money
+  - order_money
+  - pay_money
+  - weapp_id
+  required:
+  - order_id
+  - site_id
+  - create_time
+field_mappings:
+- source: order_id
+  target: id
+  type: int
+- source: order_no
+  target: orderNo
+  type: string
+- source: site_id
+  target: shopId
+  type: int
+- source: site_name
+  target: siteName
+  type: string
+- source: order_from
+  target: orderFrom
+  type: string
+- source: order_type
+  target: orderType
+  type: int
+- source: order_status
+  target: orderStatus
+  type: int
+- source: pay_status
+  target: payStatus
+  type: int
+- source: delivery_status
+  target: deliveryStatus
+  type: int
+- source: refund_status
+  target: refundStatus
+  type: int
+- source: is_delete
+  target: isDelete
+  type: int
+- source: member_id
+  target: memberId
+  type: int
+- source: pay_type
+  target: payType
+  type: string
+- source: goods_money
+  target: goodsMoney
+  type: decimal
+- source: delivery_money
+  target: deliveryMoney
+  type: decimal
+- source: promotion_money
+  target: promotionMoney
+  type: decimal
+- source: coupon_money
+  target: couponMoney
+  type: decimal
+- source: order_money
+  target: totalAmount
+  type: decimal
+- source: pay_money
+  target: payMoney
+  type: decimal
+- source: goods_num
+  target: goodsNum
+  type: decimal
+- source: create_time
+  target: createdAt
+  type: timestamp
+- source: pay_time
+  target: payTime
+  type: timestamp
+- source: delivery_time
+  target: deliveryTime
+  type: timestamp
+- source: sign_time
+  target: signTime
+  type: timestamp
+- source: finish_time
+  target: finishTime
+  type: timestamp
+- source: close_time
+  target: closeTime
+  type: timestamp
+- source: weapp_id
+  target: weappId
+  type: int
+- source: out_trade_no
+  target: outTradeNo
+  type: string
+pii_exclusion:
+- mobile
+- telephone
+- address
+- full_address
+- invoice_full_address
+- invoice_email
+- name
+- weapp_openid
+notes:
+- Full-site Order object snapshot preserves closed/refunded states and explicit source
+  tombstones.
+- Record status derives from is_delete; order_status and payment/delivery/refund states
+  remain separate source fields.
+- createdAt is source create_time; updatedAt is explicitly an observation version,
+  not a source modification timestamp.
+- Receiver name is not required by the business portrait and is excluded with contact/address
+  fields.
+- placedByLite relationship materialization remains pending; memberId is retained
+  as the source association key.
+- Order association columns observed in source structure sha256:6ef53e8f516137f95907c66caa919ed34190ef32606ef12af71f556fa7db2ca0
+- weappId zero means unset; outTradeNo is the current order trade, not every historical
+  payment trade.
+- No relationship is inferred from orderFrom; weapp_openid is never selected.
+snapshot_materialization:
+  schema_version: aos.snapshot-materialization/v3
+  platform: niushop
+  shop_key: site_id
+  source_timezone: +08:00
+  property_defaults:
+    currency: CNY
+  time_basis: observation
+  deletion_basis:
+    field: is_delete
+    live_value: 0
+    deleted_value: 1
+  status:
+    field: is_delete
+    property_target: status
+    values:
+      '0': ACTIVE
+      '1': ACTIVE

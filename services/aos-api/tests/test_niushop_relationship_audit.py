@@ -49,3 +49,19 @@ def test_invalid_cohort_is_rejected(fault):
     elif fault=='wrong_type':data['Order'][0]['ot']='Product'
     else:data['Order'][0]['link_type']='Order.lines'
     with pytest.raises(ValueError):module.audit(data)
+
+@pytest.mark.parametrize('value,valid',[(',4,5,',True),('4,5',True),(',4,,5,',False),(',4,5',False),('4,5,',False),(',04,5,',False),(',4,4,',False),(',4, 5,',False)])
+def test_category_source_delimiters_are_strict(value,valid):
+    data=inputs();data['Product'][0]['properties']['categoryId']=value
+    result=module.audit(data)['relations']['Product.inCategory']
+    assert result['matched']==(2 if valid else 0)
+    assert result['invalid']==(0 if valid else 1)
+
+
+def test_order_weapp_and_historical_payment_are_not_inferred():
+    data=inputs();data['Order'][0]['properties'].update(weappId=7,outTradeNo='current')
+    data['Weapp']=[row('Weapp',7,siteId=1)]
+    data['Payment'][0]['properties']['outTradeNo']='historical'
+    result=module.audit(data)
+    assert result['relations']['Order.fromWeapp']['matched']==1
+    assert result['paymentTradeComparison']==dict(same=0,different=1,unavailable=0,relationInvalidated=False)
