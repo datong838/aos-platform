@@ -46,3 +46,107 @@ def require_current_bootstrap_review_identity(*, transaction, scope, actor, make
             if len(grants) != 1:
                 raise PermissionError('current bootstrap action marking denied')
     return (roles[actor],)
+
+
+class AnalysisBootstrapCurrentBinding:
+    """Recheck source and stored bootstrap objects around a synchronous review operation."""
+    def __init__(self, analysis):
+        from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+        if type(analysis) is not ProductEventAnalysisService:
+            raise TypeError('exact original analysis owner required')
+        self.analysis = analysis
+
+    def run_current(self, conn, *, claimed, intent, preview_ref, execute):
+        from copy import deepcopy
+        from aos_api.ecommerce_analysis_bootstrap_contract import AnalysisBootstrapIntent
+        from aos_api.aip_production_contracts import ExactRevisionRef
+        from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+        from aos_api.extension_runtime.runtime_gate import _reject_deferred
+        if not callable(execute):
+            raise TypeError('synchronous current bootstrap callback required')
+        intent = AnalysisBootstrapIntent.model_validate(intent).checked()
+        preview_ref = ExactRevisionRef.model_validate(preview_ref)
+        if preview_ref.resource_type != 'ImpactPreviewRevision':
+            raise ValueError('bootstrap exact preview required')
+        def current(snapshot, request, _dispatch):
+            if (intent.occurrence_ref != InvestigationExactRef.model_validate(request['occurrenceRef'])
+                    or intent.source_control_receipt_ref != InvestigationExactRef.model_validate(snapshot['source']['controlReceipt']['receiptRef'])):
+                raise ValueError('bootstrap original occurrence or control receipt differs')
+            before = self._read(conn, snapshot, intent, preview_ref)
+            result = execute(deepcopy(before))
+            _reject_deferred(result)
+            if self._read(conn, snapshot, intent, preview_ref) != before:
+                raise ValueError('bootstrap current binding changed during review')
+            return result
+        return self.analysis._phase(conn, claimed, current)
+
+    def _read(self, conn, snapshot, intent, preview_ref):
+        from uuid import UUID
+        from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompilationReceiptStore
+        from aos_api.aip_production_contract_store import AipProductionContractStore
+        from aos_api.aip_production_contracts import ExactRevisionRef
+        from aos_api.asset_registry.canonical_json import canonical_sha256
+        from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseStore
+        from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunStore
+        from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+        scope = self.analysis.scope
+        intent = intent.checked()
+        if (intent.tenant.org_id, intent.tenant.project_id) != scope.key:
+            raise ValueError('bootstrap current tenant differs')
+        tx = HostTransaction(conn)
+        factory = TransactionBoundConnectFactory(tx, scope)
+        receipt = intent.compilation_receipt
+        run = BusinessInvestigationRunStore(factory).get_verified(scope, receipt.run_ref.resource_id)
+        case = BusinessInvestigationCaseStore(factory).get(scope, run.authority.case_ref.resource_id)
+        from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+        if (run.authority.case_ref != InvestigationExactRef.model_validate(snapshot['request']['caseRef'])
+                or run.authority.trigger_key != snapshot['request']['idempotencyKey']):
+            raise ValueError('bootstrap Run differs from original analysis request')
+        installed = snapshot['source']['dispatch']
+        intent.compilation_binding.validate_current(scope=scope,
+            installation_id=UUID(str(installed['installationId'])), generation=UUID(str(installed['generation'])),
+            execution_epoch=installed['executionEpoch'], case=case, run=run)
+        if BusinessInvestigationCompilationReceiptStore(factory).get_for_run(scope, receipt.run_ref) != receipt:
+            raise ValueError('bootstrap current compilation Receipt differs')
+        task = tx.execute('''SELECT * FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s FOR UPDATE''',
+                          (*scope.key, receipt.task_id)).fetchone()
+        plan = tx.execute('''SELECT * FROM aip_plan_revision WHERE org_id=%s AND project_id=%s AND plan_revision_id=%s FOR UPDATE''',
+                          (*scope.key, receipt.plan_ref.resource_id)).fetchone()
+        if (task is None or task['status'] not in {'planning', 'awaiting_approval'}
+                or task['current_plan_revision_id'] != receipt.plan_ref.resource_id
+                or plan is None or plan['task_id'] != receipt.task_id or plan['approval_status'] != 'draft'
+                or plan['revision'] != receipt.plan_ref.revision or plan['content_hash'] != receipt.plan_ref.content_hash
+                or not plan['risk'].get('productionContract', {}).get('productionStartGateRequired')):
+            raise ValueError('bootstrap current draft Task Plan differs')
+        if tx.execute('SELECT 1 FROM aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s LIMIT 1',
+                      (*scope.key, receipt.task_id)).fetchone() is not None:
+            raise ValueError('bootstrap Task already has runtime lineage')
+        preview = AipProductionContractStore(factory).assert_frozen_preview_current(conn, scope, preview_ref)
+        profile = intent.compilation_binding.request.profile
+        expected = {'plan_ref': receipt.plan_ref, 'production_context_ref': profile.production_context_ref,
+                    'responsibility_plan_ref': profile.responsibility_plan_ref, 'stage_template_ref': profile.stage_template_ref}
+        if preview['task_id'] != receipt.task_id or any(
+                ExactRevisionRef.model_validate(preview[key]) != ref for key, ref in expected.items()):
+            raise ValueError('bootstrap current preview binding differs')
+        body = intent.model_dump(mode='json', by_alias=True)
+        payload = dict(schemaVersion='aos.ecommerce.analysis-bootstrap-evidence/v1', purpose='analysis-bootstrap-only', intent=body)
+        identity = 'evidence-analysis-bootstrap-' + canonical_sha256([*scope.key, receipt.run_ref.resource_id]).removeprefix('sha256:')
+        evidence = tx.execute('''SELECT e.*,EXISTS(SELECT 1 FROM aip_evidence_revoke_event r
+            WHERE r.org_id=e.org_id AND r.project_id=e.project_id AND r.evidence_id=e.evidence_id
+            AND r.revision=1 AND r.content_hash=e.content_hash) AS revoked FROM aip_evidence e
+            WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s''', (*scope.key, identity)).fetchone()
+        if (evidence is None or evidence['revoked'] or evidence['run_id'] is not None
+                or evidence['payload'] != payload or evidence['source_ref'] != intent.content_hash
+                or evidence['source_type'] != 'analysis-bootstrap-intent' or evidence['evidence_type'] != 'analysis-bootstrap-intent'
+                or evidence['content_hash'] != canonical_sha256(payload).removeprefix('sha256:')
+                or evidence['subject_ref'] != receipt.run_ref.model_dump(mode='json', by_alias=True)
+                or evidence['observed_at'] != run.authority.created_at or evidence['freshness_at'] != run.authority.created_at
+                or evidence['created_by'] != self.analysis.source.actor or evidence['redaction'] != {}
+                or evidence['created_at'] < run.authority.created_at):
+            raise ValueError('bootstrap current intent Evidence differs')
+        for dimension in preview['impact'].values():
+            if (dimension['details'].get('purpose') != 'analysis-bootstrap-only'
+                    or dimension['details'].get('intentHash') != intent.content_hash
+                    or dimension['sourceRefs'] != [dict(resourceType='Evidence', resourceId=identity, revision='1', authority='aip')]):
+                raise ValueError('bootstrap preview intent source differs')
+        return dict(intent=body, task=dict(task), plan=dict(plan), preview=dict(preview), evidence=dict(evidence))

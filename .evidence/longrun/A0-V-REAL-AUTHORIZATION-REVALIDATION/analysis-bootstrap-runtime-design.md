@@ -56,3 +56,7 @@ Preview精确绑定本Task/Plan/Context/Brief/Bundle/Eval/职责/Stage，绑定�
 ### SC4-3c3b 当前审批身份子项
 
 先补齐services/aos-api/aos_api/ecommerce_analysis_bootstrap_authority.py的当前身份读取器及tests/extension_runtime/test_analysis_bootstrap_authority_pg.py：只接受精确HostTransaction/TenantScope，核验事务租户、当前注册Action快照、maker与checker的当前唯一membership及全部marking。checker必须不同于maker并具有原ACTION_APPROVAL_ROLES资格，maker路径只允许原maker身份。不接受调用者提供roles，不写入或授予角色；远端OpenFGA缺当前适配器时拒绝。该读取器仅给后续ActionStore提供实时资格，不证明源事件/Task/Plan授权，也不启用执行。独立校验Action快照和事务scope避免使用他租户或陈旧角色投影。
+
+### SC4-3c3c 当前初始化对象绑定
+
+在ecommerce_analysis_bootstrap_authority.py增加AnalysisBootstrapCurrentBinding，构造仅接受精确ProductEventAnalysisService。run_current在原analysis._phase内复验claim/来源审批/安装；从存储读取实际Case、Run、CompilationReceipt、Task/Plan、冻结Preview与初始化Evidence。拒绝换Occurrence/控制回执、安装代次漂移、Receipt不等、非当前草稿Plan、已存在TaskRun、Preview不对应Context/Plan/职责/模板、Evidence被撤销或内容/来源不一致。同步回调前后重复读取并比较；本项仅用于尚未启动时的动作准备/审批，不允许回调启动或批准Plan。后续原子启动另以明确暂停后置条件承接，不能放宽本读取器来容忍任意Plan变更。新增test_analysis_bootstrap_binding_pg.py验证当前原事件和故障回滚。
