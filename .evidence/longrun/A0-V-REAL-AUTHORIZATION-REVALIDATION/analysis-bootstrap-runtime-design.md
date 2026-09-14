@@ -791,3 +791,11 @@ AnalysisFactQualityContext复用该私有组合路径，在当前原snapshot组�
 Red模块缺失，新增8+原business10共18 PG passed/46.90秒；正例补充真实fixture联合validCount=1断言后单项7.14秒通过（7warnings）。实际completed组/对象/Dataset回执，分析/pending仍明确named double；未宣称整条真实业务首链。事实集合/策略类型字节不符、消费中撤权/改策略/改输出/延迟拒绝，重放source调用仍1。AR2扫描1934/188/93五类错误为空，无主库/安装/源或模型动作。
 
 下一波SC4-5l1：先完成正式固定查询存证适配方案。现有QueryResult最多100 source_refs、CanonicalQueryQualityMeasurement最多200，而完整组实测892行；不得截断来源来套合同。复核已有源证据/规范对象回执/QueryResult/QualityEvidence Owner，确定可验证的完整组来源绑定以及当前规范对象一致性，明确聚合证据与事实计数的边界、预算大小、重放/撤权/原需求语义后再编码。字段结构合格不等于金额对账、支付成功/物流签收或完整业务事实；正式Fulfillment必须继续保持原门禁。主环境迁移安装/首链/八场景与持续观察仍待完成。
+
+### SC4-5l1 正式完整来源查询存证方案复核
+
+新增snapshot-fact-query-evidence-design.md。对照原QueryResult100来源、CanonicalQueryQualityMeasurement200来源、真实完整组892行与原Store BASE_RECORD_NOT_CURRENT逻辑，采用完整组来源Evidence聚合引用，原存储/撤销与Owner全成员回读；不截断来源，不全局放大旧合同，不伪造hydration/历史SourceSnapshot。新增显式SnapshotQueryQualityMeasurement适配保留旧两个variant，但DTO不授予authority。
+
+任务补入原清单：l2当前completed组规范对象/投影只读证明；l3完整组来源Evidence；l4固定QueryResult；l5显式质量合同/适用性/人口政策和QualityEvidence；l6原Outbox/Fulfillment续跑组合。每波独立方案/Lease/测试/提交。保守freshness取整组read_started_at，不用测量时间冒充source更新时间；主环境升级/签名安装/当前权限/真实首链/八场景/观察另须落实。v1空事实仍失败，若业务需要“零发货”作为可验证事实则另行版本化，不改旧要求。
+
+本波仅方案，代码入口与字段上限人工及确定性核对完成；无新增源读取/主环境动作。下一波SC4-5l2新增pipeline_snapshot_group_projection_owner.py及PG测试，复用原ec_ingress_recovery的全部saved投影证明；如需抽取read_saved_projection_evidence先保留原completion接口语义并跑回归，禁止重新写入或恢复已completed源运行。
