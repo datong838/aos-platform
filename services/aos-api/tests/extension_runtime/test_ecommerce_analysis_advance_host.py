@@ -396,7 +396,7 @@ def test_resume_prior_receipt_drift_fails_closed(drift, monkeypatch):
     saved = prior_receipt(command)
     command["priorReceiptRef"] = saved["receiptRef"]
     if drift == "phase":
-        saved = prior_receipt(command, phase="PREPARING", action="CONTINUE")
+        saved = prior_receipt(command, phase="RUNNING", action="CONTINUE")
         command["priorReceiptRef"] = saved["receiptRef"]
     elif drift == "lineage":
         saved["caseRef"] = ref("BusinessInvestigationCaseRevision", "case-other")
@@ -587,3 +587,22 @@ def test_resume_receipt_comparison_preserves_json_boolean_and_integer_types():
     assert not _strict_resume_control_receipt(
         {**expected, "expectedRunVersion": True}
     )
+
+
+@pytest.mark.parametrize('fault',[None,'action','requirement','checkpoint','completed','plan'])
+def test_initial_predecessor_is_exact_and_contains_no_invented_waiting_fields(fault):
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_analysis_command,_validate_prior_analysis_receipt
+    command=resume_command()
+    prior=prior_receipt(command,phase='PREPARING',action='CONTINUE')
+    if fault=='action':prior['recoverableAction']='WAIT_FOR_DATA'
+    elif fault=='requirement':prior['requirementRef']=command['requirementRef']
+    elif fault=='checkpoint':prior['checkpointRef']=command['checkpointRef']
+    elif fault=='completed':prior['completed']=True
+    elif fault=='plan':prior['planRef']=ref('PlanRevision','other-plan')
+    prior['receiptRef']['contentHash']=command_hash({k:v for k,v in prior.items() if k!='receiptRef'})
+    command['priorReceiptRef']=prior['receiptRef']
+    command['requestHash']=command_hash({k:v for k,v in command.items() if k!='requestHash'})
+    parsed=_strict_analysis_command(command)
+    if fault:
+        with pytest.raises(ValueError):_validate_prior_analysis_receipt(command,parsed,prior)
+    else:_validate_prior_analysis_receipt(command,parsed,prior)

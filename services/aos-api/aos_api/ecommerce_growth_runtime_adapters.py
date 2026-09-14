@@ -1162,13 +1162,20 @@ def _validate_prior_analysis_receipt(
     ):
         raise ValueError("analysis prior Receipt lineage drifted")
     if parsed["operation"] == "runtime.analysis.resume_data":
+        waiting = (
+            receipt["phase"] == "WAITING_DATA"
+            and receipt["recoverableAction"] == "WAIT_FOR_DATA"
+            and _analysis_command_hash(receipt["requirementRef"]) == _analysis_command_hash(command["requirementRef"])
+            and _analysis_command_hash(receipt["checkpointRef"]) == _analysis_command_hash(command["checkpointRef"])
+        )
+        initial = (
+            receipt["phase"] == "PREPARING" and receipt["recoverableAction"] == "CONTINUE"
+            and receipt["requirementRef"] is None and receipt["checkpointRef"] is None
+        )
+        # Actual WAITING_DATA and pending Requirement are checked by the resume owner.
+        # Never synthesize a successor Receipt merely to describe the waiting state.
         if (
-            receipt["phase"] != "WAITING_DATA"
-            or receipt["recoverableAction"] != "WAIT_FOR_DATA"
-            or _analysis_command_hash(receipt["requirementRef"])
-            != _analysis_command_hash(command["requirementRef"])
-            or _analysis_command_hash(receipt["checkpointRef"])
-            != _analysis_command_hash(command["checkpointRef"])
+            not (waiting or initial)
             or _analysis_command_hash(receipt["planRef"])
             != _analysis_command_hash(command["priorPlanRef"])
             or receipt["priorCheckpointRef"] is not None
@@ -1618,10 +1625,12 @@ class AnalysisAdvanceHostService:
         if prior is None:
             raise ValueError("analysis prior Receipt is missing")
         run_ref = InvestigationExactRef.model_validate(prior["runRef"])
-        run = runs.get(scope, run_ref.resource_id)
+        run = runs.get_verified(scope, run_ref.resource_id)
         if (
             run.authority.version != run_ref.revision
             or run.authority.content_hash != run_ref.content_hash
+            or run.state.lifecycle.value != "WAITING_DATA"
+            or run.state.control.value != "RUNNING"
             or run.state.pending_requirement_ref != parsed["requirementRef"]
         ):
             raise ValueError("analysis Run resume lineage drifted")

@@ -77,3 +77,31 @@ def test_same_event_changed_data_policy_is_not_a_second_request(data_case):
     with pytest.raises(ValueError,match='drifted'),conn.transaction():
         prepare((conn,analysis,claimed,changed))
     assert prepare(data_case)==receipt
+
+
+def test_original_start_receipt_is_resume_predecessor_but_not_fulfillment(data_case):
+    from aos_api.ecommerce_growth_runtime_adapters import (
+        _HostAnalysisReceiptStore,_strict_analysis_command,_validate_prior_analysis_receipt,
+        _analysis_command_hash,AnalysisAdvanceHostService,
+    )
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    from test_ecommerce_analysis_advance_host import resume_command
+    from aos_api.data_requirement_store import DataRequirementStore
+    from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+    from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+    conn,analysis,claimed,spec=data_case
+    pending=prepare(data_case)
+    tx=HostTransaction(conn)
+    prior=_HostAnalysisReceiptStore(tx,analysis.scope).read(claimed.target_idempotency_key)
+    requirement=DataRequirementStore(TransactionBoundConnectFactory(tx,analysis.scope)).get_exact(
+        analysis.scope,InvestigationExactRef.model_validate(pending['requirementRef']))
+    command=resume_command(**{k:prior[k] for k in ('occurrenceRef','caseRef','profileRef','cutoffAt')},
+        priorReceiptRef=prior['receiptRef'],priorPlanRef=prior['planRef'],requirementRef=pending['requirementRef'],
+        observedAt=spec.cutoff_at.isoformat(),
+        checkpointRef=requirement.checkpoint_ref.model_dump(mode='json',by_alias=True,exclude_none=True))
+    command['requestHash']=_analysis_command_hash({k:v for k,v in command.items() if k!='requestHash'})
+    parsed=_strict_analysis_command(command)
+    _validate_prior_analysis_receipt(command,parsed,prior)
+    with pytest.raises(ValueError,match='fulfillment authority drifted'):
+        AnalysisAdvanceHostService()._resume_authorities(transaction=tx,scope=analysis.scope,
+            command=command,parsed=parsed,prior=prior)
