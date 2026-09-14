@@ -252,3 +252,9 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 新增prepare_niushop_payment_candidate.py、test_niushop_payment_candidate.py与1.13.0，Lease A0-V-SC4-PAYMENT-SNAPSHOT-CANDIDATE。从1.12.0精确树7d0eaeb6c99da59f8e9f08f78607da60320f97bdaab881184c4f7e6a47fd9587生成，只改bundle/p12/masking/evals。P12范围site_id=1 AND event='OrderPayNotify'；masking将event从pii_direct移到conditional_only，其他禁止项原样保留；未知事件不读取，不混入会员卡表ID。
 字段仅id/site_id/out_trade_no/pay_type/pay_money/pay_status/member_id/relate_id/is_delete/create_time/pay_time/event，relate_id→orderId、pay_money→payMoney、create_time→createTime/pay_time→payTime（零值保持未知，不是来源修改时间）。去掉原重复pay_type映射，公开投影保留orderId/outTradeNo/payType/payMoney/payStatus/memberId/createTime/payTime/currency/status与必需来源标记，不公开event或内部id/site/delete字段。显式is_delete，pay_status按源码[-2,-1,0,1,2]均表示存在ACTIVE，业务状态原样保留。金额非负，不计算pay_duration_min；真实父订单/会员/窗口/派生仍需原Owner后续验证。
 静态测试每种源码支付状态、零支付时间、软删、负金额、错误事件、跨店、敏感附加字段拒绝，验证相对源树不变与全部十二类静态评估。普通订单总体当前203，会员卡8明确排除，不称全支付表可用；下游质量/查询必须沿用同一范围，后续待办登记。
+
+### SC4-5f1 同事务完整源集合
+
+现有ControlledSnapshotIngress逐pipeline先认领后读、未知不重试、完整限额拒绝均保留；不能把独立12次读取当同一一致快照。先增加generic pipeline_snapshot_group_read.py（及test_pipeline_snapshot_group_read.py）：只接受已连接、非缓存JdbcConnectorRuntime和1..12个严格MappingReadSpec，同一次私有只读事务、显式下一事务REPEATABLE READ，核实全部表InnoDB后才读取业务行。每表参数化等值条件/显式列/主键排序/1..1000限额；达到上限拒绝整组、未知/跨scope/重复主键/字段不符拒绝整组；总时限1..120秒，失败无部分结果、无重试。连接由原Jdbc owner管理关闭，复用其lease和rollback，不修改旧read_rows语义。
+该读取原语不是权限或Receipt：调用方必须先核验当前所有精确选择/来源控制、同租户/同连接版本/共同时间窗并完成认领，再持久化实际输入与绑定；这些Owner组合同后续波次落实。本波允许开发者以用户既有真实只读授权验证新候选的12类完整数据，输出仅数量/哈希/验证结果，不保存源行或敏感凭据、不写主数据。源观察时间不能当历史修改时间，集合不是历史时间旅行快照。
+源引擎/一致快照要按实测结论，不只凭事务名字断言。正常业务Owner未接通前，不生成正式Observation/Hydration/Fulfillment。后续正式绑定完整集合后再处理关系/删除/时间/质量，再Outbox消费和恢复。

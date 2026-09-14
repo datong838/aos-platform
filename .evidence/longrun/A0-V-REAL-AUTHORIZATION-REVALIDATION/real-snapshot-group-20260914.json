@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "aos.developer-snapshot-group-verification/v1",
+  "sourceRead": "private-repeatable-read-InnoDB",
+  "startedAt": "2026-09-14T08:00:26.529002+00:00",
+  "completedAt": "2026-09-14T08:00:27.938767+00:00",
+  "candidate": "1.13.0",
+  "candidateTreeHash": "sha256:07478676ef5be20e10d185fe98113932a16a0b41d973248729285eaf4879015b",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "rawRowsPersisted": false,
+  "formalFulfillment": false,
+  "mainObjectsWritten": false,
+  "results": [
+    {
+      "pipelineId": "P01",
+      "objectType": "Shop",
+      "rows": 1,
+      "rowsHash": "sha256:9d7f64ff5d177ad1a639b04d67e1c98119b4b8ccff24eea10cbef8d8e8e4c6fa",
+      "status": "passed",
+      "objects": 1,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P02",
+      "objectType": "Product",
+      "rows": 65,
+      "rowsHash": "sha256:b95c48e7d3db07f687caec64659628822b74ae5bb0bcab5b220f1939ca717c2b",
+      "status": "passed",
+      "objects": 65,
+      "links": 0,
+      "deleted": 8
+    },
+    {
+      "pipelineId": "P03",
+      "objectType": "ProductSku",
+      "rows": 73,
+      "rowsHash": "sha256:db5d87a1c9b9e2cf4ae12dd1fce1edce6c5eed4895316ef7eb37b7fcff872b24",
+      "status": "passed",
+      "objects": 73,
+      "links": 0,
+      "deleted": 11
+    },
+    {
+      "pipelineId": "P04",
+      "objectType": "Category",
+      "rows": 11,
+      "rowsHash": "sha256:1a72caeb84eeb21e0e695a67ab81330394c2446de177a28d838f3fc1e3c40c44",
+      "status": "passed",
+      "objects": 11,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P05",
+      "objectType": "Order",
+      "rows": 185,
+      "rowsHash": "sha256:a9098f230c89e7bb8044ac0a7def570df6c2c12f7e688564cfc70fba6504cdc5",
+      "status": "passed",
+      "objects": 185,
+      "links": 0,
+      "deleted": 60
+    },
+    {
+      "pipelineId": "P06",
+      "objectType": "OrderLine",
+      "rows": 235,
+      "rowsHash": "sha256:38b0a89d6692db3e8ad51bc99e7da6fa0b6c37826897dc3d8318127f13aaac29",
+      "status": "passed",
+      "objects": 235,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P07",
+      "objectType": "Shipment",
+      "rows": 19,
+      "rowsHash": "sha256:6d691df38261d2bb3935de6c1cadd87a2a5e21ad9ab82f4c0386527e7a4b301e",
+      "status": "passed",
+      "objects": 19,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P08",
+      "objectType": "CustomerLite",
+      "rows": 54,
+      "rowsHash": "sha256:8c1a9d82dfa3a760c0fa4e77ead38dfe397200ae89e540d8781d0cc4e65d2c8c",
+      "status": "passed",
+      "objects": 54,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P09",
+      "objectType": "Weapp",
+      "rows": 3,
+      "rowsHash": "sha256:96027e97ab0428fd9fbb8d9e5784231c0eb5f869ab36d85aa654f90903c5bd9c",
+      "status": "passed",
+      "objects": 3,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P10",
+      "objectType": "SystemConfig",
+      "rows": 38,
+      "rowsHash": "sha256:5f79d84beebd40b0ac731ef9996914deb004536ed02146e4aa9da7560fd7aa08",
+      "status": "passed",
+      "objects": 38,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P11",
+      "objectType": "ProductReview",
+      "rows": 5,
+      "rowsHash": "sha256:24c4ae9c7e8cc34901916ae4be4b68cc0f67c7c4b5f0040b1ac10904fdaf1704",
+      "status": "passed",
+      "objects": 5,
+      "links": 0,
+      "deleted": 0
+    },
+    {
+      "pipelineId": "P12",
+      "objectType": "Payment",
+      "rows": 203,
+      "rowsHash": "sha256:4d348ec9b3fe721dd4c8bea85f9991fc20031c58b43271a315c9b932d13d5149",
+      "status": "failed",
+      "errorType": "ValueError"
+    }
+  ]
+}
