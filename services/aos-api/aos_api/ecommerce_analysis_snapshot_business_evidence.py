@@ -69,11 +69,17 @@ class AnalysisSnapshotBusinessEvidence:
             execute=lambda body:self._persist(conn,body))
 
     def read_current(self,conn,*,reference):
+        return self.run_current(conn,reference=reference,execute=lambda body:deepcopy(body))
+
+    def run_current(self,conn,*,reference,execute):
+        if not callable(execute):raise TypeError('synchronous business evidence consumer required')
         with conn.transaction():
             body=self._record(conn,reference);selection=body['selection']
             def consume(current):
                 if current!=body or self._record(conn,reference)!=body:raise ValueError('business evidence differs from current sources')
-                return deepcopy(current)
+                result=execute(current)
+                if self._record(conn,reference)!=body:raise ValueError('business Evidence changed during consumption')
+                return result
             return self._during(conn,evidence_ref=selection['evidenceRef'],query_ref=selection['queryRef'],
                 quality_ref=selection['qualityRef'],policy_ref=selection['policyRef'],execute=consume)
 

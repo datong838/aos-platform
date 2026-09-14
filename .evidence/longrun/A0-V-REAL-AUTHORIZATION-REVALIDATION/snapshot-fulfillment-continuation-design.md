@@ -75,3 +75,15 @@ records：Shop(name/status/currency/timezone)、Product(title/status/price/stock
 记录/读取均检查原tenant/hash/type/actor/subject/timestamps/撤销；消费后再核质量证据与business policy。原source/quality Evidence factIds=[]保持。历史业务Evidence不能独立授予新执行；当前read重入所有原Owner。无新源读、无模型、无主环境/安装/Run转换。纯内容中的sourceKeyHash只是定位哈希，不替代匿名化或精确领域ref。
 
 PG测试复用原实际Query/Quality/Source/Store完成组与named pending/策略fixture：实际内容与逐fact覆盖、低fact仅部分覆盖、幂等、各类撤销、策略漂移/错误type、写后回滚/租户隔离、旧字段上下文回归。主环境12类真实业务链路仍l6g另验。
+
+### l6c1 原分析Task冻结简报
+
+l6c拆为c1原TaskBrief、c2显式观察新鲜度的原EvidenceBundle适配。新增aos_api/ecommerce_analysis_snapshot_brief.py与tests/extension_runtime/test_analysis_snapshot_brief_pg.py；原BusinessEvidence添加run_current回调（read_current作为其只读包装），保存内容/hash不变。
+
+AnalysisPendingDataContext原当前守卫提供完整requirement/runtime；BusinessEvidence当前守卫内比较同requirement精确ref，任务简报绑定原runtime.task_ref，不新建Task。定义本模块可验证的AnalysisSnapshotBriefSchema v1（明确内部schema而非虚构registry），固定spec包含原requirement/业务Evidence/runtime精确血缘、窗口/所需fact/缺口和只读经营分析目标。原AipProductionContractStore.create_brief/freeze_brief完成同事务创建与冻结，scope+requirement+business evidence+schema产生幂等键并串行锁；原Brief/Receipt权威不复制。
+
+读取校验原head当前revision、精确brief hash/type/schema/spec/task/actor/frozen，与实际当前pending/runtime/evidence一致；原freeze Receipt重放后若head已有新revision必须拒绝，不能覆盖用户编辑。源或策略/质量撤销、task取消/过期拒绝。写后前后守卫失败回滚，无Run/TaskRun状态变化。
+
+PG测试使用原w2_001 DDL及现有aip_task行；分析/pending/runtime仍明确named fixtures，保存简报/冻结/Receipt为原实际Store。验证相同Task、幂等、错scope/回执/撤销/当前head变化/写后漂移回滚。c2才处理bundle freshness，不先改旧全局评估。无源读取、模型、安装或主环境动作。
+
+补充验证边界：原冻结Brief禁止revise，测试必须验证原禁止规则；current head漂移另用明确数据库故障注入测试，不描述为允许的用户编辑。新增Host模块直接引用原runtime兼容模块，按既有AR2规则追加Host分类及初始hash；不放宽验证器或修改历史preHash。

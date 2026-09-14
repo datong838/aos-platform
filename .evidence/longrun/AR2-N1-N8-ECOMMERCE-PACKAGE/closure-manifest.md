@@ -1503,3 +1503,11 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 边界 | 初始hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_pending_data_context.py` | Host原路径 | 原始pending需求与暂停任务的当前只读绑定，不授予Fulfillment或经营执行 | `858b399bfa3ba61569d73944541fb2caf8890227bc70f7f418eacc8e1a87e879` |
+
+### SC4-5l6c1 原Task快照简报Host分类
+
+原暂停Task、当前业务Evidence与原Brief Store同事务协调留在Host；引用已迁入领域的原runtime兼容合同，不复制业务规则或授予恢复权。仅追加新模块初始hash。
+
+| 文件 | 去向 | 边界 | 初始hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_brief.py` | Host原路径 | 当前原任务的内部只读分析简报，不授予Run恢复或经营执行 | `cc489e49d14d422e4329ee6478bef3c16b40042753a70c0ee69da7e526c27841` |
