@@ -322,6 +322,45 @@ class BusinessInvestigationRunStore:
             state=BusinessInvestigationRunStateRevision.model_validate(row["state_authority"]),
         )
 
+    def get_verified(self, scope: TenantScope, run_id: str) -> BusinessInvestigationRunView:
+        """Read current authority, preserving the known BIW4 initial SQL hash."""
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT r.authority_data AS run_authority,r.content_hash AS run_hash,
+                    s.authority_data AS state_authority,s.content_hash AS state_hash,
+                    s.current_version,s.current_event_sequence,s.lifecycle,s.control,
+                    'sha256:'||encode(public.digest(convert_to(
+                        (s.authority_data-'contentHash')::text,'UTF8'),'sha256'),'hex') AS sql_state_hash
+                    FROM public.ecommerce_investigation_run r
+                    JOIN public.ecommerce_investigation_run_state_head s
+                      ON s.org_id=r.org_id AND s.project_id=r.project_id AND s.run_id=r.run_id
+                    WHERE r.org_id=%s AND r.project_id=%s AND r.run_id=%s""",
+                (*scope.key, run_id),
+            ).fetchone()
+        if row is None:
+            raise BusinessInvestigationRunNotFound("BusinessInvestigationRun is not visible")
+        authority = BusinessInvestigationRunRecord.model_validate(row["run_authority"])
+        raw = row["state_authority"]
+        state = BusinessInvestigationRunStateRevision.model_validate(raw)
+        initial_fields = {
+            "schemaVersion", "tenant", "runId", "version", "lifecycle", "control",
+            "eventSequence", "createdBy", "createdAt", "contentHash",
+        }
+        if type(raw) is dict and set(raw) == initial_fields and type(raw["version"]) is int and raw["version"] == 1:
+            valid_state = type(raw["eventSequence"]) is int and row["sql_state_hash"] == state.content_hash
+        else:
+            _strict_legacy_state_authority(raw, error="current Run state serialization drifted")
+            valid_state = True
+        if (not valid_state
+                or any((t.org_id, t.project_id) != scope.key for t in (authority.tenant, state.tenant))
+                or authority.run_id != run_id or state.run_id != run_id
+                or authority.calculated_content_hash() != authority.content_hash
+                or authority.content_hash != row["run_hash"] or state.content_hash != row["state_hash"]
+                or state.version != row["current_version"] or state.event_sequence != row["current_event_sequence"]
+                or state.lifecycle.value != row["lifecycle"] or state.control.value != row["control"]):
+            raise BusinessInvestigationRunConflict("current Run authority or projection drifted")
+        return BusinessInvestigationRunView(authority=authority, state=state)
+
     def read_state_exact(
         self, scope: TenantScope, state_ref: InvestigationExactRef
     ) -> BusinessInvestigationRunStateRevision | None:

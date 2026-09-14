@@ -7,7 +7,7 @@ from aos_api.aip_task_models import CreateTaskRequest
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseRevision
-from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunView
+from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunView, BusinessInvestigationRunStore
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileRevision
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
@@ -27,7 +27,7 @@ def prepare_analysis_task(transaction, *, scope, actor, case, run, domain_profil
     if (any((tenant.org_id,tenant.project_id)!=scope.key for tenant in (case.tenant,authority.tenant,state.tenant))
             or case.lifecycle.value!='ACTIVE' or case.calculated_content_hash()!=case.content_hash
             or authority.calculated_content_hash()!=authority.content_hash
-            or state.calculated_content_hash()!=state.content_hash or state.run_id!=authority.run_id
+            or state.run_id!=authority.run_id
             or state.lifecycle.value!='PREPARING' or state.control.value!='RUNNING'
             or case.investigation_profile_ref!=domain.exact_ref or case.analysis_type.value!=domain.analysis_type
             or authority.analysis_type!=case.analysis_type
@@ -46,6 +46,8 @@ def prepare_analysis_task(transaction, *, scope, actor, case, run, domain_profil
     spec_json = spec.model_dump(mode='json',by_alias=True)
     key = 'analysis-task-' + canonical_sha256([*scope.key,authority.run_id]).removeprefix('sha256:')
     factory = TransactionBoundConnectFactory(transaction,scope)
+    if BusinessInvestigationRunStore(factory).get_verified(scope,authority.run_id)!=run:
+        raise ValueError('analysis Run differs from current stored authority')
     tasks = AipTaskStore(factory)
     task_request = CreateTaskRequest(type='ecommerce.business-investigation',title=domain.display_name,
         description='根据原始数据与来源完成经营画像、问题诊断和方案设计。',goal=spec_json)

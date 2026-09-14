@@ -35,3 +35,13 @@ SC1–SC3单项通过不计首链完成。必须SC4真实PG全链原子、同键
 ## SC1 exact政策格式
 
 蓝图schema升为aos.ecommerce.analysis-compilation-blueprint/v2，新增startupContextPolicy（必填）：schemaVersion=aos.ecommerce.analysis-startup-context-policy/v1；purpose=analysis-start；requiredFactIds=[analysis.original-event-case-run-lineage]；businessFactCoverage=not-evaluated；pendingFactProfilesSource=domain-profile.requiredFactProfiles；evalStageId等于首阶段portrait；evalPurpose=skill-publication-contract。Host按支持的完整规范对象比较，不接受附加授权字段、事实替换、阶段替换、业务完成声明或旧v1遗漏政策。原stageTemplateRequest和阶段技能选择不变，蓝图完整hash自然变化；旧候选保持不可变，不能被新Host当作支持新启动协议。新增回归对上述变体重新计算hash后仍须拒绝，避免仅靠hash捕捉篡改。
+
+## SC2 当前来源存储细化
+
+新增ecommerce_analysis_startup_evidence.py的AnalysisStartupEvidenceService，构造必须为精确ProductEventAnalysisService。record接受当前事务connection、claimed和明确业务runRef/领域profile/当前蓝图；内部重新进入分析service._phase（包含原SourceOwner/journal、claim及当前安装），再从同事务RunStore读取权威和当前状态。校验Case/profile/Run exact、triggerKey等于本次claim key、PREPARING/RUNNING及时间顺序。仅保存事件metadata和当前证明snapshotHash，不保存客户正文；已有reader已校验正文hash并移除payload。
+
+Evidence采用tenant+业务runId稳定identity、完整payload hash；observedAt取不可变业务Run创建时间，created_at取DB时钟。单独aip_evidence.run_id=NULL，subject关联业务Run。ON CONFLICT只回读，全文/元数据/撤销检查任何不同拒绝；外围SourceOwner失败由外层事务回滚。此服务不接受外部自由snapshot，也不创建Bundle或声明业务完整。测试实际PG Case/Run/claim/evidence；来源/installed fixture明确替身。后续SC4负责在已取得installed蓝图的同一授权组合内调用，单独record不等于完整START。
+
+### SC2 实库发现的初始Run状态格式兼容
+
+真实RunStore.request触发biw4_006初始状态：原JSON不含三个可选null字段，hash按PostgreSQL jsonb::text生成；模型calculated_content_hash按Python规范计算，二者不同，旧纯合同fixture掩盖CF3 Task准备的误拒绝。新增RunStore.get_verified：同事务读取当前Run/state正文与投影列，Run按原规范hash核验；状态只接受现有Python规范或明确r1固定字段集的历史PG序列化，后者由SQL重算原jsonb正文hash并逐列比较，保留旧hash不改记录。其他未知格式拒绝。任务准备和SC2使用该权威读取对照输入，不能仅通过模型投影重hash；测试升级为真实PG Run，保留坏hash/租户拒绝。

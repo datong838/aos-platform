@@ -1411,3 +1411,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_task_preparation.py` | Host原路径 | 原Case/Run绑定的Task与冻结简报事务准备，不授予执行权 | `63d802493705fc0f3eee06a35fd680672981c4799270f290d8f5307d9cd86288` |
+
+### SC2 原事件启动证据Host权威（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_startup_evidence.py` | Host原路径 | 同事务原事件与当前Case/Run证据存储，不证明经营事实完整 | `a9606a86a399b5403cabd26079a13646ce1077598f40d3795da20e0fc8f942ba` |
