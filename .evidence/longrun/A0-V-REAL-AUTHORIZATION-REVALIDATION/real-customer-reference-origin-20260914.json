@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "aos.developer-customer-reference-aggregate/v1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "startedAt": "2026-09-14T11:26:04.400605+00:00",
+  "completedAt": "2026-09-14T11:26:06.420343+00:00",
+  "elapsedSeconds": 2.02,
+  "sourceRoute": "current-P02-meta-source-configuration",
+  "parentSiteId": 1,
+  "accessMode": "read-only",
+  "isolation": "repeatable-read",
+  "tableEngines": "InnoDB",
+  "customerIdentifiersExported": false,
+  "businessWrites": false,
+  "formalFulfillment": false,
+  "queryHash": "sha256:05b43c5aa8d23d960b2c81ba679a205d842ce08e451fa82bdcb075fb1bf9545d",
+  "results": {
+    "Order": [
+      {
+        "parentState": "active",
+        "parentRows": 125,
+        "distinctPositiveReferences": 39,
+        "invalidReferences": 0,
+        "sourceMemberAbsent": 27,
+        "distinctAbsentReferences": 3,
+        "sameSiteMember": 98,
+        "otherSiteMember": 0,
+        "distinctOtherSiteReferences": 0,
+        "unknownMemberSite": 0,
+        "sourceMemberDeleted": 0,
+        "sourceMemberInactive": 0
+      },
+      {
+        "parentState": "deleted",
+        "parentRows": 60,
+        "distinctPositiveReferences": 8,
+        "invalidReferences": 0,
+        "sourceMemberAbsent": 5,
+        "distinctAbsentReferences": 2,
+        "sameSiteMember": 55,
+        "otherSiteMember": 0,
+        "distinctOtherSiteReferences": 0,
+        "unknownMemberSite": 0,
+        "sourceMemberDeleted": 0,
+        "sourceMemberInactive": 0
+      }
+    ],
+    "ProductReview": [
+      {
+        "parentState": "present",
+        "parentRows": 5,
+        "distinctPositiveReferences": 3,
+        "invalidReferences": 0,
+        "sourceMemberAbsent": 1,
+        "distinctAbsentReferences": 1,
+        "sameSiteMember": 4,
+        "otherSiteMember": 0,
+        "distinctOtherSiteReferences": 0,
+        "unknownMemberSite": 0,
+        "sourceMemberDeleted": 0,
+        "sourceMemberInactive": 0
+      }
+    ]
+  }
+}

@@ -537,3 +537,19 @@ ControlledSnapshotGroupRetirementExecutor接通原候选组执行、已提交清
 5项完整隔离PG恢复测试通过88.63秒；再补较新残留/空清退2项通过39.84秒（共7覆盖）。夹具旧父关系先由原Projector投影为历史状态，之后仅旧边从权威活跃集与graph清退，正确边保留；最终5个Receipt无重复、源始终一次。准备ack丢失不执行，清退ack丢失凭原条件Receipt恢复，图删除异常回滚图和标记，阶段撤权停止。较新额外边保留并返回requires_attention，未被本组消费的更新事件仍pending；空清退不增加Receipt。
 
 AR2扫描1925/187/93五类错误为空。主系统数据/安装仍未改变；这只是完整隔离原Owner链路的代码验证，未冒称真实经营首链完成。下一波回到真实数据质量：只读核查现有32笔订单+1条评价客户引用缺口的实际来源，区分注册站点不一致、源记录不存在、软删除等事实，输出不含客户标识的计数与证据，随后决定领域包参与客户范围与业务Readiness要求，不能盲目扩大商户范围或伪造客户。
+
+### SC4-5i1 真实客户引用缺口诊断
+
+只读开发核验脚本放本证据目录audit-real-customer-reference-origin.py，从当前P02对应meta_source私有props内存读取连接配置，独占JdbcRuntime、不复用缓存；InnoDB检查及同一REPEATABLE READ READ ONLY事务。仅以ns_order.site_id=1或ns_goods_evaluate.site_id=1为父范围LEFT JOIN ns_member.member_id，返回计数：父记录删除状态、同site客户/不同注册site客户/源客户缺失/非法引用/未知site/禁用客户及distinct缺失引用数。不选择或输出客户标识、名字、电话、正文等数据；不将任何其他site客户写回目标租户。
+
+此查询用于辨别既有32+1缺口的事实成因，绝不自动移除P08的site约束，也不是正式Owner/Readiness/Fulfillment。成功后按聚合事实决定是否需授权父关系范围的CustomerLite投影，或将源缺失/历史数据作为业务质量缺口处理。若发现新事实与旧猜测不同，先修正方案；无外部写入。
+
+### SC4-5i1 真实客户引用缺口核验结果
+
+2026-09-14 19:26:04—19:26:06（北京时间），当前P02商城私有配置、独占Jdbc、同一InnoDB REPEATABLE READ READ ONLY事务聚合2.02秒。仅parent.site_id=1关联ns_member主键，未导出客户标识或字段，无业务写入。真实源连接正常。
+
+未删除Order125条：98条客户在同site，27条客户在当前ns_member全表中不存在，涉及3个不同引用。已删除Order60条：55条客户同site，5条客户不存在，涉及2个不同引用。ProductReview5条：4条同site客户，1条客户不存在。所有分组跨site匹配/非法引用/未知site/客户删除标记/禁用匹配数均0。分组distinct可能重叠，不相加推断全局不同客户数。当前事实不能证明客户为何不存在，不称已物理删除或恢复过源数据。
+
+185=125+60、32=27+5和Review缺口1与此前关系assessment精确对账。结论：不能把问题归因SSH或P08 site过滤；保持P08现有范围，不扩大站点读取，不伪造CustomerLite。订单经营事实仍真实存在，不应为关联缺口删掉27条有效订单。缺口须按业务用途披露/约束：全店汇总与商品经营分析可保留其订单事实并标注客户关联未知；客户分群/客户动作不能将未知关联计作可定向客户。该处仅确定后续方案方向，没有放宽正式Readiness门禁。
+
+现有source-quality.v1.json只声明元数据可观察质量，不包含行级关系用途规则，因此下一波先补显式用途质量方案与包策略，再从原组质量证据接实际Readiness/Fulfillment；不能用pipeline成功代替业务数据完整。主库/安装未变，无正式Fulfillment。AR2继续按ar2-7核验；脚本输出存在时在任何源调用前拒绝，避免重复诊断覆盖原证据。
