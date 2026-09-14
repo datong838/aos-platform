@@ -46,6 +46,7 @@ from aos_api.ecom_core_models import (
     DerivedMetricResult,
     EcomConsistencyError,
     StorageIdentity,
+    SyncScope,
     _jsonable,
 )
 
@@ -873,6 +874,45 @@ class EcomConsistencyStore:
                 )
             ).mappings()
             return [dict(row) for row in rows]
+
+    def read_active_links_for_rows(self, sync_scope: SyncScope, selectors: tuple, *, limit: int = 24000) -> tuple:
+        """Bounded present-row query; an empty selection never means all rows."""
+        if type(sync_scope) is not SyncScope or type(selectors) is not tuple or len(selectors) > 32:
+            raise ValueError('exact scope and bounded row selectors required')
+        sync_scope = SyncScope.model_validate(sync_scope.model_dump())
+        if type(limit) is not int or not 1 <= limit <= 24000:
+            raise ValueError('bounded active relationship limit required')
+        clauses = []
+        for selector in selectors:
+            if type(selector) is not tuple or len(selector) != 4:
+                raise ValueError('exact relationship row selector required')
+            link_type, side, object_type, identities = selector
+            if (side not in ('source', 'target') or type(identities) is not tuple
+                    or not 1 <= len(identities) < 1000
+                    or any(type(v) is not str or not v or v != v.strip() or len(v) > 512
+                           for v in (link_type, object_type, *identities))):
+                raise ValueError('canonical nonempty relationship row selector required')
+            clauses.append(and_(ecom_link.c.link_type == link_type,
+                ecom_link.c[side + '_object_type'] == object_type,
+                ecom_link.c[side + '_external_id'].in_(identities)))
+        if not clauses:
+            return ()
+        with self._engine.begin() as conn:
+            _apply_transaction_scope(conn, org_id=sync_scope.org_id, workspace_id=sync_scope.workspace_id)
+            rows = conn.execute(select(ecom_link).where(
+                ecom_link.c.org_id == sync_scope.org_id,
+                ecom_link.c.workspace_id == sync_scope.workspace_id,
+                ecom_link.c.source_platform == sync_scope.platform,
+                ecom_link.c.target_platform == sync_scope.platform,
+                ecom_link.c.source_shop_or_marketplace_id == sync_scope.shop_or_marketplace_id,
+                ecom_link.c.target_shop_or_marketplace_id == sync_scope.shop_or_marketplace_id,
+                ecom_link.c.deleted_at.is_(None), or_(*clauses),
+            ).order_by(ecom_link.c.link_type, ecom_link.c.source_object_type,
+                ecom_link.c.source_external_id, ecom_link.c.target_object_type,
+                ecom_link.c.target_external_id).limit(limit + 1)).mappings().all()
+            if len(rows) > limit:
+                raise EcomConsistencyError('RELATIONSHIP_AUDIT_LIMIT_EXCEEDED', 'present-row relationship query exceeds bound')
+            return tuple(dict(row) for row in rows)
 
     @staticmethod
     def _idempotency_lock_key(command: BatchCommand) -> int:
