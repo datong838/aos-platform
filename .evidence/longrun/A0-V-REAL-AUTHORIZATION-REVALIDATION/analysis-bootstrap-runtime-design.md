@@ -283,3 +283,11 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 测试原认领与组原子提交/同key精确重放、换run或actor/缺组、先前单独claim拒绝、事务回滚保持预算与组为空、原控制/运行停止时拒绝重放；使用真实隔离PG源claim和组schema，签名资产明确fixture。组输入保存与源读取仍下一子项。
 
 SC4-5f4b加固：reserve先要求调用者已有事务，再在其内使用保存点；即使调用者捕获组失败后提交外层事务，也撤回本组已新增claim。不会在idle连接自动创建并提交新事务；原既有claim保留。新增真实PG反例先证实半组泄漏再修复。
+
+### SC4-5f4c 当前配置绑定组读取
+
+新增pipeline_selected_snapshot_group.py及test_pipeline_selected_snapshot_group.py；不修改旧单表路径。调用仅在原组Owner持有全部当前控制期间，由可信Host传入exact CurrentSnapshotGroup与HostTransaction、TenantScope。该数据类不是权限：本原语不创建claim/grant，后续完整执行器必须先提交确认组认领再调用。防御核对成员原draft类型/共同source与配置ref、租户、唯一表、实际最小rowLimit/timeout和交集窗口，拒绝人工放宽的group属性。
+原事务FOR SHARE锁定meta_source，原SourceConfigurationRevisionStore加载当前连接版本，必须jdbc-mysql-ssh/registered|active|ready/direct，完整sourceConfigurationRef一致；仅标准连接字段进入私有reuse_cache=False JDBC。原read_snapshot_group一次读取所有严格readSpec；连接建立和关闭也计入整体时限，返回源起止必须落在本次调用区间和共同有效窗。返回绑定实际配置ref的组结果，不保存源数据、不应用对象、不生成Fulfillment，任何异常归一化避免泄密。来源读前失败不建立连接，读后失败不返回部分结果、不重试。测试使用明确替身验证机制，不称真实当前授权已验收。
+
+
+SC4-5f4c：当前配置绑定组读取完成。新增pipeline_selected_snapshot_group.py，当前sourceConfigurationRef/direct状态严格核验，私有连接一次整组读取，原成员最严格界限不可放宽。52项测试通过（3.86秒），AR2 ar2-7扫描1913模块、五类错误为空，memory revision AOS-000573 GREEN。测试中的权限/连接均明确替身；本波无真实源调用，无主库迁移/对象写入/Fulfillment。下一项：组认领提交确认后，真实原输入与manifest原子保存、精确重放与未知结果禁止重读。
