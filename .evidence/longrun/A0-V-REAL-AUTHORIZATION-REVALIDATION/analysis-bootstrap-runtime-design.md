@@ -60,3 +60,9 @@ Preview精确绑定本Task/Plan/Context/Brief/Bundle/Eval/职责/Stage，绑定�
 ### SC4-3c3c 当前初始化对象绑定
 
 在ecommerce_analysis_bootstrap_authority.py增加AnalysisBootstrapCurrentBinding，构造仅接受精确ProductEventAnalysisService。run_current在原analysis._phase内复验claim/来源审批/安装；从存储读取实际Case、Run、CompilationReceipt、Task/Plan、冻结Preview与初始化Evidence。拒绝换Occurrence/控制回执、安装代次漂移、Receipt不等、非当前草稿Plan、已存在TaskRun、Preview不对应Context/Plan/职责/模板、Evidence被撤销或内容/来源不一致。同步回调前后重复读取并比较；本项仅用于尚未启动时的动作准备/审批，不允许回调启动或批准Plan。后续原子启动另以明确暂停后置条件承接，不能放宽本读取器来容忍任意Plan变更。新增test_analysis_bootstrap_binding_pg.py验证当前原事件和故障回滚。
+
+### SC4-3c3d 专用动作准备连接
+
+新增ecommerce_analysis_bootstrap_action.py，修改aip_action_store.py：初始化动作只接受精确内部_BootstrapActionGuard；普通Store没有该当前守卫时拒绝该动作及其快照别名。守卫固定原连接/claim/意图/preview，每次核对相同数据库事务、原事件当前对象及真实maker/checker资格；不接受长期bool授权或调用者roles。动作payload固定完整bootstrapIntent，Task/Preview完全一致，runId为空；风险重新分类，拒绝外部传入较宽RiskDecision。
+
+本子项仅创建原ActionProposal/草稿，沿当前R1 draftOnly，不新增风险例外。审批入口仍拒绝draftOnly；完整原子暂停实现后再修改专用执行策略。本次回调前后复验身份/来源，并读取原Proposal确保没有被改成approved。新增隔离PG测试：实际草稿/重复、故障回滚、普通入口拒绝、当前身份撤销。

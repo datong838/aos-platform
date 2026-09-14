@@ -82,7 +82,12 @@ def canonical_hash(value: Any) -> str:
 
 
 class AipActionStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None) -> None:
+        if bootstrap_guard is not None:
+            from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard
+            if type(bootstrap_guard) is not _BootstrapActionGuard:
+                raise TypeError('exact bootstrap action guard required')
+        self._bootstrap_guard = bootstrap_guard
         self._connect_factory = connect_factory or db_connect
 
     @staticmethod
@@ -109,6 +114,17 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        if 'ecommerce_analysis_bootstrap' in {body.action_type_id, action_snapshot.get('id')}:
+            from aos_api.aip_action_policy import classify_action_risk
+            if self._bootstrap_guard is None:
+                raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_CURRENT_GUARD_REQUIRED')
+            current_risk = classify_action_risk(body.action_type_id, action_snapshot, body.payload, body.risk_hint)
+            if body.action_type_id != action_snapshot.get('id') or risk != current_risk:
+                raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_ACTION_OR_RISK_DRIFTED')
+            self._bootstrap_guard.check(conn, scope, actor_id, action_snapshot=action_snapshot,
+                payload=body.payload, task_id=body.task_id, run_id=body.run_id,
+                preview_ref=body.impact_preview_ref, checker=False)
+            return None
         from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
         if body.action_type_id in CONTROL_ACTION_TYPES or action_snapshot.get('id') in CONTROL_ACTION_TYPES:
             from aos_api.aip_action_policy import classify_action_risk
@@ -121,6 +137,19 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        if 'ecommerce_analysis_bootstrap' in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
+            if self._bootstrap_guard is None:
+                raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_CURRENT_GUARD_REQUIRED')
+            if row['action_type_id'] != row['action_type_snapshot'].get('id'):
+                raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_ACTION_OR_RISK_DRIFTED')
+            from aos_api.aip_production_contracts import ExactRevisionRef
+            roles = self._bootstrap_guard.check(conn, scope, actor_id,
+                action_snapshot=row['action_type_snapshot'], payload=row['payload'], task_id=row['task_id'], run_id=row['run_id'],
+                preview_ref=ExactRevisionRef(resourceType='ImpactPreviewRevision',resourceId=row['impact_preview_id'],
+                    revision=row['impact_preview_revision'],contentHash=row['impact_preview_hash']), checker=checker)
+            if checker and row['policy_snapshot'].get('draftOnly') is not False:
+                raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_EXECUTION_POLICY_NOT_ENABLED')
+            return roles
         from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
         if (row['action_type_id'] in CONTROL_ACTION_TYPES
                 and row['action_type_snapshot'].get('id') != row['action_type_id']):

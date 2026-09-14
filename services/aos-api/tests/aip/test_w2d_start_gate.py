@@ -347,8 +347,7 @@ def test_transaction_bound_start_gate_rolls_back_with_outer_owner() -> None:
 
 @pytest.mark.parametrize('route',['action','preview'])
 def test_generic_start_rejects_bootstrap_even_with_approved_proposal(route):
-    request,store=_seed_start_candidate(bootstrap_preview=route=='preview',
-        action_type_id='ecommerce_analysis_bootstrap' if route=='action' else None)
+    request,store=_seed_start_candidate(bootstrap_preview=route=='preview')
     proposal=store.decide(SCOPE,'checker:w2d-start',request.action_proposal_ref.proposal_id,
         'approval-'+uuid.uuid4().hex,DecideActionProposalRequest(
             expected_proposal_version=request.action_proposal_ref.version,
@@ -356,6 +355,11 @@ def test_generic_start_rejects_bootstrap_even_with_approved_proposal(route):
             decision=ApprovalDecision.APPROVED)).proposal
     request=request.model_copy(update={'action_proposal_ref':ActionProposalExactRef(
         proposal_id=proposal.id,version=proposal.version,proposal_hash=proposal.proposal_hash)})
+    if route=='action':
+        # Inject an already-approved legacy/corrupt row: new ordinary writes are blocked earlier.
+        with connect(SCOPE) as conn:
+            conn.execute("UPDATE aip_action_proposal SET action_type_id='ecommerce_analysis_bootstrap' WHERE org_id=%s AND project_id=%s AND proposal_id=%s",(*SCOPE.key,proposal.id))
+            conn.commit()
     before=_runtime_counts(request.task_id)
     decision=AipProductionStartService().start(SCOPE,'executor:w2d-start','start-'+uuid.uuid4().hex,request)
     assert decision.status is ProductionStartDecisionStatus.BLOCKED
