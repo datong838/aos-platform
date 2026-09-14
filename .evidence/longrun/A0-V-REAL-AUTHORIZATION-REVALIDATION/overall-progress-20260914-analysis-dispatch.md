@@ -510,3 +510,15 @@ AR2 1943/190/93五类错误空；memory strong CURRENT/validate GREEN。另追�
 Red新增模块缺失；首轮隔离schema未给aos_runtime USAGE导致不可见，已按原测试角色补齐；统一fixture使用DB时钟及合法创建/观察顺序。最后12新PG passed/5.10秒，加原BindingReadiness3与严格dependency27共30 pure passed/5.79秒，均7既有warnings。覆盖scope/状态/健康/过期/hash/模型阻断/撤销/写后变更回滚/输出篡改。PG仅原Binding DDL/行/角色/GUC/事务真实，模型和严格依赖为明确named fixtures，另有原算法回归；不是当前真实Provider健康验收。AR2扫描1944/190/93五类错误空，memory strong CURRENT/validate GREEN。
 
 下一波SC4-5l6d4c完整安装快照输入：将原Source/Business/Quality/Query、当前基础计数、安装SnapshotReadinessPolicy及原Binding守卫组合为12来源typed事实，确保当前refs与same group/requirement一致，再接原SourceReadiness状态算法和Receipt。不能以两类fixture/历史health升级为完整ready；主升级安装、恢复/Outbox、栖月汇八场景实跑与连续观察仍未完成。无新源/模型/主环境/外部动作；m1、不push、230 L0挂起。
+
+## SC4-5l6d5a 原就绪计算入口（2026-09-14）
+
+Rules：方案先行、m1串行、不push、230 L0挂起，保护已有用户改动。依赖顺序按snapshot-readiness-design.md先锁定d5接收合同，再做d4c当前安装事实。
+
+新增source_readiness_snapshot_contracts.py和tests/test_source_readiness_snapshot.py；source_readiness.py增加evaluate_installed_snapshot，复用原对账、状态优先级及聚合合同。完整有序P01-P12、对象类型、同租户、带时区时间和精确ref/质量ruleRef校验；入口重新序列化校验，拒绝model_copy绕过。保留观察cutoff，未观察的projectedAt不伪造。原就绪过期边界从>改为>=，同时修正原原因列表并验证旧入口。
+
+Red：新模块不存在的收集错误（/tmp/sc4-d5a-red.log）；Green：新测试27项+原服务3项+原合同3项，共33 passed / 7.38s（/tmp/sc4-d5a-green.log）。覆盖完整12、缺失/错序/重复/对象/租户、原质量失败/未知、实际对账缺失/差异、空、到期边界、时间与引用篡改及原入口回归。7项现有框架警告。AR2 ar2-7：1945模块/190分类/93迁移，全部错误列表为空（/tmp/sc4-d5a-closure.log）。
+
+边界：纯合成输入验证不是当前安装授权、真实12源验收或Receipt。质量由后续原当前Owner填充；没有API受理自报ready，没有模型/源库调用、主库迁移、主Run/Task转换、发布安装或外部消息。缺计数按原对账算法FAILED，不虚构PASS。主环境版本与运行健康本波未刷新。package.json/package-lock.json的外部Playwright改动和overall-progress-20260913.md原+42行未纳入。
+
+下一波SC4-5l6d4c：从当前安装、Source/Query/Quality/Business、基础对象计数及原Binding Owner构建完整12类输入，验证缺失/撤销/安装与事务后变化；随后d6原Receipt保存回读、l6e原状态恢复、l6f Outbox、l6g主环境及真实业务全链/八场景/观察。整体业务目标仍未完成。

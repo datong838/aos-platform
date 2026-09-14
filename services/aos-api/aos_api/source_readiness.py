@@ -17,6 +17,11 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from aos_api.db import connect
+from aos_api.source_readiness_snapshot_contracts import (
+    InstalledSnapshotReadinessInput,
+    InstalledSnapshotReadinessSource,
+    SNAPSHOT_REF_TYPES,
+)
 from aos_api.qyh_cron_scheduler import next_run_at
 from aos_api.source_readiness_contracts import (
     CANONICAL_QYH_SOURCES,
@@ -277,6 +282,40 @@ class PostgresSourceReadinessFactSource:
 
 
 class SourceReadinessService:
+    @staticmethod
+    def evaluate_installed_snapshot(
+        facts: InstalledSnapshotReadinessInput,
+    ) -> SourceReadinessEnvelope:
+        """Evaluate owner-supplied facts; this does not establish current authority."""
+        facts = InstalledSnapshotReadinessInput.model_validate(facts.model_dump())
+        items = []
+        for source in facts.sources:
+            blockers = [key.upper() + "_MISSING" for key in SNAPSHOT_REF_TYPES
+                        if getattr(source, key) is None]
+            reconciliation = _reconciliation_observation(
+                observed=source, rule_ref=source.reconciliation_policy_ref)
+            status = _readiness_status(
+                checked_at=facts.checked_at, observed=source, blockers=blockers,
+                freshness_expires_at=source.freshness_expires_at,
+                quality=source.quality, reconciliation=reconciliation)
+            reasons = []
+            if status == SourceReadinessStatus.STALE:
+                reasons.append("SOURCE_DATA_STALE")
+            if source.quality.status == PolicyCheckStatus.FAIL:
+                reasons.append("SOURCE_QUALITY_FAILED")
+            if reconciliation.status == PolicyCheckStatus.FAIL:
+                reasons.append("SOURCE_RECONCILIATION_FAILED")
+            if source.latest_run.status != ObservationStatus.SUCCEEDED:
+                reasons.append("SOURCE_RUN_" + source.latest_run.status.value.upper())
+            items.append(SourceReadinessItem(
+                **source.model_dump(), checked_at=facts.checked_at,
+                data_cutoff=facts.cutoff_at, status=status, blockers=blockers,
+                reasons=reasons, reconciliation=reconciliation))
+        return SourceReadinessEnvelope(
+            tenant=facts.tenant, checked_at=facts.checked_at, cutoff_at=facts.cutoff_at,
+            status=aggregate_source_readiness_status([s.status for s in items]),
+            sources=items)
+
     def __init__(self, source: SourceReadinessFactSource) -> None:
         self._source = source
 
@@ -369,7 +408,7 @@ class SourceReadinessService:
                 reasons.append("SOURCE_RECONCILIATION_FAILED")
             if (
                 freshness_expires_at is not None
-                and facts.checked_at > freshness_expires_at
+                and facts.checked_at >= freshness_expires_at
             ):
                 reasons.append("SOURCE_DATA_STALE")
             if status == SourceReadinessStatus.EMPTY:
@@ -547,7 +586,7 @@ def _quality_observation(
 
 
 def _reconciliation_observation(
-    *, observed: ObservedSourceFacts, rule_ref: ExactResourceRef | None
+    *, observed: ObservedSourceFacts | InstalledSnapshotReadinessSource, rule_ref: ExactResourceRef | None
 ) -> PolicyObservation:
     if rule_ref is None:
         return PolicyObservation(
@@ -575,7 +614,7 @@ def _reconciliation_observation(
 def _readiness_status(
     *,
     checked_at: datetime,
-    observed: ObservedSourceFacts,
+    observed: ObservedSourceFacts | InstalledSnapshotReadinessSource,
     blockers: list[str],
     freshness_expires_at: datetime | None,
     quality: PolicyObservation,
@@ -598,7 +637,7 @@ def _readiness_status(
         or freshness_expires_at is None
     ):
         return SourceReadinessStatus.UNKNOWN
-    if checked_at > freshness_expires_at:
+    if checked_at >= freshness_expires_at:
         return SourceReadinessStatus.STALE
     if observed.counts.source_total == 0 and observed.counts.projection_total == 0:
         return SourceReadinessStatus.EMPTY
