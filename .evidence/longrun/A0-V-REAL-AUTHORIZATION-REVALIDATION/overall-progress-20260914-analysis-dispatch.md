@@ -34,3 +34,5 @@ SC4-2：当前Context内真实Store exact解析与原CompileSaga已接，隔离P
 SC4-3a：原生产启动门支持Host外层事务，9项累计回归通过，TaskRun/启动决定/Plan审批可随外层故障全部回滚。下一启动Preview/审批承接与实际TaskRun流程，然后接回正式事件START。主安装首链仍未完成。
 
 SC4-3b：TaskRun可在首步未执行时保存真实初始输入检查点并暂停，15项累计回归通过，输入漂移拒绝恢复，不伪造画像完成。下一启动Preview/审批组合及sealed Host接线；首链与八场景尚未完成。
+
+SC4-3c1：固定暂停初始化合同及完整授权方案入清单，33项累计回归通过；尚未启用新Action或执行规则。下一c2启动Preview、c3当前Action守卫、c4实际运行组合、SC4-4正式事件START。真实首链仍未贯穿。
