@@ -1417,3 +1417,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_startup_evidence.py` | Host原路径 | 同事务原事件与当前Case/Run证据存储，不证明经营事实完整 | `a9606a86a399b5403cabd26079a13646ce1077598f40d3795da20e0fc8f942ba` |
+
+### SC3 当前技能评估合同Host准备（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_startup_eval.py` | Host原路径 | 当前首阶段技能发布血缘派生Eval合同，统一事务冻结，不宣称业务质量 | `d9684ae8b117c84dc8a0314d14f56337f3729b67e99d7cbc2a1495f174cf5b52` |

@@ -312,7 +312,7 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt() -> None:
+def published_skill_runtime(*, skill_id=None, canonical_logic_id=None):
     suffix = uuid.uuid4().hex[:12]
     scope = TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
     with connect() as conn:
@@ -323,8 +323,8 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
         )
         conn.commit()
 
-    skill_id = f"skill.bind3.{suffix}"
-    source = skill_request(skill_id=skill_id, canonical_logic_id=f"logic.bind3.{suffix}")
+    skill_id = skill_id or f"skill.bind3.{suffix}"
+    source = skill_request(skill_id=skill_id, canonical_logic_id=canonical_logic_id or f"logic.bind3.{suffix}")
     source = source.model_copy(update={"content_hash": _canonical_hash(source.model_dump(mode="json", by_alias=True, exclude={"content_hash"}))})
     source = AipSkillRegistry().publish_skill(source, actor="pytest-bind3")
     target = AssetRevisionRef(
@@ -451,6 +451,15 @@ def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt(
         actor="pytest-bind3",
         occurred_at=datetime(2026, 8, 15, 3, 30, tzinfo=UTC),
     )
+    return SimpleNamespace(scope=scope, source=source, published=published, receipt=receipt,
+        service=service, request=request, gate=gate, report=report, suffix=suffix, skill_id=skill_id)
+
+
+def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt() -> None:
+    runtime = published_skill_runtime()
+    scope, source, published, receipt = runtime.scope, runtime.source, runtime.published, runtime.receipt
+    service, request, gate = runtime.service, runtime.request, runtime.gate
+    suffix, skill_id = runtime.suffix, runtime.skill_id
     replay, replay_receipt = service.publish_evaluated_revision(
         scope,
         request,

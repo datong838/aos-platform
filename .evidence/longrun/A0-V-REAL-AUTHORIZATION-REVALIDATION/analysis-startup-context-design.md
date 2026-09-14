@@ -45,3 +45,9 @@ Evidence采用tenant+业务runId稳定identity、完整payload hash；observedAt
 ### SC2 实库发现的初始Run状态格式兼容
 
 真实RunStore.request触发biw4_006初始状态：原JSON不含三个可选null字段，hash按PostgreSQL jsonb::text生成；模型calculated_content_hash按Python规范计算，二者不同，旧纯合同fixture掩盖CF3 Task准备的误拒绝。新增RunStore.get_verified：同事务读取当前Run/state正文与投影列，Run按原规范hash核验；状态只接受现有Python规范或明确r1固定字段集的历史PG序列化，后者由SQL重算原jsonb正文hash并逐列比较，保留旧hash不改记录。其他未知格式拒绝。任务准备和SC2使用该权威读取对照输入，不能仅通过模型投影重hash；测试升级为真实PG Run，保留坏hash/租户拒绝。
+
+## SC3-1 当前首阶段Eval事务准备
+
+新增services/aos-api/aos_api/ecommerce_analysis_startup_eval.py：AnalysisStartupEvalPreparation必须组合AnalysisCompilationSelectionReader，在当前安装/职责/Skill选择回调内取蓝图首阶段技能；校验原发布事件、parent Skill、ReleaseGate hash/TTL、Suite与真实EvalReport血缘，复用ReleasePublicationService的验证器。按原isolated_skill_contract格式派生CreateEvalContractRequest，用正文hash选择唯一当前冻结合同；缺失时事务锁+稳定key走原create/freeze，回读正文与ready状态，再次核验来源，外层统一提交。业务质量用途不被宣称。
+
+验证新增tests/extension_runtime/test_analysis_startup_eval_pg.py；将tests/aip/test_aip_skill_publication_service.py已有真实评测/发布准备段提为可复用测试helper，保留原断言。PG内通过原EvalRunner和发布服务创建评测/发布/技能记录；模型route/Logic能力与外部target执行仍明确为测试替身，不代表真实模型或业务质量。测试当前来源唯一性、TTL/撤销/错配、同键冻结回读与外层回滚。下一SC3-2把启动Bundle与此Eval合入本任务Context，再SC4正式START。

@@ -22,3 +22,5 @@ CF1已完成exact桥接输入合同；CF2已实现当前配置职责及显式阶
 SC1：蓝图v2启动政策及Host拒绝错误用途已实现，44项回归通过。启动/经营证据分阶段方案已入原计划SC1–SC4；当前下一项SC2真实事件证据，其后SC3当前Eval/Context、SC4正式Saga/TaskRun。仍无主安装真实首链完成证据。
 
 SC2：实现当前原事件启动Evidence存储并升级Task准备为真实PG Run验证；修复初始SQL状态hash与Python规范差异的误拒绝，保留历史记录。20 passed/1原严格xfail，新增写后撤销回滚启动证据8 passed；AR2 1896/174/93无错误。下一项SC3当前Eval/Context，SC4正式START与TaskRun仍未完成。
+
+SC3-1：首阶段当前技能发布血缘派生Eval合同已实现；真实PG评测/发布/合同14测试通过（模型/安装依赖明确fixture）。回调中撤销/重复合同会回滚。下一SC3-2本任务Context冻结组合，之后SC4真实Compilation/TaskRun接入；首链未完成。
