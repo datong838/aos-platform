@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "aos.developer-business-window-aggregate/v1",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "siteId": 1,
+  "startedAt": "2026-09-14T12:25:51.762151+00:00",
+  "completedAt": "2026-09-14T12:25:53.037765+00:00",
+  "elapsedSeconds": 1.276,
+  "windowStartUnix": 1786796751,
+  "windowEndUnix": 1789388751,
+  "windowBoundaries": "inclusive-start-inclusive-end",
+  "orderLineWindowBasis": "existing-same-site-parent-order-created-time",
+  "accessMode": "read-only",
+  "isolation": "repeatable-read",
+  "tableEngines": "InnoDB",
+  "sourceRoute": "current-P02-meta-source-configuration",
+  "identifiersExported": false,
+  "businessWrites": false,
+  "formalFulfillment": false,
+  "historicalSnapshotClaim": false,
+  "queryHash": "sha256:fc2ca83b39f5d5d0a3548998764149434c563049bc41b06d95fd86631719ca35",
+  "results": {
+    "Order": [
+      {
+        "parentState": "active",
+        "businessWindow": "earlier",
+        "rowsObserved": 120,
+        "missingCustomerRows": 27,
+        "minCreatedUnix": 1769260354,
+        "maxCreatedUnix": 1786169208
+      },
+      {
+        "parentState": "active",
+        "businessWindow": "last30days",
+        "rowsObserved": 5,
+        "missingCustomerRows": 0,
+        "minCreatedUnix": 1787385696,
+        "maxCreatedUnix": 1788936885
+      },
+      {
+        "parentState": "deleted",
+        "businessWindow": "earlier",
+        "rowsObserved": 60,
+        "missingCustomerRows": 5,
+        "minCreatedUnix": 1769260879,
+        "maxCreatedUnix": 1781519315
+      }
+    ],
+    "OrderLine": [
+      {
+        "parentState": "active",
+        "businessWindow": "earlier",
+        "rowsObserved": 161,
+        "ownCreatedUnknownRows": 161
+      },
+      {
+        "parentState": "active",
+        "businessWindow": "last30days",
+        "rowsObserved": 5,
+        "ownCreatedUnknownRows": 5
+      },
+      {
+        "parentState": "deleted",
+        "businessWindow": "earlier",
+        "rowsObserved": 69,
+        "ownCreatedUnknownRows": 69
+      }
+    ],
+    "Product": [
+      {
+        "productState": "active",
+        "rowsObserved": 39
+      },
+      {
+        "productState": "deleted",
+        "rowsObserved": 8
+      },
+      {
+        "productState": "off-shelf",
+        "rowsObserved": 18
+      }
+    ]
+  }
+}

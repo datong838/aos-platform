@@ -661,3 +661,19 @@ AnalysisSnapshotContext复用原AnalysisContinuationContext，固定原completed
 组合10场景与原AnalysisContinuationContext5项合计15项覆盖。首次规范JSON拒绝计量用途tuple，修复为证据载荷数组而保留Owner原计量不变；重跑14 passed/1测试夹具失败29.21秒（list iterator不属于原生成器延迟合同），将夹具改成真正generator后该项5.78秒通过；未修改原全局guard。正常、原组不符、cutoff差1微秒、actor/control/purpose不符、结果改动、release撤权均验证。实际完成组用PG原对象/图/Dataset回执；分析源上下文为明确named double，另跑原上下文5项门禁；不能合称真实完整首链验收。
 
 AR2扫描1929/187/93五类错误为空，无主数据/安装或外部动作。下一波SC4-5i9：真实只读聚合核对当前30日订单/订单行群体、删除/未知/未来时间及客户缺口分布，输出无客户标识计数；决定首个正式业务事实计划用实际经营统计还是启动计划研究，不能先假定有近期样本，更不能改legacy initial_store_analysis v1的空分母和100%阈值。其后固定事实查询、原DataRequirementOutbox消费者与Fulfillment仍需组合。
+
+### SC4-5i9 真实经营窗口核验方案
+
+新增同证据目录audit-real-business-window.py，复用前次诊断中的当前P02私有配置读取方法。限定org-org/dev-project、site_id=1，在单InnoDB REPEATABLE READ READ ONLY事务聚合ns_order/ns_order_goods/ns_member/ns_goods；query参数为核验开始UTC整数秒及前30日，报告明确诊断观察而非历史快照或正式质量回执。
+
+订单按删除状态和created_time有效性/30日窗/历史/未来分组计数；只报聚合总量、客户引用缺失计数、最早最晚创建秒。订单行以真实父订单创建时间归窗，单列自身create_time未知，缺父保留unknown。商品按显式删除/上架状态汇总，确认可用启动研究样本。不要输出客户/订单标识、金额、电话、评价正文或配置。结果存在时任何source调用前拒绝；总30秒、单次失败不盲目重试，无source/main业务写入。成功后按真实数据选择固定事实规则/首计划，legacy v1未改。
+
+### SC4-5i9 真实经营窗口核验结果
+
+2026-09-14 20:25:51—20:25:53北京时间，当前P02配置，同InnoDB REPEATABLE READ READ ONLY事务，1.276秒，无客户/订单标识或财务数据导出，无业务写。窗口2026-08-15 20:25:51至09-14 20:25:51（此诊断两端含），不声称历史快照/Fulfillment。
+
+Order185：active125=历史120+近30日5，deleted60均历史；近30日5笔客户缺口0，27笔active缺客户全在历史120笔中，另5笔deleted缺客户仍历史。近期创建最早08-22 16:01:36、最晚09-09 14:54:45。这里只是未删除订单，不代表支付/成交，不能给出GMV、利润或增长因果。OrderLine235：父active历史161+近期5+父deleted历史69，自身create_time235条全未知；父订单均可定位且其创建时间可归窗，没有missing-parent/unknown/future分组。商品65=上架39+下架18+删除8；此前57是未删除口径，并非57上架。
+
+计数与先前185/235/65以及客户32=27+5对账。脚本重复执行在任何source调用前ValueError拒绝，原证据未覆盖。固定业务计量必须按用途和窗口先确定范围：历史客户缺口不能污染近期订单群体，也不能被抹掉；订单行用真实父订单时间而非造本行时间；商品在售、未删除两口径分列。5笔样本只能支持描述和经营假设，不能作强统计结论。
+
+下一波SC4-5j1：实现受控快照的声明式业务群体选择（维度/自身时间/父订单时间）及计数分区，保留unknown行，不把缺父/坏时间从质量分母消失；完整raw cohort保持用于关联和溯源，业务窗口不物理删数据。以5笔近期/历史客户缺口、39上架/18下架、订单行未知自身时间作为测试案例。随后字段质量/人群政策与正式QualityEvidence、原DataRequirementOutbox消费合并；legacy v1阈值不动。主库/安装未变。
