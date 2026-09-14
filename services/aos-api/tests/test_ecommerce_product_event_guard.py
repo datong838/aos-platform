@@ -9,11 +9,12 @@ from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_product_event_policy import ProductEventPolicyDraft
 from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
 from aos_api.pipeline_snapshot_materialization import SnapshotMapping
+from aos_api.pipeline_snapshot_materialization_v3 import SnapshotMappingV3
 from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_product_event_guard import ProductEventPolicyGuard
 
 
-def fixture():
+def fixture(version='v1'):
     body,record=case();context=ProductEventPolicyDraft.model_validate(body)
     policy=dict(schemaVersion='aos.ecommerce.product-event-schedule-policy/v1',
         tenant={'orgId':context.org_id,'projectId':context.project_id},schedulePolicyId=context.policy_id,
@@ -25,6 +26,8 @@ def fixture():
     dispatch=SimpleNamespace(installation_id=context.installation_ref.installation_id,
         generation=context.generation,execution_epoch=context.execution_epoch)
     mapping=SnapshotMapping(record.read_spec,(),(),(),'niushop','site_id','1','+08:00',())
+    if version == 'v3':
+        mapping=SnapshotMappingV3(mapping,(),(),'state','state',((1,'ACTIVE'),))
     class Connection:
         now=context.effective_from
         def execute(self,query,params=()):
@@ -46,8 +49,9 @@ def run(data,execute=lambda: 'saved'):
         dispatch=dispatch,actor='fixture',execute=execute)
 
 
-def test_original_transaction_and_synchronous_result():
-    data=fixture()
+@pytest.mark.parametrize('version', ['v1','v3'])
+def test_original_transaction_and_synchronous_result(version):
+    data=fixture(version)
     assert run(data)=='saved' and data[4]==['source-owner']
 
 
@@ -69,10 +73,11 @@ def test_dispatch_epoch_drift_and_owner_denial():
     with pytest.raises(PermissionError):run(data,lambda:pytest.fail('must not execute'))
 
 
-def test_expiry_before_and_during_callback():
-    data=fixture();data[3].now=data[0].effective_until
+@pytest.mark.parametrize('version', ['v1','v3'])
+def test_expiry_before_and_during_callback(version):
+    data=fixture(version);data[3].now=data[0].effective_until
     with pytest.raises(PermissionError):run(data,lambda:pytest.fail('must not execute'))
-    data=fixture()
+    data=fixture(version)
     def crosses_window():
         data[3].now=data[0].effective_until
         return 'pending'

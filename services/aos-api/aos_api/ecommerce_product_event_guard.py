@@ -10,6 +10,7 @@ from aos_api.ecommerce_product_event_control_qualified_owner import ProductEvent
 from aos_api.pipeline_source_selection_store import SourceSelectionRecord
 from aos_api.pipeline_snapshot_materialization import SnapshotMapping
 from aos_api.pipeline_snapshot_materialization_v2 import SnapshotMappingV2
+from aos_api.pipeline_snapshot_materialization_v3 import SnapshotMappingV3
 from aos_api.tenant_scope import TenantScope
 
 
@@ -58,7 +59,7 @@ class ProductEventPolicyGuard:
     @staticmethod
     def _during_current(transaction,context,draft,mapping,actor,execute):
         if not callable(execute):raise TypeError('synchronous Host callback required')
-        if type(mapping) not in (SnapshotMapping, SnapshotMappingV2):
+        if type(mapping) not in (SnapshotMapping, SnapshotMappingV2, SnapshotMappingV3):
             raise TypeError('compiled current source mapping required')
         context.validate_selection(SourceSelectionRecord(context.source_selection_ref,draft,mapping.read_spec,actor,None))
         if (mapping.platform,mapping.shop_id)!=(context.platform,context.shop_or_marketplace_id):

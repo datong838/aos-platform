@@ -10,6 +10,7 @@ from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
 from aos_api.pipeline_source_selection_store import SourceSelectionRecord
 from aos_api.pipeline_snapshot_materialization import SnapshotMapping
 from aos_api.pipeline_snapshot_materialization_v2 import SnapshotMappingV2
+from aos_api.pipeline_snapshot_materialization_v3 import SnapshotMappingV3
 from aos_api.tenant_scope import TenantScope
 from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
 from aos_api.ecom_consistency_store import EcomConsistencyStore, ProjectionEventEvidence
@@ -109,7 +110,7 @@ class ProductEventCandidateReader:
         scope = TenantScope(policy.org_id,policy.project_id)
 
         def current(draft, mapping):
-            if type(mapping) not in (SnapshotMapping,SnapshotMappingV2):
+            if type(mapping) not in (SnapshotMapping,SnapshotMappingV2,SnapshotMappingV3):
                 raise TypeError('compiled current mapping required')
             policy.validate_selection(SourceSelectionRecord(policy.source_selection_ref,draft,
                 mapping.read_spec,actor,None))
