@@ -388,3 +388,20 @@ SC4-5g8：a0v046 隔离 schema 与 PipelineSnapshotGroupRelationshipJournal 完�
 AR2 ar2-7 扫描 1919 模块，五类错误为空。主库仍未迁移，关系未应用，无正式 Fulfillment。代码 head 为 a0v046，主库此前确认 a0v038 未改。来源发行资产仍为测试 fixture；准备记录不能当已应用 Receipt。
 
 下一项：独立提交确认后按原 ConsistencyStore 应用原对象批次与关系，验证 Receipt 完整性、忽略项、失败恢复和旧关系处理，再接业务 Readiness。
+
+### SC4-5h1 组对象按原Owner应用与投影
+
+新增pipeline_snapshot_group_object_executor.py及完整隔离PG测试。复用ControlledSnapshotExecutor.resume_saved（绝不execute/源重读）、原ConsistencyStore/derived journal/Projector/dataset Receipt，不另建对象写入路径。先独立事务保存关系准备并确认事务和连接退出成功；按control resource ID固定顺序逐原run续跑，每阶段之前重新核对整组准备hash/current规则与原输入，单表阶段内部仍走原当前权限。不能在持有整组run行锁时打开其他连接续跑，避免自己阻塞自己；因此对象阶段为可恢复的逐run提交，不声称全组对象原子提交。
+全部单表完成后，在原GroupAssessmentOwner当前回调内读取同一准备，逐原ControlledIngressJournal调用read_saved_projection_completion（原Store重核原command Receipt、当前对象payload/outbox和投影）；所有pending=0才返回对象阶段完成。历史dataset成功标签不能代替当前重核。输出run/dataset/completion及原manifest/assessment hash，不完成schedule runs、不授予整组Readiness、不称关系已应用。
+故障恢复：准备提交ack丢失不得启动应用；第一成员应用后中断可从原Receipt/已保存dataset重放，第二成员继续，不能重新读源。现存对象被更新导致旧Receipt不再当前则最终拒绝，不以历史成功掩盖；禁入/取消前后检查。测试使用原完整PG一致性/Projector/dataset fixture接新Shop+Weapp组，源及签名资产仍替身；所有测试表均隔离schema，主对象不变。
+
+
+# 组对象原链路应用验证
+
+SC4-5h1：ControlledSnapshotGroupObjectExecutor 完成。先独立提交关系准备并确认退出，再按原控制顺序调用 ControlledSnapshotExecutor.resume_saved，复用真实 ConsistencyStore、派生准备、Projector 与 dataset Receipt。阶段间复验整组当前准备，最后逐原 command 重核当前权威对象、outbox 和投影，全部 pending=0 才返回对象阶段完成。
+
+9 项完整 PostgreSQL 回归通过，14.95 秒（新 5 项和原单表 4 项）。Shop+Weapp 两成员产生 2 份权威对象/Receipt/投影对象/数据集/历史记录，运行仍 running，关系写入 0。第一次成员完成后中断可重放首成员并续跑第二，源调用保持一次；准备 commit ack 丢失不开始应用。历史数据集成功但权威对象已被原 Store 更新时，最终拒绝旧组结果。
+
+AR2 扫描 1920 模块，五类错误为空。测试表为完整隔离 PG schema，源和发行资产仍是明确 fixture；主数据/安装未改变。对象阶段是逐成员可恢复提交，不声称整组对象原子事务，也不宣告整组 Readiness 或 Fulfillment。
+
+下一项：严格关系写入模式，拒绝悬挂或被新版本覆盖的关系，保留原通用写入行为；随后固定关系命令准备、提交确认、实际应用及 Receipt/投影核验。
