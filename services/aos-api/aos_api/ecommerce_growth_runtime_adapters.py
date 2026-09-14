@@ -1316,16 +1316,26 @@ class AnalysisAdvanceHostService:
     def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
-    def _start_lineage(self, *, transaction, scope, command, occurred_at):
+    def _prepare_start_run(self, *, transaction, scope, command, occurred_at):
+        _strict_analysis_start_command(command)
+        from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRunNotFound
         factory = TransactionBoundConnectFactory(transaction, scope)
         cases = BusinessInvestigationCaseStore(factory)
         runs = BusinessInvestigationRunStore(factory)
-        receipts = BusinessInvestigationCompilationReceiptStore(factory)
-        binder = BusinessInvestigationRuntimeBinder(AipTaskStore(factory))
         case = cases.get(scope, command["caseRef"]["resourceId"])
         run_id = "analysis-" + hashlib.sha256(
             "\x1f".join((*scope.key, command["idempotencyKey"])).encode()
         ).hexdigest()[:32]
+        try:
+            existing = runs.get_verified(scope, run_id)
+        except BusinessInvestigationRunNotFound:
+            pass
+        else:
+            if (existing.authority.version != 1 or existing.authority.lifecycle.value != 'PREPARING'
+                    or existing.authority.control.value != 'RUNNING'
+                    or existing.authority.created_by != self.executor_identity):
+                raise ValueError('original analysis Run is no longer an initial creation candidate')
+            occurred_at = existing.authority.created_at
         result = EcommerceBusinessInvestigationApplication(
             case_store=cases,
             run_store=runs,
@@ -1344,7 +1354,13 @@ class AnalysisAdvanceHostService:
             actor=self.executor_identity,
             occurred_at=occurred_at,
         )
-        run = result.run
+        return result.run
+
+    def _start_lineage(self, *, transaction, scope, command, occurred_at):
+        factory = TransactionBoundConnectFactory(transaction, scope)
+        receipts = BusinessInvestigationCompilationReceiptStore(factory)
+        binder = BusinessInvestigationRuntimeBinder(AipTaskStore(factory))
+        run = self._prepare_start_run(transaction=transaction, scope=scope, command=command, occurred_at=occurred_at)
         run_ref = InvestigationExactRef(
             resource_type="BusinessInvestigationRun",
             resource_id=run.authority.run_id,

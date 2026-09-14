@@ -88,3 +88,7 @@ SC4-3c4实测发现：原LogicPublicationStore发布只更新published_version�
 不创建ActionApprovalEvent，不冒充任何人批准本Task；ActionProposal保持drafted，启动决定的依赖快照记录InitializationAuthority(kind=current-event-control-initialization)、原控制Receipt、Occurrence、意图hash及真实执行身份。通用StartGate仍拒绝draft Proposal和初始化类型，普通恢复/外部租约仍拒绝。只有专用原子暂停门能使用该来源许可，且最终仍零步骤/零外部作用。现存人工拒绝、撤回或已开始的评审不能被派生路径绕过；真实经营方案的人工评审不变。
 
 先实现/验证该派生路径（SC4-4a），再接事件自动准备/封闭Host（SC4-4b）。修改aip_action_policy.py及ecommerce_analysis_bootstrap_start.py，新增/扩充实际PG测试。既有SC4-3c4独立审批验证作为一种受支持路径保留，不把其fixture视作主租户审批。
+
+### SC4-4b1 共享Run创建与稳定重放
+
+从AnalysisAdvanceHostService._start_lineage提取_prepare_start_run供正式事件准备和最后Host绑定共用。仍使用原Application/RunStore、原确定性run_id与幂等键；若已存在，必须是原Host创建、版本1、PREPARING/RUNNING，复用其原createdAt重新走原幂等请求，不用新的重试时间重造正文。错误Case/不同原意图仍由原权威拒绝。修改ecommerce_growth_runtime_adapters.py，新增test_analysis_start_run_preparation_pg.py；不绕过最终CompilationReceipt和RuntimeBinder，原严格xfail暂保留。
