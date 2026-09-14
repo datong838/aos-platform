@@ -300,3 +300,13 @@ SC4-5f4c：当前配置绑定组读取完成。新增pipeline_selected_snapshot_
 
 
 SC4-5f4d：ControlledSnapshotGroupIngress完成，原组认领独立提交确认后一次读取，全部原ControlledIngressJournal输入和真实哈希manifest同事务保存。47项隔离PG组合测试通过（14.19秒），含新增13项、旧单表、组认领与schema；AR2扫描1914模块五类错误为空。失败/取消/读后禁入/第二输入失败整组回滚，认领保留且不重读；输入commit成功但ack丢失能完整零源重放。无对象apply/运行完成/Fulfillment，无主库迁移或真实源调用。本波fixture不是主真实安装验收。下一项：对同批对象开展关系/软删/业务窗口的方案与实际字段差异核对，采用包内声明与通用校验落实，不沿用未核验旧link别名。
+
+### SC4-5g1 同批真实关系及业务窗口审计
+
+新增scripts/audit_niushop_snapshot_relationships.py及test_niushop_relationship_audit.py，先输出仅诊断统计，不改旧ec_link_builder，不落链接或业务Receipt。输入仅本次同一组源读取后规范转换的对象，固定12类型/对象主键唯一/无Link行；引用使用严格正数整数或规范ASCII数字字符串，多分类严格逗号拆分。对现有13种有键关系记录候选引用数、有效父对象匹配、父缺失、零值未设置、键缺失/错误、软删端点。Order.fromWeapp明确当前没有映射键，不能把orderFrom字符串当weapp_id。
+OrderLine业务窗口只继承匹配父Order.createdAt，并标注parent-order-createdAt；源createTime零值不造数据，缺父/缺时间阻断相应覆盖率。支付只按已限定普通OrderPayNotify的orderId关联，不把当前交易号不同判作不存在；当前Order映射未包含out_trade_no，交易号二次核验明确未覆盖。按OrderLine.orderNo/memberId、Payment.memberId、Shipment.memberId对父Order做一致性计数，不暴露值。软删或未设置不是自动删除关系，正式链接Owner须后续明确策略。
+开发者真实只读重验继续使用当前P02连接配置、私有非缓存单个InnoDB事务和候选1.14.0精确映射；原始源行与对象不落盘，只落统计/源哈希/候选树哈希/观察时段。无源写入、主对象应用、正式Fulfillment。对真实缺陷按结果写下波开发要求，不用通过测试掩盖业务质量。
+
+
+SC4-5g1：同批真实关系审计完成。15测试通过（4.55秒）；真实09:07:08.053263Z–09:07:09.575589Z同一InnoDB只读事务12类型，统计保存real-relationship-audit-20260914.json。235明细/203普通支付/19发货均匹配父订单；订单号和memberId交叉字段235/203/19无不一致。235明细自身时间均未知，但父订单创建时间均可用；其中69关联软删订单。32订单、1评价缺少当前范围客户，不得客户质量宣绿。65商品分类当前诊断解析拒绝，原源Goods.php:2120–2121使用前后逗号封装，下一波核实/严格支持该格式。源schema实际有weapp_id但P05未映射，后续候选需按原schema/masking补齐，不能推算或读取weapp_openid。
+正式关系写入/客户修复/窗口读模型/Fulfillment仍未完成；不跨店扩读、不补造客户、不以重复统计充当推进。下一项：分类分隔格式严格解析修正及对应真实重验，再包内关系声明及P05关联字段候选。
