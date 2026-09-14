@@ -1,0 +1,68 @@
+# 原快照数据交付与分析续跑技术方案
+
+基线：m1 ec43ca4c，AOS-000573，2026-09-15。承接snapshot-fulfillment-continuation-design.md的l6e，不能替代原业务目标或八场景验收。Rules：方案先行、单写者、原状态Owner、Receipt-first、双租户、最小更改、不push、230 L0挂起；内部测试授权已具备。
+
+## 目标与边界
+
+数据自然到达并经完整十二源核验后，复用原业务Evidence、冻结TaskBrief、EvidenceBundle和当前SourceReadinessReceipt交付原DataRequirement，再恢复同一个暂停的TaskRun与同一个WAITING_DATA业务Run。不得新建第二个Run替代原暂停任务，不以“ready”布尔或历史Receipt直接恢复，不更改质量阈值，不伪造SemanticHydrationReceipt或SourceMappingRevision。
+
+当前l6b/c/d已经完成原事实内容、Brief/Bundle和就绪回执接线及隔离PG验证。安装/源样本/分析起点/Provider依赖仍有明确named fixture；主库最后只读核得a0v_038，代码迁移基线仍a0v_048，不能宣称本轮代码已在主系统运行。真实首链、八场景和观察仍未完成。
+
+## 已核对原权威
+
+- data_requirement_contracts.py：DataFulfillmentReceiptRecord允许真实EvidenceBundleRevision，不强制所有交付必须是水合。requestedOutputs仍是原Requirement约束，不能无视它声称交付。
+- data_fulfillment_store.py与ar2_008_fulfillment_authority_payload.py：原bind校验完整内容hash、精确当前Requirement head、actor/idempotency并保存原authority_data；原Store不推断业务完成。通过TransactionBoundConnectFactory保留外层事务，禁止另连接提前commit。
+- source_readiness_receipt_store.py与ecommerce_analysis_snapshot_readiness.py：当前完整12评估与Requirement覆盖、有效期、不可变回执已实现，回读须current核验。
+- ecommerce_analysis_snapshot_brief.py与ecommerce_analysis_snapshot_bundle.py：原冻结Brief/Bundle精确ref、内容与覆盖、撤销；观察fresh明确不等于源交易时间，license_summary仍pending-policy-review，不能改为无条件调用许可。
+- aip_business_investigation_fulfillment_saga.py：旧水合路径强制真实SemanticHydrationReceipt与其输出，保持原路径；复用其独立tenant/runtime/readiness/evidence/结果验证规则时必须匹配真实类型，不构造假的旧返回DTO。
+- ecommerce_growth_runtime_adapters.py：原AnalysisAdvanceHostService负责strict命令、当前dispatch、旧resume_data、统一AnalysisRuntimeReceipt、Run/Task结果复验。原Receipt固定字段含mappingRef；快照分支不能将安装Mapping改名SourceMappingRevision。
+- ecommerce_analysis_data_resume.py、aip_task_store.py：原Task恢复只接受exact内部会话，锁原Task/TaskRun后检查版本、暂停状态、依赖和checkpoint输入hash；成功恢复与run.control Receipt由原Store写入。
+- ecommerce_business_investigation_run.py：原resume_after_data按expected state version、exact pending requirement、RUNNING控制与无unknown状态执行WAITING_DATA→PREPARING，原事件与幂等Receipt必须复用。
+- ecommerce_analysis_continuation_origin.py/continuation_context.py与pipeline_source_selection_owner.py：原初始化、当前dispatch/安装、来源控制仍是外层权威；安装行锁/控制前后检查不能省略。
+
+## 交付合同
+
+第一段只接受requestedOutputs明确为EvidenceBundleRevision的原当前Requirement；未支持的输出组合明确阻断，不能用Bundle替代Dataset/DataProduct/Hydration。后续发现现存需求不兼容时，必须按原Requirement/Run Owner的修订流程登记处理，禁止直接改旧payload/hash或跳过pending绑定。原新的数据请求可使用已有requestedOutputs参数选择EvidenceBundleRevision，来源仍是已安装只读经营分析流程，不由浏览器自报权限。
+
+新AnalysisSnapshotFulfillment接收原SnapshotBundle、SnapshotReadiness及精确Business/Readiness/Bundle引用。在当前原Owner内验证：同scope/actor、同Requirement/窗口/cutoff、完整12、全部质量合格、Bundle覆盖complete/fresh、原Brief Task/Checkpoint/runtime一致、原请求输出类型、原回执当前未过期。artifactRefs只写真实EvidenceBundleRevision；sourceReadinessRef转换原表示并携带真实receiptId。Fulfillment ID和幂等键绑定同一Requirement/Bundle/Readiness/actor及固定模式，fulfilledAt采用首次稳定身份绑定时间，不因重试now变化破坏幂等。保存后原DataFulfillmentStore.read_exact全字段复验，原依赖变化回滚。首次生成与旧回执重放必须显式区分，旧成功仍current核验。
+
+不得把Bundle的pending-policy-review许可文本替换为passed。数据承接不等于模型调用、预算或执行许可；后续能力调用仍走原各自许可/预算/审批Owner。
+
+Fulfillment稳定时间的具体规则：身份由上述固定exact引用派生；准备前按scope+派生身份取得事务advisory锁，查询原表同ID的hash后调用原read_exact复验。已有记录复用其真实fulfilledAt，重新核当前事实；无记录时只取一次DBclock作为fulfilledAt再走原bind，不能用源观察时间伪装交付发生时间，也不能每次重试重造now。原Store仍拥有最终幂等冲突和Receipt写入权威。
+
+## 续跑采用显式模式
+
+新增runtime.analysis.resume_snapshot命令，保留runtime.analysis.resume_data原语义。命令使用原START/RESUME共同血缘字段，增加exact BusinessEvidence和安装SnapshotReadinessPolicy引用；必须有prior Receipt/Plan、Requirement/Fulfillment/Readiness/Bundle/Checkpoint、观察截止和完整requestHash。快照命令不接受SourceMappingRevision字段；源的十二个Mapping/SourceConfig/Schema/Masking由原当前SourceEvidence和安装守卫证明。统一AnalysisRuntimeReceipt仍复用原字段与原Store，快照mappingRef明确null，不能填假引用；命令operation与requestHash绑定模式，回放按模式选择严格验证。
+
+新快照结果合同只列真实Fulfillment/Readiness/Bundle/Checkpoint/Task/TaskRun，不含假hydrationReceiptRef。原水合Saga和其结果合同不删字段、不放宽类型。Task与业务Run仍各执行一次原CAS；统一结果继续进入原分析后续流程，不能只把状态改成running就宣布业务完成。
+
+## 同一事务中的前后守卫
+
+待数据只读守卫会复验WAITING_DATA和paused，所以不能把状态转换放在其回调里。不得把整个current检查结束后返回一个可跨事务复用的许可对象。
+
+采用原初始化/dispatch→原当前完整投影与安装控制→原Binding的外层守卫，覆盖整个事务。内部阶段A进入原Pending/Business/Brief/Bundle/Readiness当前守卫，准备并复验exact Fulfillment，固定所有输入hash、Task/TaskRun版本、业务Run state version与checkpoint；阶段A完全退出待数据守卫后才能阶段B转换。外层安装、投影及Binding守卫继续有效，实例保持同tenant、同数据库backend/transaction id及active作用域，禁止离开事务或串改命令。
+
+阶段B锁原Run/TaskRun/Task和当前Requirement head，再比较阶段A精确ref/版本及原保存数据，执行原TaskStore.resume_run与RunStore.resume_after_data；先后任一步失败均由原外层事务回滚。TaskStore仅增加exact新内部session类型，不允许任意协议对象或通用标记绕过bootstrap限制。Session的authorize_task_resume要求固定模式/actor/幂等键/expected版本/真实原会话当前性，不能拿任意TaskRun套用。
+
+转换后不再调用要求旧WAITING_DATA的接口判断成功。用原不可变记录、当前安装/投影/Binding守卫、原Requirement/Bundle/Quality/ref保存值和期限检查，再核原Task/TaskRun状态版本+run.control Evidence、原业务Run状态Receipt、统一AnalysisRuntimeReceipt。允许变化的只有预期两个原状态；其他依赖变化或超过原期限必须拒绝。跨连接Store投影仍按原前后复验，不能声称Host与Store跨库原子性。
+
+未知提交结果先读原目标Receipt并reconcile，不重发状态命令；取消、superseded安装、依赖过期/撤销、跨租户或版本冲突保持关闭。初始模型调用/产物生成不属于本段完成证明。
+
+## 已登记实施波次与文件
+
+| 波次 | 具体文件 | 退出条件 |
+|---|---|---|
+| l6e1 | 本方案、原continuation总方案、进度与接续清单 | 原权威核对、风险和下一项登记；设计不是实现 |
+| l6e2 | 新增aos_api/ecommerce_analysis_snapshot_fulfillment.py、tests/extension_runtime/test_analysis_snapshot_fulfillment_pg.py；必要时只在原Bundle Owner抽内部共享上下文 | 原Fulfillment实际保存、exact重放、输出类型/需求/覆盖/current/rollback验证，不恢复Run |
+| l6e3 | 新增aos_api/ecommerce_analysis_snapshot_resume_contracts.py、tests/test_analysis_snapshot_resume_contracts.py | 严格快照命令/结果类型、hash、引用/模式，不接受假水合或伪造mapping |
+| l6e4 | 新增aos_api/ecommerce_analysis_snapshot_resume_context.py及extension_runtime对应PG测试 | 上述两阶段current外层结构，事务身份/锁/预期版本与允许变化范围，未授权不转换 |
+| l6e5 | 新增aos_api/ecommerce_analysis_snapshot_resume.py；修改aos_api/aip_task_store.py、ecommerce_growth_host_composition.py、ecommerce_growth_runtime_adapters.py；对应tests/aip与extension_runtime测试 | 原Task与业务Run一次CAS+统一Receipt，旧resume_data完整回归、取消/unknown/reconcile/版本失败与原回滚 |
+| l6e6 | 新增extension_runtime/test_analysis_snapshot_resume_chain_pg.py及证据 | 原真实初始Task/Run/Checkpoint/Requirement，不用named paused起点冒充端到端；源/签名/Provider fixture边界明示；状态后继续读结果 |
+| l6f | 原DataRequirement Outbox消费与续跑接线，实施前补具体文件 | 自然自动准备/交付/续跑，重复/重启/未知结果不产生第二套任务 |
+| l6g及后续 | 原主升级/安装、全量组、真实首链与八场景总清单 | 真实数据/能力/可读建议/评审续跑/复盘Wiki、连续观察，再作发布判断 |
+
+若l6e2等暴露原接口或requestedOutputs缺口，先在本表登记最小修复与测试，再改代码。大步骤不因测试变绿提前完成。测试同tenant即使schema不同也共享原投影advisory锁，PG执行串行；纯校验可独立进行。
+
+## 本次只读主库核对的限制
+
+2026-09-15通过既有容器内部数据库用户（不读取/输出口令）对aos_meta_head执行BEGIN READ ONLY并ROLLBACK，确认schema a0v_038、data_requirement_revision的业务合同在payload。明确org-org/dev-project后按原head关联查询本连接未返回当前需求行；不能据此推断其他服务连接或其他数据库没有任务，也不能凭空确定某个真实pending需求的requestedOutputs。实施按当前Owner读取实际Requirement严格检查，主环境联调时再确认运行配置与真实任务。
