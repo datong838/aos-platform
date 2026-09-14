@@ -275,3 +275,11 @@ SC4-5e7b候选：1.11.0从精确1.10.0树d17d81fefde3e8159c1c18b8a361f6bdac12835
 新增a0v_045_snapshot_group_journal.py，父a0v_044；只执行隔离PG测试，不执行主/共享库迁移。三表：pipeline_snapshot_group_claim（tenant/group UUID/actor/request hash/member count1..12/有限binding JSON），pipeline_snapshot_group_member（group/ordinal/run_id，FK原pipeline_controlled_source_claim，run唯一禁止复用不同组），pipeline_snapshot_group_input（同group/request hash，读取起止时间、明确InnoDB可重复读、成员输入引用manifest/hash）。所有表RLS FORCE、runtime仅SELECT/INSERT、拒绝UPDATE/DELETE/TRUNCATE。
 延迟约束提交时核对group完整成员数/连续ordinal/原claim actor；输入manifest每成员runId/envelopeHash/rowsHash/rowCount严格形状、唯一且对应本组和原ecommerce_ingress_command真实哈希。函数使用TG_TABLE_SCHEMA限定原表，避免search_path替换。保存组输入必须已有所有原输入并与本组对应，失败整事务回滚。
 此schema是完整性约束，不是源读取授权或业务Fulfillment；应用Owner随后必须在组当前权限下同事务创建全部新原claim再创建组（禁止把旧无组claim追认为可重新读取），提交确认后只读一次、同事务保存全部原输入和组manifest；原应用Owner仍负责request/manifest canonical hash和当前权限复验。测试验证缺成员/重用run/错actor/错hash/部分输入/跨租户/不可变和正常提交，现有Ingress fixture只提供真实基础行，不证明组执行已接通。
+
+### SC4-5f4b 组认领Owner
+
+新增pipeline_snapshot_group_claim_owner.py与test_snapshot_group_claim_owner_pg.py，Lease A0-V-SC4-SNAPSHOT-GROUP-CLAIM-OWNER。构造精确PipelineSourceClaimOwner，内部组权限固定复用PipelineSnapshotGroupOwner。输入仅当前refs/run绑定、actor、tenant、group UUID，不接受调用者声明的current group或许可。原当前控制固定排序后以完整原draft/控制ref/run绑定构造canonical request（复用原Ingress _digest，前缀sha256）；持久化大小界限与schema一致。
+新group必须在同事务逐一reserve原claim且全部created=True，任何既有无组claim立即拒绝并回滚本事务新claim；之后写group/head+member。原group重放验证request/hash/完整成员列表并逐一read_current原claim，不新reserve、不源读取、不改运行状态。read_current只接受已存在组，不生成。方法不commit，调用方必须确认提交成功后才可能进入后继源读Owner；created标志不是源权限。中途当前组变化由外层原组Owner再核验并回滚。
+测试原认领与组原子提交/同key精确重放、换run或actor/缺组、先前单独claim拒绝、事务回滚保持预算与组为空、原控制/运行停止时拒绝重放；使用真实隔离PG源claim和组schema，签名资产明确fixture。组输入保存与源读取仍下一子项。
+
+SC4-5f4b加固：reserve先要求调用者已有事务，再在其内使用保存点；即使调用者捕获组失败后提交外层事务，也撤回本组已新增claim。不会在idle连接自动创建并提交新事务；原既有claim保留。新增真实PG反例先证实半组泄漏再修复。
