@@ -43,3 +43,7 @@ SourceReadinessService增加专用已安装快照计算入口，复用原_readin
 - 后续仍按总清单l6e原Run/TaskRun snapshot恢复、l6f原DataRequirement Outbox消费、l6g完整组大样/主升级安装/真实首链/八场景/连续观察及发布判断执行。
 
 本方案不削减原质量阈值，不因费用或Provider速度抹掉失败；小样/零业务的产品事实版本另行方案处理。不创建第二个Run/Task，不发送经营消息，不执行商城修改。新增安装候选待真实构建签名和安装阶段处理。发现新接口缺口先补本表与清单，再编码。
+
+### l6d2 编译合同细节
+
+编译函数接收原FactQualityPolicy和SnapshotRelationshipQualityPolicy，检查类型、两者quality hash相等、purpose已由原关系策略支持；文档字段集合严格为schemaVersion/fieldPolicyHash/relationshipQualityPolicyHash/purposeCode/freshnessMode/reconciliationMode/queryBindingId/sources。sources必须与原CANONICAL_QYH_SOURCES有序精确相等且原field facts唯一完整覆盖同12类。queryBindingId仅允许1..200位规范ASCII标识符，首字母或数字，后续字母数字._:-，不接受URL、空格或路径；这只是选择名称，不表示数据库绑定存在。输出frozen dataclass及规范hash，持有tuple，不含ready/pass字段。测试使用冻结1.21策略文件经原编译器得到输入，验证全12而非两类替代样本。
