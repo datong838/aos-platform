@@ -291,3 +291,12 @@ SC4-5f4b加固：reserve先要求调用者已有事务，再在其内使用保�
 
 
 SC4-5f4c：当前配置绑定组读取完成。新增pipeline_selected_snapshot_group.py，当前sourceConfigurationRef/direct状态严格核验，私有连接一次整组读取，原成员最严格界限不可放宽。52项测试通过（3.86秒），AR2 ar2-7扫描1913模块、五类错误为空，memory revision AOS-000573 GREEN。测试中的权限/连接均明确替身；本波无真实源调用，无主库迁移/对象写入/Fulfillment。下一项：组认领提交确认后，真实原输入与manifest原子保存、精确重放与未知结果禁止重读。
+
+### SC4-5f4d 原输入组执行器
+
+新增pipeline_controlled_snapshot_group_ingress.py、隔离PG test_controlled_snapshot_group_ingress_pg.py。精确原SourceClaimOwner/ConsistencyStore与可信独立连接工厂；事务一原组reserve、连接及事务退出确认提交。事务二持有全部原当前组控制，read_current记录比对；有组input时校验canonical manifest/request和全部原ControlledIngressJournal绑定/哈希后重放，零源调用。无input且不是本次新认领则OUTCOME_UNCONFIRMED，不重试。禁止已有个别独立input拼为同读组。
+只读一次当前配置绑定组结果；每成员按原compiled mapping、同一completedAt materialize，原normalize/build_batch/save_for_running_schedule或save_empty；组清单使用真实runId/原envelopeHash/observed_rows_hash/rowCount，保存实际读起止、requestHash、canonical manifestHash。全部原输入与组清单同一事务提交；任一步失败撤销全部新输入，已提交claim仍在，重放不再读源。组当前Owner返回后复验，取消/期限前后检查。此prepare不apply_batch、不完成运行、不创建正式Fulfillment；completed-run跨窗口恢复与schedule多绑定后继实现，不用本接口宣称覆盖。
+测试真实隔离PG约束与原journal；签名资产/连接读取明确fixture。源调用前独立连接能看到所有已提交claim；正常/空集合精确重放，源失败、保存回滚、提交确认丢失、claim后禁入、取消与半组保存失败均不重读，不留下部分input。
+
+
+SC4-5f4d：ControlledSnapshotGroupIngress完成，原组认领独立提交确认后一次读取，全部原ControlledIngressJournal输入和真实哈希manifest同事务保存。47项隔离PG组合测试通过（14.19秒），含新增13项、旧单表、组认领与schema；AR2扫描1914模块五类错误为空。失败/取消/读后禁入/第二输入失败整组回滚，认领保留且不重读；输入commit成功但ack丢失能完整零源重放。无对象apply/运行完成/Fulfillment，无主库迁移或真实源调用。本波fixture不是主真实安装验收。下一项：对同批对象开展关系/软删/业务窗口的方案与实际字段差异核对，采用包内声明与通用校验落实，不沿用未核验旧link别名。
