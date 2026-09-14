@@ -389,10 +389,14 @@ class AipAnalystQueryStore:
         )
 
     def _latest_for_update(self, conn: Any, scope: TenantScope, query_id: str) -> Any:
+        # Immutable events need no UPDATE grant. Serialize the whole query, not
+        # an old tail row which another writer can supersede with a new event.
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+            (_json(["aip-analyst-query-transition", *scope.key, query_id]),))
         row = conn.execute(
             """SELECT * FROM public.aip_analyst_query_event
             WHERE org_id=%s AND project_id=%s AND query_id=%s
-            ORDER BY sequence DESC LIMIT 1 FOR UPDATE""",
+            ORDER BY sequence DESC LIMIT 1""",
             (*scope.key, query_id),
         ).fetchone()
         if row is None:

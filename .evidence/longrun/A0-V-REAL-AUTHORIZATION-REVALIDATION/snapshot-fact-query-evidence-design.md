@@ -45,3 +45,13 @@ Evidence聚合不是丢弃来源：要求组成员完整（1至12）、每成员
 若12类中业务窗口内某类确实无行，旧v1仍EMPTY_DENOMINATOR；不能为通链补假数据或修改历史要求。应先以真实事实解释缺口；如果业务需要承认“当前无发货/无支付”本身是一项可验证事实，必须另做版本化事实定义/新Profile计划和新任务，不改变旧v1。这是业务语义问题，不是放松测试。
 
 随后按231路线/栖月汇双侧增长方案扩展八工作台真实经营计划，连续观察后才发布决策。主系统真实业务完成度与本方案开发进度分开报告。
+
+## SC4-5l4 精确实施补充
+
+新增services/aos-api/aos_api/ecommerce_analysis_snapshot_fact_query.py与tests/extension_runtime/test_analysis_snapshot_fact_query_pg.py。输入仅实际AnalysisSnapshotSourceEvidence与精确Evidence ref；execute_current/read_current都重入原当前来源Owner，不能接caller计数/窗口/actor。复用原fixed_metric和AipAnalystQueryStore；固定metric为snapshot结构与引用覆盖计数，逐fact行保留observed/eligible/valid/excluded/duplicate/unknown及字段、关系问题（确定性JSON文本）。status partial、confidence not_applicable、freshness unknown，不评分不授予Fulfillment。
+
+request绑定Evidence精确ref和原requirement ref，窗口/cutoff/expiresAt全部来自原请求；租户、Evidence与固定版本形成自动幂等key，并沿原查询Store Receipt/CAS。读取重算预期request/result全部结构，核原raw JSON、request/result hash及deadline/actor；撤销、过期、策略/投影变化拒绝。消费写后原来源守卫失败须整体回滚，调用不触发新源读取。
+
+隔离PG测试复用原Evidence/Store完成组；原analysis/pending仍named doubles。Query与Metric原DDL在ar1c隔离schema执行，测试专用连接适配只把原public表命名空间定位该schema，不mock SQL结果、不修改生产SQL或RLS。验证幂等/计数/来源/失效/撤销/故障回滚。真实12类892行运行仍单列欠项，不能由两类fixture替代。无主库迁移、无安装、无新增模型调用。
+
+SC4-5l4实际最小权限PG发现原aip8事件表只GRANT SELECT,INSERT，而AipAnalystQueryStore._latest_for_update使用FOR UPDATE导致InsufficientPrivilege；不能给fixture临时UPDATE掩盖。补入原aip_analyst_query_store.py最小修复：使用scope+query_id命名的pg_advisory_xact_lock，后读最新事件，保留原CAS/唯一sequence/append-only/RLS。事件不可变行的旧更新锁不能锁住新尾事件，事务级查询锁也消除该尾部竞争。无DDL/新增权限。新增隔离PG验证原start/reconcile/cancel、过期sequence冲突与无UPDATE授权，旧查询测试适配到相同原DDL命名空间执行。
