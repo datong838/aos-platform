@@ -185,3 +185,11 @@ SC4-5d按五项推进：安装内首装数据政策自动派生→当前受控�
 新增test_niushop_sku_candidate.py验证原树不可变/不能覆盖已有目标、实际编译与canonical normalize、下架/删除/精确金额/稳定源时间、跨店/负数/额外字段拒绝。所有记录为合成测试，不调用SSH，不发布/安装；当前真实主库仍2/12。其余9类时间缺省/关联/脱敏约束逐项处理，尤其OrderLine不能把全0创建时间伪造为有效历史时间。
 
 SC4-5e1自测修正：原Canonical ProductSku必需barcode，而旧bundle映射sku_no→skuNo不满足。已核对ec_normalizer.py既有normalize_product_sku以及ontology.py字段对应均为sku_no→barcode，新候选沿用原平台语义映射，直接保留源字符串，不生成条码、不补常量。
+
+### SC4-5e2 显式观察时间映射v3
+
+新增services/aos-api/aos_api/pipeline_snapshot_materialization_v3.py及tests/test_pipeline_snapshot_materialization_v3.py，修改pipeline_snapshot_materialization.py只增加版本分派。v1/v2原规则不动。此v3专供没有可靠源修改时间的全快照对象，配置必须显式time_basis=observation、deletion_basis=row-presence-only，状态由选中的整数字段和值表得出，不能靠常量声称ACTIVE。支持现有精确decimal/text转换，原字段白名单/店铺过滤/要求字段/身份/整批失败规则复用v1。
+
+输出source_updated_at仅为当前观测版本，properties.updatedAt/observedAt同为观测时间，并明确sourceUpdatedAtBasis=observation、sourceModificationTimeKnown=false；不生成sourceModifiedAt/不伪造历史源时间，已有业务源字段原样保留。CoreObjectRecord现有updatedAt兼容保留，所有使用此版本的质量/分析必须读明示时间语义，不能当源历史修改证明。物理缺失不推断删除；这一版本不支持带软删状态或关系声明的映射（有此类字段需另选明确v2/后继），先用于Category。
+
+拒绝占用上述保留属性、默认状态/调用者嵌套任意对象、不合法时间基准/删除基准、未知状态、跨店/重复/额外字段；输出直接通过原canonical normalize验证。此波只实现纯映射机制，不改主库或安装、不生成业务Fulfillment。Category候选紧接其后补入下一静态候选，原Product事件只认v1/v2边界保持，v3不借此扩展事件触发权限。
