@@ -1,0 +1,29 @@
+pipeline_id: P10
+source_table: ns_config
+target_ot: SystemConfig
+primary_key: id
+site_filter: "site_id=1"
+incremental_strategy: snapshot
+incremental_cursor:
+  fields: [modify_time]
+  fallback: create_time
+  mode: snapshot
+unique_key_pattern: "niushop:{site_id}:{pk}"
+validation:
+  required: [config_key]
+field_mappings:
+  - {source: id, target: id, type: int}
+  - {source: site_id, target: siteId, type: int}
+  - {source: weapp_id, target: weappId, type: int}
+  - {source: app_module, target: appModule, type: string}
+  - {source: config_key, target: configKey, type: string}
+  - {source: value, target: value, type: string}
+  - {source: config_desc, target: configDesc, type: string}
+  - {source: is_use, target: isUse, type: int}
+  - {source: create_time, target: createTime, type: timestamp}
+  - {source: modify_time, target: modifyTime, type: timestamp}
+pii_exclusion: []
+notes:
+  - "ns_config 表共 10 个字段，系统配置键值对"
+  - "字段映射 10 个：全字段映射"
+  - "PII 排除：无（配置表不含敏感信息）"
