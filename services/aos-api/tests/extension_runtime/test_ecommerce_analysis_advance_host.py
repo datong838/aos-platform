@@ -574,19 +574,30 @@ def test_resume_receipt_comparison_preserves_json_boolean_and_integer_types():
         _strict_resume_control_receipt,
     )
 
-    expected = {
-        "operation": "resume",
-        "expectedRunVersion": 3,
-        "expectedTaskVersion": 2,
-        "reason": "bounded resume",
-    }
-    expected["requestHash"] = command_hash(expected)
+    from aos_api.aip_task_store import AipTaskStore
+    expected = AipTaskStore._control_request('resume',3,2,'bounded resume')
     assert _strict_resume_control_receipt(expected)
     assert _analysis_json_equal({"completed": False}, {"completed": False})
     assert not _analysis_json_equal({"completed": False}, {"completed": 0})
     assert not _strict_resume_control_receipt(
         {**expected, "expectedRunVersion": True}
     )
+
+
+@pytest.mark.parametrize('fault',['prefix','hash','extra','string-version','bool-version','zero-version','reason'])
+def test_original_control_receipt_rejects_non_native_or_malformed_payload(fault):
+    from aos_api.aip_task_store import AipTaskStore
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_resume_control_receipt
+    payload=AipTaskStore._control_request('resume',3,2,'native control')
+    assert _strict_resume_control_receipt(payload)
+    if fault=='prefix':payload['requestHash']='sha256:'+payload['requestHash']
+    elif fault=='hash':payload['requestHash']='a'*64
+    elif fault=='extra':payload['approved']=True
+    elif fault=='string-version':payload=AipTaskStore._control_request('resume','3',2,'native control')
+    elif fault=='bool-version':payload=AipTaskStore._control_request('resume',True,2,'native control')
+    elif fault=='zero-version':payload=AipTaskStore._control_request('resume',0,2,'native control')
+    elif fault=='reason':payload=AipTaskStore._control_request('resume',3,2,None)
+    assert not _strict_resume_control_receipt(payload)
 
 
 @pytest.mark.parametrize('fault',[None,'action','requirement','checkpoint','completed','plan'])

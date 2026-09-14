@@ -1,5 +1,6 @@
 """Actual original Task/Run owners; snapshot stage explicitly remains a fixture."""
 from datetime import timedelta
+from types import SimpleNamespace
 
 import pytest
 
@@ -63,6 +64,10 @@ def test_original_task_and_domain_resume_once_under_snapshot_session(snapshot_ca
     assert not tasks.timeline(analysis.scope,runtime.task_run_ref.resource_id).steps
     assert conn.execute("SELECT count(*) AS n FROM aip_evidence WHERE source_ref=%s",
         ('run-control:resume:'+session.control_key,)).fetchone()['n']==1
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_resume_control_receipt
+    saved_control=conn.execute("SELECT payload FROM aip_evidence WHERE source_ref=%s",
+        ('run-control:resume:'+session.control_key,)).fetchone()['payload']
+    assert _strict_resume_control_receipt(saved_control)
     # A second first-transition request must not emit another transition.
     with pytest.raises(ValueError):session.run_current(lambda current:current._resume_states())
     assert runs.get_verified(analysis.scope,run.authority.run_id).state==after.state
@@ -88,3 +93,37 @@ def test_both_original_state_changes_rollback(snapshot_case,monkeypatch,fault):
     assert runs.get_verified(analysis.scope,run.authority.run_id).state==run.state
     assert conn.execute("SELECT count(*) AS n FROM aip_evidence WHERE source_ref=%s",
         ('run-control:resume:'+session.control_key,)).fetchone()['n']==0
+
+
+def test_legacy_resume_verifier_reads_actual_original_control_hash(resume_case,monkeypatch):
+    from aos_api.business_investigation_shared_contracts import InvestigationExactRef
+    from aos_api.aip_business_investigation_fulfillment_saga import RESUME_REASON
+    from aos_api.ecommerce_growth_runtime_adapters import (
+        AnalysisAdvanceHostService,_AnalysisRunAndTaskResumer,_HostAnalysisReceiptStore,_strict_analysis_command,
+    )
+    from aos_api import ecommerce_growth_host_composition as composition
+    conn,analysis,session,run,runtime,requirement=resume_case
+    tx=HostTransaction(conn)
+    _,runs,compilations,*_=DataRequirementRequestHostService._components(tx,analysis.scope)
+    tasks=AipTaskStore(TransactionBoundConnectFactory(tx,analysis.scope),_analysis_resume_session=session)
+    # Only legacy data-readiness is named. Original state writes and verifier are real.
+    monkeypatch.setattr(AnalysisAdvanceHostService,'_resume_authorities',
+        lambda *a,**kw:(None,None,None,runtime,None,None,None,None,None))
+    resumer=_AnalysisRunAndTaskResumer(runs,tasks,InvestigationExactRef.model_validate(session.command['requirementRef']),run.authority.run_id,
+        run.state.version,conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+    def invoke():
+        return resumer.resume_run(analysis.scope,runtime.task_run_ref.resource_id,
+            expected_run_version=runtime.task_run_ref.version,expected_task_version=runtime.task_ref.version,
+            actor=AnalysisAdvanceHostService.executor_identity,idempotency_key='bi-fulfillment-resume-native-verifier',
+            reason=RESUME_REASON)
+    monkeypatch.setattr(composition,'build_ecommerce_growth_host_ports',lambda *a,**kw:
+        SimpleNamespace(runtime_port=SimpleNamespace(commit=lambda **kw:invoke())))
+    session.resume()
+    host=AnalysisAdvanceHostService()
+    prior=_HostAnalysisReceiptStore(tx,analysis.scope).read_exact(session.command['priorReceiptRef'])
+    compilation=compilations.get_for_run(analysis.scope,requirement.run_ref)
+    resumed=host._runtime_binding_for_task_run(analysis.scope,compilation,
+        runs.get_verified(analysis.scope,run.authority.run_id),tasks,runtime.task_run_ref.resource_id)
+    payload=host._running_receipt(session.command,prior,resumed,analysis.scope,session.command['idempotencyKey'])
+    assert host._verify_resume_commit(transaction=tx,scope=analysis.scope,command=session.command,
+        parsed=_strict_analysis_command(session.command),receipt=payload)==payload

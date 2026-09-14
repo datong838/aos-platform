@@ -932,8 +932,10 @@ def _strict_resume_control_receipt(payload: Any) -> bool:
         or type(payload["requestHash"]) is not str
     ):
         return False
-    body = {key: value for key, value in payload.items() if key != "requestHash"}
-    return payload["requestHash"] == _analysis_command_hash(body)
+    expected = AipTaskStore._control_request(
+        "resume", payload["expectedRunVersion"], payload["expectedTaskVersion"], payload["reason"]
+    )
+    return payload == expected
 
 
 def _analysis_hydration_rows(transaction, scope, mapping_ref, artifact_refs):
@@ -1934,13 +1936,9 @@ class AnalysisAdvanceHostService:
             or timeline.run.plan_revision_id != compilation.plan_ref.resource_id
         ):
             raise ValueError("analysis resume AIP successor drifted")
-        expected_control = {
-            "operation": "resume",
-            "expectedRunVersion": prior_task_run.revision,
-            "expectedTaskVersion": timeline.task.version - 1,
-            "reason": RESUME_REASON,
-        }
-        expected_control["requestHash"] = _analysis_command_hash(expected_control)
+        expected_control = AipTaskStore._control_request(
+            "resume", prior_task_run.revision, timeline.task.version - 1, RESUME_REASON
+        )
         control_rows = transaction.execute(
             """SELECT source_ref,payload FROM public.aip_evidence
                 WHERE org_id=%s AND project_id=%s AND run_id=%s
