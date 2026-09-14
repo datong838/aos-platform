@@ -130,3 +130,6 @@ SC4-5g4：领域包1.16.0十四关系声明完成，树be89c813a9185c05a4c923016
 
 
 SC4-5g5：PipelineSnapshotGroupPolicyOwner完成，全部当前控制内按原installation/artifacts/release policy验证同包导出JSON exact ref、文件字节哈希、公开字段及完整对象集合；执行后再查策略再由GroupOwner复验控制。59组合测试通过3.89秒，补public projection隐匿反例后新文件16项通过3.47秒（合计覆盖60项）；AR2扫描1916五类错误空，AOS-000573 validate GREEN。测试安装/签名资产为明确doubles，不宣称主真实发行资格通过。本波无源调用或业务写入。下一项：只读消费已持久化组原输入，绑定manifest/规则hash和原时间后生成关系assessment，缺input不主动读取源，再关系持久化与原应用Owner。
+
+
+SC4-5g6：PipelineSnapshotGroupInputOwner完成。只消费已有原组claim+input，在全部原当前控制内核对manifest/request/逐原journal与rowCount/对象类型/原观察窗口；前后重新加载比较，callback改动或禁入均拒绝，缺输入不隐式采集。33组合测试通过13.37秒；再增越窗保存反例后新文件12测试通过7.68秒（共34覆盖）。AR2扫描1917模块五类错误为空。无真实源调用或主数据/安装变更。下一项：同事务组合当前策略和原输入，输出带manifest/精确policy双hash的关系核验，再关系准备持久化及原应用Owner。

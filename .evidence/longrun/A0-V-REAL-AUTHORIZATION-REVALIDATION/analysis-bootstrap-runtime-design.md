@@ -353,3 +353,12 @@ SC4-5g4：领域包1.16.0十四关系声明完成，树be89c813a9185c05a4c923016
 
 
 SC4-5g5：PipelineSnapshotGroupPolicyOwner完成，全部当前控制内按原installation/artifacts/release policy验证同包导出JSON exact ref、文件字节哈希、公开字段及完整对象集合；执行后再查策略再由GroupOwner复验控制。59组合测试通过3.89秒，补public projection隐匿反例后新文件16项通过3.47秒（合计覆盖60项）；AR2扫描1916五类错误空，AOS-000573 validate GREEN。测试安装/签名资产为明确doubles，不宣称主真实发行资格通过。本波无源调用或业务写入。下一项：只读消费已持久化组原输入，绑定manifest/规则hash和原时间后生成关系assessment，缺input不主动读取源，再关系持久化与原应用Owner。
+
+### SC4-5g6 当前原组输入消费边界
+
+新增pipeline_snapshot_group_input_owner.py和test_snapshot_group_input_owner_pg.py。只接受精确SourceClaimOwner，组合原GroupOwner/GroupClaimOwner；run_current固定tenant/group/actor/controls-runs，必须已有整组input，缺claim或缺input立即拒绝，不reserve、不source读、不save。原GroupClaimOwner.read_current核验全部认领和当前运行；schema-qualified读取group input，requestHash与原组claim相同，manifest严格顶层/成员形状、顺序runId/真实原Ingress envelopeHash/rowsHash格式/rowCount一致。
+对每成员以原ControlledIngressJournal/_bound_parent核验运行与原input，必须含outputRows，个数等于原rowCount、只有该mapping的Object而非Link；原journal负责canonical command/output一致。组读取时间必须在当前原共同窗口且不晚于DB当前时间，明确innodb-repeatable-read。回调前后重读比较同一组原输入和清单，拒绝回调内变更，外围GroupOwner再验当前控制；延迟返回拒绝。结果含原claim/group/manifest/hash/时间/parents，只在当前回调内有资格，非Receipt或写授权。
+验证隔离PG真实claim/input已提交后的读取重放零源调用、缺group/input不隐式启动、错绑定/actor/停止/禁入拒绝、回调异常与生成器。既有两成员fixture同Object类型只验证通用输入消费；后继策略组合要求实际类型唯一完整，不以此fixture冒充12类真实应用。
+
+
+SC4-5g6：PipelineSnapshotGroupInputOwner完成。只消费已有原组claim+input，在全部原当前控制内核对manifest/request/逐原journal与rowCount/对象类型/原观察窗口；前后重新加载比较，callback改动或禁入均拒绝，缺输入不隐式采集。33组合测试通过13.37秒；再增越窗保存反例后新文件12测试通过7.68秒（共34覆盖）。AR2扫描1917模块五类错误为空。无真实源调用或主数据/安装变更。下一项：同事务组合当前策略和原输入，输出带manifest/精确policy双hash的关系核验，再关系准备持久化及原应用Owner。
