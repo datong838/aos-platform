@@ -1,0 +1,3802 @@
+{
+  "schemaVersion": "aos.developer-source-structure-observation/v1",
+  "observedAt": "2026-09-14T06:42:36.486972+00:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "sourceRoute": "current-P02-meta-source-configuration",
+  "accessMode": "read-only",
+  "isolation": "repeatable-read",
+  "sourceRowPayloadsRead": false,
+  "formalFulfillment": false,
+  "tables": [
+    {
+      "pipelineId": "P01",
+      "objectType": "Shop",
+      "table": "ns_site",
+      "primaryKey": "site_id",
+      "siteId": 1,
+      "rowCount": 1,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "site_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_domain",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "username",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "logo",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "seo_keywords",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "seo_description",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_tel",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "logo_square",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "seo_title",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P02",
+      "objectType": "Product",
+      "table": "ns_goods",
+      "primaryKey": "goods_id",
+      "siteId": 1,
+      "rowCount": 65,
+      "deletionCounts": [
+        {
+          "is_delete": 0,
+          "n": 57
+        },
+        {
+          "is_delete": 1,
+          "n": 8
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "goods_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "goods_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_class",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_class_name",
+          "column_type": "varchar(25)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_class",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "site_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_image",
+          "column_type": "varchar(2000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_content",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_state",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "category_id",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "category_json",
+          "column_type": "varchar(500)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "brand_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "brand_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "market_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cost_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_stock",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_stock_alarm",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_virtual",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "virtual_indate",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_free_shipping",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shipping_template",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_spec_format",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_format",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "introduction",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "keywords",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "unit",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sort",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_experience_quota",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_lead_goods_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_lead_goods_quantity",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "video_url",
+          "column_type": "varchar(555)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_num",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_shaitu",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_shipin",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_zhuiping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_haoping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_zhongping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_chaping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_fenxiao",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "fenxiao_type",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "supplier_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_consume_discount",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_grant_member_level_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_send_coupon_json",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "discount_config",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "discount_method",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "promotion_addon",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_service_ids",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "label_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "label_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_sale",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "max_buy",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "min_buy",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "recommend_way",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "timer_on",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "timer_off",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_need_verify",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "verify_validity_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_limit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "limit_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qr_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "template_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "success_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "fail_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "wait_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "stock_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_deliver_type",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_receive_type",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "barrage_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "market_price_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "form_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "support_trade_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_channel",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "sale_store",
+          "column_type": "varchar(5000)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "service_category",
+          "column_type": "varchar(2000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_unify_price",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "real_stock",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "pricing_type",
+          "column_type": "varchar(10)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_reserve",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "service_mode",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "service_price_way",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P03",
+      "objectType": "ProductSku",
+      "table": "ns_goods_sku",
+      "primaryKey": "sku_id",
+      "siteId": 1,
+      "rowCount": 73,
+      "deletionCounts": [
+        {
+          "is_delete": 0,
+          "n": 62
+        },
+        {
+          "is_delete": 1,
+          "n": 11
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "sku_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_spec_format",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "market_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cost_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "discount_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_type",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "start_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "end_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "stock",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "weight",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "volume",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "click_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_num",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "collect_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_images",
+          "column_type": "varchar(2000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_class",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_class_name",
+          "column_type": "varchar(25)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_class",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_content",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_state",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_stock_alarm",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_virtual",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_indate",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_free_shipping",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shipping_template",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_spec_format",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_attr_format",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "introduction",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "keywords",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "unit",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sort",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "video_url",
+          "column_type": "varchar(555)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_shaitu",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_shipin",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_zhuiping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_haoping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_zhongping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_chaping",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "spec_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "supplier_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_consume_discount",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "discount_config",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "discount_method",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_price",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "self_shop_special_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "allow_use_coupon",
+          "column_type": "tinyint(1) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "allow_use_balance",
+          "column_type": "tinyint(1) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_service_ids",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_sale",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "max_buy",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "min_buy",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "recommend_way",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "fenxiao_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "stock_alarm",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_sort",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_default",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "verify_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_limit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "limit_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qr_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "template_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "success_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "fail_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "wait_evaluate_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "brand_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "brand_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "form_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "support_trade_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_channel",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sale_store",
+          "column_type": "varchar(5000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "service_length",
+          "column_type": "int(11)",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "real_stock",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_unify_price",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "plu",
+          "column_type": "varchar(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pricing_type",
+          "column_type": "varchar(10)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P04",
+      "objectType": "Category",
+      "table": "ns_goods_category",
+      "primaryKey": "category_id",
+      "siteId": 1,
+      "rowCount": 11,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "category_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "category_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "short_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pid",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "level",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sort",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "keywords",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "description",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "attr_class_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "attr_class_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "category_id_1",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "category_id_2",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "category_id_3",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "category_full_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "image_adv",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "commission_rate",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "link_url",
+          "column_type": "varchar(2000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_recommend",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "icon",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P05",
+      "objectType": "Order",
+      "table": "ns_order",
+      "primaryKey": "order_id",
+      "siteId": 1,
+      "rowCount": 185,
+      "deletionCounts": [
+        {
+          "is_delete": 0,
+          "n": 125
+        },
+        {
+          "is_delete": 1,
+          "n": 60
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "order_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "order_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "site_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "website_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_name",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_from",
+          "column_type": "varchar(55)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "weapp_appid",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "weapp_openid",
+          "column_type": "varchar(64)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_platform",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "third_delivery_no",
+          "column_type": "varchar(64)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_from_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_type_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_promotion_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_promotion_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "out_trade_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "out_trade_no_2",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_code",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_status_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_status_action",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "delivery_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_type",
+          "column_type": "varchar(55)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_type_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_type",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_type_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "share_member_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_bind_time",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "commission_risk_flag",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "commission_risk_reason",
+          "column_type": "varchar(500)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_bind_source",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_bind_weapp",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mobile",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "telephone",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "province_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "city_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "district_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "community_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "full_address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "longitude",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "latitude",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "buyer_ip",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "buyer_ask_delivery_time",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "buyer_message",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "coupon_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "coupon_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "adjust_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "pay_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sign_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "finish_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "close_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_lock",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_evaluate",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_enable_refund",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "remark",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_num",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_store_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_status_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_settlement",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "store_settlement_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_store_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_type_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_status_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_store_info",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "virtual_code",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "evaluate_status_name",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "commission",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_invoice",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_title",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "taxpayer_number",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_rate",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_content",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_delivery_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_full_address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_tax_invoice",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "invoice_email",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_title_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_fenxiao",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "point_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_card_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_card_order",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_status",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_remark",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_code",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "invoice_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "predict_delivery_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_video_number",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "close_cause",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cashier_order_type",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cashier_sell_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cashier_operator_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cashier_operator_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "total_balance",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "store_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "reduction",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "round_money",
+          "column_type": "decimal(10,0)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_scene",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "store_commission_rate",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "store_commission",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_start_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_end_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_biz_type",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "share_instance_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "share_owner_member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_self_shop_special_price",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_self_shop_order",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P06",
+      "objectType": "OrderLine",
+      "table": "ns_order_goods",
+      "primaryKey": "order_goods_id",
+      "siteId": 1,
+      "rowCount": 235,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "order_goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "order_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_no",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "sku_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "sku_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_image",
+          "column_type": "varchar(2000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_virtual",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "goods_class",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_class_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cost_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "num",
+          "column_type": "decimal(12,3)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "cost_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_status_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "gift_flag",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "refund_status_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_status_action",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_apply_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_reason",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_real_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_delivery_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_delivery_no",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_refuse_reason",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_action_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "real_goods_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_remark",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_images",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_delivery_remark",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_refund_stock",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_money_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_refund_remark",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_active_refund",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_active_refund_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_active_refund_remark",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_active_refund_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_active_refund_money_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_mode",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "promotion_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "coupon_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "adjust_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_name",
+          "column_type": "varchar(400)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_spec_format",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_fenxiao",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "use_point",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "point_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_delivery_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "out_aftersale_id",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_address_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_pay_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "refund_channel_status",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "store_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "card_item_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "card_promotion_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "supplier_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_adjust_price",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "price_tier",
+          "column_type": "varchar(16)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "card_holding_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "price_level_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P07",
+      "objectType": "Shipment",
+      "table": "ns_express_delivery_package",
+      "primaryKey": "id",
+      "siteId": 1,
+      "rowCount": 19,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_goods_id_array",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_id_array",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "package_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_type",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "express_company_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "express_company_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_no",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "delivery_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "express_company_image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "type",
+          "column_type": "varchar(20)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "template_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "template_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "follow_waybill_token",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "follow_waybill_status",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "follow_waybill_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "follow_waybill_err",
+          "column_type": "varchar(500)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "upload_shipping_status",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "upload_shipping_err",
+          "column_type": "varchar(500)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "upload_shipping_retry",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "follow_delivery_id",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace_plugin_token",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace_plugin_status",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace_plugin_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace_plugin_err",
+          "column_type": "varchar(500)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trace_plugin_delivery_id",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P08",
+      "objectType": "CustomerLite",
+      "table": "ns_member",
+      "primaryKey": "member_id",
+      "siteId": 1,
+      "rowCount": 54,
+      "deletionCounts": [
+        {
+          "is_delete": 0,
+          "n": 54
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "share_member",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "source_member",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "fenxiao_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_fenxiao",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "username",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "nickname",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mobile",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "mobile_country_code",
+          "column_type": "varchar(16)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "email",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "password",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "headimg",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_level",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "member_level_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_label",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "member_label_name",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qq",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qq_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "wx_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "wx_unionid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "ali_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "baidu_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "toutiao_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "douyin_openid",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "login_ip",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "login_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "login_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "last_login_ip",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "last_login_type",
+          "column_type": "varchar(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "last_login_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "last_visit_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "last_consum_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "login_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "realname",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sex",
+          "column_type": "smallint(6)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "location",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "birthday",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "reg_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "point",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "balance",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "growth",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "account5",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_auth",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_member",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sign_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sign_days_series",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_password",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "order_complete_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_complete_num",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_withdraw_apply",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_withdraw",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "member_level_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "level_expire_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_edit_username",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "login_type_name",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "can_receive_registergift",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_lock",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_money_lock",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "province_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "city_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "district_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "community_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "full_address",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "longitude",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "latitude",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_code",
+          "column_type": "varchar(50)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "bind_fenxiao_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "has_shop_qualified",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P09",
+      "objectType": "Weapp",
+      "table": "ns_weapp",
+      "primaryKey": "weapp_id",
+      "siteId": 1,
+      "rowCount": 3,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "appid",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "appsecret",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "weapp_original",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "qrcode",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "status",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_default",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "token",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "encodingaeskey",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P10",
+      "objectType": "SystemConfig",
+      "table": "ns_config",
+      "primaryKey": "id",
+      "siteId": 1,
+      "rowCount": 38,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "app_module",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "config_key",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "value",
+          "column_type": "text",
+          "is_nullable": "YES",
+          "column_key": ""
+        },
+        {
+          "column_name": "config_desc",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_use",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "modify_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P11",
+      "objectType": "ProductReview",
+      "table": "ns_goods_evaluate",
+      "primaryKey": "evaluate_id",
+      "siteId": 1,
+      "rowCount": 5,
+      "deletionCounts": null,
+      "columns": [
+        {
+          "column_name": "evaluate_id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "website_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_no",
+          "column_type": "bigint(20) unsigned",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "order_goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "goods_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_price",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "sku_image",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "content",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "images",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "videos",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "explain_first",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_name",
+          "column_type": "varchar(100)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_headimg",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_anonymous",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "scores",
+          "column_type": "tinyint(4)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_content",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_images",
+          "column_type": "varchar(3000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_explain",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "explain_type",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_show",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_desccredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_servicecredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "shop_deliverycredit",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_audit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "again_is_audit",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    },
+    {
+      "pipelineId": "P12",
+      "objectType": "Payment",
+      "table": "ns_pay",
+      "primaryKey": "id",
+      "siteId": 1,
+      "rowCount": 211,
+      "deletionCounts": [
+        {
+          "is_delete": 0,
+          "n": 211
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "column_type": "int(11) unsigned",
+          "is_nullable": "NO",
+          "column_key": "PRI"
+        },
+        {
+          "column_name": "site_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": "MUL"
+        },
+        {
+          "column_name": "weapp_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mch_id",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_appid",
+          "column_type": "varchar(32)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "out_trade_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": "UNI"
+        },
+        {
+          "column_name": "pay_type",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "trade_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_no",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_body",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_detail",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_addon",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_voucher",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_status",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "return_url",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "event",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "mch_info",
+          "column_type": "varchar(1000)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "create_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_time",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "balance_money",
+          "column_type": "decimal(10,2)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "member_id",
+          "column_type": "int(11)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "pay_json",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "is_delete",
+          "column_type": "tinyint(1)",
+          "is_nullable": "NO",
+          "column_key": ""
+        },
+        {
+          "column_name": "relate_id",
+          "column_type": "varchar(255)",
+          "is_nullable": "NO",
+          "column_key": ""
+        }
+      ],
+      "missingMappedColumns": []
+    }
+  ]
+}

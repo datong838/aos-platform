@@ -201,3 +201,15 @@ SC4-5e1自测修正：原Canonical ProductSku必需barcode，而旧bundle映射s
 测试根/多层/乱序/森林/孤儿/自环/多节点环、深链1000无递归溢出、错误列/根类型/主键类型拒绝。该机制只验证已读全量分类层级，不生成Product.inCategory或任何关系Receipt。新候选Category将pid→parentCategoryId并采用本声明，再完成静态候选。
 
 SC4-5e3候选落地：新增scripts/prepare_niushop_category_candidate.py，独立子Lease A0-V-SC4-CATEGORY-SNAPSHOT-CANDIDATE；从1.6.0精确树891b9312ecd040d19388e624fc40d636f08e2c567e56487650283a38aab6b0c6生成1.7.0，只变bundle版本、p04、静态eval。pid映射原Canonical parentCategoryId；is_show明确0/1→INACTIVE/ACTIVE，同时保留原isShow；未获新源数据，未知值拒绝。旧custom循环/孤儿说明替换为可执行hierarchy规则；去除旧未执行的Product.inCategory声明并明确关系仍未物化，保留分类原字段。未发布/安装；已有三类静态评估再次使用实际新候选目录运行。
+
+### SC4-5e4 订单观察版本与显式删除
+
+2026-09-14复用当前P02 meta_source连接配置，经独立JdbcConnectorRuntime/read-only repeatable-read核对12类表结构和数量；证据full-store-source-structure-20260914.json，仅结构与聚合，不是正式Observation/Fulfillment。订单185（125非删/60软删），明细235且创建时间全0；旧frozen数量不再作当前总体。默认旧13306端口不监听，但原连接管理器的SSH与库访问实测成功。一次探针因误写内部事务方法名AttributeError，修正为已有_read_only_transaction后聚合成功，无源写入。
+
+本子项先扩展v3 deletion_basis可为原row-presence-only或严格{field,live_value,deleted_value}，后者必须绑定已选int列且值不同。未知值拒绝，显式deleted时is_deleted=true、status_raw和对应属性为DELETED；普通状态仍从选中列映射。原v3行为不变，不把物理缺失当删除。此为新候选用的显式能力，1.7.0分类声明不改写。
+
+订单候选随后使用is_delete状态（0/1都表明记录存在，显式删除覆盖为DELETED），原order_status/pay_status/delivery_status/refund_status保留业务字段，不能把关闭/退款误当物理删除；create_time→createdAt、order_money→totalAmount、site_id→shopId沿用原Canonical语义。移除无画像必要的源name字段，继续排除联系方式和地址。source_updated_at和updatedAt为明确观察版本，真实创建时间单独保留，不伪造源修改时间。关联与业务窗口筛选仍需原后续Owner。
+
+修改pipeline_snapshot_materialization_v3.py和tests/test_pipeline_snapshot_materialization_v3.py，覆盖显式删除/未知删除值/错误声明/跨店、以及旧三版回归；纯映射仍无源读取或AOS主写入。候选另开脚本与目录子Lease。
+
+SC4-5e4候选：新增scripts/prepare_niushop_order_candidate.py及1.8.0目录，子Lease A0-V-SC4-ORDER-SNAPSHOT-CANDIDATE。固定1.7.0树5641f4890a2198fd92d6eefc4e68400d90ce7030c8e8e8059a657c09de4ba069，只改新版本bundle/p05/evals；保留原所有非负与隐私约束，并主动去掉画像无必要的name。映射状态以is_delete列的0/1存在值生成ACTIVE，再由显式删除覆盖DELETED；业务order_status原样保留，不依赖猜测枚举（本次真实值-1/0/1/2/10）。金额和createdAt直接取源字段，sourceUpdatedAtBasis明确observation；关闭订单保留。关联placedByLite尚未落关系Receipt，保留memberId不计关系完成。后4类源表虽可读，旧schema/masking只覆盖前8类，必须后续补齐显式声明后才能选列采集。

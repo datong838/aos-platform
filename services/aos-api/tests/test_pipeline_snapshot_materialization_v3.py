@@ -129,3 +129,34 @@ def test_category_hierarchy_declaration_is_exact(fault):
     elif fault=='bool_root':rule['root_value']=False
     else:rule['custom']='unsafe'
     with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)
+
+
+def deletion_mapping():
+    value=mapping()
+    value['field_mappings'].append({'source':'is_delete','target':'isDelete','type':'int'})
+    value['snapshot_materialization']['deletion_basis']={'field':'is_delete','live_value':0,'deleted_value':1}
+    return value
+
+
+def test_observation_snapshot_uses_only_explicit_source_deletion():
+    plan=compiled(deletion_mapping())
+    live=materialize_snapshot([row()|{'is_delete':0}],plan,observed_at=NOW)[0]
+    deleted=materialize_snapshot([row()|{'is_delete':1}],plan,observed_at=NOW)[0]
+    assert live['is_deleted'] is False and live['status_raw']=='ACTIVE'
+    assert deleted['is_deleted'] is True and deleted['status_raw']=='DELETED'
+    assert deleted['properties']['status']=='DELETED'
+    assert deleted['properties']['sourceModificationTimeKnown'] is False
+    assert materialize_snapshot([],plan,observed_at=NOW)==[]
+    with pytest.raises(ValueError,match='SNAPSHOT_MATERIALIZATION_INVALID'):
+        materialize_snapshot([row()|{'is_delete':2}],plan,observed_at=NOW)
+
+
+@pytest.mark.parametrize('fault',['missing','text','equal','boolean','extra'])
+def test_explicit_deletion_declaration_is_bound_to_selected_integer(fault):
+    value=deletion_mapping();rule=value['snapshot_materialization']['deletion_basis']
+    if fault=='missing':rule['field']='unselected'
+    elif fault=='text':rule['field']='category_name'
+    elif fault=='equal':rule['deleted_value']=0
+    elif fault=='boolean':rule['live_value']=False
+    else:rule['execute']='unsafe'
+    with pytest.raises(ValueError,match='SNAPSHOT_MAPPING_INVALID'):compiled(value)

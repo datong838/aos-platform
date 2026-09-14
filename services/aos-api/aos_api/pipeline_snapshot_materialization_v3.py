@@ -21,6 +21,7 @@ class SnapshotMappingV3:
     status_target: str
     statuses: tuple[tuple[int,str],...]
     hierarchy: tuple[str,int] | None = None
+    tombstone: tuple[str,int,int] | None = None
 
     @property
     def read_spec(self):return self.base.read_spec
@@ -39,7 +40,7 @@ def compile_v3(mapping,read_spec):
         base_keys={'schema_version','platform','shop_key','source_timezone','property_defaults'}
         if (type(config) is not dict or set(config)!=base_keys|{'time_basis','deletion_basis','status'}
                 or config['schema_version']!='aos.snapshot-materialization/v3'
-                or config['time_basis']!='observation' or config['deletion_basis']!='row-presence-only'
+                or config['time_basis']!='observation'
                 or value.get('links') or 'soft_delete' in value or 'incremental_cursor' in value):
             raise ValueError('explicit observation-only snapshot required')
         fields=value['field_mappings'];defaults=config['property_defaults']
@@ -51,6 +52,15 @@ def compile_v3(mapping,read_spec):
         target=_identifier(status['property_target'])
         if target.casefold() in targets|_RESERVED:raise ValueError('state target collision')
         kinds={f['source']:f['type'] for f in fields}
+        tombstone=None
+        deletion=config['deletion_basis']
+        if deletion!='row-presence-only':
+            if (type(deletion) is not dict or set(deletion)!={'field','live_value','deleted_value'}
+                    or kinds.get(deletion['field'])!='int'
+                    or type(deletion['live_value']) is not int or type(deletion['deleted_value']) is not int
+                    or deletion['live_value']==deletion['deleted_value']):
+                raise ValueError('explicit selected deletion field required')
+            tombstone=(_identifier(deletion['field']),deletion['live_value'],deletion['deleted_value'])
         hierarchy=None
         if 'hierarchy' in value['validation']:
             rule=value['validation'].pop('hierarchy')
@@ -82,7 +92,7 @@ def compile_v3(mapping,read_spec):
         value['snapshot_materialization']={key:config[key] for key in base_keys}
         value['snapshot_materialization']['schema_version']='aos.snapshot-materialization/v1'
         base=compile_snapshot_mapping(value,read_spec)
-        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy)
+        return SnapshotMappingV3(base,tuple(conversions),tuple(constraints),status['field'],target,tuple(sorted(parsed)),hierarchy,tombstone)
     except (ValueError,TypeError,KeyError,AttributeError,OverflowError):
         raise ValueError('SNAPSHOT_MAPPING_INVALID') from None
 
@@ -122,6 +132,12 @@ def materialize_v3(rows,mapping,*,observed_at):
             if type(source[mapping.status_field]) is not int or source[mapping.status_field] not in states:
                 raise ValueError('unknown source state')
             status=states[source[mapping.status_field]]
+            if mapping.tombstone is not None:
+                field,live,removed=mapping.tombstone
+                if type(source[field]) is not int or source[field] not in (live,removed):
+                    raise ValueError('unknown deletion value')
+                item['is_deleted']=source[field]==removed
+                if item['is_deleted']:status='DELETED'
             item['status_raw']=status
             item['properties'].update(updatedAt=observed,observedAt=observed,
                 sourceUpdatedAtBasis='observation',sourceModificationTimeKnown=False)
