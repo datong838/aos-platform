@@ -845,3 +845,11 @@ Red模块缺失；首轮5 setup errors因测试TWA org主键误写org_id（实�
 AR2扫描1937/188/93，五类错误空；memory status强投影CURRENT，validate GREEN，authority AOS-000573。测试18432隔离schema；无主环境迁移/安装、无新增源读取/模型或外部业务写。保护overall-progress-20260913.md原+42行。主环境039–048升级、签名安装、真实新Run首链和八工作台仍未完成。
 
 下一波SC4-5l5：新增显式SnapshotQueryQualityMeasurement并保留旧两个variant；当前精确查询+完整来源重验后生成正式逐类计量，Shop唯一scope人口策略不把不同类型相加，freshness使用原read_started_at；再接原QualityEvidenceStore，空分母/逐类阈值/撤权/过期仍拒绝。l6接原Outbox/Fulfillment预期状态转换，不能放入readonly pending callback。
+
+### SC4-5l5a 显式完整快照质量合同
+
+新增SnapshotQueryQualityMeasurement，schema aos.data-requirement-snapshot-query-quality-measurement/v1。严格一个完整组Evidence（id/hash一致、整数revision1、无receipt_id）和精确QueryResultRevision；旧两个variant字段不变。原evaluate_quality与QualityEvidenceInput判别器直接兼容，不复制评分器，不修改threshold/原请求。DTO只保证结构，不认证来源；l5b须原Owner当前验证和查询逐项重算。
+
+Red缺新增类型；新合同与原质量/存证51 passed/15.17秒，旧CanonicalQueryMeasurement额外8 passed/5.19秒，共59。错误来源/重复/空引用/string revision/receipt/query类型、空分母与低质量并存、源年龄不被query时间刷新、原QualityEvidenceInput往返均验证。AR2扫描1937/188/93五类错误空，memory validate GREEN。无PG/源/模型/主环境动作。
+
+下一波SC4-5l5b：原source Evidence当前Owner内读取固定QueryResult，原requirement完整hash/策略与逐类counts构造新测量；实际Shop唯一范围人口（不跨类型相加）、read_started_at保守freshness、原QualityEvidenceStore存证与消费时当前复核。历史已存证不作为永久许可；原Fulfillment预期转换仍l6。真实主环境12类型892行、主安装升级、真实首链与八场景仍待执行。

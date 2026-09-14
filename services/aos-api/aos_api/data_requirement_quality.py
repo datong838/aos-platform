@@ -140,8 +140,32 @@ class CanonicalQueryQualityMeasurement(_QualityMeasurementBase):
         return self
 
 
+class SnapshotQueryQualityMeasurement(_QualityMeasurementBase):
+    """Complete-group provenance, distinct from hydration and per-object reads.
+
+    This is only a typed measurement. Current source and fixed query Owners
+    must authenticate the complete group before any fulfillment use.
+    """
+    schema_version: Literal["aos.data-requirement-snapshot-query-quality-measurement/v1"] = "aos.data-requirement-snapshot-query-quality-measurement/v1"
+    query_result_ref: InvestigationExactRef
+    source_refs: list[InvestigationExactRef] = Field(min_length=1, max_length=1)
+
+    @model_validator(mode="after")
+    def _snapshot_query(self) -> Self:
+        query = self.query_result_ref
+        if (query.resource_type != "QueryResultRevision"
+            or type(query.revision) is not int or query.receipt_id is not None):
+            raise ValueError("exact snapshot query result reference required")
+        source = self.source_refs[0]
+        if (source.resource_type != "Evidence" or type(source.revision) is not int
+            or source.revision != 1 or source.receipt_id is not None
+            or source.resource_id != "evidence-analysis-snapshot-source-" + source.content_hash[7:]):
+            raise ValueError("single complete snapshot source Evidence required")
+        return self
+
+
 QualityMeasurementRecord = Annotated[
-    QualityMeasurement | CanonicalQueryQualityMeasurement, Field(discriminator="schema_version")
+    QualityMeasurement | CanonicalQueryQualityMeasurement | SnapshotQueryQualityMeasurement, Field(discriminator="schema_version")
 ]
 _MEASUREMENT_ADAPTER = TypeAdapter(QualityMeasurementRecord)
 

@@ -55,3 +55,7 @@ request绑定Evidence精确ref和原requirement ref，窗口/cutoff/expiresAt全
 隔离PG测试复用原Evidence/Store完成组；原analysis/pending仍named doubles。Query与Metric原DDL在ar1c隔离schema执行，测试专用连接适配只把原public表命名空间定位该schema，不mock SQL结果、不修改生产SQL或RLS。验证幂等/计数/来源/失效/撤销/故障回滚。真实12类892行运行仍单列欠项，不能由两类fixture替代。无主库迁移、无安装、无新增模型调用。
 
 SC4-5l4实际最小权限PG发现原aip8事件表只GRANT SELECT,INSERT，而AipAnalystQueryStore._latest_for_update使用FOR UPDATE导致InsufficientPrivilege；不能给fixture临时UPDATE掩盖。补入原aip_analyst_query_store.py最小修复：使用scope+query_id命名的pg_advisory_xact_lock，后读最新事件，保留原CAS/唯一sequence/append-only/RLS。事件不可变行的旧更新锁不能锁住新尾事件，事务级查询锁也消除该尾部竞争。无DDL/新增权限。新增隔离PG验证原start/reconcile/cancel、过期sequence冲突与无UPDATE授权，旧查询测试适配到相同原DDL命名空间执行。
+
+## SC4-5l5a 合同分段
+
+SC4-5l5拆为l5a显式合同/旧评估与存证兼容、l5b原当前Owner适用性+Shop人口+QualityEvidence存证。l5a修改services/aos-api/aos_api/data_requirement_quality.py，新增tests/test_snapshot_query_quality_measurement.py。新schema aos.data-requirement-snapshot-query-quality-measurement/v1，queryResultRevision精确ref，sourceRefs严格且仅一个完整组Evidence精确ref，id/hash前缀与revision=1/无receipt_id匹配。沿用原计数、时间、租户、逐fact/过期/人口独立校验。旧hydration/canonical query DTO字段与hash不变，联合判别器显式加入第三variant。DTO不验证源真实性、不授予执行权限；源Owner和固定查询重验在l5b。测试覆盖合法序列化、错误/重复/截断来源、伪造query ref、旧合同回归、空分母/弱fact/过期保留，以及原QualityEvidenceInput完整回读兼容；不改默认threshold或旧请求。
