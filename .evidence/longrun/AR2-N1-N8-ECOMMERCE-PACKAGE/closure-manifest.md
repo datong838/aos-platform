@@ -1495,3 +1495,11 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_data_resume.py` | Host原路径 | 原来源事务内逐次验证数据并恢复内部分析，不授予Provider许可 | `b8f7c39b86225c0f137dc20e4ac3443d2f9fe63e5e7598109101fe6ca47fa603` |
+
+### SC4-5j3a 新增Host只读待处理需求上下文分类
+
+复核：该模块在Host事务中协调原Run/DataRequirement/Compilation/Checkpoint与当前分析Receipt，必须留在Host；业务Profile仍由原迁入growth的兼容目录提供，不复制领域规则，不引入bundle到Host的逆向依赖。该行仅登记新模块及初始文件hash，不修改原迁移清册preHash或验证器规则。
+
+| 文件 | 去向 | 边界 | 初始hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_pending_data_context.py` | Host原路径 | 原始pending需求与暂停任务的当前只读绑定，不授予Fulfillment或经营执行 | `858b399bfa3ba61569d73944541fb2caf8890227bc70f7f418eacc8e1a87e879` |
