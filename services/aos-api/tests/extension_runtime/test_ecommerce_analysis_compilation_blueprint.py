@@ -18,6 +18,12 @@ def test_installed_blueprint_matches_compilable_stage_contract():
     assert result['stageTemplateRequest']==expected
     assert result['profileRef']==body['profileRef']
     assert result['compilerProfile']==expected['profile']
+    assert result['schemaVersion']=='aos.ecommerce.analysis-compilation-blueprint/v2'
+    assert result['startupContextPolicy']==dict(
+        schemaVersion='aos.ecommerce.analysis-startup-context-policy/v1',
+        purpose='analysis-start',requiredFactIds=['analysis.original-event-case-run-lineage'],
+        businessFactCoverage='not-evaluated',pendingFactProfilesSource='domain-profile.requiredFactProfiles',
+        evalStageId='portrait',evalPurpose='skill-publication-contract')
     assert [(s['stageId'],s['skillId']) for s in result['stageSkills']]==[
         ('portrait','ecommerce.skill.D01'),('diagnosis','ecommerce.skill.D02'),('solution-design','ecommerce.skill.D03')]
     assert result['contentHash']==canonical_sha256({k:v for k,v in result.items() if k!='contentHash'})

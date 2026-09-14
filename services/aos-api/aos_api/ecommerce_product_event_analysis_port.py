@@ -71,11 +71,12 @@ def validate_analysis_compilation_blueprint(domain_profile, result):
         raise TypeError('exact domain profile required')
     domain = EcommerceInvestigationProfileRevision.model_validate(domain_profile.model_dump(mode='json', by_alias=True))
     request = dict(profileRef=domain.exact_ref.model_dump(mode='json', by_alias=True, exclude_none=True))
-    fields = {'schemaVersion','profileRef','compilerProfile','stageTemplateRequest','stageSkills','contentHash'}
+    fields = {'schemaVersion','profileRef','compilerProfile','stageTemplateRequest','stageSkills','contentHash',
+              'startupContextPolicy'}
     if type(result) is not dict or set(result) != fields:
         raise ValueError('strict compilation blueprint response required')
     canonical_json(result)
-    if (result['schemaVersion'] != 'aos.ecommerce.analysis-compilation-blueprint/v1'
+    if (result['schemaVersion'] != 'aos.ecommerce.analysis-compilation-blueprint/v2'
             or canonical_json(result['profileRef']) != canonical_json(request['profileRef'])
             or result['compilerProfile'] != domain.responsibility_template_code
             or canonical_sha256({k:v for k,v in result.items() if k != 'contentHash'}) != result['contentHash']):
@@ -84,6 +85,14 @@ def validate_analysis_compilation_blueprint(domain_profile, result):
     source = ExactRevisionRef(resourceType=domain.exact_ref.resource_type,resourceId=domain.profile_id,
         revision=domain.revision,contentHash=domain.content_hash.removeprefix('sha256:'))
     order = tuple(item.stage_id for item in domain.stages)
+    # This protocol supports startup lineage only. Business evidence is still
+    # required by each analysis stage and cannot be asserted by the package.
+    startup_policy = dict(schemaVersion='aos.ecommerce.analysis-startup-context-policy/v1',
+        purpose='analysis-start',requiredFactIds=['analysis.original-event-case-run-lineage'],
+        businessFactCoverage='not-evaluated',pendingFactProfilesSource='domain-profile.requiredFactProfiles',
+        evalStageId=order[0],evalPurpose='skill-publication-contract')
+    if canonical_json(result['startupContextPolicy']) != canonical_json(startup_policy):
+        raise ValueError('unsupported analysis startup context policy')
     if (canonical_json(stage.model_dump(mode='json',by_alias=True)) != canonical_json(result['stageTemplateRequest'])
             or stage.profile != result['compilerProfile'] or stage.source_bundle_ref != source
             or tuple(item.stage_id for item in stage.stages) != order):

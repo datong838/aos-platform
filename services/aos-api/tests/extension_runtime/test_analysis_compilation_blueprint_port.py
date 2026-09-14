@@ -34,3 +34,30 @@ def test_blueprint_port_revalidates_installed_response(monkeypatch,fault):
     else:
         assert run()['compilerProfile']==INITIAL_STORE_PROFILE.responsibility_template_code
     assert len(calls)==1
+
+
+@pytest.mark.parametrize('fault',[
+    'missing','legacy','purpose','facts','coverage','pending','eval-stage','eval-purpose','extra',
+])
+def test_host_rejects_rehashed_startup_policy_substitution(fault):
+    from aos_api.ecommerce_product_event_analysis_port import validate_analysis_compilation_blueprint
+    result=_package().handle('ecommerce_growth_analysis_advance',dict(
+        kind='build_analysis_compilation_blueprint',
+        profileRef=INITIAL_STORE_PROFILE.exact_ref.model_dump(mode='json',by_alias=True,exclude_none=True)),object())
+    assert validate_analysis_compilation_blueprint(INITIAL_STORE_PROFILE,result)==result
+    assert 'startupContextPolicy' in result
+    if fault=='missing':del result['startupContextPolicy']
+    elif fault=='legacy':result['schemaVersion']='aos.ecommerce.analysis-compilation-blueprint/v1'
+    else:
+        key,value={
+            'purpose':('purpose','business-analysis'),
+            'facts':('requiredFactIds',['Order']),
+            'coverage':('businessFactCoverage','complete'),
+            'pending':('pendingFactProfilesSource','none'),
+            'eval-stage':('evalStageId','diagnosis'),
+            'eval-purpose':('evalPurpose','business-quality'),
+            'extra':('approved',True),
+        }[fault]
+        result['startupContextPolicy'][key]=value
+    result['contentHash']=canonical_sha256({k:v for k,v in result.items() if k!='contentHash'})
+    with pytest.raises(ValueError):validate_analysis_compilation_blueprint(INITIAL_STORE_PROFILE,result)

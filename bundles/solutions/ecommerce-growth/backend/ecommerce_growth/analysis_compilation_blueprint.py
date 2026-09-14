@@ -30,8 +30,12 @@ def build_analysis_compilation_blueprint(payload):
         checkpointPolicy=dict(mode='receipt-first',unknown='pause'), retryPolicy=dict(automatic=False),
         compensationPolicy=dict(externalEffect='none')) for stage,title,dependencies,slots,_ in _STAGES]
     source = {**_PROFILE, 'contentHash': _PROFILE['contentHash'].removeprefix('sha256:')}
-    body = dict(schemaVersion='aos.ecommerce.analysis-compilation-blueprint/v1', profileRef=deepcopy(_PROFILE),
+    body = dict(schemaVersion='aos.ecommerce.analysis-compilation-blueprint/v2', profileRef=deepcopy(_PROFILE),
         compilerProfile=_COMPILER_PROFILE,
+        startupContextPolicy=dict(schemaVersion='aos.ecommerce.analysis-startup-context-policy/v1',
+            purpose='analysis-start',requiredFactIds=['analysis.original-event-case-run-lineage'],
+            businessFactCoverage='not-evaluated',pendingFactProfilesSource='domain-profile.requiredFactProfiles',
+            evalStageId='portrait',evalPurpose='skill-publication-contract'),
         stageTemplateRequest=dict(profile=_COMPILER_PROFILE,sourceBundleRef=source,stages=stages),
         stageSkills=[dict(stageId=stage,skillId=f'ecommerce.skill.{skill}',canonicalLogicId=f'ecommerce.logic.{skill}')
                      for stage,_,_,_,skill in _STAGES])

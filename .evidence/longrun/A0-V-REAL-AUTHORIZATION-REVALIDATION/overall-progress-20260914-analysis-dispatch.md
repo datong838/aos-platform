@@ -18,3 +18,5 @@
 CF1已完成exact桥接输入合同；CF2已实现当前配置职责及显式阶段引用读取，正在核对Logic/Skill与安装模板选择。CF3–CF6仍未完成；Run缺编译回执的真实PG已知失败仍保留。职责/阶段单测结果不折算业务完成率。
 
 2026-09-14 CF2依赖链已补蓝图、当前职责/技能/Logic选择，CF3已完成兼容阶段模板与本任务Task/frozen v2 Brief准备。CF3-4修复公共Context冻结允许同租户跨任务/跨Brief证据错接：真实隔离PG先复现两项失败，修复后Context/Impact/Task准备14 passed，追加无Receipt断言Context6 passed。仍未解决启动证据/Eval与Context组合、Compilation/TaskRun连接；真实START严格xfail仍保留。上述代码未部署主安装，不折算经营闭环完成比例。
+
+SC1：蓝图v2启动政策及Host拒绝错误用途已实现，44项回归通过。启动/经营证据分阶段方案已入原计划SC1–SC4；当前下一项SC2真实事件证据，其后SC3当前Eval/Context、SC4正式Saga/TaskRun。仍无主安装真实首链完成证据。

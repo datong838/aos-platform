@@ -31,3 +31,7 @@
 SC1–SC3单项通过不计首链完成。必须SC4真实PG全链原子、同键重放、当前撤销和崩溃恢复通过，再新候选评审安装及主库迁移。之后以栖月汇真实数据自然事件执行黄埔0期销售武器包首链，审阅可读业务产物，再扩展八工作台和连续观察。
 
 启动证据与经营证据的用途约束必须在代码里执行，不仅留在本文。若下游以“任意complete Bundle”放行经营结果，登记并修复该消费点；不能在入口换名称就宣称问题解决。不新增外发动作，不push，230 L0仍挂起。
+
+## SC1 exact政策格式
+
+蓝图schema升为aos.ecommerce.analysis-compilation-blueprint/v2，新增startupContextPolicy（必填）：schemaVersion=aos.ecommerce.analysis-startup-context-policy/v1；purpose=analysis-start；requiredFactIds=[analysis.original-event-case-run-lineage]；businessFactCoverage=not-evaluated；pendingFactProfilesSource=domain-profile.requiredFactProfiles；evalStageId等于首阶段portrait；evalPurpose=skill-publication-contract。Host按支持的完整规范对象比较，不接受附加授权字段、事实替换、阶段替换、业务完成声明或旧v1遗漏政策。原stageTemplateRequest和阶段技能选择不变，蓝图完整hash自然变化；旧候选保持不可变，不能被新Host当作支持新启动协议。新增回归对上述变体重新计算hash后仍须拒绝，避免仅靠hash捕捉篡改。
