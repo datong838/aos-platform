@@ -1423,3 +1423,9 @@ API加载2c11ccff（日志product-controlled-api-2c11ccff.json），IAB复用原
 | 文件 | 去向 | 职责 | preHash |
 |---|---|---|---|
 | `services/aos-api/aos_api/ecommerce_analysis_startup_eval.py` | Host原路径 | 当前首阶段技能发布血缘派生Eval合同，统一事务冻结，不宣称业务质量 | `d9684ae8b117c84dc8a0314d14f56337f3729b67e99d7cbc2a1495f174cf5b52` |
+
+### SC3 本任务Context组合Host权威（2026-09-14）
+
+| 文件 | 去向 | 职责 | preHash |
+|---|---|---|---|
+| `services/aos-api/aos_api/ecommerce_analysis_context_preparation.py` | Host原路径 | 当前原事件下自动准备模板/任务/启动证据/Eval与Context，统一事务不授予运行权 | `462fdbf09fadb79f99b42c3eecabcd8e47b54eae9e3e1d8c11753925245a0635` |

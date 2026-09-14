@@ -193,18 +193,24 @@ def test_governed_receipt_result_identity_is_stable_and_strict() -> None:
 
 
 class _ReadyRouteAuthority:
+    def __init__(self, scope=None):
+        self.scope = scope
+
     def require_ready(self, scope, route_ref, policy_ref, *, evaluated_at):
-        assert scope.org_id.startswith("bind3-org-")
+        assert scope == self.scope if self.scope is not None else scope.org_id.startswith("bind3-org-")
         assert route_ref.asset_type == "ModelRouteRevision"
         assert policy_ref.asset_type == "RuntimePolicyRevision"
         assert evaluated_at.tzinfo is not None
 
 
 class _PublishedLogicAuthority:
+    def __init__(self, scope=None):
+        self.scope = scope
+
     def require_published(
         self, _conn, scope, canonical_logic_id, logic_revision_ref
     ):
-        assert scope.org_id.startswith("bind3-org-")
+        assert scope == self.scope if self.scope is not None else scope.org_id.startswith("bind3-org-")
         assert canonical_logic_id == logic_revision_ref.asset_id
         assert logic_revision_ref.asset_type == "LogicRevision"
 
@@ -312,13 +318,13 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def published_skill_runtime(*, skill_id=None, canonical_logic_id=None):
+def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None):
     suffix = uuid.uuid4().hex[:12]
-    scope = TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
+    scope = scope or TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
     with connect() as conn:
-        conn.execute("INSERT INTO twa_org(id,name) VALUES (%s,%s)", (scope.org_id, scope.org_id))
+        conn.execute("INSERT INTO twa_org(id,name) VALUES (%s,%s) ON CONFLICT DO NOTHING", (scope.org_id, scope.org_id))
         conn.execute(
-            "INSERT INTO twa_workspace(org_id,project_id,name) VALUES (%s,%s,%s)",
+            "INSERT INTO twa_workspace(org_id,project_id,name) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
             (*scope.key, scope.project_id),
         )
         conn.commit()
@@ -442,8 +448,8 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None):
         idempotency_key=f"publish-skill-{suffix}",
     )
     service = AipSkillPublicationService(
-        route_authority=_ReadyRouteAuthority(),
-        logic_authority=_PublishedLogicAuthority(),
+        route_authority=_ReadyRouteAuthority(scope),
+        logic_authority=_PublishedLogicAuthority(scope),
     )
     published, receipt = service.publish_evaluated_revision(
         scope,
