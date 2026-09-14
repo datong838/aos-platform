@@ -33,6 +33,14 @@ class PipelineSnapshotGroupAssessmentOwner:
         self._policies=PipelineSnapshotGroupPolicyOwner(controls=claims._controls)
 
     def run_current(self,conn,*,scope,group_id,actor,bindings,policy_ref,execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
+            policy_ref=policy_ref,execute=execute,completed_read=False)
+
+    def run_completed_current(self,conn,*,scope,group_id,actor,bindings,policy_ref,execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
+            policy_ref=policy_ref,execute=execute,completed_read=True)
+
+    def _run(self,conn,*,scope,group_id,actor,bindings,policy_ref,execute,completed_read):
         if not callable(execute):raise TypeError('synchronous assessment consumer required')
         def consume_input(source):
             def consume_policy(current):
@@ -47,4 +55,5 @@ class PipelineSnapshotGroupAssessmentOwner:
                 return result
             return self._policies.run_current(conn,scope=scope,refs=tuple(ref for ref,_ in bindings),actor=actor,
                 policy_ref=policy_ref,execute=consume_policy)
-        return self._inputs.run_current(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=consume_input)
+        read=self._inputs.run_completed_current if completed_read else self._inputs.run_current
+        return read(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=consume_input)

@@ -31,17 +31,25 @@ class PipelineSnapshotGroupInputOwner:
         self._claims=claims
 
     def run_current(self,conn,*,scope,group_id,actor,bindings,execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=execute,completed_read=False)
+
+    def run_completed_current(self,conn,*,scope,group_id,actor,bindings,execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=execute,completed_read=True)
+
+    def _run(self,conn,*,scope,group_id,actor,bindings,execute,completed_read):
         if not callable(execute):raise TypeError('synchronous consumer required')
         args=dict(scope=scope,group_id=group_id,actor=actor,bindings=bindings)
         def consume(group):
-            current=self._load(conn,group,args)
+            current=self._load(conn,group,args,completed_read=completed_read)
             result=execute(current);_reject_deferred(result)
-            if self._load(conn,group,args)!=current:raise IngressJournalConflict('GROUP_INPUT_CHANGED_DURING_CONSUMPTION')
+            if self._load(conn,group,args,completed_read=completed_read)!=current:raise IngressJournalConflict('GROUP_INPUT_CHANGED_DURING_CONSUMPTION')
             return result
         return self._groups._groups.run_current(conn,scope=scope,refs=tuple(ref for ref,_ in bindings),actor=actor,execute=consume)
 
-    def _load(self,conn,group,args):
-        scope=args['scope'];claim=self._groups.read_current(conn,**args)
+    def _load(self,conn,group,args,*,completed_read=False):
+        scope=args['scope']
+        read=self._groups.read_completed_current if completed_read else self._groups.read_current
+        claim=read(conn,**args)
         with conn.cursor(row_factory=dict_row) as cursor:
             saved=cursor.execute(sql.SQL('SELECT request_hash,manifest_hash,manifest,read_started_at,read_completed_at,snapshot_basis FROM {} WHERE org_id=%s AND project_id=%s AND group_id=%s').format(
                 sql.Identifier(self._claims._journal.schema,'pipeline_snapshot_group_input')),(*scope.key,UUID(args['group_id']))).fetchone()
@@ -58,7 +66,7 @@ class PipelineSnapshotGroupInputOwner:
                     or leaf['runId']!=member.run_id or type(leaf['rowCount']) is not int or not 0<=leaf['rowCount']<group.row_limit
                     or type(leaf['rowsHash']) is not str or re.fullmatch(r'sha256:[0-9a-f]{64}',leaf['rowsHash']) is None):
                 raise IngressJournalConflict('GROUP_ORIGINAL_MEMBER_DRIFT')
-            journal=ControlledIngressJournal(claims=self._claims,scope=scope,run_id=member.run_id,control_ref=ref,actor=args['actor'])
+            journal=ControlledIngressJournal(claims=self._claims,scope=scope,run_id=member.run_id,control_ref=ref,actor=args['actor'],completed_read=completed_read)
             parent=_bound_parent(conn,scope,member.run_id,journal)
             rows=parent.get('outputRows')
             if (leaf['envelopeHash']!=_digest(parent) or type(rows) is not list or len(rows)!=leaf['rowCount']

@@ -44,7 +44,12 @@ class PipelineSnapshotGroupClaimOwner:
     def read_current(self,conn,*,scope,group_id,actor,bindings):
         return self._operate(conn,scope,group_id,actor,bindings,create=False).record
 
-    def _operate(self,conn,scope,group_id,actor,bindings,*,create):
+    def read_completed_current(self,conn,*,scope,group_id,actor,bindings):
+        """All original members completed; current authorization remains required."""
+        return self._operate(conn,scope,group_id,actor,bindings,create=False,completed_read=True).record
+
+    def _operate(self,conn,scope,group_id,actor,bindings,*,create,completed_read=False):
+        if completed_read and create:raise ValueError('completed group cannot reserve source calls')
         if type(scope) is not TenantScope or type(group_id) is not str or str(UUID(group_id))!=group_id:
             raise ValueError('canonical snapshot group identity required')
         actor=_text(actor,240)
@@ -74,7 +79,8 @@ class PipelineSnapshotGroupClaimOwner:
                     if [(row['ordinal'],row['run_id']) for row in saved]!=[(i+1,item['runId']) for i,item in enumerate(members)]:
                         raise IngressJournalConflict('SNAPSHOT_GROUP_MEMBERS_DIFFER')
                     for ref,_,_ in group.members:
-                        records.append(self._claims.read_current(conn,scope=scope,run_id=runs[ref.resource_id],control_ref=ref,actor=actor))
+                        read=self._claims.read_completed_current if completed_read else self._claims.read_current
+                        records.append(read(conn,scope=scope,run_id=runs[ref.resource_id],control_ref=ref,actor=actor))
                     return SnapshotGroupClaimReservation(SnapshotGroupClaimRecord(scope,group_id,actor,request_hash,tuple(records)),False)
                 if not create:raise LookupError('snapshot group claim unavailable')
                 for ref,_,_ in group.members:

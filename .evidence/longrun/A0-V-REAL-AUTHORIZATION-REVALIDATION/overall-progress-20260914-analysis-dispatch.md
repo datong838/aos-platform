@@ -280,3 +280,11 @@ PipelineSnapshotGroupLocator复用原member唯一键联查claim/input，要求ru
 隔离PG10项覆盖：逐成员定位同组、准备前None、未知run不替换、差1微秒拒绝、错tenant/非法输入拒绝、原唯一约束、原binding/manifest损坏拒绝。首次测试误按调用顺序比较，修正为原Owner的control resource_id排序；后一次9过1夹具失败，原FK正确禁止修改已引用requestHash，改为测试专用破坏binding body而保留原FK。最终损坏反例2项5.11秒通过，其余9项在前组合通过；未放宽产品约束。AR2扫描1928/187/93五类错误为空。主库/数据未变。
 
 下一波SC4-5i7：给原GroupClaim/Input/Assessment/Quality增设独立completed-current只读入口，复用原单run read_completed_current和ControlledIngressJournal(completed_read=True)，要求组内全部成功/执行器已停/原Dataset Receipt与完整投影记录合格；默认running写路径不变。定位到组后仍需此当前只读守卫。暂不支持换控制代次的组续期，不把完成态历史变成新写许可。
+
+### SC4-5i7 完成组当前只读验证
+
+原GroupClaim/Input/Assessment/Quality新增独立read_completed_current/run_completed_current；内部逐成员复用原SourceClaim.read_completed_current和ControlledIngressJournal(completed_read=True)，每次核成功/停止/完成时间/原Dataset回执。默认reserve/run_current/GroupObjectExecutor未扩大到完成态；同一原控制当前权限仍要求。返回原input计量，非最新规范对象、正式Readiness或新写入授权。
+
+隔离PG新完成态8项＋原Quality15项共23项24.03秒通过；再跑原GroupClaim/Input/Object28项23.89秒通过，共51项。测试用原对象/图/Dataset执行器生成实际回执，运行终止状态明确为夹具设置；不是主系统调度完成实测。验证完整组只读重放一次源、默认写路拒绝、任一成员running/failed/未停/无finished/缺Receipt/hash坏拒绝，以及消费中当前release撤权拒绝。AR2扫描1928/187/93五类错误为空；memory-status强投影CURRENT、validateGREEN，eventual Codex pending不手改。主系统仍未升级或安装。
+
+下一波SC4-5i8：组合原AnalysisContinuationContext、origin.runId和精确cutoff定位器、完成组QualityOwner，在同一当前事务绑定analysis Receipt、原组manifest与策略。要求定位actor/controlRef和原analysis source journal完全一致，不接调用方自报run/group/时间，不更新旧需求截止。组合先补原始分析上下文与组之间的读取接线，随后该输入用于固定事实测量与原DataRequirementOutbox消费；不会把引用覆盖直接当Fulfillment。

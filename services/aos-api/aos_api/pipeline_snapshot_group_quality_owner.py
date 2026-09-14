@@ -44,6 +44,14 @@ class PipelineSnapshotGroupQualityOwner:
         self._assessments = PipelineSnapshotGroupAssessmentOwner(claims=claims)
 
     def run_current(self, conn, *, scope, group_id, actor, bindings, policy_ref, quality_ref, execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
+            policy_ref=policy_ref,quality_ref=quality_ref,execute=execute,completed_read=False)
+
+    def run_completed_current(self, conn, *, scope, group_id, actor, bindings, policy_ref, quality_ref, execute):
+        return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
+            policy_ref=policy_ref,quality_ref=quality_ref,execute=execute,completed_read=True)
+
+    def _run(self, conn, *, scope, group_id, actor, bindings, policy_ref, quality_ref, execute, completed_read):
         if not callable(execute):
             raise TypeError('synchronous quality consumer required')
         quality_ref = PipelineExactRef.model_validate(quality_ref)
@@ -67,5 +75,6 @@ class PipelineSnapshotGroupQualityOwner:
             if load_quality() != quality or observed_rows_hash([quality_payload(current)]) != current.content_hash:
                 raise ValueError('current group quality changed during consumption')
             return result
-        return self._assessments.run_current(conn, scope=scope, group_id=group_id, actor=actor,
+        read=self._assessments.run_completed_current if completed_read else self._assessments.run_current
+        return read(conn, scope=scope, group_id=group_id, actor=actor,
             bindings=bindings, policy_ref=policy_ref, execute=consume)

@@ -1,0 +1,7 @@
+### SC4-5i7 完成组当前只读验证
+
+原GroupClaim/Input/Assessment/Quality新增独立read_completed_current/run_completed_current；内部逐成员复用原SourceClaim.read_completed_current和ControlledIngressJournal(completed_read=True)，每次核成功/停止/完成时间/原Dataset回执。默认reserve/run_current/GroupObjectExecutor未扩大到完成态；同一原控制当前权限仍要求。返回原input计量，非最新规范对象、正式Readiness或新写入授权。
+
+隔离PG新完成态8项＋原Quality15项共23项24.03秒通过；再跑原GroupClaim/Input/Object28项23.89秒通过，共51项。测试用原对象/图/Dataset执行器生成实际回执，运行终止状态明确为夹具设置；不是主系统调度完成实测。验证完整组只读重放一次源、默认写路拒绝、任一成员running/failed/未停/无finished/缺Receipt/hash坏拒绝，以及消费中当前release撤权拒绝。AR2扫描1928/187/93五类错误为空；memory-status强投影CURRENT、validateGREEN，eventual Codex pending不手改。主系统仍未升级或安装。
+
+下一波SC4-5i8：组合原AnalysisContinuationContext、origin.runId和精确cutoff定位器、完成组QualityOwner，在同一当前事务绑定analysis Receipt、原组manifest与策略。要求定位actor/controlRef和原analysis source journal完全一致，不接调用方自报run/group/时间，不更新旧需求截止。组合先补原始分析上下文与组之间的读取接线，随后该输入用于固定事实测量与原DataRequirementOutbox消费；不会把引用覆盖直接当Fulfillment。
