@@ -43,7 +43,8 @@
 在执行本节前，修改 `scripts/a0v_ecommerce_current_reinstall.py` 与对应测试，增加 C released-owner settlement及 D 的 exact create/prepare/verify/stage/configure/enable 路由：D 只能以前述已收敛的 C 为 predecessor；所有操作继续使用唯一 intent/result 和原正式服务。新 Host 必须先显示 lifecycle、product-event、analysis-data-requirement 三个 Worker ACTIVE，随后才能接收 settlement与 D 的运行请求。切换后本节所有“当前 C”按实际当前安装 D 执行，控制器从主库 current head解析并锁定 exact ref，不能保留 C 常量。
 
 - 新增 `scripts/a0v_qyh_current_product_event_first_chain.py`：固定仓外0700状态目录、0600 intent/result；分 action 执行 observe、source-probe、prepare-p02、select、control、schedule、bind、enable/read/disable、Case/Policy/EventControl 与最终观察。每项在调用前按主库当前事实生成并冻结 intent；已有 intent/result 时只读，不重发。
-- 新增 `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：验证 C/ref/hash/epoch 固定、历史引用拒绝、上游只读边界、状态机、未知结果只观察、canary与外部副作用为零。执行组件继续由现有生产 Owner测试覆盖，不复制实现。
+- 修改 `scripts/a0v_p02_current_preflight.py` 与 `services/aos-api/tests/test_a0v_p02_current_preflight.py`：移除退役 Niushop 1.5/C 之前安装常量，从当前重装 D 的不可变 create receipt与主库 active@5 head导出 exact installation ref；固定当前签名根与 Niushop 1.22，要求 ready/enabled/unfenced、config ref存在并逐字段匹配。当前 P02 mapping与1.5字节一致，但 schema/masking摘要已经变化，必须从1.22签名资产重新导出，不得复用旧审批中的摘要。
+- 新增 `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：验证 D/ref/hash/epoch 固定、历史引用拒绝、上游只读边界、状态机、未知结果只观察、canary与外部副作用为零。执行组件继续由现有生产 Owner测试覆盖，不复制实现。
 - 若实际盘点证明某一步已有通用正式入口，控制器只做严格装配与证据，不新增第二套 Store/Receipt；若正式入口缺失，先补本方案再进行最小产品实现。
 
 ## preHash
