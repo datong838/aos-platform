@@ -32,3 +32,5 @@
 
 ## 主库落地结果（05:56）
 389d39e8固定执行器五阶段graphs/publication/contracts/bindings/verify均成功，私有事实目录 successor-g/model-successor/*-result.json。主库八图后继r2、八Skill r3、两组许可/八评估合同、八后继能力/技能绑定完成；原责任计划@2读取frozen/ready/complete且blockers=[]。G事件保持暂停；未重发17unknown，真实经营Run仍待后续恢复验证。下一波登记：核对未知目标Receipt、建立有效窗口后继SourceSelection/Control/Policy，正式恢复自然首链。不计为经营闭环完成。
+
+未知核查：17 attempt均unknown，按target_idempotency_key查目标runtime journal回执0，Case Run0；不把缺失视为成功，不重置/重发。新 scripts/a0v_g_product_window2.py 复用G现有源/Policy/控制Owner，SourceSelection/Control以前一exact ref形成后继，Policy从实际r3 Receipt生成r4（Case保留），仅新enable审批不重复dispatch扩展。新数据同步独立intent；scripts/a0v_event_complete_product_source_once.py 将固定policy revision提取为默认3的profile常量，新wrapper指定4并参数化SQL，防止同Policy多版本歧义。旧pending保留因旧窗口/绑定禁用不会被claim。继续登记unknown无目标回执的正式结案能力缺口，不能伪造receipt。

@@ -15,6 +15,7 @@ def policy_profile():
 from a0v_qyh_current_product_event_first_chain import api,freeze
 
 STATE=f.STATE/'product-source-v1'
+POLICY_REVISION=3
 
 
 def counts():
@@ -39,9 +40,9 @@ def run():
     policy=policy_profile()
     from a0v_formal_text_model_renewal import database_connect
     with database_connect('aos_meta_head')() as c:
-        row=c.execute("SELECT enabled,approved,policy_revision,installation_id,generation,execution_epoch,effective_until>clock_timestamp() AS current FROM automation_schedule_binding WHERE org_id='org-org' AND project_id='dev-project' AND policy_id=%s AND policy_revision=3",(policy.POLICY,)).fetchone()
+        row=c.execute("SELECT enabled,approved,policy_revision,installation_id,generation,execution_epoch,effective_until>clock_timestamp() AS current FROM automation_schedule_binding WHERE org_id='org-org' AND project_id='dev-project' AND policy_id=%s AND policy_revision=%s",(policy.POLICY,POLICY_REVISION)).fetchone()
     if (row is None or not all(row[k] is True for k in ('enabled','approved','current'))
-        or row['policy_revision']!=3 or str(row['installation_id'])!=f.G_ID
+        or row['policy_revision']!=POLICY_REVISION or str(row['installation_id'])!=f.G_ID
         or str(row['generation'])!=f.G_GENERATION or row['execution_epoch']!=3):
         raise ValueError('current approved G event binding required')
     freeze(STATE/'execute-intent.json',dict(scheduleId=authority.SCHEDULE,bindingRef=authority.load('binding')['ref'],maxSourceCalls=1,observationSeconds=180))
