@@ -38,10 +38,21 @@ def run(phase,plane):
         freeze(intent,payload)
         proposal,ref=_approve(ACTION['id'],payload,PREFIX+'-dispatch-approval')
         result=dict(proposalId=proposal.proposal.id,approvalRef=ref,request=request)
-    elif phase=='expand':
+    elif phase in ('expand','expand-recovered'):
         from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchRequest
         approved=load('approve-dispatch')
         request=EventControlDispatchRequest.model_validate({**approved['request'],'approvalRef':approved['approvalRef']})
+        if phase=='expand-recovered':
+            from a0v_formal_text_model_renewal import database_connect
+            with database_connect('aos_meta_head')() as conn:
+                count=conn.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE org_id='org-org' AND project_id='dev-project' AND idempotency_key=%s",(request.idempotency_key,)).fetchone()['n']
+                rows=conn.execute("SELECT operation_id,installation_id,generation,execution_epoch,operation_fence,cutover_group_revision FROM extension_operation_dispatch_binding WHERE org_id='org-org' AND project_id='dev-project' AND cutover_group_id=%s",(f.GROUP,)).fetchall()
+            from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+            if (count!=0 or {r['operation_id'] for r in rows}!=set(ECOMMERCE_GROWTH_OPERATIONS)
+                or any(str(r['installation_id'])!=f.F_ID or str(r['generation'])!=f.F_GENERATION or r['execution_epoch']!=3 or r['operation_fence'] is not False or r['cutover_group_revision']!=5 for r in rows)
+                or json.loads((STATE/'expand-intent.json').read_text())!=request.wire()):
+                raise ValueError('failed expansion is not proven absent and unchanged')
+            freeze(STATE/'expand-recovered-precheck.json',dict(receiptCount=count,entries=len(rows),groupRevision=5))
         freeze(intent,request.wire())
         result=plane.pipeline_control_factory.build_event_dispatch_lifecycle(scope).transition(scope=scope,request=request,actor=f.ACTOR)
     elif phase=='approve-control':
@@ -67,7 +78,7 @@ def run(phase,plane):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['action','approve-dispatch','expand','approve-control','enable']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['action','approve-dispatch','expand','expand-recovered','approve-control','enable']);args=parser.parse_args()
     print(json.dumps(run(args.phase,f.setup()),ensure_ascii=False,indent=2,default=str))
 
 

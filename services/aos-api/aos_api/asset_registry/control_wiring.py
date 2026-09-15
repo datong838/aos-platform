@@ -452,6 +452,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         disable_dependent=disable_dependent,
         live_job_directory=LivePreparedJobDirectory(),
         pipeline_control_factory=PipelineControlServiceFactory(
+            event_dispatch_connect=registration_connect,
             installation_store=store,
             policy=policy,
             allowlist_roots=_allowlist_roots(repository_root=_REPOSITORY_ROOT),

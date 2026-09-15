@@ -200,7 +200,7 @@ def test_signed_service_uses_actual_approval_and_independent_receipt(service_dat
         monkeypatch.setattr(composition,'runtime_worker_connection',runtime_connect)
         service=composition.PipelineControlServiceFactory(
             installation_store=PostgresInstallationStore(runtime_connect),policy=policy,
-            allowlist_roots={'service':tmp_path}).build_event_dispatch_lifecycle(scope)
+            allowlist_roots={'service':tmp_path},event_dispatch_connect=runtime_connect).build_event_dispatch_lifecycle(scope)
         parsed = EventControlDispatchRequest.model_validate(request)
         if fault == 'artifact':
             (directory / CONTROL_CONTRACT_PATH).write_bytes(b'{}')

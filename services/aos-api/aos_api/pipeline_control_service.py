@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
+from typing import Callable
 
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.manifest_loader import ManifestLoader
@@ -58,12 +59,15 @@ class PipelineControlServiceFactory:
     installation_store: PostgresInstallationStore
     policy: ReleasePolicy
     allowlist_roots: dict[str,Path]
+    event_dispatch_connect: Callable | None = None
 
     def __post_init__(self):
         if type(self.installation_store) is not PostgresInstallationStore or type(self.policy) is not ReleasePolicy:
             raise TypeError('exact production pipeline dependencies required')
         if type(self.allowlist_roots) is not dict or any(type(key) is not str or not isinstance(value,Path) for key,value in self.allowlist_roots.items()):
             raise TypeError('server-owned asset roots required')
+        if self.event_dispatch_connect is not None and not callable(self.event_dispatch_connect):
+            raise TypeError('explicit event dispatch identity connector required')
         object.__setattr__(self,'allowlist_roots',MappingProxyType(dict(self.allowlist_roots)))
 
     def _source_dependencies(self,scope):
@@ -82,8 +86,10 @@ class PipelineControlServiceFactory:
 
     def build_event_dispatch_lifecycle(self,scope):
         from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchLifecycle
+        if self.event_dispatch_connect is None:
+            raise PermissionError('protected event dispatch identity is not configured')
         _,artifacts=self._source_dependencies(scope)
-        return EventControlDispatchLifecycle(connect=runtime_worker_connection,
+        return EventControlDispatchLifecycle(connect=self.event_dispatch_connect,
             installation_store=self.installation_store,artifacts=artifacts,release_policy=self.policy)
 
     def build_event_owner(self,scope):
