@@ -24,6 +24,8 @@ COPY_SOURCES = {
     "backend/ecommerce_growth/ecommerce_product_event_command.py": "44b216eee44d4dceb6700e242c5630bd9b2320f4e8ef4f01ce973e7fcbb371d3",
     "backend/ecommerce_growth/ecommerce_product_event_control.py": "b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b",
     "backend/ecommerce_growth/ecommerce_product_event_schedule.py": "07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed",
+    "content/schemas/product-event-control.contract.v1.json": "e89fad0608fc8b1d234a7d006104f12b83ed3585eed7134068b9f58142c1778e",
+    "content/schemas/product-event-save.contract.v1.json": "7b489c715ca6638fe4d3ce759d254b328f0bf47a0158b8a42354ac412be2f085",
 }
 
 _BASE_OPERATION = (

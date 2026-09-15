@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "aos.ecommerce.product-event-control-contract/v1",
+  "operationId": "ecommerce_growth_event_control",
+  "commandSchema": "aos.ecommerce.product-event-control-command/v1",
+  "receiptType": "EventPolicyControlReceipt",
+  "tenantAuthority": "trusted-host-scope",
+  "enableApproval": "current-independent-action-approval",
+  "disableAuthority": "current-tenant-controller",
+  "sourceRequiredForDisable": false
+}

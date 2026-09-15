@@ -12,7 +12,7 @@ owner：`m1`；不 push；230 L0 挂起。
 
 ## 目标与方案
 
-先生成不可变 `solution.ecommerce.growth@1.9.0` 候选：以 1.8.0 冻结树 `sha256:718548ad92a3715891b4b84060f0a2f22ad4baf6e492195573738e49c40ac8c4` 为唯一基线，保留全部七工作台导航/UI、经营参谋只读页面与历史业务文件；只追加已经逐步评审的 ProductEvent 四模块、分析启动/编译蓝图，更新应用组合，并把注册入口扩为十项增长操作加经营参谋读取。候选本身不安装、不签名、不授权、不修改数据库。
+先生成不可变 `solution.ecommerce.growth@1.9.0` 候选：以 1.8.0 冻结树 `sha256:718548ad92a3715891b4b84060f0a2f22ad4baf6e492195573738e49c40ac8c4` 为唯一基线，保留全部七工作台导航/UI、经营参谋只读页面与历史业务文件；只追加已经逐步评审的 ProductEvent 四模块、两个导出合同、分析启动/编译蓝图，更新应用组合，并把注册入口扩为十项增长操作加经营参谋读取。候选本身不安装、不签名、不授权、不修改数据库。
 
 随后新增 receipt-first 的可选分派扩展协议。它只允许当前已安装、已签名、ready/enabled/unfenced 且清单确实声明 `ecommerce_growth_event_control` 的增长包，在原完整九操作组上追加这一固定操作；请求必须绑定当前安装代次、execution epoch、runtime revision、cutover group revision、签名 release 与专用当前审批。数据库函数在串行事务、租户会话和 advisory lock 下完成一次 CAS，写不可变 Receipt；重复同请求回放，漂移拒绝。逆操作也必须 receipt-first，先 fence/drain 再删除可选行，供卸载、回滚与后继切换复用。
 
@@ -21,7 +21,7 @@ owner：`m1`；不 push；230 L0 挂起。
 ## Rules
 
 1. 方案、清册和固定源 hash 先提交，之后才编码；历史 1.8 候选、已签名根和运行目录均不可修改。
-2. 1.9 候选只允许改变 `bundle.yaml`、注册入口和八个自身引用；只允许新增六个领域模块，并以已评审源文件固定 hash 覆盖应用组合。任何额外差异失败关闭。
+2. 1.9 候选只允许改变 `bundle.yaml`、注册入口和八个自身引用；只允许新增六个领域模块与两个导出合同，并以已评审源文件固定 hash 覆盖应用组合。任何额外差异失败关闭。
 3. 注册必须精确为 14 项导航/UI、原九项增长 API、固定 `ecommerce_growth_event_control` 和 `analyst_workspace_view_v1`，共 25 项；ProductEvent 与分析构造通过 SDK 纯运行测试，不连接 Host 或数据库。
 4. 第十项分派只能由新的专用协议管理；不手工写 `extension_operation_dispatch_binding`，不复用普通注册回执或 cutover approval，不接受任意 operationId。
 5. 原九项 cutover 语义保持；十项扩展在激活后执行、收缩在 rollback 前执行。异常结果先读取 Receipt，未知结果不换 key 重发。
