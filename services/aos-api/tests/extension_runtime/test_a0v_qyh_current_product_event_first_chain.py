@@ -54,7 +54,24 @@ def test_execute_enables_runs_once_and_disables(control, monkeypatch, tmp_path):
         calls.append((method,path,body)); return 200,{"status":"succeeded"}
     monkeypatch.setattr(control,"api",api)
     result=control.execute_once(object(),object())
-    assert result["outcome"]=="CURRENT_PRODUCT_SNAPSHOT_EXECUTED"
+    assert result["outcome"]=="CURRENT_PRODUCT_SNAPSHOT_SUCCEEDED"
     assert calls==[("PATCH",f"/v1/schedules/{control.SCHEDULE}",{"enabled":True}),
                    ("POST",f"/v1/schedules/{control.SCHEDULE}/run",{}),
                    ("PATCH",f"/v1/schedules/{control.SCHEDULE}",{"enabled":False})]
+
+
+def test_execute_reports_known_failed_run_without_claiming_success(control, monkeypatch, tmp_path):
+    monkeypatch.setattr(control, "STATE", tmp_path)
+    current_control = {"resourceType": "PipelineRuntimeControlRevision", "resourceId": "pipeline-control-current", "revision": 1, "contentHash": "sha256:current"}
+    current_binding = {"resourceType": "PipelineScheduleControlBinding", "resourceId": "schedule-control-current", "revision": 2, "contentHash": "sha256:binding"}
+    control.freeze(tmp_path / "control-result.json", {"ref": current_control})
+    control.freeze(tmp_path / "binding-result.json", {"ref": current_binding})
+    monkeypatch.setattr(control, "observe", lambda *_: {"current": {"schedule": {"enabled": False},
+        "binding": {"ref": current_binding, "controlRef": current_control}}})
+    replies = iter(((200, {"enabled": True}),
+                    (200, {"status": "failed", "result": {"error_code": "PIPELINE_EXECUTOR_FAILED"}}),
+                    (200, {"enabled": False})))
+    monkeypatch.setattr(control, "api", lambda *_a, **_k: next(replies))
+    result = control.execute_once(object(), object())
+    assert result["outcome"] == "CURRENT_PRODUCT_SNAPSHOT_FAILED"
+    assert result["run"]["body"]["result"]["error_code"] == "PIPELINE_EXECUTOR_FAILED"

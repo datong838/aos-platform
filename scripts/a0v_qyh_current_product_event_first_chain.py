@@ -172,7 +172,8 @@ def execute_once(preflight, plane) -> dict[str, Any]:
         run_status, run = api("POST", f"/v1/schedules/{SCHEDULE}/run", {})
     finally:
         disable_status, disabled = api("PATCH", f"/v1/schedules/{SCHEDULE}", {"enabled": False})
-    return {"outcome": "CURRENT_PRODUCT_SNAPSHOT_EXECUTED", "enable": {"status": enable_status, "body": enabled},
+    run_outcome = "CURRENT_PRODUCT_SNAPSHOT_SUCCEEDED" if run.get("status") == "succeeded" else "CURRENT_PRODUCT_SNAPSHOT_FAILED"
+    return {"outcome": run_outcome, "enable": {"status": enable_status, "body": enabled},
             "run": {"status": run_status, "body": run}, "disable": {"status": disable_status, "body": disabled}}
 
 
@@ -194,8 +195,20 @@ def observe(preflight, plane) -> dict[str, Any]:
         binding = PipelineScheduleControlOwner(controls=services.controls).read_latest(conn, scope=scope, schedule_id=SCHEDULE)
         schedule = conn.execute("SELECT id,pipeline_id,enabled,last_run FROM meta_schedule WHERE org_id=%s AND project_id=%s AND id=%s",(*scope.key,SCHEDULE)).fetchone()
         run = conn.execute("SELECT * FROM meta_schedule_run WHERE org_id=%s AND project_id=%s AND schedule_id=%s ORDER BY started_at DESC LIMIT 1",(*scope.key,SCHEDULE)).fetchone()
+        stages = None
+        if run is not None:
+            stages = {}
+            for label, table in (("command", "ecommerce_ingress_command"),
+                                 ("derived", "ecommerce_ingress_derived_command"),
+                                 ("dataset", "ecommerce_ingress_dataset_receipt"),
+                                 ("recoveryClaim", "ecommerce_ingress_recovery_claim")):
+                stages[label] = conn.execute(
+                    f"SELECT count(*) AS n FROM {table} WHERE org_id=%s AND project_id=%s AND run_id=%s",
+                    (*scope.key, run["id"]),
+                ).fetchone()["n"]
         canary = conn.execute("SELECT count(*) AS n FROM pipeline_controlled_source_claim WHERE org_id='dev-org' AND project_id='dev-project'").fetchone()["n"]
         result = {"schedule": dict(schedule) if schedule else None, "run": dict(run) if run else None,
+                  "ingressStageCounts": stages,
                   "selectionRef": decode_selection_row(selection_row).ref.model_dump(mode="json",by_alias=True) if selection_row else None,
                   "controlRef": decode_control_row(control_row).ref.model_dump(mode="json",by_alias=True) if control_row else None,
                   "binding": None if binding is None else {"ref": binding.ref.model_dump(mode="json",by_alias=True),

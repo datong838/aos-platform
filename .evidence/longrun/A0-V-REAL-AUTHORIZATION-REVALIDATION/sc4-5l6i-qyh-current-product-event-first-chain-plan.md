@@ -18,6 +18,10 @@
 
 切换前快照于 2026-09-15 17:26 +08:00 冻结，旧 Host 随后优雅退出。实际读回 C 为 active@5、binding rev5/epoch4、enabled=false、fenced=true、desired=enabled、observed=unknown，三个资源均 released/observedRelease=true，原四项 operation均 terminal，canary=0。这是 Host cleanup 的正式未归属恢复态，不能再调用只接受 enabled/unfenced 的普通 disable。控制器新增窄化的 `settle-c`：先逐字段确认上述当前安装、配置存在、资源已释放且无未决 operation，再使用原 RuntimeDisableService 发出唯一 disable Receipt，由新 Host消费并把 desired收敛为 disabled；只有该 operation成功且再次读回满足 replacement predecessor合同后才能 create D。
 
+2026-09-15 18:36 +08:00，D 的第一次真实 P02 批次 `scr-f22003e66e544ebe` 已知失败并停止。一次源调用成功读取 65 条，原始规范命令已不可变保存；没有 derived、Dataset Receipt、projection 或 canary 写。精确离线对账确认 64 条与权威对象一致，`niushop:1:32` 的 `stock/saleNum` 已变化而源 `modify_time` 未变化。旧批次键只绑定最大源游标，因此还与历史不同载荷 Receipt 撞键，权威层以 `IDEMPOTENCY_CONFLICT` 正确拒绝。该 Run 不满足“相同原命令可重放”的恢复条件，永久保留 failed；不得通过放宽同版本冲突、改旧 Receipt、改 Journal 或伪造源时间恢复。
+
+修复采用已有正式 `aos.snapshot-materialization/v3`，不新增第二套版本算法：Niushop 后继包把 P02 从宣称可靠源修改时间的 v2 改为完整观测版本 v3，`time_basis=observation`，并在属性中明确 `sourceUpdatedAtBasis=observation`、`sourceModificationTimeKnown=false`。完整观测每次可形成新的诚实版本，源表内业务时间仍不得冒充修改水位。新批次幂等键自然随观测版本变化；内核的相同版本差异拒绝规则不变。由于签名包不可变，修复必须形成 Niushop 1.23 候选、签名并通过 D→E 正式重装后才能新读，禁止就地改 D 的签名资产或数据库 graph。
+
 ## Rules、主路径与停止条件
 
 1. 先修独立 Host 生命周期接线，再配置真实链。ProductEvent Worker 与 DataRequirement Worker使用同一个 control plane、LivePreparedJobDirectory、stop event 和 Host health；Host 停止后两者必须退出。保持 API 内嵌 Host disabled，保持 QYH Cron disabled。
@@ -30,6 +34,7 @@
 7. 若当前有效独立审批、职责、方法、预算、模型健康或十二源策略不足，保留准确阻断与已完成的真实数据证据；不扩大角色、不伪造批准、不用旧 Receipt 代替当前授权。
 8. 正租户固定 `org-org/dev-project`；canary `dev-org/dev-project` 只检查零写。上游只读，无外部发布、触达、投流、价格或履约写；不 push，230 L0 挂起。
 9. 相同阶段失败两次、来源结果未知、Host/数据库单写冲突、租户或 exact ref 漂移时停止该写动作，先读回原 Receipt；不重发未知操作。
+10. 已知 `IDEMPOTENCY_CONFLICT` 的原 Run 保持 failed，不走 saved recovery；只有 1.23/D→E 完成并重新取得当前 SourceSelection/RuntimeControl/ScheduleBinding 后，才允许一个新 Run 做一次新鲜源读。
 
 ## 方案与代码范围
 
@@ -45,6 +50,8 @@
 - 新增 `scripts/a0v_qyh_current_product_event_first_chain.py`：固定仓外0700状态目录、0600 intent/result；分 action 执行 observe、source-probe、prepare-p02、select、control、schedule、bind、enable/read/disable、Case/Policy/EventControl 与最终观察。每项在调用前按主库当前事实生成并冻结 intent；已有 intent/result 时只读，不重发。
 - 修改 `scripts/a0v_p02_current_preflight.py` 与 `services/aos-api/tests/test_a0v_p02_current_preflight.py`：移除退役 Niushop 1.5/C 之前安装常量，从当前重装 D 的不可变 create receipt与主库 active@5 head导出 exact installation ref；固定当前签名根与 Niushop 1.22，要求 ready/enabled/unfenced、config ref存在并逐字段匹配。当前 P02 mapping与1.5字节一致，但 schema/masking摘要已经变化，必须从1.22签名资产重新导出，不得复用旧审批中的摘要。
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：验证 D/ref/hash/epoch 固定、历史引用拒绝、上游只读边界、状态机、未知结果只观察、canary与外部副作用为零。执行组件继续由现有生产 Owner测试覆盖，不复制实现。
+- 修正控制器结果分类：HTTP 调用完成不等于业务成功；Run 为 failed 时输出 `CURRENT_PRODUCT_SNAPSHOT_FAILED` 并保留安全 error code，只有真实 Run succeeded 才输出 `CURRENT_PRODUCT_SNAPSHOT_SUCCEEDED`。观察动作增加 Journal/derived/Dataset/claim 的计数，避免把“调用完成”误报为批次完成。
+- 后继 Niushop 1.23 只修改 P02 mapping 的时间基础与对应包清单/签名材料；不修改 v2 通用语义，不放宽 `EcomConsistencyStore` 同版本约束。经现有包构建验证、签名和 D→E 生命周期后，重新生成 E 的 P02 current preflight 与控制 refs。
 - 若实际盘点证明某一步已有通用正式入口，控制器只做严格装配与证据，不新增第二套 Store/Receipt；若正式入口缺失，先补本方案再进行最小产品实现。
 
 ## preHash
