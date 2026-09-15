@@ -33,3 +33,10 @@ class ProductEventControlCommand(AipContractModel):
         if self.intent == 'enable' and self.approval_ref is None:
             raise ValueError('enable intent requires an approval reference')
         return self
+
+    def approval_intent(self):
+        """Canonical review intent excludes absent optional reference metadata."""
+        checked=type(self).model_validate(self.model_dump(mode='python',by_alias=True))
+        value=checked.model_dump(mode='json',by_alias=True,exclude_none=True)
+        value.pop('approvalRef',None)
+        return value

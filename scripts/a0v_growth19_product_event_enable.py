@@ -62,11 +62,20 @@ def run(phase,plane):
         freeze(intent,payload)
         proposal,ref=_approve('ecommerce_growth_event_control',payload,PREFIX+'-control-approval')
         result=dict(proposalId=proposal.proposal.id,approvalRef=ref,control=control)
-    elif phase=='enable':
+    elif phase in ('enable','enable-recovered'):
         from aos_api.auth import Principal
         from aos_api.ecommerce_growth_canonical_router import EcommerceGrowthCanonicalRouter,ExpectedRuntimeTarget
         from aos_api.ecommerce_growth_host_composition import build_scoped_ecommerce_growth_registry
         approved=load('approve-control');command={**approved['control'],'approvalRef':approved['approvalRef']}
+        if phase=='enable-recovered':
+            from a0v_formal_text_model_renewal import database_connect
+            with database_connect('aos_meta_head')() as conn:
+                enabled=conn.execute("SELECT enabled FROM ecommerce_investigation_schedule_policy_head WHERE org_id='org-org' AND project_id='dev-project' AND schedule_policy_id=%s",(policy.POLICY,)).fetchone()
+                bindings=conn.execute("SELECT count(*) AS n FROM automation_schedule_binding WHERE org_id='org-org' AND project_id='dev-project' AND policy_id=%s",(policy.POLICY,)).fetchone()['n']
+                receipts=conn.execute("SELECT count(*) AS n FROM ecommerce_product_event_control_receipt WHERE org_id='org-org' AND project_id='dev-project' AND idempotency_key=%s",(command['idempotencyKey'],)).fetchone()['n']
+            if enabled is None or enabled['enabled'] is not False or bindings!=0 or receipts!=0 or json.loads((STATE/'enable-intent.json').read_text())!=command:
+                raise ValueError('failed enable is not proven absent')
+            freeze(STATE/'enable-recovered-precheck.json',dict(bindings=bindings,receipts=receipts,enabled=False))
         freeze(intent,command)
         principal=Principal(subject=f.ACTOR,org_id=scope.org_id,project_id=scope.project_id,roles=['admin'])
         router=EcommerceGrowthCanonicalRouter(build_scoped_ecommerce_growth_registry(principal,plane.pipeline_control_factory))
@@ -78,7 +87,7 @@ def run(phase,plane):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['action','approve-dispatch','expand','expand-recovered','approve-control','enable']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['action','approve-dispatch','expand','expand-recovered','approve-control','enable','enable-recovered']);args=parser.parse_args()
     print(json.dumps(run(args.phase,f.setup()),ensure_ascii=False,indent=2,default=str))
 
 

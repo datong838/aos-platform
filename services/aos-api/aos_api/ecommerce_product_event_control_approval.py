@@ -10,8 +10,7 @@ def require_current_event_control_approval(*,transaction,scope,command,case_id,e
     checked=ProductEventControlCommand.model_validate(command)
     if checked.intent!='enable':
         raise ValueError('enable intent required for independent control approval')
-    intent=checked.model_dump(by_alias=True,mode='json')
-    intent.pop('approvalRef')
+    intent=checked.approval_intent()
     return _require_current_event_approval(transaction=transaction,scope=scope,case_id=case_id,
         policy_id=checked.policy_ref.resource_id,approval_ref=checked.approval_ref,executor=executor,
         action_type='ecommerce_growth_event_control',expected_payload=dict(caseId=case_id,

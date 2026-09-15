@@ -43,3 +43,13 @@ def test_copied_models_cannot_bypass_current_validation():
     command=ProductEventControlCommand.model_validate(payload())
     forged=command.model_copy(update={'expected_binding_revision':True})
     with pytest.raises(ValidationError):ProductEventControlCommand.model_validate(forged)
+
+
+def test_approval_intent_matches_absent_optional_metadata_without_losing_business_fields():
+    raw=payload();omitted=payload()
+    omitted['policyRef'].pop('receiptId');omitted['approvalRef'].pop('receiptId')
+    first=ProductEventControlCommand.model_validate(raw).approval_intent()
+    assert first==ProductEventControlCommand.model_validate(omitted).approval_intent()
+    assert 'receiptId' not in first['policyRef'] and 'approvalRef' not in first
+    omitted['expectedBindingRevision']=1
+    assert first!=ProductEventControlCommand.model_validate(omitted).approval_intent()

@@ -47,7 +47,8 @@ def control_governed(governed):
     conn,saved=governed;command=payload()
     command['approvalRef']=dict(saved['approvalRef'],receiptId=None)
     command['policyRef'].update(resourceId=saved['policy']['schedulePolicyId'],contentHash=saved['policy']['contentHash'])
-    intent={key:value for key,value in command.items() if key!='approvalRef'}
+    from aos_api.ecommerce_product_event_control_contracts import ProductEventControlCommand
+    intent=ProductEventControlCommand.model_validate(command).approval_intent()
     full=dict(caseId=saved['caseAuthority']['caseId'],schedulePolicyId=command['policyRef']['resourceId'],controlIntent=intent)
     row=dict(id='ecommerce_growth_event_control',name='event control',object_type='Case',parameters=[],required_markings=[],submission_criteria=[])
     snapshot=action_snapshot_from_row(row);risk=classify_action_risk(row['id'],snapshot,full,None)
