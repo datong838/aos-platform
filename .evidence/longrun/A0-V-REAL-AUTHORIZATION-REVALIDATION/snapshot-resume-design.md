@@ -195,3 +195,13 @@ l6f1只建立路由事实，不引入执行许可。查询必须运行在`aos_ru
 本段开工preHash：本方案`d06ebd09380bbc5de6b18a1beb1f477528440a8ef2e80cdf9a84324fa2c3edb4`；`data_requirement_outbox_store.py`=`f30c47b97f7c2e46ade99b26fd77ec4fe5a44aa1e8aa423699cd7f43c8044cf6`；`main.py`=`fa6fdd9f9b0ff343fd57d2891decf984ddeb09a7e82f8505d4e68488bf88d73f`；`pipeline_control_service.py`=`6ffe7267eafb887a4840951c3142c24acd3b8ee26c5a7fd99f1f1d9846ea0087`；l6f1两个新增文件preHash=`NEW`。若l6f1发现原Receipt与Requirement不能唯一回溯，必须先以Red证据登记最小不可变关联字段，不能靠时间最近或任意第一条选取。
 
 l6f1收尾补充：`verify_closure.py --phase ar2-7`在新增模块未分类时仍无反向依赖错误，因为该Host组合的直接依赖当前均未落入迁移集合；这不替代施工清册完整性。按原新增Host模块惯例，收尾最小追加`closure-manifest.md`分类行，清册preHash=`5e4d45a8784e631dce97b2e29e9030f031ab7858df40eef6888977754405a033`，登记新模块初始hash，不改历史preHash、阶段规则或验证器。
+
+### l6f2 当前安装六策略集合
+
+基线`82086dfd`。l6f1只返回原group控制引用与安装身份；现有Source/Quality/Business/Readiness链仍由调用方分别传入六个`PipelineExactRef`，因此尚可手工选择路径或把candidate文件hash接入流程。l6f2新增`aos_api/ecommerce_analysis_snapshot_policy_set.py`与`tests/extension_runtime/test_analysis_snapshot_policy_set_pg.py`，固定解析当前安装包导出的六个标准路径：`snapshot-relationships.v1.json`、`relationship-quality.v1.json`、`business-cohort.v1.json`、`fact-quality.v1.json`、`business-facts.v1.json`、`snapshot-readiness.v1.json`。调用方只提供l6f1的原`refs/actor`，不能提供路径、版本、hash或编译结果。
+
+为避免复制安装与发布校验，最小修改`pipeline_snapshot_group_policy_owner.py`：抽出只在原group当前守卫内使用的当前release解析辅助，并增加按固定导出路径从Registry artifact记录构造`PipelineExactRef`的内部入口；仍逐次校验active baseline唯一选中同一package、published记录、签名指纹、release evidence revision、manifest exports、Registry artifact唯一path/digest/size，随后由原`read_artifact`及内容hash回读。六项必须全部来自同一selected release及同一version，任何缺失、重复、非JSON、非导出、digest漂移、当前安装变化或发布撤销均在回调前关闭。
+
+新Owner在同一个`PipelineSnapshotGroupOwner.run_current`前后守卫中按依赖顺序编译六项：relationship→relationship quality→business cohort→fact quality→business facts→readiness。现有编译器负责完整对象、purpose、跨策略hash、P01-P12与query binding一致性；集合再次要求六个ref版本一致并绑定原group package version。返回冻结dataclass，包含六个exact refs和六个编译对象，只供同步Host回调；回调后重新解析/编译并比较，拒绝generator/coroutine等延迟逃逸。此段不读商城、不生成Evidence/Fulfillment、不确认Outbox、不恢复Run。
+
+本段preHash：`pipeline_snapshot_group_policy_owner.py`=`c7511c7d84a96d3e5e0e6d7c914f58018e8ca33b4455c8a599e680cd790eeb71`；本方案=`ece9d7e1159ec01f459b3aa455a590c2d00016d6ae104c7ffbb8d22394ad20cd`；两个新增文件=`NEW`。退出条件为PG正向证明只传原route即可得到六个当前exact ref及相互绑定的编译策略，负向至少覆盖artifact缺失/错digest、非导出、当前安装撤换、发布证据拒绝和回调中漂移；原单策略Owner回归通过。完成后l6f3用该集合替换组合链的六项调用方参数，进入固定协调器。

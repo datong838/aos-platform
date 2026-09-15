@@ -67,6 +67,16 @@ class PipelineSnapshotGroupPolicyOwner:
                 or any(part in {'.','..'} for part in path.parts) or str(path)!=ref.resource_id
                 or path.suffix!='.json'):
             raise ValueError('exact exported JSON policy required')
+        selected,record=self._current_release(conn,scope,group)
+        if ref.revision!=selected.version or not ManifestLoader._is_exported_path(ref.resource_id,record.manifest.spec.exports.policies):
+            raise PermissionError('policy is not the exact exported version')
+        raw=self._selections._artifacts.read_artifact(selected,ref.resource_id,256*1024)
+        if type(raw) is not bytes or len(raw)>256*1024 or 'sha256:'+hashlib.sha256(raw).hexdigest()!=ref.content_hash:
+            raise ValueError('policy artifact digest differs')
+        return json.loads(raw,object_pairs_hook=_pairs,parse_constant=_constant)
+
+    def _current_release(self,conn,scope,group):
+        """Resolve the group's one current published release inside its guard."""
         selections=self._selections;draft=group.members[0][1]
         if selections._artifacts.scope!=scope:raise PermissionError('artifact tenant differs')
         current=CurrentInstallationRef.model_validate(draft.installation_ref.model_dump(mode='json',by_alias=True))
@@ -77,9 +87,32 @@ class PipelineSnapshotGroupPolicyOwner:
         selected=matches[0]
         record=selections._artifacts.load_record(selected)
         selections._release_policy.evaluate(record,checked_at=_now(conn),expected_signature_fingerprint=selected.signature_fingerprint,expected_evidence_revision=selected.release_evidence_revision)
-        if ref.revision!=selected.version or not ManifestLoader._is_exported_path(ref.resource_id,record.manifest.spec.exports.policies):
-            raise PermissionError('policy is not the exact exported version')
-        raw=selections._artifacts.read_artifact(selected,ref.resource_id,256*1024)
-        if type(raw) is not bytes or len(raw)>256*1024 or 'sha256:'+hashlib.sha256(raw).hexdigest()!=ref.content_hash:
-            raise ValueError('policy artifact digest differs')
-        return json.loads(raw,object_pairs_hook=_pairs,parse_constant=_constant)
+        return selected,record
+
+    def _resolve_exported_ref(self,conn,scope,group,*,resource_type,path):
+        """Build an exact ref from the current Registry artifact, never a caller hash."""
+        probe=PipelineExactRef(resource_type=resource_type,resource_id=path,
+            revision=group.members[0][1].package_ref.version,content_hash='sha256:'+'0'*64)
+        normalized=PurePosixPath(probe.resource_id)
+        if (normalized.is_absolute() or any(part in {'.','..'} for part in normalized.parts)
+                or str(normalized)!=probe.resource_id or normalized.suffix!='.json'):
+            raise ValueError('exact exported JSON policy path required')
+        selected,record=self._current_release(conn,scope,group)
+        if not ManifestLoader._is_exported_path(path,record.manifest.spec.exports.policies):
+            raise PermissionError('policy path is not exported by current release')
+        matches=[]
+        for item in record.artifacts:
+            if type(item) is dict:
+                relative=item.get('relativePath');digest=item.get('digest');size=item.get('size');media=item.get('mediaType')
+            else:
+                relative=getattr(item,'relative_path',None);digest=getattr(item,'digest',None)
+                size=getattr(item,'size',None);media=getattr(item,'media_type',None)
+            if relative==path:matches.append((digest,size,media))
+        if len(matches)!=1:
+            raise ValueError('current policy artifact is not unique')
+        digest,size,media=matches[0]
+        if (type(digest) is not str or type(size) is not int or isinstance(size,bool)
+                or not 0<size<=256*1024 or media!='application/json'):
+            raise ValueError('current policy artifact metadata differs')
+        return PipelineExactRef(resource_type=resource_type,resource_id=path,
+            revision=selected.version,content_hash=digest)
