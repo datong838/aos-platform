@@ -26,11 +26,15 @@ def counts():
     return dict(at=datetime.now(timezone.utc).isoformat(),occurrences=[dict(r) for r in occurrences])
 
 
+def preflight_profile():
+    from a0v_event_complete_product_preflight import load_profile
+    return load_profile()
+
+
 def run():
     if (STATE/'execute-intent.json').exists():raise ValueError('existing source intent requires read-only inspection')
     plane=f.setup();authority=authority_profile()
-    from a0v_event_complete_product_preflight import load_profile
-    preflight=load_profile()
+    preflight=preflight_profile()
     spec=importlib.util.spec_from_file_location('f_source_observation',f.ROOT/'scripts/a0v_qyh_current_product_event_first_chain.py')
     previous=importlib.util.module_from_spec(spec);spec.loader.exec_module(previous)
     current=previous.observe(preflight,plane)['current']

@@ -26,6 +26,11 @@ def previous_reference(phase):
     return None
 
 
+def preflight_profile():
+    from a0v_event_complete_product_preflight import load_profile
+    return load_profile()
+
+
 def run(phase,plane):
     from a0v_qyh_current_product_event_first_chain import freeze
     from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft,PipelineRuntimeControlDraft
@@ -37,8 +42,7 @@ def run(phase,plane):
     intent=STATE/(phase+'-intent.json')
     if intent.exists():raise ValueError('existing intent requires read-only inspection')
     if phase=='prepare':
-        from a0v_event_complete_product_preflight import load_profile
-        result=load_profile().run('preflight');require_g(result['draft'])
+        result=preflight_profile().run('preflight');require_g(result['draft'])
         freeze(intent,dict(installationId=f.G_ID,generation=f.G_GENERATION))
     else:
         draft=load('prepare')['draft'];require_g(draft)

@@ -9,6 +9,7 @@ def policy_profile():
 
 STATE=f.STATE/'event-enable'
 PREFIX='a0v-qyh-g-event-enable-20260916-v1'
+EXPECTED_GROUP_REVISION=11
 ACTION=dict(id='ecommerce_growth_event_dispatch',name='配置电商商品事件受控入口',objectType='Case',parameters=[],requiredMarkings=[],submissionCriteria=[])
 
 
@@ -35,7 +36,7 @@ def run(phase,plane):
     elif phase=='approve-dispatch':
         request=dict(schemaVersion='aos.ecommerce.event-control-dispatch/v1',phase='expand',
             installationRef=dict(installationId=f.G_ID,revision=5,lockHash=f.LOCK,overlayRevision='a0v-canonical-ecommerce-v1'),
-            generation=f.G_GENERATION,executionEpoch=3,runtimeRevision=6,cutoverGroupId=f.GROUP,expectedGroupRevision=11,
+            generation=f.G_GENERATION,executionEpoch=3,runtimeRevision=6,cutoverGroupId=f.GROUP,expectedGroupRevision=EXPECTED_GROUP_REVISION,
             caseId=policy.CASE,schedulePolicyId=policy.POLICY,idempotencyKey=PREFIX+'-expand')
         payload=dict(caseId=policy.CASE,schedulePolicyId=policy.POLICY,dispatchIntent=request)
         freeze(intent,payload)
@@ -52,10 +53,10 @@ def run(phase,plane):
                 rows=conn.execute("SELECT operation_id,installation_id,generation,execution_epoch,operation_fence,cutover_group_revision FROM extension_operation_dispatch_binding WHERE org_id='org-org' AND project_id='dev-project' AND cutover_group_id=%s",(f.GROUP,)).fetchall()
             from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
             if (count!=0 or {r['operation_id'] for r in rows}!=set(ECOMMERCE_GROWTH_OPERATIONS)
-                or any(str(r['installation_id'])!=f.G_ID or str(r['generation'])!=f.G_GENERATION or r['execution_epoch']!=3 or r['operation_fence'] is not False or r['cutover_group_revision']!=11 for r in rows)
+                or any(str(r['installation_id'])!=f.G_ID or str(r['generation'])!=f.G_GENERATION or r['execution_epoch']!=3 or r['operation_fence'] is not False or r['cutover_group_revision']!=EXPECTED_GROUP_REVISION for r in rows)
                 or json.loads((STATE/'expand-intent.json').read_text())!=request.wire()):
                 raise ValueError('failed expansion is not proven absent and unchanged')
-            freeze(STATE/'expand-recovered-precheck.json',dict(receiptCount=count,entries=len(rows),groupRevision=11))
+            freeze(STATE/'expand-recovered-precheck.json',dict(receiptCount=count,entries=len(rows),groupRevision=EXPECTED_GROUP_REVISION))
         freeze(intent,request.wire())
         result=plane.pipeline_control_factory.build_event_dispatch_lifecycle(scope).transition(scope=scope,request=request,actor=f.ACTOR)
     elif phase=='approve-control':
