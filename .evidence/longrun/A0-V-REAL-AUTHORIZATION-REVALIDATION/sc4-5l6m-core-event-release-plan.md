@@ -26,3 +26,4 @@ G安装实测后精确身份：installation 4b081ad7-2cf6-4188-bc18-870726da1262
 新增 scripts/a0v_event_complete_successor_business.py 按上述固定身份登记；随后 scripts/a0v_event_complete_successor_cutover.py 绑定实际登记Receipt、新独立审批/操作ID完成接管。旧F脚本不改，G不可复用F审批。
 
 G接管已resumed，后续source/profile脚本以G当前binding6/epoch3及group11为固定检查。新G Product授权为首版本（安装维度）；源schedule沿旧绑定版本继续CAS。业务Case不重建：从F成功的Policy revision2与Case version4生成Policy revision3/Case version5，保留业务历史ID、换成G current SourceSelection。新增a0v_event_complete_product_{preflight,authority,policy,enable,source_once}.py，仅通过正式Owner/服务/API推进。新源执行有自己幂等intent，不重新发送F旧run；新的当前数据更新会形成独立来源证据。
+G源执行预检必须按policy_id与policy_revision=3精确选择新事件绑定；同业务Policy保留F revision2的disabled绑定，不能任取首行。正式事件服务与数据库仍独立复核G安装/代次/epoch及有效期。

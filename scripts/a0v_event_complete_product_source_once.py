@@ -39,7 +39,7 @@ def run():
     policy=policy_profile()
     from a0v_formal_text_model_renewal import database_connect
     with database_connect('aos_meta_head')() as c:
-        row=c.execute("SELECT enabled,approved,policy_revision,installation_id,generation,execution_epoch,effective_until>clock_timestamp() AS current FROM automation_schedule_binding WHERE org_id='org-org' AND project_id='dev-project' AND policy_id=%s",(policy.POLICY,)).fetchone()
+        row=c.execute("SELECT enabled,approved,policy_revision,installation_id,generation,execution_epoch,effective_until>clock_timestamp() AS current FROM automation_schedule_binding WHERE org_id='org-org' AND project_id='dev-project' AND policy_id=%s AND policy_revision=3",(policy.POLICY,)).fetchone()
     if (row is None or not all(row[k] is True for k in ('enabled','approved','current'))
         or row['policy_revision']!=3 or str(row['installation_id'])!=f.G_ID
         or str(row['generation'])!=f.G_GENERATION or row['execution_epoch']!=3):
