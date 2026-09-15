@@ -283,26 +283,106 @@ def require_stale_enable_cancel(
     }
 
 
+def require_unowned_recovery_cancel(
+    snapshot: dict[str, Any], *, expected_operation_id: str
+) -> dict[str, Any]:
+    head = snapshot["head"]
+    bindings = snapshot["bindings"]
+    if snapshot.get("canaryInstallations") != 0:
+        raise ValueError("canary installation drift")
+    if head["state"] != "active" or head["etag_version"] != 5 or len(bindings) != 1:
+        raise ValueError("one active installation generation required")
+    binding = bindings[0]
+    if (
+        binding["revision"] != 5
+        or binding["execution_epoch"] != 3
+        or binding["enabled"] is not False
+        or binding["operation_fence"] is not True
+        or binding["desired_state"] != "disabled"
+        or binding["observed_state"] != "unknown"
+        or not binding["config_ref"]
+    ):
+        raise ValueError("exact unowned recovery binding required")
+    pending = [
+        item
+        for item in snapshot["operations"]
+        if item["status"] not in {"succeeded", "failed", "cancelled"}
+    ]
+    if (
+        len(pending) != 1
+        or str(pending[0]["operation_id"]) != expected_operation_id
+        or pending[0]["kind"] != "enable"
+        or pending[0]["status"] != "accepted"
+        or pending[0]["phase"] != "accepted"
+    ):
+        raise ValueError("one exact unowned enable operation required")
+    if not snapshot["resources"] or any(
+        item["cleanup_state"] != "released" or item["observed_release"] is not True
+        for item in snapshot["resources"]
+    ):
+        raise ValueError("unowned recovery released resources required")
+    return {
+        "etag": 5,
+        "generation": str(binding["generation"]),
+        "bindingRevision": binding["revision"],
+        "unownedEnableOperationId": expected_operation_id,
+    }
+
+
+def replacement_ref_for_b(snapshot: dict[str, Any]) -> dict[str, Any]:
+    head = snapshot["head"]
+    bindings = snapshot["bindings"]
+    if snapshot.get("canaryInstallations") != 0:
+        raise ValueError("canary installation drift")
+    if head["state"] != "active" or head["etag_version"] != 5 or len(bindings) != 1:
+        raise ValueError("installation A active predecessor required")
+    binding = bindings[0]
+    if (
+        binding["enabled"] is not False
+        or binding["operation_fence"] is not True
+        or binding["desired_state"] != "disabled"
+        or binding["observed_state"] != "unknown"
+    ):
+        raise ValueError("installation A drained predecessor required")
+    if not snapshot["resources"] or any(
+        item["cleanup_state"] != "released" or item["observed_release"] is not True
+        for item in snapshot["resources"]
+    ):
+        raise ValueError("installation A released resources required")
+    if any(
+        item["status"] not in {"succeeded", "failed", "cancelled"}
+        for item in snapshot["operations"]
+    ):
+        raise ValueError("installation A unresolved operation")
+    return {
+        "installationId": str(head["installation_id"]),
+        "revision": head["etag_version"],
+        "lockHash": head["lock_hash"],
+        "overlayRevision": head["overlay_revision"],
+    }
+
+
 def create(label: str) -> dict[str, Any]:
     target = STATE / label / "create-result.json"
     if target.exists():
         raise ValueError("create result exists; observe without resending")
-    predecessor = observe_installation(PREDECESSOR["installationId"])
-    binding = predecessor["bindings"]
-    if (
-        predecessor["head"]["state"] != "active"
-        or predecessor["head"]["etag_version"] != 5
-        or predecessor["head"]["lock_hash"] != PREDECESSOR["lockHash"]
-        or len(binding) != 1
-        or binding[0]["enabled"] is not False
-        or binding[0]["operation_fence"] is not True
-        or predecessor["canaryInstallations"] != 0
-    ):
-        raise ValueError("exact drained predecessor required")
-    if label == "b":
-        first = observe_installation(_initial("a")["installationId"])
-        if first["head"]["state"] != "uninstalled":
-            raise ValueError("installation A must be uninstalled before B")
+    if label == "a":
+        predecessor = observe_installation(PREDECESSOR["installationId"])
+        binding = predecessor["bindings"]
+        if (
+            predecessor["head"]["state"] != "active"
+            or predecessor["head"]["etag_version"] != 5
+            or predecessor["head"]["lock_hash"] != PREDECESSOR["lockHash"]
+            or len(binding) != 1
+            or binding[0]["enabled"] is not False
+            or binding[0]["operation_fence"] is not True
+            or predecessor["canaryInstallations"] != 0
+        ):
+            raise ValueError("exact drained predecessor required")
+        predecessor_ref = PREDECESSOR
+    else:
+        predecessor = observe_installation(_initial("a")["installationId"])
+        predecessor_ref = replacement_ref_for_b(predecessor)
     first_installer = _load("a0v_canonical_ecommerce_first_install")
     helper = _load("a0v_ecommerce_growth_1_5_registry_successor")
     target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -313,7 +393,7 @@ def create(label: str) -> dict[str, Any]:
     )
     _freeze(target.parent / "create-intent.json", {
         "label": label,
-        "predecessor": PREDECESSOR,
+        "predecessor": predecessor_ref,
         "versions": VERSIONS,
         "backup": backup,
     })
@@ -329,7 +409,7 @@ def create(label: str) -> dict[str, Any]:
         adapter_version="1.22.0",
         growth_version="1.8.0",
         idempotency_prefix=f"a0v-current-ecommerce-{label}-20260915",
-        current_installation_ref=PREDECESSOR,
+        current_installation_ref=predecessor_ref,
     )
     if result["installationState"] != "approved":
         raise ValueError("new approved installation required")
@@ -501,6 +581,38 @@ def cancel_stale_enable_a() -> dict[str, Any]:
     }
 
 
+def cancel_unowned_recovery_a() -> dict[str, Any]:
+    installation_id = _initial("a")["installationId"]
+    original = json.loads((STATE / "recover-a-command.json").read_text(encoding="utf-8"))
+    operation_id = str(original["receipt"]["operationId"])
+    command = require_unowned_recovery_cancel(
+        observe_installation(installation_id), expected_operation_id=operation_id
+    )
+    _freeze(
+        STATE / "a/cancel-unowned-recovery-intent.json",
+        {"installationId": installation_id, **command},
+    )
+    activation, _store, _lifecycle, service, _dependent = _setup_runtime_plane()
+    receipt = service.request(
+        **SCOPE,
+        installation_id=installation_id,
+        actor=activation.ACTOR,
+        roles=activation.ROLES,
+        markings=activation.MARKINGS,
+        idempotency_key="a0v-current-ecommerce-a-cancel-unowned-recovery-20260915",
+        if_match='"5"',
+        target={
+            "generation": command["generation"],
+            "bindingRevision": command["bindingRevision"],
+        },
+    )
+    return {
+        "command": command,
+        "receipt": receipt.response_json,
+        "replayed": receipt.replayed,
+    }
+
+
 @contextmanager
 def _installation_connection():
     import psycopg
@@ -529,6 +641,15 @@ def uninstall_a() -> dict[str, Any]:
     installation_id = _initial("a")["installationId"]
     snapshot = observe_installation(installation_id)
     command = require_phase("uninstall", snapshot)
+    successor = observe_installation(_initial("b")["installationId"])
+    if (
+        successor["head"]["state"] != "active"
+        or len(successor["bindings"]) != 1
+        or successor["bindings"][0]["enabled"] is not True
+        or successor["bindings"][0]["operation_fence"] is not False
+        or successor["bindings"][0]["observed_state"] != "ready"
+    ):
+        raise ValueError("enabled installation B required before uninstall A")
     _freeze(STATE / "a/uninstall-intent.json", {"installationId": installation_id, **command})
     legacy = _load("a0v_ecommerce_invalid_baseline_uninstall")
     store, service = legacy._build(
@@ -561,7 +682,8 @@ def main() -> None:
         "action",
         choices=(
             "observe", "create-a", "prepare-a", "verify-a", "stage-a", "configure-a",
-            "enable-a", "drain-predecessor", "cancel-stale-enable-a", "disable-a",
+            "enable-a", "drain-predecessor", "cancel-stale-enable-a",
+            "cancel-unowned-recovery-a", "disable-a",
             "recover-a", "disable-a-final",
             "uninstall-a", "create-b", "prepare-b",
             "verify-b", "stage-b", "configure-b", "enable-b",
@@ -582,6 +704,8 @@ def main() -> None:
         result = drain_predecessor()
     elif args.action == "cancel-stale-enable-a":
         result = cancel_stale_enable_a()
+    elif args.action == "cancel-unowned-recovery-a":
+        result = cancel_unowned_recovery_a()
     elif args.action == "disable-a":
         result = disable("a")
     elif args.action == "disable-a-final":

@@ -190,3 +190,53 @@ def test_stale_enable_cancel_requires_one_exact_expired_operation(reinstall):
             reinstall.require_stale_enable_cancel(
                 drifted, expected_operation_id="operation-a"
             )
+
+
+def test_unowned_recovery_cancel_requires_released_runtime(reinstall):
+    value = snapshot(enabled=False, fenced=True)
+    value["bindings"][0].update({
+        "execution_epoch": 3,
+        "desired_state": "disabled",
+        "observed_state": "unknown",
+        "revision": 5,
+        "config_ref": {"configurationId": "configuration-a"},
+    })
+    value["operations"] = [{
+        "operation_id": "operation-recovery",
+        "kind": "enable",
+        "status": "accepted",
+        "phase": "accepted",
+        "deadline_expired": False,
+    }]
+    result = reinstall.require_unowned_recovery_cancel(
+        value, expected_operation_id="operation-recovery"
+    )
+    assert result["bindingRevision"] == 5
+    live = {**value, "resources": [{"cleanup_state": "leased", "observed_release": False}]}
+    with pytest.raises(ValueError, match="released resources"):
+        reinstall.require_unowned_recovery_cancel(
+            live, expected_operation_id="operation-recovery"
+        )
+
+
+def test_installation_b_uses_drained_a_as_replacement_predecessor(reinstall):
+    value = predecessor_snapshot(reinstall)
+    value["head"].update({
+        "installation_id": UUID("00000000-0000-0000-0000-00000000000a"),
+        "lock_hash": "sha256:" + "b" * 64,
+        "overlay_revision": "overlay-a",
+    })
+    value["bindings"][0].update({
+        "desired_state": "disabled",
+        "revision": 7,
+        "execution_epoch": 4,
+    })
+    assert reinstall.replacement_ref_for_b(value) == {
+        "installationId": "00000000-0000-0000-0000-00000000000a",
+        "revision": 5,
+        "lockHash": "sha256:" + "b" * 64,
+        "overlayRevision": "overlay-a",
+    }
+    value["operations"][0]["status"] = "accepted"
+    with pytest.raises(ValueError, match="unresolved"):
+        reinstall.replacement_ref_for_b(value)
