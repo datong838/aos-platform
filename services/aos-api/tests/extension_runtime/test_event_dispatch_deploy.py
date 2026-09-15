@@ -13,7 +13,7 @@ def deploy(monkeypatch):
 
 def test_exact_deployment_scope(deploy):
     assert (deploy.SOURCE, deploy.TARGET, deploy.CHAIN) == ('a0v_053', 'a0v_054', ['a0v_054'])
-    assert deploy.CLONE == 'aos_event_dispatch_20260916_test'
+    assert deploy.CLONE == 'aos_event_dispatch_quiesced_20260916_test'
     assert deploy.storage.MAIN == 'aos_meta_head'
     assert deploy.FILES == ('a0v_054_event_control_dispatch_lifecycle.py',)
 

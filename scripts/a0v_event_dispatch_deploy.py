@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location('event_dispatch_deploy_storage', Path(__file__).with_name('a0v_controlled_source_claim_deploy.py'))
 storage = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(storage)
-STATE = ROOT.parent / '.aos-recovery-20260916/state/event-dispatch-deployment'
-CLONE = 'aos_event_dispatch_20260916_test'
+STATE = ROOT.parent / '.aos-recovery-20260916/state/event-dispatch-deployment-quiesced'
+CLONE = 'aos_event_dispatch_quiesced_20260916_test'
 SOURCE, TARGET = 'a0v_053', 'a0v_054'
 TASK = 'SC4-5L6M-EVENT-DISPATCH-DEPLOY-20260916'
 FILES = ('a0v_054_event_control_dispatch_lifecycle.py',)
