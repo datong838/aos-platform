@@ -172,3 +172,26 @@ e5c具体范围：仅修改ecommerce_analysis_snapshot_resume.py及extension_run
 AnalysisSnapshotFulfillment要求Bundle.brief.business与Readiness.context.business为同一原实例。从原不可变SourceEvidence取group/control/run选择，进入原ProjectionOwner当前完整组外层；在该外层内串行调用Bundle.read_current、Readiness.read_current与原DataRequirementStore.get_current进行保存前后复验，避免再次嵌套两套完整Pending栈。实际projection payload须与SourceEvidence精确一致。保存/读取均在同外层事务，无请求时DDL，无Run转换。原Requirement head保存前后同一exact，requestedOutputs仅EvidenceBundleRevision，Bundle与Requirement/Business精确关联。回执读取限定由此identity派生的原ID，不接受任意Fulfillment借用已合格依赖。完整12 fixture须创建原DataRequirement/Head/Outbox及Fulfillment原DDL，调用原request而非直接填假fulfilled记录；暂停Task/分析起点仍沿已披露named范围。
 
 2026-09-15通过既有容器内部数据库用户（不读取/输出口令）对aos_meta_head执行BEGIN READ ONLY并ROLLBACK，确认schema a0v_038、data_requirement_revision的业务合同在payload。明确org-org/dev-project后按原head关联查询本连接未返回当前需求行；不能据此推断其他服务连接或其他数据库没有任务，也不能凭空确定某个真实pending需求的requestedOutputs。实施按当前Owner读取实际Requirement严格检查，主环境联调时再确认运行配置与真实任务。
+
+## l6f DataRequirement Outbox 自然续跑接线
+
+基线`c9feb7ef`。e6e已经证明原始事件、十二源快照、证据、履约和统一恢复能在同一谱系工作，但测试仍由调用者逐段拼装；生产端只有`data.requirement.request` Outbox的领取、普通ack/fail/unknown，没有固定消费者。普通ack只证明worker持有有效Lease，不能证明对应业务Run已经恢复；旧unknown reconcile也只核DataFulfillmentReceipt，无法覆盖“履约已提交、统一恢复Receipt尚未提交”的崩溃窗口。因此l6f不直接把现有ack当作自然链完成。
+
+固定链路按六个小段串行施工：
+
+| 小段 | 精确文件 | 职责与退出条件 |
+|---|---|---|
+| l6f1 | 新增`aos_api/ecommerce_analysis_data_requirement_route.py`、`tests/extension_runtime/test_analysis_data_requirement_route_pg.py` | 只读解析一个已领取Outbox，校验payload/Head/完整Requirement，唯一回溯原PREPARING AnalysisRuntimeReceipt、accepted occurrence、ProductEventOrigin和原完整快照组；输出原actor/source run/control、安装代次与receipt exact ref，不生成证据、不恢复Run、不确认Outbox。 |
+| l6f2 | 新增`aos_api/ecommerce_analysis_snapshot_policy_set.py`及PG测试 | 只从原组当前安装包的published/签名/证据/exports读取六个固定策略文件并按实际artifact digest构造exact refs；缺失、旧安装、错hash、非导出或不同package一律禁入，不读取candidate目录冒充安装态。 |
+| l6f3 | 新增`aos_api/ecommerce_analysis_snapshot_coordinator.py`及PG测试 | 用l6f1路由重建原ProductEventAnalysisService，调用原GroupCompletion及Source/Query/Quality/Business/Brief/Bundle/Readiness/Fulfillment/Resume Owner；每阶段使用内容寻址Receipt重放，绝不由模型决定控制流，不调用外部业务写能力。 |
+| l6f4 | 新增`alembic/versions/a0v_050_data_requirement_outbox_completion.py`，修改`data_requirement_outbox_store.py`及原测试 | 增加受控complete/reconcile函数：同一租户、Outbox、Requirement必须同时匹配fulfilled DataFulfillmentReceipt和phase=RUNNING的统一AnalysisRuntimeReceipt，且后者的requirementRef/fulfillmentRef一致；成功才acked。运行角色仍无表写权限，旧接口保持兼容但自然消费者不得调用普通ack。 |
+| l6f5 | 新增`aos_api/ecommerce_analysis_data_requirement_worker.py`，最小修改`pipeline_control_service.py`、`main.py`及生命周期测试 | App ACTIVE且目标安装在Live目录时轮询，按tenant/installation/generation有界领取；Lease过期可恢复，确定性无作用失败可failed，不明提交只unknown并进入严格reconcile，不能盲目重发。与extension host共用stop/host-ready生命周期。 |
+| l6f6 | 新增完整PG自然链/重启窗口测试、波次证据和双仓接续更新 | 从原ProductEvent worker产生Outbox后只调用worker tick，证明Run自然恢复；覆盖履约前崩溃、履约后恢复前、恢复后complete前、同key漂移、过期、撤销、canary隔离和二次tick零新增副作用。串行验证AR2 closure、Prime健康，提交但不push。 |
+
+l6f1只建立路由事实，不引入执行许可。查询必须运行在`aos_runtime`与GUC双租户事务内；Outbox payload精确等于`eventId/requirementId/revision/contentHash`，且contentHash与原Requirement一致。原AnalysisRuntimeReceipt必须通过原Store exact回读，phase仍为PREPARING、runRef与Requirement相同，并且是accepted occurrence实际记录的唯一target receipt。ProductEventOrigin的source run/actor必须与原SnapshotGroupLocator得到的成员和actor相同，Requirement cutoff必须等于原组不可变readCompletedAt。Occurrence中的installation/generation只作为后续重建入口，l6f3仍须由当前dispatch、Live目录和安装Owner重新授权。
+
+崩溃语义固定为：快照/证据/履约前崩溃由Lease过期重领并走原内容寻址Receipt；履约后恢复前重领时读取原Fulfillment后继续原Resume；恢复提交后Outbox完成前重领时只读回查统一Receipt再complete。若只出现Task/Run转换痕迹而缺统一Receipt，沿e5c既有规则阻断并进入人工/后续专门reconcile，不能把缺Receipt当作首次请求。`failed`只用于确定性合同/授权错误，超时或提交结果不明必须`unknown`，l6f4严格证据齐备后才能reconcile为acked。
+
+本段开工preHash：本方案`d06ebd09380bbc5de6b18a1beb1f477528440a8ef2e80cdf9a84324fa2c3edb4`；`data_requirement_outbox_store.py`=`f30c47b97f7c2e46ade99b26fd77ec4fe5a44aa1e8aa423699cd7f43c8044cf6`；`main.py`=`fa6fdd9f9b0ff343fd57d2891decf984ddeb09a7e82f8505d4e68488bf88d73f`；`pipeline_control_service.py`=`6ffe7267eafb887a4840951c3142c24acd3b8ee26c5a7fd99f1f1d9846ea0087`；l6f1两个新增文件preHash=`NEW`。若l6f1发现原Receipt与Requirement不能唯一回溯，必须先以Red证据登记最小不可变关联字段，不能靠时间最近或任意第一条选取。
+
+l6f1收尾补充：`verify_closure.py --phase ar2-7`在新增模块未分类时仍无反向依赖错误，因为该Host组合的直接依赖当前均未落入迁移集合；这不替代施工清册完整性。按原新增Host模块惯例，收尾最小追加`closure-manifest.md`分类行，清册preHash=`5e4d45a8784e631dce97b2e29e9030f031ab7858df40eef6888977754405a033`，登记新模块初始hash，不改历史preHash、阶段规则或验证器。

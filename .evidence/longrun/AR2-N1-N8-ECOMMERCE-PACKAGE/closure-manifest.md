@@ -1526,3 +1526,11 @@ Original runtime DTO consumer only; no dispatch acceptance, state transition, or
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_resume_contracts.py` | Host原路径 | Strict snapshot command/result and tenant lineage; no runtime execution | `167c2287eb5670d1dae6ce7e9caaa218f34cd87a0506ac921bbd3321ad8dd170` |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_resume.py` | Host原路径 | Exact snapshot session for original TaskStore; transaction and fixed command checks; no public registration | `96a575c909df488e00a6f822d8ba8cb3ec65b45526215d2341b0bc61795c6627` |
+
+### SC4-5l6f1 DataRequirement Outbox route Host
+
+Claimed Outbox to original immutable analysis and snapshot routing only. This classification adds no source read, Run transition, Outbox acknowledgement, Provider call, or external effect authority.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_data_requirement_route.py` | Host原路径 | Current claimed Outbox, Requirement Head, original Analysis Receipt, occurrence and snapshot-group route verification only | `aa5c45a850beaa9911948e79c9d1b13c1c5de6a2c1dccb1da0dda6d5a3aed484` |

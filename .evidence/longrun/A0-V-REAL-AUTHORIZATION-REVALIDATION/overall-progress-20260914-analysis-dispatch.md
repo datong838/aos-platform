@@ -710,3 +710,9 @@ AR2 1951/192/93五类错误为空（/tmp/sc4-e6c-closure.log）。主库未迁�
 基线d460879e。新增全结构PG组合测试，将原产品事件初始化产生的Case/Run/Task/TaskRun/Checkpoint、Pending DataRequirement、十二源组完成、Source/Query/Quality/Business Evidence、Brief/Bundle、SourceReadiness/Fulfillment与统一AnalysisRuntimeReceipt接在同一原谱系。初始化/Pending/occurrence先提交，独立源worker随后完成，恢复从新SERIALIZABLE快照读取；命名能力绑定由控制面连接建立，运行连接保持aos_runtime。
 
 最终2 passed/168.44s，正向同一TaskRun与业务Run各前进一版、12调度终态、13 Store Receipt、源读取一次且重建只读回放；撤销当前Business Evidence时仍paused/WAITING_DATA且无统一续跑回执。AR2 1952/192/93错误列表空，memory validate GREEN。商城源、安装签名和Provider仍为named fixture，主库和真实经营未动作。下一波SC4-5l6f接原DataRequirement Outbox固定消费者，删除开发者直接调用各阶段的接线方式，覆盖重启、重复投递、unknown、撤权与租户隔离，然后进入主升级、真实安装和栖月汇真实八工作台观察。
+
+## 2026-09-15 SC4-5l6f1 DataRequirement Outbox 原路由
+
+新增只读路由器，将当前已领取的`data.requirement.request`严格回溯到仍为当前Head的完整Requirement、唯一原PREPARING AnalysisRuntimeReceipt、accepted occurrence、ProductEventOrigin以及同cutoff完整SnapshotGroup。运行时还必须持有同attempt/token且未过期的Lease；领取后需求取消、payload漂移、非唯一或不同来源均在返回路由前拒绝。该切片不读商城源、不生成Evidence、不恢复Run、不确认Outbox。
+
+新鲜原生PG验证：正向1 passed/76.23s；payload漂移与领取后取消负向1 passed/76.24s；静态编译/diff通过。重启后5433与不存在数据库、测试未配置生产runtime credential三项环境问题均以测试运行入口/夹具修正，没有加入产品后门。详细见`sc4-5l6f1-data-requirement-route-verification.md`。下一项l6f2从原组当前安装包解析六个exact exported policy refs，禁止读取candidate目录替代安装态。
