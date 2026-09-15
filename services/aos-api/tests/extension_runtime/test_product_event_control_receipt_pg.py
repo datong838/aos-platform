@@ -90,7 +90,7 @@ def test_receipt_is_immutable_even_for_table_owner(receipt_store):
         conn.execute("UPDATE ecommerce_product_event_control_receipt SET actor='different'")
 
 
-def test_migration_empty_roundtrip_and_nonempty_retention(receipt_store):
+def test_migration_dependency_and_nonempty_retention(receipt_store):
     import importlib.util
     from pathlib import Path
     conn,store,command=receipt_store
@@ -98,10 +98,10 @@ def test_migration_empty_roundtrip_and_nonempty_retention(receipt_store):
     spec=importlib.util.spec_from_file_location('event_control_migration',path)
     migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migration)
     migration.op=SimpleNamespace(execute=conn.execute)
-    with conn.transaction():
+    # a0v_061 retains admission provenance even when its new catalog is empty.
+    with pytest.raises(psycopg.errors.DependentObjectsStillExist),conn.transaction():
         conn.execute('RESET ROLE')
-        migration.downgrade();migration.upgrade()
-        conn.execute('SET LOCAL ROLE aos_runtime')
+        migration.downgrade()
     store.put(command,actor='fixture-operator')
     with pytest.raises(psycopg.errors.RaiseException,match='retain'),conn.transaction():
         conn.execute('RESET ROLE')

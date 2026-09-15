@@ -19,7 +19,22 @@ class _BootstrapActionGuard:
         self.intent = AnalysisBootstrapIntent.model_validate(intent).checked()
         self.preview_ref = ExactRevisionRef.model_validate(preview_ref)
 
+    def action_type_snapshot(self):
+        from aos_api.ecommerce_installed_bootstrap_action import InstalledBootstrapActionCatalog
+        invoker = self.current.analysis.invoker
+        scope = self.current.analysis.scope
+        runtime = self.conn.execute('SELECT execution_epoch FROM extension_runtime_binding '
+            'WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s',
+            (*scope.key, invoker.installation_id, invoker.generation)).fetchone()
+        if runtime is None:
+            raise ValueError('bootstrap installation unavailable')
+        return InstalledBootstrapActionCatalog(HostTransaction(self.conn), scope).read_current(
+            installation_id=invoker.installation_id, generation=invoker.generation,
+            execution_epoch=runtime['execution_epoch'])
+
     def check(self, conn, scope, actor, *, action_snapshot, payload, task_id, run_id, preview_ref, checker):
+        if action_snapshot != self.action_type_snapshot():
+            raise ValueError('current installed bootstrap action snapshot differs')
         if scope != self.current.analysis.scope:
             raise PermissionError('bootstrap action tenant differs')
         statement = 'SELECT pg_backend_pid() AS pid,txid_current() AS xid'

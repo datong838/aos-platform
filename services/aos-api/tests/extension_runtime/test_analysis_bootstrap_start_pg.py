@@ -149,7 +149,7 @@ def test_current_event_control_initializes_without_fabricating_human_review(star
 
 
 @pytest.mark.parametrize('start_case',['source-controlled'],indirect=True)
-@pytest.mark.parametrize('fault',['rejected','source-revoked','action-snapshot'])
+@pytest.mark.parametrize('fault',['rejected','source-revoked','installed-action-binding'])
 def test_source_derivation_cannot_bypass_current_denial(start_case,fault):
     from aos_api.aip_action_models import DecideActionProposalRequest
     from aos_api.aip_contracts import ApprovalDecision
@@ -161,7 +161,7 @@ def test_source_derivation_cannot_bypass_current_denial(start_case,fault):
     else:
         conn.execute('RESET ROLE')
         if fault=='source-revoked':conn.execute("DELETE FROM meta_membership WHERE subject='fixture-approver'")
-        else:conn.execute("UPDATE meta_action_type SET name='changed' WHERE id='ecommerce_analysis_bootstrap'")
+        else:conn.execute("UPDATE extension_runtime_binding SET config_ref='{}'::jsonb || jsonb_build_object('drift',true) WHERE org_id=%s AND project_id=%s",analysis.scope.key)
         conn.execute('SET LOCAL ROLE aos_runtime')
     with pytest.raises((ValueError,PermissionError)):
         service.start(analysis.scope,analysis.source.actor,key,request)

@@ -183,6 +183,10 @@ class AipActionStore:
         return roles
 
     def action_type_snapshot(self, scope: TenantScope, action_type_id: str) -> dict[str, Any]:
+        if action_type_id == 'ecommerce_analysis_bootstrap' and self._bootstrap_guard is not None:
+            if scope != self._bootstrap_guard.current.analysis.scope:
+                raise PermissionError('bootstrap action tenant differs')
+            return self._bootstrap_guard.action_type_snapshot()
         with self._connect(scope) as conn:
             row = conn.execute(
                 "SELECT id,name,object_type,parameters,required_markings,submission_criteria FROM meta_action_type WHERE id=%s",

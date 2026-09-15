@@ -25,6 +25,9 @@ def formal_case(preview_case,review_identity,monkeypatch,request):
     from psycopg import sql
     identity='fixture_bootstrap_runtime_'+uuid4().hex
     conn.execute('RESET ROLE')
+    # The real installer must supply the internal definition; the legacy global
+    # review fixture must not accidentally make this formal path succeed.
+    conn.execute("DELETE FROM meta_action_type WHERE id='ecommerce_analysis_bootstrap'")
     from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
     for operation in ECOMMERCE_GROWTH_OPERATIONS:
         conn.execute("""INSERT INTO extension_operation_dispatch_binding
@@ -59,6 +62,9 @@ def test_formal_event_handle_creates_complete_initial_lineage(formal_case):
     conn,analysis,claimed=formal_case
     receipt=asyncio.run(analysis.handle(claimed))
     assert receipt['resourceType']=='AnalysisRuntimeReceipt'
+    assert conn.execute("SELECT count(*) AS n FROM meta_action_type WHERE id='ecommerce_analysis_bootstrap'").fetchone()['n']==0
+    proposal=conn.execute("SELECT action_type_snapshot FROM aip_action_proposal WHERE org_id=%s AND project_id=%s AND action_type_id='ecommerce_analysis_bootstrap'",analysis.scope.key).fetchone()
+    assert proposal['action_type_snapshot']['installedActionRef']['resourceType']=='InstalledActionTypeRevision'
     assert asyncio.run(analysis.handle(claimed))==receipt
     journal=conn.execute("SELECT request_hash,response FROM ecommerce_growth_runtime_command_receipt WHERE org_id=%s AND project_id=%s AND operation_id='ecommerce_growth_analysis_advance'",analysis.scope.key).fetchall()
     assert len(journal)==1 and journal[0]['request_hash']==journal[0]['response']['requestHash']

@@ -22,10 +22,14 @@ def require_current_bootstrap_review_identity(*, transaction, scope, actor, make
         raise PermissionError('current bootstrap transaction tenant differs')
     if not isinstance(action_snapshot, dict) or action_snapshot.get('id') != 'ecommerce_analysis_bootstrap':
         raise ValueError('exact bootstrap action required')
-    row = transaction.execute('''SELECT id,name,object_type,parameters,required_markings,submission_criteria
-        FROM meta_action_type WHERE id=%s FOR SHARE''', (action_snapshot['id'],)).fetchone()
-    if row is None or action_snapshot_from_row(row) != action_snapshot:
-        raise ValueError('current bootstrap action snapshot differs')
+    if 'installedActionRef' in action_snapshot:
+        from aos_api.ecommerce_installed_bootstrap_action import InstalledBootstrapActionCatalog
+        InstalledBootstrapActionCatalog(transaction, scope).verify_snapshot(action_snapshot)
+    else:
+        row = transaction.execute('''SELECT id,name,object_type,parameters,required_markings,submission_criteria
+            FROM meta_action_type WHERE id=%s FOR SHARE''', (action_snapshot['id'],)).fetchone()
+        if row is None or action_snapshot_from_row(row) != action_snapshot:
+            raise ValueError('current bootstrap action snapshot differs')
     markings = action_snapshot['requiredMarkings']
     if type(markings) is not list or any(type(label) is not str or not label or label != label.strip() for label in markings):
         raise ValueError('current bootstrap action markings invalid')

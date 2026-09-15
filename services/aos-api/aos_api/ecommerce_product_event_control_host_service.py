@@ -84,6 +84,9 @@ class ProductEventControlHostService:
         def enable():
             binding=self._enable_check(transaction,scope,dispatch,checked,policy)
             result=ProductEventBindingControlStore(transaction,scope).apply(checked,actor=self._actor,binding=binding) if write else None
+            if result is not None and result['replayed'] is False:
+                from aos_api.ecommerce_installed_bootstrap_action import InstalledBootstrapActionCatalog
+                InstalledBootstrapActionCatalog(transaction, scope).install(result)
             self._enable_check(transaction,scope,dispatch,checked,policy)
             return result
         return self._guard.run_policy(transaction=transaction,scope=scope,policy=policy,
