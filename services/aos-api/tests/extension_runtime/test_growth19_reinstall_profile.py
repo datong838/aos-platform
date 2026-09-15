@@ -91,3 +91,30 @@ def test_disable_refuses_recovered_predecessor_generation(profile, monkeypatch):
     with pytest.raises(ValueError, match='generation'):
         profile.run('disable-e', base)
     assert called == []
+
+
+@pytest.mark.parametrize('rows,allowed', [([],False), ([{'attached':8}],False),
+    ([{'attached':9},{'attached':9}],False), ([{'attached':9,'cutover_operation_id':'activation'}],True)])
+def test_recovery_requires_one_orphaned_nine_entry_group(profile,rows,allowed):
+    class Connection:
+        def execute(self,query,params):
+            assert params==(profile.E_ID,profile.E_GENERATION)
+            return SimpleNamespace(fetchall=lambda:rows)
+    @contextmanager
+    def connect():
+        yield Connection()
+    if allowed:
+        assert profile.require_orphaned_e(connect)=='activation'
+    else:
+        with pytest.raises(ValueError,match='orphaned'):
+            profile.require_orphaned_e(connect)
+
+
+def test_reconcile_rejects_unreleased_generation_before_request(profile,monkeypatch):
+    snapshot=retired(profile)
+    snapshot['resources'][0]['observed_release']=False
+    base=profile.load_profile()
+    monkeypatch.setattr(base,'observe_installation',lambda _:snapshot)
+    monkeypatch.setattr(base,'_setup_runtime_plane',lambda:pytest.fail('invalid predecessor reached write service'))
+    with pytest.raises(ValueError,match='released resources'):
+        profile.reconcile_e(base)

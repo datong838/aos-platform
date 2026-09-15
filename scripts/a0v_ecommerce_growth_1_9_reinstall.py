@@ -17,7 +17,7 @@ E_ID = '1c08edfb-ec0d-4abb-a411-7b6ec0d6066a'
 E_GENERATION = 'ebaa620a-8831-4c2a-b971-788383f352f8'
 VERSIONS = {'domain.ecommerce.core': '1.3.0', 'platform.ecommerce.niushop': '1.23.0',
             'solution.ecommerce.growth': '1.9.0', 'solution.ecommerce.operations-base': '1.2.0'}
-ACTIONS = ('observe', 'disable-e', 'settle-e', 'create-f', 'prepare-f', 'verify-f',
+ACTIONS = ('observe', 'disable-e', 'settle-e', 'reconcile-e', 'create-f', 'prepare-f', 'verify-f',
            'stage-f', 'configure-f', 'enable-f')
 
 
@@ -105,6 +105,42 @@ def create_f(profile):
     return dict(outcome='GROWTH_1_9_F_APPROVED', **result)
 
 
+def require_orphaned_e(connect):
+    with connect() as conn:
+        rows = conn.execute('''SELECT c.cutover_operation_id,
+            (SELECT count(*) FROM extension_operation_dispatch_binding d
+             WHERE d.org_id=c.org_id AND d.project_id=c.project_id
+               AND d.cutover_group_id=c.cutover_group_id
+               AND d.installation_id=c.target_installation_id
+               AND d.generation=c.target_generation) AS attached
+            FROM extension_dispatch_cutover_operation c
+            WHERE c.org_id='org-org' AND c.project_id='dev-project'
+              AND c.target_installation_id=%s AND c.target_generation=%s
+              AND c.kind='activate' AND c.status='resumed'
+              AND NOT EXISTS(SELECT 1 FROM extension_dispatch_lifecycle_operation l
+                WHERE l.org_id=c.org_id AND l.project_id=c.project_id
+                  AND l.activation_operation_id=c.cutover_operation_id)''',
+            (E_ID, E_GENERATION)).fetchall()
+    if len(rows) != 1 or rows[0]['attached'] != 9:
+        raise ValueError('exact orphaned E dispatch recovery required')
+    return str(rows[0]['cutover_operation_id'])
+
+
+def reconcile_e(profile):
+    snapshot = profile.observe_installation(E_ID)
+    require_retired_e(profile, snapshot)
+    from a0v_formal_text_model_renewal import database_connect
+    activation_id = require_orphaned_e(database_connect('aos_meta_head'))
+    target = dict(generation=E_GENERATION, bindingRevision=snapshot['bindings'][0]['revision'])
+    profile._freeze(STATE / 'e/reconcile-intent.json', dict(installationId=E_ID,
+        activationOperationId=activation_id, target=target))
+    activation, _store, _lifecycle, service, _dependent = profile._setup_runtime_plane()
+    receipt = service.request(**profile.SCOPE, installation_id=E_ID, actor=activation.ACTOR,
+        roles=activation.ROLES, markings=activation.MARKINGS,
+        idempotency_key='a0v-growth19-e-reconcile-retirement-20260916', if_match='"5"', target=target)
+    return dict(receipt=receipt.response_json, replayed=receipt.replayed)
+
+
 def run(action, profile):
     if action not in ACTIONS:
         raise ValueError('unsupported fixed growth 1.9 action')
@@ -120,6 +156,8 @@ def run(action, profile):
         return profile.disable('e', suffix='growth19-disable')
     if action == 'settle-e':
         return profile.settle_released('e')
+    if action == 'reconcile-e':
+        return reconcile_e(profile)
     if action == 'create-f':
         return create_f(profile)
     phase, label = action.split('-')
