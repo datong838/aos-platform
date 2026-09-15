@@ -11,3 +11,10 @@ G已暂停Policy3/4与源schedule；21unknown及109pending保留。安全诊断�
 6. 留证据并继续经营首链与八工作台；整个恢复过程不等于业务完成。
 
 先测试固定身份、已有intent不重发；每阶段独立证据与CAS。任何未决调用先只读核对，绝不清理历史绕过排空。
+
+新增 scripts/a0v_ecommerce_diagnostic_reinstall.py：沿已验证event_complete_reinstall profile，只固定前序G及后继H独立目录/幂等标识；相同19签名包，不改旧脚本、旧版本、旧Receipt。H身份由create结果取得。测试固定G前序、generation及未知输出保护。
+
+## 060结案后恢复原shrink
+060正式部署成功，21项均经服务形成不可变未接收结案Receipt。新增scripts/a0v_g_shrink_after_closure.py，保留原失败shrink-intent：核对它与原批准request完全相同、当前仍group13、同idempotencyKey没有shrink Receipt、G不存在claimed/unknown、21结案完整且hash正确后，记录独立recovery-intent并调用原Lifecycle（仍复核当前审批）。如独立恢复意图已存在，不重发；若审批过期则另走正式新审批，不改旧回执。测试缺Receipt/残留unknown/漂移证明拒绝。
+
+06:46原shrink恢复在审批检查处拒绝，未产生目标Receipt。只读核验原审批事件已于22:37Z到期，Proposal本身尚未到期；没有修改旧审批。新增scripts/a0v_g_retirement_approval_renewal.py：独立新request key、重新精确审批，要求旧key无Receipt、group13不变、21结案完成/无unknown，随后由原Lifecycle再核验当前审批并shrink。
