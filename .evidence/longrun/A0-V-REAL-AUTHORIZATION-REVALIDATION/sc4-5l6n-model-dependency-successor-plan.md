@@ -29,3 +29,6 @@
 绑定实施文件 scripts/a0v_firstchain_binding_successor.py：显式connect/validate_target、八个skill r3发布证明，全部依赖preview通过后再写。每个create/evaluate/activate/suspend独立私有intent/result，不自动重放已存在intent；新能力activation使用实际健康观察，Skill前序必须r2同角色active，新Skill r3先create/evaluate后暂停旧binding再激活新binding。保持G暂停。独立测试拒绝发布证明漂移及已有intent重发。
 
 克隆绑定实测8新SkillBinding active、8旧suspended，按skill每项唯一active。原responsibility-plan-63c82d2a75614e1b95f1@2动态读取frozen/ready/complete/blockers=[]，无需新造plan或改配置hash。新增 scripts/a0v_g_model_successor_apply.py 固定G和当前模型4/route4/policy5；要求克隆ready证据及主库G事件暂停，阶段graph/publication/contracts/bindings独立intent/result，主库每图前序hash与克隆预演前序一致。正式发布使用主库自己新Eval/Receipt，不复制克隆发布事实；后续主库只读职责复核。
+
+## 主库落地结果（05:56）
+389d39e8固定执行器五阶段graphs/publication/contracts/bindings/verify均成功，私有事实目录 successor-g/model-successor/*-result.json。主库八图后继r2、八Skill r3、两组许可/八评估合同、八后继能力/技能绑定完成；原责任计划@2读取frozen/ready/complete且blockers=[]。G事件保持暂停；未重发17unknown，真实经营Run仍待后续恢复验证。下一波登记：核对未知目标Receipt、建立有效窗口后继SourceSelection/Control/Policy，正式恢复自然首链。不计为经营闭环完成。
