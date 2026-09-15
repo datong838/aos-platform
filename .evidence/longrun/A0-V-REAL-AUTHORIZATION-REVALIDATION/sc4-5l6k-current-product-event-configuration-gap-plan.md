@@ -46,6 +46,8 @@ predecessor 读回后，fresh draft 的 `notBefore` / `expiresAt` 已按 JSON mo
 
 event authority 刷新成功后，schedule material 构造因进程未配置 `ecommerce_growth` Python 包路径而在任何审批写入前拒绝。领域 Case / ProductEvent 规则必须从本次安装实际使用的 signed bundle root 中加载 `solution.ecommerce.growth/1.8.0/backend`，且路径必须是该受信根下存在的普通目录；禁止退回工作区候选源码或复制领域逻辑到执行器。preflight 已在每次 action 建立当前安装 lock/signature/release 证据，领域模型继续自行复验 Case/policy hash。
 
+signed growth backend 的公开依赖 `aos_extension_sdk` 由平台 SDK 包提供，并不复制进每个 signed bundle。受控脚本必须同时加入仓库固定的 `packages/aos-extension-sdk/python` 目录，先验证该目录下 SDK package 存在；这只满足领域模型导入，不改变 signed growth 源码选择，也不把 SDK 当作业务授权。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
