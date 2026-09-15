@@ -13,7 +13,9 @@ from psycopg.types.json import Jsonb
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 from test_ecommerce_growth_cutover_pg import database, _connection, _migration, _seed_pending_occurrence
+from test_ecommerce_growth_cutover_pg import _resumed_activation, _begin_runtime_disable, _complete_runtime_disable
 
 
 @pytest.fixture
@@ -262,3 +264,37 @@ def test_shrink_waits_for_occurrence_and_dispatch_resolution(dispatch_db, inflig
     receipt = _transition(dispatch_db, scope, request)
     assert receipt['drainEvidence']['claimedOccurrences'] == 0
     assert receipt['drainEvidence']['unresolvedDispatchAttempts'] == 0
+
+
+def test_optional_expansion_and_shrink_preserve_resumed_disable_detach(dispatch_db):
+    scope = TenantScope('org-org', 'dev-project')
+    original, _ = _resumed_activation(dispatch_db, scope)
+    owner = dispatch_db.owner
+    owner.execute("INSERT INTO meta_membership VALUES(%s,%s,'fixture-operator','admin')", scope.key)
+    runtime = owner.execute('SELECT * FROM extension_runtime_binding WHERE installation_id=%s AND generation=%s',
+                            (original.target_installation_id, original.target_generation)).fetchone()
+    group = owner.execute('SELECT cutover_group_id,cutover_group_revision FROM extension_operation_dispatch_binding LIMIT 1').fetchone()
+    ids = (str(original.target_installation_id), str(original.target_generation), str(group['cutover_group_id']))
+    group_revision = group['cutover_group_revision']
+    for offset, phase in enumerate(('expand', 'fence', 'shrink')):
+        request = _request(ids, phase, group_revision+offset, 'retirement-'+phase)
+        request['installationRef']['revision'] = runtime['installation_revision']
+        request['executionEpoch'] = runtime['execution_epoch']
+        request['runtimeRevision'] = runtime['revision']
+        _transition(dispatch_db, scope, request)
+    operation_id, revision = _begin_runtime_disable(dispatch_db, scope, original)
+    _complete_runtime_disable(dispatch_db, scope, operation_id, revision)
+    with _connection(dispatch_db, runtime=True)(scope) as conn:
+        dependent = EcommerceGrowthDisableDependent(schema=dispatch_db.schema)
+        args = dict(org_id=scope.org_id, project_id=scope.project_id, runtime_operation_id=operation_id)
+        detached = dependent.after_runtime_disabled(conn, **args)
+        replay = dependent.after_runtime_disabled(conn, **args)
+        conn.commit()
+    assert detached.status == 'detached'
+    assert replay.replayed and replay.receipt_id == detached.receipt_id
+    rows = owner.execute('SELECT * FROM extension_operation_dispatch_binding').fetchall()
+    assert len(rows) == 9
+    assert all(row['handler_kind'] == 'legacy' and row['installation_id'] is None
+               and row['operation_fence'] is False
+               and row['cutover_group_revision'] == group_revision+5 for row in rows)
+    assert owner.execute('SELECT count(*) AS n FROM extension_dispatch_claim_gate').fetchone()['n'] == 0
