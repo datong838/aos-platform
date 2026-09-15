@@ -28,6 +28,8 @@ R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover pr
 
 角色修复部署后首次真实 prepare 又按预期拒绝：原两笔 approval 的 30 分钟有效期已经结束，而 proposal 尚未到期，切换表仍保持零写。AIP 明确禁止同一 checker 对同一 proposal 重复批准，因此恢复动作不得覆盖旧 result、删除旧事件或复用旧审批 key；必须以相同 action type、payload、maker 和双 checker 创建新的 R3 proposal，冻结为独立 refresh intent/result，并让后续 prepare 只消费最新 refresh approval exact ref。旧 proposal 与过期 approval 保留为失败恢复审计证据。
 
+原 prepare intent 已绑定过期 approval exact ref，虽然服务在写入 cutover operation 前拒绝，它仍是不可变请求证据。刷新审批后的 prepare 必须使用新的幂等 key 和独立 refresh intent/result；后续 pause/commit 只消费成功的最新 prepare Receipt，不能改写或删除首次失败 intent。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
