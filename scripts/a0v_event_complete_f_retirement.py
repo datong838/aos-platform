@@ -60,12 +60,21 @@ def run(phase):
         request=current_dispatch(target);payload=dict(caseId=policy.CASE,schedulePolicyId=policy.POLICY,dispatchIntent=request)
         freeze(intent,payload);bundle,ref=_approve('ecommerce_growth_event_dispatch',payload,PREFIX+'-'+target+'-approval')
         result=dict(request=request,approvalRef=ref,proposalId=bundle.proposal.id)
-    elif phase in ('fence','shrink'):
+    elif phase in ('fence','shrink','shrink-recovered'):
         from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchRequest
         from aos_api.tenant_scope import TenantScope
-        approved=load('approve-'+phase)
-        if current_dispatch(phase)!=approved['request']:raise ValueError('retirement dispatch approval drifted')
+        target='shrink' if phase=='shrink-recovered' else phase
+        approved=load('approve-'+target)
+        if current_dispatch(target)!=approved['request']:raise ValueError('retirement dispatch approval drifted')
         request=EventControlDispatchRequest.model_validate({**approved['request'],'approvalRef':approved['approvalRef']})
+        if phase=='shrink-recovered':
+            from a0v_formal_text_model_renewal import database_connect
+            with database_connect('aos_meta_head')() as c:
+                versions=c.execute('SELECT version_num FROM alembic_version').fetchall()
+                count=c.execute("SELECT count(*) n FROM extension_event_control_dispatch_receipt WHERE org_id='org-org' AND project_id='dev-project' AND idempotency_key=%s",(request.idempotency_key,)).fetchone()['n']
+            if versions!=[{'version_num':'a0v_059'}] or count!=0 or json.loads((STATE/'shrink-intent.json').read_text())!=request.wire():
+                raise ValueError('failed shrink not proven absent and exact')
+            freeze(STATE/'shrink-recovered-precheck.json',dict(receipts=count,version='a0v_059',groupRevision=7))
         freeze(intent,request.wire());scope=TenantScope('org-org','dev-project')
         result=plane.pipeline_control_factory.build_event_dispatch_lifecycle(scope).transition(scope=scope,request=request,actor=f.ACTOR)
     else:raise ValueError('unknown retirement phase')
@@ -73,5 +82,5 @@ def run(phase):
 
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['approve-disable','disable','approve-fence','fence','approve-shrink','shrink']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['approve-disable','disable','approve-fence','fence','approve-shrink','shrink','shrink-recovered']);args=parser.parse_args()
     print(json.dumps(run(args.phase),ensure_ascii=False,default=str))
