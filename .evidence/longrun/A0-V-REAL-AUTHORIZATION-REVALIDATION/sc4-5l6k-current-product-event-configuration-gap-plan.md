@@ -22,6 +22,8 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 首次 reviewer API 调用在 18181 的 TWA memory 模式返回成功，但安装控制的 `meta_membership` 读回仍只有 runtime owner 与 `user:dev`，因此 checker 审批被 `INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED` 拒绝。真实链必须把受控 API 以既有 `AOS_TWA_STORE=pg` 启动，再经同一 workspace member API 重放 reviewer 配置，并要求 `meta_membership` exact 读回；内存 member 不能作为权限证据。已创建但未完成的 cutover proposal 必须按原 idempotency key查回复用，审批 expiry 从已存 proposal 固定推导，禁止因重试时间变化新建 proposal。
 
+PG 模式重放又暴露 `ensure_tenant_catalog_schema()` 错误继承 HTTP 请求的 tenant context：无参 `connect()` 因 contextvar 自动应用 scope 并降为 `aos_runtime`，随后 `CREATE TABLE IF NOT EXISTS` 被 schema 权限拒绝，成员 API 仍只更新内存。schema bootstrap 属于控制面 DDL，必须用 `connect(inherit_scope=False)`；实际 member upsert 继续使用当前租户事务，不扩大 runtime 角色权限。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
@@ -51,6 +53,8 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 - `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：`56a504025b7de9b499c8aad99e85c6361a9c05eb6fb4126cbda99d817a61238b`
 - `services/aos-api/aos_api/ecommerce_growth_registration_qualification.py`：仅把注册资格的九项筛选范围与九项所有权对齐；完整 release signature/fingerprint 复验保持不变。
 - `services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_qualification.py`：增加带独立 API contribution 仍可验证、九项自身漂移仍拒绝的回归覆盖。
+- `services/aos-api/aos_api/tenant_catalog.py`：schema bootstrap 明确不继承请求租户 scope，避免以 runtime role 误执行 DDL。
+- `services/aos-api/tests/test_tenant_catalog.py`：验证 schema bootstrap 的连接参数与成员持久化边界。
 - 本补充方案：`NEW`。
 
 不修改 Action policy、Case Store、ProductEvent Store、Worker、Receipt、migration 或已签名包资产。签名包无需修改；资格层仍由完整签名重验证保证额外贡献不可被篡改。若现有 Host 路由无法完成上述正式配置，先落失败证据并另开最小实现方案。
