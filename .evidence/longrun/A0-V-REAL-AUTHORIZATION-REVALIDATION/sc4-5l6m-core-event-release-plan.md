@@ -21,3 +21,6 @@ F event disable 与 fence 已真实成功，shrink因 ar2_005 的历史Receipt�
 新增 a0v_059 迁移按确切列/目标关系验证待移除外键，仅移除这一条；降级若历史Receipt已无当前dispatch则拒绝，不删除历史来降级。PG测试必须覆盖先写真实event Receipt→移除当前入口→历史可读/负租户不可读、再次调用写函数被拒绝；旧九入口回归。备份克隆预演/全表事务指纹保护后部署，原shrink意图无成功Receipt且exact fence快照未变才允许同key恢复。
 
 安装执行文件：scripts/a0v_ecommerce_event_complete_reinstall.py 固定前序F、后继G独立输出目录和core1.4/growth1.10版本。沿用已经真实验证的受控安装服务；创建G前必须F禁用资源排空且正式detach，不能因收缩或登记成功跳过旧安装生命周期。G准备前Host只在F全部退役后改读新签名根；API独立重载。仍保留所有旧E/F脚本和历史Receipt。
+
+G安装实测后精确身份：installation 4b081ad7-2cf6-4188-bc18-870726da1262，generation 1c8d9a2d-0a1b-4caa-9fef-528568fd2629，初始runtime revision4/epoch3；lock sha256:3997ccbf5729e46dd7947db59d3093b9963e5e74c5bdfa627003c8fbacfad1cc；config bf6875bf-c01b-46ad-bb1f-d7c634369f5e@1 / sha256:e420c697c1969955a8d44ed3b7e2c0497416c72436433fdc9fcd982bd942e796。F detach Receipt3a0aa78f-c6c7-4584-9792-b6491e16f67d；当前九入口legacy/fenced/groupRevision10。
+新增 scripts/a0v_event_complete_successor_business.py 按上述固定身份登记；随后 scripts/a0v_event_complete_successor_cutover.py 绑定实际登记Receipt、新独立审批/操作ID完成接管。旧F脚本不改，G不可复用F审批。
