@@ -9,3 +9,5 @@ Rules：m1 串行、先方案、最小修复、隔离数据库，主库与真实
 修复方向：当前已批准方案需要一条连续的批准事件版本链，最后事件版本+1等于当前方案版本；内容 hash、action binding、policy、actor、期限、maker-checker 的现有校验仍须成立。不能简单接受任意较旧 approval。原 schedule Host 的二次检查也需对齐；先定位并登记文件范围后修改。
 
 本项未完成前不部署新版本；完整 Service 签名/审批集成仍为后续门禁。
+
+实际 writer 红测已确认：proposal.version=2、event.proposal_version=1，current gate 报 current approval set binding differs。实施范围：ecommerce_product_event_approval.py 用所有批准事件的唯一连续版本序列验证当前方案 version；ecommerce_product_event_host_service.py 的单事件前置检查只要求其版本早于当前方案，最终完整版本链仍由公共门禁校验。同步 test_product_event_host_service.py 的 fixture 到真实 writer 语义，原版本漂移用回退到 1 触发；新增 writer 单人/双人批准与跳跃拒绝测试。
