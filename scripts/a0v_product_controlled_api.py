@@ -69,7 +69,7 @@ def load_launcher():
     spec=importlib.util.spec_from_file_location('product_controlled_api',path)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.BUNDLE_ROOT=(module.ROOT.parent/
-        '.aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce')
+        '.aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current')
     configure=module.configure_environment
     def configure_product():
         configure()
