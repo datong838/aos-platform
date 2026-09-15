@@ -27,3 +27,10 @@ G安装实测后精确身份：installation 4b081ad7-2cf6-4188-bc18-870726da1262
 
 G接管已resumed，后续source/profile脚本以G当前binding6/epoch3及group11为固定检查。新G Product授权为首版本（安装维度）；源schedule沿旧绑定版本继续CAS。业务Case不重建：从F成功的Policy revision2与Case version4生成Policy revision3/Case version5，保留业务历史ID、换成G current SourceSelection。新增a0v_event_complete_product_{preflight,authority,policy,enable,source_once}.py，仅通过正式Owner/服务/API推进。新源执行有自己幂等intent，不重新发送F旧run；新的当前数据更新会形成独立来源证据。
 G源执行预检必须按policy_id与policy_revision=3精确选择新事件绑定；同业务Policy保留F revision2的disabled绑定，不能任取首行。正式事件服务与数据库仍独立复核G安装/代次/epoch及有效期。
+
+G实测自然产生65个occurrence，但分析承接被通用dispatcher标记unknown/needs_attention，Run=0；原dispatcher吞掉异常而无诊断。源run已成功，不重发。先用新exact审批关闭G当前Policy revision3事件绑定（不停止Host、不改epoch），保留unknown及pending记录；新增 scripts/a0v_event_complete_g_pause.py 仅approve/disable，当前binding revision1 CAS，不提供重新启用/重试路径。后续补安全失败诊断与正式Receipt核对恢复，禁止SQL重置unknown。
+
+## G 分析前置条件恢复波次
+实时只读检查：65 occurrence = 17 needs_attention + 48 pending，目标 Case Run=0。六个角色实际 CapabilityBinding 旧评估于2026-09-12到期；正式 preview 均返回 MODEL_ROUTE_BLOCKED / PROVIDER_HEALTH_UNAVAILABLE，不能仅刷新时间戳。私有证据 successor-g/analysis-pause/capability-preview.json。此为已证明的前置缺口，不声称已捕获17次原始异常。
+下一波：1读取现有模型健康探针及当前exact依赖；2通过 scripts/a0v_real_text_provider_health.py 独立journal单次真实健康检查；3通过正式CapabilityBinding evaluate按当前version与依赖重新评估；4重新读取职责ready/complete及其他阻断；5审查unknown正式恢复接口，禁止SQL清理/重发；6留证据并进入有效窗口下自然首链。新健康检查不包含客户数据，仅固定公共健康提示。若旧网络/模型授权失效，则登记并通过现有后继配置流程修复，不能改旧权威。
+本波文件：scripts/a0v_event_complete_g_pause.py；测试 services/aos-api/tests/extension_runtime/test_a0v_event_complete_g_pause.py。检查既有intent拒绝重发；暂停不修改Host epoch、不清理记录。所有产物阶段尚待真实验证。
