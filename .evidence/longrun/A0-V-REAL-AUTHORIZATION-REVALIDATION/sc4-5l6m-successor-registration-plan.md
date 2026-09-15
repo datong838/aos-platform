@@ -26,3 +26,5 @@ Rules：m1单写、先方案、最小兼容扩展，原首次注册/撤回/审�
 主库升级仍禁止直接运行旧跨时刻比较实现。后续须实现同一REPEATABLE READ事务内迁移前后全表比较、版本及ACL验证，再提交；迁移自身的数据变化必须导致回滚。备份至执行期间正常运行漂移单独记录，不作为零写入证明。先用隔离数据库的并发写入与故意迁移DML测试验证，才允许正式部署；不修改旧054/055执行器。
 
 同事务迁移实现补充：services/aos-api/alembic/env.py仅新增显式传入connection的路径；既有CLI自建连接路径不变。新056部署器持有SQLAlchemy REPEATABLE READ事务，以同一底层连接完成版本检查、旧表指纹、Alembic升级、ACL核验与旧表指纹复验。提交前持久化只读验证结果，提交后独立读取版本；未知结果只读回查不重复执行。故意迁移DML必须回滚，并发业务提交不应被归为迁移写入。此修订不排除任何原有表，只有新表和Alembic版本表不参与旧数据比较。
+
+F正式登记执行方案：新增scripts/a0v_growth19_successor_business.py及services/aos-api/tests/extension_runtime/test_growth19_successor_business.py。固定F安装245959da-9d11-462c-9922-7d08f459992b、代次0e85a39b-7841-4378-b6c9-2984c4a685c8、安装etag5/binding4/epoch3及签名lock/config；固定E detach be5df1d2-4ef5-43ea-867e-c91475dd1d6c和组版本4，独立growth1.9 business/successor-f状态及新幂等键。新1.9受控API启动器初始化正式连接和签名资格验证。预览仅取当前状态构造完整请求，登记调用真实first_dispatch_registration_service.register_successor，写前落不可变intent；已有intent只走read_successor_receipt核验，不在未知结果下再次发起。禁止直接写业务表或伪造收据；结果不是经营执行权限。精确审批与cutover另续波次，不复用E硬编码函数或幂等键。
