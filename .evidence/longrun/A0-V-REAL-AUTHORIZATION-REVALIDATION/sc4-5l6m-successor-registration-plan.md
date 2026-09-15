@@ -21,3 +21,8 @@ Rules：m1单写、先方案、最小兼容扩展，原首次注册/撤回/审�
 展示契约补充：修改 apps/web/src/api/assetControl/registrationStatus.ts 及测试，接受明确SuccessorDispatchRegistrationReceipt + successor_history组合且allowedActions只能空；禁止继任凭据被误当“未使用首次注册”而出现撤回按钮。后端返回当前安装etag和历史凭据，不授予执行权；多份冲突历史显示needs_attention且清除动作。必要时补RegistrationPanel说明文案。新增状态查询只在a0v056表存在时读取，保证加法迁移前旧安装仍可查询。
 
 部署文件补充：新增 scripts/a0v_successor_registration_deploy.py 及测试，固定 a0v055→056、独立successor-registration-deployment状态目录/aos_successor_registration_20260916_test恢复库。保留054/055执行器。新表runtime只读、maintainer也无直接INSERT权限，只有受控函数可登记；已有全表指纹（包括event-control收据）必须一致，新继任表为空，immutable_history/immutable_truncate生效。独立备份恢复验真后主库迁移。API重启加载服务适配，Host不重启；真实F服务调用与浏览器状态验收随后执行。
+
+在线部署修订：F启用后Host持续更新租约与运行事件，不能将不同时间的全表指纹差异直接归因于迁移，也不能停Host再将保护性禁入当作透明暂停。先在只读REPEATABLE READ事务导出快照，将该事务全表指纹与pg_dump --snapshot绑定，导出事务保持到dump完成；恢复库必须完整匹配同一快照。备份失败保留文件且不进入恢复/主库。新增导出快照函数和时序测试，改动限定scripts/a0v_successor_registration_deploy.py及其专项测试。
+主库升级仍禁止直接运行旧跨时刻比较实现。后续须实现同一REPEATABLE READ事务内迁移前后全表比较、版本及ACL验证，再提交；迁移自身的数据变化必须导致回滚。备份至执行期间正常运行漂移单独记录，不作为零写入证明。先用隔离数据库的并发写入与故意迁移DML测试验证，才允许正式部署；不修改旧054/055执行器。
+
+同事务迁移实现补充：services/aos-api/alembic/env.py仅新增显式传入connection的路径；既有CLI自建连接路径不变。新056部署器持有SQLAlchemy REPEATABLE READ事务，以同一底层连接完成版本检查、旧表指纹、Alembic升级、ACL核验与旧表指纹复验。提交前持久化只读验证结果，提交后独立读取版本；未知结果只读回查不重复执行。故意迁移DML必须回滚，并发业务提交不应被归为迁移写入。此修订不排除任何原有表，只有新表和Alembic版本表不参与旧数据比较。
