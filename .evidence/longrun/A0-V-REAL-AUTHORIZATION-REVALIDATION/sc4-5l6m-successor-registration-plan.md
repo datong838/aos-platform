@@ -1,0 +1,17 @@
+# 保留历史的继任入口注册
+
+Rules：m1单写、先方案、最小兼容扩展，原首次注册/撤回/审批历史不变，不push、230 L0挂起。
+
+问题：a0v027首次注册只允许不存在入口；a0v030撤回只允许从未使用的首次注册。E已真实使用并正式detach，九个legacy入口及版本必须保留。F不能用重置入口、删历史、缺registrationRef的旧fixture通道完成切换。
+
+设计：继任注册是新的不可执行来源凭据，独立于首次注册表及其唯一group约束。新请求包装完整FirstDispatchRegistrationRequest（保持旧请求序列化/哈希不变）、expectedGroupRevision、predecessorDetachReceiptRef。新不可变successor receipt记录租户、目标安装/代次/配置、原组完整快照、本次请求hash、前序detach exact ref及hash。只增加Receipt，不改分派、不推进组版本、不允许执行。
+
+前置：标准Registration Owner相同当前权限/签名/安装配置验证；同一事务锁组和安装；精确解码前序detach与对应activation/runtime disable，现有组与detach快照一致、九操作legacy/fenced、无当前claim gate、前序安装已disabled且代次排空。目标F已ready/enabled，同组expectedGroupRevision匹配，目标不能是前序同安装。canonical hash与不可变Receipt由受控SQL和服务读回校验。重复相同key回放；payload/actor漂移拒绝。
+
+继任注册不独占组：多个候选注册都不可执行；后续exact approval、snapshot和cutover CAS决定唯一接管者。一次实际切换推进组版本，其他注册立即失效，避免注册未使用就永久锁死重装。
+
+兼容：RegistrationReceiptRef新增SuccessorDispatchRegistrationReceipt变体；服务按明确类型读对应表，返回其中原FirstDispatchRegistrationRequest走现有签名/配置当前复验。Cutover prepare只有继任变体可使用经该Receipt验证的非1版本legacy快照；原首次变体仍要求revision1，原无Ref fixture路径不扩大到正式控制。AIP action binding及Cutover各阶段继续绑定完整ref。
+
+新增文件：services/aos-api/aos_api/ecommerce_growth_successor_registration.py（请求/完整解码/服务协作），alembic/versions/a0v_056_dispatch_successor_registration.py（独立表、RLS、不可变、受控写）；修改ecommerce_growth_registration_origin.py、ecommerce_growth_registration.py、ecommerce_growth_cutover.py；新增对应contracts/PG/service集成测试。CLI F控制脚本仅在以上服务测试和部署后调用，不直接造Receipt。
+
+验证：旧首次哈希/行为不变；新ref/父hash/租户/目标/九操作/版本/快照漂移拒绝；未完成detach、活动gate、未知或running旧任务拒绝；继任注册无dispatch mutation、幂等回放；真实完整Service签名资格/审批/cutover，旧测试回归。数据库备份恢复后部署，再F注册接管。后续event-control与经营首链仍单列，不能用本凭据冒充业务完成。
