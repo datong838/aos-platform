@@ -120,7 +120,7 @@ class ProductEventSchedulePutHostService:
         _validate_schedule_approval_rows(event,proposal,approval,checked_at=now,case_id=case['caseId'],
             policy_id=policy['schedulePolicyId'],policy_hash=canonical_hash(policy,prefixed=True),
             expected_policy_revision=command['expectedPolicyRevision'],expected_case_version=command['expectedCaseVersion'])
-        if (event['created_at'] > now or proposal is None or proposal['version'] != approval.revision
+        if (event['created_at'] > now or proposal is None or proposal['version'] <= approval.revision
                 or proposal['expires_at'] is None or proposal['expires_at'] <= now):
             raise ValueError('event approval is not current')
         require_current_event_approval(transaction=transaction,scope=scope,case_id=case['caseId'],

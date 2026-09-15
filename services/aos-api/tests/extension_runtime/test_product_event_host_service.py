@@ -23,7 +23,7 @@ def service_case(stored,monkeypatch):
         payload=dict(caseId=c['caseId'],schedulePolicyId=p['schedulePolicyId'],expectedPolicyRevision=0,
             expectedCaseVersion=c['revision']-1,policyHash=canonical_hash(p,prefixed=True)),
         proposal_hash='fixture-proposal-hash',status='approved',action_binding_hash='a'*64,
-        version=1,expires_at=now+timedelta(days=1))
+        version=2,expires_at=now+timedelta(days=1))
     command=dict(idempotencyKey='host-event',expectedPolicyRevision=0,expectedCaseVersion=c['revision']-1,
         policy={k:v for k,v in p.items() if k!='tenant'},caseAuthority={k:v for k,v in c.items() if k!='tenant'},
         approvalRef=dict(resourceType='ActionApprovalEvent',resourceId='fixture-approval',revision=1,
@@ -43,6 +43,7 @@ def service_case(stored,monkeypatch):
         VALUES('org-org','dev-project',%s,%s,1,%s,'approved',%s,%s,%s,%s,%s,'fixture-approval','fixture')""",
         (approval['approval_event_id'],approval['proposal_id'],approval['proposal_hash'],approval['actor_id'],
          approval['reason'],approval['expires_at'],approval['created_at'],approval['action_binding_hash']))
+    conn.execute("UPDATE aip_action_proposal SET version=2 WHERE proposal_id='fixture-proposal'")
     conn.execute('SET LOCAL ROLE aos_runtime')
     class Connection:
         def execute(self,query,params=()):
@@ -83,7 +84,7 @@ def test_guard_failure_never_writes(service_case,change):
     elif change=='future':
         approval['created_at']=datetime.now(timezone.utc)+timedelta(hours=1)
         command['approvalRef']['contentHash']=canonical_hash(approval,prefixed=True)
-    elif change=='version':proposal['version']=2
+    elif change=='version':proposal['version']=1
     elif change=='method':command['policy']['methodRef']['contentHash']='sha256:'+'b'*64
     else:command['actor']='self-reported'
     with pytest.raises(ValueError),conn.transaction():execute(service_case)

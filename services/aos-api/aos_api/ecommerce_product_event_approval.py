@@ -83,9 +83,13 @@ def _require_current_event_approval(*,transaction,scope,case_id,policy_id,approv
             or canonical_hash({key:chosen[0][key] for key in _HASH_FIELDS},prefixed=True)!=approval_ref.content_hash
             or chosen[0]['proposal_version']!=approval_ref.revision):
         raise ValueError('current independent approval quorum required')
-    if any(event['proposal_hash']!=proposal['proposal_hash'] or event['proposal_version']!=proposal['version']
+    versions = sorted(event['proposal_version'] for event in events)
+    if (not versions or proposal['version'] != len(events)+1
+            or versions != list(range(1, len(events)+1))):
+        raise ValueError('current approval version chain differs')
+    if any(event['proposal_hash']!=proposal['proposal_hash']
            or event['action_binding_hash']!=proposal['action_binding_hash']
-           or event['approval_policy_hash']!=proposal['approval_policy_hash'] for event in valid):
+           or event['approval_policy_hash']!=proposal['approval_policy_hash'] for event in events):
         raise ValueError('current approval set binding differs')
     markings=proposal['action_type_snapshot']['requiredMarkings']
     if type(markings) is not list or any(type(label) is not str or not label.strip() for label in markings):
