@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location('event_runtime_receipt_deploy_storage', Path(__file__).with_name('a0v_controlled_source_claim_deploy.py'))
 storage = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(storage)
-STATE = ROOT.parent / '.aos-recovery-20260916/state/event-runtime-receipt-deployment'
-CLONE = 'aos_event_runtime_receipt_20260916_test'
+STATE = ROOT.parent / '.aos-recovery-20260916/state/event-runtime-receipt-deployment-v2'
+CLONE = 'aos_event_runtime_receipt_20260916_v2_test'
 SOURCE, TARGET = 'a0v_057', 'a0v_058'
 TASK = 'SC4-5L6M-EVENT-RUNTIME-RECEIPT-DEPLOY-20260916'
 FILES = ('a0v_058_event_runtime_receipt.py',)

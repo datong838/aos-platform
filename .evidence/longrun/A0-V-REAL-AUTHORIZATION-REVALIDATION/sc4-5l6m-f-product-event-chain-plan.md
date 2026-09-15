@@ -31,3 +31,5 @@ F事件策略执行补充：新增scripts/a0v_growth19_product_event_policy.py�
 4. 克隆库预演、备份与全部原表指纹保护后，按既有单写者部署流程升级。
 5. 源窗口已过期则走新窗口、Policy successor 与新审批，不修改旧时间或重复旧启用。
 6. 真实启用成功后进入真实 Product 更新自然触发 Case/Run 波次；八工作台业务闭环仍未完成。
+
+克隆预演补充：现场通用账本 aos_runtime 存在历史 SELECT/INSERT/UPDATE/DELETE 授权，与 ar2_005 只允许 SELECT 的设计不一致。a0v_058 必须撤回该表三项直接写权限、保留 SELECT 和受控函数 EXECUTE，避免绕过精确 Receipt 协议；旧业务通过相同函数写入，不改变业务数据。新增“历史宽授权收敛”数据库测试。首次克隆保留 a0v_057，使用新隔离克隆与快照重新预演；不复用失败 proof。

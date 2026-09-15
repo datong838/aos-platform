@@ -309,6 +309,7 @@ def test_postgres_host_and_direct_receipt_paths_share_one_lock_order(database):
 
 
 def test_event_control_journal_exact_replay_isolation_and_downgrade(database):
+    database.owner.execute('GRANT INSERT,UPDATE,DELETE ON ecommerce_growth_runtime_command_receipt TO aos_runtime')
     migration = _migration(database.owner, 'a0v_058_event_runtime_receipt.py')
     positive = TenantScope('org-org', 'dev-project')
     canary = TenantScope('dev-org', 'dev-project')

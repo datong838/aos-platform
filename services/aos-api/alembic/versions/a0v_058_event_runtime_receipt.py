@@ -37,6 +37,7 @@ def _change(include_event):
 
 def upgrade():
     _change(True)
+    op.execute("REVOKE INSERT,UPDATE,DELETE ON public.ecommerce_growth_runtime_command_receipt FROM aos_runtime")
 
 
 def downgrade():
