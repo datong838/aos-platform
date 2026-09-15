@@ -1,0 +1,132 @@
+from contextlib import contextmanager
+import importlib.util
+from pathlib import Path
+from types import SimpleNamespace
+from uuid import uuid4
+
+import pytest
+from psycopg import sql
+from psycopg.types.json import Jsonb
+
+from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from aos_api.tenant_scope import TenantScope
+from test_ecommerce_growth_cutover_pg import database, _connection
+
+
+@pytest.fixture
+def dispatch_db(database):
+    owner = database.owner
+    owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+    owner.execute("""CREATE TABLE meta_membership(org_id text NOT NULL,project_id text NOT NULL,
+        subject text NOT NULL,role text NOT NULL,PRIMARY KEY(org_id,project_id,subject))""")
+    owner.execute("GRANT SELECT ON meta_membership TO aos_extension_maintainer")
+    owner.execute(sql.SQL("""CREATE FUNCTION {}.canonical_asset_registry_jsonb(jsonb) RETURNS text
+        LANGUAGE sql IMMUTABLE AS 'SELECT $1::text'""").format(
+        sql.Identifier(database.schema)))
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location("a0v_054_test", root / "alembic/versions/a0v_054_event_control_dispatch_lifecycle.py")
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    def execute(statement):
+        body = statement.replace("public.", database.schema + ".")
+        return owner.execute(body)
+    migration.op = SimpleNamespace(execute=execute)
+    migration.upgrade()
+    return database
+
+
+def _seed(database, scope):
+    owner = database.owner
+    owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+    installation, generation, group = uuid4(), uuid4(), uuid4()
+    owner.execute("INSERT INTO bundle_installation(org_id,project_id,installation_id) VALUES(%s,%s,%s)",
+                  (*scope.key, installation))
+    owner.execute("""INSERT INTO bundle_installation_revision(org_id,project_id,installation_pk,revision,state)
+        SELECT org_id,project_id,installation_pk,1,'active' FROM bundle_installation
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s""", (*scope.key, installation))
+    owner.execute("""INSERT INTO extension_runtime_binding(org_id,project_id,installation_id,generation,
+        installation_revision,package_lock_ref,profile_ref,config_ref,execution_epoch,desired_state,
+        observed_state,enabled,operation_fence,revision)
+        VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1','{}',3,'enabled','ready',true,false,6)""",
+        (*scope.key, installation, generation))
+    owner.execute("INSERT INTO meta_membership VALUES(%s,%s,'fixture-operator','admin')", scope.key)
+    for operation in ECOMMERCE_GROWTH_OPERATIONS:
+        owner.execute("""INSERT INTO extension_operation_dispatch_binding(org_id,project_id,operation_id,
+            handler_kind,installation_id,generation,execution_epoch,operation_fence,revision,
+            cutover_group_id,cutover_group_revision,updated_by)
+            VALUES(%s,%s,%s,'extension',%s,%s,3,false,2,%s,11,'fixture-operator')""",
+            (*scope.key, operation, installation, generation, group))
+    return str(installation), str(generation), str(group)
+
+
+def _request(ids, phase, expected, key):
+    installation, generation, group = ids
+    return {
+        "schemaVersion": "aos.ecommerce.event-control-dispatch/v1",
+        "phase": phase,
+        "installationId": installation,
+        "generation": generation,
+        "executionEpoch": 3,
+        "runtimeRevision": 6,
+        "cutoverGroupId": group,
+        "expectedGroupRevision": expected,
+        "caseId": "case-current",
+        "schedulePolicyId": "product-change-current",
+        "approvalRef": {"resourceType": "ActionApprovalEvent", "resourceId": "approval-" + phase,
+                        "revision": 1, "contentHash": "sha256:" + "a" * 64},
+        "idempotencyKey": key,
+    }
+
+
+def _transition(database, scope, request, *, runtime=False):
+    with _connection(database, runtime=runtime)(scope) as conn:
+        row = conn.execute("SELECT extension_event_control_dispatch_transition_a0v_054(%s,%s) AS receipt",
+                           (Jsonb(request), "fixture-operator")).fetchone()
+        conn.commit()
+        return row["receipt"]
+
+
+def test_expand_replay_fence_and_shrink_are_exact_and_receipted(dispatch_db):
+    scope = TenantScope("org-org", "dev-project")
+    ids = _seed(dispatch_db, scope)
+    expanded = _transition(dispatch_db, scope, _request(ids, "expand", 11, "expand-1"))
+    assert expanded["phase"] == "expand" and expanded["targetGroupRevision"] == 12
+    assert len(expanded["beforeSnapshot"]) == 9 and len(expanded["afterSnapshot"]) == 10
+    replay = _transition(dispatch_db, scope, _request(ids, "expand", 11, "expand-1"))
+    assert replay["receiptId"] == expanded["receiptId"] and replay["replayed"] is True
+    fenced = _transition(dispatch_db, scope, _request(ids, "fence", 12, "fence-1"))
+    control = [row for row in fenced["afterSnapshot"] if row["operationId"] == "ecommerce_growth_event_control"]
+    assert len(control) == 1 and control[0]["operationFence"] is True and control[0]["revision"] == 2
+    shrunk = _transition(dispatch_db, scope, _request(ids, "shrink", 13, "shrink-1"))
+    assert shrunk["targetGroupRevision"] == 14 and len(shrunk["afterSnapshot"]) == 9
+    rows = dispatch_db.owner.execute(sql.SQL("SELECT phase FROM {}.extension_event_control_dispatch_receipt \
+        WHERE org_id='org-org' ORDER BY created_at").format(sql.Identifier(dispatch_db.schema))).fetchall()
+    assert [row["phase"] for row in rows] == ["expand", "fence", "shrink"]
+
+
+def test_phase_drift_canary_and_direct_runtime_call_fail_closed(dispatch_db):
+    scope = TenantScope("org-org", "dev-project")
+    ids = _seed(dispatch_db, scope)
+    with pytest.raises(Exception):
+        _transition(dispatch_db, scope, _request(ids, "shrink", 11, "early-shrink"))
+    _transition(dispatch_db, scope, _request(ids, "expand", 11, "same-key"))
+    drift = _request(ids, "fence", 12, "same-key")
+    with pytest.raises(Exception):
+        _transition(dispatch_db, scope, drift)
+    with pytest.raises(Exception):
+        _transition(dispatch_db, TenantScope("dev-org", "dev-project"),
+                    _request(ids, "fence", 12, "canary"))
+    with pytest.raises(Exception):
+        _transition(dispatch_db, scope, _request(ids, "fence", 12, "runtime-direct"), runtime=True)
+    count = dispatch_db.owner.execute(sql.SQL("SELECT count(*) AS n FROM {}.extension_event_control_dispatch_receipt \
+        WHERE org_id='dev-org'").format(sql.Identifier(dispatch_db.schema))).fetchone()["n"]
+    assert count == 0
+
+
+def test_receipt_is_immutable(dispatch_db):
+    scope = TenantScope("org-org", "dev-project")
+    ids = _seed(dispatch_db, scope)
+    receipt = _transition(dispatch_db, scope, _request(ids, "expand", 11, "immutable"))
+    with pytest.raises(Exception):
+        dispatch_db.owner.execute(sql.SQL("UPDATE {}.extension_event_control_dispatch_receipt SET actor='other' \
+            WHERE receipt_id=%s").format(sql.Identifier(dispatch_db.schema)), (receipt["receiptId"],))
