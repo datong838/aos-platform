@@ -14,21 +14,32 @@ from alembic import command
 from psycopg.rows import dict_row
 
 from aos_api.data_requirement_outbox_store import (
+    DataRequirementOutboxClaim,
     DataRequirementOutboxConflict,
     DataRequirementOutboxStore,
     DataRequirementOutboxValidationError,
 )
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
 from tests.aip._migration_test_support import isolated_aip_migration_database
 
 
 MIGRATION = Path(__file__).parents[1] / "alembic/versions/biw2_004_data_requirement_outbox_delivery.py"
+A0V_MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_050_data_requirement_outbox_completion.py"
 SCOPE = TenantScope(org_id="org-org", project_id="dev-project")
 NOW = datetime(2026, 8, 26, 6, 30, tzinfo=UTC)
 
 
 def _load_migration():
     spec = util.spec_from_file_location("biw2_004", MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_a0v_migration():
+    spec = util.spec_from_file_location("a0v_050", A0V_MIGRATION)
     assert spec and spec.loader
     module = util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -141,6 +152,75 @@ def test_unknown_reconcile_requires_exact_non_unknown_receipt():
     assert unknown.state == "unknown" and reconciled.state == "acked"
     assert "data_requirement_outbox_unknown_biw2_004" in connection.calls[0][0]
     assert "data_requirement_outbox_reconcile_biw2_004" in connection.calls[1][0]
+
+
+def test_a0v_completion_migration_retains_dual_exact_receipts_without_direct_write_grant():
+    module = _load_a0v_migration()
+    assert module.revision == "a0v_050" and module.down_revision == "a0v_049"
+    statements: list[str] = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+    sql = "\n".join(statements)
+    assert "completion_fulfillment_ref JSONB" in sql
+    assert "completion_analysis_ref JSONB" in sql
+    assert "data_requirement_outbox_complete_a0v_050" in sql
+    assert "data_requirement_outbox_reconcile_completed_a0v_050" in sql
+    assert "ecommerce_growth_runtime_command_receipt" in sql
+    assert "phase' IS NOT DISTINCT FROM 'RUNNING'" in sql
+    assert "GRANT EXECUTE ON FUNCTION" in sql
+    assert "GRANT UPDATE" not in sql and "GRANT INSERT" not in sql
+
+
+def test_store_complete_uses_exact_claim_and_dual_receipts():
+    claim = DataRequirementOutboxClaim("outbox-1", "requirement-1", 1, "event-1",
+        "data.requirement.request", {"eventId": "event-1"}, "sha256:" + "a" * 64,
+        2, "lease-token-2", NOW + timedelta(minutes=5))
+    fulfillment = InvestigationExactRef(resource_type="DataFulfillmentReceipt",
+        resource_id="fulfillment-receipt-1", revision=1, content_hash="sha256:" + "b" * 64,
+        receipt_id="fulfillment-receipt-1")
+    analysis = InvestigationExactRef(resource_type="AnalysisRuntimeReceipt",
+        resource_id="analysis-receipt-1", revision=1, content_hash="sha256:" + "c" * 64,
+        receipt_id="analysis-receipt-1")
+    connection = Connection([{"state": "acked", "replayed": False}])
+    result = DataRequirementOutboxStore(factory(connection)).complete(
+        SCOPE, claim, fulfillment, analysis)
+    assert result.state == "acked" and not result.replayed and connection.commits == 1
+    query, params = connection.calls[0]
+    assert "data_requirement_outbox_complete_a0v_050" in query
+    assert params[:3] == ("outbox-1", 2, "lease-token-2")
+
+    replay_connection = Connection([{"state": "acked", "replayed": True}])
+    replay = DataRequirementOutboxStore(factory(replay_connection)).reconcile_completed(
+        SCOPE, claim, fulfillment, analysis)
+    assert replay.replayed
+    assert "data_requirement_outbox_reconcile_completed_a0v_050" in replay_connection.calls[0][0]
+
+    with pytest.raises(DataRequirementOutboxValidationError):
+        DataRequirementOutboxStore(factory(Connection([]))).complete(
+            SCOPE, claim, analysis, fulfillment)
+
+
+def test_a0v_empty_upgrade_and_downgrade_preserve_old_delivery_contract():
+    with isolated_aip_migration_database(
+        "a0v_outbox_completion", migration_target="a0v_049"
+    ) as (config, dsn):
+        command.upgrade(config, "a0v_050")
+        with psycopg.connect(dsn) as conn:
+            columns = {row[0] for row in conn.execute('''SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name='data_requirement_outbox_delivery' ''').fetchall()}
+            assert {'completion_fulfillment_ref', 'completion_analysis_ref'} <= columns
+            assert conn.execute('''SELECT count(*) FROM pg_proc
+                WHERE proname IN ('data_requirement_outbox_complete_a0v_050',
+                    'data_requirement_outbox_reconcile_completed_a0v_050')''').fetchone()[0] == 2
+        command.downgrade(config, "a0v_049")
+        with psycopg.connect(dsn) as conn:
+            columns = {row[0] for row in conn.execute('''SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name='data_requirement_outbox_delivery' ''').fetchall()}
+            assert 'completion_fulfillment_ref' not in columns
+            assert conn.execute('''SELECT count(*) FROM pg_proc
+                WHERE proname LIKE 'data_requirement_outbox_%_a0v_050' ''').fetchone()[0] == 0
 
 
 def test_disposable_database_restart_fence_reconcile_isolation_and_downgrade():

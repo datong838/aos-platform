@@ -6,10 +6,13 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
+import re
 from typing import Any, Literal
 
 import psycopg
+from psycopg.types.json import Jsonb
 
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
@@ -121,6 +124,51 @@ class DataRequirementOutboxStore:
             (outbox_id, receipt_id),
         )
 
+    def complete(
+        self,
+        scope: TenantScope,
+        claim: DataRequirementOutboxClaim,
+        fulfillment_ref: InvestigationExactRef,
+        analysis_ref: InvestigationExactRef,
+    ) -> DataRequirementOutboxTransition:
+        return self._complete(
+            scope, "complete", claim, fulfillment_ref, analysis_ref
+        )
+
+    def reconcile_completed(
+        self,
+        scope: TenantScope,
+        claim: DataRequirementOutboxClaim,
+        fulfillment_ref: InvestigationExactRef,
+        analysis_ref: InvestigationExactRef,
+    ) -> DataRequirementOutboxTransition:
+        return self._complete(
+            scope, "reconcile_completed", claim, fulfillment_ref, analysis_ref
+        )
+
+    def _complete(
+        self,
+        scope: TenantScope,
+        operation: Literal["complete", "reconcile_completed"],
+        claim: DataRequirementOutboxClaim,
+        fulfillment_ref: InvestigationExactRef,
+        analysis_ref: InvestigationExactRef,
+    ) -> DataRequirementOutboxTransition:
+        self._completion_claim(claim)
+        self._completion_ref(fulfillment_ref, "DataFulfillmentReceipt")
+        self._completion_ref(analysis_ref, "AnalysisRuntimeReceipt")
+        return self._execute_transition(
+            scope,
+            f"SELECT state,replayed FROM data_requirement_outbox_{operation}_a0v_050(%s,%s,%s,%s,%s)",
+            (
+                claim.outbox_id,
+                claim.attempt,
+                claim.lease_token,
+                Jsonb(fulfillment_ref.model_dump(mode="json", by_alias=True, exclude_none=True)),
+                Jsonb(analysis_ref.model_dump(mode="json", by_alias=True, exclude_none=True)),
+            ),
+        )
+
     def _finish(
         self,
         scope: TenantScope,
@@ -139,7 +187,7 @@ class DataRequirementOutboxStore:
         )
 
     def _execute_transition(
-        self, scope: TenantScope, sql: str, params: tuple[str, ...]
+        self, scope: TenantScope, sql: str, params: tuple[Any, ...]
     ) -> DataRequirementOutboxTransition:
         try:
             with self._connect_factory(scope) as conn:
@@ -156,6 +204,42 @@ class DataRequirementOutboxStore:
     def _required(name: str, value: str) -> None:
         if not value.strip() or len(value) > 200:
             raise DataRequirementOutboxValidationError(f"{name} must be non-empty and bounded")
+
+    @classmethod
+    def _completion_claim(cls, claim: DataRequirementOutboxClaim) -> None:
+        if type(claim) is not DataRequirementOutboxClaim:
+            raise DataRequirementOutboxValidationError("completion requires an exact Outbox claim")
+        for name, value in (
+            ("outbox id", claim.outbox_id),
+            ("requirement id", claim.requirement_id),
+            ("event id", claim.event_id),
+            ("lease token", claim.lease_token),
+        ):
+            cls._required(name, value)
+        if claim.topic != "data.requirement.request":
+            raise DataRequirementOutboxValidationError("completion claim topic is not supported")
+        if (
+            isinstance(claim.requirement_revision, bool)
+            or not isinstance(claim.requirement_revision, int)
+            or claim.requirement_revision < 1
+            or isinstance(claim.attempt, bool)
+            or not isinstance(claim.attempt, int)
+            or claim.attempt < 1
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", claim.content_hash) is None
+        ):
+            raise DataRequirementOutboxValidationError("completion claim identity is invalid")
+
+    @staticmethod
+    def _completion_ref(ref: InvestigationExactRef, expected_type: str) -> None:
+        if (
+            type(ref) is not InvestigationExactRef
+            or ref.resource_type != expected_type
+            or ref.revision != 1
+            or ref.receipt_id != ref.resource_id
+        ):
+            raise DataRequirementOutboxValidationError(
+                f"completion requires an exact {expected_type} receipt reference"
+            )
 
     @staticmethod
     def _translate(exc: psycopg.Error) -> None:
