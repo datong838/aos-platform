@@ -175,7 +175,7 @@ def main():
         raise ValueError('immutable output exists; inspect before retry')
     profile = load_profile()
     result = run(args.action, profile)
-    profile._freeze(args.output, result)
+    profile._freeze_or_match(args.output, result)
     print(json.dumps(result, ensure_ascii=False, default=str, indent=2))
 
 
