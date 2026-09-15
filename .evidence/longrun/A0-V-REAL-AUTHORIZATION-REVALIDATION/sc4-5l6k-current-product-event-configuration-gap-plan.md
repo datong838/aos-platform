@@ -34,6 +34,8 @@ R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover pr
 
 `a0v_051` 上线后的逐条件诊断确认版本等式已经成立，剩余拒绝来自第二个历史契约差异：直接 `create_proposal` 路径的 stable snapshot 在没有来源草稿时不写 `sourceDraftRef` 键，而 `ar2_014` 只接受显式 JSON `null`。应用层 canonical 校验已把“缺键”和 `None` 视为同一无来源语义，proposal 的三个 source draft 列也全部为 NULL。新增 `a0v_052` 将数据库函数对应比较改为 `COALESCE(snapshot->'sourceDraftRef','null'::jsonb)`；有来源时仍要求三列和 exact ref 全等，其他校验不变。当前系统策略实际把 internal cutover 定为 R2/minimumApprovals=1；本次人为执行了两名独立 checker，证据中按真实策略记录，后续生命周期设计再单独评审是否把风险 floor 提升到 R3，禁止把当前 R2 伪记成 R3。
 
+两轮诊断和迁移超过了刷新 approval 的有效期；当前操作已完成 prepare/pause，状态为 `draining`，九项 dispatch 仍为 fenced legacy，运行时已按协议 drain。现有模型没有“审批过期后续签”入口，直接改 operation、prepare Receipt、pause Receipt 或 approval expiry 都会破坏不可变历史，禁止使用。新增 `a0v_053` 的 `extension_dispatch_cutover_approval_refresh_receipt` 作为每个 activation operation 一次的不可变续签权威：请求必须引用原 prepare Receipt 和新的当前 ActionApprovalEvent；服务在同一事务内复验原 operation/Receipt、完全相同的 cutover payload、当前 checker 权限和新审批，再写 refresh Receipt，不改旧表。commit 数据库函数与应用层后续锁统一优先消费经过 content hash 复验的 refresh approval ref；缺少 refresh 时保持原逻辑。漂移 payload、过期审批、跨租户、重复不同请求和 refresh Receipt 篡改全部拒绝。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
