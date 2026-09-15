@@ -40,3 +40,12 @@
 - 与方案一致：此次只改变 schema 和受控函数/约束，不改变现有安装、路由、Task/Run、商城对象或交付状态。迁移器不能创建 ProductEvent、Case、Run、Requirement 或成功 Receipt。
 - 主库已到代码 head，但两个历史安装仍 disabled/fenced/unknown，资源 released；这是真实安全基线，不是安装恢复成功。
 - 下一步必须先核当前签名包是否与 HEAD/新自然链代码一致。若不一致，构建、签名、资格审查新领域候选，再通过原 Owner执行安装、配置、enable、disable/fence、Host重启恢复、卸载和重装；每一步按实际 Receipt对账，canary持续为零。
+
+## 重启后控制面与页面入口恢复
+
+- 代码基线 `2c9c8bdf`。`a0v_product_controlled_api.py check` 在主库 050 上再次通过：本地诊断元数据、Host Web 隔离探针、Runtime、目录及 UI 读取身份均指向 `aos_meta_head`，相互权限边界不变；`sourceCalls=0 / runsCreated=0`。
+- 受控 API 以唯一 PID `32492` 监听 `127.0.0.1:18181`；启动日志明确 migration disabled、Runtime Host disabled、QYH Cron disabled、AIP logic automation disabled、模型健康维护 inactive、SSH 预热 disabled。`/v1/health` 与 `/v1/ready` 均为 200。
+- 前端从 `apps/web` 正确根目录、固定 Node 与 `VITE_AOS_API_PROXY_TARGET=http://127.0.0.1:18181` 启动。PID `33540` 监听 5173，PID `33568` 监听 8434；两端 `/ontology` 和 `/api/v1/health` 均为 200。
+- 首次前端尝试因重启后 PATH 无 Node 且包管理器依赖检查并发而失败；由该尝试产生的 `pnpm-lock.yaml` 变动已逐行还原，原有受保护 `package.json / package-lock.json` 差异未触碰。第二次从错误仓库根启动虽监听但 `/ontology` 为 404，核对准确 PID 后只停止本轮两个 Vite 进程，再从 `apps/web` 重启成功；两次失败均未接触主库或业务 Worker。
+- 服务恢复后再次独立执行升级器 `readback`：`a0v_050 / businessWrites=0 / actionableBindings=0 / unresolvedOutbox=0 / unstoppedSchedules=0 / dispatchRoutes=9 / canaryDispatchRoutes=0`。QYH 恢复观察仍显示两个历史 generation 均 `enabled=false / operation_fence=true / observed_state=unknown`，全部三项资源 released。
+- Runtime Host 本步有意保持关闭。现有签名根最高为 core 1.3、growth 1.7、Niushop 1.5；growth 1.7 虽声明八工作台和既有分析 API，但早于 039–050 与本轮自然 ProductEvent→DataRequirement Outbox→快照恢复逻辑，不能冒充当前完整领域包。下一波先形成当前代际构建、签名、资格审查与重装方案，再启动唯一 Host。
