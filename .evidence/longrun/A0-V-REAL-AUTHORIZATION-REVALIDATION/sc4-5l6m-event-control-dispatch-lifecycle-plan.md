@@ -49,3 +49,11 @@ Service 通过当前 installation lock 和 ReleasePolicy 复验 growth 的签名
 5. 任一写结果未知时只按 org/project/key 读取 Receipt；同阶段两次失败停止真实写并保留证据。
 
 本步不迁移主库、不修改 E、不安装 1.9。完成后进入第 2/6 步：把 1.9 纳入 current 四包构建与资格 profile。
+
+## 第 3/6 步部署前修订（2026-09-16）
+
+Rules：m1 串行，先方案再修改，真实数据库合同优先，主库部署保持关闭直到生命周期缺口完成。
+
+优先修复测试权威：`test_event_control_dispatch_lifecycle_pg.py` 从 228asset0 原迁移 AST 读取唯一 canonical 函数定义，在隔离 schema 中安装原实现并固定函数 search_path；禁止以 JSONB 文本输出模拟 canonical。对 expand、fence、shrink 和 replay 的 requestHash/contentHash 均使用 Python canonical_sha256 交叉验证；包含中文和嵌套字段。此子步只改测试，不修改生产哈希规则。
+
+后续必须补 exact fence Receipt 和 drain 证据，并以 resumed 安装的 ar2_017 disable/detach 作为 E→F 退役入口；ar2_016 仅用于 validation 窗口。可选分派组版本变化与正式退役的兼容性须有集成实证。前述 46 项通过不关闭这些出口。
