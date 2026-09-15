@@ -696,3 +696,11 @@ AR2 1951/192/93五类错误为空（/tmp/sc4-e6c-closure.log）。主库未迁�
 重启后恢复Docker并重建约束角色齐全的aos-extension-pg测试容器；未接触真实商城库。主库未迁移，无真实源/模型/Task/安装发布；用户三份既有改动保护，不push，230 L0挂起。详细证据见sc4-5l6e6d1-completed-group-readback-verification.md。
 
 下一波e6d2实现固定完整组完成服务及原调度结果写入复用：同组单写者、全running执行、全完成只读、混合状态拒绝、十二路终态事务CAS与完成后Receipt后验。之后继续原初始化+Pending+完整快照+统一恢复、Outbox自然消费、主升级安装、真实首链、八工作台与连续观察。
+
+## 2026-09-15 SC4-5l6e6d2 完整组统一调度收尾
+
+基线1460a68c3f2e55a255ca75fbee62f957f85eb82f。新增pipeline_snapshot_group_completion.py，最小抽取qyh_cron_scheduler原结果写入函数，新增全结构PG组合测试。固定服务持有tenant/group advisory单写者锁；全running执行原Retirement恢复链，全succeeded/stopped只读，混合/未知拒绝。十二Run与Schedule锁定后同一事务CAS终态和last_run，再用原Projection/Retirement/Audit完成后回读；后验或第六次写入失败全部回滚，独立Store效果依13个原Receipt恢复。完成回放不调用执行器/源、不改Schedule，真实Audit仍可返回requires_attention。
+
+新鲜验证：完整组4 passed/179.15s；只读不写补强1 passed/69.74s；e6d1回归2 passed/123.45s；原qyh单路调度26 passed/3.53s；均7项既有warnings。AR2 ar2-7为1952/192/93且五类错误空，编译/diff通过。详细见sc4-5l6e6d2-group-completion-verification.md。
+
+本波仍是18432私有全结构，源/安装current为named；无主迁移、真实商城、模型、真实Task或发布作用。下一波e6e组合实际原Task/TaskRun/Checkpoint/Requirement初始化、Pending、完整组收尾、快照证据与统一恢复，消除剩余named阶段拼接；其后继续Outbox自然消费、安装接线、主升级、真实首链、八工作台与连续观察。

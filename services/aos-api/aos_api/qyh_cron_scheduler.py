@@ -240,6 +240,48 @@ def _claim_run(scope: TenantScope, schedule_id: str, scheduled_for: datetime, tr
     return str(row["id"]) if row else None
 
 
+def _persist_schedule_result(
+    conn,
+    scope: TenantScope,
+    *,
+    schedule_id: str,
+    run_id: str,
+    trigger: str,
+    result: dict[str, Any],
+    duration_ms: int,
+    expected_status: str | None = None,
+) -> dict[str, Any]:
+    """Write one original schedule result; the caller owns the transaction."""
+    status = "succeeded" if result.get("ok") else "failed"
+    last_run = {
+        "id": run_id, "at": datetime.now(timezone.utc).isoformat(), "status": status,
+        "trigger": trigger, "rowsWritten": int(result.get("rows_written") or 0),
+        "durationMs": duration_ms, "errorCode": str(result.get("error_code") or ""),
+    }
+    expected = " AND status=%s" if expected_status is not None else ""
+    params = (
+        status, duration_ms, int(result.get("rows_written") or 0),
+        str(result.get("error_code") or ""), str(result.get("error_message") or "")[:1000],
+        "ec-live-v1", result.get("executor_stopped") is True, run_id, *scope.key,
+    ) + ((expected_status,) if expected_status is not None else ())
+    changed = conn.execute(
+        """UPDATE meta_schedule_run SET status=%s, finished_at=NOW(), duration_ms=%s,
+               rows_written=%s, error_code=%s, error_message=%s, executor_id=%s, executor_stopped=%s
+           WHERE id=%s AND org_id=%s AND project_id=%s""" + expected,
+        params,
+    )
+    if expected_status is not None and changed.rowcount != 1:
+        raise RuntimeError("SCHEDULE_RESULT_CAS_FAILED")
+    schedule = conn.execute(
+        "UPDATE meta_schedule SET last_run=%s::jsonb, updated_at=NOW() "
+        "WHERE id=%s AND org_id=%s AND project_id=%s",
+        (_json(last_run), schedule_id, *scope.key),
+    )
+    if expected_status is not None and schedule.rowcount != 1:
+        raise RuntimeError("SCHEDULE_RESULT_PARENT_MISSING")
+    return last_run
+
+
 def execute_schedule(
     scope: TenantScope,
     schedule_id: str,
@@ -300,27 +342,13 @@ def execute_schedule(
             "error_message": "schedule executor failed",
         }
     duration_ms = int(result.get("duration_ms") or max(1, (time.monotonic() - started) * 1000))
-    status = "succeeded" if result.get("ok") else "failed"
-    last_run = {
-        "id": run_id, "at": datetime.now(timezone.utc).isoformat(), "status": status,
-        "trigger": trigger, "rowsWritten": int(result.get("rows_written") or 0),
-        "durationMs": duration_ms, "errorCode": str(result.get("error_code") or ""),
-    }
     with connect(scope) as conn:
-        conn.execute(
-            """UPDATE meta_schedule_run SET status=%s, finished_at=NOW(), duration_ms=%s,
-                   rows_written=%s, error_code=%s, error_message=%s, executor_id=%s, executor_stopped=%s
-               WHERE id=%s AND org_id=%s AND project_id=%s""",
-            (status, duration_ms, int(result.get("rows_written") or 0),
-             str(result.get("error_code") or ""), str(result.get("error_message") or "")[:1000],
-             "ec-live-v1", result.get("executor_stopped") is True, run_id, *scope.key),
-        )
-        conn.execute(
-            "UPDATE meta_schedule SET last_run=%s::jsonb, updated_at=NOW() "
-            "WHERE id=%s AND org_id=%s AND project_id=%s",
-            (_json(last_run), schedule_id, *scope.key),
+        last_run = _persist_schedule_result(
+            conn, scope, schedule_id=schedule_id, run_id=run_id, trigger=trigger,
+            result=result, duration_ms=duration_ms,
         )
         conn.commit()
+    status = last_run["status"]
     log.info("qyh_cron_run schedule=%s status=%s rows=%s trigger=%s", schedule_id, status, last_run["rowsWritten"], trigger)
     return {"id": run_id, "scheduleId": schedule_id, "status": status, "lastRun": last_run, "result": result}
 
