@@ -21,3 +21,13 @@ F事件策略执行补充：新增scripts/a0v_growth19_product_event_policy.py�
 入口扩展真实连接修订：正式expand完成签名/审批校验后在SET ROLE maintainer拒绝，无权限扩大。工厂误用普通runtime_worker_connection；修复PipelineControlServiceFactory新增可选event_dispatch_connect，未显式配置时拒绝构造；control_wiring只传既有registration_connect（独立保护文件/精确双角色校验），普通source/control继续原runtime连接。测试工厂用受控双角色连接，原无连接构造保持兼容但不开放事件维护。保留expand失败intent，恢复动作重新核实receipt0、九入口group5和F目标未漂移后使用同一exact请求，原记录不删除。
 
 启用意图规范化修订：实际expand成功，enable在current event control intent differs拒绝。新增ProductEventControlCommand.approval_intent统一exclude_none，事件审批验收采用该方法，与新AIP绑定的canonical payload一致；原command完整wire输出不变。补空可选receiptId输入等价与字段变更仍绑定测试；调整旧approval测试fixture使用正式方法。enable-recovered仅在当前Policy disabled、automation binding0、control receipt0且原请求逐字相同时恢复，不删除失败记录。
+
+## 补充波次：事件控制通用回执账本（2026-09-16）
+真实 F 扩展入口已成功；真实 Policy revision 1、Case version 3 已写入。启用在通用 Receipt 校验失败，独立只读回查 enabled=false、binding=0、control receipt=0，事务完整回滚。40 项控制意图测试通过并不足以证明完整入口可用。
+
+1. 保留失败意图和回查，禁止未知结果重发。
+2. 通用运行账本只增加 `ecommerce_growth_event_control`，不改变原九项操作；Python 白名单与新增 a0v_058 数据库 CHECK/函数白名单同步。保持原函数的租户、dispatch、runtime、幂等锁及 ACL，不修改旧迁移和历史数据。
+3. 用真实隔离 PostgreSQL 验证事件回执首写、重放、漂移拒绝、负租户不可读、非空禁止降级；原九项回归。
+4. 克隆库预演、备份与全部原表指纹保护后，按既有单写者部署流程升级。
+5. 源窗口已过期则走新窗口、Policy successor 与新审批，不修改旧时间或重复旧启用。
+6. 真实启用成功后进入真实 Product 更新自然触发 Case/Run 波次；八工作台业务闭环仍未完成。

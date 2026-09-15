@@ -26,6 +26,7 @@ _OPERATIONS = frozenset(
         "ecommerce_growth_review_advance",
         "ecommerce_growth_content_generate",
         "ecommerce_growth_content_review",
+        "ecommerce_growth_event_control",
     }
 )
 

@@ -306,3 +306,31 @@ def test_postgres_host_and_direct_receipt_paths_share_one_lock_order(database):
     finally:
         host.rollback()
         host.close()
+
+
+def test_event_control_journal_exact_replay_isolation_and_downgrade(database):
+    migration = _migration(database.owner, 'a0v_058_event_runtime_receipt.py')
+    positive = TenantScope('org-org', 'dev-project')
+    canary = TenantScope('dev-org', 'dev-project')
+    dispatch = seed(database, positive)
+    database.owner.execute("UPDATE extension_operation_dispatch_binding SET operation_id='ecommerce_growth_event_control'")
+    dispatch = replace(dispatch, operation_id='ecommerce_growth_event_control')
+    with bound(database, positive) as (store, conn):
+        assert put(store, dispatch).replayed is False
+        assert put(store, dispatch).replayed is True
+        assert conn.execute("SELECT has_table_privilege(current_user,'ecommerce_growth_runtime_command_receipt','INSERT') AS allowed").fetchone()['allowed'] is False
+    with bound(database, canary) as (store, _):
+        assert store.read(operation_id=dispatch.operation_id, idempotency_key='case-qyh-001') is None
+    with pytest.raises(psycopg.Error, match='drifted'):
+        with bound(database, positive) as (store, _):
+            put(store, dispatch, {'receiptRef': TARGET, 'changed': True})
+    with pytest.raises(psycopg.Error, match='not empty'):
+        migration.downgrade()
+
+
+def test_event_journal_empty_upgrade_downgrade_preserves_base(database):
+    migration = _migration(database.owner, 'a0v_058_event_runtime_receipt.py')
+    migration.downgrade()
+    dispatch = seed(database, TenantScope('org-org', 'dev-project'))
+    with bound(database, TenantScope('org-org', 'dev-project')) as (store, _):
+        assert put(store, dispatch).replayed is False
