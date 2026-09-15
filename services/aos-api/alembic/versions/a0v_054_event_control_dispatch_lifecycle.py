@@ -56,6 +56,7 @@ def upgrade() -> None:
       v_project text:=nullif(current_setting('aos.project_id',true),'');
       v_phase text; v_key text; v_install uuid; v_generation uuid; v_group uuid;
       v_epoch bigint; v_runtime_revision bigint; v_expected bigint; v_target bigint;
+      v_prior record; v_prior_ref jsonb := NULL;
       v_existing record; v_runtime record; v_rows bigint; v_control record;
       v_before jsonb; v_after jsonb; v_hash text; v_body jsonb; v_content_hash text;
       v_receipt uuid:=gen_random_uuid(); v_now timestamptz; v_ref jsonb; v_number jsonb;
@@ -162,6 +163,24 @@ def upgrade() -> None:
         OR (v_phase='shrink' AND v_control.operation_fence IS NOT TRUE)
       THEN RAISE EXCEPTION 'event dispatch phase precondition drifted' USING ERRCODE='40001'; END IF;
 
+      IF v_phase='shrink' THEN
+        SELECT r.*,count(*) OVER () AS matches INTO v_prior FROM public.extension_event_control_dispatch_receipt r
+          WHERE org_id=v_org AND project_id=v_project AND phase='fence'
+            AND installation_id=v_install AND generation=v_generation
+            AND execution_epoch=v_epoch AND runtime_revision=v_runtime_revision
+            AND cutover_group_id=v_group AND target_group_revision=v_expected
+            AND case_id=p_request->>'caseId' AND policy_id=p_request->>'schedulePolicyId'
+            AND authority_data->'installationRef'=p_request->'installationRef'
+            AND after_snapshot=v_before;
+        GET DIAGNOSTICS v_rows=ROW_COUNT;
+        IF v_rows<>1 OR v_prior.matches<>1 OR v_prior.content_hash IS DISTINCT FROM
+            'sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(v_prior.authority_data),'UTF8')),'hex')
+          OR v_prior.authority_data->'afterSnapshot' IS DISTINCT FROM v_before
+        THEN RAISE EXCEPTION 'exact fence receipt required' USING ERRCODE='40001'; END IF;
+        v_prior_ref:=jsonb_build_object('receiptId',v_prior.receipt_id::text,
+          'contentHash',v_prior.content_hash);
+      END IF;
+
       UPDATE public.extension_operation_dispatch_binding SET cutover_group_revision=v_target,updated_by=p_actor,
         updated_at=clock_timestamp() WHERE org_id=v_org AND project_id=v_project AND cutover_group_id=v_group;
       IF v_phase='expand' THEN
@@ -192,6 +211,9 @@ def upgrade() -> None:
         'caseId',p_request->>'caseId','schedulePolicyId',p_request->>'schedulePolicyId',
         'approvalRef',v_ref,'idempotencyKey',v_key,'requestHash',v_hash,'beforeSnapshot',v_before,
         'afterSnapshot',coalesce(v_after,'[]'::jsonb),'actor',p_actor,'createdAt',v_now);
+      IF v_phase='shrink' THEN
+        v_body:=v_body||jsonb_build_object('priorFenceReceiptRef',v_prior_ref);
+      END IF;
       v_content_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(v_body),'UTF8')),'hex');
       INSERT INTO public.extension_event_control_dispatch_receipt(org_id,project_id,receipt_id,idempotency_key,
         phase,request_hash,installation_id,generation,execution_epoch,runtime_revision,cutover_group_id,

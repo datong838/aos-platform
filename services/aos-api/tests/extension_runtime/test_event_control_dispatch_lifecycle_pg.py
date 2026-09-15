@@ -110,6 +110,10 @@ def test_expand_replay_fence_and_shrink_are_exact_and_receipted(dispatch_db):
     control = [row for row in fenced["afterSnapshot"] if row["operationId"] == "ecommerce_growth_event_control"]
     assert len(control) == 1 and control[0]["operationFence"] is True and control[0]["revision"] == 2
     shrunk = _transition(dispatch_db, scope, _request(ids, "shrink", 13, "shrink-1"))
+    assert shrunk['priorFenceReceiptRef'] == {
+        'receiptId': fenced['receiptId'], 'contentHash': fenced['contentHash']}
+    replay_shrink = _transition(dispatch_db, scope, _request(ids, "shrink", 13, "shrink-1"))
+    assert replay_shrink['receiptId'] == shrunk['receiptId'] and replay_shrink['replayed']
     assert shrunk["targetGroupRevision"] == 14 and len(shrunk["afterSnapshot"]) == 9
     rows = dispatch_db.owner.execute(sql.SQL("SELECT phase FROM {}.extension_event_control_dispatch_receipt \
         WHERE org_id='org-org' ORDER BY created_at").format(sql.Identifier(dispatch_db.schema))).fetchall()
@@ -152,3 +156,27 @@ def test_receipt_is_immutable(dispatch_db):
     with pytest.raises(Exception):
         dispatch_db.owner.execute(sql.SQL("UPDATE {}.extension_event_control_dispatch_receipt SET actor='other' \
             WHERE receipt_id=%s").format(sql.Identifier(dispatch_db.schema)), (receipt["receiptId"],))
+
+
+@pytest.mark.parametrize('drift', ['missing_receipt', 'case', 'snapshot'])
+def test_shrink_requires_exact_current_fence_receipt(dispatch_db, drift):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'expand-exact'))
+    if drift == 'missing_receipt':
+        dispatch_db.owner.execute("UPDATE extension_operation_dispatch_binding SET operation_fence=true, "
+            "revision=revision+1 WHERE operation_id='ecommerce_growth_event_control'")
+        dispatch_db.owner.execute("UPDATE extension_operation_dispatch_binding SET cutover_group_revision=13")
+    else:
+        _transition(dispatch_db, scope, _request(ids, 'fence', 12, 'fence-exact'))
+    request = _request(ids, 'shrink', 13, 'shrink-exact')
+    if drift == 'case':
+        request['caseId'] = 'different-case'
+    if drift == 'snapshot':
+        dispatch_db.owner.execute("UPDATE extension_operation_dispatch_binding SET revision=revision+1 "
+            "WHERE operation_id='ecommerce_growth_event_control'")
+    before = dispatch_db.owner.execute('SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall()
+    with pytest.raises(Exception, match='exact fence receipt required'):
+        _transition(dispatch_db, scope, request)
+    assert dispatch_db.owner.execute('SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall() == before
+    assert dispatch_db.owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='shrink'").fetchone()['n'] == 0
