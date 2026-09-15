@@ -113,7 +113,7 @@ def _configure_environment(
     os.environ.update(values)
 
 
-def _build_host():
+def _build_runtime():
     if str(API) not in sys.path:
         sys.path.insert(0, str(API))
     from aos_api.asset_registry.control_wiring import (
@@ -128,7 +128,20 @@ def _build_host():
     selected = build_production_runtime_host_selection(control_plane=plane)
     if selected.status != "ACTIVE" or selected.host is None:
         raise HostBlocked(selected.error_code or "HOST_SELECTION_INACTIVE")
-    return selected.host
+    return selected.host, plane
+
+
+def _build_business_workers(control_plane):
+    from aos_api.ecommerce_analysis_data_requirement_worker import (
+        build_analysis_data_requirement_worker,
+    )
+    from aos_api.ecommerce_product_event_worker import build_product_event_worker
+
+    product_event = build_product_event_worker(control_plane)
+    analysis_data = build_analysis_data_requirement_worker(control_plane)
+    if product_event is None or analysis_data is None:
+        raise HostBlocked("BUSINESS_WORKER_DEPENDENCY_MISSING")
+    return product_event, analysis_data
 
 
 async def _serve(args: argparse.Namespace) -> None:
@@ -137,7 +150,8 @@ async def _serve(args: argparse.Namespace) -> None:
         bundle_root=args.bundle_root.resolve(),
         trust_roots_file=args.trust_roots_file.resolve(),
     )
-    host = _build_host()
+    host, control_plane = _build_runtime()
+    product_event_worker, analysis_data_worker = _build_business_workers(control_plane)
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()
     for signum in (signal.SIGINT, signal.SIGTERM):
@@ -150,12 +164,48 @@ async def _serve(args: argparse.Namespace) -> None:
         "positiveTenant": "org-org/dev-project",
         "canaryTenantCount": 0,
         "intervalSeconds": args.interval_seconds,
+        "businessWorkers": ["product-event", "analysis-data-requirement"],
     }
     _write(args.status_file.resolve(), public)
     print(json.dumps(public, ensure_ascii=False, sort_keys=True), flush=True)
+    host_task = asyncio.create_task(
+        host.serve(stop_event, interval_seconds=args.interval_seconds),
+        name="extension-runtime-host",
+    )
+    host_ready = lambda: not host_task.done()
+    worker_tasks = (
+        asyncio.create_task(
+            product_event_worker.serve(stop_event, host_ready=host_ready),
+            name="product-event-consumption",
+        ),
+        asyncio.create_task(
+            analysis_data_worker.serve(stop_event, host_ready=host_ready),
+            name="analysis-data-requirement",
+        ),
+    )
+    stop_task = asyncio.create_task(stop_event.wait(), name="runtime-host-stop")
     try:
-        await host.serve(stop_event, interval_seconds=args.interval_seconds)
+        done, _ = await asyncio.wait(
+            (host_task, *worker_tasks, stop_task),
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if not stop_event.is_set():
+            if host_task in done:
+                error = host_task.exception()
+                if error is not None:
+                    raise error
+            else:
+                finished = next(task for task in worker_tasks if task in done)
+                error = finished.exception()
+                if error is not None:
+                    raise error
+                raise HostBlocked("BUSINESS_WORKER_STOPPED")
     finally:
+        stop_event.set()
+        await asyncio.gather(host_task, *worker_tasks, return_exceptions=True)
+        if not stop_task.done():
+            stop_task.cancel()
+        await asyncio.gather(stop_task, return_exceptions=True)
         stopped = {**public, "outcome": "RUNTIME_HOST_STOPPED"}
         _write(args.status_file.resolve(), stopped)
         print(json.dumps(stopped, ensure_ascii=False, sort_keys=True), flush=True)

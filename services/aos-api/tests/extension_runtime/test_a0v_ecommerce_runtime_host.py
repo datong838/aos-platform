@@ -94,7 +94,13 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
             assert isinstance(stop_event, asyncio.Event)
             assert interval_seconds == 3
 
-    monkeypatch.setattr(HOST, "_build_host", lambda: Host())
+    class Worker:
+        async def serve(self, stop_event, *, host_ready):
+            assert isinstance(stop_event, asyncio.Event)
+            assert host_ready() is False
+
+    monkeypatch.setattr(HOST, "_build_runtime", lambda: (Host(), object()))
+    monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: (Worker(), Worker()))
     asyncio.run(HOST._serve(argparse.Namespace(
         credential_file=credential_path,
         bundle_root=bundle,
@@ -107,13 +113,61 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     assert result["outcome"] == "RUNTIME_HOST_STOPPED"
     assert result["tenantCount"] == 1
     assert result["canaryTenantCount"] == 0
+    assert result["businessWorkers"] == ["product-event", "analysis-data-requirement"]
+
+
+def test_serve_runs_business_workers_with_same_stop_and_live_host(tmp_path, monkeypatch):
+    credential_path, _ = _credential_file(tmp_path / 'identities.json')
+    bundle = tmp_path / 'bundles'; bundle.mkdir()
+    trust = tmp_path / 'trust.json'; trust.write_text('{}')
+    status = tmp_path / 'status.json'
+    seen = []
+
+    class Host:
+        async def serve(self, stop_event, *, interval_seconds):
+            seen.append(('host', stop_event, interval_seconds))
+            await stop_event.wait()
+
+    class Worker:
+        def __init__(self, name, stop=False): self.name, self.stop = name, stop
+        async def serve(self, stop_event, *, host_ready):
+            await asyncio.sleep(0)
+            seen.append((self.name, stop_event, host_ready()))
+            if self.stop: stop_event.set()
+            else: await stop_event.wait()
+
+    monkeypatch.setattr(HOST, '_build_runtime', lambda: (Host(), object()))
+    monkeypatch.setattr(HOST, '_build_business_workers',
+        lambda _plane: (Worker('product-event'), Worker('analysis-data', stop=True)))
+    asyncio.run(HOST._serve(argparse.Namespace(credential_file=credential_path,
+        bundle_root=bundle, trust_roots_file=trust, status_file=status, interval_seconds=2)))
+
+    assert [item[0] for item in seen] == ['host', 'product-event', 'analysis-data']
+    stop_events = [item[1] for item in seen]
+    assert len({id(item) for item in stop_events}) == 1 and stop_events[0].is_set()
+    assert seen[1][2] is True and seen[2][2] is True
+
+
+def test_business_worker_construction_fails_before_active_status(tmp_path, monkeypatch):
+    credential_path, _ = _credential_file(tmp_path / 'identities.json')
+    bundle = tmp_path / 'bundles'; bundle.mkdir()
+    trust = tmp_path / 'trust.json'; trust.write_text('{}')
+    status = tmp_path / 'status.json'
+    monkeypatch.setattr(HOST, '_build_runtime', lambda: (object(), object()))
+    monkeypatch.setattr(HOST, '_build_business_workers',
+        lambda _plane: (_ for _ in ()).throw(RuntimeError('worker unavailable')))
+
+    with pytest.raises(RuntimeError, match='worker unavailable'):
+        asyncio.run(HOST._serve(argparse.Namespace(credential_file=credential_path,
+            bundle_root=bundle, trust_roots_file=trust, status_file=status, interval_seconds=2)))
+    assert not status.exists()
 
 
 def test_serve_rejects_symlink_before_build(tmp_path, monkeypatch):
     path, _ = _credential_file(tmp_path / 'identities.json')
     link = tmp_path / 'link'
     link.symlink_to(path)
-    monkeypatch.setattr(HOST, '_build_host', lambda: pytest.fail('symlink reached host construction'))
+    monkeypatch.setattr(HOST, '_build_runtime', lambda: pytest.fail('symlink reached host construction'))
     with pytest.raises(HOST.HostBlocked):
         asyncio.run(HOST._serve(argparse.Namespace(
             credential_file=link, bundle_root=tmp_path, trust_roots_file=path,
