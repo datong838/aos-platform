@@ -195,6 +195,7 @@ def database():
             owner.execute(f"GRANT SELECT ON {table} TO aos_runtime")
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
+        _migration(root, "a0v_051_cutover_approval_version.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
@@ -386,7 +387,7 @@ def _seed(
              object_ref,purpose,risk_level,policy_snapshot,payload,diff,evidence_refs,
              action_binding_hash,approval_policy_hash,proposal_hash,status,version,expires_at,created_by)
            VALUES(%s,%s,%s,'ecommerce_growth_cutover',%s,NULL,NULL,NULL,%s,'R3',
-             %s,%s,'{}','[]',%s,%s,%s,'approved',3,%s,'operator')""",
+             %s,%s,'{}','[]',%s,%s,%s,'approved',4,%s,'operator')""",
         (*scope.key, f"proposal-cutover{suffix}", psycopg.types.json.Jsonb(action_type), stable["purpose"],
          psycopg.types.json.Jsonb(policy), psycopg.types.json.Jsonb(payload),
          stable["actionBindingHash"], stable["approvalPolicyHash"], proposal_hash,
