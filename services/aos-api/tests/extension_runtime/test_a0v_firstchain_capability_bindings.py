@@ -61,3 +61,10 @@ def test_blocked_preview_never_creates_binding_service(monkeypatch):
     def forbidden(*a,**k):raise AssertionError('write service created')
     monkeypatch.setattr(activate,'AipCapabilityBindingService',forbidden)
     with pytest.raises(ValueError,match='DEPENDENCIES_BLOCKED'):activate.run('aos_meta_head')
+
+
+def test_successor_binding_namespace_is_explicit_and_legacy_stable():
+    from a0v_firstchain_capability_bindings import binding_namespace
+    assert binding_namespace(2)=='a0v-firstchain-'
+    assert binding_namespace(3)=='a0v-model-successor-r3-'
+    with pytest.raises(ValueError):binding_namespace(4)

@@ -49,12 +49,23 @@ def require_contract(row, skill):
         raise ValueError('FIRSTCHAIN_EVAL_CONTRACT_LINEAGE_INVALID')
 
 
+def binding_namespace(skill_revision):
+    if skill_revision not in (2, 3):
+        raise ValueError('EXACT_BINDING_SKILL_REVISION_REQUIRED')
+    return 'a0v-firstchain-' if skill_revision == 2 else 'a0v-model-successor-r3-'
+
+
 def prepare(database, logic_ids=('D01','D02','D03')):
     connect = database_connect(database)
-    require_target(connect, database)
+    return prepare_material(connect, validate_target=lambda c: require_target(c, database), logic_ids=logic_ids)
+
+
+def prepare_material(connect, *, validate_target, logic_ids=('D01','D02','D03'), skill_revision=2):
+    prefix = binding_namespace(skill_revision)
+    validate_target(connect)
     registry = AipSkillRegistry(connect)
-    skills = [registry.get_skill('ecommerce.skill.'+logic, 2) for logic in logic_ids]
-    require_internal_skills(skills,logic_ids)
+    skills = [registry.get_skill('ecommerce.skill.'+logic, skill_revision) for logic in logic_ids]
+    require_internal_skills(skills,logic_ids,skill_revision=skill_revision)
     models = AipModelRuntimeStore(connect)
     route = models.get_route(SCOPE, 'a0v-ecommerce-text-readonly-v1')
     if len(route.candidates) != 1:
@@ -100,7 +111,7 @@ def prepare(database, logic_ids=('D01','D02','D03')):
                     raise ValueError('FIRSTCHAIN_PUBLISHED_CAPABILITY_REQUIRED')
                 cap=rows[0]
                 ref=exact('CapabilityRevision',cap['capability_id'],cap['revision'],cap['content_hash'])
-                request=CreateCapabilityBindingRequest(binding_id='a0v-firstchain-'+skill.skill_id.rsplit('.',1)[1].lower()+'-'+capability_id,
+                request=CreateCapabilityBindingRequest(binding_id=prefix+skill.skill_id.rsplit('.',1)[1].lower()+'-'+capability_id,
                     binding=CapabilityBindingRequest(capability=ref,secret_ref=provider.secret_ref,
                         network_policy_revision=policy.network_policy_ref.asset_id+'@'+str(policy.network_policy_ref.revision),
                         quota_policy_revision=policy.quota_policy_ref.asset_id+'@'+str(policy.quota_policy_ref.revision),

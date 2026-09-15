@@ -25,3 +25,7 @@
 第三轮克隆8个Skill r3发布成功，隔离合约59例通过，旧修订保留。后续许可/评估合同旧执行器固定r2；补改 scripts/a0v_firstchain_internal_license.py 与 scripts/a0v_firstchain_eval_contracts.py，抽取显式连接+目标校验回调的materialize入口，接受固定skill_revision 2或3，默认历史run仍2，不放宽原数据库allowlist。新克隆显式传3并匹配已成功发布Receipt。先合同/许可预演再新绑定。
 
 许可与合同克隆实测：两组内部许可EvidenceBundle均complete/fresh；八个新Skill对应EvalContract全部frozen，业务Runs=0、ProviderCalls=0。34相关测试通过。下一步补 scripts/a0v_firstchain_capability_bindings.py 显式连接/目标校验/skill revision与后继binding前缀，旧run默认保持原2版；新增后继绑定执行器先全部preview再创建能力、评估、激活及SkillBinding替换，单步intent/CAS、未知不重发。活动旧SkillBinding只在新后继准备就绪后暂停，新项激活前保留可恢复旧项。职责计划重新读取而非手工改ready。
+
+绑定实施文件 scripts/a0v_firstchain_binding_successor.py：显式connect/validate_target、八个skill r3发布证明，全部依赖preview通过后再写。每个create/evaluate/activate/suspend独立私有intent/result，不自动重放已存在intent；新能力activation使用实际健康观察，Skill前序必须r2同角色active，新Skill r3先create/evaluate后暂停旧binding再激活新binding。保持G暂停。独立测试拒绝发布证明漂移及已有intent重发。
+
+克隆绑定实测8新SkillBinding active、8旧suspended，按skill每项唯一active。原responsibility-plan-63c82d2a75614e1b95f1@2动态读取frozen/ready/complete/blockers=[]，无需新造plan或改配置hash。新增 scripts/a0v_g_model_successor_apply.py 固定G和当前模型4/route4/policy5；要求克隆ready证据及主库G事件暂停，阶段graph/publication/contracts/bindings独立intent/result，主库每图前序hash与克隆预演前序一致。正式发布使用主库自己新Eval/Receipt，不复制克隆发布事实；后续主库只读职责复核。
