@@ -1550,3 +1550,11 @@ The coordinator composes existing current Owners from one immutable Outbox route
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_coordinator.py` | Host原路径 | Fixed group completion, evidence, fulfillment and unified resume composition with committed Receipt replay; no Outbox acknowledgement | `93a3c519d08d233d87f9a2770e495e3c743972dee7281d3f5fa6c92b08fde961` |
+
+### SC4-5l6f4 DataRequirement Outbox dual Receipt completion Host
+
+The existing Host Outbox Store gains only fenced completion adapters. The new Alembic migration owns the database transition and proves the exact fulfilled DataFulfillmentReceipt and RUNNING AnalysisRuntimeReceipt lineage before acknowledgement. Neither file is a domain-package rule, public endpoint, Provider call, worker registration, or external business-effect authority. The Store was already classified as Host; this note records the additive migration and does not alter historical preHash rows or verifier rules.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/alembic/versions/a0v_050_data_requirement_outbox_completion.py` | Host schema migration | Additive paired exact Receipt retention and fenced complete/reconcile functions; no direct runtime DML grant | `9b2d4282cb4cf6261a1a3ee5ca1ef8d61008638d0161ebe104584765208fe53d` |
