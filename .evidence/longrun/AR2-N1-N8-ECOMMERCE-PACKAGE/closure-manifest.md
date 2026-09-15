@@ -1534,3 +1534,11 @@ Claimed Outbox to original immutable analysis and snapshot routing only. This cl
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_data_requirement_route.py` | Host原路径 | Current claimed Outbox, Requirement Head, original Analysis Receipt, occurrence and snapshot-group route verification only | `aa5c45a850beaa9911948e79c9d1b13c1c5de6a2c1dccb1da0dda6d5a3aed484` |
+
+### SC4-5l6f2 Current installed snapshot policy set Host
+
+The new module composes existing current group, Registry release, signature evidence, exports and policy compilers. It does not read candidate files, source data, acknowledge Outbox, create evidence, resume a Run, or invoke a Provider. This append-only classification does not alter historical preHash entries or verifier rules.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_policy_set.py` | Host原路径 | Resolve and compile six exact policies from the original group's current installed published package; no data or execution grant | `cd7700bd8fb9c41a1154bd1c6e4085b7428e2b3b420e73af076ece2a9e2a19ae` |

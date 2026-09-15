@@ -716,3 +716,11 @@ AR2 1951/192/93五类错误为空（/tmp/sc4-e6c-closure.log）。主库未迁�
 新增只读路由器，将当前已领取的`data.requirement.request`严格回溯到仍为当前Head的完整Requirement、唯一原PREPARING AnalysisRuntimeReceipt、accepted occurrence、ProductEventOrigin以及同cutoff完整SnapshotGroup。运行时还必须持有同attempt/token且未过期的Lease；领取后需求取消、payload漂移、非唯一或不同来源均在返回路由前拒绝。该切片不读商城源、不生成Evidence、不恢复Run、不确认Outbox。
 
 新鲜原生PG验证：正向1 passed/76.23s；payload漂移与领取后取消负向1 passed/76.24s；静态编译/diff通过。重启后5433与不存在数据库、测试未配置生产runtime credential三项环境问题均以测试运行入口/夹具修正，没有加入产品后门。详细见`sc4-5l6f1-data-requirement-route-verification.md`。下一项l6f2从原组当前安装包解析六个exact exported policy refs，禁止读取candidate目录替代安装态。
+
+## 2026-09-15 SC4-5l6f2 当前安装六策略集合
+
+基线82086dfd，功能提交0c07989a。新增AnalysisSnapshotPolicySetOwner，并复用原group policy Owner的active baseline、published Registry、签名/release evidence、exports及artifact回读校验，从当前安装包固定解析六个标准策略exact refs；调用方不能传path/version/hash。六文档在同一完整group当前守卫内按依赖顺序编译并交叉hash绑定，回调后重新解析；缺文件、错digest、非导出、安装撤换、发布拒绝和消费中漂移全部禁入。
+
+有效Red为模块缺失；实现阶段真实Owner先后暴露测试未开显式事务、未恢复aos_runtime双租户身份，均只修fixture。18432私有完整PG最终7 passed/32.89s；相邻单策略Owner和六编译器115 passed/3.87s；编译/diff通过。一次遗漏DSN命中默认5433拒绝，按固定入口重跑，不改产品。详细见sc4-5l6f2-installed-policy-set-verification.md。
+
+安装发布资产仍为named fixture，1.22.0尚未真实build/sign/publish/install；未读取商城、确认Outbox、生成Evidence、恢复Run或调用Provider。下一波l6f3把l6f1路由和本集合交给固定协调器，移除原组合链六项人工参数并按Receipt恢复各阶段，覆盖重复、重启、unknown、撤权、租户隔离与最终Outbox确认，再进入主库升级、真实安装、栖月汇首链和八工作台连续观察。
