@@ -54,11 +54,12 @@ def predecessor_snapshot(reinstall):
 def test_exact_versions_and_predecessor_are_frozen(reinstall):
     assert reinstall.VERSIONS == {
         "domain.ecommerce.core": "1.3.0",
-        "platform.ecommerce.niushop": "1.22.0",
+        "platform.ecommerce.niushop": "1.23.0",
         "solution.ecommerce.growth": "1.8.0",
         "solution.ecommerce.operations-base": "1.2.0",
     }
     assert reinstall.PREDECESSOR["installationId"] == "97aeb2e7-59ba-40f6-89a3-fb0293bc0497"
+    assert "signed-bundles-niushop-1.23-current" in str(reinstall.BUNDLE_ROOT)
 
 
 def test_lifecycle_requires_exact_owner_phases(reinstall):
@@ -273,19 +274,20 @@ def test_replacement_requires_exact_drained_predecessor(reinstall):
         reinstall.replacement_ref(value)
 
 
-def test_installation_d_is_an_allowed_exact_label(reinstall, monkeypatch, tmp_path):
+def test_installation_e_is_an_allowed_exact_label(reinstall, monkeypatch, tmp_path):
     monkeypatch.setattr(reinstall, "STATE", tmp_path)
-    (tmp_path / "d").mkdir()
-    (tmp_path / "d/create-result.json").write_text(
-        '{"installationId":"installation-d"}', encoding="utf-8"
+    (tmp_path / "e").mkdir()
+    (tmp_path / "e/create-result.json").write_text(
+        '{"installationId":"installation-e"}', encoding="utf-8"
     )
-    assert reinstall._initial("d") == {"installationId": "installation-d"}
+    assert reinstall._initial("e") == {"installationId": "installation-e"}
     with pytest.raises(ValueError, match="exact install label"):
-        reinstall._initial("e")
+        reinstall._initial("f")
 
 
 def test_replacement_installations_use_the_immediate_drained_generation(reinstall):
     assert reinstall.replacement_predecessor_label("b") == "a"
     assert reinstall.replacement_predecessor_label("d") == "c"
+    assert reinstall.replacement_predecessor_label("e") == "d"
     with pytest.raises(ValueError, match="replacement install label"):
         reinstall.replacement_predecessor_label("c")

@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT.parent / ".aos-recovery-20260915/state/current-ecommerce-package/install"
 BUNDLE_ROOT = (
     ROOT.parent
-    / ".aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce"
+    / ".aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current"
 )
 TRUST_STATE = ROOT.parent / ".aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install"
 PREDECESSOR = {
@@ -32,7 +32,7 @@ PREDECESSOR_GENERATION = "3a445eee-aa28-4459-9e5a-f12a806a94b1"
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 VERSIONS = {
     "domain.ecommerce.core": "1.3.0",
-    "platform.ecommerce.niushop": "1.22.0",
+    "platform.ecommerce.niushop": "1.23.0",
     "solution.ecommerce.growth": "1.8.0",
     "solution.ecommerce.operations-base": "1.2.0",
 }
@@ -66,7 +66,7 @@ def _freeze_or_match(path: Path, value: dict[str, Any]) -> None:
 
 
 def _initial(label: str) -> dict[str, Any]:
-    if label not in {"a", "b", "c", "d"}:
+    if label not in {"a", "b", "c", "d", "e"}:
         raise ValueError("exact install label required")
     return json.loads((STATE / label / "create-result.json").read_text(encoding="utf-8"))
 
@@ -159,7 +159,7 @@ def observe() -> dict[str, Any]:
         "at": datetime.now(timezone.utc).isoformat(),
         "predecessor": observe_installation(PREDECESSOR["installationId"]),
     }
-    for label in ("a", "b", "c", "d"):
+    for label in ("a", "b", "c", "d", "e"):
         path = STATE / label / "create-result.json"
         if path.exists():
             result[label] = observe_installation(json.loads(path.read_text())["installationId"])
@@ -405,7 +405,7 @@ def replacement_ref(snapshot: dict[str, Any]) -> dict[str, Any]:
 
 def replacement_predecessor_label(label: str) -> str:
     try:
-        return {"b": "a", "d": "c"}[label]
+        return {"b": "a", "d": "c", "e": "d"}[label]
     except KeyError as exc:
         raise ValueError("replacement install label required") from exc
 
@@ -433,7 +433,7 @@ def create(label: str) -> dict[str, Any]:
         ):
             raise ValueError("exact drained predecessor required")
         predecessor_ref = PREDECESSOR
-    elif label in {"b", "d"}:
+    elif label in {"b", "d", "e"}:
         predecessor_label = replacement_predecessor_label(label)
         predecessor = observe_installation(_initial(predecessor_label)["installationId"])
         predecessor_ref = replacement_ref(predecessor)
@@ -462,7 +462,7 @@ def create(label: str) -> dict[str, Any]:
         connect_factory=connect,
         state_dir=TRUST_STATE,
         core_version="1.3.0",
-        adapter_version="1.22.0",
+        adapter_version="1.23.0",
         growth_version="1.8.0",
         idempotency_prefix=f"a0v-current-ecommerce-{label}-20260915",
         current_installation_ref=predecessor_ref,
@@ -767,7 +767,8 @@ def main() -> None:
             "configure-b", "enable-b", "disable-b", "uninstall-b", "create-c",
             "prepare-c", "verify-c", "stage-c", "configure-c", "enable-c",
             "disable-c", "settle-c", "create-d", "prepare-d", "verify-d", "stage-d",
-            "configure-d", "enable-d",
+            "configure-d", "enable-d", "settle-d", "create-e", "prepare-e", "verify-e",
+            "stage-e", "configure-e", "enable-e",
         ),
     )
     parser.add_argument("--output", type=Path, required=True)
@@ -780,7 +781,7 @@ def main() -> None:
         result = create(args.action[-1])
     elif args.action in {
         "prepare-a", "verify-a", "prepare-b", "verify-b", "prepare-c", "verify-c",
-        "prepare-d", "verify-d",
+        "prepare-d", "verify-d", "prepare-e", "verify-e",
     }:
         action, label = args.action.split("-")
         result = lifecycle(label, action)
@@ -800,6 +801,8 @@ def main() -> None:
         result = disable("c")
     elif args.action == "settle-c":
         result = settle_released("c")
+    elif args.action == "settle-d":
+        result = settle_released("d")
     elif args.action in {"uninstall-a", "uninstall-b"}:
         result = uninstall(args.action[-1])
     else:
