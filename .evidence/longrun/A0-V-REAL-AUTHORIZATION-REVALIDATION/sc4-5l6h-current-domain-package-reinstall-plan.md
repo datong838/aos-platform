@@ -24,8 +24,8 @@
 4. 永久签名复用既有 Ed25519 信任根但绝不输出私钥。逐字节验证旧14版本，验证本次 build/qualification 的 gitHead、树 hash、成员、贡献数与运行 admission；新根只增加 Niushop 1.22，growth 1.8 必须与旧根字节一致。签名前后不发布外部 Registry、不改项目 `.env`，API/Host 使用显式新根。
 5. 第一次安装 A 以97a active@5为精确前驱，组合必须唯一解析到 core1.3/Niushop1.22/growth1.8/operations1.2。按 maker/checker 职责分离完成 draft→submit→approve，再由 runtime Owner prepare→verify；配置继续使用当前四类正式 Source 引用并重新计算配置 revision/hash，不复制旧 installation 的授权 Receipt。
 6. enable A 前要求主库050、正租户九路 dispatch、canary零、Source/Provider/预算/审批当前门禁、唯一 Host。enable 后启动 Host，只允许当前 A generation；观察 ready/enabled/unfenced、三容器和租约续期。异常或同阶段失败两次立即停写并保留诊断。
-7. 控制演练对 A 执行 disable/fence，要求 schedule/Run 排空、generation exact、全部资源 released、旧路由不再可调度。系统级重启只停止并重启已核实的唯一 Host，不重启 API/数据库；确认围栏保持，再经新的 current enable Receipt 恢复 A，禁止复用旧授权。
-8. uninstall A 必须由 Uninstall Owner 检查 fenced/drained/released，保留不可变历史与 Receipt。随后创建安装 B，使用同一15版本签名根完成 approve/prepare/verify/configure/enable；B 成为最终可用安装，A 不得复活或持有运行资源。
+7. 控制演练对 A 执行 disable/fence，要求 schedule/Run 排空、generation exact、全部资源 released、旧路由不再可调度。系统级重启只停止并重启已核实的唯一 Host，不重启 API/数据库；确认围栏保持。若资源仍存活，可经新的 current enable Receipt 恢复同一代；若资源已经由故障清理释放，必须创建新的 replacement 安装恢复，不得让 enable 绕过 runtime-apply 进程所有权。
+8. 安装 B 以已排空 A 的 exact installation revision/lock/overlay 为前驱，使用同一15版本签名根完成 approve/prepare/verify/configure/enable，作为实际恢复重装。B 成功后，uninstall A 必须由 Uninstall Owner 检查 fenced/drained/released，保留不可变历史与 Receipt；B 成为最终可用安装，A 不得复活或持有运行资源。
 9. 每一步都核正租户 `org-org/dev-project` 与 canary `dev-org/dev-project`。canary 全程零安装、零路由、零业务交付；不读取或写入 canary。上游商城只读和真实经营动作留到下一波，不把 build/install 结果写成真实首链成功。
 10. 不 push；230 L0 挂起；不触碰用户已有 `overall-progress-20260913.md`、`package.json`、`package-lock.json` 差异。失败不 reset/rebase/clean，不对主库做破坏性降级。
 
@@ -56,8 +56,8 @@
 2. 本方案提交，新增范围、preHash、停止条件和双安装最终态明确。
 3. 三个脚本及合同测试提交，原通用 builder、历史候选和签名根未修改。
 4. 当前四包隔离 build/qualification 与15版本永久签名后继根通过，外部发布和安装副作用为零。
-5. 安装A完整完成 enable→disable/fence→Host重启保持→重新授权恢复→uninstall；所有动作有实际 Receipt，资源释放且 canary 为零。
-6. 安装B完成重装、配置、enable 与唯一 Host 连续性；API/5173/8434健康，主库与业务基线无越权漂移。落证据提交后进入下一波栖月汇真实 Source/经营计划/自然 ProductEvent 首链，不形成发布结论。
+5. 安装A完成配置、启用失败安全围栏、正式 disable/drain 与 Host 重启保持；资源释放且 canary 为零。以 A 为 exact 前驱创建 B 并完成重新 runtime-apply/verify，证明故障后恢复重装。
+6. 安装B完成配置、enable，随后 A 正式 uninstall；唯一 Host、API/5173/8434健康，主库与业务基线无越权漂移。落证据提交后进入下一波栖月汇真实 Source/经营计划/自然 ProductEvent 首链，不形成发布结论。
 
 ## 实测后的窄化修订
 
@@ -67,4 +67,6 @@
 
 A 完成停用、Host 重启与 `recover-a` 后还需第二次正式停用才能卸载，因此控制器同时增加 `disable-a-final`，复用同一阶段校验但使用独立 intent 和幂等键。原 `disable-a` 的命令文件、键和行为保持不变。
 
-前驱排空修复与测试提交期间，A 的既有 enable Receipt 超过五分钟 deadline；重启 Host 后它保持 accepted 且不再被目录调度，A 仍为 revision3/epoch2、disabled/fenced/desired-disabled/unknown，三资源 released。控制器再增加 `cancel-stale-enable-a` 窄动作：必须精确读取原 `enable-a-command.json` 的 operationId，并要求它是唯一未终态、accepted/accepted 且 deadline 已过；同时固定 A 当前 binding 和资源释放状态。随后通过原 RuntimeDisableService 的同事务取消规则创建独立 disable Receipt，由正常 Host 消费完成当前 `disabled_committed`。之后只允许 `recover-a` 创建新的 current enable Receipt；不得重发过期 enable、改 deadline 或直接写 operation/binding。
+前驱排空修复与测试提交期间，A 的既有 enable Receipt 超过五分钟 deadline；重启 Host 后它保持 accepted 且不再被目录调度，A 仍为 revision3/epoch2、disabled/fenced/desired-disabled/unknown，三资源 released。控制器再增加 `cancel-stale-enable-a` 窄动作：必须精确读取原 `enable-a-command.json` 的 operationId，并要求它是唯一未终态、accepted/accepted 且 deadline 已过；同时固定 A 当前 binding 和资源释放状态。随后通过原 RuntimeDisableService 的同事务取消规则创建独立 disable Receipt，由正常 Host 消费完成当前 `disabled_committed`。不得重发过期 enable、改 deadline 或直接写 operation/binding；同代恢复还必须另行证明运行资源未释放。
+
+实测 `recover-a` 新 enable Receipt `fe2cfc93-b99a-420e-a4ad-4f4001e75038` 已 accepted，但 A 的三项资源均已由前次 Host 故障清理确认 released；PendingPreparationDirectory 只从 runtime-apply outbox 创建进程所有者，因此该 enable 不具备可执行 owner。新增 `cancel-unowned-recovery-a` 要求精确匹配该 Receipt、A revision5/epoch3、disabled/fenced/desired-disabled/unknown、三资源 released 和 canary 零；通过原 DisableService 在同一事务取消该尚未执行的 positive operation，并由当前 Host 完成 disable。随后 create-b 不再要求 A 先卸载，而以 A 当前 active@5 的 lock/overlay 为 exact predecessor；B 启用成功后才卸载 A。该顺序把 B 定义为实际恢复重装，禁止为已释放资源伪造同代恢复。
