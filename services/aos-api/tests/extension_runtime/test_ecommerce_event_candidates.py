@@ -43,3 +43,17 @@ def test_probe_rejects_registered_but_wrong_computation(profile):
     class Session:
         async def invoke(self,*args):return {'registered':True}
     with pytest.raises(ValueError,match='computation differs'):asyncio.run(profile.probe(Session()))
+
+
+def test_qualification_routes_mixed_ui_contributions_without_api_fields(profile,monkeypatch):
+    from types import SimpleNamespace
+    builder=profile.previous_builder()
+    calls=[]
+    builder._qualify_session=lambda **kwargs:calls.append(kwargs) or {'ok':True}
+    monkeypatch.setattr(profile,'previous_builder',lambda:builder)
+    current=profile.load_builder()
+    claims=[SimpleNamespace(kind='navigation'),SimpleNamespace(kind='api',operation_id='analyst_workspace_view_v1')]
+    assert current._qualify_session(contributions=claims)=={'ok':True}
+    assert 'probe' not in calls[0]
+    current._qualify_session(contributions=[SimpleNamespace(kind='api',operation_id=profile.METHOD)])
+    assert calls[1]['probe'] is profile.probe

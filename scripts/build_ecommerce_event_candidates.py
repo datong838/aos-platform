@@ -38,7 +38,7 @@ def load_builder():
     builder.EXPECTED_RUNTIME_OPERATION_COUNT=15
     previous=builder._qualify_session
     def qualify_session(**kwargs):
-        methods=[c.get('operationId') if isinstance(c,dict) else c.operation_id for c in kwargs['contributions']]
+        methods=[c.get('operationId') if isinstance(c,dict) else getattr(c,'operation_id',None) for c in kwargs['contributions']]
         if METHOD in methods:return previous(**kwargs,probe=probe)
         return previous(**kwargs)
     builder._qualify_session=qualify_session
