@@ -14,7 +14,7 @@
 - Niushop 1.22 由 1.21 的冻结树追加 `snapshot-readiness.v1.json` 并更新版本/eval，提交 `1810c18a`；已完成候选静态合同，但没有实际 build/sign/install。1.22 包含十二源映射、字段/关系质量、business cohort、facts 与 readiness 策略。
 - 现有 `build_ecommerce_ui_candidates.py` 固定 growth 1.8 + Niushop 1.5；`build_niushop_snapshot_candidates.py` 仍只固定早期 1.4。原通用 builder 固定 growth 1.7 + Niushop 1.3。不得临时 monkeypatch 命令或改通用默认值。
 - 现有永久签名后继根 `growth-ui-1.8-registry/signed-bundles-growth-ui-1.8` 有14个版本：core 1.1–1.3、Niushop 1.1–1.5、growth 1.4–1.8、operations-base 1.2。新根只追加 Niushop 1.22，预期15个版本；旧根不改写，中间1.6–1.21候选不必伪装成已发布版本。
-- 当前精确前驱安装为 `97aeb2e7-59ba-40f6-89a3-fb0293bc0497` active@5，lock `sha256:a4441a4383783cb2a2f32171c52eb2718f526a5f56102dc5c0e12bf79299a42b`，overlay `a0v-canonical-ecommerce-v1`；generation `3a445eee-aa28-4459-9e5a-f12a806a94b` 已 `enabled=false / fenced=true / observed=unknown`，三项资源 released。它可作为 drained predecessor，不再重发历史 disable。
+- 当前精确前驱安装为 `97aeb2e7-59ba-40f6-89a3-fb0293bc0497` active@5，lock `sha256:a4441a4383783cb2a2f32171c52eb2718f526a5f56102dc5c0e12bf79299a42b`，overlay `a0v-canonical-ecommerce-v1`；generation `3a445eee-aa28-4459-9e5a-f12a806a94b` 在本次开机后为 `enabled=false / fenced=true / desired=enabled / observed=unknown`、revision5/epoch4，三项资源 released。它是安全禁入状态，但尚不满足 replacement guard 对当前 `disabled_committed` 的精确要求，不能仅凭资源释放把它写成 drained predecessor。
 
 ## Rules、主路径与停止条件
 
@@ -58,3 +58,11 @@
 4. 当前四包隔离 build/qualification 与15版本永久签名后继根通过，外部发布和安装副作用为零。
 5. 安装A完整完成 enable→disable/fence→Host重启保持→重新授权恢复→uninstall；所有动作有实际 Receipt，资源释放且 canary 为零。
 6. 安装B完成重装、配置、enable 与唯一 Host 连续性；API/5173/8434健康，主库与业务基线无越权漂移。落证据提交后进入下一波栖月汇真实 Source/经营计划/自然 ProductEvent 首链，不形成发布结论。
+
+## 实测后的窄化修订
+
+2026-09-15 安装 A 的 configure 已由唯一 Host 成功提交；第一次 enable Receipt `7df3448d-b526-4a83-8bab-a9d4e9892fa6` 被接受后，replacement guard 读取前驱发现其 `desired=enabled` 且缺少当前 revision5/epoch4 对应的 `disabled_committed`，因此 Host 以 `RuntimeConflict` 安全停止。A 保持 disabled/fenced，enable Receipt 仍为 accepted，没有业务调用或 canary 写入。
+
+在继续启用 A 前，控制器新增 `drain-predecessor`：只接受上述精确前驱、generation、revision5/epoch4、disabled/fenced/desired-enabled/unknown、三资源 released、全部历史 operation 终态及 canary 零；通过原 RuntimeDisableService 创建新的 disable Receipt，再由原 RuntimeDisableConsumer 单次消费并核对同一 operationId 已 succeeded。这样先生成 replacement guard 所需的当前不可变排空证据，再重启唯一 Host 续办既有 A enable Receipt；不得重发 enable，也不得直接更新 binding/event/outbox。
+
+A 完成停用、Host 重启与 `recover-a` 后还需第二次正式停用才能卸载，因此控制器同时增加 `disable-a-final`，复用同一阶段校验但使用独立 intent 和幂等键。原 `disable-a` 的命令文件、键和行为保持不变。
