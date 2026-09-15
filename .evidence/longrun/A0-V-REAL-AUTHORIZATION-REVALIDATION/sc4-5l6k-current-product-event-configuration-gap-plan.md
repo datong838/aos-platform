@@ -38,7 +38,7 @@ R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover pr
 
 cutover 完成后真实 Case 已经通过 current E 扩展处理器激活，但 ProductEvent authority refresh 在 P02 预检处安全拒绝。安装时冻结的 runtime binding revision 为 4，正式 cutover validate/resume 按协议把同一 generation 的 binding 推进到 revision 6；预检仍把 revision 4 写死为唯一合法值，因此把已经由不可变 CutoverResumeReceipt 证明的 current ready binding 误判为漂移。修复只扩展私有只读预检：revision 4 保持原安装态精确约束；revision 6 必须额外存在 frozen resume result，并与主库唯一 `phase=resume` Receipt、content hash、operation target、generation/epoch、targetRuntimeRevision 和当前 binding 全部一致。缺 Receipt、Receipt 篡改、跨 installation/generation、非 resumed operation 或其他 revision 一律拒绝，不改变运行时产品逻辑和权限。
 
-binding 证明修复后，event refresh 继续在读取 predecessor 时拒绝：执行器调用了 Owner 并不存在的 `read_current` 方法。SourceSelection 与 RuntimeControl 的 Owner 只暴露受 current gate 保护的消费方法；历史解码函数则已经负责完整 payload、content hash、request hash 和身份列复验。执行器应在同一 tenant-scoped runtime transaction 内按 installation/generation/pipeline 分别锁定唯一最新行，调用既有 `decode_selection_row` / `decode_control_row` 得到 exact predecessor ref；schedule binding 继续使用已有 `read_latest`。不得给产品 Owner 增加一个绕过 current gate 的公开读取接口，也不得只拼数据库字段伪造 ref。
+binding 证明修复后，event refresh 继续在读取 predecessor 时拒绝：执行器调用了 Owner 并不存在的 `read_current` 方法。SourceSelection 与 RuntimeControl 的 Owner 只暴露受 current gate 保护的消费方法；历史解码函数则已经负责完整 payload、content hash、request hash 和身份列复验。执行器应在同一 tenant-scoped runtime transaction 内按 installation/generation/pipeline 分别读取唯一最新行，调用既有 `decode_selection_row` / `decode_control_row` 得到 exact predecessor ref；schedule binding 继续使用已有 `read_latest`。`aos_runtime` 对这两张表只有 SELECT，读取不得附带需要 UPDATE 权限的行锁；后续 append 会在自己的写事务内再次比较 latest 与 previous ref，从而关闭并发窗口。不得扩大表权限、给产品 Owner 增加绕过 current gate 的公开读取接口，也不得只拼数据库字段伪造 ref。
 
 ## 本次主路径
 
