@@ -1,0 +1,17 @@
+# 事件三类动作正式审批绑定
+
+Rules：m1单写、方案先行、旧审批不回填、执行端exact检查不放宽、不push/230 L0挂起。
+
+问题：事件策略保存/控制/可选入口类型已配置R2审批，但AIP创建普通提案时action_binding_hash为空，真实执行必被拒绝。修复应在正式提案创建与审批决策中建立绑定，不能由脚本造hash。
+
+新增aos_api/ecommerce_event_action_binding.py：三类严格schema、canonical action snapshot revisionHash、tenant及完整payload内容绑定。schedule_put绑定Case/Policy及精确版本和policyHash；event_control绑定严格policyRef、enable/disable、expectedBindingRevision/idempotency；event_dispatch绑定完整安装/代次/runtime/group版本、Case/Policy/phase/idempotency。拒绝额外字段、类型转换、跨Case/Policy、非规范identity。绑定是审核来源，不授予执行。
+
+新增aos_api/ecommerce_event_proposal_gate.py：同一提案事务验证当前ActionType、当前规范Case及hash、maker/checker现有租户成员与markings。schedule要求当前Case版本，控制要求现有Policy exact ref，dispatch扩展要求当前ACTIVE Case（fence/shrink可用于非ACTIVE恢复）；实际签名资格、租约、预算、审批完整集合与控制CAS仍由执行服务每次验证。禁止仅凭标称roles授权。保留当前remote OpenFGA未适配时拒绝行为。所有资源只读加锁，不创建业务对象。
+
+修改AipActionStore：把事件三类纳入内部request risk一致性检查、proposal current guard与canonical stable snapshot检查；事件guard返回真实成员角色，checker不能由调用者伪造角色。禁止混入task/run/impact-preview伪装成其他执行授权；cutover及分析bootstrap原分支不改。事件历史NULL绑定提案继续不可执行，需新idempotencyKey重新创建/审批。
+
+测试：纯contract跨租户/快照/未知字段/版本漂移；真实AIP Store创建→独立审批→事件资格复验，maker/checker撤权、Case版本漂移、ActionType变化拒绝；旧cutover回归。原使用手工NULL绑定proposal的事务测试需要改为正式create_proposal建立来源，不能mock新检查让错误fixture通过。再建立F后继来源窗口与新Policy审批，实际保存验证。
+
+提案锁权限修订：实测正式AIP连接session_user=aos_app/current_user=aos_runtime，对Case/Policy头没有UPDATE权限；不能直接FOR SHARE，也不能调用a0v041已存在审批事件专用函数。新增alembic/versions/a0v_057_event_proposal_lock.py：仅提供scoped aos_runtime的Case/Policy头行锁函数，固定租户current_setting、规范Case/Policy参数、不返回数据、不写业务行、不接受任意表/SQL，不授予表UPDATE。提案guard调用此函数；迁移后才启用真实新提案路径。专项非runtime/跨租户拒绝和同事务锁测试，恢复库与同事务全表指纹核验后部署。
+
+部署清单：新增scripts/a0v_event_proposal_lock_deploy.py及部署边界测试，固定056→057、独立event-proposal-lock-deployment目录/aos_event_proposal_lock_20260916_test恢复库。复用已验证的快照备份和同事务迁移核验方法，本次无新增表，因此除alembic_version外所有表（含继任收据）均参与指纹。仅runtime可调用固定锁函数，PUBLIC无EXECUTE，Case/Policy UPDATE权限仍无。API单独重启加载事件审批gate及Case规范化，Host不重启；旧NULL审批不回填。

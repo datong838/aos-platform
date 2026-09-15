@@ -16,7 +16,7 @@ from tests.asset_registry.test_m2_core_integration import FixedLoader
 from test_admission import fixture as signed_fixture
 from test_product_event_current_approval_pg import governed, service_case, stored, pair, body
 from aos_api.aip_action_store import AipActionStore
-from aos_api.aip_action_models import DecideActionProposalRequest
+from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
 from aos_api.aip_action_policy import classify_action_risk
 from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.asset_registry.composition_contracts import (
@@ -159,18 +159,31 @@ def test_signed_service_uses_actual_approval_and_independent_receipt(service_dat
     payload = dict(caseId=request['caseId'], schedulePolicyId=request['schedulePolicyId'], dispatchIntent=request)
     action_snapshot = action_snapshot_from_row(action)
     risk = classify_action_risk(action['id'], action_snapshot, payload, None)
-    approval_policy = dict(floor=risk.floor.value, reasons=list(risk.reasons), **risk.approval_policy)
     with admin_connect() as current:
-        current.execute("DELETE FROM aip_action_approval_event WHERE proposal_id='fixture-proposal'")
+        current.execute("UPDATE meta_membership SET role='owner' WHERE subject='fixture-maker'")
         current.execute("INSERT INTO meta_action_type(id,name,object_type,parameters,required_markings,submission_criteria) VALUES(%s,%s,%s,'[]','[]','[]')", (action['id'], action['name'], action['object_type']))
-        current.execute('''UPDATE aip_action_proposal SET action_type_id=%s,action_type_snapshot=%s,payload=%s,
-            policy_snapshot=%s,approval_policy_hash=%s,version=1,status='drafted',proposal_hash=%s,action_type_revision_hash=%s
-            WHERE proposal_id='fixture-proposal' ''', (action['id'], Jsonb(action_snapshot), Jsonb(payload), Jsonb(approval_policy), canonical_hash(approval_policy), 'c'*64, 'd'*64))
-        current.execute("INSERT INTO aip_action_draft(org_id,project_id,draft_id,proposal_id,proposal_version,proposal_hash,snapshot,approval_policy,created_by) VALUES('org-org','dev-project','service-draft','fixture-proposal',1,%s,'{}','{}','fixture-maker')", ('c'*64,))
-    AipActionStore(admin_connect).decide(scope, 'fixture-approver', 'fixture-proposal', 'service-approve',
-        DecideActionProposalRequest(expectedProposalVersion=1, expectedProposalHash='c'*64, decision='approved'), actor_roles=('approver',))
+        # Establish the fixture Policy through its guarded storage function, preserving Case history.
+        policy_body=command['policy']|{'tenant':dict(orgId=scope.org_id,projectId=scope.project_id)}
+        case_body=command['caseAuthority']|{'tenant':dict(orgId=scope.org_id,projectId=scope.project_id)}
+        current.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
+        current.execute('SET LOCAL ROLE aos_runtime')
+        current.execute('SELECT * FROM ecommerce_product_event_policy_put_a0v_040(%s,%s,%s,%s,%s,%s)',
+            ('service-policy',command['expectedPolicyRevision'],command['expectedCaseVersion'],
+             canonical_hash(dict(policy=policy_body,case=case_body),prefixed=True),Jsonb(policy_body),Jsonb(case_body)))
+    @contextmanager
+    def proposal_connect(*_):
+        with admin_connect() as current:
+            current.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
+            current.execute('SET LOCAL ROLE aos_runtime')
+            yield current
+    aip=AipActionStore(proposal_connect)
+    proposed=aip.create_proposal(scope,'fixture-maker','service-dispatch-proposal',
+        CreateActionProposalRequest(actionTypeId=action['id'],purpose='real service review',payload=payload),action_snapshot,risk)
+    aip.decide(scope,'fixture-approver',proposed.proposal.id,'service-approve',
+        DecideActionProposalRequest(expectedProposalVersion=proposed.proposal.version,
+            expectedProposalHash=proposed.proposal.proposal_hash,decision='approved'),actor_roles=('approver',))
     with admin_connect() as current:
-        event = current.execute("SELECT * FROM aip_action_approval_event WHERE proposal_id='fixture-proposal'").fetchone()
+        event=current.execute('SELECT * FROM aip_action_approval_event WHERE proposal_id=%s',(proposed.proposal.id,)).fetchone()
     request['approvalRef'] = dict(resourceType='ActionApprovalEvent', resourceId=event['approval_event_id'],
         revision=event['proposal_version'], contentHash=canonical_hash({key:event[key] for key in _HASH_FIELDS}, prefixed=True))
     role = 'service_test_'+uuid4().hex
@@ -196,7 +209,7 @@ def test_signed_service_uses_actual_approval_and_independent_receipt(service_dat
         if fault in {'receipt_failure', 'late_expiry'}:
             with admin_connect() as current:
                 statement = ("RAISE EXCEPTION 'test receipt insertion failed';" if fault == 'receipt_failure'
-                    else "UPDATE public.aip_action_proposal SET expires_at=clock_timestamp()-interval '1 second' WHERE proposal_id='fixture-proposal';")
+                    else "UPDATE public.aip_action_proposal SET expires_at=clock_timestamp()-interval '1 second' WHERE action_type_id='ecommerce_growth_event_dispatch';")
                 current.execute('CREATE FUNCTION public.test_receipt_fault() RETURNS trigger LANGUAGE plpgsql '
                     'SECURITY DEFINER SET search_path=pg_catalog,public AS $$ BEGIN '+statement+' RETURN NEW; END $$')
                 current.execute('CREATE TRIGGER test_receipt_fault BEFORE INSERT ON extension_event_control_dispatch_receipt '

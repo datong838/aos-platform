@@ -94,6 +94,8 @@ class AipActionStore:
     def _internal_control_binding(conn, scope, actor_id, action_snapshot, payload, policy,
                                   *, task_id=None, run_id=None, impact_preview=None, checker=False):
         from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        from aos_api.ecommerce_event_action_binding import EVENT_ACTION_TYPES
+        CONTROL_ACTION_TYPES = CONTROL_ACTION_TYPES | EVENT_ACTION_TYPES
         if action_snapshot.get('id') not in CONTROL_ACTION_TYPES:
             return None, ()
         from aos_api.ecommerce_growth_cutover_proposal_gate import require_internal_cutover_binding
@@ -107,10 +109,14 @@ class AipActionStore:
                 or type(policy.get('minimumApprovals')) is not int or policy['minimumApprovals'] < 1):
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_REVIEW_POLICY_REQUIRED')
         try:
+            if action_snapshot.get('id') in EVENT_ACTION_TYPES:
+                from aos_api.ecommerce_event_proposal_gate import require_internal_event_binding
+                return require_internal_event_binding(conn=conn, scope=scope, actor=actor_id,
+                    action_snapshot=action_snapshot, payload=payload, checker=checker)
             return require_internal_cutover_binding(conn=conn, scope=scope, actor=actor_id,
                 action_snapshot=action_snapshot, payload=payload,
                 operation=APPROVE_INSTALLATION_OPERATION if checker else APPLY_INSTALLATION_OPERATION)
-        except (ValueError, TypeError, AssetRegistryError, RuntimeConflict) as exc:
+        except (ValueError, TypeError, PermissionError, AssetRegistryError, RuntimeConflict) as exc:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
@@ -126,6 +132,8 @@ class AipActionStore:
                 preview_ref=body.impact_preview_ref, checker=False)
             return None
         from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        from aos_api.ecommerce_event_action_binding import EVENT_ACTION_TYPES
+        CONTROL_ACTION_TYPES = CONTROL_ACTION_TYPES | EVENT_ACTION_TYPES
         if body.action_type_id in CONTROL_ACTION_TYPES or action_snapshot.get('id') in CONTROL_ACTION_TYPES:
             from aos_api.aip_action_policy import classify_action_risk
             current_risk = classify_action_risk(body.action_type_id, action_snapshot, body.payload, body.risk_hint)
@@ -151,6 +159,8 @@ class AipActionStore:
                 raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_EXECUTION_POLICY_NOT_ENABLED')
             return roles
         from aos_api.ecommerce_growth_cutover_action_binding import CONTROL_ACTION_TYPES
+        from aos_api.ecommerce_event_action_binding import EVENT_ACTION_TYPES
+        CONTROL_ACTION_TYPES = CONTROL_ACTION_TYPES | EVENT_ACTION_TYPES
         if (row['action_type_id'] in CONTROL_ACTION_TYPES
                 and row['action_type_snapshot'].get('id') != row['action_type_id']):
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_ACTION_DRIFTED')
