@@ -495,7 +495,24 @@ def refresh_cutover_approval(_preflight, _plane) -> dict[str, Any]:
             "replacesExpiredApprovalRef": prior["approvalRef"]}
 
 
+def refresh_cutover_approval_again(_preflight, _plane) -> dict[str, Any]:
+    payload = _cutover_target()
+    prior = load_result("cutover-approval-refresh")
+    frozen = {"maker": ACTOR, "checkers": [CHECKER, CUTOVER_CHECKER],
+              "executor": ACTOR, "payload": payload,
+              "replacesExpiredApprovalRef": prior["approvalRef"]}
+    freeze_or_match(STATE / "cutover-approval-refresh2-intent.json", frozen)
+    bundle, ref = _approve("ecommerce_growth_cutover", payload,
+                           "a0v-qyh-niushop-1.23-generation-e-cutover-refresh-v2")
+    return {"outcome": "CURRENT_E_CUTOVER_APPROVAL_REFRESHED_AGAIN",
+            "proposalId": bundle.proposal.id, "approvalRef": ref, "payload": payload,
+            "replacesExpiredApprovalRef": prior["approvalRef"]}
+
+
 def current_cutover_approval_result() -> dict[str, Any]:
+    refresh2 = STATE / "cutover-approval-refresh2-result.json"
+    if refresh2.exists():
+        return load_result("cutover-approval-refresh2")
     refresh = STATE / "cutover-approval-refresh-result.json"
     return load_result("cutover-approval-refresh") if refresh.exists() else load_result("cutover-approval")
 
@@ -528,6 +545,27 @@ def cutover_prepare(_preflight, plane) -> dict[str, Any]:
 def current_cutover_prepare_result() -> dict[str, Any]:
     refresh = STATE / "cutover-prepare-refresh-result.json"
     return load_result("cutover-prepare-refresh") if refresh.exists() else load_result("cutover-prepare")
+
+
+def refresh_cutover_authority(_preflight, plane) -> dict[str, Any]:
+    from aos_api.ecommerce_growth_cutover import CutoverApprovalRefreshRequest
+    from aos_api.tenant_scope import TenantScope
+    prepared = current_cutover_prepare_result()["receipt"]
+    approval = current_cutover_approval_result()["approvalRef"]
+    request = CutoverApprovalRefreshRequest(
+        cutoverOperationId=CUTOVER_OPERATION_ID,
+        idempotencyKey="a0v-qyh-niushop-1.23-generation-e-cutover-authority-refresh-v1",
+        prepareReceiptRef={"resourceType": "CutoverPrepareReceipt",
+            "resourceId": prepared["receiptId"], "revision": 1,
+            "contentHash": prepared["contentHash"]},
+        approvalRef={key: value for key, value in approval.items() if key != "receiptId"},
+    )
+    material = request.model_dump(mode="json", by_alias=True)
+    freeze_or_match(STATE / "cutover-authority-refresh-intent.json", material)
+    receipt = plane.ecommerce_growth_cutover_service.refresh_activation_approval(
+        TenantScope(**SCOPE), request, actor=ACTOR)
+    return {"outcome": "CURRENT_E_CUTOVER_AUTHORITY_REFRESHED",
+            "receipt": receipt.model_dump(mode="json", by_alias=True)}
 
 
 def _cutover_commit_request():
@@ -994,7 +1032,8 @@ def main() -> None:
     parser.add_argument("action", choices=("prepare", "selection", "control", "binding", "execute", "observe",
         "reviewer", "action-types", "brief", "cutover-action-type", "cutover-reviewer",
         "reviewers-persist", "registration-withdraw",
-        "registration-register", "cutover-approval", "cutover-approval-refresh", "cutover-prepare", "cutover-pause",
+        "registration-register", "cutover-approval", "cutover-approval-refresh",
+        "cutover-approval-refresh2", "cutover-authority-refresh", "cutover-prepare", "cutover-pause",
         "cutover-commit", "cutover-validate", "cutover-resume", "cutover-observe", "case",
         "event-refresh", "schedule-approval", "policy", "control-approval", "event-enable",
         "event-observe"))
@@ -1016,6 +1055,8 @@ def main() -> None:
               "registration-register": lambda: register_current_e(preflight,plane),
               "cutover-approval": lambda: approve_cutover(preflight,plane),
               "cutover-approval-refresh": lambda: refresh_cutover_approval(preflight,plane),
+              "cutover-approval-refresh2": lambda: refresh_cutover_approval_again(preflight,plane),
+              "cutover-authority-refresh": lambda: refresh_cutover_authority(preflight,plane),
               "cutover-prepare": lambda: cutover_prepare(preflight,plane),
               "cutover-pause": lambda: cutover_pause(preflight,plane),
               "cutover-commit": lambda: cutover_commit(preflight,plane),

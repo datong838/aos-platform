@@ -149,6 +149,40 @@ class CutoverCommitRequest(AipContractModel):
         return canonical_sha256(self.model_dump(mode="json", by_alias=True))
 
 
+class CutoverApprovalRefreshRequest(AipContractModel):
+    cutover_operation_id: UUID
+    idempotency_key: str = Field(min_length=1, max_length=240)
+    prepare_receipt_ref: CutoverExactRef
+    approval_ref: CutoverExactRef
+
+    @model_validator(mode="after")
+    def _refs(self) -> "CutoverApprovalRefreshRequest":
+        if self.idempotency_key != self.idempotency_key.strip():
+            raise ValueError("cutover approval refresh key must be canonical")
+        if self.prepare_receipt_ref.resource_type != "CutoverPrepareReceipt":
+            raise ValueError("prepareReceiptRef must reference CutoverPrepareReceipt")
+        if self.approval_ref.resource_type != "ActionApprovalEvent":
+            raise ValueError("approvalRef must reference ActionApprovalEvent")
+        return self
+
+    def request_hash(self) -> str:
+        return canonical_sha256(self.model_dump(mode="json", by_alias=True))
+
+
+class CutoverApprovalRefreshReceipt(AipContractModel):
+    tenant: TenantContext
+    receipt_id: UUID
+    cutover_operation_id: UUID
+    status: Literal["approval_refreshed"] = "approval_refreshed"
+    prepare_receipt_ref: CutoverExactRef
+    old_approval_ref: CutoverExactRef
+    new_approval_ref: CutoverExactRef
+    request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    replayed: bool = False
+    created_at: datetime
+
+
 class CutoverCommitPhaseReceipt(AipContractModel):
     tenant: TenantContext
     receipt_id: UUID
@@ -566,6 +600,104 @@ class EcommerceGrowthCutoverStore:
             if row is None:
                 raise EcommerceGrowthCutoverConflict("cutover prepare readback is missing")
             result = self._receipt(scope, row, replayed=False)
+            conn.commit()
+            return result
+
+    def refresh_activation_approval(
+        self,
+        scope: TenantScope,
+        request: CutoverApprovalRefreshRequest,
+        *,
+        actor: str,
+    ) -> CutoverApprovalRefreshReceipt:
+        if type(scope) is not TenantScope or type(request) is not CutoverApprovalRefreshRequest:
+            raise TypeError("trusted TenantScope and CutoverApprovalRefreshRequest are required")
+        request = CutoverApprovalRefreshRequest.model_validate(
+            request.model_dump(mode="python", by_alias=True)
+        )
+        if type(actor) is not str or not actor or actor != actor.strip() or len(actor) > 240:
+            raise ValueError("canonical cutover actor is required")
+        request_hash = request.request_hash()
+        with self._connect_factory(scope) as conn:
+            self._require_maintainer(conn)
+            existing = conn.execute(
+                f"""SELECT * FROM {self._schema}.extension_dispatch_cutover_approval_refresh_receipt
+                      WHERE org_id=%s AND project_id=%s
+                        AND (cutover_operation_id=%s OR idempotency_key=%s)""",
+                (*scope.key, request.cutover_operation_id, request.idempotency_key),
+            ).fetchone()
+            if existing is not None:
+                if (existing["request_hash"] != request_hash
+                        or existing["cutover_operation_id"] != request.cutover_operation_id):
+                    raise EcommerceGrowthCutoverConflict("cutover approval refresh idempotency drifted")
+                return self._approval_refresh_receipt(scope, dict(existing), replayed=True)
+            operation = self._load_operation_with_prepare(conn, scope, request.cutover_operation_id)
+            prepare = self._validate_prepare_ref(
+                scope, operation, CutoverCommitRequest(
+                    cutoverOperationId=request.cutover_operation_id,
+                    idempotencyKey=request.idempotency_key,
+                    prepareReceiptRef=request.prepare_receipt_ref,
+                ),
+            )
+            if operation["status"] not in {"prepared", "draining"}:
+                raise EcommerceGrowthCutoverBlocked("cutover approval can only refresh before commit")
+            if request.approval_ref == prepare.approval_ref:
+                raise EcommerceGrowthCutoverBlocked("a new current cutover approval is required")
+            reconstructed = CutoverPrepareRequest(
+                cutoverOperationId=prepare.cutover_operation_id,
+                idempotencyKey=operation["idempotency_key"],
+                cutoverGroupId=prepare.cutover_group_id,
+                expectedGroupRevision=prepare.expected_group_revision,
+                targetInstallationId=prepare.target_installation_id,
+                targetGeneration=prepare.target_generation,
+                targetExecutionEpoch=prepare.target_execution_epoch,
+                targetRuntimeRevision=prepare.target_runtime_revision,
+                policyRef=prepare.policy_ref,
+                approvalRef=request.approval_ref,
+                checkpoint=prepare.checkpoint,
+                occurrenceWatermark=prepare.occurrence_watermark,
+                pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
+                registrationReceiptRef=prepare.registration_receipt_ref,
+            )
+            conn.execute(
+                f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
+                (request.approval_ref.resource_id,),
+            )
+            checked_at = self._approval_authority(conn, scope, reconstructed)
+            old_ref = prepare.approval_ref.model_dump(mode="json", by_alias=True)
+            new_ref = request.approval_ref.model_dump(mode="json", by_alias=True)
+            prepare_ref = request.prepare_receipt_ref.model_dump(mode="json", by_alias=True)
+            receipt_id = uuid4()
+            authority = {
+                "schemaVersion": "aos.ecommerce.dispatch-cutover-approval-refresh/v1",
+                "tenant": {"orgId": scope.org_id, "projectId": scope.project_id},
+                "receiptId": str(receipt_id),
+                "cutoverOperationId": str(request.cutover_operation_id),
+                "status": "approval_refreshed",
+                "prepareReceiptRef": prepare_ref,
+                "oldApprovalRef": old_ref,
+                "newApprovalRef": new_ref,
+                "requestHash": request_hash,
+                "refreshedBy": actor,
+                "createdAt": checked_at.isoformat(),
+            }
+            content_hash = canonical_sha256(authority)
+            conn.execute(
+                f"""INSERT INTO {self._schema}.extension_dispatch_cutover_approval_refresh_receipt(
+                     org_id,project_id,receipt_id,cutover_operation_id,idempotency_key,request_hash,
+                     prepare_receipt_ref,old_approval_ref,new_approval_ref,authority_data,content_hash,
+                     refreshed_by,created_at)
+                   VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                (*scope.key, receipt_id, request.cutover_operation_id, request.idempotency_key,
+                 request_hash, Jsonb(prepare_ref), Jsonb(old_ref), Jsonb(new_ref), Jsonb(authority),
+                 content_hash, actor, checked_at),
+            )
+            row = conn.execute(
+                f"""SELECT * FROM {self._schema}.extension_dispatch_cutover_approval_refresh_receipt
+                      WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+                (*scope.key, receipt_id),
+            ).fetchone()
+            result = self._approval_refresh_receipt(scope, dict(row), replayed=False)
             conn.commit()
             return result
 
@@ -1243,6 +1375,78 @@ class EcommerceGrowthCutoverStore:
             raise EcommerceGrowthCutoverConflict("prepared request authority drifted")
         return prepare
 
+    @staticmethod
+    def _approval_refresh_receipt(
+        scope: TenantScope,
+        row: dict[str, Any],
+        *,
+        replayed: bool,
+    ) -> CutoverApprovalRefreshReceipt:
+        authority = _object(row["authority_data"])
+        try:
+            request = CutoverApprovalRefreshRequest(
+                cutoverOperationId=authority.get("cutoverOperationId"),
+                idempotencyKey=row["idempotency_key"],
+                prepareReceiptRef=authority.get("prepareReceiptRef"),
+                approvalRef=authority.get("newApprovalRef"),
+            )
+        except (TypeError, ValueError) as exc:
+            raise EcommerceGrowthCutoverConflict("cutover approval refresh Receipt drifted") from exc
+        if (
+            canonical_sha256(authority) != row["content_hash"]
+            or request.request_hash() != row["request_hash"]
+            or authority.get("schemaVersion")
+                != "aos.ecommerce.dispatch-cutover-approval-refresh/v1"
+            or authority.get("tenant")
+                != {"orgId": scope.org_id, "projectId": scope.project_id}
+            or authority.get("receiptId") != str(row["receipt_id"])
+            or authority.get("cutoverOperationId") != str(row["cutover_operation_id"])
+            or authority.get("status") != "approval_refreshed"
+            or canonical_hash(authority.get("prepareReceiptRef"))
+                != canonical_hash(_object(row["prepare_receipt_ref"]))
+            or canonical_hash(authority.get("oldApprovalRef"))
+                != canonical_hash(_object(row["old_approval_ref"]))
+            or canonical_hash(authority.get("newApprovalRef"))
+                != canonical_hash(_object(row["new_approval_ref"]))
+            or authority.get("refreshedBy") != row["refreshed_by"]
+            or authority.get("createdAt") != row["created_at"].isoformat()
+        ):
+            raise EcommerceGrowthCutoverConflict("cutover approval refresh Receipt drifted")
+        return CutoverApprovalRefreshReceipt.model_validate({
+            "tenant": authority["tenant"],
+            "receiptId": row["receipt_id"],
+            "cutoverOperationId": row["cutover_operation_id"],
+            "prepareReceiptRef": authority["prepareReceiptRef"],
+            "oldApprovalRef": authority["oldApprovalRef"],
+            "newApprovalRef": authority["newApprovalRef"],
+            "requestHash": row["request_hash"],
+            "contentHash": row["content_hash"],
+            "replayed": replayed,
+            "createdAt": row["created_at"],
+        })
+
+    def _effective_approval_ref(
+        self,
+        conn: Any,
+        scope: TenantScope,
+        prepare: CutoverPrepareReceipt,
+    ) -> CutoverExactRef:
+        row = conn.execute(
+            f"""SELECT * FROM {self._schema}.extension_dispatch_cutover_approval_refresh_receipt
+                  WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s""",
+            (*scope.key, prepare.cutover_operation_id),
+        ).fetchone()
+        if row is None:
+            return prepare.approval_ref
+        receipt = self._approval_refresh_receipt(scope, dict(row), replayed=True)
+        if (
+            receipt.old_approval_ref != prepare.approval_ref
+            or receipt.prepare_receipt_ref.resource_id != str(prepare.receipt_id)
+            or receipt.prepare_receipt_ref.content_hash != prepare.content_hash
+        ):
+            raise EcommerceGrowthCutoverConflict("cutover approval refresh origin drifted")
+        return receipt.new_approval_ref
+
     def _lock_current_prepare_authority(
         self,
         conn: Any,
@@ -1287,9 +1491,10 @@ class EcommerceGrowthCutoverStore:
             or runtime["operation_fence"] is not runtime_draining
         ):
             raise EcommerceGrowthCutoverConflict("target runtime binding is not exact and ready")
+        approval_ref = self._effective_approval_ref(conn, scope, prepare)
         conn.execute(
             f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
-            (prepare.approval_ref.resource_id,),
+            (approval_ref.resource_id,),
         )
         reconstructed = CutoverPrepareRequest(
             cutoverOperationId=prepare.cutover_operation_id,
@@ -1301,7 +1506,7 @@ class EcommerceGrowthCutoverStore:
             targetExecutionEpoch=prepare.target_execution_epoch,
             targetRuntimeRevision=prepare.target_runtime_revision,
             policyRef=prepare.policy_ref,
-            approvalRef=prepare.approval_ref,
+            approvalRef=approval_ref,
             checkpoint=prepare.checkpoint,
             occurrenceWatermark=prepare.occurrence_watermark,
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,
@@ -1662,9 +1867,10 @@ class EcommerceGrowthCutoverStore:
             raise EcommerceGrowthCutoverConflict("cutover claim gate finalization drifted")
         if not check_activation_approval:
             return
+        approval_ref = self._effective_approval_ref(conn, scope, prepare)
         conn.execute(
             f"SELECT {self._schema}.extension_dispatch_cutover_lock_approval_ar2_013(%s)",
-            (prepare.approval_ref.resource_id,),
+            (approval_ref.resource_id,),
         )
         reconstructed = CutoverPrepareRequest(
             cutoverOperationId=prepare.cutover_operation_id,
@@ -1676,7 +1882,7 @@ class EcommerceGrowthCutoverStore:
             targetExecutionEpoch=prepare.target_execution_epoch,
             targetRuntimeRevision=prepare.target_runtime_revision,
             policyRef=prepare.policy_ref,
-            approvalRef=prepare.approval_ref,
+            approvalRef=approval_ref,
             checkpoint=prepare.checkpoint,
             occurrenceWatermark=prepare.occurrence_watermark,
             pendingTargetReceiptRefs=prepare.pending_target_receipt_refs,

@@ -22,6 +22,7 @@ from pydantic import ValidationError
 from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore
 from aos_api.ecommerce_growth_cutover import (
+    CutoverApprovalRefreshRequest,
     CutoverCommitRequest,
     CutoverExactRef,
     CutoverFinalizeRequest,
@@ -197,6 +198,7 @@ def database():
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         _migration(root, "a0v_051_cutover_approval_version.py", owner, schema=schema)
         _migration(root, "a0v_052_cutover_optional_source_ref.py", owner, schema=schema)
+        _migration(root, "a0v_053_cutover_approval_refresh.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
@@ -968,6 +970,54 @@ def test_commit_function_itself_rejects_current_approval_drift(database):
     assert database.owner.execute(
         "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
     ).fetchone()["n"] == 9
+
+
+def test_expired_inflight_approval_can_refresh_once_without_rewriting_prepare(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    commit_request = _commit_request(prepared)
+    store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    database.owner.execute("UPDATE aip_action_approval_event SET expires_at=NOW()-interval '1 second'")
+    database.owner.execute(
+        "INSERT INTO aip_action_proposal SELECT org_id,project_id,'proposal-refresh',action_type_id,"
+        "action_type_snapshot,task_id,run_id,object_ref,purpose,risk_level,policy_snapshot,payload,diff,"
+        "evidence_refs,impact_preview_id,impact_preview_revision,impact_preview_hash,action_binding_hash,"
+        "source_draft_id,source_draft_revision,source_draft_hash,approval_policy_hash,proposal_hash,status,"
+        "version,expires_at,created_by FROM aip_action_proposal"
+    )
+    database.owner.execute(
+        "INSERT INTO aip_action_draft SELECT org_id,project_id,'proposal-refresh',proposal_hash,snapshot "
+        "FROM aip_action_draft"
+    )
+    database.owner.execute(
+        "INSERT INTO aip_action_approval_event SELECT org_id,project_id,'approval-refresh',"
+        "'proposal-refresh',proposal_version,proposal_hash,decision,'refresh-reviewer',reason,"
+        "NOW()+interval '20 minutes',NOW(),action_binding_hash FROM aip_action_approval_event"
+    )
+    approval = database.owner.execute(
+        "SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,actor_id,reason,"
+        "expires_at,created_at,action_binding_hash FROM aip_action_approval_event "
+        "WHERE approval_event_id='approval-refresh'"
+    ).fetchone()
+    refresh = CutoverApprovalRefreshRequest(
+        cutoverOperationId=prepared.cutover_operation_id,
+        idempotencyKey="refresh-cutover-approval-1",
+        prepareReceiptRef={"resourceType": "CutoverPrepareReceipt",
+            "resourceId": str(prepared.receipt_id), "revision": 1,
+            "contentHash": prepared.content_hash},
+        approvalRef={"resourceType": "ActionApprovalEvent", "resourceId": "approval-refresh",
+            "revision": approval["proposal_version"],
+            "contentHash": canonical_hash(dict(approval), prefixed=True)},
+    )
+    receipt = store.refresh_activation_approval(scope, refresh, actor="runtime-owner")
+    assert receipt.replayed is False
+    assert store.refresh_activation_approval(scope, refresh, actor="runtime-owner").replayed is True
+    assert store.commit_activation(scope, commit_request, actor="runtime-owner").status == "committed"
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_dispatch_cutover_approval_refresh_receipt"
+    ).fetchone()["n"] == 1
 
 
 def test_commit_function_rejects_nonempty_source_draft_ref_drift(database):

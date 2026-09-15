@@ -77,6 +77,8 @@ def test_cutover_prepare_prefers_immutable_refresh_approval(control, monkeypatch
     assert control.current_cutover_approval_result()["approvalRef"]["resourceId"] == "expired"
     control.freeze(tmp_path / "cutover-approval-refresh-result.json", {"approvalRef": {"resourceId": "current"}})
     assert control.current_cutover_approval_result()["approvalRef"]["resourceId"] == "current"
+    control.freeze(tmp_path / "cutover-approval-refresh2-result.json", {"approvalRef": {"resourceId": "newest"}})
+    assert control.current_cutover_approval_result()["approvalRef"]["resourceId"] == "newest"
     control.freeze(tmp_path / "cutover-prepare-result.json", {"receipt": {"receiptId": "failed"}})
     assert control.current_cutover_prepare_result()["receipt"]["receiptId"] == "failed"
     control.freeze(tmp_path / "cutover-prepare-refresh-result.json", {"receipt": {"receiptId": "current"}})
