@@ -10,10 +10,10 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 PIPELINE='P02-product-qyh'
 ACTOR='a0v-ecommerce-growth-1.4-runtime-owner'
-BUNDLE_ROOT=ROOT.parent/'.aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce'
+BUNDLE_ROOT=ROOT.parent/'.aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current'
 TRUST_ROOTS=ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json'
-CURRENT_CREATE=ROOT.parent/'.aos-recovery-20260915/state/current-ecommerce-package/install/d/create-result.json'
-NIUSHOP_VERSION='1.22.0'
+CURRENT_CREATE=ROOT.parent/'.aos-recovery-20260915/state/current-ecommerce-package/install/e/create-result.json'
+NIUSHOP_VERSION='1.23.0'
 
 
 def require_current_head(create_receipt,head,binding):
@@ -21,7 +21,7 @@ def require_current_head(create_receipt,head,binding):
             or create_receipt.get('installationState')!='approved'
             or head.get('state')!='active' or head.get('etag_version')!=5
             or head.get('overlay_revision')!='a0v-canonical-ecommerce-v1'):
-        raise ValueError('exact current installation D required')
+        raise ValueError('exact current installation E required')
     if (binding.get('revision')!=4 or binding.get('execution_epoch')!=3
             or binding.get('enabled') is not True or binding.get('operation_fence') is not False
             or binding.get('desired_state')!='enabled' or binding.get('observed_state')!='ready'

@@ -15,6 +15,7 @@ def test_scope_and_business_route_are_fixed(control):
     assert control.PIPELINE == "P02-product-qyh"
     assert control.SCHEDULE == "sch-p02-qyh-controlled-20260913-v1"
     assert control.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
+    assert "p02-e-first-chain" in str(control.STATE)
 
 
 def test_private_freeze_is_exclusive(control, tmp_path):

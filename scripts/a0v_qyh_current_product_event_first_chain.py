@@ -14,7 +14,7 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STATE = ROOT.parent / ".aos-recovery-20260915/state/current-ecommerce-package/business/p02-d-first-chain"
+STATE = ROOT.parent / ".aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain"
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 PIPELINE = "P02-product-qyh"
 SCHEDULE = "sch-p02-qyh-controlled-20260913-v1"
@@ -73,7 +73,7 @@ def prepare(preflight) -> dict[str, Any]:
 def approve_selection(preflight, plane) -> dict[str, Any]:
     prepared = load_result("prepare")
     draft = prepared["draft"]
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-selection-20260915-v1", "draft": draft}
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-selection-20260915-v1", "draft": draft}
     freeze_or_match(STATE / "selection-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft
     from aos_api.tenant_scope import TenantScope
@@ -90,7 +90,7 @@ def approve_control(preflight, plane) -> dict[str, Any]:
     selection = load_result("selection")["ref"]
     draft = {**prepared["draft"], "schemaVersion": "aos.pipeline-runtime-control-draft/v1",
              "sourceSelectionRef": selection}
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-control-20260915-v1", "draft": draft}
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-control-20260915-v1", "draft": draft}
     freeze_or_match(STATE / "control-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDraft
     from aos_api.tenant_scope import TenantScope
@@ -131,7 +131,7 @@ def bind_schedule(preflight, plane) -> dict[str, Any]:
     if previous is None:
         raise ValueError("historical Product schedule binding required")
     control = load_result("control")["ref"]
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-schedule-binding-20260915-v1",
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-schedule-binding-20260915-v1",
               "scheduleId": SCHEDULE, "controlRef": control,
               "previousRef": previous.ref.model_dump(mode="json", by_alias=True)}
     freeze_or_match(STATE / "binding-intent.json", intent)
