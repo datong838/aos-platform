@@ -1542,3 +1542,11 @@ The new module composes existing current group, Registry release, signature evid
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_policy_set.py` | Host原路径 | Resolve and compile six exact policies from the original group's current installed published package; no data or execution grant | `cd7700bd8fb9c41a1154bd1c6e4085b7428e2b3b420e73af076ece2a9e2a19ae` |
+
+### SC4-5l6f3 Fixed snapshot coordinator Host
+
+The coordinator composes existing current Owners from one immutable Outbox route. It has no public endpoint, model-selected control flow, Outbox completion authority, Provider invocation, or external business effect authority. This append-only classification does not alter historical preHash entries or verifier rules.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_snapshot_coordinator.py` | Host原路径 | Fixed group completion, evidence, fulfillment and unified resume composition with committed Receipt replay; no Outbox acknowledgement | `93a3c519d08d233d87f9a2770e495e3c743972dee7281d3f5fa6c92b08fde961` |
