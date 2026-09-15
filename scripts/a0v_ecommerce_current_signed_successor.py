@@ -35,31 +35,31 @@ def load_successor():
     helper._builder = profile.load_builder
     successor.legacy = lambda: helper
     recovery = successor.ROOT.parent / ".aos-recovery-20260915"
-    successor.BUILD = recovery / "state/current-ecommerce-package/build/candidates"
-    successor.BUILD_RECEIPT = recovery / "state/current-ecommerce-package/build/build-receipt.json"
-    successor.QUALIFICATION = recovery / "state/current-ecommerce-package/build/qualification-receipt.json"
-    successor.STATE = recovery / "state/current-ecommerce-package/registry"
+    successor.BUILD = recovery / "state/niushop-1.23-current-package/build/candidates"
+    successor.BUILD_RECEIPT = recovery / "state/niushop-1.23-current-package/build/build-receipt.json"
+    successor.QUALIFICATION = recovery / "state/niushop-1.23-current-package/build/qualification-receipt.json"
+    successor.STATE = recovery / "state/niushop-1.23-current-package/registry"
     successor.OLD_ROOT = (
         successor.ROOT.parent
-        / ".aos-recovery-20260913/state/growth-ui-1.8-registry/signed-bundles-growth-ui-1.8"
+        / ".aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce"
     )
-    successor.NEW_ROOT = successor.STATE / "signed-bundles-current-ecommerce"
+    successor.NEW_ROOT = successor.STATE / "signed-bundles-niushop-1.23-current"
     successor.VERSIONS = dict(
         successor.VERSIONS,
         **{
-            "platform.ecommerce.niushop": "1.22.0",
+            "platform.ecommerce.niushop": "1.23.0",
             "solution.ecommerce.growth": "1.8.0",
         },
     )
-    successor.EXPECTED_OLD_COUNT = 14
-    successor.EXPECTED_NEW_COUNT = 15
+    successor.EXPECTED_OLD_COUNT = 15
+    successor.EXPECTED_NEW_COUNT = 16
     successor.EXTRA_BUILD_PATHS = (
         "scripts/build_ecommerce_ui_candidates.py",
         "scripts/build_ecommerce_current_candidates.py",
         "scripts/fixtures/analyst-workspace-read-probe.json",
     )
-    successor.ACTOR_PREFIX = "a0v-current-ecommerce-20260915"
-    successor.SUCCESS_OUTCOME = "CURRENT_ECOMMERCE_REGISTRY_GREEN"
+    successor.ACTOR_PREFIX = "a0v-niushop-1.23-current-20260915"
+    successor.SUCCESS_OUTCOME = "NIUSHOP_1_23_CURRENT_REGISTRY_GREEN"
     successor.require_sessions = ui_successor.require_sessions
     return successor
 

@@ -1,4 +1,4 @@
-"""Fixed current ecommerce profile: growth 1.8 and Niushop 1.22."""
+"""Fixed current ecommerce profile: growth 1.8 and Niushop 1.23."""
 from __future__ import annotations
 
 import importlib.util
@@ -12,9 +12,9 @@ OLD_NIUSHOP = (
     "ecommerce_niushop",
 )
 CURRENT_NIUSHOP = (
-    "platform.ecommerce.niushop/1.22.0",
+    "platform.ecommerce.niushop/1.23.0",
     "platform.ecommerce.niushop",
-    "1.22.0",
+    "1.23.0",
     "ecommerce_niushop",
 )
 

@@ -43,13 +43,14 @@ def _qualified_document():
 
 
 def test_successor_uses_exact_parent_and_current_coordinates(successor):
-    assert successor.EXPECTED_OLD_COUNT == 14
-    assert successor.EXPECTED_NEW_COUNT == 15
-    assert "growth-ui-1.8" in str(successor.OLD_ROOT)
+    assert successor.EXPECTED_OLD_COUNT == 15
+    assert successor.EXPECTED_NEW_COUNT == 16
+    assert "signed-bundles-current-ecommerce" in str(successor.OLD_ROOT)
+    assert "niushop-1.23-current" in str(successor.NEW_ROOT)
     assert successor.NEW_ROOT != successor.OLD_ROOT
     assert successor.VERSIONS == {
         "domain.ecommerce.core": "1.3.0",
-        "platform.ecommerce.niushop": "1.22.0",
+        "platform.ecommerce.niushop": "1.23.0",
         "solution.ecommerce.growth": "1.8.0",
         "solution.ecommerce.operations-base": "1.2.0",
     }

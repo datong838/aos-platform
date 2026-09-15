@@ -18,7 +18,7 @@ def test_current_profile_combines_exact_frozen_candidates(profile):
     assert result["moduleCount"] == 8
     assert {item["id"]: item["version"] for item in result["bundles"]} == {
         "domain.ecommerce.core": "1.3.0",
-        "platform.ecommerce.niushop": "1.22.0",
+        "platform.ecommerce.niushop": "1.23.0",
         "solution.ecommerce.growth": "1.8.0",
         "solution.ecommerce.operations-base": "1.2.0",
     }
