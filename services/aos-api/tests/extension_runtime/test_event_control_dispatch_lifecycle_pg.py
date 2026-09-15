@@ -5,13 +5,14 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from psycopg.errors import LockNotAvailable
 from psycopg import sql
 from psycopg.types.json import Jsonb
 
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
 from aos_api.asset_registry.canonical_json import canonical_sha256
-from test_ecommerce_growth_cutover_pg import database, _connection
+from test_ecommerce_growth_cutover_pg import database, _connection, _migration
 
 
 @pytest.fixture
@@ -180,3 +181,27 @@ def test_shrink_requires_exact_current_fence_receipt(dispatch_db, drift):
         _transition(dispatch_db, scope, request)
     assert dispatch_db.owner.execute('SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall() == before
     assert dispatch_db.owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='shrink'").fetchone()['n'] == 0
+
+
+def test_fence_waits_for_current_host_transaction_then_retries(dispatch_db):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'expand-drain'))
+    for filename in ('a0v_028_dispatch_read_lock.py', 'a0v_044_event_control_dispatch_group.py'):
+        _migration(dispatch_db.root, filename, dispatch_db.owner, schema=dispatch_db.schema)
+    request = _request(ids, 'fence', 12, 'fence-drain')
+    with _connection(dispatch_db, runtime=True)(scope) as executing:
+        locked = executing.execute('SELECT * FROM extension_dispatch_lock_group_a0v_028(%s)',
+                                   (ids[2],)).fetchall()
+        assert len(locked) == 10
+        with pytest.raises(LockNotAvailable):
+            with _connection(dispatch_db)(scope) as fencing:
+                fencing.execute("SET LOCAL lock_timeout='100ms'")
+                fencing.execute('SELECT extension_event_control_dispatch_transition_a0v_054(%s,%s)',
+                                (Jsonb(request), 'fixture-operator'))
+        assert dispatch_db.owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='fence'").fetchone()['n'] == 0
+        assert dispatch_db.owner.execute("SELECT operation_fence FROM extension_operation_dispatch_binding WHERE operation_id='ecommerce_growth_event_control'").fetchone()['operation_fence'] is False
+        executing.commit()
+    receipt = _transition(dispatch_db, scope, request)
+    assert receipt['phase'] == 'fence' and receipt['replayed'] is False
+    assert dispatch_db.owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='fence'").fetchone()['n'] == 1
