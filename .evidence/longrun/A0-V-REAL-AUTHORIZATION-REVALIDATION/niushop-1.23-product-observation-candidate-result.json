@@ -1,0 +1,23 @@
+{
+  "outcome": "NIUSHOP_PRODUCT_OBSERVATION_CANDIDATE_PREPARED",
+  "sourceTreeHash": "sha256:f0ef69161dbae032fb29da036fa3cf9e9ef6dca1224027d9225d25df49eb8088",
+  "targetTreeHash": "sha256:51656fc4587ad3df31f14e1c057d2f09295a3c302103848ea2c3d0765e5b0a3a",
+  "changedFiles": [
+    "bundle.yaml",
+    "content/mappings/p02-product.yaml",
+    "evidence/bundle-evals.json"
+  ],
+  "evaluation": {
+    "status": "passed",
+    "checks": [
+      "p02-v3-compiled",
+      "same-observation-deterministic",
+      "later-observation-new-version",
+      "observation-provenance-explicit",
+      "invalid-time-basis-refused"
+    ],
+    "realTenantAcceptance": false
+  },
+  "published": false,
+  "installed": false
+}

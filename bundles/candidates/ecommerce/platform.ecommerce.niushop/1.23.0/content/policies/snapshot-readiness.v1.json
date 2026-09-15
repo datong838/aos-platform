@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "aos.snapshot-readiness-policy/v1",
+  "fieldPolicyHash": "sha256:79c6a340984fb2e3b2e4cd918476da5378a70ca06c2ae00b771bdaebd0ba697d",
+  "relationshipQualityPolicyHash": "sha256:4827a94a911f23f7eed50442550416b064b3ce567e00abf018c23967ccd464c7",
+  "purposeCode": "initial_store_analysis",
+  "freshnessMode": "requirement-oldest-observation",
+  "reconciliationMode": "current-original-base-and-derived",
+  "queryBindingId": "ecommerce.data_advisor.strategy.plan.r2",
+  "sources": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "objectType": "Shop"
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "objectType": "Product"
+    },
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "objectType": "ProductSku"
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "objectType": "Category"
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "objectType": "Order"
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "objectType": "OrderLine"
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "objectType": "Shipment"
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "objectType": "CustomerLite"
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "objectType": "Weapp"
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "objectType": "SystemConfig"
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "objectType": "ProductReview"
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "objectType": "Payment"
+    }
+  ]
+}
