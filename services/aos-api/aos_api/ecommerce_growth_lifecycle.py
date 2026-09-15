@@ -106,13 +106,20 @@ class EcommerceGrowthDisableDependent:
                     AND b.generation=c.target_generation
                   WHERE c.org_id=%s AND c.project_id=%s AND c.kind='activate'
                     AND c.status='resumed' AND c.target_installation_id=%s
-                    AND b.revision=c.target_runtime_revision+3
-                    AND b.execution_epoch=c.target_execution_epoch+1
+                    AND b.revision=%s+1
+                    AND b.execution_epoch>c.target_execution_epoch
                     AND NOT b.enabled AND b.operation_fence
                     AND b.observed_state='draining'""",
-            (*scope.key, runtime["installation_id"]),
+            (*scope.key, runtime["installation_id"], runtime["expected_binding_revision"]),
         ).fetchall()
         if not activations:
+            attached = conn.execute(
+                f"""SELECT 1 FROM {self._schema}.extension_operation_dispatch_binding
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s LIMIT 1""",
+                (*scope.key, runtime["installation_id"]),
+            ).fetchone()
+            if attached is not None:
+                raise EcommerceGrowthLifecycleConflict("attached dispatch has no exact disable activation")
             return None
         if len(activations) != 1:
             raise EcommerceGrowthLifecycleConflict(
