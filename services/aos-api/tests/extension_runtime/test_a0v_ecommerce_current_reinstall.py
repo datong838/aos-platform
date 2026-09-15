@@ -229,6 +229,27 @@ def test_unowned_recovery_cancel_requires_released_runtime(reinstall):
         )
 
 
+def test_released_owner_settlement_requires_cleanup_and_no_pending_operation(reinstall):
+    value = snapshot(enabled=False, fenced=True)
+    value["bindings"][0].update({
+        "desired_state": "enabled",
+        "observed_state": "unknown",
+        "config_ref": {"configurationId": "configuration-c"},
+    })
+    value["operations"] = [{"status": "succeeded"}]
+    assert reinstall.require_released_owner_settlement(value) == {
+        "etag": 5,
+        "generation": "generation-a",
+        "bindingRevision": 7,
+    }
+    unresolved = {**value, "operations": [{"status": "accepted"}]}
+    with pytest.raises(ValueError, match="unresolved"):
+        reinstall.require_released_owner_settlement(unresolved)
+    live = {**value, "resources": [{"cleanup_state": "pending", "observed_release": False}]}
+    with pytest.raises(ValueError, match="resources"):
+        reinstall.require_released_owner_settlement(live)
+
+
 def test_replacement_requires_exact_drained_predecessor(reinstall):
     value = predecessor_snapshot(reinstall)
     value["head"].update({

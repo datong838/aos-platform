@@ -337,6 +337,39 @@ def require_unowned_recovery_cancel(
     }
 
 
+def require_released_owner_settlement(snapshot: dict[str, Any]) -> dict[str, Any]:
+    head = snapshot["head"]
+    bindings = snapshot["bindings"]
+    if snapshot.get("canaryInstallations") != 0:
+        raise ValueError("canary installation drift")
+    if head["state"] != "active" or head["etag_version"] != 5 or len(bindings) != 1:
+        raise ValueError("one active released installation required")
+    binding = bindings[0]
+    if (
+        binding["enabled"] is not False
+        or binding["operation_fence"] is not True
+        or binding["desired_state"] != "enabled"
+        or binding["observed_state"] != "unknown"
+        or not binding["config_ref"]
+    ):
+        raise ValueError("exact released owner binding required")
+    if not snapshot["resources"] or any(
+        item["cleanup_state"] != "released" or item["observed_release"] is not True
+        for item in snapshot["resources"]
+    ):
+        raise ValueError("released owner resources required")
+    if any(
+        item["status"] not in {"succeeded", "failed", "cancelled"}
+        for item in snapshot["operations"]
+    ):
+        raise ValueError("released owner unresolved operation")
+    return {
+        "etag": 5,
+        "generation": str(binding["generation"]),
+        "bindingRevision": binding["revision"],
+    }
+
+
 def replacement_ref(snapshot: dict[str, Any]) -> dict[str, Any]:
     head = snapshot["head"]
     bindings = snapshot["bindings"]
@@ -493,6 +526,30 @@ def disable(label: str, *, suffix: str = "disable") -> dict[str, Any]:
         roles=activation.ROLES,
         markings=activation.MARKINGS,
         idempotency_key=f"a0v-current-ecommerce-{label}-{suffix}-20260915",
+        if_match='"5"',
+        target={
+            "generation": command["generation"],
+            "bindingRevision": command["bindingRevision"],
+        },
+    )
+    return {"command": command, "receipt": receipt.response_json, "replayed": receipt.replayed}
+
+
+def settle_released(label: str) -> dict[str, Any]:
+    installation_id = _initial(label)["installationId"]
+    command = require_released_owner_settlement(observe_installation(installation_id))
+    _freeze(
+        STATE / label / "settle-released-intent.json",
+        {"installationId": installation_id, **command},
+    )
+    activation, _store, _lifecycle, service, _dependent = _setup_runtime_plane()
+    receipt = service.request(
+        **SCOPE,
+        installation_id=installation_id,
+        actor=activation.ACTOR,
+        roles=activation.ROLES,
+        markings=activation.MARKINGS,
+        idempotency_key=f"a0v-current-ecommerce-{label}-settle-released-20260915",
         if_match='"5"',
         target={
             "generation": command["generation"],
@@ -709,7 +766,7 @@ def main() -> None:
             "uninstall-a", "create-b", "prepare-b", "verify-b", "stage-b",
             "configure-b", "enable-b", "disable-b", "uninstall-b", "create-c",
             "prepare-c", "verify-c", "stage-c", "configure-c", "enable-c",
-            "disable-c", "create-d", "prepare-d", "verify-d", "stage-d",
+            "disable-c", "settle-c", "create-d", "prepare-d", "verify-d", "stage-d",
             "configure-d", "enable-d",
         ),
     )
@@ -741,6 +798,8 @@ def main() -> None:
         result = disable("b")
     elif args.action == "disable-c":
         result = disable("c")
+    elif args.action == "settle-c":
+        result = settle_released("c")
     elif args.action in {"uninstall-a", "uninstall-b"}:
         result = uninstall(args.action[-1])
     else:
