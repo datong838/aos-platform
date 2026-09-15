@@ -66,3 +66,5 @@
 在继续启用 A 前，控制器新增 `drain-predecessor`：只接受上述精确前驱、generation、revision5/epoch4、disabled/fenced/desired-enabled/unknown、三资源 released、全部历史 operation 终态及 canary 零；通过原 RuntimeDisableService 创建新的 disable Receipt，再由原 RuntimeDisableConsumer 单次消费并核对同一 operationId 已 succeeded。这样先生成 replacement guard 所需的当前不可变排空证据，再重启唯一 Host 续办既有 A enable Receipt；不得重发 enable，也不得直接更新 binding/event/outbox。
 
 A 完成停用、Host 重启与 `recover-a` 后还需第二次正式停用才能卸载，因此控制器同时增加 `disable-a-final`，复用同一阶段校验但使用独立 intent 和幂等键。原 `disable-a` 的命令文件、键和行为保持不变。
+
+前驱排空修复与测试提交期间，A 的既有 enable Receipt 超过五分钟 deadline；重启 Host 后它保持 accepted 且不再被目录调度，A 仍为 revision3/epoch2、disabled/fenced/desired-disabled/unknown，三资源 released。控制器再增加 `cancel-stale-enable-a` 窄动作：必须精确读取原 `enable-a-command.json` 的 operationId，并要求它是唯一未终态、accepted/accepted 且 deadline 已过；同时固定 A 当前 binding 和资源释放状态。随后通过原 RuntimeDisableService 的同事务取消规则创建独立 disable Receipt，由正常 Host 消费完成当前 `disabled_committed`。之后只允许 `recover-a` 创建新的 current enable Receipt；不得重发过期 enable、改 deadline 或直接写 operation/binding。
