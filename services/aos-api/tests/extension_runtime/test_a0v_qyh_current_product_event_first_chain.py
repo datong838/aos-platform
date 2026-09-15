@@ -169,3 +169,32 @@ def test_execute_reports_known_failed_run_without_claiming_success(control, monk
     result = control.execute_once(object(), object())
     assert result["outcome"] == "CURRENT_PRODUCT_SNAPSHOT_FAILED"
     assert result["run"]["body"]["result"]["error_code"] == "PIPELINE_EXECUTOR_FAILED"
+
+
+def test_signed_backend_import_does_not_write_bytecode(control, monkeypatch, tmp_path):
+    import sys
+    backend = tmp_path / 'signed' / 'backend'
+    backend.mkdir(parents=True)
+    (backend / 'signed_cache_probe.py').write_text('value = 42\n')
+    sdk = tmp_path / 'sdk'
+    (sdk / 'aos_extension_sdk').mkdir(parents=True)
+    monkeypatch.setattr(control, 'SIGNED_BUNDLE_ROOT', tmp_path / 'signed')
+    monkeypatch.setattr(control, 'GROWTH_BACKEND', backend)
+    monkeypatch.setattr(control, 'SDK_ROOT', sdk)
+    monkeypatch.setattr(sys, 'path', list(sys.path))
+    monkeypatch.setattr(sys, 'dont_write_bytecode', False)
+    real_import = importlib.import_module
+
+    def stop_after_signed_import(name):
+        if name == 'a0v_p02_current_preflight':
+            assert real_import('signed_cache_probe').value == 42
+            raise RuntimeError('stop before external preflight')
+        return real_import(name)
+
+    monkeypatch.setattr(control.importlib, 'import_module', stop_after_signed_import)
+    try:
+        with pytest.raises(RuntimeError, match='stop before external preflight'):
+            control.setup()
+        assert not list(backend.rglob('*.pyc'))
+    finally:
+        sys.modules.pop('signed_cache_probe', None)

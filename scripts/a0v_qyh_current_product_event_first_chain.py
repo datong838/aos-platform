@@ -76,6 +76,8 @@ def setup():
     if (not growth_backend.is_dir() or not growth_backend.is_relative_to(signed_root)
             or not (sdk_root / "aos_extension_sdk").is_dir()):
         raise ValueError("current signed ecommerce growth backend required")
+    # Signed artifact directories must remain byte-for-byte immutable on import.
+    sys.dont_write_bytecode = True
     sys.path.insert(0, str(sdk_root))
     sys.path.insert(0, str(growth_backend))
     preflight = importlib.import_module("a0v_p02_current_preflight")
