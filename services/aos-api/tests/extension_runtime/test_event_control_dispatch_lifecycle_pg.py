@@ -1,4 +1,5 @@
 import ast
+from datetime import datetime, timedelta, timezone
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,7 +13,7 @@ from psycopg.types.json import Jsonb
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
 from aos_api.asset_registry.canonical_json import canonical_sha256
-from test_ecommerce_growth_cutover_pg import database, _connection, _migration
+from test_ecommerce_growth_cutover_pg import database, _connection, _migration, _seed_pending_occurrence
 
 
 @pytest.fixture
@@ -205,3 +206,59 @@ def test_fence_waits_for_current_host_transaction_then_retries(dispatch_db):
     receipt = _transition(dispatch_db, scope, request)
     assert receipt['phase'] == 'fence' and receipt['replayed'] is False
     assert dispatch_db.owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='fence'").fetchone()['n'] == 1
+
+
+@pytest.mark.parametrize('lease_minutes', [-5, 5])
+def test_shrink_waits_for_persisted_attempt_terminal_state(dispatch_db, lease_minutes):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'expand-async'))
+    _transition(dispatch_db, scope, _request(ids, 'fence', 12, 'fence-async'))
+    owner = dispatch_db.owner
+    owner.execute("SELECT set_config('aos.org_id',%s,false),set_config('aos.project_id',%s,false)", scope.key)
+    attempt_id = uuid4()
+    owner.execute('''INSERT INTO extension_runtime_execution_attempt(
+        org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+        operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,state,lease_until)
+        VALUES(%s,%s,%s,%s,%s,3,'signed_read','drain-read','drain-read',%s,%s,'running',%s)''',
+        (*scope.key, attempt_id, ids[0], ids[1], 'sha256:'+'7'*64, 'sha256:'+'8'*64,
+         datetime.now(timezone.utc)+timedelta(minutes=lease_minutes)))
+    request = _request(ids, 'shrink', 13, 'shrink-async')
+    before = owner.execute('SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall()
+    with pytest.raises(Exception, match='event dispatch target is not drained'):
+        _transition(dispatch_db, scope, request)
+    assert owner.execute('SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall() == before
+    assert owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='shrink'").fetchone()['n'] == 0
+    owner.execute("UPDATE extension_runtime_execution_attempt SET state='succeeded',revision=2,completed_at=clock_timestamp() WHERE attempt_id=%s", (attempt_id,))
+    receipt = _transition(dispatch_db, scope, request)
+    assert receipt['drainEvidence']['runningExecutionAttempts'] == 0
+    assert receipt['drainEvidence']['generation'] == ids[1]
+
+
+@pytest.mark.parametrize('inflight', ['occurrence', 'claimed', 'unknown'])
+def test_shrink_waits_for_occurrence_and_dispatch_resolution(dispatch_db, inflight):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'expand-occurrence'))
+    _transition(dispatch_db, scope, _request(ids, 'fence', 12, 'fence-occurrence'))
+    occurrence_id, now = _seed_pending_occurrence(dispatch_db, scope, SimpleNamespace(
+        target_installation_id=ids[0], target_generation=ids[1], target_execution_epoch=3))
+    owner = dispatch_db.owner
+    if inflight == 'occurrence':
+        owner.execute("UPDATE automation_occurrence SET status='claimed',claim_owner='test-worker',claim_until=%s WHERE occurrence_id=%s",
+                      (now + timedelta(minutes=5), occurrence_id))
+    else:
+        owner.execute('''INSERT INTO automation_occurrence_dispatch_attempt(
+            org_id,project_id,attempt_id,occurrence_id,claim_owner,target_idempotency_key,
+            status,claimed_at,claim_until) VALUES(%s,%s,%s,%s,'test-worker','test-dispatch',%s,%s,%s)''',
+            (*scope.key, uuid4(), occurrence_id, inflight, now, now+timedelta(minutes=5)))
+    request = _request(ids, 'shrink', 13, 'shrink-occurrence')
+    with pytest.raises(Exception, match='event dispatch target is not drained'):
+        _transition(dispatch_db, scope, request)
+    assert owner.execute("SELECT count(*) AS n FROM extension_event_control_dispatch_receipt WHERE phase='shrink'").fetchone()['n'] == 0
+    assert owner.execute('SELECT count(*) AS n FROM extension_operation_dispatch_binding').fetchone()['n'] == 10
+    owner.execute("UPDATE automation_occurrence SET status='accepted',claim_owner=NULL,claim_until=NULL WHERE occurrence_id=%s", (occurrence_id,))
+    owner.execute("UPDATE automation_occurrence_dispatch_attempt SET status='receipt_recorded',resolved_at=clock_timestamp() WHERE occurrence_id=%s", (occurrence_id,))
+    receipt = _transition(dispatch_db, scope, request)
+    assert receipt['drainEvidence']['claimedOccurrences'] == 0
+    assert receipt['drainEvidence']['unresolvedDispatchAttempts'] == 0

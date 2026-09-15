@@ -57,6 +57,7 @@ def upgrade() -> None:
       v_phase text; v_key text; v_install uuid; v_generation uuid; v_group uuid;
       v_epoch bigint; v_runtime_revision bigint; v_expected bigint; v_target bigint;
       v_prior record; v_prior_ref jsonb := NULL;
+      v_running bigint; v_claimed bigint; v_dispatching bigint; v_drain jsonb;
       v_existing record; v_runtime record; v_rows bigint; v_control record;
       v_before jsonb; v_after jsonb; v_hash text; v_body jsonb; v_content_hash text;
       v_receipt uuid:=gen_random_uuid(); v_now timestamptz; v_ref jsonb; v_number jsonb;
@@ -179,6 +180,23 @@ def upgrade() -> None:
         THEN RAISE EXCEPTION 'exact fence receipt required' USING ERRCODE='40001'; END IF;
         v_prior_ref:=jsonb_build_object('receiptId',v_prior.receipt_id::text,
           'contentHash',v_prior.content_hash);
+        SELECT count(*) INTO v_running FROM public.extension_runtime_execution_attempt a
+          WHERE a.org_id=v_org AND a.project_id=v_project AND a.installation_id=v_install
+            AND a.generation=v_generation AND a.state='running';
+        SELECT count(*) INTO v_claimed FROM public.automation_occurrence o
+          WHERE o.org_id=v_org AND o.project_id=v_project AND o.installation_id=v_install
+            AND o.generation=v_generation AND o.execution_epoch=v_epoch AND o.status='claimed';
+        SELECT count(*) INTO v_dispatching FROM public.automation_occurrence_dispatch_attempt a
+          JOIN public.automation_occurrence o USING(org_id,project_id,occurrence_id)
+          WHERE a.org_id=v_org AND a.project_id=v_project AND o.installation_id=v_install
+            AND o.generation=v_generation AND o.execution_epoch=v_epoch
+            AND a.status IN ('claimed','unknown');
+        IF v_running<>0 OR v_claimed<>0 OR v_dispatching<>0
+        THEN RAISE EXCEPTION 'event dispatch target is not drained' USING ERRCODE='55000'; END IF;
+        v_drain:=jsonb_build_object('installationId',v_install::text,'generation',v_generation::text,
+          'executionEpoch',v_epoch,'runningExecutionAttempts',v_running,
+          'claimedOccurrences',v_claimed,'unresolvedDispatchAttempts',v_dispatching,
+          'checkedAt',clock_timestamp());
       END IF;
 
       UPDATE public.extension_operation_dispatch_binding SET cutover_group_revision=v_target,updated_by=p_actor,
@@ -212,7 +230,7 @@ def upgrade() -> None:
         'approvalRef',v_ref,'idempotencyKey',v_key,'requestHash',v_hash,'beforeSnapshot',v_before,
         'afterSnapshot',coalesce(v_after,'[]'::jsonb),'actor',p_actor,'createdAt',v_now);
       IF v_phase='shrink' THEN
-        v_body:=v_body||jsonb_build_object('priorFenceReceiptRef',v_prior_ref);
+        v_body:=v_body||jsonb_build_object('priorFenceReceiptRef',v_prior_ref,'drainEvidence',v_drain);
       END IF;
       v_content_hash:='sha256:'||encode(sha256(convert_to(public.canonical_asset_registry_jsonb(v_body),'UTF8')),'hex');
       INSERT INTO public.extension_event_control_dispatch_receipt(org_id,project_id,receipt_id,idempotency_key,

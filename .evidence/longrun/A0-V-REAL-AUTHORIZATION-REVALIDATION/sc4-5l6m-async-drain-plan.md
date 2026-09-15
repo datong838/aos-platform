@@ -9,3 +9,5 @@ Rules：m1、方案先行、最小修改、隔离 PG，不 push、不迁移主�
 先增加 running attempt 的有效/过期租约负例，检查错误后原分派和收缩回执未变，再由已有终态更新结束 attempt，同 key 收缩成功。随后增加 claimed occurrence/dispatch 分支测试。退出前执行当前生命周期回归。
 
 该门不替代完整 Service 资格/审批链与 resumed 退役组合验证。
+
+复核补充：dispatch attempt 的 unknown 同样未得到确定结果，必须与 claimed 一起阻止收缩；不靠租约过期或 needs_attention 字样推断已结束。
