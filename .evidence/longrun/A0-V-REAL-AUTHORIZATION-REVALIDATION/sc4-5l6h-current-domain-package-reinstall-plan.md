@@ -37,6 +37,7 @@
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_current_signed_successor.py`：验证父树/新树、版本集合、growth字节继承、运行 session/admission 和篡改拒绝合同。
 - 新增 `scripts/a0v_ecommerce_current_reinstall.py`：固定 A/B/C 安装、准备、验证、配置、启用、禁用、卸载及窄恢复状态机；每个命令先写 intent，结果未知时仅 observe。
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_current_reinstall.py`：验证精确 predecessor、阶段/etag/generation、幂等 key、权限分离、排空/资源释放、uninstall 与 B 不复活 A、canary拒绝。
+- 修改 `scripts/a0v_product_controlled_api.py` 与 `services/aos-api/tests/test_a0v_controlled_api.py`：在最终安装成功后，仅把私有受控 API profile 从旧13版本 Niushop1.5 根切到本波15版本当前根；后台写者、迁移、SSH预热、身份和原诊断 launcher 均不变。
 - 新增本波验证文档 `sc4-5l6h-current-domain-package-reinstall-verification.md`，并把构建、资格、签名、安装、配置、Runtime、停用、恢复、卸载、重装与 canary 证据逐项落盘。
 
 ## preHash
@@ -46,6 +47,8 @@
 - `scripts/build_niushop_snapshot_candidates.py`：`6e784d50b2b4776e3e2e571098431b378656509031f1abe23b4fe2b1c80c11ee`
 - `scripts/a0v_ecommerce_ui_signed_successor.py`：`6179acdb403e24893878dcad1de8feaf39ef8596625457ef7e7864a8a7ecba48`
 - `scripts/a0v_qyh_reboot_recovery.py`：`ac930ffb57c527cb442b45bcdd7d5658081940462370998e2140ea2f1d5e4d39`
+- `scripts/a0v_product_controlled_api.py`：`2eceb2cbeffb5b5499fae9dbba644f5bf4332afd69e085988e1e523a16a3f4c1`
+- `services/aos-api/tests/test_a0v_controlled_api.py`：`8c7de324c3ced75a419acd78bd6cb9a3311d2150e8d38215d85cf365d6f69962`
 - growth 1.8 manifest：`75efe478e04d3b9d9691e1a9e5522d58b5b2e27cfcdc8af6ef367c34842e2c53`
 - Niushop 1.22 manifest：`d194249c902713ab2b047d7a8abec66a17a8c767d234b1cd8d304aa83a574960`
 - 三个新增脚本、三个测试与验证文档：`NEW`。
