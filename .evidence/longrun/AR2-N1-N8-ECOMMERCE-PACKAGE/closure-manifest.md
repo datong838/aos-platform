@@ -1558,3 +1558,11 @@ The existing Host Outbox Store gains only fenced completion adapters. The new Al
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/alembic/versions/a0v_050_data_requirement_outbox_completion.py` | Host schema migration | Additive paired exact Receipt retention and fenced complete/reconcile functions; no direct runtime DML grant | `9b2d4282cb4cf6261a1a3ee5ca1ef8d61008638d0161ebe104584765208fe53d` |
+
+### SC4-5l6f5 Lifecycle-owned DataRequirement worker Host
+
+The worker is app-lifecycle Host composition. It enumerates only current live installation scopes, rebuilds the immutable route, calls the fixed coordinator, and settles only through the fenced Outbox functions. It contains no domain policy, public endpoint, Provider-selected control flow, tenant directory scan, or external business-effect authority. Existing Store, route reader, pipeline factory and app lifecycle remain Host paths; this append-only classification records only the new module.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_analysis_data_requirement_worker.py` | Host原路径 | Bounded current-live claim/reconcile, fixed coordinator invocation and dual-Receipt settlement; no public or external effect grant | `d8237074b50ddd0b45863228c9e993da6ce679ee269440f6679ba16dff94aab8` |
