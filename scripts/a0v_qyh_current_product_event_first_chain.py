@@ -508,23 +508,31 @@ def cutover_prepare(_preflight, plane) -> dict[str, Any]:
               if key != "operationIds"}
     approval_ref = {key: value for key, value in current_approval["approvalRef"].items()
                     if key != "receiptId"}
+    refreshed = (STATE / "cutover-approval-refresh-result.json").exists()
     request = CutoverPrepareRequest(
         cutoverOperationId=CUTOVER_OPERATION_ID,
-        idempotencyKey="a0v-qyh-niushop-1.23-generation-e-cutover-prepare-v1",
+        idempotencyKey=("a0v-qyh-niushop-1.23-generation-e-cutover-prepare-refresh-v1"
+                        if refreshed else "a0v-qyh-niushop-1.23-generation-e-cutover-prepare-v1"),
         approvalRef=approval_ref,
         checkpoint={"legacyEntry": "canonical-router", "version": 1},
         occurrenceWatermark=None, pendingTargetReceiptRefs=[], **target)
     material = request.model_dump(mode="json", by_alias=True)
-    freeze_or_match(STATE / "cutover-prepare-intent.json", material)
+    intent_name = "cutover-prepare-refresh-intent.json" if refreshed else "cutover-prepare-intent.json"
+    freeze_or_match(STATE / intent_name, material)
     receipt = plane.ecommerce_growth_cutover_service.prepare_activation(
         TenantScope(**SCOPE), request, actor=ACTOR)
     return {"outcome": "CURRENT_E_CUTOVER_PREPARED",
             "receipt": receipt.model_dump(mode="json", by_alias=True)}
 
 
+def current_cutover_prepare_result() -> dict[str, Any]:
+    refresh = STATE / "cutover-prepare-refresh-result.json"
+    return load_result("cutover-prepare-refresh") if refresh.exists() else load_result("cutover-prepare")
+
+
 def _cutover_commit_request():
     from aos_api.ecommerce_growth_cutover import CutoverCommitRequest
-    prepared = load_result("cutover-prepare")["receipt"]
+    prepared = current_cutover_prepare_result()["receipt"]
     return CutoverCommitRequest(
         cutoverOperationId=CUTOVER_OPERATION_ID,
         idempotencyKey="a0v-qyh-niushop-1.23-generation-e-cutover-commit-v1",
