@@ -25,7 +25,7 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
 2. `configure-brief` 创建并冻结“栖月汇全店基线与商品尖刀验证”真实 TaskBrief，来源引用本次 P02 Dataset/Run，目标是识别商品结构、在售/下架变化和后续数据缺口，不预填经营结论。
 3. `transfer-registration` 先读回旧注册及其 Receipt，要求状态精确为 pristine/withdraw-only、九项 dispatch 仍是同一 fenced legacy group；以固定 idempotency key 正式 withdraw。随后从 current E 安装、revision、runtime binding 与 config ref 构造 `FirstDispatchRegistrationRequest`，正式 register 并读回 exact registration Receipt。每个远程写阶段分别冻结 intent/result；未知结果时只允许按原 key 读回或幂等重放。
-4. `approve-cutover` 先通过正式 ActionType 入口确保 `ecommerce_growth_cutover` exact 定义，再用 `user:dev` 创建绑定 E target、九项有序 operation、cutover group/revision、runtime revision、policy exact ref 和 registration Receipt ref 的内部 control proposal；专用 checker 审批，runtime owner 只能执行。
+4. `approve-cutover` 先通过正式 ActionType 入口确保 `ecommerce_growth_cutover` exact 定义。平台将 cutover 固定判为 R3：制单者必须有 installation apply 权限，且至少需要两名不同于制单者、彼此不同、当前仍有 installation approve 权限的 checker。故由已有 runtime owner/admin 制单并执行，新增第二个用途受限 admin checker，与已建立的第一 checker 分别批准；`user:dev=owner` 只负责通过 workspace 正式入口幂等建立 checker，不冒充安装控制制单者。proposal 精确绑定 E target、九项有序 operation、cutover group/revision、runtime revision、policy exact ref 和 registration Receipt ref。
 5. `cutover-prepare/pause/commit/validate/resume` 使用平台 `ecommerce_growth_cutover_service`，按独立不可变 intent/result 串行推进。checkpoint 只记录 legacy canonical-router/version 1；无 pending target Receipt；prepare 必须验证 first registration 与当前 approval，resume 后九项必须全部指向 E、extension、unfenced，并通过 service replay 复读。
 6. `configure-case` 使用当前 shop/profile/scope exact refs，经已完成 cutover 的 `ecommerce_growth_case_put` 建立唯一 `initial_store_analysis` DRAFT Case，再走既有 Case lifecycle 正式 transition 到 ACTIVE。脚本不得直接插 Case 表；之前被 fence 拒绝的 intent 原样保留并在 cutover 后以同一业务对象重试。
 7. `configure-reviewer`、`configure-action-types`、`configure-brief` 沿用已完成结果；另外两个 Case 动作类型与 cutover 动作类型均须 exact 匹配。该动作只补当前租户运行所需平台元数据，不宣称已解决包重装配置。
@@ -39,7 +39,7 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 - 正租户固定 `org-org/dev-project`；`dev-org/dev-project` 只做相关表零写检查。
 - TaskBrief 可由当前 tenant owner `user:dev` 冻结；Case、schedule policy 与 event control 必须以 SourceSelection 当前 actor `a0v-ecommerce-growth-1.4-runtime-owner` 执行。
 - R2 三方分离：`user:dev` 只制单，专用 checker 只审批，runtime owner 只执行。审批必须绑定当前 ActionType snapshot、payload、policy hash 与 expiration。
-- cutover 属于安装控制操作；其 proposal 不绑定业务 Task/Run/impact preview，并额外接受当前安装 APPLY/APPROVE 权限、ActionType snapshot 与 registration Receipt 联合校验。它不复用 schedule/control 的业务 R2 proposal。
+- cutover 属于安装控制操作；其 proposal 不绑定业务 Task/Run/impact preview，并额外接受当前安装 APPLY/APPROVE 权限、ActionType snapshot 与 registration Receipt 联合校验。它使用 R3 双 checker，不复用 schedule/control 的业务 R2 proposal；制单者可在批准后以 runtime owner 身份执行，但任何批准者均不得等于制单者。
 - 仅允许内部任务、审批、Case、策略、绑定和分析链状态写；无商城写、发布、触达、投流、改价、库存、订单或履约副作用。
 - 首次有效事件后的 occurrence、Run、DataRequirement 与恢复必须由独立 Runtime Host 的 Worker 自然产生。
 
