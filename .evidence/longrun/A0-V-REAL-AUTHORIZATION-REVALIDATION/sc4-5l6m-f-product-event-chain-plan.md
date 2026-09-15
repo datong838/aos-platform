@@ -33,3 +33,5 @@ F事件策略执行补充：新增scripts/a0v_growth19_product_event_policy.py�
 6. 真实启用成功后进入真实 Product 更新自然触发 Case/Run 波次；八工作台业务闭环仍未完成。
 
 克隆预演补充：现场通用账本 aos_runtime 存在历史 SELECT/INSERT/UPDATE/DELETE 授权，与 ar2_005 只允许 SELECT 的设计不一致。a0v_058 必须撤回该表三项直接写权限、保留 SELECT 和受控函数 EXECUTE，避免绕过精确 Receipt 协议；旧业务通过相同函数写入，不改变业务数据。新增“历史宽授权收敛”数据库测试。首次克隆保留 a0v_057，使用新隔离克隆与快照重新预演；不复用失败 proof。
+
+当前源窗口后继实施：在 scripts/a0v_growth19_product_event_policy.py 增加默认空的前序 Policy 读取钩子；第三窗口从已成功 v2 prepare/put 精确引用恢复前序，通过签名包 prepare_event_case_binding(previous_policy=...) 生成 Policy revision 2 与 Case version 4。新 profile 分别使用 product-authority-v3/product-event-v3/event-enable-v3 私有目录和新幂等键；只允许 approve-control/enable，禁止重复 expand。原 v1/v2 profile 行为不变。实际保存仍经产品 canonical router、当前 Case/Policy CAS 与新 AIP 审批校验。

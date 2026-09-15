@@ -30,3 +30,22 @@ def test_renewal_preserves_original_state_and_requires_exact_private_predecessor
     event=importlib.import_module('a0v_growth19_product_event_policy_renewal').load_profile()
     assert event.authority.STATE==p.STATE
     assert event.STATE==tmp_path/'product-event-v2'
+
+
+def test_third_window_rejects_unreceipted_or_mismatched_policy(profile,monkeypatch,tmp_path):
+    import json
+    f,_,_=profile;monkeypatch.setattr(f,'STATE',tmp_path)
+    p=importlib.import_module('a0v_growth19_product_event_policy_window3').load_profile()
+    assert p.authority.STATE==tmp_path/'product-authority-v3'
+    assert p.STATE==tmp_path/'product-event-v3'
+    with pytest.raises(ValueError,match='predecessor'):p.previous_policy_payload()
+    old=tmp_path/'product-event-v2';old.mkdir()
+    policy={'revision':1,'contentHash':'sha256:old'}
+    for phase,value in [('prepare',{'command':{'policy':policy}}),('put',{'receiptRef':{'resourceId':p.POLICY,'revision':2,'contentHash':'sha256:old'}})]:
+        path=old/(phase+'-result.json');path.write_text(json.dumps(value));path.chmod(0o600)
+    with pytest.raises(ValueError,match='differs'):p.previous_policy_payload()
+    path=old/'put-result.json';path.write_text(json.dumps({'receiptRef':{'resourceId':p.POLICY,'revision':1,'contentHash':'sha256:old'}}))
+    assert p.previous_policy_payload()['tenant']=={'orgId':'org-org','projectId':'dev-project'}
+    enable=importlib.import_module('a0v_growth19_product_event_enable_window3').load_profile()
+    assert enable.STATE==tmp_path/'event-enable-v3'
+    assert enable.policy_profile().STATE==p.STATE

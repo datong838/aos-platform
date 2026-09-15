@@ -19,6 +19,10 @@ def load(phase):
     return json.loads(path.read_text())
 
 
+def previous_policy_payload():
+    return None
+
+
 def prepare():
     from a0v_qyh_current_product_event_first_chain import _web_connection
     from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseStore
@@ -34,17 +38,21 @@ def prepare():
     original=case.model_dump(mode='json',by_alias=True)
     draft=authority.load('prepare')['draft'];authority.require_f(draft)
     start=datetime.fromisoformat(draft['notBefore']);end=datetime.fromisoformat(draft['expiresAt'])
+    previous_raw=previous_policy_payload()
+    previous=ProductEventSchedulePolicy.from_authority(previous_raw) if previous_raw else None
+    expected_revision=previous.revision if previous else 0
+    prior=dict(resourceType='SchedulePolicyRevision',resourceId=previous.policy_id,revision=previous.revision,contentHash=previous.content_hash,receiptId=None) if previous else None
     raw=dict(schemaVersion='aos.ecommerce.product-event-schedule-policy/v1',tenant=dict(orgId='org-org',projectId='dev-project'),
-        schedulePolicyId=POLICY,revision=1,priorRef=None,
+        schedulePolicyId=POLICY,revision=expected_revision+1,priorRef=prior,
         caseRef=dict(resourceType='BusinessInvestigationCaseRevision',resourceId=case.case_id,revision=case.revision,contentHash=case.content_hash,receiptId=None),
         sourceSelectionRef=authority.load('selection')['ref'],methodRef=original['investigationProfileRef'],
         platform='niushop',shopId='1',objectTypes=['Product'],effectiveFrom=start.isoformat(),effectiveUntil=end.isoformat(),
         maxSourceAgeSeconds=3600,recoveryWindowSeconds=900,createdBy=f.ACTOR,createdAt=start.isoformat())
     raw['contentHash']=canonical_hash(raw)
-    pair=prepare_event_case_binding(BusinessInvestigationCase.from_authority(original),ProductEventSchedulePolicy.from_authority(raw))
+    pair=prepare_event_case_binding(BusinessInvestigationCase.from_authority(original),ProductEventSchedulePolicy.from_authority(raw),previous_policy=previous)
     policy=pair.policy.authority_payload()
-    payload=dict(caseId=CASE,schedulePolicyId=POLICY,expectedPolicyRevision=0,expectedCaseVersion=case.version,policyHash=approval_hash(policy,prefixed=True))
-    command=dict(idempotencyKey=PREFIX+'-policy-put',expectedPolicyRevision=0,expectedCaseVersion=case.version,
+    payload=dict(caseId=CASE,schedulePolicyId=POLICY,expectedPolicyRevision=expected_revision,expectedCaseVersion=case.version,policyHash=approval_hash(policy,prefixed=True))
+    command=dict(idempotencyKey=PREFIX+'-policy-put',expectedPolicyRevision=expected_revision,expectedCaseVersion=case.version,
         policy={k:v for k,v in policy.items() if k!='tenant'},caseAuthority={k:v for k,v in pair.case.authority_payload().items() if k!='tenant'})
     return dict(originalCase=original,payload=payload,command=command)
 
