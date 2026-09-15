@@ -42,6 +42,8 @@ binding 证明修复后，event refresh 继续在读取 predecessor 时拒绝：
 
 predecessor 读回后，fresh draft 的 `notBefore` / `expiresAt` 已按 JSON mode 序列化为 ISO 字符串；严格 Pydantic 模型的 Python-object 入口不做字符串到 datetime 的隐式转换。event refresh 应与已验证的 selection/control 路径一致，从冻结 JSON 通过 `model_validate_json` 恢复强类型 datetime，再交给 Owner；不得放松模型 strict 配置或手工改写时间字段。
 
+首次 event refresh 已在写入前冻结 intent，后续因严格 datetime 解析失败而零写；重跑 preflight 会生成新的时间窗口，不能拿新 draft 覆盖原 intent。恢复时若 intent 已存在，必须验证 actor、三个 predecessor exact ref 与 fresh draft 除 `notBefore` / `expiresAt` 外完全一致，并继续使用原冻结 draft；Owner 仍会检查原窗口当前有效并复验 current predecessor。窗口失效时停止并另立新版本 key/intents，禁止覆盖或改时钟。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
