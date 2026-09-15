@@ -925,7 +925,7 @@ def main() -> None:
     result = action()
     freeze(args.output, result)
     canonical = STATE / f"{args.action}-result.json"
-    if canonical != args.output:
+    if canonical.resolve() != args.output.resolve():
         freeze(canonical, result)
     print(json.dumps(result, ensure_ascii=False, default=str, indent=2))
 

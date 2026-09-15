@@ -70,6 +70,12 @@ def test_private_freeze_is_exclusive(control, tmp_path):
         control.freeze_or_match(target, {"outcome": "changed"})
 
 
+def test_canonical_and_relative_output_resolve_to_one_file(control, tmp_path):
+    canonical = tmp_path / "state" / "result.json"
+    relative = tmp_path / "state" / ".." / "state" / "result.json"
+    assert canonical.resolve() == relative.resolve()
+
+
 def test_previous_result_must_be_private(control, monkeypatch, tmp_path):
     monkeypatch.setattr(control, "PREVIOUS_STATE", tmp_path)
     target = tmp_path / "selection-result.json"
