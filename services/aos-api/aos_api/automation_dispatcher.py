@@ -5,9 +5,30 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
+from pathlib import Path
+from aos_api.logging_facade import get_logger
 
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ClaimedOccurrence, ClaimTarget
 from aos_api.tenant_scope import TenantScope
+
+
+log = get_logger('aos-api.automation-dispatcher')
+
+
+def _report_held_failure(scope, occurrence_id, error):
+    """Metadata only: no exception text, source lines, locals, or payloads."""
+    frames = []
+    trace = error.__traceback__
+    while trace is not None:
+        code = trace.tb_frame.f_code
+        frames.append((Path(code.co_filename).name, code.co_name, trace.tb_lineno))
+        trace = trace.tb_next
+    try:
+        log.warning('automation_target_held scope=%s occurrence=%s error=%s locations=%s',
+            scope.key, str(occurrence_id), type(error).__name__, frames[-6:])
+    except Exception:
+        # Diagnostic sinks must not undo the already persisted reconcile-only state.
+        pass
 
 
 TargetHandler = Callable[[ClaimedOccurrence], dict[str, Any]]
@@ -31,13 +52,14 @@ def dispatch_one_occurrence(
         receipt = handler(claimed)
         if not isinstance(receipt, dict) or not receipt:
             raise ValueError("handler returned no target Receipt")
-    except Exception:
+    except Exception as error:
         authority.mark_needs_attention(
             scope,
             occurrence_id=claimed.occurrence_id,
             owner=owner,
             occurred_at=occurred_at,
         )
+        _report_held_failure(scope, claimed.occurrence_id, error)
         return False
     authority.record_target_receipt(
         scope,
@@ -70,10 +92,11 @@ async def dispatch_one_occurrence_async(
         receipt = await handler(claimed)
         if type(receipt) is not dict or not receipt:
             raise ValueError("handler returned no target Receipt")
-    except Exception:
+    except Exception as error:
         store.mark_needs_attention(
             scope, occurrence_id=claimed.occurrence_id, owner=owner, occurred_at=clock()
         )
+        _report_held_failure(scope, claimed.occurrence_id, error)
         return False
     # Cancellation propagates; a failed commit leaves the original claim for reconciliation.
     store.record_target_receipt(

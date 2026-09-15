@@ -62,3 +62,27 @@ def test_async_dispatch_does_not_retry_unknown_outcome(outcome):
     else:
         assert run() is False
         assert calls == ([] if outcome == 'no-claim' else ['handler', 'attention'])
+
+
+def test_failure_diagnostic_keeps_location_without_exception_payload(monkeypatch):
+    import aos_api.automation_dispatcher as m
+    logs=[];actions=[]
+    monkeypatch.setattr(m,'log',SimpleNamespace(warning=lambda fmt,*args:logs.append(fmt % args)))
+    claim=SimpleNamespace(occurrence_id=uuid4())
+    store=SimpleNamespace(reconcile_expired_claims=lambda *a,**k:None,claim_next=lambda *a,**k:claim,
+        mark_needs_attention=lambda *a,**k:actions.append('held'))
+    async def secret_handler(_):
+        actions.append('called')
+        raise ValueError('private-token-and-customer-body')
+    assert asyncio.run(m.dispatch_one_occurrence_async(TenantScope('org-org','dev-project'),owner='worker',
+        target=ClaimTarget('analysis',uuid4(),uuid4()),handler=secret_handler,store=store)) is False
+    assert actions==['called','held']
+    assert len(logs)==1 and 'ValueError' in logs[0] and 'secret_handler' in logs[0]
+    assert 'private-token-and-customer-body' not in logs[0]
+
+
+def test_failure_diagnostic_sink_cannot_break_held_result(monkeypatch):
+    import aos_api.automation_dispatcher as m
+    def broken(*args):raise RuntimeError('sink unavailable')
+    monkeypatch.setattr(m,'log',SimpleNamespace(warning=broken))
+    m._report_held_failure(TenantScope('org-org','dev-project'),uuid4(),ValueError('secret'))

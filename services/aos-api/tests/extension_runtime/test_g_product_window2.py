@@ -17,3 +17,11 @@ def test_source_window_uses_new_policy_revision(profile):
     assert p.POLICY_REVISION==4
     assert p.STATE.name=='product-source-v2'
     assert p.policy_profile().STATE.name=='product-event-v2'
+
+
+@pytest.mark.parametrize('phase',['approve','disable'])
+def test_window_pause_retains_unknown_without_resend(profile,tmp_path,phase):
+    p=importlib.import_module('a0v_g_window2_pause').load_profile()
+    assert p.policy.STATE.name=='product-event-v2'
+    p.STATE=tmp_path;(tmp_path/(phase+'-intent.json')).write_text('{}')
+    with pytest.raises(ValueError,match='read-only'):p.run(phase)
