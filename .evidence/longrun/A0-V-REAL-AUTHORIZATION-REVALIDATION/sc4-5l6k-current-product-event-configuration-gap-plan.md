@@ -20,6 +20,8 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 当前租户只有 `a0v-ecommerce-growth-1.4-runtime-owner=admin` 与 `user:dev=owner`。运行时 owner 必须执行且不能批准自己的执行；当前审批门的 checker 角色只接受 `admin/approver/aip_approver`，而 workspace 正式成员模型只提供 owner/admin/editor/viewer，故两名现有成员不能组成 maker/checker/executor 三方链。应由现有 tenant owner 经正式 workspace member 入口增加一个用途受限的 checker 身份，角色为 admin；不得改原两名成员角色。全局 `meta_action_type` 尚缺 `ecommerce_growth_schedule_put` 与 `ecommerce_growth_event_control`，而现有包 manifest 只有 actionTypes 权限声明，没有动作类型定义随安装落地。这些都是“可安装、可重装后无需开发者接线”的真实生命周期缺口，必须进入后续包配置计划。
 
+首次 reviewer API 调用在 18181 的 TWA memory 模式返回成功，但安装控制的 `meta_membership` 读回仍只有 runtime owner 与 `user:dev`，因此 checker 审批被 `INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED` 拒绝。真实链必须把受控 API 以既有 `AOS_TWA_STORE=pg` 启动，再经同一 workspace member API 重放 reviewer 配置，并要求 `meta_membership` exact 读回；内存 member 不能作为权限证据。已创建但未完成的 cutover proposal 必须按原 idempotency key查回复用，审批 expiry 从已存 proposal 固定推导，禁止因重试时间变化新建 proposal。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
@@ -28,7 +30,7 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 4. `approve-cutover` 先通过正式 ActionType 入口确保 `ecommerce_growth_cutover` exact 定义。平台将 cutover 固定判为 R3：制单者必须有 installation apply 权限，且至少需要两名不同于制单者、彼此不同、当前仍有 installation approve 权限的 checker。故由已有 runtime owner/admin 制单并执行，新增第二个用途受限 admin checker，与已建立的第一 checker 分别批准；`user:dev=owner` 只负责通过 workspace 正式入口幂等建立 checker，不冒充安装控制制单者。proposal 精确绑定 E target、九项有序 operation、cutover group/revision、runtime revision、policy exact ref 和 registration Receipt ref。
 5. `cutover-prepare/pause/commit/validate/resume` 使用平台 `ecommerce_growth_cutover_service`，按独立不可变 intent/result 串行推进。checkpoint 只记录 legacy canonical-router/version 1；无 pending target Receipt；prepare 必须验证 first registration 与当前 approval，resume 后九项必须全部指向 E、extension、unfenced，并通过 service replay 复读。
 6. `configure-case` 使用当前 shop/profile/scope exact refs，经已完成 cutover 的 `ecommerce_growth_case_put` 建立唯一 `initial_store_analysis` DRAFT Case，再走既有 Case lifecycle 正式 transition 到 ACTIVE。脚本不得直接插 Case 表；之前被 fence 拒绝的 intent 原样保留并在 cutover 后以同一业务对象重试。
-7. `configure-reviewer`、`configure-action-types`、`configure-brief` 沿用已完成结果；另外两个 Case 动作类型与 cutover 动作类型均须 exact 匹配。该动作只补当前租户运行所需平台元数据，不宣称已解决包重装配置。
+7. `configure-reviewer` 由 `user:dev` 经运行于 PG 模式的正式 workspace member 入口幂等建立两个用途受限的 admin checker，并从 `meta_membership` exact 读回；第一 checker 用于业务 R2，两个 checker 共同用于 cutover R3。`configure-action-types`、`configure-brief` 沿用已完成结果；两个 Case 动作类型与 cutover 动作类型均须 exact 匹配。当前补写不宣称已解决包重装配置。
 8. `approve-schedule` 由 `user:dev` 创建 R2 schedule proposal，payload 精确绑定 caseId、schedulePolicyId、policyHash、expectedPolicyRevision、expectedCaseVersion；由专用 checker 独立批准，审批窗口限制在一小时内。
 9. `put-policy` 从当前 E SourceSelection、current Case、签名包中的 `ProductEventSchedulePolicy` 与 `prepare_event_case_binding` 生成 revision 1 policy/successor，经当前 scoped canonical router 保存；不得直接写 policy 或 Case revision。
 10. `approve-control` 对完整 enable command（移除 approvalRef 后）形成独立 R2 proposal并批准；`enable-event` 经 `ecommerce_growth_event_control` 建立 current binding。
