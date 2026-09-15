@@ -1,0 +1,6 @@
+# F真实事件保存发现的两处产品缺口
+
+1. 首次put在current Case hash检查拒绝：CaseStore.transition把时间原字符串+00:00写入，hash按模型Z生成。29fb83c0修复未来写端与历史读端；没有更新历史数据。专项6passed、原事件Host数据库回归加专项18passed、恢复边界14passed。独立检查Policy0/command receipt0/Case仍ACTIVE r2。
+2. put-recovered通过Case校验后，在exact schedule approval绑定检查拒绝。真实AIP proposal与approval的proposalHash一致、payload exact五项完全一致，action_binding_hash为空（SQL比较返回NULL）。AipActionStore._internal_control_binding只为cutover类型生成内部绑定，事件三类只配置了risk floor而未接通binding。执行端拒绝正确，不能伪造hash或回填旧审批。
+
+当前保存未成功，F Policy尚未启用，15分钟来源授权将自然过期。下一波完整补事件三类内部审批绑定及maker/checker当前性，测试真实AIP Store写入再进入正式事件服务。之后重新形成F后继selection/control、Case/Policy草案和新审批，不篡改已过期授权或失败intent。
