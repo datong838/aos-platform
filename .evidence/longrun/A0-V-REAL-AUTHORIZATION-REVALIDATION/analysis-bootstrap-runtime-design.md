@@ -1097,3 +1097,11 @@ Red重建Session仍进入Pending，1失败7.57s（/tmp/sc4-e5c-red.log）。隔�
 一次并行累计回归在autouse迁移ALTER ROLE aos_runtime发生tuple concurrently updated，138项断言均未执行（/tmp/sc4-e5c-regression.log）；检查无其他pytest后串行重跑，138 passed /4.76s（/tmp/sc4-e5c-regression-final.log）。方案已更正为同一PG实例所有pytest串行，包括纯合同（默认亦初始化一次性库）；没有用产品改动掩盖环境错误。各正常组7项既有warnings。AR2 1951/192/93错误列表空（/tmp/sc4-e5c-closure.log），编译/diff和memory validate通过。
 
 全部业务测试18432隔离；主库未升级、未真实读取商城或调用Provider，未push，230 L0挂起，用户原改动保护。真实原初始化/状态/统一Store已组合，完整十二源交付stage仍named；不能称真实首链完成。下一波e6组合实际完整十二源Owner与原初始化Task/Run/Checkpoint/Requirement，先核对两组fixture的同连接/命名空间和原Owner边界，不能跨连接伪造原子性或复制任务状态。之后Outbox自然自动消费、主升级安装、真实首链/八场景/连续观察及发布判断继续。
+
+## 2026-09-15 SC4-5l6e6e 原初始化到统一续跑完整组合
+
+基线d460879e。新增单一全结构PG组合测试，原ProductEventAnalysisService、DataRequirement、完整十二源组完成、Source/Query/Quality/Business Evidence、Brief/Bundle、Readiness/Fulfillment与统一AnalysisRuntimeReceipt已在同一原谱系贯通。真实事务边界为初始化/Pending/occurrence先提交，独立源worker完成，恢复事务再从新SERIALIZABLE快照读取；能力目录由控制面建立，运行连接不获得写目录权限。
+
+正向、经营证据撤销拒绝最终2 passed/168.44s；前者同一TaskRun/业务Run各只前进一版、12调度终态、13 Store Receipt、源读一次并可重建只读回放，后者保持paused/WAITING_DATA且无统一续跑回执。AR2 1952/192/93错误列表空，memory validate GREEN。详细证据见sc4-5l6e6e-native-resume-chain-verification.md。
+
+商城源、安装签名和Provider依赖仍为named fixture，主库/真实安装/模型/经营任务均未动作，不能称自然首链完成。下一波SC4-5l6f实现原DataRequirement Outbox固定消费者，让Pending自动路由十二源完成、交付和统一续跑，覆盖重启、重复、unknown、撤权和租户隔离；之后才进入主升级与栖月汇真实八工作台观察。

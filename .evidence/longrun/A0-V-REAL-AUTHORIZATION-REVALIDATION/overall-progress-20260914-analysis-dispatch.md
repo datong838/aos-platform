@@ -704,3 +704,9 @@ AR2 1951/192/93五类错误为空（/tmp/sc4-e6c-closure.log）。主库未迁�
 新鲜验证：完整组4 passed/179.15s；只读不写补强1 passed/69.74s；e6d1回归2 passed/123.45s；原qyh单路调度26 passed/3.53s；均7项既有warnings。AR2 ar2-7为1952/192/93且五类错误空，编译/diff通过。详细见sc4-5l6e6d2-group-completion-verification.md。
 
 本波仍是18432私有全结构，源/安装current为named；无主迁移、真实商城、模型、真实Task或发布作用。下一波e6e组合实际原Task/TaskRun/Checkpoint/Requirement初始化、Pending、完整组收尾、快照证据与统一恢复，消除剩余named阶段拼接；其后继续Outbox自然消费、安装接线、主升级、真实首链、八工作台与连续观察。
+
+## 2026-09-15 SC4-5l6e6e 原初始化到统一续跑完整组合
+
+基线d460879e。新增全结构PG组合测试，将原产品事件初始化产生的Case/Run/Task/TaskRun/Checkpoint、Pending DataRequirement、十二源组完成、Source/Query/Quality/Business Evidence、Brief/Bundle、SourceReadiness/Fulfillment与统一AnalysisRuntimeReceipt接在同一原谱系。初始化/Pending/occurrence先提交，独立源worker随后完成，恢复从新SERIALIZABLE快照读取；命名能力绑定由控制面连接建立，运行连接保持aos_runtime。
+
+最终2 passed/168.44s，正向同一TaskRun与业务Run各前进一版、12调度终态、13 Store Receipt、源读取一次且重建只读回放；撤销当前Business Evidence时仍paused/WAITING_DATA且无统一续跑回执。AR2 1952/192/93错误列表空，memory validate GREEN。商城源、安装签名和Provider仍为named fixture，主库和真实经营未动作。下一波SC4-5l6f接原DataRequirement Outbox固定消费者，删除开发者直接调用各阶段的接线方式，覆盖重启、重复投递、unknown、撤权与租户隔离，然后进入主升级、真实安装和栖月汇真实八工作台观察。
