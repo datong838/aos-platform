@@ -1566,3 +1566,17 @@ The worker is app-lifecycle Host composition. It enumerates only current live in
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_data_requirement_worker.py` | Host原路径 | Bounded current-live claim/reconcile, fixed coordinator invocation and dual-Receipt settlement; no public or external effect grant | `d8237074b50ddd0b45863228c9e993da6ce679ee269440f6679ba16dff94aab8` |
+
+### SC4-5l6l ProductEvent signed successor ownership
+
+The currently installed signed growth 1.8 predates the reviewed ProductEvent and analysis-bootstrap domain modules. A new immutable 1.9 candidate must carry those rules inside the package; Host keeps only installation, dispatch, approval, transaction and tenant authority. The candidate grants no execution by itself. Optional event-control dispatch expansion remains a separate Host receipt-first lifecycle and may not be implemented as package-side or manual database wiring.
+
+| file | destination | boundary | preHash |
+| --- | --- | --- | --- |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_compilation_blueprint.py` | copy into immutable growth 1.9 candidate | Pure installed analysis compilation blueprint; no Host/database authority | `efad9be76309d29cd8d4987f72c4b1625829257cde5416fab1b87dfc287512a8` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/analysis_start_operation.py` | copy into immutable growth 1.9 candidate | Pure installed analysis-start command construction; no execution grant | `c324568193aab81ef5cb2495ec332d22b77e842c7c7433a2e6e17f0cd4684d48` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_binding.py` | copy into immutable growth 1.9 candidate | Pure policy/Case binding and lineage validation | `f5daff339d18214864a78a01767d6dc7b8f2a6fdd9edfb8ad6d40e45e6abe011` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_command.py` | copy into immutable growth 1.9 candidate | Pure ProductEvent save command construction | `44b216eee44d4dceb6700e242c5630bd9b2320f4e8ef4f01ce973e7fcbb371d3` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_control.py` | copy into immutable growth 1.9 candidate | Pure enable/disable command and Receipt verification | `b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py` | copy into immutable growth 1.9 candidate | Pure ProductEvent schedule policy model | `07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed` |
+| `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_application.py` | replace 1.8 candidate copy in immutable 1.9 only | Package application composition with optional event-control port; no Host implementation | `828bdac469a72f3a99776539655df0e358858b4ad09f0d5eda380d3740544a9f` |
