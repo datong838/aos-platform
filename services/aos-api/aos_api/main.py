@@ -411,6 +411,12 @@ async def _lifespan_body(_app: FastAPI):
             event_task=asyncio.create_task(product_event_worker.serve(extension_runtime_stop,
                 host_ready=lambda:not extension_runtime_task.done()),name="product-event-consumption")
             _app.state.runtime_background_tasks.append(event_task)
+        from aos_api.ecommerce_analysis_data_requirement_worker import build_analysis_data_requirement_worker
+        analysis_data_worker=build_analysis_data_requirement_worker(_app.state.extension_runtime_control_plane)
+        if analysis_data_worker is not None:
+            analysis_data_task=asyncio.create_task(analysis_data_worker.serve(extension_runtime_stop,
+                host_ready=lambda:not extension_runtime_task.done()),name="analysis-data-requirement")
+            _app.state.runtime_background_tasks.append(analysis_data_task)
 
     else:
         log.info(

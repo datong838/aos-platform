@@ -25,6 +25,8 @@ from aos_api.data_requirement_outbox_store import (
 from aos_api.ecommerce_analysis_data_requirement_route import AnalysisDataRequirementRouteReader
 from aos_api.ecommerce_analysis_snapshot_coordinator import AnalysisSnapshotCoordinator
 from aos_api.ecommerce_analysis_snapshot_policy_set import AnalysisSnapshotPolicySetOwner
+from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+from aos_api.pipeline_control_service import PipelineControlServiceFactory
 
 
 def _runtime_connect(conn):
@@ -207,3 +209,25 @@ def test_claim_route_is_the_only_input_to_fixed_coordinator(chain_case, completi
             runtime.execute('''UPDATE data_requirement_outbox_delivery SET state='failed'
                 WHERE outbox_id=%s''', (claim.outbox_id,))
         runtime.rollback()
+
+
+def test_production_factory_composes_coordinator_from_original_analysis(chain_case, monkeypatch):
+    conn, state, analysis, _prepared_session, _root, _requirement = chain_case
+    conn.rollback()
+    connect_factory = _runtime_connect(conn)
+    claim = DataRequirementOutboxStore(connect_factory).claim_next(analysis.scope,
+        topic='data.requirement.request', worker_id='factory-composition-test',
+        lease_token='factory-composition-token', lease_seconds=300)
+    route = AnalysisDataRequirementRouteReader(
+        claims=analysis.source.reader._journal._claims,
+        connect_factory=connect_factory).read(analysis.scope, claim)
+    factory = object.__new__(PipelineControlServiceFactory)
+    monkeypatch.setattr(PipelineControlServiceFactory, 'build_event_analysis',
+        lambda self, scope, **kwargs: analysis)
+    coordinator = factory.build_analysis_snapshot_coordinator(analysis.scope,
+        route=route, live_directory=LivePreparedJobDirectory(), markings=('internal',),
+        store=state['completion']._store)
+    assert type(coordinator) is AnalysisSnapshotCoordinator
+    assert coordinator.analysis is analysis
+    assert coordinator.completion._claims is analysis.source.reader._journal._claims
+    assert coordinator.store is state['completion']._store

@@ -125,6 +125,24 @@ def test_store_claim_and_ack_use_exact_fence_and_commit_once_each():
     assert "data_requirement_outbox_ack_biw2_004" in connection.calls[1][0]
 
 
+def test_store_reads_original_unknown_attempt_without_claim_or_commit():
+    row = {
+        "outbox_id": "outbox-unknown", "requirement_id": "requirement-unknown",
+        "requirement_revision": 2, "event_id": "event-unknown",
+        "topic": "data.requirement.request", "payload": {"eventId": "event-unknown"},
+        "content_hash": "d" * 64, "attempt": 3, "lease_token": "unknown-token",
+        "lease_expires_at": NOW - timedelta(minutes=5),
+    }
+    connection = Connection([row])
+    claim = DataRequirementOutboxStore(factory(connection)).read_unknown_next(
+        SCOPE, topic="data.requirement.request")
+    assert claim is not None
+    assert (claim.outbox_id, claim.attempt, claim.lease_token, claim.content_hash) == (
+        "outbox-unknown", 3, "unknown-token", "sha256:" + "d" * 64)
+    assert "d.state='unknown'" in connection.calls[0][0]
+    assert connection.commits == 0
+
+
 def test_store_fails_closed_for_invalid_lease_and_stale_fence():
     untouched = Connection([])
     store = DataRequirementOutboxStore(factory(untouched))

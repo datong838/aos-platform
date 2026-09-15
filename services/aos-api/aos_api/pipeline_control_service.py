@@ -125,3 +125,24 @@ class PipelineControlServiceFactory:
             package_id='solution.ecommerce.growth',markings=markings,connect_factory=connect_serializable,
             installation_store=self.installation_store,live_directory=live_directory)
         return ProductEventAnalysisService(source_context=source,invoker=growth)
+
+    def build_analysis_snapshot_coordinator(self,scope,*,route,live_directory,markings,store):
+        """Build the one fixed coordinator from a server-resolved original route."""
+        from aos_api.ecommerce_analysis_data_requirement_route import AnalysisDataRequirementRoute
+        from aos_api.ecommerce_analysis_snapshot_coordinator import AnalysisSnapshotCoordinator
+        from aos_api.ecom_consistency_store import EcomConsistencyStore
+        from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+        from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+        from aos_api.phase5_pipeline_engine import get_engine
+        from aos_api.pipeline_snapshot_group_completion import PipelineSnapshotGroupCompletion
+        if (type(route) is not AnalysisDataRequirementRoute
+                or type(live_directory) is not LivePreparedJobDirectory
+                or type(store) is not EcomConsistencyStore):
+            raise TypeError('exact lifecycle snapshot coordinator inputs required')
+        analysis=self.build_event_analysis(scope,actor=route.actor,run_id=route.source_run_id,
+            control_ref=route.source_control_ref,installation_id=route.installation_id,
+            generation=route.generation,live_directory=live_directory,markings=markings,store=store)
+        claims=analysis.source.reader._journal._claims
+        completion=PipelineSnapshotGroupCompletion(claims=claims,store=store,
+            connect=runtime_worker_connection,eng=get_engine())
+        return AnalysisSnapshotCoordinator(analysis=analysis,completion=completion,store=store)

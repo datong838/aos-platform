@@ -85,6 +85,35 @@ class DataRequirementOutboxStore:
             raise
         if row is None:
             return None
+        return self._claim_from_row(row)
+
+    def read_unknown_next(
+        self, scope: TenantScope, *, topic: str
+    ) -> DataRequirementOutboxClaim | None:
+        """Read one immutable unknown attempt for exact Receipt reconciliation."""
+        self._required("topic", topic)
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT o.outbox_id,o.requirement_id,o.requirement_revision,o.event_id,
+                              o.topic,o.payload,o.content_hash,d.attempt,d.lease_token,
+                              d.lease_expires_at
+                         FROM public.data_requirement_outbox_delivery d
+                         JOIN public.data_requirement_outbox o
+                           USING(org_id,project_id,outbox_id)
+                        WHERE d.org_id=%s AND d.project_id=%s AND d.state='unknown'
+                          AND o.topic=%s
+                        ORDER BY o.created_at,o.outbox_id
+                        LIMIT 1""",
+                    (*scope.key, topic),
+                ).fetchone()
+        except psycopg.Error as exc:
+            self._translate(exc)
+            raise
+        return None if row is None else self._claim_from_row(row)
+
+    @staticmethod
+    def _claim_from_row(row: Any) -> DataRequirementOutboxClaim:
         return DataRequirementOutboxClaim(
             outbox_id=str(row["outbox_id"]),
             requirement_id=str(row["requirement_id"]),

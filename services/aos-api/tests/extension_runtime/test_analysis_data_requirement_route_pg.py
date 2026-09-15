@@ -74,6 +74,21 @@ def test_claim_routes_to_exact_original_analysis_and_snapshot_group(chain_case):
     assert route.generation == str(analysis.invoker.generation)
     assert session.command["requirementRef"]["resourceId"] == claim.requirement_id
 
+    outbox = DataRequirementOutboxStore(connect_factory)
+    assert outbox.mark_unknown(analysis.scope, claim.outbox_id, claim.lease_token,
+        reason_code="COORDINATION_RESULT_UNKNOWN").state == "unknown"
+    unknown = outbox.read_unknown_next(analysis.scope, topic="data.requirement.request")
+    assert unknown == claim
+    assert AnalysisDataRequirementRouteReader(
+        claims=analysis.source.reader._journal._claims,
+        connect_factory=connect_factory,
+    ).read_unknown(analysis.scope, unknown) == route
+    with pytest.raises(ValueError, match="no longer current"):
+        AnalysisDataRequirementRouteReader(
+            claims=analysis.source.reader._journal._claims,
+            connect_factory=connect_factory,
+        ).read(analysis.scope, unknown)
+
 
 def test_claim_payload_or_current_head_drift_fails_before_route_is_returned(chain_case):
     conn, _state, analysis, _session, _root, requirement = chain_case

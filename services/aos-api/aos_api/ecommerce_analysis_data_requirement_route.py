@@ -61,7 +61,7 @@ class AnalysisDataRequirementRouteReader:
             raise ValueError("DataRequirement Outbox payload differs from its claim")
 
     @staticmethod
-    def _outbox_current(conn, scope, claim):
+    def _outbox_current(conn, scope, claim, *, expected_state):
         row = conn.execute(
             """SELECT o.requirement_id,o.requirement_revision,o.event_id,o.topic,o.payload,
                       o.content_hash,d.state,d.attempt,d.lease_token,d.lease_expires_at,
@@ -80,11 +80,11 @@ class AnalysisDataRequirementRouteReader:
             or row["topic"] != claim.topic
             or row["payload"] != claim.payload
             or "sha256:" + str(row["content_hash"]).strip() != claim.content_hash
-            or row["state"] != "claimed"
+            or row["state"] != expected_state
             or int(row["attempt"]) != claim.attempt
             or row["lease_token"] != claim.lease_token
             or row["lease_expires_at"] != claim.lease_expires_at
-            or row["lease_current"] is not True
+            or (expected_state == "claimed" and row["lease_current"] is not True)
         ):
             raise ValueError("DataRequirement Outbox claim is no longer current")
 
@@ -120,13 +120,13 @@ class AnalysisDataRequirementRouteReader:
         InvestigationExactRef.model_validate(reference)
         return saved
 
-    def read(self, scope, claim):
+    def _read(self, scope, claim, *, expected_state):
         if type(scope) is not TenantScope:
             raise TypeError("exact DataRequirement route tenant required")
         self._validate_claim(claim)
         with self._connect(scope) as conn:
             tx = HostTransaction(conn)
-            self._outbox_current(conn, scope, claim)
+            self._outbox_current(conn, scope, claim, expected_state=expected_state)
             factory = TransactionBoundConnectFactory(tx, scope)
             reference = InvestigationExactRef(
                 resource_type="DataRequirementRevision",
@@ -182,3 +182,10 @@ class AnalysisDataRequirementRouteReader:
                 installation_id=occurrence["installationId"],
                 generation=occurrence["generation"],
             )
+
+    def read(self, scope, claim):
+        return self._read(scope, claim, expected_state="claimed")
+
+    def read_unknown(self, scope, claim):
+        """Rebuild only the immutable route of the same unknown delivery attempt."""
+        return self._read(scope, claim, expected_state="unknown")
