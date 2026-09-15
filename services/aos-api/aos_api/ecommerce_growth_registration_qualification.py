@@ -32,7 +32,8 @@ def require_growth_registration_claims(selected: ResolvedBundle) -> str:
         raise ValueError(error)
     if set(_API_PATHS) != set(ECOMMERCE_GROWTH_OPERATIONS):
         raise ValueError(error)
-    claims = [claim for claim in selected.contributions if claim.kind == 'api']
+    claims = [claim for claim in selected.contributions
+              if claim.kind == 'api' and claim.operation_id in _API_PATHS]
     if (len(claims) != len(_API_PATHS)
             or {claim.operation_id for claim in claims} != set(_API_PATHS)
             or any(claim.method != 'POST' or claim.mode != 'exclusive'

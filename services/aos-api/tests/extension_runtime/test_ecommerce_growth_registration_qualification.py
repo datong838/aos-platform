@@ -33,7 +33,7 @@ def test_current_candidate_declarations_are_complete_and_unchanged():
     assert value.model_dump(mode='json', by_alias=True) == before
 
 
-@pytest.mark.parametrize('case', ['missing', 'duplicate', 'method', 'path', 'operation', 'extra-api', 'package', 'kind'])
+@pytest.mark.parametrize('case', ['missing', 'duplicate', 'method', 'path', 'operation', 'package', 'kind'])
 def test_claim_drift_rejected(case):
     data = selected().model_dump(mode='json', by_alias=True)
     claims = data['contributions']
@@ -43,12 +43,21 @@ def test_claim_drift_rejected(case):
     elif case == 'method': claims[index]['method'] = 'GET'
     elif case == 'path': claims[index]['path'] = '/ecommerce/growth/other'
     elif case == 'operation': claims[index]['operationId'] = 'other_operation'
-    elif case == 'extra-api':
-        claims.append(dict(kind='api', method='POST', path='/other', operationId='other_operation', mode='exclusive'))
     elif case == 'package': data['id'] = 'solution.other'
     elif case == 'kind': data['kind'] = 'DomainPack'
     with pytest.raises(ValueError):
         require_growth_registration_claims(ResolvedBundle.model_validate(data))
+
+
+def test_independent_signed_api_does_not_change_nine_operation_qualification_scope():
+    value = selected()
+    data = value.model_dump(mode='json', by_alias=True)
+    data['contributions'].append(dict(
+        kind='api', method='POST', path='/ecommerce/growth/workspace/view',
+        operationId='analyst_workspace_view_v1', mode='exclusive'))
+    extended = ResolvedBundle.model_validate(data)
+    assert require_growth_registration_claims(extended).startswith('sha256:')
+    assert require_growth_registration_claims(extended) != require_growth_registration_claims(value)
 
 
 @pytest.mark.parametrize('case', ['valid', 'missing-backend', 'wrong-hash', 'wrong-claims', 'revoked'])
