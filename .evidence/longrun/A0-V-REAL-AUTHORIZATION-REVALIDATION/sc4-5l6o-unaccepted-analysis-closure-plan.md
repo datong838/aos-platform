@@ -26,3 +26,7 @@ G事件入口fence成功（group13）；shrink因21个unknown dispatch attempts�
 隔离PG回归56 passed（结案、原event-dispatch生命周期、原occurrence）；请求契约另8 passed。锁竞争用真实PG行锁验证阻塞拒绝；存在目标Receipt、trigger Run或确定性Run均拒绝。克隆恢复到a0v_059后迁移a0v_060完成，全既有表行指纹未变、新Receipt表为空。主库仍a0v_059，仍21unknown/109pending，Case Run=0。
 
 后续：提交代码与证据后，正式迁移主库、经服务关闭21项并逐项回读；审查原shrink失败意图与无Receipt证明，再恢复同一exact shrink。完成G退休后才切换诊断Host。此证据不代表真实经营首链完成。
+
+## 正式执行结果（06:48）
+主库a0v_060已部署，迁移事务542张既有表指纹未变，新增Receipt表为空；备份后至迁移前仅Host生命周期记录继续自然更新，已独立记入changedSinceBackup，不冒充全时段静止。21条unknown经正式服务全部结案并回读，109pending保持，Case Run0；未接受业务、不产生对外作用。
+旧shrink恢复被已过期审批事件拒绝，目标Receipt数0。生成新精确审批后shrink成功，Receipt c6e3f6ed-d350-4ce5-87da-a241863e3aaa，group14，running/claimed/unresolved三项均0。历史事件入口及分析回执保留。后继代码4a41e5b5继续G关闭/H重装。
