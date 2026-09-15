@@ -1,4 +1,4 @@
-"""Fixed current ecommerce profile: growth 1.8 and Niushop 1.23."""
+"""Fixed current ecommerce profile: growth 1.9 and Niushop 1.23."""
 from __future__ import annotations
 
 import importlib.util
@@ -17,6 +17,8 @@ CURRENT_NIUSHOP = (
     "1.23.0",
     "ecommerce_niushop",
 )
+OLD_GROWTH = ("solution.ecommerce.growth/1.8.0", "solution.ecommerce.growth", "1.8.0", "ecommerce_growth")
+CURRENT_GROWTH = ("solution.ecommerce.growth/1.9.0", "solution.ecommerce.growth", "1.9.0", "ecommerce_growth")
 
 
 def _load(path: Path, name: str):
@@ -37,18 +39,20 @@ def load_builder():
     builder = ui_profile.load_builder()
     if (
         builder.RUNTIME_CASES.count(OLD_NIUSHOP) != 1
+        or builder.RUNTIME_CASES.count(OLD_GROWTH) != 1
         or builder.ALL_CASES[: len(builder.RUNTIME_CASES)] != builder.RUNTIME_CASES
         or builder.EXPECTED_RUNTIME_OPERATION_COUNT != 13
     ):
         raise RuntimeError("growth 1.8 candidate profile drifted")
     builder.RUNTIME_CASES = tuple(
-        CURRENT_NIUSHOP if item == OLD_NIUSHOP else item
+        CURRENT_NIUSHOP if item == OLD_NIUSHOP else (CURRENT_GROWTH if item == OLD_GROWTH else item)
         for item in builder.RUNTIME_CASES
     )
     builder.ALL_CASES = tuple(
-        CURRENT_NIUSHOP if item == OLD_NIUSHOP else item
+        CURRENT_NIUSHOP if item == OLD_NIUSHOP else (CURRENT_GROWTH if item == OLD_GROWTH else item)
         for item in builder.ALL_CASES
     )
+    builder.EXPECTED_RUNTIME_OPERATION_COUNT = 14
     return builder
 
 

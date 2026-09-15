@@ -1,0 +1,116 @@
+{
+  "buildReceipt": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260916/state/growth-1.9-current-package/build/build-receipt.json",
+  "buildReceiptHash": "sha256:e2dbe20d85b1a5f368d872e97711f529ec27565d62e33d966a5599a21dd39d05",
+  "effects": {
+    "externalPublicationCount": 0,
+    "installationMutationCount": 0,
+    "providerInvocationCount": 0,
+    "registryPublishCount": 0
+  },
+  "ephemeralSignaturePersisted": false,
+  "gitHead": "1128d389cd91d87ea7135b55742e36a21efde935",
+  "mode": "qualification",
+  "moduleCount": 8,
+  "outcome": "QUALIFICATION_GREEN",
+  "outputTreeHash": "sha256:4756ec28f4d7cc4c8670c572df5b0c0e7f1b6ac33e1882c89d2a6bc0e66dcd2c",
+  "resolved": [
+    {
+      "id": "domain.ecommerce.core",
+      "reason": "dependency",
+      "version": "1.3.0"
+    },
+    {
+      "id": "platform.ecommerce.niushop",
+      "reason": "requested",
+      "version": "1.23.0"
+    },
+    {
+      "id": "solution.ecommerce.growth",
+      "reason": "requested",
+      "version": "1.9.0"
+    },
+    {
+      "id": "solution.ecommerce.operations-base",
+      "reason": "requested",
+      "version": "1.2.0"
+    }
+  ],
+  "runtimeAdmissions": {
+    "domain.ecommerce.core": {
+      "imageId": "sha256:bc85b368fe05157da96d69de7c0a5f0ea1285d56dbdbadf535d92dc62fb385ce",
+      "packageHash": "sha256:a7e986882ea1e121fe510d662540f8f153bab1e862b0335ebcec3b7e2c1ed872"
+    },
+    "platform.ecommerce.niushop": {
+      "imageId": "sha256:3cb783e202e739ab7256b77115456a8420acff7345ab04bfd4660daa46bfbbdb",
+      "packageHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117"
+    },
+    "solution.ecommerce.growth": {
+      "imageId": "sha256:cf49b36a2dc5a6e7c1d89126efbcbfaab7641e78dd2bf7fed81f5c93ac8adbca",
+      "packageHash": "sha256:b52eb830e85d9fb3bc2353de59c460109e0040e01466c94dad54fd5a6db6c364"
+    }
+  },
+  "runtimeMemberCount": 3,
+  "runtimeSessions": {
+    "domain.ecommerce.core": {
+      "cleanup": "released",
+      "contributionCount": 1,
+      "heartbeat": "alive",
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260916/state/growth-1.9-current-package/build/qualification-session-journal/9106f392ac4742ffb4caf9921a9bcca9.jsonl",
+      "registration": "exact"
+    },
+    "platform.ecommerce.niushop": {
+      "cleanup": "released",
+      "contributionCount": 2,
+      "heartbeat": "alive",
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260916/state/growth-1.9-current-package/build/qualification-session-journal/e22acd5847a94300aef53b8bd30ab8f3.jsonl",
+      "registration": "exact"
+    },
+    "solution.ecommerce.growth": {
+      "cleanup": "released",
+      "contributionCount": 25,
+      "heartbeat": "alive",
+      "heartbeatChecks": 2048,
+      "journal": "/Users/ddt/work/projects/ai_agent/.aos-recovery-20260916/state/growth-1.9-current-package/build/qualification-session-journal/1b1c7c58a4754355af7dca65c40375e2.jsonl",
+      "readProbe": {
+        "caseCount": 1,
+        "evidence": "qualification-fixture-only",
+        "executionAllowed": false,
+        "fixtureHash": "sha256:88d2e10d98ececd832bf6f4e07cbde53b1c5eae31be8ccb34dfe05cd77a3bdd9",
+        "method": "analyst_workspace_view_v1",
+        "payloadHash": "sha256:cddd0863f38441b5a14e100464b3bfd5aace011007864ed3e291c96506192730",
+        "resultHash": "sha256:a352f97d7fc23f2553442dba29276783f2eb2bc589b537940bd84c4ebacc7e4d",
+        "runCount": 1
+      },
+      "registration": "exact"
+    }
+  },
+  "schemaRequirements": {
+    "domain.ecommerce.core": {
+      "migrationHash": "sha256:d0c32b11ad733dd89e1f439a2d519a8716afe9d4bbfe8ce7ce8b01fa6cb933ee",
+      "packageId": "bundle-de982d07b154219ff69d3d3e8e3e1e172937bd5d403afada17bf898e2e372328",
+      "schemaVersion": "aos-platform-a0v-001"
+    },
+    "platform.ecommerce.niushop": {
+      "migrationHash": "sha256:53bf3754b35dd941fe5410a5504035a73da716ef07c1d6c4d4184ea8a14389c2",
+      "packageId": "bundle-98d43bb435a5fa7b5d84d7861149d784f7147d25cb28101fe21e3b647d37d78d",
+      "schemaVersion": "aos-platform-a0v-001"
+    },
+    "solution.ecommerce.growth": {
+      "migrationHash": "sha256:0ae03d2d1701ca1843565d41be75ffb181133ad208b7d2188e792ab53bb6dee4",
+      "packageId": "bundle-b88d3561086b0bbf1f2dc64e04020c26b662d6b18b876a668ab6e8b4398ac7df",
+      "schemaVersion": "aos-platform-a0v-001"
+    }
+  },
+  "snapshotHash": "sha256:7953498c403718449b9b68bf467efcd57841f131fafcb5bd5e68196e854b2777",
+  "tamperRejections": [
+    "imageIndexBytes",
+    "imageDigest",
+    "dependencyLock",
+    "sbom",
+    "backend",
+    "schemaCompatibility",
+    "schemaRequirements"
+  ]
+}

@@ -26,7 +26,7 @@ def _qualified_document():
         for key, count in (
             ("domain.ecommerce.core", 1),
             ("platform.ecommerce.niushop", 2),
-            ("solution.ecommerce.growth", 24),
+            ("solution.ecommerce.growth", 25),
         )
     }
     sessions["solution.ecommerce.growth"]["readProbe"] = {
@@ -43,18 +43,18 @@ def _qualified_document():
 
 
 def test_successor_uses_exact_parent_and_current_coordinates(successor):
-    assert successor.EXPECTED_OLD_COUNT == 15
-    assert successor.EXPECTED_NEW_COUNT == 16
-    assert "signed-bundles-current-ecommerce" in str(successor.OLD_ROOT)
-    assert "niushop-1.23-current" in str(successor.NEW_ROOT)
+    assert successor.EXPECTED_OLD_COUNT == 16
+    assert successor.EXPECTED_NEW_COUNT == 17
+    assert "niushop-1.23-current" in str(successor.OLD_ROOT)
+    assert "growth-1.9-current" in str(successor.NEW_ROOT)
     assert successor.NEW_ROOT != successor.OLD_ROOT
     assert successor.VERSIONS == {
         "domain.ecommerce.core": "1.3.0",
         "platform.ecommerce.niushop": "1.23.0",
-        "solution.ecommerce.growth": "1.8.0",
+        "solution.ecommerce.growth": "1.9.0",
         "solution.ecommerce.operations-base": "1.2.0",
     }
-    assert successor.legacy()._builder().preflight()["operationCount"] == 13
+    assert successor.legacy()._builder().preflight()["operationCount"] == 14
 
 
 @pytest.mark.parametrize("drift", ["cleanup", "heartbeat", "count", "probe"])

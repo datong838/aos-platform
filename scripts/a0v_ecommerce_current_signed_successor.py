@@ -34,33 +34,42 @@ def load_successor():
     helper = successor.legacy()
     helper._builder = profile.load_builder
     successor.legacy = lambda: helper
-    recovery = successor.ROOT.parent / ".aos-recovery-20260915"
-    successor.BUILD = recovery / "state/niushop-1.23-current-package/build/candidates"
-    successor.BUILD_RECEIPT = recovery / "state/niushop-1.23-current-package/build/build-receipt.json"
-    successor.QUALIFICATION = recovery / "state/niushop-1.23-current-package/build/qualification-receipt.json"
-    successor.STATE = recovery / "state/niushop-1.23-current-package/registry"
+    recovery = successor.ROOT.parent / ".aos-recovery-20260916"
+    successor.BUILD = recovery / "state/growth-1.9-current-package/build/candidates"
+    successor.BUILD_RECEIPT = recovery / "state/growth-1.9-current-package/build/build-receipt.json"
+    successor.QUALIFICATION = recovery / "state/growth-1.9-current-package/build/qualification-receipt.json"
+    successor.STATE = recovery / "state/growth-1.9-current-package/registry"
     successor.OLD_ROOT = (
         successor.ROOT.parent
-        / ".aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce"
+        / ".aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current"
     )
-    successor.NEW_ROOT = successor.STATE / "signed-bundles-niushop-1.23-current"
+    successor.NEW_ROOT = successor.STATE / "signed-bundles-growth-1.9-current"
     successor.VERSIONS = dict(
         successor.VERSIONS,
         **{
             "platform.ecommerce.niushop": "1.23.0",
-            "solution.ecommerce.growth": "1.8.0",
+            "solution.ecommerce.growth": "1.9.0",
         },
     )
-    successor.EXPECTED_OLD_COUNT = 15
-    successor.EXPECTED_NEW_COUNT = 16
+    successor.EXPECTED_OLD_COUNT = 16
+    successor.EXPECTED_NEW_COUNT = 17
     successor.EXTRA_BUILD_PATHS = (
         "scripts/build_ecommerce_ui_candidates.py",
         "scripts/build_ecommerce_current_candidates.py",
+        "scripts/prepare_ecommerce_growth_1_9_candidate.py",
         "scripts/fixtures/analyst-workspace-read-probe.json",
     )
-    successor.ACTOR_PREFIX = "a0v-niushop-1.23-current-20260915"
-    successor.SUCCESS_OUTCOME = "NIUSHOP_1_23_CURRENT_REGISTRY_GREEN"
-    successor.require_sessions = ui_successor.require_sessions
+    successor.ACTOR_PREFIX = "a0v-growth-1.9-current-20260916"
+    successor.SUCCESS_OUTCOME = "GROWTH_1_9_CURRENT_REGISTRY_GREEN"
+    base_require_sessions = ui_successor.require_sessions
+    def require_sessions(document):
+        patched = json.loads(json.dumps(document))
+        growth = (patched.get("runtimeSessions") or {}).get("solution.ecommerce.growth") or {}
+        if growth.get("contributionCount") != 25:
+            raise ValueError("growth 1.9 requires 25 runtime contributions")
+        growth["contributionCount"] = 24
+        base_require_sessions(patched)
+    successor.require_sessions = require_sessions
     return successor
 
 
