@@ -24,6 +24,8 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 PG 模式重放又暴露 `ensure_tenant_catalog_schema()` 错误继承 HTTP 请求的 tenant context：无参 `connect()` 因 contextvar 自动应用 scope 并降为 `aos_runtime`，随后 `CREATE TABLE IF NOT EXISTS` 被 schema 权限拒绝，成员 API 仍只更新内存。schema bootstrap 属于控制面 DDL，必须用 `connect(inherit_scope=False)`；实际 member upsert 继续使用当前租户事务，不扩大 runtime 角色权限。
 
+R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover prepare 仍报告 approval 不存在。原因是 Store 以 `aos_extension_maintainer` 查询启用 RLS 的 AIP proposal/approval/draft 表，而这些 tenant policy 只对 `aos_runtime` 生效。审批读取与 current revalidation 必须在同一 serializable transaction 内临时切换到该注册身份本就拥有的 `aos_runtime`，随后恢复 `aos_extension_maintainer` 执行 cutover；不增加 grant、不绕过 RLS，异常由整笔 transaction 回滚。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
@@ -54,7 +56,9 @@ PG 模式重放又暴露 `ensure_tenant_catalog_schema()` 错误继承 HTTP 请�
 - `services/aos-api/aos_api/ecommerce_growth_registration_qualification.py`：仅把注册资格的九项筛选范围与九项所有权对齐；完整 release signature/fingerprint 复验保持不变。
 - `services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_qualification.py`：增加带独立 API contribution 仍可验证、九项自身漂移仍拒绝的回归覆盖。
 - `services/aos-api/aos_api/tenant_catalog.py`：schema bootstrap 明确不继承请求租户 scope，避免以 runtime role 误执行 DDL。
-- `services/aos-api/tests/test_tenant_catalog.py`：验证 schema bootstrap 的连接参数与成员持久化边界。
+- `services/aos-api/tests/tenant_isolation/test_tenant_catalog_memory_boundary.py`：验证 schema bootstrap 的连接参数与成员持久化边界。
+- `services/aos-api/aos_api/ecommerce_growth_cutover.py`：approval authority 只在 tenant-scoped runtime role 下可见，校验后恢复 maintainer。
+- `services/aos-api/tests/extension_runtime/test_ecommerce_growth_cutover_pg.py`：真实 RLS/双角色路径回归。
 - 本补充方案：`NEW`。
 
 不修改 Action policy、Case Store、ProductEvent Store、Worker、Receipt、migration 或已签名包资产。签名包无需修改；资格层仍由完整签名重验证保证额外贡献不可被篡改。若现有 Host 路由无法完成上述正式配置，先落失败证据并另开最小实现方案。
