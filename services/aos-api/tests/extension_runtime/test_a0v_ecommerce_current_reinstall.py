@@ -103,6 +103,16 @@ def test_freeze_is_exclusive_and_private(reinstall, tmp_path):
         reinstall._freeze(target, {"command": "twice"})
 
 
+def test_matching_failed_intent_can_be_reused_without_replacement(reinstall, tmp_path):
+    target = tmp_path / "intent.json"
+    reinstall._freeze_or_match(target, {"command": "same"})
+    first = target.read_bytes()
+    reinstall._freeze_or_match(target, {"command": "same"})
+    assert target.read_bytes() == first
+    with pytest.raises(ValueError, match="differs"):
+        reinstall._freeze_or_match(target, {"command": "changed"})
+
+
 def test_predecessor_drain_requires_exact_restart_state(reinstall):
     value = predecessor_snapshot(reinstall)
     assert reinstall.require_predecessor_drain(value) == {

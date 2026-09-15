@@ -57,8 +57,16 @@ def _freeze(path: Path, value: dict[str, Any]) -> None:
         os.fsync(handle.fileno())
 
 
+def _freeze_or_match(path: Path, value: dict[str, Any]) -> None:
+    if path.exists():
+        if json.loads(path.read_text(encoding="utf-8")) != value:
+            raise ValueError("immutable intent differs")
+        return
+    _freeze(path, value)
+
+
 def _initial(label: str) -> dict[str, Any]:
-    if label not in {"a", "b"}:
+    if label not in {"a", "b", "c"}:
         raise ValueError("exact install label required")
     return json.loads((STATE / label / "create-result.json").read_text(encoding="utf-8"))
 
@@ -151,7 +159,7 @@ def observe() -> dict[str, Any]:
         "at": datetime.now(timezone.utc).isoformat(),
         "predecessor": observe_installation(PREDECESSOR["installationId"]),
     }
-    for label in ("a", "b"):
+    for label in ("a", "b", "c"):
         path = STATE / label / "create-result.json"
         if path.exists():
             result[label] = observe_installation(json.loads(path.read_text())["installationId"])
@@ -366,7 +374,12 @@ def create(label: str) -> dict[str, Any]:
     target = STATE / label / "create-result.json"
     if target.exists():
         raise ValueError("create result exists; observe without resending")
-    if label == "a":
+    if label in {"a", "c"}:
+        if label == "c":
+            for retired in ("a", "b"):
+                prior = observe_installation(_initial(retired)["installationId"])
+                if prior["head"]["state"] != "uninstalled":
+                    raise ValueError("installations A and B must be uninstalled before C")
         predecessor = observe_installation(PREDECESSOR["installationId"])
         binding = predecessor["bindings"]
         if (
@@ -637,20 +650,18 @@ def _installation_connection():
         yield conn
 
 
-def uninstall_a() -> dict[str, Any]:
-    installation_id = _initial("a")["installationId"]
+def uninstall(label: str) -> dict[str, Any]:
+    installation_id = _initial(label)["installationId"]
     snapshot = observe_installation(installation_id)
     command = require_phase("uninstall", snapshot)
-    successor = observe_installation(_initial("b")["installationId"])
-    if (
-        successor["head"]["state"] != "active"
-        or len(successor["bindings"]) != 1
-        or successor["bindings"][0]["enabled"] is not True
-        or successor["bindings"][0]["operation_fence"] is not False
-        or successor["bindings"][0]["observed_state"] != "ready"
-    ):
-        raise ValueError("enabled installation B required before uninstall A")
-    _freeze(STATE / "a/uninstall-intent.json", {"installationId": installation_id, **command})
+    if label == "a":
+        successor = observe_installation(_initial("b")["installationId"])
+        if successor["head"]["state"] != "uninstalled":
+            raise ValueError("installation B must be uninstalled before A")
+    _freeze_or_match(
+        STATE / label / "uninstall-intent.json",
+        {"installationId": installation_id, **command},
+    )
     legacy = _load("a0v_ecommerce_invalid_baseline_uninstall")
     store, service = legacy._build(
         _installation_connection,
@@ -662,12 +673,12 @@ def uninstall_a() -> dict[str, Any]:
         **SCOPE,
         installation_id=installation_id,
         request=UninstallInstallationRequest(
-            reason="Current ecommerce installation A rehearsal completed after confirmed cleanup"
+            reason=f"Current ecommerce installation {label.upper()} rehearsal completed after confirmed cleanup"
         ),
         actor="a0v-ecommerce-growth-1.4-runtime-owner",
         roles=["admin"],
         markings=[],
-        idempotency_key="a0v-current-ecommerce-a-uninstall-20260915",
+        idempotency_key=f"a0v-current-ecommerce-{label}-uninstall-20260915",
         if_match='"5"',
     )
     record = store.get_installation(**SCOPE, installation_id=installation_id)
@@ -685,8 +696,9 @@ def main() -> None:
             "enable-a", "drain-predecessor", "cancel-stale-enable-a",
             "cancel-unowned-recovery-a", "disable-a",
             "recover-a", "disable-a-final",
-            "uninstall-a", "create-b", "prepare-b",
-            "verify-b", "stage-b", "configure-b", "enable-b",
+            "uninstall-a", "create-b", "prepare-b", "verify-b", "stage-b",
+            "configure-b", "enable-b", "disable-b", "uninstall-b", "create-c",
+            "prepare-c", "verify-c", "stage-c", "configure-c", "enable-c",
         ),
     )
     parser.add_argument("--output", type=Path, required=True)
@@ -697,7 +709,9 @@ def main() -> None:
         result = observe()
     elif args.action.startswith("create-"):
         result = create(args.action[-1])
-    elif args.action in {"prepare-a", "verify-a", "prepare-b", "verify-b"}:
+    elif args.action in {
+        "prepare-a", "verify-a", "prepare-b", "verify-b", "prepare-c", "verify-c"
+    }:
         action, label = args.action.split("-")
         result = lifecycle(label, action)
     elif args.action == "drain-predecessor":
@@ -710,8 +724,10 @@ def main() -> None:
         result = disable("a")
     elif args.action == "disable-a-final":
         result = disable("a", suffix="disable-final")
-    elif args.action == "uninstall-a":
-        result = uninstall_a()
+    elif args.action == "disable-b":
+        result = disable("b")
+    elif args.action in {"uninstall-a", "uninstall-b"}:
+        result = uninstall(args.action[-1])
     else:
         action, label = args.action.split("-")
         result = configure(label, action)
