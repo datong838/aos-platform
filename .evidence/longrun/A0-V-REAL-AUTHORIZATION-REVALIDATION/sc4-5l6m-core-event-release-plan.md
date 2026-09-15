@@ -13,3 +13,5 @@
 验证目录：services/aos-api/tests/extension_runtime/；候选目录 bundles/candidates/ecommerce/domain.ecommerce.core/1.4.0 与 solution.ecommerce.growth/1.10.0；执行器 scripts/prepare_ecommerce_event_candidates.py、build_ecommerce_event_candidates.py。
 
 容器资格预演发现混合导航声明缺少 operation_id；验收器已修复并新增混合项测试（4 passed）。新代码提交后旧构建Receipt的HEAD绑定正确拒绝复验。保留build目录及日志，新建build-v2重新构建、验收和签名，禁止改旧Receipt的HEAD来通过校验。
+
+F→G 顺序细化：使用 scripts/a0v_event_complete_f_retirement.py 固定 F 身份和当前 Policy revision2，先新 exact disable 审批并关闭 automation 事件绑定；再各自审批 fence 与 shrink，实时核对 group/CAS，并由现有服务验证排空与本次 fence Receipt。源schedule必须关闭、未决源执行必须停止。三步各独立intent与Receipt，已有intent禁止重复。完成event收缩后才允许 RuntimeDisableService 禁用F并等待Host完整释放/正式detach；新G尚无已知ID，不预造身份。
