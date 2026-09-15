@@ -40,6 +40,8 @@ cutover 完成后真实 Case 已经通过 current E 扩展处理器激活，但 
 
 binding 证明修复后，event refresh 继续在读取 predecessor 时拒绝：执行器调用了 Owner 并不存在的 `read_current` 方法。SourceSelection 与 RuntimeControl 的 Owner 只暴露受 current gate 保护的消费方法；历史解码函数则已经负责完整 payload、content hash、request hash 和身份列复验。执行器应在同一 tenant-scoped runtime transaction 内按 installation/generation/pipeline 分别读取唯一最新行，调用既有 `decode_selection_row` / `decode_control_row` 得到 exact predecessor ref；schedule binding 继续使用已有 `read_latest`。`aos_runtime` 对这两张表只有 SELECT，读取不得附带需要 UPDATE 权限的行锁；后续 append 会在自己的写事务内再次比较 latest 与 previous ref，从而关闭并发窗口。不得扩大表权限、给产品 Owner 增加绕过 current gate 的公开读取接口，也不得只拼数据库字段伪造 ref。
 
+predecessor 读回后，fresh draft 的 `notBefore` / `expiresAt` 已按 JSON mode 序列化为 ISO 字符串；严格 Pydantic 模型的 Python-object 入口不做字符串到 datetime 的隐式转换。event refresh 应与已验证的 selection/control 路径一致，从冻结 JSON 通过 `model_validate_json` 恢复强类型 datetime，再交给 Owner；不得放松模型 strict 配置或手工改写时间字段。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
