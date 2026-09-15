@@ -16,3 +16,17 @@ def test_authority_draft_never_uses_E_or_canary(profile,fault):
         draft[fault]={'installationId':'old-e'} if fault=='installationRef' else 'other'
         with pytest.raises(ValueError):p.require_f(draft)
     else:p.require_f(draft)
+
+
+def test_renewal_preserves_original_state_and_requires_exact_private_predecessors(profile,monkeypatch,tmp_path):
+    import json
+    f,_,_=profile;monkeypatch.setattr(f,'STATE',tmp_path)
+    p=importlib.import_module('a0v_growth19_product_authority_renewal').load_profile()
+    assert p.STATE==tmp_path/'product-authority-v2'
+    with pytest.raises(ValueError,match='predecessor'):p.previous_reference('selection')
+    original=tmp_path/'product-authority';original.mkdir()
+    path=original/'selection-result.json';path.write_text(json.dumps({'ref':{'resourceId':'original-selection','revision':1}}));path.chmod(0o600)
+    assert p.previous_reference('selection')=={'resourceId':'original-selection','revision':1}
+    event=importlib.import_module('a0v_growth19_product_event_policy_renewal').load_profile()
+    assert event.authority.STATE==p.STATE
+    assert event.STATE==tmp_path/'product-event-v2'

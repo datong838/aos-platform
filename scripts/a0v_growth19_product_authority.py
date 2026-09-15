@@ -22,6 +22,10 @@ def require_f(draft):
         raise ValueError('exact F Product draft required')
 
 
+def previous_reference(phase):
+    return None
+
+
 def run(phase,plane):
     from a0v_qyh_current_product_event_first_chain import freeze
     from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft,PipelineRuntimeControlDraft
@@ -40,14 +44,14 @@ def run(phase,plane):
         draft=load('prepare')['draft'];require_f(draft)
         service=plane.pipeline_control_factory.build(scope)
         if phase=='selection':
-            material=dict(actor=f.ACTOR,idempotencyKey=PREFIX+'-selection',draft=draft,previousRef=None)
+            material=dict(actor=f.ACTOR,idempotencyKey=PREFIX+'-selection',draft=draft,previousRef=previous_reference(phase))
             freeze(intent,material)
-            ref=service.approve_selection(draft=PipelineSourceSelectionDraft.model_validate_json(json.dumps(draft)),actor=f.ACTOR,idempotency_key=material['idempotencyKey'],previous_ref=None)
+            ref=service.approve_selection(draft=PipelineSourceSelectionDraft.model_validate_json(json.dumps(draft)),actor=f.ACTOR,idempotency_key=material['idempotencyKey'],previous_ref=material['previousRef'])
         elif phase=='control':
             draft={**draft,'schemaVersion':'aos.pipeline-runtime-control-draft/v1','sourceSelectionRef':load('selection')['ref']}
-            material=dict(actor=f.ACTOR,idempotencyKey=PREFIX+'-control',draft=draft,previousRef=None)
+            material=dict(actor=f.ACTOR,idempotencyKey=PREFIX+'-control',draft=draft,previousRef=previous_reference(phase))
             freeze(intent,material)
-            ref=service.approve_control(draft=PipelineRuntimeControlDraft.model_validate_json(json.dumps(draft)),actor=f.ACTOR,idempotency_key=material['idempotencyKey'],previous_ref=None)
+            ref=service.approve_control(draft=PipelineRuntimeControlDraft.model_validate_json(json.dumps(draft)),actor=f.ACTOR,idempotency_key=material['idempotencyKey'],previous_ref=material['previousRef'])
         elif phase=='binding':
             with consumer_connection(runtime_worker_connection,dict(org_id=scope.org_id,project_id=scope.project_id)) as conn:
                 row=conn.execute('SELECT pipeline_id,enabled,ingest FROM meta_schedule WHERE org_id=%s AND project_id=%s AND id=%s',(*scope.key,SCHEDULE)).fetchone()
@@ -59,6 +63,8 @@ def run(phase,plane):
                 previous=PipelineScheduleControlOwner(controls=service.controls).read_latest(conn,scope=scope,schedule_id=SCHEDULE)
                 if previous is None:raise ValueError('historical Product binding required')
                 previous=previous.ref.model_dump(mode='json',by_alias=True)
+                expected=previous_reference('binding')
+                if expected is not None and expected!=previous:raise ValueError('renewal binding predecessor differs')
             material=dict(actor=f.ACTOR,idempotencyKey=PREFIX+'-binding',controlRef=load('control')['ref'],previousRef=previous)
             freeze(intent,material)
             ref=service.bind_schedule(pipeline_id=PIPELINE,schedule_id=SCHEDULE,control_ref=material['controlRef'],actor=f.ACTOR,idempotency_key=material['idempotencyKey'],previous_ref=previous)
