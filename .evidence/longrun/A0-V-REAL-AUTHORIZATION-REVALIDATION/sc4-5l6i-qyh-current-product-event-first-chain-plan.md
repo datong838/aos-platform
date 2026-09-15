@@ -16,6 +16,8 @@
 
 2026-09-15 代码接线完成后复核运行所有权又发现：当前 C 的三个 OCI 资源由仍在运行的旧代码 Host 进程持有；Host 的正常退出会按合同释放其资源，而新进程不会凭数据库中已成功的旧 apply 回执冒充原 owner 重新接管。因而禁止直接停旧 Host 后继续把 C 当作 ready。安全路径固定为：先让控制器支持后继 D；再优雅停止旧 Host并读回 C 的实际释放状态；启动已含两个业务 Worker 的新 Host；通过正式 disable Receipt 把 C 收敛为 disabled/fenced/unknown 且资源 confirmed released；以 C 的当前 exact head 创建 D；由新 Host消费 D 的 prepare/verify/configure/enable，最终 D 成为 active/ready/enabled/unfenced并持有三个新资源。C 在 D 生效前不得卸载，且后续真实 P02 和 ProductEvent 引用全部绑定 D。
 
+切换前快照于 2026-09-15 17:26 +08:00 冻结，旧 Host 随后优雅退出。实际读回 C 为 active@5、binding rev5/epoch4、enabled=false、fenced=true、desired=enabled、observed=unknown，三个资源均 released/observedRelease=true，原四项 operation均 terminal，canary=0。这是 Host cleanup 的正式未归属恢复态，不能再调用只接受 enabled/unfenced 的普通 disable。控制器新增窄化的 `settle-c`：先逐字段确认上述当前安装、配置存在、资源已释放且无未决 operation，再使用原 RuntimeDisableService 发出唯一 disable Receipt，由新 Host消费并把 desired收敛为 disabled；只有该 operation成功且再次读回满足 replacement predecessor合同后才能 create D。
+
 ## Rules、主路径与停止条件
 
 1. 先修独立 Host 生命周期接线，再配置真实链。ProductEvent Worker 与 DataRequirement Worker使用同一个 control plane、LivePreparedJobDirectory、stop event 和 Host health；Host 停止后两者必须退出。保持 API 内嵌 Host disabled，保持 QYH Cron disabled。
@@ -38,7 +40,7 @@
 
 ### B. 当前 C 的真实 P02 与 ProductEvent 控制器
 
-在执行本节前，修改 `scripts/a0v_ecommerce_current_reinstall.py` 与对应测试，增加 D 的 exact create/prepare/verify/stage/configure/enable 路由：D 只能以前述已收敛的 C 为 predecessor；所有操作继续使用唯一 intent/result 和原正式服务。新 Host 必须先显示 lifecycle、product-event、analysis-data-requirement 三个 Worker ACTIVE，随后才能接收 D 的运行请求。切换后本节所有“当前 C”按实际当前安装 D 执行，控制器从主库 current head解析并锁定 exact ref，不能保留 C 常量。
+在执行本节前，修改 `scripts/a0v_ecommerce_current_reinstall.py` 与对应测试，增加 C released-owner settlement及 D 的 exact create/prepare/verify/stage/configure/enable 路由：D 只能以前述已收敛的 C 为 predecessor；所有操作继续使用唯一 intent/result 和原正式服务。新 Host 必须先显示 lifecycle、product-event、analysis-data-requirement 三个 Worker ACTIVE，随后才能接收 settlement与 D 的运行请求。切换后本节所有“当前 C”按实际当前安装 D 执行，控制器从主库 current head解析并锁定 exact ref，不能保留 C 常量。
 
 - 新增 `scripts/a0v_qyh_current_product_event_first_chain.py`：固定仓外0700状态目录、0600 intent/result；分 action 执行 observe、source-probe、prepare-p02、select、control、schedule、bind、enable/read/disable、Case/Policy/EventControl 与最终观察。每项在调用前按主库当前事实生成并冻结 intent；已有 intent/result 时只读，不重发。
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：验证 C/ref/hash/epoch 固定、历史引用拒绝、上游只读边界、状态机、未知结果只观察、canary与外部副作用为零。执行组件继续由现有生产 Owner测试覆盖，不复制实现。
