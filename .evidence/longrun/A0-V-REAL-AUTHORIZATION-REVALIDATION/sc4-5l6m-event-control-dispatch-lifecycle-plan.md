@@ -36,8 +36,8 @@ Service 通过当前 installation lock 和 ReleasePolicy 复验 growth 的签名
 
 ## preHash
 
-- `services/aos-api/aos_api/aip_action_policy.py`：`4255c692bb0fe597c5d5c81c97d8c6a6fda0ae57d70c09856a0287fd95cb464f`
-- `services/aos-api/aos_api/ecommerce_product_event_approval.py`：`417c9ed0bc3ddf64b61e2a7a4d5fb1730cbc67e66a9ba6ac05d61f2c5a93df10`
+- `services/aos-api/aos_api/aip_action_policy.py`：`cbcdfd5de12def0fade338050edcd723f9caa6cb0cdf544afb0ca8fafa1328a6`
+- `services/aos-api/aos_api/ecommerce_product_event_approval.py`：`35456244303a02b91a1b6a68242dff0279d6f9e0b8dee3a50c1c6bf4dea06fd5`
 - 新迁移、Service、测试：`NEW`。
 
 ## 退出与停止条件
