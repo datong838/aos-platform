@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+import ast
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,6 +10,7 @@ from psycopg.types.json import Jsonb
 
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from test_ecommerce_growth_cutover_pg import database, _connection
 
 
@@ -20,10 +21,16 @@ def dispatch_db(database):
     owner.execute("""CREATE TABLE meta_membership(org_id text NOT NULL,project_id text NOT NULL,
         subject text NOT NULL,role text NOT NULL,PRIMARY KEY(org_id,project_id,subject))""")
     owner.execute("GRANT SELECT ON meta_membership TO aos_extension_maintainer")
-    owner.execute(sql.SQL("""CREATE FUNCTION {}.canonical_asset_registry_jsonb(jsonb) RETURNS text
-        LANGUAGE sql IMMUTABLE AS 'SELECT $1::text'""").format(
-        sql.Identifier(database.schema)))
     root = Path(__file__).resolve().parents[2]
+    source = ast.parse((root / 'alembic/versions/228asset0_evidence_snapshot.py').read_text())
+    definitions = [node.value for node in ast.walk(source) if isinstance(node, ast.Constant)
+                   and isinstance(node.value, str)
+                   and 'CREATE OR REPLACE FUNCTION canonical_asset_registry_jsonb' in node.value]
+    assert len(definitions) == 1
+    owner.execute(definitions[0])
+    owner.execute(sql.SQL('ALTER FUNCTION {}.canonical_asset_registry_jsonb(jsonb) '
+                         'SET search_path TO pg_catalog, {}').format(
+        sql.Identifier(database.schema), sql.Identifier(database.schema)))
     spec = importlib.util.spec_from_file_location("a0v_054_test", root / "alembic/versions/a0v_054_event_control_dispatch_lifecycle.py")
     migration = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(migration)
@@ -83,6 +90,10 @@ def _transition(database, scope, request, *, runtime=False):
     with _connection(database, runtime=runtime)(scope) as conn:
         row = conn.execute("SELECT extension_event_control_dispatch_transition_a0v_054(%s,%s) AS receipt",
                            (Jsonb(request), "fixture-operator")).fetchone()
+        receipt = row['receipt']
+        assert receipt['requestHash'] == canonical_sha256(request)
+        assert receipt['contentHash'] == canonical_sha256({
+            key: value for key, value in receipt.items() if key not in {'contentHash', 'replayed'}})
         conn.commit()
         return row["receipt"]
 
@@ -122,6 +133,16 @@ def test_phase_drift_canary_and_direct_runtime_call_fail_closed(dispatch_db):
     count = dispatch_db.owner.execute(sql.SQL("SELECT count(*) AS n FROM {}.extension_event_control_dispatch_receipt \
         WHERE org_id='dev-org'").format(sql.Identifier(dispatch_db.schema))).fetchone()["n"]
     assert count == 0
+
+
+def test_receipt_hash_preserves_unicode_and_nested_installation(dispatch_db):
+    scope = TenantScope('org-org', 'dev-project')
+    request = _request(_seed(dispatch_db, scope), 'expand', 11, '真实首链-1')
+    request['caseId'] = '栖月汇商品分析'
+    request['installationRef']['overlayRevision'] = '租户配置-2'
+    receipt = _transition(dispatch_db, scope, request)
+    assert receipt['caseId'] == request['caseId']
+    assert receipt['installationRef'] == request['installationRef']
 
 
 def test_receipt_is_immutable(dispatch_db):
