@@ -270,6 +270,8 @@ def _skill_eval(logic_id: str, source_skill: Any, graph: Any, model: Any, *, con
     )
     suite = registry.register_suite_revision(_base.SCOPE, suite, actor=actor)
     run_key = f"{suite_id}-run-r1"
+    from skill_eval_revision_key import skill_eval_revision_key
+    run_key = skill_eval_revision_key(run_key, graph)
     with (connect_factory or _base.db_connect)(_base.SCOPE) as conn:
         existing = conn.execute(
             "SELECT run_id,status FROM aip_eval_run "

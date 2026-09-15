@@ -451,6 +451,8 @@ def _skill_eval(source_skill: Any, graph: Any, model: Any, *, connect_factory=No
     suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
     suite = registry.register_suite_revision(SCOPE, suite, actor=actor)
     run_key = f"{SUITE_ID}-run-r1"
+    from skill_eval_revision_key import skill_eval_revision_key
+    run_key = skill_eval_revision_key(run_key, graph)
     with (connect_factory or db_connect)(SCOPE) as conn:
         existing = conn.execute(
             "SELECT run_id,status FROM aip_eval_run WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",

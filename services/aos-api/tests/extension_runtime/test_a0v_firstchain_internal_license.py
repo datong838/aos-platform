@@ -20,3 +20,13 @@ def test_license_is_limited_to_exact_internal_published_skills(fault):
         with pytest.raises(ValueError,match='INTERNAL_LICENSE_'):
             require_internal_skills(skills)
     else: require_internal_skills(skills)
+
+
+def test_explicit_successor_internal_revision_is_checked():
+    from types import SimpleNamespace as NS
+    import a0v_firstchain_internal_license as m
+    skills=[NS(skill_id='ecommerce.skill.'+s,revision=3,lifecycle=NS(value='published'),
+        source_license='internal',publication_tenant=NS(org_id='org-org',project_id='dev-project')) for s in ('D01','D02','D03')]
+    m.require_internal_skills(skills,skill_revision=3)
+    with pytest.raises(ValueError):m.require_internal_skills(skills)
+    with pytest.raises(ValueError):m.require_internal_skills(skills,skill_revision=4)

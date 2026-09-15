@@ -20,14 +20,16 @@ FACTS = ['firstchain.skill.internal-license', 'firstchain.user.development-scope
 AUTHORITY = 'user-session:AOS-AR2-continuous-development'
 
 
-def require_internal_skills(skills, logic_ids=('D01','D02','D03')):
+def require_internal_skills(skills, logic_ids=('D01','D02','D03'), *, skill_revision=2):
+    if skill_revision not in (2, 3):
+        raise ValueError('INTERNAL_LICENSE_EXACT_REVISION_REQUIRED')
     allowed = {frozenset(('D01','D02','D03')), frozenset(('S01','P01','C06','A02','G06'))}
     if frozenset(logic_ids) not in allowed or len(logic_ids)!=len(set(logic_ids)):
         raise ValueError('INTERNAL_LICENSE_EXACT_SKILLS_REQUIRED')
     if len(skills)!=len(logic_ids) or {s.skill_id for s in skills}!={'ecommerce.skill.'+x for x in logic_ids}:
         raise ValueError('INTERNAL_LICENSE_EXACT_SKILLS_REQUIRED')
     for s in skills:
-        if (s.revision != 2 or s.lifecycle.value != 'published' or s.source_license != 'internal'
+        if (s.revision != skill_revision or s.lifecycle.value != 'published' or s.source_license != 'internal'
                 or s.publication_tenant is None
                 or (s.publication_tenant.org_id, s.publication_tenant.project_id) != SCOPE.key):
             raise ValueError('INTERNAL_LICENSE_SOURCE_OR_TENANT_INVALID')
@@ -35,10 +37,15 @@ def require_internal_skills(skills, logic_ids=('D01','D02','D03')):
 
 def run(database, apply=False, logic_ids=('D01','D02','D03')):
     connect = database_connect(database)
-    require_target(connect, database)
+    return materialize(connect, database=database, validate_target=lambda c: require_target(c, database),
+        apply=apply, logic_ids=logic_ids)
+
+
+def materialize(connect, *, database, validate_target, apply=False, logic_ids=('D01','D02','D03'), skill_revision=2):
+    validate_target(connect)
     registry = AipSkillRegistry(connect)
-    skills = [registry.get_skill('ecommerce.skill.'+x,2) for x in logic_ids]
-    require_internal_skills(skills,logic_ids)
+    skills = [registry.get_skill('ecommerce.skill.'+x,skill_revision) for x in logic_ids]
+    require_internal_skills(skills,logic_ids,skill_revision=skill_revision)
     runtime = AipModelRuntimeStore(connect)
     model = runtime.get_model(SCOPE,MODEL_ID)
     runtime.require_model_governance(SCOPE,model,runtime.get_price_snapshot(SCOPE,PRICE_ID))
@@ -75,7 +82,7 @@ def run(database, apply=False, logic_ids=('D01','D02','D03')):
         with connect(SCOPE) as conn:
             step = conn.execute("SELECT * FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='record-internal-scope' ORDER BY attempt DESC LIMIT 1",(*SCOPE.key,task_run.id)).fetchone()
         if not step or step['status'] != 'succeeded':
-            require_internal_skills([registry.get_skill(s.skill_id,s.revision) for s in skills],logic_ids)
+            require_internal_skills([registry.get_skill(s.skill_id,s.revision) for s in skills],logic_ids,skill_revision=skill_revision)
             if step and step['status']=='running' and step['lease_owner']==ACTOR and step['lease_expires_at']>datetime.now(UTC):
                 lease=tasks.heartbeat_step(SCOPE,step['step_run_id'],ACTOR,step['fence'],lease_seconds=300)
             else:

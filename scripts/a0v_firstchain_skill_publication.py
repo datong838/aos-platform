@@ -172,6 +172,12 @@ def materialize_contracts(connect, *, require_target, database, authority_scope,
             suite, report = _skill_eval(logic_id, source, graph, model, connect_factory=connect, actor=ACTOR)
         release = AipReleasePublicationService(connect)
         key = 'a0v-firstchain-'+logic_id.lower()+'-'+suite.content_hash[:24]
+        if graph.revision > 1:
+            key = 'a0v-successor-'+logic_id.lower()+'-'+canonical_hash({
+                'graph': graph.graph_hash, 'revision': graph.revision,
+                'route': route_ref.model_dump(mode='json'),
+                'policy': policy_ref.model_dump(mode='json'),
+                'authority': authority_scope})[:32]
         gate = release.derive_gate(SCOPE, actor=ACTOR, request=DeriveReleaseGateRequest(
             reportId=report.report_id, reportRevision=report.revision, reportHash=report.content_hash,
             idempotencyKey=key+'-gate'))

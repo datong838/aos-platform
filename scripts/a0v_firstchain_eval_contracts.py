@@ -36,15 +36,23 @@ def require_lineage(skill, gate, event, now):
 
 
 def run(database, apply=False, logic_ids=('D01','D02','D03')):
+    connect = database_connect(database)
+    return materialize(connect, database=database, validate_target=lambda c: require_target(c, database),
+        apply=apply, logic_ids=logic_ids)
+
+
+def materialize(connect, *, database, validate_target, apply=False, logic_ids=('D01','D02','D03'), skill_revision=2):
     if tuple(logic_ids) not in {('D01','D02','D03'),('S01','P01','C06','A02','G06')}:
         raise ValueError('EXACT_CONTRACT_SKILL_SET_REQUIRED')
-    connect = database_connect(database)
+    if skill_revision not in (2, 3):
+        raise ValueError('EXACT_CONTRACT_SKILL_REVISION_REQUIRED')
+    validate_target(connect)
     store = AipProductionContractStore(connect)
     skills = AipSkillRegistry(connect)
     results = []
     for logic_id in logic_ids:
-        require_target(connect, database)
-        skill = skills.get_skill('ecommerce.skill.'+logic_id, 2)
+        validate_target(connect)
+        skill = skills.get_skill('ecommerce.skill.'+logic_id, skill_revision)
         with connect(SCOPE) as conn:
             row = conn.execute('SELECT * FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s AND decision_id=%s',
                 (*SCOPE.key, skill.release_gate_ref.asset_id)).fetchone()

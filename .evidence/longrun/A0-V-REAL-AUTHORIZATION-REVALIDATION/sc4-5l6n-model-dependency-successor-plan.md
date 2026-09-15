@@ -21,3 +21,7 @@
 
 ## 第二轮克隆结果与下一波
 逻辑证据ID修复后20测试通过。克隆首个D01逻辑新评估及发布已成功，但Skill发布遇到旧幂等键/新reasonHash冲突；未产生新Skill。发现七个 scripts/aip/bootstrap_*_skill_authority.py 的run_key固定为suite-run-r1，需新增 scripts/aip/skill_eval_revision_key.py：graph revision1保持旧key；后继修订key绑定revision/full hash，七入口仅接入该函数。scripts/a0v_firstchain_skill_publication.py 后继发布key同时绑定graph hash、route/policy及authority scope，旧revision1路径保持不变。测试覆盖旧key兼容、新修订隔离、同revision不同hash隔离。不得把旧成功report计为新评估。下一波完成此修复并在现有克隆按独立意图恢复正式发布流程。
+
+第三轮克隆8个Skill r3发布成功，隔离合约59例通过，旧修订保留。后续许可/评估合同旧执行器固定r2；补改 scripts/a0v_firstchain_internal_license.py 与 scripts/a0v_firstchain_eval_contracts.py，抽取显式连接+目标校验回调的materialize入口，接受固定skill_revision 2或3，默认历史run仍2，不放宽原数据库allowlist。新克隆显式传3并匹配已成功发布Receipt。先合同/许可预演再新绑定。
+
+许可与合同克隆实测：两组内部许可EvidenceBundle均complete/fresh；八个新Skill对应EvalContract全部frozen，业务Runs=0、ProviderCalls=0。34相关测试通过。下一步补 scripts/a0v_firstchain_capability_bindings.py 显式连接/目标校验/skill revision与后继binding前缀，旧run默认保持原2版；新增后继绑定执行器先全部preview再创建能力、评估、激活及SkillBinding替换，单步intent/CAS、未知不重发。活动旧SkillBinding只在新后继准备就绪后暂停，新项激活前保留可恢复旧项。职责计划重新读取而非手工改ready。
