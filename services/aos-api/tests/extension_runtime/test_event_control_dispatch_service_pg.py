@@ -65,7 +65,7 @@ def service_database():
 
 
 @pytest.mark.parametrize('fault', ['none', 'artifact', 'revoked', 'receipt_failure', 'late_expiry'])
-def test_signed_service_uses_actual_approval_and_independent_receipt(service_database, governed, tmp_path, fault):
+def test_signed_service_uses_actual_approval_and_independent_receipt(service_database, governed, tmp_path, fault, monkeypatch):
     conn, command = governed
     conn.execute('RESET ROLE')
     conn.commit()
@@ -196,10 +196,11 @@ def test_signed_service_uses_actual_approval_and_independent_receipt(service_dat
         with psycopg.connect(**{**parts, 'user': role}, options='-c role=aos_runtime', row_factory=dict_row) as current:
             yield current
     try:
-        service = EventControlDispatchLifecycle(connect=runtime_connect,
-            installation_store=PostgresInstallationStore(runtime_connect),
-            artifacts=CurrentRuntimeReleaseArtifacts(connect=runtime_connect, scope=scope,
-                loader=ManifestLoader({'service': tmp_path}, trust_roots=roots)), release_policy=policy)
+        import aos_api.pipeline_control_service as composition
+        monkeypatch.setattr(composition,'runtime_worker_connection',runtime_connect)
+        service=composition.PipelineControlServiceFactory(
+            installation_store=PostgresInstallationStore(runtime_connect),policy=policy,
+            allowlist_roots={'service':tmp_path}).build_event_dispatch_lifecycle(scope)
         parsed = EventControlDispatchRequest.model_validate(request)
         if fault == 'artifact':
             (directory / CONTROL_CONTRACT_PATH).write_bytes(b'{}')

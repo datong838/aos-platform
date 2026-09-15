@@ -80,6 +80,12 @@ class PipelineControlServiceFactory:
         controls=PipelineRuntimeControlOwner(selections=selections)
         return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls))
 
+    def build_event_dispatch_lifecycle(self,scope):
+        from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchLifecycle
+        _,artifacts=self._source_dependencies(scope)
+        return EventControlDispatchLifecycle(connect=runtime_worker_connection,
+            installation_store=self.installation_store,artifacts=artifacts,release_policy=self.policy)
+
     def build_event_owner(self,scope):
         from aos_api.ecommerce_product_event_qualified_owner import ProductEventQualifiedOwner
         selections,artifacts=self._source_dependencies(scope)
