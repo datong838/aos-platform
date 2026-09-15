@@ -79,4 +79,3 @@ def test_backup_and_fingerprint_share_live_snapshot(deploy, monkeypatch, tmp_pat
     assert events[-2:] == ['dump', 'closed']
     assert path.read_bytes() == b'custom-format-backup'
     assert path.stat().st_mode & 0o777 == 0o600
-
