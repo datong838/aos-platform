@@ -73,7 +73,7 @@ def upgrade() -> None:
         OR length(p_actor) NOT BETWEEN 1 AND 240 OR p_actor ~ '[[:cntrl:]]'
         OR jsonb_typeof(p_request) IS DISTINCT FROM 'object'
         OR p_request->>'schemaVersion' IS DISTINCT FROM 'aos.ecommerce.event-control-dispatch/v1'
-        OR p_request-ARRAY['schemaVersion','phase','installationId','generation','executionEpoch',
+        OR p_request-ARRAY['schemaVersion','phase','installationRef','generation','executionEpoch',
           'runtimeRevision','cutoverGroupId','expectedGroupRevision','caseId','schedulePolicyId',
           'approvalRef','idempotencyKey'] <> '{}'::jsonb
       THEN RAISE EXCEPTION 'invalid event dispatch request' USING ERRCODE='22023'; END IF;
@@ -87,19 +87,24 @@ def upgrade() -> None:
         OR v_ref->>'resourceType' IS DISTINCT FROM 'ActionApprovalEvent'
         OR coalesce(v_ref->>'contentHash','') !~ '^sha256:[0-9a-f]{64}$'
       THEN RAISE EXCEPTION 'invalid event dispatch authority' USING ERRCODE='22023'; END IF;
+      IF jsonb_typeof(p_request->'installationRef') IS DISTINCT FROM 'object'
+        OR (p_request->'installationRef')-ARRAY['installationId','revision','lockHash','overlayRevision'] <> '{}'::jsonb
+        OR coalesce(p_request#>>'{installationRef,lockHash}','') !~ '^sha256:[0-9a-f]{64}$'
+        OR coalesce(p_request#>>'{installationRef,overlayRevision}','')=''
+      THEN RAISE EXCEPTION 'invalid event dispatch installation reference' USING ERRCODE='22023'; END IF;
       FOREACH v_number IN ARRAY ARRAY[p_request->'executionEpoch',p_request->'runtimeRevision',
-          p_request->'expectedGroupRevision',v_ref->'revision'] LOOP
+          p_request->'expectedGroupRevision',v_ref->'revision',p_request#>'{installationRef,revision}'] LOOP
         IF jsonb_typeof(v_number) IS DISTINCT FROM 'number' OR v_number::text !~ '^[1-9][0-9]*$'
           OR (v_number::text)::numeric>9223372036854775807
         THEN RAISE EXCEPTION 'invalid event dispatch revision' USING ERRCODE='22023'; END IF;
       END LOOP;
       BEGIN
-        v_install:=(p_request->>'installationId')::uuid; v_generation:=(p_request->>'generation')::uuid;
+        v_install:=(p_request#>>'{installationRef,installationId}')::uuid; v_generation:=(p_request->>'generation')::uuid;
         v_group:=(p_request->>'cutoverGroupId')::uuid;
       EXCEPTION WHEN invalid_text_representation THEN
         RAISE EXCEPTION 'invalid event dispatch identity' USING ERRCODE='22023';
       END;
-      IF v_install::text IS DISTINCT FROM p_request->>'installationId'
+      IF v_install::text IS DISTINCT FROM p_request#>>'{installationRef,installationId}'
         OR v_generation::text IS DISTINCT FROM p_request->>'generation'
         OR v_group::text IS DISTINCT FROM p_request->>'cutoverGroupId'
       THEN RAISE EXCEPTION 'noncanonical event dispatch identity' USING ERRCODE='22023'; END IF;
@@ -127,6 +132,7 @@ def upgrade() -> None:
         AND installation_id=v_install AND generation=v_generation FOR UPDATE;
       IF NOT FOUND OR v_runtime.execution_epoch IS DISTINCT FROM v_epoch
         OR v_runtime.revision IS DISTINCT FROM v_runtime_revision OR v_runtime.enabled IS NOT TRUE
+        OR v_runtime.installation_revision IS DISTINCT FROM (p_request#>>'{installationRef,revision}')::bigint
         OR v_runtime.operation_fence IS NOT FALSE OR v_runtime.desired_state IS DISTINCT FROM 'enabled'
         OR v_runtime.observed_state IS DISTINCT FROM 'ready'
       THEN RAISE EXCEPTION 'event dispatch runtime drifted' USING ERRCODE='40001'; END IF;
@@ -180,7 +186,7 @@ def upgrade() -> None:
       v_now:=clock_timestamp();
       v_body:=jsonb_build_object('schemaVersion','aos.ecommerce.event-control-dispatch-receipt/v1',
         'tenant',jsonb_build_object('orgId',v_org,'projectId',v_project),'receiptId',v_receipt::text,
-        'phase',v_phase,'operationId','ecommerce_growth_event_control','installationId',v_install::text,
+        'phase',v_phase,'operationId','ecommerce_growth_event_control','installationRef',p_request->'installationRef',
         'generation',v_generation::text,'executionEpoch',v_epoch,'runtimeRevision',v_runtime_revision,
         'cutoverGroupId',v_group::text,'expectedGroupRevision',v_expected,'targetGroupRevision',v_target,
         'caseId',p_request->>'caseId','schedulePolicyId',p_request->>'schedulePolicyId',

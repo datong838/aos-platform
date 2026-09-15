@@ -18,6 +18,17 @@ def require_current_event_approval(*,transaction,scope,case_id,policy_id,approva
         action_type='ecommerce_growth_schedule_put',expected_payload=None)
 
 
+def require_current_event_dispatch_approval(*, transaction, scope, case_id, policy_id,
+                                            approval_ref, executor, dispatch_intent):
+    if type(dispatch_intent) is not dict:
+        raise TypeError('strict event dispatch intent required')
+    expected = dict(caseId=case_id, schedulePolicyId=policy_id,
+                    dispatchIntent=dispatch_intent)
+    return _require_current_event_approval(transaction=transaction, scope=scope,
+        case_id=case_id, policy_id=policy_id, approval_ref=approval_ref, executor=executor,
+        action_type='ecommerce_growth_event_dispatch', expected_payload=expected)
+
+
 def _require_current_event_approval(*,transaction,scope,case_id,policy_id,approval_ref,executor,
                                     action_type,expected_payload):
     if type(transaction) is not HostTransaction or type(scope) is not TenantScope:

@@ -64,7 +64,8 @@ def _request(ids, phase, expected, key):
     return {
         "schemaVersion": "aos.ecommerce.event-control-dispatch/v1",
         "phase": phase,
-        "installationId": installation,
+        "installationRef": {"installationId": installation, "revision": 1,
+                            "lockHash": "sha256:" + "b" * 64, "overlayRevision": "overlay-1"},
         "generation": generation,
         "executionEpoch": 3,
         "runtimeRevision": 6,

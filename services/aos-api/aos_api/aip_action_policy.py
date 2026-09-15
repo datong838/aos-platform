@@ -44,9 +44,10 @@ def classify_action_risk(
     elif action_type_id == 'ecommerce_analysis_bootstrap':
         floor = ActionRiskLevel.R1
         reasons.append('internal_analysis_initial_pause_only')
-    elif action_type_id == 'ecommerce_growth_event_control':
+    elif action_type_id in {'ecommerce_growth_event_control', 'ecommerce_growth_event_dispatch'}:
         floor = ActionRiskLevel.R2
-        reasons.append('internal_event_binding_control')
+        reasons.append('internal_event_dispatch_control' if action_type_id.endswith('_dispatch')
+                       else 'internal_event_binding_control')
     elif action_type_id == 'ecommerce_growth_schedule_put':
         floor = ActionRiskLevel.R2
         reasons.append('internal_schedule_authority_change')
