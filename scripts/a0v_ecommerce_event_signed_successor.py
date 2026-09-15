@@ -12,9 +12,9 @@ def load_successor():
     successor=previous();helper=successor.legacy();helper._builder=profile.load_builder
     successor.legacy=lambda:helper
     recovery=successor.ROOT.parent/'.aos-recovery-20260916/state/event-complete-package'
-    successor.BUILD=recovery/'build/candidates'
-    successor.BUILD_RECEIPT=recovery/'build/build-receipt.json'
-    successor.QUALIFICATION=recovery/'build/qualification-receipt.json'
+    successor.BUILD=recovery/'build-v2/candidates'
+    successor.BUILD_RECEIPT=recovery/'build-v2/build-receipt.json'
+    successor.QUALIFICATION=recovery/'build-v2/qualification-receipt.json'
     successor.STATE=recovery/'registry'
     successor.OLD_ROOT=successor.ROOT.parent/'.aos-recovery-20260916/state/growth-1.9-current-package/registry/signed-bundles-growth-1.9-current'
     successor.NEW_ROOT=successor.STATE/'signed-bundles-event-complete'

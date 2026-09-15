@@ -11,3 +11,5 @@
 6. 继续经营分析有来源建议、exact评审、内容能力任务及产物、人工评审自动续跑、Wiki候选；扩展八工作台真实经营计划并观察。未到发布决定阶段。
 
 验证目录：services/aos-api/tests/extension_runtime/；候选目录 bundles/candidates/ecommerce/domain.ecommerce.core/1.4.0 与 solution.ecommerce.growth/1.10.0；执行器 scripts/prepare_ecommerce_event_candidates.py、build_ecommerce_event_candidates.py。
+
+容器资格预演发现混合导航声明缺少 operation_id；验收器已修复并新增混合项测试（4 passed）。新代码提交后旧构建Receipt的HEAD绑定正确拒绝复验。保留build目录及日志，新建build-v2重新构建、验收和签名，禁止改旧Receipt的HEAD来通过校验。
