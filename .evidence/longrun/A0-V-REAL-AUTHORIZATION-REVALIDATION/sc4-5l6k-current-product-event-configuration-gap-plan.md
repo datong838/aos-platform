@@ -36,6 +36,8 @@ R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover pr
 
 两轮诊断和迁移超过了刷新 approval 的有效期；当前操作已完成 prepare/pause，状态为 `draining`，九项 dispatch 仍为 fenced legacy，运行时已按协议 drain。现有模型没有“审批过期后续签”入口，直接改 operation、prepare Receipt、pause Receipt 或 approval expiry 都会破坏不可变历史，禁止使用。新增 `a0v_053` 的 `extension_dispatch_cutover_approval_refresh_receipt` 作为每个 activation operation 一次的不可变续签权威：请求必须引用原 prepare Receipt 和新的当前 ActionApprovalEvent；服务在同一事务内复验原 operation/Receipt、完全相同的 cutover payload、当前 checker 权限和新审批，再写 refresh Receipt，不改旧表。commit 数据库函数与应用层后续锁统一优先消费经过 content hash 复验的 refresh approval ref；缺少 refresh 时保持原逻辑。漂移 payload、过期审批、跨租户、重复不同请求和 refresh Receipt 篡改全部拒绝。
 
+cutover 完成后真实 Case 已经通过 current E 扩展处理器激活，但 ProductEvent authority refresh 在 P02 预检处安全拒绝。安装时冻结的 runtime binding revision 为 4，正式 cutover validate/resume 按协议把同一 generation 的 binding 推进到 revision 6；预检仍把 revision 4 写死为唯一合法值，因此把已经由不可变 CutoverResumeReceipt 证明的 current ready binding 误判为漂移。修复只扩展私有只读预检：revision 4 保持原安装态精确约束；revision 6 必须额外存在 frozen resume result，并与主库唯一 `phase=resume` Receipt、content hash、operation target、generation/epoch、targetRuntimeRevision 和当前 binding 全部一致。缺 Receipt、Receipt 篡改、跨 installation/generation、非 resumed operation 或其他 revision 一律拒绝，不改变运行时产品逻辑和权限。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
@@ -62,7 +64,9 @@ R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover pr
 ## 代码范围与 preHash
 
 - `scripts/a0v_qyh_current_product_event_first_chain.py`：`b7d2d6612841ec3fc376ce476cfe2a6f5636bb1055bab10748029796c12b3de7`
+- `scripts/a0v_p02_current_preflight.py`：cutover 后只接受有 exact resume Receipt 的 revision 6；preHash `18fc2069fb8337386878e6868e289ec55154b61e270d667305c3ceda7a21aec2`。
 - `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：`56a504025b7de9b499c8aad99e85c6361a9c05eb6fb4126cbda99d817a61238b`
+- `services/aos-api/tests/test_a0v_p02_current_preflight.py`：覆盖安装态 revision 4、cutover Receipt 证明的 revision 6 以及缺失/漂移证明拒绝。
 - `services/aos-api/aos_api/ecommerce_growth_registration_qualification.py`：仅把注册资格的九项筛选范围与九项所有权对齐；完整 release signature/fingerprint 复验保持不变。
 - `services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_qualification.py`：增加带独立 API contribution 仍可验证、九项自身漂移仍拒绝的回归覆盖。
 - `services/aos-api/aos_api/tenant_catalog.py`：schema bootstrap 明确不继承请求租户 scope，避免以 runtime role 误执行 DDL。
