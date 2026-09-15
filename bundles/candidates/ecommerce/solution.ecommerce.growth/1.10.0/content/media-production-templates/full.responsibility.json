@@ -1,0 +1,18 @@
+{
+  "schema": "aos.ecommerce-media-responsibility-template/v1",
+  "templateId": "ecommerce.media-studio.full.responsibility",
+  "revision": 1,
+  "profile": "FULL",
+  "slots": [
+    {"slotId":"media.producer","responsibilityType":"producer","requiredCapabilityIds":["strategy.plan","material.collect","performance.review"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"plan"},
+    {"slotId":"media.director","responsibilityType":"creative_direction","requiredCapabilityIds":["strategy.plan","copy.generate","script.compose"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"plan"},
+    {"slotId":"media.screenwriter","responsibilityType":"screenwriting","requiredCapabilityIds":["copy.generate","script.compose"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"script"},
+    {"slotId":"media.art","responsibilityType":"art_direction","requiredCapabilityIds":["material.collect","strategy.plan","platform.adapt"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"plan"},
+    {"slotId":"media.storyboard","responsibilityType":"storyboard","requiredCapabilityIds":["script.compose","video.compose"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"script"},
+    {"slotId":"media.capture","responsibilityType":"capture_or_generation","requiredCapabilityIds":["material.collect","speech.synthesize","video.compose"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"generate"},
+    {"slotId":"media.post","responsibilityType":"post_production","requiredCapabilityIds":["speech.synthesize","video.compose","platform.adapt"],"required":true,"protected":false,"mergeAllowed":true,"returnStage":"generate"},
+    {"slotId":"media.review","responsibilityType":"independent_review","requiredCapabilityIds":["content.review","performance.review"],"required":true,"protected":true,"mergeAllowed":false,"returnStage":"generate"}
+  ],
+  "addonCapabilityIds": ["live.orchestrate"],
+  "governanceResponsibilityTypes": ["external_publication_approval","receipt_reconciliation"]
+}

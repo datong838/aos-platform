@@ -1,0 +1,37 @@
+{
+  "schema": "aos.ecommerce-media-cost-projection-contract/v1",
+  "contractId": "ecommerce.media-studio.projected-cost",
+  "revision": 1,
+  "profiles": ["LITE", "STANDARD", "FULL"],
+  "priceAuthority": {
+    "resourceType": "ModelPriceSnapshotRevision",
+    "exactRevisionRequired": true,
+    "activeAndEffectiveRequired": true
+  },
+  "dimensions": [
+    "quantity",
+    "unitPrice",
+    "tax",
+    "platformFee",
+    "licenseFee",
+    "redundancy"
+  ],
+  "currencyPolicy": {
+    "pattern": "^[A-Z]{3}$",
+    "crossCurrencyAggregation": false,
+    "fxRefRequiredForConversion": true
+  },
+  "unknownPolicy": {
+    "numericZeroForbidden": true,
+    "confirmationBlocked": true
+  },
+  "actualCostAuthority": "UsageReceipt->Attribution->Adjustment/Reconcile",
+  "confirmationEffect": "accept_recommendation_and_projected_range_only",
+  "forbiddenEffects": [
+    "freeze_responsibility_plan",
+    "create_task_run",
+    "invoke_provider",
+    "publish_external_content",
+    "debit_hard_budget"
+  ]
+}
