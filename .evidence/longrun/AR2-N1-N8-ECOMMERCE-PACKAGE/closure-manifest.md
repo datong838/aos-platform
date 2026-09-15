@@ -1580,3 +1580,12 @@ The currently installed signed growth 1.8 predates the reviewed ProductEvent and
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_control.py` | copy into immutable growth 1.9 candidate | Pure enable/disable command and Receipt verification | `b7b392d3f85dc85cc0b96d84b8ee8517239da312d85a8576197dda76c288b82b` |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_product_event_schedule.py` | copy into immutable growth 1.9 candidate | Pure ProductEvent schedule policy model | `07cc9387bee74bcc9f66cdcfead0fb39ca621689058abfb6a408f736285e51ed` |
 | `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_application.py` | replace 1.8 candidate copy in immutable 1.9 only | Package application composition with optional event-control port; no Host implementation | `828bdac469a72f3a99776539655df0e358858b4ad09f0d5eda380d3740544a9f` |
+
+### SC4-5l6m EventControl optional dispatch lifecycle Host ownership
+
+Optional dispatch membership coordinates tenant session, installed signed release, runtime binding, existing cutover group, Action approval and immutable database Receipts. It therefore remains Host authority. The package contributes only the fixed operation declaration and pure command contract. This planned classification grants no database write until the dedicated migration and Service pass isolated PostgreSQL verification.
+
+| file | destination | boundary | preHash |
+| --- | --- | --- | --- |
+| `services/aos-api/alembic/versions/a0v_054_event_control_dispatch_lifecycle.py` | Host schema migration | Additive immutable Receipt and fixed expand/fence/shrink CAS; no arbitrary operation or package rule | `NEW` |
+| `services/aos-api/aos_api/ecommerce_event_control_dispatch_lifecycle.py` | Host original path | Compose current signed release, exact AIP approval and restricted dispatch transition | `NEW` |
