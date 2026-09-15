@@ -335,3 +335,21 @@ def test_event_journal_empty_upgrade_downgrade_preserves_base(database):
     dispatch = seed(database, TenantScope('org-org', 'dev-project'))
     with bound(database, TenantScope('org-org', 'dev-project')) as (store, _):
         assert put(store, dispatch).replayed is False
+
+
+def test_historical_event_receipt_survives_current_dispatch_removal(database):
+    _migration(database.owner,'a0v_058_event_runtime_receipt.py')
+    migration=_migration(database.owner,'a0v_059_historical_runtime_receipt.py')
+    scope=TenantScope('org-org','dev-project');dispatch=seed(database,scope)
+    database.owner.execute("UPDATE extension_operation_dispatch_binding SET operation_id='ecommerce_growth_event_control'")
+    dispatch=replace(dispatch,operation_id='ecommerce_growth_event_control')
+    with bound(database,scope) as (store,_):assert put(store,dispatch).replayed is False
+    database.owner.execute("DELETE FROM extension_operation_dispatch_binding WHERE operation_id='ecommerce_growth_event_control'")
+    with bound(database,scope) as (store,_):
+        assert store.read(operation_id=dispatch.operation_id,idempotency_key='case-qyh-001')['receiptRef']==TARGET
+    with bound(database,TenantScope('dev-org','dev-project')) as (store,_):
+        assert store.read(operation_id=dispatch.operation_id,idempotency_key='case-qyh-001') is None
+    with pytest.raises(psycopg.Error,match='dispatch authority drifted'):
+        with bound(database,scope) as (store,_):put(store,dispatch)
+    with pytest.raises(psycopg.errors.ForeignKeyViolation):migration.downgrade()
+    assert database.owner.execute('SELECT count(*) n FROM ecommerce_growth_runtime_command_receipt').fetchone()['n']==1

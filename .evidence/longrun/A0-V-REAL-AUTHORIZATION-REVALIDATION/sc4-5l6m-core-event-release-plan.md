@@ -15,3 +15,7 @@
 容器资格预演发现混合导航声明缺少 operation_id；验收器已修复并新增混合项测试（4 passed）。新代码提交后旧构建Receipt的HEAD绑定正确拒绝复验。保留build目录及日志，新建build-v2重新构建、验收和签名，禁止改旧Receipt的HEAD来通过校验。
 
 F→G 顺序细化：使用 scripts/a0v_event_complete_f_retirement.py 固定 F 身份和当前 Policy revision2，先新 exact disable 审批并关闭 automation 事件绑定；再各自审批 fence 与 shrink，实时核对 group/CAS，并由现有服务验证排空与本次 fence Receipt。源schedule必须关闭、未决源执行必须停止。三步各独立intent与Receipt，已有intent禁止重复。完成event收缩后才允许 RuntimeDisableService 禁用F并等待Host完整释放/正式detach；新G尚无已知ID，不预造身份。
+
+## 真实回执后的卸载缺口（a0v_059）
+F event disable 与 fence 已真实成功，shrink因 ar2_005 的历史Receipt→当前dispatch行外键拒绝删除入口，整笔回滚。历史回执不可删除，也不可cascade。修复仅解除历史账本对可卸载当前dispatch行的外键；保留Receipt对安装代次runtime的外键、RLS、不可直写权限、操作白名单，以及写函数中对当前dispatch/runtime的锁与精确身份检查。历史记录保存完整dispatch版本及安装/代次，不把历史Receipt当作当前执行授权。
+新增 a0v_059 迁移按确切列/目标关系验证待移除外键，仅移除这一条；降级若历史Receipt已无当前dispatch则拒绝，不删除历史来降级。PG测试必须覆盖先写真实event Receipt→移除当前入口→历史可读/负租户不可读、再次调用写函数被拒绝；旧九入口回归。备份克隆预演/全表事务指纹保护后部署，原shrink意图无成功Receipt且exact fence快照未变才允许同key恢复。
