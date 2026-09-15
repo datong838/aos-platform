@@ -26,6 +26,8 @@ PG 模式重放又暴露 `ensure_tenant_catalog_schema()` 错误继承 HTTP 请�
 
 R3 approval exact ref、版本和 hash 已从主库验证一致，但 cutover prepare 仍报告 approval 不存在。原因是 Store 以 `aos_extension_maintainer` 查询启用 RLS 的 AIP proposal/approval/draft 表，而这些 tenant policy 只对 `aos_runtime` 生效。审批读取与 current revalidation 必须在同一 serializable transaction 内临时切换到该注册身份本就拥有的 `aos_runtime`，随后恢复 `aos_extension_maintainer` 执行 cutover；不增加 grant、不绕过 RLS，异常由整笔 transaction 回滚。
 
+角色修复部署后首次真实 prepare 又按预期拒绝：原两笔 approval 的 30 分钟有效期已经结束，而 proposal 尚未到期，切换表仍保持零写。AIP 明确禁止同一 checker 对同一 proposal 重复批准，因此恢复动作不得覆盖旧 result、删除旧事件或复用旧审批 key；必须以相同 action type、payload、maker 和双 checker 创建新的 R3 proposal，冻结为独立 refresh intent/result，并让后续 prepare 只消费最新 refresh approval exact ref。旧 proposal 与过期 approval 保留为失败恢复审计证据。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
