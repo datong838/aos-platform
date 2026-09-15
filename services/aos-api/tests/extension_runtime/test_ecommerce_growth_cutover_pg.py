@@ -196,6 +196,7 @@ def database():
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         _migration(root, "a0v_051_cutover_approval_version.py", owner, schema=schema)
+        _migration(root, "a0v_052_cutover_optional_source_ref.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
@@ -955,6 +956,32 @@ def test_commit_function_itself_rejects_current_approval_drift(database):
     request = _commit_request(prepared)
     store.begin_activation_commit(scope, request, actor="runtime-owner")
     database.owner.execute("UPDATE aip_action_proposal SET status='expired'")
+    with _connection(database)(scope) as conn:
+        with pytest.raises(psycopg.Error, match="approval is not bound"):
+            conn.execute(
+                sql.SQL("SELECT {}.extension_dispatch_cutover_commit_ar2_014(%s,%s)").format(
+                    sql.Identifier(database.schema)
+                ),
+                (request.cutover_operation_id, "runtime-owner"),
+            )
+        conn.rollback()
+    assert database.owner.execute(
+        "SELECT count(*) AS n FROM extension_operation_dispatch_binding WHERE handler_kind='legacy'"
+    ).fetchone()["n"] == 9
+
+
+def test_commit_function_rejects_nonempty_source_draft_ref_drift(database):
+    scope = TenantScope("org-org", "dev-project")
+    prepare_request = _seed(database, scope, pending_receipt=False)
+    store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
+    prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
+    request = _commit_request(prepared)
+    store.begin_activation_commit(scope, request, actor="runtime-owner")
+    database.owner.execute(
+        "UPDATE aip_action_draft SET snapshot=jsonb_set(snapshot,'{sourceDraftRef}',"
+        "'{\"resourceType\":\"ActionDraftRevision\",\"resourceId\":\"drift\","
+        "\"revision\":1,\"contentHash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}')"
+    )
     with _connection(database)(scope) as conn:
         with pytest.raises(psycopg.Error, match="approval is not bound"):
             conn.execute(
