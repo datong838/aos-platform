@@ -5,3 +5,9 @@
 新增 `scripts/a0v_i_current_binding_refresh.py`、`scripts/a0v_i_product_preflight.py`、`scripts/a0v_i_product_window.py`，以已验证H profile为基础固定I identity及实际resume引用，独立目录/键，保持原H文件不变。真实Provider探活在独立health目录执行一次；之后以Owner刷新8个capability及8个Skill的当前readiness。源权限是I installation/generation首版previousRef=None；业务Policy沿H5→I6，Case继续原主键。正式切换后core组23，event expand到24。所有写入前做当前exact校验，未知意图只读查Receipt，不重发。
 
 新enable必须在同事务自动生成 scoped bootstrap action 目录，并回读其I安装代次、epoch3、configRef与控制Receipt；这一步无业务执行权。再运行一次原受控商品源任务与自然观察，finally关闭源schedule。验收以真实Case/Run/暂停任务和来源链为证，不手工创建Run或注入handler。后续继续真实评审、内容能力、产物、续跑与复盘，以及八工作台场景。
+
+07:52 I实际enable成功，目录entry929e5bad-e56c-4121-81f4-05980387d2aa，控制Receipt7fa59ceb-db34-58a4-a344-adffba8a15f4，I epoch3/config精确，目录hashb0827b38958c4a43def72aff0fe395ad6970765ed993a70b976d32c823f8ab05。真实源产生65事件；首条发生AttributeError，安全诊断末帧lifecycle_store._require_transaction:55，经source snapshot/current scope路径，尚无analysis runtimeReceipt。新增scripts/a0v_i_product_pause.py按原H暂停profile固定I Policy6/独立key审批并关闭，以保留未知，随后排查事务接口；不重发unknown。
+
+暂停首次因dispatch组行锁等待5秒超时，在进入控制写入前回滚。保留原disable-intent；新增 `scripts/a0v_i_pause_lock_recovery.py` 仅在当前binding仍revision1/enabled且原key无控制Receipt、原命令与审批记录一致时，记录独立恢复意图，通过原router和runtime角色重试同一幂等命令。只将此次维护连接的lock_timeout设为25秒，statement_timeout仍30秒；不改变生产全局设置、不取消其他事务、不放宽审批/权限/CAS。已有恢复意图不重发。
+
+本波实际结果：I新目录自动建立已验证；65条真实事件自然生成，最终9needs_attention/unknown、56pending，analysis runtimeReceipt仍0。源观察finally已关闭schedule；暂停恢复成功，实际disable Receipt3f56ee2c-c420-5c90-a11a-ad4f27aa989f@2/hashc2455db2f39713dd2e762cdff4bb0c2e114489ef9e06f129b346b8cdb394d387，保存在analysis-pause/lock-recovery/result.json；原5秒超时意图保留。精确fixture新增生产_require_transaction检查复现同样AttributeError，进入5L6T修复，不声称首链完成。
