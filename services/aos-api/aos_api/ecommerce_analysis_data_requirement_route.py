@@ -96,7 +96,10 @@ class AnalysisDataRequirementRouteReader:
                  FROM public.ecommerce_growth_runtime_command_receipt
                 WHERE org_id=%s AND project_id=%s
                   AND operation_id='ecommerce_growth_analysis_advance'
-                  AND response->'runRef'=%s::jsonb""",
+                  AND response->'runRef'=%s::jsonb
+                  AND response->>'phase'='PREPARING'
+                  AND response->'completed'='false'::jsonb
+                  AND response->'requirementRef'='null'::jsonb""",
             (*scope.key, Jsonb(run_ref)),
         ).fetchall()
         if len(rows) != 1:

@@ -1,4 +1,5 @@
 """Full-schema original pending -> twelve-source snapshot -> unified resume."""
+import asyncio
 from copy import deepcopy
 from datetime import timedelta
 import hashlib
@@ -15,7 +16,8 @@ from test_analysis_snapshot_native_claims_pg import native_claims_case as base_n
 from test_analysis_snapshot_native_projection_pg import native_projection_case
 from test_product_event_consumer_pg import consumer_case as base_consumer_case
 from test_analysis_data_preparation_pg import (
-    data_case as base_data_case, prepare as prepare_data, formal_case, preview_case, review_identity,
+    data_case as base_data_case, prepare as prepare_data, _automatic_readers,
+    formal_case, preview_case, review_identity,
     compilation_case as base_compilation_case, context_case, startup_case,
     analysis_case, host_case, control_governed, governed, service_case,
     pair, body,
@@ -159,7 +161,7 @@ def policy_ref(base, kind, path, raw):
 
 
 @pytest.fixture
-def chain_case(native_projection_case, data_case, monkeypatch):
+def chain_case(native_projection_case, data_case, monkeypatch, request):
     objects, conn, args, state = native_projection_case
     data_conn, analysis, claimed, _ = data_case
     assert data_conn is conn and analysis.scope == args['scope']
@@ -180,7 +182,55 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         'resource_id': 'content/policies/snapshot-relationships.v1.json',
         'content_hash': 'sha256:' + hashlib.sha256(relation_raw).hexdigest()})
     args = args | {'policy_ref': relation_ref}
-    requested = prepare_data(data_case)
+    natural = getattr(request, 'param', None) == 'natural-worker'
+    if natural:
+        from contextlib import contextmanager
+        from aos_api.ecommerce_product_event_worker import ProductEventConsumptionWorker
+        from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
+        from aos_api.pipeline_control_service import PipelineControlServiceFactory
+        import aos_api.ecommerce_product_event_worker as event_worker_module
+
+        original_installed_reader = analysis.invoker.read_current_in_transaction
+        missing_owner = not hasattr(analysis.source.reader, '_owner')
+        original_source_owner = getattr(analysis.source.reader, '_owner', None)
+        _automatic_readers(data_case, monkeypatch)
+        factory = object.__new__(PipelineControlServiceFactory)
+        directory = LivePreparedJobDirectory()
+        event_worker = ProductEventConsumptionWorker(factory, directory)
+        monkeypatch.setattr(event_worker, '_origin', lambda scope, current: {
+            'actor': analysis.source.actor, 'runId': first_run,
+            'controlRef': first_ref.model_dump(mode='json', by_alias=True),
+        })
+        monkeypatch.setattr(event_worker, '_markings', lambda scope, actor: ('internal',))
+        monkeypatch.setattr(PipelineControlServiceFactory, 'build_event_analysis',
+            lambda self, scope, **kwargs: analysis)
+        @contextmanager
+        def store():
+            yield objects._store
+        async def dispatch(scope, **kwargs):
+            assert kwargs['target'].trigger_source == 'event'
+            await kwargs['handler'](claimed)
+            return True
+        monkeypatch.setattr(event_worker_module, '_authoritative_store', store)
+        monkeypatch.setattr(event_worker_module, 'dispatch_one_occurrence_async', dispatch)
+        assert asyncio.run(event_worker._dispatch((analysis.scope,
+            analysis.invoker.installation_id, analysis.invoker.generation)))
+        analysis.invoker.read_current_in_transaction = original_installed_reader
+        if missing_owner:
+            del analysis.source.reader._owner
+        else:
+            analysis.source.reader._owner = original_source_owner
+        row = conn.execute('''SELECT h.requirement_id,h.current_revision,r.content_hash
+            FROM data_requirement_head h JOIN data_requirement_revision r
+              ON r.org_id=h.org_id AND r.project_id=h.project_id
+             AND r.requirement_id=h.requirement_id AND r.revision=h.current_revision
+            WHERE h.org_id=%s AND h.project_id=%s''', analysis.scope.key).fetchone()
+        assert row is not None
+        requested = {'requirementRef': dict(resourceType='DataRequirementRevision',
+            resourceId=row['requirement_id'], revision=row['current_revision'],
+            contentHash='sha256:' + row['content_hash'])}
+    else:
+        requested = prepare_data(data_case)
     tx = HostTransaction(conn)
     root = _HostAnalysisReceiptStore(tx, analysis.scope).read(claimed.target_idempotency_key)
     now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
@@ -242,17 +292,7 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         (cohort_ref,cohort_raw),(field_ref,field_raw),(business_policy_ref,business_raw),
         (readiness_policy_ref,readiness_raw))}
     objects._claims._controls._selections._artifacts.read_artifact = lambda selected,path,limit: documents[path]
-
-    source = AnalysisSnapshotSourceEvidence(analysis,store=objects._store)
-    source_call = dict(receipt_ref=root['receiptRef'],policy_ref=relation_ref,quality_ref=quality_ref,
-        cohort_ref=cohort_ref,field_ref=field_ref)
-    source_ref = source.capture_current(conn,**source_call)
-    quality = AnalysisSnapshotQualityEvidence(source)
-    query_ref = quality.query.execute_current(conn,evidence_ref=source_ref)
-    quality_evidence_ref = quality.put_current(conn,evidence_ref=source_ref,query_ref=query_ref)
-    business = AnalysisSnapshotBusinessEvidence(source)
-    business_ref = business.put_current(conn,evidence_ref=source_ref,query_ref=query_ref,
-        quality_ref=quality_evidence_ref,policy_ref=business_policy_ref)
+    state['policy_documents'] = documents
 
     cap = VersionedAssetRef(asset_type='CapabilityRevision',asset_id='strategy.plan',revision=1,content_hash='1'*64)
     deps = OperationalBindingDependencies(); digest = AipBindingReadinessService.snapshot_hash(cap,deps)
@@ -272,6 +312,21 @@ def chain_case(native_projection_case, data_case, monkeypatch):
             dependency_snapshot_hash=self.snapshot_hash(ref,dependencies),evaluated_at=evaluated_at,
             expires_at=evaluated_at+timedelta(minutes=15)))
     monkeypatch.setattr(binding.ContentGenerateHostService,'_binding_dependency_authority',lambda *a,**k:None)
+
+    state['completion'] = completion
+    if natural:
+        return conn,state,analysis,None,root,requirement
+
+    source = AnalysisSnapshotSourceEvidence(analysis,store=objects._store)
+    source_call = dict(receipt_ref=root['receiptRef'],policy_ref=relation_ref,quality_ref=quality_ref,
+        cohort_ref=cohort_ref,field_ref=field_ref)
+    source_ref = source.capture_current(conn,**source_call)
+    quality = AnalysisSnapshotQualityEvidence(source)
+    query_ref = quality.query.execute_current(conn,evidence_ref=source_ref)
+    quality_evidence_ref = quality.put_current(conn,evidence_ref=source_ref,query_ref=query_ref)
+    business = AnalysisSnapshotBusinessEvidence(source)
+    business_ref = business.put_current(conn,evidence_ref=source_ref,query_ref=query_ref,
+        quality_ref=quality_evidence_ref,policy_ref=business_policy_ref)
 
     readiness = AnalysisSnapshotReadiness(AnalysisSnapshotReadinessContext(business))
     ready = readiness.put_current(conn,business_ref=business_ref,policy_ref=readiness_policy_ref)
@@ -294,7 +349,6 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         readinessPolicyRef=readiness_policy_ref.model_dump(mode='json',by_alias=True,exclude_none=True))
     command['requestHash'] = _analysis_command_hash(command)
     context = AnalysisSnapshotResumeContext(fulfillment,AnalysisContinuationOrigin(AnalysisContinuationContext(analysis)))
-    state['completion'] = completion
     return conn,state,analysis,_AnalysisSnapshotResumeSession(context,conn,command),root,requirement
 
 
