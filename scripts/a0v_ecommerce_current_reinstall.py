@@ -117,7 +117,8 @@ def observe_installation(installation_id: str) -> dict[str, Any]:
             params,
         ).fetchall()
         operations = conn.execute(
-            """SELECT operation_id,kind,status,phase,revision,failure_code
+            """SELECT operation_id,kind,status,phase,revision,failure_code,
+                      deadline < clock_timestamp() AS deadline_expired
                FROM extension_runtime_operation
                WHERE org_id=%s AND project_id=%s AND installation_id=%s
                ORDER BY created_at""",
@@ -232,6 +233,53 @@ def require_predecessor_drain(snapshot: dict[str, Any]) -> dict[str, Any]:
         "etag": PREDECESSOR["revision"],
         "generation": PREDECESSOR_GENERATION,
         "bindingRevision": binding["revision"],
+    }
+
+
+def require_stale_enable_cancel(
+    snapshot: dict[str, Any], *, expected_operation_id: str
+) -> dict[str, Any]:
+    head = snapshot["head"]
+    bindings = snapshot["bindings"]
+    if snapshot.get("canaryInstallations") != 0:
+        raise ValueError("canary installation drift")
+    if head["state"] != "active" or head["etag_version"] != 5 or len(bindings) != 1:
+        raise ValueError("one active installation generation required")
+    binding = bindings[0]
+    if (
+        binding["revision"] != 3
+        or binding["execution_epoch"] != 2
+        or binding["enabled"] is not False
+        or binding["operation_fence"] is not True
+        or binding["desired_state"] != "disabled"
+        or binding["observed_state"] != "unknown"
+        or not binding["config_ref"]
+    ):
+        raise ValueError("exact post-failure binding required")
+    pending = [
+        item
+        for item in snapshot["operations"]
+        if item["status"] not in {"succeeded", "failed", "cancelled"}
+    ]
+    if (
+        len(pending) != 1
+        or str(pending[0]["operation_id"]) != expected_operation_id
+        or pending[0]["kind"] != "enable"
+        or pending[0]["status"] != "accepted"
+        or pending[0]["phase"] != "accepted"
+        or pending[0]["deadline_expired"] is not True
+    ):
+        raise ValueError("one exact expired enable operation required")
+    if not snapshot["resources"] or any(
+        item["cleanup_state"] != "released" or item["observed_release"] is not True
+        for item in snapshot["resources"]
+    ):
+        raise ValueError("post-failure released resources required")
+    return {
+        "etag": 5,
+        "generation": str(binding["generation"]),
+        "bindingRevision": binding["revision"],
+        "expiredEnableOperationId": expected_operation_id,
     }
 
 
@@ -421,6 +469,38 @@ def drain_predecessor() -> dict[str, Any]:
     }
 
 
+def cancel_stale_enable_a() -> dict[str, Any]:
+    installation_id = _initial("a")["installationId"]
+    original = json.loads((STATE / "enable-a-command.json").read_text(encoding="utf-8"))
+    operation_id = str(original["receipt"]["operationId"])
+    command = require_stale_enable_cancel(
+        observe_installation(installation_id), expected_operation_id=operation_id
+    )
+    _freeze(
+        STATE / "a/cancel-stale-enable-intent.json",
+        {"installationId": installation_id, **command},
+    )
+    activation, _store, _lifecycle, service, _dependent = _setup_runtime_plane()
+    receipt = service.request(
+        **SCOPE,
+        installation_id=installation_id,
+        actor=activation.ACTOR,
+        roles=activation.ROLES,
+        markings=activation.MARKINGS,
+        idempotency_key="a0v-current-ecommerce-a-cancel-stale-enable-20260915",
+        if_match='"5"',
+        target={
+            "generation": command["generation"],
+            "bindingRevision": command["bindingRevision"],
+        },
+    )
+    return {
+        "command": command,
+        "receipt": receipt.response_json,
+        "replayed": receipt.replayed,
+    }
+
+
 @contextmanager
 def _installation_connection():
     import psycopg
@@ -481,7 +561,8 @@ def main() -> None:
         "action",
         choices=(
             "observe", "create-a", "prepare-a", "verify-a", "stage-a", "configure-a",
-            "enable-a", "drain-predecessor", "disable-a", "recover-a", "disable-a-final",
+            "enable-a", "drain-predecessor", "cancel-stale-enable-a", "disable-a",
+            "recover-a", "disable-a-final",
             "uninstall-a", "create-b", "prepare-b",
             "verify-b", "stage-b", "configure-b", "enable-b",
         ),
@@ -499,6 +580,8 @@ def main() -> None:
         result = lifecycle(label, action)
     elif args.action == "drain-predecessor":
         result = drain_predecessor()
+    elif args.action == "cancel-stale-enable-a":
+        result = cancel_stale_enable_a()
     elif args.action == "disable-a":
         result = disable("a")
     elif args.action == "disable-a-final":

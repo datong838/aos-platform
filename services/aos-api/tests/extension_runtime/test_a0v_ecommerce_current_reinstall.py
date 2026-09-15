@@ -157,3 +157,36 @@ def test_final_disable_uses_distinct_intent_and_idempotency_key(
     assert (tmp_path / "a/disable-final-intent.json").is_file()
     assert len(calls) == 1
     assert calls[0]["idempotency_key"] == "a0v-current-ecommerce-a-disable-final-20260915"
+
+
+def test_stale_enable_cancel_requires_one_exact_expired_operation(reinstall):
+    value = snapshot(enabled=False, fenced=True)
+    value["bindings"][0].update({
+        "execution_epoch": 2,
+        "desired_state": "disabled",
+        "observed_state": "unknown",
+        "revision": 3,
+        "config_ref": {"configurationId": "configuration-a"},
+    })
+    value["operations"] = [{
+        "operation_id": "operation-a",
+        "kind": "enable",
+        "status": "accepted",
+        "phase": "accepted",
+        "deadline_expired": True,
+    }]
+    assert reinstall.require_stale_enable_cancel(
+        value, expected_operation_id="operation-a"
+    )["bindingRevision"] == 3
+    for field, changed in (
+        ("operation_id", "operation-b"),
+        ("kind", "configure"),
+        ("status", "running"),
+        ("phase", "validating"),
+        ("deadline_expired", False),
+    ):
+        drifted = {**value, "operations": [{**value["operations"][0], field: changed}]}
+        with pytest.raises(ValueError, match="exact expired enable"):
+            reinstall.require_stale_enable_cancel(
+                drifted, expected_operation_id="operation-a"
+            )
