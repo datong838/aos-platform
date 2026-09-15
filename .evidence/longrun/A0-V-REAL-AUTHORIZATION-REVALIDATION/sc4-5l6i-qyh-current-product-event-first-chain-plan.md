@@ -1,0 +1,63 @@
+# SC4-5l6i 栖月汇当前包真实 ProductEvent 首链方案
+
+日期：2026-09-15
+代码基线：`ed22f062`
+任务权威：`A0V-QYH-CURRENT-PRODUCT-EVENT-FIRST-CHAIN-20260915` 与 `A0V-STANDALONE-RUNTIME-BUSINESS-WORKERS-20260915`，owner=`m1`，有效至 2026-09-17 23:59 +08:00。
+
+## 目标与当前事实
+
+本波把最终安装 C 从“包与容器可运行”推进到“真实数据变化能自然进入经营分析”。当前 C `044c2743-9700-4e84-a6c1-98670c94f005@5`、generation `09d2a19a-d85a-4c81-981c-87c1600944ea` 已 ready/enabled/unfenced，签名组合为 core 1.3、Niushop 1.22、growth 1.8、operations-base 1.2。
+
+2026-09-15 通过受控 API 的正式 Source probe 重验 `niushop-qyh`：当前配置 revision `a84b6c79-8654-48f0-98c2-57d41b067b3d` 经 SSH/JDBC 只读连接在 2364ms 内返回 302 张表、未截断，包含 `ns_goods/ns_goods_sku/ns_order/ns_goods_evaluate/ns_pay/ns_express_delivery_package` 等；没有读取业务行或写上游。
+
+主库的两个 SourceSelection/RuntimeControl 均绑定已退役历史安装，当前 C 为零；ProductEvent policy、Case、Run 均为零。既有 P02 真实首读证明 65 商品、39 active/18 inactive/8 deleted，但该证据是 2026-09-13 历史批次，不能替代本次新鲜读取。
+
+另一个实现缺口是：`main.py` 的内嵌 Host 模式会随 Host 启动 ProductEvent Worker 与 AnalysisDataRequirement Worker，而 `a0v_ecommerce_runtime_host.py` 独立 Host 启动器只运行生命周期 Host。当前 API 为避免双写明确禁用内嵌 Host，因此若不修复独立启动器，真实事件不会自然消费。
+
+## Rules、主路径与停止条件
+
+1. 先修独立 Host 生命周期接线，再配置真实链。ProductEvent Worker 与 DataRequirement Worker使用同一个 control plane、LivePreparedJobDirectory、stop event 和 Host health；Host 停止后两者必须退出。保持 API 内嵌 Host disabled，保持 QYH Cron disabled。
+2. 当前 P02 配置必须从 C 的当前 installation/generation/config ref 与签名 Niushop 1.22 资产生成；复用正式 SourceSelection、RuntimeControl、ScheduleBinding Owner。不得复制历史 selection/control ref，不直接写控制表。
+3. 当前源读取固定 `ns_goods/site_id=1`、SNAPSHOT、最多1000行、30秒、一次 source call；读前重验精确 source configuration 和 mapping/schema/masking hash。结果未知时按原 run/key/claim/journal 对账，不换键重读。
+4. 真实批次必须保留 active/inactive/deleted 与原源时间语义，不把旧65条或前次窗口冒充当前数据。当前批次完成后由原 Journal、Dataset Receipt、SourceClaim 与 projection evidence交叉核验。
+5. ProductEvent policy 必须引用当前 C 的 P02 SourceSelection、当前 Case/Profile/方法及现有正式 Approval；Event Control 只允许当前 C 的 extension dispatch。不得用 fixture、直接 SQL 或脚本自报 approval 生成可执行绑定。
+6. “计划为空”先形成全店基线/商品尖刀验证 Case候选及有来源的经营问题；本波允许用正式 Case/Plan/Approval入口完成一次租户初始化配置，但事件后的 Occurrence、Analysis Run、Task/Run、DataRequirement 与后续恢复必须由 Worker自然产生，禁止逐表手工制造成功状态。
+7. 若当前有效独立审批、职责、方法、预算、模型健康或十二源策略不足，保留准确阻断与已完成的真实数据证据；不扩大角色、不伪造批准、不用旧 Receipt 代替当前授权。
+8. 正租户固定 `org-org/dev-project`；canary `dev-org/dev-project` 只检查零写。上游只读，无外部发布、触达、投流、价格或履约写；不 push，230 L0 挂起。
+9. 相同阶段失败两次、来源结果未知、Host/数据库单写冲突、租户或 exact ref 漂移时停止该写动作，先读回原 Receipt；不重发未知操作。
+
+## 方案与代码范围
+
+### A. 独立 Host 的业务 Worker 生命周期
+
+- 修改 `scripts/a0v_ecommerce_runtime_host.py`：`_build_host` 返回 host 与其原 control plane，`_serve` 启动 lifecycle Host task，再从同一 control plane 构造 ProductEvent Worker 与 AnalysisDataRequirement Worker。两个 Worker 仅在 Host task 未结束时运行，共享 stop event；关闭时先置 stop，再等待三个任务结束。任何 Worker 构造失败均阻止 ACTIVE 状态；后台异常进入固定安全状态，不输出业务载荷或秘密。
+- 修改 `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_runtime_host.py`：验证两个 Worker均启动、共享 stop/Host health、Host正常退出使两者退出、构造失败不宣告 ACTIVE、原凭据/锁/安全异常合同不变。
+
+### B. 当前 C 的真实 P02 与 ProductEvent 控制器
+
+- 新增 `scripts/a0v_qyh_current_product_event_first_chain.py`：固定仓外0700状态目录、0600 intent/result；分 action 执行 observe、source-probe、prepare-p02、select、control、schedule、bind、enable/read/disable、Case/Policy/EventControl 与最终观察。每项在调用前按主库当前事实生成并冻结 intent；已有 intent/result 时只读，不重发。
+- 新增 `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：验证 C/ref/hash/epoch 固定、历史引用拒绝、上游只读边界、状态机、未知结果只观察、canary与外部副作用为零。执行组件继续由现有生产 Owner测试覆盖，不复制实现。
+- 若实际盘点证明某一步已有通用正式入口，控制器只做严格装配与证据，不新增第二套 Store/Receipt；若正式入口缺失，先补本方案再进行最小产品实现。
+
+## preHash
+
+- `scripts/a0v_ecommerce_runtime_host.py`：`88935d03f619c2a21a3dea1ef0617c92c3cd8458`
+- `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_runtime_host.py`：`45e1c4a46692c4de66cbd73fd8196d6f049516e5`
+- `scripts/a0v_p02_current_preflight.py`：`44f9a5f4d498955a45fd9672a1ca8fc686d7048e`
+- `services/aos-api/aos_api/ecommerce_product_event_worker.py`：`62734cb80f64098f0df7c1b2065619015d5aec53`
+- `services/aos-api/aos_api/ecommerce_analysis_data_requirement_worker.py`：`a140200484a694f1684226fbbdd40fa8071adf7e`
+- `services/aos-api/aos_api/main.py`：`4d55aa576021b657dade0104c3be3e385482fa6e`
+- 新控制器、新测试与本方案：`NEW`。
+
+## 六步退出条件
+
+1. 当前包、来源、历史配置、Host接线和经营资料盘点完成；真实 Source probe 通过。
+2. 本方案、范围、preHash、授权与停止条件提交。
+3. 独立 Host 同生命周期 Worker接线及测试通过；唯一 Host受控重启后 C 与三个 OCI连续可用。
+4. C 的 P02 SourceSelection/RuntimeControl/ScheduleBinding 通过正式入口持久化；一次新鲜真实只读批次完成，SourceClaim/Journal/Dataset/Projection exact对账，canary为零。
+5. 当前 Case、ProductEvent policy 与 Event Control经当前职责/审批门启用；真实批次由 Worker生成 Occurrence和 Analysis入口，不由脚本写成功 Receipt。
+6. Case/Run/Task/DataRequirement及来源化分析状态独立读回；幂等复跑无重复对象，Host重启可恢复。落验证证据后进入下一波 exact 三阶段评审与经营计划候选，再承接八工作台内容/能力任务。
+
+## 完成边界
+
+本波成功只证明“当前签名包 + 当前真实来源 + 自然事件 → 分析入口/等待数据或运行态”。经营建议质量、exact 方案通过、内容与媒体产物、人工评审后续跑、总控复盘和 WikiCandidate 需继续按后续波次逐项实测；在这些完成并连续观察前不作发布决定。
