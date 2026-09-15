@@ -24,3 +24,5 @@ F event disable 与 fence 已真实成功，shrink因 ar2_005 的历史Receipt�
 
 G安装实测后精确身份：installation 4b081ad7-2cf6-4188-bc18-870726da1262，generation 1c8d9a2d-0a1b-4caa-9fef-528568fd2629，初始runtime revision4/epoch3；lock sha256:3997ccbf5729e46dd7947db59d3093b9963e5e74c5bdfa627003c8fbacfad1cc；config bf6875bf-c01b-46ad-bb1f-d7c634369f5e@1 / sha256:e420c697c1969955a8d44ed3b7e2c0497416c72436433fdc9fcd982bd942e796。F detach Receipt3a0aa78f-c6c7-4584-9792-b6491e16f67d；当前九入口legacy/fenced/groupRevision10。
 新增 scripts/a0v_event_complete_successor_business.py 按上述固定身份登记；随后 scripts/a0v_event_complete_successor_cutover.py 绑定实际登记Receipt、新独立审批/操作ID完成接管。旧F脚本不改，G不可复用F审批。
+
+G接管已resumed，后续source/profile脚本以G当前binding6/epoch3及group11为固定检查。新G Product授权为首版本（安装维度）；源schedule沿旧绑定版本继续CAS。业务Case不重建：从F成功的Policy revision2与Case version4生成Policy revision3/Case version5，保留业务历史ID、换成G current SourceSelection。新增a0v_event_complete_product_{preflight,authority,policy,enable,source_once}.py，仅通过正式Owner/服务/API推进。新源执行有自己幂等intent，不重新发送F旧run；新的当前数据更新会形成独立来源证据。
