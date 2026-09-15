@@ -1,7 +1,8 @@
 # SC4-5l6f1 DataRequirement Outbox 原路由验证
 
-日期：2026-09-15  
-基线：`c9feb7ef`  
+日期：2026-09-15
+
+基线：`c9feb7ef`
 范围：只读 Outbox → 原 Analysis/Occurrence/ProductEvent/SnapshotGroup 路由；不读取商城源、不生成 Evidence、不调用 Provider、不恢复 Run、不确认 Outbox。
 
 ## 实现
@@ -30,6 +31,7 @@
 - `py_compile`：新增产品模块与测试通过。
 - `git diff --check`：通过。
 - `verify_closure.py --phase ar2-7`：追加清册后为 `1953 scanned / 193 classified / 93 migrated`，五类错误全部为空。
+- Prime/shared-memory：七个强一致投影 `CURRENT`，Codex eventual 投影保持 `PENDING_ASYNC`；`memoryctl validate` 为 `GREEN`，AOS-000573，1201 Delivery / 1183 Task / 2900 Event。
 
 默认不带 `--phase` 的验证器会检查冻结的 `ar2-0` 历史 hash，并把 A0-V 后续合法演进报告为漂移；本波权威阶段仍使用 `ar2-7`。该失败不用于修改历史 hash。
 
