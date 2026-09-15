@@ -17,11 +17,11 @@ CUTOVER_RESUME=ROOT.parent/'.aos-recovery-20260915/state/niushop-1.23-current-pa
 NIUSHOP_VERSION='1.23.0'
 
 
-def require_cutover_resume(create_receipt,binding,result,row):
+def require_cutover_resume(create_receipt,binding,result,row,*,expected_outcome="CURRENT_E_CUTOVER_RESUMED"):
     from aos_api.asset_registry.canonical_json import canonical_sha256
     receipt=result.get('receipt',{}) if type(result) is dict else {}
     authority=row.get('authority_data',{}) if type(row) is dict else {}
-    if (result.get('outcome')!='CURRENT_E_CUTOVER_RESUMED'
+    if (result.get('outcome')!=expected_outcome
             or receipt.get('phase')!='resume' or receipt.get('status')!='resumed'
             or str(row.get('receipt_id'))!=receipt.get('receiptId')
             or row.get('content_hash')!=receipt.get('contentHash')
