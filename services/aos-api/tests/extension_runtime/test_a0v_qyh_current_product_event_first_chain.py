@@ -1,5 +1,7 @@
 import importlib
+from io import BytesIO
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pytest
 
@@ -15,7 +17,8 @@ def test_scope_and_business_route_are_fixed(control):
     assert control.PIPELINE == "P02-product-qyh"
     assert control.SCHEDULE == "sch-p02-qyh-controlled-20260913-v1"
     assert control.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
-    assert "p02-e-first-chain" in str(control.STATE)
+    assert str(control.STATE).endswith("p02-e-first-chain-r2")
+    assert str(control.PREVIOUS_STATE).endswith("p02-e-first-chain")
 
 
 def test_private_freeze_is_exclusive(control, tmp_path):
@@ -27,6 +30,27 @@ def test_private_freeze_is_exclusive(control, tmp_path):
     control.freeze_or_match(target, {"outcome": "once"})
     with pytest.raises(ValueError, match="intent differs"):
         control.freeze_or_match(target, {"outcome": "changed"})
+
+
+def test_previous_result_must_be_private(control, monkeypatch, tmp_path):
+    monkeypatch.setattr(control, "PREVIOUS_STATE", tmp_path)
+    target = tmp_path / "selection-result.json"
+    target.write_text('{"ref":{"revision":1}}', encoding="utf-8")
+    target.chmod(0o644)
+    with pytest.raises(ValueError, match="private previous selection"):
+        control.load_previous_result("selection")
+    target.chmod(0o600)
+    assert control.load_previous_result("selection")["ref"]["revision"] == 1
+
+
+def test_api_error_keeps_only_safe_code(control, monkeypatch):
+    error = HTTPError("http://local", 403, "forbidden", {}, BytesIO(
+        b'{"detail":{"code":"SCHEDULE_CONTROL_FORBIDDEN","message":"hidden"}}'
+    ))
+    monkeypatch.setattr(control, "urlopen", lambda *_a, **_k: (_ for _ in ()).throw(error))
+    with pytest.raises(RuntimeError, match="403:SCHEDULE_CONTROL_FORBIDDEN") as caught:
+        control.api("POST", "/v1/schedules/s/run", {})
+    assert "hidden" not in str(caught.value)
 
 
 def test_execute_refuses_historical_or_enabled_schedule(control, monkeypatch, tmp_path):

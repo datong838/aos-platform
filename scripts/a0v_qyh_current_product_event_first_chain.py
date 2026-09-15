@@ -14,7 +14,8 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-STATE = ROOT.parent / ".aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain"
+PREVIOUS_STATE = ROOT.parent / ".aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain"
+STATE = ROOT.parent / ".aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain-r2"
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 PIPELINE = "P02-product-qyh"
 SCHEDULE = "sch-p02-qyh-controlled-20260913-v1"
@@ -46,6 +47,13 @@ def load_result(name: str) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_previous_result(name: str) -> dict[str, Any]:
+    path = PREVIOUS_STATE / f"{name}-result.json"
+    if not path.is_file() or path.stat().st_mode & 0o777 != 0o600:
+        raise ValueError(f"private previous {name} result required")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def setup():
     sys.path.insert(0, str(ROOT / "scripts"))
     preflight = importlib.import_module("a0v_p02_current_preflight")
@@ -73,14 +81,16 @@ def prepare(preflight) -> dict[str, Any]:
 def approve_selection(preflight, plane) -> dict[str, Any]:
     prepared = load_result("prepare")
     draft = prepared["draft"]
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-selection-20260915-v1", "draft": draft}
+    previous = load_previous_result("selection")["ref"]
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-selection-20260915-v2",
+              "draft": draft, "previousRef": previous}
     freeze_or_match(STATE / "selection-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft
     from aos_api.tenant_scope import TenantScope
 
     ref = plane.pipeline_control_factory.build(TenantScope(**SCOPE)).approve_selection(
         draft=PipelineSourceSelectionDraft.model_validate_json(json.dumps(draft)), actor=ACTOR,
-        idempotency_key=intent["idempotencyKey"], previous_ref=None,
+        idempotency_key=intent["idempotencyKey"], previous_ref=previous,
     )
     return {"outcome": "CURRENT_PRODUCT_SELECTION_APPROVED", "ref": ref.model_dump(mode="json", by_alias=True)}
 
@@ -90,14 +100,16 @@ def approve_control(preflight, plane) -> dict[str, Any]:
     selection = load_result("selection")["ref"]
     draft = {**prepared["draft"], "schemaVersion": "aos.pipeline-runtime-control-draft/v1",
              "sourceSelectionRef": selection}
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-control-20260915-v1", "draft": draft}
+    previous = load_previous_result("control")["ref"]
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-control-20260915-v2",
+              "draft": draft, "previousRef": previous}
     freeze_or_match(STATE / "control-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDraft
     from aos_api.tenant_scope import TenantScope
 
     ref = plane.pipeline_control_factory.build(TenantScope(**SCOPE)).approve_control(
         draft=PipelineRuntimeControlDraft.model_validate_json(json.dumps(draft)), actor=ACTOR,
-        idempotency_key=intent["idempotencyKey"], previous_ref=None,
+        idempotency_key=intent["idempotencyKey"], previous_ref=previous,
     )
     return {"outcome": "CURRENT_PRODUCT_CONTROL_APPROVED", "ref": ref.model_dump(mode="json", by_alias=True)}
 
@@ -130,10 +142,13 @@ def bind_schedule(preflight, plane) -> dict[str, Any]:
         )
     if previous is None:
         raise ValueError("historical Product schedule binding required")
+    expected_previous = load_previous_result("binding")["ref"]
+    if previous.ref.model_dump(mode="json", by_alias=True) != expected_previous:
+        raise ValueError("previous Product schedule binding differs")
     control = load_result("control")["ref"]
-    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-schedule-binding-20260915-v1",
+    intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-e-schedule-binding-20260915-v2",
               "scheduleId": SCHEDULE, "controlRef": control,
-              "previousRef": previous.ref.model_dump(mode="json", by_alias=True)}
+              "previousRef": expected_previous}
     freeze_or_match(STATE / "binding-intent.json", intent)
     ref = service.bind_schedule(
         pipeline_id=PIPELINE, schedule_id=SCHEDULE, control_ref=control, actor=ACTOR,
@@ -152,7 +167,18 @@ def api(method: str, path: str, body: dict[str, Any] | None = None) -> tuple[int
         with urlopen(request, timeout=45) as response:
             return response.status, json.loads(response.read())
     except HTTPError as error:
-        raise RuntimeError(f"controlled API returned {error.code}") from error
+        safe_code = "HTTP_ERROR"
+        try:
+            payload = json.loads(error.read())
+            detail = payload.get("detail") if type(payload) is dict else None
+            candidate = payload.get("code") if type(payload) is dict else None
+            if candidate is None and type(detail) is dict:
+                candidate = detail.get("code")
+            if type(candidate) is str and candidate.isidentifier():
+                safe_code = candidate
+        except (json.JSONDecodeError, OSError, TypeError):
+            pass
+        raise RuntimeError(f"controlled API returned {error.code}:{safe_code}") from error
 
 
 def execute_once(preflight, plane) -> dict[str, Any]:
