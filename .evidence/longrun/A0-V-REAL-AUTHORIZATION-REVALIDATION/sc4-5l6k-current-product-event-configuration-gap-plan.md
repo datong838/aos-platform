@@ -12,25 +12,32 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 当前 canonical shop refs、`initial_store_analysis` profile/scope、该 profile 的职责与阶段模板已经存在。Case selection 的公开预览因十二类 SourceReadiness 未完成而显示 `SOURCE_READINESS_NOT_READY`；领域包的 `ecommerce_growth_case_put` 正式 Host 入口仍允许建立 DRAFT Case，后续分析必须用原 `WAITING_DATA`、DataRequirement 与恢复链表达数据不足，禁止伪造 readiness。
 
+首次经 canonical router 提交 Case 时平台以 `EcommerceGrowthHostBlocked: current dispatch is not executable` 拒绝，且 Case 零写。主库读回进一步证明九项 `extension_operation_dispatch_binding` 全部仍为 `handler_kind=legacy`、`operation_fence=true`、revision 1，installation/generation 为空。当前 E 的 runtime ready 不能替代正式 Host dispatch 权威；任何直接调用 Store/Host port 的做法都会绕过安装边界，禁止使用。
+
+旧 installation `97aeb2e7-59ba-40f6-89a3-fb0293bc0497` 仍持有一笔未使用、可撤销的 first-dispatch registration；其状态为 `registered`、`allowedActions=[withdraw]`、`executable=false`。当前 E 为 `unregistered`。因此必须先正式撤销旧的 pristine registration，再以 E 的 current installation revision、generation、binding revision、execution epoch 和 config exact ref 注册九项 fenced legacy 起点；之后才能执行 exact activation cutover。
+
 当前租户只有 `a0v-ecommerce-growth-1.4-runtime-owner=admin` 与 `user:dev=owner`。运行时 owner 必须执行且不能批准自己的执行；当前审批门的 checker 角色只接受 `admin/approver/aip_approver`，而 workspace 正式成员模型只提供 owner/admin/editor/viewer，故两名现有成员不能组成 maker/checker/executor 三方链。应由现有 tenant owner 经正式 workspace member 入口增加一个用途受限的 checker 身份，角色为 admin；不得改原两名成员角色。全局 `meta_action_type` 尚缺 `ecommerce_growth_schedule_put` 与 `ecommerce_growth_event_control`，而现有包 manifest 只有 actionTypes 权限声明，没有动作类型定义随安装落地。这些都是“可安装、可重装后无需开发者接线”的真实生命周期缺口，必须进入后续包配置计划。
 
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
 2. `configure-brief` 创建并冻结“栖月汇全店基线与商品尖刀验证”真实 TaskBrief，来源引用本次 P02 Dataset/Run，目标是识别商品结构、在售/下架变化和后续数据缺口，不预填经营结论。
-3. `configure-case` 使用当前 shop/profile/scope exact refs，经 `ecommerce_growth_case_put` 建立唯一 `initial_store_analysis` DRAFT Case，再走既有 Case lifecycle 正式 transition 到 ACTIVE。脚本不得直接插 Case 表。
-4. `configure-reviewer` 由 `user:dev` 经正式 workspace member 入口幂等建立 `a0v-ecommerce-growth-1.4-approval-checker=admin`；若同名成员已存在则必须精确匹配。该身份只用于本链内部 R2 审批，不能成为 maker 或 executor。
-5. `configure-action-types` 仅在动作类型不存在时通过平台正式 ActionType 写入口创建两个精确、空 marking、空 submission criteria 的内部 Case 动作类型；若已存在则要求逐字段完全一致。该动作只补当前租户运行所需平台元数据，不宣称已解决包重装配置。
-6. `approve-schedule` 由 `user:dev` 创建 R2 schedule proposal，payload 精确绑定 caseId、schedulePolicyId、policyHash、expectedPolicyRevision、expectedCaseVersion；由专用 checker 独立批准，审批窗口限制在一小时内。
-7. `put-policy` 从当前 E SourceSelection、current Case、签名包中的 `ProductEventSchedulePolicy` 与 `prepare_event_case_binding` 生成 revision 1 policy/successor，经当前 scoped canonical router 保存；不得直接写 policy 或 Case revision。
-8. `approve-control` 对完整 enable command（移除 approvalRef 后）形成独立 R2 proposal并批准；`enable-event` 经 `ecommerce_growth_event_control` 建立 current binding。
-9. `observe-event` 只轮询正式表与 Worker 状态，等待自然创建 ProductEvent occurrence、analysis entry/Run；禁止脚本调用 Worker 内部方法或写 occurrence/run。
+3. `transfer-registration` 先读回旧注册及其 Receipt，要求状态精确为 pristine/withdraw-only、九项 dispatch 仍是同一 fenced legacy group；以固定 idempotency key 正式 withdraw。随后从 current E 安装、revision、runtime binding 与 config ref 构造 `FirstDispatchRegistrationRequest`，正式 register 并读回 exact registration Receipt。每个远程写阶段分别冻结 intent/result；未知结果时只允许按原 key 读回或幂等重放。
+4. `approve-cutover` 先通过正式 ActionType 入口确保 `ecommerce_growth_cutover` exact 定义，再用 `user:dev` 创建绑定 E target、九项有序 operation、cutover group/revision、runtime revision、policy exact ref 和 registration Receipt ref 的内部 control proposal；专用 checker 审批，runtime owner 只能执行。
+5. `cutover-prepare/pause/commit/validate/resume` 使用平台 `ecommerce_growth_cutover_service`，按独立不可变 intent/result 串行推进。checkpoint 只记录 legacy canonical-router/version 1；无 pending target Receipt；prepare 必须验证 first registration 与当前 approval，resume 后九项必须全部指向 E、extension、unfenced，并通过 service replay 复读。
+6. `configure-case` 使用当前 shop/profile/scope exact refs，经已完成 cutover 的 `ecommerce_growth_case_put` 建立唯一 `initial_store_analysis` DRAFT Case，再走既有 Case lifecycle 正式 transition 到 ACTIVE。脚本不得直接插 Case 表；之前被 fence 拒绝的 intent 原样保留并在 cutover 后以同一业务对象重试。
+7. `configure-reviewer`、`configure-action-types`、`configure-brief` 沿用已完成结果；另外两个 Case 动作类型与 cutover 动作类型均须 exact 匹配。该动作只补当前租户运行所需平台元数据，不宣称已解决包重装配置。
+8. `approve-schedule` 由 `user:dev` 创建 R2 schedule proposal，payload 精确绑定 caseId、schedulePolicyId、policyHash、expectedPolicyRevision、expectedCaseVersion；由专用 checker 独立批准，审批窗口限制在一小时内。
+9. `put-policy` 从当前 E SourceSelection、current Case、签名包中的 `ProductEventSchedulePolicy` 与 `prepare_event_case_binding` 生成 revision 1 policy/successor，经当前 scoped canonical router 保存；不得直接写 policy 或 Case revision。
+10. `approve-control` 对完整 enable command（移除 approvalRef 后）形成独立 R2 proposal并批准；`enable-event` 经 `ecommerce_growth_event_control` 建立 current binding。
+11. `observe-event` 只轮询正式表与 Worker 状态，等待自然创建 ProductEvent occurrence、analysis entry/Run；禁止脚本调用 Worker 内部方法或写 occurrence/run。
 
 ## 身份、租户与副作用边界
 
 - 正租户固定 `org-org/dev-project`；`dev-org/dev-project` 只做相关表零写检查。
 - TaskBrief 可由当前 tenant owner `user:dev` 冻结；Case、schedule policy 与 event control 必须以 SourceSelection 当前 actor `a0v-ecommerce-growth-1.4-runtime-owner` 执行。
 - R2 三方分离：`user:dev` 只制单，专用 checker 只审批，runtime owner 只执行。审批必须绑定当前 ActionType snapshot、payload、policy hash 与 expiration。
+- cutover 属于安装控制操作；其 proposal 不绑定业务 Task/Run/impact preview，并额外接受当前安装 APPLY/APPROVE 权限、ActionType snapshot 与 registration Receipt 联合校验。它不复用 schedule/control 的业务 R2 proposal。
 - 仅允许内部任务、审批、Case、策略、绑定和分析链状态写；无商城写、发布、触达、投流、改价、库存、订单或履约副作用。
 - 首次有效事件后的 occurrence、Run、DataRequirement 与恢复必须由独立 Runtime Host 的 Worker 自然产生。
 
@@ -44,12 +51,12 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 ## 测试与退出条件
 
-1. 静态测试覆盖 action 顺序、固定身份、不可变 intent/result、当前 E refs、真实 TaskBrief 来源、R2 maker/checker 分离、policy/control payload exact 绑定、canary 零写和无 Worker 直调。
+1. 静态测试覆盖 action 顺序、固定身份、不可变 intent/result、旧注册 pristine 撤销、当前 E 注册、cutover 五阶段 exact Receipt 串联、当前 E refs、真实 TaskBrief 来源、R2 maker/checker 分离、policy/control payload exact 绑定、canary 零写和无 Worker 直调。
 2. 相关 ProductEvent approval、Host、control、router 与执行器测试通过；AR2 五类静态扫描保持为零。
-3. 真实 TaskBrief 为 frozen；Case 为 ACTIVE 且 schedulePolicyRef 指向保存后的 current policy；两个 proposal/approval 当前有效且 checker 独立。
-4. current event binding enabled，引用 E installation/generation/epoch、P02 SourceSelection、Case 与 policy exact refs。
-5. Worker 自然创建一次预期 occurrence 和分析入口；幂等复读不增加对象；canary 相关表为零。
-6. 落证据并提交。若 event discovery 因 P02 `meta_schedule.enabled=false` 不触发，则下一波只补“已完成历史 Run 可消费、无需保持源 Schedule 开启”的产品语义方案；不得为了触发长期打开真实源调度。
+3. 旧注册已正式撤销，E first-dispatch registration 为 registered/activated；九项 dispatch 均为 extension、指向 E installation/generation/epoch、unfenced，cutover prepare/pause/commit/validate/resume Receipt 完整且 replay 不增写。
+4. 真实 TaskBrief 为 frozen；Case 为 ACTIVE 且 schedulePolicyRef 指向保存后的 current policy；两个业务 proposal/approval 当前有效且 checker 独立。
+5. current event binding enabled，引用 E installation/generation/epoch、P02 SourceSelection、Case 与 policy exact refs。
+6. Worker 自然创建一次预期 occurrence 和分析入口；幂等复读不增加对象；canary 相关表为零。落证据并提交。若 event discovery 因 P02 `meta_schedule.enabled=false` 不触发，则下一波只补“已完成历史 Run 可消费、无需保持源 Schedule 开启”的产品语义方案；不得为了触发长期打开真实源调度。
 
 ## 后续必须纳入清册的生命周期缺口
 
