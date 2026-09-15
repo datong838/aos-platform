@@ -23,6 +23,9 @@ def test_private_freeze_is_exclusive(control, tmp_path):
     assert target.stat().st_mode & 0o777 == 0o600
     with pytest.raises(FileExistsError):
         control.freeze(target, {"outcome": "twice"})
+    control.freeze_or_match(target, {"outcome": "once"})
+    with pytest.raises(ValueError, match="intent differs"):
+        control.freeze_or_match(target, {"outcome": "changed"})
 
 
 def test_execute_refuses_historical_or_enabled_schedule(control, monkeypatch, tmp_path):

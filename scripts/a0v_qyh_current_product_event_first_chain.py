@@ -31,6 +31,14 @@ def freeze(path: Path, value: dict[str, Any]) -> None:
         os.fsync(handle.fileno())
 
 
+def freeze_or_match(path: Path, value: dict[str, Any]) -> None:
+    if path.exists():
+        if json.loads(path.read_text(encoding="utf-8")) != value:
+            raise ValueError("immutable intent differs")
+        return
+    freeze(path, value)
+
+
 def load_result(name: str) -> dict[str, Any]:
     path = STATE / f"{name}-result.json"
     if not path.is_file() or path.stat().st_mode & 0o777 != 0o600:
@@ -66,12 +74,12 @@ def approve_selection(preflight, plane) -> dict[str, Any]:
     prepared = load_result("prepare")
     draft = prepared["draft"]
     intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-selection-20260915-v1", "draft": draft}
-    freeze(STATE / "selection-intent.json", intent)
+    freeze_or_match(STATE / "selection-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft
     from aos_api.tenant_scope import TenantScope
 
     ref = plane.pipeline_control_factory.build(TenantScope(**SCOPE)).approve_selection(
-        draft=PipelineSourceSelectionDraft.model_validate(draft), actor=ACTOR,
+        draft=PipelineSourceSelectionDraft.model_validate_json(json.dumps(draft)), actor=ACTOR,
         idempotency_key=intent["idempotencyKey"], previous_ref=None,
     )
     return {"outcome": "CURRENT_PRODUCT_SELECTION_APPROVED", "ref": ref.model_dump(mode="json", by_alias=True)}
@@ -83,12 +91,12 @@ def approve_control(preflight, plane) -> dict[str, Any]:
     draft = {**prepared["draft"], "schemaVersion": "aos.pipeline-runtime-control-draft/v1",
              "sourceSelectionRef": selection}
     intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-control-20260915-v1", "draft": draft}
-    freeze(STATE / "control-intent.json", intent)
+    freeze_or_match(STATE / "control-intent.json", intent)
     from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDraft
     from aos_api.tenant_scope import TenantScope
 
     ref = plane.pipeline_control_factory.build(TenantScope(**SCOPE)).approve_control(
-        draft=PipelineRuntimeControlDraft.model_validate(draft), actor=ACTOR,
+        draft=PipelineRuntimeControlDraft.model_validate_json(json.dumps(draft)), actor=ACTOR,
         idempotency_key=intent["idempotencyKey"], previous_ref=None,
     )
     return {"outcome": "CURRENT_PRODUCT_CONTROL_APPROVED", "ref": ref.model_dump(mode="json", by_alias=True)}
@@ -126,7 +134,7 @@ def bind_schedule(preflight, plane) -> dict[str, Any]:
     intent = {"actor": ACTOR, "idempotencyKey": "a0v-p02-d-schedule-binding-20260915-v1",
               "scheduleId": SCHEDULE, "controlRef": control,
               "previousRef": previous.ref.model_dump(mode="json", by_alias=True)}
-    freeze(STATE / "binding-intent.json", intent)
+    freeze_or_match(STATE / "binding-intent.json", intent)
     ref = service.bind_schedule(
         pipeline_id=PIPELINE, schedule_id=SCHEDULE, control_ref=control, actor=ACTOR,
         idempotency_key=intent["idempotencyKey"], previous_ref=intent["previousRef"],
@@ -158,7 +166,7 @@ def execute_once(preflight, plane) -> dict[str, Any]:
         raise ValueError("current disabled schedule binding differs")
     intent = {"scheduleId": SCHEDULE, "bindingRef": expected_binding,
               "controlRef": expected_control, "maxSourceCalls": 1}
-    freeze(STATE / "execute-intent.json", intent)
+    freeze_or_match(STATE / "execute-intent.json", intent)
     enable_status, enabled = api("PATCH", f"/v1/schedules/{SCHEDULE}", {"enabled": True})
     try:
         run_status, run = api("POST", f"/v1/schedules/{SCHEDULE}/run", {})
