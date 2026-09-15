@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import UUID
 
 import pytest
 
@@ -29,7 +30,7 @@ def snapshot(*, state="active", etag=5, enabled=True, fenced=False, resources=Tr
 def predecessor_snapshot(reinstall):
     return {
         "head": {
-            "installation_id": reinstall.PREDECESSOR["installationId"],
+            "installation_id": UUID(reinstall.PREDECESSOR["installationId"]),
             "etag_version": 5,
             "state": "active",
             "lock_hash": reinstall.PREDECESSOR["lockHash"],

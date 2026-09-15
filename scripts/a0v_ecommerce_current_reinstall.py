@@ -12,6 +12,9 @@ import sys
 from typing import Any
 
 
+os.environ.setdefault("AOS_DOTENV_DISABLED", "1")
+
+
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT.parent / ".aos-recovery-20260915/state/current-ecommerce-package/install"
 BUNDLE_ROOT = (
@@ -196,7 +199,7 @@ def require_predecessor_drain(snapshot: dict[str, Any]) -> dict[str, Any]:
     if snapshot.get("canaryInstallations") != 0:
         raise ValueError("canary installation drift")
     if (
-        head["installation_id"] != PREDECESSOR["installationId"]
+        str(head["installation_id"]) != PREDECESSOR["installationId"]
         or head["state"] != "active"
         or head["etag_version"] != PREDECESSOR["revision"]
         or head["lock_hash"] != PREDECESSOR["lockHash"]
