@@ -44,6 +44,8 @@ predecessor 读回后，fresh draft 的 `notBefore` / `expiresAt` 已按 JSON mo
 
 首次 event refresh 已在写入前冻结 intent，后续因严格 datetime 解析失败而零写；重跑 preflight 会生成新的时间窗口，不能拿新 draft 覆盖原 intent。恢复时若 intent 已存在，必须验证 actor、三个 predecessor exact ref 与 fresh draft 除 `notBefore` / `expiresAt` 外完全一致，并继续使用原冻结 draft；Owner 仍会检查原窗口当前有效并复验 current predecessor。窗口失效时停止并另立新版本 key/intents，禁止覆盖或改时钟。
 
+event authority 刷新成功后，schedule material 构造因进程未配置 `ecommerce_growth` Python 包路径而在任何审批写入前拒绝。领域 Case / ProductEvent 规则必须从本次安装实际使用的 signed bundle root 中加载 `solution.ecommerce.growth/1.8.0/backend`，且路径必须是该受信根下存在的普通目录；禁止退回工作区候选源码或复制领域逻辑到执行器。preflight 已在每次 action 建立当前安装 lock/signature/release 证据，领域模型继续自行复验 Case/policy hash。
+
 ## 本次主路径
 
 1. 扩展现有私有状态执行器；每个 action 先冻结 0600 intent，再通过正式 Store、AIP Action 与当前 canonical router 执行；存在 result 时只读，不以新 key 重发未知结果。
