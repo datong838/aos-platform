@@ -229,7 +229,7 @@ def test_unowned_recovery_cancel_requires_released_runtime(reinstall):
         )
 
 
-def test_installation_b_uses_drained_a_as_replacement_predecessor(reinstall):
+def test_replacement_requires_exact_drained_predecessor(reinstall):
     value = predecessor_snapshot(reinstall)
     value["head"].update({
         "installation_id": UUID("00000000-0000-0000-0000-00000000000a"),
@@ -241,7 +241,7 @@ def test_installation_b_uses_drained_a_as_replacement_predecessor(reinstall):
         "revision": 7,
         "execution_epoch": 4,
     })
-    assert reinstall.replacement_ref_for_b(value) == {
+    assert reinstall.replacement_ref(value) == {
         "installationId": "00000000-0000-0000-0000-00000000000a",
         "revision": 5,
         "lockHash": "sha256:" + "b" * 64,
@@ -249,4 +249,22 @@ def test_installation_b_uses_drained_a_as_replacement_predecessor(reinstall):
     }
     value["operations"][0]["status"] = "accepted"
     with pytest.raises(ValueError, match="unresolved"):
-        reinstall.replacement_ref_for_b(value)
+        reinstall.replacement_ref(value)
+
+
+def test_installation_d_is_an_allowed_exact_label(reinstall, monkeypatch, tmp_path):
+    monkeypatch.setattr(reinstall, "STATE", tmp_path)
+    (tmp_path / "d").mkdir()
+    (tmp_path / "d/create-result.json").write_text(
+        '{"installationId":"installation-d"}', encoding="utf-8"
+    )
+    assert reinstall._initial("d") == {"installationId": "installation-d"}
+    with pytest.raises(ValueError, match="exact install label"):
+        reinstall._initial("e")
+
+
+def test_replacement_installations_use_the_immediate_drained_generation(reinstall):
+    assert reinstall.replacement_predecessor_label("b") == "a"
+    assert reinstall.replacement_predecessor_label("d") == "c"
+    with pytest.raises(ValueError, match="replacement install label"):
+        reinstall.replacement_predecessor_label("c")

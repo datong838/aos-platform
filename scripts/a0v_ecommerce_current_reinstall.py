@@ -66,7 +66,7 @@ def _freeze_or_match(path: Path, value: dict[str, Any]) -> None:
 
 
 def _initial(label: str) -> dict[str, Any]:
-    if label not in {"a", "b", "c"}:
+    if label not in {"a", "b", "c", "d"}:
         raise ValueError("exact install label required")
     return json.loads((STATE / label / "create-result.json").read_text(encoding="utf-8"))
 
@@ -159,7 +159,7 @@ def observe() -> dict[str, Any]:
         "at": datetime.now(timezone.utc).isoformat(),
         "predecessor": observe_installation(PREDECESSOR["installationId"]),
     }
-    for label in ("a", "b", "c"):
+    for label in ("a", "b", "c", "d"):
         path = STATE / label / "create-result.json"
         if path.exists():
             result[label] = observe_installation(json.loads(path.read_text())["installationId"])
@@ -337,13 +337,13 @@ def require_unowned_recovery_cancel(
     }
 
 
-def replacement_ref_for_b(snapshot: dict[str, Any]) -> dict[str, Any]:
+def replacement_ref(snapshot: dict[str, Any]) -> dict[str, Any]:
     head = snapshot["head"]
     bindings = snapshot["bindings"]
     if snapshot.get("canaryInstallations") != 0:
         raise ValueError("canary installation drift")
     if head["state"] != "active" or head["etag_version"] != 5 or len(bindings) != 1:
-        raise ValueError("installation A active predecessor required")
+        raise ValueError("active replacement predecessor required")
     binding = bindings[0]
     if (
         binding["enabled"] is not False
@@ -351,23 +351,30 @@ def replacement_ref_for_b(snapshot: dict[str, Any]) -> dict[str, Any]:
         or binding["desired_state"] != "disabled"
         or binding["observed_state"] != "unknown"
     ):
-        raise ValueError("installation A drained predecessor required")
+        raise ValueError("drained replacement predecessor required")
     if not snapshot["resources"] or any(
         item["cleanup_state"] != "released" or item["observed_release"] is not True
         for item in snapshot["resources"]
     ):
-        raise ValueError("installation A released resources required")
+        raise ValueError("replacement predecessor released resources required")
     if any(
         item["status"] not in {"succeeded", "failed", "cancelled"}
         for item in snapshot["operations"]
     ):
-        raise ValueError("installation A unresolved operation")
+        raise ValueError("replacement predecessor unresolved operation")
     return {
         "installationId": str(head["installation_id"]),
         "revision": head["etag_version"],
         "lockHash": head["lock_hash"],
         "overlayRevision": head["overlay_revision"],
     }
+
+
+def replacement_predecessor_label(label: str) -> str:
+    try:
+        return {"b": "a", "d": "c"}[label]
+    except KeyError as exc:
+        raise ValueError("replacement install label required") from exc
 
 
 def create(label: str) -> dict[str, Any]:
@@ -393,9 +400,12 @@ def create(label: str) -> dict[str, Any]:
         ):
             raise ValueError("exact drained predecessor required")
         predecessor_ref = PREDECESSOR
+    elif label in {"b", "d"}:
+        predecessor_label = replacement_predecessor_label(label)
+        predecessor = observe_installation(_initial(predecessor_label)["installationId"])
+        predecessor_ref = replacement_ref(predecessor)
     else:
-        predecessor = observe_installation(_initial("a")["installationId"])
-        predecessor_ref = replacement_ref_for_b(predecessor)
+        raise ValueError("exact install label required")
     first_installer = _load("a0v_canonical_ecommerce_first_install")
     helper = _load("a0v_ecommerce_growth_1_5_registry_successor")
     target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -699,6 +709,8 @@ def main() -> None:
             "uninstall-a", "create-b", "prepare-b", "verify-b", "stage-b",
             "configure-b", "enable-b", "disable-b", "uninstall-b", "create-c",
             "prepare-c", "verify-c", "stage-c", "configure-c", "enable-c",
+            "disable-c", "create-d", "prepare-d", "verify-d", "stage-d",
+            "configure-d", "enable-d",
         ),
     )
     parser.add_argument("--output", type=Path, required=True)
@@ -710,7 +722,8 @@ def main() -> None:
     elif args.action.startswith("create-"):
         result = create(args.action[-1])
     elif args.action in {
-        "prepare-a", "verify-a", "prepare-b", "verify-b", "prepare-c", "verify-c"
+        "prepare-a", "verify-a", "prepare-b", "verify-b", "prepare-c", "verify-c",
+        "prepare-d", "verify-d",
     }:
         action, label = args.action.split("-")
         result = lifecycle(label, action)
@@ -726,6 +739,8 @@ def main() -> None:
         result = disable("a", suffix="disable-final")
     elif args.action == "disable-b":
         result = disable("b")
+    elif args.action == "disable-c":
+        result = disable("c")
     elif args.action in {"uninstall-a", "uninstall-b"}:
         result = uninstall(args.action[-1])
     else:
