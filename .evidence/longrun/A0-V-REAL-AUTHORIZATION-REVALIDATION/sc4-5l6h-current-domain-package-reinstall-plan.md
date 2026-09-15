@@ -25,7 +25,7 @@
 5. 第一次安装 A 以97a active@5为精确前驱，组合必须唯一解析到 core1.3/Niushop1.22/growth1.8/operations1.2。按 maker/checker 职责分离完成 draft→submit→approve，再由 runtime Owner prepare→verify；配置继续使用当前四类正式 Source 引用并重新计算配置 revision/hash，不复制旧 installation 的授权 Receipt。
 6. enable A 前要求主库050、正租户九路 dispatch、canary零、Source/Provider/预算/审批当前门禁、唯一 Host。enable 后启动 Host，只允许当前 A generation；观察 ready/enabled/unfenced、三容器和租约续期。异常或同阶段失败两次立即停写并保留诊断。
 7. 控制演练对 A 执行 disable/fence，要求 schedule/Run 排空、generation exact、全部资源 released、旧路由不再可调度。系统级重启只停止并重启已核实的唯一 Host，不重启 API/数据库；确认围栏保持。若资源仍存活，可经新的 current enable Receipt 恢复同一代；若资源已经由故障清理释放，必须创建新的 replacement 安装恢复，不得让 enable 绕过 runtime-apply 进程所有权。
-8. 安装 B 以已排空 A 的 exact installation revision/lock/overlay 为前驱，使用同一15版本签名根完成 approve/prepare/verify/configure/enable，作为实际恢复重装。B 成功后，uninstall A 必须由 Uninstall Owner 检查 fenced/drained/released，保留不可变历史与 Receipt；B 成为最终可用安装，A 不得复活或持有运行资源。
+8. 安装 B 以已排空 A 的 exact installation revision/lock/overlay 为前驱，使用同一15版本签名根完成 approve/prepare/verify/configure/enable，作为实际恢复重装。卸载必须遵守 replacement lineage 的 leaf-first 规则：B 启用验证后正式 disable/uninstall B，再 uninstall A；随后以最初已排空安装为前驱创建最终 C，完成同一签名组合的 prepare/verify/configure/enable。A/B 不得复活或持有运行资源，C 成为最终可用安装。
 9. 每一步都核正租户 `org-org/dev-project` 与 canary `dev-org/dev-project`。canary 全程零安装、零路由、零业务交付；不读取或写入 canary。上游商城只读和真实经营动作留到下一波，不把 build/install 结果写成真实首链成功。
 10. 不 push；230 L0 挂起；不触碰用户已有 `overall-progress-20260913.md`、`package.json`、`package-lock.json` 差异。失败不 reset/rebase/clean，不对主库做破坏性降级。
 
@@ -35,7 +35,7 @@
 - 新增 `services/aos-api/tests/extension_runtime/test_build_ecommerce_current_candidates.py`：验证原 builder 不变、两个精确替换、候选目录/操作数、growth fixture 与版本漂移拒绝。
 - 新增 `scripts/a0v_ecommerce_current_signed_successor.py`：复用既有永久签名 helper，以 growth1.8签名根为14版本父树，仅追加已资格审查的Niushop1.22，生成15版本不可变新根。
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_current_signed_successor.py`：验证父树/新树、版本集合、growth字节继承、运行 session/admission 和篡改拒绝合同。
-- 新增 `scripts/a0v_ecommerce_current_reinstall.py`：`observe / create-a / prepare-a / verify-a / configure-a / enable-a / disable-a / recover-a / uninstall-a / create-b / prepare-b / verify-b / configure-b / enable-b` 固定状态机；每个命令先写 intent，结果未知时仅 observe。
+- 新增 `scripts/a0v_ecommerce_current_reinstall.py`：固定 A/B/C 安装、准备、验证、配置、启用、禁用、卸载及窄恢复状态机；每个命令先写 intent，结果未知时仅 observe。
 - 新增 `services/aos-api/tests/extension_runtime/test_a0v_ecommerce_current_reinstall.py`：验证精确 predecessor、阶段/etag/generation、幂等 key、权限分离、排空/资源释放、uninstall 与 B 不复活 A、canary拒绝。
 - 新增本波验证文档 `sc4-5l6h-current-domain-package-reinstall-verification.md`，并把构建、资格、签名、安装、配置、Runtime、停用、恢复、卸载、重装与 canary 证据逐项落盘。
 
@@ -56,8 +56,8 @@
 2. 本方案提交，新增范围、preHash、停止条件和双安装最终态明确。
 3. 三个脚本及合同测试提交，原通用 builder、历史候选和签名根未修改。
 4. 当前四包隔离 build/qualification 与15版本永久签名后继根通过，外部发布和安装副作用为零。
-5. 安装A完成配置、启用失败安全围栏、正式 disable/drain 与 Host 重启保持；资源释放且 canary 为零。以 A 为 exact 前驱创建 B 并完成重新 runtime-apply/verify，证明故障后恢复重装。
-6. 安装B完成配置、enable，随后 A 正式 uninstall；唯一 Host、API/5173/8434健康，主库与业务基线无越权漂移。落证据提交后进入下一波栖月汇真实 Source/经营计划/自然 ProductEvent 首链，不形成发布结论。
+5. 安装A完成配置、启用失败安全围栏、正式 disable/drain 与 Host 重启保持；资源释放且 canary 为零。以 A 为 exact 前驱创建 B 并完成 runtime-apply/verify/configure/enable，证明故障后恢复重装；随后 B 正式 disable/uninstall，再 uninstall A，符合 leaf-first。
+6. 最终安装 C 以最初已排空安装为前驱完成 approve/prepare/verify/configure/enable；唯一 Host、API/5173/8434健康，主库与业务基线无越权漂移。落证据提交后进入下一波栖月汇真实 Source/经营计划/自然 ProductEvent 首链，不形成发布结论。
 
 ## 实测后的窄化修订
 
@@ -70,3 +70,5 @@ A 完成停用、Host 重启与 `recover-a` 后还需第二次正式停用才能
 前驱排空修复与测试提交期间，A 的既有 enable Receipt 超过五分钟 deadline；重启 Host 后它保持 accepted 且不再被目录调度，A 仍为 revision3/epoch2、disabled/fenced/desired-disabled/unknown，三资源 released。控制器再增加 `cancel-stale-enable-a` 窄动作：必须精确读取原 `enable-a-command.json` 的 operationId，并要求它是唯一未终态、accepted/accepted 且 deadline 已过；同时固定 A 当前 binding 和资源释放状态。随后通过原 RuntimeDisableService 的同事务取消规则创建独立 disable Receipt，由正常 Host 消费完成当前 `disabled_committed`。不得重发过期 enable、改 deadline 或直接写 operation/binding；同代恢复还必须另行证明运行资源未释放。
 
 实测 `recover-a` 新 enable Receipt `fe2cfc93-b99a-420e-a4ad-4f4001e75038` 已 accepted，但 A 的三项资源均已由前次 Host 故障清理确认 released；PendingPreparationDirectory 只从 runtime-apply outbox 创建进程所有者，因此该 enable 不具备可执行 owner。新增 `cancel-unowned-recovery-a` 要求精确匹配该 Receipt、A revision5/epoch3、disabled/fenced/desired-disabled/unknown、三资源 released 和 canary 零；通过原 DisableService 在同一事务取消该尚未执行的 positive operation，并由当前 Host 完成 disable。随后 create-b 不再要求 A 先卸载，而以 A 当前 active@5 的 lock/overlay 为 exact predecessor；B 启用成功后才卸载 A。该顺序把 B 定义为实际恢复重装，禁止为已释放资源伪造同代恢复。
+
+B 已实际完成 enable `893c9f1b-d497-48e4-9adb-abdee89cd938` 并达到 revision4/epoch3 ready/enabled/unfenced。随后 A uninstall 被 Installation Owner 的 `guard_no_active_replacement_in_transaction` 拒绝并回滚，证明活动后继存在时不能删除中间 lineage。方案据此改为 leaf-first：先 disable/uninstall B，再复用内容完全一致的原 A uninstall intent 和幂等键卸载 A；仅在两者均 uninstalled 后创建 C。控制器新增 `disable-b / uninstall-b / create-c / prepare-c / verify-c / stage-c / configure-c / enable-c`；C 固定回到最初 predecessor，不跳过任何 maker/checker、runtime、配置或启用门禁。
