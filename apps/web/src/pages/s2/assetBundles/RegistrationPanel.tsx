@@ -11,7 +11,7 @@ export function RegistrationPanel({installationId,offline}:{installationId:strin
   const scope=useSyncExternalStore(subscribe,identity,identity);
   return installationId ? <RegistrationDetails key={scope+installationId} installationId={installationId} scope={scope} offline={offline}/> : null;
 }
-const reasons={unused_origin:"登记尚未进入业务执行，可撤回后重新准备。",dependent_history:"已有业务切换或任务记录，不能按未启用登记撤回。",dispatch_changed:"登记状态已变化，需要核对当前运行记录。",not_applicable:""};
+const reasons={unused_origin:"登记尚未进入业务执行，可撤回后重新准备。",dependent_history:"已有业务切换或任务记录，不能按未启用登记撤回。",dispatch_changed:"登记状态已变化，需要核对当前运行记录。",successor_history:"已登记接续原安装的业务，历史记录保留；实际接管仍需评审与切换确认。",not_applicable:""};
 function RegistrationDetails({installationId,scope,offline}:{installationId:string;scope:string;offline:boolean}) {
   const [data,setData]=useState<RegistrationStatus|null>(null);
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false);

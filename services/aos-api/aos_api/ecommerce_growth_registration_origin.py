@@ -13,7 +13,7 @@ from aos_api.tenant_scope import TenantScope
 class RegistrationReceiptRef(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True,
                               hide_input_in_errors=True, revalidate_instances="always")
-    resourceType: Literal["FirstDispatchRegistrationReceipt"]
+    resourceType: Literal["FirstDispatchRegistrationReceipt", "SuccessorDispatchRegistrationReceipt"]
     resourceId: str
     revision: StrictInt = Field(ge=1, le=1)
     contentHash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
@@ -45,8 +45,13 @@ def verify_registration_origin(*, row, scope: TenantScope,
                 or type(execution_epoch) is not int or type(binding_revision) is not int
                 or execution_epoch < 1 or binding_revision < 1):
             raise ValueError()
-        body = decode_registration_receipt(row, scope=scope)
-        request = FirstDispatchRegistrationRequest.model_validate(body["request"])
+        if ref.resourceType == "SuccessorDispatchRegistrationReceipt":
+            from aos_api.ecommerce_growth_successor_registration import decode_successor_receipt
+            body = decode_successor_receipt(row, scope=scope)
+            request = FirstDispatchRegistrationRequest.model_validate(body["request"]["registration"])
+        else:
+            body = decode_registration_receipt(row, scope=scope)
+            request = FirstDispatchRegistrationRequest.model_validate(body["request"])
         if (body["receiptId"] != ref.resourceId or body["contentHash"] != ref.contentHash
                 or body["installationId"] != installation_id or body["generation"] != generation
                 or request.executionEpoch != execution_epoch or request.bindingRevision != binding_revision

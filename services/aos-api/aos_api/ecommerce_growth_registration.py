@@ -89,8 +89,11 @@ class FirstDispatchRegistrationService:
             raise TypeError('exact registration Receipt reference required')
         receipt_ref=RegistrationReceiptRef.model_validate(receipt_ref.model_dump())
         self._require_current_transaction(conn,scope)
-        row=conn.execute("""SELECT org_id,project_id,receipt_id,installation_id,generation,group_id,
-            idempotency_key,request_hash,payload,content_hash FROM public.extension_dispatch_registration_receipt
+        table=('extension_dispatch_successor_registration_receipt'
+            if receipt_ref.resourceType=='SuccessorDispatchRegistrationReceipt'
+            else 'extension_dispatch_registration_receipt')
+        row=conn.execute(f"""SELECT org_id,project_id,receipt_id,installation_id,generation,group_id,
+            idempotency_key,request_hash,payload,content_hash FROM public.{table}
             WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (*scope.key,receipt_ref.resourceId)).fetchone()
         if row is None:
@@ -149,6 +152,24 @@ class FirstDispatchRegistrationService:
                 raise ValueError('registration readback differs')
             result['replayed']=response['replayed']
         return result
+
+    def register_successor(self, *, scope: TenantScope, request, actor: str) -> dict:
+        from aos_api.ecommerce_growth_successor_registration import register_successor
+        return register_successor(self, scope=scope, request=request, actor=actor)
+
+    def read_successor_receipt(self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str):
+        from aos_api.ecommerce_growth_successor_registration import decode_successor_receipt
+        self._identity(scope,actor)
+        key=validate_idempotency_key(idempotency_key)
+        if type(installation_id) is not str or str(UUID(installation_id))!=installation_id:
+            raise ValueError('canonical successor installation required')
+        with self._transaction(scope) as conn:
+            self._authorize_receipt_access(conn,scope,installation_id,actor)
+            row=conn.execute('''SELECT * FROM public.extension_dispatch_successor_registration_receipt
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND idempotency_key=%s''',
+                (*scope.key,installation_id,key)).fetchone()
+            if row is None:raise LookupError('successor registration receipt unavailable')
+            return dict(decode_successor_receipt(row,scope=scope),historical=True)
 
     def read_receipt(self, *, scope: TenantScope, installation_id: str, idempotency_key: str, actor: str) -> dict:
         self._identity(scope,actor);key=validate_idempotency_key(idempotency_key)
@@ -284,4 +305,24 @@ class FirstDispatchRegistrationService:
                     receipt=self._read_withdrawal(conn,scope,row['idempotency_key'],installation_id)
                     result['state']='withdrawn'
                     result['withdrawalReceiptId']=receipt['receiptId']
+            # Old installations remain readable during the additive schema rollout.
+            available=conn.execute("SELECT to_regclass('public.extension_dispatch_successor_registration_receipt') AS relation").fetchone()
+            if available['relation'] is not None:
+                from aos_api.ecommerce_growth_successor_registration import decode_successor_receipt
+                require_runtime_role(conn,org_id=scope.org_id,project_id=scope.project_id,
+                    protected_tables=('public.extension_dispatch_successor_registration_receipt',))
+                successors=conn.execute('''SELECT * FROM public.extension_dispatch_successor_registration_receipt
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s
+                    ORDER BY created_at DESC,receipt_id LIMIT 2''',(*scope.key,installation_id)).fetchall()
+                if len(successors)>1 or (successors and rows):
+                    result.update(state='needs_attention',allowedActions=[],registrationReceiptRef=None,
+                        expectedInstallationEtag=None,withdrawalReceiptId=None,withdrawalReason='not_applicable')
+                elif successors:
+                    origin=decode_successor_receipt(successors[0],scope=scope)
+                    current=conn.execute('SELECT etag_version FROM bundle_installation WHERE org_id=%s AND project_id=%s AND installation_id=%s',
+                        (*scope.key,installation_id)).fetchone()
+                    result.update(state='registered',allowedActions=[],withdrawalReason='successor_history',
+                        withdrawalReceiptId=None,expectedInstallationEtag=current['etag_version'],
+                        registrationReceiptRef=RegistrationReceiptRef(resourceType='SuccessorDispatchRegistrationReceipt',
+                            resourceId=origin['receiptId'],revision=1,contentHash=origin['contentHash']).model_dump(mode='json'))
         return result

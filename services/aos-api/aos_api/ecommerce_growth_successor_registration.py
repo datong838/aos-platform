@@ -91,3 +91,34 @@ def decode_successor_receipt(row, *, scope):
         return dict(deepcopy(body),contentHash=row['content_hash'])
     except (KeyError,TypeError,ValueError,OverflowError):
         raise ValueError('SUCCESSOR_REGISTRATION_RECEIPT_INVALID') from None
+
+
+def register_successor(owner, *, scope, request, actor):
+    from psycopg.types.json import Jsonb
+    if type(request) is not SuccessorDispatchRegistrationRequest:
+        raise TypeError('validated successor registration request required')
+    request=SuccessorDispatchRegistrationRequest.model_validate(request.model_dump(mode='python',by_alias=True))
+    owner._identity(scope,actor)
+    material=request.model_dump(mode='json',by_alias=True)
+    with owner._transaction(scope) as conn:
+        prefix=scope.org_id+chr(31)+scope.project_id+chr(31)
+        for suffix in ('ecommerce-first-registration',request.registration.groupId):
+            conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',(prefix+suffix,))
+        owner.validate_current_authority_in_transaction(conn,scope=scope,request=request.registration,actor=actor)
+        conn.execute('SET LOCAL ROLE aos_extension_maintainer')
+        response=conn.execute('SELECT public.extension_dispatch_successor_register_a0v_056(%s,%s) AS receipt',
+            (Jsonb(material),actor)).fetchone()['receipt']
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        row=conn.execute('''SELECT org_id,project_id,receipt_id,installation_id,generation,group_id,
+            idempotency_key,request_hash,payload,content_hash FROM public.extension_dispatch_successor_registration_receipt
+            WHERE org_id=%s AND project_id=%s AND idempotency_key=%s AND installation_id=%s''',
+            (*scope.key,request.registration.idempotencyKey,request.registration.installationRef.installation_id)).fetchone()
+        if row is None:raise ValueError('successor receipt readback missing')
+        result=decode_successor_receipt(row,scope=scope)
+        if (result['requestHash']!=request.request_hash() or result['actor']!=actor
+            or result['receiptId']!=response.get('receiptId') or result['contentHash']!=response.get('contentHash')
+            or type(response.get('replayed')) is not bool):
+            raise ValueError('successor receipt readback differs')
+        owner.validate_current_authority_in_transaction(conn,scope=scope,request=request.registration,actor=actor)
+        result['replayed']=response['replayed']
+        return result

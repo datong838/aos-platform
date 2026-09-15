@@ -25,3 +25,10 @@ describe("registration status boundary",()=>{
     expect(parseRegistrationStatus(value).state).toBe(state);
   });
 });
+
+it("recognizes successor history without a withdrawal action",()=>{
+  const value={...fixture(),registrationReceiptRef:{...fixture().registrationReceiptRef,resourceType:"SuccessorDispatchRegistrationReceipt"},withdrawalReason:"successor_history",allowedActions:[]};
+  expect(parseRegistrationStatus(value).registrationReceiptRef?.resourceType).toBe("SuccessorDispatchRegistrationReceipt");
+  expect(()=>parseRegistrationStatus({...value,allowedActions:["withdraw"]})).toThrow();
+  expect(()=>parseRegistrationStatus({...value,withdrawalReason:"unused_origin",allowedActions:["withdraw"]})).toThrow();
+});

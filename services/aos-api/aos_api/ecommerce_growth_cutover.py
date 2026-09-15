@@ -450,7 +450,9 @@ class EcommerceGrowthCutoverStore:
             if any(
                 row["handler_kind"] != "legacy"
                 or row["operation_fence"] is not (request.registration_receipt_ref is not None)
-                or (request.registration_receipt_ref is not None and row["revision"] != 1)
+                or (request.registration_receipt_ref is not None
+                    and request.registration_receipt_ref.resourceType == "FirstDispatchRegistrationReceipt"
+                    and row["revision"] != 1)
                 or int(row["cutover_group_revision"]) != request.expected_group_revision
                 for row in rows
             ):

@@ -67,3 +67,17 @@ def test_successor_receipt_rejects_tamper_even_when_outer_hash_is_recomputed(fau
     if fault!='hash':row['content_hash']=canonical_sha256(body)
     with pytest.raises(ValueError,match='SUCCESSOR_REGISTRATION_RECEIPT_INVALID'):
         decode_successor_receipt(row,scope=TenantScope('org-org','dev-project'))
+
+
+def test_successor_origin_uses_explicit_reference_type_and_exact_snapshot():
+    from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef, verify_registration_origin
+    row=receipt_row();body=row['payload'];inner=body['request']['registration']
+    args=dict(row=row,scope=TenantScope('org-org','dev-project'),dispatch_snapshot=body['dispatchSnapshot'],
+        installation_id=body['installationId'],generation=body['generation'],execution_epoch=inner['executionEpoch'],
+        binding_revision=inner['bindingRevision'])
+    ref=RegistrationReceiptRef(resourceType='SuccessorDispatchRegistrationReceipt',resourceId=body['receiptId'],
+                               revision=1,contentHash=row['content_hash'])
+    assert verify_registration_origin(receipt_ref=ref,**args).request_hash()==FirstDispatchRegistrationRequest.model_validate(inner).request_hash()
+    wrong=RegistrationReceiptRef(**{**ref.model_dump(),'resourceType':'FirstDispatchRegistrationReceipt'})
+    with pytest.raises(ValueError,match='REGISTRATION_ORIGIN_INVALID'):
+        verify_registration_origin(receipt_ref=wrong,**args)

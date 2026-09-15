@@ -17,3 +17,7 @@ Rules：m1单写、先方案、最小兼容扩展，原首次注册/撤回/审�
 验证：旧首次哈希/行为不变；新ref/父hash/租户/目标/九操作/版本/快照漂移拒绝；未完成detach、活动gate、未知或running旧任务拒绝；继任注册无dispatch mutation、幂等回放；真实完整Service签名资格/审批/cutover，旧测试回归。数据库备份恢复后部署，再F注册接管。后续event-control与经营首链仍单列，不能用本凭据冒充业务完成。
 
 契约阶段验证：新继任请求/收据解码与旧首次契约、收据、来源测试累计70passed。新凭据严格绑定父detach、组版本与完整九入口快照；原FirstDispatchRegistrationRequest字节及hash保持不变。当前仅新增纯契约文件，无数据库/服务写入口启用。API已切到growth1.9签名根PID84100；首次OpenAPI生成6.4秒超过5秒探测超时，后续HTTP404根响应及日志200表明进程可用，不将超时误报为拒绝连接。
+
+展示契约补充：修改 apps/web/src/api/assetControl/registrationStatus.ts 及测试，接受明确SuccessorDispatchRegistrationReceipt + successor_history组合且allowedActions只能空；禁止继任凭据被误当“未使用首次注册”而出现撤回按钮。后端返回当前安装etag和历史凭据，不授予执行权；多份冲突历史显示needs_attention且清除动作。必要时补RegistrationPanel说明文案。新增状态查询只在a0v056表存在时读取，保证加法迁移前旧安装仍可查询。
+
+部署文件补充：新增 scripts/a0v_successor_registration_deploy.py 及测试，固定 a0v055→056、独立successor-registration-deployment状态目录/aos_successor_registration_20260916_test恢复库。保留054/055执行器。新表runtime只读、maintainer也无直接INSERT权限，只有受控函数可登记；已有全表指纹（包括event-control收据）必须一致，新继任表为空，immutable_history/immutable_truncate生效。独立备份恢复验真后主库迁移。API重启加载服务适配，Host不重启；真实F服务调用与浏览器状态验收随后执行。

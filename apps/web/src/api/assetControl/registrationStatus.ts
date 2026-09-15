@@ -1,5 +1,5 @@
 export interface RegistrationReceiptRef {
-  resourceType: "FirstDispatchRegistrationReceipt";
+  resourceType: "FirstDispatchRegistrationReceipt" | "SuccessorDispatchRegistrationReceipt";
   resourceId: string;
   revision: 1;
   contentHash: string;
@@ -13,7 +13,7 @@ export interface RegistrationStatus {
   allowedActions: ("withdraw")[];
   executable: false;
   expectedInstallationEtag: number | null;
-  withdrawalReason: "not_applicable" | "unused_origin" | "dependent_history" | "dispatch_changed";
+  withdrawalReason: "not_applicable" | "unused_origin" | "dependent_history" | "dispatch_changed" | "successor_history";
 }
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 function object(value: unknown, fields: string[]): Record<string, unknown> {
@@ -35,11 +35,12 @@ export function parseRegistrationStatus(value: unknown): RegistrationStatus {
   if(item.state==="registered") {
     const raw=object(item.registrationReceiptRef,["resourceType","resourceId","revision","contentHash"]);
     uuid(raw.resourceId);
-    if(raw.resourceType!=="FirstDispatchRegistrationReceipt" || raw.revision!==1 ||
+    if((raw.resourceType!=="FirstDispatchRegistrationReceipt" && raw.resourceType!=="SuccessorDispatchRegistrationReceipt") || raw.revision!==1 ||
       typeof raw.contentHash!=="string" || !/^sha256:[0-9a-f]{64}$/.test(raw.contentHash) ||
       !Number.isSafeInteger(item.expectedInstallationEtag) || Number(item.expectedInstallationEtag)<1 ||
-      item.withdrawalReceiptId!==null || !["unused_origin","dependent_history","dispatch_changed"].includes(String(item.withdrawalReason))) throw new Error("Invalid registration reference");
-    ref={resourceType:"FirstDispatchRegistrationReceipt",resourceId:raw.resourceId,revision:1,contentHash:raw.contentHash};
+      item.withdrawalReceiptId!==null || !["unused_origin","dependent_history","dispatch_changed","successor_history"].includes(String(item.withdrawalReason))) throw new Error("Invalid registration reference");
+    if((raw.resourceType==="SuccessorDispatchRegistrationReceipt")!==(item.withdrawalReason==="successor_history")) throw new Error("Invalid successor registration hint");
+    ref={resourceType:raw.resourceType,resourceId:raw.resourceId,revision:1,contentHash:raw.contentHash};
     const expected=item.withdrawalReason==="unused_origin" ? ["withdraw"] : [];
     if(JSON.stringify(item.allowedActions)!==JSON.stringify(expected)) throw new Error("Invalid withdrawal hint");
   } else {
