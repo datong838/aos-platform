@@ -1,5 +1,6 @@
 import importlib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -21,6 +22,30 @@ def snapshot(*, state="active", etag=5, enabled=True, fenced=False, resources=Tr
         "head": {"state": state, "etag_version": etag},
         "bindings": bindings,
         "resources": ([{"cleanup_state": "released", "observed_release": True}] if resources else []),
+        "canaryInstallations": 0,
+    }
+
+
+def predecessor_snapshot(reinstall):
+    return {
+        "head": {
+            "installation_id": reinstall.PREDECESSOR["installationId"],
+            "etag_version": 5,
+            "state": "active",
+            "lock_hash": reinstall.PREDECESSOR["lockHash"],
+            "overlay_revision": reinstall.PREDECESSOR["overlayRevision"],
+        },
+        "bindings": [{
+            "generation": reinstall.PREDECESSOR_GENERATION,
+            "revision": 5,
+            "execution_epoch": 4,
+            "enabled": False,
+            "operation_fence": True,
+            "desired_state": "enabled",
+            "observed_state": "unknown",
+        }],
+        "operations": [{"status": "succeeded"}],
+        "resources": [{"cleanup_state": "released", "observed_release": True}],
         "canaryInstallations": 0,
     }
 
@@ -75,3 +100,59 @@ def test_freeze_is_exclusive_and_private(reinstall, tmp_path):
     assert target.stat().st_mode & 0o777 == 0o600
     with pytest.raises(FileExistsError):
         reinstall._freeze(target, {"command": "twice"})
+
+
+def test_predecessor_drain_requires_exact_restart_state(reinstall):
+    value = predecessor_snapshot(reinstall)
+    assert reinstall.require_predecessor_drain(value) == {
+        "etag": 5,
+        "generation": reinstall.PREDECESSOR_GENERATION,
+        "bindingRevision": 5,
+    }
+    for field, changed in (
+        ("desired_state", "disabled"),
+        ("observed_state", "ready"),
+        ("revision", 6),
+        ("execution_epoch", 5),
+        ("enabled", True),
+        ("operation_fence", False),
+    ):
+        drifted = predecessor_snapshot(reinstall)
+        drifted["bindings"][0][field] = changed
+        with pytest.raises(ValueError, match="restart state"):
+            reinstall.require_predecessor_drain(drifted)
+    unresolved = predecessor_snapshot(reinstall)
+    unresolved["operations"][0]["status"] = "accepted"
+    with pytest.raises(ValueError, match="unresolved"):
+        reinstall.require_predecessor_drain(unresolved)
+
+
+def test_final_disable_uses_distinct_intent_and_idempotency_key(
+    reinstall, monkeypatch, tmp_path
+):
+    calls = []
+
+    class Service:
+        def request(self, **kwargs):
+            calls.append(kwargs)
+            return SimpleNamespace(response_json={"operationId": "operation-final"}, replayed=False)
+
+    monkeypatch.setattr(reinstall, "STATE", tmp_path)
+    monkeypatch.setattr(reinstall, "_initial", lambda label: {"installationId": "installation-a"})
+    monkeypatch.setattr(reinstall, "observe_installation", lambda installation_id: snapshot())
+    monkeypatch.setattr(
+        reinstall,
+        "_setup_runtime_plane",
+        lambda: (
+            SimpleNamespace(ACTOR="actor", ROLES={"admin"}, MARKINGS=set()),
+            object(),
+            object(),
+            Service(),
+            object(),
+        ),
+    )
+    result = reinstall.disable("a", suffix="disable-final")
+    assert result["receipt"]["operationId"] == "operation-final"
+    assert (tmp_path / "a/disable-final-intent.json").is_file()
+    assert len(calls) == 1
+    assert calls[0]["idempotency_key"] == "a0v-current-ecommerce-a-disable-final-20260915"

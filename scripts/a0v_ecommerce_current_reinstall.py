@@ -25,6 +25,7 @@ PREDECESSOR = {
     "lockHash": "sha256:a4441a4383783cb2a2f32171c52eb2718f526a5f56102dc5c0e12bf79299a42b",
     "overlayRevision": "a0v-canonical-ecommerce-v1",
 }
+PREDECESSOR_GENERATION = "3a445eee-aa28-4459-9e5a-f12a806a94b1"
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 VERSIONS = {
     "domain.ecommerce.core": "1.3.0",
@@ -73,18 +74,21 @@ def _setup_runtime_plane():
     from aos_api.extension_runtime.disable_service import RuntimeDisableService
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
     from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+    from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 
     store, lifecycle = activation._services(
         runtime_worker_connection, TRUST_STATE / "signing/trust-roots.json"
     )
+    dependent = EcommerceGrowthDisableDependent()
     disable = RuntimeDisableService(
         installation_store=store,
         installation_reader=lifecycle._reader,
         check_current_permission=CurrentControlPermission(
             operation=DISABLE_RUNTIME_OPERATION
         ),
+        dependent=dependent,
     )
-    return activation, store, lifecycle, disable
+    return activation, store, lifecycle, disable, dependent
 
 
 def observe_installation(installation_id: str) -> dict[str, Any]:
@@ -186,6 +190,48 @@ def require_phase(action: str, snapshot: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def require_predecessor_drain(snapshot: dict[str, Any]) -> dict[str, Any]:
+    head = snapshot["head"]
+    bindings = snapshot["bindings"]
+    if snapshot.get("canaryInstallations") != 0:
+        raise ValueError("canary installation drift")
+    if (
+        head["installation_id"] != PREDECESSOR["installationId"]
+        or head["state"] != "active"
+        or head["etag_version"] != PREDECESSOR["revision"]
+        or head["lock_hash"] != PREDECESSOR["lockHash"]
+        or head["overlay_revision"] != PREDECESSOR["overlayRevision"]
+        or len(bindings) != 1
+    ):
+        raise ValueError("exact predecessor head required")
+    binding = bindings[0]
+    if (
+        str(binding["generation"]) != PREDECESSOR_GENERATION
+        or binding["revision"] != 5
+        or binding["execution_epoch"] != 4
+        or binding["enabled"] is not False
+        or binding["operation_fence"] is not True
+        or binding["desired_state"] != "enabled"
+        or binding["observed_state"] != "unknown"
+    ):
+        raise ValueError("exact predecessor restart state required")
+    if not snapshot["resources"] or any(
+        item["cleanup_state"] != "released" or item["observed_release"] is not True
+        for item in snapshot["resources"]
+    ):
+        raise ValueError("predecessor released resources required")
+    if any(
+        item["status"] not in {"succeeded", "failed", "cancelled"}
+        for item in snapshot["operations"]
+    ):
+        raise ValueError("predecessor unresolved operation")
+    return {
+        "etag": PREDECESSOR["revision"],
+        "generation": PREDECESSOR_GENERATION,
+        "bindingRevision": binding["revision"],
+    }
+
+
 def create(label: str) -> dict[str, Any]:
     target = STATE / label / "create-result.json"
     if target.exists():
@@ -246,7 +292,7 @@ def lifecycle(label: str, action: str) -> dict[str, Any]:
     command = require_phase(action, snapshot)
     intent = STATE / label / f"{action}-intent.json"
     _freeze(intent, {"installationId": installation_id, **command})
-    activation, _store, service, _disable = _setup_runtime_plane()
+    activation, _store, service, _disable, _dependent = _setup_runtime_plane()
     receipt = service.request_preparation(
         **SCOPE,
         installation_id=installation_id,
@@ -281,18 +327,18 @@ def configure(label: str, action: str) -> dict[str, Any]:
     return profile.run("enable" if action == "recover" else action)
 
 
-def disable(label: str) -> dict[str, Any]:
+def disable(label: str, *, suffix: str = "disable") -> dict[str, Any]:
     installation_id = _initial(label)["installationId"]
     command = require_phase("disable", observe_installation(installation_id))
-    _freeze(STATE / label / "disable-intent.json", {"installationId": installation_id, **command})
-    activation, _store, _lifecycle, service = _setup_runtime_plane()
+    _freeze(STATE / label / f"{suffix}-intent.json", {"installationId": installation_id, **command})
+    activation, _store, _lifecycle, service, _dependent = _setup_runtime_plane()
     receipt = service.request(
         **SCOPE,
         installation_id=installation_id,
         actor=activation.ACTOR,
         roles=activation.ROLES,
         markings=activation.MARKINGS,
-        idempotency_key=f"a0v-current-ecommerce-{label}-disable-20260915",
+        idempotency_key=f"a0v-current-ecommerce-{label}-{suffix}-20260915",
         if_match='"5"',
         target={
             "generation": command["generation"],
@@ -300,6 +346,76 @@ def disable(label: str) -> dict[str, Any]:
         },
     )
     return {"command": command, "receipt": receipt.response_json, "replayed": receipt.replayed}
+
+
+def drain_predecessor() -> dict[str, Any]:
+    from uuid import UUID
+    from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
+    from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
+    from aos_api.extension_runtime.current_permission import CurrentControlPermission
+    from aos_api.extension_runtime.disable_consumer import (
+        ClaimedDisableDelivery,
+        RuntimeDisableConsumer,
+    )
+    from aos_api.extension_runtime.generation_attempts import GenerationDrainReader
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+    from aos_api.tenant_scope import TenantScope
+
+    snapshot = observe_installation(PREDECESSOR["installationId"])
+    command = require_predecessor_drain(snapshot)
+    _freeze(
+        STATE / "predecessor-drain-intent.json",
+        {"installationId": PREDECESSOR["installationId"], **command},
+    )
+    activation, store, _lifecycle, service, _dependent = _setup_runtime_plane()
+    receipt = service.request(
+        **SCOPE,
+        installation_id=PREDECESSOR["installationId"],
+        actor=activation.ACTOR,
+        roles=activation.ROLES,
+        markings=activation.MARKINGS,
+        idempotency_key="a0v-current-ecommerce-predecessor-drain-20260915",
+        if_match='"5"',
+        target={
+            "generation": command["generation"],
+            "bindingRevision": command["bindingRevision"],
+        },
+    )
+    operation_id = UUID(receipt.response_json["operationId"])
+    consumer = RuntimeDisableConsumer(
+        connect=runtime_worker_connection,
+        installation_store=store,
+        check_current_permission=CurrentControlPermission(
+            operation=DISABLE_RUNTIME_OPERATION
+        ),
+        check_drained=GenerationDrainReader(),
+        dependent=EcommerceGrowthDisableDependent(),
+    )
+    scope = TenantScope(**SCOPE)
+    with consumer._connection(SCOPE) as conn:
+        lease = consumer.outbox.claim(
+            conn,
+            **SCOPE,
+            operation_kind="disable",
+            installation_id=PREDECESSOR["installationId"],
+        )
+    if lease is None or lease.operation_id != operation_id:
+        raise ValueError("exact predecessor disable delivery required")
+    delivery = consumer.finish_claimed(
+        ClaimedDisableDelivery(scope, lease, UUID(PREDECESSOR["installationId"]))
+    )
+    if delivery.operation_id != operation_id or delivery.operation_status != "succeeded":
+        raise ValueError("predecessor disable did not settle")
+    return {
+        "command": command,
+        "receipt": receipt.response_json,
+        "replayed": receipt.replayed,
+        "delivery": {
+            "operationId": str(delivery.operation_id),
+            "operationStatus": delivery.operation_status,
+            "deliveryStatus": delivery.delivery_status,
+        },
+    }
 
 
 @contextmanager
@@ -362,7 +478,8 @@ def main() -> None:
         "action",
         choices=(
             "observe", "create-a", "prepare-a", "verify-a", "stage-a", "configure-a",
-            "enable-a", "disable-a", "recover-a", "uninstall-a", "create-b", "prepare-b",
+            "enable-a", "drain-predecessor", "disable-a", "recover-a", "disable-a-final",
+            "uninstall-a", "create-b", "prepare-b",
             "verify-b", "stage-b", "configure-b", "enable-b",
         ),
     )
@@ -377,8 +494,12 @@ def main() -> None:
     elif args.action in {"prepare-a", "verify-a", "prepare-b", "verify-b"}:
         action, label = args.action.split("-")
         result = lifecycle(label, action)
-    elif args.action in {"disable-a"}:
+    elif args.action == "drain-predecessor":
+        result = drain_predecessor()
+    elif args.action == "disable-a":
         result = disable("a")
+    elif args.action == "disable-a-final":
+        result = disable("a", suffix="disable-final")
     elif args.action == "uninstall-a":
         result = uninstall_a()
     else:
