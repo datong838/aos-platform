@@ -19,6 +19,44 @@ def test_scope_and_business_route_are_fixed(control):
     assert control.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
     assert str(control.STATE).endswith("p02-e-first-chain-r2")
     assert str(control.PREVIOUS_STATE).endswith("p02-e-first-chain")
+    assert control.OLD_REGISTRATION_INSTALLATION == "97aeb2e7-59ba-40f6-89a3-fb0293bc0497"
+    assert control.REGISTRATION_GROUP_ID == "6a402d31-83ad-546c-807f-508c87498ce1"
+    assert control.CUTOVER_OPERATION_ID == "b5555da7-6d0e-52f8-a443-d39b8264f40c"
+    assert control.MAKER != control.CHECKER != control.ACTOR
+
+
+def test_cutover_control_action_is_installation_scoped(control):
+    assert control.CUTOVER_ACTION_TYPE == {
+        "id": "ecommerce_growth_cutover", "name": "切换电商经营九项宿主入口",
+        "objectType": "BundleInstallation", "parameters": [], "requiredMarkings": [],
+        "submissionCriteria": [],
+    }
+
+
+def test_cutover_target_binds_registration_policy_and_exact_operations(control, monkeypatch):
+    registration = {
+        "outcome": "CURRENT_E_FIRST_DISPATCH_REGISTERED",
+        "request": {
+            "installationRef": {"installationId": "11111111-1111-4111-8111-111111111111"},
+            "groupId": control.REGISTRATION_GROUP_ID,
+            "generation": "22222222-2222-4222-8222-222222222222",
+            "executionEpoch": 3, "bindingRevision": 4,
+        },
+        "receipt": {"receiptId": "33333333-3333-4333-8333-333333333333",
+                    "contentHash": "sha256:" + "a" * 64},
+    }
+    monkeypatch.setattr(control, "_current_registration_result", lambda: registration)
+    monkeypatch.setattr(control, "_cutover_policy_ref", lambda: {
+        "resourceType": "RuntimeCutoverPolicyRevision", "resourceId": "policy", "revision": 1,
+        "contentHash": "sha256:" + "b" * 64})
+    monkeypatch.setattr(control, "_growth_operations", lambda: [f"operation-{n}" for n in range(9)])
+    target = control._cutover_target()
+    assert target["expectedGroupRevision"] == 1
+    assert target["targetInstallationId"] == registration["request"]["installationRef"]["installationId"]
+    assert target["targetRuntimeRevision"] == 4
+    assert target["operationIds"] == [f"operation-{n}" for n in range(9)]
+    assert target["registrationReceiptRef"]["resourceId"] == registration["receipt"]["receiptId"]
+    assert target["policyRef"]["resourceId"] == "policy"
 
 
 def test_private_freeze_is_exclusive(control, tmp_path):
