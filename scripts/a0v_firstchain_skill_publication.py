@@ -81,6 +81,14 @@ def require_clone(connect):
             raise ValueError('FIRSTCHAIN_CONTRACT_CLONE_ONLY')
 
 
+def versioned_logic_evidence(evaluated, graph, key):
+    report = evaluated.report
+    if (report.target_id, report.target_revision, report.target_hash) != (graph.id, graph.revision, graph.graph_hash):
+        raise ValueError('FIRSTCHAIN_LOGIC_EVAL_TARGET_DRIFT')
+    suite = evaluated.suite.model_copy(update={'id': key+'-suite'})
+    return suite, report.model_copy(update={'suite_id': suite.id})
+
+
 def _logic(connect, logic_id, model):
     store = LogicGraphStore(connect)
     build, evaluate, adapters = contract_components(logic_id)
@@ -101,10 +109,11 @@ def _logic(connect, logic_id, model):
         suite = evidence.get_suite(*SCOPE.key, report.suite_id)
     except EvalNotFound:
         evaluated = evaluate(graph, registry, datetime.now(UTC))
-        suite = evidence.create_suite(*SCOPE.key, ACTOR, evaluated.suite)
-        if suite.model_dump(mode='json') != evaluated.suite.model_dump(mode='json'):
+        expected_suite, expected_report = versioned_logic_evidence(evaluated, graph, key)
+        suite = evidence.create_suite(*SCOPE.key, ACTOR, expected_suite)
+        if suite.model_dump(mode='json') != expected_suite.model_dump(mode='json'):
             raise ValueError('FIRSTCHAIN_LOGIC_SUITE_DRIFT')
-        report = evaluated.report.model_copy(update={'report_id': key+'-report'})
+        report = expected_report.model_copy(update={'report_id': key+'-report'})
         report = evidence.save_report(*SCOPE.key, ACTOR, report)
     if (report.target_id, report.target_revision, report.target_hash) != (graph.id, graph.revision, graph.graph_hash) or not report.gate_passed:
         raise ValueError('FIRSTCHAIN_LOGIC_REPORT_DRIFT')

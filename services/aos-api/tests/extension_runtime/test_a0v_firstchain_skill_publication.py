@@ -64,3 +64,20 @@ def test_investigation_role_uses_own_complete_contract(logic_id):
     assert result.report.gate_passed
     assert result.report.total>=6
     assert all(case.id.startswith(logic_id.lower()+'-') for case in result.suite.cases)
+
+
+def test_successor_evidence_uses_distinct_suite_and_exact_report_target():
+    from datetime import UTC, datetime
+    from aos_api.aip_logic_graph_models import LogicGraphSnapshot, compute_logic_graph_hash
+    build,evaluate,registry=preparation.contract_components('D03')
+    request=build('new-exact-model')
+    graph=LogicGraphSnapshot(**request.model_dump(exclude={'id'}),id=request.id,revision=2,
+        graph_hash=compute_logic_graph_hash(request),created_at=datetime.now(UTC),updated_at=datetime.now(UTC))
+    result=evaluate(graph,registry('new-exact-model'),datetime.now(UTC))
+    suite,report=preparation.versioned_logic_evidence(result,graph,'successor-hash')
+    assert suite.id=='successor-hash-suite'
+    assert report.suite_id==suite.id
+    assert result.suite.id!=suite.id
+    wrong=graph.model_copy(update={'revision':3})
+    with pytest.raises(ValueError,match='TARGET_DRIFT'):
+        preparation.versioned_logic_evidence(result,wrong,'successor-hash')
