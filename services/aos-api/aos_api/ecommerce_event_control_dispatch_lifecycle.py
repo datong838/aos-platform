@@ -138,8 +138,14 @@ class EventControlDispatchLifecycle:
                 'public.extension_event_control_dispatch_receipt WHERE org_id=%s AND project_id=%s '
                 'AND idempotency_key=%s', (*scope.key, request.idempotency_key)).fetchone()
             if (row is None or row['actor'] != actor or row['request_hash'] != canonical_sha256(request.wire())
+                    or row['content_hash'] != canonical_sha256(row['authority_data'])
                     or response.get('contentHash') != row['content_hash']
                     or {**row['authority_data'], 'contentHash': row['content_hash']} !=
                        {key: value for key, value in response.items() if key != 'replayed'}):
                 raise ValueError('event dispatch receipt readback differs')
+            self._qualify(conn, scope, request)
+            require_current_event_dispatch_approval(transaction=HostTransaction(conn), scope=scope,
+                case_id=request.case_id, policy_id=request.schedule_policy_id,
+                approval_ref=request.approval_ref, executor=actor,
+                dispatch_intent=request.approval_intent())
             return response
