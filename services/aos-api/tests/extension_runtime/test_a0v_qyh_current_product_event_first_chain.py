@@ -19,11 +19,21 @@ def test_scope_and_business_route_are_fixed(control):
     assert control.ACTOR == "a0v-ecommerce-growth-1.4-runtime-owner"
     assert str(control.STATE).endswith("p02-e-first-chain-r2")
     assert str(control.PREVIOUS_STATE).endswith("p02-e-first-chain")
+    assert str(control.GROWTH_BACKEND).endswith("solution.ecommerce.growth/1.8.0/backend")
+    assert str(control.SDK_ROOT).endswith("packages/aos-extension-sdk/python")
     assert control.OLD_REGISTRATION_INSTALLATION == "97aeb2e7-59ba-40f6-89a3-fb0293bc0497"
     assert control.REGISTRATION_GROUP_ID == "6a402d31-83ad-546c-807f-508c87498ce1"
     assert control.CUTOVER_OPERATION_ID == "b5555da7-6d0e-52f8-a443-d39b8264f40c"
     assert control.MAKER != control.CHECKER != control.ACTOR
     assert len({control.ACTOR, control.CHECKER, control.CUTOVER_CHECKER}) == 3
+
+
+def test_event_refresh_decodes_exact_predecessors_without_owner_read_shortcut(control):
+    text=Path(control.__file__).read_text(encoding='utf-8')
+    assert 'decode_selection_row(selection_row)' in text
+    assert 'decode_control_row(control_row)' in text
+    assert '.selections.read_current' not in text
+    assert '.controls.read_current' not in text
 
 
 def test_cutover_control_action_is_installation_scoped(control):

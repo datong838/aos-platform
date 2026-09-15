@@ -13,16 +13,40 @@ ACTOR='a0v-ecommerce-growth-1.4-runtime-owner'
 BUNDLE_ROOT=ROOT.parent/'.aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current'
 TRUST_ROOTS=ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-first-install/signing/trust-roots.json'
 CURRENT_CREATE=ROOT.parent/'.aos-recovery-20260915/state/current-ecommerce-package/install/e/create-result.json'
+CUTOVER_RESUME=ROOT.parent/'.aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain-r2/cutover-resume-result.json'
 NIUSHOP_VERSION='1.23.0'
 
 
-def require_current_head(create_receipt,head,binding):
+def require_cutover_resume(create_receipt,binding,result,row):
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+    receipt=result.get('receipt',{}) if type(result) is dict else {}
+    authority=row.get('authority_data',{}) if type(row) is dict else {}
+    if (result.get('outcome')!='CURRENT_E_CUTOVER_RESUMED'
+            or receipt.get('phase')!='resume' or receipt.get('status')!='resumed'
+            or str(row.get('receipt_id'))!=receipt.get('receiptId')
+            or row.get('content_hash')!=receipt.get('contentHash')
+            or canonical_sha256(authority)!=row.get('content_hash')
+            or row.get('status')!='resumed'
+            or str(row.get('cutover_operation_id'))!=receipt.get('cutoverOperationId')
+            or str(row.get('target_installation_id'))!=create_receipt.get('installationId')
+            or str(row.get('target_generation'))!=str(binding.get('generation'))
+            or row.get('target_execution_epoch')!=binding.get('execution_epoch')
+            or row.get('target_runtime_revision')+2!=binding.get('revision')
+            or authority.get('targetRuntimeRevision')!=binding.get('revision')
+            or authority.get('status')!='resumed' or authority.get('claimPaused') is not False):
+        raise ValueError('exact cutover resume Receipt required')
+    return True
+
+
+def require_current_head(create_receipt,head,binding,cutover_resumed=False):
     if (create_receipt.get('installationId')!=str(head.get('installation_id'))
             or create_receipt.get('installationState')!='approved'
             or head.get('state')!='active' or head.get('etag_version')!=5
             or head.get('overlay_revision')!='a0v-canonical-ecommerce-v1'):
         raise ValueError('exact current installation E required')
-    if (binding.get('revision')!=4 or binding.get('execution_epoch')!=3
+    if (binding.get('revision') not in ({4,6} if cutover_resumed else {4})
+            or binding.get('revision')==6 and not cutover_resumed
+            or binding.get('execution_epoch')!=3
             or binding.get('enabled') is not True or binding.get('operation_fence') is not False
             or binding.get('desired_state')!='enabled' or binding.get('observed_state')!='ready'
             or not binding.get('config_ref')):
@@ -78,7 +102,25 @@ def run(action):
             WHERE org_id=%s AND project_id=%s AND installation_id=%s AND installation_revision=5''',
             (*scope.key,create_receipt['installationId'])).fetchall()
         if head is None or len(bindings)!=1:raise ValueError('one current installation binding required')
-        binding=bindings[0];current_ref=require_current_head(create_receipt,dict(head),dict(binding))
+        binding=bindings[0];binding_dict=dict(binding);cutover_resumed=False
+        if binding_dict['revision']==6:
+            if (not CUTOVER_RESUME.is_file() or CUTOVER_RESUME.stat().st_mode & 0o777 != 0o600):
+                raise ValueError('private cutover resume result required')
+            resume_result=json.loads(CUTOVER_RESUME.read_text(encoding='utf-8'))
+            resume_receipt=resume_result.get('receipt',{})
+            from aos_api.ecommerce_growth_registration_connection import registration_connection
+            from aos_api.ecommerce_growth_cutover_connection import scoped_cutover_connection
+            with scoped_cutover_connection(registration_connection)(scope) as control_conn:
+                resume_row=control_conn.execute('''SELECT o.cutover_operation_id,o.status,o.target_installation_id,
+                    o.target_generation,o.target_execution_epoch,o.target_runtime_revision,
+                    r.receipt_id,r.content_hash,r.authority_data
+                    FROM extension_dispatch_cutover_operation o
+                    JOIN extension_dispatch_cutover_receipt r USING(org_id,project_id,cutover_operation_id)
+                    WHERE o.org_id=%s AND o.project_id=%s AND r.phase='resume' AND r.receipt_id=%s''',
+                    (*scope.key,resume_receipt.get('receiptId'))).fetchall()
+            if len(resume_row)!=1:raise ValueError('one cutover resume Receipt required')
+            cutover_resumed=require_cutover_resume(create_receipt,binding_dict,resume_result,dict(resume_row[0]))
+        current_ref=require_current_head(create_receipt,dict(head),binding_dict,cutover_resumed)
         baseline=plane.installation_store.load_active_baseline_in_transaction(conn,org_id=scope.org_id,project_id=scope.project_id,
             requested_ref=CurrentInstallationRef.model_validate(current_ref))
         selected=[p for p in baseline.lock.payload.resolved if p.id=='platform.ecommerce.niushop']

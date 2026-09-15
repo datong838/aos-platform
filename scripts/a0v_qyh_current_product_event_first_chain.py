@@ -32,6 +32,9 @@ OLD_REGISTRATION_KEY = "a0v-qyh-reboot-operating-registration-v1"
 REGISTRATION_GROUP_ID = "6a402d31-83ad-546c-807f-508c87498ce1"
 CUTOVER_OPERATION_ID = "b5555da7-6d0e-52f8-a443-d39b8264f40c"
 REGISTRATION_KEY = "a0v-qyh-niushop-1.23-generation-e-registration-v1"
+SIGNED_BUNDLE_ROOT = ROOT.parent / ".aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current"
+GROWTH_BACKEND = SIGNED_BUNDLE_ROOT / "solution.ecommerce.growth/1.8.0/backend"
+SDK_ROOT = ROOT / "packages/aos-extension-sdk/python"
 
 
 def freeze(path: Path, value: dict[str, Any]) -> None:
@@ -67,6 +70,14 @@ def load_previous_result(name: str) -> dict[str, Any]:
 
 def setup():
     sys.path.insert(0, str(ROOT / "scripts"))
+    signed_root = SIGNED_BUNDLE_ROOT.resolve()
+    growth_backend = GROWTH_BACKEND.resolve()
+    sdk_root = SDK_ROOT.resolve()
+    if (not growth_backend.is_dir() or not growth_backend.is_relative_to(signed_root)
+            or not (sdk_root / "aos_extension_sdk").is_dir()):
+        raise ValueError("current signed ecommerce growth backend required")
+    sys.path.insert(0, str(sdk_root))
+    sys.path.insert(0, str(growth_backend))
     preflight = importlib.import_module("a0v_p02_current_preflight")
     from a0v_product_controlled_api import load_launcher
     product_api = load_launcher()
@@ -772,29 +783,53 @@ def configure_case(preflight, plane) -> dict[str, Any]:
 
 def refresh_event_authority(preflight, plane) -> dict[str, Any]:
     from aos_api.pipeline_runtime_control_contracts import PipelineRuntimeControlDraft, PipelineSourceSelectionDraft
+    from aos_api.pipeline_runtime_control_owner import decode_control_row
     from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
+    from aos_api.pipeline_source_selection_store import decode_selection_row
     from aos_api.tenant_scope import TenantScope
     prepared = preflight.run("preflight")
     if prepared.get("outcome") != "PRODUCT_CURRENT_PREFLIGHT_GREEN":
         raise ValueError("fresh Product preflight required")
     scope = TenantScope(**SCOPE)
     service = plane.pipeline_control_factory.build(scope)
+    target = (*scope.key, prepared["currentInstallationRef"]["installationId"],
+              prepared["runtimeBinding"]["generation"], PIPELINE)
     with _scope_and_connection()[1] as conn:
-        prior_selection = service.selections.read_current(conn, scope=scope, installation_id=prepared["currentInstallationRef"]["installationId"], pipeline_id=PIPELINE)
-        prior_control = service.controls.read_current(conn, scope=scope, installation_id=prepared["currentInstallationRef"]["installationId"], pipeline_id=PIPELINE)
+        selection_row = conn.execute("""SELECT * FROM pipeline_source_selection_revision
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s AND pipeline_id=%s
+            ORDER BY revision DESC LIMIT 1""", target).fetchone()
+        control_row = conn.execute("""SELECT * FROM pipeline_runtime_control_revision
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s AND pipeline_id=%s
+            ORDER BY revision DESC LIMIT 1""", target).fetchone()
+        prior_selection = None if selection_row is None else decode_selection_row(selection_row)
+        prior_control = None if control_row is None else decode_control_row(control_row)
         prior_binding = PipelineScheduleControlOwner(controls=service.controls).read_latest(conn, scope=scope, schedule_id=SCHEDULE)
     if any(value is None for value in (prior_selection, prior_control, prior_binding)):
         raise ValueError("current Product authority chain required")
     draft = prepared["draft"]
-    intent = {"actor": ACTOR, "selectionPreviousRef": prior_selection.ref.model_dump(by_alias=True, mode="json"),
-              "controlPreviousRef": prior_control.ref.model_dump(by_alias=True, mode="json"),
-              "bindingPreviousRef": prior_binding.ref.model_dump(by_alias=True, mode="json"), "draft": draft}
-    freeze_or_match(STATE / "event-refresh-intent.json", intent)
-    selection = service.approve_selection(draft=PipelineSourceSelectionDraft.model_validate(draft), actor=ACTOR,
+    candidate = {"actor": ACTOR, "selectionPreviousRef": prior_selection.ref.model_dump(by_alias=True, mode="json"),
+                 "controlPreviousRef": prior_control.ref.model_dump(by_alias=True, mode="json"),
+                 "bindingPreviousRef": prior_binding.ref.model_dump(by_alias=True, mode="json"), "draft": draft}
+    intent_path = STATE / "event-refresh-intent.json"
+    if intent_path.exists():
+        if intent_path.stat().st_mode & 0o777 != 0o600:
+            raise ValueError("private event refresh intent required")
+        intent = json.loads(intent_path.read_text(encoding="utf-8"))
+        stable = lambda value: {key: item for key, item in value.items()
+                                if key not in {"notBefore", "expiresAt"}}
+        if ({key: intent.get(key) for key in ("actor", "selectionPreviousRef", "controlPreviousRef", "bindingPreviousRef")}
+                != {key: candidate[key] for key in ("actor", "selectionPreviousRef", "controlPreviousRef", "bindingPreviousRef")}
+                or stable(intent.get("draft", {})) != stable(draft)):
+            raise ValueError("immutable event refresh authority differs")
+        draft = intent["draft"]
+    else:
+        intent = candidate
+        freeze(intent_path, intent)
+    selection = service.approve_selection(draft=PipelineSourceSelectionDraft.model_validate_json(json.dumps(draft)), actor=ACTOR,
         idempotency_key="a0v-p02-e-event-selection-20260915-v3", previous_ref=intent["selectionPreviousRef"])
     control_draft = {**draft, "schemaVersion": "aos.pipeline-runtime-control-draft/v1",
                      "sourceSelectionRef": selection.model_dump(by_alias=True, mode="json")}
-    control = service.approve_control(draft=PipelineRuntimeControlDraft.model_validate(control_draft), actor=ACTOR,
+    control = service.approve_control(draft=PipelineRuntimeControlDraft.model_validate_json(json.dumps(control_draft)), actor=ACTOR,
         idempotency_key="a0v-p02-e-event-control-20260915-v3", previous_ref=intent["controlPreviousRef"])
     binding = service.bind_schedule(pipeline_id=PIPELINE, schedule_id=SCHEDULE, control_ref=control,
         actor=ACTOR, idempotency_key="a0v-p02-e-event-binding-20260915-v3", previous_ref=intent["bindingPreviousRef"])

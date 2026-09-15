@@ -44,3 +44,27 @@ def test_current_head_requires_generation_e_ready_exact_state():
             ('operation_fence',True),('desired_state','disabled'),('observed_state','unknown')):
         with pytest.raises(ValueError,match='ready binding'):
             m.require_current_head(receipt,head,{**binding,field:value})
+    resumed={**binding,'revision':6}
+    with pytest.raises(ValueError,match='ready binding'):
+        m.require_current_head(receipt,head,resumed)
+    assert m.require_current_head(receipt,head,resumed,True)['installationId']=='installation-e'
+
+
+def test_cutover_resume_proof_must_match_current_runtime():
+    spec=importlib.util.spec_from_file_location('p02_preflight',ROOT/'scripts/a0v_p02_current_preflight.py')
+    m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+    receipt={'installationId':'installation-e'}
+    binding={'generation':'generation-e','revision':6,'execution_epoch':3}
+    authority={'targetRuntimeRevision':6,'status':'resumed','claimPaused':False}
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+    content_hash=canonical_sha256(authority)
+    result={'outcome':'CURRENT_E_CUTOVER_RESUMED','receipt':{'phase':'resume','status':'resumed',
+        'receiptId':'receipt-1','contentHash':content_hash,'cutoverOperationId':'cutover-1'}}
+    row={'receipt_id':'receipt-1','content_hash':content_hash,'authority_data':authority,
+        'status':'resumed','cutover_operation_id':'cutover-1','target_installation_id':'installation-e',
+        'target_generation':'generation-e','target_execution_epoch':3,'target_runtime_revision':4}
+    assert m.require_cutover_resume(receipt,binding,result,row)
+    for field,value in (('status','validated'),('target_installation_id','installation-d'),
+            ('target_generation','generation-d'),('target_runtime_revision',3)):
+        with pytest.raises(ValueError,match='resume Receipt'):
+            m.require_cutover_resume(receipt,binding,result,{**row,field:value})
