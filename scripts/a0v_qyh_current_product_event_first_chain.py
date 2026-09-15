@@ -306,7 +306,7 @@ def _current_registration_request(preflight):
 
 
 def withdraw_old_registration(_preflight, plane) -> dict[str, Any]:
-    from aos_api.ecommerce_growth_registration_origin import RegistrationWithdrawalRequest
+    from aos_api.ecommerce_growth_registration_withdrawal import RegistrationWithdrawalRequest
     from aos_api.tenant_scope import TenantScope
     scope = TenantScope(**SCOPE)
     service = plane.first_dispatch_registration_service

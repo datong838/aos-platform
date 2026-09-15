@@ -16,6 +16,8 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 旧 installation `97aeb2e7-59ba-40f6-89a3-fb0293bc0497` 仍持有一笔未使用、可撤销的 first-dispatch registration；其状态为 `registered`、`allowedActions=[withdraw]`、`executable=false`。当前 E 为 `unregistered`。因此必须先正式撤销旧的 pristine registration，再以 E 的 current installation revision、generation、binding revision、execution epoch 和 config exact ref 注册九项 fenced legacy 起点；之后才能执行 exact activation cutover。
 
+旧注册撤销后，E 的首次注册被 `REGISTRATION_GROWTH_DECLARATIONS_INVALID` 安全拒绝且零注册写入。签名 growth 1.8 包确实完整声明了九项受控经营 API，同时还合法声明了独立的 `analyst_workspace_view_v1` 只读工作台 API；资格函数却把“选中九项经营声明”写成了“整个包只能有九个 API 声明”，导致包增加无关 API 后无法注册。资格校验应只筛选 `_API_PATHS` 所属九项，并继续要求数量、operationId、method、path、mode 全部 exact；完整包声明摘要与签名复验仍覆盖包括工作台 API 在内的所有 backend contributions，不能削弱。
+
 当前租户只有 `a0v-ecommerce-growth-1.4-runtime-owner=admin` 与 `user:dev=owner`。运行时 owner 必须执行且不能批准自己的执行；当前审批门的 checker 角色只接受 `admin/approver/aip_approver`，而 workspace 正式成员模型只提供 owner/admin/editor/viewer，故两名现有成员不能组成 maker/checker/executor 三方链。应由现有 tenant owner 经正式 workspace member 入口增加一个用途受限的 checker 身份，角色为 admin；不得改原两名成员角色。全局 `meta_action_type` 尚缺 `ecommerce_growth_schedule_put` 与 `ecommerce_growth_event_control`，而现有包 manifest 只有 actionTypes 权限声明，没有动作类型定义随安装落地。这些都是“可安装、可重装后无需开发者接线”的真实生命周期缺口，必须进入后续包配置计划。
 
 ## 本次主路径
@@ -45,9 +47,11 @@ ProductEvent Worker 没有产生 Occurrence、Case 或 Run。主库读回证明�
 
 - `scripts/a0v_qyh_current_product_event_first_chain.py`：`b7d2d6612841ec3fc376ce476cfe2a6f5636bb1055bab10748029796c12b3de7`
 - `services/aos-api/tests/extension_runtime/test_a0v_qyh_current_product_event_first_chain.py`：`56a504025b7de9b499c8aad99e85c6361a9c05eb6fb4126cbda99d817a61238b`
+- `services/aos-api/aos_api/ecommerce_growth_registration_qualification.py`：仅把注册资格的九项筛选范围与九项所有权对齐；完整 release signature/fingerprint 复验保持不变。
+- `services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_qualification.py`：增加带独立 API contribution 仍可验证、九项自身漂移仍拒绝的回归覆盖。
 - 本补充方案：`NEW`。
 
-不修改 Action policy、Case Store、ProductEvent Store、Worker、Receipt、migration 或已签名包资产。若现有 Host 路由无法完成上述正式配置，先落失败证据并另开最小实现方案。
+不修改 Action policy、Case Store、ProductEvent Store、Worker、Receipt、migration 或已签名包资产。签名包无需修改；资格层仍由完整签名重验证保证额外贡献不可被篡改。若现有 Host 路由无法完成上述正式配置，先落失败证据并另开最小实现方案。
 
 ## 测试与退出条件
 
