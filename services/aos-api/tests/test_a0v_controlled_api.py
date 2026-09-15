@@ -29,6 +29,15 @@ def test_api_flags_do_not_start_other_writers(launcher,monkeypatch):
     assert os.environ['AOS_DB_MIGRATION_MODE']=='disabled'
 
 
+def test_product_profile_uses_current_ecommerce_signed_root(monkeypatch):
+    root=Path(__file__).resolve().parents[3]
+    monkeypatch.syspath_prepend(str(root/'scripts'))
+    import a0v_product_controlled_api as product
+    launcher=product.load_launcher()
+    assert launcher.BUNDLE_ROOT==(root.parent/
+        '.aos-recovery-20260915/state/current-ecommerce-package/registry/signed-bundles-current-ecommerce')
+
+
 def test_invalid_lease_blocks_before_environment(launcher,monkeypatch):
     configure=Mock()
     monkeypatch.setattr(launcher,'_configure_environment',configure)
