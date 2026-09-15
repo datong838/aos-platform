@@ -15,3 +15,5 @@ Rules：m1单写、先方案、最小兼容扩展，原首次注册/撤回/审�
 新增文件：services/aos-api/aos_api/ecommerce_growth_successor_registration.py（请求/完整解码/服务协作），alembic/versions/a0v_056_dispatch_successor_registration.py（独立表、RLS、不可变、受控写）；修改ecommerce_growth_registration_origin.py、ecommerce_growth_registration.py、ecommerce_growth_cutover.py；新增对应contracts/PG/service集成测试。CLI F控制脚本仅在以上服务测试和部署后调用，不直接造Receipt。
 
 验证：旧首次哈希/行为不变；新ref/父hash/租户/目标/九操作/版本/快照漂移拒绝；未完成detach、活动gate、未知或running旧任务拒绝；继任注册无dispatch mutation、幂等回放；真实完整Service签名资格/审批/cutover，旧测试回归。数据库备份恢复后部署，再F注册接管。后续event-control与经营首链仍单列，不能用本凭据冒充业务完成。
+
+契约阶段验证：新继任请求/收据解码与旧首次契约、收据、来源测试累计70passed。新凭据严格绑定父detach、组版本与完整九入口快照；原FirstDispatchRegistrationRequest字节及hash保持不变。当前仅新增纯契约文件，无数据库/服务写入口启用。API已切到growth1.9签名根PID84100；首次OpenAPI生成6.4秒超过5秒探测超时，后续HTTP404根响应及日志200表明进程可用，不将超时误报为拒绝连接。
