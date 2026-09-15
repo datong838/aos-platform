@@ -1,0 +1,9 @@
+# 5L6T 初始化来源校验事务边界修复
+
+I真实错误：_BootstrapProductionStartService._source_derivation 接收父StartService传入的 `_TransactionBoundConnection`（刻意只提供execute、不暴露info/commit所有权），却把它交给需要原始事务连接的 AnalysisService._phase；真实Source Owner检查conn.info.transaction_status时AttributeError。fixture来源资格替身未执行该检查，原测试未覆盖这条边界。
+
+最小修复文件 `services/aos-api/aos_api/ecommerce_analysis_bootstrap_start.py`：在_source_derivation中先比较传入视图与guard.conn的pg_backend_pid/txid_current，并验证scope；随后只用guard原始连接重新进入_phase。不得给交易视图添加任意属性透传或独立commit/rollback，不降低原始Owner检查。
+
+自测文件 `services/aos-api/tests/extension_runtime/test_product_event_analysis_bootstrap_pg.py`：在正式初始化测试路径对每次_phase执行生产同款_require_transaction，先复现AttributeError，再验证修复成功。加入不同事务拒绝检查。随后回归bootstrap及event控制；I未决保留，不重试原事件。部署加载需先另行确认运行资源退休条件，不能直接替换进程内代码。
+
+07:57验证：新增完整初始化回归先真实复现 `_TransactionBoundConnection` 缺少 info 的 AttributeError（与现场相同文件/行）；修复后52项检查通过，含原始事务每阶段检查、跨事务拒绝、真实存储初始化/暂停、动作目录、审批和历史快照。受限视图未增加属性/提交能力；改动只有_source_derivation的scope+pid/xid核验及原始连接传递。新代码尚未进入当前Host；后续须保留I未知并正式退休/重载，首链依然未完成。

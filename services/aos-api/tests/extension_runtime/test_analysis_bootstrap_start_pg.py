@@ -179,3 +179,12 @@ def test_revoked_initialization_authority_blocks_replay(start_case):
     with pytest.raises(ValueError,match='authority Evidence differs'):
         service.start(analysis.scope,analysis.source.actor,key,request)
     assert service._tasks.get_run(analysis.scope,first['run'].id)==first['run']
+
+
+def test_source_derivation_rejects_different_transaction(start_case,monkeypatch):
+    from types import SimpleNamespace
+    conn,analysis,service,request,key=start_case
+    different=SimpleNamespace(execute=lambda query:SimpleNamespace(fetchone=lambda:dict(pid=-1,xid=-1)))
+    monkeypatch.setattr(analysis,'_phase',lambda *args,**kwargs:pytest.fail('foreign transaction reached current source'))
+    with pytest.raises(PermissionError,match='transaction differs'):
+        service._source_derivation(different,analysis.scope,request)

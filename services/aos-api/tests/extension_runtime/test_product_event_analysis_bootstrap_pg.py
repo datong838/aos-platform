@@ -112,3 +112,17 @@ def test_formal_rejects_package_command_hash_drift(formal_case):
     with pytest.raises(ValueError),conn.transaction():
         asyncio.run(analysis.handle(claimed))
     assert conn.execute('SELECT count(*) AS n FROM aip_task_run WHERE org_id=%s AND project_id=%s',analysis.scope.key).fetchone()['n']==0
+
+
+def test_formal_source_revalidation_keeps_original_transaction(formal_case,monkeypatch):
+    from aos_api.extension_runtime.lifecycle_store import _require_transaction
+    conn,analysis,claimed=formal_case
+    original=analysis._phase
+    def checked(connection,*args,**kwargs):
+        # Real qualification owners need the original transaction metadata.
+        # The installed computation fixture must not hide a narrow-view leak.
+        _require_transaction(connection)
+        return original(connection,*args,**kwargs)
+    monkeypatch.setattr(analysis,'_phase',checked)
+    receipt=asyncio.run(analysis.handle(claimed))
+    assert receipt['resourceType']=='AnalysisRuntimeReceipt'

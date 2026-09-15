@@ -152,6 +152,10 @@ class _BootstrapProductionStartService(AipProductionStartService):
     def _source_derivation(self, conn, scope, body):
         from aos_api.business_investigation_shared_contracts import InvestigationExactRef
         guard = self._guard
+        identity = 'SELECT pg_backend_pid() AS pid,txid_current() AS xid'
+        if (scope != guard.current.analysis.scope
+                or conn.execute(identity).fetchone() != guard.conn.execute(identity).fetchone()):
+            raise PermissionError('bootstrap source derivation transaction differs')
         intent = guard.intent.checked()
         def current(snapshot, request, _dispatch):
             if (intent.source_control_receipt_ref != InvestigationExactRef.model_validate(snapshot['source']['controlReceipt']['receiptRef'])
@@ -163,7 +167,7 @@ class _BootstrapProductionStartService(AipProductionStartService):
                 sourceControlReceiptRef=intent.source_control_receipt_ref.model_dump(mode='json', by_alias=True),
                 occurrenceRef=intent.occurrence_ref.model_dump(mode='json', by_alias=True),
                 businessExecutionAuthorized=False, externalEffectAuthorized=False)
-        return guard.current.analysis._phase(conn, guard.claimed, current)
+        return guard.current.analysis._phase(guard.conn, guard.claimed, current)
 
     def _record_authority(self, conn, scope, authority):
         from psycopg.types.json import Jsonb
