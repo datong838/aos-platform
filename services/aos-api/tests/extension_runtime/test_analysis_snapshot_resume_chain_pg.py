@@ -177,6 +177,7 @@ def chain_case(native_projection_case, data_case, monkeypatch):
     relation_raw = json.dumps(relation_doc).encode()
     state['policy_raw'] = relation_raw
     relation_ref = args['policy_ref'].model_copy(update={
+        'resource_id': 'content/policies/snapshot-relationships.v1.json',
         'content_hash': 'sha256:' + hashlib.sha256(relation_raw).hexdigest()})
     args = args | {'policy_ref': relation_ref}
     requested = prepare_data(data_case)
@@ -215,20 +216,20 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         windowBoundary='start-inclusive-end-exclusive',
         rules=[dict(objectType=kind,basis='snapshot',statusFilter=None) for kind in kinds])
     quality_raw, cohort_raw = json.dumps(quality_doc).encode(), json.dumps(cohort_doc).encode()
-    quality_ref = policy_ref(relation_ref,'SnapshotRelationshipQualityPolicy','content/policies/quality.json',quality_raw)
-    cohort_ref = policy_ref(relation_ref,'SnapshotBusinessCohortPolicy','content/policies/cohort.json',cohort_raw)
+    quality_ref = policy_ref(relation_ref,'SnapshotRelationshipQualityPolicy','content/policies/relationship-quality.v1.json',quality_raw)
+    cohort_ref = policy_ref(relation_ref,'SnapshotBusinessCohortPolicy','content/policies/business-cohort.v1.json',cohort_raw)
     field_doc = dict(schemaVersion='aos.snapshot-fact-quality/v1',
         cohortPolicyHash=compile_business_cohort_policy(cohort_doc,relationship_policy=relation).content_hash,
         relationshipQualityPolicyHash=compile_relationship_quality_policy(quality_doc,relationship_policy=relation).content_hash,
         purposeCode='initial_store_analysis',
         facts=[dict(objectType=kind,fields=[dict(property='name',kind='nonblank-string')]) for kind in kinds])
     field_raw = json.dumps(field_doc).encode()
-    field_ref = policy_ref(relation_ref,'SnapshotFactQualityPolicy','content/policies/fields.json',field_raw)
+    field_ref = policy_ref(relation_ref,'SnapshotFactQualityPolicy','content/policies/fact-quality.v1.json',field_raw)
     business_doc = dict(schemaVersion='aos.snapshot-business-facts/v1',
         fieldPolicyHash='sha256:'+_digest(field_doc),purposeCode='initial_store_analysis',
         facts=[dict(objectType=kind,mode='records',fields=['name']) for kind in kinds])
     business_raw = json.dumps(business_doc).encode()
-    business_policy_ref = policy_ref(relation_ref,'SnapshotBusinessFactPolicy','content/policies/business.json',business_raw)
+    business_policy_ref = policy_ref(relation_ref,'SnapshotBusinessFactPolicy','content/policies/business-facts.v1.json',business_raw)
     readiness_doc = dict(schemaVersion='aos.snapshot-readiness-policy/v1',
         fieldPolicyHash='sha256:'+_digest(field_doc),
         relationshipQualityPolicyHash=field_doc['relationshipQualityPolicyHash'],purposeCode='initial_store_analysis',
@@ -236,7 +237,7 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         queryBindingId='query-twelve',sources=[dict(pipelineId=item.pipeline_id,objectType=item.object_type)
             for item in CANONICAL_QYH_SOURCES])
     readiness_raw = json.dumps(readiness_doc).encode()
-    readiness_policy_ref = policy_ref(relation_ref,'SnapshotReadinessPolicy','content/policies/readiness.json',readiness_raw)
+    readiness_policy_ref = policy_ref(relation_ref,'SnapshotReadinessPolicy','content/policies/snapshot-readiness.v1.json',readiness_raw)
     documents = {ref.resource_id:raw for ref,raw in ((relation_ref,relation_raw),(quality_ref,quality_raw),
         (cohort_ref,cohort_raw),(field_ref,field_raw),(business_policy_ref,business_raw),
         (readiness_policy_ref,readiness_raw))}
@@ -293,6 +294,7 @@ def chain_case(native_projection_case, data_case, monkeypatch):
         readinessPolicyRef=readiness_policy_ref.model_dump(mode='json',by_alias=True,exclude_none=True))
     command['requestHash'] = _analysis_command_hash(command)
     context = AnalysisSnapshotResumeContext(fulfillment,AnalysisContinuationOrigin(AnalysisContinuationContext(analysis)))
+    state['completion'] = completion
     return conn,state,analysis,_AnalysisSnapshotResumeSession(context,conn,command),root,requirement
 
 
