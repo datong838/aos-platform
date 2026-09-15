@@ -71,6 +71,14 @@ def test_private_freeze_is_exclusive(control, tmp_path):
         control.freeze_or_match(target, {"outcome": "changed"})
 
 
+def test_cutover_prepare_prefers_immutable_refresh_approval(control, monkeypatch, tmp_path):
+    monkeypatch.setattr(control, "STATE", tmp_path)
+    control.freeze(tmp_path / "cutover-approval-result.json", {"approvalRef": {"resourceId": "expired"}})
+    assert control.current_cutover_approval_result()["approvalRef"]["resourceId"] == "expired"
+    control.freeze(tmp_path / "cutover-approval-refresh-result.json", {"approvalRef": {"resourceId": "current"}})
+    assert control.current_cutover_approval_result()["approvalRef"]["resourceId"] == "current"
+
+
 def test_canonical_and_relative_output_resolve_to_one_file(control, tmp_path):
     canonical = tmp_path / "state" / "result.json"
     relative = tmp_path / "state" / ".." / "state" / "result.json"

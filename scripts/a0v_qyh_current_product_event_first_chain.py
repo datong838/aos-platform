@@ -481,12 +481,32 @@ def approve_cutover(_preflight, _plane) -> dict[str, Any]:
             "approvalRef": ref, "payload": payload}
 
 
+def refresh_cutover_approval(_preflight, _plane) -> dict[str, Any]:
+    payload = _cutover_target()
+    prior = load_result("cutover-approval")
+    frozen = {"maker": ACTOR, "checkers": [CHECKER, CUTOVER_CHECKER],
+              "executor": ACTOR, "payload": payload,
+              "replacesExpiredApprovalRef": prior["approvalRef"]}
+    freeze_or_match(STATE / "cutover-approval-refresh-intent.json", frozen)
+    bundle, ref = _approve("ecommerce_growth_cutover", payload,
+                           "a0v-qyh-niushop-1.23-generation-e-cutover-refresh-v1")
+    return {"outcome": "CURRENT_E_CUTOVER_APPROVAL_REFRESHED",
+            "proposalId": bundle.proposal.id, "approvalRef": ref, "payload": payload,
+            "replacesExpiredApprovalRef": prior["approvalRef"]}
+
+
+def current_cutover_approval_result() -> dict[str, Any]:
+    refresh = STATE / "cutover-approval-refresh-result.json"
+    return load_result("cutover-approval-refresh") if refresh.exists() else load_result("cutover-approval")
+
+
 def cutover_prepare(_preflight, plane) -> dict[str, Any]:
     from aos_api.ecommerce_growth_cutover import CutoverPrepareRequest
     from aos_api.tenant_scope import TenantScope
-    target = {key: value for key, value in load_result("cutover-approval")["payload"].items()
+    current_approval = current_cutover_approval_result()
+    target = {key: value for key, value in current_approval["payload"].items()
               if key != "operationIds"}
-    approval_ref = {key: value for key, value in load_result("cutover-approval")["approvalRef"].items()
+    approval_ref = {key: value for key, value in current_approval["approvalRef"].items()
                     if key != "receiptId"}
     request = CutoverPrepareRequest(
         cutoverOperationId=CUTOVER_OPERATION_ID,
@@ -966,7 +986,7 @@ def main() -> None:
     parser.add_argument("action", choices=("prepare", "selection", "control", "binding", "execute", "observe",
         "reviewer", "action-types", "brief", "cutover-action-type", "cutover-reviewer",
         "reviewers-persist", "registration-withdraw",
-        "registration-register", "cutover-approval", "cutover-prepare", "cutover-pause",
+        "registration-register", "cutover-approval", "cutover-approval-refresh", "cutover-prepare", "cutover-pause",
         "cutover-commit", "cutover-validate", "cutover-resume", "cutover-observe", "case",
         "event-refresh", "schedule-approval", "policy", "control-approval", "event-enable",
         "event-observe"))
@@ -987,6 +1007,7 @@ def main() -> None:
               "registration-withdraw": lambda: withdraw_old_registration(preflight,plane),
               "registration-register": lambda: register_current_e(preflight,plane),
               "cutover-approval": lambda: approve_cutover(preflight,plane),
+              "cutover-approval-refresh": lambda: refresh_cutover_approval(preflight,plane),
               "cutover-prepare": lambda: cutover_prepare(preflight,plane),
               "cutover-pause": lambda: cutover_pause(preflight,plane),
               "cutover-commit": lambda: cutover_commit(preflight,plane),
