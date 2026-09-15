@@ -13,6 +13,15 @@ from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_product_event_store import ProductEventPolicyStore
 
 
+def _current_case_authority(value):
+    """Decode historical timestamp spellings using the Case writer's hash contract."""
+    from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseRevision
+    case = BusinessInvestigationCaseRevision.model_validate(value)
+    if case.lifecycle.value != 'ACTIVE' or case.content_hash != case.calculated_content_hash():
+        raise ValueError('current event Case invalid')
+    return case.model_dump(mode='json', by_alias=True)
+
+
 def _parse(command, scope):
     keys = {'idempotencyKey', 'expectedPolicyRevision', 'expectedCaseVersion',
             'policy', 'caseAuthority', 'approvalRef'}
@@ -82,10 +91,7 @@ class ProductEventSchedulePutHostService:
         ).fetchone()
         if current is None:
             raise ValueError('current event Case unavailable')
-        current = current['authority_data']
-        if (current.get('lifecycle') != 'ACTIVE'
-                or current.get('contentHash') != canonical_hash({k:v for k,v in current.items() if k!='contentHash'},prefixed=True)):
-            raise ValueError('current event Case invalid')
+        current = _current_case_authority(current['authority_data'])
         selection = EcommerceInvestigationProfileCatalog().read(current['analysisType'])
         if selection is None:
             raise ValueError('current event method unavailable')

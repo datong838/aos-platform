@@ -49,6 +49,27 @@ def prepare():
     return dict(originalCase=original,payload=payload,command=command)
 
 
+def require_empty_failed_put(proof, expected_version):
+    if (proof['policyCount']!=0 or proof['receiptCount']!=0
+        or proof['case']['current_revision']!=expected_version
+        or proof['case']['version']!=expected_version or proof['case']['lifecycle']!='ACTIVE'):
+        raise ValueError('failed put is not proven absent')
+
+
+def recheck_failed_put(command):
+    from a0v_formal_text_model_renewal import database_connect
+    with database_connect('aos_meta_head')() as conn:
+        policy=conn.execute("SELECT count(*) AS n FROM ecommerce_investigation_schedule_policy_head WHERE org_id='org-org' AND project_id='dev-project' AND schedule_policy_id=%s",(POLICY,)).fetchone()['n']
+        receipt=conn.execute("SELECT count(*) AS n FROM ecommerce_investigation_schedule_policy_command_receipt WHERE org_id='org-org' AND project_id='dev-project' AND idempotency_key=%s",(command['idempotencyKey'],)).fetchone()['n']
+        case=conn.execute("SELECT current_revision,version,lifecycle FROM ecommerce_investigation_case_head WHERE org_id='org-org' AND project_id='dev-project' AND case_id=%s",(CASE,)).fetchone()
+    if case is None:raise ValueError('original Case missing')
+    proof=dict(policyCount=policy,receiptCount=receipt,case=dict(case))
+    require_empty_failed_put(proof,command['expectedCaseVersion'])
+    if json.loads((STATE/'put-intent.json').read_text())!=command:
+        raise ValueError('original put intent differs')
+    return proof
+
+
 def run(phase,plane):
     from a0v_qyh_current_product_event_first_chain import freeze,_approve
     intent=STATE/(phase+'-intent.json')
@@ -59,12 +80,15 @@ def run(phase,plane):
         payload=load('prepare')['payload'];freeze(intent,payload)
         bundle,ref=_approve('ecommerce_growth_schedule_put',payload,PREFIX+'-schedule-approval')
         result=dict(proposalId=bundle.proposal.id,approvalRef=ref)
-    elif phase=='put':
+    elif phase in ('put','put-recovered'):
         from aos_api.auth import Principal
         from aos_api.ecommerce_growth_canonical_router import EcommerceGrowthCanonicalRouter,ExpectedRuntimeTarget
         from aos_api.ecommerce_growth_host_composition import build_scoped_ecommerce_growth_registry
         from aos_api.tenant_scope import TenantScope
         command={**load('prepare')['command'],'approvalRef':load('approve')['approvalRef']}
+        if phase=='put-recovered':
+            proof=recheck_failed_put(command)
+            freeze(STATE/'put-recovered-precheck.json',proof)
         freeze(intent,command);scope=TenantScope('org-org','dev-project')
         principal=Principal(subject=f.ACTOR,org_id=scope.org_id,project_id=scope.project_id,roles=['admin'])
         router=EcommerceGrowthCanonicalRouter(build_scoped_ecommerce_growth_registry(principal,plane.pipeline_control_factory))
@@ -77,7 +101,7 @@ def run(phase,plane):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['prepare','approve','put']);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('phase',choices=['prepare','approve','put','put-recovered']);args=parser.parse_args()
     print(json.dumps(run(args.phase,f.setup()),ensure_ascii=False,indent=2,default=str))
 
 

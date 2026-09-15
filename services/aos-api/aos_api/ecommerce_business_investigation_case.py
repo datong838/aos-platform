@@ -308,6 +308,7 @@ class BusinessInvestigationCaseStore:
         payload["contentHash"] = successor.calculated_content_hash()
         successor = BusinessInvestigationCaseRevision.model_validate(payload)
         successor.validate_successor(previous)
+        payload = successor.model_dump(by_alias=True, mode='json')
         request_hash = _canonical_hash(
             {"caseId": case_id, "expectedVersion": expected_version, "targetLifecycle": target.value}
         )
