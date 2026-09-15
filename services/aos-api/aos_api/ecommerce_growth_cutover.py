@@ -2023,6 +2023,13 @@ class EcommerceGrowthCutoverStore:
         action_type_id: str = "ecommerce_growth_cutover",
         expected_payload: dict[str, Any] | None = None,
     ) -> datetime:
+        # AIP tenant RLS is owned by the runtime role.  A formally registered
+        # cutover runs through the protected identity carrying both roles, so
+        # use the tenant-scoped reader before restoring the maintainer role in
+        # the current-approval validator.  Legacy callers keep their established
+        # connection role and therefore preserve the pre-registration contract.
+        if self._registration_service is not None:
+            conn.execute("SET LOCAL ROLE aos_runtime")
         approval = conn.execute(
             f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
                       actor_id,reason,expires_at,created_at,action_binding_hash
@@ -2144,6 +2151,7 @@ class EcommerceGrowthCutoverStore:
             from aos_api.ecommerce_growth_cutover_current_approval import require_current_cutover_approval
             require_current_cutover_approval(conn=conn, scope=scope, proposal=proposal,
                 approval_id=approval['approval_event_id'], checked_at=checked_at, schema=self._schema)
+            conn.execute("SET LOCAL ROLE aos_extension_maintainer")
         return checked_at
 
     def _registration_assets(self,conn,scope,target,old_snapshot,actor):

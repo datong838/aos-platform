@@ -192,6 +192,7 @@ def database():
                   WITH CHECK(org_id=current_setting('aos.org_id',true)
                     AND project_id=current_setting('aos.project_id',true))"""
             )
+            owner.execute(f"GRANT SELECT ON {table} TO aos_runtime")
         _migration(root, "ar2_013_ecommerce_growth_cutover.py", owner, schema=schema)
         _migration(root, "ar2_014_ecommerce_growth_cutover_commit.py", owner, schema=schema)
         _migration(root, "ar2_015_ecommerce_growth_cutover_finalize.py", owner, schema=schema)

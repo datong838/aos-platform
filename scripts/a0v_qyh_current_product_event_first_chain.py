@@ -23,6 +23,7 @@ SCHEDULE = "sch-p02-qyh-controlled-20260913-v1"
 ACTOR = "a0v-ecommerce-growth-1.4-runtime-owner"
 MAKER = "user:dev"
 CHECKER = "a0v-ecommerce-growth-1.4-approval-checker"
+CUTOVER_CHECKER = "a0v-ecommerce-growth-1.4-cutover-checker"
 CASE_ID = "case-qyh-full-store-baseline-20260915"
 POLICY_ID = "product-event-qyh-full-store-baseline-20260915"
 API = "http://127.0.0.1:18181"
@@ -68,7 +69,10 @@ def setup():
     sys.path.insert(0, str(ROOT / "scripts"))
     preflight = importlib.import_module("a0v_p02_current_preflight")
     from a0v_product_controlled_api import load_launcher
-    load_launcher().configure_environment()
+    product_api = load_launcher()
+    product_api_check = product_api.preflight()
+    if product_api_check.get("outcome") != "CONTROLLED_API_LOCAL_DIAGNOSTIC_PREFLIGHT_GREEN":
+        raise ValueError("controlled Product API preflight required")
     os.environ["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] = "0"
     sys.path.insert(0, str(ROOT / "services/aos-api"))
     from aos_api.asset_registry.control_wiring import build_runtime_control_plane
@@ -79,10 +83,8 @@ def setup():
 
 @contextmanager
 def _web_connection(scope):
-    from aos_api.extension_runtime.runtime_connections import runtime_web_identity_connection
-    from aos_api.tenant_scope import apply_transaction_scope
-    with runtime_web_identity_connection() as conn:
-        apply_transaction_scope(conn, scope)
+    from aos_api.db import connect
+    with connect(scope) as conn:
         yield conn
 
 
@@ -289,6 +291,54 @@ def configure_cutover_action_type(_preflight, _plane) -> dict[str, Any]:
             "actionType": comparable, "created": actual is None}
 
 
+def configure_cutover_reviewer(_preflight, _plane) -> dict[str, Any]:
+    intent = {"actor": MAKER, "subject": CUTOVER_CHECKER, "role": "admin",
+              "workspaceId": SCOPE["project_id"]}
+    freeze_or_match(STATE / "cutover-reviewer-intent.json", intent)
+    api("GET", "/v1/workspaces")
+    _status, listed = api("GET", f"/v1/workspaces/{SCOPE['project_id']}/members")
+    matches = [item for item in listed.get("items", []) if item.get("subject") == CUTOVER_CHECKER]
+    if matches:
+        if len(matches) != 1 or matches[0].get("role") != "admin":
+            raise ValueError("current cutover checker membership differs")
+        row, replayed = matches[0], True
+    else:
+        _status, row = api("POST", f"/v1/workspaces/{SCOPE['project_id']}/members",
+                           {"subject": CUTOVER_CHECKER, "role": "admin"})
+        replayed = False
+    return {"outcome": "CURRENT_PRODUCT_CUTOVER_REVIEWER_CONFIGURED", "member": row,
+            "maker": ACTOR, "otherChecker": CHECKER, "replayed": replayed}
+
+
+def persist_reviewers(_preflight, _plane) -> dict[str, Any]:
+    subjects = [CHECKER, CUTOVER_CHECKER]
+    intent = {"actor": MAKER, "subjects": subjects, "role": "admin",
+              "workspaceId": SCOPE["project_id"], "requiredStore": "pg"}
+    freeze_or_match(STATE / "reviewers-persist-intent.json", intent)
+    api("GET", "/v1/workspaces")
+    _status, listed = api("GET", f"/v1/workspaces/{SCOPE['project_id']}/members")
+    existing = {item.get("subject"): item for item in listed.get("items", [])}
+    writes = []
+    for subject in subjects:
+        row = existing.get(subject)
+        if row is not None and row.get("role") != "admin":
+            raise ValueError("current durable reviewer role differs")
+        if row is None:
+            _status, row = api("POST", f"/v1/workspaces/{SCOPE['project_id']}/members",
+                               {"subject": subject, "role": "admin"})
+            writes.append(subject)
+    from aos_api.tenant_scope import TenantScope
+    scope = TenantScope(**SCOPE)
+    with _web_connection(scope) as conn:
+        rows = [dict(row) for row in conn.execute(
+            "SELECT subject,role FROM meta_membership WHERE org_id=%s AND project_id=%s "
+            "AND subject=ANY(%s) ORDER BY subject", (*scope.key, subjects)).fetchall()]
+    if rows != [{"subject": subject, "role": "admin"} for subject in sorted(subjects)]:
+        raise ValueError("reviewer membership was not durably persisted")
+    return {"outcome": "CURRENT_PRODUCT_REVIEWERS_DURABLE", "members": rows,
+            "written": writes}
+
+
 def _current_registration_request(preflight):
     from aos_api.ecommerce_growth_registration_contracts import FirstDispatchRegistrationRequest
     current = preflight.run("preflight")
@@ -422,10 +472,11 @@ def _growth_operations() -> list[str]:
 
 def approve_cutover(_preflight, _plane) -> dict[str, Any]:
     payload = _cutover_target()
-    frozen = {"maker": MAKER, "checker": CHECKER, "executor": ACTOR, "payload": payload}
-    freeze_or_match(STATE / "cutover-approval-intent.json", frozen)
+    frozen = {"maker": ACTOR, "checkers": [CHECKER, CUTOVER_CHECKER],
+              "executor": ACTOR, "payload": payload}
+    freeze_or_match(STATE / "cutover-approval-v2-intent.json", frozen)
     bundle, ref = _approve("ecommerce_growth_cutover", payload,
-                           "a0v-qyh-niushop-1.23-generation-e-cutover-v1")
+                           "a0v-qyh-niushop-1.23-generation-e-cutover-v2")
     return {"outcome": "CURRENT_E_CUTOVER_APPROVED", "proposalId": bundle.proposal.id,
             "approvalRef": ref, "payload": payload}
 
@@ -433,11 +484,14 @@ def approve_cutover(_preflight, _plane) -> dict[str, Any]:
 def cutover_prepare(_preflight, plane) -> dict[str, Any]:
     from aos_api.ecommerce_growth_cutover import CutoverPrepareRequest
     from aos_api.tenant_scope import TenantScope
-    target = load_result("cutover-approval")["payload"]
+    target = {key: value for key, value in load_result("cutover-approval")["payload"].items()
+              if key != "operationIds"}
+    approval_ref = {key: value for key, value in load_result("cutover-approval")["approvalRef"].items()
+                    if key != "receiptId"}
     request = CutoverPrepareRequest(
         cutoverOperationId=CUTOVER_OPERATION_ID,
         idempotencyKey="a0v-qyh-niushop-1.23-generation-e-cutover-prepare-v1",
-        approvalRef=load_result("cutover-approval")["approvalRef"],
+        approvalRef=approval_ref,
         checkpoint={"legacyEntry": "canonical-router", "version": 1},
         occurrenceWatermark=None, pendingTargetReceiptRefs=[], **target)
     material = request.model_dump(mode="json", by_alias=True)
@@ -684,12 +738,12 @@ def refresh_event_authority(preflight, plane) -> dict[str, Any]:
             "bindingRef": binding.model_dump(by_alias=True, mode="json"), "runtimeBinding": prepared["runtimeBinding"]}
 
 
-def _approval_ref(bundle) -> dict[str, Any]:
+def _approval_ref(bundle, *, expected_count: int = 1) -> dict[str, Any]:
     from aos_api.aip_budget_reservation_store import canonical_hash
     approved = [item for item in bundle.approvals if item.decision.value == "approved"]
-    if len(approved) != 1:
-        raise ValueError("one independent approval required")
-    event = approved[0]
+    if len(approved) != expected_count:
+        raise ValueError("exact independent approval count required")
+    event = approved[-1]
     row = {"approval_event_id": event.id, "proposal_id": event.proposal_id,
            "proposal_version": event.proposal_version, "proposal_hash": event.proposal_hash,
            "decision": event.decision.value, "actor_id": event.actor.actor_id, "reason": event.reason,
@@ -701,23 +755,44 @@ def _approval_ref(bundle) -> dict[str, Any]:
 
 def _approve(action_type: str, payload: dict[str, Any], key: str):
     from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
-    from aos_api.aip_action_service import AipActionService
+    from aos_api.aip_action_policy import classify_action_risk
     from aos_api.aip_action_store import AipActionStore
     from aos_api.aip_contracts import ApprovalDecision
-    from aos_api.auth import Principal
-    service = AipActionService(AipActionStore(_web_connection))
-    maker = Principal(subject=MAKER, org_id=SCOPE["org_id"], project_id=SCOPE["project_id"], roles=["owner"])
-    checker = Principal(subject=CHECKER, org_id=SCOPE["org_id"], project_id=SCOPE["project_id"], roles=["admin"])
-    expiry = datetime.now(timezone.utc) + timedelta(minutes=45)
-    proposal = service.create_proposal(maker, key + ":proposal", CreateActionProposalRequest(
-        actionTypeId=action_type, purpose="栖月汇真实商品事件首链内部配置", payload=payload, expiresAt=expiry))
-    reviewed = service.decide(checker, proposal.proposal.id, key + ":approval", DecideActionProposalRequest(
-        expectedProposalVersion=proposal.proposal.version, expectedProposalHash=proposal.proposal.proposal_hash,
-        decision=ApprovalDecision.APPROVED, reason="当前租户真实首链内部配置独立复核",
-        approvalExpiresAt=datetime.now(timezone.utc) + timedelta(minutes=30)))
+    from aos_api.tenant_scope import TenantScope
+    scope = TenantScope(**SCOPE)
+    store = AipActionStore(_web_connection)
+    snapshot = store.action_type_snapshot(scope, action_type)
+    control = action_type == "ecommerce_growth_cutover"
+    maker = ACTOR if control else MAKER
+    checkers = (CHECKER, CUTOVER_CHECKER) if control else (CHECKER,)
+    with _web_connection(scope) as conn:
+        existing = conn.execute(
+            "SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s "
+            "AND idempotency_key=%s", (*scope.key, key + ":proposal")).fetchone()
+    if existing is None:
+        expiry = datetime.now(timezone.utc) + timedelta(minutes=45)
+    else:
+        expiry = store.get_proposal(scope, existing["proposal_id"]).proposal.expires_at
+    body = CreateActionProposalRequest(
+        actionTypeId=action_type, purpose="栖月汇真实商品事件首链内部配置",
+        payload=payload, expiresAt=expiry)
+    risk = classify_action_risk(action_type, snapshot, payload, body.risk_hint)
+    reviewed = (store.create_proposal(scope, maker, key + ":proposal", body, snapshot, risk)
+                if existing is None else store.get_proposal(scope, existing["proposal_id"]))
+    approved_actors = {item.actor.actor_id for item in reviewed.approvals
+                       if item.decision.value == "approved"}
+    for index, checker in enumerate(checkers, start=1):
+        if checker in approved_actors:
+            continue
+        reviewed = store.decide(scope, checker, reviewed.proposal.id,
+            key + f":approval:{index}", DecideActionProposalRequest(
+                expectedProposalVersion=reviewed.proposal.version,
+                expectedProposalHash=reviewed.proposal.proposal_hash,
+                decision=ApprovalDecision.APPROVED, reason="当前租户真实首链内部配置独立复核",
+                approvalExpiresAt=reviewed.proposal.expires_at - timedelta(minutes=5)), ("admin",))
     if reviewed.proposal.status.value != "approved":
         raise ValueError("current ProductEvent proposal approval required")
-    return reviewed, _approval_ref(reviewed)
+    return reviewed, _approval_ref(reviewed, expected_count=len(checkers))
 
 
 def _event_binding_material():
@@ -889,7 +964,8 @@ def observe(preflight, plane) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=("prepare", "selection", "control", "binding", "execute", "observe",
-        "reviewer", "action-types", "brief", "cutover-action-type", "registration-withdraw",
+        "reviewer", "action-types", "brief", "cutover-action-type", "cutover-reviewer",
+        "reviewers-persist", "registration-withdraw",
         "registration-register", "cutover-approval", "cutover-prepare", "cutover-pause",
         "cutover-commit", "cutover-validate", "cutover-resume", "cutover-observe", "case",
         "event-refresh", "schedule-approval", "policy", "control-approval", "event-enable",
@@ -906,6 +982,8 @@ def main() -> None:
               "action-types": lambda: configure_action_types(preflight,plane),
               "brief": lambda: configure_brief(preflight,plane),
               "cutover-action-type": lambda: configure_cutover_action_type(preflight,plane),
+              "cutover-reviewer": lambda: configure_cutover_reviewer(preflight,plane),
+              "reviewers-persist": lambda: persist_reviewers(preflight,plane),
               "registration-withdraw": lambda: withdraw_old_registration(preflight,plane),
               "registration-register": lambda: register_current_e(preflight,plane),
               "cutover-approval": lambda: approve_cutover(preflight,plane),

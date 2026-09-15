@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 
 def test_memory_catalog_never_touches_shared_postgres(monkeypatch):
     from aos_api import membership, orgs, tenant_catalog, twa_pg, workspaces_catalog
@@ -50,3 +52,29 @@ def test_memory_catalog_boot_preserves_seeded_state(monkeypatch):
         "discoverable": True,
     }
     orgs.reset_org_store()
+
+
+def test_pg_schema_bootstrap_does_not_inherit_request_scope(monkeypatch):
+    from aos_api import tenant_catalog
+
+    calls = []
+
+    class Connection:
+        def execute(self, statement):
+            calls.append(statement)
+
+        def commit(self):
+            calls.append("commit")
+
+    @contextmanager
+    def connect(*, inherit_scope):
+        calls.append(("connect", inherit_scope))
+        yield Connection()
+
+    monkeypatch.setattr(tenant_catalog, "persistence_enabled", lambda: True)
+    monkeypatch.setattr(tenant_catalog, "connect", connect)
+    monkeypatch.setattr(tenant_catalog, "_schema_ready", False)
+    tenant_catalog.ensure_tenant_catalog_schema()
+
+    assert calls[0] == ("connect", False)
+    assert calls[-1] == "commit"

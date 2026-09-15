@@ -27,7 +27,7 @@ def ensure_tenant_catalog_schema() -> None:
         return
     if _schema_ready:
         return
-    with connect() as conn:
+    with connect(inherit_scope=False) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS meta_org (

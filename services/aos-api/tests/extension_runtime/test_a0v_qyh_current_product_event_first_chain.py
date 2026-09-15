@@ -23,6 +23,7 @@ def test_scope_and_business_route_are_fixed(control):
     assert control.REGISTRATION_GROUP_ID == "6a402d31-83ad-546c-807f-508c87498ce1"
     assert control.CUTOVER_OPERATION_ID == "b5555da7-6d0e-52f8-a443-d39b8264f40c"
     assert control.MAKER != control.CHECKER != control.ACTOR
+    assert len({control.ACTOR, control.CHECKER, control.CUTOVER_CHECKER}) == 3
 
 
 def test_cutover_control_action_is_installation_scoped(control):
