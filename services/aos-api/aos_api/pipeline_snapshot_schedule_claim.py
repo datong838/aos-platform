@@ -99,6 +99,8 @@ class PipelineSnapshotScheduleClaimOwner:
                (h.org_id,h.project_id,h.definition_id,h.revision,h.content_hash)
             WHERE h.org_id=%s AND h.project_id=%s AND h.definition_id=%s""",(*scope.key,identifier)).fetchone()
         value=PipelineSnapshotScheduleDefinitionOwner._decode(row,scope,identifier)
+        if row['request'].get('intent')=='renew_saved_group':
+            raise ValueError('snapshot recovery-only definition requires saved-input recovery')
         body=value['body']
         if (value['ref']!=wire or body['state']!='enabled' or body['executor']!=actor
                 or body['members']!=[_member(b) for b in bindings]
