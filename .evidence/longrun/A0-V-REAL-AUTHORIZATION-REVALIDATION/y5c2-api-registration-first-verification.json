@@ -1,0 +1,167 @@
+{
+  "observedAt": "2026-09-16T10:26:22.213693+00:00",
+  "previewHash": "sha256:709946930dbef68345d40f5137f416567d39a94b4560545c6f76d26d8059b8d1",
+  "results": [
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": false
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "pipeline": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "graph": {
+        "confirmed": true,
+        "submitted": true
+      },
+      "schedule": {
+        "confirmed": true,
+        "submitted": true
+      }
+    }
+  ],
+  "before": {
+    "runs": 11,
+    "source_claims": 10
+  },
+  "after": {
+    "runs": 11,
+    "source_claims": 10
+  },
+  "sourceCalls": 0,
+  "newSchedulesEnabled": false,
+  "businessChainComplete": false
+}
