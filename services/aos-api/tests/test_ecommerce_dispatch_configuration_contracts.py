@@ -4,6 +4,7 @@ import json
 import pytest
 from aos_api.ecommerce_dispatch_configuration_contracts import DispatchConfigurationRefreshRequest
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from aos_api.aip_action_policy import classify_action_risk
 
 
 def request():
@@ -33,6 +34,15 @@ def test_exact_request_roundtrip_hash_and_approval_scope():
     changed=deepcopy(body);changed['projectId']='other-project'
     assert parse(changed).request_hash()!=value.request_hash()
     with pytest.raises(ValueError):value.target_execution_epoch=6
+
+
+def test_refresh_control_risk_is_executable_r2_maker_checker():
+    action=dict(id='ecommerce_dispatch_configuration_refresh',name='configuration refresh',
+        objectType='BundleInstallation',parameters=[],requiredMarkings=[],submissionCriteria=[])
+    risk=classify_action_risk(action['id'],action,request(),None)
+    assert risk.floor.value=='R2'
+    assert risk.approval_policy==dict(makerChecker=True,minimumApprovals=1,
+        executionAllowed=True,draftOnly=False)
 
 
 @pytest.mark.parametrize('field,value',[

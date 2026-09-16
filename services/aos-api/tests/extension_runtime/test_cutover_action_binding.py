@@ -4,6 +4,7 @@ import pytest
 from aos_api.aip_action_store import canonical_hash
 from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from tests.test_ecommerce_dispatch_configuration_contracts import request as refresh_request
 
 
 def binding():
@@ -43,5 +44,32 @@ def test_untrusted_binding_material_is_rejected(defect):
     elif defect=='operation-set':payload['operationIds']=payload['operationIds'][:-1]
     elif defect=='uuid':payload['targetInstallationId']='not-an-installation'
     else:payload.pop('registrationReceiptRef')
+    with pytest.raises((ValueError,TypeError)):
+        binding()(scope=TenantScope('org-org','dev-project'),action_snapshot=snapshot,payload=payload)
+
+
+def refresh_inputs():
+    snapshot=dict(id='ecommerce_dispatch_configuration_refresh',name='configuration refresh',
+        objectType='BundleInstallation',parameters=[],requiredMarkings=[],submissionCriteria=[])
+    snapshot['revisionHash']=canonical_hash(snapshot)
+    payload=refresh_request();payload.pop('approvalRef')
+    return snapshot,payload
+
+
+def test_configuration_refresh_binding_is_exact_and_scope_bound():
+    snapshot,payload=refresh_inputs();scope=TenantScope('org-org','dev-project')
+    value=binding()(scope=scope,action_snapshot=snapshot,payload=payload)
+    assert value==binding()(scope=scope,action_snapshot=deepcopy(snapshot),payload=deepcopy(payload))
+    assert value!=binding()(scope=TenantScope('dev-org','dev-project'),action_snapshot=snapshot,
+        payload={**payload,'orgId':'dev-org'})
+
+
+@pytest.mark.parametrize('fault',['approval-field','source-revision','operation-set','tenant'])
+def test_configuration_refresh_binding_rejects_drift(fault):
+    snapshot,payload=refresh_inputs()
+    if fault=='approval-field':payload['approvalRef']={'claimed':True}
+    elif fault=='source-revision':payload['sourceRuntimeRevision']=payload['targetRuntimeRevision']
+    elif fault=='operation-set':payload['operationIds']=payload['operationIds'][:-1]
+    else:payload['orgId']='dev-org'
     with pytest.raises((ValueError,TypeError)):
         binding()(scope=TenantScope('org-org','dev-project'),action_snapshot=snapshot,payload=payload)

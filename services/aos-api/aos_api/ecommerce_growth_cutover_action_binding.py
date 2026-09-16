@@ -10,7 +10,11 @@ from aos_api.ecommerce_growth_registration_origin import RegistrationReceiptRef
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.tenant_scope import TenantScope
 
-CONTROL_ACTION_TYPES = frozenset(('ecommerce_growth_cutover','ecommerce_growth_cutover_rollback'))
+CONFIGURATION_REFRESH_ACTION_TYPE = 'ecommerce_dispatch_configuration_refresh'
+CONTROL_ACTION_TYPES = frozenset((
+    'ecommerce_growth_cutover', 'ecommerce_growth_cutover_rollback',
+    CONFIGURATION_REFRESH_ACTION_TYPE,
+))
 
 
 class _Target(AipContractModel):
@@ -70,8 +74,24 @@ def internal_cutover_binding_hash(*, scope, action_snapshot, payload):
     stable={k:v for k,v in action_snapshot.items() if k!='revisionHash'}
     if action_snapshot['revisionHash'] != canonical_hash(stable):
         raise ValueError('current action snapshot hash differs')
-    model=_Activation if action_snapshot['id']=='ecommerce_growth_cutover' else _Rollback
-    checked=model.model_validate(payload).model_dump(mode='json',by_alias=True)
+    if action_snapshot['id'] == CONFIGURATION_REFRESH_ACTION_TYPE:
+        from aos_api.ecommerce_dispatch_configuration_contracts import DispatchConfigurationRefreshRequest
+        material = dict(payload)
+        material['approvalRef'] = {
+            'resourceType': 'ActionApprovalEvent',
+            'resourceId': 'configuration-refresh-binding',
+            'revision': 1,
+            'contentHash': 'sha256:' + 'f' * 64,
+        }
+        request = DispatchConfigurationRefreshRequest.model_validate_json(
+            json.dumps(material, allow_nan=False)
+        )
+        checked = request.approval_intent()
+        if (request.org_id, request.project_id) != scope.key:
+            raise ValueError('configuration refresh tenant differs')
+    else:
+        model=_Activation if action_snapshot['id']=='ecommerce_growth_cutover' else _Rollback
+        checked=model.model_validate(payload).model_dump(mode='json',by_alias=True)
     if checked != payload:
         raise ValueError('canonical control payload required')
     return canonical_hash(dict(schemaVersion='aos.runtime-cutover-action-binding/v1',

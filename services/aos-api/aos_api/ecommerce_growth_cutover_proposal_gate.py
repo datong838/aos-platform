@@ -25,7 +25,9 @@ def require_internal_cutover_binding(*, conn, scope, actor, action_snapshot, pay
     if operation not in {APPLY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION}:
         raise ValueError('internal maker or checker operation required')
     binding = internal_cutover_binding_hash(scope=scope, action_snapshot=action_snapshot, payload=payload)
-    installation_id = payload['targetInstallationId']
+    installation_id = (payload['installationRef']['installationId']
+        if action_snapshot['id'] == 'ecommerce_dispatch_configuration_refresh'
+        else payload['targetInstallationId'])
     row = conn.execute('''SELECT etag_version FROM bundle_installation
         WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
         (*scope.key, installation_id)).fetchone()

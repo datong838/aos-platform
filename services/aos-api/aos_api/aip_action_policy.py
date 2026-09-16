@@ -38,9 +38,11 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback"}:
+    if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback",
+                          "ecommerce_dispatch_configuration_refresh"}:
         floor = ActionRiskLevel.R2
-        reasons.append("internal_runtime_cutover")
+        reasons.append("internal_runtime_configuration_refresh" if action_type_id.endswith('_refresh')
+                       else "internal_runtime_cutover")
     elif action_type_id == 'ecommerce_analysis_bootstrap':
         floor = ActionRiskLevel.R1
         reasons.append('internal_analysis_initial_pause_only')

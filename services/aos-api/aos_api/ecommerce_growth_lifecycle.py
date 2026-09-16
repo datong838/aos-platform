@@ -12,8 +12,10 @@ from pydantic import Field
 
 from aos_api.aip_contracts import AipContractModel, TenantContext
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.ecommerce_dispatch_configuration_receipt import decode_receipt
 from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
 from aos_api.extension_runtime.lifecycle_store import _require_transaction
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.tenant_scope import TenantScope
 
 
@@ -39,6 +41,7 @@ class DispatchLifecycleReceipt(AipContractModel):
     operation_ids: tuple[str, ...]
     dispatch_snapshot: tuple[dict[str, Any], ...]
     unknown_attempts: tuple[dict[str, Any], ...]
+    configuration_refresh_ref: PipelineExactRef | None = None
     request_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     content_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     replayed: bool = False
@@ -99,19 +102,41 @@ class EcommerceGrowthDisableDependent:
         if existing is not None:
             return self._receipt(scope, existing, replayed=True)
         activations = conn.execute(
-            f"""SELECT c.* FROM {self._schema}.extension_dispatch_cutover_operation c
+            f"""SELECT c.*,b.revision AS current_binding_revision,
+                            b.execution_epoch AS current_binding_epoch
+                   FROM {self._schema}.extension_dispatch_cutover_operation c
                    JOIN {self._schema}.extension_runtime_binding b
                      ON b.org_id=c.org_id AND b.project_id=c.project_id
                     AND b.installation_id=c.target_installation_id
                     AND b.generation=c.target_generation
                   WHERE c.org_id=%s AND c.project_id=%s AND c.kind='activate'
                     AND c.status='resumed' AND c.target_installation_id=%s
-                    AND b.revision=%s+1
                     AND b.execution_epoch>c.target_execution_epoch
                     AND NOT b.enabled AND b.operation_fence
                     AND b.observed_state='draining'""",
-            (*scope.key, runtime["installation_id"], runtime["expected_binding_revision"]),
+            (*scope.key, runtime["installation_id"]),
         ).fetchall()
+        matched = []
+        for row in activations:
+            candidate = dict(row)
+            target_revision, target_epoch, refresh_ref = self._current_dispatch_authority(
+                conn, scope, candidate
+            )
+            if (
+                (
+                    refresh_ref is None
+                    and int(candidate["current_binding_revision"])
+                    == int(runtime["expected_binding_revision"]) + 1
+                )
+                or (
+                    refresh_ref is not None
+                    and int(runtime["expected_binding_revision"]) == target_revision
+                    and int(candidate["current_binding_revision"]) == target_revision + 1
+                )
+            ) and int(candidate["current_binding_epoch"]) > target_epoch:
+                candidate["configuration_refresh_ref"] = refresh_ref
+                matched.append(candidate)
+        activations = matched
         if not activations:
             attached = conn.execute(
                 f"""SELECT 1 FROM {self._schema}.extension_operation_dispatch_binding
@@ -126,6 +151,7 @@ class EcommerceGrowthDisableDependent:
                 "runtime disable matches multiple resumed activations"
             )
         activation = dict(activations[0])
+        refresh_ref = activation.pop("configuration_refresh_ref")
         current = self._dispatch_rows(conn, scope, activation["cutover_group_id"])
         fenced = [
             {
@@ -187,6 +213,7 @@ class EcommerceGrowthDisableDependent:
             dispatch_snapshot=fenced,
             request_hash=request_hash,
             unknown_attempts=self._unknown_attempts(conn, scope, activation),
+            configuration_refresh_ref=refresh_ref,
         )
         self._insert_history(
             conn,
@@ -238,6 +265,16 @@ class EcommerceGrowthDisableDependent:
         if activation is None:
             raise EcommerceGrowthLifecycleConflict("activation authority is missing")
         activation = dict(activation)
+        target_revision, _target_epoch, refresh_ref = self._current_dispatch_authority(
+            conn, scope, activation
+        )
+        if (
+            refresh_ref is not None
+            and int(runtime["expected_binding_revision"]) != target_revision
+        ):
+            raise EcommerceGrowthLifecycleConflict(
+                "runtime disable differs from current dispatch authority"
+            )
         try:
             updated = conn.execute(
                 f"SELECT {self._schema}.extension_dispatch_lifecycle_detach_ar2_017(%s,%s) AS updated",
@@ -259,6 +296,7 @@ class EcommerceGrowthDisableDependent:
             request_hash=request_hash,
             unknown_attempts=self._unknown_attempts(conn, scope, activation),
             fence_receipt=fence,
+            configuration_refresh_ref=refresh_ref,
         )
         self._insert_history(
             conn,
@@ -318,13 +356,12 @@ class EcommerceGrowthDisableDependent:
                    JOIN {self._schema}.automation_occurrence o
                      USING(org_id,project_id,occurrence_id)
                   WHERE a.org_id=%s AND a.project_id=%s AND a.status='unknown'
-                    AND o.installation_id=%s AND o.generation=%s AND o.execution_epoch=%s
+                    AND o.installation_id=%s AND o.generation=%s
                   ORDER BY a.attempt_id""",
             (
                 *scope.key,
                 activation["target_installation_id"],
                 activation["target_generation"],
-                activation["target_execution_epoch"],
             ),
         ).fetchall()
         return [
@@ -337,6 +374,56 @@ class EcommerceGrowthDisableDependent:
             for row in rows
         ]
 
+    def _current_dispatch_authority(
+        self, conn: Any, scope: TenantScope, activation: dict[str, Any]
+    ) -> tuple[int, int, dict[str, Any] | None]:
+        refresh_table = conn.execute(
+            "SELECT to_regclass(%s) AS relation",
+            (f"{self._schema}.extension_dispatch_configuration_refresh_receipt",),
+        ).fetchone()
+        if refresh_table is None or refresh_table["relation"] is None:
+            return (
+                int(activation["target_runtime_revision"]),
+                int(activation["target_execution_epoch"]),
+                None,
+            )
+        row = conn.execute(
+            f"""SELECT *
+                   FROM {self._schema}.extension_dispatch_configuration_refresh_receipt
+                  WHERE org_id=%s AND project_id=%s AND activation_operation_id=%s
+                  ORDER BY revision DESC LIMIT 1""",
+            (*scope.key, activation["cutover_operation_id"]),
+        ).fetchone()
+        if row is None:
+            return (
+                int(activation["target_runtime_revision"]),
+                int(activation["target_execution_epoch"]),
+                None,
+            )
+        try:
+            decoded = decode_receipt(dict(row))
+        except ValueError as exc:
+            raise EcommerceGrowthLifecycleConflict(
+                "current configuration refresh authority drifted"
+            ) from exc
+        request = decoded["request"]
+        if (
+            request["orgId"] != scope.org_id
+            or request["projectId"] != scope.project_id
+            or request["installationRef"]["installationId"]
+            != str(activation["target_installation_id"])
+            or request["generation"] != str(activation["target_generation"])
+            or request["cutoverGroupId"] != str(activation["cutover_group_id"])
+        ):
+            raise EcommerceGrowthLifecycleConflict(
+                "configuration refresh differs from activation root"
+            )
+        return (
+            int(request["targetRuntimeRevision"]),
+            int(request["targetExecutionEpoch"]),
+            decoded["ref"],
+        )
+
     @staticmethod
     def _authority(
         scope: TenantScope,
@@ -348,6 +435,7 @@ class EcommerceGrowthDisableDependent:
         request_hash: str,
         unknown_attempts: list[dict[str, Any]],
         fence_receipt: dict[str, Any] | None = None,
+        configuration_refresh_ref: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         return {
             "schemaVersion": f"aos.ecommerce.dispatch-disable-{phase}/v1",
@@ -359,6 +447,7 @@ class EcommerceGrowthDisableDependent:
             "operationIds": _array(activation["operation_ids"]),
             "dispatchSnapshot": dispatch_snapshot,
             "unknownAttempts": unknown_attempts,
+            "configurationRefreshRef": configuration_refresh_ref,
             "runtimeRequestHash": runtime["request_hash"],
             "requestHash": request_hash,
             "requestedBy": runtime["requested_by"],
@@ -493,6 +582,7 @@ class EcommerceGrowthDisableDependent:
                 "operationIds": tuple(authority["operationIds"]),
                 "dispatchSnapshot": tuple(authority["dispatchSnapshot"]),
                 "unknownAttempts": tuple(authority["unknownAttempts"]),
+                "configurationRefreshRef": authority.get("configurationRefreshRef"),
                 "requestHash": authority["requestHash"],
                 "contentHash": row["content_hash"],
                 "replayed": replayed,
