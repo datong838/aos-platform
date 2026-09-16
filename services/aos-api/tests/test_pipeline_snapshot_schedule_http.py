@@ -21,7 +21,7 @@ def api():
         calls.append(kw)
         if getattr(service,'error',None):raise service.error
         return {'ref':ref('SnapshotScheduleDefinitionRevision','snapshot-schedule-'),'body':{'state':'disabled'}}
-    service=NS(configure=invoke,transition=invoke,read=invoke)
+    service=NS(configure=invoke,transition=invoke,read=invoke,list=invoke,read_receipt=invoke)
     scopes=[]
     def build(scope,*,source_controls):scopes.append(scope);return service
     app=FastAPI();register_exception_handlers(app);app.include_router(router)
@@ -83,3 +83,32 @@ def test_read_does_not_require_new_idempotency_key(api):
     result=client.get('/v1/pipelines/snapshot-schedules/'+definition)
     assert result.status_code==200,result.text
     assert calls==[dict(definition_id=definition,actor='signed-user')]
+
+
+def test_list_and_receipt_routes_are_read_only(api):
+    client,calls,_,_,definition,_=api
+    assert client.get('/v1/pipelines/snapshot-schedules/definitions?limit=2').status_code==200
+    assert calls.pop()==dict(actor='signed-user',after=None,limit=2)
+    assert client.get('/v1/pipelines/snapshot-schedules/'+definition+'/receipts/original-key').status_code==200
+    assert calls.pop()==dict(actor='signed-user',definition_id=definition,idempotency_key='original-key')
+
+
+@pytest.mark.parametrize('query',['?limit=0','?limit=51','?after=bad-cursor'])
+def test_bad_list_bounds_do_not_call_service(api,query):
+    client,calls,scopes,*_=api
+    assert client.get('/v1/pipelines/snapshot-schedules/definitions'+query).status_code==(422 if 'after=' in query else 400)
+    assert not calls and not scopes
+
+
+def test_real_app_matches_list_before_dynamic_pipeline_resource(monkeypatch):
+    from aos_api.main import app
+    calls=[]
+    def listing(**kw):calls.append(kw);return {'items':[],'nextCursor':None}
+    monkeypatch.setattr(app.state,'extension_runtime_control_plane',
+        NS(pipeline_control_factory=NS(build_snapshot_schedule=lambda *a,**kw:NS(list=listing))),raising=False)
+    monkeypatch.setitem(app.dependency_overrides,require_principal,
+        lambda:Principal(subject='route-reader',org_id='org-org',project_id='dev-project',roles=['admin'],markings=[]))
+    response=TestClient(app).get('/v1/pipelines/snapshot-schedules/definitions')
+    assert response.status_code==200,response.text
+    assert calls==[dict(actor='route-reader',after=None,limit=50)]
+    assert response.json()=={'items':[],'nextCursor':None}

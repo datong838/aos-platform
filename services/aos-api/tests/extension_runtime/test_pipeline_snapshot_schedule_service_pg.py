@@ -90,3 +90,49 @@ def test_stop_only_service_preserves_current_permission_and_cannot_enable(servic
     assert stop.read(**common)==disabled
     with pytest.raises(PermissionError,match='stop-only'):
         stop.transition(**common,intent='enable',expected_ref=disabled['ref'],idempotency_key='forbidden')
+
+
+def test_original_key_readback_survives_later_retirement(service):
+    owner,args,database,_=service
+    first=owner.configure(**args)
+    common={k:args[k] for k in ('definition_id','actor')}
+    retired=owner.transition(**common,intent='retire',expected_ref=first['ref'],idempotency_key='retire')
+    receipt=owner.read_receipt(**common,idempotency_key=args['idempotency_key'])
+    assert receipt['ref']==first['ref'] and receipt['body']==first['body']
+    assert receipt['idempotencyKey']==args['idempotency_key']
+    assert receipt['request']['intent']=='configure'
+    assert owner.read(**common)==retired
+    with pytest.raises(LookupError):owner.read_receipt(**common,idempotency_key='uncommitted')
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        assert db.execute('SELECT count(*) AS n FROM pipeline_snapshot_schedule_definition_revision').fetchone()['n']==2
+
+
+def test_list_and_receipt_are_scoped_and_permission_checked(service):
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    owner,args,database,_=service
+    first=owner.configure(**args)
+    result=owner.list(actor=args['actor'])
+    assert result=={'items':[first],'nextCursor':None}
+    assert owner.list(actor=args['actor'],after=args['definition_id'])=={'items':[],'nextCursor':None}
+    negative=PipelineSnapshotScheduleService(scope=TenantScope('dev-org','dev-project'),controls=None,installation_store=PostgresInstallationStore())
+    assert negative.list(actor=args['actor'])=={'items':[],'nextCursor':None}
+    with pytest.raises(LookupError):negative.read_receipt(definition_id=args['definition_id'],actor=args['actor'],idempotency_key=args['idempotency_key'])
+    with psycopg.connect(database) as db:db.execute('DELETE FROM meta_membership WHERE subject=%s',(args['actor'],))
+    with pytest.raises(RuntimeConflict,match='membership'):owner.list(actor=args['actor'])
+    with pytest.raises(RuntimeConflict,match='membership'):owner.read_receipt(definition_id=args['definition_id'],actor=args['actor'],idempotency_key=args['idempotency_key'])
+
+
+def test_pagination_covers_definitions_without_duplicates(service):
+    from uuid import uuid4
+    owner,args,_,_=service
+    identifiers=sorted(str(uuid4()) for _ in range(3))
+    for identifier in reversed(identifiers):
+        first=owner.configure(**(args|{'definition_id':identifier}))
+        owner.transition(definition_id=identifier,actor=args['actor'],intent='retire',
+            expected_ref=first['ref'],idempotency_key='retire')
+    first_page=owner.list(actor=args['actor'],limit=2)
+    assert [r['body']['definitionId'] for r in first_page['items']]==identifiers[:2]
+    assert first_page['nextCursor']==identifiers[1]
+    second_page=owner.list(actor=args['actor'],after=first_page['nextCursor'],limit=2)
+    assert [r['body']['definitionId'] for r in second_page['items']]==identifiers[2:]
+    assert second_page['nextCursor'] is None

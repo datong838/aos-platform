@@ -71,3 +71,19 @@ Y2b-2复核：原factory的ManifestLoader构造会检查签名资产根目录存
 Red为新路由模块不存在；初次HTTP完整app测试因未指定18434误用默认5433连接拒绝，重新按隔离库命令执行，不计作产品失败或通过证据。最终累计81 passed / 35.35秒（/tmp/aos-group-api-final.log），包括HTTP/原管道API/factory/新service PG/配置Owner/组围栏。git diff --check通过。具名签名资产/源读取夹具仍不是真实租户运行；真实主库仍061/host旧版本，尚不对外开放新接口。
 
 后续Y2c产品入口需先补当前配置列表、服务端可选exact成员与策略来源、按原key读取历史回执（只读确认未知提交，不能仅看latest覆盖旧结果），再实现页面。仍需双向并发验证，不以HTTP或81测试作为八工作台业务完成。Y3–Y6沿原清单继续。
+
+## Y2c-1 产品读取与原回执核对（基线e92ec1e1）
+
+在pipeline_snapshot_schedule_service.py与routers/pipeline_snapshot_schedules.py新增GET列表与GET /{definitionId}/receipts/{idempotencyKey}。列表使用服务端固定最多50项、UUID keyset cursor，返回nextCursor；没有裸SQL/任意筛选参数。每个安装按原当前配置权限验证，其他租户RLS不可见；读取不依赖源目录。回执先检查当前安装配置权限，再按同scope/definition/key读取不可变revision，验hash，返回原ref/body/requestHash/request/key；不存在为404而非自动重发。原head已到后续版本或retired仍返回原历史回执。HTTP只读无需新Idempotency-Key，不分配版本/Run/sourceclaim。产品页后续持久保存待确认key及原请求，超时只发GET，不生成新key。
+
+文件范围上述两服务文件、test_pipeline_snapshot_schedule_http.py与test_pipeline_snapshot_schedule_service_pg.py。验收：同definition多个版本仍按原key读回、权限撤销拒绝、负租户404/空列表、分页不重复、列表只读零新增、非法cursor/key安全拒绝；HTTP route不能被动态definition_id误捕获。后续仍需服务端可选成员/策略、页面与竞争验证。
+
+Y2c-1路由复核：主应用phase5_pipelines先于pipeline_controls挂载，GET /v1/pipelines/snapshot-schedules会被已有/{pl_id}捕获。为不重排旧路由、不占用潜在已有管道ID，列表改为GET /v1/pipelines/snapshot-schedules/definitions；在新router内先于/{definition_id}注册。实际主app匹配测试验证请求选中新列表endpoint。分页limit限制1..50，默认50；三个真实Owner创建/退役的定义验证两页覆盖、不重不漏。
+
+### Y2c-1验证结果
+
+已提供GET definitions列表（UUID keyset，limit1..50）、原definition/key回执读取；原当前安装权限仍为读取门禁，源目录不参与。真实PG验证原configure回执在后续retire后仍精确读回、missing key为404、列表/回执在撤销成员后拒绝、负租户列表空/回执404、三个真实Owner创建并退役的配置按两页不重不漏。读取未新增运行或源调用。
+
+Red缺少read_receipt。HTTP参数验证沿用全局handler的400，手工语义校验422，不改既有错误约定。主app新FastAPI IncludedRouter的matches不直接携带endpoint，已改为真实TestClient请求命中命名列表service验证；不使用仅OpenAPI存在作为路由通过证据。最终66 passed /36.74秒（/tmp/aos-group-readback-final-v3.log），包含原pipeline HTTP与factory回归。git diff --check通过。
+
+未升级主库/重载host/实际源读取。下一波Y2c-2服务器当前成员/关系策略选项，随后页面与双向竞争。配置列表不是已运行列表，原J真实首链仍未完成。
