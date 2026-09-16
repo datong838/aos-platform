@@ -1,0 +1,63 @@
+{
+  "outcome": "SOURCE_HEALTH_AND_POLICY9_NATURAL_WINDOW_ARMED",
+  "recordedAt": "2026-09-16T16:25:37.610098+00:00",
+  "head": "b85667a2",
+  "sourceHealth": {
+    "outcome": "SOURCE_METADATA_HEALTH_GREEN",
+    "startedAt": "2026-09-16T16:16:06.333098+00:00",
+    "finishedAt": "2026-09-16T16:16:08.342670+00:00",
+    "httpStatus": 200,
+    "sourceId": "niushop-qyh",
+    "configurationRevision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+    "latencyMs": 1994,
+    "tableCount": 302,
+    "tableDirectoryHash": "sha256:08dde1a43c9c6ad46a4a021da4b0eade7bd34aff73efa0ad0a28498196467892",
+    "truncated": false,
+    "errorCode": null,
+    "businessRowsRead": 0,
+    "sourceCalls": 1
+  },
+  "policyReceiptRef": {
+    "resourceType": "SchedulePolicyRevision",
+    "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+    "revision": 9,
+    "contentHash": "sha256:7f8b9655351a7f5b50ed8930f9b767926d76817194ee7225474c3ff2a26c95ed"
+  },
+  "bindingReceiptRef": {
+    "resourceType": "EventPolicyControlReceipt",
+    "resourceId": "523d07c1-f450-5511-b301-7ff510e81569",
+    "revision": 1,
+    "contentHash": "sha256:50da165ccc46f63c579d41f69492f4b7c258761f062393550e81c7dc806940a8"
+  },
+  "rejectedBindingAttempt": {
+    "errorCode": "EVENT_CONTROL_BINDING_REVISION_CONFLICT",
+    "receiptCount": 0,
+    "policy9BindingCountBeforeCorrection": 0,
+    "scheduleRemainedDisabled": true,
+    "replayed": false
+  },
+  "armedSnapshot": {
+    "scheduleEnabled": true,
+    "cron": "0 * * * *",
+    "policyRevision": 9,
+    "policyEnabled": false,
+    "bindingRevision": 1,
+    "bindingEnabled": true,
+    "bindingEffectiveUntil": "2026-09-16 17:48:23.488735+00:00",
+    "routeCount": 10,
+    "runs": 0,
+    "ingress": 0,
+    "occurrences": 0,
+    "inflight": {
+      "running": 0,
+      "unresolved": 0
+    },
+    "negativeCanaryDispatch": 0
+  },
+  "tests": {
+    "focused": "88 passed",
+    "correction": "6 passed"
+  },
+  "manualRunCalls": 0,
+  "next": "Observe the single 01:00 Asia/Shanghai Cron terminal state, then disarm immediately."
+}

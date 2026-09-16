@@ -12,6 +12,7 @@ STATE = current.STATE / 'natural-product-event'
 SCHEDULE = 'sch-p02-qyh-controlled-20260913-v1'
 POLICY = 'product-event-qyh-full-store-generation-f-20260916'
 POLICY_REVISION = 8
+EXPECTED_BINDING_REVISION = 1
 
 
 def _private(name):
@@ -98,7 +99,8 @@ def validate_ready(value, *, require_drained=True):
         or str(binding['installation_id']) != current.L_ID
         or str(binding['generation']) != current.L_GENERATION or binding['execution_epoch'] != 3
         or binding['approved'] is not True or binding['enabled'] is not True
-        or binding['revision'] != 1 or binding['effective_until'] <= datetime.now(timezone.utc)
+        or binding['revision'] != EXPECTED_BINDING_REVISION
+        or binding['effective_until'] <= datetime.now(timezone.utc)
         or len(routes) != 10 or [row['operation_id'] for row in routes] != value['expectedOperations']
         or any(row['handler_kind'] != 'extension' or str(row['installation_id']) != current.L_ID
                or str(row['generation']) != current.L_GENERATION or row['execution_epoch'] != 3

@@ -3,7 +3,7 @@ from time import monotonic
 from typing import Any
 
 from aos_api import data_os_store
-from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
+from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime, connector_failure_code
 from aos_api.source_connection_config import SOURCE_CONNECTION_FIELDS, normalize_source_connection_config
 from aos_api.tenant_scope import TenantScope
 
@@ -39,6 +39,6 @@ def probe_source_tables(scope: TenantScope, source_id: str, expected_revision: s
                     latencyMs=round((monotonic()-started)*1000),**discovery)
     except data_os_store.ApiError:
         raise
-    except Exception:
-        raise data_os_store.ApiError(code='SOURCE_PROBE_FAILED',
+    except Exception as exc:
+        raise data_os_store.ApiError(code=connector_failure_code(exc) or 'SOURCE_PROBE_FAILED',
             message='连接测试未成功，请检查配置或稍后重试',status_code=503) from None

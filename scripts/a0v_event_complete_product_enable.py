@@ -10,6 +10,7 @@ def policy_profile():
 STATE=f.STATE/'event-enable'
 PREFIX='a0v-qyh-g-event-enable-20260916-v1'
 EXPECTED_GROUP_REVISION=11
+EXPECTED_BINDING_REVISION=0
 ACTION=dict(id='ecommerce_growth_event_dispatch',name='配置电商商品事件受控入口',objectType='Case',parameters=[],requiredMarkings=[],submissionCriteria=[])
 
 
@@ -61,7 +62,7 @@ def run(phase,plane):
         result=plane.pipeline_control_factory.build_event_dispatch_lifecycle(scope).transition(scope=scope,request=request,actor=f.ACTOR)
     elif phase=='approve-control':
         policy_ref=policy.load('put')['receiptRef']
-        control=dict(schemaVersion='aos.ecommerce.product-event-control-command/v1',idempotencyKey=PREFIX+'-control',policyRef=policy_ref,expectedBindingRevision=0,intent='enable')
+        control=dict(schemaVersion='aos.ecommerce.product-event-control-command/v1',idempotencyKey=PREFIX+'-control',policyRef=policy_ref,expectedBindingRevision=EXPECTED_BINDING_REVISION,intent='enable')
         payload=dict(caseId=policy.CASE,schedulePolicyId=policy.POLICY,controlIntent=control)
         freeze(intent,payload)
         proposal,ref=_approve('ecommerce_growth_event_control',payload,PREFIX+'-control-approval')
