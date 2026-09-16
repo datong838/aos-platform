@@ -24,7 +24,8 @@ def counts(runtime,scope):
         return {t:conn.execute('SELECT count(*) AS n FROM public.'+t).fetchone()['n'] for t in tables}
 
 
-def test_original_partial_store_commit_recovers_under_new_window_once(recovery_case,monkeypatch):
+@pytest.mark.parametrize('stopped',[False,True],ids=['running','stopped-failed'])
+def test_original_partial_store_commit_recovers_under_new_window_once(recovery_case,monkeypatch,stopped):
     runtime,owner,command,state=recovery_case
     store=runtime._completion._store
     original=store.apply_batch;armed=True
@@ -45,7 +46,11 @@ def test_original_partial_store_commit_recovers_under_new_window_once(recovery_c
     partial=counts(runtime,command['scope'])
     assert partial['ecom_object']==partial['ecom_ingest_receipt']==1 and partial['meta_schedule_run']==12
     monkeypatch.setattr(store,'apply_batch',original)
-    with runtime._transaction(command['scope']) as conn:receipt=owner.renew(conn,**command)
+    with runtime._transaction(command['scope']) as conn:
+        if stopped:
+            # Named stopped-executor fixture after an original partial Store effect.
+            conn.execute("UPDATE public.meta_schedule_run SET status='failed',executor_stopped=true,finished_at=clock_timestamp()")
+        receipt=owner.renew(conn,**command)
     call=dict(scope=command['scope'],actor=command['actor'],recovery_ref=receipt['ref'])
     result=runtime_for(runtime,owner).resume_saved(**call)
     assert result['status']=='succeeded' and result['input_replayed'] is True
@@ -54,9 +59,13 @@ def test_original_partial_store_commit_recovers_under_new_window_once(recovery_c
         ecommerce_ingress_dataset_receipt=12,ecom_link=1)
     with runtime._transaction(command['scope']) as conn:
         assert conn.execute("SELECT count(*) AS n FROM meta_schedule_run WHERE status='succeeded' AND executor_stopped").fetchone()['n']==12
+        recovery_claims=conn.execute('SELECT run_id,claim_id,payload_hash FROM ecommerce_ingress_recovery_claim ORDER BY run_id').fetchall()
+        assert len(recovery_claims)==(12 if stopped else 0)
     again=runtime_for(runtime,owner).resume_saved(**call)
     assert again['replayed'] is True and again['projection_hash']==result['projection_hash']
     assert again['preparation_hash']==result['preparation_hash'] and counts(runtime,command['scope'])==before
+    with runtime._transaction(command['scope']) as conn:
+        assert conn.execute('SELECT run_id,claim_id,payload_hash FROM ecommerce_ingress_recovery_claim ORDER BY run_id').fetchall()==recovery_claims
     assert state['calls']==1
 
 
