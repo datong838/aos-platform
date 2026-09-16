@@ -55,8 +55,17 @@ def guard_snapshot_schedule_run(conn, *, scope, run_id, actor, control_ref, cont
                     or schedule['ingest'].get('pipelineId')!=binding.pipeline_id
                     or current_binding!=binding):
                 raise ValueError('snapshot definition current member authority differs')
-    owner._groups.run_current(conn,scope=scope,actor=actor,
-        refs=tuple(b.control_ref for b in bindings),execute=validate)
+    from aos_api.pipeline_snapshot_claim_context import _current_source_claim_group
+    current_group=_current_source_claim_group(conn,scope=scope,actor=actor,record=record)
+    if current_group is None:
+        owner._groups.run_current(conn,scope=scope,actor=actor,
+            refs=tuple(b.control_ref for b in bindings),execute=validate)
+    else:
+        # All controls are locked and checked before and after this fixed
+        # metadata loop by the original outer GroupOwner. No source runs here.
+        owner._groups._validate(conn,scope,current_group.members)
+        validate(current_group)
+        owner._groups._validate(conn,scope,current_group.members)
 
 
 def guard_single_snapshot_prepare(conn, *, scope, run_id):
@@ -85,3 +94,4 @@ def guard_snapshot_schedule_group(conn, *, scope, group_id, actor, bindings, con
     actual={run:ref.model_dump(mode='json',by_alias=True,exclude_none=True) for ref,run in bindings}
     if record['request']['actor']!=actor or actual!=expected:
         raise ValueError('snapshot definition requires complete original group bindings')
+    return record if record['schemaVersion']=='aos.snapshot-schedule-claim/v2' else None

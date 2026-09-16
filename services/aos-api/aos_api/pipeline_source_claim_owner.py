@@ -82,7 +82,7 @@ class PipelineSourceClaimOwner:
 
     def _guard_group(self,conn,*,scope,group_id,actor,bindings):
         from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_group
-        guard_snapshot_schedule_group(conn,scope=scope,group_id=group_id,actor=actor,
+        return guard_snapshot_schedule_group(conn,scope=scope,group_id=group_id,actor=actor,
             bindings=bindings,controls=self._controls)
 
     def _guard_single_prepare(self,conn,*,scope,run_id):
@@ -100,6 +100,8 @@ class PipelineSourceClaimOwner:
         run_id,actor = _text(run_id,200),_text(actor,240)
         ref = PipelineExactRef.model_validate(control_ref)
         identity = UUID(_ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-'))
+        from aos_api.pipeline_snapshot_claim_context import _check_source_claim_loop
+        _check_source_claim_loop(conn,scope=scope,actor=actor,run_id=run_id,control_ref=ref)
 
         def current(draft, spec):
             # Global lock order: current installation first, then immutable run.

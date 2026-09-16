@@ -49,6 +49,8 @@ class PipelineSnapshotGroupClaimOwner:
         return self._operate(conn,scope,group_id,actor,bindings,create=False,completed_read=True).record
 
     def _operate(self,conn,scope,group_id,actor,bindings,*,create,completed_read=False):
+        from aos_api.pipeline_snapshot_claim_context import _reject_nested_source_claim_loop
+        _reject_nested_source_claim_loop()
         if completed_read and create:raise ValueError('completed group cannot reserve source calls')
         if type(scope) is not TenantScope or type(group_id) is not str or str(UUID(group_id))!=group_id:
             raise ValueError('canonical snapshot group identity required')
@@ -59,9 +61,13 @@ class PipelineSnapshotGroupClaimOwner:
             if type(item) is not tuple or len(item)!=2:raise ValueError('exact control/run pair required')
             normalized.append((PipelineExactRef.model_validate(item[0]),_text(item[1],200)))
         if len({run for _,run in normalized})!=len(normalized):raise ValueError('unique group runs required')
-        self._claims._guard_group(conn,scope=scope,group_id=group_id,actor=actor,bindings=tuple(normalized))
+        definition=self._claims._guard_group(conn,scope=scope,group_id=group_id,actor=actor,bindings=tuple(normalized))
         refs=tuple(ref for ref,_ in normalized);runs={ref.resource_id:run for ref,run in normalized}
         def current(group):
+            from aos_api.pipeline_snapshot_claim_context import _original_source_claim_loop
+            with _original_source_claim_loop(conn,scope=scope,actor=actor,record=definition,group=group):
+                return operate(group)
+        def operate(group):
             members=[{'runId':runs[ref.resource_id],'controlRef':ref.model_dump(mode='json',by_alias=True),
                 'draft':draft.model_dump(mode='json',by_alias=True)} for ref,draft,_ in group.members]
             body={'schemaVersion':'aos.snapshot-group-claim/v1','orgId':scope.org_id,'projectId':scope.project_id,
@@ -88,10 +94,13 @@ class PipelineSnapshotGroupClaimOwner:
                     result=self._claims.reserve(conn,scope=scope,run_id=runs[ref.resource_id],control_ref=ref,actor=actor)
                     if result.created is not True:raise IngressJournalConflict('SNAPSHOT_GROUP_REQUIRES_NEW_SOURCE_CLAIMS')
                     records.append(result.record)
+                constraint=sql.Identifier(self._schema,'complete_snapshot_group')
+                cursor.execute(sql.SQL('SET CONSTRAINTS {} DEFERRED').format(constraint))
                 cursor.execute(sql.SQL('INSERT INTO {}(org_id,project_id,group_id,actor,request_hash,member_count,binding) VALUES(%s,%s,%s,%s,%s,%s,%s)').format(
                     sql.Identifier(self._schema,'pipeline_snapshot_group_claim')),(*scope.key,UUID(group_id),actor,request_hash,len(members),Jsonb(body)))
                 for ordinal,item in enumerate(members,1):
                     cursor.execute(sql.SQL('INSERT INTO {}(org_id,project_id,group_id,ordinal,run_id) VALUES(%s,%s,%s,%s,%s)').format(
                         sql.Identifier(self._schema,'pipeline_snapshot_group_member')),(*scope.key,UUID(group_id),ordinal,item['runId']))
+                cursor.execute(sql.SQL('SET CONSTRAINTS {} IMMEDIATE').format(constraint))
                 return SnapshotGroupClaimReservation(SnapshotGroupClaimRecord(scope,group_id,actor,request_hash,tuple(records)),True)
         return self._groups.run_current(conn,scope=scope,refs=refs,actor=actor,execute=current)
