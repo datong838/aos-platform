@@ -18,7 +18,7 @@ from test_product_event_consumer_pg import consumer_case as base_consumer_case
 from test_analysis_data_preparation_pg import (
     data_case as base_data_case, prepare as prepare_data, _automatic_readers,
     formal_case, preview_case, review_identity,
-    compilation_case as base_compilation_case, context_case, startup_case,
+    compilation_case as base_compilation_case, context_case, startup_case as base_startup_case,
     analysis_case, host_case, control_governed, governed, service_case,
     pair, body,
 )
@@ -97,11 +97,8 @@ def compilation_case(context_case, publications, monkeypatch):
 
 
 @pytest.fixture
-def native_claims_case(host_case, formal_case, publications):
+def native_claims_case(host_case, publications):
     """Bind the source event origin to one member before the group is claimed."""
-    assert formal_case[0] is host_case[0]
-    identity = host_case[0].execute('SELECT session_user AS name').fetchone()['name']
-    publications.runtime_identity = identity
     host_case[0].execute('RESET ROLE')
     host_case[0].execute('RESET SESSION AUTHORIZATION')
     conn, owner, args, source_id, revision = base_native_claims_case.__wrapped__(host_case)
@@ -116,26 +113,23 @@ def native_claims_case(host_case, formal_case, publications):
 def consumer_case(host_case, publications, monkeypatch):
     """Restore the runtime identity after the committed native source setup."""
     conn = host_case[0]
+    if conn.autocommit:
+        conn.autocommit = False
     conn.execute('SET ROLE aos_runtime')
     conn.execute("SELECT set_config('aos.org_id','org-org',false),set_config('aos.project_id','dev-project',false)")
     result = base_consumer_case.__wrapped__(host_case,monkeypatch)
     row = result[1].reader.run_candidates(execute=lambda rows: rows[0])
-    publications.event_cutoff = row['created_at'].replace(microsecond=0)
+    event_at = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    row.update(created_at=event_at, source_updated_at=event_at.isoformat())
     return result
 
 
 @pytest.fixture
 def native_input_case(native_claims_case, private_database, publications, monkeypatch):
-    """Return the source snapshot observed at the original product-event cutoff."""
+    """Keep the independent source clock; never align it to the event clock."""
     generator = base_native_input_case.__wrapped__(native_claims_case, private_database, monkeypatch)
     value = next(generator)
-    import aos_api.pipeline_controlled_snapshot_group_ingress as ingress_module
-    original = ingress_module.read_selected_snapshot_group
-    def aligned_source(**kwargs):
-        result = original(**kwargs)
-        cutoff = publications.event_cutoff
-        return type(result)(result.rows_by_table, result.source_configuration_ref, cutoff, cutoff)
-    monkeypatch.setattr(ingress_module, 'read_selected_snapshot_group', aligned_source)
+    publications.native_input = value
     try:
         yield value
     finally:
@@ -143,16 +137,43 @@ def native_input_case(native_claims_case, private_database, publications, monkey
 
 
 @pytest.fixture
+def startup_case(analysis_case, request):
+    # Keep the original startup setup, but retain the independent source-event
+    # time rather than its legacy transaction timestamp truncated to seconds.
+    result = base_startup_case.__wrapped__(analysis_case, request)
+    analysis = result[1]
+    event_at = analysis.source.reader.run_candidates(execute=lambda rows: rows[0]['created_at'])
+    original = analysis.source.reader.run_event
+    def event(*args, **kwargs):
+        callback = kwargs.pop('execute')
+        return original(*args, **kwargs, execute=lambda row: callback(dict(
+            row, created_at=event_at, source_updated_at=event_at.isoformat())))
+    analysis.source.reader.run_event = event
+    return result
+
+
+@pytest.fixture
 def data_case(formal_case, publications):
     """Restore the analysis transaction after native input commits its source data."""
     conn = formal_case[0]
-    conn.autocommit = False
+    if conn.autocommit:
+        conn.autocommit = False
+    identity = conn.execute('SELECT session_user AS name').fetchone()['name']
     conn.execute('RESET ROLE')
     conn.execute('RESET SESSION AUTHORIZATION')
-    conn.execute(sql.SQL('SET SESSION AUTHORIZATION {}').format(sql.Identifier(publications.runtime_identity)))
+    conn.execute(sql.SQL('SET SESSION AUTHORIZATION {}').format(sql.Identifier(identity)))
     conn.execute('SET ROLE aos_runtime')
     conn.execute("SELECT set_config('aos.org_id','org-org',false),set_config('aos.project_id','dev-project',false)")
-    return base_data_case.__wrapped__(formal_case)
+    source, _, args, _ = publications.native_input
+    first_ref, first_run = args['bindings'][0]
+    formal_case[1].source.reader._journal = ControlledIngressJournal(
+        claims=source._claims, scope=args['scope'], run_id=first_run,
+        control_ref=first_ref, actor=args['actor'], completed_read=True)
+    result = base_data_case.__wrapped__(formal_case)
+    saved = conn.execute('SELECT read_completed_at FROM pipeline_snapshot_group_input').fetchone()
+    assert result[3].cutoff_at == saved['read_completed_at'], 'analysis must use the independent source snapshot clock'
+    return result
+
 
 
 def policy_ref(base, kind, path, raw):

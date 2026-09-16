@@ -58,8 +58,11 @@ class AnalysisStartupEvidenceService:
             event_at = datetime.fromisoformat(event['created_at'])
             cutoff = datetime.fromisoformat(request['cutoffAt'])
             now = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-            if (event_at.utcoffset() is None or cutoff.utcoffset() is None
-                    or not event_at <= cutoff <= authority.created_at <= now):
+            if event_at.utcoffset() is None or cutoff.utcoffset() is None:
+                raise ValueError('startup evidence chronology differs')
+            chronological = (cutoff <= event_at <= authority.created_at <= now
+                if 'sourceGroup' in snapshot else event_at <= cutoff <= authority.created_at <= now)
+            if not chronological:
                 raise ValueError('startup evidence chronology differs')
             payload = dict(schemaVersion='aos.ecommerce.analysis-startup-evidence/v1',
                 tenant=dict(orgId=scope.org_id,projectId=scope.project_id),purpose='analysis-start',

@@ -261,3 +261,5 @@ l6f6真实重启Red补充：首次协调已经提交统一RUNNING Analysis Recei
 ### l6g / SC4-5L6W 真实自然首链暴露的组与时间缺口
 
 2026-09-16 J 首个真实Run已产生，但原单路P02没有SnapshotGroup，事件created_at也不等于原组read_completed_at。原e6e/l6f6测试有named时间对齐，不能当作此边界已验收。新增连续清单见sc4-5l6w-snapshot-cutoff-plan.md：W原组只读精确时间发现→X初始化时间与血缘合同→Y十二源产品调度→Z活动Case事件等待和历史任务正式恢复。先完成W，旧精确read与原任务冻结字段不变；不得补造历史组或更改旧cutoff。后续各波补具体文件与验收后连续实施。
+
+Y完整源组调度细化见sc4-5l6y-snapshot-group-scheduling-design.md：原子调度领取回执→安装绑定配置→原Ingress/Completion执行恢复→生命周期/cron/API→真实十二源配置→升级与观察。现有组fixture手工插入调度运行行属于测试边界，正式产品入口必须补齐；原source claim与新调度领取不能混为一层。

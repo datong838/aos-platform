@@ -98,6 +98,12 @@ class ProductEventAnalysisService:
         key = 'analysis-bootstrap-start-' + canonical_sha256([*self.scope.key, command['idempotencyKey']]).removeprefix('sha256:')
         return _BootstrapProductionStartService(guard).start(self.scope, self.source.actor, key, body)
 
+    def _source_group(self, conn):
+        from aos_api.pipeline_snapshot_group_locator import PipelineSnapshotGroupLocator
+        journal = self.source.reader._journal
+        return PipelineSnapshotGroupLocator(claims=journal._claims).discover(
+            conn, scope=self.scope, run_id=journal._run_id)
+
     def _phase(self,conn,claimed,execute):
         if type(claimed) is not ClaimedOccurrence or claimed.operation_id!='ecommerce_growth_analysis_advance':
             raise ValueError('exact analysis claim required')
@@ -126,14 +132,27 @@ class ProductEventAnalysisService:
             installed=self.invoker.read_current_in_transaction(tx)
             occurrence=_occurrence_payload(tx,scope,claimed.occurrence_id)
             case=snapshot['case']
+            group = self._source_group(conn)
+            source_group = None
+            cutoff = row['created_at'].astimezone(UTC).replace(microsecond=0)
+            if group is not None:
+                journal = self.source.reader._journal
+                if (group.actor != self.source.actor
+                        or (journal._ref, origin['runId']) not in group.bindings):
+                    raise ValueError('analysis snapshot group differs from original source')
+                cutoff = group.read_completed_at.astimezone(UTC)
+                source_group = dict(groupId=group.group_id, manifestHash=group.manifest_hash,
+                    readStartedAt=group.read_started_at.isoformat(), readCompletedAt=cutoff.isoformat())
             request=dict(kind='build_analysis_start',occurrenceRef=_occurrence_ref(occurrence),
                 caseRef=dict(resourceType='BusinessInvestigationCaseRevision',resourceId=case['caseId'],
                              revision=case['revision'],contentHash=case['contentHash']),
                 profileRef={key:value for key,value in case['investigationProfileRef'].items() if value is not None},
-                cutoffAt=row['created_at'].astimezone(UTC).replace(microsecond=0).isoformat(),
+                cutoffAt=cutoff.isoformat(),
                 idempotencyKey=claimed.target_idempotency_key)
             stable=dict(source=snapshot,growth=installed,occurrence=occurrence,origin=origin,request=request,
                         dispatchRevision=routing['revision'],groupRevision=routing['cutover_group_revision'])
+            if source_group is not None:
+                stable['sourceGroup'] = source_group
             result=execute(stable,request,issued)
             AutomationOccurrenceStore._lock_claim(conn,scope,claimed)
             if self.invoker.read_current_in_transaction(tx)!=installed:

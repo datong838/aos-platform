@@ -10,6 +10,16 @@ from aos_api.ecommerce_product_event_control_approval import require_current_eve
 
 @pytest.fixture
 def consumer_case(host_case,monkeypatch):
+    from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+    from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
+    original_group = ProductEventAnalysisService._source_group
+    def named_single_source(analysis, connection):
+        # The old candidate fixture has no original claims. Composed native
+        # tests install a real journal and must use the production locator.
+        if type(analysis.source.reader._journal) is ControlledIngressJournal:
+            return original_group(analysis, connection)
+        return None
+    monkeypatch.setattr(ProductEventAnalysisService, '_source_group', named_single_source)
     conn,control,tx,dispatch,command=host_case
     call(host_case)
     service=object.__new__(ProductEventConsumptionService)
