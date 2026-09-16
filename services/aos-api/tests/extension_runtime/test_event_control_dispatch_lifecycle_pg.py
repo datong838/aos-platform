@@ -43,6 +43,19 @@ def dispatch_db(database):
         return owner.execute(body)
     migration.op = SimpleNamespace(execute=execute)
     migration.upgrade()
+    owner.execute("""CREATE TABLE extension_dispatch_configuration_refresh_receipt(
+        org_id text NOT NULL,project_id text NOT NULL,cutover_group_id uuid NOT NULL,
+        receipt_id uuid NOT NULL,revision bigint NOT NULL,installation_id uuid NOT NULL,
+        generation uuid NOT NULL,activation_operation_id uuid,request jsonb NOT NULL,
+        request_hash text NOT NULL,body jsonb NOT NULL,content_hash text NOT NULL,
+        PRIMARY KEY(org_id,project_id,cutover_group_id,revision))""")
+    owner.execute("GRANT SELECT ON extension_dispatch_configuration_refresh_receipt TO aos_runtime,aos_extension_maintainer")
+    spec = importlib.util.spec_from_file_location(
+        "a0v_070_test", root / "alembic/versions/a0v_070_event_control_after_configuration_refresh.py")
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=execute)
+    migration.upgrade()
     return database
 
 
@@ -102,6 +115,37 @@ def _transition(database, scope, request, *, runtime=False):
         return row["receipt"]
 
 
+def _refresh_transition(database, scope, ids):
+    installation, generation, group = ids
+    request = {
+        'schemaVersion': 'aos.ecommerce.dispatch-configuration-refresh/v1',
+        'orgId': scope.org_id, 'projectId': scope.project_id,
+        'installationRef': {'installationId': installation},
+        'generation': generation, 'cutoverGroupId': group,
+        'sourceExecutionEpoch': 3, 'targetExecutionEpoch': 5,
+        'targetRuntimeRevision': 9, 'expectedGroupRevision': 12,
+        'targetConfigurationRef': {'resourceType': 'ConfigurationRevision',
+                                   'resourceId': 'configuration-current', 'revision': 2,
+                                   'contentHash': 'sha256:' + 'c' * 64},
+        'externalEffectsAllowed': False, 'resumeBusinessRuns': False,
+    }
+    owner = database.owner
+    owner.execute("""UPDATE extension_runtime_binding SET execution_epoch=5,revision=9,
+        config_ref=%s WHERE installation_id=%s AND generation=%s""",
+        (Jsonb(request['targetConfigurationRef']), installation, generation))
+    owner.execute("""UPDATE extension_operation_dispatch_binding SET execution_epoch=5,
+        revision=revision+1,cutover_group_revision=13
+        WHERE operation_id<>'ecommerce_growth_event_control'""")
+    receipt_id = uuid4()
+    body = {'request': request}
+    owner.execute("""INSERT INTO extension_dispatch_configuration_refresh_receipt(
+        org_id,project_id,cutover_group_id,receipt_id,revision,installation_id,generation,
+        request,request_hash,body,content_hash) VALUES(%s,%s,%s,%s,1,%s,%s,%s,%s,%s,%s)""",
+        (*scope.key, group, receipt_id, installation, generation, Jsonb(request),
+         canonical_sha256(request), Jsonb(body), canonical_sha256(body)))
+    return request, str(receipt_id), canonical_sha256(body)
+
+
 def test_expand_replay_fence_and_shrink_are_exact_and_receipted(dispatch_db):
     scope = TenantScope("org-org", "dev-project")
     ids = _seed(dispatch_db, scope)
@@ -122,6 +166,53 @@ def test_expand_replay_fence_and_shrink_are_exact_and_receipted(dispatch_db):
     rows = dispatch_db.owner.execute(sql.SQL("SELECT phase FROM {}.extension_event_control_dispatch_receipt \
         WHERE org_id='org-org' ORDER BY created_at").format(sql.Identifier(dispatch_db.schema))).fetchall()
     assert [row["phase"] for row in rows] == ["expand", "fence", "shrink"]
+
+
+def test_fence_and_shrink_accept_only_latest_refresh_proven_mixed_epoch(dispatch_db):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'refresh-expand'))
+    refresh, refresh_id, refresh_hash = _refresh_transition(dispatch_db, scope, ids)
+    fence_request = _request(ids, 'fence', 13, 'refresh-fence')
+    fence_request['runtimeRevision'] = 9
+    fenced = _transition(dispatch_db, scope, fence_request)
+    assert fenced['configurationRefreshReceiptRef'] == {
+        'resourceType': 'DispatchConfigurationRefreshReceipt', 'resourceId': refresh_id,
+        'revision': 1, 'contentHash': refresh_hash}
+    business = [row for row in fenced['afterSnapshot']
+                if row['operationId'] != 'ecommerce_growth_event_control']
+    control = [row for row in fenced['afterSnapshot']
+               if row['operationId'] == 'ecommerce_growth_event_control']
+    assert len(business) == 9 and all(row['executionEpoch'] == 5
+                                      and row['cutoverGroupRevision'] == 14 for row in business)
+    assert len(control) == 1 and control[0]['executionEpoch'] == 3
+    assert control[0]['operationFence'] is True and control[0]['cutoverGroupRevision'] == 14
+    shrink_request = _request(ids, 'shrink', 14, 'refresh-shrink')
+    shrink_request['runtimeRevision'] = 9
+    shrunk = _transition(dispatch_db, scope, shrink_request)
+    assert len(shrunk['afterSnapshot']) == 9
+    assert all(row['executionEpoch'] == 5 and row['cutoverGroupRevision'] == 15
+               for row in shrunk['afterSnapshot'])
+    assert shrunk['drainEvidence']['executionEpoch'] == refresh['sourceExecutionEpoch']
+
+
+def test_refresh_transition_rejects_business_or_control_drift_without_write(dispatch_db):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(dispatch_db, scope)
+    _transition(dispatch_db, scope, _request(ids, 'expand', 11, 'refresh-drift-expand'))
+    _refresh_transition(dispatch_db, scope, ids)
+    request = _request(ids, 'fence', 13, 'refresh-drift-fence')
+    request['runtimeRevision'] = 9
+    dispatch_db.owner.execute("""UPDATE extension_operation_dispatch_binding
+        SET execution_epoch=4 WHERE operation_id='ecommerce_growth_case_put'""")
+    before = dispatch_db.owner.execute(
+        'SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall()
+    with pytest.raises(Exception, match='complete current event dispatch group required'):
+        _transition(dispatch_db, scope, request)
+    assert dispatch_db.owner.execute(
+        'SELECT * FROM extension_operation_dispatch_binding ORDER BY operation_id').fetchall() == before
+    assert dispatch_db.owner.execute("""SELECT count(*) AS n
+        FROM extension_event_control_dispatch_receipt WHERE phase='fence'""").fetchone()['n'] == 0
 
 
 def test_phase_drift_canary_and_direct_runtime_call_fail_closed(dispatch_db):

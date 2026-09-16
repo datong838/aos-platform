@@ -44,6 +44,8 @@ Task Receipt：`SC4-5L6Y5F4-REFRESH-DEPLOY-20260916`
 
 真实 refresh Receipt、九路 target epoch/group revision 和旧 epoch 无新 claim 通过后，走正式 lifecycle Owner：fence -> drain/readback -> detach。任何 running/claimed/unknown occurrence 阻断 detach。随后按既有安装恢复路径恢复到可配置、可启用状态并核对最新 refresh authority ref，不启动自然经营 Run。
 
+真实 J 预检补充：九路 refresh 后，event-control 按设计仍保留旧 epoch/group revision；旧 a0v054 只接受十路完全同 epoch/revision，无法表达“业务九路已接续、事件入口待独立退出”。a0v070 必须只在存在最新、有效 Refresh Receipt 时接受该过渡态：runtime binding 精确等于 refresh target，九路精确等于 refresh target epoch/group，event-control 精确等于 refresh source epoch/旧 group。fence 仍以组级 CAS 把十路 group revision 汇合并只围栏 event-control；shrink 在 drain 为零后按原组级 CAS 删除 event-control。无 Refresh 的旧路径保持原合同。
+
 ## 文件范围
 
 - `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/sc4-5l6y5f4-refresh-deployment-plan.md`
@@ -52,6 +54,8 @@ Task Receipt：`SC4-5L6Y5F4-REFRESH-DEPLOY-20260916`
 - `scripts/a0v_j_configuration_successor_refresh.py`
 - `scripts/a0v_j_dispatch_configuration_refresh.py`：固定重建、ActionType、审批、Owner、
   同 key 重放、正负租户回读；每个写阶段均先落 0600 O_EXCL intent，未知结果只进入 inspect。
+- `services/aos-api/alembic/versions/a0v_070_event_control_after_configuration_refresh.py`：
+  让 event-control lifecycle 只在最新 Refresh Receipt 证明的混合 epoch 过渡态下继续。
 - F4 verification/JSON 证据
 - `docs/palantier/AOS项目开发上下文/memory/leases.json` 中新增 Task Receipt
 

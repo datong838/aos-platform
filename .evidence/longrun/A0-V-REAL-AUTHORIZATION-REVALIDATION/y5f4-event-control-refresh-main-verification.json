@@ -1,0 +1,39 @@
+{
+  "outcome": "EVENT_CONTROL_REFRESH_CONTINUATION_MAIN_070_VERIFIED",
+  "source": "a0v_069",
+  "target": "a0v_070",
+  "preservedTableCount": 552,
+  "oldDataUnchangedWithinTransaction": true,
+  "migrations": {
+    "a0v_070_event_control_after_configuration_refresh.py": "sha256:57b1c9da165f2de26b81283e898ccffdd6ee791d70b2e4102289b968b0ce5961"
+  },
+  "executors": {
+    "a0v_event_control_refresh_continuation_clone.py": "sha256:5a404779b8365f0135fbbb1f3c67a9871820e133027e6df054676ffb0bb06b17",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c",
+    "a0v_event_control_refresh_continuation_main_deploy.py": "sha256:20d644dc6b54f3690ae6c1d153ed7f6ef9a6479cc662d95a1567a6b4e7008f2b"
+  },
+  "schema": {
+    "ownerFunction": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "runtime_execute": false,
+      "maintainer_execute": true,
+      "public_execute": false
+    },
+    "refreshAwareTokens": [
+      "extension_dispatch_configuration_refresh_receipt",
+      "latest configuration refresh does not authorize event retirement",
+      "configurationRefreshReceiptRef",
+      "v_phase IN ('fence','shrink')"
+    ]
+  },
+  "freshBackupSha256": "sha256:c50c1064e048053a0811f0a0283f4a4bb93df6364ca51828dd480b5f2f3d83ca",
+  "refreshRows": 1,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T13:34:17.273411+00:00"
+}
