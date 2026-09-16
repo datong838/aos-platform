@@ -21,6 +21,8 @@ class ProductEventConsumptionWorker:
         self.factory,self.directory=factory,directory
         self._cursors={};self._target_offset=0
         self._claim_owner='product-event-'+uuid4().hex
+        self.last_status=dict(targetsChecked=0,candidates=0,occurrences=0,
+                              analysesAccepted=0,failed=0)
 
     def _origin(self,scope,claimed):
         with connect_serializable(scope) as conn:
@@ -65,7 +67,9 @@ class ProductEventConsumptionWorker:
         targets=self.directory.current_targets()
         self._cursors={key:value for key,value in self._cursors.items() if key in targets}
         stats=dict(targetsChecked=0,candidates=0,occurrences=0,analysesAccepted=0,failed=0)
-        if not targets:return stats
+        if not targets:
+            self.last_status=dict(stats)
+            return stats
         start=self._target_offset%len(targets)
         selected=(targets[start:]+targets[:start])[:4]
         self._target_offset=(start+len(selected))%len(targets)
@@ -102,6 +106,7 @@ class ProductEventConsumptionWorker:
             except Exception as exc:
                 stats['failed']+=1
                 log.warning('product_event_analysis_dispatch_failed target=%s error=%s',target,type(exc).__name__)
+        self.last_status=dict(stats)
         return stats
 
     async def serve(self,stop,*,host_ready):

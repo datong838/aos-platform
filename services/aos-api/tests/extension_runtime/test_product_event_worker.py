@@ -54,6 +54,8 @@ def test_no_live_targets_does_no_work(monkeypatch):
     worker,directory,_,calls=setup(monkeypatch)
     for scope,installation,generation in directory.current_targets():directory.unregister(directory.resolve(scope=scope,installation_id=installation,generation=generation))
     assert asyncio.run(worker.tick())['candidates']==0 and calls==[]
+    assert worker.last_status=={'targetsChecked':0,'candidates':0,'occurrences':0,
+                                'analysesAccepted':0,'failed':0}
 
 
 def test_stopped_or_failed_host_never_ticks(monkeypatch):

@@ -144,6 +144,15 @@ def _build_business_workers(control_plane):
     return product_event, analysis_data
 
 
+def _business_status(public, control_plane, product_event_worker):
+    targets = control_plane.live_job_directory.current_targets()
+    return {**public,
+        "liveTargets": [{"tenant": list(scope.key), "installationId": str(installation),
+                         "generation": str(generation)}
+                        for scope, installation, generation in targets],
+        "productEventWorker": dict(product_event_worker.last_status)}
+
+
 async def _serve(args: argparse.Namespace) -> None:
     _configure_environment(
         args.credential_file,
@@ -166,7 +175,8 @@ async def _serve(args: argparse.Namespace) -> None:
         "intervalSeconds": args.interval_seconds,
         "businessWorkers": ["product-event", "analysis-data-requirement"],
     }
-    _write(args.status_file.resolve(), public)
+    _write(args.status_file.resolve(), _business_status(
+        public, control_plane, product_event_worker))
     print(json.dumps(public, ensure_ascii=False, sort_keys=True), flush=True)
     host_task = asyncio.create_task(
         host.serve(stop_event, interval_seconds=args.interval_seconds),
@@ -183,10 +193,19 @@ async def _serve(args: argparse.Namespace) -> None:
             name="analysis-data-requirement",
         ),
     )
+    async def report_status():
+        while not stop_event.is_set():
+            _write(args.status_file.resolve(), _business_status(
+                public, control_plane, product_event_worker))
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=2)
+            except TimeoutError:
+                continue
+    reporter_task = asyncio.create_task(report_status(), name="runtime-business-status")
     stop_task = asyncio.create_task(stop_event.wait(), name="runtime-host-stop")
     try:
         done, _ = await asyncio.wait(
-            (host_task, *worker_tasks, stop_task),
+            (host_task, *worker_tasks, reporter_task, stop_task),
             return_when=asyncio.FIRST_COMPLETED,
         )
         if not stop_event.is_set():
@@ -194,6 +213,11 @@ async def _serve(args: argparse.Namespace) -> None:
                 error = host_task.exception()
                 if error is not None:
                     raise error
+            elif reporter_task in done:
+                error = reporter_task.exception()
+                if error is not None:
+                    raise error
+                raise HostBlocked("BUSINESS_STATUS_REPORTER_STOPPED")
             else:
                 finished = next(task for task in worker_tasks if task in done)
                 error = finished.exception()
@@ -202,11 +226,12 @@ async def _serve(args: argparse.Namespace) -> None:
                 raise HostBlocked("BUSINESS_WORKER_STOPPED")
     finally:
         stop_event.set()
-        await asyncio.gather(host_task, *worker_tasks, return_exceptions=True)
+        await asyncio.gather(host_task, *worker_tasks, reporter_task, return_exceptions=True)
         if not stop_task.done():
             stop_task.cancel()
         await asyncio.gather(stop_task, return_exceptions=True)
-        stopped = {**public, "outcome": "RUNTIME_HOST_STOPPED"}
+        stopped = {**_business_status(public, control_plane, product_event_worker),
+                   "outcome": "RUNTIME_HOST_STOPPED"}
         _write(args.status_file.resolve(), stopped)
         print(json.dumps(stopped, ensure_ascii=False, sort_keys=True), flush=True)
 

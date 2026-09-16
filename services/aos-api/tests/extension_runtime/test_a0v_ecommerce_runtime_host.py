@@ -95,11 +95,15 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
             assert interval_seconds == 3
 
     class Worker:
+        last_status = {'targetsChecked': 0, 'candidates': 0, 'occurrences': 0,
+                       'analysesAccepted': 0, 'failed': 0}
         async def serve(self, stop_event, *, host_ready):
             assert isinstance(stop_event, asyncio.Event)
             assert host_ready() is False
 
-    monkeypatch.setattr(HOST, "_build_runtime", lambda: (Host(), object()))
+    plane = type('Plane', (), {'live_job_directory': type('Directory', (), {
+        'current_targets': lambda self: ()})()})()
+    monkeypatch.setattr(HOST, "_build_runtime", lambda: (Host(), plane))
     monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: (Worker(), Worker()))
     asyncio.run(HOST._serve(argparse.Namespace(
         credential_file=credential_path,
@@ -129,6 +133,8 @@ def test_serve_runs_business_workers_with_same_stop_and_live_host(tmp_path, monk
             await stop_event.wait()
 
     class Worker:
+        last_status = {'targetsChecked': 0, 'candidates': 0, 'occurrences': 0,
+                       'analysesAccepted': 0, 'failed': 0}
         def __init__(self, name, stop=False): self.name, self.stop = name, stop
         async def serve(self, stop_event, *, host_ready):
             await asyncio.sleep(0)
@@ -136,7 +142,9 @@ def test_serve_runs_business_workers_with_same_stop_and_live_host(tmp_path, monk
             if self.stop: stop_event.set()
             else: await stop_event.wait()
 
-    monkeypatch.setattr(HOST, '_build_runtime', lambda: (Host(), object()))
+    plane = type('Plane', (), {'live_job_directory': type('Directory', (), {
+        'current_targets': lambda self: ()})()})()
+    monkeypatch.setattr(HOST, '_build_runtime', lambda: (Host(), plane))
     monkeypatch.setattr(HOST, '_build_business_workers',
         lambda _plane: (Worker('product-event'), Worker('analysis-data', stop=True)))
     asyncio.run(HOST._serve(argparse.Namespace(credential_file=credential_path,

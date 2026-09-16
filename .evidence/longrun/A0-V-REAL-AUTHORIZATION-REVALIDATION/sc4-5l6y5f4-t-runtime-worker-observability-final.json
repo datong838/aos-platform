@@ -1,0 +1,21 @@
+{
+  "outcome": "RUNTIME_LIVE_TARGET_ABSENCE_PROVEN",
+  "observedAt": "2026-09-16T17:14:34Z",
+  "runtimeHost": {
+    "pid": 5833,
+    "outcome": "RUNTIME_HOST_ACTIVE",
+    "liveTargets": [],
+    "productEventWorker": {
+      "targetsChecked": 0,
+      "candidates": 0,
+      "occurrences": 0,
+      "analysesAccepted": 0,
+      "failed": 0
+    }
+  },
+  "rootCause": "Delivered runtime-apply has no pending outbox after process restart, so the in-memory PreparedJob directory is not reconstructed.",
+  "tests": "26 passed",
+  "scheduleEnabled": false,
+  "businessWrites": 0,
+  "next": "Implement a receipt- and binding-qualified ready-generation cold-start recovery owner."
+}
