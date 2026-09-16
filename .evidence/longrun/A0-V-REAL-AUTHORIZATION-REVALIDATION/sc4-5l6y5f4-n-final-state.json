@@ -1,0 +1,275 @@
+{
+  "businessRunsResumed": 0,
+  "capturedAt": "2026-09-16T14:31:47.744328+00:00",
+  "database": {
+    "detachContentHash": "sha256:da0fbd2e59fc3176274eade80acbdd58f2bce8fdbf24b29843b334c76c0c0f98",
+    "detachReceiptId": "15f04808-68e3-481f-9e20-9c6cf43a49a8",
+    "groupRevision": 35,
+    "inflight": {
+      "running": 0,
+      "unresolved": 0
+    },
+    "routeRevision": 20,
+    "routes": 9,
+    "version": [
+      {
+        "version_num": "a0v_072"
+      }
+    ]
+  },
+  "eventControlEnabled": false,
+  "externalEffects": 0,
+  "j": {
+    "bindings": [
+      {
+        "config_ref": {
+          "configurationId": "e2fdde1f-ebdb-4863-b158-7204735f3fe8",
+          "hash": "sha256:e60388471f9cba40e8cc80d82c8e1ee8c4775dc9dc09e974f1aca3ada5e10091",
+          "revision": 2
+        },
+        "desired_state": "uninstalled",
+        "enabled": false,
+        "execution_epoch": 6,
+        "generation": "5295b81e-6005-4c2e-befc-3323f1456b8c",
+        "observed_state": "stopped",
+        "operation_fence": true,
+        "revision": 12
+      }
+    ],
+    "canaryInstallations": 0,
+    "head": {
+      "etag_version": 6,
+      "installation_id": "d6531562-e388-4206-a3ba-a89aaddc255c",
+      "lock_hash": "sha256:85f986267d34c4847b7045144a61539a7f57abfc75ac582721b27e6b3cd5d785",
+      "overlay_revision": "a0v-canonical-ecommerce-v1",
+      "state": "uninstalled"
+    },
+    "operations": [
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "runtime-apply",
+        "operation_id": "d2ed253c-2c6a-4917-9841-c46df6f7bd68",
+        "phase": "succeeded",
+        "revision": 816,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "runtime-verify",
+        "operation_id": "3e1ed8a3-50cb-4352-a6ad-62120ab308bb",
+        "phase": "succeeded",
+        "revision": 5,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "configure",
+        "operation_id": "5b45d5cf-2dcd-47ef-9035-742ab659b506",
+        "phase": "succeeded",
+        "revision": 6,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "enable",
+        "operation_id": "fba1cb48-9d69-4c8c-b343-1a447eaf3276",
+        "phase": "succeeded",
+        "revision": 5,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "configure",
+        "operation_id": "99d44b1d-e470-4f1b-ae9e-7700d0d24f0d",
+        "phase": "succeeded",
+        "revision": 6,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "enable",
+        "operation_id": "a81beb7e-6991-4b3d-a1c1-b311a36dce8a",
+        "phase": "succeeded",
+        "revision": 5,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "disable",
+        "operation_id": "178a52b9-b8db-4b35-9c0a-66288bd703c8",
+        "phase": "succeeded",
+        "revision": 6,
+        "status": "succeeded"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "05d4776f-e8b8-4931-a03d-13b4579c402c"
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "4d961c50-4f72-4d25-b51c-92ebca16a62f"
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "ef56918b-e5c5-4407-90ac-fe783df647cb"
+      }
+    ]
+  },
+  "k": {
+    "bindings": [],
+    "canaryInstallations": 0,
+    "head": {
+      "etag_version": 6,
+      "installation_id": "6dcae78b-a1e9-402c-ad09-36b111f52698",
+      "lock_hash": "sha256:ed7b373cb43cd59f4c80b1adffd060381d551219bf25e860a5024737745b8522",
+      "overlay_revision": "a0v-canonical-ecommerce-v1",
+      "state": "uninstalled"
+    },
+    "operations": [
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "runtime-apply",
+        "operation_id": "96780ba0-eb9a-49c6-a4ac-918ff785912e",
+        "phase": "succeeded",
+        "revision": 16,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": true,
+        "failure_code": "PREPARATION_OWNER_LOST",
+        "kind": "runtime-verify",
+        "operation_id": "5837a0ed-3859-4fe1-b1c4-2d722e7c1a15",
+        "phase": "accepted",
+        "revision": 2,
+        "status": "failed"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "76754de7-1516-455a-aee3-5dc87aaf25cc"
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "bdbb8e28-ce50-4506-bb65-efee40c110fb"
+      },
+      {
+        "cleanup_state": "released",
+        "observed_release": true,
+        "resource_id": "f1890d97-b61c-44f2-a0ca-b6c8c6f1f355"
+      }
+    ]
+  },
+  "l": {
+    "bindings": [
+      {
+        "config_ref": {
+          "configurationId": "e02eeab5-eabf-41b5-82ee-47229b938e2f",
+          "hash": "sha256:f98af03c9790f56b50a08d8d876a0b019390225d51577e8fdf0926f775bd1ff4",
+          "revision": 1
+        },
+        "desired_state": "enabled",
+        "enabled": true,
+        "execution_epoch": 3,
+        "generation": "64742c68-5e71-485b-a3c8-edc20be3d101",
+        "observed_state": "ready",
+        "operation_fence": false,
+        "revision": 4
+      }
+    ],
+    "canaryInstallations": 0,
+    "head": {
+      "etag_version": 5,
+      "installation_id": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+      "lock_hash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "overlay_revision": "a0v-canonical-ecommerce-v1",
+      "state": "active"
+    },
+    "operations": [
+      {
+        "deadline_expired": true,
+        "failure_code": null,
+        "kind": "runtime-apply",
+        "operation_id": "a7155a75-b968-4f98-8b25-17ca9f06715b",
+        "phase": "succeeded",
+        "revision": 18,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": false,
+        "failure_code": null,
+        "kind": "runtime-verify",
+        "operation_id": "67ef33b7-11bc-4082-a09c-a2b2564bf185",
+        "phase": "succeeded",
+        "revision": 5,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": false,
+        "failure_code": null,
+        "kind": "configure",
+        "operation_id": "a319d7d7-4dd0-4824-8c9d-63d9b8cfbc52",
+        "phase": "succeeded",
+        "revision": 6,
+        "status": "succeeded"
+      },
+      {
+        "deadline_expired": false,
+        "failure_code": null,
+        "kind": "enable",
+        "operation_id": "8953694f-0c29-4f6f-9dcd-8ed04a18c915",
+        "phase": "succeeded",
+        "revision": 5,
+        "status": "succeeded"
+      }
+    ],
+    "resources": [
+      {
+        "cleanup_state": "pending",
+        "observed_release": false,
+        "resource_id": "1a98bb1c-1b91-4d3c-a157-1add9873ab82"
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false,
+        "resource_id": "5d611194-7b90-4c9c-9a70-fda6baa5ee10"
+      },
+      {
+        "cleanup_state": "pending",
+        "observed_release": false,
+        "resource_id": "abd4865e-753f-422f-b783-7ef761db3f6c"
+      }
+    ]
+  },
+  "outcome": "J_K_FAILURE_RECOVERED_L_READY_UNROUTED",
+  "runtimeHost": {
+    "businessWorkers": [
+      "product-event",
+      "analysis-data-requirement"
+    ],
+    "canaryTenantCount": 0,
+    "hostId": "a0v-local-ecommerce-host-20260912",
+    "intervalSeconds": 2,
+    "outcome": "RUNTIME_HOST_ACTIVE",
+    "pid": 87185,
+    "positiveTenant": "org-org/dev-project",
+    "tenantCount": 1
+  },
+  "runtimeHostAlive": true,
+  "scheduleStarted": false
+}
