@@ -37,7 +37,10 @@ def read_case(monkeypatch):
         def __exit__(self,*args):state['closed']=True
         def read_rows(self,table,**kwargs):
             state['query']=(table,kwargs)
-            if state.get('error'):raise RuntimeError('fixture-secret-must-not-escape')
+            if state.get('error'):
+                if isinstance(state['error'], Exception):
+                    raise state['error']
+                raise RuntimeError('fixture-secret-must-not-escape')
             return state['rows']
     monkeypatch.setattr(module.SourceConfigurationRevisionStore,'read_connection_input',load)
     monkeypatch.setattr(module,'JdbcConnectorRuntime',Runtime)
@@ -76,6 +79,27 @@ def test_current_source_revision_drift_prevents_connection(read_case):
     state['ref']=state['ref'].model_copy(update={'content_hash':'sha256:'+'f'*64})
     with pytest.raises(ValueError):read_selected_snapshot(**args)
     assert state['calls']==['lock']
+
+
+@pytest.mark.parametrize(('failure','expected'),[
+    (RuntimeError('SSH tunnel failed to become ready after 50 retries; diagnostic=NO_STDERR'),
+     'SSH_TUNNEL_NOT_READY'),
+    (RuntimeError('SSH tunnel exited rc=255; diagnostic=AUTHENTICATION_FAILED'),
+     'SSH_AUTHENTICATION_FAILED'),
+    (RuntimeError('private diagnostic=CONNECT_TIMEOUT secret'),
+     'SELECTED_SNAPSHOT_READ_FAILED'),
+])
+def test_connector_failure_keeps_only_bounded_code(read_case,failure,expected):
+    args,state,module=read_case
+    state['error']=failure
+
+    with pytest.raises(module.SelectedSnapshotReadError) as caught:
+        read_selected_snapshot(**args)
+
+    assert str(caught.value)=='SELECTED_SNAPSHOT_READ_FAILED'
+    assert caught.value.code==expected
+    assert caught.value.__cause__ is None
+    assert 'secret' not in repr(caught.value)
 
 
 @pytest.mark.parametrize('mode',['elapsed','expiry','tenant'])

@@ -1265,43 +1265,13 @@ class PipelineEngine:
     def _safe_error_code(exc: Exception) -> str:
         """Return a bounded transport/runtime classification without raw details."""
         from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
+        from aos_api.jdbc_connector_runtime import connector_failure_code
+        from aos_api.pipeline_selected_snapshot import SelectedSnapshotReadError
         if type(exc) is SourceCallBudgetExhausted:
             return 'PIPELINE_SOURCE_CALL_BUDGET_EXHAUSTED'
-        exc_module = type(exc).__module__
-        exc_name = type(exc).__name__
-        if exc_module.startswith("pymysql") and exc_name == "OperationalError":
-            mysql_code = exc.args[0] if exc.args else None
-            if mysql_code == 2003:
-                return "MYSQL_CONNECT_FAILED"
-            if mysql_code == 2006:
-                return "MYSQL_SERVER_GONE"
-            if mysql_code == 2013:
-                return "MYSQL_CONNECTION_LOST"
-
-        # JDBC runtime diagnostics are generated from a closed allowlist. We only
-        # inspect them for classification and never persist the exception text.
-        detail = str(exc)
-        if not detail.startswith(("SSH tunnel exited rc=", "SSH tunnel failed to become ready")):
-            return "PIPELINE_EXECUTOR_FAILED"
-        ssh_diagnostic_codes = {
-            "AUTHENTICATION_FAILED": "SSH_AUTHENTICATION_FAILED",
-            "CONNECT_TIMEOUT": "SSH_CONNECT_TIMEOUT",
-            "CONNECTION_REFUSED": "SSH_CONNECTION_REFUSED",
-            "HOST_RESOLUTION_FAILED": "SSH_HOST_RESOLUTION_FAILED",
-            "HOST_KEY_VERIFICATION_FAILED": "SSH_HOST_KEY_VERIFICATION_FAILED",
-            "LOCAL_FORWARD_BIND_FAILED": "SSH_LOCAL_FORWARD_BIND_FAILED",
-            "FORWARD_FAILED": "SSH_FORWARD_FAILED",
-            "SSH_PROCESS_ERROR": "SSH_PROCESS_FAILED",
-        }
-        for diagnostic, error_code in ssh_diagnostic_codes.items():
-            if f"diagnostic={diagnostic}" in detail:
-                return error_code
-        if (
-            "SSH tunnel failed to become ready" in detail
-            and "diagnostic=NO_STDERR" in detail
-        ):
-            return "SSH_TUNNEL_NOT_READY"
-        return "PIPELINE_EXECUTOR_FAILED"
+        if type(exc) is SelectedSnapshotReadError:
+            return exc.code
+        return connector_failure_code(exc) or "PIPELINE_EXECUTOR_FAILED"
 
     @staticmethod
     def _contains_unsupported_config(value: Any) -> bool:

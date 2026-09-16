@@ -73,6 +73,44 @@ def _classify_ssh_stderr(stderr: str) -> str:
     return "SSH_PROCESS_ERROR"
 
 
+def connector_failure_code(exc: Exception) -> str | None:
+    """Return a bounded code for connector failures without exposing details."""
+    exc_type = type(exc)
+    if exc_type.__module__.startswith("pymysql") and exc_type.__name__ == "OperationalError":
+        mysql_code = exc.args[0] if exc.args else None
+        return {
+            2003: "MYSQL_CONNECT_FAILED",
+            2006: "MYSQL_SERVER_GONE",
+            2013: "MYSQL_CONNECTION_LOST",
+        }.get(mysql_code)
+
+    detail = str(exc)
+    if not detail.startswith((
+        "SSH tunnel exited rc=",
+        "SSH tunnel failed to become ready",
+    )):
+        return None
+    ssh_codes = {
+        "AUTHENTICATION_FAILED": "SSH_AUTHENTICATION_FAILED",
+        "CONNECT_TIMEOUT": "SSH_CONNECT_TIMEOUT",
+        "CONNECTION_REFUSED": "SSH_CONNECTION_REFUSED",
+        "HOST_RESOLUTION_FAILED": "SSH_HOST_RESOLUTION_FAILED",
+        "HOST_KEY_VERIFICATION_FAILED": "SSH_HOST_KEY_VERIFICATION_FAILED",
+        "LOCAL_FORWARD_BIND_FAILED": "SSH_LOCAL_FORWARD_BIND_FAILED",
+        "FORWARD_FAILED": "SSH_FORWARD_FAILED",
+        "SSH_PROCESS_ERROR": "SSH_PROCESS_FAILED",
+    }
+    for diagnostic, code in ssh_codes.items():
+        if f"diagnostic={diagnostic}" in detail:
+            return code
+    if (
+        detail.startswith("SSH tunnel failed to become ready")
+        and "diagnostic=NO_STDERR" in detail
+    ):
+        return "SSH_TUNNEL_NOT_READY"
+    return None
+
+
 # ═══════════════════════════════════════════════════════════════
 # D4 Phase C · C1: 302 表分类打标（A/B/C/D/E）
 # 上位规格：D4-12OT业务闭环与302表衔接执行规格.md §4.3

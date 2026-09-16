@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from time import monotonic
 
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime
+from aos_api.jdbc_connector_runtime import JdbcConnectorRuntime, connector_failure_code
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef, PipelineSourceSelectionDraft
 from aos_api.pipeline_source_selection import MappingReadSpec
 from aos_api.source_configuration_revision import SourceConfigurationRevisionStore
@@ -22,6 +22,23 @@ class SelectedSnapshotResult:
     source_configuration_ref: PipelineExactRef
     started_at: datetime
     completed_at: datetime
+
+
+class SelectedSnapshotReadError(ValueError):
+    """Publicly generic selected-read failure with an optional safe code."""
+
+    _SAFE_CODES = frozenset({
+        'SELECTED_SNAPSHOT_READ_FAILED',
+        'MYSQL_CONNECT_FAILED', 'MYSQL_SERVER_GONE', 'MYSQL_CONNECTION_LOST',
+        'SSH_AUTHENTICATION_FAILED', 'SSH_CONNECT_TIMEOUT',
+        'SSH_CONNECTION_REFUSED', 'SSH_HOST_RESOLUTION_FAILED',
+        'SSH_HOST_KEY_VERIFICATION_FAILED', 'SSH_LOCAL_FORWARD_BIND_FAILED',
+        'SSH_FORWARD_FAILED', 'SSH_PROCESS_FAILED', 'SSH_TUNNEL_NOT_READY',
+    })
+
+    def __init__(self, code: str = 'SELECTED_SNAPSHOT_READ_FAILED'):
+        self.code = code if code in self._SAFE_CODES else 'SELECTED_SNAPSHOT_READ_FAILED'
+        super().__init__('SELECTED_SNAPSHOT_READ_FAILED')
 
 
 def read_selected_snapshot(*, transaction, scope, draft, read_spec):
@@ -72,6 +89,8 @@ def read_selected_snapshot(*, transaction, scope, draft, read_spec):
             if any(column in row and row[column] != value for column,value in spec.filters):
                 raise ValueError('selected snapshot scope differs')
         return SelectedSnapshotResult(rows,draft.source_configuration_ref,started_at,completed_at)
-    except Exception:
+    except Exception as exc:
         # Neither connector errors nor rejected source values may escape.
-        raise ValueError('SELECTED_SNAPSHOT_READ_FAILED') from None
+        raise SelectedSnapshotReadError(
+            connector_failure_code(exc) or 'SELECTED_SNAPSHOT_READ_FAILED'
+        ) from None

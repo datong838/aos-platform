@@ -138,6 +138,29 @@ def test_executor_exception_is_failed_and_secret_is_not_exposed():
     assert run.output_ref == ""
 
 
+@pytest.mark.parametrize(('code','expected'),[
+    ('SSH_TUNNEL_NOT_READY','SSH_TUNNEL_NOT_READY'),
+    ('MYSQL_CONNECT_FAILED','MYSQL_CONNECT_FAILED'),
+    ('private-host-secret','SELECTED_SNAPSHOT_READ_FAILED'),
+])
+def test_selected_reader_failure_propagates_only_bounded_code(code, expected):
+    from aos_api.pipeline_selected_snapshot import SelectedSnapshotReadError
+
+    eng = get_engine()
+    def failing(**_kwargs):
+        raise SelectedSnapshotReadError(code)
+    eng.register_executor('selected-reader-failure', failing)
+    pl = eng.create_pipeline(TEST_SCOPE, name='p', executor_id='selected-reader-failure', execution_mode='live')
+    sc = eng.create_schedule(TEST_SCOPE, name='s', pipeline_id=pl.id)
+
+    run = eng.run_schedule(TEST_SCOPE, sc.id)
+
+    assert run.status == 'failed'
+    assert run.error_code == expected
+    assert run.error_message == 'pipeline executor failed'
+    assert 'private-host-secret' not in repr(run)
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_code"),
     [
