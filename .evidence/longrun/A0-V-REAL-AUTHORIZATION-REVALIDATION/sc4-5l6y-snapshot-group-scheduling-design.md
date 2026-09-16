@@ -63,3 +63,5 @@ Y2具体配置/启停/退役、停用不回落单路、锁序和文件清单见s
 ## Y3恢复边界增补（2026-09-16）
 
 Y3a已引入exact enabled配置v2领取，Y3b补每事务守卫与原Ingress/Completion接线。新增Y3c正式组窗口续期恢复Owner/Receipt：原组已领取且有input时，单路既有窗口续期机制不能自动越过旧组exact definitionRef；需要明确关联原group、原input、旧定义及同业务上下文的新窗口控制并经原权限核验。未完成前到期禁入，不改历史、不用新Run冒充恢复。Y3c须在Y4/Y6真实恢复验收前完成；无原input的unknown仍禁止重新读取。
+
+Y3b-2完整runtime接线暴露重复current校验成本，新增Y3b-3性能波次（sc4-5l6y3b3-snapshot-guard-cost-plan.md），排在Y3c正式续期恢复前。以原调用计数、数据库往返与完整真实PG/Store耗时验证改进，不能以跳过权限、跨事务缓存许可或提高递归上限替代。Y3c草案另见sc4-5l6y3c-saved-group-renewal-design.md，明确未实现事项和原回执不变边界。

@@ -1,0 +1,43 @@
+{
+  "recordedAt": "2026-09-16T03:56:27.324239+00:00",
+  "kind": "isolated-mid-run-table-statistics",
+  "note": "Index scans are PostgreSQL table statistics, not SQL statement counts or final totals. Twelve source fixture rows; no live merchant data.",
+  "tables": [
+    {
+      "name": "meta_schedule",
+      "sequentialScans": 11,
+      "indexScans": 20162,
+      "insertedRows": 12
+    },
+    {
+      "name": "pipeline_runtime_control_revision",
+      "sequentialScans": 4,
+      "indexScans": 78408,
+      "insertedRows": 12
+    },
+    {
+      "name": "pipeline_schedule_control_binding",
+      "sequentialScans": 4,
+      "indexScans": 36072,
+      "insertedRows": 12
+    },
+    {
+      "name": "pipeline_snapshot_schedule_claim",
+      "sequentialScans": 1,
+      "indexScans": 1560,
+      "insertedRows": 1
+    },
+    {
+      "name": "pipeline_snapshot_schedule_current_member",
+      "sequentialScans": 1,
+      "indexScans": 19302,
+      "insertedRows": 24
+    },
+    {
+      "name": "pipeline_source_selection_revision",
+      "sequentialScans": 4,
+      "indexScans": 78420,
+      "insertedRows": 12
+    }
+  ]
+}

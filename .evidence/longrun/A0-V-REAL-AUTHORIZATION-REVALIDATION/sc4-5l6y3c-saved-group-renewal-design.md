@@ -1,0 +1,37 @@
+# SC4-5L6Y3c 原组保存输入的窗口续期恢复设计草案
+
+状态：设计草案，未实现、未验收。承接Y3b运行器，必须继续逐项复核原Owner与哈希合同后编码；不是任何实际恢复授权。m1串行、不push、230L0挂起。
+
+## 业务问题
+
+Y3b只支持原权限有效期间的中断恢复。窗口到期后，原current检查正确拒绝旧控制；单纯新建12控制/绑定会使旧定义与原组回执不再exact，不能因此改旧回执或新建组替代。真实可恢复需要产品化的“对原已保存输入续期处理”授权，且绝不能重新读取结果未知的源。
+
+## 不变项与授权边界
+
+必须已有完整pipeline_snapshot_group_input及十二原parent，原group/source claims/Run/输入/对象Receipt全部保留。无input或source outcome unknown不进入续期恢复。仅同租户、同installation/generation/epoch/配置/包/源配置/schema/masking/graph/mapping/策略与业务scope允许；跨重装代次、源配置变化或改业务语义一律拒绝，交正式业务取消/改版流程。
+
+首版仅考虑延长expiresAt、保持原notBefore与其他业务字段完全相同的控制后继；由原选择/控制审批Owner产生，不直接写不可变控制行。不提高原maxSourceCalls，不新增SourceClaim，不调用源reader。这样原readStarted/readCompleted仍属于原与新公共窗口，原快照时钟无需重写。
+
+必须有不可变、幂等、租户隔离的恢复授权Receipt：关联原group request/content hash、完整input manifest hash、原definitionRef、恢复当前definitionRef、十二原/新控制与binding映射、相同policyRef、管理审批人及原执行人。每事务重新核验current安装权限、配置状态、角色和最新Receipt；停止或再次改变定义立即使旧恢复授权无效。不可用内存布尔标志或“用户曾授权”代替Receipt。
+
+## 待实现分项（先复核后细化文件）
+
+C1 审计原恢复合同与哈希依赖、确定恢复授权存储与DB约束。当前assessment_payload只含原claimRequestHash/inputManifestHash/policy/实际观察与业务候选，不含新窗口，理论上可复用原业务回执；必须继续检查link/retirement/projection各层，不以此一处推断全部兼容。
+
+C2 正式恢复授权Owner/API：当前配置管理权限、审批新控制、原组/input存在性及不变项验证；配置变更只允许严格同成员原组恢复用途，不能在普通configure中开放“忽略在途”参数。恢复定义与授权同事务提交/CAS，启停仍有当前权威；同idempotency key确认原回执，未知提交不发新key。
+
+C3 保存恢复执行通道：新的current refs只作本次续期执行权威；原source group绑定/hash、input、assessment和对象/关系命令保持原语义与幂等键。SourceClaimOwner复用原read_saved_current的同上下文续期比较；原GroupInput/Claim层须显式支持正式恢复授权，不能把新draft重新hash后冒充原group。运行器恢复入口不得调用Ingress.prepare或reserve。同步Owner回调与数据库锁约束继续成立。
+
+C4 状态恢复与自然回到周期：只允许原Run可证明安全的状态；mixed/停止未确认不能擅自改为running。确需failed→running时复用/扩展原受控Run恢复Owner，保持组原子性。恢复完成后正常周期使用新current配置，不要求开发者改绑定；任何自动配置续接也必须被同一正式授权范围覆盖并重新验证角色，不能借恢复开启未授权新源读取。
+
+C5 独立PG/真实Store验收：原窗口到期、续期控制被撤销、停用竞争、部分对象已提交/metadata未收尾、只读completed恢复、重复Receipt零源调用、负租户、跨代次/策略/源配置漂移、无input unknown禁入。最后Y4/Y6克隆与真实环境验证，不能以夹具升级为真实恢复完成。
+
+## 当前待查风险
+
+新旧control refs在GroupClaim/Input及各层journal传递时，必须同时保存“原业务输入身份”和“当前执行权威”，不能混为同一hash。普通configure禁止在途变更的规则不得整体取消。停止后续期、已运行配置自然接回周期、失败Run组内原子恢复尚需明确原Owner接缝；这些未定项未完成前不得声称跨窗口恢复可用。
+
+## 必须区分的恢复入口
+
+- 只有schedule claim、没有任何source claim：同一有效窗口内Y3b可继续第一次prepare；跨窗口不能套用“保存输入恢复”。需另经正式零源调用证明和取消/续接Owner处理，原Run取消与新尝试须如实区分，不能修改旧回执冒充完成。
+- source claim存在、完整input不存在：仍为unknown，禁止自动重读或用新group绕过；后续若允许人工评审后的结算/重启，必须有独立可审查的正式处理Receipt，保留已消耗预算与原未知事实。本草案不授权该例外。
+- 完整input已存在：本设计的saved-only续期恢复范围，零新源调用、保留全部原业务幂等键。

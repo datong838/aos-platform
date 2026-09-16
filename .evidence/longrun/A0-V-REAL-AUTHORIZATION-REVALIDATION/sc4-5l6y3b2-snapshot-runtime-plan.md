@@ -1,0 +1,30 @@
+# SC4-5L6Y3b-2 原组Ingress与Completion执行接线
+
+本波承接Y3a确切定义领取、Y3b-1每事务守卫。主库保持061，先隔离实现；m1串行、不push、230L0挂起。
+
+## 合同与状态路线
+
+新增内部可信PipelineSnapshotScheduleRuntime（pipeline_snapshot_schedule_runtime.py），构造依赖必须原PipelineSourceClaimOwner、EcomConsistencyStore、独立runtime连接工厂与既有engine。不暴露浏览器传source/Run/success的入口。execute只接exact definitionRef、scope、执行actor、group_id、slot/trigger和可选deadline/cancel；从持久化定义加载原绑定，不接受客户端成员列表。
+
+1. 独立事务读取exact enabled定义及原绑定，通过Y3a claim原子创建或回读12Run和v2回执；真实COMMIT后才下一阶段。未知提交没有新key重试行为；调用方只可用原group参数恢复。
+2. 用原回执派生controlRef/runId对与原配置policyRef。读取原Run状态，全部succeeded则直接原Completion完整只读复核；全部running才进入原Ingress.prepare。混合/未确认失败不擅自改状态。
+3. 原Ingress负责source claims先提交、一次整组一致读取、完整input同事务保存；source claim已存在且input不存在仍报GROUP_OUTCOME_UNCONFIRMED，runtime不捕获后重读。input已存在仅恢复，不调用源。
+4. 原Completion负责Store恢复/对象/关系/必要清退与12Run原子收尾；所有current定义/源控制由Y3b-1原事务守卫生效。中断保留原Receipt，不创建替代Run。
+
+runtime不自行调用低层reader、不直接INSERT源claim/input/对象/终态、不并发开多个组。Y4再由factory/cron/lifespan调度本runtime并提供真实运行状态，替换UI开发提示。Y5真实十二源配置，Y6克隆升级后主库验证；J旧失败业务Run不会被此新运行自动宣称恢复。
+
+## 文件与验证
+
+新增 services/aos-api/aos_api/pipeline_snapshot_schedule_runtime.py、tests/extension_runtime/test_snapshot_schedule_runtime_pg.py；测试复用完整64库、正式配置/领取Owner，具名read模拟源但保留真实Store和回执。先验证领取提交响应丢失恢复、源input提交响应丢失恢复、已完成重放零新增调用、无input未知停止、disabled拒绝、负租户拒绝、deadline取消。完整经营链路须后续真实验证。
+
+## 整体接线暴露的栈深问题与修复方案
+
+首次runtime恢复全链264.52秒后在退休准备/嵌套group current检查触发RecursionError（/tmp/aos-snapshot-runtime-first.log），尚未整组成功，不计完成。原PipelineSnapshotGroupOwner以递归walk把每个控制的同步回调嵌入下一个；增加原执行每事务守卫后，多层完整组消费者把12成员栈乘开。
+
+新增 tests/extension_runtime/test_snapshot_group_stack_pg.py，用真实12控制和多层同步组消费者复现。最小修改 aos_api/pipeline_snapshot_group_owner.py：同一conn/同一外层事务按既有ref排序逐个调用原run_current_snapshot采集不可变draft/mapping，数据库锁均保留到事务结束；验证完整组共同窗口后执行唯一同步callback，拒绝deferred，再按相同原Owner逐一复核成员与共同窗口。与原逻辑同样在callback前后核验，回调内改控制仍必须异常回滚；不提高recursionlimit、不跳权限、不引入跨事务缓存。额外回归原两控制callback中supersede拒绝、原完整组领取与SourceClaim守卫。
+
+锁内消费细化：保留第一个原current控制回调作为整个组同步消费的外层守卫，在其中顺序采集其余成员；全部common authority一致后才执行消费者，随后原Owner逐个复核所有成员。这样整段仍处于原run_guarded同步回调与同一事务内，不导出可重复使用的许可；栈深只随业务嵌套层数增长，不再乘十二。8层真实12源专项已复现RecursionError（4.73秒），不需要反复耗时完整业务才定位。
+
+第二次完整运行（/tmp/aos-snapshot-runtime-final.log）已返回succeeded，随后测试把所有计数统一断言12而失败：对象批12之外，原关系Store命令另有一份Receipt，总13是期望事实。改成明确字典校验12Run/12SourceClaim/12Object/12DatasetReceipt/13StoreReceipt/1Link，并验12终态succeeded+executor_stopped；不是放宽到任意数量。最终重放仍待复验。该次耗时733.48秒，重复完整current核对的性能需后续Y3b-3测量优化；不得仅因逻辑通就声称性能合格。
+
+完整重放复验中途采样已保留y3b2-db-work-sample.json：12源夹具下control/selection表各约78,000次index scans、binding约36,000次，证明存在大量重复元数据读取；这些是表扫描统计，不等于SQL条数或最终累计。下一波Y3b-3先定量消除同一原完整组同步回调里的重复current展开，严格保留事务/权限/窗口/幂等检查；方案草案sc4-5l6y3b3-snapshot-guard-cost-plan.md。跨窗口恢复草案sc4-5l6y3c-saved-group-renewal-design.md仍未实现。

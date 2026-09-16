@@ -37,20 +37,26 @@ class PipelineSnapshotGroupOwner:
         ordered=tuple(sorted((PipelineExactRef.model_validate(ref) for ref in refs),key=lambda ref:ref.resource_id))
         for ref in ordered:_ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-')
         if len({ref.resource_id for ref in ordered})!=len(ordered):raise ValueError('unique group controls required')
-        def walk(index,members,finish):
-            if index==len(ordered):return finish(members)
-            ref=ordered[index]
-            return self._controls.run_current_snapshot(conn,scope=scope,ref=ref,actor=actor,
-                execute=lambda draft,mapping:walk(index+1,members+((ref,draft,mapping),),finish))
-        def consume(members):
+        def collect(refs):
+            # Every current Owner retains its database locks until the caller's
+            # transaction ends. Do not multiply synchronous callback stack by N.
+            values=[]
+            for ref in refs:
+                draft,mapping=self._controls.run_current_snapshot(conn,scope=scope,ref=ref,actor=actor,
+                    execute=lambda draft,mapping:(draft,mapping))
+                values.append((ref,draft,mapping))
+            return tuple(values)
+        def consume(first_draft,first_mapping):
+            members=((ordered[0],first_draft,first_mapping),)+collect(ordered[1:])
             original=self._validate(conn,scope,members)
             result=execute(original)
             _reject_deferred(result)
-            def verify(current):
-                if self._validate(conn,scope,current)!=original:raise ValueError('current snapshot group changed during execution')
-            walk(0,(),verify)
+            if self._validate(conn,scope,collect(ordered))!=original:
+                raise ValueError('current snapshot group changed during execution')
             return result
-        return walk(0,(),consume)
+        # Keep the complete synchronous consumer inside an original admission
+        # callback. All members must share its installation/configuration scope.
+        return self._controls.run_current_snapshot(conn,scope=scope,ref=ordered[0],actor=actor,execute=consume)
 
     @staticmethod
     def _validate(conn,scope,members):
