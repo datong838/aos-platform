@@ -1,0 +1,102 @@
+{
+  "observedAt": "2026-09-16T11:22:47.831791+00:00",
+  "outcome": "FRESH_MODEL_EVIDENCE_AND_UNPUBLISHED_RENEWAL_CANDIDATE",
+  "evidence": {
+    "schemaVersion": "a0v.verified-text-evidence/v1",
+    "provider": {
+      "asset_type": "ProviderInstanceRevision",
+      "asset_id": "a0v-agnes-text-readonly-dev",
+      "revision": 1,
+      "content_hash": "66941c4bb51757f5d95a6149580f7bbb3dbe86debb2035747fa96229efb06982"
+    },
+    "network": {
+      "asset_type": "NetworkPolicyRevision",
+      "asset_id": "a0v-ecommerce-network-v1",
+      "revision": 1,
+      "content_hash": "c9a51ac325d19145f4554f670becedf43d8227b83db51e6c237e8576b9249d7f"
+    },
+    "providerModelId": "agnes-2.5-flash",
+    "cases": [
+      {
+        "caseId": "instruction",
+        "requestHash": "aaea25068aff3c1437a8724581227d3e10aac8e190b74a75cd320b355005778e",
+        "evidenceHash": "afdada26cddcade15fd87b4551286bb3898c402be5329d7ad91ec3151c3edb62",
+        "observedAt": "2026-09-16T11:18:04.157170+00:00",
+        "promptTokens": 73,
+        "completionTokens": 4,
+        "totalTokens": 77,
+        "latencyMs": 642
+      },
+      {
+        "caseId": "source",
+        "requestHash": "7cc8bc339bead3a3659e800ba03c3a113aa906397e7b06c5f24721e85ec17de4",
+        "evidenceHash": "8825b6787a9ee5dd0449dcac49389553d4be09e98ee87541ace76d5e665b9f43",
+        "observedAt": "2026-09-16T11:18:04.746073+00:00",
+        "promptTokens": 77,
+        "completionTokens": 3,
+        "totalTokens": 80,
+        "latencyMs": 526
+      },
+      {
+        "caseId": "missing",
+        "requestHash": "44e5a04514d34d3168d967141a3b1e29bb4e6bbb20b646a7ba64350891f0d14a",
+        "evidenceHash": "d93b363dae7b2de09a51f103601a904556168801853d1a3481b6d3a4ae657a6e",
+        "observedAt": "2026-09-16T11:18:05.510476+00:00",
+        "promptTokens": 81,
+        "completionTokens": 3,
+        "totalTokens": 84,
+        "latencyMs": 679
+      }
+    ],
+    "profile": "text-readiness-v2",
+    "sourceHash": "1b749961e2069ff12cc563e7daf9c3f3c8475b4e74261a3b8153fd590f11e1fc",
+    "checkedAt": "2026-09-16T11:22:47.823252+00:00",
+    "providerCalls": 0,
+    "databaseWrites": 0
+  },
+  "planHash": "f838a9c87bde03e74861d8e3e080c3862404f02dd4a9449c20cd2022df82e3a5",
+  "candidate": {
+    "budgetRevision": 6,
+    "policyRevision": 6,
+    "modelRevision": 5,
+    "routeRevision": 5,
+    "effectiveUntil": "2026-09-17T11:18:04.157170Z"
+  },
+  "currentPolicies": [
+    {
+      "policy_kind": "budget",
+      "policy_id": "a0v-ecommerce-budget-policy-v1",
+      "current_revision": 5
+    },
+    {
+      "policy_kind": "quota",
+      "policy_id": "a0v-ecommerce-quota-v1",
+      "current_revision": 1
+    }
+  ],
+  "runtime": [
+    {
+      "revision": 6,
+      "execution_epoch": 3,
+      "config_ref": {
+        "hash": "sha256:91ca4b1b840890be7c664edcac37f4b7ca76bddc29e3549e90dd9c679d32c0c5",
+        "revision": 1,
+        "configurationId": "e2fdde1f-ebdb-4863-b158-7204735f3fe8"
+      },
+      "enabled": true,
+      "operation_fence": false,
+      "observed_state": "ready"
+    }
+  ],
+  "attemptStates": [],
+  "resources": [
+    {
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "count": 3
+    }
+  ],
+  "providerCalls": 3,
+  "published": false,
+  "businessChainComplete": false
+}
