@@ -1,5 +1,7 @@
 # SC4-5L6Y3b-2 原组Ingress与Completion执行接线
 
+最终验证：原组响应丢失、完整执行与完成后重放 1 passed / 824.49秒（/tmp/aos-snapshot-runtime-replay-final.log）；负例 6 passed / 32.42秒；栈修复定向 17 passed / 16.71秒；原控制修改、窗口与deferred合同 5 passed / 5.02秒。完成后源调用仍1，12 Run/SourceClaim/对象/DatasetReceipt、13 StoreReceipt、1关系数量不变，12终态succeeded且executor_stopped。全部是隔离PG与具名模拟源，主库061和主服务未升级，栖月汇经营首链仍未闭环。当前耗时不合格，下一波Y3b-3优化重复校验，Y3c续期仍待实现。代码提交da69a078；最终证据单独补记。
+
 本波承接Y3a确切定义领取、Y3b-1每事务守卫。主库保持061，先隔离实现；m1串行、不push、230L0挂起。
 
 ## 合同与状态路线
