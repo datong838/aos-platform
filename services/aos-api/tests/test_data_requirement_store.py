@@ -358,3 +358,27 @@ def test_reject_and_illegal_transition_are_fail_closed() -> None:
             requirement(revision=2, status="accepted"),
             expected_version=1,
         )
+
+
+def test_expired_requirement_can_reach_terminal_revision_but_not_new_active_revision() -> None:
+    current = requirement()
+    terminal_created = current.expires_at + timedelta(seconds=1)
+    payload = current.model_dump(mode="json", by_alias=True)
+    payload.update(
+        revision=2,
+        priorRef=ref("DataRequirementRevision", current.requirement_id, 1),
+        status="rejected",
+        createdAt=terminal_created.isoformat(),
+        blockers=[{
+            "code": "DATA_REQUIREMENT_EXPIRED",
+            "severity": "blocking",
+            "dependency": current.requirement_id,
+            "requiredAction": "request a new synchronized snapshot group",
+        }],
+    )
+    terminal = DataRequirementRevisionRecord.model_validate(payload)
+    assert terminal.expires_at == current.expires_at < terminal.created_at
+
+    payload.update(status="accepted", blockers=[])
+    with pytest.raises(ValueError, match="expiresAt must be after createdAt"):
+        DataRequirementRevisionRecord.model_validate(payload)

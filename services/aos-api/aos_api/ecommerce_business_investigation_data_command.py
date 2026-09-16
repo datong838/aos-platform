@@ -36,6 +36,7 @@ from aos_api.data_requirement_store import (
     canonical_revision_content_hash,
 )
 from aos_api.ecommerce_business_investigation_run import (
+    BusinessInvestigationRunControl,
     BusinessInvestigationRunStateRevision,
     BusinessInvestigationRunStore,
 )
@@ -252,15 +253,26 @@ class EcommerceBusinessInvestigationDataCommandService:
                 raise BusinessInvestigationDataCommandConflict(
                     "DataRequirement rejection reason idempotency conflict"
                 )
-        run_result = self._runs.request_data(
-            scope,
-            run_id,
-            data_result.exact_ref,
-            expected_version=expected_version,
-            idempotency_key=idempotency_key,
-            actor=actor,
-            occurred_at=occurred_at,
-        )
+        if operation == "reject":
+            run_result = self._runs.transition_control(
+                scope,
+                run_id,
+                BusinessInvestigationRunControl.CANCELLED,
+                expected_version=expected_version,
+                idempotency_key=idempotency_key,
+                actor=actor,
+                occurred_at=occurred_at,
+            )
+        else:
+            run_result = self._runs.request_data(
+                scope,
+                run_id,
+                data_result.exact_ref,
+                expected_version=expected_version,
+                idempotency_key=idempotency_key,
+                actor=actor,
+                occurred_at=occurred_at,
+            )
         return BusinessInvestigationDataCommandResponse(
             tenant=self._tenant(scope),
             requirement_ref=self._requirement_ref(requirement),

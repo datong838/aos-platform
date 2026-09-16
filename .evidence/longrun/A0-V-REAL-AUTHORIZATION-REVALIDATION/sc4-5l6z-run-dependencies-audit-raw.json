@@ -1,0 +1,3463 @@
+{
+  "capturedAt": "2026-09-16T20:12:13.304371+00:00",
+  "ids": {
+    "requirement_id": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+    "task_id": "task-19f4698041d34fd9bcda",
+    "task_run_id": "run-6b3ca4f7c21347b684d9",
+    "plan_revision_id": "plan-bf6514bf8d7f49f2871e"
+  },
+  "matches": {
+    "requirement_id": {
+      "data_requirement_event": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "requirement_id": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+          "requirement_revision": 1,
+          "event_id": "data-requirement-event-93bbb8fbb6894e7191669872c600a09c",
+          "sequence": 1,
+          "event_type": "data_requirement.request",
+          "from_status": null,
+          "to_status": "requested",
+          "payload": {
+            "status": "requested",
+            "revision": 1,
+            "contentHash": "sha256:22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+            "requirementId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206"
+          },
+          "content_hash": "22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+          "created_by": "ecommerce-growth-data-host",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "data_requirement_head": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "requirement_id": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+          "current_revision": 1,
+          "current_content_hash": "22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+          "status": "requested",
+          "version": 1,
+          "created_by": "ecommerce-growth-data-host",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "updated_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "data_requirement_outbox": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "outbox_id": "data-requirement-outbox-eb2ca2b8c1864f87b9a5a6490463dfb3",
+          "requirement_id": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+          "requirement_revision": 1,
+          "event_id": "data-requirement-event-93bbb8fbb6894e7191669872c600a09c",
+          "topic": "data.requirement.request",
+          "payload": {
+            "eventId": "data-requirement-event-93bbb8fbb6894e7191669872c600a09c",
+            "revision": 1,
+            "contentHash": "sha256:22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+            "requirementId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206"
+          },
+          "content_hash": "22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+          "created_by": "ecommerce-growth-data-host",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "data_requirement_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "requirement_id": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+          "revision": 1,
+          "prior_revision": null,
+          "content_hash": "22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+          "status": "requested",
+          "operation": "request",
+          "idempotency_key": "analysis-initial-data-1fc4fe162454ababc225b319125d1b63c85f59ba355c05b6d5ab12c83ae48260",
+          "request_hash": "fbb92a9a233e65c6d9f1d3aa110ee8af3ea878541ffc3bdf1141403aa8fbbc55",
+          "case_ref": {
+            "revision": 9,
+            "receiptId": null,
+            "resourceId": "case-qyh-full-store-baseline-20260915",
+            "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+            "resourceType": "BusinessInvestigationCaseRevision"
+          },
+          "run_ref": {
+            "revision": 1,
+            "receiptId": null,
+            "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+            "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+            "resourceType": "BusinessInvestigationRun"
+          },
+          "checkpoint_ref": {
+            "revision": 1,
+            "receiptId": null,
+            "resourceId": "checkpoint-02a75f9b7493418993c0",
+            "contentHash": "sha256:ec1299a02a5a2755acc0fbb96a7c65526ea2ad546cea1b145d4cb6ee72e07aa2",
+            "resourceType": "CheckpointRevision"
+          },
+          "payload": {
+            "grain": "store",
+            "runRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "status": "requested",
+            "tenant": {
+              "orgId": "org-org",
+              "projectId": "dev-project"
+            },
+            "caseRef": {
+              "revision": 9,
+              "receiptId": null,
+              "resourceId": "case-qyh-full-store-baseline-20260915",
+              "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+              "resourceType": "BusinessInvestigationCaseRevision"
+            },
+            "blockers": [],
+            "cutoffAt": "2026-09-16T00:10:43Z",
+            "markings": [],
+            "priorRef": null,
+            "revision": 1,
+            "createdAt": "2026-09-16T00:11:04.546382Z",
+            "createdBy": "ecommerce-growth-data-host",
+            "entityRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "niushop:1:1",
+              "contentHash": "sha256:b372a40cab64d052ba5c01d87698a7432a2ddb76a46aac4c7353a96392e4782a",
+              "resourceType": "BusinessEntityRevision"
+            },
+            "expiresAt": "2026-09-16T00:23:42.666449Z",
+            "channelRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "niushop:1",
+              "contentHash": "sha256:79c222ce1ab2debae4751c048977e983ff1a71dd0350a933758206ec2e38bd69",
+              "resourceType": "ChannelRevision"
+            },
+            "piiAllowed": false,
+            "timeWindow": {
+              "endAt": "2026-09-16T00:10:43Z",
+              "startAt": "2026-08-17T00:10:43Z"
+            },
+            "budgetMinor": 10000,
+            "contentHash": "sha256:22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+            "purposeCode": "initial_store_analysis",
+            "checkpointRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "checkpoint-02a75f9b7493418993c0",
+              "contentHash": "sha256:ec1299a02a5a2755acc0fbb96a7c65526ea2ad546cea1b145d4cb6ee72e07aa2",
+              "resourceType": "CheckpointRevision"
+            },
+            "minPopulation": 1,
+            "requiredFacts": [
+              "Shop",
+              "Product",
+              "ProductSku",
+              "Category",
+              "Order",
+              "OrderLine",
+              "Shipment",
+              "CustomerLite",
+              "Weapp",
+              "SystemConfig",
+              "ProductReview",
+              "Payment"
+            ],
+            "requirementId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+            "schemaVersion": "aos.data-requirement-authority/v1",
+            "qualityThreshold": 1.0,
+            "requestedOutputs": [
+              "EvidenceBundleRevision"
+            ],
+            "acceptableDegradation": [],
+            "freshnessMaxAgeSeconds": 3600
+          },
+          "created_by": "ecommerce-growth-data-host",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ]
+    },
+    "task_id": {
+      "aip_action_proposal": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "proposal_id": "proposal-aa11ebb165fb413a83a8",
+          "action_type_id": "ecommerce_analysis_bootstrap",
+          "action_type_revision_hash": "105267d171548d47ec4ec794e108bd987322a8f5178c458af1ae13fea69d1e14",
+          "action_type_snapshot": {
+            "id": "ecommerce_analysis_bootstrap",
+            "name": "初始化分析承接",
+            "objectType": "Task",
+            "parameters": [],
+            "revisionHash": "105267d171548d47ec4ec794e108bd987322a8f5178c458af1ae13fea69d1e14",
+            "requiredMarkings": [],
+            "installedActionRef": {
+              "revision": 1,
+              "resourceId": "0635f922-25be-420f-9318-f3ee44a3bf2d",
+              "contentHash": "sha256:ce1bd0340107cc69842dd861e8aae725ff097800cd91e5afdf7e16b317306980",
+              "resourceType": "InstalledActionTypeRevision"
+            },
+            "submissionCriteria": []
+          },
+          "task_id": "task-19f4698041d34fd9bcda",
+          "run_id": null,
+          "object_ref": null,
+          "purpose": "初始化分析承接位置，暂不执行经营步骤",
+          "client_risk_hint": null,
+          "risk_level": "R1",
+          "policy_snapshot": {
+            "floor": "R1",
+            "reasons": [
+              "internal_analysis_initial_pause_only"
+            ],
+            "draftOnly": false,
+            "makerChecker": true,
+            "executionAllowed": true,
+            "minimumApprovals": 1,
+            "controlledSourceInitialization": true
+          },
+          "payload": {
+            "bootstrapIntent": {
+              "mode": "paused-before-first-step",
+              "tenant": {
+                "orgId": "org-org",
+                "projectId": "dev-project"
+              },
+              "operation": "ecommerce_analysis_bootstrap",
+              "contentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b",
+              "occurrenceRef": {
+                "revision": 1,
+                "receiptId": null,
+                "resourceId": "37bead7a-52d6-5e6e-878e-a8e1e54a294c",
+                "contentHash": "sha256:66594003f9763876fa29402378f4810c5e09a88d83d240d658c4fa28d525eb3b",
+                "resourceType": "AutomationOccurrence"
+              },
+              "schemaVersion": "aos.ecommerce.analysis-bootstrap-intent/v1",
+              "compilationBinding": {
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "request": {
+                  "runRef": {
+                    "revision": 1,
+                    "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+                    "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+                    "resourceType": "BusinessInvestigationRun"
+                  },
+                  "taskId": "task-19f4698041d34fd9bcda",
+                  "caseRef": {
+                    "revision": 9,
+                    "resourceId": "case-qyh-full-store-baseline-20260915",
+                    "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+                    "resourceType": "BusinessInvestigationCaseRevision"
+                  },
+                  "profile": {
+                    "stages": [
+                      {
+                        "stageId": "portrait",
+                        "skillRefs": [
+                          {
+                            "revision": 3,
+                            "resourceId": "ecommerce.skill.D01",
+                            "contentHash": "cef266bd2156be59dd029c26e7ac42fec6d90ce372cadbfde9471d3379afcf53",
+                            "resourceType": "SkillTemplateRevision"
+                          }
+                        ]
+                      },
+                      {
+                        "stageId": "diagnosis",
+                        "skillRefs": [
+                          {
+                            "revision": 3,
+                            "resourceId": "ecommerce.skill.D02",
+                            "contentHash": "d4dcf2821c96fddc60f8ea3414f2dbe8bc5fd8a7bd38e8a80e3474d4468aceb4",
+                            "resourceType": "SkillTemplateRevision"
+                          }
+                        ]
+                      },
+                      {
+                        "stageId": "solution-design",
+                        "skillRefs": [
+                          {
+                            "revision": 3,
+                            "resourceId": "ecommerce.skill.D03",
+                            "contentHash": "2f21e5ff2b715be2ac047372678c3ce32371b6e95d15f5a7a03a5e872b78b103",
+                            "resourceType": "SkillTemplateRevision"
+                          }
+                        ]
+                      }
+                    ],
+                    "logicRef": {
+                      "revision": 2,
+                      "resourceId": "ecommerce.logic.D01",
+                      "contentHash": "11b4b29a672b164735bdff429b9a61a89475eb22e16c0e169fa93689ca5ec481",
+                      "resourceType": "LogicRevision"
+                    },
+                    "revision": 1,
+                    "profileId": "analysis-compilation-profile-9eb05a4cf83880098551ac8806c348c29f1c5a3ca90be6a020974b4b62c02ed0",
+                    "contentHash": "0794d6335db125f67bbb08ea45428e32d43d812817cb7b16dc16324acc4a38cb",
+                    "analysisType": "initial_store_analysis",
+                    "schemaVersion": "aos.aip.business-investigation-profile/v1",
+                    "compilerProfile": "ecommerce.business-investigation.readonly",
+                    "orderedSkillRefs": [
+                      {
+                        "revision": 3,
+                        "resourceId": "ecommerce.skill.D01",
+                        "contentHash": "cef266bd2156be59dd029c26e7ac42fec6d90ce372cadbfde9471d3379afcf53",
+                        "resourceType": "SkillTemplateRevision"
+                      },
+                      {
+                        "revision": 3,
+                        "resourceId": "ecommerce.skill.D02",
+                        "contentHash": "d4dcf2821c96fddc60f8ea3414f2dbe8bc5fd8a7bd38e8a80e3474d4468aceb4",
+                        "resourceType": "SkillTemplateRevision"
+                      },
+                      {
+                        "revision": 3,
+                        "resourceId": "ecommerce.skill.D03",
+                        "contentHash": "2f21e5ff2b715be2ac047372678c3ce32371b6e95d15f5a7a03a5e872b78b103",
+                        "resourceType": "SkillTemplateRevision"
+                      }
+                    ],
+                    "stageTemplateRef": {
+                      "revision": 2,
+                      "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+                      "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+                      "resourceType": "StageTemplateRevision"
+                    },
+                    "skillBindingSetRef": {
+                      "revision": 1,
+                      "resourceId": "analysis-skill-set-e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+                      "contentHash": "e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+                      "resourceType": "SkillBindingSetRevision"
+                    },
+                    "productionContextRef": {
+                      "revision": 1,
+                      "resourceId": "ctx-daeec3f5a06049a08783",
+                      "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+                      "resourceType": "ProductionContextRevision"
+                    },
+                    "responsibilityPlanRef": {
+                      "revision": 2,
+                      "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+                      "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+                      "resourceType": "ResponsibilityPlanRevision"
+                    }
+                  },
+                  "taskBriefRef": {
+                    "revision": 2,
+                    "resourceId": "brief-1a32ccf253034d39ac0d",
+                    "contentHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+                    "resourceType": "TaskBriefRevision"
+                  },
+                  "taskBriefSpec": {
+                    "runRef": {
+                      "revision": 1,
+                      "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+                      "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+                      "resourceType": "BusinessInvestigationRun"
+                    },
+                    "caseRef": {
+                      "revision": 9,
+                      "resourceId": "case-qyh-full-store-baseline-20260915",
+                      "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+                      "resourceType": "BusinessInvestigationCaseRevision"
+                    },
+                    "analysisType": "initial_store_analysis",
+                    "schemaVersion": "aos.aip.business-investigation-task-brief-intent/v2",
+                    "compilerProfile": "ecommerce.business-investigation.readonly",
+                    "domainProfileRef": {
+                      "revision": 1,
+                      "resourceId": "ecommerce.initial-store-analysis",
+                      "contentHash": "267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+                      "resourceType": "InvestigationProfileRevision"
+                    }
+                  },
+                  "expectedTaskVersion": 1
+                },
+                "generation": "5295b81e-6005-4c2e-befc-3323f1456b8c",
+                "contentHash": "sha256:c6c1c4dd2db7211161fc802758e7f26f3ff0a1ef5afd33f27a704293338b0376",
+                "domainProfile": {
+                  "stages": [
+                    {
+                      "stageId": "portrait",
+                      "requiredCapabilityIds": [
+                        "frame-problem",
+                        "build-evidence-pack",
+                        "identify-data-gaps",
+                        "profile-data-semantics"
+                      ]
+                    },
+                    {
+                      "stageId": "diagnosis",
+                      "requiredCapabilityIds": [
+                        "form-hypotheses",
+                        "diagnose-metric-change",
+                        "analyze-root-cause"
+                      ]
+                    },
+                    {
+                      "stageId": "solution-design",
+                      "requiredCapabilityIds": [
+                        "compare-alternatives",
+                        "estimate-impact",
+                        "rank-recommendations",
+                        "prepare-handoff"
+                      ]
+                    }
+                  ],
+                  "revision": 1,
+                  "profileId": "ecommerce.initial-store-analysis",
+                  "safetyMode": "read-only",
+                  "contentHash": "sha256:267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+                  "displayName": "全店经营基线分析",
+                  "profileType": "ecommerce.business-investigation",
+                  "analysisType": "initial_store_analysis",
+                  "schemaVersion": "aos.ecommerce.investigation-profile/v1",
+                  "handoffPolicyCode": "ecommerce.business-investigation.review-required",
+                  "requiredFactProfiles": [
+                    "Shop",
+                    "Product",
+                    "ProductSku",
+                    "Category",
+                    "Order",
+                    "OrderLine",
+                    "Shipment",
+                    "CustomerLite",
+                    "Weapp",
+                    "SystemConfig",
+                    "ProductReview",
+                    "Payment"
+                  ],
+                  "responsibilityTemplateCode": "ecommerce.business-investigation.readonly"
+                },
+                "schemaVersion": "aos.ecommerce.analysis-compilation-binding/v1",
+                "executionEpoch": 3,
+                "installationId": "d6531562-e388-4206-a3ba-a89aaddc255c"
+              },
+              "compilationReceipt": {
+                "runRef": {
+                  "revision": 1,
+                  "receiptId": null,
+                  "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+                  "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+                  "resourceType": "BusinessInvestigationRun"
+                },
+                "taskId": "task-19f4698041d34fd9bcda",
+                "tenant": {
+                  "orgId": "org-org",
+                  "projectId": "dev-project"
+                },
+                "planRef": {
+                  "revision": 1,
+                  "resourceId": "plan-bf6514bf8d7f49f2871e",
+                  "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+                  "resourceType": "PlanRevision"
+                },
+                "logicRef": {
+                  "revision": 2,
+                  "resourceId": "ecommerce.logic.D01",
+                  "contentHash": "11b4b29a672b164735bdff429b9a61a89475eb22e16c0e169fa93689ca5ec481",
+                  "resourceType": "LogicRevision"
+                },
+                "commandId": "bi-compile-2d991ae5a63a25cee8cc431a8add381bc5649fcc5f63af98426e4f5c2f2c9fc8",
+                "createdAt": "2026-09-16T00:10:45.678295Z",
+                "inputHash": "2eb606cd2fb21b132b17792d0664c2e4afa49c440219b55c27c34c779d7be518",
+                "receiptId": "bi-compilation-receipt-df84a242975648f8438c5ba2435ee5ce029301967d1a3ec3dcb83e558e62f536",
+                "profileRef": {
+                  "revision": 1,
+                  "resourceId": "analysis-compilation-profile-9eb05a4cf83880098551ac8806c348c29f1c5a3ca90be6a020974b4b62c02ed0",
+                  "contentHash": "0794d6335db125f67bbb08ea45428e32d43d812817cb7b16dc16324acc4a38cb",
+                  "resourceType": "InvestigationProfileRevision"
+                },
+                "requestHash": "sha256:010dfeb56fe3b7683d9692e45171d9dbbf467ec543550274ef4c35d557b3be3a",
+                "schemaVersion": "aos.aip.business-investigation-compilation-receipt/v1",
+                "compilationHash": "9b1c0db22c848feab4dfaf1a8c1826669bf7166bd140d668b572cada5b5a39ed",
+                "runtimeAuthorized": false,
+                "skillBindingSetRef": {
+                  "revision": 1,
+                  "resourceId": "analysis-skill-set-e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+                  "contentHash": "e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+                  "resourceType": "SkillBindingSetRevision"
+                },
+                "stageCompilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+                "responsibilityPlanRef": {
+                  "revision": 2,
+                  "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+                  "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+                  "resourceType": "ResponsibilityPlanRevision"
+                }
+              },
+              "sourceControlReceiptRef": {
+                "revision": 1,
+                "receiptId": null,
+                "resourceId": "54fa4156-0ff9-5a02-9145-e11975164f63",
+                "contentHash": "sha256:b679300b2c578a8fccc029b2688ad5eab45ee0def37a4fb907ab14d0fac6bfa8",
+                "resourceType": "EventPolicyControlReceipt"
+              },
+              "externalEffectAuthorized": false,
+              "businessExecutionAuthorized": false
+            }
+          },
+          "diff": {},
+          "evidence_refs": [],
+          "proposal_hash": "506fbe477edc7899078e57138c41f97d30d35f4f853b81a487808380879ba4a2",
+          "status": "drafted",
+          "expires_at": "2026-09-16 00:20:47.318443+00:00",
+          "idempotency_key": "analysis-bootstrap-action-dd2f43e329649c54ed2bc5909f2700cd61cf53beceda44f25f776133392734f8",
+          "request_hash": "6d27c8b5f7ced2061d02885b8a7f16fbccd3c4f049d0db60bfa0e793548cbf2e",
+          "version": 1,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "updated_at": "2026-09-16 00:10:45.678295+00:00",
+          "impact_preview_id": "impact-preview-c7615b7cef554e78a067",
+          "impact_preview_revision": 2,
+          "impact_preview_hash": "a1875fe96e8f6ed943613738f9738055066badb2c017449541d2aa02f6733587",
+          "action_binding_hash": "97e589668d193ab90576c0dfced6d0c671966bf6c86bb0900529e4eaacf96022",
+          "source_draft_id": null,
+          "source_draft_revision": null,
+          "source_draft_hash": null,
+          "approval_policy_hash": "b78a220a724227048950ab56cb9960aaccf0eee18da44d7130789db88f1d5105",
+          "compensation_original_proposal_id": null,
+          "compensation_original_receipt_id": null,
+          "compensation_policy_ref": null,
+          "compensation_effect": null,
+          "compensation_residual_effect": null
+        }
+      ],
+      "aip_business_investigation_compile_receipt": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "receipt_id": "bi-compilation-receipt-df84a242975648f8438c5ba2435ee5ce029301967d1a3ec3dcb83e558e62f536",
+          "command_id": "bi-compile-2d991ae5a63a25cee8cc431a8add381bc5649fcc5f63af98426e4f5c2f2c9fc8",
+          "request_hash": "sha256:010dfeb56fe3b7683d9692e45171d9dbbf467ec543550274ef4c35d557b3be3a",
+          "run_id": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+          "run_version": 1,
+          "run_content_hash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "plan_revision": 1,
+          "plan_content_hash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+          "receipt_data": {
+            "runRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "taskId": "task-19f4698041d34fd9bcda",
+            "tenant": {
+              "orgId": "org-org",
+              "projectId": "dev-project"
+            },
+            "planRef": {
+              "revision": 1,
+              "resourceId": "plan-bf6514bf8d7f49f2871e",
+              "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "resourceType": "PlanRevision"
+            },
+            "logicRef": {
+              "revision": 2,
+              "resourceId": "ecommerce.logic.D01",
+              "contentHash": "11b4b29a672b164735bdff429b9a61a89475eb22e16c0e169fa93689ca5ec481",
+              "resourceType": "LogicRevision"
+            },
+            "commandId": "bi-compile-2d991ae5a63a25cee8cc431a8add381bc5649fcc5f63af98426e4f5c2f2c9fc8",
+            "createdAt": "2026-09-16T00:10:45.678295Z",
+            "inputHash": "2eb606cd2fb21b132b17792d0664c2e4afa49c440219b55c27c34c779d7be518",
+            "receiptId": "bi-compilation-receipt-df84a242975648f8438c5ba2435ee5ce029301967d1a3ec3dcb83e558e62f536",
+            "profileRef": {
+              "revision": 1,
+              "resourceId": "analysis-compilation-profile-9eb05a4cf83880098551ac8806c348c29f1c5a3ca90be6a020974b4b62c02ed0",
+              "contentHash": "0794d6335db125f67bbb08ea45428e32d43d812817cb7b16dc16324acc4a38cb",
+              "resourceType": "InvestigationProfileRevision"
+            },
+            "requestHash": "sha256:010dfeb56fe3b7683d9692e45171d9dbbf467ec543550274ef4c35d557b3be3a",
+            "schemaVersion": "aos.aip.business-investigation-compilation-receipt/v1",
+            "compilationHash": "9b1c0db22c848feab4dfaf1a8c1826669bf7166bd140d668b572cada5b5a39ed",
+            "runtimeAuthorized": false,
+            "skillBindingSetRef": {
+              "revision": 1,
+              "resourceId": "analysis-skill-set-e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+              "contentHash": "e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+              "resourceType": "SkillBindingSetRevision"
+            },
+            "stageCompilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+            "responsibilityPlanRef": {
+              "revision": 2,
+              "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+              "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "resourceType": "ResponsibilityPlanRevision"
+            }
+          },
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_impact_preview_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "preview_id": "impact-preview-c7615b7cef554e78a067",
+          "revision": 1,
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_ref": {
+            "revision": 1,
+            "resourceId": "plan-bf6514bf8d7f49f2871e",
+            "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+            "resourceType": "PlanRevision"
+          },
+          "brief_ref": {
+            "revision": 2,
+            "resourceId": "brief-1a32ccf253034d39ac0d",
+            "contentHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+            "resourceType": "TaskBriefRevision"
+          },
+          "evidence_bundle_ref": {
+            "revision": 1,
+            "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+            "contentHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+            "resourceType": "EvidenceBundleRevision"
+          },
+          "eval_contract_ref": {
+            "revision": 2,
+            "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+            "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+            "resourceType": "EvalContractRevision"
+          },
+          "responsibility_plan_ref": {
+            "revision": 2,
+            "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+            "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "resourceType": "ResponsibilityPlanRevision"
+          },
+          "stage_template_ref": {
+            "revision": 2,
+            "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+            "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+            "resourceType": "StageTemplateRevision"
+          },
+          "model_route_ref": null,
+          "runtime_policy_ref": null,
+          "binding_refs": [
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-a02",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-c06",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d02",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d03",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-g06",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-p01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-s01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.campaign_planner.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.content_officer.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.customer_service.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.data_advisor.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.private_domain_manager.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.shopping_advisor.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-a02-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-c06-content.review",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d01-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d02-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d03-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-g06-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-p01-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-s01-material.collect",
+              "resourceType": "CapabilityBinding"
+            }
+          ],
+          "capability_ref": null,
+          "account_ref": null,
+          "impact": {
+            "cost": {
+              "value": {
+                "scope": "initialization-only",
+                "externalCalls": 0,
+                "providerCalls": 0
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "risks": {
+              "value": {
+                "businessFacts": "not-evaluated",
+                "externalEffectAuthorized": false,
+                "businessExecutionAuthorized": false
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "budget": {
+              "value": {
+                "businessCapabilityBudget": "requires-current-gate",
+                "initializationConsumesProviderBudget": false
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "objectScope": {
+              "value": {
+                "runRef": {
+                  "revision": 1,
+                  "receiptId": null,
+                  "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+                  "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+                  "resourceType": "BusinessInvestigationRun"
+                },
+                "taskId": "task-19f4698041d34fd9bcda",
+                "caseRef": {
+                  "revision": 9,
+                  "resourceId": "case-qyh-full-store-baseline-20260915",
+                  "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+                  "resourceType": "BusinessInvestigationCaseRevision"
+                }
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "measured",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "channelScope": {
+              "value": {
+                "channel": "internal-aip-runtime-control",
+                "externalChannels": []
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "approvalChain": {
+              "value": {
+                "parentControlReceipt": {
+                  "revision": 1,
+                  "resourceId": "54fa4156-0ff9-5a02-9145-e11975164f63",
+                  "contentHash": "sha256:b679300b2c578a8fccc029b2688ad5eab45ee0def37a4fb907ab14d0fac6bfa8",
+                  "resourceType": "EventPolicyControlReceipt"
+                },
+                "businessPlanReviewRequired": true,
+                "startupActionApprovalRequired": true
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "reversibility": {
+              "value": {
+                "initialStepStatus": "not-started",
+                "transactionRollback": true
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "rateCapacityKill": {
+              "value": {
+                "stepExecutionCount": 0,
+                "runtimeStateOnCommit": "paused-before-first-step",
+                "currentEventControlReceipt": {
+                  "revision": 1,
+                  "resourceId": "54fa4156-0ff9-5a02-9145-e11975164f63",
+                  "contentHash": "sha256:b679300b2c578a8fccc029b2688ad5eab45ee0def37a4fb907ab14d0fac6bfa8",
+                  "resourceType": "EventPolicyControlReceipt"
+                }
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            }
+          },
+          "expires_at": "2026-09-16 00:20:47.318443+00:00",
+          "content_hash": "a1875fe96e8f6ed943613738f9738055066badb2c017449541d2aa02f6733587",
+          "dependency_snapshot_hash": "1a76254ae85dcec425b08b6e1f7c5b2db9afb6f203a9d0cb6d36edb71159e04a",
+          "dependency_snapshot": [
+            {
+              "lifecycle": null,
+              "resourceId": "plan-bf6514bf8d7f49f2871e",
+              "observedHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "resourceType": "PlanRevision",
+              "requestedHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "brief-1a32ccf253034d39ac0d",
+              "observedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "resourceType": "TaskBriefRevision",
+              "requestedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+              "observedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "resourceType": "EvidenceBundleRevision",
+              "requestedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+              "observedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "resourceType": "EvalContractRevision",
+              "requestedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+              "observedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "resourceType": "ResponsibilityPlanRevision",
+              "requestedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+              "observedHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+              "resourceType": "StageTemplateRevision",
+              "requestedHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "ctx-daeec3f5a06049a08783",
+              "observedHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+              "resourceType": "ProductionContextRevision",
+              "requestedHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "revision": 2,
+              "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+              "blockerCodes": [],
+              "resourceType": "EvalContractDynamicReadiness",
+              "publicationEffective": "published"
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-a02",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-c06",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d02",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d03",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-g06",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-p01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-s01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.campaign_planner.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.content_officer.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.customer_service.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.data_advisor.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.private_domain_manager.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.shopping_advisor.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-a02-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-c06-content.review",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d02-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d03-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-g06-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-p01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-s01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            }
+          ],
+          "lifecycle": "draft",
+          "readiness": "ready",
+          "blockers": [],
+          "frozen_by": null,
+          "frozen_at": null,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "production_context_ref": {
+            "revision": 1,
+            "resourceId": "ctx-daeec3f5a06049a08783",
+            "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+            "resourceType": "ProductionContextRevision"
+          },
+          "external_action_binding": null
+        },
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "preview_id": "impact-preview-c7615b7cef554e78a067",
+          "revision": 2,
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_ref": {
+            "revision": 1,
+            "resourceId": "plan-bf6514bf8d7f49f2871e",
+            "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+            "resourceType": "PlanRevision"
+          },
+          "brief_ref": {
+            "revision": 2,
+            "resourceId": "brief-1a32ccf253034d39ac0d",
+            "contentHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+            "resourceType": "TaskBriefRevision"
+          },
+          "evidence_bundle_ref": {
+            "revision": 1,
+            "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+            "contentHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+            "resourceType": "EvidenceBundleRevision"
+          },
+          "eval_contract_ref": {
+            "revision": 2,
+            "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+            "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+            "resourceType": "EvalContractRevision"
+          },
+          "responsibility_plan_ref": {
+            "revision": 2,
+            "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+            "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "resourceType": "ResponsibilityPlanRevision"
+          },
+          "stage_template_ref": {
+            "revision": 2,
+            "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+            "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+            "resourceType": "StageTemplateRevision"
+          },
+          "model_route_ref": null,
+          "runtime_policy_ref": null,
+          "binding_refs": [
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-a02",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-c06",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d02",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-d03",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-g06",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-p01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 6,
+              "resourceId": "a0v-model-successor-r3-skill-s01",
+              "resourceType": "SkillBinding"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.campaign_planner.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.content_officer.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.customer_service.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.data_advisor.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.private_domain_manager.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 2,
+              "resourceId": "ecommerce.shopping_advisor.default",
+              "resourceType": "AgentInstance"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-a02-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-c06-content.review",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d01-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d02-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-d03-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-g06-strategy.plan",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-p01-material.collect",
+              "resourceType": "CapabilityBinding"
+            },
+            {
+              "version": 12,
+              "resourceId": "a0v-model-successor-r3-s01-material.collect",
+              "resourceType": "CapabilityBinding"
+            }
+          ],
+          "capability_ref": null,
+          "account_ref": null,
+          "impact": {
+            "cost": {
+              "value": {
+                "scope": "initialization-only",
+                "externalCalls": 0,
+                "providerCalls": 0
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "risks": {
+              "value": {
+                "businessFacts": "not-evaluated",
+                "externalEffectAuthorized": false,
+                "businessExecutionAuthorized": false
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "budget": {
+              "value": {
+                "businessCapabilityBudget": "requires-current-gate",
+                "initializationConsumesProviderBudget": false
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "objectScope": {
+              "value": {
+                "runRef": {
+                  "revision": 1,
+                  "receiptId": null,
+                  "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+                  "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+                  "resourceType": "BusinessInvestigationRun"
+                },
+                "taskId": "task-19f4698041d34fd9bcda",
+                "caseRef": {
+                  "revision": 9,
+                  "resourceId": "case-qyh-full-store-baseline-20260915",
+                  "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+                  "resourceType": "BusinessInvestigationCaseRevision"
+                }
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "measured",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "channelScope": {
+              "value": {
+                "channel": "internal-aip-runtime-control",
+                "externalChannels": []
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "approvalChain": {
+              "value": {
+                "parentControlReceipt": {
+                  "revision": 1,
+                  "resourceId": "54fa4156-0ff9-5a02-9145-e11975164f63",
+                  "contentHash": "sha256:b679300b2c578a8fccc029b2688ad5eab45ee0def37a4fb907ab14d0fac6bfa8",
+                  "resourceType": "EventPolicyControlReceipt"
+                },
+                "businessPlanReviewRequired": true,
+                "startupActionApprovalRequired": true
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "reversibility": {
+              "value": {
+                "initialStepStatus": "not-started",
+                "transactionRollback": true
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            },
+            "rateCapacityKill": {
+              "value": {
+                "stepExecutionCount": 0,
+                "runtimeStateOnCommit": "paused-before-first-step",
+                "currentEventControlReceipt": {
+                  "revision": 1,
+                  "resourceId": "54fa4156-0ff9-5a02-9145-e11975164f63",
+                  "contentHash": "sha256:b679300b2c578a8fccc029b2688ad5eab45ee0def37a4fb907ab14d0fac6bfa8",
+                  "resourceType": "EventPolicyControlReceipt"
+                }
+              },
+              "details": {
+                "purpose": "analysis-bootstrap-only",
+                "intentHash": "sha256:b1dfd1b4ce031f70a65caf5a0cc01ff2efaf6bd26ddddbd3dc5401c6f121790b"
+              },
+              "quality": "estimated",
+              "cutoffAt": "2026-09-16T00:10:47.318443Z",
+              "sourceRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aip",
+                  "resourceId": "evidence-analysis-bootstrap-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+                  "resourceType": "Evidence"
+                }
+              ]
+            }
+          },
+          "expires_at": "2026-09-16 00:20:47.318443+00:00",
+          "content_hash": "a1875fe96e8f6ed943613738f9738055066badb2c017449541d2aa02f6733587",
+          "dependency_snapshot_hash": "1a76254ae85dcec425b08b6e1f7c5b2db9afb6f203a9d0cb6d36edb71159e04a",
+          "dependency_snapshot": [
+            {
+              "lifecycle": null,
+              "resourceId": "plan-bf6514bf8d7f49f2871e",
+              "observedHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "resourceType": "PlanRevision",
+              "requestedHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "brief-1a32ccf253034d39ac0d",
+              "observedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "resourceType": "TaskBriefRevision",
+              "requestedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+              "observedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "resourceType": "EvidenceBundleRevision",
+              "requestedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+              "observedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "resourceType": "EvalContractRevision",
+              "requestedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+              "observedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "resourceType": "ResponsibilityPlanRevision",
+              "requestedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+              "observedHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+              "resourceType": "StageTemplateRevision",
+              "requestedHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+              "observedRevision": 2,
+              "requestedRevision": 2
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "ctx-daeec3f5a06049a08783",
+              "observedHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+              "resourceType": "ProductionContextRevision",
+              "requestedHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+              "observedRevision": 1,
+              "requestedRevision": 1
+            },
+            {
+              "revision": 2,
+              "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+              "blockerCodes": [],
+              "resourceType": "EvalContractDynamicReadiness",
+              "publicationEffective": "published"
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-a02",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-c06",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d02",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-d03",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-g06",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-p01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-skill-s01",
+              "resourceType": "SkillBinding",
+              "observedVersion": 6,
+              "requestedVersion": 6
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.campaign_planner.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.content_officer.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.customer_service.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.data_advisor.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.private_domain_manager.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "ecommerce.shopping_advisor.default",
+              "resourceType": "AgentInstance",
+              "observedVersion": 2,
+              "requestedVersion": 2
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-a02-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-c06-content.review",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d02-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-d03-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-g06-strategy.plan",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-p01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            },
+            {
+              "status": "active",
+              "resourceId": "a0v-model-successor-r3-s01-material.collect",
+              "resourceType": "CapabilityBinding",
+              "observedVersion": 12,
+              "requestedVersion": 12
+            }
+          ],
+          "lifecycle": "frozen",
+          "readiness": "ready",
+          "blockers": [],
+          "frozen_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "frozen_at": "2026-09-16 00:10:45.678295+00:00",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "production_context_ref": {
+            "revision": 1,
+            "resourceId": "ctx-daeec3f5a06049a08783",
+            "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+            "resourceType": "ProductionContextRevision"
+          },
+          "external_action_binding": null
+        }
+      ],
+      "aip_plan_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "revision": 1,
+          "content_hash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+          "steps": [
+            {
+              "title": "经营画像",
+              "stepKey": "portrait",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.portrait.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.customer_service.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.content_officer.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.private_domain_manager.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.portrait.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.portrait.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "data-steward",
+                "content-research",
+                "customer-research",
+                "channel-research"
+              ]
+            },
+            {
+              "title": "问题与机会诊断",
+              "stepKey": "diagnosis",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.diagnosis.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.customer_service.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.private_domain_manager.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.shopping_advisor.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.diagnosis.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.diagnosis.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "data-steward",
+                "customer-research",
+                "channel-research",
+                "business-reviewer"
+              ]
+            },
+            {
+              "title": "方案设计",
+              "stepKey": "solution-design",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.solution-design.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.content_officer.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.shopping_advisor.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.solution-design.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.solution-design.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "content-research",
+                "channel-research",
+                "business-reviewer"
+              ]
+            }
+          ],
+          "dependencies": [
+            {
+              "to": "diagnosis",
+              "from": "portrait"
+            },
+            {
+              "to": "solution-design",
+              "from": "diagnosis"
+            }
+          ],
+          "risk": {
+            "productionContract": {
+              "inputHash": "712e843ed6ed2309bd92354b3efaed0c874fb5ddfe0306b5d2bc84d772709a55",
+              "compilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+              "compilerVersion": "w2c.v1",
+              "stageCompilation": [
+                {
+                  "title": "经营画像",
+                  "stageId": "portrait",
+                  "gateRefs": [],
+                  "dependsOn": [],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "content-research",
+                    "customer-research",
+                    "channel-research"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "问题与机会诊断",
+                  "stageId": "diagnosis",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "portrait"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "customer-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "方案设计",
+                  "stageId": "solution-design",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "diagnosis"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "content-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                }
+              ],
+              "stageTemplateRef": {
+                "revision": 2,
+                "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+                "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+                "resourceType": "StageTemplateRevision"
+              },
+              "governedDependencies": [],
+              "productionContextRef": {
+                "revision": 1,
+                "resourceId": "ctx-daeec3f5a06049a08783",
+                "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+                "resourceType": "ProductionContextRevision"
+              },
+              "responsibilityPlanRef": {
+                "revision": 2,
+                "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+                "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+                "resourceType": "ResponsibilityPlanRevision"
+              },
+              "productionStartGateRef": null,
+              "productionStartGateRequired": true
+            }
+          },
+          "approval_status": "approved",
+          "approved_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "approved_at": "2026-09-16 00:10:45.678295+00:00",
+          "idempotency_key": "w2c-f124c85285b0d7f64ab334babe175f30bbfa34d5f1fa6063",
+          "request_hash": "d362223137042223697e1ae8d1b44fd19fa697ed107ceb82f0d317d65798d6b5",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_production_context_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "context_id": "ctx-daeec3f5a06049a08783",
+          "revision": 1,
+          "task_id": "task-19f4698041d34fd9bcda",
+          "brief_ref": {
+            "revision": 2,
+            "resourceId": "brief-1a32ccf253034d39ac0d",
+            "contentHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+            "resourceType": "TaskBriefRevision"
+          },
+          "evidence_bundle_ref": {
+            "revision": 1,
+            "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+            "contentHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+            "resourceType": "EvidenceBundleRevision"
+          },
+          "eval_contract_ref": {
+            "revision": 2,
+            "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+            "contentHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+            "resourceType": "EvalContractRevision"
+          },
+          "responsibility_plan_ref": {
+            "revision": 2,
+            "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+            "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+            "resourceType": "ResponsibilityPlanRevision"
+          },
+          "preparation_ref": null,
+          "profile": "ecommerce.business-investigation.readonly",
+          "dependency_snapshot": [
+            {
+              "lifecycle": "frozen",
+              "resourceId": "brief-1a32ccf253034d39ac0d",
+              "expectedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "observedHash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+              "resourceType": "TaskBriefRevision",
+              "expectedRevision": 2,
+              "observedRevision": 2
+            },
+            {
+              "revoked": false,
+              "coverage": "complete",
+              "freshness": "fresh",
+              "resourceId": "evidence-bundle-811958acc0cc4743bc48",
+              "expectedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "observedHash": "43baa94317e1aa56bb25bc2c540397eee94f3c0969f5d7467cdbe1e0a6d81b7c",
+              "resourceType": "EvidenceBundleRevision",
+              "revokeReason": null
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "eval-contract-eb2d228de06542d2a0ec",
+              "expectedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "observedHash": "3181334354e7003b5e65797a58a9ea75eb65686dc0b25d43d9fdb3d48d98c5b1",
+              "resourceType": "EvalContractRevision"
+            },
+            {
+              "lifecycle": "frozen",
+              "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+              "expectedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "observedHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "resourceType": "ResponsibilityPlanRevision"
+            }
+          ],
+          "dependency_snapshot_hash": "e8efb527e4d9d4159e8a5d8e0c5974a31f392eb0c6b782b372aff0843fdad66c",
+          "content_hash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+          "lifecycle": "frozen",
+          "readiness": "ready",
+          "blockers": [],
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "production_profile_ref": null
+        }
+      ],
+      "aip_production_start_decision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "decision_id": "start-decision-8cc344c0bf0840aca9b5",
+          "status": "started",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_ref": {
+            "revision": 1,
+            "resourceId": "plan-bf6514bf8d7f49f2871e",
+            "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+            "resourceType": "PlanRevision"
+          },
+          "preview_ref": {
+            "revision": 2,
+            "resourceId": "impact-preview-c7615b7cef554e78a067",
+            "contentHash": "a1875fe96e8f6ed943613738f9738055066badb2c017449541d2aa02f6733587",
+            "resourceType": "ImpactPreviewRevision"
+          },
+          "action_proposal_ref": {
+            "version": 1,
+            "proposalId": "proposal-aa11ebb165fb413a83a8",
+            "proposalHash": "506fbe477edc7899078e57138c41f97d30d35f4f853b81a487808380879ba4a2"
+          },
+          "dependency_snapshot_hash": "9ad074e6f0eb254ddac942e3c77d3e9df179397980f8dc501b2b19bb6b910ac7",
+          "blockers": [],
+          "task_run_ref": {
+            "revision": "1",
+            "authority": "aip-task-runtime",
+            "resourceId": "run-6b3ca4f7c21347b684d9",
+            "resourceType": "TaskRun"
+          },
+          "idempotency_key": "analysis-bootstrap-start-1fc4fe162454ababc225b319125d1b63c85f59ba355c05b6d5ab12c83ae48260",
+          "request_hash": "03b95c859c79edc20d663a66396652c7a2c572144b7852d44f1a9ed6a57db482",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "production_context_ref": {
+            "revision": 1,
+            "resourceId": "ctx-daeec3f5a06049a08783",
+            "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+            "resourceType": "ProductionContextRevision"
+          }
+        }
+      ],
+      "aip_task": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "task_type": "ecommerce.business-investigation",
+          "title": "全店经营基线分析",
+          "description": "根据原始数据与来源完成经营画像、问题诊断和方案设计。",
+          "status": "paused",
+          "priority": 50,
+          "goal": {
+            "runRef": {
+              "revision": 1,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "caseRef": {
+              "revision": 9,
+              "resourceId": "case-qyh-full-store-baseline-20260915",
+              "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+              "resourceType": "BusinessInvestigationCaseRevision"
+            },
+            "analysisType": "initial_store_analysis",
+            "schemaVersion": "aos.aip.business-investigation-task-brief-intent/v2",
+            "compilerProfile": "ecommerce.business-investigation.readonly",
+            "domainProfileRef": {
+              "revision": 1,
+              "resourceId": "ecommerce.initial-store-analysis",
+              "contentHash": "267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+              "resourceType": "InvestigationProfileRevision"
+            }
+          },
+          "selection_ref": null,
+          "policy_revision": null,
+          "idempotency_key": "analysis-task-759b88dd3b291251b769b65fd1e158311f1292752fd6c8b7c71ef056d9d3c947",
+          "request_hash": "61122f2640bf135da66258fea6bbb4ad3a2c7c82b9044a81fda183c3e78f1898",
+          "current_plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "version": 5,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "updated_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_task_brief_head": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "brief_id": "brief-1a32ccf253034d39ac0d",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "current_revision": 2,
+          "version": 2,
+          "updated_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_task_brief_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "brief_id": "brief-1a32ccf253034d39ac0d",
+          "revision": 1,
+          "task_id": "task-19f4698041d34fd9bcda",
+          "brief_type": "ecommerce.business-investigation.intent",
+          "schema_ref": {
+            "revision": "2",
+            "authority": "aos.aip",
+            "resourceId": "aos.aip.business-investigation-task-brief-intent",
+            "resourceType": "JsonSchema"
+          },
+          "spec": {
+            "runRef": {
+              "revision": 1,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "caseRef": {
+              "revision": 9,
+              "resourceId": "case-qyh-full-store-baseline-20260915",
+              "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+              "resourceType": "BusinessInvestigationCaseRevision"
+            },
+            "analysisType": "initial_store_analysis",
+            "schemaVersion": "aos.aip.business-investigation-task-brief-intent/v2",
+            "compilerProfile": "ecommerce.business-investigation.readonly",
+            "domainProfileRef": {
+              "revision": 1,
+              "resourceId": "ecommerce.initial-store-analysis",
+              "contentHash": "267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+              "resourceType": "InvestigationProfileRevision"
+            }
+          },
+          "content_hash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+          "lifecycle": "draft",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        },
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "brief_id": "brief-1a32ccf253034d39ac0d",
+          "revision": 2,
+          "task_id": "task-19f4698041d34fd9bcda",
+          "brief_type": "ecommerce.business-investigation.intent",
+          "schema_ref": {
+            "revision": "2",
+            "authority": "aos.aip",
+            "resourceId": "aos.aip.business-investigation-task-brief-intent",
+            "resourceType": "JsonSchema"
+          },
+          "spec": {
+            "runRef": {
+              "revision": 1,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "caseRef": {
+              "revision": 9,
+              "resourceId": "case-qyh-full-store-baseline-20260915",
+              "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+              "resourceType": "BusinessInvestigationCaseRevision"
+            },
+            "analysisType": "initial_store_analysis",
+            "schemaVersion": "aos.aip.business-investigation-task-brief-intent/v2",
+            "compilerProfile": "ecommerce.business-investigation.readonly",
+            "domainProfileRef": {
+              "revision": 1,
+              "resourceId": "ecommerce.initial-store-analysis",
+              "contentHash": "267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+              "resourceType": "InvestigationProfileRevision"
+            }
+          },
+          "content_hash": "e9edd173568d5de36c0e83ffc74aced76cc35fd3925f8d723d3675b8437d05b2",
+          "lifecycle": "frozen",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_task_run": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "run_id": "run-6b3ca4f7c21347b684d9",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "logic_graph_id": "ecommerce.logic.D01",
+          "logic_revision": 2,
+          "status": "paused",
+          "idempotency_key": "w2d-start:start-decision-8cc344c0bf0840aca9b5",
+          "request_hash": "6d2b2af59ab9f2b1d5eca48ddbd21980ad419cd9cc06e52272cfe418d34249e0",
+          "last_checkpoint_id": "checkpoint-02a75f9b7493418993c0",
+          "version": 3,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "started_at": "2026-09-16 00:10:45.678295+00:00",
+          "finished_at": null,
+          "updated_at": "2026-09-16 00:10:45.678295+00:00",
+          "dependency_snapshot_hash": "b29f247386e7346b439c5c362ee0dc450e5ab4edb21eb8852d8fa4230704fb4f",
+          "pause_requested_at": "2026-09-16 00:10:45.678295+00:00",
+          "pause_reason": "analysis initialization: first input not executed"
+        }
+      ]
+    },
+    "task_run_id": {},
+    "plan_revision_id": {
+      "aip_business_investigation_compile_receipt": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "receipt_id": "bi-compilation-receipt-df84a242975648f8438c5ba2435ee5ce029301967d1a3ec3dcb83e558e62f536",
+          "command_id": "bi-compile-2d991ae5a63a25cee8cc431a8add381bc5649fcc5f63af98426e4f5c2f2c9fc8",
+          "request_hash": "sha256:010dfeb56fe3b7683d9692e45171d9dbbf467ec543550274ef4c35d557b3be3a",
+          "run_id": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+          "run_version": 1,
+          "run_content_hash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "plan_revision": 1,
+          "plan_content_hash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+          "receipt_data": {
+            "runRef": {
+              "revision": 1,
+              "receiptId": null,
+              "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+              "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+              "resourceType": "BusinessInvestigationRun"
+            },
+            "taskId": "task-19f4698041d34fd9bcda",
+            "tenant": {
+              "orgId": "org-org",
+              "projectId": "dev-project"
+            },
+            "planRef": {
+              "revision": 1,
+              "resourceId": "plan-bf6514bf8d7f49f2871e",
+              "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "resourceType": "PlanRevision"
+            },
+            "logicRef": {
+              "revision": 2,
+              "resourceId": "ecommerce.logic.D01",
+              "contentHash": "11b4b29a672b164735bdff429b9a61a89475eb22e16c0e169fa93689ca5ec481",
+              "resourceType": "LogicRevision"
+            },
+            "commandId": "bi-compile-2d991ae5a63a25cee8cc431a8add381bc5649fcc5f63af98426e4f5c2f2c9fc8",
+            "createdAt": "2026-09-16T00:10:45.678295Z",
+            "inputHash": "2eb606cd2fb21b132b17792d0664c2e4afa49c440219b55c27c34c779d7be518",
+            "receiptId": "bi-compilation-receipt-df84a242975648f8438c5ba2435ee5ce029301967d1a3ec3dcb83e558e62f536",
+            "profileRef": {
+              "revision": 1,
+              "resourceId": "analysis-compilation-profile-9eb05a4cf83880098551ac8806c348c29f1c5a3ca90be6a020974b4b62c02ed0",
+              "contentHash": "0794d6335db125f67bbb08ea45428e32d43d812817cb7b16dc16324acc4a38cb",
+              "resourceType": "InvestigationProfileRevision"
+            },
+            "requestHash": "sha256:010dfeb56fe3b7683d9692e45171d9dbbf467ec543550274ef4c35d557b3be3a",
+            "schemaVersion": "aos.aip.business-investigation-compilation-receipt/v1",
+            "compilationHash": "9b1c0db22c848feab4dfaf1a8c1826669bf7166bd140d668b572cada5b5a39ed",
+            "runtimeAuthorized": false,
+            "skillBindingSetRef": {
+              "revision": 1,
+              "resourceId": "analysis-skill-set-e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+              "contentHash": "e5d2b66b63e82e8da2367d6b458fec38ecdac224471d6e92b5a407cd3d2655f4",
+              "resourceType": "SkillBindingSetRevision"
+            },
+            "stageCompilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+            "responsibilityPlanRef": {
+              "revision": 2,
+              "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+              "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+              "resourceType": "ResponsibilityPlanRevision"
+            }
+          },
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_checkpoint": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "checkpoint_id": "checkpoint-02a75f9b7493418993c0",
+          "run_id": "run-6b3ca4f7c21347b684d9",
+          "sequence": 1,
+          "schema_version": 2,
+          "step_key": "portrait",
+          "state_hash": "ec1299a02a5a2755acc0fbb96a7c65526ea2ad546cea1b145d4cb6ee72e07aa2",
+          "state_snapshot_ref": {
+            "kind": "initial-input",
+            "status": "not-started",
+            "attempt": 1,
+            "lineage": {
+              "taskRunRef": {
+                "version": 3,
+                "resourceId": "run-6b3ca4f7c21347b684d9",
+                "resourceType": "TaskRun"
+              },
+              "planRevisionRef": {
+                "revision": 1,
+                "resourceId": "plan-bf6514bf8d7f49f2871e",
+                "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+                "resourceType": "PlanRevision"
+              }
+            },
+            "stepKey": "portrait",
+            "inputHash": "b4778ba89382eddb96ba885f6c9c9307a09f9bdd1ae937cc7364a2a92bc36752",
+            "artifactRefs": [],
+            "schemaVersion": "aos.aip.initial-input-checkpoint/v1",
+            "completedStepIds": [],
+            "dependencySnapshotHash": "b29f247386e7346b439c5c362ee0dc450e5ab4edb21eb8852d8fa4230704fb4f"
+          },
+          "artifact_refs": [],
+          "resume_token_hash": null,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "attempt": 1,
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "input_hash": "b4778ba89382eddb96ba885f6c9c9307a09f9bdd1ae937cc7364a2a92bc36752",
+          "provider_request_fingerprint": null,
+          "dependency_snapshot": {
+            "runId": "run-6b3ca4f7c21347b684d9",
+            "steps": [
+              {
+                "title": "经营画像",
+                "stepKey": "portrait",
+                "gateRefs": [],
+                "inputRefs": [
+                  {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.input",
+                    "resourceType": "JsonSchema"
+                  }
+                ],
+                "skipReason": null,
+                "retryPolicy": {
+                  "automatic": false
+                },
+                "assigneeRefs": [
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.data_advisor.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.customer_service.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.content_officer.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.private_domain_manager.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.campaign_planner.default",
+                    "resourceType": "AgentInstance"
+                  }
+                ],
+                "applicability": "applicable",
+                "capabilityRef": null,
+                "capabilityRefs": [],
+                "inputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.portrait.input",
+                  "resourceType": "JsonSchema"
+                },
+                "outputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.portrait.output",
+                  "resourceType": "JsonSchema"
+                },
+                "checkpointPolicy": {
+                  "mode": "receipt-first",
+                  "unknown": "pause"
+                },
+                "compensationPolicy": {
+                  "externalEffect": "none"
+                },
+                "responsibilitySlotIds": [
+                  "investigation-owner",
+                  "data-steward",
+                  "content-research",
+                  "customer-research",
+                  "channel-research"
+                ]
+              },
+              {
+                "title": "问题与机会诊断",
+                "stepKey": "diagnosis",
+                "gateRefs": [],
+                "inputRefs": [
+                  {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.input",
+                    "resourceType": "JsonSchema"
+                  }
+                ],
+                "skipReason": null,
+                "retryPolicy": {
+                  "automatic": false
+                },
+                "assigneeRefs": [
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.data_advisor.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.customer_service.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.private_domain_manager.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.campaign_planner.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.shopping_advisor.default",
+                    "resourceType": "AgentInstance"
+                  }
+                ],
+                "applicability": "applicable",
+                "capabilityRef": null,
+                "capabilityRefs": [],
+                "inputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.diagnosis.input",
+                  "resourceType": "JsonSchema"
+                },
+                "outputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.diagnosis.output",
+                  "resourceType": "JsonSchema"
+                },
+                "checkpointPolicy": {
+                  "mode": "receipt-first",
+                  "unknown": "pause"
+                },
+                "compensationPolicy": {
+                  "externalEffect": "none"
+                },
+                "responsibilitySlotIds": [
+                  "investigation-owner",
+                  "data-steward",
+                  "customer-research",
+                  "channel-research",
+                  "business-reviewer"
+                ]
+              },
+              {
+                "title": "方案设计",
+                "stepKey": "solution-design",
+                "gateRefs": [],
+                "inputRefs": [
+                  {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.input",
+                    "resourceType": "JsonSchema"
+                  }
+                ],
+                "skipReason": null,
+                "retryPolicy": {
+                  "automatic": false
+                },
+                "assigneeRefs": [
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.data_advisor.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.content_officer.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.campaign_planner.default",
+                    "resourceType": "AgentInstance"
+                  },
+                  {
+                    "revision": "2",
+                    "authority": "aip-assignee-directory",
+                    "resourceId": "ecommerce.shopping_advisor.default",
+                    "resourceType": "AgentInstance"
+                  }
+                ],
+                "applicability": "applicable",
+                "capabilityRef": null,
+                "capabilityRefs": [],
+                "inputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.solution-design.input",
+                  "resourceType": "JsonSchema"
+                },
+                "outputSchemaRef": {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.solution-design.output",
+                  "resourceType": "JsonSchema"
+                },
+                "checkpointPolicy": {
+                  "mode": "receipt-first",
+                  "unknown": "pause"
+                },
+                "compensationPolicy": {
+                  "externalEffect": "none"
+                },
+                "responsibilitySlotIds": [
+                  "investigation-owner",
+                  "content-research",
+                  "channel-research",
+                  "business-reviewer"
+                ]
+              }
+            ],
+            "dependencies": [
+              {
+                "to": "diagnosis",
+                "from": "portrait"
+              },
+              {
+                "to": "solution-design",
+                "from": "diagnosis"
+              }
+            ],
+            "logicGraphId": "ecommerce.logic.D01",
+            "planRevision": 1,
+            "logicRevision": 2,
+            "planRevisionId": "plan-bf6514bf8d7f49f2871e",
+            "planContentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+            "productionContract": {
+              "inputHash": "712e843ed6ed2309bd92354b3efaed0c874fb5ddfe0306b5d2bc84d772709a55",
+              "compilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+              "compilerVersion": "w2c.v1",
+              "stageCompilation": [
+                {
+                  "title": "经营画像",
+                  "stageId": "portrait",
+                  "gateRefs": [],
+                  "dependsOn": [],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "content-research",
+                    "customer-research",
+                    "channel-research"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "问题与机会诊断",
+                  "stageId": "diagnosis",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "portrait"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "customer-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "方案设计",
+                  "stageId": "solution-design",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "diagnosis"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "content-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                }
+              ],
+              "stageTemplateRef": {
+                "revision": 2,
+                "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+                "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+                "resourceType": "StageTemplateRevision"
+              },
+              "governedDependencies": [],
+              "productionContextRef": {
+                "revision": 1,
+                "resourceId": "ctx-daeec3f5a06049a08783",
+                "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+                "resourceType": "ProductionContextRevision"
+              },
+              "responsibilityPlanRef": {
+                "revision": 2,
+                "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+                "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+                "resourceType": "ResponsibilityPlanRevision"
+              },
+              "productionStartGateRef": null,
+              "productionStartGateRequired": true
+            }
+          },
+          "dependency_snapshot_hash": "b29f247386e7346b439c5c362ee0dc450e5ab4edb21eb8852d8fa4230704fb4f",
+          "checkpoint_policy": {
+            "mode": "receipt-first",
+            "unknown": "pause",
+            "position": "before-first-step"
+          },
+          "usage_refs": [],
+          "receipt_refs": [],
+          "lineage": {
+            "taskRunRef": {
+              "version": 3,
+              "resourceId": "run-6b3ca4f7c21347b684d9",
+              "resourceType": "TaskRun"
+            },
+            "planRevisionRef": {
+              "revision": 1,
+              "resourceId": "plan-bf6514bf8d7f49f2871e",
+              "contentHash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+              "resourceType": "PlanRevision"
+            }
+          }
+        }
+      ],
+      "aip_plan_revision": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "revision": 1,
+          "content_hash": "0401f8e031018c31197570a3426c9c120a96f9d7524589f14454e8e997846b06",
+          "steps": [
+            {
+              "title": "经营画像",
+              "stepKey": "portrait",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.portrait.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.customer_service.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.content_officer.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.private_domain_manager.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.portrait.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.portrait.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "data-steward",
+                "content-research",
+                "customer-research",
+                "channel-research"
+              ]
+            },
+            {
+              "title": "问题与机会诊断",
+              "stepKey": "diagnosis",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.diagnosis.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.customer_service.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.private_domain_manager.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.shopping_advisor.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.diagnosis.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.diagnosis.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "data-steward",
+                "customer-research",
+                "channel-research",
+                "business-reviewer"
+              ]
+            },
+            {
+              "title": "方案设计",
+              "stepKey": "solution-design",
+              "gateRefs": [],
+              "inputRefs": [
+                {
+                  "revision": "1",
+                  "authority": "aos.ecommerce.business-investigation",
+                  "resourceId": "business-investigation.solution-design.input",
+                  "resourceType": "JsonSchema"
+                }
+              ],
+              "skipReason": null,
+              "retryPolicy": {
+                "automatic": false
+              },
+              "assigneeRefs": [
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.data_advisor.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.content_officer.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.campaign_planner.default",
+                  "resourceType": "AgentInstance"
+                },
+                {
+                  "revision": "2",
+                  "authority": "aip-assignee-directory",
+                  "resourceId": "ecommerce.shopping_advisor.default",
+                  "resourceType": "AgentInstance"
+                }
+              ],
+              "applicability": "applicable",
+              "capabilityRef": null,
+              "capabilityRefs": [],
+              "inputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.solution-design.input",
+                "resourceType": "JsonSchema"
+              },
+              "outputSchemaRef": {
+                "revision": "1",
+                "authority": "aos.ecommerce.business-investigation",
+                "resourceId": "business-investigation.solution-design.output",
+                "resourceType": "JsonSchema"
+              },
+              "checkpointPolicy": {
+                "mode": "receipt-first",
+                "unknown": "pause"
+              },
+              "compensationPolicy": {
+                "externalEffect": "none"
+              },
+              "responsibilitySlotIds": [
+                "investigation-owner",
+                "content-research",
+                "channel-research",
+                "business-reviewer"
+              ]
+            }
+          ],
+          "dependencies": [
+            {
+              "to": "diagnosis",
+              "from": "portrait"
+            },
+            {
+              "to": "solution-design",
+              "from": "diagnosis"
+            }
+          ],
+          "risk": {
+            "productionContract": {
+              "inputHash": "712e843ed6ed2309bd92354b3efaed0c874fb5ddfe0306b5d2bc84d772709a55",
+              "compilationHash": "56bfd365f25707ee99a378d0f39f7b96c6b2843197a6f85029bce60335c4638f",
+              "compilerVersion": "w2c.v1",
+              "stageCompilation": [
+                {
+                  "title": "经营画像",
+                  "stageId": "portrait",
+                  "gateRefs": [],
+                  "dependsOn": [],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.portrait.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "content-research",
+                    "customer-research",
+                    "channel-research"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "问题与机会诊断",
+                  "stageId": "diagnosis",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "portrait"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.diagnosis.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "data-steward",
+                    "customer-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                },
+                {
+                  "title": "方案设计",
+                  "stageId": "solution-design",
+                  "gateRefs": [],
+                  "dependsOn": [
+                    "diagnosis"
+                  ],
+                  "retryPolicy": {
+                    "automatic": false
+                  },
+                  "applicability": {
+                    "kind": "always",
+                    "profiles": []
+                  },
+                  "inputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.input",
+                    "resourceType": "JsonSchema"
+                  },
+                  "outputSchemaRef": {
+                    "revision": "1",
+                    "authority": "aos.ecommerce.business-investigation",
+                    "resourceId": "business-investigation.solution-design.output",
+                    "resourceType": "JsonSchema"
+                  },
+                  "requiredSlotIds": [
+                    "investigation-owner",
+                    "content-research",
+                    "channel-research",
+                    "business-reviewer"
+                  ],
+                  "checkpointPolicy": {
+                    "mode": "receipt-first",
+                    "unknown": "pause"
+                  },
+                  "evaluatedProfile": "ecommerce.business-investigation.readonly",
+                  "compensationPolicy": {
+                    "externalEffect": "none"
+                  },
+                  "applicabilityResult": "applicable"
+                }
+              ],
+              "stageTemplateRef": {
+                "revision": 2,
+                "resourceId": "stage-template-9a16f2cf2f6f410aa555",
+                "contentHash": "fdcd7aaa34096b489aa01ac3f314bcc86e878bd866869531bd1106305e43567e",
+                "resourceType": "StageTemplateRevision"
+              },
+              "governedDependencies": [],
+              "productionContextRef": {
+                "revision": 1,
+                "resourceId": "ctx-daeec3f5a06049a08783",
+                "contentHash": "90ecb9b0794681cb92016bfc0edabceef27ee7a1236a5317907142168c2d190d",
+                "resourceType": "ProductionContextRevision"
+              },
+              "responsibilityPlanRef": {
+                "revision": 2,
+                "resourceId": "responsibility-plan-63c82d2a75614e1b95f1",
+                "contentHash": "b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a",
+                "resourceType": "ResponsibilityPlanRevision"
+              },
+              "productionStartGateRef": null,
+              "productionStartGateRequired": true
+            }
+          },
+          "approval_status": "approved",
+          "approved_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "approved_at": "2026-09-16 00:10:45.678295+00:00",
+          "idempotency_key": "w2c-f124c85285b0d7f64ab334babe175f30bbfa34d5f1fa6063",
+          "request_hash": "d362223137042223697e1ae8d1b44fd19fa697ed107ceb82f0d317d65798d6b5",
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00"
+        }
+      ],
+      "aip_task_run": [
+        {
+          "org_id": "org-org",
+          "project_id": "dev-project",
+          "run_id": "run-6b3ca4f7c21347b684d9",
+          "task_id": "task-19f4698041d34fd9bcda",
+          "plan_revision_id": "plan-bf6514bf8d7f49f2871e",
+          "logic_graph_id": "ecommerce.logic.D01",
+          "logic_revision": 2,
+          "status": "paused",
+          "idempotency_key": "w2d-start:start-decision-8cc344c0bf0840aca9b5",
+          "request_hash": "6d2b2af59ab9f2b1d5eca48ddbd21980ad419cd9cc06e52272cfe418d34249e0",
+          "last_checkpoint_id": "checkpoint-02a75f9b7493418993c0",
+          "version": 3,
+          "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+          "created_at": "2026-09-16 00:10:45.678295+00:00",
+          "started_at": "2026-09-16 00:10:45.678295+00:00",
+          "finished_at": null,
+          "updated_at": "2026-09-16 00:10:45.678295+00:00",
+          "dependency_snapshot_hash": "b29f247386e7346b439c5c362ee0dc450e5ab4edb21eb8852d8fa4230704fb4f",
+          "pause_requested_at": "2026-09-16 00:10:45.678295+00:00",
+          "pause_reason": "analysis initialization: first input not executed"
+        }
+      ]
+    }
+  }
+}

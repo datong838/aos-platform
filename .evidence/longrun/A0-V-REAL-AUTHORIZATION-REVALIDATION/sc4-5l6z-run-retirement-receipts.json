@@ -1,0 +1,183 @@
+{
+  "capturedAt": "2026-09-16T20:42:10.956176+00:00",
+  "alembicVersion": [
+    {
+      "version_num": "a0v_075"
+    }
+  ],
+  "runState": [
+    {
+      "current_version": 3,
+      "lifecycle": "PREPARING",
+      "control": "CANCELLED",
+      "current_event_sequence": 3,
+      "pending_requirement_ref": null,
+      "uncertain_command": null,
+      "content_hash": "sha256:3bb67fb09e10c81192844754c1c9aec9785271ea943cc8155aa14da6146487e9"
+    }
+  ],
+  "runEvents": [
+    {
+      "sequence": 1,
+      "event_type": "RUN_REQUESTED",
+      "event_data": {
+        "runRef": {
+          "revision": 1,
+          "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+          "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+          "resourceType": "BusinessInvestigationRun"
+        },
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "caseRef": {
+          "revision": 9,
+          "receiptId": null,
+          "resourceId": "case-qyh-full-store-baseline-20260915",
+          "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+          "resourceType": "BusinessInvestigationCaseRevision"
+        },
+        "eventId": "57a27506-45cf-4545-a6c4-aeb3b2543674",
+        "sequence": 1,
+        "eventType": "RUN_REQUESTED",
+        "occurredAt": "2026-09-16T00:10:47.318443Z",
+        "schemaVersion": "aos.ecommerce.business-investigation-run-event/v1"
+      },
+      "content_hash": "sha256:b4eefb9c6909f0953048845ef392f3ba8247f97728ae50382fb5955a7dcda85f",
+      "occurred_at": "2026-09-16 00:10:47.318443+00:00"
+    },
+    {
+      "sequence": 2,
+      "event_type": "RUN_WAITING_DATA",
+      "event_data": {
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "eventId": "2e48eed6-cecb-42d5-a0dd-a76495e66764",
+        "sequence": 2,
+        "eventType": "RUN_WAITING_DATA",
+        "nonClaims": [
+          "NO_RETRY",
+          "NO_RECONCILE_SUCCESS",
+          "NO_EXTERNAL_EFFECT"
+        ],
+        "occurredAt": "2026-09-16T00:11:04.546382+00:00",
+        "runStateRef": {
+          "revision": 2,
+          "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+          "contentHash": "sha256:afa7b4c7a430e08abb408f2d7a503f7a73adfac17d51c2bf1240e37c13d93cf4",
+          "resourceType": "BusinessInvestigationRunStateRevision"
+        },
+        "schemaVersion": "aos.ecommerce.business-investigation-run-event/v1"
+      },
+      "content_hash": "sha256:615306e14b42f552c205d83a1ad0d88602bae12d3277d0e56b22d7a063f1c741",
+      "occurred_at": "2026-09-16 00:11:04.546382+00:00"
+    },
+    {
+      "sequence": 3,
+      "event_type": "RUN_CANCELLED",
+      "event_data": {
+        "tenant": {
+          "orgId": "org-org",
+          "projectId": "dev-project"
+        },
+        "eventId": "a958a197-4949-48ad-ba4d-e8a883f1da18",
+        "sequence": 3,
+        "eventType": "RUN_CANCELLED",
+        "nonClaims": [
+          "NO_AIP_TASKRUN_CONTROL",
+          "NO_EXTERNAL_EFFECT"
+        ],
+        "occurredAt": "2026-09-16T20:37:09.953283+00:00",
+        "runStateRef": {
+          "revision": 3,
+          "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+          "contentHash": "sha256:3bb67fb09e10c81192844754c1c9aec9785271ea943cc8155aa14da6146487e9",
+          "resourceType": "BusinessInvestigationRunStateRevision"
+        },
+        "schemaVersion": "aos.ecommerce.business-investigation-run-event/v1"
+      },
+      "content_hash": "sha256:a3828f295e0f7c66dc6a1f7924528d25d2a162da58a0cc12418241d1883e7702",
+      "occurred_at": "2026-09-16 20:37:09.953283+00:00"
+    }
+  ],
+  "runControlReceipt": [
+    {
+      "receipt_id": "559d442b-6bbf-4854-b02c-1057f6d5390a",
+      "operation": "business_investigation_run.control",
+      "idempotency_key": "a0v-z-ungrouped-run-20260917-v1-reject-requirement",
+      "expected_version": 2,
+      "result_version": 3,
+      "request_hash": "sha256:d34cd4d9f088f509e210a8a204082ac2fe8ccb8d20535efb4b2eec3e9a4919a4",
+      "created_at": "2026-09-16 20:37:10.011592+00:00"
+    }
+  ],
+  "activeSlot": [],
+  "requirementRevisions": [
+    {
+      "revision": 1,
+      "status": "requested",
+      "operation": "request",
+      "idempotency_key": "analysis-initial-data-1fc4fe162454ababc225b319125d1b63c85f59ba355c05b6d5ab12c83ae48260",
+      "content_hash": "22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+      "created_by": "ecommerce-growth-data-host",
+      "created_at": "2026-09-16 00:10:45.678295+00:00"
+    },
+    {
+      "revision": 2,
+      "status": "rejected",
+      "operation": "reject",
+      "idempotency_key": "a0v-z-ungrouped-run-20260917-v1-reject-requirement",
+      "content_hash": "f0145e85393e64629ce08e520620e47fb45f59299b7ba8de8e12a9c7ade89765",
+      "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "created_at": "2026-09-16 20:25:12.658717+00:00"
+    }
+  ],
+  "requirementDelivery": [
+    {
+      "state": "failed",
+      "attempt": 1,
+      "failure_code": "CURRENT_ROUTE_REJECTED",
+      "completion_fulfillment_ref": null,
+      "completion_analysis_ref": null
+    }
+  ],
+  "task": [
+    {
+      "task_id": "task-19f4698041d34fd9bcda",
+      "status": "cancelled",
+      "version": 6,
+      "updated_at": "2026-09-16 20:41:24.164499+00:00"
+    }
+  ],
+  "taskRun": [
+    {
+      "run_id": "run-6b3ca4f7c21347b684d9",
+      "status": "cancelled",
+      "version": 4,
+      "last_checkpoint_id": "checkpoint-02a75f9b7493418993c0",
+      "started_at": "2026-09-16 00:10:45.678295+00:00",
+      "finished_at": "2026-09-16 20:41:24.164499+00:00",
+      "updated_at": "2026-09-16 20:41:24.164499+00:00"
+    }
+  ],
+  "taskRunControlEvidence": [
+    {
+      "evidence_id": "evidence-8a1f6eb0958a4bf2a8f2",
+      "evidence_type": "run.control",
+      "source_ref": "run-control:cancel:a0v-z-ungrouped-run-20260917-v1-cancel-task-run",
+      "content_hash": "250acb7b5edb8f54b614dc63bff9ec28a2d099231111ca5cacf24b290f49decf",
+      "payload": {
+        "reason": "关联领域 Run 因原源缺失完整 snapshot group 已正式取消。",
+        "operation": "cancel",
+        "requestHash": "c24817403ec2bb5ecfe1ef3c3cb34a8fd6823308fb3f220af5011a89941873d7",
+        "expectedRunVersion": 3,
+        "expectedTaskVersion": 5
+      },
+      "created_by": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "created_at": "2026-09-16 20:41:24.164499+00:00"
+    }
+  ]
+}

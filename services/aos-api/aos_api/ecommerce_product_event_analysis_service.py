@@ -1,6 +1,5 @@
 """Original event and current claim to the sealed analysis Host transaction."""
 from copy import deepcopy
-from datetime import UTC
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ClaimedOccurrence
@@ -133,16 +132,13 @@ class ProductEventAnalysisService:
             occurrence=_occurrence_payload(tx,scope,claimed.occurrence_id)
             case=snapshot['case']
             group = self._source_group(conn)
-            source_group = None
-            cutoff = row['created_at'].astimezone(UTC).replace(microsecond=0)
-            if group is not None:
-                journal = self.source.reader._journal
-                if (group.actor != self.source.actor
-                        or (journal._ref, origin['runId']) not in group.bindings):
-                    raise ValueError('analysis snapshot group differs from original source')
-                cutoff = group.read_completed_at.astimezone(UTC)
-                source_group = dict(groupId=group.group_id, manifestHash=group.manifest_hash,
-                    readStartedAt=group.read_started_at.isoformat(), readCompletedAt=cutoff.isoformat())
+            journal = self.source.reader._journal
+            if (group is None or group.actor != self.source.actor
+                    or (journal._ref, origin['runId']) not in group.bindings):
+                raise ValueError('analysis snapshot group differs from original source')
+            cutoff = group.read_completed_at
+            source_group = dict(groupId=group.group_id, manifestHash=group.manifest_hash,
+                readStartedAt=group.read_started_at.isoformat(), readCompletedAt=cutoff.isoformat())
             request=dict(kind='build_analysis_start',occurrenceRef=_occurrence_ref(occurrence),
                 caseRef=dict(resourceType='BusinessInvestigationCaseRevision',resourceId=case['caseId'],
                              revision=case['revision'],contentHash=case['contentHash']),
@@ -151,8 +147,7 @@ class ProductEventAnalysisService:
                 idempotencyKey=claimed.target_idempotency_key)
             stable=dict(source=snapshot,growth=installed,occurrence=occurrence,origin=origin,request=request,
                         dispatchRevision=routing['revision'],groupRevision=routing['cutover_group_revision'])
-            if source_group is not None:
-                stable['sourceGroup'] = source_group
+            stable['sourceGroup'] = source_group
             result=execute(stable,request,issued)
             AutomationOccurrenceStore._lock_claim(conn,scope,claimed)
             if self.invoker.read_current_in_transaction(tx)!=installed:

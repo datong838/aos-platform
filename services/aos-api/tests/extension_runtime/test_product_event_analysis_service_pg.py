@@ -9,6 +9,8 @@ from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory,_strict_analysis_start_command
 from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
 from aos_api.aip_business_investigation_compile_saga import BusinessInvestigationCompileConflict
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
+from aos_api.pipeline_snapshot_group_locator import SnapshotGroupRoute
 
 
 @pytest.fixture
@@ -33,6 +35,15 @@ def analysis_case(consumer_case):
     assert claimed is not None, conn.execute('SELECT effective_from,effective_until,enabled,approved FROM automation_schedule_binding').fetchall()
     service=object.__new__(ProductEventAnalysisService)
     service.scope=source.scope;service.source=source;service.invoker=source.invoker
+    control_ref=PipelineExactRef(resourceType='PipelineRuntimeControlRevision',
+        resourceId='pipeline-control-12345678-1234-1234-1234-123456789abc',
+        revision=1,contentHash='sha256:'+'a'*64)
+    source.reader._journal._ref=control_ref
+    completed_at=datetime.now(UTC).replace(microsecond=0)
+    group=SnapshotGroupRoute('12345678-1234-1234-1234-123456789abc',source.actor,
+        ((control_ref,source.reader._journal._run_id),),'sha256:'+'b'*64,
+        completed_at-timedelta(seconds=1),completed_at)
+    service._source_group=lambda db:group
     return conn,service,claimed
 
 

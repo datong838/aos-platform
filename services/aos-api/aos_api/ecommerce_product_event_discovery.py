@@ -37,6 +37,14 @@ WHERE h.org_id=%s AND h.project_id=%s AND b.installation_id=%s AND b.generation=
  AND EXISTS(SELECT 1 FROM ecommerce_ingress_command i WHERE i.org_id=c.org_id AND i.project_id=c.project_id AND i.run_id=c.run_id)
  AND EXISTS(SELECT 1 FROM ecommerce_ingress_derived_command d WHERE d.org_id=c.org_id AND d.project_id=c.project_id AND d.run_id=c.run_id)
  AND EXISTS(SELECT 1 FROM ecommerce_ingress_dataset_receipt d WHERE d.org_id=c.org_id AND d.project_id=c.project_id AND d.run_id=c.run_id)
+ AND EXISTS(
+   SELECT 1 FROM pipeline_snapshot_group_member gm
+   JOIN pipeline_snapshot_group_claim gc
+     ON gc.org_id=gm.org_id AND gc.project_id=gm.project_id AND gc.group_id=gm.group_id
+   JOIN pipeline_snapshot_group_input gi
+     ON gi.org_id=gm.org_id AND gi.project_id=gm.project_id AND gi.group_id=gm.group_id
+   WHERE gm.org_id=c.org_id AND gm.project_id=c.project_id AND gm.run_id=c.run_id
+     AND gc.actor=c.actor)
  AND (h.schedule_policy_id,c.run_id)>(%s,%s)
 ORDER BY h.schedule_policy_id,c.run_id LIMIT %s'''
 

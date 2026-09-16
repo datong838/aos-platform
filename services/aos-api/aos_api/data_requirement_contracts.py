@@ -149,7 +149,11 @@ class DataRequirementRevisionRecord(AipContractModel):
             raise ValueError("timeWindow must not extend beyond cutoffAt")
         if self.cutoff_at > self.created_at:
             raise ValueError("cutoffAt must not be after createdAt")
-        if self.expires_at <= self.created_at:
+        if (self.status in {
+            DataRequirementStatus.REQUESTED,
+            DataRequirementStatus.ACCEPTED,
+            DataRequirementStatus.PLANNED,
+        } and self.expires_at <= self.created_at):
             raise ValueError("expiresAt must be after createdAt")
         if any(item not in _OUTPUT_TYPES for item in self.requested_outputs):
             raise ValueError("requestedOutputs contains a non-canonical output type")

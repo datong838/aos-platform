@@ -57,6 +57,7 @@ def state(
     version: int = 1,
     *,
     pending: InvestigationExactRef | None = None,
+    control: str = "RUNNING",
 ) -> BusinessInvestigationRunStateRevision:
     payload = {
         "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
@@ -73,7 +74,7 @@ def state(
             ).model_dump(mode="json", by_alias=True)
         ),
         "lifecycle": "PREPARING" if pending is None else "WAITING_DATA",
-        "control": "RUNNING",
+        "control": control,
         "eventSequence": version,
         "contentHash": "sha256:" + "0" * 64,
         "pendingRequirementRef": (
@@ -207,6 +208,19 @@ class FakeRuns:
         self.view.state = authority
         return BusinessInvestigationRunStateWrite(authority=authority, replayed=False)
 
+    def transition_control(
+        self, scope, run_id, target, *, expected_version, idempotency_key, actor, occurred_at,
+    ):
+        if idempotency_key in self.receipts:
+            return BusinessInvestigationRunStateWrite(
+                authority=self.receipts[idempotency_key], replayed=True
+            )
+        assert target.value == "CANCELLED" and expected_version == self.view.state.version
+        authority = state(expected_version + 1, control="CANCELLED")
+        self.receipts[idempotency_key] = authority
+        self.view.state = authority
+        return BusinessInvestigationRunStateWrite(authority=authority, replayed=False)
+
 
 def service(runs: FakeRuns, data: FakeData):
     return EcommerceBusinessInvestigationDataCommandService(
@@ -276,7 +290,7 @@ def test_request_rejects_same_web_key_with_different_body_before_second_data_wri
     assert len(data.receipts) == 1
 
 
-def test_manual_accept_and_reject_append_successor_and_rebind_run() -> None:
+def test_manual_accept_rebinds_run_and_reject_cancels_run() -> None:
     for decision in ("accept", "reject"):
         runs, data = FakeRuns(), FakeData()
         created = service(runs, data).request_missing_data(
@@ -305,7 +319,46 @@ def test_manual_accept_and_reject_append_successor_and_rebind_run() -> None:
             "accepted" if decision == "accept" else "rejected"
         )
         assert bool(data.current.blockers) is (decision == "reject")
-        assert confirmed.run_authority.pending_requirement_ref.revision == 2
+        if decision == "accept":
+            assert confirmed.run_authority.pending_requirement_ref.revision == 2
+        else:
+            assert confirmed.run_authority.control.value == "CANCELLED"
+            assert confirmed.run_authority.pending_requirement_ref is None
+
+
+def test_reject_partial_failure_reentry_reuses_requirement_and_completes_cancel() -> None:
+    runs, data = FakeRuns(), FakeData()
+    created = service(runs, data).request_missing_data(
+        SCOPE, "investigation-run-1", command(), expected_version=1,
+        idempotency_key="create-reject-reentry", actor="user:data-owner", occurred_at=NOW,
+    )
+    original = runs.transition_control
+    calls = 0
+    def fail_once(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("transient Run cancellation failure")
+        return original(*args, **kwargs)
+    runs.transition_control = fail_once
+    request = ConfirmBusinessInvestigationDataRequirementCommand(
+        decision="reject", reason="过期输入不可恢复"
+    )
+    with pytest.raises(RuntimeError, match="transient Run cancellation failure"):
+        service(runs, data).confirm_requirement(
+            SCOPE, "investigation-run-1", request,
+            expected_version=created.run_authority.version,
+            idempotency_key="reject-reentry", actor="user:data-owner", occurred_at=NOW,
+        )
+    first = data.current
+    completed = service(runs, data).confirm_requirement(
+        SCOPE, "investigation-run-1", request,
+        expected_version=created.run_authority.version,
+        idempotency_key="reject-reentry", actor="user:data-owner", occurred_at=NOW,
+    )
+    assert data.current == first and len(data.receipts) == 2
+    assert completed.data_replayed is True
+    assert completed.run_authority.control.value == "CANCELLED"
 
 
 def test_confirmation_rejects_same_key_with_opposite_decision_without_new_revision() -> None:

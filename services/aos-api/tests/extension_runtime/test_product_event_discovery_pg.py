@@ -24,7 +24,10 @@ CREATE TABLE meta_schedule(org_id text,project_id text,id text,pipeline_id text,
 CREATE TABLE pipeline_schedule_control_binding(org_id text,project_id text,schedule_id text,pipeline_id text,installation_id uuid,generation uuid,actor text,revision bigint,control_id uuid,control_revision bigint,control_hash text);
 CREATE TABLE ecommerce_ingress_command(org_id text,project_id text,run_id text);
 CREATE TABLE ecommerce_ingress_derived_command(org_id text,project_id text,run_id text);
-CREATE TABLE ecommerce_ingress_dataset_receipt(org_id text,project_id text,run_id text);''')
+CREATE TABLE ecommerce_ingress_dataset_receipt(org_id text,project_id text,run_id text);
+CREATE TABLE pipeline_snapshot_group_member(org_id text,project_id text,group_id uuid,ordinal bigint,run_id text);
+CREATE TABLE pipeline_snapshot_group_claim(org_id text,project_id text,group_id uuid,actor text);
+CREATE TABLE pipeline_snapshot_group_input(org_id text,project_id text,group_id uuid);''')
     now=datetime.now(timezone.utc)
     auth=dict(schemaVersion='aos.ecommerce.product-event-schedule-policy/v1',contentHash='sha256:'+'a'*64,
         sourceSelectionRef=dict(resourceId='source-selection-'+str(SEL),revision=1,contentHash='sha256:'+'b'*64))
@@ -35,11 +38,15 @@ CREATE TABLE ecommerce_ingress_dataset_receipt(org_id text,project_id text,run_i
     conn.execute("INSERT INTO meta_schedule VALUES(%s,%s,'schedule','pipeline',true,%s)",(*SCOPE.key,Jsonb(dict(kind='pipeline-live-v1',pipelineId='pipeline'))))
     conn.execute("INSERT INTO pipeline_schedule_control_binding VALUES(%s,%s,'schedule','pipeline',%s,%s,'actor',1,%s,1,%s)",(*SCOPE.key,INSTALL,GEN,CONTROL,'sha256:'+'c'*64))
     def insert(run):
+        group=UUID(bytes=run.encode().ljust(16,b'0')[:16])
         conn.execute("INSERT INTO pipeline_controlled_source_claim VALUES(%s,%s,%s,%s,'pipeline',%s,'actor')",(*SCOPE.key,INSTALL,GEN,run))
         conn.execute("INSERT INTO meta_schedule_run VALUES(%s,%s,%s,'schedule','succeeded',true,'ec-live-v1',%s)",(*SCOPE.key,run,now))
         for table in ('ecommerce_ingress_command','ecommerce_ingress_derived_command','ecommerce_ingress_dataset_receipt'):
             from psycopg import sql
             conn.execute(sql.SQL('INSERT INTO {} VALUES(%s,%s,%s)').format(sql.Identifier(table)),(*SCOPE.key,run))
+        conn.execute('INSERT INTO pipeline_snapshot_group_member VALUES(%s,%s,%s,1,%s)',(*SCOPE.key,group,run))
+        conn.execute("INSERT INTO pipeline_snapshot_group_claim VALUES(%s,%s,%s,'actor')",(*SCOPE.key,group))
+        conn.execute('INSERT INTO pipeline_snapshot_group_input VALUES(%s,%s,%s)',(*SCOPE.key,group))
     insert('run-1');insert('run-2')
     return conn,insert
 
@@ -65,7 +72,7 @@ def test_current_control_successor_is_used(discovery):
     assert read(conn)==()
 
 
-@pytest.mark.parametrize('fault',['disabled','unfinished','receipt','source_hash','actor','generation','tenant'])
+@pytest.mark.parametrize('fault',['disabled','unfinished','receipt','source_hash','actor','generation','tenant','group'])
 def test_ineligible_routes_are_excluded(discovery,fault):
     conn,_=discovery
     if fault=='disabled':conn.execute('UPDATE automation_schedule_binding SET enabled=false')
@@ -75,6 +82,7 @@ def test_ineligible_routes_are_excluded(discovery,fault):
     if fault=='actor':conn.execute("UPDATE pipeline_schedule_control_binding SET actor='other'")
     if fault=='generation':conn.execute('UPDATE pipeline_controlled_source_claim SET generation=%s',(UUID(int=99),))
     if fault=='tenant':conn.execute("UPDATE pipeline_controlled_source_claim SET org_id='dev-org'")
+    if fault=='group':conn.execute('DELETE FROM pipeline_snapshot_group_input')
     assert read(conn)==()
 
 

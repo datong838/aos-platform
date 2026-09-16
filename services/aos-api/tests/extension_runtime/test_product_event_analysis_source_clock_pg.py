@@ -42,11 +42,9 @@ def test_group_clock_and_original_source_membership(analysis_case, monkeypatch, 
     assert conn.execute('SELECT count(*) AS n FROM ecommerce_investigation_run').fetchone()['n'] == 0
 
 
-def test_legacy_single_source_keeps_snapshot_shape_and_event_clock(analysis_case):
+def test_single_source_without_snapshot_group_is_rejected(analysis_case, monkeypatch):
     conn, analysis, claimed = analysis_case
-    snapshot, request = analysis._phase(conn, claimed, lambda snapshot, request, dispatch: (snapshot, request))
-    assert set(snapshot) == {'source', 'growth', 'occurrence', 'origin', 'request',
-                             'dispatchRevision', 'groupRevision'}
-    event = conn.execute('SELECT created_at FROM automation_occurrence WHERE occurrence_id=%s',
-        (claimed.occurrence_id,)).fetchone()
-    assert request['cutoffAt'] == event['created_at'].astimezone(UTC).replace(microsecond=0).isoformat()
+    monkeypatch.setattr(analysis, '_source_group', lambda db: None)
+    with pytest.raises(ValueError, match='snapshot group differs'):
+        analysis._phase(conn, claimed, lambda *args: pytest.fail('ungrouped source admitted'))
+    assert conn.execute('SELECT count(*) AS n FROM ecommerce_investigation_run').fetchone()['n'] == 0

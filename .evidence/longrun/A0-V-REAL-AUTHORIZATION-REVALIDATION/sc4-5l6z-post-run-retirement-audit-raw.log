@@ -1,0 +1,161 @@
+{"ts": "2026-09-16T20:37:38.000274+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "run": {
+    "authority": {
+      "schemaVersion": "aos.ecommerce.business-investigation-run/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "runId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+      "version": 1,
+      "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+      "caseRef": {
+        "resourceType": "BusinessInvestigationCaseRevision",
+        "resourceId": "case-qyh-full-store-baseline-20260915",
+        "revision": 9,
+        "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+        "receiptId": null
+      },
+      "analysisType": "initial_store_analysis",
+      "triggerKind": "recovery",
+      "triggerKey": "automation-occurrence:37bead7a-52d6-5e6e-878e-a8e1e54a294c",
+      "lifecycle": "PREPARING",
+      "control": "RUNNING",
+      "createdBy": "ecommerce-growth-analysis-host",
+      "createdAt": "2026-09-16T00:10:47.318443Z"
+    },
+    "state": {
+      "schemaVersion": "aos.ecommerce.business-investigation-run-state/v1",
+      "tenant": {
+        "orgId": "org-org",
+        "projectId": "dev-project"
+      },
+      "runId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+      "version": 3,
+      "priorRef": {
+        "resourceType": "BusinessInvestigationRunStateRevision",
+        "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+        "revision": 2,
+        "contentHash": "sha256:afa7b4c7a430e08abb408f2d7a503f7a73adfac17d51c2bf1240e37c13d93cf4",
+        "receiptId": null
+      },
+      "lifecycle": "PREPARING",
+      "control": "CANCELLED",
+      "eventSequence": 3,
+      "contentHash": "sha256:3bb67fb09e10c81192844754c1c9aec9785271ea943cc8155aa14da6146487e9",
+      "pendingRequirementRef": null,
+      "uncertainCommand": null,
+      "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "createdAt": "2026-09-16T20:37:09.953283Z"
+    }
+  },
+  "requirement": {
+    "schemaVersion": "aos.data-requirement-authority/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "requirementId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+    "revision": 2,
+    "priorRef": {
+      "resourceType": "DataRequirementRevision",
+      "resourceId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+      "revision": 1,
+      "contentHash": "sha256:22fe42a2a52328d54038601425139a1e6e4dfa1f9a02134594a6c22e8c193678",
+      "receiptId": null
+    },
+    "contentHash": "sha256:f0145e85393e64629ce08e520620e47fb45f59299b7ba8de8e12a9c7ade89765",
+    "status": "rejected",
+    "caseRef": {
+      "resourceType": "BusinessInvestigationCaseRevision",
+      "resourceId": "case-qyh-full-store-baseline-20260915",
+      "revision": 9,
+      "contentHash": "sha256:482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+      "receiptId": null
+    },
+    "runRef": {
+      "resourceType": "BusinessInvestigationRun",
+      "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+      "revision": 1,
+      "contentHash": "sha256:f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+      "receiptId": null
+    },
+    "checkpointRef": {
+      "resourceType": "CheckpointRevision",
+      "resourceId": "checkpoint-02a75f9b7493418993c0",
+      "revision": 1,
+      "contentHash": "sha256:ec1299a02a5a2755acc0fbb96a7c65526ea2ad546cea1b145d4cb6ee72e07aa2",
+      "receiptId": null
+    },
+    "purposeCode": "initial_store_analysis",
+    "channelRef": {
+      "resourceType": "ChannelRevision",
+      "resourceId": "niushop:1",
+      "revision": 1,
+      "contentHash": "sha256:79c222ce1ab2debae4751c048977e983ff1a71dd0350a933758206ec2e38bd69",
+      "receiptId": null
+    },
+    "entityRef": {
+      "resourceType": "BusinessEntityRevision",
+      "resourceId": "niushop:1:1",
+      "revision": 1,
+      "contentHash": "sha256:b372a40cab64d052ba5c01d87698a7432a2ddb76a46aac4c7353a96392e4782a",
+      "receiptId": null
+    },
+    "requiredFacts": [
+      "Shop",
+      "Product",
+      "ProductSku",
+      "Category",
+      "Order",
+      "OrderLine",
+      "Shipment",
+      "CustomerLite",
+      "Weapp",
+      "SystemConfig",
+      "ProductReview",
+      "Payment"
+    ],
+    "timeWindow": {
+      "startAt": "2026-08-17T00:10:43Z",
+      "endAt": "2026-09-16T00:10:43Z"
+    },
+    "grain": "store",
+    "cutoffAt": "2026-09-16T00:10:43Z",
+    "freshnessMaxAgeSeconds": 3600,
+    "qualityThreshold": 1.0,
+    "markings": [],
+    "piiAllowed": false,
+    "minPopulation": 1,
+    "acceptableDegradation": [],
+    "requestedOutputs": [
+      "EvidenceBundleRevision"
+    ],
+    "budgetMinor": 10000,
+    "expiresAt": "2026-09-16T00:23:42.666449Z",
+    "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "createdAt": "2026-09-16T20:25:12.623211Z",
+    "blockers": [
+      {
+        "code": "MANUAL_DATA_REQUIREMENT_REJECTED",
+        "severity": "blocking",
+        "dependency": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+        "requiredAction": "原源 Run 缺少完整 snapshot group claim/input，无法证明十二源同一截止时点；Requirement 已过期，禁止补造旧组或重领 failed Outbox。"
+      }
+    ]
+  },
+  "delivery": [
+    {
+      "state": "failed",
+      "attempt": 1,
+      "failure_code": "CURRENT_ROUTE_REJECTED",
+      "completion_fulfillment_ref": null,
+      "completion_analysis_ref": null
+    }
+  ],
+  "fulfillmentCount": 0,
+  "snapshotGroupMemberCount": 0,
+  "activeSlotCount": 0
+}
+{"ts": "2026-09-16T20:37:38.077211+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}
