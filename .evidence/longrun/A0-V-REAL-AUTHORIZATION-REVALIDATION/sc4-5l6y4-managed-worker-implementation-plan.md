@@ -2,6 +2,12 @@
 
 2026-09-16。前置：Y3c-5完整失败Store恢复验收通过后实施；本文件登记方案，不宣称worker已启动或真实首链已完成。
 
+## Y4a实施证据
+
+新增只读Dispatch和对应PG测试。Red为新增模块尚不存在的收集失败（`/tmp/aos-dispatch-red.log`），实现后专项5 passed/23.55s（`/tmp/aos-dispatch-final.log`）；原defined claim及recovery-only禁入回归11 passed/25.46s（`/tmp/aos-dispatch-regression.log`）。diff检查通过。
+
+组身份只含租户/定义标识/UTC分钟；未完成原组包括全停止失败均阻止后续slot，配置revision变化保留本slot已完成组身份；新周期候选、停用、负租户、续期专用配置均覆盖。routing完成状态使用具名SQL夹具，只证明状态分流，不声称实际Store完成或当前执行许可。实际Store证据由C5提供。输出始终executionAuthorized=false；Y4b必须在会话锁内重读并经原Runtime检查。未接应用启动、未发源调用、未迁移主库。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
@@ -22,6 +28,8 @@
 - worker重启或重复tick不更换原组/幂等键。数据库提交确认未知时先读取原回执，不能重领新的组。
 
 ## 验证与退出条件
+
+Y4a接口细化：`snapshot_slot_group_id(scope, definition_id, scheduled_for)`仅接受exact租户、canonical UUID和aware整分钟，规范UTC后UUIDv5，不含revision。`PipelineSnapshotScheduleDispatch(definitions, claims).inspect(conn, scope, definition_id, now)`只读且返回executionAuthorized=false；读取完整原Claim及十二Run状态，只要存在未完成历史组，返回original_group_pending及原组路由，绝不返回新领取。全完成同slot返回slot_completed。没有待处理组、当前非续期专用且cron命中才返回due候选；这不是执行授权，Y4b必须在持锁后再次inspect并调用原Runtime。disabled/retired/recovery_only/not_due分别返回明确状态，不读源、不新建Run、不替用户续期。
 
 先Red/Green验证固定分钟身份、配置revision变更、跨分钟未知阻断、普通已完成组下一周期、续期定义不新读源；随后双连接并发同slot、锁竞争、当前权限撤销、disable竞态、停止信号传播和底层线程实际退出。保留旧单路回归、租户负例、卸载禁入及重装代次负例。工厂测试验证原Owner依赖，浏览器验证真实服务状态而非硬编码。
 
