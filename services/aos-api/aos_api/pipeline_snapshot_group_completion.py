@@ -1,6 +1,8 @@
 """Complete one original snapshot group; never accept a client success claim."""
 from time import monotonic
-from uuid import UUID
+from uuid import UUID,NAMESPACE_URL,uuid5
+from contextlib import contextmanager
+from aos_api.asset_registry.canonical_json import canonical_sha256
 
 from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.ec_ingress_recovery import _check_active
@@ -76,6 +78,46 @@ class PipelineSnapshotGroupCompletion:
         if completed:
             return 'completed'
         raise IngressJournalConflict('GROUP_RUN_STATE_MIXED')
+
+    def _route_with_recovery(self,rows):
+        values=tuple(rows.values())
+        if (self._claims._recovery is not None and len(values)==12
+                and all(r['status']=='failed' and r['executor_stopped'] is True and r['finished_at'] is not None for r in values)):
+            return 'stopped_failed'
+        return self._route(rows)
+
+    def _recover_stopped_group(self,conn,args,*,deadline,cancel_event):
+        """Called only inside complete's original session lock and outer transaction."""
+        from aos_api.ec_ingress_claim import claim_failed_run
+        from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
+        authority=self._claims._recovery
+        if authority is None or authority._group_id!=args['group_id']:
+            raise PermissionError('fixed original recovery group required')
+        scope=args['scope']
+        @contextmanager
+        def shared(requested):
+            if requested!=scope:raise PermissionError('shared recovery transaction scope differs')
+            yield conn
+        def reopen(current):
+            if PipelineExactRef.model_validate(args['policy_ref'])!=current.execution.policy_ref:
+                raise ValueError('recovery completion policy differs')
+            rows=self._rows(conn,scope,args['bindings'],lock=True)
+            if self._route_with_recovery(rows)!='stopped_failed':
+                raise IngressJournalConflict('GROUP_STOPPED_FAILED_REQUIRED')
+            for ref,run in sorted(args['bindings'],key=lambda pair:pair[1]):
+                _check_active(deadline,cancel_event)
+                identity=canonical_sha256(dict(tenant=list(scope.key),groupId=args['group_id'],
+                    recoveryRef=current.receipt['ref'],runId=run))
+                claim_id=str(uuid5(NAMESPACE_URL,identity))
+                journal=ControlledIngressJournal(claims=self._claims,scope=scope,run_id=run,
+                    control_ref=ref,actor=args['actor'],saved_recovery=True)
+                claimed=claim_failed_run(shared,scope,run,claim_id,journal=journal,expected_schedule_id=rows[run]['schedule_id'])
+                if claimed is not True:
+                    raise IngressJournalConflict('GROUP_RECOVERY_APPROVAL_ALREADY_CONSUMED')
+            if self._route(self._rows(conn,scope,args['bindings']))!='running':
+                raise IngressJournalConflict('GROUP_RECOVERY_NOT_ATOMIC')
+            _check_active(deadline,cancel_event)
+        authority.run_current(conn,scope=scope,actor=args['actor'],bindings=args['bindings'],execute=reopen)
 
     @staticmethod
     def _validate_schedules(current, rows):
@@ -156,7 +198,12 @@ class PipelineSnapshotGroupCompletion:
             try:
                 with self._transaction(scope) as conn:
                     rows = self._rows(conn, scope, bindings, lock=False)
-                    route = self._route(rows)
+                    route = self._route_with_recovery(rows)
+                    if route == 'stopped_failed':
+                        self._recover_stopped_group(conn,args,deadline=deadline,cancel_event=cancel_event)
+                        rows=self._rows(conn,scope,bindings,lock=False)
+                        route=self._route(rows)
+                        _check_active(deadline,cancel_event)
                     if route == 'completed':
                         projection, retirement, audit = self._read_completed(conn, args, rows)
                         attention = any(counts[key] for counts in audit.counts.values()

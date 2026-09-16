@@ -60,7 +60,7 @@ def test_original_partial_store_commit_recovers_under_new_window_once(recovery_c
     assert state['calls']==1
 
 
-@pytest.mark.parametrize('fault',['disabled','actor','stale-ref','failed','negative-tenant'])
+@pytest.mark.parametrize('fault',['disabled','actor','stale-ref','failed-unknown','negative-tenant'])
 def test_invalid_current_recovery_never_reaches_store(recovery_case,fault):
     runtime,owner,command,state=recovery_case
     with runtime._transaction(command['scope']) as conn:
@@ -69,14 +69,14 @@ def test_invalid_current_recovery_never_reaches_store(recovery_case,fault):
             runtime._definitions.transition(conn,scope=command['scope'],actor=command['actor'],
                 definition_id=receipt['body']['currentDefinitionRef']['resourceId'].removeprefix('snapshot-schedule-'),
                 expected_ref=receipt['body']['currentDefinitionRef'],intent='disable',idempotency_key='disable-before-resume')
-        if fault=='failed':
-            conn.execute("UPDATE public.meta_schedule_run SET status='failed',executor_stopped=true,finished_at=clock_timestamp()")
+        if fault=='failed-unknown':
+            conn.execute("UPDATE public.meta_schedule_run SET status='failed',executor_stopped=false,finished_at=clock_timestamp()")
     before=counts(runtime,command['scope'])
     call=dict(scope=command['scope'],actor=command['actor'],recovery_ref=receipt['ref'])
     error,message=ValueError,'definition'
     if fault=='actor':call['actor']='another-actor';error,message=PermissionError,'executor'
     if fault=='stale-ref':call['recovery_ref']=dict(receipt['ref'],revision=99);message='receipt'
-    if fault=='failed':error,message=IngressJournalConflict,'MIXED'
+    if fault=='failed-unknown':error,message=IngressJournalConflict,'MIXED'
     if fault=='negative-tenant':call['scope']=TenantScope('dev-org','dev-project');error,message=LookupError,'receipt'
     with pytest.raises(error,match=message):runtime_for(runtime,owner).resume_saved(**call)
     assert counts(runtime,command['scope'])==before and before['ecom_ingest_receipt']==0

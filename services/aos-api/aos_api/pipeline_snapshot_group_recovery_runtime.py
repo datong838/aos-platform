@@ -61,7 +61,7 @@ class PipelineSnapshotGroupRecoveryRuntime:
             claims=PipelineSourceClaimOwner(controls=self._controls,recovery=authority,recovery_bindings=bindings)
             completion=PipelineSnapshotGroupCompletion(claims=claims,store=self._store,connect=self._connect,eng=self._eng)
             authority.run_current(conn,scope=scope,actor=actor,bindings=bindings,
-                execute=lambda _:completion._route(completion._rows(conn,scope,bindings)))
+                execute=lambda _:completion._route_with_recovery(completion._rows(conn,scope,bindings)))
             _check_active(**active)
         # No ScheduleClaim, source reservation or preparation. A completed
         # metadata transaction must return before original Store recovery starts.
