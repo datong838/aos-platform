@@ -52,3 +52,23 @@ def test_snapshot_stop_mode_does_not_require_available_asset_directory(tmp_path)
     with pytest.raises(PermissionError,match='stop-only'):
         stopped._owner.transition(None,scope=scope,definition_id='unused',actor='actor',intent='enable',
             expected_ref=None,idempotency_key='denied')
+
+
+def test_snapshot_worker_factory_shares_original_authority_without_connecting(tmp_path,monkeypatch):
+    from sqlalchemy import create_engine
+    from aos_api.ecom_consistency_store import EcomConsistencyStore
+    import aos_api.pipeline_control_service as module
+    import aos_api.phase5_pipeline_engine as pipeline
+    monkeypatch.setattr(module,'runtime_worker_connection',lambda:pytest.fail('constructor connected'))
+    named_engine=object()
+    monkeypatch.setattr(pipeline,'get_engine',lambda:named_engine)
+    engine=create_engine('postgresql+psycopg://unused@127.0.0.1:1/unused')
+    try:
+        store=EcomConsistencyStore(engine)
+        worker=factory(tmp_path).build_snapshot_worker(TenantScope('org-org','dev-project'),store=store)
+        assert worker._runtime._claims._groups._controls is worker._recovery._controls
+        assert worker._runtime._completion._store is worker._recovery._store is store
+        assert worker._runtime._connect is worker._recovery._connect is module.runtime_worker_connection
+        assert worker._recovery._eng is named_engine
+        with pytest.raises(TypeError):factory(tmp_path).build_snapshot_worker(worker.scope,store=object())
+    finally:engine.dispose()

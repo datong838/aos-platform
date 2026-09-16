@@ -8,11 +8,19 @@
 
 组身份只含租户/定义标识/UTC分钟；未完成原组包括全停止失败均阻止后续slot，配置revision变化保留本slot已完成组身份；新周期候选、停用、负租户、续期专用配置均覆盖。routing完成状态使用具名SQL夹具，只证明状态分流，不声称实际Store完成或当前执行许可。实际Store证据由C5提供。输出始终executionAuthorized=false；Y4b必须在会话锁内重读并经原Runtime检查。未接应用启动、未发源调用、未迁移主库。
 
+## Y4b实施证据
+
+新增同步Worker，稳定定义会话锁覆盖锁内重查及原Runtime执行，Factory复用原SourceClaim/Control/Store与runtime_worker_connection。Red为Worker模块缺失；专项3项通过，工厂+Worker+Dispatch联合14 passed/35.54s（`/tmp/aos-worker-final.log`），diff检查通过。第二连接执行实例在原执行回调期间返回busy；原Claim提交后具名确认异常保留原组，第二实例读取pending而不再execute；停止/停用零源；tick异常用固定unknown编码不泄漏异常内容，也不写虚假stopped。工厂构造无连接，两个原Runtime共用授权与Store。
+
+本波执行回调使用明确停止seam，只证明锁、原Claim和调度错误边界，不替代C5实际Store链验收。main未注册Worker。下一波Y4c先实现async serve与线程真实排空测试，再接默认关闭的main入口和状态；恢复执行正式入口仍待Y4d。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4b追加测试目录：`services/aos-api/tests/test_pipeline_control_service.py`，验证原Factory构造无连接/无源调用且两个Runtime共享ControlOwner/Store/runtime身份；现有工厂测试一并回归。
 
 1. Y4a：固定周期计划和原组状态读取。新增 `services/aos-api/aos_api/pipeline_snapshot_schedule_dispatch.py` 与 `services/aos-api/tests/extension_runtime/test_snapshot_schedule_dispatch_pg.py`。复用DefinitionOwner解码、原ScheduleClaim及成员Run事实、原Cron解析。配置定义标识、租户、UTC分钟构成稳定组身份；不以可变revision生成另一个同分钟组。新的领取仍交原ScheduleClaimOwner执行CAS和完整当前控制验证。
 2. Y4b：工厂及受管理执行。修改 `services/aos-api/aos_api/pipeline_control_service.py`，新增 `services/aos-api/aos_api/pipeline_snapshot_schedule_worker.py` 与对应worker测试。只构造原ScheduleRuntime、RecoveryRuntime、Store和runtime_worker_connection。每定义会话锁覆盖执行全过程；同一锁内重新读取当前状态，再决定新领取、原组继续、等待明确恢复或拒绝。不可在锁外扫描结果上直接执行。
@@ -20,6 +28,8 @@
 4. Y4d：正式恢复执行请求与界面。复用 `services/aos-api/aos_api/routers/pipeline_snapshot_recoveries.py`、`pipeline_snapshot_schedule_service.py` 及现有配置页面；具体前端文件由页面定位后补全清单。请求只指定exact回执与原幂等键，principal当前授权通过后交同一个受管理worker。不得另起无生命周期管理的后台线程。页面显示停用、可调度、执行中、等待恢复、unknown、需重配；只有实际启用才替换“尚未接通执行”。
 
 ## 原组优先与未知结果边界
+
+Y4b接口细化：`PipelineSnapshotScheduleWorker(scope,runtime,recovery)`只接受原两个Runtime且共享ControlOwner，`run_definition(definition_id,cancel_event,deadline)`先检查停止，获取按scope/definition稳定的非阻塞PG会话锁，再用数据库当前时间只读inspect；只有due走原Runtime.execute，actor/definitionRef/groupId/slot均取服务端结果，其他状态只返回。锁贯穿源读取及Store完成，finally释放；原异常向上传递，不写假的停止/完成状态。`tick`从当前租户定义头枚举enabled，串行调用，逐项异常记录固定unknown状态、原定义标识且不包含敏感异常文本。持锁失败返回busy，不排队后自动重读源。Factory新增build_snapshot_worker(scope,store)，复用原依赖及get_engine；本波不注册main启动，async serve停止协议留Y4c。测试用具名Runtime执行seam验证锁覆盖、原claim提交后异常与再次tick阻断，明确不替代C5实际Store验收。
 
 - 本分钟已有原ScheduleClaim时保留其exact定义/成员身份；同分钟改配置不能创建第二组绕过原回执。
 - 跨分钟存在原组running、failed或未知时，不仅检查active Run谓词，还检查完整十二成员和原组完成事实。全失败且stopped也不能直接跳过原组开新周期。

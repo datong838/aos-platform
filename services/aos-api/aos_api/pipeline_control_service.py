@@ -93,6 +93,18 @@ class PipelineControlServiceFactory:
             controls=PipelineRuntimeControlOwner(selections=selections)
         return PipelineSnapshotScheduleService(scope=scope,controls=controls,installation_store=self.installation_store)
 
+    def build_snapshot_worker(self,scope,*,store):
+        from aos_api.ecom_consistency_store import EcomConsistencyStore
+        from aos_api.phase5_pipeline_engine import get_engine
+        from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleRuntime
+        from aos_api.pipeline_snapshot_group_recovery_runtime import PipelineSnapshotGroupRecoveryRuntime
+        from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker
+        if type(store) is not EcomConsistencyStore:raise TypeError('original snapshot Store required')
+        services=self.build(scope)
+        dependencies=dict(claims=services.claims,store=store,connect=runtime_worker_connection,eng=get_engine())
+        return PipelineSnapshotScheduleWorker(scope=scope,runtime=PipelineSnapshotScheduleRuntime(**dependencies),
+            recovery=PipelineSnapshotGroupRecoveryRuntime(**dependencies))
+
     def build_event_dispatch_lifecycle(self,scope):
         from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchLifecycle
         if self.event_dispatch_connect is None:
