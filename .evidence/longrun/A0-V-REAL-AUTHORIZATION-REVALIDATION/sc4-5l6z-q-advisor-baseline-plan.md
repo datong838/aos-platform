@@ -1,0 +1,67 @@
+# SC4-5L6Z-Q｜计划为空时经营参谋首次全店基线自动启动方案
+
+日期：2026-09-17。基线：`5250e8d4`。本切片承接 Q Policy12 真实自然空窗，目标是让已安装并完成租户配置的电商包在没有活动经营计划时，自动启动一次来源化的全店基线分析。它不修改商城源数据，不伪造商品变化，不批准 GrowthPlan，不执行外部触达，也不扩大 230 L0 权限。
+
+## 1. 产品与当前事实
+
+- 产品方案规定：`StorePortfolio` 没有活动计划时，经营参谋仍须盘点当前业务、读取可信数据、形成问题/机会和候选计划；首次接入应运行 `FULL_STORE_BASELINE_ASSESSMENT`，首个内部场景为“商品尖刀验证”。
+- 当前 Q 已完成安装、配置、切流、event-control 和一次真实只读 Cron；最新来源运行写入 65 行商品，但相对当前事件游标没有变化，所以自然窗口正确地产生零候选、零 Case/Run。
+- 当前 Case `case-qyh-full-store-baseline-20260915@14` 已绑定 ProductEvent Policy12。Case 只允许一个 `schedulePolicyRef`，不能把一次性基线计划覆盖到同一 Case 上。
+- 正式 D01/D02/D03、GrowthPlan 草稿 Owner、exact 评审、Handoff 已存在；当前缺的是“首次安装/计划为空”到一个正式 Run 的自动触发和当前真实来源上下文，而不是第二套分析或计划实现。
+
+## 2. 选择的产品路径
+
+建立一个独立的首次基线 Case，并使用现有 `initial_checkup / once` BusinessInvestigationSchedulePolicy。一次性策略属于租户安装配置；配置完成后由 Runtime Host 自然枚举到期 slot、生成唯一 `schedule` occurrence、消费 occurrence 并启动分析，开发者不参与每次 Case/Run 创建。
+
+计划为空不是充分条件。自动启动必须在同一受控读取中同时满足：
+
+1. 当前租户为 `org-org/dev-project`，当前安装精确为 Q installation/generation/epoch；
+2. Case 为 ACTIVE、`initial_store_analysis`、独立 baseline Case，且 once policy 当前启用；
+3. 当前业务实体唯一、来源 readiness 可用，存在一组已完成且可回读的真实 Pipeline Snapshot Group；
+4. 当前没有同 Case/analysisType 的活动 Run；
+5. 当前没有可用的 DRAFT/APPROVED GrowthPlan；若已有计划则 occurrence 记为 `not_applicable`，不重跑基线；
+6. 当前路由、安装、配置、预算、能力和 reviewer 边界仍通过现有 bootstrap 守卫。
+
+首次基线不伪装成 ProductEvent。它使用现有 `trigger_source=schedule` 和 once binding；来源上下文引用最新合格快照组、Case exact ref、SchedulePolicy exact ref 和 occurrence exact ref。分析启动后仍走现有 compilation、bootstrap、DataRequirement、D01/D02/D03、stage review、GrowthPlan approval 和 Handoff 权威。
+
+## 3. 六步施工顺序
+
+1. **入口与契约**：新增 baseline eligibility/discovery 纯读取服务，输出 exact Case、Policy、安装目标和最新合格 snapshot group；已有计划、活动 Run、来源不新鲜、canary 或代次漂移全部失败关闭。
+2. **自然 once occurrence**：补齐 once slot 枚举与 watermark；每个 policy 只产生一个稳定 occurrence，重启重放不重复。未到 effectiveFrom 不产生；超过恢复窗标记 missed。
+3. **schedule 分析上下文**：抽取 ProductEvent 分析启动中的公共 bootstrap 核心；新增 schedule 来源适配器，只接受 `trigger_source=schedule`，不要求 ProductEventOrigin，也不读取源库。
+4. **宿主 worker**：Runtime Host 增加 baseline-schedule worker。它先枚举 once slot，再只 claim 当前 Q 的 schedule occurrence；执行结果未知时进入 reconcile/needs_attention，不重发模型或动作。
+5. **真实租户配置与运行**：通过当前 Q canonical router 建立独立 baseline Case、once policy 和审批/绑定；不直接写表。等待 Host 自动生成 occurrence 和 Run，随后观察 DataNeed、画像、诊断和计划草稿。
+6. **exact 评审和下一波**：对可读且逐项有来源的计划执行人工角色 exact 评审；批准后进入内部工作台任务，不执行外部发布。下一波补齐计划承接、可读产物、人工续跑、总控复盘和 WikiCandidate。
+
+## 4. 实现文件与最小边界
+
+| 文件 | 动作 | preHash / 边界 |
+|---|---|---|
+| `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py` | 新增 | 只读 eligibility；不创建 Case/Run/Plan |
+| `services/aos-api/aos_api/ecommerce_baseline_assessment_worker.py` | 新增 | once slot + schedule claim；只处理当前 live target |
+| `services/aos-api/aos_api/ecommerce_scheduled_analysis_service.py` | 新增 | schedule occurrence 到现有 bootstrap；不接受 event occurrence |
+| `services/aos-api/aos_api/ecommerce_product_event_analysis_service.py` | 最小抽取 | `4e86e96b...`；ProductEvent 行为和守卫保持不变 |
+| `services/aos-api/aos_api/automation_occurrence_store.py` | 最小补强 | `a5bfbcad...`；复用已有 schedule schema，不改数据库约束 |
+| `services/aos-api/aos_api/aip_logic_automation_scheduler.py` | 最小补强 | once slot 计算；weekly 语义不变 |
+| `services/aos-api/aos_api/pipeline_control_service.py` | 最小装配 | `cdbb8de5...`；仅构造当前安装的 schedule 分析服务 |
+| `scripts/a0v_ecommerce_runtime_host.py` | 最小装配 | `85cae8db...`；新增 worker 生命周期与状态，不改变原两 worker |
+| `services/aos-api/tests/test_ecommerce_baseline_assessment_*.py` | 新增 | 空计划/已有计划、重放、来源/租户/代次/活动 Run 反例 |
+| `services/aos-api/tests/test_aip_logic_automation_scheduler.py` | 修改 | once/weekly 不回归 |
+| `scripts/a0v_q_advisor_baseline.py` | 新增 | 当前 Q 配置、观察、恢复和证据；禁止直接 DML 业务对象 |
+
+实际编码前逐文件重新校验 hash；若现有公共 bootstrap 无法安全抽取，则新增 schedule 专用适配层，不放宽 ProductEvent 类型检查。
+
+## 5. 验收与停止条件
+
+- 一个独立 baseline Case、一个 enabled once policy、一个 schedule occurrence、一个 BusinessInvestigationRun；同一配置和重启重放数量不增长。
+- Run 的 Case/Policy/occurrence/snapshot group/installation/generation/epoch 均可 exact 对账；来源只来自受治理快照，不查询或修改商城 MySQL。
+- 已有计划时不启动；活动 Run、来源失效、预算/能力/角色/配置漂移时不启动；`dev-org/dev-project` 产生零对象。
+- 计划正文必须可读，建议逐项引用 Evidence/Insight/Decision；缺订单、支付、成本或内容事实时生成 DataNeed 或显式未知，不猜数字。
+- 未经 exact 评审不批准 GrowthPlan；未经预算、能力和动作批准不生成外部副作用。任何未知写结果只读 reconcile，不盲重发。
+- 专项测试、受影响原回归、PostgreSQL 隔离用例、AR2 `--phase ar2-7` 验证全部通过；真实结果另落 JSON/Markdown 并提交。
+
+## 6. 风险说明
+
+- 当前真实窗口只确认 Product 65 行，完整全店分析需要十二类事实。首个 Run 很可能先进入 `WAITING_DATA`；这是正确结果，后续由既有 DataRequirement worker 补齐，不能用商业材料或模型猜测替代。
+- “计划为空”不能长期作为重复触发器；once watermark、Plan existence 和活动 Run 三道门必须共同阻止重启风暴。
+- 商品尖刀方法来自产品方案和商业案例，仅作为候选分析方法。最终选品、价格、预算、内容声称和渠道动作必须由当前真实证据和后续评审决定。
