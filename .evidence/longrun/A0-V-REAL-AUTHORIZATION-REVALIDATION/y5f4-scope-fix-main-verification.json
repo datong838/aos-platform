@@ -1,0 +1,48 @@
+{
+  "outcome": "DISPATCH_CONFIGURATION_REFRESH_MAIN_069_VERIFIED",
+  "source": "a0v_068",
+  "target": "a0v_069",
+  "preservedTableCount": 551,
+  "oldDataUnchangedWithinTransaction": true,
+  "migrations": {
+    "a0v_069_dispatch_configuration_refresh_scope.py": "sha256:0c29d0fd9b985b90599f23d3943a854d152d2590e59f3ff8e74372ec25258ec5"
+  },
+  "executors": {
+    "a0v_dispatch_configuration_refresh_scope_fix_clone.py": "sha256:1bc59479c2704d83e90861b1ab69bb672926af4c284a6cacb1b8706d2f4d2e6a",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c",
+    "a0v_dispatch_configuration_refresh_scope_fix_main_deploy.py": "sha256:df0db41085265d99752ad1cdab096bffcad8a396c4adce006adb70dab09082b9"
+  },
+  "schema": {
+    "tableAcl": {
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "runtime_select": true,
+      "runtime_write": false,
+      "maintainer_select": true,
+      "maintainer_write": false
+    },
+    "triggers": [
+      "immutable_refresh_history",
+      "validate_refresh_history"
+    ],
+    "dualTenantPolicy": true,
+    "ownerFunction": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "runtime_execute": false,
+      "maintainer_execute": true,
+      "public_execute": false
+    },
+    "validatorPublicExecute": false,
+    "newRows": 0
+  },
+  "freshBackupSha256": "sha256:7bf85af491eb825ccced40c806d220ea225b5fbbe476f9222d35029f2c800d3c",
+  "refreshRows": 0,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T13:15:08.725931+00:00"
+}

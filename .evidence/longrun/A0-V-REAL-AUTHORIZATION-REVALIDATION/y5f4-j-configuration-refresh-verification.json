@@ -1,0 +1,122 @@
+{
+  "outcome": "A0V_Y5F4_J_CONFIGURATION_REFRESH_GREEN",
+  "databaseVersion": "a0v_069",
+  "clone": {
+    "outcome": "DISPATCH_CONFIGURATION_REFRESH_SCOPE_FIX_CLONE_VERIFIED",
+    "source": "a0v_068",
+    "target": "a0v_069",
+    "preservedTableCount": 551,
+    "oldDataUnchanged": true,
+    "mainMigrated": false
+  },
+  "main": {
+    "outcome": "DISPATCH_CONFIGURATION_REFRESH_MAIN_069_VERIFIED",
+    "source": "a0v_068",
+    "target": "a0v_069",
+    "preservedTableCount": 551,
+    "oldDataUnchangedWithinTransaction": true,
+    "refreshRows": 0,
+    "businessWrites": 0,
+    "sourceCalls": 0
+  },
+  "approval": {
+    "proposalId": "proposal-2acb2592bfcd437e8fc6",
+    "approvalRef": {
+      "resourceType": "ActionApprovalEvent",
+      "resourceId": "approval-d1e8a5f9515a489ea877",
+      "revision": 1,
+      "contentHash": "sha256:c89b09f2f83bcf03b94e404dc2bfb438a3eb9661c479dcc0a92819d25e589e12"
+    },
+    "riskLevel": "R2",
+    "independentApprovals": 1
+  },
+  "receiptRef": {
+    "resourceType": "DispatchConfigurationRefreshReceipt",
+    "resourceId": "708dd66a-787c-43b5-be8e-4953e37a24cd",
+    "revision": 1,
+    "contentHash": "sha256:4e40226aa22cbceab702225636699cf1b83e1bb11aa77544117c6e31bc50288f"
+  },
+  "requestHash": "sha256:4adc635a053bbbc0e9468dd0946d924fac96fca32099af32f09480efe1e675c7",
+  "dispatch": [
+    {
+      "operation_id": "ecommerce_growth_analysis_advance",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_case_put",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_content_generate",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_content_review",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_data_fulfill",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_investigation_describe",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_review_advance",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_schedule_put",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    },
+    {
+      "operation_id": "ecommerce_growth_schedule_trigger",
+      "revision": 18,
+      "execution_epoch": 5,
+      "operation_fence": false,
+      "cutover_group_revision": 31
+    }
+  ],
+  "eventControl": {
+    "operation_id": "ecommerce_growth_event_control",
+    "revision": 1,
+    "execution_epoch": 3,
+    "operation_fence": false,
+    "cutover_group_revision": 30
+  },
+  "canaryVisibleRows": 0,
+  "sameKeyReplay": true,
+  "externalEffects": 0,
+  "businessRunsResumed": 0,
+  "enabledSchedules": 0,
+  "tests": {
+    "passed": 92,
+    "skipped": 3
+  },
+  "next": "event-control disable/detach, nine-operation disable/detach, controlled recovery without business run"
+}

@@ -11,7 +11,7 @@ pytest_plugins=('test_product_event_control_host_service',)
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.ecommerce_dispatch_configuration_receipt import decode_receipt
-from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS
+from aos_api.ecommerce_growth_host_composition import ECOMMERCE_GROWTH_OPERATIONS, EVENT_CONTROL_OPERATION
 from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
 from aos_api.extension_runtime.binding_store import RuntimeBindingStore
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
@@ -89,6 +89,15 @@ def owner_case(ledger):
             VALUES(%s,%s,%s,'extension',%s,%s,%s,false,1,%s,%s,'fixture-admin')''',
             (saved['org_id'],saved['project_id'],operation,saved['installation_id'],saved['generation'],
              req['sourceExecutionEpoch'],saved['cutover_group_id'],req['expectedGroupRevision']))
+    # Production places event control in the same cutover group. Configuration
+    # continuation owns only the fixed nine business operations.
+    conn.execute('''INSERT INTO extension_operation_dispatch_binding(org_id,project_id,operation_id,
+        handler_kind,installation_id,generation,execution_epoch,operation_fence,revision,
+        cutover_group_id,cutover_group_revision,updated_by)
+        VALUES(%s,%s,%s,'extension',%s,%s,%s,false,7,%s,%s,'fixture-admin')''',
+        (saved['org_id'],saved['project_id'],EVENT_CONTROL_OPERATION,saved['installation_id'],
+         saved['generation'],req['sourceExecutionEpoch'],saved['cutover_group_id'],
+         req['expectedGroupRevision']))
     legacy=[dict(operationId=operation,handlerKind='legacy',installationId=None,generation=None,
         executionEpoch=None,operationFence=False,revision=1,cutoverGroupId=str(saved['cutover_group_id']),
         cutoverGroupRevision=req['expectedGroupRevision']-1)
@@ -143,11 +152,16 @@ def test_atomic_refresh_and_same_key_replay(owner_case):
     first=execute(conn,saved);second=execute(conn,saved)
     assert first==second and first['ref']['revision']==1
     rows=conn.execute('''SELECT execution_epoch,revision,cutover_group_revision
-        FROM extension_operation_dispatch_binding ORDER BY operation_id''').fetchall()
+        FROM extension_operation_dispatch_binding WHERE operation_id=ANY(%s) ORDER BY operation_id''',
+        (list(ECOMMERCE_GROWTH_OPERATIONS),)).fetchall()
     assert len(rows)==len(ECOMMERCE_GROWTH_OPERATIONS)
     assert {row['execution_epoch'] for row in rows}=={saved['request']['targetExecutionEpoch']}
     assert {row['revision'] for row in rows}=={2}
     assert {row['cutover_group_revision'] for row in rows}=={saved['request']['expectedGroupRevision']+1}
+    control=dict(conn.execute('''SELECT execution_epoch,revision,cutover_group_revision
+        FROM extension_operation_dispatch_binding WHERE operation_id=%s''',(EVENT_CONTROL_OPERATION,)).fetchone())
+    assert control==dict(execution_epoch=saved['request']['sourceExecutionEpoch'],revision=7,
+        cutover_group_revision=saved['request']['expectedGroupRevision'])
     assert conn.execute('SELECT count(*) AS n FROM extension_dispatch_configuration_refresh_receipt').fetchone()['n']==1
     next_request=deepcopy(saved['request'])
     next_request.update(sourceAuthorityRef=first['ref'],
@@ -177,6 +191,11 @@ def test_atomic_refresh_and_same_key_replay(owner_case):
     assert conn.execute('SELECT count(*) AS n FROM extension_dispatch_configuration_refresh_receipt').fetchone()['n']==2
     with pytest.raises(psycopg.Error,match='idempotency conflict'):
         execute(conn,saved)
+    # The optional event-control entry has its own a0v054 disable/detach owner.
+    # Model that completed boundary before the nine-operation runtime lifecycle.
+    conn.execute('DELETE FROM extension_operation_dispatch_binding WHERE operation_id=%s',
+        (EVENT_CONTROL_OPERATION,))
+    conn.commit()
     assert_refreshed_dispatch_lifecycle(owner_case,latest,next_request)
 
 

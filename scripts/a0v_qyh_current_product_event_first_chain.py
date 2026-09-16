@@ -865,9 +865,12 @@ def _approve(action_type: str, payload: dict[str, Any], key: str):
     scope = TenantScope(**SCOPE)
     store = AipActionStore(_web_connection)
     snapshot = store.action_type_snapshot(scope, action_type)
-    control = action_type == "ecommerce_growth_cutover"
+    control = action_type in {
+        "ecommerce_growth_cutover", "ecommerce_dispatch_configuration_refresh"
+    }
     maker = ACTOR if control else MAKER
-    checkers = (CHECKER, CUTOVER_CHECKER) if control else (CHECKER,)
+    checkers = ((CHECKER, CUTOVER_CHECKER)
+                if action_type == "ecommerce_growth_cutover" else (CHECKER,))
     with _web_connection(scope) as conn:
         existing = conn.execute(
             "SELECT proposal_id FROM aip_action_proposal WHERE org_id=%s AND project_id=%s "

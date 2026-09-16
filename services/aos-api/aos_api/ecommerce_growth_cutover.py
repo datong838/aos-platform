@@ -2236,7 +2236,8 @@ class EcommerceGrowthCutoverStore:
         # use the tenant-scoped reader before restoring the maintainer role in
         # the current-approval validator.  Legacy callers keep their established
         # connection role and therefore preserve the pre-registration contract.
-        if self._registration_service is not None:
+        if (self._registration_service is not None
+                or action_type_id == 'ecommerce_dispatch_configuration_refresh'):
             conn.execute("SET LOCAL ROLE aos_runtime")
         approval = conn.execute(
             f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,

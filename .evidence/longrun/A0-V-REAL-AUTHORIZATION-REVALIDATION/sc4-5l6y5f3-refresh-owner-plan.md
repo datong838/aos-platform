@@ -30,7 +30,7 @@ Python Owner 在同一 tenant-scoped maintainer 事务中：
    - binding 正是 target config/revision/epoch，且 enabled/ready/unfenced；
    - configure 与 enable 均 `status=phase=succeeded`，revision、installation 和 actor 精确；
    - 两个 accepted event 的 `configurationTarget` 分别绑定 source revision 与 target revision 前一版，且均指向 target config；
-   - 九路集合与 F1 固定集合完全一致，均为 extension、同 installation/generation、source epoch、同 expected group revision、未围栏；
+   - 请求内九路集合与 F1 固定集合完全一致，均为 extension、同 installation/generation、source epoch、同 expected group revision、未围栏；同 group 的 `ecommerce_growth_event_control` 属于独立控制入口，不得被本 Owner 更新；
    - 初次接续以 CutoverResumeReceipt 为源，后续接续必须是该组最新 Refresh Receipt，且 source 等于上一 target；
    - approval ref 与 request hash 保持原值，外部效果和业务续跑均为 false。
 5. 单条事务内把九路 execution epoch 更新到 target、各自 revision+1、group revision+1，并插入 canonical Receipt；重复 idempotency key 仅在 request hash、actor、链头完全相同才返回既有 Receipt。
@@ -51,9 +51,14 @@ Python Owner 在同一 tenant-scoped maintainer 事务中：
 
 2026-09-16：F3 已在隔离库完成。两次连续续接、链头幂等、刷新后 fence/detach、全 epoch 未决阻断与旧路径回归均已验证；详见 `sc4-5l6y5f3-refresh-owner-verification.md`。主库部署和真实审批/接续属于 F4，仍未执行。
 
+2026-09-16 F4 主库预检补充：真实 J 拓扑中 `ecommerce_growth_event_control` 与九路经营入口共用 cutover group。068 的组级集合查询会误纳第十行并 fail closed，未产生写入。以 069 `CREATE OR REPLACE FUNCTION` 把锁、校验和 UPDATE 范围同时限定为 F1 request 的固定九路；新增第十行不变回归后再部署。
+
+真实审批消费预检还确认：refresh Owner 不构造 registration service，但 AIP Proposal/Approval 表只允许 tenant-scoped runtime reader。`_approval_authority` 必须像正式 cutover 一样在读取审批前临时切换 `aos_runtime`，完成 current-authority 复验后恢复 maintainer；不得给 maintainer 增加 AIP 表权限。
+
 ## 计划文件
 
 - `services/aos-api/alembic/versions/a0v_068_dispatch_configuration_refresh_owner.py`
+- `services/aos-api/alembic/versions/a0v_069_dispatch_configuration_refresh_scope.py`
 - `services/aos-api/aos_api/ecommerce_dispatch_configuration_owner.py`
 - `services/aos-api/aos_api/ecommerce_dispatch_configuration_approval.py`
 - `services/aos-api/aos_api/ecommerce_growth_cutover_action_binding.py`

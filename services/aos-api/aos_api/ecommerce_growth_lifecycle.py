@@ -152,7 +152,9 @@ class EcommerceGrowthDisableDependent:
             )
         activation = dict(activations[0])
         refresh_ref = activation.pop("configuration_refresh_ref")
-        current = self._dispatch_rows(conn, scope, activation["cutover_group_id"])
+        current = self._dispatch_rows(
+            conn, scope, activation["cutover_group_id"], _array(activation["operation_ids"])
+        )
         fenced = [
             {
                 **item,
@@ -284,7 +286,9 @@ class EcommerceGrowthDisableDependent:
             raise EcommerceGrowthLifecycleBlocked(str(exc).splitlines()[0]) from exc
         if int(updated) != len(ECOMMERCE_GROWTH_OPERATIONS):
             raise EcommerceGrowthLifecycleConflict("dispatch lifecycle detach was not exact")
-        detached = self._dispatch_rows(conn, scope, lifecycle["cutover_group_id"])
+        detached = self._dispatch_rows(
+            conn, scope, lifecycle["cutover_group_id"], _array(lifecycle["operation_ids"])
+        )
         request_hash = lifecycle["request_hash"]
         completed_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
         authority = self._authority(
@@ -337,14 +341,23 @@ class EcommerceGrowthDisableDependent:
         return dict(row)
 
     def _dispatch_rows(
-        self, conn: Any, scope: TenantScope, cutover_group_id: UUID
+        self,
+        conn: Any,
+        scope: TenantScope,
+        cutover_group_id: UUID,
+        operation_ids: list[str],
     ) -> list[dict[str, Any]]:
+        if sorted(operation_ids) != sorted(ECOMMERCE_GROWTH_OPERATIONS):
+            raise EcommerceGrowthLifecycleConflict("exact business operation set is required")
         rows = conn.execute(
             f"""SELECT * FROM {self._schema}.extension_operation_dispatch_binding
                   WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
+                    AND operation_id=ANY(%s)
                   ORDER BY operation_id""",
-            (*scope.key, cutover_group_id),
+            (*scope.key, cutover_group_id, operation_ids),
         ).fetchall()
+        if len(rows) != len(ECOMMERCE_GROWTH_OPERATIONS):
+            raise EcommerceGrowthLifecycleConflict("complete business dispatch set is required")
         return [_snapshot(dict(row)) for row in rows]
 
     def _unknown_attempts(
