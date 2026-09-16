@@ -222,3 +222,43 @@ def test_options_reject_unknown_generation(service):
     owner,args,database,_=service
     target=option_target(database);target['generation']=str(uuid4())
     with pytest.raises(LookupError,match='generation'):owner.options(actor=args['actor'],**target)
+
+
+def test_options_never_fall_back_to_old_generation_binding(service):
+    """Query regression only: second runtime is a named disabled/fenced fixture."""
+    from uuid import uuid4
+    from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
+    from aos_api.pipeline_runtime_control_contracts import PipelineSourceSelectionDraft, PipelineRuntimeControlDraft
+    owner,args,database,controls=service
+    target=option_target(database)
+    generation=str(uuid4())
+    schedule=args['members'][0]['scheduleId']
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        # Explicit lifecycle fixture, not a claim that reinstall was executed.
+        db.execute('''INSERT INTO extension_runtime_binding
+            (org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
+             profile_ref,execution_epoch,desired_state,observed_state,enabled,operation_fence,config_ref)
+            SELECT org_id,project_id,installation_id,%s,installation_revision,package_lock_ref,
+                profile_ref,execution_epoch,'disabled','ready',false,true,config_ref
+            FROM extension_runtime_binding WHERE installation_id=%s AND generation=%s''',
+            (generation,target['installation_id'],target['generation']))
+        db.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",owner.scope.key)
+        db.execute('SET LOCAL ROLE aos_runtime')
+        binding=PipelineScheduleControlOwner.read_latest(db,scope=owner.scope,schedule_id=schedule)
+        draft=controls.run_current(db,scope=owner.scope,ref=binding.control_ref,actor=args['actor'],execute=lambda d,s:d)
+        selected=PipelineSourceSelectionDraft.model_validate(dict(
+            draft.model_dump(exclude={'schema_version','source_selection_ref'}),generation=generation))
+        selection=controls._selections.append(db,draft=selected,actor=args['actor'],idempotency_key='second-gen-selection')
+        control=controls.append(db,draft=PipelineRuntimeControlDraft.model_validate(dict(
+            selected.model_dump(exclude={'schema_version'}),source_selection_ref=selection)),
+            actor=args['actor'],idempotency_key='second-gen-control')
+        successor=PipelineScheduleControlOwner(controls=controls).bind(db,scope=owner.scope,schedule_id=schedule,
+            control_ref=control,actor=args['actor'],idempotency_key='second-gen-binding',previous_ref=binding.ref)
+        assert successor.generation==generation and successor.ref.revision==binding.ref.revision+1
+    options=owner.options(actor=args['actor'],**target)
+    assert options['status']=='incomplete'
+    assert options['missing']==[binding.pipeline_id]
+    assert options['members']==[] and options['policies']==[]
+    with psycopg.connect(database) as db:
+        assert db.execute('SELECT count(*) FROM pipeline_schedule_control_binding WHERE schedule_id=%s',(schedule,)).fetchone()[0]==2
+        assert db.execute('SELECT count(*) FROM meta_schedule_run').fetchone()[0]==0
