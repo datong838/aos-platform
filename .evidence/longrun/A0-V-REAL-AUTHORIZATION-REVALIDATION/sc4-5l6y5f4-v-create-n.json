@@ -1,0 +1,49 @@
+{
+  "outcome": "N_CLEAN_INSTALLATION_APPROVED_AFTER_M_INTERRUPTION",
+  "snapshotHash": "sha256:cd8fd660d7fb126395db68ac8f07433017842267d37b7250deef1205e77ae366",
+  "compositionId": "a65c3836-897b-4978-ac62-6b55141f614f",
+  "lockRevision": 1,
+  "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+  "permissionDiffHash": "sha256:fbf784ddb11ab7be33d488b9123f5104fe07f17713338529cd070801acc30357",
+  "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+  "contributionDiffHash": "sha256:065568ac8538972fdd71dc2358f18ffd66b03923ab7eec7e317bd78b9799a4d2",
+  "resolved": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.0",
+      "contentHash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5",
+      "selectionReason": "dependency"
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+      "selectionReason": "requested"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.10.0",
+      "contentHash": "sha256:7fd951883b9e9fada326cae69a778297aab34625616b9203b248c375dff650a6",
+      "selectionReason": "requested"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.0",
+      "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+      "selectionReason": "requested"
+    }
+  ],
+  "edgeCount": 3,
+  "contributionCount": 31,
+  "moduleCount": 8,
+  "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+  "installationState": "approved",
+  "installationRevision": 3,
+  "installationEtag": 3,
+  "transitions": [
+    "submit",
+    "approve"
+  ],
+  "maker": "a0v-canonical-ecommerce-first-install-maker",
+  "checker": "a0v-canonical-ecommerce-first-install-checker"
+}

@@ -1,0 +1,41 @@
+{
+  "outcome": "RELEASED_EVENT_RETIREMENT_CLONE_VERIFIED",
+  "source": "a0v_073",
+  "target": "a0v_074",
+  "main": "aos_meta_head",
+  "clone": "aos_released_event_retirement_20260917_test",
+  "migrations": {
+    "a0v_074_released_event_control_retirement.py": "sha256:470b278dd63a81a903bc7e6a625d8749b510500ffe194fce6b726158e5ccebbe"
+  },
+  "executors": {
+    "a0v_released_event_retirement_clone.py": "sha256:f4138c4852e1823df629da0eefadea7fdbb1564a02f58da4ecc16a9315114278",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c"
+  },
+  "schema": {
+    "function": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "maintainer_execute": true,
+      "runtime_execute": false,
+      "public_execute": false
+    },
+    "requiredTokens": [
+      "v_released_mode",
+      "cleanup_state='released'",
+      "automation_schedule_binding",
+      "a.status IN ('claimed','unknown')",
+      "releasedRuntimeRecovery"
+    ]
+  },
+  "mainMigrated": false,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T17:48:32.468476+00:00",
+  "preservedTableCount": 552,
+  "oldDataUnchanged": true,
+  "backupSha256": "sha256:b97b068882b6ff6a34f007491df121b8970615bf06a1266034ecfb4995a289c8"
+}

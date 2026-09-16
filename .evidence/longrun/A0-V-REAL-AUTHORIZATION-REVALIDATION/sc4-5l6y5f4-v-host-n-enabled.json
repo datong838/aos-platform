@@ -1,0 +1,30 @@
+{
+  "businessWorkers": [
+    "product-event",
+    "analysis-data-requirement"
+  ],
+  "canaryTenantCount": 0,
+  "hostId": "a0v-local-ecommerce-host-20260912",
+  "intervalSeconds": 2,
+  "liveTargets": [
+    {
+      "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+      "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "tenant": [
+        "org-org",
+        "dev-project"
+      ]
+    }
+  ],
+  "outcome": "RUNTIME_HOST_ACTIVE",
+  "pid": 10115,
+  "positiveTenant": "org-org/dev-project",
+  "productEventWorker": {
+    "analysesAccepted": 0,
+    "candidates": 0,
+    "failed": 0,
+    "occurrences": 0,
+    "targetsChecked": 1
+  },
+  "tenantCount": 1
+}

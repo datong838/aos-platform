@@ -1,0 +1,56 @@
+{
+  "action": "configure",
+  "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+  "installation": {
+    "state": "active",
+    "etag_version": 5
+  },
+  "binding": {
+    "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+    "revision": 1,
+    "desired_state": "disabled",
+    "observed_state": "ready",
+    "enabled": false,
+    "operation_fence": true,
+    "config_ref": null
+  },
+  "configuration": {
+    "schemaVersion": 1,
+    "roleRefs": [
+      {
+        "authority": "aip.responsibility_plan_revision",
+        "id": "responsibility-plan-63c82d2a75614e1b95f1",
+        "revision": 2,
+        "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+      }
+    ],
+    "dataRefs": [
+      {
+        "authority": "aip.data_classification_policy_revision",
+        "id": "a0v-ecommerce-public-catalog-v1",
+        "revision": 1,
+        "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+      }
+    ],
+    "budgetRef": {
+      "authority": "aip.budget_revision",
+      "id": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "policyRef": {
+      "authority": "aip.runtime_policy_revision",
+      "id": "a0v-ecommerce-runtime-policy-v1",
+      "revision": 6,
+      "hash": "sha256:a027139479581164d6e772dda9adfbd69887a7580aab6921b7ae4f54470a875e"
+    }
+  },
+  "authorized": true,
+  "receipt": {
+    "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+    "operationId": "7941094a-1c26-4dfa-b6db-5353df012960",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  }
+}

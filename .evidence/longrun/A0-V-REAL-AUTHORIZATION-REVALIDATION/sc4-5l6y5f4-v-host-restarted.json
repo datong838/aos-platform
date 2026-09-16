@@ -1,0 +1,21 @@
+{
+  "businessWorkers": [
+    "product-event",
+    "analysis-data-requirement"
+  ],
+  "canaryTenantCount": 0,
+  "hostId": "a0v-local-ecommerce-host-20260912",
+  "intervalSeconds": 2,
+  "liveTargets": [],
+  "outcome": "RUNTIME_HOST_ACTIVE",
+  "pid": 10115,
+  "positiveTenant": "org-org/dev-project",
+  "productEventWorker": {
+    "analysesAccepted": 0,
+    "candidates": 0,
+    "failed": 0,
+    "occurrences": 0,
+    "targetsChecked": 0
+  },
+  "tenantCount": 1
+}

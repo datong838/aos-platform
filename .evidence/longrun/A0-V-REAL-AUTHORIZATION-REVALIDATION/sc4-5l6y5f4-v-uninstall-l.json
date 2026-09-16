@@ -1,0 +1,131 @@
+{
+  "outcome": "L_UNINSTALLED_FOR_M_REBUILD",
+  "receipt": {
+    "installationId": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+    "displayName": "A0-V Canonical 电商八工作台首装",
+    "state": "uninstalled",
+    "currentRevision": 6,
+    "activeRevision": null,
+    "previousActiveRevision": null,
+    "etagVersion": 6,
+    "createdAt": "2026-09-16T14:23:46.454948Z",
+    "updatedAt": "2026-09-16T17:54:32.599591Z",
+    "current": {
+      "installationId": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+      "revision": 6,
+      "parentRevision": 5,
+      "state": "uninstalled",
+      "compositionId": "a65c3836-897b-4978-ac62-6b55141f614f",
+      "lockRevision": 1,
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "permissionDiffHash": "sha256:fbf784ddb11ab7be33d488b9123f5104fe07f17713338529cd070801acc30357",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:065568ac8538972fdd71dc2358f18ffd66b03923ab7eec7e317bd78b9799a4d2",
+      "overlayRevision": "a0v-canonical-ecommerce-v1",
+      "requestedBy": "a0v-canonical-ecommerce-first-install-maker",
+      "decisionId": "886871e0-616c-461f-ba99-3dc759c48f6d",
+      "createdAt": "2026-09-16T17:54:32.599591Z"
+    },
+    "decision": {
+      "decisionId": "886871e0-616c-461f-ba99-3dc759c48f6d",
+      "installationId": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+      "submittedRevision": 2,
+      "decision": "approved",
+      "actor": "a0v-canonical-ecommerce-first-install-checker",
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "permissionDiffHash": "sha256:fbf784ddb11ab7be33d488b9123f5104fe07f17713338529cd070801acc30357",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:065568ac8538972fdd71dc2358f18ffd66b03923ab7eec7e317bd78b9799a4d2",
+      "reason": null,
+      "createdAt": "2026-09-16T14:23:46.746852Z"
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "fromRevision": null,
+        "toRevision": 1,
+        "fromState": null,
+        "toState": "draft",
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T14:23:46.454948Z"
+      },
+      {
+        "sequence": 2,
+        "fromRevision": 1,
+        "toRevision": 2,
+        "fromState": "draft",
+        "toState": "submitted",
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T14:23:46.615127Z"
+      },
+      {
+        "sequence": 3,
+        "fromRevision": 2,
+        "toRevision": 3,
+        "fromState": "submitted",
+        "toState": "approved",
+        "actor": "a0v-canonical-ecommerce-first-install-checker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T14:23:46.746852Z"
+      },
+      {
+        "sequence": 4,
+        "fromRevision": 3,
+        "toRevision": 4,
+        "fromState": "approved",
+        "toState": "applied",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": null,
+        "evidence": {
+          "type": "runtime_preparation",
+          "evidenceRef": "evidence://bundle-installations/19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3/revisions/4/runtime_preparation",
+          "evidenceHash": "sha256:c6880782c28ab50239bd5cb28354690ea03695979f5827d4d8fca7a5d19edfdd",
+          "status": "valid",
+          "observedAt": "2026-09-16T14:26:11.992555Z"
+        },
+        "createdAt": "2026-09-16T14:26:11.992555Z"
+      },
+      {
+        "sequence": 5,
+        "fromRevision": 4,
+        "toRevision": 5,
+        "fromState": "applied",
+        "toState": "active",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": null,
+        "evidence": {
+          "type": "verification",
+          "evidenceRef": "evidence://bundle-installations/19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3/revisions/5/verification",
+          "evidenceHash": "sha256:c45a53ac8fcf8f1096d05fd1c638f26cee6b71984aeefae722c52845d22e735d",
+          "status": "valid",
+          "observedAt": "2026-09-16T14:27:04.594599Z"
+        },
+        "createdAt": "2026-09-16T14:27:04.594599Z"
+      },
+      {
+        "sequence": 6,
+        "fromRevision": 5,
+        "toRevision": 6,
+        "fromState": "active",
+        "toState": "uninstalled",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": "L released and detached; replace with approved M",
+        "evidence": {
+          "type": "uninstall",
+          "evidenceRef": "evidence://bundle-installations/19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3/revisions/6/uninstall",
+          "evidenceHash": "sha256:eea759028a5cc3664fb6bd58904ab790e138113a04469c08a394d958589aa7be",
+          "status": "valid",
+          "observedAt": "2026-09-16T17:54:32.599591Z"
+        },
+        "createdAt": "2026-09-16T17:54:32.599591Z"
+      }
+    ]
+  },
+  "replayed": false,
+  "successorInstallationId": "7810fc47-5d15-4e70-8b2a-1856b3fe0aae"
+}

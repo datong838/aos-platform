@@ -1,0 +1,11 @@
+{
+  "outcome": "M_INTERRUPTED_PREPARATION_RESET",
+  "receipt": {
+    "installationId": "7810fc47-5d15-4e70-8b2a-1856b3fe0aae",
+    "state": "approved",
+    "revision": 5
+  },
+  "replayed": false,
+  "state": "approved",
+  "revision": 5
+}

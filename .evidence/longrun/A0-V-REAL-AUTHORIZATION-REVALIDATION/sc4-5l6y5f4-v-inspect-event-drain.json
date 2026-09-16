@@ -1,0 +1,7 @@
+{
+  "outcome": "L_EVENT_ROUTE_DRAINED",
+  "inflight": {
+    "running": 0,
+    "unresolved": 0
+  }
+}

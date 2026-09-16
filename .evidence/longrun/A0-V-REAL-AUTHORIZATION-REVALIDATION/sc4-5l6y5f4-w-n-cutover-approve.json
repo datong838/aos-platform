@@ -1,0 +1,42 @@
+{
+  "proposalId": "proposal-9e27cde939c3424ab9f8",
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-1b1faed99c7647edb425",
+    "revision": 2,
+    "contentHash": "sha256:58d84719d3578dc0e3dbb4c69dcb50cfd7b40e4c5a324ef48670bba71bcff06c",
+    "receiptId": null
+  },
+  "payload": {
+    "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+    "expectedGroupRevision": 41,
+    "targetInstallationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+    "targetGeneration": "677046ff-6147-4b3b-905d-9e12964b6581",
+    "targetExecutionEpoch": 3,
+    "targetRuntimeRevision": 4,
+    "operationIds": [
+      "ecommerce_growth_analysis_advance",
+      "ecommerce_growth_case_put",
+      "ecommerce_growth_content_generate",
+      "ecommerce_growth_content_review",
+      "ecommerce_growth_data_fulfill",
+      "ecommerce_growth_investigation_describe",
+      "ecommerce_growth_review_advance",
+      "ecommerce_growth_schedule_put",
+      "ecommerce_growth_schedule_trigger"
+    ],
+    "policyRef": {
+      "resourceType": "RuntimeCutoverPolicyRevision",
+      "resourceId": "qyh-reinstall-generation-n-activation",
+      "revision": 1,
+      "contentHash": "sha256:9baff93dcfacfc4c7bfef8131025ff13a945bf5553a2eb6b80b2280a83d58e36"
+    },
+    "registrationReceiptRef": {
+      "resourceType": "SuccessorDispatchRegistrationReceipt",
+      "resourceId": "535b61ca-c2ab-46f7-b104-caa4352d3707",
+      "revision": 1,
+      "contentHash": "sha256:d05797b5a63636bea9329d744bb5c40651bf38d444f87d021aa771f47c6d5c0a"
+    }
+  },
+  "outcome": "CURRENT_N_CUTOVER_APPROVE"
+}

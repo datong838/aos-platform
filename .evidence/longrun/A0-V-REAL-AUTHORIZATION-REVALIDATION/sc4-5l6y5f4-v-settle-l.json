@@ -1,0 +1,15 @@
+{
+  "command": {
+    "etag": 5,
+    "generation": "64742c68-5e71-485b-a3c8-edc20be3d101",
+    "bindingRevision": 7
+  },
+  "receipt": {
+    "installationId": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+    "operationId": "9ef11747-6520-4f50-8a54-2d36f73443ce",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  },
+  "replayed": false
+}

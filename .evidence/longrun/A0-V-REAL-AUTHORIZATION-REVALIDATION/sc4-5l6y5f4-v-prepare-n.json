@@ -1,0 +1,14 @@
+{
+  "command": {
+    "etag": 3,
+    "kind": "runtime-apply"
+  },
+  "receipt": {
+    "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+    "operationId": "51868f67-6871-40e2-88b9-85b0acb362fc",
+    "phase": "accepted",
+    "status": "accepted",
+    "revision": 1
+  },
+  "replayed": false
+}

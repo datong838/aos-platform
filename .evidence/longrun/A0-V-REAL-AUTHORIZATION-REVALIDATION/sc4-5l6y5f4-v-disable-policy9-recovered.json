@@ -1,0 +1,51 @@
+{
+  "outcome": "L_POLICY9_RELEASED_DISABLE_GREEN",
+  "receipt": {
+    "receiptRef": {
+      "resourceType": "EventPolicyControlReceipt",
+      "resourceId": "d8601861-de8e-5d0e-82c2-7cdd3b161c3b",
+      "revision": 2,
+      "contentHash": "sha256:026f33beaa31055f10c4e80d732db99b9b0ee7c5e34493b30cec6890564b28e3"
+    },
+    "authority": {
+      "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "binding": {
+        "org_id": "org-org",
+        "cadence": "event",
+        "enabled": false,
+        "approved": true,
+        "revision": 2,
+        "timezone": "Asia/Shanghai",
+        "policy_id": "product-event-qyh-full-store-generation-f-20260916",
+        "watermark": null,
+        "generation": "64742c68-5e71-485b-a3c8-edc20be3d101",
+        "local_time": null,
+        "project_id": "dev-project",
+        "weekly_day": null,
+        "policy_hash": "sha256:7f8b9655351a7f5b50ed8930f9b767926d76817194ee7225474c3ff2a26c95ed",
+        "operation_id": "ecommerce_growth_analysis_advance",
+        "effective_from": "2026-09-16T16:18:23.488735+00:00",
+        "effective_until": "2026-09-16T17:48:23.488735+00:00",
+        "execution_epoch": 3,
+        "installation_id": "19620ea4-4a36-4cf1-a14a-8b24ee7d9fc3",
+        "policy_revision": 9
+      },
+      "command": {
+        "intent": "disable",
+        "policyRef": {
+          "revision": 9,
+          "receiptId": null,
+          "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+          "contentHash": "sha256:7f8b9655351a7f5b50ed8930f9b767926d76817194ee7225474c3ff2a26c95ed",
+          "resourceType": "SchedulePolicyRevision"
+        },
+        "approvalRef": null,
+        "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+        "idempotencyKey": "a0v-event-complete-m-rebuild-20260917-disable-policy9",
+        "expectedBindingRevision": 1
+      },
+      "schemaVersion": "aos.ecommerce.product-event-control-receipt/v1"
+    },
+    "replayed": false
+  }
+}

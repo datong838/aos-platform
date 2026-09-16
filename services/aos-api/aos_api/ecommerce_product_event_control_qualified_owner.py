@@ -56,7 +56,8 @@ class ProductEventControlQualifiedOwner:
         conn.execute('SELECT pg_advisory_xact_lock(228,1)')
         def check():
             row=conn.execute('''SELECT i.installation_id,i.active_revision AS revision,i.etag_version,
-                ir.lock_hash,ir.overlay_revision,r.generation,r.execution_epoch
+                ir.lock_hash,ir.overlay_revision,r.generation,r.execution_epoch,r.revision AS runtime_revision,
+                r.enabled,r.operation_fence,r.desired_state,r.observed_state
                 FROM bundle_installation i JOIN bundle_installation_revision ir
                   ON (ir.org_id,ir.project_id,ir.installation_pk,ir.revision)=
                      (i.org_id,i.project_id,i.installation_pk,i.active_revision)
@@ -65,9 +66,29 @@ class ProductEventControlQualifiedOwner:
                      (i.org_id,i.project_id,i.installation_id,i.active_revision)
                 WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s AND r.generation=%s''',
                 (*scope.key,dispatch.installation_id,dispatch.generation)).fetchone()
+            released=False
+            if row is not None and type(dispatch.execution_epoch) is int:
+                resources=conn.execute('''SELECT count(*) AS total,
+                    count(*) FILTER (WHERE cleanup_state='released' AND observed_release) AS released
+                    FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s
+                    AND generation=%s''',(*scope.key,dispatch.generation)).fetchone()
+                unresolved=conn.execute('''SELECT
+                    (SELECT count(*) FROM extension_runtime_execution_attempt WHERE org_id=%s
+                      AND project_id=%s AND installation_id=%s AND generation=%s AND state='running') AS running,
+                    (SELECT count(*) FROM automation_occurrence_dispatch_attempt a JOIN automation_occurrence o
+                      USING(org_id,project_id,occurrence_id) WHERE a.org_id=%s AND a.project_id=%s
+                      AND o.installation_id=%s AND o.generation=%s AND a.status IN ('claimed','unknown')) AS attempts''',
+                    (*scope.key,dispatch.installation_id,dispatch.generation,*scope.key,
+                     dispatch.installation_id,dispatch.generation)).fetchone()
+                released=(row['execution_epoch']>dispatch.execution_epoch
+                    and row['enabled'] is False and row['operation_fence'] is True
+                    and row['desired_state']=='enabled' and row['observed_state']=='unknown'
+                    and resources is not None and resources['total']==3 and resources['released']==3
+                    and unresolved is not None and unresolved['running']==0 and unresolved['attempts']==0)
             if (row is None or str(row['installation_id'])!=str(dispatch.installation_id)
                     or str(row['generation'])!=str(dispatch.generation)
-                    or type(dispatch.execution_epoch) is not int or row['execution_epoch']!=dispatch.execution_epoch):
+                    or type(dispatch.execution_epoch) is not int
+                    or (row['execution_epoch']!=dispatch.execution_epoch and not released)):
                 raise ValueError('current control installation or generation drifted')
             current=CurrentInstallationRef(installationId=str(row['installation_id']),revision=row['revision'],
                 lockHash=row['lock_hash'],overlayRevision=row['overlay_revision'])

@@ -1,0 +1,33 @@
+{
+  "outcome": "CURRENT_N_SUCCESSOR_REQUEST_PREVIEW",
+  "request": {
+    "schemaVersion": "aos.ecommerce.successor-dispatch-registration/v1",
+    "registration": {
+      "schemaVersion": "aos.ecommerce.first-dispatch-registration/v1",
+      "installationRef": {
+        "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "revision": 5,
+        "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+        "overlayRevision": "a0v-canonical-ecommerce-v1"
+      },
+      "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+      "bindingRevision": 4,
+      "executionEpoch": 3,
+      "configRef": {
+        "configurationId": "2006f9db-e89b-4ea6-82e6-adbec0c5e8ed",
+        "revision": 1,
+        "hash": "sha256:9ad6dc8af8c7b15d7b04b4635b9d02a3f4146b1be45ec244bb6461fb2a52ee0f"
+      },
+      "groupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+      "idempotencyKey": "a0v-qyh-reinstall-generation-n-successor-v1"
+    },
+    "expectedGroupRevision": 41,
+    "predecessorDetachReceiptRef": {
+      "resourceType": "DispatchDisableDetachReceipt",
+      "resourceId": "e43b1b5c-77b7-4fc2-bb35-3cb29a9a54c2",
+      "revision": 1,
+      "contentHash": "sha256:c87738ebc3a779961d8752273e83cb9d45e8f47f797b46a5c18f1285724ed2fa"
+    }
+  },
+  "requestHash": "sha256:4c65f77bd8fbf294ea0ed584a9feb368eccf66c706db5eace73993a39637c632"
+}
