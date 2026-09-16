@@ -136,3 +136,89 @@ def test_pagination_covers_definitions_without_duplicates(service):
     second_page=owner.list(actor=args['actor'],after=first_page['nextCursor'],limit=2)
     assert [r['body']['definitionId'] for r in second_page['items']]==identifiers[2:]
     assert second_page['nextCursor'] is None
+
+
+def test_options_resolve_current_bindings_and_installed_policy_without_reads(service):
+    owner,args,database,_=service
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        target=db.execute('SELECT installation_id,generation FROM pipeline_schedule_control_binding LIMIT 1').fetchone()
+    options=owner.options(actor=args['actor'],installation_id=str(target['installation_id']),generation=str(target['generation']))
+    assert options['status']=='ready'
+    assert len(options['members'])==12 and options['missing']==[] and options['ambiguous']==[]
+    assert options['policies']==[args['policy_ref'].model_dump(mode='json',by_alias=True,exclude_none=True)]
+    assert {m['scheduleId'] for m in options['members']}=={m['scheduleId'] for m in args['members']}
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        assert db.execute('SELECT count(*) AS n FROM pipeline_controlled_source_claim').fetchone()['n']==0
+        assert db.execute('SELECT count(*) AS n FROM pipeline_snapshot_schedule_definition_head').fetchone()['n']==0
+
+
+def option_target(database):
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        row=db.execute('SELECT installation_id,generation FROM pipeline_schedule_control_binding LIMIT 1').fetchone()
+    return dict(installation_id=str(row['installation_id']),generation=str(row['generation']))
+
+
+@pytest.mark.parametrize('schedule_group',['eleven'],indirect=True)
+def test_options_report_missing_source_without_synthesizing_member(service):
+    owner,args,database,_=service
+    value=owner.options(actor=args['actor'],**option_target(database))
+    assert value['status']=='incomplete' and len(value['missing'])==1
+    assert value['members']==[] and value['policies']==[]
+
+
+def test_duplicate_current_pipeline_requires_resolution(service):
+    from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
+    owner,args,database,controls=service
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        db.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",owner.scope.key)
+        db.execute('SET LOCAL ROLE aos_runtime')
+        binding=PipelineScheduleControlOwner.read_latest(db,scope=owner.scope,schedule_id=args['members'][0]['scheduleId'])
+        db.execute("""INSERT INTO meta_schedule(id,org_id,project_id,name,cron,pipeline_id,enabled,ingest)
+            SELECT 'duplicate-source',org_id,project_id,'duplicate','0 8 * * *',pipeline_id,false,ingest
+            FROM meta_schedule WHERE id=%s""",(binding.schedule_id,))
+        PipelineScheduleControlOwner(controls=controls).bind(db,scope=owner.scope,schedule_id='duplicate-source',
+            control_ref=binding.control_ref,actor=args['actor'],idempotency_key='duplicate')
+    value=owner.options(actor=args['actor'],**option_target(database))
+    assert value['status']=='incomplete' and value['ambiguous']==[binding.pipeline_id]
+    assert value['members']==[] and value['policies']==[]
+
+
+def test_no_relationship_policy_and_revoked_permission_do_not_offer_ready(service):
+    from types import SimpleNamespace as NS
+    from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
+    owner,args,database,controls=service
+    target=option_target(database)
+    original=controls._selections._artifacts.load_record
+    controls._selections._artifacts.load_record=lambda *a:NS(manifest=original(*a).manifest,artifacts=[])
+    value=owner.options(actor=args['actor'],**target)
+    assert value['status']=='policy_unavailable' and value['policies']==[]
+    with psycopg.connect(database) as db:db.execute('DELETE FROM meta_membership WHERE subject=%s',(args['actor'],))
+    with pytest.raises(RuntimeConflict,match='membership'):owner.options(actor=args['actor'],**target)
+
+
+def test_options_surface_ownership_and_latest_binding(service):
+    from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
+    owner,args,database,controls=service
+    configured=owner.configure(**args)
+    options=owner.options(actor=args['actor'],**option_target(database))
+    assert {m['definitionId'] for m in options['members']}=={args['definition_id']}
+    # A new exact binding is a real original-Owner revision, not an edited row.
+    with psycopg.connect(database,row_factory=dict_row) as db:
+        db.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",owner.scope.key)
+        db.execute('SET LOCAL ROLE aos_runtime')
+        schedule=args['members'][0]['scheduleId']
+        binding=PipelineScheduleControlOwner.read_latest(db,scope=owner.scope,schedule_id=schedule)
+        successor=PipelineScheduleControlOwner(controls=controls).bind(db,scope=owner.scope,schedule_id=schedule,
+            control_ref=binding.control_ref,actor=args['actor'],idempotency_key='successor',previous_ref=binding.ref)
+    options=owner.options(actor=args['actor'],**option_target(database))
+    selected=next(m for m in options['members'] if m['scheduleId']==schedule)
+    assert selected['bindingRef']==successor.ref.model_dump(mode='json',by_alias=True,exclude_none=True)
+    assert selected['bindingRef']!=binding.ref.model_dump(mode='json',by_alias=True,exclude_none=True)
+    assert owner.read(definition_id=args['definition_id'],actor=args['actor'])==configured
+
+
+def test_options_reject_unknown_generation(service):
+    from uuid import uuid4
+    owner,args,database,_=service
+    target=option_target(database);target['generation']=str(uuid4())
+    with pytest.raises(LookupError,match='generation'):owner.options(actor=args['actor'],**target)

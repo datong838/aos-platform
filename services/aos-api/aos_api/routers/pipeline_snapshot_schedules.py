@@ -59,12 +59,15 @@ class SnapshotScheduleTransitionRequest(BaseModel):
         return self
 
 
-def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=None,limit=50):
+def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=None,limit=50,installation_id=None,generation=None):
     try:
-        if intent!='list' and str(UUID(definition_id))!=definition_id:raise ValueError('canonical definition id required')
+        if intent not in {'list','options'} and str(UUID(definition_id))!=definition_id:raise ValueError('canonical definition id required')
         if after is not None and str(UUID(after))!=after:raise ValueError('canonical page cursor required')
+        if intent=='options':
+            if str(UUID(installation_id))!=installation_id or str(UUID(generation))!=generation:
+                raise ValueError('canonical installation and generation required')
         if receipt_key is not None:validate_idempotency_key(receipt_key)
-        key=None if intent in {'read','receipt','list'} else require_idempotency_key(request)
+        key=None if intent in {'read','receipt','list','options'} else require_idempotency_key(request)
         if body is not None and body.expected_ref is not None and body.expected_ref.resource_id!='snapshot-schedule-'+definition_id:
             raise ValueError('definition predecessor differs')
         plane=getattr(request.app.state,'extension_runtime_control_plane',None)
@@ -72,7 +75,8 @@ def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=
         if factory is None:
             raise ApiError(code='SNAPSHOT_SCHEDULE_UNAVAILABLE',message='数据组配置服务当前不可用。',status_code=503)
         service=factory.build_snapshot_schedule(TenantScope(principal.org_id,principal.project_id),
-            source_controls=intent in {'configure','enable'})
+            source_controls=intent in {'configure','enable','options'})
+        if intent=='options':return service.options(actor=principal.subject,installation_id=installation_id,generation=generation)
         if intent=='list':return service.list(actor=principal.subject,after=after,limit=limit)
         common=dict(definition_id=definition_id,actor=principal.subject)
         if intent=='receipt':return service.read_receipt(**common,idempotency_key=receipt_key)
@@ -97,6 +101,13 @@ def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=
         raise ApiError(code='SNAPSHOT_SCHEDULE_INVALID',message='配置范围或精确引用无效，请刷新核对。',status_code=422) from exc
     except Exception as exc:
         raise ApiError(code='SNAPSHOT_SCHEDULE_OUTCOME_UNCONFIRMED',message='暂未确认操作结果；请保留原幂等键核对，勿重复创建。',status_code=503) from exc
+
+
+@router.get('/options')
+async def options(request:Request,principal:PrincipalDependency,
+                  installation_id:str=Query(alias='installationId'),generation:str=Query()):
+    return await run_in_threadpool(_operate,request,principal,None,None,'options',
+        installation_id=installation_id,generation=generation)
 
 
 @router.get('/definitions')

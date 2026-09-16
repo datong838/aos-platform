@@ -14,7 +14,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 @pytest.fixture
-def schedule_group(native_claims_case):
+def schedule_group(native_claims_case,request):
     conn, source_group, args, _, _ = native_claims_case
     # Only disposable, never-consumed fixture runs are removed. The assertion
     # below will count runs actually created by the product claim Owner.
@@ -24,7 +24,8 @@ def schedule_group(native_claims_case):
     conn.execute('SET LOCAL ROLE aos_runtime')
     bindings = []
     schedule_owner = PipelineScheduleControlOwner(controls=source_group._claims._controls)
-    for ref, run in args['bindings']:
+    source_bindings=args['bindings'][:-1] if getattr(request,'param',None)=='eleven' else args['bindings']
+    for ref, run in source_bindings:
         bindings.append(schedule_owner.bind(conn, scope=args['scope'], schedule_id=by_run[run],
             control_ref=ref, actor=args['actor'], idempotency_key='group-bind-'+run))
     owner = PipelineSnapshotScheduleClaimOwner(controls=source_group._claims._controls)

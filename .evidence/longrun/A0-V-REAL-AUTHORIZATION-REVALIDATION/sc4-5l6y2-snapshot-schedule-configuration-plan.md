@@ -87,3 +87,19 @@ Y2c-1路由复核：主应用phase5_pipelines先于pipeline_controls挂载，GET
 Red缺少read_receipt。HTTP参数验证沿用全局handler的400，手工语义校验422，不改既有错误约定。主app新FastAPI IncludedRouter的matches不直接携带endpoint，已改为真实TestClient请求命中命名列表service验证；不使用仅OpenAPI存在作为路由通过证据。最终66 passed /36.74秒（/tmp/aos-group-readback-final-v3.log），包含原pipeline HTTP与factory回归。git diff --check通过。
 
 未升级主库/重载host/实际源读取。下一波Y2c-2服务器当前成员/关系策略选项，随后页面与双向竞争。配置列表不是已运行列表，原J真实首链仍未完成。
+
+## Y2c-2 服务端当前绑定与策略选项（基线8636296d）
+
+新增只读GET /v1/pipelines/snapshot-schedules/options?installationId=...&generation=...，原principal配置权限先行。service从每个schedule的全量最新binding中筛选指定安装/代次（不能先筛旧代次再取latest），要求十二canonical管道各唯一；缺少/歧义返回incomplete与missing/ambiguous清单，不能自动选择碰巧一条。完整时复用原GroupOwner当前窗口/角色/预算/配置/源约束；核对schedule仍原pipeline-live-v1；返回服务端exact bindingRef/controlRef及占用definitionId，供页面选择/编辑，不要求手填哈希。所有标识来自已授权服务端记录，不读远程源。
+
+策略来自当前签名安装release的导出policy artifacts，最多32个JSON候选；通过原_resolve_exported_ref与原关系策略编译/映射覆盖校验，只返回可用于这组的精确ref。不存在有效关系策略则返回policy_unavailable；不硬编码某个版本文件名，不允许调用方提供摘要或success。选项只是当前只读建议，configure/enable仍重新执行原权限与exact检查，不把ready当持久授权。stop/read构造模式不允许请求源选项。
+
+范围pipeline_snapshot_schedule_service.py、routers/pipeline_snapshot_schedules.py和HTTP/完整PG service测试；更新具名安装资产夹具使其包含与raw一致的artifact元数据。验收完整12/缺源/重复/改绑后旧generation不可选/无策略/撤权/负租户/零sourceclaim。主库不迁移、不重载。后续Y2c-3将组入口放入apps/web/src/pages/s2/dataSchedules.tsx的独立“整组采集”页签，配套组件与API客户端，先补UI方案再编码。
+
+### Y2c-2验证结果
+
+options API已实现：原安装权限/现存generation→全scope每schedule最新binding再筛安装代次→十二管道唯一覆盖→原完整源组current守卫→当前签名安装导出JSON策略编译与映射检查。只返回当前exact成员与definition占用，不硬编码策略文件名。缺源/歧义返回incomplete，无有效策略policy_unavailable；stop-only服务拒绝该源选项。没有调用远程源或分配配置/运行。
+
+Red为缺少options方法。最终完整PG/HTTP/配置/围栏累计70 passed /68.16秒（/tmp/aos-group-options-final-v2.log）：完整组选项、11源不凑数、原ScheduleOwner创建的重复管道拒绝、无策略、撤销权限、unknown generation、当前组占用、原Owner successor绑定取最新ref且不改旧配置；原Y1领取/Y2a配置/Y2b围栏回归仍通过。测试夹具schedule_group支持显式eleven参数以形成原Owner合法的11绑定，不删除不可变历史；definition_case签名资产夹具新增与原raw一致的artifact摘要/大小/mediaType。改绑到另一个真实generation后旧generation过滤的端到端负例尚未独立做，当前SQL顺序已复核、latest同generation successor已实测，不能扩大声称覆盖。
+
+git diff --check通过；主库061/host仍未重载，J原失败首链未变。下一波Y2c-3页面与安全请求客户端；后续Y2c并发、Y3执行恢复、Y4生命周期、Y5真实十二源配置、Y6观察继续。

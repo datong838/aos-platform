@@ -57,7 +57,7 @@ def definition_case(schedule_group):
         signature_fingerprint='named-signature',release_evidence_revision=1)
     selections=claim._groups._controls._selections
     selections._store=NS(load_active_baseline_in_transaction=lambda *a,**k:NS(lock=NS(payload=NS(resolved=[selected]))))
-    selections._artifacts=NS(scope=args['scope'],load_record=lambda *a:NS(manifest=NS(spec=NS(exports=NS(policies=['content/policies/'])))),read_artifact=lambda *a:raw)
+    selections._artifacts=NS(scope=args['scope'],load_record=lambda *a:NS(manifest=NS(spec=NS(exports=NS(policies=['content/policies/']))),artifacts=[dict(relativePath='content/policies/native.json',digest='sha256:'+hashlib.sha256(raw).hexdigest(),size=len(raw),mediaType='application/json')]),read_artifact=lambda *a:raw)
     selections._release_policy=NS(evaluate=lambda *a,**k:None)
     complete_configuration_installation(conn,args['scope'],args['actor'])
     conn.execute('SET LOCAL ROLE aos_runtime')

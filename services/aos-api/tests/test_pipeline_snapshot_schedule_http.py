@@ -21,7 +21,7 @@ def api():
         calls.append(kw)
         if getattr(service,'error',None):raise service.error
         return {'ref':ref('SnapshotScheduleDefinitionRevision','snapshot-schedule-'),'body':{'state':'disabled'}}
-    service=NS(configure=invoke,transition=invoke,read=invoke,list=invoke,read_receipt=invoke)
+    service=NS(configure=invoke,transition=invoke,read=invoke,list=invoke,read_receipt=invoke,options=invoke)
     scopes=[]
     def build(scope,*,source_controls):scopes.append(scope);return service
     app=FastAPI();register_exception_handlers(app);app.include_router(router)
@@ -112,3 +112,17 @@ def test_real_app_matches_list_before_dynamic_pipeline_resource(monkeypatch):
     assert response.status_code==200,response.text
     assert calls==[dict(actor='route-reader',after=None,limit=50)]
     assert response.json()=={'items':[],'nextCursor':None}
+
+
+def test_options_use_server_principal_and_canonical_installation(api):
+    client,calls,_,_,_,_=api
+    installation,generation=str(uuid4()),str(uuid4())
+    result=client.get('/v1/pipelines/snapshot-schedules/options',params={'installationId':installation,'generation':generation})
+    assert result.status_code==200,result.text
+    assert calls==[dict(actor='signed-user',installation_id=installation,generation=generation)]
+
+
+def test_options_reject_bad_installation_before_service(api):
+    client,calls,scopes,*_=api
+    assert client.get('/v1/pipelines/snapshot-schedules/options',params={'installationId':'invalid','generation':str(uuid4())}).status_code==422
+    assert not calls and not scopes
