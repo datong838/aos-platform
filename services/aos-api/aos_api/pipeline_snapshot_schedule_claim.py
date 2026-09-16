@@ -7,6 +7,7 @@ from psycopg.types.json import Jsonb
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner
+from aos_api.pipeline_schedule_claim import read_current_snapshot_definition
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner, ScheduleControlBinding
 from aos_api.pipeline_snapshot_group_owner import PipelineSnapshotGroupOwner
 from aos_api.pipeline_source_claim_owner import _text
@@ -102,6 +103,8 @@ class PipelineSnapshotScheduleClaimOwner:
                             or schedule['ingest'].get('kind') != 'pipeline-live-v1'
                             or schedule['ingest'].get('pipelineId') != binding.pipeline_id):
                         raise ValueError('snapshot member schedule is not enabled and bound')
+                    if read_current_snapshot_definition(conn,scope,binding.schedule_id) is not None:
+                        raise ValueError('snapshot schedule requires its current definition authority')
                     if PipelineScheduleControlOwner.read_latest(conn,scope=scope,schedule_id=binding.schedule_id) != binding:
                         raise ValueError('snapshot schedule binding is no longer current')
                 if previous is not None:

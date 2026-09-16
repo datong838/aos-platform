@@ -359,8 +359,10 @@ def run_due_qyh(now: datetime | None = None, *, control_factory=None) -> list[di
     with _RUN_LOCK:
         with connect(QYH_SCOPE) as conn:
             rows = conn.execute(
-                "SELECT id, cron FROM meta_schedule WHERE org_id=%s AND project_id=%s AND enabled=TRUE "
-                "AND ingest->>'kind'='pipeline-live-v1' ORDER BY id",
+                "SELECT s.id, s.cron FROM public.meta_schedule s WHERE s.org_id=%s AND s.project_id=%s AND s.enabled=TRUE "
+                "AND s.ingest->>'kind'='pipeline-live-v1' AND NOT EXISTS ("
+                "SELECT 1 FROM public.pipeline_snapshot_schedule_current_member m "
+                "WHERE m.org_id=s.org_id AND m.project_id=s.project_id AND m.schedule_id=s.id) ORDER BY s.id",
                 QYH_SCOPE.key,
             ).fetchall()
         outcomes: list[dict[str, Any]] = []

@@ -12,8 +12,15 @@ from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict
 
 
 @pytest.fixture
-def bound_case(executor_case,binding_case):
+def bound_case(executor_case,binding_case,monkeypatch):
     original,conn,args,state=executor_case
+    import aos_api.pipeline_controlled_snapshot_ingress as module
+    # This 025-only schema models no group configuration. Full 063 ownership
+    # is exercised without this replacement by snapshot_schedule_fence_pg.
+    def named_legacy_no_group(db, scope, schedule_id):
+        assert scope==args['scope'] and schedule_id=='schedule'
+        return None
+    monkeypatch.setattr(module,'read_current_snapshot_definition',named_legacy_no_group)
     owner=PipelineScheduleControlOwner(controls=original._claims._controls)
     bind_args=dict(scope=args['scope'],schedule_id='schedule',control_ref=args['control_ref'],actor=args['actor'])
     conn.execute("UPDATE meta_schedule_run SET status='succeeded',executor_stopped=true")

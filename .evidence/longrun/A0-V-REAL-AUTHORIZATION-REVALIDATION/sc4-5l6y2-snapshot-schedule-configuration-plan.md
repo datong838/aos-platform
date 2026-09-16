@@ -41,3 +41,17 @@ Red：缺少Owner；旧测试安装仅满足FK但不满足原Composition模型�
 最终完整隔离PG验证：test_pipeline_snapshot_schedule_definition_pg.py + test_pipeline_snapshot_schedule_claim_pg.py + test_pipeline_snapshot_schedule_recovery_pg.py，27 passed / 17.41秒，日志/tmp/aos-group-definition-final.log。覆盖角色撤销/viewer/未知actor、源拒绝后另一管理员停止且executor不变、active/unknown阻止编辑/退役、跨租户不可见、不可变历史、exact修改及旧回执重放、原领取与提交恢复。git diff --check通过。
 
 范围限制：安装/签名资产和远程源仍为明确命名测试夹具，实际权限与配置持久化走真实PG；不能代替真实租户安装验收。尚无产品API/UI或成员领取围栏，因此063未部署主库且组配置不对外开放。下一波Y2b先建立领取围栏，再接API；Y2整体未完成。J原失败Run、历史Outbox、主库061保持原样。共享记录strong投影CURRENT，eventual异步项仍PENDING_ASYNC，不据此宣布业务完成。
+
+## Y2b-1 领取围栏施工（基线7f6821f9）
+
+先于API开放实施拒绝路径：pipeline_schedule_claim.py原schedule行锁下查询public当前成员；pipeline_snapshot_schedule_claim.py原十二schedule行锁下拒绝无definition的归组成员；qyh_cron_scheduler.py列举排除归组成员，但锁内检查仍为最后权威。此段不增加允许归组执行的旁路，definition exact执行授权在后续Y3绑定原领取回执实现后开放。未归组历史调度保持行为。新测试test_pipeline_snapshot_schedule_fence_pg.py用真实配置Owner建立归属，验证enabled/disabled、单路/旧group领取均拒绝，退役且显式重新enable后恢复未归组行为；cron列举测试证明仅排除归组成员。旧schema专用测试须装063依赖或显式创建相同归属表，不能用查询异常时忽略围栏。API/UI仍不开放。
+
+Y2b-1复核新增pipeline_controlled_snapshot_ingress.py：ControlledScheduleExecution.claim_recovery使用独立Ingress事务，不能只在普通schedule_claim_connection防护。在原_guard_binding的current controls回调内、Run锁前锁schedule行，检查enabled及当前归属，整个实际恢复/输入事务持有锁；源组配置同一schedule行锁因此不能在恢复检查后插入。新增完整PG直接守卫用例。旧025专用schema行锁回归明确命名无组读取夹具，不作为063围栏验证；新完整PG用真实配置和归属读取覆盖新边界。
+
+### Y2b-1验证结果
+
+两个Red实际复现：enabled组成员可进入旧单路executor；受控Ingress恢复_guard_binding未拒绝组成员。已分别在原schedule行锁与原current-control事务守卫内查询public当前归属并拒绝；普通cron SQL排除成员，旧无definition组领取亦拒绝。受控Ingress同时检查schedule仍enabled；归组/停用与恢复在同一schedule锁上串行。新模块级读取函数统一原单路与旧组领取的权威查询，不捕获缺表异常、不降级放行。
+
+最终完整隔离PG 33 passed / 20.75秒（/tmp/aos-group-fence-final-v2.log），覆盖enabled/disabled且旧flag被手工开启仍拒绝、无definition组领取拒绝且零运行、退役保持停用/显式启用后旧单路恢复、cron只执行未归组成员、原受控恢复守卫拒绝；累计包含Y2a配置及Y1跨连接恢复。旧025专用schema+执行/定时器回归74 passed / 8.12秒（/tmp/aos-group-fence-legacy-final-v2.log）。两个旧025夹具明确命名无组reader，仅验证旧行锁/绑定语义，不计为新归属安全证据；新完整库未替换该reader。git diff --check通过。
+
+新增/修改文件以本提交为准，额外旧夹具test_controlled_schedule_guard_pg.py纳入。未改主库061、未重载真实host、未读取商城，未开放API。部署必须063先行，不允许先重载新代码到061。下一波Y2b-2正式配置API，之后Y2c页面和双向竞争；Y3才接带exact definition的组执行。当前安全拒绝不等于业务闭环已完成。

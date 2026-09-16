@@ -24,6 +24,13 @@ def read_schedule_binding(scope, schedule_id):
         return PipelineScheduleControlOwner.read_latest(conn, scope=scope, schedule_id=schedule_id)
 
 
+def read_current_snapshot_definition(conn, scope, schedule_id):
+    """Read persisted group ownership while the caller holds the schedule lock."""
+    return conn.execute('''SELECT definition_id FROM public.pipeline_snapshot_schedule_current_member
+        WHERE org_id=%s AND project_id=%s AND schedule_id=%s''',
+        (*scope.key,schedule_id)).fetchone()
+
+
 @contextmanager
 def schedule_claim_connection(scope, *, schedule_id, binding=None):
     if binding is not None:
@@ -36,6 +43,8 @@ def schedule_claim_connection(scope, *, schedule_id, binding=None):
             WHERE org_id=%s AND project_id=%s AND id=%s FOR UPDATE''', (*scope.key, schedule_id)).fetchone()
         if row is None:
             raise LookupError('schedule unavailable')
+        if read_current_snapshot_definition(conn,scope,schedule_id) is not None:
+            raise RuntimeConflict('schedule belongs to a snapshot group')
         ingest = row['ingest'] or {}
         if (row['enabled'] is not True or type(ingest) is not dict
                 or ingest.get('kind') != 'pipeline-live-v1' or ingest.get('pipelineId') != row['pipeline_id']):

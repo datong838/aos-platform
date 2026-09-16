@@ -15,6 +15,14 @@ def claiming(executor_case, binding_case, monkeypatch):
     import aos_api.pipeline_schedule_claim as module
     original, conn, args, state = executor_case
     monkeypatch.setattr(module, '_connection', original._transaction)
+    # This legacy dedicated-schema fixture stops at migration 025. It models
+    # only first-binding row locks, not installed group ownership. The full
+    # migration-063 tests in test_pipeline_snapshot_schedule_fence_pg exercise
+    # the real reader and configuration Owner, including enabled/disabled groups.
+    def named_legacy_no_group(db, scope, schedule_id):
+        assert scope == args['scope'] and schedule_id == 'schedule'
+        return None
+    monkeypatch.setattr(module, 'read_current_snapshot_definition', named_legacy_no_group)
     conn.execute("UPDATE meta_schedule_run SET status='succeeded',executor_stopped=true")
     owner = PipelineScheduleControlOwner(controls=original._claims._controls)
     bind_args = dict(scope=args['scope'], schedule_id='schedule', control_ref=args['control_ref'],

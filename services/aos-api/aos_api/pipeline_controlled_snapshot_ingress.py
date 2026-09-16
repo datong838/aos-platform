@@ -18,7 +18,8 @@ from aos_api.pipeline_selected_snapshot import read_selected_snapshot
 from aos_api.pipeline_snapshot_materialization import materialize_snapshot
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner, ScheduleControlBinding
-from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict
+from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict, RuntimeConflict
+from aos_api.pipeline_schedule_claim import read_current_snapshot_definition
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,13 @@ class ControlledSnapshotIngress:
         def check(draft,spec):
             current=owner.read_latest(conn,scope=scope,schedule_id=binding.schedule_id)
             if current!=binding:raise RuntimeRevisionConflict('schedule binding was superseded')
+            schedule=conn.execute('''SELECT enabled FROM meta_schedule
+                WHERE org_id=%s AND project_id=%s AND id=%s FOR SHARE''',
+                (*scope.key,binding.schedule_id)).fetchone()
+            if read_current_snapshot_definition(conn,scope,binding.schedule_id) is not None:
+                raise RuntimeConflict('schedule belongs to a snapshot group')
+            if schedule is None or schedule['enabled'] is not True:
+                raise RuntimeConflict('schedule is not currently enabled')
         self._claims._controls.run_current(conn,scope=scope,ref=binding.control_ref,actor=binding.actor,execute=check)
 
     @contextmanager
