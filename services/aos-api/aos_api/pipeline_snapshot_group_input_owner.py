@@ -12,6 +12,7 @@ from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
 from aos_api.pipeline_snapshot_group_claim_owner import PipelineSnapshotGroupClaimOwner,SnapshotGroupClaimRecord
 from aos_api.pipeline_snapshot_group_owner import CurrentSnapshotGroup
 from aos_api.pipeline_source_selection_owner import _now
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,7 @@ class CurrentSnapshotGroupInput:
     read_started_at: datetime
     read_completed_at: datetime
     parents: tuple[dict,...]
+    recovery_ref: PipelineExactRef | None = None
 
 
 class PipelineSnapshotGroupInputOwner:
@@ -38,6 +40,9 @@ class PipelineSnapshotGroupInputOwner:
 
     def _run(self,conn,*,scope,group_id,actor,bindings,execute,completed_read):
         if not callable(execute):raise TypeError('synchronous consumer required')
+        if self._claims._recovery is not None:
+            return self._run_recovery(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
+                execute=execute,completed_read=completed_read)
         args=dict(scope=scope,group_id=group_id,actor=actor,bindings=bindings)
         def consume(group):
             current=self._load(conn,group,args,completed_read=completed_read)
@@ -45,6 +50,25 @@ class PipelineSnapshotGroupInputOwner:
             if self._load(conn,group,args,completed_read=completed_read)!=current:raise IngressJournalConflict('GROUP_INPUT_CHANGED_DURING_CONSUMPTION')
             return result
         return self._groups._groups.run_current(conn,scope=scope,refs=tuple(ref for ref,_ in bindings),actor=actor,execute=consume)
+
+    def _run_recovery(self,conn,*,scope,group_id,actor,bindings,execute,completed_read):
+        authority=self._claims._recovery
+        if group_id!=authority._group_id:raise PermissionError('fixed recovery group differs')
+        def consume(current):
+            facts=current.facts;group=current.execution.group
+            by_control={PipelineExactRef.model_validate(ref).resource_id:run for ref,run in bindings}
+            def load():
+                read=self._claims.read_completed_current if completed_read else self._claims.read_saved_current
+                records=tuple(read(conn,scope=scope,run_id=by_control[ref.resource_id],control_ref=ref,actor=actor)
+                    for ref,_,_ in group.members)
+                claim=SnapshotGroupClaimRecord(scope,group_id,actor,facts.source_claim_hash,records)
+                return CurrentSnapshotGroupInput(group,claim,facts.manifest_hash,facts.manifest,
+                    facts.read_started_at,facts.read_completed_at,facts.parents,authority._ref)
+            source=load()
+            result=execute(source);_reject_deferred(result)
+            if load()!=source:raise IngressJournalConflict('GROUP_RECOVERY_INPUT_CHANGED_DURING_CONSUMPTION')
+            return result
+        return authority.run_current(conn,scope=scope,actor=actor,bindings=bindings,execute=consume)
 
     def _load(self,conn,group,args,*,completed_read=False):
         scope=args['scope']

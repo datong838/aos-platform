@@ -49,11 +49,30 @@ def _decode(row):
 
 
 class PipelineSourceClaimOwner:
-    def __init__(self, *, controls):
+    def __init__(self, *, controls, recovery=None, recovery_bindings=()):
         if type(controls) is not PipelineRuntimeControlOwner:
             raise TypeError('exact current runtime control Owner required')
         self._controls = controls
         self._journal = IngressJournal()
+        self._recovery=recovery
+        self._recovery_bindings=()
+        if recovery is not None:
+            from aos_api.pipeline_snapshot_group_recovery_authority import SnapshotGroupRecoveryAuthority
+            if type(recovery) is not SnapshotGroupRecoveryAuthority or recovery._definitions._groups._groups._controls is not controls:
+                raise TypeError('exact shared recovery authority required')
+            if type(recovery_bindings) is not tuple or len(recovery_bindings)!=12:
+                raise ValueError('complete fixed recovery bindings required')
+            normalized=[]
+            for item in recovery_bindings:
+                if type(item) is not tuple or len(item)!=2:raise ValueError('exact recovery control/run pair required')
+                ref=PipelineExactRef.model_validate(item[0])
+                _ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-')
+                normalized.append((ref,_text(item[1],200)))
+            if len({ref.resource_id for ref,_ in normalized})!=12 or len({run for _,run in normalized})!=12:
+                raise ValueError('unique fixed recovery members required')
+            self._recovery_bindings=tuple(normalized)
+        elif recovery_bindings!=():
+            raise ValueError('recovery bindings require fixed authority')
 
     def reserve(self, conn, *, scope, run_id, control_ref, actor):
         """Caller must confirm COMMIT before any separately reauthorized source call.
@@ -81,15 +100,21 @@ class PipelineSourceClaimOwner:
             create=False,saved_recovery=True,completed_read=True).record
 
     def _guard_group(self,conn,*,scope,group_id,actor,bindings):
+        if self._recovery is not None:raise PermissionError('saved recovery requires original input path, never a new group claim')
         from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_group
         return guard_snapshot_schedule_group(conn,scope=scope,group_id=group_id,actor=actor,
             bindings=bindings,controls=self._controls)
 
     def _guard_single_prepare(self,conn,*,scope,run_id):
+        if self._recovery is not None:raise PermissionError('saved recovery cannot prepare a new source read')
         from aos_api.pipeline_snapshot_schedule_guard import guard_single_snapshot_prepare
         guard_single_snapshot_prepare(conn,scope=scope,run_id=run_id)
 
     def _guard_schedule(self,conn,*,scope,run_id,control_ref,actor):
+        if self._recovery is not None:
+            if (PipelineExactRef.model_validate(control_ref),run_id) not in self._recovery_bindings:
+                raise PermissionError('saved recovery fixed member differs')
+            return self._recovery.run_current(conn,scope=scope,actor=actor,bindings=self._recovery_bindings,execute=lambda _:None)
         # Lazy import avoids the existing schedule/control Owner dependency cycle.
         from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_run
         guard_snapshot_schedule_run(conn,scope=scope,run_id=run_id,actor=actor,
@@ -97,9 +122,14 @@ class PipelineSourceClaimOwner:
 
     def _operate(self, conn, *, scope, run_id, control_ref, actor, create, saved_recovery=False, completed_read=False):
         if completed_read and create:raise ValueError('completed input cannot reserve source calls')
+        if self._recovery is not None:
+            if create:raise PermissionError('saved recovery cannot reserve another source call')
+            saved_recovery=True
         run_id,actor = _text(run_id,200),_text(actor,240)
         ref = PipelineExactRef.model_validate(control_ref)
         identity = UUID(_ref_identity(ref,'PipelineRuntimeControlRevision','pipeline-control-'))
+        if self._recovery is not None and (ref,run_id) not in self._recovery_bindings:
+            raise PermissionError('saved recovery fixed member differs')
         from aos_api.pipeline_snapshot_claim_context import _check_source_claim_loop
         _check_source_claim_loop(conn,scope=scope,actor=actor,run_id=run_id,control_ref=ref)
 

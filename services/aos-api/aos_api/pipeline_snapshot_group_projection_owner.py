@@ -73,6 +73,7 @@ class PipelineSnapshotGroupProjectionOwner:
     def run_current(self, conn, *, scope, group_id, actor, bindings, execute):
         if not callable(execute):raise TypeError('synchronous projection proof consumer required')
         def consume(source):
+            original_refs={member.run_id:member.control_ref for member in source.claim.members}
             def read():
                 members=[]
                 for (ref,_,mapping),parent in zip(source.group.members,source.parents):
@@ -86,7 +87,7 @@ class PipelineSnapshotGroupProjectionOwner:
                         sql.Identifier(self._claims._journal.schema,'ecommerce_ingress_dataset_receipt')),(*scope.key,run_id)).fetchone()
                     if row is None:raise IngressJournalConflict('GROUP_DATASET_RECEIPT_REQUIRED')
                     members.append(dict(runId=run_id,objectType=mapping.read_spec.object_type,
-                        controlRef=ref.model_dump(mode='json',by_alias=True),datasetReceiptHash=row['payload_hash'],
+                        controlRef=original_refs[run_id].model_dump(mode='json',by_alias=True),datasetReceiptHash=row['payload_hash'],
                         events=[asdict(event) for event in sorted(events,key=lambda e:e.event_key)]))
                 return dict(schemaVersion='aos.snapshot-group-current-projection/v1',
                     tenant=dict(orgId=scope.org_id,projectId=scope.project_id),groupId=source.claim.group_id,
