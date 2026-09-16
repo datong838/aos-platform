@@ -27,3 +27,15 @@ Y5a 退出只说明盘点完成。Y5 退出要求十二源已通过原配置入�
 2026-09-16T10:05Z，同一 REPEATABLE READ READ ONLY 事务核验主库：a0v_061，J 安装 active，P01/P02 两个 revision=1 图、两个 disabled 调度；niushop-qyh 源配置 registered 且通过原身份哈希核验。P02 是 8 个 control 身份、13 条历史记录、单身份最高 revision=3，不能称为 revision=13。十二份 Mapping 全部通过原 derive/compile 合同，P03–P12 无图。详见 y5a-real-configuration-inventory.json。零远程源读取、零数据库写入。
 
 实现前读码确认 phase5_schedules 使用内存 Engine；wave_ext 的同路径 POST 才调用 data_os_store.persist_schedule。Y5b/c 须检查实际 app 路由顺序、持久化失败传播和独立读回，不能混用。此次盘点没有证明源库实时连接、数据完整性或业务链完成。
+
+## Y5b 编码前接口细化
+
+新增 scripts/a0v_snapshot_configuration_preview.py：build_preview(artifacts, selected, source_id) 只接受原 CurrentRuntimeReleaseArtifacts 和 ResolvedBundle，固定 Niushop 包；通过原 reader 读取 schema/masking/十二 Mapping，原 derive/compile/verify 逐一校验，拒绝 canonical objectType 错配及重复 table。返回十二个标准 graph、disabled schedule 草案、原 artifact exact refs 和 canonical hash，executionAuthorized=false；无连接配置、源读取、配置写入。它是预览工具，不是运行权限门，调用方仍需当前 installation baseline 取 selected；Y5c 应用时再次原 Owner 核验。
+
+测试 services/aos-api/tests/test_snapshot_configuration_preview.py 以 repo 1.23.0 candidate 为明确隔离 artifact seam，验证完整确定性/不改输入、对象错配、缺件、非法依赖/源身份、重复表拒绝。先缺模块 Red，再实现 Green。真实验证另用当前安装 baseline+原 reader，只读预览，不以 fixture 代替签名/current 证据。
+
+## Y5b 验收
+
+新增 preview builder 与 9 项测试；累计原 P02 preflight 15 passed / 3.58s（/tmp/aos-y5b-final.log）。Red 为缺少新模块，首轮 7 passed 后补重复表/非目标包测试。真实验证使用当前 J installation baseline 及原 CurrentRuntimeReleaseArtifacts，十二份预览通过、已有 P01/P02 read spec 一致；预览 hash sha256:709946930dbef68345d40f5137f416567d39a94b4560545c6f76d26d8059b8d1，见 y5b-current-signed-preview.json。零源调用、零配置写入。严格 READ ONLY 拒绝原 SELECT FOR SHARE；改用原消费者事务并 raise psycopg.Rollback 正常回滚。中间错误使用显式 conn.rollback 被事务 context 拒绝，未算成功，最终原 context 回滚完成。
+
+下一波 Y5c1 前置修复：wave_ext.create_schedule 在更新缓存后调用吞掉一般持久化异常的 _persist_safe，存在 HTTP 成功但未落库风险。必须先写最小设计/Red，用正式持久层结果决定缓存和响应；同路径 API 实际路由须核对。不得为十路真实配置绕过此缺口直接 INSERT。Y5c2 才建立 disabled 配置；Y6 审批有效窗口和部署执行。

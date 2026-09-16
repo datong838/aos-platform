@@ -1,0 +1,2039 @@
+{
+  "observedAt": "2026-09-16T10:12:39.194563+00:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "installationRef": {
+    "installationId": "d6531562-e388-4206-a3ba-a89aaddc255c",
+    "revision": 5,
+    "lockHash": "sha256:85f986267d34c4847b7045144a61539a7f57abfc75ac582721b27e6b3cd5d785",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "preview": {
+    "schemaVersion": "aos.snapshot-configuration-preview/v1",
+    "executionAuthorized": false,
+    "sourceId": "niushop-qyh",
+    "packageRef": {
+      "publisher": "aos",
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117"
+    },
+    "members": [
+      {
+        "pipelineId": "P01-shop-qyh",
+        "objectType": "Shop",
+        "table": "ns_site",
+        "graph": {
+          "pipeline_id": "P01-shop-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-店铺",
+          "nodes": [
+            {
+              "id": "P01-shop-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_site",
+                "source_table": "ns_site",
+                "pk": "site_id",
+                "primary_key": "site_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P01-shop-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_type",
+                    "target": "siteType",
+                    "type": "string"
+                  },
+                  {
+                    "source": "site_domain",
+                    "target": "domain",
+                    "type": "string"
+                  },
+                  {
+                    "source": "site_name",
+                    "target": "name",
+                    "type": "string"
+                  },
+                  {
+                    "source": "username",
+                    "target": "username",
+                    "type": "string"
+                  },
+                  {
+                    "source": "logo",
+                    "target": "logo",
+                    "type": "string"
+                  },
+                  {
+                    "source": "logo_square",
+                    "target": "logoSquare",
+                    "type": "string"
+                  },
+                  {
+                    "source": "seo_keywords",
+                    "target": "seoKeywords",
+                    "type": "string"
+                  },
+                  {
+                    "source": "seo_description",
+                    "target": "seoDescription",
+                    "type": "string"
+                  },
+                  {
+                    "source": "seo_title",
+                    "target": "seoTitle",
+                    "type": "string"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "Shop"
+              }
+            },
+            {
+              "id": "P01-shop-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Shop",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P01-shop-qyh-edge-0",
+              "source_node_id": "P01-shop-qyh-source",
+              "target_node_id": "P01-shop-qyh-transform"
+            },
+            {
+              "id": "P01-shop-qyh-edge-1",
+              "source_node_id": "P01-shop-qyh-transform",
+              "target_node_id": "P01-shop-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:1d4dcc31eceadafb779021d38b217b76a843e1ce59e7f4359fa197ba83b669d5",
+        "schedule": {
+          "pipelineId": "P01-shop-qyh",
+          "name": "栖月汇-店铺",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p01-shop.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P02-product-qyh",
+        "objectType": "Product",
+        "table": "ns_goods",
+        "graph": {
+          "pipeline_id": "P02-product-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-商品",
+          "nodes": [
+            {
+              "id": "P02-product-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_goods",
+                "source_table": "ns_goods",
+                "pk": "goods_id",
+                "primary_key": "goods_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P02-product-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "goods_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "goods_name",
+                    "target": "title",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_class",
+                    "target": "goodsClass",
+                    "type": "int"
+                  },
+                  {
+                    "source": "goods_class_name",
+                    "target": "goodsClassName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "shopId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_name",
+                    "target": "siteName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_image",
+                    "target": "image",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_content",
+                    "target": "content",
+                    "type": "text"
+                  },
+                  {
+                    "source": "goods_state",
+                    "target": "state",
+                    "type": "int"
+                  },
+                  {
+                    "source": "category_id",
+                    "target": "categoryId",
+                    "type": "string"
+                  },
+                  {
+                    "source": "brand_id",
+                    "target": "brandId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "brand_name",
+                    "target": "brandName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "price",
+                    "target": "price",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "market_price",
+                    "target": "marketPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "cost_price",
+                    "target": "costPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "goods_stock",
+                    "target": "stock",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "is_virtual",
+                    "target": "isVirtual",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_free_shipping",
+                    "target": "isFreeShipping",
+                    "type": "int"
+                  },
+                  {
+                    "source": "introduction",
+                    "target": "introduction",
+                    "type": "string"
+                  },
+                  {
+                    "source": "keywords",
+                    "target": "keywords",
+                    "type": "string"
+                  },
+                  {
+                    "source": "unit",
+                    "target": "unit",
+                    "type": "string"
+                  },
+                  {
+                    "source": "sort",
+                    "target": "sort",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sku_id",
+                    "target": "skuId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "supplier_id",
+                    "target": "supplierId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sale_num",
+                    "target": "saleNum",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "is_delete",
+                    "target": "isDelete",
+                    "type": "int"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createdAt",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "modify_time",
+                    "target": "modifyTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "Product"
+              }
+            },
+            {
+              "id": "P02-product-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Product",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P02-product-qyh-edge-0",
+              "source_node_id": "P02-product-qyh-source",
+              "target_node_id": "P02-product-qyh-transform"
+            },
+            {
+              "id": "P02-product-qyh-edge-1",
+              "source_node_id": "P02-product-qyh-transform",
+              "target_node_id": "P02-product-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:5776c6bf65f796f0306570579566feb1fbbf46f8a2bcb79c4f028659fec61a4e",
+        "schedule": {
+          "pipelineId": "P02-product-qyh",
+          "name": "栖月汇-商品",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p02-product.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P03-product-sku-qyh",
+        "objectType": "ProductSku",
+        "table": "ns_goods_sku",
+        "graph": {
+          "pipeline_id": "P03-product-sku-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-商品SKU",
+          "nodes": [
+            {
+              "id": "P03-product-sku-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_goods_sku",
+                "source_table": "ns_goods_sku",
+                "pk": "sku_id",
+                "primary_key": "sku_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P03-product-sku-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "sku_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "goods_id",
+                    "target": "productId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sku_name",
+                    "target": "name",
+                    "type": "string"
+                  },
+                  {
+                    "source": "sku_no",
+                    "target": "barcode",
+                    "type": "string"
+                  },
+                  {
+                    "source": "price",
+                    "target": "price",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "market_price",
+                    "target": "marketPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "cost_price",
+                    "target": "costPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "discount_price",
+                    "target": "discountPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "stock",
+                    "target": "stock",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "sku_image",
+                    "target": "image",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_state",
+                    "target": "goodsState",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_virtual",
+                    "target": "isVirtual",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_default",
+                    "target": "isDefault",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_delete",
+                    "target": "isDelete",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sale_num",
+                    "target": "saleNum",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "modify_time",
+                    "target": "modifyTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "ProductSku"
+              }
+            },
+            {
+              "id": "P03-product-sku-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "ProductSku",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P03-product-sku-qyh-edge-0",
+              "source_node_id": "P03-product-sku-qyh-source",
+              "target_node_id": "P03-product-sku-qyh-transform"
+            },
+            {
+              "id": "P03-product-sku-qyh-edge-1",
+              "source_node_id": "P03-product-sku-qyh-transform",
+              "target_node_id": "P03-product-sku-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:8a74034f99cb11f9c4f7c4eabc35b31b5573239053fa5425f8165bcee0171369",
+        "schedule": {
+          "pipelineId": "P03-product-sku-qyh",
+          "name": "栖月汇-商品SKU",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p03-product-sku.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:60f8de20de644bde825d174d08c214e18a4fec5de5a62a068809fec4ea9ffa47"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P04-category-qyh",
+        "objectType": "Category",
+        "table": "ns_goods_category",
+        "graph": {
+          "pipeline_id": "P04-category-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-类目",
+          "nodes": [
+            {
+              "id": "P04-category-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_goods_category",
+                "source_table": "ns_goods_category",
+                "pk": "category_id",
+                "primary_key": "category_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P04-category-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "category_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "category_name",
+                    "target": "name",
+                    "type": "string"
+                  },
+                  {
+                    "source": "short_name",
+                    "target": "shortName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "pid",
+                    "target": "parentCategoryId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "level",
+                    "target": "level",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_show",
+                    "target": "isShow",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sort",
+                    "target": "sort",
+                    "type": "int"
+                  },
+                  {
+                    "source": "image",
+                    "target": "image",
+                    "type": "string"
+                  },
+                  {
+                    "source": "category_id_1",
+                    "target": "categoryId1",
+                    "type": "int"
+                  },
+                  {
+                    "source": "category_id_2",
+                    "target": "categoryId2",
+                    "type": "int"
+                  },
+                  {
+                    "source": "category_id_3",
+                    "target": "categoryId3",
+                    "type": "int"
+                  },
+                  {
+                    "source": "category_full_name",
+                    "target": "fullName",
+                    "type": "string"
+                  }
+                ],
+                "target_ot": "Category"
+              }
+            },
+            {
+              "id": "P04-category-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Category",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P04-category-qyh-edge-0",
+              "source_node_id": "P04-category-qyh-source",
+              "target_node_id": "P04-category-qyh-transform"
+            },
+            {
+              "id": "P04-category-qyh-edge-1",
+              "source_node_id": "P04-category-qyh-transform",
+              "target_node_id": "P04-category-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:168442bf2b6d20341650cc88e98d157b7afe0c378e2cef2c98eb77d4f5e090b2",
+        "schedule": {
+          "pipelineId": "P04-category-qyh",
+          "name": "栖月汇-类目",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p04-category.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:07eb63d373af249557f8b9c970430ceea89ea0e1841d4fd30f18c6e890b747bd"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P05-order-qyh",
+        "objectType": "Order",
+        "table": "ns_order",
+        "graph": {
+          "pipeline_id": "P05-order-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-订单",
+          "nodes": [
+            {
+              "id": "P05-order-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_order",
+                "source_table": "ns_order",
+                "pk": "order_id",
+                "primary_key": "order_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P05-order-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "order_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_no",
+                    "target": "orderNo",
+                    "type": "string"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "shopId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_name",
+                    "target": "siteName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "order_from",
+                    "target": "orderFrom",
+                    "type": "string"
+                  },
+                  {
+                    "source": "order_type",
+                    "target": "orderType",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_status",
+                    "target": "orderStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "pay_status",
+                    "target": "payStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "delivery_status",
+                    "target": "deliveryStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "refund_status",
+                    "target": "refundStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_delete",
+                    "target": "isDelete",
+                    "type": "int"
+                  },
+                  {
+                    "source": "member_id",
+                    "target": "memberId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "pay_type",
+                    "target": "payType",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_money",
+                    "target": "goodsMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "delivery_money",
+                    "target": "deliveryMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "promotion_money",
+                    "target": "promotionMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "coupon_money",
+                    "target": "couponMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "order_money",
+                    "target": "totalAmount",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "pay_money",
+                    "target": "payMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "goods_num",
+                    "target": "goodsNum",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createdAt",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "pay_time",
+                    "target": "payTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "delivery_time",
+                    "target": "deliveryTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "sign_time",
+                    "target": "signTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "finish_time",
+                    "target": "finishTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "close_time",
+                    "target": "closeTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "weapp_id",
+                    "target": "weappId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "out_trade_no",
+                    "target": "outTradeNo",
+                    "type": "string"
+                  }
+                ],
+                "target_ot": "Order"
+              }
+            },
+            {
+              "id": "P05-order-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Order",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P05-order-qyh-edge-0",
+              "source_node_id": "P05-order-qyh-source",
+              "target_node_id": "P05-order-qyh-transform"
+            },
+            {
+              "id": "P05-order-qyh-edge-1",
+              "source_node_id": "P05-order-qyh-transform",
+              "target_node_id": "P05-order-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:a16ce611cdfc34bfaddd44115dfe02b750a449908dc79fc5f861fa8d7fe108dc",
+        "schedule": {
+          "pipelineId": "P05-order-qyh",
+          "name": "栖月汇-订单",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p05-order.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:c56213d59b4a68755786b1645e05d1e761042035b358ca33851864d26f103f85"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P06-order-line-qyh",
+        "objectType": "OrderLine",
+        "table": "ns_order_goods",
+        "graph": {
+          "pipeline_id": "P06-order-line-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-订单明细",
+          "nodes": [
+            {
+              "id": "P06-order-line-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_order_goods",
+                "source_table": "ns_order_goods",
+                "pk": "order_goods_id",
+                "primary_key": "order_goods_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P06-order-line-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "order_goods_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_id",
+                    "target": "orderId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_no",
+                    "target": "orderNo",
+                    "type": "string"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "member_id",
+                    "target": "memberId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "goods_id",
+                    "target": "productId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sku_id",
+                    "target": "skuId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sku_name",
+                    "target": "skuName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "sku_no",
+                    "target": "skuNo",
+                    "type": "string"
+                  },
+                  {
+                    "source": "goods_name",
+                    "target": "goodsName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "price",
+                    "target": "unitPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "cost_price",
+                    "target": "costPrice",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "num",
+                    "target": "quantity",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "goods_money",
+                    "target": "lineAmount",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "cost_money",
+                    "target": "costMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "delivery_status",
+                    "target": "deliveryStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "refund_status",
+                    "target": "refundStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "refund_type",
+                    "target": "refundType",
+                    "type": "int"
+                  },
+                  {
+                    "source": "refund_apply_money",
+                    "target": "refundApplyMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "refund_real_money",
+                    "target": "refundRealMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "refund_action_time",
+                    "target": "refundActionTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "OrderLine"
+              }
+            },
+            {
+              "id": "P06-order-line-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "OrderLine",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P06-order-line-qyh-edge-0",
+              "source_node_id": "P06-order-line-qyh-source",
+              "target_node_id": "P06-order-line-qyh-transform"
+            },
+            {
+              "id": "P06-order-line-qyh-edge-1",
+              "source_node_id": "P06-order-line-qyh-transform",
+              "target_node_id": "P06-order-line-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:9ebf83a7887054204aa2f9239ed1f585a99e5867d5964573a2f3eb2535b4209a",
+        "schedule": {
+          "pipelineId": "P06-order-line-qyh",
+          "name": "栖月汇-订单明细",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p06-order-line.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:be4f4a01881789964578cc4682f379164c0ce92d4c6a3a409920487f36318eef"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P07-shipment-qyh",
+        "objectType": "Shipment",
+        "table": "ns_express_delivery_package",
+        "graph": {
+          "pipeline_id": "P07-shipment-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-发货",
+          "nodes": [
+            {
+              "id": "P07-shipment-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_express_delivery_package",
+                "source_table": "ns_express_delivery_package",
+                "pk": "id",
+                "primary_key": "id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P07-shipment-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_id",
+                    "target": "orderId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "package_name",
+                    "target": "packageName",
+                    "type": "string"
+                  },
+                  {
+                    "source": "delivery_type",
+                    "target": "deliveryType",
+                    "type": "int"
+                  },
+                  {
+                    "source": "express_company_id",
+                    "target": "expressCompanyId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "express_company_name",
+                    "target": "carrier",
+                    "type": "string"
+                  },
+                  {
+                    "source": "delivery_time",
+                    "target": "shippedAt",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "member_id",
+                    "target": "memberId",
+                    "type": "int"
+                  }
+                ],
+                "target_ot": "Shipment"
+              }
+            },
+            {
+              "id": "P07-shipment-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Shipment",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P07-shipment-qyh-edge-0",
+              "source_node_id": "P07-shipment-qyh-source",
+              "target_node_id": "P07-shipment-qyh-transform"
+            },
+            {
+              "id": "P07-shipment-qyh-edge-1",
+              "source_node_id": "P07-shipment-qyh-transform",
+              "target_node_id": "P07-shipment-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:2583dcf5e4e21705da3aa0062505f23dd583d4bb878a308456935b2e260e01a7",
+        "schedule": {
+          "pipelineId": "P07-shipment-qyh",
+          "name": "栖月汇-发货",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p07-shipment.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:1dca12ebd494d9abdb130fdddca4780538c2874fb5a2557f10b11c72642bb17b"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P08-customer-lite-qyh",
+        "objectType": "CustomerLite",
+        "table": "ns_member",
+        "graph": {
+          "pipeline_id": "P08-customer-lite-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-会员",
+          "nodes": [
+            {
+              "id": "P08-customer-lite-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_member",
+                "source_table": "ns_member",
+                "pk": "member_id",
+                "primary_key": "member_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P08-customer-lite-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "member_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "member_level",
+                    "target": "memberLevel",
+                    "type": "int"
+                  },
+                  {
+                    "source": "reg_time",
+                    "target": "createdAt",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "status",
+                    "target": "sourceStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_delete",
+                    "target": "isDelete",
+                    "type": "int"
+                  }
+                ],
+                "target_ot": "CustomerLite"
+              }
+            },
+            {
+              "id": "P08-customer-lite-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "CustomerLite",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P08-customer-lite-qyh-edge-0",
+              "source_node_id": "P08-customer-lite-qyh-source",
+              "target_node_id": "P08-customer-lite-qyh-transform"
+            },
+            {
+              "id": "P08-customer-lite-qyh-edge-1",
+              "source_node_id": "P08-customer-lite-qyh-transform",
+              "target_node_id": "P08-customer-lite-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:aef25262f7d00814c29dc7b741d271293592727caa5f12e672d7a2f25d5ca2cb",
+        "schedule": {
+          "pipelineId": "P08-customer-lite-qyh",
+          "name": "栖月汇-会员",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p08-customer-lite.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:599bd3b58ac836049e1867557995aa411581eca08b715a66848178c1a6adac96"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P09-weapp-qyh",
+        "objectType": "Weapp",
+        "table": "ns_weapp",
+        "graph": {
+          "pipeline_id": "P09-weapp-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-小程序",
+          "nodes": [
+            {
+              "id": "P09-weapp-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_weapp",
+                "source_table": "ns_weapp",
+                "pk": "weapp_id",
+                "primary_key": "weapp_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P09-weapp-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "weapp_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "weapp_name",
+                    "target": "name",
+                    "type": "string"
+                  },
+                  {
+                    "source": "appid",
+                    "target": "appId",
+                    "type": "string"
+                  },
+                  {
+                    "source": "status",
+                    "target": "sourceStatus",
+                    "type": "int"
+                  }
+                ],
+                "target_ot": "Weapp"
+              }
+            },
+            {
+              "id": "P09-weapp-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Weapp",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P09-weapp-qyh-edge-0",
+              "source_node_id": "P09-weapp-qyh-source",
+              "target_node_id": "P09-weapp-qyh-transform"
+            },
+            {
+              "id": "P09-weapp-qyh-edge-1",
+              "source_node_id": "P09-weapp-qyh-transform",
+              "target_node_id": "P09-weapp-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:ef5df9e695da65e9949474646c547533499e096a7019d361d3b5d36408d3585b",
+        "schedule": {
+          "pipelineId": "P09-weapp-qyh",
+          "name": "栖月汇-小程序",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p09-weapp.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:fd828a44591ee0f0f360ec3fb965db1f305a099a6f3d013ecfee6c7555ec3117"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P10-system-config-qyh",
+        "objectType": "SystemConfig",
+        "table": "ns_config",
+        "graph": {
+          "pipeline_id": "P10-system-config-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-系统配置",
+          "nodes": [
+            {
+              "id": "P10-system-config-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_config",
+                "source_table": "ns_config",
+                "pk": "id",
+                "primary_key": "id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P10-system-config-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "weapp_id",
+                    "target": "weappId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "app_module",
+                    "target": "module",
+                    "type": "string"
+                  },
+                  {
+                    "source": "config_key",
+                    "target": "key",
+                    "type": "string"
+                  },
+                  {
+                    "source": "is_use",
+                    "target": "isUse",
+                    "type": "int"
+                  }
+                ],
+                "target_ot": "SystemConfig"
+              }
+            },
+            {
+              "id": "P10-system-config-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "SystemConfig",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P10-system-config-qyh-edge-0",
+              "source_node_id": "P10-system-config-qyh-source",
+              "target_node_id": "P10-system-config-qyh-transform"
+            },
+            {
+              "id": "P10-system-config-qyh-edge-1",
+              "source_node_id": "P10-system-config-qyh-transform",
+              "target_node_id": "P10-system-config-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:f8b9835b7458b56613c45fa4d3acb07275ddd74cd522f005933d1e159a6ccf62",
+        "schedule": {
+          "pipelineId": "P10-system-config-qyh",
+          "name": "栖月汇-系统配置",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p10-system-config.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:f9dd1731fefb9bca5b1f0c399c5bf71540400932a6b75ef4be084989b9142da2"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P11-product-review-qyh",
+        "objectType": "ProductReview",
+        "table": "ns_goods_evaluate",
+        "graph": {
+          "pipeline_id": "P11-product-review-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-商品评价",
+          "nodes": [
+            {
+              "id": "P11-product-review-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_goods_evaluate",
+                "source_table": "ns_goods_evaluate",
+                "pk": "evaluate_id",
+                "primary_key": "evaluate_id",
+                "site_filter": "site_id=1",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P11-product-review-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "evaluate_id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_id",
+                    "target": "orderId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "order_goods_id",
+                    "target": "orderGoodsId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "goods_id",
+                    "target": "productId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "sku_id",
+                    "target": "skuId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "scores",
+                    "target": "score",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_show",
+                    "target": "isShow",
+                    "type": "int"
+                  },
+                  {
+                    "source": "is_audit",
+                    "target": "isAudit",
+                    "type": "int"
+                  },
+                  {
+                    "source": "member_id",
+                    "target": "memberId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "ProductReview"
+              }
+            },
+            {
+              "id": "P11-product-review-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "ProductReview",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P11-product-review-qyh-edge-0",
+              "source_node_id": "P11-product-review-qyh-source",
+              "target_node_id": "P11-product-review-qyh-transform"
+            },
+            {
+              "id": "P11-product-review-qyh-edge-1",
+              "source_node_id": "P11-product-review-qyh-transform",
+              "target_node_id": "P11-product-review-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:9fc32d375b26d1ab03c4da9da53cf8bcb891c79e22713fdee81e5db9da1f7840",
+        "schedule": {
+          "pipelineId": "P11-product-review-qyh",
+          "name": "栖月汇-商品评价",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p11-product-review.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:d260f275d3ed110660a322b7dc1a0797168df363964b4743518b29a679cf002d"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      },
+      {
+        "pipelineId": "P12-payment-qyh",
+        "objectType": "Payment",
+        "table": "ns_pay",
+        "graph": {
+          "pipeline_id": "P12-payment-qyh",
+          "pipeline_type": "ETL",
+          "write_mode": "SNAPSHOT",
+          "name": "栖月汇-支付",
+          "nodes": [
+            {
+              "id": "P12-payment-qyh-source",
+              "name": "source",
+              "node_type": "source",
+              "position_x": 60,
+              "position_y": 60,
+              "config": {
+                "source_id": "niushop-qyh",
+                "table": "ns_pay",
+                "source_table": "ns_pay",
+                "pk": "id",
+                "primary_key": "id",
+                "site_filter": "site_id=1 AND event='OrderPayNotify'",
+                "incremental_strategy": "snapshot",
+                "initial": false,
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            },
+            {
+              "id": "P12-payment-qyh-transform",
+              "name": "transform",
+              "node_type": "transform",
+              "position_x": 320,
+              "position_y": 60,
+              "config": {
+                "expression": "row",
+                "field_mappings": [
+                  {
+                    "source": "id",
+                    "target": "id",
+                    "type": "int"
+                  },
+                  {
+                    "source": "site_id",
+                    "target": "siteId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "out_trade_no",
+                    "target": "outTradeNo",
+                    "type": "string"
+                  },
+                  {
+                    "source": "pay_type",
+                    "target": "payType",
+                    "type": "string"
+                  },
+                  {
+                    "source": "pay_money",
+                    "target": "payMoney",
+                    "type": "decimal"
+                  },
+                  {
+                    "source": "pay_status",
+                    "target": "payStatus",
+                    "type": "int"
+                  },
+                  {
+                    "source": "event",
+                    "target": "event",
+                    "type": "string"
+                  },
+                  {
+                    "source": "member_id",
+                    "target": "memberId",
+                    "type": "int"
+                  },
+                  {
+                    "source": "relate_id",
+                    "target": "orderId",
+                    "type": "string"
+                  },
+                  {
+                    "source": "is_delete",
+                    "target": "isDelete",
+                    "type": "int"
+                  },
+                  {
+                    "source": "create_time",
+                    "target": "createTime",
+                    "type": "timestamp"
+                  },
+                  {
+                    "source": "pay_time",
+                    "target": "payTime",
+                    "type": "timestamp"
+                  }
+                ],
+                "target_ot": "Payment"
+              }
+            },
+            {
+              "id": "P12-payment-qyh-sink",
+              "name": "sink",
+              "node_type": "sink",
+              "position_x": 580,
+              "position_y": 60,
+              "config": {
+                "target_ot": "Payment",
+                "write_mode": "SNAPSHOT",
+                "unique_key_pattern": "niushop:{site_id}:{pk}"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "id": "P12-payment-qyh-edge-0",
+              "source_node_id": "P12-payment-qyh-source",
+              "target_node_id": "P12-payment-qyh-transform"
+            },
+            {
+              "id": "P12-payment-qyh-edge-1",
+              "source_node_id": "P12-payment-qyh-transform",
+              "target_node_id": "P12-payment-qyh-sink"
+            }
+          ]
+        },
+        "graphPreviewHash": "sha256:d8bad332a9132572b2875ad80b954fca9ccb340e1c66e0c922d0094b7a3b1e06",
+        "schedule": {
+          "pipelineId": "P12-payment-qyh",
+          "name": "栖月汇-支付",
+          "enabled": false,
+          "cron": "0 * * * *",
+          "ingest": null
+        },
+        "artifactRefs": {
+          "mappingRef": {
+            "resourceType": "Mapping",
+            "resourceId": "content/mappings/p12-payment.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:d2cca07cb0fc041f9b63b60e1097ea120c129704f850edbc952dffe1ba6c9e1b"
+          },
+          "schemaRef": {
+            "resourceType": "SchemaFingerprint",
+            "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+            "revision": "1.23.0",
+            "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+          },
+          "maskingPolicyRef": {
+            "resourceType": "MaskingPolicy",
+            "resourceId": "content/mappings/_pii-exclusion.yaml",
+            "revision": "1.23.0",
+            "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+          }
+        }
+      }
+    ],
+    "previewHash": "sha256:709946930dbef68345d40f5137f416567d39a94b4560545c6f76d26d8059b8d1"
+  },
+  "existingGraphs": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "revision": 1,
+      "readSpecificationMatches": true
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "revision": 1,
+      "readSpecificationMatches": true
+    }
+  ],
+  "sourceReads": 0,
+  "databaseWrites": 0,
+  "transaction": "original shared-lock validation then Rollback"
+}
