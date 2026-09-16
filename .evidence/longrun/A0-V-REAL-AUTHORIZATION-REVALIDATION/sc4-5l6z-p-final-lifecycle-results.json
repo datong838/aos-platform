@@ -1,0 +1,48 @@
+{
+  "outcome": "P_FINAL_LIFECYCLE_GREEN",
+  "tenant": "org-org/dev-project",
+  "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+  "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+  "eventShrink": {
+    "receiptId": "0710afa1-71b0-4499-b21a-19309a262ec6",
+    "contentHash": "sha256:597e35b4bd3ae813070085d9171ce60d40103c93767a482383ed631a37421672",
+    "releasedRuntimeRecovery": true,
+    "groupRevisionBefore": 50,
+    "groupRevisionAfter": 51,
+    "eventRouteRemoved": true
+  },
+  "runtimeDisable": {
+    "operationId": "92809daf-2988-421f-a2f5-dece5bdb75e3",
+    "status": "succeeded",
+    "outboxDelivery": "acknowledged",
+    "bindingRevisionBefore": 7,
+    "bindingRevisionAfterDetach": 9,
+    "executionEpochBefore": 4,
+    "executionEpochAfter": 5,
+    "dispatchLifecycleReceipts": ["fence", "detach"],
+    "nineRoutesDetached": true,
+    "dispatchGroupRevision": 53
+  },
+  "uninstall": {
+    "state": "uninstalled",
+    "installationEtag": 6,
+    "runtimeRevision": 10,
+    "runtimeDesiredState": "uninstalled",
+    "runtimeObservedState": "stopped",
+    "retainedReleasedResources": 3,
+    "receiptRecoveredByReadback": true,
+    "uninstallResent": false
+  },
+  "retainedSafety": {
+    "cancelledOccurrences": 65,
+    "closureReceipts": 65,
+    "targetCommandReceipts": 0,
+    "negativeTenantCanaryRows": 0,
+    "externalEffects": 0
+  },
+  "validation": {
+    "adjacentTests": "34 passed",
+    "ar2_7Verifier": "green",
+    "dynamicReferenceErrors": 0
+  }
+}
