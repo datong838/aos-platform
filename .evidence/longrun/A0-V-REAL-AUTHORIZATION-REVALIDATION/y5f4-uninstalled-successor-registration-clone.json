@@ -1,0 +1,41 @@
+{
+  "outcome": "UNINSTALLED_SUCCESSOR_REGISTRATION_CLONE_VERIFIED",
+  "source": "a0v_072",
+  "target": "a0v_073",
+  "main": "aos_meta_head",
+  "clone": "aos_uninstalled_successor_registration_20260916_test",
+  "migrations": {
+    "a0v_073_uninstalled_successor_registration.py": "sha256:c2a16ca6b9fb1f82a5381d9dbb70c7d8435bfe822a9aeabb593fbf1170f152ca"
+  },
+  "executors": {
+    "a0v_uninstalled_successor_registration_clone.py": "sha256:684b56b301bbef5cb5389a107a3b2e4f4bae5260c5c91cecca5712e795e5899d",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c"
+  },
+  "schema": {
+    "function": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "maintainer_execute": true,
+      "runtime_execute": false,
+      "public_execute": false
+    },
+    "requiredTokens": [
+      "v_old_binding.desired_state='uninstalled'",
+      "v_old_binding.observed_state='stopped'",
+      "r.state='uninstalled'",
+      "i.active_revision IS NULL",
+      "v_old_binding.desired_state='disabled'"
+    ]
+  },
+  "mainMigrated": false,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T14:44:31.728097+00:00",
+  "preservedTableCount": 552,
+  "oldDataUnchanged": true,
+  "backupSha256": "sha256:762727154d0f2bebb6f785506fc029f0abcb5b1f796d108ec037b718675855b0"
+}
