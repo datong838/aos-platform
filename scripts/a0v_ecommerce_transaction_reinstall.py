@@ -102,7 +102,7 @@ def create_j(profile):
     if result['installationState'] != 'approved':
         raise ValueError('J must have its own approved installation')
     profile._freeze(target, result)
-    return dict(outcome='DIAGNOSTIC_H_APPROVED', **result)
+    return result
 
 
 def require_orphaned_i(connect):
