@@ -3311,11 +3311,51 @@ class SchedulePutHostService:
             actor=self.executor_identity,
             occurred_at=occurred_at or checked_at,
         )
-        AutomationOccurrenceStore(factory).disable_policy_bindings(
+        occurrences = AutomationOccurrenceStore(factory)
+        occurrences.disable_policy_bindings(
             scope,
             result.authority.schedule_policy_id,
             keep_revision=result.authority.revision if result.authority.enabled else None,
         )
+        if result.authority.enabled:
+            route = transaction.execute(
+                """SELECT handler_kind,installation_id,generation,execution_epoch,
+                          operation_fence,cutover_group_id,cutover_group_revision
+                     FROM extension_operation_dispatch_binding
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_schedule_trigger' FOR SHARE""",
+                scope.key,
+            ).fetchone()
+            if (
+                route is None
+                or route["handler_kind"] != "extension"
+                or route["operation_fence"] is not False
+                or dispatch_ref is None
+                or str(route["installation_id"]) != str(dispatch_ref.installation_id)
+                or str(route["generation"]) != str(dispatch_ref.generation)
+                or int(route["execution_epoch"]) != int(dispatch_ref.execution_epoch)
+                or str(route["cutover_group_id"]) != str(dispatch_ref.cutover_group_id)
+                or int(route["cutover_group_revision"]) != int(dispatch_ref.cutover_group_revision)
+            ):
+                raise ValueError("schedule trigger route differs from approved schedule write")
+            occurrences.put_binding(
+                scope,
+                ScheduleBinding(
+                    policy_id=result.authority.schedule_policy_id,
+                    policy_revision=result.authority.revision,
+                    policy_hash=result.authority.content_hash,
+                    operation_id="ecommerce_growth_schedule_trigger",
+                    installation_id=UUID(str(route["installation_id"])),
+                    generation=UUID(str(route["generation"])),
+                    execution_epoch=int(route["execution_epoch"]),
+                    cadence=result.authority.cadence.value,
+                    effective_from=result.authority.created_at,
+                    weekly_day=result.authority.weekly_day,
+                    local_time=result.authority.local_time,
+                    approved=True,
+                    enabled=True,
+                ),
+            )
         return {
             "receiptRef": _schedule_ref(result.authority),
             "authority": result.authority.model_dump(by_alias=True, mode="json"),

@@ -504,6 +504,10 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         revision=1,
         content_hash="sha256:" + "b" * 64,
         enabled=True,
+        cadence=SimpleNamespace(value="once"),
+        created_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+        weekly_day=None,
+        local_time=None,
         model_dump=lambda **_: {"schedulePolicyId": "schedule-qyh-001", "revision": 1},
     )
     case = SimpleNamespace(
@@ -532,27 +536,64 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
             return SimpleNamespace(authority=authority, case_authority=case, replayed=False)
 
     class Occurrences:
+        binding = None
+
         def __init__(self, _factory):
             pass
 
         def disable_policy_bindings(self, _scope, _policy_id, *, keep_revision):
             assert keep_revision == 1
 
+        def put_binding(self, _scope, binding):
+            type(self).binding = binding
+
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
     monkeypatch.setattr(runtime_adapters, "EcommerceBusinessInvestigationApplication", App)
     monkeypatch.setattr(runtime_adapters, "AutomationOccurrenceStore", Occurrences)
     service = runtime_adapters.SchedulePutHostService()
-    transaction = HostTransaction(SimpleNamespace(execute=lambda *_: None))
+    runtime = SimpleNamespace(
+        installation_id="11111111-1111-4111-8111-111111111111",
+        generation="22222222-2222-4222-8222-222222222222",
+        execution_epoch=3,
+        cutover_group_id="33333333-3333-4333-8333-333333333333",
+        cutover_group_revision=9,
+    )
+    route = {
+        "handler_kind": "extension",
+        "installation_id": runtime.installation_id,
+        "generation": runtime.generation,
+        "execution_epoch": runtime.execution_epoch,
+        "operation_fence": False,
+        "cutover_group_id": runtime.cutover_group_id,
+        "cutover_group_revision": runtime.cutover_group_revision,
+    }
+    transaction = HostTransaction(SimpleNamespace(
+        execute=lambda *_: SimpleNamespace(fetchone=lambda: route)
+    ))
     response = service.execute(
         transaction=transaction,
         scope=scope,
-        dispatch_ref=None,
+        dispatch_ref=runtime,
         command=command,
         checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
         occurred_at=None,
     )
     assert response["receiptRef"]["resourceId"] == "schedule-qyh-001"
+    assert Occurrences.binding is not None
+    assert Occurrences.binding.cadence == "once"
+    assert str(Occurrences.binding.installation_id) == runtime.installation_id
+    route["generation"] = "44444444-4444-4444-8444-444444444444"
+    with pytest.raises(ValueError, match="trigger route differs"):
+        service.execute(
+            transaction=transaction,
+            scope=scope,
+            dispatch_ref=runtime,
+            command=command,
+            checked_at=datetime(2026, 9, 8, 12, tzinfo=UTC),
+            occurred_at=None,
+        )
+    route["generation"] = runtime.generation
     assert service.verify_receipt(
         transaction=transaction,
         scope=scope,
