@@ -1,0 +1,48 @@
+{
+  "outcome": "L_POLICY9_NATURAL_DOWNSTREAM_TIMED_OUT",
+  "observedAt": "2026-09-16T17:10:38.288059+00:00",
+  "run": {
+    "id": "scr-fa4d8b91162c4ef5",
+    "status": "succeeded",
+    "trigger": "cron",
+    "scheduled_for": "2026-09-16 17:00:00+00:00",
+    "started_at": "2026-09-16 17:00:12.697996+00:00",
+    "finished_at": "2026-09-16 17:00:22.510312+00:00",
+    "rows_written": 65,
+    "error_code": "",
+    "executor_stopped": true
+  },
+  "source": {
+    "rowsWritten": 65,
+    "ingressCount": 1,
+    "sourceId": "niushop-qyh",
+    "sourceRevision": "a84b6c79-8654-48f0-98c2-57d41b067b3d"
+  },
+  "discovery": {
+    "authorizedCandidateCount": 1,
+    "occurrenceCount": 0,
+    "attemptCount": 0,
+    "investigationRunCount": 0
+  },
+  "final": {
+    "scheduleEnabled": false,
+    "inflight": {
+      "running": 0,
+      "unresolved": 0
+    },
+    "negativeCanaryDispatch": 0,
+    "policyRevision": 9,
+    "bindingRevision": 1,
+    "routeCount": 10
+  },
+  "runtimeHost": {
+    "oldPid": 87185,
+    "reloadedPid": 5203,
+    "businessWorkers": [
+      "product-event",
+      "analysis-data-requirement"
+    ]
+  },
+  "manualRunCalls": 0,
+  "next": "Add process-owned live-target/worker observability, repair natural candidate consumption, then renew an exact successor window."
+}
