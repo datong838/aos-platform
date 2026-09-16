@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+const SnapshotSchedulesPanel = lazy(() => import("./SnapshotSchedulesPanel").then(module => ({default:module.SnapshotSchedulesPanel})));
 import { getTenant } from "../../api/tenant";
 import { recoverScheduledRun } from "../../api/scheduleRecovery";
 import { apiPatch, apiPost } from "../../api/client";
@@ -74,6 +75,7 @@ export function recoveryReasonLabel(reason?: string): string {
 }
 
 export function SchedulesPage() {
+  const [mode, setMode] = useState<"single" | "group">("single");
   const { data, err, reload } = useJsonGet<{
     items: {
       id: string;
@@ -197,7 +199,8 @@ export function SchedulesPage() {
   return (
     <S2Chrome title="同步计划编辑器" lede="管理栖月汇业务数据的周期同步计划与真实运行记录">
       <PipelineWorkflowStepper current={2} />
-      <BpSplit
+      <BpTabs tabs={[{id:"single",label:"单路计划"},{id:"group",label:"整组采集"}]} active={mode} onChange={id=>setMode(id as "single"|"group")} />
+      {mode === "group" ? <Suspense fallback={<p role="status">正在加载整组配置…</p>}><SnapshotSchedulesPanel /></Suspense> : <><BpSplit
         left={
           <div className="bp-object-panel">
             <label className="muted" style={{ display: "block", fontSize: "0.75rem" }}>
@@ -373,6 +376,7 @@ export function SchedulesPage() {
           </div>
         ))}
       </div>
+      </>}
     </S2Chrome>
   );
 }

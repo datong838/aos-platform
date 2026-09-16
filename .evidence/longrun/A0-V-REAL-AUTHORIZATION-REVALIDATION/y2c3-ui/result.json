@@ -1,0 +1,17 @@
+{
+  "kind": "hermetic-ui-only",
+  "liveAosRequests": 0,
+  "sourceReads": 0,
+  "writesToFixture": 4,
+  "checks": [
+    "incomplete disabled",
+    "commit acknowledgement lost",
+    "reload zero resend",
+    "original receipt GET",
+    "enable",
+    "disable",
+    "retire",
+    "responsive"
+  ],
+  "errors": []
+}

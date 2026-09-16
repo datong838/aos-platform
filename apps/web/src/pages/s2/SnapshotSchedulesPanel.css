@@ -1,0 +1,12 @@
+.snapshot-groups{max-width:1200px;margin:0 auto;padding:20px;color:var(--text-primary,#203047)}
+.snapshot-groups__header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.snapshot-groups h2,.snapshot-groups h3{margin:0 0 10px}.snapshot-groups p{line-height:1.65}
+.snapshot-groups__notice{padding:14px 18px;background:var(--bg-secondary,#f1f5fa);border-left:3px solid #637b96;border-radius:5px}
+.snapshot-groups__layout{display:grid;grid-template-columns:minmax(230px,1fr) minmax(320px,2fr);gap:24px;margin-top:24px}
+.snapshot-groups__list,.snapshot-groups__editor{padding:20px;border:1px solid var(--border-color,#dce3ed);border-radius:10px;background:var(--bg-primary,#fff)}
+.snapshot-groups label{display:block;margin:18px 0 10px;font-weight:600}.snapshot-groups input,.snapshot-groups select{display:block;box-sizing:border-box;width:100%;padding:10px;margin-top:8px;border:1px solid #b8c6d8;border-radius:6px;background:var(--bg-primary,#fff);color:inherit}
+.snapshot-groups button{padding:9px 13px;border:1px solid #b8c6d8;border-radius:6px;background:var(--bg-primary,#fff);color:inherit;cursor:pointer}.snapshot-groups button:disabled{opacity:.48;cursor:not-allowed}
+.snapshot-groups__item{display:flex;flex-direction:column;text-align:left;gap:7px;width:100%;margin:12px 0}.snapshot-groups__item.is-selected{border-color:#2674c7;background:var(--bg-secondary,#edf5ff)}
+.snapshot-groups__actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.snapshot-groups__pending{padding:16px;border:1px solid #d8b66b;border-radius:8px;background:var(--bg-secondary,#fff8e7);margin:14px 0}.snapshot-groups__error{padding:12px;border-left:3px solid #b04444;background:var(--bg-secondary,#fff0ef)}
+.snapshot-groups details{margin:16px 0}.snapshot-groups summary{cursor:pointer}.snapshot-groups code{overflow-wrap:anywhere;font-size:12px}.snapshot-groups small{color:var(--text-secondary,#63748a)}
+@media(max-width:760px){.snapshot-groups{padding:12px}.snapshot-groups__layout{grid-template-columns:1fr;gap:14px}.snapshot-groups__list,.snapshot-groups__editor{padding:14px}}
