@@ -2,7 +2,14 @@ import asyncio
 from contextlib import contextmanager
 from types import SimpleNamespace
 import pytest
-from aos_api.ecommerce_product_event_worker import ProductEventConsumptionWorker
+from aos_api.ecommerce_product_event_worker import ProductEventConsumptionWorker, _safe_failure_detail
+
+
+def test_worker_failure_detail_is_bounded_and_does_not_expose_unknown_errors():
+    assert _safe_failure_detail(ValueError('current event policy unavailable')) == 'current event policy unavailable'
+    assert _safe_failure_detail(RuntimeError('provider secret')) == '-'
+    assert _safe_failure_detail(ValueError('x\nprivate')) == '-'
+    assert _safe_failure_detail(ValueError('x'*201)) == '-'
 from aos_api.pipeline_control_service import PipelineControlServiceFactory
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 from test_live_job_directory import _job

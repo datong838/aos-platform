@@ -1,0 +1,118 @@
+{"ts": "2026-09-16T18:16:08.062386+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "observedAt": "2026-09-16T18:16:08.151595+00:00",
+  "sourceRowsRead": 0,
+  "approvalsWritten": 0,
+  "businessWrites": 0,
+  "spec": {
+    "table": "ns_goods",
+    "columnCount": 28,
+    "objectType": "Product"
+  },
+  "artifactRefs": {
+    "mappingRef": {
+      "resourceType": "Mapping",
+      "resourceId": "content/mappings/p02-product.yaml",
+      "revision": "1.23.0",
+      "contentHash": "sha256:4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0"
+    },
+    "schemaRef": {
+      "resourceType": "SchemaFingerprint",
+      "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+      "revision": "1.23.0",
+      "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a"
+    },
+    "maskingPolicyRef": {
+      "resourceType": "MaskingPolicy",
+      "resourceId": "content/mappings/_pii-exclusion.yaml",
+      "revision": "1.23.0",
+      "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97"
+    }
+  },
+  "outcome": "PRODUCT_CURRENT_PREFLIGHT_GREEN",
+  "checkedActor": "a0v-ecommerce-growth-1.4-runtime-owner",
+  "currentInstallationRef": {
+    "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+    "revision": 5,
+    "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+    "overlayRevision": "a0v-canonical-ecommerce-v1"
+  },
+  "runtimeBinding": {
+    "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+    "revision": 6,
+    "execution_epoch": 3,
+    "enabled": true,
+    "operation_fence": false,
+    "desired_state": "enabled",
+    "observed_state": "ready",
+    "config_ref": {
+      "hash": "sha256:9ad6dc8af8c7b15d7b04b4635b9d02a3f4146b1be45ec244bb6461fb2a52ee0f",
+      "revision": 1,
+      "configurationId": "2006f9db-e89b-4ea6-82e6-adbec0c5e8ed"
+    }
+  },
+  "draft": {
+    "state": "prepared",
+    "readOnly": true,
+    "orgId": "org-org",
+    "projectId": "dev-project",
+    "pipelineId": "P02-product-qyh",
+    "graphRevision": 1,
+    "graphHash": "538aaeb637ca1592548de41feceddc2942a8a955bef15c36887d4a159890dc2d",
+    "installationRef": {
+      "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "revision": 5,
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "overlayRevision": "a0v-canonical-ecommerce-v1"
+    },
+    "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+    "executionEpoch": 3,
+    "configurationRef": {
+      "configurationId": "2006f9db-e89b-4ea6-82e6-adbec0c5e8ed",
+      "revision": 1,
+      "hash": "sha256:9ad6dc8af8c7b15d7b04b4635b9d02a3f4146b1be45ec244bb6461fb2a52ee0f"
+    },
+    "packageRef": {
+      "publisher": "aos",
+      "id": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117"
+    },
+    "sourceId": "niushop-qyh",
+    "sourceConfigurationRef": {
+      "resourceType": "DataSourceConfigurationRevision",
+      "resourceId": "source-config-a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "revision": 1,
+      "contentHash": "sha256:1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+      "receiptId": null
+    },
+    "mappingRef": {
+      "resourceType": "Mapping",
+      "resourceId": "content/mappings/p02-product.yaml",
+      "revision": "1.23.0",
+      "contentHash": "sha256:4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0",
+      "receiptId": null
+    },
+    "schemaRef": {
+      "resourceType": "SchemaFingerprint",
+      "resourceId": "content/schemas/niushop-schema-fingerprint.json",
+      "revision": "1.23.0",
+      "contentHash": "sha256:a5f7e624a273200173cf579405e3261fec8bf82efb14249e377c1768b953ff2a",
+      "receiptId": null
+    },
+    "maskingPolicyRef": {
+      "resourceType": "MaskingPolicy",
+      "resourceId": "content/mappings/_pii-exclusion.yaml",
+      "revision": "1.23.0",
+      "contentHash": "sha256:e25481aa97129562a249c120028ba3b0eabfa4ff4f72f183fe91475839a3dc97",
+      "receiptId": null
+    },
+    "rowLimit": 1000,
+    "timeoutSeconds": 30,
+    "maxSourceCalls": 1,
+    "notBefore": "2026-09-16T18:16:08.257814Z",
+    "expiresAt": "2026-09-16T19:46:08.257814Z",
+    "schemaVersion": "aos.pipeline-source-selection-draft/v1"
+  }
+}
+{"ts": "2026-09-16T18:16:08.467757+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

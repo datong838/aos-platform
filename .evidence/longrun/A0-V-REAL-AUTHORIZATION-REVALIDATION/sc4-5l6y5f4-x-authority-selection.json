@@ -1,0 +1,10 @@
+{
+  "outcome": "CURRENT_G_PRODUCT_SELECTION",
+  "ref": {
+    "resourceType": "SourceSelectionRevision",
+    "resourceId": "source-selection-8e96fedb-6bc7-4eae-88d4-8d9f7c8ff964",
+    "revision": 1,
+    "contentHash": "sha256:30a3e52bee1039a966ac128697a4281e8afd2faeb928931ea39ad420038e02f7",
+    "receiptId": null
+  }
+}

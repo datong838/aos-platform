@@ -1,0 +1,191 @@
+{"ts": "2026-09-16T18:19:50.419743+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T18:19:50.519599+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "originalCase": {
+    "schemaVersion": "aos.ecommerce.business-investigation-case/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "caseId": "case-qyh-full-store-baseline-20260915",
+    "revision": 11,
+    "version": 11,
+    "priorRef": {
+      "resourceType": "BusinessInvestigationCaseRevision",
+      "resourceId": "case-qyh-full-store-baseline-20260915",
+      "revision": 10,
+      "contentHash": "sha256:d38b28467aad78487cb3ec83b578cd321dd7ad6ed5f2d59e83d0d6946804a29e",
+      "receiptId": null
+    },
+    "contentHash": "sha256:c72aa8c83659b947cda1056dc843ad3af54dbdefabfb6180ef151a0ece538dbe",
+    "lifecycle": "ACTIVE",
+    "analysisType": "initial_store_analysis",
+    "title": "栖月汇全店基线与商品尖刀验证",
+    "purposeCode": "initial_store_analysis",
+    "channelRef": {
+      "resourceType": "ChannelRevision",
+      "resourceId": "niushop:1",
+      "revision": 1,
+      "contentHash": "sha256:79c222ce1ab2debae4751c048977e983ff1a71dd0350a933758206ec2e38bd69",
+      "receiptId": null
+    },
+    "businessEntityRef": {
+      "resourceType": "BusinessEntityRevision",
+      "resourceId": "niushop:1:1",
+      "revision": 1,
+      "contentHash": "sha256:b372a40cab64d052ba5c01d87698a7432a2ddb76a46aac4c7353a96392e4782a",
+      "receiptId": null
+    },
+    "entityChannelBindingRef": {
+      "resourceType": "BusinessEntityChannelBindingRevision",
+      "resourceId": "niushop:1:niushop:1:1",
+      "revision": 1,
+      "contentHash": "sha256:86dbe9e7b7084c14b5522205d85179bfda71000791051b6b81e0d3a4fa3f10cf",
+      "receiptId": null
+    },
+    "investigationProfileRef": {
+      "resourceType": "InvestigationProfileRevision",
+      "resourceId": "ecommerce.initial-store-analysis",
+      "revision": 1,
+      "contentHash": "sha256:267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+      "receiptId": null
+    },
+    "scopeRef": {
+      "resourceType": "InvestigationScopeRevision",
+      "resourceId": "ecommerce.current-business-entity.full-store.readonly",
+      "revision": 1,
+      "contentHash": "sha256:a8f298b03dcdd413df828b71abe9a2bb2c46ad17972162eb6d6100278fed20ce",
+      "receiptId": null
+    },
+    "schedulePolicyRef": {
+      "resourceType": "SchedulePolicyRevision",
+      "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+      "revision": 9,
+      "contentHash": "sha256:7f8b9655351a7f5b50ed8930f9b767926d76817194ee7225474c3ff2a26c95ed",
+      "receiptId": null
+    },
+    "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "createdAt": "2026-09-16T16:18:23.488735Z"
+  },
+  "payload": {
+    "caseId": "case-qyh-full-store-baseline-20260915",
+    "schedulePolicyId": "product-event-qyh-full-store-generation-f-20260916",
+    "expectedPolicyRevision": 9,
+    "expectedCaseVersion": 11,
+    "policyHash": "sha256:f64c29538e95fb1f2d2226c9fe31253a841d07af8f29e034495fa441afce5b39"
+  },
+  "command": {
+    "idempotencyKey": "a0v-qyh-product-event-n-20260917-v4-policy-put",
+    "expectedPolicyRevision": 9,
+    "expectedCaseVersion": 11,
+    "policy": {
+      "schemaVersion": "aos.ecommerce.product-event-schedule-policy/v1",
+      "schedulePolicyId": "product-event-qyh-full-store-generation-f-20260916",
+      "revision": 10,
+      "priorRef": {
+        "resourceType": "SchedulePolicyRevision",
+        "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+        "revision": 9,
+        "contentHash": "sha256:7f8b9655351a7f5b50ed8930f9b767926d76817194ee7225474c3ff2a26c95ed",
+        "receiptId": null
+      },
+      "caseRef": {
+        "resourceType": "BusinessInvestigationCaseRevision",
+        "resourceId": "case-qyh-full-store-baseline-20260915",
+        "revision": 11,
+        "contentHash": "sha256:c72aa8c83659b947cda1056dc843ad3af54dbdefabfb6180ef151a0ece538dbe",
+        "receiptId": null
+      },
+      "sourceSelectionRef": {
+        "resourceType": "SourceSelectionRevision",
+        "resourceId": "source-selection-8e96fedb-6bc7-4eae-88d4-8d9f7c8ff964",
+        "revision": 1,
+        "contentHash": "sha256:30a3e52bee1039a966ac128697a4281e8afd2faeb928931ea39ad420038e02f7",
+        "receiptId": null
+      },
+      "methodRef": {
+        "resourceType": "InvestigationProfileRevision",
+        "resourceId": "ecommerce.initial-store-analysis",
+        "revision": 1,
+        "contentHash": "sha256:267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+        "receiptId": null
+      },
+      "platform": "niushop",
+      "shopId": "1",
+      "objectTypes": [
+        "Product"
+      ],
+      "effectiveFrom": "2026-09-16T18:19:14.642561+00:00",
+      "effectiveUntil": "2026-09-16T19:49:14.642561+00:00",
+      "maxSourceAgeSeconds": 3600,
+      "recoveryWindowSeconds": 900,
+      "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "createdAt": "2026-09-16T18:19:14.642561+00:00",
+      "contentHash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4"
+    },
+    "caseAuthority": {
+      "schemaVersion": "aos.ecommerce.business-investigation-case/v1",
+      "caseId": "case-qyh-full-store-baseline-20260915",
+      "revision": 12,
+      "version": 12,
+      "priorRef": {
+        "resourceType": "BusinessInvestigationCaseRevision",
+        "resourceId": "case-qyh-full-store-baseline-20260915",
+        "revision": 11,
+        "contentHash": "sha256:c72aa8c83659b947cda1056dc843ad3af54dbdefabfb6180ef151a0ece538dbe",
+        "receiptId": null
+      },
+      "lifecycle": "ACTIVE",
+      "analysisType": "initial_store_analysis",
+      "title": "栖月汇全店基线与商品尖刀验证",
+      "purposeCode": "initial_store_analysis",
+      "channelRef": {
+        "resourceType": "ChannelRevision",
+        "resourceId": "niushop:1",
+        "revision": 1,
+        "contentHash": "sha256:79c222ce1ab2debae4751c048977e983ff1a71dd0350a933758206ec2e38bd69",
+        "receiptId": null
+      },
+      "businessEntityRef": {
+        "resourceType": "BusinessEntityRevision",
+        "resourceId": "niushop:1:1",
+        "revision": 1,
+        "contentHash": "sha256:b372a40cab64d052ba5c01d87698a7432a2ddb76a46aac4c7353a96392e4782a",
+        "receiptId": null
+      },
+      "entityChannelBindingRef": {
+        "resourceType": "BusinessEntityChannelBindingRevision",
+        "resourceId": "niushop:1:niushop:1:1",
+        "revision": 1,
+        "contentHash": "sha256:86dbe9e7b7084c14b5522205d85179bfda71000791051b6b81e0d3a4fa3f10cf",
+        "receiptId": null
+      },
+      "investigationProfileRef": {
+        "resourceType": "InvestigationProfileRevision",
+        "resourceId": "ecommerce.initial-store-analysis",
+        "revision": 1,
+        "contentHash": "sha256:267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+        "receiptId": null
+      },
+      "scopeRef": {
+        "resourceType": "InvestigationScopeRevision",
+        "resourceId": "ecommerce.current-business-entity.full-store.readonly",
+        "revision": 1,
+        "contentHash": "sha256:a8f298b03dcdd413df828b71abe9a2bb2c46ad17972162eb6d6100278fed20ce",
+        "receiptId": null
+      },
+      "schedulePolicyRef": {
+        "resourceType": "SchedulePolicyRevision",
+        "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+        "revision": 10,
+        "contentHash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4",
+        "receiptId": null
+      },
+      "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "createdAt": "2026-09-16T18:19:14.642561Z",
+      "contentHash": "sha256:662f0ad541a6bb48e7e8283c136d0b1f156a4b991fdd85f7073227d5be74f2c5"
+    }
+  },
+  "outcome": "CURRENT_G_EVENT_POLICY_PREPARE"
+}
+{"ts": "2026-09-16T18:19:50.529928+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

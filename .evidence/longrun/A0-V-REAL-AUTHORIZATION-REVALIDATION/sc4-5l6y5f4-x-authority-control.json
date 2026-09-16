@@ -1,0 +1,10 @@
+{
+  "outcome": "CURRENT_G_PRODUCT_CONTROL",
+  "ref": {
+    "resourceType": "PipelineRuntimeControlRevision",
+    "resourceId": "pipeline-control-5f3b9d0d-387b-4c75-aad8-a9629632ec2a",
+    "revision": 1,
+    "contentHash": "sha256:b1945509b1937b86d0e2333c22ab576374664470706b06192029a22d62f588bc",
+    "receiptId": null
+  }
+}

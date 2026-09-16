@@ -14,6 +14,15 @@ from aos_api.logging_facade import get_logger
 log=get_logger('aos-api.product-event-worker')
 
 
+def _safe_failure_detail(exc):
+    if type(exc) not in (ValueError,PermissionError):
+        return '-'
+    value=str(exc)
+    if not value or len(value)>200 or '\n' in value or '\r' in value or not value.isprintable():
+        return '-'
+    return value
+
+
 class ProductEventConsumptionWorker:
     def __init__(self,factory,directory):
         if type(factory) is not PipelineControlServiceFactory or type(directory) is not LivePreparedJobDirectory:
@@ -96,8 +105,8 @@ class ProductEventConsumptionWorker:
                         stats['occurrences']+=sum(not item.replayed for item in writes)
                 except Exception as exc:
                     stats['failed']+=1
-                    log.warning('product_event_candidate_failed scope=%s policy=%s run=%s error=%s',
-                        scope.key,row['policyId'],row['runId'],type(exc).__name__)
+                    log.warning('product_event_candidate_failed scope=%s policy=%s run=%s error=%s detail=%s',
+                        scope.key,row['policyId'],row['runId'],type(exc).__name__,_safe_failure_detail(exc))
                 finally:
                     self._cursors[target]=(row['policyId'],row['runId'])
             if len(rows)<5:self._cursors.pop(target,None)

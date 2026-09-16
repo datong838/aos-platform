@@ -1,0 +1,55 @@
+{
+  "receiptRef": {
+    "resourceType": "EventPolicyControlReceipt",
+    "resourceId": "ccd903fc-988e-51fa-8eae-7b3ff11c061b",
+    "revision": 1,
+    "contentHash": "sha256:f67325c880d5b317ca59ba0156bd0d079a88406970e0708ab6a09a3951be5e55"
+  },
+  "authority": {
+    "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "binding": {
+      "org_id": "org-org",
+      "cadence": "event",
+      "enabled": true,
+      "approved": true,
+      "revision": 1,
+      "timezone": "Asia/Shanghai",
+      "policy_id": "product-event-qyh-full-store-generation-f-20260916",
+      "watermark": null,
+      "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+      "local_time": null,
+      "project_id": "dev-project",
+      "weekly_day": null,
+      "policy_hash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4",
+      "operation_id": "ecommerce_growth_analysis_advance",
+      "effective_from": "2026-09-16T18:19:14.642561+00:00",
+      "effective_until": "2026-09-16T19:49:14.642561+00:00",
+      "execution_epoch": 3,
+      "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "policy_revision": 10
+    },
+    "command": {
+      "intent": "enable",
+      "policyRef": {
+        "revision": 10,
+        "receiptId": null,
+        "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+        "contentHash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4",
+        "resourceType": "SchedulePolicyRevision"
+      },
+      "approvalRef": {
+        "revision": 1,
+        "receiptId": null,
+        "resourceId": "approval-81f3bf9dab2d47e5970e",
+        "contentHash": "sha256:9426c4338aeec9d010aa7951859ca1693ba9ad5bb57630cb3e90b6653cb531dd",
+        "resourceType": "ActionApprovalEvent"
+      },
+      "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+      "idempotencyKey": "a0v-qyh-n-event-enable-20260917-v4-control",
+      "expectedBindingRevision": 0
+    },
+    "schemaVersion": "aos.ecommerce.product-event-control-receipt/v1"
+  },
+  "replayed": false,
+  "outcome": "CURRENT_G_EVENT_ENABLE"
+}

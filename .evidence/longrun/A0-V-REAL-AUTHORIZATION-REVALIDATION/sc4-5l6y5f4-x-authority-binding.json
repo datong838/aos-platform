@@ -1,0 +1,10 @@
+{
+  "outcome": "CURRENT_G_PRODUCT_BINDING",
+  "ref": {
+    "resourceType": "PipelineScheduleControlBinding",
+    "resourceId": "schedule-control-eeff7221-b61f-4ca5-a6cd-f333947a1cff",
+    "revision": 16,
+    "contentHash": "sha256:d5d49ce2751b9355f40a7a67203de28517a7d56aaab29a0d6ef613625d7cf0f8",
+    "receiptId": null
+  }
+}
