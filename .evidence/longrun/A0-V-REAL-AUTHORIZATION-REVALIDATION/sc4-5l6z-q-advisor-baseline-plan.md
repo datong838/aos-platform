@@ -99,3 +99,31 @@
 - `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py`
 - `services/aos-api/aos_api/ecommerce_analysis_bootstrap_contract.py`
 - 对应专项测试与 migration 静态测试。
+
+## 8. 重启恢复实况修订：R 中断后由 clean S 接管（2026-09-17）
+
+Q 完成正式 fence/detach 后，R 已按计划创建并完成 `runtime-apply`。但 Q 在 R 的
+`runtime-verify` 受理前已经正式卸载，验证器因此命中 `CurrentInstallationStaleError`；
+Host 释放 R 的三项资源并停止，R 保持 `applied@4`，未形成 binding。该失败是当前性守卫
+的正确拒绝，不能通过回写 Q、复活旧 owner 或重发未知 verify 绕过。
+
+恢复沿用已验收的 preparation-reset 协议：等待 R 原 verify 租约自然过期，调用正式
+`reset_preparation` 回到 `approved@5`；创建无 predecessor 的 clean S；确认 S
+`approved@3` 后正式卸载 R；再让唯一 Host 完成 S 的 prepare、verify、stage、configure、
+enable。当前 S 为 `77b8e5c2-db96-4d55-a808-1b62e00163d2`，generation
+`e621100a-baea-440f-9075-ae8a5290845a`，binding `revision4 / epoch3 / ready / enabled`。
+
+接续施工必须使用 Q disable operation 的最终 detach Receipt
+`2bcb4ff2-9da1-4bc8-a3b3-7ed98e18eb4d@sha256:cc974be8...`，并只在九条路由仍为
+`legacy / fenced / groupRevision59 / routeRevision32`、零在途、零 unresolved 时：
+
+1. 新增 `scripts/a0v_s_successor_business.py`，固定 S identity、configuration、Q detach
+   Receipt 和 expected group revision 59，生成并登记 successor Receipt；
+2. 新增 `scripts/a0v_s_successor_cutover.py`，用新的 operation/idempotency namespace 完成
+   approve、prepare、pause、commit、validate、resume，预期最终 group revision 60；
+3. 新增只读终态验证，要求九条路由全部指向 S epoch3、无 fence、S 为唯一 live target、
+   Q/R 均不可执行、canary 为零；
+4. 将 `scripts/a0v_q_advisor_baseline.py` 的运行目标改为 S，之后才重签来源控制与创建
+   baseline Case/once Policy。
+
+这些文件不触碰商城源库，不修改业务表数据，不继承 Q 的旧安装审批作为 S 当前授权。
