@@ -95,15 +95,83 @@ class EcommerceGrowthDisableDependent:
         project_id: str,
         runtime_operation_id: UUID,
     ) -> DispatchLifecycleReceipt | None:
+        return self._after_runtime_fenced(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            runtime_operation_id=runtime_operation_id,
+            succeeded_recovery=False,
+        )
+
+    def recover_succeeded_disable(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        runtime_operation_id: UUID,
+    ) -> tuple[DispatchLifecycleReceipt, DispatchLifecycleReceipt]:
+        """Finish the omitted dependent callback for one settled disable."""
+        fence = self._after_runtime_fenced(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            runtime_operation_id=runtime_operation_id,
+            succeeded_recovery=True,
+        )
+        if fence is None:
+            raise EcommerceGrowthLifecycleConflict(
+                "succeeded disable recovery has no attached dispatch"
+            )
+        detach = self.after_runtime_disabled(
+            conn,
+            org_id=org_id,
+            project_id=project_id,
+            runtime_operation_id=runtime_operation_id,
+        )
+        if detach is None:
+            raise EcommerceGrowthLifecycleConflict(
+                "succeeded disable recovery did not detach dispatch"
+            )
+        return fence, detach
+
+    def _after_runtime_fenced(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        runtime_operation_id: UUID,
+        succeeded_recovery: bool,
+    ) -> DispatchLifecycleReceipt | None:
         _require_transaction(conn)
         scope = self._scope(conn, org_id, project_id)
         runtime = self._runtime_operation(conn, scope, runtime_operation_id)
+        if succeeded_recovery:
+            if (runtime["status"], runtime["phase"]) != ("succeeded", "succeeded"):
+                raise EcommerceGrowthLifecycleBlocked(
+                    "settled runtime disable is required for callback recovery"
+                )
+        elif runtime["status"] == "succeeded":
+            raise EcommerceGrowthLifecycleBlocked(
+                "settled runtime disable requires the explicit recovery entry"
+            )
         existing = self._load_receipt(conn, scope, runtime_operation_id, "fence")
         if existing is not None:
             return self._receipt(scope, existing, replayed=True)
+        lifecycle = conn.execute(
+            f"""SELECT 1 FROM {self._schema}.extension_dispatch_lifecycle_operation
+                  WHERE org_id=%s AND project_id=%s AND runtime_operation_id=%s""",
+            (*scope.key, runtime_operation_id),
+        ).fetchone()
+        if lifecycle is not None:
+            raise EcommerceGrowthLifecycleConflict(
+                "dispatch lifecycle exists without its fence Receipt"
+            )
         activations = conn.execute(
             f"""SELECT c.*,b.revision AS current_binding_revision,
-                            b.execution_epoch AS current_binding_epoch
+                            b.execution_epoch AS current_binding_epoch,
+                            b.observed_state AS current_binding_state
                    FROM {self._schema}.extension_dispatch_cutover_operation c
                    JOIN {self._schema}.extension_runtime_binding b
                      ON b.org_id=c.org_id AND b.project_id=c.project_id
@@ -113,8 +181,9 @@ class EcommerceGrowthDisableDependent:
                     AND c.status='resumed' AND c.target_installation_id=%s
                     AND b.execution_epoch>c.target_execution_epoch
                     AND NOT b.enabled AND b.operation_fence
-                    AND b.observed_state='draining'""",
-            (*scope.key, runtime["installation_id"]),
+                    AND b.observed_state=ANY(%s)""",
+            (*scope.key, runtime["installation_id"],
+             ["unknown"] if succeeded_recovery else ["draining"]),
         ).fetchall()
         matched = []
         for row in activations:
@@ -122,18 +191,24 @@ class EcommerceGrowthDisableDependent:
             target_revision, target_epoch, refresh_ref = self._current_dispatch_authority(
                 conn, scope, candidate
             )
-            if (
-                (
+            normal_revision = (
                     refresh_ref is None
                     and int(candidate["current_binding_revision"])
                     == int(runtime["expected_binding_revision"]) + 1
-                )
-                or (
+                ) or (
                     refresh_ref is not None
                     and int(runtime["expected_binding_revision"]) == target_revision
                     and int(candidate["current_binding_revision"]) == target_revision + 1
                 )
-            ) and int(candidate["current_binding_epoch"]) > target_epoch:
+            recovery_revision = (
+                refresh_ref is not None
+                and int(runtime["expected_binding_revision"]) == target_revision
+                and int(candidate["current_binding_revision"]) == target_revision + 2
+            )
+            if (
+                (recovery_revision if succeeded_recovery else normal_revision)
+                and int(candidate["current_binding_epoch"]) > target_epoch
+            ):
                 candidate["configuration_refresh_ref"] = refresh_ref
                 matched.append(candidate)
         activations = matched
@@ -152,9 +227,22 @@ class EcommerceGrowthDisableDependent:
             )
         activation = dict(activations[0])
         refresh_ref = activation.pop("configuration_refresh_ref")
+        if succeeded_recovery:
+            self._assert_recovery_drained(conn, scope, activation)
         current = self._dispatch_rows(
             conn, scope, activation["cutover_group_id"], _array(activation["operation_ids"])
         )
+        if succeeded_recovery and any(
+            item["handlerKind"] != "extension"
+            or item["installationId"] != str(activation["target_installation_id"])
+            or item["generation"] != str(activation["target_generation"])
+            or item["executionEpoch"] != target_epoch
+            or item["operationFence"] is not False
+            for item in current
+        ):
+            raise EcommerceGrowthLifecycleConflict(
+                "succeeded disable recovery dispatch differs from refresh authority"
+            )
         fenced = [
             {
                 **item,
@@ -199,8 +287,13 @@ class EcommerceGrowthDisableDependent:
             ),
         )
         try:
+            fence_function = (
+                "extension_dispatch_lifecycle_recover_fence_a0v_072"
+                if succeeded_recovery
+                else "extension_dispatch_lifecycle_fence_ar2_017"
+            )
             updated = conn.execute(
-                f"SELECT {self._schema}.extension_dispatch_lifecycle_fence_ar2_017(%s,%s) AS updated",
+                f"SELECT {self._schema}.{fence_function}(%s,%s) AS updated",
                 (runtime_operation_id, runtime["requested_by"]),
             ).fetchone()["updated"]
         except psycopg.Error as exc:
@@ -232,6 +325,39 @@ class EcommerceGrowthDisableDependent:
         if row is None:
             raise EcommerceGrowthLifecycleConflict("dispatch fence Receipt is missing")
         return self._receipt(scope, row, replayed=False)
+
+    def _assert_recovery_drained(
+        self, conn: Any, scope: TenantScope, activation: dict[str, Any]
+    ) -> None:
+        unresolved = conn.execute(
+            f"""SELECT
+                (SELECT count(*) FROM {self._schema}.extension_runtime_execution_attempt a
+                  WHERE a.org_id=%s AND a.project_id=%s AND a.installation_id=%s
+                    AND a.generation=%s AND a.state='running') AS running,
+                (SELECT count(*) FROM {self._schema}.automation_occurrence o
+                  WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s
+                    AND o.generation=%s AND o.status='claimed') AS claimed_occurrences,
+                (SELECT count(*) FROM {self._schema}.automation_occurrence_dispatch_attempt a
+                  JOIN {self._schema}.automation_occurrence o
+                    USING(org_id,project_id,occurrence_id)
+                  WHERE a.org_id=%s AND a.project_id=%s AND o.installation_id=%s
+                    AND o.generation=%s AND a.status IN ('claimed','unknown')) AS unresolved_attempts""",
+            (
+                *scope.key,
+                activation["target_installation_id"],
+                activation["target_generation"],
+                *scope.key,
+                activation["target_installation_id"],
+                activation["target_generation"],
+                *scope.key,
+                activation["target_installation_id"],
+                activation["target_generation"],
+            ),
+        ).fetchone()
+        if unresolved is None or any(int(unresolved[key]) != 0 for key in unresolved):
+            raise EcommerceGrowthLifecycleBlocked(
+                "succeeded disable recovery target is not drained"
+            )
 
     def after_runtime_disabled(
         self,

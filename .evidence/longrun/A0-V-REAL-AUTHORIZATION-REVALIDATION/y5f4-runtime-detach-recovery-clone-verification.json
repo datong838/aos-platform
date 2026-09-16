@@ -1,0 +1,40 @@
+{
+  "outcome": "SUCCEEDED_DISABLE_RECOVERY_CLONE_VERIFIED",
+  "source": "a0v_071",
+  "target": "a0v_072",
+  "main": "aos_meta_head",
+  "clone": "aos_succeeded_disable_recovery_20260916_test",
+  "migrations": {
+    "a0v_072_succeeded_disable_dispatch_recovery.py": "sha256:89aced7994afc210480e773878eda9864945768baf93ef605f5ed6ef85d97e21"
+  },
+  "executors": {
+    "a0v_succeeded_disable_recovery_clone.py": "sha256:a85a02d8fabf203ce56ad56d90fb75ab1a7ede1c3a8266762fa6dd014ef4238d",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c"
+  },
+  "schema": {
+    "recoveryFunction": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "runtime_execute": true,
+      "maintainer_execute": false,
+      "public_execute": false
+    },
+    "recoveryTokens": [
+      "v_runtime.phase<>'succeeded'",
+      "v_runtime.expected_binding_revision+2<>v_binding.revision",
+      "v_binding.desired_state<>'disabled'",
+      "succeeded runtime disable recovery is required"
+    ]
+  },
+  "mainMigrated": false,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T14:00:28.386976+00:00",
+  "preservedTableCount": 552,
+  "oldDataUnchanged": true,
+  "backupSha256": "sha256:5db4d29733fed812fde8768ecf7a326345d46aa2fdc253f8e1e2ecc41c831ff0"
+}

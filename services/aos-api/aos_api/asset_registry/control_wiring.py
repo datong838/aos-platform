@@ -394,6 +394,14 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
         runtime_uninstall_guard=RuntimeUninstallGuard(),
     )
 
+    # A control plane that owns ecommerce registration must also own the
+    # matching disable lifecycle.  Keep the generic plane domain-neutral, and
+    # preserve an explicitly supplied dependent for tests or another host.
+    if registration_connect is not None and disable_dependent is None:
+        from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
+
+        disable_dependent = EcommerceGrowthDisableDependent()
+
     disable = RuntimeDisableService(
         installation_store=store,
         installation_reader=installation,

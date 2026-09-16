@@ -1,6 +1,7 @@
 """Atomic refresh on disposable PostgreSQL; fixtures are not live approval."""
 from copy import deepcopy
 from datetime import datetime,timezone,timedelta
+from pathlib import Path
 from uuid import UUID,uuid4
 
 import psycopg
@@ -17,6 +18,7 @@ from aos_api.extension_runtime.binding_store import RuntimeBindingStore
 from aos_api.extension_runtime.lifecycle_store import RuntimeOperationStore
 from aos_api.tenant_scope import TenantScope
 from test_dispatch_configuration_refresh_schema_pg import ledger
+from test_ecommerce_growth_cutover_pg import _migration
 
 
 def seed_operation(conn, saved, *, kind, operation_id, revision, binding_revision):
@@ -142,6 +144,12 @@ def execute(conn,saved,request=None,actor='fixture-admin'):
 
 def test_atomic_refresh_and_same_key_replay(owner_case):
     conn,saved=owner_case
+    _migration(
+        Path(__file__).resolve().parents[2],
+        'a0v_072_succeeded_disable_dispatch_recovery.py',
+        conn,
+        schema='public',
+    )
     operation=sorted(ECOMMERCE_GROWTH_OPERATIONS)[0]
     conn.execute('UPDATE extension_operation_dispatch_binding SET execution_epoch=execution_epoch+1 '
         'WHERE operation_id=%s',(operation,));conn.commit()
@@ -216,12 +224,8 @@ def assert_refreshed_dispatch_lifecycle(owner_case,refresh,request):
                 installation_id=UUID(str(saved['installation_id'])),generation=UUID(str(saved['generation'])),
                 operation_id=operation.operation_id,expected_operation_revision=operation.revision,
                 expected_binding_revision=request['targetRuntimeRevision'])
-            dependent=EcommerceGrowthDisableDependent()
-            fence_receipt=dependent.after_runtime_fenced(conn,org_id=scope.org_id,
-                project_id=scope.project_id,runtime_operation_id=operation.operation_id)
-            assert fence_receipt is not None
-            assert fence_receipt.configuration_refresh_ref is not None
-            assert fence_receipt.configuration_refresh_ref.resource_id==refresh['ref']['resourceId']
+            # Model the production assembly defect: runtime fencing succeeds,
+            # while the ecommerce dependent callback was omitted.
         with conn.transaction():
             conn.execute('SET LOCAL ROLE aos_runtime')
             conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
@@ -244,9 +248,16 @@ def assert_refreshed_dispatch_lifecycle(owner_case,refresh,request):
         with conn.transaction():
             conn.execute('SET LOCAL ROLE aos_runtime')
             conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id',%s,true)",scope.key)
-            detach=EcommerceGrowthDisableDependent().after_runtime_disabled(conn,org_id=scope.org_id,
+            dependent=EcommerceGrowthDisableDependent()
+            fence_receipt,detach=dependent.recover_succeeded_disable(conn,org_id=scope.org_id,
                 project_id=scope.project_id,runtime_operation_id=operation.operation_id)
-            assert detach is not None and detach.status=='detached'
+            replay_fence,replay_detach=dependent.recover_succeeded_disable(conn,org_id=scope.org_id,
+                project_id=scope.project_id,runtime_operation_id=operation.operation_id)
+            assert fence_receipt.status=='fenced' and detach.status=='detached'
+            assert replay_fence.receipt_id==fence_receipt.receipt_id and replay_fence.replayed
+            assert replay_detach.receipt_id==detach.receipt_id and replay_detach.replayed
+            assert fence_receipt.configuration_refresh_ref is not None
+            assert fence_receipt.configuration_refresh_ref.resource_id==refresh['ref']['resourceId']
             assert detach.configuration_refresh_ref is not None
             assert detach.configuration_refresh_ref.resource_id==refresh['ref']['resourceId']
     finally:
