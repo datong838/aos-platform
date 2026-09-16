@@ -670,6 +670,109 @@ class AutomationOccurrenceStore:
             target_idempotency_key=target_key,
         )
 
+    def list_current_natural_bindings(
+        self,
+        scope: TenantScope,
+        *,
+        installation_id: UUID,
+        generation: UUID,
+        limit: int = 100,
+    ) -> tuple[tuple[ScheduleBinding, datetime | None], ...]:
+        """Read bounded approved once/weekly bindings for one live target."""
+        if type(scope) is not TenantScope or type(installation_id) is not UUID or type(generation) is not UUID:
+            raise TypeError("exact natural schedule target required")
+        if type(limit) is not int or not 1 <= limit <= 1000:
+            raise ValueError("bounded natural schedule binding limit required")
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                """SELECT policy_id,policy_revision,policy_hash,operation_id,installation_id,generation,
+                          execution_epoch,cadence,effective_from,effective_until,weekly_day,
+                          to_char(local_time,'HH24:MI') AS local_time,approved,enabled,watermark
+                     FROM automation_schedule_binding
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                      AND operation_id='ecommerce_growth_schedule_trigger'
+                      AND cadence IN ('once','weekly') AND approved AND enabled
+                    ORDER BY policy_id,policy_revision LIMIT %s""",
+                (*scope.key, installation_id, generation, limit + 1),
+            ).fetchall()
+        if len(rows) > limit:
+            raise AutomationOccurrenceConflict("natural schedule binding scan exceeded limit")
+        return tuple((ScheduleBinding(
+            policy_id=row["policy_id"], policy_revision=int(row["policy_revision"]),
+            policy_hash=row["policy_hash"], operation_id=row["operation_id"],
+            installation_id=UUID(str(row["installation_id"])), generation=UUID(str(row["generation"])),
+            execution_epoch=int(row["execution_epoch"]), cadence=row["cadence"],
+            effective_from=row["effective_from"], effective_until=row["effective_until"],
+            weekly_day=row["weekly_day"], local_time=row["local_time"],
+            approved=bool(row["approved"]), enabled=bool(row["enabled"]),
+        ), row["watermark"]) for row in rows)
+
+    def record_not_applicable(
+        self,
+        scope: TenantScope,
+        *,
+        occurrence_id: UUID,
+        owner: str,
+        receipt_ref: dict[str, Any],
+        occurred_at: datetime,
+    ) -> None:
+        """Settle a claimed deterministic skip with an inspectable disposition Receipt."""
+        occurred_at = _utc_seconds(occurred_at, "occurred_at")
+        if not receipt_ref or not owner.strip():
+            raise ValueError("not-applicable Receipt and claim owner are required")
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """UPDATE automation_occurrence
+                      SET status='not_applicable',receipt_ref=%s,claim_owner=NULL,claim_until=NULL,updated_at=%s
+                    WHERE org_id=%s AND project_id=%s AND occurrence_id=%s
+                      AND status='claimed' AND claim_owner=%s AND claim_until>%s
+                    RETURNING occurrence_id""",
+                (Jsonb(receipt_ref), occurred_at, *scope.key, occurrence_id, owner, occurred_at),
+            ).fetchone()
+            if row is None:
+                raise AutomationOccurrenceConflict("claim changed before not-applicable disposition")
+            attempt = conn.execute(
+                """UPDATE automation_occurrence_dispatch_attempt
+                      SET status='receipt_recorded',receipt_ref=%s,resolved_at=%s
+                    WHERE org_id=%s AND project_id=%s AND occurrence_id=%s
+                      AND status='claimed' AND claim_owner=%s RETURNING attempt_id""",
+                (Jsonb(receipt_ref), occurred_at, *scope.key, occurrence_id, owner),
+            ).fetchone()
+            if attempt is None:
+                raise AutomationOccurrenceConflict("dispatch attempt missing before not-applicable disposition")
+            conn.execute(
+                """UPDATE automation_occurrence_outbox SET delivered_at=%s,claim_until=NULL
+                    WHERE org_id=%s AND project_id=%s AND occurrence_id=%s""",
+                (occurred_at, *scope.key, occurrence_id),
+            )
+            conn.commit()
+
+    def read_needs_attention_target(
+        self,
+        scope: TenantScope,
+        *,
+        target: ClaimTarget,
+    ) -> dict[str, Any] | None:
+        """Read one reconcile-only target; this never renews or reclaims it."""
+        if type(target) is not ClaimTarget:
+            raise TypeError("exact reconcile target required")
+        source_filter = "" if target.trigger_source is None else "AND o.trigger_source=%s"
+        params = (*scope.key, target.operation_id, target.installation_id, target.generation)
+        if target.trigger_source is not None:
+            params += (target.trigger_source,)
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute(
+                f"""SELECT o.occurrence_id,a.target_idempotency_key
+                       FROM automation_occurrence o
+                       JOIN automation_occurrence_dispatch_attempt a USING(org_id,project_id,occurrence_id)
+                      WHERE o.org_id=%s AND o.project_id=%s AND o.operation_id=%s
+                        AND o.installation_id=%s AND o.generation=%s {source_filter}
+                        AND o.status='needs_attention' AND a.status='unknown'
+                      ORDER BY o.updated_at,o.occurrence_id LIMIT 1""",
+                params,
+            ).fetchall()
+        return None if not rows else dict(rows[0])
+
     @staticmethod
     def _lock_claim(conn, scope: TenantScope, claimed: ClaimedOccurrence) -> dict[str, Any]:
         """Keep the current attempt locked in the caller's write transaction."""
