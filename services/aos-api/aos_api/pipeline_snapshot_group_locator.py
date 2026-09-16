@@ -34,12 +34,19 @@ class PipelineSnapshotGroupLocator:
         self._schema = claims._journal.schema
 
     def read(self, conn, *, scope, run_id, expected_cutoff):
+        if type(expected_cutoff) is not datetime or expected_cutoff.utcoffset() is None:
+            raise ValueError('aware original cutoff required')
+        route = self.discover(conn, scope=scope, run_id=run_id)
+        if route is not None and route.read_completed_at != expected_cutoff:
+            raise ValueError('original snapshot cutoff differs')
+        return route
+
+    def discover(self, conn, *, scope, run_id):
+        """Find the saved source clock; this is not current execution authority."""
         _require_transaction(conn)
         if type(scope) is not TenantScope:
             raise TypeError('exact route tenant required')
         run_id = _text(run_id, 200)
-        if type(expected_cutoff) is not datetime or expected_cutoff.utcoffset() is None:
-            raise ValueError('aware original cutoff required')
         with conn.cursor(row_factory=dict_row) as cursor:
             identity = cursor.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
                 "current_setting('aos.project_id',true) AS project_id").fetchone()
@@ -95,8 +102,7 @@ class PipelineSnapshotGroupLocator:
             if [(r['ordinal'],r['run_id']) for r in saved] != list(enumerate(runs,1)):
                 raise ValueError('original member index differs from binding')
             if (row['snapshot_basis'] != 'innodb-repeatable-read'
-                or row['read_started_at'] > row['read_completed_at']
-                or row['read_completed_at'] != expected_cutoff):
+                or row['read_started_at'] > row['read_completed_at']):
                 raise ValueError('original snapshot cutoff differs')
             return SnapshotGroupRoute(group_id, actor, tuple(bindings), row['manifest_hash'],
                 row['read_started_at'], row['read_completed_at'])
