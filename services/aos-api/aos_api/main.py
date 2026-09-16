@@ -39,6 +39,55 @@ log = get_logger("aos-api")
 _EXTENSION_RUNTIME_SHUTDOWN_TIMEOUT_SECONDS = 30
 
 
+async def _start_snapshot_group_worker(_app: FastAPI) -> None:
+    _app.state.snapshot_group_worker = None
+    _app.state.snapshot_group_worker_task = None
+    _app.state.snapshot_group_worker_error_code = None
+    enabled = os.getenv('AOS_SNAPSHOT_GROUP_WORKER_ENABLED','false').strip().lower() in {'1','true','yes','on'}
+    if not enabled:
+        _app.state.snapshot_group_worker_status = 'DISABLED'
+        return
+    host = getattr(_app.state,'extension_runtime_host_task',None)
+    plane = getattr(_app.state,'extension_runtime_control_plane',None)
+    factory = getattr(plane,'pipeline_control_factory',None)
+    if host is None or host.done() or factory is None:
+        _app.state.snapshot_group_worker_status = 'FAILED_CLOSED'
+        _app.state.snapshot_group_worker_error_code = 'SNAPSHOT_HOST_UNAVAILABLE'
+        raise RuntimeError('snapshot worker requires a running host and control factory')
+    stop = asyncio.Event()
+    _app.state.runtime_stop_events = (*_app.state.runtime_stop_events,stop)
+    _app.state.snapshot_group_worker_status = 'STARTING'
+    async def run():
+        from aos_api.pipeline_controlled_runtime import _authoritative_store
+        try:
+            # This context owns a lazy engine, not an open DB connection.
+            # serve drains actual execution before its Store is disposed.
+            with _authoritative_store() as store:
+                worker = factory.build_snapshot_worker(TenantScope('org-org','dev-project'),store=store)
+                _app.state.snapshot_group_worker = worker
+                _app.state.snapshot_group_worker_status = 'RUNNING'
+                await worker.serve(stop,host_ready=lambda:not host.done())
+        except asyncio.CancelledError:
+            _app.state.snapshot_group_worker_status = 'STOPPED'
+            raise
+        except Exception:
+            _app.state.snapshot_group_worker_status = 'FAILED_CLOSED'
+            _app.state.snapshot_group_worker_error_code = 'SNAPSHOT_WORKER_FAILED'
+            raise
+        else:
+            _app.state.snapshot_group_worker_status = 'STOPPED'
+    task = asyncio.create_task(run(),name='snapshot-group-worker')
+    _app.state.snapshot_group_worker_task = task
+    _app.state.runtime_background_tasks.append(task)
+    def observe(done):
+        if not done.cancelled() and done.exception() is not None:
+            log.error('snapshot_group_worker_failed_closed')
+    task.add_done_callback(observe)
+    await asyncio.sleep(0)
+    if task.done() and not task.cancelled() and task.exception() is not None:
+        raise RuntimeError('snapshot worker failed during startup') from task.exception()
+
+
 def _qyh_cron_worker_enabled() -> bool:
     """Keep production Cron on by default, with an explicit local-test off switch."""
     return os.getenv("AOS_QYH_CRON_ENABLED", "true").strip().lower() not in {
@@ -440,6 +489,8 @@ async def _lifespan_body(_app: FastAPI):
             except TimeoutError:
                 continue
 
+    await _start_snapshot_group_worker(_app)
+
     if _qyh_cron_worker_enabled():
         cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
         _app.state.runtime_background_tasks.append(cron_task)
@@ -589,6 +640,10 @@ async def _shutdown_application_runtime(_app: FastAPI) -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    _app.state.snapshot_group_worker = None
+    _app.state.snapshot_group_worker_task = None
+    _app.state.snapshot_group_worker_status = 'NOT_SELECTED'
+    _app.state.snapshot_group_worker_error_code = None
     _app.state.extension_runtime_control_plane = None
     _app.state.extension_runtime_host_selection = None
     _app.state.extension_runtime_host_task = None

@@ -20,11 +20,19 @@
 
 真实Python线程具名tick seam分别验证Task.cancel（含第二次取消）、async停止事件、host失活；线程收到threading.Event后延迟清理时，serve保持STOPPING且Task不结束，释放清理门后线程退出才STOPPED。预停止、host未就绪不启动tick，重复serve拒绝。未访问业务源/Store、未改数据库Run终态。下一波c2把默认关闭的应用入口接到已验证serve，并确保Store资源在serve实际排空之后释放。
 
+## Y4c2应用接线证据
+
+main默认关闭的新入口已接线；显式启用必须有活host与工厂。启动构造异常FAILED_CLOSED，生命周期开始清空旧worker状态。serve持有lazy Store上下文直到真实线程排空；原shutdown设置stop并等待task，之后才清理连接资源。Red缺少启动helper（1 failed/3.71s）；初次Green测试夹具因yield后清理未放finally而失败，改为与生产_authoritative_store一致的finally后，通过联合23项/3.98s（`/tmp/aos-snapshot-main-verified.log`）。覆盖原runtime startup composition、stop/host/cancel真实线程及构造失败资源释放。diff检查通过。
+
+测试未启动真实源，不表示主服务已加载；主环境未设置启用开关、未重启/迁移。下一步Y4d先提供受当前principal保护的服务端状态与原续期回执自动消费设计，再接页面；禁止另起不受上述生命周期管理的执行线程。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4c2追加精确接口：main新增 `_start_snapshot_group_worker(app)` 和显式 `AOS_SNAPSHOT_GROUP_WORKER_ENABLED`（默认false）。只有已运行host及原factory存在才可启用；缺失依赖启动失败，不宣传可调度。应用持有worker/task/状态，注册stop事件和后台task，复用原shutdown drain。任务上下文持有_authoritative_store（lazy engine），serve完全退出后才dispose；实际数据库连接仅由worker线程创建。新增 `services/aos-api/tests/test_snapshot_schedule_main_lifecycle.py`，验证默认关闭无工厂调用、明确启用缺host拒绝、原shutdown等待实际线程退出后再释放Store。原runtime startup composition回归。主运行环境不开启新开关。
 
 Y4b追加测试目录：`services/aos-api/tests/test_pipeline_control_service.py`，验证原Factory构造无连接/无源调用且两个Runtime共享ControlOwner/Store/runtime身份；现有工厂测试一并回归。
 
