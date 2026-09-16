@@ -174,6 +174,11 @@ class HostTransaction:
             raise TypeError('exact current control Owner required')
         return owner.run_without_source(self.__connection,scope=scope,dispatch=dispatch,execute=execute)
 
+    def lock_automation_claim(self, *, scope, claimed):
+        """Lock one exact occurrence attempt without exporting the connection."""
+        from aos_api.automation_occurrence_store import AutomationOccurrenceStore
+        return AutomationOccurrenceStore._lock_claim(self.__connection, scope, claimed)
+
 
 def _normalized_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", value.casefold())
