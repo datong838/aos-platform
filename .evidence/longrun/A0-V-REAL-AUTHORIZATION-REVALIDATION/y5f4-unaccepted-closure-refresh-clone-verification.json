@@ -1,0 +1,40 @@
+{
+  "outcome": "UNACCEPTED_CLOSURE_REFRESH_CONTINUATION_CLONE_VERIFIED",
+  "source": "a0v_070",
+  "target": "a0v_071",
+  "main": "aos_meta_head",
+  "clone": "aos_unaccepted_closure_refresh_20260916_test",
+  "migrations": {
+    "a0v_071_unaccepted_closure_after_configuration_refresh.py": "sha256:088d0f813086ff03aac825f9f060d68bd733ba5e41ba855e7997d8ab24f231e9"
+  },
+  "executors": {
+    "a0v_unaccepted_closure_refresh_continuation_clone.py": "sha256:f52cd9a6276f88c3409b1b51b2027474e16f88021c124c67797d9f268e5dfaec",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c"
+  },
+  "schema": {
+    "ownerFunction": {
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog, public, pg_temp"
+      ],
+      "runtime_execute": false,
+      "maintainer_execute": true,
+      "public_execute": false
+    },
+    "refreshAwareTokens": [
+      "extension_dispatch_configuration_refresh_receipt",
+      "refresh-proven closure runtime required",
+      "configurationRefreshReceiptRef",
+      "targetConfigurationRef"
+    ]
+  },
+  "mainMigrated": false,
+  "businessWrites": 0,
+  "sourceCalls": 0,
+  "at": "2026-09-16T13:42:56.008274+00:00",
+  "preservedTableCount": 552,
+  "oldDataUnchanged": true,
+  "backupSha256": "sha256:58cfca35f720aa3cc1d09a7fbab71f236ff37da7d6d895e080a860f0f7272707"
+}

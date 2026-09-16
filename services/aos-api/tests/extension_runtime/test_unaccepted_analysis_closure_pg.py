@@ -7,7 +7,9 @@ from psycopg.types.json import Jsonb
 from aos_api.tenant_scope import TenantScope
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from test_ecommerce_growth_cutover_pg import database, _connection, _migration
-from test_event_control_dispatch_lifecycle_pg import dispatch_db, _seed, _request, _transition
+from test_event_control_dispatch_lifecycle_pg import (
+    dispatch_db, _seed, _request, _transition, _refresh_transition,
+)
 
 pytestmark = pytest.mark.skipif(__import__('os').getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PG required')
 
@@ -21,6 +23,8 @@ def closure_db(dispatch_db):
         org_id text,project_id text,run_id text,trigger_key text)''')
     _migration(Path(__file__).resolve().parents[2], 'a0v_043_product_event_origin.py', db.owner, schema=db.schema)
     _migration(Path(__file__).resolve().parents[2], 'a0v_060_unaccepted_analysis_closure.py', db.owner, schema=db.schema)
+    _migration(Path(__file__).resolve().parents[2],
+               'a0v_071_unaccepted_closure_after_configuration_refresh.py', db.owner, schema=db.schema)
     return db
 
 
@@ -29,6 +33,10 @@ def seed(db):
     ids = _seed(db, scope)
     _transition(db, scope, _request(ids, 'expand', 11, 'expand'))
     fence = _transition(db, scope, _request(ids, 'fence', 12, 'fence'))
+    return seed_occurrence(db, scope, ids, fence)
+
+
+def seed_occurrence(db, scope, ids, fence):
     occurrence = str(uuid4())
     db.owner.execute('''INSERT INTO automation_schedule_binding(org_id,project_id,policy_id,policy_revision,
         policy_hash,operation_id,installation_id,generation,execution_epoch,timezone,cadence,effective_from,approved,enabled)
@@ -53,6 +61,17 @@ def seed(db):
     return scope, ids, request
 
 
+def seed_refresh(db):
+    scope = TenantScope('org-org', 'dev-project')
+    ids = _seed(db, scope)
+    _transition(db, scope, _request(ids, 'expand', 11, 'refresh-expand'))
+    _refresh_transition(db, scope, ids)
+    fence_request = _request(ids, 'fence', 13, 'refresh-fence')
+    fence_request['runtimeRevision'] = 9
+    fence = _transition(db, scope, fence_request)
+    return seed_occurrence(db, scope, ids, fence)
+
+
 def close(db, scope, request, *, runtime=False, actor='fixture-operator'):
     with _connection(db, runtime=runtime)(scope) as conn:
         value = conn.execute('SELECT ecommerce_unaccepted_analysis_close_a0v_060(%s,%s) AS value',
@@ -73,6 +92,31 @@ def test_close_retains_unknown_snapshot_and_unblocks_formal_drain(closure_db):
     _transition(db,scope,_request(ids,'shrink',13,'shrink'))
     with pytest.raises(Exception):
         db.owner.execute('DELETE FROM ecommerce_unaccepted_analysis_closure_receipt')
+
+
+def test_refresh_proven_fence_closes_old_epoch_without_changing_target_runtime(closure_db):
+    db = closure_db
+    scope, ids, request = seed_refresh(db)
+    before = dict(db.owner.execute("""SELECT execution_epoch,revision,config_ref
+        FROM extension_runtime_binding WHERE installation_id=%s AND generation=%s""", ids[:2]).fetchone())
+    value = close(db, scope, request)
+    after = dict(db.owner.execute("""SELECT execution_epoch,revision,config_ref
+        FROM extension_runtime_binding WHERE installation_id=%s AND generation=%s""", ids[:2]).fetchone())
+    assert value['businessAccepted'] is False
+    assert value['priorOccurrence']['execution_epoch'] == 3
+    assert before == after and after['execution_epoch'] == 5 and after['revision'] == 9
+    shrink_request = _request(ids, 'shrink', 14, 'refresh-shrink')
+    shrink_request['runtimeRevision'] = 9
+    assert _transition(db, scope, shrink_request)['drainEvidence']['executionEpoch'] == 3
+
+
+def test_refresh_closure_rejects_target_runtime_drift(closure_db):
+    db = closure_db
+    scope, _, request = seed_refresh(db)
+    db.owner.execute("UPDATE extension_runtime_binding SET execution_epoch=6")
+    with pytest.raises(Exception, match='refresh-proven closure runtime required'):
+        close(db, scope, request)
+    assert db.owner.execute("SELECT count(*) AS n FROM ecommerce_unaccepted_analysis_closure_receipt").fetchone()['n'] == 0
 
 
 @pytest.mark.parametrize('reason',['target_receipt','run','unfenced','binding_enabled','lease','accepted','actor','tenant','runtime'])
