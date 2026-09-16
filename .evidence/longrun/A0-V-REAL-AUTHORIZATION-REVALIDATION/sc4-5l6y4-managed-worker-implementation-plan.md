@@ -48,11 +48,19 @@ Red新增readGroupRuntime未实现；API/组件16项通过，类型检查与Vite
 
 这里只证明客户端及隔离浏览器状态显示；真实后端运行状态API已由d2 PG/HTTP验证，主服务尚未加载，未声称真实浏览器经营闭环。下一波d3b原任务上下文/正式续期窗口/原key确认交互，不自动重发未知写；然后Y5/Y6/Z。
 
+## Y4d3b1恢复客户端证据
+
+复用原请求层添加恢复上下文/窗口/原key提交和确认；上下文与十二Run、原group/当前exact定义/观察时间/窗口合同严格解析。POST前持久化scope/group/key/body，POST后只GET原receipt逐项核对请求、前驱、输入hash、actor/tenant、UTC窗口与新定义revision。未知或404/错配保留；明确4xx拒绝清对应key；确认身份变化不清原记录。配置与恢复未知命令互斥，没有自动重发或自动审批。
+
+Red为新增方法缺失；客户端及既有配置/面板联合23 passed（`/tmp/aos-recovery-client-final.log`），类型检查通过（首次仅测试夹具union unknown，已修正；`/tmp/aos-recovery-client-types-final.log`），diff检查通过。包含本地存储失败零发送、原receipt错配、超时未知、跨租户隔离、当前身份变化、窗口不合法和配置版本漂移。均前端具名网络夹具，不是真实审批/源调用。下一波b2表单与原回执恢复入口、浏览器验证，主环境未改。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4d3b拆分为b1客户端合同、b2表单及浏览器。b1修改 `apps/web/src/api/snapshotSchedules.ts` 并新增 `apps/web/src/api/snapshotRecoveries.test.ts`，复用原有30秒有界请求/租户身份快照、精确ref与稳定比较函数，不复制网络身份层。严格读恢复上下文（原group/当前definition exactRef/输入hash/观察时间/服务端窗口规则/十二Run汇总），本地只保存待核对请求，不保存业务原始行或凭证。续期提交前先持久化原key和请求，POST后必须GET原receipt验证tenant/group/actor/request/body前驱/输入hash/window匹配，再清除pending；未知结果和回执错配保留，404不自动重发。4xx明确拒绝可清除同key，成功只算approval_recorded不宣称执行完成。配置与恢复未知命令互斥。客户端窗口只辅助输入，服务端Owner仍最终裁决；不自动扩窗、不自动提交。b2再新增恢复Panel，在真实原组状态内只读核对、手动选择时间并显式提交，具体组件测试/浏览器目录实施前补充。
 
 Y4d3a先显示状态，文件：`apps/web/src/api/snapshotSchedules.ts`及`.test.ts`、`apps/web/src/pages/s2/SnapshotSchedulesPanel.tsx`及`.test.tsx`。新增严格解析runtime响应（租户/definition/exactRef/状态/布尔值/时间/恢复ref），复用原请求身份快照。选中已保存配置后读取真实状态并提供只读刷新；不轮询写入、不自动审批。组件请求序号与卸载/租户保护阻止旧结果覆盖新选择；配置版本漂移明确要求刷新配置。删除过期“尚未接通”固定说法，换成“选中配置查看当前运行情况”及服务端分态：未启用执行器、停用、运行中、待原组恢复、已批准等待承接、等待周期、需重新配置、结果未知。无worker可用时不能显示已在运行。正式续期表单另列d3b实现；本波不以状态页替代恢复交互完成。运行前端测试/类型构建，隔离浏览器用具名API响应验证布局与状态；真实后端浏览器联调留Y6加载后的验收。
 
