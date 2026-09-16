@@ -1,0 +1,14 @@
+{"ts": "2026-09-16T19:53:34.754222+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:34.859727+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "action": {
+    "id": "ecommerce_growth_event_dispatch",
+    "name": "配置电商商品事件受控入口",
+    "objectType": "Case",
+    "parameters": [],
+    "requiredMarkings": [],
+    "submissionCriteria": []
+  },
+  "outcome": "CURRENT_G_EVENT_ACTION"
+}
+{"ts": "2026-09-16T19:53:34.866655+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

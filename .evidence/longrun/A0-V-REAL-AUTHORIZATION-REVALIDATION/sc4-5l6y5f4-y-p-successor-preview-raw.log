@@ -1,0 +1,35 @@
+{"ts": "2026-09-16T19:49:05.447675+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "CURRENT_P_SUCCESSOR_REQUEST_PREVIEW",
+  "request": {
+    "schemaVersion": "aos.ecommerce.successor-dispatch-registration/v1",
+    "registration": {
+      "schemaVersion": "aos.ecommerce.first-dispatch-registration/v1",
+      "installationRef": {
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "revision": 5,
+        "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+        "overlayRevision": "a0v-canonical-ecommerce-v1"
+      },
+      "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+      "bindingRevision": 4,
+      "executionEpoch": 3,
+      "configRef": {
+        "configurationId": "31cebe73-d50e-43dc-8165-7e94ab3409f2",
+        "revision": 1,
+        "hash": "sha256:20183377bbe9a528104fe009eda106f768c9213ef8c20e40c9a0976d396dbce1"
+      },
+      "groupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+      "idempotencyKey": "a0v-qyh-clean-generation-p-successor-v1"
+    },
+    "expectedGroupRevision": 47,
+    "predecessorDetachReceiptRef": {
+      "resourceType": "DispatchDisableDetachReceipt",
+      "resourceId": "4d075823-2066-4706-9f25-542dff38bba2",
+      "revision": 1,
+      "contentHash": "sha256:279923c2997b4221c348576e1079a8d8fe7fdeae860df002fe132c2c3214acad"
+    }
+  },
+  "requestHash": "sha256:5bcf717cdd485d88b1717b93dd26098a13e9ae05c073699b834db89db0c5207d"
+}
+{"ts": "2026-09-16T19:49:05.612088+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

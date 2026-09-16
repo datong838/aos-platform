@@ -1,0 +1,49 @@
+{"ts": "2026-09-16T19:49:27.874726+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:49:27.996348+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:49:28.002577+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:49:28.009336+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:49:28.060520+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:49:28.108000+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "proposalId": "proposal-2b90d7240d8a4d98825a",
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-a12bd52c16f54edaa2cd",
+    "revision": 2,
+    "contentHash": "sha256:94cace219d680e5c53019677e52bce7248637708d31413d0cbc6fc5c455ce851",
+    "receiptId": null
+  },
+  "payload": {
+    "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+    "expectedGroupRevision": 47,
+    "targetInstallationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+    "targetGeneration": "df883b18-0170-410b-8424-442c7cdd60b4",
+    "targetExecutionEpoch": 3,
+    "targetRuntimeRevision": 4,
+    "operationIds": [
+      "ecommerce_growth_analysis_advance",
+      "ecommerce_growth_case_put",
+      "ecommerce_growth_content_generate",
+      "ecommerce_growth_content_review",
+      "ecommerce_growth_data_fulfill",
+      "ecommerce_growth_investigation_describe",
+      "ecommerce_growth_review_advance",
+      "ecommerce_growth_schedule_put",
+      "ecommerce_growth_schedule_trigger"
+    ],
+    "policyRef": {
+      "resourceType": "RuntimeCutoverPolicyRevision",
+      "resourceId": "qyh-clean-generation-p-activation",
+      "revision": 1,
+      "contentHash": "sha256:700f3f0c8def8f56b861bf123d3a370566653c712847b0bbb58588f6b3ee6f33"
+    },
+    "registrationReceiptRef": {
+      "resourceType": "SuccessorDispatchRegistrationReceipt",
+      "resourceId": "004f70a2-1b72-4125-af85-77fa2420ac5a",
+      "revision": 1,
+      "contentHash": "sha256:ae8652a1835368e18fc3de6e2435f55f3323d488b1c3e8a20115ecd8c91c185f"
+    }
+  },
+  "outcome": "CURRENT_P_CUTOVER_APPROVE"
+}
+{"ts": "2026-09-16T19:49:28.160847+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

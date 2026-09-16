@@ -1,0 +1,147 @@
+{
+  "capturedAt": "2026-09-16T20:09:00.024560+00:00",
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+  "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+  "runtime": [
+    {
+      "revision": 7,
+      "execution_epoch": 4,
+      "enabled": false,
+      "operation_fence": true,
+      "desired_state": "enabled",
+      "observed_state": "unknown"
+    }
+  ],
+  "resourceCounts": [
+    {
+      "cleanup_state": "released",
+      "observed_release": true,
+      "n": 3
+    }
+  ],
+  "schedule": [
+    {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "enabled": false,
+      "last_run": {
+        "at": "2026-09-16T00:10:28.183882+00:00",
+        "id": "scr-bddff0a74c2a4365",
+        "status": "succeeded",
+        "trigger": "manual",
+        "errorCode": "",
+        "durationMs": 9954,
+        "rowsWritten": 65
+      },
+      "updated_at": "2026-09-16 20:01:27.928637+00:00"
+    }
+  ],
+  "runs": [
+    {
+      "id": "scr-4eda5462575a4740",
+      "status": "succeeded",
+      "trigger": "cron",
+      "scheduled_for": "2026-09-16 20:00:00+00:00",
+      "started_at": "2026-09-16 20:00:14.336288+00:00",
+      "finished_at": "2026-09-16 20:00:26.805067+00:00",
+      "rows_written": 65,
+      "error_code": "",
+      "executor_stopped": true
+    }
+  ],
+  "ingress": [
+    {
+      "run_id": "scr-4eda5462575a4740",
+      "pipeline_id": "P02-product-qyh",
+      "source_id": "niushop-qyh",
+      "source_revision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "envelope_hash": "e75d9e3a42bb0df0267b1b4be3dd4efe8a3ed7d116eea56140114a9fbb3d7127",
+      "created_at": "2026-09-16 20:00:19.915200+00:00"
+    }
+  ],
+  "binding": [
+    {
+      "policy_revision": 11,
+      "revision": 1,
+      "approved": true,
+      "enabled": true,
+      "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+      "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+      "execution_epoch": 3,
+      "effective_until": "2026-09-16 21:22:44.896045+00:00"
+    }
+  ],
+  "routeCounts": [
+    {
+      "cutover_group_revision": 49,
+      "operation_fence": false,
+      "handler_kind": "extension",
+      "n": 10
+    }
+  ],
+  "occurrenceCounts": [
+    {
+      "status": "needs_attention",
+      "n": 5
+    },
+    {
+      "status": "pending",
+      "n": 60
+    }
+  ],
+  "attemptCounts": [
+    {
+      "status": "unknown",
+      "n": 5
+    }
+  ],
+  "investigationRunCount": [
+    {
+      "n": 0
+    }
+  ],
+  "activeSlots": [
+    {
+      "case_id": "case-qyh-full-store-baseline-20260915",
+      "analysis_type": "initial_store_analysis",
+      "run_id": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+      "trigger_kind": "recovery",
+      "trigger_key": "automation-occurrence:37bead7a-52d6-5e6e-878e-a8e1e54a294c",
+      "acquired_at": "2026-09-16 00:10:47.318443+00:00"
+    }
+  ],
+  "controlReceiptCount": [
+    {
+      "n": 0
+    }
+  ],
+  "negativeCanaryDispatch": [
+    {
+      "n": 0
+    }
+  ],
+  "hostStatus": {
+    "businessWorkers": [
+      "product-event",
+      "analysis-data-requirement"
+    ],
+    "canaryTenantCount": 0,
+    "hostId": "a0v-local-ecommerce-host-20260912",
+    "intervalSeconds": 2,
+    "liveTargets": [],
+    "outcome": "RUNTIME_HOST_STOPPED",
+    "pid": 17273,
+    "positiveTenant": "org-org/dev-project",
+    "productEventWorker": {
+      "analysesAccepted": 0,
+      "candidates": 0,
+      "failed": 0,
+      "occurrences": 0,
+      "targetsChecked": 1
+    },
+    "tenantCount": 1
+  }
+}

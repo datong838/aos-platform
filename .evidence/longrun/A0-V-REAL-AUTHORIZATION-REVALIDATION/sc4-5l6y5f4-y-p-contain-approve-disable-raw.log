@@ -1,0 +1,28 @@
+{"ts": "2026-09-16T20:04:49.652284+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T20:04:49.752169+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T20:04:49.758749+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T20:04:49.766240+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T20:04:49.792145+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-3535d4d1808149c3a756",
+    "revision": 1,
+    "contentHash": "sha256:6d9e0a8121173b98896d567ceefa34d601f76c9034ac3cae474e618bf0562afa",
+    "receiptId": null
+  },
+  "control": {
+    "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+    "idempotencyKey": "a0v-qyh-p-policy11-failed-window-20260917-v1-disable",
+    "policyRef": {
+      "resourceType": "SchedulePolicyRevision",
+      "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+      "revision": 11,
+      "contentHash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5"
+    },
+    "expectedBindingRevision": 1,
+    "intent": "disable"
+  },
+  "proposalId": "proposal-5e5ba4d6090c4c3a903d"
+}
+{"ts": "2026-09-16T20:04:49.814266+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

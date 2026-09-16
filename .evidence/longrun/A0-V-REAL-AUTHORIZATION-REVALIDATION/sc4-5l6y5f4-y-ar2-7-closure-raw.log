@@ -1,0 +1,1 @@
+{'phase': 'ar2-7', 'scannedPythonModules': 1982, 'classifiedModules': 198, 'migratedModules': 93, 'hashErrors': [], 'unclassifiedForwardDependencies': [], 'unclassifiedReverseCallers': ['aos_api.ecommerce_event_proposal_gate'], 'bundleCrossLayerImports': [], 'dynamicReferenceErrors': []}

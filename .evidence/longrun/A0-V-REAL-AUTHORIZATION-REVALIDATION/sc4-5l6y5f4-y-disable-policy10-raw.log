@@ -1,0 +1,53 @@
+{"ts": "2026-09-16T19:26:32.920096+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "N_POLICY10_RELEASED_DISABLE_GREEN",
+  "receipt": {
+    "receiptRef": {
+      "resourceType": "EventPolicyControlReceipt",
+      "resourceId": "bd0aa93c-83b0-544b-82fe-d1359d3f016c",
+      "revision": 2,
+      "contentHash": "sha256:a833b9a6f48c217650fa19210945d386e6f61e1e2e481adb51eab110a3b35e70"
+    },
+    "authority": {
+      "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+      "binding": {
+        "org_id": "org-org",
+        "cadence": "event",
+        "enabled": false,
+        "approved": true,
+        "revision": 2,
+        "timezone": "Asia/Shanghai",
+        "policy_id": "product-event-qyh-full-store-generation-f-20260916",
+        "watermark": null,
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "local_time": null,
+        "project_id": "dev-project",
+        "weekly_day": null,
+        "policy_hash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4",
+        "operation_id": "ecommerce_growth_analysis_advance",
+        "effective_from": "2026-09-16T18:19:14.642561+00:00",
+        "effective_until": "2026-09-16T19:49:14.642561+00:00",
+        "execution_epoch": 3,
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "policy_revision": 10
+      },
+      "command": {
+        "intent": "disable",
+        "policyRef": {
+          "revision": 10,
+          "receiptId": null,
+          "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+          "contentHash": "sha256:3787b835eafc04830767b1cbcb92acfa6eceeb035eda0562f3dd5c326956d9e4",
+          "resourceType": "SchedulePolicyRevision"
+        },
+        "approvalRef": null,
+        "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+        "idempotencyKey": "a0v-qyh-n-to-o-recovery-20260917-disable-policy10",
+        "expectedBindingRevision": 1
+      },
+      "schemaVersion": "aos.ecommerce.product-event-control-receipt/v1"
+    },
+    "replayed": false
+  }
+}
+{"ts": "2026-09-16T19:26:33.417947+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

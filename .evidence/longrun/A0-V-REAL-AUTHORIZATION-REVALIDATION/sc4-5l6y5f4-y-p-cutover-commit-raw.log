@@ -1,0 +1,145 @@
+{"ts": "2026-09-16T19:49:49.374121+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "receipt": {
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "receiptId": "130fd9e1-ef49-45d8-9030-3c7499e4c0a5",
+    "cutoverOperationId": "0bd6a2c7-fc35-5c64-bfed-534eb88c9d74",
+    "phase": "commit",
+    "status": "committed",
+    "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+    "operationIds": [
+      "ecommerce_growth_analysis_advance",
+      "ecommerce_growth_case_put",
+      "ecommerce_growth_content_generate",
+      "ecommerce_growth_content_review",
+      "ecommerce_growth_data_fulfill",
+      "ecommerce_growth_investigation_describe",
+      "ecommerce_growth_review_advance",
+      "ecommerce_growth_schedule_put",
+      "ecommerce_growth_schedule_trigger"
+    ],
+    "dispatchSnapshot": [
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_analysis_advance",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_case_put",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_content_generate",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_content_review",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_data_fulfill",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_investigation_describe",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_review_advance",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_schedule_put",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      },
+      {
+        "revision": 27,
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "handlerKind": "extension",
+        "operationId": "ecommerce_growth_schedule_trigger",
+        "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+        "executionEpoch": 3,
+        "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "operationFence": false,
+        "cutoverGroupRevision": 48
+      }
+    ],
+    "occurrenceWatermark": null,
+    "claimedOccurrences": [],
+    "claimedAttempts": [],
+    "unknownAttempts": [],
+    "runningRuntimeAttempts": [],
+    "pendingTargetReceiptRefs": [],
+    "prepareReceiptRef": {
+      "resourceType": "CutoverPrepareReceipt",
+      "resourceId": "7b9f92d8-ab0c-48b7-a362-5e4382e41f04",
+      "revision": 1,
+      "contentHash": "sha256:b8f4735fb98a9680be39399f9e1709fed128582cc428deaa6aeb7bb3a1bda736"
+    },
+    "requestHash": "sha256:c771fbdb7ee5b89dc6a8c49c299271188a714e3cd34b6dae2bb45fb2e363f944",
+    "contentHash": "sha256:720cb7d0bc7794a319050ac7bf9a78337c605c0efd4b3cb67937bf1c1a16f984",
+    "claimPaused": true,
+    "replayed": false,
+    "createdAt": "2026-09-16T19:49:49.690537Z"
+  },
+  "outcome": "CURRENT_P_CUTOVER_COMMIT"
+}
+{"ts": "2026-09-16T19:49:49.698264+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

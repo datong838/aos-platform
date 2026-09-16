@@ -1,0 +1,12 @@
+{"ts": "2026-09-16T19:52:51.879515+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "CURRENT_G_PRODUCT_SELECTION",
+  "ref": {
+    "resourceType": "SourceSelectionRevision",
+    "resourceId": "source-selection-c97ac554-144a-45ba-a3ba-57b55c4ab7d4",
+    "revision": 1,
+    "contentHash": "sha256:c77f875fb3fb2344318913b60d264c296818984882cba1104052362a349b4eb5",
+    "receiptId": null
+  }
+}
+{"ts": "2026-09-16T19:52:52.187910+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

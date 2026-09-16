@@ -1,0 +1,198 @@
+{"ts": "2026-09-16T19:54:18.946222+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "P_POLICY11_NATURAL_PRODUCT_CRON_ARMED",
+  "status": 200,
+  "body": {
+    "id": "sch-p02-qyh-controlled-20260913-v1",
+    "cron": "0 * * * *",
+    "pipelineId": "P02-product-qyh",
+    "enabled": true,
+    "name": "栖月汇商品真实数据受控接入",
+    "ingest": {
+      "kind": "pipeline-live-v1",
+      "pipelineId": "P02-product-qyh"
+    },
+    "lastRun": {
+      "at": "2026-09-16T00:10:28.183882+00:00",
+      "id": "scr-bddff0a74c2a4365",
+      "status": "succeeded",
+      "trigger": "manual",
+      "errorCode": "",
+      "durationMs": 9954,
+      "rowsWritten": 65
+    },
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "snapshot": {
+    "at": "2026-09-16T19:54:19.061141+00:00",
+    "schedule": {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "cron": "0 * * * *",
+      "pipeline_id": "P02-product-qyh",
+      "enabled": true,
+      "ingest": {
+        "kind": "pipeline-live-v1",
+        "pipelineId": "P02-product-qyh"
+      },
+      "last_run": {
+        "at": "2026-09-16T00:10:28.183882+00:00",
+        "id": "scr-bddff0a74c2a4365",
+        "status": "succeeded",
+        "trigger": "manual",
+        "errorCode": "",
+        "durationMs": 9954,
+        "rowsWritten": 65
+      },
+      "updated_at": "2026-09-16 19:54:19.026572+00:00"
+    },
+    "policy": {
+      "schedule_policy_id": "product-event-qyh-full-store-generation-f-20260916",
+      "current_revision": 11,
+      "case_id": "case-qyh-full-store-baseline-20260915",
+      "enabled": false,
+      "content_hash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5",
+      "updated_at": "2026-09-16 19:52:44.896045+00:00"
+    },
+    "binding": {
+      "policy_id": "product-event-qyh-full-store-generation-f-20260916",
+      "policy_revision": 11,
+      "policy_hash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5",
+      "operation_id": "ecommerce_growth_analysis_advance",
+      "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+      "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+      "execution_epoch": 3,
+      "effective_from": "2026-09-16 19:52:44.896045+00:00",
+      "effective_until": "2026-09-16 21:22:44.896045+00:00",
+      "approved": true,
+      "enabled": true,
+      "watermark": null,
+      "revision": 1
+    },
+    "routes": [
+      {
+        "operation_id": "ecommerce_growth_analysis_advance",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_case_put",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_content_generate",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_content_review",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_data_fulfill",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_event_control",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 1,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_investigation_describe",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_review_advance",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_schedule_put",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      },
+      {
+        "operation_id": "ecommerce_growth_schedule_trigger",
+        "handler_kind": "extension",
+        "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+        "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 27,
+        "cutover_group_revision": 49
+      }
+    ],
+    "expectedOperations": [
+      "ecommerce_growth_analysis_advance",
+      "ecommerce_growth_case_put",
+      "ecommerce_growth_content_generate",
+      "ecommerce_growth_content_review",
+      "ecommerce_growth_data_fulfill",
+      "ecommerce_growth_event_control",
+      "ecommerce_growth_investigation_describe",
+      "ecommerce_growth_review_advance",
+      "ecommerce_growth_schedule_put",
+      "ecommerce_growth_schedule_trigger"
+    ],
+    "runs": [],
+    "ingress": [],
+    "occurrences": [],
+    "attempts": [],
+    "investigationRuns": [],
+    "inflight": {
+      "running": 0,
+      "unresolved": 0
+    },
+    "negativeCanaryDispatch": 0
+  }
+}
+{"ts": "2026-09-16T19:54:19.061977+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

@@ -1,0 +1,134 @@
+{"ts": "2026-09-16T19:36:21.231882+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "N_UNINSTALLED_FOR_O_RECOVERY",
+  "receipt": {
+    "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+    "displayName": "A0-V Canonical 电商八工作台首装",
+    "state": "uninstalled",
+    "currentRevision": 6,
+    "activeRevision": null,
+    "previousActiveRevision": null,
+    "etagVersion": 6,
+    "createdAt": "2026-09-16T18:00:34.280997Z",
+    "updatedAt": "2026-09-16T19:36:21.373154Z",
+    "current": {
+      "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "revision": 6,
+      "parentRevision": 5,
+      "state": "uninstalled",
+      "compositionId": "a65c3836-897b-4978-ac62-6b55141f614f",
+      "lockRevision": 1,
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "permissionDiffHash": "sha256:fbf784ddb11ab7be33d488b9123f5104fe07f17713338529cd070801acc30357",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:065568ac8538972fdd71dc2358f18ffd66b03923ab7eec7e317bd78b9799a4d2",
+      "overlayRevision": "a0v-canonical-ecommerce-v1",
+      "requestedBy": "a0v-canonical-ecommerce-first-install-maker",
+      "decisionId": "cf92101b-0c34-4cbc-a8bb-ad9935787f2a",
+      "createdAt": "2026-09-16T19:36:21.373154Z"
+    },
+    "decision": {
+      "decisionId": "cf92101b-0c34-4cbc-a8bb-ad9935787f2a",
+      "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "submittedRevision": 2,
+      "decision": "approved",
+      "actor": "a0v-canonical-ecommerce-first-install-checker",
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "permissionDiffHash": "sha256:fbf784ddb11ab7be33d488b9123f5104fe07f17713338529cd070801acc30357",
+      "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+      "contributionDiffHash": "sha256:065568ac8538972fdd71dc2358f18ffd66b03923ab7eec7e317bd78b9799a4d2",
+      "reason": null,
+      "createdAt": "2026-09-16T18:00:34.573033Z"
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "fromRevision": null,
+        "toRevision": 1,
+        "fromState": null,
+        "toState": "draft",
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T18:00:34.280997Z"
+      },
+      {
+        "sequence": 2,
+        "fromRevision": 1,
+        "toRevision": 2,
+        "fromState": "draft",
+        "toState": "submitted",
+        "actor": "a0v-canonical-ecommerce-first-install-maker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T18:00:34.431961Z"
+      },
+      {
+        "sequence": 3,
+        "fromRevision": 2,
+        "toRevision": 3,
+        "fromState": "submitted",
+        "toState": "approved",
+        "actor": "a0v-canonical-ecommerce-first-install-checker",
+        "reason": null,
+        "evidence": null,
+        "createdAt": "2026-09-16T18:00:34.573033Z"
+      },
+      {
+        "sequence": 4,
+        "fromRevision": 3,
+        "toRevision": 4,
+        "fromState": "approved",
+        "toState": "applied",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": null,
+        "evidence": {
+          "type": "runtime_preparation",
+          "evidenceRef": "evidence://bundle-installations/d42cd39a-bc44-403b-a184-c241cae7769e/revisions/4/runtime_preparation",
+          "evidenceHash": "sha256:9993c1228e6361d470796afa699c82be5755fa989997e0984d8de5fb2f12d70d",
+          "status": "valid",
+          "observedAt": "2026-09-16T18:01:40.418028Z"
+        },
+        "createdAt": "2026-09-16T18:01:40.418028Z"
+      },
+      {
+        "sequence": 5,
+        "fromRevision": 4,
+        "toRevision": 5,
+        "fromState": "applied",
+        "toState": "active",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": null,
+        "evidence": {
+          "type": "verification",
+          "evidenceRef": "evidence://bundle-installations/d42cd39a-bc44-403b-a184-c241cae7769e/revisions/5/verification",
+          "evidenceHash": "sha256:4a43acba4647d3474cf63fb5372f3c08aae416d5ddb4123ca0a85b068ea02073",
+          "status": "valid",
+          "observedAt": "2026-09-16T18:02:12.520124Z"
+        },
+        "createdAt": "2026-09-16T18:02:12.520124Z"
+      },
+      {
+        "sequence": 6,
+        "fromRevision": 5,
+        "toRevision": 6,
+        "fromState": "active",
+        "toState": "uninstalled",
+        "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+        "reason": "N disabled and detached after failed natural ingress; replace with approved O",
+        "evidence": {
+          "type": "uninstall",
+          "evidenceRef": "evidence://bundle-installations/d42cd39a-bc44-403b-a184-c241cae7769e/revisions/6/uninstall",
+          "evidenceHash": "sha256:ea0c00bf315d6ee4705a168a31ece06249ba2ed237f642326d691c0586da3c6b",
+          "status": "valid",
+          "observedAt": "2026-09-16T19:36:21.373154Z"
+        },
+        "createdAt": "2026-09-16T19:36:21.373154Z"
+      }
+    ]
+  },
+  "replayed": false,
+  "state": "uninstalled",
+  "successorInstallationId": "4ed5cb6f-10b3-4dce-80d2-63697516b2a6"
+}
+{"ts": "2026-09-16T19:36:21.470465+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

@@ -1,0 +1,92 @@
+{"ts": "2026-09-16T19:45:41.694787+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "action": "stage",
+  "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+  "installation": {
+    "state": "active",
+    "etag_version": 5
+  },
+  "binding": {
+    "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+    "revision": 1,
+    "desired_state": "disabled",
+    "observed_state": "ready",
+    "enabled": false,
+    "operation_fence": true,
+    "config_ref": null
+  },
+  "configuration": {
+    "schemaVersion": 1,
+    "roleRefs": [
+      {
+        "authority": "aip.responsibility_plan_revision",
+        "id": "responsibility-plan-63c82d2a75614e1b95f1",
+        "revision": 2,
+        "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+      }
+    ],
+    "dataRefs": [
+      {
+        "authority": "aip.data_classification_policy_revision",
+        "id": "a0v-ecommerce-public-catalog-v1",
+        "revision": 1,
+        "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+      }
+    ],
+    "budgetRef": {
+      "authority": "aip.budget_revision",
+      "id": "a0v-ecommerce-hard-stop-budget-v1",
+      "revision": 1,
+      "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+    },
+    "policyRef": {
+      "authority": "aip.runtime_policy_revision",
+      "id": "a0v-ecommerce-runtime-policy-v1",
+      "revision": 6,
+      "hash": "sha256:a027139479581164d6e772dda9adfbd69887a7580aab6921b7ae4f54470a875e"
+    }
+  },
+  "authorized": true,
+  "staged": {
+    "installationEtag": 5,
+    "bindingRevision": 1,
+    "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+    "configuration": {
+      "schemaVersion": 1,
+      "roleRefs": [
+        {
+          "authority": "aip.responsibility_plan_revision",
+          "id": "responsibility-plan-63c82d2a75614e1b95f1",
+          "revision": 2,
+          "hash": "sha256:b0bc174c7341f3163954523ae0a297c90a8d0112baeae294b08276abaef6317a"
+        }
+      ],
+      "dataRefs": [
+        {
+          "authority": "aip.data_classification_policy_revision",
+          "id": "a0v-ecommerce-public-catalog-v1",
+          "revision": 1,
+          "hash": "sha256:1ee6ca682f19afb4c3dc8113d66add66cf1aa30c0d940a99c7a5181757a3f477"
+        }
+      ],
+      "budgetRef": {
+        "authority": "aip.budget_revision",
+        "id": "a0v-ecommerce-hard-stop-budget-v1",
+        "revision": 1,
+        "hash": "sha256:6190c56adfb90e8119fd47d4235ec8eb783232d8108d82d284baa6daffc11126"
+      },
+      "policyRef": {
+        "authority": "aip.runtime_policy_revision",
+        "id": "a0v-ecommerce-runtime-policy-v1",
+        "revision": 6,
+        "hash": "sha256:a027139479581164d6e772dda9adfbd69887a7580aab6921b7ae4f54470a875e"
+      }
+    },
+    "configRef": {
+      "configurationId": "31cebe73-d50e-43dc-8165-7e94ab3409f2",
+      "revision": 1,
+      "hash": "sha256:20183377bbe9a528104fe009eda106f768c9213ef8c20e40c9a0976d396dbce1"
+    }
+  }
+}
+{"ts": "2026-09-16T19:45:41.869030+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

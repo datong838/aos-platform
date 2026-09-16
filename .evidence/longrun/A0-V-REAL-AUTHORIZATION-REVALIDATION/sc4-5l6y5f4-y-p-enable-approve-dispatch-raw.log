@@ -1,0 +1,35 @@
+{"ts": "2026-09-16T19:53:41.586221+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:41.665086+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:41.671835+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:41.678881+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:41.704131+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "proposalId": "proposal-f20f0bb4aea149a89263",
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-52b1dcda362d4cba99e0",
+    "revision": 1,
+    "contentHash": "sha256:ab747e1362610c176b74033b619e5581252d61eaf294998ca897bde762608fba",
+    "receiptId": null
+  },
+  "request": {
+    "schemaVersion": "aos.ecommerce.event-control-dispatch/v1",
+    "phase": "expand",
+    "installationRef": {
+      "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+      "revision": 5,
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "overlayRevision": "a0v-canonical-ecommerce-v1"
+    },
+    "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+    "executionEpoch": 3,
+    "runtimeRevision": 6,
+    "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+    "expectedGroupRevision": 48,
+    "caseId": "case-qyh-full-store-baseline-20260915",
+    "schedulePolicyId": "product-event-qyh-full-store-generation-f-20260916",
+    "idempotencyKey": "a0v-qyh-p-event-enable-20260917-v5-expand"
+  },
+  "outcome": "CURRENT_G_EVENT_APPROVE-DISPATCH"
+}
+{"ts": "2026-09-16T19:53:41.725502+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

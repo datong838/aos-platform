@@ -1,0 +1,13 @@
+{"ts": "2026-09-16T19:43:04.164164+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "O_INTERRUPTED_PREPARATION_RESET",
+  "receipt": {
+    "installationId": "4ed5cb6f-10b3-4dce-80d2-63697516b2a6",
+    "state": "approved",
+    "revision": 5
+  },
+  "replayed": false,
+  "state": "approved",
+  "revision": 5
+}
+{"ts": "2026-09-16T19:43:04.388585+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

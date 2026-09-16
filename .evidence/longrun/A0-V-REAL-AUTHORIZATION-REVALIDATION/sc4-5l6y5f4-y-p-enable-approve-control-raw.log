@@ -1,0 +1,29 @@
+{"ts": "2026-09-16T19:53:55.659822+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:55.733724+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:55.739796+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:55.747140+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:53:55.774465+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "proposalId": "proposal-2653fcb3cd2443f1b42c",
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-9bc2c26aa17c4dc99468",
+    "revision": 1,
+    "contentHash": "sha256:bdffac8a778f2b981d480e4d95e16830c81671f63b86a61dc55a8e137f7058ff",
+    "receiptId": null
+  },
+  "control": {
+    "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+    "idempotencyKey": "a0v-qyh-p-event-enable-20260917-v5-control",
+    "policyRef": {
+      "resourceType": "SchedulePolicyRevision",
+      "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+      "revision": 11,
+      "contentHash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5"
+    },
+    "expectedBindingRevision": 0,
+    "intent": "enable"
+  },
+  "outcome": "CURRENT_G_EVENT_APPROVE-CONTROL"
+}
+{"ts": "2026-09-16T19:53:55.795800+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

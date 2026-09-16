@@ -1,0 +1,34 @@
+{"ts": "2026-09-16T19:27:25.566906+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:27:25.704288+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:27:25.711256+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:27:25.718512+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{"ts": "2026-09-16T19:27:25.746026+00:00", "level": "debug", "service": "aos-api", "logger": "aos-api.db", "msg": "db_connect host_port_from_env=False", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "request": {
+    "schemaVersion": "aos.ecommerce.event-control-dispatch/v1",
+    "phase": "fence",
+    "installationRef": {
+      "installationId": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "revision": 5,
+      "lockHash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "overlayRevision": "a0v-canonical-ecommerce-v1"
+    },
+    "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+    "executionEpoch": 3,
+    "runtimeRevision": 7,
+    "cutoverGroupId": "6a402d31-83ad-546c-807f-508c87498ce1",
+    "expectedGroupRevision": 43,
+    "caseId": "case-qyh-full-store-baseline-20260915",
+    "schedulePolicyId": "product-event-qyh-full-store-generation-f-20260916",
+    "idempotencyKey": "a0v-qyh-n-to-o-recovery-20260917-event-fence"
+  },
+  "approvalRef": {
+    "resourceType": "ActionApprovalEvent",
+    "resourceId": "approval-716fc9c50fa54d75a76e",
+    "revision": 1,
+    "contentHash": "sha256:1ba10fd88fa39d3b052ea0b53a3e7ce6ea349eff4e0a5bbc590e2c54711df5f8",
+    "receiptId": null
+  },
+  "proposalId": "proposal-57d1b19ecdcb45c3a6e5"
+}
+{"ts": "2026-09-16T19:27:25.771321+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

@@ -1591,3 +1591,17 @@ Optional dispatch membership coordinates tenant session, installed signed releas
 | --- | --- | --- | --- |
 | `services/aos-api/alembic/versions/a0v_054_event_control_dispatch_lifecycle.py` | Host schema migration | Additive immutable Receipt and fixed expand/fence/shrink CAS; no arbitrary operation or package rule | `NEW` |
 | `services/aos-api/aos_api/ecommerce_event_control_dispatch_lifecycle.py` | Host original path | Compose current signed release, exact AIP approval and restricted dispatch transition | `NEW` |
+
+### SC4-5L6Y Event proposal current-authority gate
+
+The gate is a Host-side transaction guard added before this recovery wave. It reads the
+current tenant membership, markings, Action snapshot, Case and schedule-policy heads,
+then returns only the immutable binding hash used by the existing AIP proposal store.
+It does not define package policy, create a proposal, approve an action, dispatch an
+operation, invoke a Provider, or grant an external effect. This append-only
+classification records its already committed initial hash and does not alter any
+historical preHash or verifier rule.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_event_proposal_gate.py` | Host original path | Current tenant/role/marking and exact Case/Policy provenance guard inside the existing AIP transaction; no proposal, approval, dispatch or effect grant | `62a075d7e49c5cf1c898959248247bb7704c17ec6dcf8f7432b8a55614f945cd` |

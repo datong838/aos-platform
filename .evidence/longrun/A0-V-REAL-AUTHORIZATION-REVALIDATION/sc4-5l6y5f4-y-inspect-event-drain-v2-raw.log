@@ -1,0 +1,131 @@
+{"ts": "2026-09-16T19:27:39.444470+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "N_EVENT_ROUTE_DRAINED",
+  "state": {
+    "phase": "fenced",
+    "routes": [
+      {
+        "operation_id": "ecommerce_growth_analysis_advance",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_case_put",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_content_generate",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_content_review",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_data_fulfill",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_event_control",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": true,
+        "revision": 2,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_investigation_describe",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_review_advance",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_schedule_put",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      },
+      {
+        "operation_id": "ecommerce_growth_schedule_trigger",
+        "handler_kind": "extension",
+        "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+        "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+        "execution_epoch": 3,
+        "operation_fence": false,
+        "revision": 24,
+        "cutover_group_revision": 44
+      }
+    ],
+    "binding": {
+      "policy_revision": 10,
+      "revision": 2,
+      "enabled": false,
+      "installation_id": "d42cd39a-bc44-403b-a184-c241cae7769e",
+      "generation": "677046ff-6147-4b3b-905d-9e12964b6581",
+      "execution_epoch": 3
+    },
+    "run": {
+      "status": "succeeded",
+      "trigger": "cron",
+      "rows_written": 65,
+      "executor_stopped": true
+    },
+    "sourceRevision": "a84b6c79-8654-48f0-98c2-57d41b067b3d",
+    "counts": {
+      "occurrences": 0,
+      "running": 0,
+      "unresolved": 0,
+      "canary": 0
+    }
+  }
+}
+{"ts": "2026-09-16T19:27:39.562267+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

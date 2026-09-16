@@ -1,0 +1,51 @@
+{"ts": "2026-09-16T19:35:57.826151+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "O_REPLACEMENT_APPROVED",
+  "snapshotHash": "sha256:cd8fd660d7fb126395db68ac8f07433017842267d37b7250deef1205e77ae366",
+  "compositionId": "b9fad9a5-e8a4-41e7-93e2-cfeb985f39eb",
+  "lockRevision": 1,
+  "lockHash": "sha256:9060bf8eef5db6e60cb8e3474c4a903cf1b77b14837103590978f5017a8b2c58",
+  "permissionDiffHash": "sha256:9f9c3df7067f6a31f2e1c03354daa1196efae776681977567c39420169dd35fe",
+  "migrationPlanHash": "sha256:9c790a19ae8d670812bcd5382cd9f49744650f9a7ca95da2f387b067705ec575",
+  "contributionDiffHash": "sha256:1f30ecc285fbc5842c01044a0bcc3479ebc1e8f921121d90fb3b50e163603e16",
+  "resolved": [
+    {
+      "bundleId": "domain.ecommerce.core",
+      "version": "1.4.0",
+      "contentHash": "sha256:91bbe20c38d85f151e2d37ab6b08e48b261b1147b40d91203df4309b75def4e5",
+      "selectionReason": "dependency"
+    },
+    {
+      "bundleId": "platform.ecommerce.niushop",
+      "version": "1.23.0",
+      "contentHash": "sha256:55b29795b73d5be0f28bd68fafc48c8dd7aa42c65eb5ea130a307326e7534117",
+      "selectionReason": "requested"
+    },
+    {
+      "bundleId": "solution.ecommerce.growth",
+      "version": "1.10.0",
+      "contentHash": "sha256:7fd951883b9e9fada326cae69a778297aab34625616b9203b248c375dff650a6",
+      "selectionReason": "requested"
+    },
+    {
+      "bundleId": "solution.ecommerce.operations-base",
+      "version": "1.2.0",
+      "contentHash": "sha256:eaf3a9ac9e0faca35246ed85d709ad97c8e1e8a4e5a7e315f1b4a0d6f896a298",
+      "selectionReason": "requested"
+    }
+  ],
+  "edgeCount": 3,
+  "contributionCount": 31,
+  "moduleCount": 8,
+  "installationId": "4ed5cb6f-10b3-4dce-80d2-63697516b2a6",
+  "installationState": "approved",
+  "installationRevision": 3,
+  "installationEtag": 3,
+  "transitions": [
+    "submit",
+    "approve"
+  ],
+  "maker": "a0v-canonical-ecommerce-first-install-maker",
+  "checker": "a0v-canonical-ecommerce-first-install-checker"
+}
+{"ts": "2026-09-16T19:35:59.075811+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

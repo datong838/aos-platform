@@ -1,0 +1,12 @@
+{"ts": "2026-09-16T19:52:58.911397+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "outcome": "CURRENT_G_PRODUCT_CONTROL",
+  "ref": {
+    "resourceType": "PipelineRuntimeControlRevision",
+    "resourceId": "pipeline-control-fd3ac7b4-b70c-4e22-9262-753a32f84576",
+    "revision": 1,
+    "contentHash": "sha256:26ec1f3317d5ac2539e3fe7e06a39f78a0c61abf2a52bac8ed54998ee8808e6b",
+    "receiptId": null
+  }
+}
+{"ts": "2026-09-16T19:52:59.217475+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}

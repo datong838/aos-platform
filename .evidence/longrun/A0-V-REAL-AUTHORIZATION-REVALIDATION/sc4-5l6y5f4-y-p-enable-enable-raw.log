@@ -1,0 +1,57 @@
+{"ts": "2026-09-16T19:54:02.509502+00:00", "level": "info", "service": "aos-api", "logger": "aos-api", "msg": "aos-api_app_created version=0.3.0", "trace_id": "-", "org_id": "-", "project_id": "-"}
+{
+  "receiptRef": {
+    "resourceType": "EventPolicyControlReceipt",
+    "resourceId": "96437069-855b-57fe-bbb8-3728a2e32a38",
+    "revision": 1,
+    "contentHash": "sha256:2d57641929e5b22709f712f48ecbaf0a384daecdfe98acbbe0882778d075e981"
+  },
+  "authority": {
+    "actor": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "binding": {
+      "org_id": "org-org",
+      "cadence": "event",
+      "enabled": true,
+      "approved": true,
+      "revision": 1,
+      "timezone": "Asia/Shanghai",
+      "policy_id": "product-event-qyh-full-store-generation-f-20260916",
+      "watermark": null,
+      "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+      "local_time": null,
+      "project_id": "dev-project",
+      "weekly_day": null,
+      "policy_hash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5",
+      "operation_id": "ecommerce_growth_analysis_advance",
+      "effective_from": "2026-09-16T19:52:44.896045+00:00",
+      "effective_until": "2026-09-16T21:22:44.896045+00:00",
+      "execution_epoch": 3,
+      "installation_id": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+      "policy_revision": 11
+    },
+    "command": {
+      "intent": "enable",
+      "policyRef": {
+        "revision": 11,
+        "receiptId": null,
+        "resourceId": "product-event-qyh-full-store-generation-f-20260916",
+        "contentHash": "sha256:225d22ed09f209b9b6444bbc896bf958049b90fee7889da8c607df5f22327de5",
+        "resourceType": "SchedulePolicyRevision"
+      },
+      "approvalRef": {
+        "revision": 1,
+        "receiptId": null,
+        "resourceId": "approval-9bc2c26aa17c4dc99468",
+        "contentHash": "sha256:bdffac8a778f2b981d480e4d95e16830c81671f63b86a61dc55a8e137f7058ff",
+        "resourceType": "ActionApprovalEvent"
+      },
+      "schemaVersion": "aos.ecommerce.product-event-control-command/v1",
+      "idempotencyKey": "a0v-qyh-p-event-enable-20260917-v5-control",
+      "expectedBindingRevision": 0
+    },
+    "schemaVersion": "aos.ecommerce.product-event-control-receipt/v1"
+  },
+  "replayed": false,
+  "outcome": "CURRENT_G_EVENT_ENABLE"
+}
+{"ts": "2026-09-16T19:54:03.314548+00:00", "level": "info", "service": "aos-api", "logger": "aos-api.jdbc-connector-runtime", "msg": "Cleaning up JDBC cache: tunnels=0, conns=0", "trace_id": "-", "org_id": "-", "project_id": "-"}
