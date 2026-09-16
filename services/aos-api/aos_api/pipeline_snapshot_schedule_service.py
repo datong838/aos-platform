@@ -12,6 +12,13 @@ from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotSchedu
 from aos_api.tenant_scope import TenantScope
 from aos_api.source_readiness_contracts import CANONICAL_QYH_SOURCES
 from aos_api.asset_registry.manifest_loader import ManifestLoader
+from aos_api.ec_ingress_journal import IngressJournalConflict
+from aos_api.pipeline_runtime_control_owner import decode_control_row
+from aos_api.pipeline_snapshot_schedule_claim import PipelineSnapshotScheduleClaimOwner
+from aos_api.pipeline_snapshot_group_recovery_owner import PipelineSnapshotGroupRecoveryOwner
+from aos_api.pipeline_snapshot_group_saved_facts import SnapshotSavedFactsReader
+from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt as _read_recovery_receipt
+from aos_api.pipeline_source_selection_owner import _now
 
 
 class PipelineSnapshotScheduleService:
@@ -29,6 +36,71 @@ class PipelineSnapshotScheduleService:
                 'public.pipeline_snapshot_schedule_definition_head',
                 'public.pipeline_snapshot_schedule_current_member'))
             yield conn
+
+    def _recovery_identity(self,conn):
+        require_runtime_role(conn,org_id=self.scope.org_id,project_id=self.scope.project_id,protected_tables=(
+            'public.pipeline_snapshot_group_recovery_receipt','public.pipeline_snapshot_group_input',
+            'public.pipeline_snapshot_schedule_claim'))
+
+    def _recovery_claims(self):
+        if self._owner._groups is None:raise PermissionError('recovery controls unavailable')
+        return PipelineSnapshotScheduleClaimOwner(controls=self._owner._groups._groups._controls)
+
+    def renew_saved_group(self,*,group_id,actor,expected_definition_ref,expected_recovery_ref,
+                          input_manifest_hash,not_before,expires_at,idempotency_key):
+        owner=PipelineSnapshotGroupRecoveryOwner(definitions=self._owner,claims=self._recovery_claims())
+        with self._connection() as conn:
+            self._recovery_identity(conn)
+            receipt=owner.renew(conn,scope=self.scope,group_id=group_id,actor=actor,
+                expected_definition_ref=expected_definition_ref,expected_recovery_ref=expected_recovery_ref,
+                input_manifest_hash=input_manifest_hash,not_before=not_before,expires_at=expires_at,idempotency_key=idempotency_key)
+        return dict(status='approval_recorded',executionStarted=False,receipt=receipt)
+
+    def read_recovery_receipt(self,*,group_id,actor,idempotency_key):
+        group_id=_group_id(group_id);key=validate_idempotency_key(idempotency_key)
+        with self._connection() as conn:
+            self._recovery_identity(conn)
+            receipt=_read_recovery_receipt(conn,scope=self.scope,group_id=group_id,idempotency_key=key)
+            if receipt is None:raise LookupError('original recovery receipt unavailable')
+            definition_id=receipt['body']['originalDefinitionRef']['resourceId'].removeprefix('snapshot-schedule-')
+            self._read_authorized(conn,definition_id=definition_id,actor=actor)
+            return receipt
+
+    def read_recovery_context(self,*,group_id,actor):
+        group_id=_group_id(group_id);claims=self._recovery_claims()
+        with self._connection() as conn:
+            self._recovery_identity(conn)
+            schedule=claims.read(conn,scope=self.scope,group_id=group_id)
+            if schedule is None or schedule['schemaVersion']!='aos.snapshot-schedule-claim/v2':
+                raise LookupError('original defined group unavailable')
+            identifier,_=claims._definition_ref(schedule['request']['definitionRef'])
+            current=self._read_authorized(conn,definition_id=identifier,actor=actor)
+            saved=conn.execute('''SELECT manifest_hash FROM public.pipeline_snapshot_group_input
+                WHERE org_id=%s AND project_id=%s AND group_id=%s''',(*self.scope.key,group_id)).fetchone()
+            if saved is None:raise IngressJournalConflict('GROUP_ORIGINAL_INPUT_REQUIRED')
+            facts=SnapshotSavedFactsReader(definitions=self._owner,claims=claims).read(conn,scope=self.scope,
+                group_id=group_id,actor=actor,expected_manifest_hash=saved['manifest_hash'])
+            prior=_read_recovery_receipt(conn,scope=self.scope,group_id=group_id)
+            controls=[]
+            for b in self._owner._saved_bindings(conn,self.scope,current['body']):
+                row=conn.execute('''SELECT * FROM public.pipeline_runtime_control_revision
+                    WHERE org_id=%s AND project_id=%s AND control_id=%s AND revision=%s''',
+                    (*self.scope.key,b.control_ref.resource_id.removeprefix('pipeline-control-'),b.control_ref.revision)).fetchone()
+                if row is None:raise ValueError('recovery context control unavailable')
+                control=decode_control_row(row)
+                if control.ref!=b.control_ref:raise ValueError('recovery context control differs')
+                controls.append(control)
+            runs=[m['runId'] for m in schedule['members']]
+            states=conn.execute('''SELECT status,executor_stopped,finished_at,count(*) AS count
+                FROM public.meta_schedule_run WHERE org_id=%s AND project_id=%s AND id=ANY(%s)
+                GROUP BY status,executor_stopped,finished_at ORDER BY status,executor_stopped,finished_at''',(*self.scope.key,runs)).fetchall()
+            return dict(status='saved_input_verified',executionAuthorized=False,groupId=group_id,
+                originalDefinitionRef=facts.definition['ref'],expectedDefinitionRef=current['ref'],
+                expectedRecoveryRef=prior['ref'] if prior else None,inputManifestHash=facts.manifest_hash,
+                observation=dict(startedAt=facts.read_started_at.isoformat(),completedAt=facts.read_completed_at.isoformat()),
+                windowRules=dict(maxDurationHours=24,notBeforeMinimum=max(c.draft.not_before for c in controls).isoformat(),
+                    expiresAfter=max(c.draft.expires_at for c in controls).isoformat(),currentTime=_now(conn).isoformat()),
+                runStates=[dict(status=r['status'],executorStopped=r['executor_stopped'],finishedAt=r['finished_at'].isoformat() if r['finished_at'] else None,count=r['count']) for r in states])
 
     def configure(self,*,definition_id,actor,cron,policy_ref,members,expected_ref,idempotency_key):
         if type(members) not in (list,tuple) or len(members)!=12:

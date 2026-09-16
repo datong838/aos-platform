@@ -133,3 +133,5 @@ async def bind_schedule_control(pipeline_id: str, request: Request, principal: P
 
 from aos_api.routers.pipeline_snapshot_schedules import router as snapshot_schedule_router
 router.include_router(snapshot_schedule_router)
+from aos_api.routers.pipeline_snapshot_recoveries import router as snapshot_recovery_router
+router.include_router(snapshot_recovery_router)
