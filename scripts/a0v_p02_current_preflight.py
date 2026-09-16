@@ -15,6 +15,7 @@ TRUST_ROOTS=ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-fi
 CURRENT_CREATE=ROOT.parent/'.aos-recovery-20260915/state/current-ecommerce-package/install/e/create-result.json'
 CUTOVER_RESUME=ROOT.parent/'.aos-recovery-20260915/state/niushop-1.23-current-package/business/p02-e-first-chain-r2/cutover-resume-result.json'
 NIUSHOP_VERSION='1.23.0'
+AUTHORITY_WINDOW_MINUTES=15
 
 
 def require_cutover_resume(create_receipt,binding,result,row,*,expected_outcome="CURRENT_E_CUTOVER_RESUMED"):
@@ -146,7 +147,8 @@ def run(action):
             executionEpoch=binding['execution_epoch'],configurationRef=binding['config_ref'],
             packageRef=dict(publisher=selected.publisher,id=selected.id,version=selected.version,contentHash=selected.content_hash),
             sourceId='niushop-qyh',sourceConfigurationRef=source.ref.model_dump(mode='json',by_alias=True),
-            rowLimit=1000,timeoutSeconds=30,maxSourceCalls=1,notBefore=now,expiresAt=now+timedelta(minutes=15),**refs)
+            rowLimit=1000,timeoutSeconds=30,maxSourceCalls=1,notBefore=now,
+            expiresAt=now+timedelta(minutes=AUTHORITY_WINDOW_MINUTES),**refs)
         draft=PipelineSourceSelectionDraft.model_validate(body)
         service.selections._guarded(conn,draft,ACTOR,lambda value:True,snapshot=True)
         runtime_binding={**dict(binding),'generation':str(binding['generation'])}
