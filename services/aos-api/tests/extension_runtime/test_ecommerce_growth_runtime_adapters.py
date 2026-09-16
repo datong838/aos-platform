@@ -511,6 +511,9 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         model_dump=lambda **_: {"schedulePolicyId": "schedule-qyh-001", "revision": 1},
     )
     case = SimpleNamespace(
+        case_id="case-qyh-001",
+        revision=2,
+        content_hash="sha256:" + "c" * 64,
         model_dump=lambda **_: {"caseId": "case-qyh-001", "revision": 2}
     )
 
@@ -547,10 +550,18 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         def put_binding(self, _scope, binding):
             type(self).binding = binding
 
+    class Controls:
+        written = None
+
+        def put(self, _transaction, _scope, **values):
+            type(self).written = values
+            return SimpleNamespace()
+
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationCaseStore", Cases)
     monkeypatch.setattr(runtime_adapters, "EcommerceBusinessInvestigationApplication", App)
     monkeypatch.setattr(runtime_adapters, "AutomationOccurrenceStore", Occurrences)
+    monkeypatch.setattr(runtime_adapters, "SchedulePolicyControlStore", Controls)
     service = runtime_adapters.SchedulePutHostService()
     runtime = SimpleNamespace(
         installation_id="11111111-1111-4111-8111-111111111111",
@@ -583,6 +594,9 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
     assert Occurrences.binding is not None
     assert Occurrences.binding.cadence == "once"
     assert str(Occurrences.binding.installation_id) == runtime.installation_id
+    assert Controls.written["policy_ref"].resource_id == "schedule-qyh-001"
+    assert Controls.written["case_ref"].resource_id == "case-qyh-001"
+    assert Controls.written["execution_epoch"] == 3
     route["generation"] = "44444444-4444-4444-8444-444444444444"
     with pytest.raises(ValueError, match="trigger route differs"):
         service.execute(

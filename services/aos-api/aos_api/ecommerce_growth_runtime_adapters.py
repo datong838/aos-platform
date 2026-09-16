@@ -112,6 +112,7 @@ from aos_api.ecommerce_business_investigation_schedule import (
 )
 from aos_api.aip_budget_reservation_store import canonical_hash as budget_canonical_hash
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ScheduleBinding
+from aos_api.ecommerce_schedule_policy_control import SchedulePolicyControlStore
 from aos_api.ecommerce_business_investigation_case_selection import (
     BusinessInvestigationCaseSelectionResolver,
     CatalogCanonicalProfileSelectionSource,
@@ -3356,6 +3357,20 @@ class SchedulePutHostService:
                     enabled=True,
                 ),
             )
+        control_key = "schedule-control-" + budget_canonical_hash(
+            [*scope.key, key, result.authority.content_hash]
+        )
+        SchedulePolicyControlStore().put(
+            transaction,
+            scope,
+            idempotency_key=control_key,
+            policy_ref=InvestigationExactRef.model_validate(_schedule_ref(result.authority)),
+            case_ref=InvestigationExactRef.model_validate(_case_ref(result.case_authority)),
+            approval_ref=approval_ref,
+            installation_id=str(dispatch_ref.installation_id),
+            generation=str(dispatch_ref.generation),
+            execution_epoch=int(dispatch_ref.execution_epoch),
+        )
         return {
             "receiptRef": _schedule_ref(result.authority),
             "authority": result.authority.model_dump(by_alias=True, mode="json"),
