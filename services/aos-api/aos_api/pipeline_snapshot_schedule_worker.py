@@ -10,6 +10,7 @@ from aos_api.pipeline_snapshot_schedule_claim import _group_id
 from aos_api.pipeline_snapshot_schedule_dispatch import PipelineSnapshotScheduleDispatch
 from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleRuntime
 from aos_api.pipeline_snapshot_group_recovery_runtime import PipelineSnapshotGroupRecoveryRuntime
+from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt
 from aos_api.tenant_scope import TenantScope
 
 
@@ -85,7 +86,18 @@ class PipelineSnapshotScheduleWorker:
                 with self._runtime._transaction(self.scope) as conn:
                     now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
                     candidate=self._dispatch.inspect(conn,scope=self.scope,definition_id=definition_id,now=now)
+                    recovery=None
+                    if candidate['status']=='original_group_pending' and len(candidate['groupIds'])==1:
+                        saved=read_recovery_receipt(conn,scope=self.scope,group_id=candidate['groupIds'][0])
+                        if saved is not None and saved['body']['currentDefinitionRef']==candidate['definitionRef']:
+                            recovery=saved
                 _check_active(**active)
+                if recovery is not None:
+                    # The immutable approval is the durable routing intent.
+                    # The original fixed Authority rechecks every permission,
+                    # window and saved-input fact before any Store operation.
+                    return self._recovery.resume_saved(scope=self.scope,actor=recovery['body']['executor'],
+                        recovery_ref=recovery['ref'],**active)
                 if candidate['status']!='due':return candidate
                 return self._runtime.execute(scope=self.scope,definition_ref=candidate['definitionRef'],
                     group_id=candidate['groupId'],actor=candidate['actor'],

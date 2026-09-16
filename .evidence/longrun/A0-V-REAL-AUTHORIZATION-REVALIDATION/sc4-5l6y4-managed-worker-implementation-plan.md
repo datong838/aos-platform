@@ -26,6 +26,12 @@ main默认关闭的新入口已接线；显式启用必须有活host与工厂。
 
 测试未启动真实源，不表示主服务已加载；主环境未设置启用开关、未重启/迁移。下一步Y4d先提供受当前principal保护的服务端状态与原续期回执自动消费设计，再接页面；禁止另起不受上述生命周期管理的执行线程。
 
+## Y4d1正式续期自动承接证据
+
+原worker在同定义锁内读最新RecoveryReceipt，exact currentDefinitionRef匹配才交原RecoveryRuntime，执行者来自持久回执。Red为原先只返回pending（1 failed/12.73s）；恢复接线、普通worker与线程生命周期联合9 passed/34.42s（`/tmp/aos-worker-recovery-green.log`）；新增实际撤销持久membership后经原RecoveryRuntime在Store前拒绝，1 passed/12.41s（`/tmp/aos-worker-recovery-permission.log`）。diff检查通过。
+
+锁内第二实例busy、具名完成路由后不重复承接、停用拒绝、无审批原组仍pending。完成路由是明确seam，不替代C5实际Store；撤权负例走真实原Authority，源仍原准备一次、零Store写入。本波无新队列/执行POST，065审批回执即持久恢复依据，所有副作用仍限原Owner链。后续Y4d2当前principal保护状态API、Y4d3配置/恢复页面与浏览器验证；主环境仍未启用/迁移/重启，真实首链未完成。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
@@ -42,6 +48,8 @@ Y4b追加测试目录：`services/aos-api/tests/test_pipeline_control_service.py
 4. Y4d：正式恢复执行请求与界面。复用 `services/aos-api/aos_api/routers/pipeline_snapshot_recoveries.py`、`pipeline_snapshot_schedule_service.py` 及现有配置页面；具体前端文件由页面定位后补全清单。请求只指定exact回执与原幂等键，principal当前授权通过后交同一个受管理worker。不得另起无生命周期管理的后台线程。页面显示停用、可调度、执行中、等待恢复、unknown、需重配；只有实际启用才替换“尚未接通执行”。
 
 ## 原组优先与未知结果边界
+
+Y4d1方案细化与替代：恢复已拥有065正式审批回执，复核后不新增另一套HTTP执行队列/幂等账本。修改 `pipeline_snapshot_schedule_worker.py`，新增 `services/aos-api/tests/extension_runtime/test_snapshot_worker_recovery_pg.py`。当前enabled定义只有一个待处理原组时，在同定义session锁内读取原最新RecoveryReceipt；仅当其currentDefinitionRef等于当前候选exact定义，才交原RecoveryRuntime.resume_saved，actor取回执executor，当前权限、控制窗口、原输入/Run仍由固定Authority全验。无回执或多个待处理组只返回pending；过期/撤权/旧回执不会授权。完成后原Run事实使后续tick不再消费；同Receipt未知结果按原Runtime幂等恢复，无新源或新Run。原renew HTTP仍只提交审批，本身不启动线程；启用受管理worker后自然承接已审批原组。这替代上文Y4d新增独立执行POST的初步设想，减少平行执行通道，保留持久原回执与服务端固定身份。
 
 Y4c拆为c1线程排空、c2应用接线。c1修改 `pipeline_snapshot_schedule_worker.py`，新增 `services/aos-api/tests/test_snapshot_schedule_worker_lifecycle.py`。serve只允许单实例一个循环，async stop/host失活/Task.cancel均传播至threading.Event；active to_thread任务用shield保护，取消协程后仍等待实际任务完成，期间状态STOPPING、禁止再tick。只有底层任务退出才STOPPED，不改数据库Run终态。重复取消同样不能丢弃底层任务；线程抛错只保存固定错误码，不能把错误文本暴露状态。纯线程夹具验证取消过程中延迟清理、host失活、预停止零执行、重复serve拒绝；c1通过后才进入c2 main默认关闭入口与启动/关闭集成。
 
