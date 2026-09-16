@@ -50,4 +50,6 @@
 | `services/aos-api/alembic/versions/a0v_077_schedule_cursor_repair.py` | 新增 | 精确历史游标修复与不可变 Receipt；不授予调度/来源执行 |
 | `services/aos-api/tests/extension_runtime/test_schedule_cursor_repair_pg.py` | 新增 | CAS、最新成功目标、运行中/跨租户/幂等反例 |
 | `scripts/a0v_z_q_source_cursor_repair.py` | 新增 | m1 单次迁移、修复、读回和证据落盘 |
+| `scripts/a0v_q_cursor_product_api.py` | 新增 | 复用现有独立 snapshot worker + QYH Cron profile，以当前有效自然链租约重载 18181；不改变运行开关 |
+| `services/aos-api/tests/test_q_cursor_product_api.py` | 新增 | 固定启动租约、profile 透传和原开关不变 |
 | `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/sc4-5l6z-q-source-cursor-*` | 新增 | 方案、验证及真实运行证据 |
