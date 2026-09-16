@@ -47,3 +47,13 @@ Y6 克隆迁移/恢复演练→主库受控升级→真实完整组观察。主�
 运行领取遵守原control→schedule锁顺序：先在原完整GroupOwner校验current、canonical pipeline/objectType全覆盖；再按schedule_id稳定排序锁原meta_schedule，核对每条最新binding精确引用与actor。独立单源运行的同slot冲突依旧由原PK约束保护，错误回滚全部新行。首次领取只接受服务器当前UTC分钟或固定服务端manual slot；旧slot只允许读取已存在exact组回执。不得凭客户端过去/未来slot创造历史运行。
 
 Y1测试使用隔离完整schema，明确清除原native fixture尚未消费的测试run行后，经原ScheduleControlOwner建立12条当前绑定，再由新Owner真正创建12运行并验回执；这种测试清理不允许用于主库。正向断言原source claims/input均仍0，证明领取运行没有提前取得源调用资格。源调用与重启恢复留Y3原Ingress做最终判断。
+
+Y1补充验收文件：services/aos-api/tests/extension_runtime/test_pipeline_snapshot_schedule_recovery_pg.py。每例私有完整数据库，实际提交原12运行及回执后模拟响应丢失，新连接/new Owner读回同回执并在current控制下重放，验证零新运行/零source claims。新增DB直接不完整回执拒绝测试，不把Owner层拒绝当作数据库约束已验收。
+
+Y1复核补强：新Owner SQL及约束函数固定public权威表，函数固定pg_catalog/public/pg_temp查找顺序；运行角色创建同名临时表不能替代回执或绕过完整性检查。新增同名临时表Red/Green验证。旧专用schema回归需AOS_EXTENSION_PG_TEST和18432独立库，首次未显式启用的31 skipped不算通过；新Owner与真实提交读回9项已通过，最终增加原native完整组Owner累计回归。
+
+## Y1 验收结果（2026-09-16）
+
+实现新a0v_062两表与deferred完整性约束、原Owner整体领取、exact当前绑定/十二源覆盖、一次事务十二运行、同group回执重放、source claims仍0。新Owner/跨连接提交恢复/同名临时表/原完整组Owner累计14 passed / 12.07秒（/tmp/aos-group-schedule-final-v2.log）；显式启用18432独立测试库后，原单路调度绑定、CAS、claim行锁与运行领取31 passed / 8.35秒（/tmp/aos-group-schedule-legacy.log）。最初31 skipped已补跑，不能计为通过两次。Red为缺少新Owner模块，以及同名临时表使原read错误返回None；后者由固定public查询与约束函数查找路径修复。
+
+git diff --check通过。新表仅在隔离测试库迁移，主库仍a0v_061。新Owner没有远程读取、没有创建SourceClaim，也未被cron/API自动调用；此结果只完成Y1。下一波Y2需安装绑定的正式组配置、可禁入/停用和成员单路调度围栏，随后Y3运行恢复与Y4生命周期接线。J原失败Run未被替代或回写。
