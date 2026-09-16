@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from psycopg.types.json import Jsonb
 
 from aos_api.asset_registry.canonical_json import canonical_sha256
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner
 from aos_api.pipeline_schedule_claim import read_current_snapshot_definition
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner, ScheduleControlBinding
@@ -43,12 +44,19 @@ class PipelineSnapshotScheduleClaimOwner:
             return None
         record, request = row['record'], row['request']
         if (canonical_sha256(request) != row['request_hash'] or canonical_sha256(record) != row['content_hash']
-                or record.get('schemaVersion') != 'aos.snapshot-schedule-claim/v1'
+                or record.get('schemaVersion') not in ('aos.snapshot-schedule-claim/v1','aos.snapshot-schedule-claim/v2')
                 or set(record) != {'schemaVersion','request','members'} or record['request'] != request
                 or (request.get('orgId'),request.get('projectId'),request.get('groupId')) != (*scope.key,group_id)
                 or type(record['members']) is not list or len(record['members']) != 12
                 or type(request.get('members')) is not list or len(request['members']) != 12):
             raise ValueError('saved snapshot schedule claim differs')
+        version = record['schemaVersion'].rsplit('/',1)[1]
+        fields = {'schemaVersion','orgId','projectId','groupId','actor','scheduledFor','trigger','members'}
+        if version == 'v2': fields.add('definitionRef')
+        if set(request) != fields or request.get('schemaVersion') != 'aos.snapshot-schedule-request/'+version:
+            raise ValueError('saved snapshot schedule request version differs')
+        if version == 'v2':
+            self._definition_ref(request['definitionRef'])
         saved = conn.execute('''SELECT ordinal,schedule_id,binding_id,binding_revision,binding_hash,run_id
             FROM public.pipeline_snapshot_schedule_member WHERE org_id=%s AND project_id=%s AND group_id=%s
             ORDER BY ordinal''', (*scope.key,group_id)).fetchall()
@@ -64,7 +72,41 @@ class PipelineSnapshotScheduleClaimOwner:
                 raise ValueError('saved snapshot schedule member differs')
         return deepcopy(record)
 
-    def claim(self, conn, *, scope, group_id, actor, scheduled_for, trigger, bindings):
+    @staticmethod
+    def _definition_ref(value):
+        ref=PipelineExactRef.model_validate(value)
+        if ref.resource_type != 'SnapshotScheduleDefinitionRevision' or not ref.resource_id.startswith('snapshot-schedule-'):
+            raise ValueError('exact snapshot definition reference required')
+        identifier=_group_id(ref.resource_id.removeprefix('snapshot-schedule-'))
+        return identifier,ref.model_dump(mode='json',by_alias=True,exclude_none=True)
+
+    def _lock_definition(self,conn,scope,ref,bindings,actor):
+        # Import at use time: the configuration Owner shares _member with this module.
+        from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotScheduleDefinitionOwner
+        identifier,wire=self._definition_ref(ref)
+        target=conn.execute("""SELECT installation_id FROM public.pipeline_snapshot_schedule_definition_head
+            WHERE org_id=%s AND project_id=%s AND definition_id=%s""",(*scope.key,identifier)).fetchone()
+        if target is None:raise ValueError('snapshot definition unavailable')
+        if conn.execute("""SELECT installation_id FROM public.bundle_installation
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE""",
+            (*scope.key,target['installation_id'])).fetchone() is None:
+            raise ValueError('snapshot installation unavailable')
+        conn.execute("""SELECT revision FROM public.pipeline_snapshot_schedule_definition_head
+            WHERE org_id=%s AND project_id=%s AND definition_id=%s FOR UPDATE""",(*scope.key,identifier))
+        row=conn.execute("""SELECT r.* FROM public.pipeline_snapshot_schedule_definition_revision r
+            JOIN public.pipeline_snapshot_schedule_definition_head h
+            ON (r.org_id,r.project_id,r.definition_id,r.revision,r.content_hash)=
+               (h.org_id,h.project_id,h.definition_id,h.revision,h.content_hash)
+            WHERE h.org_id=%s AND h.project_id=%s AND h.definition_id=%s""",(*scope.key,identifier)).fetchone()
+        value=PipelineSnapshotScheduleDefinitionOwner._decode(row,scope,identifier)
+        body=value['body']
+        if (value['ref']!=wire or body['state']!='enabled' or body['executor']!=actor
+                or body['members']!=[_member(b) for b in bindings]
+                or any((b.installation_id,b.generation)!=(body['installationId'],body['generation']) for b in bindings)):
+            raise ValueError('snapshot definition is not current enabled authority')
+        return body
+
+    def claim(self, conn, *, scope, group_id, actor, scheduled_for, trigger, bindings, definition_ref=None):
         PipelineScheduleControlOwner._identity(conn, scope)
         group_id, actor = _group_id(group_id), _text(actor,240)
         if type(scheduled_for) is not datetime or scheduled_for.utcoffset() is None:
@@ -82,9 +124,15 @@ class PipelineSnapshotScheduleClaimOwner:
         request = dict(schemaVersion='aos.snapshot-schedule-request/v1',orgId=scope.org_id,
             projectId=scope.project_id,groupId=group_id,actor=actor,scheduledFor=scheduled_for.isoformat(),
             trigger=trigger,members=[_member(b) for b in bindings])
+        if definition_ref is not None:
+            _,wire=self._definition_ref(definition_ref)
+            request.update(schemaVersion='aos.snapshot-schedule-request/v2',definitionRef=wire)
         with conn.transaction():
+            conn.execute('SET CONSTRAINTS snapshot_schedule_claim_complete,snapshot_schedule_member_complete DEFERRED')
             conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',
                 ('snapshot-schedule:'+canonical_sha256([*scope.key,group_id]),))
+            definition=(self._lock_definition(conn,scope,definition_ref,bindings,actor)
+                        if definition_ref is not None else None)
             previous = self.read(conn,scope=scope,group_id=group_id)
             if previous is not None and previous['request'] != request:
                 raise ValueError('snapshot schedule request differs')
@@ -103,11 +151,16 @@ class PipelineSnapshotScheduleClaimOwner:
                             or schedule['ingest'].get('kind') != 'pipeline-live-v1'
                             or schedule['ingest'].get('pipelineId') != binding.pipeline_id):
                         raise ValueError('snapshot member schedule is not enabled and bound')
-                    if read_current_snapshot_definition(conn,scope,binding.schedule_id) is not None:
-                        raise ValueError('snapshot schedule requires its current definition authority')
+                    membership=read_current_snapshot_definition(conn,scope,binding.schedule_id)
+                    if definition is None:
+                        if membership is not None:
+                            raise ValueError('snapshot schedule requires its current definition authority')
+                    elif membership is None or str(membership['definition_id'])!=definition['definitionId']:
+                        raise ValueError('snapshot schedule current definition membership differs')
                     if PipelineScheduleControlOwner.read_latest(conn,scope=scope,schedule_id=binding.schedule_id) != binding:
                         raise ValueError('snapshot schedule binding is no longer current')
                 if previous is not None:
+                    conn.execute('SET CONSTRAINTS snapshot_schedule_claim_complete,snapshot_schedule_member_complete IMMEDIATE')
                     return previous
                 now = conn.execute("SELECT date_trunc('minute',clock_timestamp()) AS slot").fetchone()['slot']
                 if scheduled_for != now:
@@ -127,7 +180,7 @@ class PipelineSnapshotScheduleClaimOwner:
                     if inserted is None:
                         raise ValueError('snapshot schedule slot already claimed')
                     members.append(dict(_member(binding),runId=run_id))
-                record = dict(schemaVersion='aos.snapshot-schedule-claim/v1',request=request,members=members)
+                record = dict(schemaVersion='aos.snapshot-schedule-claim/'+('v2' if definition else 'v1'),request=request,members=members)
                 conn.execute('''INSERT INTO public.pipeline_snapshot_schedule_claim
                     (org_id,project_id,group_id,actor,scheduled_for,trigger,request_hash,request,content_hash,record)
                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
@@ -140,6 +193,7 @@ class PipelineSnapshotScheduleClaimOwner:
                         (*scope.key,group_id,ordinal,binding.schedule_id,
                          binding.ref.resource_id.removeprefix('schedule-control-'),binding.ref.revision,
                          binding.ref.content_hash,member['runId']))
+                conn.execute('SET CONSTRAINTS snapshot_schedule_claim_complete,snapshot_schedule_member_complete IMMEDIATE')
                 return self.read(conn,scope=scope,group_id=group_id)
             return self._groups.run_current(conn,scope=scope,refs=tuple(b.control_ref for b in bindings),
                 actor=actor,execute=reserve)
