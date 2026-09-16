@@ -36,7 +36,9 @@ class AnalysisBootstrapIntent(AipContractModel):
         receipt, request = self.compilation_receipt, binding.request
         if (self.tenant != binding.tenant or self.tenant != receipt.tenant
                 or self.occurrence_ref.resource_type != 'AutomationOccurrence'
-                or self.source_control_receipt_ref.resource_type != 'EventPolicyControlReceipt'):
+                or self.source_control_receipt_ref.resource_type not in {
+                    'EventPolicyControlReceipt', 'SchedulePolicyControlReceipt'
+                }):
             raise ValueError('bootstrap tenant or source reference kind differs')
         run = receipt.run_ref
         if (run.resource_type, run.resource_id, run.revision, run.content_hash.removeprefix('sha256:')) != (

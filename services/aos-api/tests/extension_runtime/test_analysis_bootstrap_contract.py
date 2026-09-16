@@ -35,6 +35,15 @@ def test_bootstrap_binds_compilation_without_business_authorization():
     with pytest.raises(ValueError):intent.checked()
 
 
+def test_bootstrap_accepts_exact_schedule_control_without_granting_execution():
+    body=payload()
+    body['sourceControlReceiptRef']['resourceType']='SchedulePolicyControlReceipt'
+    body['contentHash']=canonical_sha256({k:v for k,v in body.items() if k!='contentHash'})
+    intent=parse(body)
+    assert intent.source_control_receipt_ref.resource_type=='SchedulePolicyControlReceipt'
+    assert intent.business_execution_authorized is False and intent.external_effect_authorized is False
+
+
 @pytest.mark.parametrize('fault',['mode','business','external','false-coercion','tenant','occurrence','control','task',
     'profile','receipt-request','binding-hash','content-hash','extra'])
 def test_bootstrap_rejects_expanded_or_cross_composed_intent(fault):

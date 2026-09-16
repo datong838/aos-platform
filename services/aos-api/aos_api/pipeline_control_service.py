@@ -159,6 +159,22 @@ class PipelineControlServiceFactory:
             installation_store=self.installation_store,live_directory=live_directory)
         return ProductEventAnalysisService(source_context=source,invoker=growth)
 
+    def build_scheduled_analysis(self,scope,*,actor,run_id,control_ref,installation_id,generation,
+                                 live_directory,markings,store):
+        """Build the same sealed analysis bootstrap with a schedule-only phase owner."""
+        from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+        from aos_api.ecommerce_scheduled_analysis_service import ScheduledBaselinePhaseOwner
+        from aos_api.extension_runtime.installed_package_invoker import CurrentInstalledPackageInvoker
+        from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+        source=self.build_event_consumer(scope,actor=actor,run_id=run_id,control_ref=control_ref,
+            installation_id=installation_id,generation=generation,live_directory=live_directory,
+            markings=markings,store=store)
+        growth=CurrentInstalledPackageInvoker(scope=scope,installation_id=installation_id,generation=generation,
+            package_id='solution.ecommerce.growth',markings=markings,connect_factory=connect_serializable,
+            installation_store=self.installation_store,live_directory=live_directory)
+        return ProductEventAnalysisService(source_context=source,invoker=growth,
+            phase_owner=ScheduledBaselinePhaseOwner())
+
     def build_analysis_snapshot_coordinator(self,scope,*,route,live_directory,markings,store):
         """Build the one fixed coordinator from a server-resolved original route."""
         from aos_api.ecommerce_analysis_data_requirement_route import AnalysisDataRequirementRoute

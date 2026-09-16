@@ -50,6 +50,7 @@ class BaselineAssessmentRoute:
     source_control_ref: PipelineExactRef
     source_selection_ref: PipelineExactRef
     schedule_control: SchedulePolicyControlReceipt
+    max_source_age_seconds: int
     cutoff_at: datetime
 
 
@@ -112,12 +113,16 @@ class BaselineAssessmentDiscovery:
             raise BaselineAssessmentBlocked("current once baseline Case or Policy differs")
 
         active = transaction.execute(
-            """SELECT run_id FROM ecommerce_investigation_run_active_slot
-                WHERE org_id=%s AND project_id=%s AND case_id=%s
+            """SELECT s.run_id,r.trigger_key FROM ecommerce_investigation_run_active_slot s
+                JOIN ecommerce_investigation_run_revision r
+                  ON r.org_id=s.org_id AND r.project_id=s.project_id AND r.run_id=s.run_id
+                 AND r.version=(SELECT max(x.version) FROM ecommerce_investigation_run_revision x
+                    WHERE x.org_id=s.org_id AND x.project_id=s.project_id AND x.run_id=s.run_id)
+                WHERE s.org_id=%s AND s.project_id=%s AND s.case_id=%s
                   AND analysis_type='initial_store_analysis' LIMIT 2""",
             (*scope.key, case.case_id),
         ).fetchall()
-        if active:
+        if active and (len(active) != 1 or active[0].get("trigger_key") != claimed.target_idempotency_key):
             raise BaselineAssessmentNotApplicable("ACTIVE_BASELINE_RUN_EXISTS")
         plans = transaction.execute(
             """SELECT r.payload->>'lifecycle' AS lifecycle
@@ -225,6 +230,7 @@ class BaselineAssessmentDiscovery:
                 contentHash=str(latest["selection_hash"]),
             ),
             schedule_control=schedule_control,
+            max_source_age_seconds=int(self._max_source_age.total_seconds()),
             cutoff_at=latest["read_completed_at"],
         )
 

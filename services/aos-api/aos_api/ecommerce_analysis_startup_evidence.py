@@ -50,30 +50,45 @@ class AnalysisStartupEvidenceService:
                     or authority.trigger_key!=claimed.target_idempotency_key
                     or state.lifecycle.value!='PREPARING' or state.control.value!='RUNNING'):
                 raise ValueError('startup evidence current Case/Run lineage differs')
-            events = snapshot['source']['events']
-            if (len(events)!=1 or events[0]['event_key']!=snapshot['origin']['sourceEventId']
-                    or re.fullmatch('[0-9a-f]{64}',events[0].get('payload_hash','')) is None):
-                raise ValueError('startup evidence original event proof differs')
-            event = events[0]
-            event_at = datetime.fromisoformat(event['created_at'])
             cutoff = datetime.fromisoformat(request['cutoffAt'])
             now = tx.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-            if event_at.utcoffset() is None or cutoff.utcoffset() is None:
-                raise ValueError('startup evidence chronology differs')
-            chronological = (cutoff <= event_at <= authority.created_at <= now
-                if 'sourceGroup' in snapshot else event_at <= cutoff <= authority.created_at <= now)
-            if not chronological:
-                raise ValueError('startup evidence chronology differs')
-            payload = dict(schemaVersion='aos.ecommerce.analysis-startup-evidence/v1',
+            common = dict(
                 tenant=dict(orgId=scope.org_id,projectId=scope.project_id),purpose='analysis-start',
                 factIds=blueprint['startupContextPolicy']['requiredFactIds'],businessFactCoverage='not-evaluated',
                 pendingBusinessFactProfiles=list(domain_profile.required_fact_profiles),
                 caseRef=deepcopy(request['caseRef']),runRef=ref.model_dump(mode='json',by_alias=True,exclude_none=True),
                 domainProfileRef=deepcopy(blueprint['profileRef']),blueprintHash=blueprint['contentHash'],
-                occurrenceRef=deepcopy(request['occurrenceRef']),sourceEventId=event['event_key'],
-                sourcePayloadHash=event['payload_hash'],sourceBatchRunId=snapshot['origin']['runId'],
+                occurrenceRef=deepcopy(request['occurrenceRef']),
+                sourceBatchRunId=snapshot['origin']['runId'],
                 sourceActor=snapshot['origin']['actor'],sourceSnapshotHash=canonical_sha256(snapshot),
                 observedAt=authority.created_at.isoformat())
+            if snapshot['occurrence']['triggerSource'] == 'event':
+                events = snapshot['source']['events']
+                if (len(events)!=1 or events[0]['event_key']!=snapshot['origin']['sourceEventId']
+                        or re.fullmatch('[0-9a-f]{64}',events[0].get('payload_hash','')) is None):
+                    raise ValueError('startup evidence original event proof differs')
+                event = events[0]
+                event_at = datetime.fromisoformat(event['created_at'])
+                if event_at.utcoffset() is None or cutoff.utcoffset() is None:
+                    raise ValueError('startup evidence chronology differs')
+                chronological = (cutoff <= event_at <= authority.created_at <= now
+                    if 'sourceGroup' in snapshot else event_at <= cutoff <= authority.created_at <= now)
+                if not chronological:
+                    raise ValueError('startup evidence chronology differs')
+                payload = dict(schemaVersion='aos.ecommerce.analysis-startup-evidence/v1', **common,
+                    sourceEventId=event['event_key'],sourcePayloadHash=event['payload_hash'])
+            elif snapshot['occurrence']['triggerSource'] == 'schedule':
+                scheduled_at = datetime.fromisoformat(snapshot['occurrence']['scheduledAt'])
+                if (snapshot['source']['events'] or snapshot['occurrence']['sourceEventId'] is not None
+                        or snapshot['origin'].get('triggerSource') != 'schedule'
+                        or cutoff.utcoffset() is None or scheduled_at.utcoffset() is None
+                        or not cutoff <= scheduled_at <= authority.created_at <= now):
+                    raise ValueError('startup evidence scheduled source proof differs')
+                payload = dict(schemaVersion='aos.ecommerce.analysis-startup-evidence/v2', **common,
+                    triggerSource='schedule',sourceSchedulePolicyRef=deepcopy(snapshot['origin']['schedulePolicyRef']),
+                    sourceSnapshotGroup=deepcopy(snapshot['sourceGroup']))
+            else:
+                raise ValueError('startup evidence trigger source differs')
             evidence = self._put(tx,scope,payload,actor=self.analysis.source.actor,observed_at=authority.created_at)
             if runs.get_verified(scope,ref.resource_id)!=run:
                 raise ValueError('startup evidence Run changed during recording')
@@ -94,7 +109,8 @@ class AnalysisStartupEvidenceService:
              observed_at,freshness_at,content_hash,redaction,payload,created_by,created_at)
             VALUES(%s,%s,%s,NULL,%s,%s,%s,%s,%s,%s,%s,'{}'::jsonb,%s,%s,clock_timestamp())
             ON CONFLICT (org_id,project_id,evidence_id) DO NOTHING''',
-            (*scope.key,identity,_TYPE,Jsonb(subject),_TYPE,payload['sourceEventId'],
+            (*scope.key,identity,_TYPE,Jsonb(subject),_TYPE,
+             payload.get('sourceEventId',payload['occurrenceRef']['resourceId']),
              observed_at,observed_at,digest,Jsonb(payload),actor))
         row = tx.execute('''SELECT e.*,EXISTS(SELECT 1 FROM public.aip_evidence_revoke_event r
             WHERE r.org_id=e.org_id AND r.project_id=e.project_id AND r.evidence_id=e.evidence_id
@@ -102,7 +118,8 @@ class AnalysisStartupEvidenceService:
             FROM public.aip_evidence e WHERE e.org_id=%s AND e.project_id=%s AND e.evidence_id=%s''',
             (*scope.key,identity)).fetchone()
         expected = dict(org_id=scope.org_id,project_id=scope.project_id,evidence_id=identity,
-            run_id=None,evidence_type=_TYPE,subject_ref=subject,source_type=_TYPE,source_ref=payload['sourceEventId'],
+            run_id=None,evidence_type=_TYPE,subject_ref=subject,source_type=_TYPE,
+            source_ref=payload.get('sourceEventId',payload['occurrenceRef']['resourceId']),
             observed_at=observed_at,freshness_at=observed_at,content_hash=digest,redaction={},payload=payload,created_by=actor)
         if (row is None or row['revoked'] or any(row[key]!=value for key,value in expected.items())
                 or canonical_sha256(row['payload'])!='sha256:'+digest

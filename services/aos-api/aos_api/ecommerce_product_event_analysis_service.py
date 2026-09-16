@@ -14,7 +14,7 @@ from aos_api.extension_runtime.installed_package_invoker import CurrentInstalled
 
 
 class ProductEventAnalysisService:
-    def __init__(self, *, source_context, invoker):
+    def __init__(self, *, source_context, invoker, phase_owner=None):
         if type(source_context) is not ProductEventConsumptionService or type(invoker) is not CurrentInstalledPackageInvoker:
             raise TypeError('exact current source context and installed invoker required')
         core=source_context.invoker
@@ -25,6 +25,11 @@ class ProductEventAnalysisService:
         self.scope=source_context.scope
         self.connect=source_context.connect
         self.port=InstalledProductEventAnalysisPort(invoker)
+        if phase_owner is not None:
+            from aos_api.ecommerce_scheduled_analysis_service import ScheduledBaselinePhaseOwner
+            if type(phase_owner) is not ScheduledBaselinePhaseOwner:
+                raise TypeError('exact scheduled baseline phase owner required')
+        self.phase_owner=phase_owner
 
     async def handle(self, claimed):
         return await self._handle(claimed,prepare_data=False)
@@ -104,6 +109,11 @@ class ProductEventAnalysisService:
             conn, scope=self.scope, run_id=journal._run_id)
 
     def _phase(self,conn,claimed,execute):
+        if getattr(self,'phase_owner',None) is not None:
+            return self.phase_owner.run_current(self,conn,claimed,execute)
+        return self._event_phase(conn,claimed,execute)
+
+    def _event_phase(self,conn,claimed,execute):
         if type(claimed) is not ClaimedOccurrence or claimed.operation_id!='ecommerce_growth_analysis_advance':
             raise ValueError('exact analysis claim required')
         scope=self.scope;tx=HostTransaction(conn)

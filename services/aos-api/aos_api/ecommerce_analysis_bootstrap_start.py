@@ -161,7 +161,10 @@ class _BootstrapProductionStartService(AipProductionStartService):
             if (intent.source_control_receipt_ref != InvestigationExactRef.model_validate(snapshot['source']['controlReceipt']['receiptRef'])
                     or intent.occurrence_ref != InvestigationExactRef.model_validate(request['occurrenceRef'])):
                 raise ValueError('bootstrap source derivation no longer matches original control')
-            return dict(kind='current-event-control-initialization', actor=guard.current.analysis.source.actor,
+            kind = ('current-schedule-control-initialization'
+                if intent.source_control_receipt_ref.resource_type == 'SchedulePolicyControlReceipt'
+                else 'current-event-control-initialization')
+            return dict(kind=kind, actor=guard.current.analysis.source.actor,
                 intentHash=intent.content_hash, proposalRef=body.action_proposal_ref.model_dump(mode='json', by_alias=True),
                 previewRef=body.preview_ref.model_dump(mode='json', by_alias=True),
                 sourceControlReceiptRef=intent.source_control_receipt_ref.model_dump(mode='json', by_alias=True),

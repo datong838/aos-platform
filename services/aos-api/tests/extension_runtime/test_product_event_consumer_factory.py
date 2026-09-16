@@ -52,3 +52,21 @@ def test_analysis_factory_reuses_exact_source_context(monkeypatch):
     assert service.invoker.package_id=='solution.ecommerce.growth'
     assert service.invoker.markings==('internal',)
     assert calls[0][1]['run_id']=='original' and len(calls)==1
+
+
+def test_scheduled_analysis_factory_keeps_exact_service_and_adds_phase_owner(monkeypatch):
+    from aos_api.ecommerce_product_event_consumer import ProductEventConsumptionService
+    from aos_api.ecommerce_product_event_analysis_service import ProductEventAnalysisService
+    from aos_api.ecommerce_scheduled_analysis_service import ScheduledBaselinePhaseOwner
+    scope=TenantScope('org-org','dev-project');factory=object.__new__(PipelineControlServiceFactory)
+    object.__setattr__(factory,'installation_store',object())
+    source=object.__new__(ProductEventConsumptionService)
+    source.scope=scope;source.connect=lambda scope:None
+    source.invoker=SimpleNamespace(scope=scope,installation_id=UUID(int=1),generation=UUID(int=2))
+    monkeypatch.setattr(PipelineControlServiceFactory,'build_event_consumer',lambda *_args,**_kw:source)
+    monkeypatch.setattr(CurrentInstalledPackageInvoker,'__init__',lambda self,**kw:self.__dict__.update(kw))
+    service=factory.build_scheduled_analysis(scope,actor='actor',run_id='original',control_ref={},
+        installation_id=UUID(int=1),generation=UUID(int=2),live_directory=object(),markings=('internal',),store=object())
+    assert type(service) is ProductEventAnalysisService
+    assert type(service.phase_owner) is ScheduledBaselinePhaseOwner
+    assert service.source is source and service.invoker.package_id=='solution.ecommerce.growth'
