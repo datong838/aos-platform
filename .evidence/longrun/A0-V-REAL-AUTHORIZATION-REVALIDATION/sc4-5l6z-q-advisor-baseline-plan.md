@@ -80,6 +80,7 @@
 该补充引入数据库对象但不修改 occurrence 约束，也不放宽已有 ProductEvent 类型检查。新增或修改文件限定为：
 
 - `services/aos-api/alembic/versions/a0v_078_schedule_policy_control_receipt.py`
+- `scripts/a0v_q_advisor_baseline_migration.py`（仅执行冻结过的 `a0v_077→a0v_078` 单步迁移与无业务变化审计）
 - `services/aos-api/aos_api/ecommerce_schedule_policy_control.py`
 - `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py`
 - `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py`
