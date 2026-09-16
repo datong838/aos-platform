@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-09-16T11:39:50.757483+00:00",
+  "mainMigration": "a0v_066",
+  "mainRefreshTablePresent": false,
+  "counts": {
+    "runs": 11,
+    "claims": 10,
+    "enabled_schedules": 0
+  },
+  "appliedToMain": false
+}
