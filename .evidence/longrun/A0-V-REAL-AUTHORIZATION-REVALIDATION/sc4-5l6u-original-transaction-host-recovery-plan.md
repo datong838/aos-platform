@@ -7,3 +7,5 @@
 新增 `scripts/a0v_ecommerce_transaction_reinstall.py`：固定I→J，前序create来自bootstrap-action-recovery/install/i，新目录original-transaction-recovery/install/j。正式disable后等待资源release/dispatch detach到28；核对旧PID命令后SIGTERM并等待退出，新进程加载e27ce884及后续脚本，不改19签名包。J identity必须来自create结果，然后按prepare/verify/stage/configure/enable。下一波实际注册及切换、健康、权限、业务窗口继承Case，Policy6→7。严禁重试unknown或手改历史状态。
 
 复用既有已验证服务，测试固定identity、generation、旧intent、精确组版本及资源释放条件。每阶段记录实际Receipt。
+
+08:02事实：I fence Receipt340cd03c-54e2-4d6c-b57d-140d83c9449b/group25；等最后claim于23:59:48Z到期后9条060结案完成，shrink Receiptfb8c96fa-fb80-414a-8691-b218881d509b/group26。正式disable已完成，I runtime8/epoch4 disabled/fenced，3资源released且observed_release=true，dispatch detached。旧10096/10098正常退出，新Host12960/API12961加载03bf562f（包含e27ce884核心修复）。正在逐阶段创建并准备J。
