@@ -43,7 +43,7 @@ def test_create_failure_preserves_previous_cache_and_invalidates_load(owner, mon
 def test_edit_failure_does_not_mutate_original_object(owner, monkeypatch):
     previous = item(); routes._schedules['s'] = previous
     def fail(*args): raise RuntimeError('unconfirmed')
-    monkeypatch.setattr(data_os_store, 'persist_schedule', fail)
+    monkeypatch.setattr(data_os_store, 'persist_schedule_configuration', fail)
     with pytest.raises(ApiError):
         routes.patch_schedule('s', dict(enabled=True, name='changed'), owner)
     assert previous == item() and routes._schedules['s'] == item()
@@ -58,10 +58,38 @@ def test_success_persists_before_publishing_cache(owner, monkeypatch, edit):
         assert scope.key == ('org-org', 'dev-project')
         assert routes._schedules == before
         calls.append(deepcopy(value))
-    monkeypatch.setattr(data_os_store, 'persist_schedule', save)
+    monkeypatch.setattr(
+        data_os_store,
+        'persist_schedule_configuration' if edit else 'persist_schedule',
+        save,
+    )
     result = (routes.patch_schedule('s', dict(name='changed'), owner) if edit else
               routes.create_schedule(dict(id='s', enabled=False), owner))
-    assert calls == [result] and routes._schedules['s'] == result
+    if edit:
+        expected = dict(result)
+        expected.pop("lastRun")
+        assert calls == [expected]
+        assert result["lastRun"] is None
+    else:
+        assert calls == [result]
+    assert routes._schedules['s'] == result
+
+
+def test_edit_publishes_executor_owned_cursor_readback(owner, monkeypatch):
+    stale = {"id": "run-old", "status": "succeeded"}
+    current = {"id": "run-current", "status": "succeeded"}
+    routes._schedules['s'] = {**item(), "lastRun": stale}
+
+    def save(scope, value):
+        assert value["lastRun"] == stale
+        return current
+
+    monkeypatch.setattr(data_os_store, 'persist_schedule_configuration', save)
+    result = routes.patch_schedule('s', {"enabled": True}, owner)
+
+    assert result["enabled"] is True
+    assert result["lastRun"] == current
+    assert routes._schedules['s']["lastRun"] == current
 
 
 def test_original_api_error_and_scope_guard_preserved(owner, monkeypatch):

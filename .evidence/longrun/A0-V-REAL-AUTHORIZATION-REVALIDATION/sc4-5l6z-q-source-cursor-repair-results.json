@@ -1,0 +1,46 @@
+{
+  "outcome": "A0V_077_SOURCE_CURSOR_REPAIR_GREEN",
+  "tenant": "org-org/dev-project",
+  "scheduleId": "sch-p02-qyh-controlled-20260913-v1",
+  "rootCause": "configuration PATCH rewrote executor-owned last_run from stale process cache",
+  "code": {
+    "configurationUpdatePreservesDatabaseCursor": true,
+    "configurationUpdateReturnsAuthoritativeCursor": true,
+    "createScheduleBehaviorRetained": true,
+    "tenantScopeRetained": true
+  },
+  "migration": {
+    "source": "a0v_076",
+    "target": "a0v_077",
+    "migrationHash": "sha256:eb0e1dcbad9438052b2a778c3dafa67b6103615a36e3a0f0982e254d1e544087",
+    "businessStateChangedDuringMigration": false
+  },
+  "repair": {
+    "expectedCurrentRunId": "scr-bddff0a74c2a4365",
+    "targetRunId": "scr-4eda5462575a4740",
+    "targetStatus": "succeeded",
+    "targetTrigger": "cron",
+    "targetRowsWritten": 65,
+    "targetExecutorStopped": true,
+    "receiptId": "6d6b49ea-64e7-4548-8235-84f43a24e52e",
+    "contentHash": "sha256:2417b909496d2086648f33038f634906350d0c0b486218af37dd9f8b842b40e3",
+    "replayConfirmed": true,
+    "runJournalHashBeforeAfterEqual": true,
+    "canaryReceipts": 0,
+    "externalEffects": 0
+  },
+  "failedAttempt": {
+    "stage": "post-call-readback",
+    "cause": "SET LOCAL ROLE remained active in the outer connection transaction",
+    "readbackAfterFailure": "old cursor and zero receipts",
+    "transactionOutcome": "rolled_back",
+    "resendRule": "only retried after fresh readback proved no committed result"
+  },
+  "validation": {
+    "focusedTests": "41 passed",
+    "tenantWriteRegression": "7 passed, 2 deselected",
+    "ar2_7Verifier": "green",
+    "dynamicReferenceErrors": 0,
+    "diffCheck": "green"
+  }
+}

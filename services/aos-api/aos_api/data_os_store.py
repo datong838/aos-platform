@@ -504,6 +504,52 @@ def persist_schedule(scope: TenantScope, item: dict[str, Any]) -> None:
         conn.commit()
 
 
+def persist_schedule_configuration(
+    scope: TenantScope, item: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Persist control-plane fields without taking ownership of ``last_run``.
+
+    Schedule execution owns ``last_run``.  A configuration edit can carry a
+    stale cached copy, so the conflict path deliberately preserves the value
+    already committed by the executor and returns it for cache publication.
+    """
+    scope = _require_scope(scope)
+    ensure_data_os_schema()
+    with connect(scope) as conn:
+        row = conn.execute(
+            """
+            INSERT INTO meta_schedule
+              (id, cron, pipeline_id, enabled, name, ingest, last_run,
+               org_id, project_id, props, updated_at)
+            VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s,%s,'{}'::jsonb,NOW())
+            ON CONFLICT (org_id, project_id, id) DO UPDATE SET
+              cron=EXCLUDED.cron, pipeline_id=EXCLUDED.pipeline_id,
+              enabled=EXCLUDED.enabled, name=EXCLUDED.name,
+              ingest=EXCLUDED.ingest, updated_at=NOW()
+            WHERE meta_schedule.org_id=EXCLUDED.org_id
+              AND meta_schedule.project_id=EXCLUDED.project_id
+            RETURNING last_run
+            """,
+            (
+                item["id"],
+                item.get("cron") or "0 * * * *",
+                item.get("pipelineId"),
+                bool(item.get("enabled", True)),
+                item.get("name"),
+                json.dumps(item.get("ingest"), ensure_ascii=False, default=str)
+                if item.get("ingest") is not None
+                else None,
+                json.dumps(item.get("lastRun"), ensure_ascii=False, default=str)
+                if item.get("lastRun") is not None
+                else None,
+                *scope.key,
+            ),
+        ).fetchone()
+        _assert_scoped_upsert(row, resource="schedule", resource_id=str(item["id"]))
+        conn.commit()
+    return row["last_run"]
+
+
 def persist_dataset_history(
     scope: TenantScope, dataset_rid: str, entries: list[dict[str, Any]]
 ) -> None:

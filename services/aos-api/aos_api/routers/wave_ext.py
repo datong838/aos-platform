@@ -2192,6 +2192,26 @@ def _persist_schedule_confirmed(scope: TenantScope, item: dict[str, Any]) -> Non
         ) from None
 
 
+def _persist_schedule_configuration_confirmed(
+    scope: TenantScope, item: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Persist configuration and publish the executor-owned cursor readback."""
+    from aos_api import data_os_store
+
+    try:
+        return data_os_store.persist_schedule_configuration(scope, item)
+    except ApiError:
+        _data_os_loaded_scopes.discard(scope.key)
+        raise
+    except Exception:
+        _data_os_loaded_scopes.discard(scope.key)
+        raise ApiError(
+            code="SCHEDULE_PERSISTENCE_UNCONFIRMED",
+            message="计划保存结果尚未确认，请刷新核对原计划后再操作",
+            status_code=503,
+        ) from None
+
+
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
@@ -2260,7 +2280,7 @@ def patch_schedule(
         item["name"] = str(body["name"])
     if "ingest" in body and (body["ingest"] is None or isinstance(body["ingest"], dict)):
         item["ingest"] = body["ingest"]
-    _persist_schedule_confirmed(scope, item)
+    item["lastRun"] = _persist_schedule_configuration_confirmed(scope, item)
     _schedules[schedule_id] = item
     return item
 
