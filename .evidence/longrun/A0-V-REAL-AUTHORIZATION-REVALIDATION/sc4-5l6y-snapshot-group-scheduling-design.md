@@ -57,3 +57,5 @@ Y1复核补强：新Owner SQL及约束函数固定public权威表，函数固定
 实现新a0v_062两表与deferred完整性约束、原Owner整体领取、exact当前绑定/十二源覆盖、一次事务十二运行、同group回执重放、source claims仍0。新Owner/跨连接提交恢复/同名临时表/原完整组Owner累计14 passed / 12.07秒（/tmp/aos-group-schedule-final-v2.log）；显式启用18432独立测试库后，原单路调度绑定、CAS、claim行锁与运行领取31 passed / 8.35秒（/tmp/aos-group-schedule-legacy.log）。最初31 skipped已补跑，不能计为通过两次。Red为缺少新Owner模块，以及同名临时表使原read错误返回None；后者由固定public查询与约束函数查找路径修复。
 
 git diff --check通过。新表仅在隔离测试库迁移，主库仍a0v_061。新Owner没有远程读取、没有创建SourceClaim，也未被cron/API自动调用；此结果只完成Y1。下一波Y2需安装绑定的正式组配置、可禁入/停用和成员单路调度围栏，随后Y3运行恢复与Y4生命周期接线。J原失败Run未被替代或回写。
+
+Y2具体配置/启停/退役、停用不回落单路、锁序和文件清单见sc4-5l6y2-snapshot-schedule-configuration-plan.md。状态分disabled/enabled/retired；member归属只在确认无在途/未知运行的retire中释放，不能disable后被单路cron接管。Y2a/b/c分别收口存储Owner、API与围栏、产品入口验收，不以其中一个完成代替整体产品可用。
