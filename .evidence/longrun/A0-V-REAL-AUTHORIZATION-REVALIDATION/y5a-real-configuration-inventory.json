@@ -1,0 +1,187 @@
+{
+  "observedAt": "2026-09-16T10:05:03.930618+00:00",
+  "scope": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "sourceRowsRead": 0,
+  "databaseWrites": 0,
+  "executionAuthorized": false,
+  "migration": [
+    {
+      "version_num": "a0v_061"
+    }
+  ],
+  "graphs": [
+    {
+      "pipeline_id": "P01-shop-qyh",
+      "revision": 1
+    },
+    {
+      "pipeline_id": "P02-product-qyh",
+      "revision": 1
+    }
+  ],
+  "schedules": [
+    {
+      "id": "sch-p01-qyh-controlled-20260913-v1",
+      "pipeline_id": "P01-shop-qyh",
+      "enabled": false,
+      "cron": "0 * * * *"
+    },
+    {
+      "id": "sch-p02-qyh-controlled-20260913-v1",
+      "pipeline_id": "P02-product-qyh",
+      "enabled": false,
+      "cron": "0 * * * *"
+    }
+  ],
+  "controlHistories": [
+    {
+      "pipeline_id": "P01-shop-qyh",
+      "record_count": 1,
+      "control_count": 1,
+      "maximum_per_control_revision": 1
+    },
+    {
+      "pipeline_id": "P02-product-qyh",
+      "record_count": 13,
+      "control_count": 8,
+      "maximum_per_control_revision": 3
+    }
+  ],
+  "currentInstallation": [
+    {
+      "installation_id": "d6531562-e388-4206-a3ba-a89aaddc255c",
+      "current_revision": 5,
+      "state": "active",
+      "lock_hash": "sha256:85f986267d34c4847b7045144a61539a7f57abfc75ac582721b27e6b3cd5d785"
+    }
+  ],
+  "sourceConfiguration": {
+    "sourceId": "niushop-qyh",
+    "status": "registered",
+    "ref": {
+      "resourceType": "DataSourceConfigurationRevision",
+      "resourceId": "source-config-a84b6c79-8654-48f0-98c2-57d41b067b3d",
+      "revision": 1,
+      "contentHash": "sha256:1bb98e27d0cac5033e1a0e0bf69f8d3919a9439759bd3e15efa82374e1010fb7",
+      "receiptId": null
+    }
+  },
+  "mappingChecks": [
+    {
+      "pipelineId": "P01-shop-qyh",
+      "objectType": "Shop",
+      "table": "ns_site",
+      "columnCount": 11,
+      "mappingSha256": "893691a4bd11d52f40da19a0435390a5beb2195e594dd19f506b80a90505f4bc",
+      "graphPresent": true,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P02-product-qyh",
+      "objectType": "Product",
+      "table": "ns_goods",
+      "columnCount": 28,
+      "mappingSha256": "4ef146db758ca22e756857dc6cb6e8f615374dc2dccb96bc8835c93f8123d7f0",
+      "graphPresent": true,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P03-product-sku-qyh",
+      "objectType": "ProductSku",
+      "table": "ns_goods_sku",
+      "columnCount": 18,
+      "mappingSha256": "60f8de20de644bde825d174d08c214e18a4fec5de5a62a068809fec4ea9ffa47",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P04-category-qyh",
+      "objectType": "Category",
+      "table": "ns_goods_category",
+      "columnCount": 13,
+      "mappingSha256": "07eb63d373af249557f8b9c970430ceea89ea0e1841d4fd30f18c6e890b747bd",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P05-order-qyh",
+      "objectType": "Order",
+      "table": "ns_order",
+      "columnCount": 28,
+      "mappingSha256": "c56213d59b4a68755786b1645e05d1e761042035b358ca33851864d26f103f85",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P06-order-line-qyh",
+      "objectType": "OrderLine",
+      "table": "ns_order_goods",
+      "columnCount": 22,
+      "mappingSha256": "be4f4a01881789964578cc4682f379164c0ce92d4c6a3a409920487f36318eef",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P07-shipment-qyh",
+      "objectType": "Shipment",
+      "table": "ns_express_delivery_package",
+      "columnCount": 9,
+      "mappingSha256": "1dca12ebd494d9abdb130fdddca4780538c2874fb5a2557f10b11c72642bb17b",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P08-customer-lite-qyh",
+      "objectType": "CustomerLite",
+      "table": "ns_member",
+      "columnCount": 6,
+      "mappingSha256": "599bd3b58ac836049e1867557995aa411581eca08b715a66848178c1a6adac96",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P09-weapp-qyh",
+      "objectType": "Weapp",
+      "table": "ns_weapp",
+      "columnCount": 5,
+      "mappingSha256": "fd828a44591ee0f0f360ec3fb965db1f305a099a6f3d013ecfee6c7555ec3117",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P10-system-config-qyh",
+      "objectType": "SystemConfig",
+      "table": "ns_config",
+      "columnCount": 6,
+      "mappingSha256": "f9dd1731fefb9bca5b1f0c399c5bf71540400932a6b75ef4be084989b9142da2",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P11-product-review-qyh",
+      "objectType": "ProductReview",
+      "table": "ns_goods_evaluate",
+      "columnCount": 11,
+      "mappingSha256": "d260f275d3ed110660a322b7dc1a0797168df363964b4743518b29a679cf002d",
+      "graphPresent": false,
+      "compiled": true
+    },
+    {
+      "pipelineId": "P12-payment-qyh",
+      "objectType": "Payment",
+      "table": "ns_pay",
+      "columnCount": 12,
+      "mappingSha256": "d2cca07cb0fc041f9b63b60e1097ea120c129704f850edbc952dffe1ba6c9e1b",
+      "graphPresent": false,
+      "compiled": true
+    }
+  ],
+  "limitations": [
+    "Mapping directory compiled; current signed baseline authority must be verified by original artifact reader before configuration",
+    "No remote source query; table freshness and completeness not verified",
+    "No Y1-Y4 deployment or real business-chain acceptance"
+  ]
+}
