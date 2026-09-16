@@ -2,7 +2,7 @@
 
 2026-09-16 C1编码前纠正：下文早期“保持notBefore”方向已由sc4-5l6y3c1a-saved-renewal-contract-plan.md取代。原模型限制单控制窗口最多24小时，隔日恢复必须将原观察窗口与当前执行窗口分别验证；允许新notBefore后移，不改原input时间、不放宽24小时上限。C2/C3需显式携带原观察group与当前执行group，不能再用当前window包住旧采样时间。新恢复定义必须被saved-only围栏阻止创建新SourceClaim/新周期；自动重开周期需另有明确的正式授权和配置版本，不能借续期扩大权限。
 
-状态：设计草案，未实现、未验收。承接Y3b运行器，必须继续逐项复核原Owner与哈希合同后编码；不是任何实际恢复授权。m1串行、不push、230L0挂起。
+状态：C1a纯续期差异合同已提交，C1b历史存储隔离验证见各自证据；C2正式授权Owner、C3恢复运行、C4状态恢复及C5整链验收尚未实现。承接Y3b运行器，必须逐项复核原Owner与哈希合同后编码；当前不提供实际恢复授权。m1串行、不push、230L0挂起。
 
 ## 业务问题
 
@@ -12,7 +12,7 @@ Y3b只支持原权限有效期间的中断恢复。窗口到期后，原current�
 
 必须已有完整pipeline_snapshot_group_input及十二原parent，原group/source claims/Run/输入/对象Receipt全部保留。无input或source outcome unknown不进入续期恢复。仅同租户、同installation/generation/epoch/配置/包/源配置/schema/masking/graph/mapping/策略与业务scope允许；跨重装代次、源配置变化或改业务语义一律拒绝，交正式业务取消/改版流程。
 
-首版仅考虑延长expiresAt、保持原notBefore与其他业务字段完全相同的控制后继；由原选择/控制审批Owner产生，不直接写不可变控制行。不提高原maxSourceCalls，不新增SourceClaim，不调用源reader。这样原readStarted/readCompleted仍属于原与新公共窗口，原快照时钟无需重写。
+首版允许notBefore不早于原起点、expiresAt严格后移的控制后继，由原选择/控制审批Owner产生，不直接写不可变控制行。每个窗口仍最长24小时，其他业务字段完全相同，不提高原maxSourceCalls，不新增SourceClaim，不调用源reader。原readStarted/readCompleted必须属于原十二控制的共同观察窗口；当前执行必须属于新共同执行窗口，两段窗口可以不重叠。原快照时钟不重写，GroupInput恢复路径须显式分离原观察证据与当前执行权威。
 
 必须有不可变、幂等、租户隔离的恢复授权Receipt：关联原group request/content hash、完整input manifest hash、原definitionRef、恢复当前definitionRef、十二原/新控制与binding映射、相同policyRef、管理审批人及原执行人。每事务重新核验current安装权限、配置状态、角色和最新Receipt；停止或再次改变定义立即使旧恢复授权无效。不可用内存布尔标志或“用户曾授权”代替Receipt。
 

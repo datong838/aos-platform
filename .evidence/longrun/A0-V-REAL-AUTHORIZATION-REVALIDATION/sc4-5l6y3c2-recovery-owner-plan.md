@@ -1,0 +1,23 @@
+# Y3c-2 正式原组续期Owner接线设计
+
+状态：C1b验证期间的后续设计，未实施。产品动作是“续期并恢复原已保存输入”，不是新建读取。不得只拿C1a纯校验或C1b读取历史当权限。
+
+## 执行与锁序
+
+先校验真实principal/tenant与规范group ID，使用原Completion._lock_key对同一原组尝试事务级advisory锁；忙时返回明确执行中，不在持有安装锁时等待旧Completion，否则可能造成锁序循环。再按既有定义advisory→CurrentConfigurationPermission安装锁→definition head→原/新controls→schedule→Run顺序推进。原input必须完整存在且属于原claim，source unknown/无input直接拒绝，审批新控制前完成此门禁。
+
+参数由产品提交groupId、expectedDefinitionRef、expectedRecoveryRef、期望inputManifestHash、新notBefore/expiresAt和idempotencyKey；actor取principal，executor只取原定义。服务端从原不可变control/sourceSelection构造后继，不接受浏览器传SQL、成员、控制draft或成功状态。新窗口当前有效、最长24小时；原输入以原观察window验证，不能改历史时间。manager与executor均须当前角色许可，manager不能仅凭旧Receipt恢复已撤销executor。
+
+原SelectionOwner、ControlOwner、ScheduleControlOwner在同一外层事务产生十二后继，C1a比较原/新语义。当前普通configure的active/unknown围栏不修改；恢复Owner只在完整原input、唯一原active组、同十二成员及同业务语义证明后，复用DefinitionOwner._save追加intent=renew_saved_group的enabled定义，并同事务写C1b回执、立即验证全部新约束。重复key先读原request并重验当前管理权限，确认原Receipt，不重发审批、不生成另一组。
+
+## saved-only围栏（必须先于任何恢复入口可调用）
+
+新增066和原ScheduleClaimOwner门禁：当前definition revision若其持久请求intent=renew_saved_group，普通新组领取必须拒绝，即使还没有Receipt。应用在创建十二Run前拒绝，数据库在插入schedule claim时再次拒绝。不必把Receipt存在性当该围栏开关；缺Receipt只会保持禁入，不能意外转成普通配置。此设计允许C1b单纯存储夹具独立验证，不要求通过关闭约束制造假权限。
+
+恢复Runtime不走ScheduleClaim或Ingress.prepare。新的当前控制只通过固定RecoveryRef实例进入原保存输入/Completion路径，每事务重验Receipt、当前head、角色、窗口、十二bindings以及原input；SourceClaim.reserve在恢复实例上明确拒绝。Receipt停止/过期/被更高配置替代后立刻失效；旧Receipt仍可只读作为历史。
+
+## 尚需完成的审查与文件
+
+计划新增pipeline_snapshot_group_recovery_owner.py及065后的066围栏迁移；修改pipeline_snapshot_schedule_claim.py、pipeline_control_service.py、pipeline_snapshot_schedule_service.py/受保护router（复用安全幂等客户端所需回执读回）。具体接口模型、原input历史核验辅助与PG/HTTP测试文件在开工前列齐。原group input当前Owner强制current控制，因此审批阶段的历史读取不能调用旧过期权限，也不能跳过信封hash/原source claim/manifest核对；需独立只读原事实检查，由当前管理许可包围。
+
+C3需要分离原观察group和当前执行group，保留原claim/assessment/Store idempotency身份与原projection证据；C4仅原全部running/全部succeeded/全部可证明停止的failed状态，混合拒绝。恢复成功后是否重开周期必须有另外明确的正式配置启用授权并产生新definition revision，不能隐式继承saved-only许可。正常“enable”产生的后继能否承接续期控制，需在该授权中明确其源调用预算与新周期含义。
