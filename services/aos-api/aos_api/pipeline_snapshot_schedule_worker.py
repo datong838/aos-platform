@@ -1,5 +1,8 @@
 """Serial server-owned snapshot execution; no application startup side effects."""
 from datetime import datetime
+import asyncio
+from math import isfinite
+from threading import Event
 from psycopg.pq import TransactionStatus
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.ec_ingress_recovery import _check_active
@@ -20,6 +23,51 @@ class PipelineSnapshotScheduleWorker:
             raise TypeError('shared original worker runtimes required')
         self.scope,self._runtime,self._recovery=scope,runtime,recovery
         self._dispatch=PipelineSnapshotScheduleDispatch(definitions=runtime._definitions,claims=runtime._claims)
+        self.status='STOPPED'
+        self.last_outcomes=[]
+        self.last_error=None
+        self._serving=False
+
+    async def serve(self,stop,*,host_ready,interval=15):
+        if (not callable(host_ready) or type(interval) not in (int,float)
+                or not isfinite(interval) or interval<=0):
+            raise ValueError('bounded worker polling configuration required')
+        if getattr(self,'_serving',False):raise RuntimeError('snapshot worker already serving')
+        self._serving=True
+        self.status='IDLE';self.last_outcomes=[];self.last_error=None
+        cancel=Event();active=None;cancelled=False
+        try:
+            while not stop.is_set() and host_ready():
+                self.status='RUNNING'
+                active=asyncio.create_task(asyncio.to_thread(self.tick,cancel_event=cancel))
+                while not active.done():
+                    if stop.is_set() or not host_ready():
+                        self.status='STOPPING';cancel.set()
+                        break
+                    # wait does not propagate cancellation into the thread task.
+                    await asyncio.wait({active},timeout=.05)
+                if cancel.is_set():break
+                try:
+                    self.last_outcomes=active.result();self.last_error=None
+                except Exception:
+                    self.last_error='SNAPSHOT_TICK_UNCONFIRMED'
+                active=None;self.status='IDLE'
+                try:await asyncio.wait_for(stop.wait(),timeout=interval)
+                except TimeoutError:pass
+        except asyncio.CancelledError:
+            cancelled=True
+        finally:
+            self.status='STOPPING';cancel.set()
+            if active is not None:
+                while not active.done():
+                    try:await asyncio.shield(active)
+                    except asyncio.CancelledError:cancelled=True
+                    except Exception:break
+                if not active.cancelled():
+                    try:active.result()
+                    except Exception:self.last_error='SNAPSHOT_TICK_UNCONFIRMED'
+            self.status='STOPPED';self._serving=False
+        if cancelled:raise asyncio.CancelledError
 
     def run_definition(self,definition_id,*,deadline=None,cancel_event=None):
         definition_id=_group_id(definition_id)

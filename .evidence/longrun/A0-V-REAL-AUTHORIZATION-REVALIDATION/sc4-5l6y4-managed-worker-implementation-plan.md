@@ -14,6 +14,12 @@
 
 本波执行回调使用明确停止seam，只证明锁、原Claim和调度错误边界，不替代C5实际Store链验收。main未注册Worker。下一波Y4c先实现async serve与线程真实排空测试，再接默认关闭的main入口和状态；恢复执行正式入口仍待Y4d。
 
+## Y4c1线程排空证据
+
+初次测试因遗漏隔离DSN而在默认5433拒绝连接，未计为逻辑Red；补齐18434测试配置后，以修改前Worker验证缺少serve（1 failed/4.34s，`/tmp/aos-worker-drain-red-confirmed.log`）。实现后生命周期/Factory/Worker联合13 passed/17.00s（`/tmp/aos-worker-drain-final.log`），diff检查通过。
+
+真实Python线程具名tick seam分别验证Task.cancel（含第二次取消）、async停止事件、host失活；线程收到threading.Event后延迟清理时，serve保持STOPPING且Task不结束，释放清理门后线程退出才STOPPED。预停止、host未就绪不启动tick，重复serve拒绝。未访问业务源/Store、未改数据库Run终态。下一波c2把默认关闭的应用入口接到已验证serve，并确保Store资源在serve实际排空之后释放。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
@@ -28,6 +34,8 @@ Y4b追加测试目录：`services/aos-api/tests/test_pipeline_control_service.py
 4. Y4d：正式恢复执行请求与界面。复用 `services/aos-api/aos_api/routers/pipeline_snapshot_recoveries.py`、`pipeline_snapshot_schedule_service.py` 及现有配置页面；具体前端文件由页面定位后补全清单。请求只指定exact回执与原幂等键，principal当前授权通过后交同一个受管理worker。不得另起无生命周期管理的后台线程。页面显示停用、可调度、执行中、等待恢复、unknown、需重配；只有实际启用才替换“尚未接通执行”。
 
 ## 原组优先与未知结果边界
+
+Y4c拆为c1线程排空、c2应用接线。c1修改 `pipeline_snapshot_schedule_worker.py`，新增 `services/aos-api/tests/test_snapshot_schedule_worker_lifecycle.py`。serve只允许单实例一个循环，async stop/host失活/Task.cancel均传播至threading.Event；active to_thread任务用shield保护，取消协程后仍等待实际任务完成，期间状态STOPPING、禁止再tick。只有底层任务退出才STOPPED，不改数据库Run终态。重复取消同样不能丢弃底层任务；线程抛错只保存固定错误码，不能把错误文本暴露状态。纯线程夹具验证取消过程中延迟清理、host失活、预停止零执行、重复serve拒绝；c1通过后才进入c2 main默认关闭入口与启动/关闭集成。
 
 Y4b接口细化：`PipelineSnapshotScheduleWorker(scope,runtime,recovery)`只接受原两个Runtime且共享ControlOwner，`run_definition(definition_id,cancel_event,deadline)`先检查停止，获取按scope/definition稳定的非阻塞PG会话锁，再用数据库当前时间只读inspect；只有due走原Runtime.execute，actor/definitionRef/groupId/slot均取服务端结果，其他状态只返回。锁贯穿源读取及Store完成，finally释放；原异常向上传递，不写假的停止/完成状态。`tick`从当前租户定义头枚举enabled，串行调用，逐项异常记录固定unknown状态、原定义标识且不包含敏感异常文本。持锁失败返回busy，不排队后自动重读源。Factory新增build_snapshot_worker(scope,store)，复用原依赖及get_engine；本波不注册main启动，async serve停止协议留Y4c。测试用具名Runtime执行seam验证锁覆盖、原claim提交后异常与再次tick阻断，明确不替代C5实际Store验收。
 
