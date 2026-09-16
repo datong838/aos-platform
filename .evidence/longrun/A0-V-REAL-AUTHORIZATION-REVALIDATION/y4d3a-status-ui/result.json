@@ -1,0 +1,15 @@
+{
+  "kind": "hermetic-status-ui-only",
+  "liveAosRequests": 0,
+  "sourceReads": 0,
+  "writesToFixture": 0,
+  "checks": [
+    "worker disabled",
+    "active definition",
+    "pending original",
+    "approved recovery",
+    "exact definition drift",
+    "760 width"
+  ],
+  "errors": []
+}

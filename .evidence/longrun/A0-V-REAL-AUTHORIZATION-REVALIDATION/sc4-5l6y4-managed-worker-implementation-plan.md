@@ -40,11 +40,21 @@ Red缺read_runtime_status（1 failed/8.24s）；PG当前权限/原组只读+HTTP
 
 下一波d3在既有SnapshotSchedulesPanel/API契约中展示真实状态、处理定义漂移/租户切换，再补正式续期交互与浏览器验收。应用主环境仍未加载/启用。
 
+## Y4d3a状态页面证据
+
+既有API客户端新增严格runtime解析；租户/配置exactRef、执行授权false、状态布尔逻辑、aware时间与原恢复ref不匹配一律拒绝。面板选中配置后只读加载状态，可手动刷新；请求序号、卸载和租户身份检查丢弃旧响应。配置enabled但worker disabled明确显示执行器尚未启用，不再使用“执行调度尚未接通”固定文案。
+
+Red新增readGroupRuntime未实现；API/组件16项通过，类型检查与Vite构建通过（既有chunk大小提醒保留）。独立Chrome/15174预览全部API拦截，fixture显式标注“隔离验收实例（非真实商城）”；未启用、执行中、原组待恢复、已批准待承接、配置exactRef漂移、760宽度均通过，真实请求/源读/fixture写均0，pageerror=0。脚本、结果与四张截图位于y4d3a-status-ui；桌面/760均目视检查，新面板无横向溢出，原窄屏侧栏仍占上方空间。时间与按钮间距复用原header布局后重新构建/浏览器验证。日志/tmp/aos-status-ui-browser-final.log。
+
+这里只证明客户端及隔离浏览器状态显示；真实后端运行状态API已由d2 PG/HTTP验证，主服务尚未加载，未声称真实浏览器经营闭环。下一波d3b原任务上下文/正式续期窗口/原key确认交互，不自动重发未知写；然后Y5/Y6/Z。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4d3a先显示状态，文件：`apps/web/src/api/snapshotSchedules.ts`及`.test.ts`、`apps/web/src/pages/s2/SnapshotSchedulesPanel.tsx`及`.test.tsx`。新增严格解析runtime响应（租户/definition/exactRef/状态/布尔值/时间/恢复ref），复用原请求身份快照。选中已保存配置后读取真实状态并提供只读刷新；不轮询写入、不自动审批。组件请求序号与卸载/租户保护阻止旧结果覆盖新选择；配置版本漂移明确要求刷新配置。删除过期“尚未接通”固定说法，换成“选中配置查看当前运行情况”及服务端分态：未启用执行器、停用、运行中、待原组恢复、已批准等待承接、等待周期、需重新配置、结果未知。无worker可用时不能显示已在运行。正式续期表单另列d3b实现；本波不以状态页替代恢复交互完成。运行前端测试/类型构建，隔离浏览器用具名API响应验证布局与状态；真实后端浏览器联调留Y6加载后的验收。
 
 Y4d2状态API文件：修改 `pipeline_snapshot_schedule_service.py`、`routers/pipeline_snapshot_schedules.py`、`pipeline_snapshot_schedule_worker.py`，新增 `services/aos-api/tests/extension_runtime/test_snapshot_runtime_status_pg.py` 并扩展 `services/aos-api/tests/test_pipeline_snapshot_schedule_http.py`。GET /v1/pipelines/snapshot-schedules/{definition_id}/runtime 使用principal scope/subject，先当前管理权限，再原Dispatch只读状态及原RecoveryReceipt引用，末尾复验当前权限和exact定义；输出始终executionAuthorized=false，无业务原始行/连接资料。进程投影只在worker.scope与principal相等且worker Task/host存活时显示可用，明确disabled/stopped/failed与activeDefinitionId；不展示其他租户或定义的执行信息。该进程观察不是集群全局执行证明，也不是执行授权。worker在锁内进入实际Runtime前设置active_definition_id，finally清除。页面下一波对exact定义漂移和租户切换丢弃旧状态。
 

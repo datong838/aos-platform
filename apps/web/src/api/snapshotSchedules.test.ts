@@ -3,10 +3,23 @@ import { beforeEach, expect, it, vi } from 'vitest';
 const state=vi.hoisted(()=>({tenant:{orgId:'org-org',projectId:'dev-project',subject:'operator'},auth:1}));
 vi.mock('./tenant',()=>({getTenant:()=>state.tenant,getAuthRevision:()=>state.auth,tenantAuthHeaders:()=>({'X-Org-Id':state.tenant.orgId,'X-Project-Id':state.tenant.projectId,Authorization:'Bearer fixture'})}));
 vi.mock('./apiBase',()=>({getApiBase:()=>'/api'}));
-import { groupScope, listGroups, submitGroupCommand, pendingGroupCommand, confirmGroupCommand } from './snapshotSchedules';
+import { groupScope, listGroups, submitGroupCommand, pendingGroupCommand, confirmGroupCommand,readGroupRuntime } from './snapshotSchedules';
 const definition='12345678-1234-4234-8234-123456789012';
 const ref={resourceType:'SnapshotScheduleDefinitionRevision',resourceId:'snapshot-schedule-'+definition,revision:1,contentHash:'sha256:'+'a'.repeat(64)};
 beforeEach(()=>{localStorage.clear();vi.restoreAllMocks();state.tenant={orgId:'org-org',projectId:'dev-project',subject:'operator'};state.auth=1;});
+
+function runtimePayload(){return {orgId:'org-org',projectId:'dev-project',definitionId:definition,definitionRef:ref,configurationState:'enabled',executionAuthorized:false,routingStatus:'not_due',originalGroups:[],observedAt:'2026-09-16T09:30:00+00:00',worker:{state:'DISABLED',available:false,active:false,errorCode:null}};}
+it('reads scoped exact runtime state without making a write',async()=>{
+ const fetcher=vi.fn().mockResolvedValue(new Response(JSON.stringify(runtimePayload())));vi.stubGlobal('fetch',fetcher);
+ const result=await readGroupRuntime(groupScope(),definition,ref);
+ expect(result.worker.available).toBe(false);expect(fetcher.mock.calls[0][1].method).toBe('GET');
+});
+it('rejects drifted or inconsistent runtime projections',async()=>{
+ for(const patch of [{orgId:'other'},{definitionRef:{...ref,revision:2}},{executionAuthorized:true},{worker:{state:'DISABLED',available:true,active:true,errorCode:null}}]){
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({...runtimePayload(),...patch}))));
+  await expect(readGroupRuntime(groupScope(),definition,ref)).rejects.toThrow();
+ }
+});
 
 it('persists unknown result and never automatically retries a write',async()=>{
  const fetcher=vi.fn().mockRejectedValue(new Error('network'));vi.stubGlobal('fetch',fetcher);

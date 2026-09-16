@@ -5,6 +5,7 @@ export type ExactRef={resourceType:string;resourceId:string;revision:number|stri
 export type GroupMember={scheduleId:string;pipelineId:string;bindingRef:ExactRef;controlRef:ExactRef;definitionId?:string|null};
 export type GroupDefinition={ref:ExactRef;body:{schemaVersion:string;orgId:string;projectId:string;definitionId:string;revision:number;priorRef:ExactRef|null;installationId:string;generation:string;state:'disabled'|'enabled'|'retired';cron:string;timezone:string;policyRef:ExactRef;members:GroupMember[];actor:string;executor:string;createdAt:string}};
 export type GroupOptions={installationId:string;generation:string;status:'ready'|'incomplete'|'policy_unavailable';missing:string[];ambiguous:string[];members:GroupMember[];policies:ExactRef[]};
+export type GroupRuntime={orgId:string;projectId:string;definitionId:string;definitionRef:ExactRef;configurationState:GroupDefinition['body']['state'];executionAuthorized:false;routingStatus:string;originalGroups:{groupId:string;recoveryRef:ExactRef|null}[];observedAt:string;worker:{state:string;available:boolean;active:boolean;errorCode:string|null}};
 export type GroupIntent='configure'|'enable'|'disable'|'retire';
 export type GroupCommandBody={expectedRef:ExactRef|null;cron?:string;policyRef?:ExactRef;members?:{scheduleId:string;bindingRef:ExactRef}[]};
 export type PendingGroupCommand={schema:1;scope:Omit<GroupScope,'auth'>;definitionId:string;key:string;intent:GroupIntent;body:GroupCommandBody};
@@ -76,3 +77,15 @@ export async function confirmGroupCommand(scope:GroupScope):Promise<GroupDefinit
 }
 
 export async function readGroup(scope:GroupScope,definitionId:string){return parseGroup(await request(scope,"/"+uuid(definitionId)),scope);}
+
+export async function readGroupRuntime(scope:GroupScope,definitionId:string,expectedRef:ExactRef):Promise<GroupRuntime>{
+ const value=object(await request(scope,'/'+uuid(definitionId)+'/runtime')),worker=object(value.worker);
+ const exact=ref(value.definitionRef,'SnapshotScheduleDefinitionRevision');
+ if(value.orgId!==scope.orgId||value.projectId!==scope.projectId||value.definitionId!==definitionId||exact.resourceId!=='snapshot-schedule-'+definitionId||!same(exact,expectedRef))throw new Error('运行状态的租户或配置版本已变化，请刷新配置');
+ if(value.executionAuthorized!==false||!['disabled','enabled','retired'].includes(String(value.configurationState))||!['disabled','retired','due','not_due','original_group_pending','slot_completed','recovery_only'].includes(String(value.routingStatus)))throw new Error('运行状态格式无效');
+ if(!['DISABLED','FAILED_CLOSED','STOPPED','NOT_SELECTED','UNAVAILABLE','RUNNING','IDLE','STOPPING'].includes(String(worker.state))||typeof worker.available!=='boolean'||typeof worker.active!=='boolean'||worker.available&&!['RUNNING','IDLE'].includes(String(worker.state))||worker.active&&(!worker.available||worker.state!=='RUNNING')||worker.errorCode!==null&&worker.errorCode!=='SNAPSHOT_TICK_UNCONFIRMED')throw new Error('执行器状态不一致');
+ const observedAt=text(value.observedAt);if(!/(Z|[+-]\d\d:\d\d)$/.test(observedAt)||!Number.isFinite(Date.parse(observedAt)))throw new Error('运行状态时间无效');
+ const groups=array(value.originalGroups).map(item=>{const group=object(item),groupId=uuid(group.groupId),recoveryRef=group.recoveryRef===null?null:ref(group.recoveryRef,'SnapshotGroupRecoveryRevision');if(recoveryRef&&recoveryRef.resourceId!=='snapshot-recovery-'+groupId)throw new Error('恢复回执范围不一致');return {groupId,recoveryRef};});
+ if(new Set(groups.map(g=>g.groupId)).size!==groups.length)throw new Error('原任务标识重复');
+ return {orgId:scope.orgId,projectId:scope.projectId,definitionId,definitionRef:exact,configurationState:value.configurationState as GroupRuntime['configurationState'],executionAuthorized:false,routingStatus:String(value.routingStatus),originalGroups:groups,observedAt,worker:{state:String(worker.state),available:worker.available,active:worker.active,errorCode:worker.errorCode as string|null}};
+}

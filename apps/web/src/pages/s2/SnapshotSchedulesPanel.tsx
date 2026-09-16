@@ -1,12 +1,37 @@
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { assetControlClient } from '../../api/assetControl/client';
 import type { InstallationListItem } from '../../api/assetControl/types';
-import { confirmGroupCommand,groupOptions,groupScope,listGroups,readGroup,pendingGroupCommand,submitGroupCommand,type GroupDefinition,type GroupIntent,type GroupOptions,type GroupScope,type PendingGroupCommand } from '../../api/snapshotSchedules';
+import { confirmGroupCommand,groupOptions,groupScope,listGroups,readGroup,readGroupRuntime,pendingGroupCommand,submitGroupCommand,type GroupDefinition,type GroupIntent,type GroupOptions,type GroupScope,type GroupRuntime,type PendingGroupCommand } from '../../api/snapshotSchedules';
 import { getPipelineDisplayName } from './pipelineMeta';
 import './SnapshotSchedulesPanel.css';
 
 const labels={disabled:'已配置 · 已停用',enabled:'已启用配置',retired:'已退役'};
 function scopeOrNull(){try{return groupScope();}catch{return null;}}
+function RuntimeStatus({scope,group}:{scope:GroupScope;group:GroupDefinition}){
+ const [value,setValue]=useState<GroupRuntime|null>(null),[error,setError]=useState<string|null>(null),[loading,setLoading]=useState(false);
+ const mounted=useRef(false),epoch=useRef(0);
+ const refresh=useCallback(async()=>{
+  const sequence=++epoch.current;setLoading(true);setError(null);setValue(null);
+  const current=()=>mounted.current&&sequence===epoch.current&&JSON.stringify(scopeOrNull())===JSON.stringify(scope);
+  try{const result=await readGroupRuntime(scope,group.body.definitionId,group.ref);if(current())setValue(result);}
+  catch(e){if(current())setError((e as Error).message);}
+  finally{if(current())setLoading(false);}
+ },[scope,group]);
+ useEffect(()=>{mounted.current=true;void refresh();return()=>{mounted.current=false;epoch.current+=1;};},[refresh]);
+ let label='正在核对运行情况';
+ if(value){
+  if(value.configurationState==='disabled')label='数据组已停用';
+  else if(value.configurationState==='retired')label='数据组已退役';
+  else if(value.worker.active)label='正在执行当前数据组';
+  else if(!value.worker.available)label=value.worker.state==='DISABLED'?'执行器尚未启用':value.worker.state==='STOPPING'?'执行器正在停止':'执行器当前不可用';
+  else if(value.worker.errorCode)label='执行结果待核对';
+  else if(value.routingStatus==='original_group_pending')label=value.originalGroups.length>0&&value.originalGroups.every(g=>g.recoveryRef)?'原任务恢复已批准，等待执行器承接':'原任务尚未完成，需核对恢复条件';
+  else if(value.routingStatus==='recovery_only')label='原任务恢复已结束，后续采集需重新配置';
+  else if(value.routingStatus==='slot_completed')label='本周期任务已完成';
+  else label='执行器已就绪，等待采集周期';
+ }
+ return <aside className="snapshot-groups__notice" aria-label="数据组运行状态"><h4>当前运行情况</h4>{error?<p role="alert">运行状态尚未确认：{error}</p>:<p role="status">{label}</p>}<div className="snapshot-groups__header">{value&&<small>核对时间：{new Date(value.observedAt).toLocaleString('zh-CN')}</small>}<button type="button" disabled={loading} onClick={()=>void refresh()}>刷新运行状态</button></div></aside>;
+}
 export function SnapshotSchedulesPanel(){
  const [scope,setScope]=useState(scopeOrNull);
  useEffect(()=>{const change=()=>setScope(scopeOrNull());window.addEventListener('aos-tenant-updated',change);window.addEventListener('aos-auth-updated',change);return()=>{window.removeEventListener('aos-tenant-updated',change);window.removeEventListener('aos-auth-updated',change);};},[]);
@@ -59,7 +84,8 @@ function GroupPanel({scope}:{scope:GroupScope}){
  const name=(id:string)=>installations.find(i=>i.installationId===id)?.displayName||'已安装数据组';
  return <section className="snapshot-groups" aria-label="整组采集配置">
   <header className="snapshot-groups__header"><div><h2>整组采集</h2><p>让商品、订单、客户等十二类来源按同一计划准备一致数据。</p></div><button type="button" disabled={busy} onClick={()=>void reload().catch(e=>setError(e.message))}>刷新配置</button></header>
-  <p className="snapshot-groups__notice" role="status">当前提供配置管理；执行调度尚未接通。启用配置不代表数据已采集或业务已完成。</p>
+  <p className="snapshot-groups__notice">选择已保存的数据组，查看当前运行情况。启用配置不代表数据已采集或业务已完成。</p>
+  {selected&&<RuntimeStatus key={JSON.stringify(selected.ref)} scope={scope} group={selected}/>}
   {error&&<p className="snapshot-groups__error" role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
   {pending&&<aside className="snapshot-groups__pending"><strong>有一项待确认操作</strong><p>本地仅保留原请求以核对结果，不会自动重发。请先核对，再进行下一项操作。</p><button type="button" disabled={busy} onClick={()=>void confirm()}>核对原操作</button><details><summary>原操作标识</summary><code>{pending.key}</code></details></aside>}
   <div className="snapshot-groups__layout"><div className="snapshot-groups__list"><h3>已保存的配置</h3>{!groups.length&&<p>尚无数据组配置；请先选择已安装实例检查来源。</p>}
