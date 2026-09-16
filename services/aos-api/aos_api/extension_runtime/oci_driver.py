@@ -83,6 +83,23 @@ class OciDriver:
             raise ValueError("invalid container identity")
         return ["docker", "--context", self.context, "start", "--attach", "--interactive", container_id]
 
+    def require_stopped_owned(self, name: str, owner: str, container_id: str) -> None:
+        """Prove an exact persisted container can be attached without replacement."""
+        if (not re.fullmatch(r'aos-ext-[a-z0-9-]+',name)
+                or not re.fullmatch(r'[a-zA-Z0-9-]+',owner)
+                or not re.fullmatch(r'[0-9a-f]{64}',container_id)):
+            raise ValueError('invalid persisted container identity')
+        metadata=json.loads(self._run('inspect',container_id))
+        if len(metadata)!=1:
+            raise RuntimeError('persisted container observation differs')
+        item=metadata[0]
+        labels=item.get('Config',{}).get('Labels') or {}
+        if (item.get('Id')!=container_id or item.get('Name')!='/'+name
+                or labels.get('aos.extension.owner')!=owner):
+            raise RuntimeError('persisted container ownership differs')
+        if item.get('State',{}).get('Running') is not False:
+            raise RuntimeError('persisted container is not stopped')
+
     def remove_owned(self, name: str, owner: str, *, expected_container_id: str | None = None) -> bool:
         if expected_container_id is not None and not re.fullmatch(r'[0-9a-f]{64}',expected_container_id):
             raise ValueError('invalid persisted container identity')

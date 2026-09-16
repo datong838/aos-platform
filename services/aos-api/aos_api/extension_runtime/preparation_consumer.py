@@ -20,7 +20,8 @@ class PreparationDeliveryResult:
 
 
 class PreparationConsumer:
-    def __init__(self,*,connect,worker,installation_id,org_id,project_id,live_directory=None):
+    def __init__(self,*,connect,worker,installation_id,org_id,project_id,live_directory=None,
+                 rehydrate=False):
         self.tenant_scope=TenantScope(org_id,project_id)
         if not callable(connect) or not isinstance(worker,PreparationWorker):
             raise ValueError('trusted preparation worker and connection required')
@@ -32,6 +33,8 @@ class PreparationConsumer:
         self.installation=UUID(str(installation_id))
         self.connect,self.worker=connect,worker
         self.live_directory=live_directory
+        if type(rehydrate) is not bool:raise TypeError('exact rehydrate mode required')
+        self.rehydrate=rehydrate
         self.outbox=RuntimeOutboxStore()
         self._task=self._job=self._close_task=None
         self._closing=False
@@ -83,6 +86,24 @@ class PreparationConsumer:
         return job
 
     async def _run(self):
+        if self.rehydrate:
+            if self._job is None:
+                job=await _settled(self.worker.resume_current(**self.scope,
+                    installation_id=self.installation))
+                if not isinstance(job,PreparedJob):
+                    raise RuntimeConflict('worker did not return rehydrated PreparedJob')
+                self._job=job
+                if (job.tenant_scope!=self.tenant_scope
+                        or job.plan.installation_id!=self.installation):
+                    await _settled(job.stop())
+                    raise RuntimeConflict('rehydrated owner routing mismatch')
+                if self.live_directory is not None:
+                    try:self.live_directory.register(job)
+                    except BaseException:
+                        await _settled(job.stop())
+                        raise
+                await _settled(job.prepared())
+            return None
         lease=await _settled(asyncio.to_thread(self._claim))
         if lease is None:return None
         status,phase,revision=await _settled(asyncio.to_thread(self._read,lease))

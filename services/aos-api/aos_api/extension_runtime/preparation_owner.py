@@ -19,13 +19,15 @@ class PreparationOwner:
     Factories must be signed, journaled contexts. commit must settle any database
     thread before propagating cancellation. No session escapes this owner.
     """
-    def __init__(self, factories, commit, *, lease_seconds, health_clock=None):
+    def __init__(self, factories, commit, *, lease_seconds, health_clock=None,
+                 already_verified=False):
         factories = tuple(factories)
         if (not 1 <= len(factories) <= 64 or not all(callable(f) for f in factories)
                 or not callable(commit) or (health_clock is not None and not callable(health_clock))
                 or isinstance(lease_seconds, bool)
                 or not isinstance(lease_seconds, (int, float))
-                or not math.isfinite(lease_seconds) or not 0 < lease_seconds <= 300):
+                or not math.isfinite(lease_seconds) or not 0 < lease_seconds <= 300
+                or type(already_verified) is not bool):
             raise ValueError("bounded trusted preparation inputs required")
         self._health_clock = health_clock
         self._ready = asyncio.get_running_loop().create_future()
@@ -36,6 +38,9 @@ class PreparationOwner:
         self._invocations = set()
         self._invocation_lock = asyncio.Lock()
         self._verification = None
+        if already_verified:
+            self._verification=asyncio.get_running_loop().create_future()
+            self._verification.set_result(None)
         self._control = None
         self._lease_timer = None
         self._task = asyncio.create_task(self._run(factories, commit, lease_seconds))

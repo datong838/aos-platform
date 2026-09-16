@@ -81,6 +81,23 @@ def test_job_requires_host_conditions_before_verification():
     asyncio.run(run())
 
 
+def test_rehydrated_job_renews_without_replaying_verification():
+    async def run():
+        stopped=asyncio.Event();calls=[]
+        class Owner:
+            async def wait_closed(self):await stopped.wait()
+            async def renew(self,commit):return await commit('trusted-clock')
+        def renew(observed):
+            calls.append(observed)
+            from datetime import datetime,timezone,timedelta
+            return datetime.now(timezone.utc)+timedelta(seconds=180)
+        job=PreparedJob(None,Owner(),lambda code:None,renew=renew,already_verified=True)
+        assert await job.renew_if_due() is not None
+        assert calls==['trusted-clock']
+        stopped.set();await job.wait_closed()
+    asyncio.run(run())
+
+
 def test_job_health_preserves_uncertain_when_finalization_refuses():
     async def run():
         error = CleanupUncertainError('isolated', 'exact-name', 'exact-owner')

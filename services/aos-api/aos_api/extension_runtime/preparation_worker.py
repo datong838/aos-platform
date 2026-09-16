@@ -8,9 +8,9 @@ from .lifecycle_store import RuntimeOperationStore, RuntimeConflict, _values
 from .oci_driver import CleanupUncertainError
 from .preparation_commit import commit_prepared
 from .preparation_owner import PreparationOwner, _observe
-from .preparation_plan import claim_preparation
+from .preparation_plan import claim_preparation, rehydrate_current_preparation
 from .reconciler import ResourceJournal
-from .signed_session import open_signed_session
+from .signed_session import open_signed_session, open_existing_signed_session
 from .verification_commit import commit_verified
 from .enable_commit import commit_enabled
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
@@ -18,7 +18,8 @@ from aos_api.tenant_scope import TenantScope
 
 
 class PreparedJob:
-    def __init__(self, plan, owner, finalize, verify=None, enable=None, *, tenant_scope=None, renew=None):
+    def __init__(self, plan, owner, finalize, verify=None, enable=None, *, tenant_scope=None,
+                 renew=None, already_verified=False):
         self.plan=plan
         self._tenant_scope=tenant_scope
         self._owner=owner
@@ -27,7 +28,8 @@ class PreparedJob:
         self._verify=verify
         self._enable=enable
         self._renew=renew
-        self._verified=False
+        if type(already_verified) is not bool:raise TypeError('exact verified state required')
+        self._verified=already_verified
         self._next_renewal=0.0
         self._closed=asyncio.create_task(self._watch())
         self._closed.add_done_callback(_observe)
@@ -210,6 +212,14 @@ class PreparationWorker:
                     check_current_permission=self.permission,**scope,operation_id=operation_id,
                     expected_revision=expected_revision,engine_context=self.driver.context)
 
+    def _rehydrate(self,scope,installation_id):
+        with self._connection(scope) as conn:
+            with conn.transaction():
+                return rehydrate_current_preparation(conn,installation_store=self.store,
+                    revalidator=self.revalidator,check_current_permission=self.permission,
+                    check_current_conditions=self.conditions,**scope,installation_id=installation_id,
+                    engine_context=self.driver.context)
+
     def _enable(self,scope,plan,operation_id,expected_revision,observed):
         with self._connection(scope) as conn:
             return commit_enabled(conn,installation_store=self.store,revalidator=self.revalidator,
@@ -293,4 +303,42 @@ class PreparationWorker:
                 renew=(lambda observed:self._renew(scope,plan,observed)) if verify is not None else None)
         except BaseException:
             await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,scope,plan,'PREPARATION_STOPPED')))
+            raise
+
+    async def resume_current(self, *, org_id, project_id, installation_id):
+        scope=dict(org_id=org_id,project_id=project_id)
+        plan,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(
+            self._rehydrate,scope,installation_id)))
+        try:
+            if cancelled:raise asyncio.CancelledError
+            remaining=min(180,(plan.deadline-datetime.now(timezone.utc)).total_seconds())
+            if remaining<=0:raise TimeoutError('rehydration lease expired')
+            def factory(member):
+                if member.container_id is None:
+                    raise RuntimeConflict('rehydration container identity required')
+                @asynccontextmanager
+                async def open_member():
+                    record=await asyncio.to_thread(self.load_record,member.selected)
+                    async with open_existing_signed_session(driver=self.driver,
+                            connect=lambda:self._connection(scope),**scope,
+                            resource_id=member.intent.resource_id,
+                            container_id=member.container_id,record=record,selected=member.selected,
+                            policy=self.policy,checked_at=datetime.now(timezone.utc),
+                            read_artifact=self._artifact_reader(member),platform=self.platform) as session:
+                        yield session
+                return open_member
+            async def committed():return None
+            async def health_clock():
+                observed,was_cancelled=await _settle(asyncio.create_task(asyncio.to_thread(
+                    self._read_health_clock,scope)))
+                if was_cancelled:raise asyncio.CancelledError
+                return observed
+            owner=PreparationOwner([factory(member) for member in plan.members],committed,
+                lease_seconds=remaining,health_clock=health_clock,already_verified=True)
+            return PreparedJob(plan,owner,lambda code:self._finalize(scope,plan,code),
+                tenant_scope=TenantScope(**scope),
+                renew=lambda observed:self._renew(scope,plan,observed),already_verified=True)
+        except BaseException:
+            await _settle(asyncio.create_task(asyncio.to_thread(
+                self._finalize,scope,plan,'REHYDRATION_STOPPED')))
             raise

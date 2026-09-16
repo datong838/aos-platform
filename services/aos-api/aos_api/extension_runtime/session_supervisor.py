@@ -170,3 +170,60 @@ async def open_session(driver, *, image_id, declared, resource_identity):
         finally:
             if watcher:
                 await asyncio.gather(watcher,return_exceptions=True)
+
+
+@asynccontextmanager
+async def open_existing_session(driver, *, container_id, declared, resource_identity):
+    """Attach one exact stopped owned container; never create a replacement."""
+    if not isinstance(resource_identity,ResourceIdentity):
+        raise ValueError('persisted resource identity required')
+    declared=RegistrationDescription.model_validate(declared)
+    identity=resource_identity
+    await asyncio.to_thread(driver.require_isolation)
+    await asyncio.to_thread(driver.require_stopped_owned,identity.name,identity.owner,container_id)
+    launch=asyncio.create_task(asyncio.create_subprocess_exec(*driver.start_command(container_id),
+        stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE))
+    process=None;stderr_task=None;watcher=None;session=None;cleanup_task=None
+
+    async def cleanup():
+        if session is not None:session.failed=True
+        launched=(await asyncio.gather(launch,return_exceptions=True))[0]
+        if stderr_task:
+            stderr_task.cancel()
+            await asyncio.gather(stderr_task,return_exceptions=True)
+        try:
+            await asyncio.to_thread(driver.remove_owned,identity.name,identity.owner,
+                expected_container_id=container_id)
+        except Exception as exc:
+            raise CleanupUncertainError(driver.context,identity.name,identity.owner) from exc
+        finally:
+            if isinstance(launched,asyncio.subprocess.Process) and launched.returncode is None:
+                launched.kill();await launched.wait()
+
+    async def close():
+        nonlocal cleanup_task
+        if cleanup_task is None:cleanup_task=asyncio.create_task(cleanup())
+        cancelled=False
+        while not cleanup_task.done():
+            try:await asyncio.shield(cleanup_task)
+            except asyncio.CancelledError:cancelled=True
+        cleanup_task.result()
+        if cancelled:raise asyncio.CancelledError
+
+    try:
+        process=await asyncio.shield(launch)
+        stderr_task=asyncio.create_task(_bounded_read(process.stderr,65536))
+        session=RuntimeSession(process,stderr_task,declared,close)
+        async def watch_stderr():
+            try:await asyncio.shield(stderr_task)
+            except asyncio.CancelledError:return
+            except Exception:pass
+            await close()
+        watcher=asyncio.create_task(watch_stderr())
+        result=await session._exchange('register','register',{},15)
+        validate_registration(declared,RegistrationDescription.model_validate(result))
+        yield session
+    finally:
+        try:await close()
+        finally:
+            if watcher:await asyncio.gather(watcher,return_exceptions=True)

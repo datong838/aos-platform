@@ -103,3 +103,29 @@ def test_persistent_command_is_fixed_and_keeps_isolation():
     image="sha256:"+"a"*64
     ordinary=driver.registration_command(image,"aos-ext-test","test")
     assert driver.session_command(image,"aos-ext-test","test")==ordinary+["--serve"]
+
+
+@pytest.mark.parametrize('change',['running','owner','name','container'])
+def test_rehydration_requires_exact_stopped_owned_container(monkeypatch,change):
+    import json
+    driver=OciDriver(context='colima-aos-extension')
+    container='a'*64
+    item={'Id':container,'Name':'/aos-ext-test',
+          'Config':{'Labels':{'aos.extension.owner':'owner'}},'State':{'Running':False}}
+    if change=='running':item['State']['Running']=True
+    if change=='owner':item['Config']['Labels']['aos.extension.owner']='other'
+    if change=='name':item['Name']='/aos-ext-other'
+    if change=='container':item['Id']='b'*64
+    monkeypatch.setattr(driver,'_run',lambda *args:json.dumps([item]))
+    with pytest.raises(RuntimeError):
+        driver.require_stopped_owned('aos-ext-test','owner',container)
+
+
+def test_rehydration_accepts_exact_stopped_owned_container(monkeypatch):
+    import json
+    driver=OciDriver(context='colima-aos-extension')
+    container='a'*64
+    monkeypatch.setattr(driver,'_run',lambda *args:json.dumps([{'Id':container,
+        'Name':'/aos-ext-test','Config':{'Labels':{'aos.extension.owner':'owner'}},
+        'State':{'Running':False}}]))
+    assert driver.require_stopped_owned('aos-ext-test','owner',container) is None

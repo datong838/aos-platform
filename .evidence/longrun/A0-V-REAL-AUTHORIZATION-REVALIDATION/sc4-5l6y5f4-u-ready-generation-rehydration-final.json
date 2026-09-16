@@ -1,0 +1,24 @@
+{
+  "outcome": "READY_GENERATION_REHYDRATION_CODE_GREEN",
+  "tests": {
+    "adjacentPassed": 168,
+    "directoryConsumerPassed": 40,
+    "pgSkippedWithoutTestDsn": 16
+  },
+  "live": {
+    "scope": "org-org/dev-project",
+    "eligibleDescriptors": 0,
+    "currentL": "FENCED_RELEASED_NOT_REHYDRATED"
+  },
+  "files": {
+    "services/aos-api/aos_api/extension_runtime/preparation_plan.py": "sha256:de5426e713e687617874a31880d155caba513ea1613f8c802769572156a9e019",
+    "services/aos-api/aos_api/extension_runtime/preparation_worker.py": "sha256:1148b462ca222fcfae19061426f5dba8bc4fc20981c3719bb8d5f1d41375e1ed",
+    "services/aos-api/aos_api/extension_runtime/preparation_consumer.py": "sha256:1d02ee85e17512c10fe51a4898a9f81615f58b5af280a054c99043164c10a414",
+    "services/aos-api/aos_api/extension_runtime/pending_preparation_directory.py": "sha256:8230e198f8147832fefb60179cc2519966dc77020841b44defe31285cc954d30",
+    "services/aos-api/aos_api/extension_runtime/preparation_owner.py": "sha256:8cbd538210e8f7335101efcb5bd0fffd210e0e4157d2b599aab37cb6633a64e9",
+    "services/aos-api/aos_api/extension_runtime/oci_driver.py": "sha256:a11e299d02bed26c8df9b640bb3c96c83a2870f33f75e4e6ca76c64815903d27",
+    "services/aos-api/aos_api/extension_runtime/session_supervisor.py": "sha256:41360a20122901e439874f8c8cdf40e80388bf86ada004408ccc24a31d3a910b",
+    "services/aos-api/aos_api/extension_runtime/journaled_session.py": "sha256:2f6596851fc73e50266b29a6efc478e9286d3ea57727a3cb7c7340adc738c8d4",
+    "services/aos-api/aos_api/extension_runtime/signed_session.py": "sha256:cbe52d1e22fe8e7316f4e350b48b698a45d1448ed1c9c1c08148eb8d1a9391d2"
+  }
+}

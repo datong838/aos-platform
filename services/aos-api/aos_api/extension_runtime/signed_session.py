@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from .admission import admit_runtime_artifact
 from .contracts import RegistrationDescription
-from .journaled_session import open_journaled_session, _settle
+from .journaled_session import open_journaled_session, open_existing_journaled_session, _settle
 from .reconciler import ResourceJournal
 
 
@@ -32,4 +32,17 @@ async def open_signed_session(*, driver, connect, org_id, project_id, resource_i
             connect,org_id,project_id,resource_id,declared)))
         if cancelled:
             raise asyncio.CancelledError
+        yield session
+
+
+@asynccontextmanager
+async def open_existing_signed_session(*,driver,connect,org_id,project_id,resource_id,
+        container_id,record,selected,policy,checked_at,read_artifact,platform):
+    record,selected=deepcopy(record),deepcopy(selected)
+    artifact=await asyncio.to_thread(admit_runtime_artifact,record=record,selected=selected,
+        policy=policy,checked_at=checked_at,read_artifact=read_artifact,platform=platform,driver=driver)
+    declared=RegistrationDescription(contributions=record.manifest.spec.contributions)
+    async with open_existing_journaled_session(driver,connect=connect,org_id=org_id,
+            project_id=project_id,resource_id=resource_id,container_id=container_id,
+            declared=declared,expected_package=(record.manifest.metadata.id,artifact.package_hash)) as session:
         yield session

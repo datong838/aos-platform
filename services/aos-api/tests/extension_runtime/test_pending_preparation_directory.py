@@ -25,6 +25,8 @@ def test_descriptor_requires_exact_scope_and_uuid():
         PendingPreparationDescriptor(SCOPE, "not-a-uuid")
     with pytest.raises(TypeError):
         PendingPreparationDescriptor(object(), uuid4())
+    with pytest.raises(TypeError):
+        PendingPreparationDescriptor(SCOPE, uuid4(), "guess")
 
 
 def test_directory_normalizes_dict_and_tuple_rows_in_uuid_order():
@@ -40,6 +42,15 @@ def test_directory_normalizes_dict_and_tuple_rows_in_uuid_order():
         PendingPreparationDescriptor(SCOPE, first),
         PendingPreparationDescriptor(SCOPE, second),
     )
+
+
+def test_directory_preserves_explicit_rehydration_mode():
+    installation=UUID(int=1)
+    directory=object.__new__(PostgresPendingPreparationDirectory)
+    directory.scope=SCOPE
+    directory._read_installations=lambda:({'installation_id':installation,'mode':'rehydrate'},)
+    assert directory.read_descriptors()==(
+        PendingPreparationDescriptor(SCOPE,installation,'rehydrate'),)
 
 
 @pytest.mark.parametrize(
@@ -76,6 +87,9 @@ def test_factory_builds_exact_unstarted_owner_and_rejects_cross_scope():
     assert owner.preparation.live_directory is live_directory
     assert owner.preparation.installation == descriptor.installation_id
     assert owner.preparation.job is None
+    assert owner.preparation.rehydrate is False
+    resumed=factory(PendingPreparationDescriptor(SCOPE,uuid4(),'rehydrate'))
+    assert resumed.preparation.rehydrate is True
     with pytest.raises(ValueError, match="scope mismatch"):
         factory(PendingPreparationDescriptor(TenantScope("other", "project"), uuid4()))
 

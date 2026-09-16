@@ -14,6 +14,32 @@ def named_worker(start):
     return worker
 
 
+def test_rehydration_never_claims_outbox_and_registers_exact_live_job():
+    from aos_api.extension_runtime.preparation_consumer import PreparationConsumer
+    async def run():
+        installation,operation=uuid4(),uuid4()
+        calls=[]
+        job=named_job(installation,operation)
+        async def prepared():calls.append('prepared')
+        async def stop():calls.append('stop')
+        job.prepared,job.stop=prepared,stop
+        worker=object.__new__(PreparationWorker)
+        async def resume_current(**kwargs):
+            calls.append(('resume',kwargs));return job
+        worker.resume_current=resume_current
+        consumer=PreparationConsumer(connect=lambda:None,worker=worker,
+            installation_id=installation,rehydrate=True,**SCOPE)
+        consumer._claim=lambda:pytest.fail('rehydration consumed an outbox')
+        assert await consumer.run_once() is None
+        assert await consumer.run_once() is None
+        assert calls[:2]==[('resume',{'org_id':'org-org','project_id':'dev-project',
+            'installation_id':installation}),'prepared']
+        assert len([item for item in calls if isinstance(item,tuple)])==1
+        await consumer.stop()
+        assert calls[-1]=='stop'
+    asyncio.run(run())
+
+
 def named_job(installation,operation):
     job=object.__new__(PreparedJob)
     job._tenant_scope=TenantScope(**SCOPE)

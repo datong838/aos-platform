@@ -4,8 +4,9 @@ from contextlib import asynccontextmanager
 
 from .lifecycle_store import RuntimeConflict, _values
 from .oci_driver import CleanupUncertainError
-from .reconciler import ResourceJournal
-from .session_supervisor import open_session
+from .reconciler import ResourceJournal, ResourceIntent
+from .session_supervisor import open_session, open_existing_session
+from .supervisor import ResourceIdentity
 
 
 async def _settle(task):
@@ -93,3 +94,52 @@ async def open_journaled_session(driver,*,connect,org_id,project_id,resource_id,
             _,cancelled_during_observation=await _settle(asyncio.create_task(asyncio.to_thread(wrapped.observe,False)))
             if cancelled_during_observation:
                 raise asyncio.CancelledError
+
+
+@asynccontextmanager
+async def open_existing_journaled_session(driver,*,connect,org_id,project_id,
+                                           resource_id,container_id,declared,
+                                           expected_package=None):
+    """Attach an already-created exact resource and journal its final cleanup."""
+    journal=ResourceJournal()
+    def read():
+        with connect() as conn:
+            row=conn.execute('''SELECT owner_token_ref,engine_context,container_id,package_id,
+                package_hash,cleanup_state,observed_release FROM extension_runtime_resource_lease
+                WHERE org_id=%s AND project_id=%s AND resource_id=%s''',
+                (org_id,project_id,resource_id)).fetchone()
+            if row is None:raise LookupError('rehydration resource not found')
+            owner,context,persisted,package,digest,state,released=_values(row,('owner_token_ref',
+                'engine_context','container_id','package_id','package_hash','cleanup_state','observed_release'))
+            if (context!=driver.context or persisted!=container_id or state!='pending' or released
+                    or expected_package is not None and (package,digest)!=expected_package):
+                raise RuntimeConflict('rehydration resource changed')
+            return ResourceIntent(resource_id,ResourceIdentity(owner),context,True)
+    intent,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(read)))
+    if cancelled:raise asyncio.CancelledError
+    observed=False
+    def persist(confirmed):
+        with connect() as conn:
+            with conn.transaction():
+                journal.record_cleanup(conn,org_id=org_id,project_id=project_id,
+                    intent=intent,removed=confirmed)
+    class ExistingDriver:
+        context=driver.context
+        require_isolation=driver.require_isolation
+        require_stopped_owned=driver.require_stopped_owned
+        start_command=driver.start_command
+        def remove_owned(self,*args,**kwargs):
+            nonlocal observed
+            try:removed=driver.remove_owned(*args,**kwargs)
+            except Exception:
+                persist(False);observed=True;raise
+            persist(removed is True);observed=True
+            return removed
+    try:
+        async with open_existing_session(ExistingDriver(),container_id=container_id,
+                declared=declared,resource_identity=intent.identity) as session:
+            yield session
+    finally:
+        if not observed:
+            _,was_cancelled=await _settle(asyncio.create_task(asyncio.to_thread(persist,False)))
+            if was_cancelled:raise asyncio.CancelledError
