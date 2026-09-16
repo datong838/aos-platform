@@ -333,6 +333,22 @@ def _binding() -> ScheduleBinding:
     )
 
 
+def _once_binding() -> ScheduleBinding:
+    return ScheduleBinding(
+        policy_id="qyh-first-baseline",
+        policy_revision=1,
+        policy_hash="sha256:" + "c" * 64,
+        operation_id="ecommerce_growth_schedule_trigger",
+        installation_id=UUID("11111111-1111-4111-8111-111111111111"),
+        generation=UUID("22222222-2222-4222-8222-222222222222"),
+        execution_epoch=3,
+        cadence="once",
+        effective_from=datetime(2026, 9, 17, 1, 2, 3, tzinfo=UTC),
+        approved=True,
+        enabled=True,
+    )
+
+
 def test_scheduler_records_all_slots_and_only_latest_24h_slot_is_pending():
     captured = {}
 
@@ -350,6 +366,54 @@ def test_scheduler_records_all_slots_and_only_latest_24h_slot_is_pending():
     assert result == {"due": 4, "pending": 1, "missed": 3}
     assert [slot[3] for slot in captured["slots"]] == ["missed", "missed", "missed", "pending"]
     assert captured["new_watermark"] == datetime(2026, 8, 31, 1, tzinfo=UTC)
+
+
+def test_once_scheduler_records_one_effective_slot_and_restart_is_idle():
+    captured = []
+
+    class Store:
+        def record_due_batch(self, scope, binding, **kwargs):
+            captured.append(kwargs)
+
+    scope = TenantScope("org-org", "dev-project")
+    binding = _once_binding()
+    before = run_due_schedule_binding(
+        scope, binding, watermark=None,
+        now=datetime(2026, 9, 17, 1, 2, 2, tzinfo=UTC), store=Store(),
+    )
+    first = run_due_schedule_binding(
+        scope, binding, watermark=None,
+        now=datetime(2026, 9, 17, 1, 2, 4, tzinfo=UTC), store=Store(),
+    )
+    replay = run_due_schedule_binding(
+        scope, binding, watermark=datetime(2026, 9, 17, 1, 2, 4, tzinfo=UTC),
+        now=datetime(2026, 9, 17, 2, tzinfo=UTC), store=Store(),
+    )
+    assert before == replay == {"due": 0, "pending": 0, "missed": 0}
+    assert first == {"due": 1, "pending": 1, "missed": 0}
+    assert len(captured) == 1
+    assert captured[0]["expected_watermark"] is None
+    assert captured[0]["slots"] == [(
+        datetime(2026, 9, 17, 1, 2, 3, tzinfo=UTC),
+        "2026-09-17T09:02+0800",
+        datetime(2026, 9, 18, 1, 2, 4, tzinfo=UTC),
+        "pending",
+    )]
+
+
+def test_once_scheduler_marks_stale_slot_missed_without_catch_up_replay():
+    captured = {}
+
+    class Store:
+        def record_due_batch(self, scope, binding, **kwargs):
+            captured.update(kwargs)
+
+    result = run_due_schedule_binding(
+        TenantScope("org-org", "dev-project"), _once_binding(), watermark=None,
+        now=datetime(2026, 9, 19, 1, 2, 3, tzinfo=UTC), store=Store(),
+    )
+    assert result == {"due": 1, "pending": 0, "missed": 1}
+    assert captured["slots"][0][3] == "missed"
 
 
 def test_schedule_binding_rejects_noncanonical_operation_and_runtime_identity():

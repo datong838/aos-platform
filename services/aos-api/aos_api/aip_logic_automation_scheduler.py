@@ -62,12 +62,18 @@ def run_due_schedule_binding(
     now: datetime,
     store: AutomationOccurrenceStore | None = None,
 ) -> dict[str, int]:
-    """Enumerate every weekly slot since watermark and persist the batch atomically."""
-    if binding.cadence != "weekly" or binding.weekly_day is None or binding.local_time is None:
-        raise ValueError("natural-slot scheduler requires a weekly binding")
+    """Enumerate a once or weekly binding and persist its due slots atomically."""
+    if binding.cadence not in {"once", "weekly"}:
+        raise ValueError("natural-slot scheduler requires a once or weekly binding")
     if now.utcoffset() is None:
         raise ValueError("scheduler time must include timezone")
     moment = now.astimezone(UTC).replace(microsecond=0)
+    if binding.cadence == "once":
+        return _run_due_once_schedule_binding(
+            scope, binding, watermark=watermark, moment=moment, store=store,
+        )
+    if binding.weekly_day is None or binding.local_time is None:
+        raise ValueError("weekly binding requires weekday and local time")
     start = (watermark or binding.effective_from).astimezone(UTC).replace(microsecond=0)
     if moment < start or (watermark is not None and moment == start):
         return {"due": 0, "pending": 0, "missed": 0}
@@ -112,4 +118,34 @@ def run_due_schedule_binding(
         "due": len(slots),
         "pending": sum(item[3] == "pending" for item in slots),
         "missed": sum(item[3] == "missed" for item in slots),
+    }
+
+
+def _run_due_once_schedule_binding(
+    scope: TenantScope,
+    binding: ScheduleBinding,
+    *,
+    watermark: datetime | None,
+    moment: datetime,
+    store: AutomationOccurrenceStore | None,
+) -> dict[str, int]:
+    """Persist the single effective-from slot once; restarts cannot create another."""
+    slot = binding.effective_from.astimezone(UTC).replace(microsecond=0)
+    if watermark is not None or moment < slot:
+        return {"due": 0, "pending": 0, "missed": 0}
+    if binding.effective_until is not None and slot >= binding.effective_until.astimezone(UTC):
+        raise ValueError("once slot is outside the binding effective interval")
+    status = "pending" if moment - slot <= timedelta(hours=24) else "missed"
+    local_slot = slot.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%dT%H:%M%z")
+    (store or AutomationOccurrenceStore()).record_due_batch(
+        scope,
+        binding,
+        expected_watermark=None,
+        new_watermark=moment,
+        slots=[(slot, local_slot, max(moment, slot) + timedelta(hours=24), status)],
+    )
+    return {
+        "due": 1,
+        "pending": int(status == "pending"),
+        "missed": int(status == "missed"),
     }
