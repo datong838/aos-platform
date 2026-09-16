@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "aos.evidence.q-clean-successor/v1",
+  "observedAt": "2026-09-16T21:46:39.841807+00:00",
+  "outcome": "Q_CLEAN_SUCCESSOR_CUTOVER_GREEN",
+  "installation": {
+    "head": {
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "etag_version": 5,
+      "state": "active",
+      "lock_hash": "sha256:15ac55d0ca7098c4df286ad70b6a20e79c327b0ec9c53baceea7cbb7059fcae8",
+      "overlay_revision": "a0v-canonical-ecommerce-v1"
+    },
+    "bindings": [
+      {
+        "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+        "revision": 6,
+        "execution_epoch": 3,
+        "enabled": true,
+        "operation_fence": false,
+        "desired_state": "enabled",
+        "observed_state": "ready",
+        "config_ref": {
+          "hash": "sha256:9fb2b4eab4dda6f70e24b559e5246b400566d4f4820cc2e0e98b0904b8436c91",
+          "revision": 1,
+          "configurationId": "235146cc-26a2-44e7-a39e-8b20904f1776"
+        }
+      }
+    ],
+    "operations": [
+      {
+        "operation_id": "15cb6184-7807-4b8a-9735-d0c33dc2a7d3",
+        "kind": "runtime-apply",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 19,
+        "failure_code": null,
+        "deadline_expired": true
+      },
+      {
+        "operation_id": "b2cd67ba-bc6a-4c5b-b618-77b8cf37ee9c",
+        "kind": "runtime-verify",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null,
+        "deadline_expired": true
+      },
+      {
+        "operation_id": "d5653a9f-9006-407d-bf95-444503686b6c",
+        "kind": "configure",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 6,
+        "failure_code": null,
+        "deadline_expired": false
+      },
+      {
+        "operation_id": "257124c4-06ae-4b3c-b89e-aadd4e473c64",
+        "kind": "enable",
+        "status": "succeeded",
+        "phase": "succeeded",
+        "revision": 5,
+        "failure_code": null,
+        "deadline_expired": false
+      }
+    ],
+    "resources": [
+      {
+        "resource_id": "5275398f-5178-452b-bf5a-d941a3ff7d39",
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "resource_id": "d6b86ef7-9d91-41b5-ba55-d715dfa8ed8c",
+        "cleanup_state": "pending",
+        "observed_release": false
+      },
+      {
+        "resource_id": "f4c3a1f3-e87c-4533-8a1d-d24ea823412a",
+        "cleanup_state": "pending",
+        "observed_release": false
+      }
+    ],
+    "canaryInstallations": 0
+  },
+  "cutover": {
+    "cutover_operation_id": "34d286d2-13a6-57de-bc91-4ea6c6db6b76",
+    "status": "resumed",
+    "target_installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+    "target_generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+    "target_execution_epoch": 3,
+    "target_runtime_revision": 4,
+    "expected_group_revision": 53
+  },
+  "receipts": [
+    {
+      "phase": "prepare",
+      "receipt_id": "aedd81b5-5cb3-4c43-8c0b-70c83e2bdcb9",
+      "content_hash": "sha256:3d014d875a81e75316f3e9fa72d608692cf6a1aa28b76dd6a5dc978f16715e54"
+    },
+    {
+      "phase": "pause",
+      "receipt_id": "6c7377a7-31e1-4436-a633-fc07bc7b6a26",
+      "content_hash": "sha256:0d2b7fdb7bc15a28a55c58c523014248574b09b0590c140cb21d261c642db47a"
+    },
+    {
+      "phase": "commit",
+      "receipt_id": "8307ed23-d01a-4a60-b42d-80a9f761b4b2",
+      "content_hash": "sha256:96360781b60f1343f35e1f490a94ce19d2a66821755220cf7d8007a7a5f4d0d0"
+    },
+    {
+      "phase": "validate",
+      "receipt_id": "7bcd16ca-2eda-49a0-88d4-3fff4e18f3e0",
+      "content_hash": "sha256:7ae9cb9df3d73494d119deb03f431f4176a09145508be5199c235af8ced73e6c"
+    },
+    {
+      "phase": "resume",
+      "receipt_id": "4c3f8a05-911f-44e2-81a1-ac1f8cb35f72",
+      "content_hash": "sha256:3fcf1d5c95d8ba8975f5e5ca94710e550341a1d78c90315d140038eb6d04a25f"
+    }
+  ],
+  "routes": [
+    {
+      "operation_id": "ecommerce_growth_analysis_advance",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_case_put",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_content_generate",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_content_review",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_data_fulfill",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_investigation_describe",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_review_advance",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_schedule_put",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    },
+    {
+      "operation_id": "ecommerce_growth_schedule_trigger",
+      "handler_kind": "extension",
+      "installation_id": "9c49b383-e04d-41b4-8276-8b8bc6db49a8",
+      "generation": "98aea676-ee71-4d42-a6c8-6634960efe5e",
+      "execution_epoch": 3,
+      "operation_fence": false,
+      "revision": 30,
+      "cutover_group_revision": 54
+    }
+  ],
+  "schedule": {
+    "enabled": false,
+    "last_run": {
+      "at": "2026-09-16T20:00:26.805067+00:00",
+      "id": "scr-4eda5462575a4740",
+      "status": "succeeded",
+      "trigger": "cron",
+      "errorCode": "",
+      "durationMs": 12453,
+      "rowsWritten": 65
+    }
+  },
+  "counts": {
+    "running": 0,
+    "unresolved": 0,
+    "canary": 0
+  },
+  "externalEffects": 0
+}
