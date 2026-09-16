@@ -2174,6 +2174,24 @@ def get_build_logs(build_id: str, principal: Principal = Depends(require_princip
     return {"items": _build_logs[build_id]}
 
 
+def _persist_schedule_confirmed(scope: TenantScope, item: dict[str, Any]) -> None:
+    """Publish cache only after persistence acknowledges; unknown writes require readback."""
+    from aos_api import data_os_store
+
+    try:
+        data_os_store.persist_schedule(scope, item)
+    except ApiError:
+        _data_os_loaded_scopes.discard(scope.key)
+        raise
+    except Exception:
+        _data_os_loaded_scopes.discard(scope.key)
+        raise ApiError(
+            code="SCHEDULE_PERSISTENCE_UNCONFIRMED",
+            message="计划保存结果尚未确认，请刷新核对原计划后再操作",
+            status_code=503,
+        ) from None
+
+
 @router.post("/v1/schedules")
 def create_schedule(body: dict[str, Any], principal: Principal = Depends(require_principal)):
     scope = _mutation_scope(principal)
@@ -2194,8 +2212,8 @@ def create_schedule(body: dict[str, Any], principal: Principal = Depends(require
         "projectId": principal.project_id,
         "lastRun": None,
     }
+    _persist_schedule_confirmed(scope, item)
     _schedules[sid] = item
-    _persist_safe("persist_schedule", scope, item)
     return item
 
 
@@ -2231,6 +2249,7 @@ def patch_schedule(
     if not item:
         raise ApiError(code="NOT_FOUND", message="schedule missing", status_code=404)
     _assert_mutation_scope(item, scope, resource="schedule", resource_id=schedule_id)
+    item = dict(item)
     if "cron" in body and body["cron"] is not None:
         item["cron"] = str(body["cron"])
     if "pipelineId" in body:
@@ -2241,8 +2260,8 @@ def patch_schedule(
         item["name"] = str(body["name"])
     if "ingest" in body and (body["ingest"] is None or isinstance(body["ingest"], dict)):
         item["ingest"] = body["ingest"]
+    _persist_schedule_confirmed(scope, item)
     _schedules[schedule_id] = item
-    _persist_safe("persist_schedule", scope, item)
     return item
 
 
