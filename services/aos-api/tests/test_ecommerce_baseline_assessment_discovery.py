@@ -5,6 +5,7 @@ from uuid import UUID
 import pytest
 
 import aos_api.ecommerce_baseline_assessment_discovery as module
+from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.automation_occurrence_store import ClaimedOccurrence
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.ecommerce_business_investigation_case import (
@@ -41,6 +42,7 @@ def authorities():
     policy_ref = ref("SchedulePolicyRevision", "baseline-once", digest="b")
     case = BusinessInvestigationCaseRevision.model_construct(
         case_id="case-baseline-once", revision=2, version=2,
+        content_hash="sha256:" + "a" * 64,
         lifecycle=BusinessInvestigationCaseLifecycle.ACTIVE,
         analysis_type=BusinessInvestigationAnalysisType.INITIAL_STORE_ANALYSIS,
         schedule_policy_ref=policy_ref,
@@ -77,7 +79,7 @@ class Result:
 
 
 class Connection:
-    def __init__(self, *, active=(), plans=(), sources=None, dispatch=None):
+    def __init__(self, *, active=(), plans=(), sources=None, dispatch=None, control=None):
         self.active, self.plans = active, plans
         self.dispatch = dispatch or {
             "handler_kind": "extension", "installation_id": INSTALLATION,
@@ -88,7 +90,10 @@ class Connection:
             "run_id": "source-run-1", "actor": "source-reader",
             "control_id": UUID("66666666-6666-4666-8666-666666666666"),
             "control_revision": 4, "control_hash": "sha256:" + "c" * 64,
+            "selection_id": UUID("77777777-7777-4777-8777-777777777777"),
+            "selection_revision": 2, "selection_hash": "sha256:" + "d" * 64,
         }]
+        self.control = control
 
     def execute(self, query, _params=()):
         if "run_active_slot" in query:
@@ -97,9 +102,30 @@ class Connection:
             return Result(many=self.plans)
         if "operation_id='ecommerce_growth_analysis_advance'" in query:
             return Result(one=self.dispatch)
+        if "ecommerce_schedule_policy_control_receipt" in query:
+            return Result(one=None if self.control is False else {
+                "authority": self.control or schedule_control_authority()
+            })
         if "pipeline_snapshot_group_input" in query:
             return Result(many=self.sources)
         raise AssertionError(query)
+
+
+def schedule_control_authority():
+    body = {
+        "schemaVersion": "aos.ecommerce.schedule-policy-control-receipt/v1",
+        "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+        "policyRef": ref("SchedulePolicyRevision", "baseline-once", digest="b").model_dump(mode="json", by_alias=True),
+        "caseRef": ref("BusinessInvestigationCaseRevision", "case-baseline-once", revision=2).model_dump(mode="json", by_alias=True),
+        "approvalRef": ref("ActionApprovalEvent", "approval-1", digest="e").model_dump(mode="json", by_alias=True),
+        "commandReceiptId": "command-1",
+        "dispatch": {"installationId": str(INSTALLATION), "generation": str(GENERATION), "executionEpoch": 3},
+    }
+    digest = canonical_sha256(body)
+    return {**body, "receiptRef": {
+        "resourceType": "SchedulePolicyControlReceipt", "resourceId": "control-1",
+        "revision": 1, "contentHash": digest,
+    }, "contentHash": digest}
 
 
 def install_authority_fakes(monkeypatch, *, occurrence=None):
@@ -135,6 +161,8 @@ def test_discovers_one_current_plan_empty_baseline(monkeypatch):
     assert route.source_group_id == GROUP
     assert route.source_run_id == "source-run-1"
     assert route.source_control_ref.resource_id.startswith("pipeline-control-")
+    assert route.source_selection_ref.resource_id.startswith("source-selection-")
+    assert route.schedule_control.approval_ref.resource_id == "approval-1"
     assert route.installation_id == INSTALLATION and route.generation == GENERATION
 
 
@@ -167,6 +195,8 @@ def test_route_generation_and_stale_source_fail_closed(monkeypatch):
         "run_id": "source-run-1", "actor": "source-reader",
         "control_id": UUID("66666666-6666-4666-8666-666666666666"),
         "control_revision": 4, "control_hash": "sha256:" + "c" * 64,
+        "selection_id": UUID("77777777-7777-4777-8777-777777777777"),
+        "selection_revision": 2, "selection_hash": "sha256:" + "d" * 64,
     }]
     with pytest.raises(module.BaselineAssessmentBlocked, match="stale"):
         module.BaselineAssessmentDiscovery().read(
@@ -183,4 +213,21 @@ def test_event_occurrence_never_enters_baseline_path(monkeypatch):
     with pytest.raises(module.BaselineAssessmentBlocked, match="schedule slot"):
         module.BaselineAssessmentDiscovery().read(
             HostTransaction(Connection()), SCOPE, claim(), observed_at=NOW,
+        )
+
+
+def test_missing_or_drifted_schedule_control_fails_closed(monkeypatch):
+    install_authority_fakes(monkeypatch)
+    with pytest.raises(module.BaselineAssessmentBlocked, match="unavailable"):
+        module.BaselineAssessmentDiscovery().read(
+            HostTransaction(Connection(control=False)), SCOPE, claim(), observed_at=NOW,
+        )
+    changed = schedule_control_authority()
+    changed["dispatch"]["executionEpoch"] = 4
+    body = {key: value for key, value in changed.items() if key not in {"receiptRef", "contentHash"}}
+    changed["contentHash"] = canonical_sha256(body)
+    changed["receiptRef"]["contentHash"] = changed["contentHash"]
+    with pytest.raises(module.BaselineAssessmentBlocked, match="differs"):
+        module.BaselineAssessmentDiscovery().read(
+            HostTransaction(Connection(control=changed)), SCOPE, claim(), observed_at=NOW,
         )

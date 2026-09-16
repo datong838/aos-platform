@@ -22,6 +22,7 @@ from aos_api.ecommerce_business_investigation_schedule import (
 )
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+from aos_api.ecommerce_schedule_policy_control import SchedulePolicyControlReceipt
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.tenant_scope import TenantScope
 
@@ -47,6 +48,8 @@ class BaselineAssessmentRoute:
     source_run_id: str
     source_actor: str
     source_control_ref: PipelineExactRef
+    source_selection_ref: PipelineExactRef
+    schedule_control: SchedulePolicyControlReceipt
     cutoff_at: datetime
 
 
@@ -146,9 +149,32 @@ class BaselineAssessmentDiscovery:
         ):
             raise BaselineAssessmentBlocked("current analysis route differs from schedule occurrence")
 
+        control_row = transaction.execute(
+            """SELECT authority FROM ecommerce_schedule_policy_control_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND schedule_policy_id=%s AND policy_revision=%s""",
+            (*scope.key, policy.schedule_policy_id, policy.revision),
+        ).fetchone()
+        if control_row is None:
+            raise BaselineAssessmentBlocked("current baseline SchedulePolicy control Receipt is unavailable")
+        schedule_control = SchedulePolicyControlReceipt.model_validate(control_row["authority"])
+        if (
+            schedule_control.tenant.org_id != scope.org_id
+            or schedule_control.tenant.project_id != scope.project_id
+            or schedule_control.policy_ref != expected_policy_ref
+            or schedule_control.case_ref.resource_id != case.case_id
+            or schedule_control.case_ref.revision != case.revision
+            or schedule_control.case_ref.content_hash != case.content_hash
+            or UUID(schedule_control.dispatch.installation_id) != claimed.installation_id
+            or UUID(schedule_control.dispatch.generation) != claimed.generation
+            or schedule_control.dispatch.execution_epoch != claimed.execution_epoch
+        ):
+            raise BaselineAssessmentBlocked("current baseline SchedulePolicy control Receipt differs")
+
         sources = transaction.execute(
             """SELECT gi.group_id,gi.read_completed_at,c.run_id,c.actor,
-                      c.control_id,c.control_revision,c.control_hash
+                      c.control_id,c.control_revision,c.control_hash,
+                      r.selection_id,r.selection_revision,r.selection_hash
                  FROM pipeline_snapshot_group_input gi
                  JOIN pipeline_snapshot_group_member gm
                    ON gm.org_id=gi.org_id AND gm.project_id=gi.project_id
@@ -156,6 +182,11 @@ class BaselineAssessmentDiscovery:
                  JOIN pipeline_controlled_source_claim c
                    ON c.org_id=gm.org_id AND c.project_id=gm.project_id
                   AND c.run_id=gm.run_id
+                 JOIN pipeline_runtime_control_revision r
+                   ON r.org_id=c.org_id AND r.project_id=c.project_id
+                  AND r.installation_id=c.installation_id AND r.generation=c.generation
+                  AND r.pipeline_id=c.pipeline_id AND r.control_id=c.control_id
+                  AND r.revision=c.control_revision AND r.content_hash=c.control_hash
                 WHERE gi.org_id=%s AND gi.project_id=%s
                   AND c.installation_id=%s AND c.generation=%s
                   AND c.pipeline_id='P02-product-qyh'
@@ -187,6 +218,13 @@ class BaselineAssessmentDiscovery:
                 revision=int(latest["control_revision"]),
                 contentHash=str(latest["control_hash"]),
             ),
+            source_selection_ref=PipelineExactRef(
+                resourceType="SourceSelectionRevision",
+                resourceId="source-selection-" + str(latest["selection_id"]),
+                revision=int(latest["selection_revision"]),
+                contentHash=str(latest["selection_hash"]),
+            ),
+            schedule_control=schedule_control,
             cutoff_at=latest["read_completed_at"],
         )
 
