@@ -33,6 +33,19 @@
 5. **真实租户配置与运行**：通过当前 Q canonical router 建立独立 baseline Case、once policy 和审批/绑定；不直接写表。等待 Host 自动生成 occurrence 和 Run，随后观察 DataNeed、画像、诊断和计划草稿。
 6. **exact 评审和下一波**：对可读且逐项有来源的计划执行人工角色 exact 评审；批准后进入内部工作台任务，不执行外部发布。下一波补齐计划承接、可读产物、人工续跑、总控复盘和 WikiCandidate。
 
+### 3.1 电脑重启后的前置恢复增补（2026-09-17）
+
+电脑重启后的现场复核表明：Q installation 仍为 `active@5`，但运行租约已按设计回收，binding 已进入 `revision7 / epoch4 / enabled=false / fenced / observed=unknown`，三项运行资源均为 `released`；九项正式入口加 event-control 仍保留在旧 epoch3，当前无 running execution、无 unresolved occurrence。已释放资源不得由新 Host 原地复活，因此第 5 步前增加固定恢复子波次：
+
+1. 停止无 live target 的 Host，冻结 Q 当前头、released resource、route group、Policy12 和零在途证据；
+2. 通过 released event-control Owner 禁用 Policy12 binding，再以 exact approval 依次 fence、shrink 可选 event-control；
+3. 通过正式 disable consumer 对 Q 的九项入口执行 fence/detach，禁止直接改路由或运行绑定；
+4. 以 Q detach Receipt 为前驱，新建相同包版本的干净 R installation，执行 prepare、verify、stage、configure、enable；
+5. 注册并 cutover 到 R，重新签发 Product source selection/control/binding 与 ProductEvent policy；随后才启动本方案的一次性 baseline Case/Policy；
+6. 验证 Q 不再可执行、R 单一 live target、canary 为零、旧 epoch occurrence 不被重放，再回到第 5 步。
+
+该增补只恢复运行所有权，不修改商城源数据，不补造 ProductEvent，不跳过审批，也不把历史 Q projection 当作 R 的当前授权。
+
 ## 4. 实现文件与最小边界
 
 | 文件 | 动作 | preHash / 边界 |
