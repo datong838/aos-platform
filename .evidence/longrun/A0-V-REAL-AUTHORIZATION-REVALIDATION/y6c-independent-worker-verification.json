@@ -1,0 +1,40 @@
+{
+  "pid": 64525,
+  "observedAt": "2026-09-16T10:58:04.061272+00:00",
+  "workerState": "IDLE",
+  "workerTaskAlive": true,
+  "workerError": null,
+  "hostInThisProcess": false,
+  "topology": "independent",
+  "executionAuthorized": false,
+  "loadedSourceHashes": {
+    "scripts/a0v_snapshot_product_api.py": "sha256:c8187443dadf785dd530f10b8e5edfd8e95d01a41276b449a412aedf2c978ae0",
+    "services/aos-api/aos_api/main.py": "sha256:2ec062b69244fb66905c2cd045aae9e39a32262cc066b57ab44f5993d16af007",
+    "services/aos-api/aos_api/routers/pipeline_snapshot_schedules.py": "sha256:3f24c4d555e9b0018844a9ad09d3fec3276f12c6e2b831c8475db8fbe645c509"
+  },
+  "mainVersion": "a0v_066",
+  "counts": {
+    "definitions": 0,
+    "source_runs": 11,
+    "source_claims": 10,
+    "enabled_schedules": 0
+  },
+  "binding": {
+    "generation": "5295b81e-6005-4c2e-befc-3323f1456b8c",
+    "revision": 6,
+    "enabled": true,
+    "operation_fence": false,
+    "observed_state": "ready"
+  },
+  "resources": [
+    {
+      "cleanup_state": "pending",
+      "observed_release": false,
+      "count": 3
+    }
+  ],
+  "originalHostPid": 12960,
+  "originalHostUnchanged": true,
+  "newSourceCalls": 0,
+  "businessChainComplete": false
+}

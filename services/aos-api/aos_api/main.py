@@ -47,10 +47,18 @@ async def _start_snapshot_group_worker(_app: FastAPI) -> None:
     if not enabled:
         _app.state.snapshot_group_worker_status = 'DISABLED'
         return
+    topology = os.getenv('AOS_SNAPSHOT_GROUP_WORKER_TOPOLOGY','cohosted').strip().lower()
+    _app.state.snapshot_group_worker_topology = topology
+    if topology not in {'cohosted','independent'}:
+        _app.state.snapshot_group_worker_status = 'FAILED_CLOSED'
+        _app.state.snapshot_group_worker_error_code = 'SNAPSHOT_TOPOLOGY_INVALID'
+        raise RuntimeError('snapshot worker topology is invalid')
     host = getattr(_app.state,'extension_runtime_host_task',None)
     plane = getattr(_app.state,'extension_runtime_control_plane',None)
     factory = getattr(plane,'pipeline_control_factory',None)
-    if host is None or host.done() or factory is None:
+    from aos_api.pipeline_control_service import PipelineControlServiceFactory
+    if (factory is None or (topology=='cohosted' and (host is None or host.done()))
+            or (topology=='independent' and type(factory) is not PipelineControlServiceFactory)):
         _app.state.snapshot_group_worker_status = 'FAILED_CLOSED'
         _app.state.snapshot_group_worker_error_code = 'SNAPSHOT_HOST_UNAVAILABLE'
         raise RuntimeError('snapshot worker requires a running host and control factory')
@@ -66,7 +74,11 @@ async def _start_snapshot_group_worker(_app: FastAPI) -> None:
                 worker = factory.build_snapshot_worker(TenantScope('org-org','dev-project'),store=store)
                 _app.state.snapshot_group_worker = worker
                 _app.state.snapshot_group_worker_status = 'RUNNING'
-                await worker.serve(stop,host_ready=lambda:not host.done())
+                # Independent ingestion owns no PreparedJob and starts no Host.
+                # Every actual dispatch still enters the original current runtime
+                # gate, including installation fence, generation and approvals.
+                dependency_ready = (lambda:not host.done()) if topology=='cohosted' else (lambda:not stop.is_set())
+                await worker.serve(stop,host_ready=dependency_ready)
         except asyncio.CancelledError:
             _app.state.snapshot_group_worker_status = 'STOPPED'
             raise

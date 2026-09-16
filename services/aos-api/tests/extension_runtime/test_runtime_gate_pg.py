@@ -76,6 +76,22 @@ def test_gate_scope_and_lock_membership(database):
         with conn.transaction():run_guarded(**args,check_current_policy=checks,execute=lambda:pytest.fail("wrong lock"))
 
 
+@pytest.mark.parametrize('fence', ['disabled', 'operation-fenced'])
+def test_independent_reader_cannot_bypass_persisted_installation_fence(database, fence):
+    from aos_api.extension_runtime.runtime_gate import run_guarded, CurrentPolicy
+    args, _ = setup_gate(database)
+    conn = args['conn']
+    if fence == 'disabled':
+        conn.execute('UPDATE extension_runtime_binding SET enabled=false')
+    else:
+        conn.execute('UPDATE extension_runtime_binding SET enabled=false,operation_fence=true')
+    with pytest.raises(PermissionError), conn.transaction():
+        run_guarded(**args,
+            check_current_policy=lambda c, b: CurrentPolicy(
+                permissions_valid=True, budget_valid=True, policy_valid=True),
+            execute=lambda: pytest.fail('fenced installation reached source callback'))
+
+
 @pytest.mark.parametrize("deferred",["async-function","coroutine-result","generator-result"])
 def test_gate_cannot_return_deferred_execution(database,deferred):
     from aos_api.extension_runtime.runtime_gate import run_guarded,CurrentPolicy

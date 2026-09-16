@@ -31,7 +31,10 @@ def _worker_status(request,principal,definition_id):
         return dict(state='UNAVAILABLE',available=False,active=False,errorCode=None)
     task=getattr(app,'snapshot_group_worker_task',None)
     host=getattr(app,'extension_runtime_host_task',None)
-    live=task is not None and not task.done() and host is not None and not host.done()
+    topology=getattr(app,'snapshot_group_worker_topology','cohosted')
+    dependency_live=(topology=='independent' or
+        (topology=='cohosted' and host is not None and not host.done()))
+    live=task is not None and not task.done() and dependency_live
     actual=getattr(worker,'status','UNAVAILABLE')
     if state=='FAILED_CLOSED':actual=state
     elif not live and actual in {'RUNNING','IDLE'}:actual='UNAVAILABLE'

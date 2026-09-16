@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from threading import Event
 from types import SimpleNamespace
 import pytest
+from aos_api.pipeline_control_service import PipelineControlServiceFactory
 from aos_api import main
 from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker
 
@@ -24,10 +25,12 @@ def test_default_disabled_and_explicit_missing_host_fail_closed(monkeypatch):
     asyncio.run(scenario())
 
 
-def test_application_shutdown_disposes_store_only_after_thread_exit(monkeypatch):
+@pytest.mark.parametrize('topology',['cohosted','independent'])
+def test_application_shutdown_disposes_store_only_after_thread_exit(monkeypatch,topology):
     import aos_api.pipeline_controlled_runtime as controlled
     import aos_api.jdbc_connector_runtime as jdbc
     monkeypatch.setenv('AOS_SNAPSHOT_GROUP_WORKER_ENABLED','true')
+    monkeypatch.setenv('AOS_SNAPSHOT_GROUP_WORKER_TOPOLOGY',topology)
     monkeypatch.setattr(jdbc,'jdbc_runtime_shutdown',lambda:None)
     started,stopping,release,exited=Event(),Event(),Event(),Event();disposed=[]
     @contextmanager
@@ -57,9 +60,12 @@ def test_application_shutdown_disposes_store_only_after_thread_exit(monkeypatch)
         host=asyncio.create_task(host_stop.wait())
         app.state.runtime_stop_events=(host_stop,)
         app.state.runtime_background_tasks=[host]
-        app.state.extension_runtime_host_task=host
-        app.state.extension_runtime_control_plane=SimpleNamespace(pipeline_control_factory=SimpleNamespace(build_snapshot_worker=build))
+        app.state.extension_runtime_host_task=host if topology=='cohosted' else None
+        factory=object.__new__(PipelineControlServiceFactory)
+        object.__setattr__(factory,'build_snapshot_worker',build)
+        app.state.extension_runtime_control_plane=SimpleNamespace(pipeline_control_factory=factory)
         await main._start_snapshot_group_worker(app)
+        if topology=='independent':assert app.state.extension_runtime_host_task is None
         await until(started.is_set)
         shutdown=asyncio.create_task(main._shutdown_application_runtime_body(app))
         try:
@@ -95,4 +101,16 @@ def test_construction_failure_is_not_advertised_as_running(monkeypatch):
             assert app.state.snapshot_group_worker_error_code=='SNAPSHOT_WORKER_FAILED'
             assert closed==[True]
         finally:stop.set();await host
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize('mode',['invalid','independent'])
+def test_unknown_topology_or_missing_factory_fails_closed(monkeypatch,mode):
+    monkeypatch.setenv('AOS_SNAPSHOT_GROUP_WORKER_ENABLED','true')
+    monkeypatch.setenv('AOS_SNAPSHOT_GROUP_WORKER_TOPOLOGY',mode)
+    async def scenario():
+        app=application()
+        with pytest.raises(RuntimeError):await main._start_snapshot_group_worker(app)
+        assert app.state.snapshot_group_worker_status=='FAILED_CLOSED'
+        assert not app.state.runtime_background_tasks
     asyncio.run(scenario())

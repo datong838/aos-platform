@@ -160,3 +160,23 @@ def test_options_reject_bad_installation_before_service(api):
     client,calls,scopes,*_=api
     assert client.get('/v1/pipelines/snapshot-schedules/options',params={'installationId':'invalid','generation':str(uuid4())}).status_code==422
     assert not calls and not scopes
+
+
+def test_independent_worker_status_does_not_fabricate_host_health(api):
+    client,calls,scopes,service,definition,_=api
+    service.read_runtime_status=lambda **kw:dict(executionAuthorized=False)
+    from aos_api.tenant_scope import TenantScope
+    state=client.app.state
+    state.snapshot_group_worker=NS(scope=TenantScope('org-org','dev-project'),status='IDLE',
+        active_definition_id=None,last_error=None)
+    state.snapshot_group_worker_status='RUNNING'
+    state.snapshot_group_worker_task=NS(done=lambda:False)
+    state.extension_runtime_host_task=None
+    state.snapshot_group_worker_topology='independent'
+    result=client.get('/v1/pipelines/snapshot-schedules/'+definition+'/runtime')
+    assert result.status_code==200
+    assert result.json()['worker']==dict(state='IDLE',available=True,active=False,errorCode=None)
+    assert result.json()['executionAuthorized'] is False
+    assert state.extension_runtime_host_task is None
+    state.snapshot_group_worker_topology='unsupported'
+    assert client.get('/v1/pipelines/snapshot-schedules/'+definition+'/runtime').json()['worker']['available'] is False
