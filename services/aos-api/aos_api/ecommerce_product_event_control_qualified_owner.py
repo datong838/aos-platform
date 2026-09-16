@@ -77,14 +77,32 @@ class ProductEventControlQualifiedOwner:
                       AND project_id=%s AND installation_id=%s AND generation=%s AND state='running') AS running,
                     (SELECT count(*) FROM automation_occurrence_dispatch_attempt a JOIN automation_occurrence o
                       USING(org_id,project_id,occurrence_id) WHERE a.org_id=%s AND a.project_id=%s
-                      AND o.installation_id=%s AND o.generation=%s AND a.status IN ('claimed','unknown')) AS attempts''',
+                      AND o.installation_id=%s AND o.generation=%s AND a.status='claimed') AS claimed_attempts,
+                    (SELECT count(*) FROM automation_occurrence_dispatch_attempt a JOIN automation_occurrence o
+                      USING(org_id,project_id,occurrence_id) WHERE a.org_id=%s AND a.project_id=%s
+                      AND o.installation_id=%s AND o.generation=%s AND a.status='unknown' AND (
+                        o.status<>'needs_attention' OR o.trigger_source<>'event'
+                        OR o.operation_id<>'ecommerce_growth_analysis_advance'
+                        OR o.receipt_ref IS NOT NULL OR a.receipt_ref IS NOT NULL
+                        OR a.claim_until>=clock_timestamp()
+                        OR EXISTS(SELECT 1 FROM ecommerce_growth_runtime_command_receipt r
+                          WHERE r.org_id=o.org_id AND r.project_id=o.project_id
+                            AND r.operation_id='ecommerce_growth_analysis_advance'
+                            AND r.idempotency_key=a.target_idempotency_key)
+                        OR EXISTS(SELECT 1 FROM ecommerce_investigation_run x
+                          WHERE x.org_id=o.org_id AND x.project_id=o.project_id
+                            AND (x.trigger_key=a.target_idempotency_key OR x.run_id='analysis-'||substr(encode(
+                              sha256(convert_to(o.org_id||chr(31)||o.project_id||chr(31)||
+                                a.target_idempotency_key,'UTF8')),'hex'),1,32))))) AS unsafe_unknown''',
                     (*scope.key,dispatch.installation_id,dispatch.generation,*scope.key,
+                     dispatch.installation_id,dispatch.generation,*scope.key,
                      dispatch.installation_id,dispatch.generation)).fetchone()
                 released=(row['execution_epoch']>dispatch.execution_epoch
                     and row['enabled'] is False and row['operation_fence'] is True
                     and row['desired_state']=='enabled' and row['observed_state']=='unknown'
                     and resources is not None and resources['total']==3 and resources['released']==3
-                    and unresolved is not None and unresolved['running']==0 and unresolved['attempts']==0)
+                    and unresolved is not None and unresolved['running']==0
+                    and unresolved['claimed_attempts']==0 and unresolved['unsafe_unknown']==0)
             if (row is None or str(row['installation_id'])!=str(dispatch.installation_id)
                     or str(row['generation'])!=str(dispatch.generation)
                     or type(dispatch.execution_epoch) is not int

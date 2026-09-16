@@ -51,6 +51,49 @@ def test_disable_generation_drift_fails(control):
     with pytest.raises(ValueError):owner.run_without_source(conn,scope=scope,dispatch=dispatch,execute=lambda:pytest.fail('drift'))
 
 
+@pytest.mark.parametrize("unresolved,accepted", [
+    ({"running": 0, "claimed_attempts": 0, "unsafe_unknown": 0}, True),
+    ({"running": 1, "claimed_attempts": 0, "unsafe_unknown": 0}, False),
+    ({"running": 0, "claimed_attempts": 1, "unsafe_unknown": 0}, False),
+    ({"running": 0, "claimed_attempts": 0, "unsafe_unknown": 1}, False),
+])
+def test_released_disable_accepts_only_safe_expired_unknown(control, unresolved, accepted):
+    owner, conn, scope, record, _, _ = control
+    draft = record.draft
+    runtime = dict(installation_id=draft.installation_ref.installation_id,
+        revision=draft.installation_ref.revision, etag_version=1,
+        lock_hash=draft.installation_ref.lock_hash,
+        overlay_revision=draft.installation_ref.overlay_revision,
+        generation=draft.generation, execution_epoch=draft.execution_epoch + 1,
+        runtime_revision=7, enabled=False, operation_fence=True,
+        desired_state="enabled", observed_state="unknown")
+    identity = dict(role="aos_runtime", org_id=scope.org_id, project_id=scope.project_id)
+
+    def execute(query, *args, **kwargs):
+        if "current_user AS role" in query:
+            value = identity
+        elif "FROM bundle_installation" in query:
+            value = runtime
+        elif "cleanup_state='released'" in query:
+            value = {"total": 3, "released": 3}
+        elif "unsafe_unknown" in query:
+            value = unresolved
+        else:
+            value = None
+        return SimpleNamespace(fetchone=lambda: value)
+
+    conn.execute = execute
+    dispatch = SimpleNamespace(installation_id=draft.installation_ref.installation_id,
+        generation=draft.generation, execution_epoch=draft.execution_epoch,
+        operation_id="ecommerce_growth_event_control")
+    callback = (lambda: "stopped") if accepted else (lambda: pytest.fail("unsafe callback"))
+    if accepted:
+        assert owner.run_without_source(conn, scope=scope, dispatch=dispatch, execute=callback) == "stopped"
+    else:
+        with pytest.raises(ValueError, match="installation or generation drifted"):
+            owner.run_without_source(conn, scope=scope, dispatch=dispatch, execute=callback)
+
+
 def test_control_contract_is_exported_source_artifact():
     from pathlib import Path
     from aos_api.ecommerce_product_event_control_qualified_owner import CONTROL_CONTRACT_PATH

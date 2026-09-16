@@ -1,0 +1,23 @@
+{
+  "outcome": "A0V_076_MAIN_APPLIED",
+  "sourceRevision": "a0v_075",
+  "targetRevision": "a0v_076",
+  "migrationHash": "sha256:0eae390a0d3941a2420c02c3c753750d1773e08d2a0993269534ce0c35a04fbb",
+  "singleStep": true,
+  "advisoryLock": true,
+  "before": {
+    "eventFunctionHash": "sha256:eabcc474feb46c640e1db525b3fe2232680c13f8157158ef230f3ee140027145",
+    "closureFunctionHash": "sha256:531b8bf442f76bc7ba739160f227a1947d566f2de2e96aa5eccefdac3fddb9c1"
+  },
+  "after": {
+    "eventFunctionHash": "sha256:f269e042417540f51d3a62164fc8fcdd2f7e5f7f4f1242e17996ae03f60cc54a",
+    "closureFunctionHash": "sha256:b1de21a28d879b2dcae30a9193603be92f0d0956146ae2c094ae214f9beedf4b",
+    "safeUnknownRetirement": true,
+    "releasedRuntimeClosure": true,
+    "pendingUnclaimedClosure": true
+  },
+  "fingerprintedBusinessTables": 13,
+  "businessFingerprintsUnchanged": true,
+  "migrationBusinessWrites": 0,
+  "privateProofMode": "0600"
+}

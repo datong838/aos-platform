@@ -1,0 +1,47 @@
+{
+  "outcome": "P_OCCURRENCE_RETIREMENT_GREEN",
+  "tenant": "org-org/dev-project",
+  "installationId": "9950e057-5cb4-4849-a499-35837d8d0fb6",
+  "generation": "df883b18-0170-410b-8424-442c7cdd60b4",
+  "runtime": {
+    "revision": 7,
+    "executionEpoch": 4,
+    "enabled": false,
+    "operationFence": true,
+    "desiredState": "enabled",
+    "observedState": "unknown",
+    "releasedResources": 3
+  },
+  "policy11": {
+    "bindingRevision": 2,
+    "enabled": false,
+    "controlReceiptId": "a4461329-b769-5079-a260-ef709ec86d57",
+    "controlReceiptHash": "sha256:ece51faf68d25e0bda96eabf3e6d06b44a2a0c42b256a02bb1e93696b3378430"
+  },
+  "eventFence": {
+    "groupRevisionBefore": 49,
+    "groupRevisionAfter": 50,
+    "onlyEventRouteFenced": true,
+    "receiptId": "e0b0d307-23f2-45b1-bb23-7d280bc257d3",
+    "contentHash": "sha256:c6721417cb3b2cdbdad075c87faf27cacf5e9b6160e7dc7b2182e946fd2b0ed4",
+    "releasedRuntimeRecovery": true
+  },
+  "occurrences": {
+    "total": 65,
+    "cancelled": 65,
+    "expiredUnknownClosedUnaccepted": 5,
+    "pendingUnclaimedClosed": 60,
+    "closureReceipts": 65,
+    "businessAccepted": false,
+    "targetCommandReceipts": 0,
+    "targetBusinessInvestigationRuns": 0
+  },
+  "negativeTenantCanaryRows": 0,
+  "externalEffects": 0,
+  "tests": {
+    "focusedAndAdjacent": "58 passed",
+    "ar2_7Verifier": "green",
+    "ar2_7ScannedPythonModules": 1982,
+    "ar2_7DynamicReferenceErrors": 0
+  }
+}
