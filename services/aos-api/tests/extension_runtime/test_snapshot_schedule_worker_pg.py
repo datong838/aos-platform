@@ -25,6 +25,7 @@ def test_lock_covers_execution_and_unknown_claim_blocks_next_tick(runtime_case,m
     calls=[]
     def stopped(**execution):
         calls.append(execution)
+        assert worker.active_definition_id==common['definition_id']
         assert other.run_definition(common['definition_id'])['status']=='busy'
         with runtime._transaction(args['scope']) as conn:
             bindings=runtime._definitions._saved_bindings(conn,args['scope'],enabled['body'])
@@ -32,6 +33,7 @@ def test_lock_covers_execution_and_unknown_claim_blocks_next_tick(runtime_case,m
         raise OSError('named executor acknowledgement loss')
     monkeypatch.setattr(runtime,'execute',stopped)
     with pytest.raises(OSError):worker.run_definition(common['definition_id'])
+    assert worker.active_definition_id is None
     result=other.run_definition(common['definition_id'])
     assert result['status']=='original_group_pending' and result['groupIds']==[calls[0]['group_id']]
     assert len(calls)==1 and state['calls']==0

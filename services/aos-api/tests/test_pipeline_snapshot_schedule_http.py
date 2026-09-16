@@ -21,7 +21,7 @@ def api():
         calls.append(kw)
         if getattr(service,'error',None):raise service.error
         return {'ref':ref('SnapshotScheduleDefinitionRevision','snapshot-schedule-'),'body':{'state':'disabled'}}
-    service=NS(configure=invoke,transition=invoke,read=invoke,list=invoke,read_receipt=invoke,options=invoke)
+    service=NS(configure=invoke,transition=invoke,read=invoke,list=invoke,read_receipt=invoke,options=invoke,read_runtime_status=invoke)
     scopes=[]
     def build(scope,*,source_controls):scopes.append(scope);return service
     app=FastAPI();register_exception_handlers(app);app.include_router(router)
@@ -83,6 +83,40 @@ def test_read_does_not_require_new_idempotency_key(api):
     result=client.get('/v1/pipelines/snapshot-schedules/'+definition)
     assert result.status_code==200,result.text
     assert calls==[dict(definition_id=definition,actor='signed-user')]
+
+
+def test_runtime_status_uses_principal_and_hides_other_worker_scope(api):
+    from aos_api.tenant_scope import TenantScope
+    client,calls,scopes,_,definition,_=api
+    client.app.state.snapshot_group_worker=NS(scope=TenantScope('other-org','other-project'),
+        status='RUNNING',active_definition_id='other-secret')
+    client.app.state.snapshot_group_worker_status='RUNNING'
+    result=client.get('/v1/pipelines/snapshot-schedules/'+definition+'/runtime')
+    assert result.status_code==200,result.text
+    assert calls==[dict(definition_id=definition,actor='signed-user')]
+    assert scopes[0].key==('org-org','dev-project')
+    assert result.json()['worker']==dict(state='UNAVAILABLE',available=False,active=False,errorCode=None)
+    assert 'other-secret' not in result.text
+
+
+def test_runtime_status_requires_live_task_and_host_and_current_access(api):
+    from aos_api.tenant_scope import TenantScope
+    client,_,_,service,definition,_=api
+    live=NS(done=lambda:False)
+    state=client.app.state
+    state.snapshot_group_worker=NS(scope=TenantScope('org-org','dev-project'),status='RUNNING',
+        active_definition_id=definition,last_error=None)
+    state.snapshot_group_worker_status='RUNNING'
+    state.snapshot_group_worker_task=live;state.extension_runtime_host_task=live
+    url='/v1/pipelines/snapshot-schedules/'+definition+'/runtime'
+    assert client.get(url).json()['worker']==dict(state='RUNNING',available=True,active=True,errorCode=None)
+    state.snapshot_group_worker.active_definition_id='another-definition'
+    assert client.get(url).json()['worker']['active'] is False
+    state.extension_runtime_host_task=NS(done=lambda:True)
+    assert client.get(url).json()['worker']==dict(state='UNAVAILABLE',available=False,active=False,errorCode=None)
+    service.error=PermissionError('named revoked principal')
+    result=client.get(url)
+    assert result.status_code==403 and 'worker' not in result.json()
 
 
 def test_list_and_receipt_routes_are_read_only(api):

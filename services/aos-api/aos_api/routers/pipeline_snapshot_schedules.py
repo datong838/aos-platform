@@ -20,6 +20,29 @@ router=APIRouter(prefix='/snapshot-schedules')
 PrincipalDependency=Annotated[Principal,Depends(require_principal)]
 
 
+def _worker_status(request,principal,definition_id):
+    app=request.app.state
+    worker=getattr(app,'snapshot_group_worker',None)
+    state=getattr(app,'snapshot_group_worker_status','UNAVAILABLE')
+    if worker is None:
+        return dict(state=state if state in {'DISABLED','FAILED_CLOSED','STOPPED','NOT_SELECTED'} else 'UNAVAILABLE',
+            available=False,active=False,errorCode=None)
+    if worker.scope!=TenantScope(principal.org_id,principal.project_id):
+        return dict(state='UNAVAILABLE',available=False,active=False,errorCode=None)
+    task=getattr(app,'snapshot_group_worker_task',None)
+    host=getattr(app,'extension_runtime_host_task',None)
+    live=task is not None and not task.done() and host is not None and not host.done()
+    actual=getattr(worker,'status','UNAVAILABLE')
+    if state=='FAILED_CLOSED':actual=state
+    elif not live and actual in {'RUNNING','IDLE'}:actual='UNAVAILABLE'
+    if actual not in {'RUNNING','IDLE','STOPPING','STOPPED','FAILED_CLOSED','UNAVAILABLE'}:actual='UNAVAILABLE'
+    available=live and actual in {'RUNNING','IDLE'}
+    code=getattr(worker,'last_error',None)
+    if code not in {'SNAPSHOT_TICK_UNCONFIRMED'}:code=None
+    return dict(state=actual,available=available,
+        active=available and getattr(worker,'active_definition_id',None)==definition_id,errorCode=code)
+
+
 class SnapshotScheduleMember(BaseModel):
     model_config=ConfigDict(strict=True,extra='forbid',hide_input_in_errors=True)
     schedule_id:str=Field(alias='scheduleId',min_length=1,max_length=200)
@@ -67,7 +90,7 @@ def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=
             if str(UUID(installation_id))!=installation_id or str(UUID(generation))!=generation:
                 raise ValueError('canonical installation and generation required')
         if receipt_key is not None:validate_idempotency_key(receipt_key)
-        key=None if intent in {'read','receipt','list','options'} else require_idempotency_key(request)
+        key=None if intent in {'read','receipt','list','options','runtime'} else require_idempotency_key(request)
         if body is not None and body.expected_ref is not None and body.expected_ref.resource_id!='snapshot-schedule-'+definition_id:
             raise ValueError('definition predecessor differs')
         plane=getattr(request.app.state,'extension_runtime_control_plane',None)
@@ -75,10 +98,11 @@ def _operate(request,principal,definition_id,body,intent,receipt_key=None,after=
         if factory is None:
             raise ApiError(code='SNAPSHOT_SCHEDULE_UNAVAILABLE',message='数据组配置服务当前不可用。',status_code=503)
         service=factory.build_snapshot_schedule(TenantScope(principal.org_id,principal.project_id),
-            source_controls=intent in {'configure','enable','options'})
+            source_controls=intent in {'configure','enable','options','runtime'})
         if intent=='options':return service.options(actor=principal.subject,installation_id=installation_id,generation=generation)
         if intent=='list':return service.list(actor=principal.subject,after=after,limit=limit)
         common=dict(definition_id=definition_id,actor=principal.subject)
+        if intent=='runtime':return dict(service.read_runtime_status(**common),worker=_worker_status(request,principal,definition_id))
         if intent=='receipt':return service.read_receipt(**common,idempotency_key=receipt_key)
         if intent=='read':return service.read(**common)
         common.update(expected_ref=body.expected_ref,idempotency_key=key)
@@ -124,6 +148,11 @@ async def receipt(definition_id:str,idempotency_key:str,request:Request,principa
 @router.get('/{definition_id}')
 async def read(definition_id:str,request:Request,principal:PrincipalDependency):
     return await run_in_threadpool(_operate,request,principal,definition_id,None,'read')
+
+
+@router.get('/{definition_id}/runtime')
+async def runtime_status(definition_id:str,request:Request,principal:PrincipalDependency):
+    return await run_in_threadpool(_operate,request,principal,definition_id,None,'runtime')
 
 
 @router.put('/{definition_id}')

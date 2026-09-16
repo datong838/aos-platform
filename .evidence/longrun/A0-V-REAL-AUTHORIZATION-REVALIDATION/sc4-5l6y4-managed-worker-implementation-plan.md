@@ -32,11 +32,21 @@ main默认关闭的新入口已接线；显式启用必须有活host与工厂。
 
 锁内第二实例busy、具名完成路由后不重复承接、停用拒绝、无审批原组仍pending。完成路由是明确seam，不替代C5实际Store；撤权负例走真实原Authority，源仍原准备一次、零Store写入。本波无新队列/执行POST，065审批回执即持久恢复依据，所有副作用仍限原Owner链。后续Y4d2当前principal保护状态API、Y4d3配置/恢复页面与浏览器验证；主环境仍未启用/迁移/重启，真实首链未完成。
 
+## Y4d2授权运行状态证据
+
+新增GET定义/runtime，Service先当前管理权限、原Dispatch只读状态/恢复引用、末尾重验权限与exact定义；所有输出executionAuthorized=false，零源零Run创建。进程状态只显示同租户、存活host和后台任务，active仅匹配当前定义；Worker在真实Runtime入口设置active_definition_id、finally清除。追加原worker PG测试断言该范围与清除。
+
+Red缺read_runtime_status（1 failed/8.24s）；PG当前权限/原组只读+HTTP首轮28 passed/14.30s，补live host/task/其他定义/撤权显示后HTTP+Worker/线程回归34 passed/18.61s（`/tmp/aos-runtime-status-green.log`、`/tmp/aos-runtime-status-final.log`）。diff检查通过。HTTP服务与进程夹具只验证契约，PG当前membership撤销确实拒绝，不能把状态响应当作业务完成。
+
+下一波d3在既有SnapshotSchedulesPanel/API契约中展示真实状态、处理定义漂移/租户切换，再补正式续期交互与浏览器验收。应用主环境仍未加载/启用。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4d2状态API文件：修改 `pipeline_snapshot_schedule_service.py`、`routers/pipeline_snapshot_schedules.py`、`pipeline_snapshot_schedule_worker.py`，新增 `services/aos-api/tests/extension_runtime/test_snapshot_runtime_status_pg.py` 并扩展 `services/aos-api/tests/test_pipeline_snapshot_schedule_http.py`。GET /v1/pipelines/snapshot-schedules/{definition_id}/runtime 使用principal scope/subject，先当前管理权限，再原Dispatch只读状态及原RecoveryReceipt引用，末尾复验当前权限和exact定义；输出始终executionAuthorized=false，无业务原始行/连接资料。进程投影只在worker.scope与principal相等且worker Task/host存活时显示可用，明确disabled/stopped/failed与activeDefinitionId；不展示其他租户或定义的执行信息。该进程观察不是集群全局执行证明，也不是执行授权。worker在锁内进入实际Runtime前设置active_definition_id，finally清除。页面下一波对exact定义漂移和租户切换丢弃旧状态。
 
 Y4c2追加精确接口：main新增 `_start_snapshot_group_worker(app)` 和显式 `AOS_SNAPSHOT_GROUP_WORKER_ENABLED`（默认false）。只有已运行host及原factory存在才可启用；缺失依赖启动失败，不宣传可调度。应用持有worker/task/状态，注册stop事件和后台task，复用原shutdown drain。任务上下文持有_authoritative_store（lazy engine），serve完全退出后才dispose；实际数据库连接仅由worker线程创建。新增 `services/aos-api/tests/test_snapshot_schedule_main_lifecycle.py`，验证默认关闭无工厂调用、明确启用缺host拒绝、原shutdown等待实际线程退出后再释放Store。原runtime startup composition回归。主运行环境不开启新开关。
 

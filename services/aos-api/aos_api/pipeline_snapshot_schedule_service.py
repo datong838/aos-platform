@@ -11,6 +11,8 @@ from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotScheduleDefinitionOwner
 from aos_api.tenant_scope import TenantScope
 from aos_api.source_readiness_contracts import CANONICAL_QYH_SOURCES
+from aos_api.pipeline_snapshot_schedule_dispatch import PipelineSnapshotScheduleDispatch
+from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.pipeline_runtime_control_owner import decode_control_row
@@ -134,6 +136,25 @@ class PipelineSnapshotScheduleService:
     def read(self,*,definition_id,actor):
         with self._connection() as conn:
             return self._read_authorized(conn,definition_id=definition_id,actor=actor)
+
+    def read_runtime_status(self,*,definition_id,actor):
+        with self._connection() as conn:
+            definition=self._read_authorized(conn,definition_id=definition_id,actor=actor)
+            dispatch=PipelineSnapshotScheduleDispatch(definitions=self._owner,claims=self._recovery_claims())
+            now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+            routing=dispatch.inspect(conn,scope=self.scope,definition_id=definition_id,now=now)
+            groups=[]
+            for group_id in routing.get('groupIds',[]):
+                receipt=_read_recovery_receipt(conn,scope=self.scope,group_id=group_id)
+                current=receipt is not None and receipt['body']['currentDefinitionRef']==definition['ref']
+                groups.append(dict(groupId=group_id,recoveryRef=receipt['ref'] if current else None))
+            final=self._read_authorized(conn,definition_id=definition_id,actor=actor)
+            if final['ref']!=definition['ref'] or routing['definitionRef']!=definition['ref']:
+                raise RuntimeRevisionConflict('runtime status definition changed')
+            return dict(orgId=self.scope.org_id,projectId=self.scope.project_id,definitionId=definition_id,
+                definitionRef=definition['ref'],configurationState=definition['body']['state'],
+                executionAuthorized=False,routingStatus=routing['status'],originalGroups=groups,
+                observedAt=now.isoformat())
 
     def read_receipt(self,*,definition_id,actor,idempotency_key):
         definition_id=_group_id(definition_id)

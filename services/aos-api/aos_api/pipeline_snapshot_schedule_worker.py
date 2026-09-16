@@ -28,6 +28,7 @@ class PipelineSnapshotScheduleWorker:
         self.last_outcomes=[]
         self.last_error=None
         self._serving=False
+        self.active_definition_id=None
 
     async def serve(self,stop,*,host_ready,interval=15):
         if (not callable(host_ready) or type(interval) not in (int,float)
@@ -96,13 +97,16 @@ class PipelineSnapshotScheduleWorker:
                     # The immutable approval is the durable routing intent.
                     # The original fixed Authority rechecks every permission,
                     # window and saved-input fact before any Store operation.
+                    self.active_definition_id=definition_id
                     return self._recovery.resume_saved(scope=self.scope,actor=recovery['body']['executor'],
                         recovery_ref=recovery['ref'],**active)
                 if candidate['status']!='due':return candidate
+                self.active_definition_id=definition_id
                 return self._runtime.execute(scope=self.scope,definition_ref=candidate['definitionRef'],
                     group_id=candidate['groupId'],actor=candidate['actor'],
                     scheduled_for=datetime.fromisoformat(candidate['scheduledFor']),trigger='cron',**active)
             finally:
+                self.active_definition_id=None
                 lock.execute('SELECT pg_advisory_unlock(hashtextextended(%s,0))',(key,))
 
     def tick(self,*,deadline=None,cancel_event=None):
