@@ -1,0 +1,36 @@
+{
+  "observedAt": "2026-09-16T11:16:09.108531+00:00",
+  "outcome": "CURRENT_APPROVAL_PREFLIGHT_DENIED",
+  "policies": [
+    {
+      "policy_kind": "budget",
+      "policy_id": "a0v-ecommerce-budget-policy-v1",
+      "current_revision": 5,
+      "effective_from": "2026-09-15 06:30:19.774674+00:00",
+      "effective_until": "2026-09-16 06:29:53.243094+00:00",
+      "lifecycle": "active"
+    },
+    {
+      "policy_kind": "quota",
+      "policy_id": "a0v-ecommerce-quota-v1",
+      "current_revision": 1,
+      "effective_from": "2026-09-10 00:00:00+00:00",
+      "effective_until": "2027-09-10 00:00:00+00:00",
+      "lifecycle": "active"
+    }
+  ],
+  "counts": {
+    "runs": 11,
+    "claims": 10,
+    "enabled_schedules": 0,
+    "definitions": 0
+  },
+  "sourceReads": 0,
+  "approvalsWritten": 0,
+  "realBusinessChainComplete": false,
+  "reasons": [
+    "user:dev owner is not an authorized installation-control role",
+    "existing runtime admin passes role gate; current budget policy expired"
+  ],
+  "next": "Y5e current model evidence and exact policy/configuration renewal"
+}
