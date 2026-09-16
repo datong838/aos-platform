@@ -44,6 +44,11 @@ def claim_case(owner_case):
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.op=SimpleNamespace(execute=conn.execute);module.upgrade()
     owner=PipelineSourceClaimOwner(controls=controls)
+    # This dedicated 024 schema predates groups; full 064 tests exercise real guards.
+    def named_legacy_no_group(*args,**kwargs):return None
+    owner._guard_group=named_legacy_no_group
+    owner._guard_schedule=named_legacy_no_group
+    owner._guard_single_prepare=named_legacy_no_group
     owner._journal=IngressJournal(storage_schema=conn.execute('SELECT current_schema()').fetchone()[0])
     conn.row_factory=dict_row
     conn.execute('SET ROLE aos_runtime')

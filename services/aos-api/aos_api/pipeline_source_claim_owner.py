@@ -80,6 +80,21 @@ class PipelineSourceClaimOwner:
         return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,actor=actor,
             create=False,saved_recovery=True,completed_read=True).record
 
+    def _guard_group(self,conn,*,scope,group_id,actor,bindings):
+        from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_group
+        guard_snapshot_schedule_group(conn,scope=scope,group_id=group_id,actor=actor,
+            bindings=bindings,controls=self._controls)
+
+    def _guard_single_prepare(self,conn,*,scope,run_id):
+        from aos_api.pipeline_snapshot_schedule_guard import guard_single_snapshot_prepare
+        guard_single_snapshot_prepare(conn,scope=scope,run_id=run_id)
+
+    def _guard_schedule(self,conn,*,scope,run_id,control_ref,actor):
+        # Lazy import avoids the existing schedule/control Owner dependency cycle.
+        from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_run
+        guard_snapshot_schedule_run(conn,scope=scope,run_id=run_id,actor=actor,
+            control_ref=control_ref,controls=self._controls)
+
     def _operate(self, conn, *, scope, run_id, control_ref, actor, create, saved_recovery=False, completed_read=False):
         if completed_read and create:raise ValueError('completed input cannot reserve source calls')
         run_id,actor = _text(run_id,200),_text(actor,240)
@@ -88,6 +103,7 @@ class PipelineSourceClaimOwner:
 
         def current(draft, spec):
             # Global lock order: current installation first, then immutable run.
+            self._guard_schedule(conn,scope=scope,run_id=run_id,control_ref=ref,actor=actor)
             self._journal.lock_run(conn,scope,run_id)
             verify=self._journal.verify_completed_schedule_binding if completed_read else self._journal.verify_schedule_binding
             verify(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,

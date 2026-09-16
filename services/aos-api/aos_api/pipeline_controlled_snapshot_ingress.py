@@ -102,6 +102,7 @@ class ControlledSnapshotIngress:
         _check_active(deadline,cancel_event)
         with self._run_transaction(scope,run_id=run_id) as conn:
             def reserve(draft,mapping):
+                self._claims._guard_single_prepare(conn,scope=scope,run_id=run_id)
                 _check_active(deadline,cancel_event)
                 return self._claims.reserve(conn,**args)
             reservation=self._claims._controls.run_current_snapshot(conn,**current,execute=reserve)
@@ -109,6 +110,7 @@ class ControlledSnapshotIngress:
         _check_active(deadline,cancel_event)
         with self._run_transaction(scope,run_id=run_id) as conn:
             def prepare_input(draft,mapping):
+                self._claims._guard_single_prepare(conn,scope=scope,run_id=run_id)
                 record=self._claims.read_current(conn,**args)
                 if record!=reservation.record:
                     raise IngressJournalConflict('SOURCE_CLAIM_BINDING_DRIFT')

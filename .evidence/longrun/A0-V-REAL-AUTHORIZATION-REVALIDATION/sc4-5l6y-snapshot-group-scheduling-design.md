@@ -59,3 +59,7 @@ Y1复核补强：新Owner SQL及约束函数固定public权威表，函数固定
 git diff --check通过。新表仅在隔离测试库迁移，主库仍a0v_061。新Owner没有远程读取、没有创建SourceClaim，也未被cron/API自动调用；此结果只完成Y1。下一波Y2需安装绑定的正式组配置、可禁入/停用和成员单路调度围栏，随后Y3运行恢复与Y4生命周期接线。J原失败Run未被替代或回写。
 
 Y2具体配置/启停/退役、停用不回落单路、锁序和文件清单见sc4-5l6y2-snapshot-schedule-configuration-plan.md。状态分disabled/enabled/retired；member归属只在确认无在途/未知运行的retire中释放，不能disable后被单路cron接管。Y2a/b/c分别收口存储Owner、API与围栏、产品入口验收，不以其中一个完成代替整体产品可用。
+
+## Y3恢复边界增补（2026-09-16）
+
+Y3a已引入exact enabled配置v2领取，Y3b补每事务守卫与原Ingress/Completion接线。新增Y3c正式组窗口续期恢复Owner/Receipt：原组已领取且有input时，单路既有窗口续期机制不能自动越过旧组exact definitionRef；需要明确关联原group、原input、旧定义及同业务上下文的新窗口控制并经原权限核验。未完成前到期禁入，不改历史、不用新Run冒充恢复。Y3c须在Y4/Y6真实恢复验收前完成；无原input的unknown仍禁止重新读取。

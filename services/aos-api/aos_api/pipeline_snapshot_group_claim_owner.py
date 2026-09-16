@@ -59,6 +59,7 @@ class PipelineSnapshotGroupClaimOwner:
             if type(item) is not tuple or len(item)!=2:raise ValueError('exact control/run pair required')
             normalized.append((PipelineExactRef.model_validate(item[0]),_text(item[1],200)))
         if len({run for _,run in normalized})!=len(normalized):raise ValueError('unique group runs required')
+        self._claims._guard_group(conn,scope=scope,group_id=group_id,actor=actor,bindings=tuple(normalized))
         refs=tuple(ref for ref,_ in normalized);runs={ref.resource_id:run for ref,run in normalized}
         def current(group):
             members=[{'runId':runs[ref.resource_id],'controlRef':ref.model_dump(mode='json',by_alias=True),
