@@ -1,6 +1,5 @@
 """Revalidate persisted group authority inside original source/recovery transactions."""
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
-from aos_api.pipeline_schedule_claim import read_current_snapshot_definition
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.pipeline_snapshot_schedule_claim import PipelineSnapshotScheduleClaimOwner, _member
 
@@ -30,24 +29,31 @@ def guard_snapshot_schedule_run(conn, *, scope, run_id, actor, control_ref, cont
     ref=PipelineExactRef.model_validate(control_ref).model_dump(mode='json',by_alias=True,exclude_none=True)
     if request['actor']!=actor or member is None or member['controlRef']!=ref:
         raise ValueError('snapshot definition run control or actor differs')
-    bindings=tuple(PipelineScheduleControlOwner.read_latest(conn,scope=scope,schedule_id=m['scheduleId'])
-                   for m in request['members'])
+    schedule_ids=tuple(m['scheduleId'] for m in request['members'])
+    bindings=PipelineScheduleControlOwner.read_latest_many(conn,scope=scope,schedule_ids=schedule_ids)
     if any(b is None for b in bindings) or [_member(b) for b in bindings]!=request['members']:
         raise ValueError('snapshot definition original binding is not current')
     definition=owner._lock_definition(conn,scope,request['definitionRef'],bindings,actor)
     def validate(_group):
-        for binding in bindings:
-            schedule=conn.execute('''SELECT pipeline_id,enabled,ingest FROM public.meta_schedule
-                WHERE org_id=%s AND project_id=%s AND id=%s FOR UPDATE''',
-                (*scope.key,binding.schedule_id)).fetchone()
-            current=read_current_snapshot_definition(conn,scope,binding.schedule_id)
+        schedules={r['id']:r for r in conn.execute('''SELECT id,pipeline_id,enabled,ingest FROM public.meta_schedule
+            WHERE org_id=%s AND project_id=%s AND id=ANY(%s)
+            ORDER BY id COLLATE "C" FOR UPDATE''',(*scope.key,list(schedule_ids))).fetchall()}
+        members={r['schedule_id']:r for r in conn.execute('''SELECT schedule_id,definition_id,revision
+            FROM public.pipeline_snapshot_schedule_current_member
+            WHERE org_id=%s AND project_id=%s AND schedule_id=ANY(%s)''',
+            (*scope.key,list(schedule_ids))).fetchall()}
+        latest=PipelineScheduleControlOwner.read_latest_many(conn,scope=scope,schedule_ids=schedule_ids)
+        for binding,current_binding in zip(bindings,latest):
+            schedule=schedules.get(binding.schedule_id)
+            current=members.get(binding.schedule_id)
             if (current is None or str(current['definition_id'])!=definition['definitionId']
+                    or current['revision']!=definition['revision']
                     or schedule is None or schedule['enabled'] is not True
                     or schedule['pipeline_id']!=binding.pipeline_id
                     or type(schedule['ingest']) is not dict
                     or schedule['ingest'].get('kind')!='pipeline-live-v1'
                     or schedule['ingest'].get('pipelineId')!=binding.pipeline_id
-                    or PipelineScheduleControlOwner.read_latest(conn,scope=scope,schedule_id=binding.schedule_id)!=binding):
+                    or current_binding!=binding):
                 raise ValueError('snapshot definition current member authority differs')
     owner._groups.run_current(conn,scope=scope,actor=actor,
         refs=tuple(b.control_ref for b in bindings),execute=validate)

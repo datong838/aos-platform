@@ -90,6 +90,21 @@ class PipelineScheduleControlOwner:
                 (*scope.key,schedule_id)).fetchone()
         return decode_binding(row) if row else None
 
+    @staticmethod
+    def read_latest_many(conn,*,scope,schedule_ids):
+        PipelineScheduleControlOwner._identity(conn,scope)
+        if type(schedule_ids) is not tuple or not 1<=len(schedule_ids)<=12:
+            raise ValueError('one to twelve schedule IDs required')
+        ids=tuple(_text(value,200) for value in schedule_ids)
+        if len(set(ids))!=len(ids):raise ValueError('unique schedule IDs required')
+        with conn.cursor(row_factory=dict_row) as cursor:
+            rows=cursor.execute('''SELECT DISTINCT ON (schedule_id) *
+                FROM public.pipeline_schedule_control_binding
+                WHERE org_id=%s AND project_id=%s AND schedule_id=ANY(%s)
+                ORDER BY schedule_id,revision DESC''',(*scope.key,list(ids))).fetchall()
+        current={row['schedule_id']:decode_binding(row) for row in rows}
+        return tuple(current.get(identifier) for identifier in ids)
+
     def bind(self,conn,*,scope,schedule_id,control_ref,actor,idempotency_key,previous_ref=None,expected_pipeline_id=None):
         self._identity(conn,scope)
         schedule_id,actor=_text(schedule_id,200),_text(actor,240)

@@ -26,6 +26,8 @@ Y3 执行与恢复：新增pipeline_snapshot_schedule_runtime.py，复用原Ingr
 
 Y4 生命周期接线：PipelineControlServices、原cron worker与受保护路由接入组Owner/runtime。安装禁入/禁用/卸载必须阻止新运行；重装须新current配置，不复用旧权限。与原单路调度共存，未加入组的调度行为不变。
 
+Y4代码复核登记于sc4-5l6y4-snapshot-worker-lifecycle-review.md：现有asyncio.to_thread在Task取消后不保证同步执行停止，需显式停止传播和实际退出核验；周期领取必须防止上一组unknown时通过新slot绕过。尚未实施。
+
 Y5 真实配置：从当前签名包导出的十二源Mapping/源schema读取能力自动生成可审查配置，经原选择/控制审批Owner建立P01–P12图与绑定；不能修改源库数据、不能扩大masking、不能靠owner SQL绕过配置。实际源缺失或不符合质量时如实阻断。
 
 Y6 克隆迁移/恢复演练→主库受控升级→真实完整组观察。主库原J失败Run保持原事实；Z的正式需求/任务恢复合同完成前，不以新Run代替它宣称已恢复。

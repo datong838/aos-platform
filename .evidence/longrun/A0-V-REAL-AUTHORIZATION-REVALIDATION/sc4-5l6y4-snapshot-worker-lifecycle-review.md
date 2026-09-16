@@ -1,0 +1,21 @@
+# Y4 整组调度与生命周期接缝复核
+
+状态：待Y3完成后实施，本文件只登记代码复核与待实现合同，不表示主服务已接入。
+
+## 已确认的入口
+
+PipelineControlServiceFactory位于services/aos-api/aos_api/pipeline_control_service.py，已有build_snapshot_schedule配置服务，但没有组运行器构造入口。现有build_analysis_snapshot_coordinator只消费正式route与原Completion，不是周期调度组入口。新增工厂必须复用原runtime_worker_connection、claims、EcomConsistencyStore与engine，不能使用管理库连接执行。
+
+main.py中的_qyh_cron_loop每15秒通过asyncio.to_thread调用run_due_qyh；后者仅在org-org/dev-project内读取未被组接管的单路schedule。组定义必须有自己的确切定义读取与领取路径，不能再逐个调用单路execute_schedule。每个定义/UTC分钟使用服务端确定的原group身份，重启或重复tick回读同一回执。definition CAS变化不能产生绕过未知源结果的新组；上一组存在未结束/unknown时必须先恢复或阻断后续周期。
+
+## 停止和卸载
+
+现有shutdown先设置asyncio stop events，再cancel后台Task；cancel等待to_thread的Task并不证明底层同步线程已经退出。组worker需持有线程安全停止事件并传入原runtime.execute(cancel_event=...)，停止新领取，等待活动同步执行实际退出；若不能确认停止，保留原Run未停止事实，不写succeeded/failed-stopped，不允许另一执行器自动接管未知源。不得把取消协程当作终止源连接。源读自身超时、当前权限检查与保存结果的原事务合同共同生效。
+
+安装disable/fence/uninstall必须由原current检查阻止下一事务，已提交Receipt保留。重装新generation不能复用旧定义/原控制；由新配置创建明确新范围。Y2已覆盖的单路/组互斥继续回归，不能为组worker关闭围栏。
+
+## API、界面与验证清单
+
+配置页现有“尚未接通执行”提示应在worker真实接线后替换为服务端状态，区分停用、可调度、等待原组恢复、执行中、unknown和需重配；不得仅删除提示冒充启用。手工执行入口由当前principal授权，actor来自持久化定义和正式权限映射，不接受客户端自填执行者/成员/成功状态。
+
+验证：双连接同时tick同一slot只一组、上一组unknown禁止新slot读取、进程停止信号传播且实际线程结束、停用与领取竞争、权限撤销、卸载禁入、重装旧定义拒绝、原单路未接管功能回归、浏览器实际状态显示。具体文件和分步施工在Y3完成后补齐再编码；Y6克隆迁移和真实观察前不启动主库组worker。

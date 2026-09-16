@@ -1,0 +1,23 @@
+# Y3b-3b 原组SourceClaim循环的受限同步上下文
+
+状态：实施前设计，待Y3b-3a批量查询完整回归完成；不是通用缓存或新增授权。
+
+## 边界与文件
+
+仅PipelineSnapshotGroupClaimOwner._operate.current内的原SourceClaim循环可设置上下文。该回调只读写受事务控制的claim元数据，不调用源、Store或外部消费者。新增aos_api/pipeline_snapshot_claim_context.py（私有辅助）、tests/extension_runtime/test_snapshot_claim_context_pg.py；修改pipeline_snapshot_group_claim_owner.py、pipeline_source_claim_owner.py、pipeline_snapshot_schedule_guard.py。不得将上下文加入公共API或持久化。
+
+guard_snapshot_schedule_group成功核验v2原schedule回执、group_id、actor及完整ref/Run集合后，可返回该只读事实给原SourceGroupOwner；旧单路/legacy无此事实则维持原路径。返回事实不是许可，只有在随后原GroupOwner的完整current同步回调内才创建上下文。
+
+## 生效条件
+
+上下文持有连接对象、backend pid、当前已分配事务id、线程id、scope、actor、原group_id、全部exact ref/Run和已验证CurrentSnapshotGroup。使用ContextVar限定当前同步调用链，finally还原外层context且将本实例标记失效；不支持await/deferred。嵌套只能独立核验，不能借父上下文免检新组。
+
+SourceClaim._operate入口在获取任何控制锁前，若检测上下文则核对conn/thread/transaction/scope/actor/ref/Run，避免错误连接拿安装锁死等。每成员仍执行原controls.run_current、SourceClaim预算/历史/Run校验及guard的exact定义、最新bindings与当前成员检查。只有当guard从自身原schedule回执读出的完整ref/Run/group均与当前上下文一致时，才用原GroupOwner._validate在同事务内复核共同窗口，再执行原schedule/member校验，省去内层再次展开十二个run_current_snapshot。无context仍完整展开；有context不匹配必须拒绝。
+
+外层GroupOwner已持有安装/当前配置/控制所需锁，并在循环前后对全部成员核验；并发变更被锁阻挡，同事务其他控制supersede/停用或窗口到期必须导致外层失败和整个reserve savepoint回滚。不能吞异常或把循环中临时claim当已提交。原有read调用不新增副作用，失败由调用者事务负责回滚。
+
+## 验证与退出条件
+
+先用真实十二定义组计数重现原SourceGroup reserve约312次snapshot current展开；新路径必须只有外层前后24次，原单个SourceClaim无上下文依旧24次。验证原reserve→read→completed、幂等零新增、源调用0；错误conn/scope/actor/ref/group、已退出上下文、复制到其他线程、事务变更必须拒绝。回调内改另一控制/停用另一成员须整体回滚；窗口过期不产生部分claim；异常必须清理context使后续正常调用走完整守卫。
+
+随后19项批量/守卫回归、原native claims/input、完整runtime原组恢复与重放，比较实际耗时和原业务Receipt数量。上下文只用于这一个循环，其他Input/Projection/Store调用保持原始全检查。若证明不足，不扩大优化范围，记录限制继续严格实现。
