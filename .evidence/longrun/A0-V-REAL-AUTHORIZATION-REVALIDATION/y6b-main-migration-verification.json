@@ -1,0 +1,251 @@
+{
+  "outcome": "SNAPSHOT_SCHEDULE_MAIN_066_VERIFIED",
+  "source": "a0v_061",
+  "target": "a0v_066",
+  "preservedTableCount": 544,
+  "oldDataUnchangedWithinTransaction": true,
+  "migrations": {
+    "a0v_062_snapshot_schedule_claim.py": "sha256:87a9b7de74c09113cf4f2e4beebede3ada717977cb881ae615e300e1f3bfe1e5",
+    "a0v_063_snapshot_schedule_definition.py": "sha256:f09c64bf31c6d603f71c594afbbdadf02bb084b4b520e52d8369804fc15ac8b3",
+    "a0v_064_defined_snapshot_schedule_claim.py": "sha256:2e65cfe2f0a0e69bdfc70147d1b5d2215340705fa9aac1b7044af44904f0876c",
+    "a0v_065_snapshot_group_recovery_receipt.py": "sha256:70d76a88df9d8a74d86157fc9669a0b1648f172c30fb66c0490734afb5c6a4f9",
+    "a0v_066_snapshot_recovery_only_fence.py": "sha256:29c5a9a7024bcdf37e7201b07ef2e498cfc159576b44ef4268786e106947b296"
+  },
+  "executors": {
+    "a0v_snapshot_schedule_clone.py": "sha256:7cfd160f84d6f0341cb5972a53425603769be2a827af8e5f9c17c5df28258ac7",
+    "a0v_installed_bootstrap_action_deploy.py": "sha256:51077d0b1ea28badb5e33fcb3bec360bec30b55ad0cb75fb44272e5bf38cc6a6",
+    "a0v_controlled_source_claim_deploy.py": "sha256:377155566c1a225a9c31fd98d47dae74c23ea70d86a822bd7c6df9ed40ac30c2",
+    "env.py": "sha256:fc0a55e3e115a9f4b0734e198b2c916abc9832408109a224be5eff59502caf7c",
+    "a0v_snapshot_schedule_main_deploy.py": "sha256:059c204dfa09f403b31b2f98266dd3920b6ef6440e2e68a8be9765212655c9be"
+  },
+  "schema": {
+    "pipeline_snapshot_schedule_claim": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_history",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_recovery_only_claim_fence",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_schedule_claim_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_schedule_member": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_history",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_schedule_member_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_schedule_definition_revision": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_history",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_definition_revision_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_schedule_definition_member": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_history",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_definition_history_member_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_schedule_definition_head": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": true,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_head_delete",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_definition_head_advance",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_definition_head_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_schedule_current_member": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": true,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_truncate",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_definition_member_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    },
+    "pipeline_snapshot_group_recovery_receipt": {
+      "privileges": {
+        "relrowsecurity": true,
+        "relforcerowsecurity": true,
+        "read": true,
+        "insert": true,
+        "update": false,
+        "delete": false,
+        "truncate": false
+      },
+      "triggers": [
+        {
+          "tgname": "immutable_recovery_history",
+          "tgenabled": "O",
+          "tgdeferrable": false,
+          "tginitdeferred": false
+        },
+        {
+          "tgname": "snapshot_recovery_complete",
+          "tgenabled": "O",
+          "tgdeferrable": true,
+          "tginitdeferred": true
+        }
+      ],
+      "dualTenantPolicy": true
+    }
+  },
+  "freshBackupSha256": "sha256:7be0a8fbd6e6b2ce80bf99d5e391863f390b3b4efa38243a825b1fec7c1aa306",
+  "snapshotWorkerEnabled": false,
+  "sourceCalls": 0,
+  "at": "2026-09-16T10:40:23.170948+00:00"
+}
