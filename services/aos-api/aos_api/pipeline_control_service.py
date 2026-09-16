@@ -84,6 +84,15 @@ class PipelineControlServiceFactory:
         controls=PipelineRuntimeControlOwner(selections=selections)
         return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls))
 
+    def build_snapshot_schedule(self,scope,*,source_controls=True):
+        from aos_api.pipeline_snapshot_schedule_service import PipelineSnapshotScheduleService
+        if type(source_controls) is not bool:raise TypeError('explicit source control mode required')
+        controls=None
+        if source_controls:
+            selections,_artifacts=self._source_dependencies(scope)
+            controls=PipelineRuntimeControlOwner(selections=selections)
+        return PipelineSnapshotScheduleService(scope=scope,controls=controls,installation_store=self.installation_store)
+
     def build_event_dispatch_lifecycle(self,scope):
         from aos_api.ecommerce_event_control_dispatch_lifecycle import EventControlDispatchLifecycle
         if self.event_dispatch_connect is None:

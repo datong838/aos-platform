@@ -129,3 +129,7 @@ async def approve_control(pipeline_id: str, request: Request, principal: Princip
 async def bind_schedule_control(pipeline_id: str, request: Request, principal: PrincipalDependency):
     body = await _request_body(request, ScheduleBindingRequest)
     return await run_in_threadpool(_approve, request, principal, pipeline_id, body, False)
+
+
+from aos_api.routers.pipeline_snapshot_schedules import router as snapshot_schedule_router
+router.include_router(snapshot_schedule_router)

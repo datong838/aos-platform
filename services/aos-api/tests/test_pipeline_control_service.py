@@ -40,3 +40,15 @@ def test_bad_asset_root_is_lazy_and_does_not_construct_service(tmp_path):
 
 def test_factory_rejects_arbitrary_authority_dependencies(tmp_path):
     with pytest.raises(TypeError):PipelineControlServiceFactory(installation_store=object(),policy=ReleasePolicy(trust_roots=None),allowlist_roots={})
+
+
+def test_snapshot_stop_mode_does_not_require_available_asset_directory(tmp_path):
+    f=PipelineControlServiceFactory(installation_store=PostgresInstallationStore(),policy=ReleasePolicy(trust_roots=None),
+        allowlist_roots={'missing':tmp_path/'unavailable'})
+    scope=TenantScope('org-org','dev-project')
+    stopped=f.build_snapshot_schedule(scope,source_controls=False)
+    assert stopped._owner._groups is None
+    with pytest.raises(ValueError):f.build_snapshot_schedule(scope,source_controls=True)
+    with pytest.raises(PermissionError,match='stop-only'):
+        stopped._owner.transition(None,scope=scope,definition_id='unused',actor='actor',intent='enable',
+            expected_ref=None,idempotency_key='denied')

@@ -57,9 +57,9 @@ def _reference(body):
 
 class PipelineSnapshotScheduleDefinitionOwner:
     def __init__(self,*,controls,installation_store):
-        if type(controls) is not PipelineRuntimeControlOwner:
+        if controls is not None and type(controls) is not PipelineRuntimeControlOwner:
             raise TypeError('original runtime control Owner required')
-        self._groups=PipelineSnapshotGroupPolicyOwner(controls=controls)
+        self._groups=PipelineSnapshotGroupPolicyOwner(controls=controls) if controls is not None else None
         self._permission=CurrentConfigurationPermission(installation_store=installation_store)
 
     def read(self,conn,*,scope,definition_id):
@@ -124,6 +124,8 @@ class PipelineSnapshotScheduleDefinitionOwner:
             settings=None,bindings=None,expected_ref=expected_ref,idempotency_key=idempotency_key)
 
     def _operate(self,conn,*,scope,definition_id,actor,intent,settings,bindings,expected_ref,idempotency_key):
+        if intent in {'configure','enable'} and self._groups is None:
+            raise PermissionError('source controls unavailable in stop-only mode')
         PipelineScheduleControlOwner._identity(conn,scope)
         definition_id,actor=_group_id(definition_id),_text(actor,240)
         key=validate_idempotency_key(idempotency_key)

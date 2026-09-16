@@ -55,3 +55,19 @@ Y2b-1复核新增pipeline_controlled_snapshot_ingress.py：ControlledScheduleExe
 最终完整隔离PG 33 passed / 20.75秒（/tmp/aos-group-fence-final-v2.log），覆盖enabled/disabled且旧flag被手工开启仍拒绝、无definition组领取拒绝且零运行、退役保持停用/显式启用后旧单路恢复、cron只执行未归组成员、原受控恢复守卫拒绝；累计包含Y2a配置及Y1跨连接恢复。旧025专用schema+执行/定时器回归74 passed / 8.12秒（/tmp/aos-group-fence-legacy-final-v2.log）。两个旧025夹具明确命名无组reader，仅验证旧行锁/绑定语义，不计为新归属安全证据；新完整库未替换该reader。git diff --check通过。
 
 新增/修改文件以本提交为准，额外旧夹具test_controlled_schedule_guard_pg.py纳入。未改主库061、未重载真实host、未读取商城，未开放API。部署必须063先行，不允许先重载新代码到061。下一波Y2b-2正式配置API，之后Y2c页面和双向竞争；Y3才接带exact definition的组执行。当前安全拒绝不等于业务闭环已完成。
+
+## Y2b-2 正式配置API（基线46c90d08）
+
+新增aos_api/pipeline_snapshot_schedule_service.py与routers/pipeline_snapshot_schedules.py；在原pipeline_controls router.include_router注册/v1/pipelines/snapshot-schedules路径。原PipelineControlServiceFactory新增build_snapshot_schedule(scope)，组装同一当前controls与正式PostgresInstallationStore，API不构造替代authority。服务通过原runtime_worker_connection与consumer_connection、protected tables role gate，scope来自principal，不接受请求actor/tenant/凭据。configure请求为cron、policyRef、十二项scheduleId/bindingRef、expectedRef；服务加载每条最新binding并exact匹配，再交Y2a Owner。PUT /{definitionId}配置默认disabled；POST /{definitionId}/{enable|disable|retire}仅expectedRef；所有写操作Idempotency-Key必须唯一。GET /{definitionId}在原当前安装配置权限下返回精确ref/body，供提交未知后的只读核对；此阶段不增加重试或组执行按钮。
+
+新接口严格JSON/64KiB、UUID规范、禁止额外字段，错误不泄露内部信息；借用原pipeline_controls请求体大小/异常映射惯例，避免import循环。配置读取复用原权限；UI清单与分页在Y2c明确后实现。HTTP命名service测试只验证路由/身份/错误，无业务成功宣称；完整PG service测试通过真实Owner和runtime连接边界验证写/读取/CAS/权限/双租户。迁移063前不重载主host。
+
+Y2b-2复核：原factory的ManifestLoader构造会检查签名资产根目录存在；停用/退役/只读核对不能因该目录暂时不可用而失效。新增受限stop/read构造模式：factory仅在configure/enable构造源controls；stop/read模式Owner只持原CurrentConfigurationPermission，无源controls且强制拒绝configure/enable。该模式不跳过成员/安装markings权限，不允许传success，不允许激活。新增缺失资产根目录下停用服务可构造、启用服务拒绝，以及真实服务受限模式只可停用/读的验证。
+
+### Y2b-2 验证结果
+
+新增正式service/HTTP路由并挂入原router与factory。HTTP严格验证12 exact绑定/唯一成员/规范UUID/周期/未知字段/原Idempotency-Key，身份只来自principal，安全错误不泄密且不重试。实际服务使用原独立runtime连接、非超级用户/非表owner的角色门禁，原配置权限与Owner事务。跨连接配置/重放/启停/回读、陈旧绑定拒绝、负租户零记录、权限撤销后回读及重放拒绝、stop-only不能enable均经完整PG验证。
+
+Red为新路由模块不存在；初次HTTP完整app测试因未指定18434误用默认5433连接拒绝，重新按隔离库命令执行，不计作产品失败或通过证据。最终累计81 passed / 35.35秒（/tmp/aos-group-api-final.log），包括HTTP/原管道API/factory/新service PG/配置Owner/组围栏。git diff --check通过。具名签名资产/源读取夹具仍不是真实租户运行；真实主库仍061/host旧版本，尚不对外开放新接口。
+
+后续Y2c产品入口需先补当前配置列表、服务端可选exact成员与策略来源、按原key读取历史回执（只读确认未知提交，不能仅看latest覆盖旧结果），再实现页面。仍需双向并发验证，不以HTTP或81测试作为八工作台业务完成。Y3–Y6沿原清单继续。
