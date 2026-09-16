@@ -1,0 +1,16 @@
+{
+  "kind": "hermetic-recovery-ui-only",
+  "liveAosRequests": 0,
+  "sourceReads": 0,
+  "writesToFixture": 1,
+  "checks": [
+    "original context GET",
+    "explicit window renewal",
+    "commit ack lost",
+    "reload zero resend",
+    "original receipt GET",
+    "current definition refresh",
+    "760 width"
+  ],
+  "errors": []
+}

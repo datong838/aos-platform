@@ -1,13 +1,14 @@
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { assetControlClient } from '../../api/assetControl/client';
 import type { InstallationListItem } from '../../api/assetControl/types';
-import { confirmGroupCommand,groupOptions,groupScope,listGroups,readGroup,readGroupRuntime,pendingGroupCommand,submitGroupCommand,type GroupDefinition,type GroupIntent,type GroupOptions,type GroupScope,type GroupRuntime,type PendingGroupCommand } from '../../api/snapshotSchedules';
+import { confirmGroupCommand,confirmRecoveryCommand,groupOptions,groupScope,listGroups,readGroup,readGroupRuntime,pendingGroupCommand,pendingRecoveryCommand,submitGroupCommand,type GroupDefinition,type GroupIntent,type GroupOptions,type GroupScope,type GroupRuntime,type PendingGroupCommand,type PendingRecoveryCommand,type RecoveryReceipt } from '../../api/snapshotSchedules';
+import {SnapshotRecoveryPanel} from './SnapshotRecoveryPanel';
 import { getPipelineDisplayName } from './pipelineMeta';
 import './SnapshotSchedulesPanel.css';
 
 const labels={disabled:'已配置 · 已停用',enabled:'已启用配置',retired:'已退役'};
 function scopeOrNull(){try{return groupScope();}catch{return null;}}
-function RuntimeStatus({scope,group}:{scope:GroupScope;group:GroupDefinition}){
+function RuntimeStatus({scope,group,blocked,onConfirmed,onBusy}:{scope:GroupScope;group:GroupDefinition;blocked:boolean;onConfirmed:(receipt:RecoveryReceipt)=>Promise<void>;onBusy:(busy:boolean)=>void}){
  const [value,setValue]=useState<GroupRuntime|null>(null),[error,setError]=useState<string|null>(null),[loading,setLoading]=useState(false);
  const mounted=useRef(false),epoch=useRef(0);
  const refresh=useCallback(async()=>{
@@ -30,7 +31,7 @@ function RuntimeStatus({scope,group}:{scope:GroupScope;group:GroupDefinition}){
   else if(value.routingStatus==='slot_completed')label='本周期任务已完成';
   else label='执行器已就绪，等待采集周期';
  }
- return <aside className="snapshot-groups__notice" aria-label="数据组运行状态"><h4>当前运行情况</h4>{error?<p role="alert">运行状态尚未确认：{error}</p>:<p role="status">{label}</p>}<div className="snapshot-groups__header">{value&&<small>核对时间：{new Date(value.observedAt).toLocaleString('zh-CN')}</small>}<button type="button" disabled={loading} onClick={()=>void refresh()}>刷新运行状态</button></div></aside>;
+ return <aside className="snapshot-groups__notice" aria-label="数据组运行状态"><h4>当前运行情况</h4>{error?<p role="alert">运行状态尚未确认：{error}</p>:<p role="status">{label}</p>}<div className="snapshot-groups__header">{value&&<small>核对时间：{new Date(value.observedAt).toLocaleString('zh-CN')}</small>}<button type="button" disabled={loading||blocked} onClick={()=>void refresh()}>刷新运行状态</button></div>{value?.routingStatus==='original_group_pending'&&value.originalGroups.length===1&&<SnapshotRecoveryPanel key={value.originalGroups[0].groupId} scope={scope} groupId={value.originalGroups[0].groupId} definitionRef={group.ref} blocked={blocked||value.worker.active} onConfirmed={onConfirmed} onBusy={onBusy}/>}</aside>;
 }
 export function SnapshotSchedulesPanel(){
  const [scope,setScope]=useState(scopeOrNull);
@@ -44,14 +45,25 @@ function GroupPanel({scope}:{scope:GroupScope}){
  const [options,setOptions]=useState<GroupOptions|null>(null),[policy,setPolicy]=useState(''),[cron,setCron]=useState('0 8 * * *');
  const [error,setError]=useState<string|null>(null),[message,setMessage]=useState<string|null>(null),[busy,setBusy]=useState(false);
  const [pending,setPending]=useState<PendingGroupCommand|null>(null),[pendingError,setPendingError]=useState(false);
+ const [recoveryPending,setRecoveryPending]=useState<PendingRecoveryCommand|null>(null);
  const [confirmRetire,setConfirmRetire]=useState(false);
  const lock=useRef(false),mounted=useRef(true),selectionEpoch=useRef(0);
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;selectionEpoch.current+=1;};},[]);
  const current=()=>mounted.current&&JSON.stringify(scopeOrNull())===JSON.stringify(scope);
- const syncPending=useCallback(()=>{try{setPending(pendingGroupCommand(scope));setPendingError(false);}catch(e){setPendingError(true);setError((e as Error).message);}},[scope]);
+ const syncPending=useCallback(()=>{try{setPending(pendingGroupCommand(scope));setRecoveryPending(pendingRecoveryCommand(scope));setPendingError(false);}catch(e){setPendingError(true);setError((e as Error).message);}},[scope]);
+ useEffect(()=>{window.addEventListener('aos-snapshot-recovery-updated',syncPending);return()=>window.removeEventListener('aos-snapshot-recovery-updated',syncPending);},[syncPending]);
  const reload=useCallback(async()=>{const page=await listGroups(scope);if(!mounted.current)return;setGroups(page.items);setNext(page.nextCursor);},[scope]);
  useEffect(()=>{syncPending();void reload().catch(e=>{if(mounted.current)setError(e.message);});void assetControlClient.listInstallations({state:'active',limit:50}).then(page=>{if(current()){setInstallations(page.items);setInstallationTotal(page.total);}}).catch(e=>{if(current())setError(e.message);});},[reload,scope,syncPending]);
- const locked=busy||!!pending||pendingError;
+ const locked=busy||!!pending||!!recoveryPending||pendingError;
+ async function recovered(receipt:RecoveryReceipt){
+  if(!current())return;setMessage('原恢复申请回执已核对，等待执行器按当前条件承接。');syncPending();
+  const id=receipt.body.currentDefinitionRef.resourceId.replace(/^snapshot-schedule-/,'');
+  const latest=await readGroup(scope,id);if(!current())return;setSelected(latest);setInstallation(latest.body.installationId);setCron(latest.body.cron);await reload();
+ }
+ async function confirmRecovery(){
+  if(lock.current)return;lock.current=true;setBusy(true);setError(null);
+  try{await recovered(await confirmRecoveryCommand(scope));}catch(e){if(current())setError('原恢复申请尚未确认：'+(e as Error).message);}finally{lock.current=false;if(current()){setBusy(false);syncPending();}}
+ }
  async function choose(id:string,group:GroupDefinition|null=null){
   if(locked)return;const epoch=++selectionEpoch.current;setInstallation(id);setSelected(group);setOptions(null);setPolicy('');setMessage(null);setError(null);setConfirmRetire(false);if(group)setCron(group.body.cron);
   if(!id)return;
@@ -85,9 +97,10 @@ function GroupPanel({scope}:{scope:GroupScope}){
  return <section className="snapshot-groups" aria-label="整组采集配置">
   <header className="snapshot-groups__header"><div><h2>整组采集</h2><p>让商品、订单、客户等十二类来源按同一计划准备一致数据。</p></div><button type="button" disabled={busy} onClick={()=>void reload().catch(e=>setError(e.message))}>刷新配置</button></header>
   <p className="snapshot-groups__notice">选择已保存的数据组，查看当前运行情况。启用配置不代表数据已采集或业务已完成。</p>
-  {selected&&<RuntimeStatus key={JSON.stringify(selected.ref)} scope={scope} group={selected}/>}
+  {selected&&<RuntimeStatus key={JSON.stringify(selected.ref)} scope={scope} group={selected} blocked={locked} onConfirmed={recovered} onBusy={value=>{if(current())setBusy(value);}}/>}
   {error&&<p className="snapshot-groups__error" role="alert">{error}</p>}{message&&<p role="status">{message}</p>}
   {pending&&<aside className="snapshot-groups__pending"><strong>有一项待确认操作</strong><p>本地仅保留原请求以核对结果，不会自动重发。请先核对，再进行下一项操作。</p><button type="button" disabled={busy} onClick={()=>void confirm()}>核对原操作</button><details><summary>原操作标识</summary><code>{pending.key}</code></details></aside>}
+  {recoveryPending&&<aside className="snapshot-groups__pending"><strong>有一项待确认恢复申请</strong><p>仅核对原申请回执，不会再次提交。请先确认，再办理其他配置或恢复。</p><button type="button" disabled={busy} onClick={()=>void confirmRecovery()}>核对原恢复申请</button><details><summary>原恢复申请标识</summary><code>{recoveryPending.key}</code></details></aside>}
   <div className="snapshot-groups__layout"><div className="snapshot-groups__list"><h3>已保存的配置</h3>{!groups.length&&<p>尚无数据组配置；请先选择已安装实例检查来源。</p>}
    {groups.map(group=><button className={'snapshot-groups__item'+(selected?.body.definitionId===group.body.definitionId?' is-selected':'')} type="button" key={group.body.definitionId} disabled={locked} onClick={()=>void choose(group.body.installationId,group)}><strong>{name(group.body.installationId)}</strong><span>{labels[group.body.state]} · 版本 {group.body.revision}</span><small>{group.body.cron} · 上海时区 · 十二类来源</small></button>)}
    {next&&<button type="button" disabled={busy} onClick={()=>void listGroups(scope,next).then(page=>{if(current()){setGroups(old=>[...old,...page.items.filter(x=>!old.some(y=>x.body.definitionId===y.body.definitionId))]);setNext(page.nextCursor);}}).catch(e=>{if(current())setError(e.message);})}>加载更多配置</button>}

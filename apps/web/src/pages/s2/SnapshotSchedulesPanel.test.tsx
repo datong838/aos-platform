@@ -2,15 +2,15 @@
 import React,{act} from 'react';
 import {createRoot} from 'react-dom/client';
 import {beforeEach,expect,it,vi} from 'vitest';
-const mocks=vi.hoisted(()=>({list:vi.fn(),options:vi.fn(),submit:vi.fn(),confirm:vi.fn(),read:vi.fn(),status:vi.fn(),pending:vi.fn(),installations:vi.fn(),runtime:vi.fn(),scope:{orgId:'org-org',projectId:'dev-project',subject:'operator',auth:1}}));
+const mocks=vi.hoisted(()=>({list:vi.fn(),options:vi.fn(),submit:vi.fn(),confirm:vi.fn(),read:vi.fn(),status:vi.fn(),recoveryPending:vi.fn(),recoveryConfirm:vi.fn(),recoveryRead:vi.fn(),recoverySubmit:vi.fn(),pending:vi.fn(),installations:vi.fn(),runtime:vi.fn(),scope:{orgId:'org-org',projectId:'dev-project',subject:'operator',auth:1}}));
 vi.mock('../../api/assetControl/client',()=>({assetControlClient:{listInstallations:mocks.installations,getRuntimeInstallation:mocks.runtime}}));
-vi.mock('../../api/snapshotSchedules',()=>({groupScope:()=>mocks.scope,listGroups:mocks.list,groupOptions:mocks.options,submitGroupCommand:mocks.submit,confirmGroupCommand:mocks.confirm,readGroup:mocks.read,readGroupRuntime:mocks.status,pendingGroupCommand:mocks.pending}));
+vi.mock('../../api/snapshotSchedules',()=>({groupScope:()=>mocks.scope,listGroups:mocks.list,groupOptions:mocks.options,submitGroupCommand:mocks.submit,confirmGroupCommand:mocks.confirm,readGroup:mocks.read,readGroupRuntime:mocks.status,pendingRecoveryCommand:mocks.recoveryPending,confirmRecoveryCommand:mocks.recoveryConfirm,readRecoveryContext:mocks.recoveryRead,submitRecoveryCommand:mocks.recoverySubmit,pendingGroupCommand:mocks.pending}));
 import {SnapshotSchedulesPanel} from './SnapshotSchedulesPanel';
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 const id='12345678-1234-4234-8234-123456789012';
 const policy={resourceType:'SnapshotRelationshipPolicy',resourceId:'policy.json',revision:'1.0.0',contentHash:'sha256:'+'a'.repeat(64)};
 const ready={installationId:id,generation:id,status:'ready',missing:[],ambiguous:[],members:Array.from({length:12},(_,i)=>({scheduleId:'s'+i,pipelineId:'p'+i,bindingRef:{revision:1},definitionId:null})),policies:[policy]};
-beforeEach(()=>{vi.clearAllMocks();mocks.status.mockRejectedValue(new Error('具名未配置状态'));mocks.scope={orgId:'org-org',projectId:'dev-project',subject:'operator',auth:1};mocks.list.mockResolvedValue({items:[],nextCursor:null});mocks.pending.mockReturnValue(null);mocks.installations.mockResolvedValue({items:[{installationId:id,displayName:'栖月汇安装'}],total:1});mocks.runtime.mockResolvedValue({binding:{generation:id}});mocks.options.mockResolvedValue(ready);});
+beforeEach(()=>{vi.clearAllMocks();mocks.recoveryPending.mockReturnValue(null);mocks.status.mockRejectedValue(new Error('具名未配置状态'));mocks.scope={orgId:'org-org',projectId:'dev-project',subject:'operator',auth:1};mocks.list.mockResolvedValue({items:[],nextCursor:null});mocks.pending.mockReturnValue(null);mocks.installations.mockResolvedValue({items:[{installationId:id,displayName:'栖月汇安装'}],total:1});mocks.runtime.mockResolvedValue({binding:{generation:id}});mocks.options.mockResolvedValue(ready);});
 async function renderPanel(){const host=document.createElement('div');document.body.append(host);const root=createRoot(host);await act(async()=>{root.render(<React.StrictMode><SnapshotSchedulesPanel/></React.StrictMode>);});return {host,close:async()=>{await act(async()=>root.unmount());host.remove();}};}
 async function selectInstallation(host:HTMLElement){await act(async()=>{const input=host.querySelector('select[aria-label="已安装实例"]') as HTMLSelectElement;input.value=id;input.dispatchEvent(new Event('change',{bubbles:true}));});}
 const button=(host:HTMLElement,text:string)=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent===text)!;
@@ -35,6 +35,15 @@ it('blocks a second click while the original configuration submission is pending
 it('restores a pending command without sending it again',async()=>{
  mocks.pending.mockReturnValue({key:'old-original-key',definitionId:id});
  const page=await renderPanel();try{expect(page.host.textContent).toContain('有一项待确认操作');expect(button(page.host,'核对原操作')).toBeDefined();expect(mocks.submit).not.toHaveBeenCalled();expect(mocks.confirm).not.toHaveBeenCalled();expect(button(page.host,'保存为停用配置').disabled).toBe(true);}finally{await page.close();}
+});
+it('restores the original recovery request and only reads its receipt',async()=>{
+ mocks.recoveryPending.mockReturnValue({key:'original-recovery-key',groupId:id});
+ mocks.recoveryConfirm.mockRejectedValue(new Error('原回执尚未确认'));
+ const page=await renderPanel();try{
+  expect(page.host.textContent).toContain('有一项待确认恢复申请');expect(button(page.host,'保存为停用配置').disabled).toBe(true);
+  expect(mocks.recoverySubmit).not.toHaveBeenCalled();expect(mocks.recoveryConfirm).not.toHaveBeenCalled();
+  await act(async()=>button(page.host,'核对原恢复申请').click());expect(mocks.recoveryConfirm).toHaveBeenCalledTimes(1);expect(mocks.recoverySubmit).not.toHaveBeenCalled();expect(page.host.textContent).toContain('original-recovery-key');
+ }finally{await page.close();}
 });
 it('does not render old source choices after switching tenant',async()=>{
  let finish!:(v:unknown)=>void;mocks.options.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));

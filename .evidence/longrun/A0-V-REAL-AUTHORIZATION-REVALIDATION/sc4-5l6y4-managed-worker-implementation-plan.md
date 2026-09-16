@@ -54,11 +54,21 @@ Red新增readGroupRuntime未实现；API/组件16项通过，类型检查与Vite
 
 Red为新增方法缺失；客户端及既有配置/面板联合23 passed（`/tmp/aos-recovery-client-final.log`），类型检查通过（首次仅测试夹具union unknown，已修正；`/tmp/aos-recovery-client-types-final.log`），diff检查通过。包含本地存储失败零发送、原receipt错配、超时未知、跨租户隔离、当前身份变化、窗口不合法和配置版本漂移。均前端具名网络夹具，不是真实审批/源调用。下一波b2表单与原回执恢复入口、浏览器验证，主环境未改。
 
+## Y4d3b2恢复表单与浏览器证据
+
+新增SnapshotRecoveryPanel，待处理单原组先显式只读核对，展示原采集时间、十二Run状态/停止事实、开始下限及结束边界；输入本地时间转ISO，点击提交才POST。双击互斥，执行中/未知申请时禁新操作；全局原恢复申请banner刷新后保留，点击只GET原receipt；确认后读取最新配置而非沿用旧审批快照。租户迟到响应丢弃。
+
+Red新组件不存在；联合27项通过（`/tmp/aos-recovery-ui-final-tests.log`），类型检查通过（测试多余React导入已移除）、Vite构建通过。独立Chrome/15174全部API隔离，执行原上下文GET→显式窗口申请→模拟提交确认丢失→刷新zero resend→原key receipt GET→新配置状态，fixture续期POST恰好1，真实AOS请求/源读0，pageerror0；1440/760与表单截图已目视，面板无横向溢出。证据y4d3b-recovery-ui，日志/tmp/aos-recovery-ui-browser-final.log。未把fixture审批或页面显示当作真实经营链完成。
+
+Y4代码/隔离检查已完成本施工范围；主环境保持默认关闭，Y6仍需克隆迁移、真实当前权限/禁入/安装代次与浏览器联调后才允许主运行。下一波Y5逐项核对十二路真实产品配置缺口，形成确切文件/资源/Owner清单和只读预检；不得把302张表清单当成已配置十二路，不给旧Case伪造历史快照。
+
 ## 产品与技术目标
 
 让已安装、当前获准的十二路配置自然产生同一快照组；失败或未知结果保留原组事实，通过正式续期回执恢复，不依靠开发者逐路调用。执行身份来自服务端持久化定义，配置者与执行者的当前权限继续由原Owner检查。保持原单路未接管路径和所有租户、预算、审批、安装代次围栏。
 
 ## 分波施工与文件范围
+
+Y4d3b2文件：新增 `apps/web/src/pages/s2/SnapshotRecoveryPanel.tsx` 和 `.test.tsx`，修改 `SnapshotSchedulesPanel.tsx` / `.test.tsx`；浏览器证据目录 `y4d3b-recovery-ui`。仅待处理单一原组显示恢复入口，先点击只读核对原输入/运行状态，展示原观察时间和服务端窗口边界；datetime-local明确本地时间，提交转换带时区ISO。用户明确提交才调用b1，双击互斥；未知写全局pending阻止配置/新恢复，顶部原回执核对入口刷新后仍存在、只GET确认，不自动重发。当前组实际执行中禁新申请；正式Owner仍最终处理权限/窗口/并发。成功仅提示审批回执已核对并读最新配置/运行状态，不冒称业务已完成。租户/卸载/选中定义变化忽略旧异步结果。组件/API回归、类型构建、独立浏览器全API夹具检查一次续期响应丢失→刷新零重发→原key确认→最新状态。真实主库无写。
 
 Y4d3b拆分为b1客户端合同、b2表单及浏览器。b1修改 `apps/web/src/api/snapshotSchedules.ts` 并新增 `apps/web/src/api/snapshotRecoveries.test.ts`，复用原有30秒有界请求/租户身份快照、精确ref与稳定比较函数，不复制网络身份层。严格读恢复上下文（原group/当前definition exactRef/输入hash/观察时间/服务端窗口规则/十二Run汇总），本地只保存待核对请求，不保存业务原始行或凭证。续期提交前先持久化原key和请求，POST后必须GET原receipt验证tenant/group/actor/request/body前驱/输入hash/window匹配，再清除pending；未知结果和回执错配保留，404不自动重发。4xx明确拒绝可清除同key，成功只算approval_recorded不宣称执行完成。配置与恢复未知命令互斥。客户端窗口只辅助输入，服务端Owner仍最终裁决；不自动扩窗、不自动提交。b2再新增恢复Panel，在真实原组状态内只读核对、手动选择时间并显式提交，具体组件测试/浏览器目录实施前补充。
 
