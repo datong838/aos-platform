@@ -1,0 +1,17 @@
+# Y3c-2b 当前管理许可下的原输入历史核验
+
+## 验证结果
+
+2026-09-16已实现。Red为入口模块不存在；开发自测修正安装代次字段归属（extension_runtime_binding而非bundle_installation）与两类历史ref空字段序列化差异，保留原哈希合同不改历史。最终39 passed，50.74s（历史核验4项内含九类只读数据变异、专用围栏2项、续期合同33项），日志`/tmp/aos-saved-facts-final.log`。具名隔离输入后已批准替代控制，并模拟两天后历史检查；禁止调用旧run_current，仍完整核验十二原输入。陌生actor、双向租户隔离、unknown无input、错期望hash、temp表遮蔽、缺成员、错source/graph/Run/actor、未来采样和重算manifest错行数均拒绝或不影响真实public读取。
+
+只读历史结果不是当前generation可执行证明：本Reader核对原generation绑定存在及当前管理权限；后续正式续期必须另经当前安装/配置/运行Owner。主库061、主服务、真实业务状态未改；源调用仅隔离夹具一次，未知无输入夹具零次。下一波原子续期Owner；尚无恢复执行入口。
+
+产品目的：续期前证明原十二路输入完整存在，避免因旧执行窗口到期而无法核验历史，也避免unknown源调用无输入被重新调用。遵循Y3c双窗口方案，历史核验不返回CurrentSnapshotGroup、不产生许可、不修改Run或Receipt。
+
+文件清单：新增services/aos-api/aos_api/pipeline_snapshot_group_saved_facts.py、services/aos-api/tests/extension_runtime/test_snapshot_group_saved_facts_pg.py。本波不修改普通输入Owner，不接HTTP或执行入口。
+
+入口要求原runtime租户身份、规范group ID、当前CurrentConfigurationPermission管理权限和相同安装generation。先读取原v2 schedule claim定位原definition，然后取得安装锁与当前管理许可；历史成员读取均限定public及tenant。复用原ScheduleClaim.read、Definition._decode/_saved_bindings、decode_control_row、C1a原控制合同、SourceClaim._decode、IngressJournal.read的规范化hash校验。完整比对原definition、schedule/source组成员次序、十二SourceClaim与原control/actor/安装身份、Run所属schedule、manifest及所有父信封；原采样时间须在原控制共同观察窗口内且不在未来。
+
+返回HistoricalSnapshotInput只包含原事实，不含当前执行许可。rowsHash是原始源行的摘要；已保存outputRows为映射后的规范行，不能伪装重新计算raw rowsHash，仅验证其格式及不可变manifest完整性。原IngressJournal.read继续验证outputRows与BatchCommand一致；当前mapping、角色、配置、窗口的准入由后续RecoveryOwner/执行器处理，不能因历史核验成功省略。
+
+测试：先用不存在入口Red；具名隔离原input后已批准替代控制仍可历史核验；mock旧current控制入口为必失败以证明不调用旧权限；陌生actor、负租户、无input、期望manifest错误必须拒绝；用只读结果变异测试重算hash但错source/graph/run/control/时间及缺成员，数据库数据与约束不改。核验前后所有运行/回执数量不变、源调用仍一次。完成后衔接C2正式续期Owner原子审批及幂等回执。
