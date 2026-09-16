@@ -65,3 +65,23 @@
 - 当前真实窗口只确认 Product 65 行，完整全店分析需要十二类事实。首个 Run 很可能先进入 `WAITING_DATA`；这是正确结果，后续由既有 DataRequirement worker 补齐，不能用商业材料或模型猜测替代。
 - “计划为空”不能长期作为重复触发器；once watermark、Plan existence 和活动 Run 三道门必须共同阻止重启风暴。
 - 商品尖刀方法来自产品方案和商业案例，仅作为候选分析方法。最终选品、价格、预算、内容声称和渠道动作必须由当前真实证据和后续评审决定。
+
+## 7. 施工补充：调度控制凭据（2026-09-17）
+
+编码复核发现，现有 `SchedulePutHostService` 会在写入时锁定并校验 exact `ActionApprovalEvent`，响应也返回 `approvalRef`；但底层 `ecommerce_investigation_schedule_policy_command_receipt` 只保存 Policy/Case authority，没有把该审批与成功写入永久绑定。首次基线 bootstrap 需要同时验证来源控制凭据和审批有效期，若运行时从历史 proposal 反查，无法证明“这个审批就是这次调度写入采用的审批”。
+
+因此在 schedule 分析上下文之前增加一个最小、不可变的控制凭据切片：
+
+1. 新增 `a0v_078_schedule_policy_control_receipt.py`，保存 tenant、SchedulePolicy exact ref、Case exact ref、ActionApprovalEvent exact ref、原 command receipt、Q installation/generation/epoch、内容哈希和创建时间；表启用强制 RLS、禁止普通 DML，并通过 security-definer 函数在同一 Host 事务中写入。
+2. 写入函数必须锁定当前 Policy/Case、原 command receipt、当前 dispatch 和审批事件，逐字段验证 proposal action binding；重放只允许完全相同的请求哈希。
+3. `SchedulePutHostService` 在成功写 Policy、绑定自然 schedule 后立即写控制凭据。任一步失败则整个事务回滚，不能出现“Policy 已启用但没有 bootstrap 权威”的半成品。
+4. baseline discovery 只接受与当前 once Policy、Case 和 Q epoch 一致的 `SchedulePolicyControlReceipt`，并把它作为 `AnalysisBootstrapIntent.sourceControlReceiptRef`；商品事件仍只接受 `EventPolicyControlReceipt`。
+
+该补充引入数据库对象但不修改 occurrence 约束，也不放宽已有 ProductEvent 类型检查。新增或修改文件限定为：
+
+- `services/aos-api/alembic/versions/a0v_078_schedule_policy_control_receipt.py`
+- `services/aos-api/aos_api/ecommerce_schedule_policy_control.py`
+- `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py`
+- `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py`
+- `services/aos-api/aos_api/ecommerce_analysis_bootstrap_contract.py`
+- 对应专项测试与 migration 静态测试。
