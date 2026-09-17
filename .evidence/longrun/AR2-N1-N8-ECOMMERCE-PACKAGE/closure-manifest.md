@@ -1605,3 +1605,16 @@ historical preHash or verifier rule.
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_event_proposal_gate.py` | Host original path | Current tenant/role/marking and exact Case/Policy provenance guard inside the existing AIP transaction; no proposal, approval, dispatch or effect grant | `62a075d7e49c5cf1c898959248247bb7704c17ec6dcf8f7432b8a55614f945cd` |
+
+### SC4-5L6Z Baseline assessment discovery Host classification
+
+The discovery module was added on the Host side after the original AR2-7 fixed point and
+imports migrated investigation contracts. It only validates a claimed schedule occurrence,
+the current once Policy/Case, the exact runtime route, schedule-control Receipt and a fresh
+governed Product snapshot inside the existing tenant transaction. It does not create a Case,
+Run or Plan, acknowledge an occurrence, invoke a Provider, or authorize an external effect.
+This append-only classification changes no historical preHash or dynamic-reference rule.
+
+| file | destination | boundary | initial hash |
+| --- | --- | --- | --- |
+| `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py` | Host original path | Read-only current eligibility and exact schedule/source lineage discovery; no Case/Run creation, occurrence settlement, Provider call or effect grant | `dec823feceb9905c087692cd30de795bb54d9d747c17cbe61d3b487c21ffac18` |
