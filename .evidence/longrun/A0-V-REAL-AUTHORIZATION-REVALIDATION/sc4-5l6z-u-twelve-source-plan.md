@@ -643,6 +643,23 @@ owned verification/control、live installation owner、runtime Store、正式 Ho
 零 running/unresolved/pending/canary。detach Receipt `9b50a8eb-ed85-4c7b-9010-16e0bbea5875` /
 `sha256:adc874873a141d0d925c06c0b5cc844a52e281780096a85e7a5d9ca5ea866396` 是 AI 唯一合法 direct predecessor。
 
+安全空窗重载后 Host PID `37869`、Worker/API PID `38214`；18181 已监听，Host status 为 active/liveTargets0/canary0。
+Worker 第一次重载也因原 `A0V-NATURAL-CHAIN-MAIN-UPGRADE-20260915` 租约到期而拒绝启动，按相同用户授权只续签原 scope/
+原排除项到 `2026-09-20T23:59+08:00` 后恢复，未扩大副作用权限。
+
+AI 已走完整 direct successor 生命周期：installation `59d91f1c-efd7-4097-8ce0-1d4fa9452c0f`、generation
+`3512c4da-841c-4bd6-a711-343c163b0632`、lock
+`sha256:4873953acc7c69863fc034dd57b3c681eb67e05c5be2090abd913365d73daada`、config
+`1ceda024-1a6b-4714-9541-0327ab81a16f@1` / `sha256:901a8b27886f830afc15ebe106194bbed65ddd7708f6220d851eb07b2eaa0ed6`。
+successor Receipt `71c013e7-4022-4faa-9914-27a73ad52795` 精确引用 AH detach；cutover operation
+`bbe417ce-4cbe-4cc3-a674-3005b618f32d` 已闭合 approve/prepare/pause/commit/validate/resume，九路 current 为
+extension rev78/group105，target runtime rev6、claim resumed、零在途。
+
+保存定义已从 AH rev39 disabled 转移为 AI rev40 disabled，再以 recovery rev13 生成 rev41 enabled；十二 control 均绑定 AI，
+manifest 仍为 `sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01`，全过程
+`sourceReads=0`。下一动作只能等待自然 Worker 提交新 recoverable_store attempt；不得调用 `run_definition` 或重发恢复。
+验收重点是业务 invoke 持锁超过三秒时 Host 不再误杀 session，三资源续租持续，并最终看到 attempt succeeded、十二 Run 原子完成。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
