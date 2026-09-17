@@ -660,6 +660,40 @@ manifest 仍为 `sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0eca
 `sourceReads=0`。下一动作只能等待自然 Worker 提交新 recoverable_store attempt；不得调用 `run_definition` 或重发恢复。
 验收重点是业务 invoke 持锁超过三秒时 Host 不再误杀 session，三资源续租持续，并最终看到 attempt succeeded、十二 Run 原子完成。
 
+AI 自然 Worker 于 `2026-09-17T18:10:05.282637Z` 提交 attempt
+`4cf91136-4d6b-4e02-b817-04d8cec404cb`。本次 session health 修复已被真实长运行验证：四小时以上业务计算期间
+attempt heartbeat 与三项资源租约持续推进，Host 没有再因合法 invoke 持锁超过三秒而误杀 session；十二份
+`ecommerce_ingress_dataset_receipt` 最终于 `2026-09-17T22:04:45Z` 前后全部自然落账，未重复读取商城来源。
+
+但完整组尚未成功。attempt 在 `2026-09-17T22:27:10.053009Z` 以 revision508 failed 结算，Worker 只记录
+`PermissionError`、`error_origin=_operate`；十二 Run 仍全部 `running/executorStopped=false/finishedAt=null`。只读阶段核对证明
+`pipeline_snapshot_group_relationship` 已存在唯一当前行，而 `pipeline_snapshot_group_link_command` 与
+`pipeline_snapshot_group_retirement` 均为零行，因此失败边界位于不可变 relationship preparation 之后、link command
+持久化之前。12/12 dataset Receipt 是已提交事实，不等于 Run 或组完成；当前禁止 disable definition、补写 Run、重放
+`run_definition` 或创建新 attempt。
+
+下一最小诊断/修复切片限定在完成链的 current-authority 读取边界：先用隔离 PostgreSQL fixture 复现 saved-successor recovery
+已写 relationship、12/12 dataset Receipt、Run 仍 running 的 exact 状态，要求 link preparation 首次读取走 completed immutable
+input 且仍由 current recovery authority、当前 control、原 source claim 与 Store projection completion 联合校验。先形成能稳定暴露
+具体 PermissionError 分支的 RED；只有该 RED 证明确定性代码缺口后，才最小修改对应 Owner，并验证零新 source read、零第二份
+dataset Receipt、原 relationship 精确复用、link/retirement/十二 Run 在一个原完成协议内收口。真实 AI attempt 维持失败事实，
+不作为修复后的可执行授权；修复后若需 successor，仍须沿暂停、disable/detach、重载和 direct successor 正式路径推进。
+
+隔离 PG RED 已把生产故障收敛为 successor control 排序缺口。`PipelineSnapshotGroupOwner` 按当前 control resourceId
+确定性排序；跨安装 successor 会生成一组新的 control UUID，因此当前组顺序可以不同于原始组。恢复输入此前直接保留
+`facts.parents` 的原顺序，却同时按当前组顺序生成 claim records；后续 link preparation 将二者 `zip` 后，会拿当前 control
+去核对另一个原始 Run，确定性触发 `PipelineSourceClaimOwner._operate` 的 `saved recovery fixed member differs`，与真实日志的
+`PermissionError/error_origin=_operate` 和 relationship 已写、link command 未写边界完全吻合。同安装 renewal 因 control identity
+不变而无法覆盖这个缺口。
+
+最小修复只落在 `pipeline_snapshot_group_input_owner.py`：先验证原 `facts.parents` 的 runId 集合与固定 recovery bindings
+一一相等，再按当前 group member 对应的固定 runId 重排 parent，随后一起构造 claim records 与 current input；任何缺失、重复
+或额外 parent 均 fail closed 为 `GROUP_RECOVERY_PARENT_MEMBERS_DIFFER`。新增 PG 回归先稳定 RED（反转当前 control 顺序时首个
+parent runId 错配），修复后 GREEN；没有放宽 current authority、没有新增 source read、没有改变原始 parent 内容或 Receipt。
+主库只读逐位对账进一步确认真实 AI 组正好命中该缺口：原 immutable parent 顺序与 successor 当前 control UUID 排序后的
+固定 Run 顺序在十二个位置上 `0/12` 相同，而两侧 Run 集合完全相同。因此这不是推测性修补；它解释了为什么十二份对象
+Receipt 均可独立完成，而完成链首次把当前 control 与 parent 成对复核时必然拒绝。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与

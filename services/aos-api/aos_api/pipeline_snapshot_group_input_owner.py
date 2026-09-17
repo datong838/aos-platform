@@ -57,13 +57,18 @@ class PipelineSnapshotGroupInputOwner:
         def consume(current):
             facts=current.facts;group=current.execution.group
             by_control={PipelineExactRef.model_validate(ref).resource_id:run for ref,run in bindings}
+            by_run={parent.get('runId'):parent for parent in facts.parents if type(parent) is dict}
+            if (len(by_run)!=len(facts.parents) or set(by_run)!=set(by_control.values())
+                    or len(by_control)!=len(group.members)):
+                raise IngressJournalConflict('GROUP_RECOVERY_PARENT_MEMBERS_DIFFER')
             def load():
                 read=self._claims.read_completed_current if completed_read else self._claims.read_saved_current
                 records=tuple(read(conn,scope=scope,run_id=by_control[ref.resource_id],control_ref=ref,actor=actor)
                     for ref,_,_ in group.members)
+                parents=tuple(by_run[by_control[ref.resource_id]] for ref,_,_ in group.members)
                 claim=SnapshotGroupClaimRecord(scope,group_id,actor,facts.source_claim_hash,records)
                 return CurrentSnapshotGroupInput(group,claim,facts.manifest_hash,facts.manifest,
-                    facts.read_started_at,facts.read_completed_at,facts.parents,authority._ref)
+                    facts.read_started_at,facts.read_completed_at,parents,authority._ref)
             source=load()
             result=execute(source);_reject_deferred(result)
             if load()!=source:raise IngressJournalConflict('GROUP_RECOVERY_INPUT_CHANGED_DURING_CONSUMPTION')
