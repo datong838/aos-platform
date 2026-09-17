@@ -1,6 +1,6 @@
 # SC4-5L6Z U clean recovery 与 crash-rehydrate 验证
 
-日期：2026-09-17  
+日期：2026-09-17
 基线：`0d72f245`，分支 `m1`，单写者，不 push，230 L0 保持挂起。
 
 ## Rules 与范围
