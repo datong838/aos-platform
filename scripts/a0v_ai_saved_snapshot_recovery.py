@@ -17,7 +17,8 @@ from a0v_qyh_current_product_event_first_chain import freeze
 STATE=snapshot.STATE.parent/'ai-saved-snapshot-recovery-v1'
 GROUP='c5ff1926-45b0-56de-b6b3-07d5b7d053a1'
 MANIFEST='sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01'
-ACTIONS=('prepare','schedule-ingest','controls','transfer','renew','enable','inspect','pause','disable')
+ACTIONS=('prepare','schedule-ingest','controls','transfer','renew','enable','inspect','pause-failed','pause','disable')
+FAILED_ATTEMPT='4cf91136-4d6b-4e02-b817-04d8cec404cb'
 
 
 def profile():
@@ -136,6 +137,66 @@ def enable(plane):
 def inspect(plane):
     profile()
     return snapshot.inspect(plane)|{'outcome':'AI_SAVED_SNAPSHOT_INSPECTED'}
+
+
+def pause_failed(plane):
+    """Stop future scheduling after the exact immutable AI attempt failure."""
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+    from aos_api.tenant_scope import TenantScope
+    installation,generation=profile()
+    scope=TenantScope(**snapshot.baseline.SCOPE)
+    service=plane.pipeline_control_factory.build_snapshot_schedule(scope,source_controls=True)
+    status=service.read_runtime_status(definition_id=snapshot.DEFINITION_ID,actor=snapshot.ACTOR)
+    if status.get('configurationState')!='enabled' or status['definitionRef']['revision']!=41:
+        raise RuntimeError('exact enabled AI failed recovery definition revision41 required')
+    with consumer_connection(runtime_worker_connection,snapshot.baseline.SCOPE) as conn:
+        facts=dict(conn.execute('''SELECT
+          (SELECT count(*) FROM extension_runtime_execution_attempt WHERE org_id=%s AND project_id=%s
+            AND attempt_id=%s AND installation_id=%s AND generation=%s AND state='failed'
+            AND revision=508) failed_attempt,
+          (SELECT count(*) FROM extension_runtime_execution_attempt WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s AND state='running') running_attempts,
+          (SELECT count(*) FROM pipeline_snapshot_schedule_member
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) members,
+          (SELECT count(*) FROM meta_schedule_run r JOIN pipeline_snapshot_schedule_member m
+            ON (m.org_id,m.project_id,m.run_id)=(r.org_id,r.project_id,r.id)
+            WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s
+              AND r.status='running' AND r.executor_stopped IS FALSE AND r.finished_at IS NULL) running,
+          (SELECT count(*) FROM pipeline_snapshot_group_input
+            WHERE org_id=%s AND project_id=%s AND group_id=%s AND manifest_hash=%s) saved_input,
+          (SELECT count(*) FROM pipeline_snapshot_group_recovery_receipt
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) recoveries,
+          (SELECT count(*) FROM ecommerce_ingress_dataset_receipt d JOIN pipeline_snapshot_schedule_member m
+            ON (m.org_id,m.project_id,m.run_id)=(d.org_id,d.project_id,d.run_id)
+            WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s) dataset_receipts,
+          (SELECT count(*) FROM pipeline_snapshot_group_relationship
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) relationships,
+          (SELECT count(*) FROM pipeline_snapshot_group_link_command
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) links,
+          (SELECT count(*) FROM pipeline_snapshot_group_retirement
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) retirements,
+          (SELECT count(*) FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s AND revision=6 AND execution_epoch=3
+            AND enabled IS TRUE AND operation_fence IS FALSE AND desired_state='enabled'
+            AND observed_state='ready') live_binding,
+          (SELECT count(*) FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s
+            AND generation=%s AND cleanup_state='pending' AND observed_release IS FALSE) live_resources,
+          (SELECT count(*) FROM extension_runtime_binding WHERE org_id='dev-org'
+            AND project_id='dev-project') canary''',
+          (*scope.key,FAILED_ATTEMPT,installation,generation,*scope.key,installation,generation,
+           *scope.key,GROUP,*scope.key,GROUP,*scope.key,GROUP,MANIFEST,*scope.key,GROUP,
+           *scope.key,GROUP,*scope.key,GROUP,*scope.key,GROUP,*scope.key,GROUP,
+           *scope.key,installation,generation,*scope.key,generation)).fetchone())
+    expected={'failed_attempt':1,'running_attempts':0,'members':12,'running':12,
+        'saved_input':1,'recoveries':13,'dataset_receipts':12,'relationships':1,
+        'links':0,'retirements':0,'live_binding':1,'live_resources':3,'canary':0}
+    if facts!=expected:
+        raise RuntimeError('exact failed AI saved-input recovery facts required')
+    result=service.transition(definition_id=snapshot.DEFINITION_ID,actor=snapshot.ACTOR,intent='disable',
+        expected_ref=status['definitionRef'],idempotency_key='a0v-ai-saved-snapshot-pause-failed-v1')
+    return {'outcome':'AI_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED','facts':expected,
+        'definition':result,'sourceReads':0}
 
 
 def pause(plane):

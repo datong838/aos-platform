@@ -698,9 +698,10 @@ Receipt 均可独立完成，而完成链首次把当前 control 与 parent 成�
 
 `9bfc5438` 已修复 successor parent/current-control 排序缺口，但 AI attempt
 `4cf91136-4d6b-4e02-b817-04d8cec404cb` 是不可变 failed 事实，运行中的 Host/Worker 也仍为修复前进程。因此不得在 AI 上
-重放、补写或直接热加载。接续固定为：等待 recovery rev13 窗口自然到期，由原 Host 按既有租约协议把 AI binding fence 并
-释放三项资源；只在 members12/running12/savedInput1/recovery13/fencedBinding1/releasedResources3 精确成立时把 definition rev41
-暂停为 rev42 disabled；随后由原 disable Owner 以 AI 当前 binding revision 和 installation etag 正式完成 fence/detach，九路必须
+重放、补写或直接热加载。重启后新鲜只读事实证明 Host 仍健康持有 AI，binding rev6/epoch3 ready、三资源仍 pending，且没有
+running attempt；等待 recovery 窗口本身不会让健康 Host 退出。接续固定为：先在 attempt failed rev508、members12/running12、
+savedInput1/recovery13、datasetReceipt12、relationship1/link0/retirement0、canary0 的 exact 状态下把 definition rev41 正式暂停为
+rev42 disabled；随后由原 disable Owner 以 AI 当前 binding revision 和 installation etag 完成 fence/detach，九路必须
 全部回到 legacy 且无 running/unresolved/pending/canary。
 
 空窗形成后停止并重启 Host 与独立 Worker，使 `9bfc5438` 成为实际加载代码。AJ 必须是 AI detach Receipt 的 direct successor，
