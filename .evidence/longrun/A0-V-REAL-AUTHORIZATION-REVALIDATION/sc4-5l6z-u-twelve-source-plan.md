@@ -635,6 +635,14 @@ successor AI 以 recovery rev12→rev13 继续相同 manifest 的自然验收。
 owned verification/control、live installation owner、runtime Store、正式 Host 脚本与签名生命周期为 69 passed、8 skipped。
 所有跳过项均为测试既有的环境条件跳过，无失败；方案所述真实 timeout 清理和合法在途 invoke 串行等待均已有直接回归。
 
+系统重启后原 `m1` 控制 API 与 canonical install 租约已越过 `2026-09-17T23:59+08:00`，脚本先按设计拒绝执行；依据用户继续
+独占 `m1` 的明确授权，只把这两条原 scope、原排除项租约续签到 `2026-09-20T23:59+08:00`，没有扩大到 push、230 L0、
+外部发布或 canary 写入。随后 AH 以 members12/running12/savedInput1/recovery12/fencedBinding1/releasedResources3 的精确事实
+暂停 rev38，得到 rev39 disabled，`sourceReads=0`。正式 disable operation
+`414e0c58-a252-48f6-b834-4fcdd6f5cbba` 已闭合 fence/detach；九路为 legacy rev77/group104，binding rev9/epoch5，
+零 running/unresolved/pending/canary。detach Receipt `9b50a8eb-ed85-4c7b-9010-16e0bbea5875` /
+`sha256:adc874873a141d0d925c06c0b5cc844a52e281780096a85e7a5d9ca5ea866396` 是 AI 唯一合法 direct predecessor。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
