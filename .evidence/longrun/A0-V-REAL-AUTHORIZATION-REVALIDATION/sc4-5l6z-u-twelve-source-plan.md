@@ -694,6 +694,24 @@ parent runId 错配），修复后 GREEN；没有放宽 current authority、没�
 固定 Run 顺序在十二个位置上 `0/12` 相同，而两侧 Run 集合完全相同。因此这不是推测性修补；它解释了为什么十二份对象
 Receipt 均可独立完成，而完成链首次把当前 control 与 parent 成对复核时必然拒绝。
 
+### AI 失败后的 AJ 正式接续方案（2026-09-18）
+
+`9bfc5438` 已修复 successor parent/current-control 排序缺口，但 AI attempt
+`4cf91136-4d6b-4e02-b817-04d8cec404cb` 是不可变 failed 事实，运行中的 Host/Worker 也仍为修复前进程。因此不得在 AI 上
+重放、补写或直接热加载。接续固定为：等待 recovery rev13 窗口自然到期，由原 Host 按既有租约协议把 AI binding fence 并
+释放三项资源；只在 members12/running12/savedInput1/recovery13/fencedBinding1/releasedResources3 精确成立时把 definition rev41
+暂停为 rev42 disabled；随后由原 disable Owner 以 AI 当前 binding revision 和 installation etag 正式完成 fence/detach，九路必须
+全部回到 legacy 且无 running/unresolved/pending/canary。
+
+空窗形成后停止并重启 Host 与独立 Worker，使 `9bfc5438` 成为实际加载代码。AJ 必须是 AI detach Receipt 的 direct successor，
+走原安装、配置、启用、successor registration、九路原子 cutover 全流程；不得复用 AI generation 或绕过生命周期表。保存定义只从
+rev42 disabled 转移到 AJ disabled，再以 recovery rev13 的 exact ref 续签 rev14 并启用；原 group、manifest、十二 Run 与已落账的
+十二 dataset Receipt 全部复用，`sourceReads=0`。自然 Worker 是唯一可创建新 recoverable_store attempt 的入口。
+
+AJ 验收必须同时证明：新 attempt terminal succeeded；十二 Run 同批 `succeeded/executorStopped=true/finishedAt!=null`；原 dataset
+Receipt 仍每个 Run 一份且总数不增加；relationship 精确复用，link command 与 retirement 只各落唯一合法记录；definition 随即
+禁用；无 dev-org 写入、无外部动作、无手工 `run_definition`。任一 exact precondition 不符即停止在当前阶段，不猜测修表。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
