@@ -127,3 +127,234 @@ enable。当前 S 为 `77b8e5c2-db96-4d55-a808-1b62e00163d2`，generation
    baseline Case/once Policy。
 
 这些文件不触碰商城源库，不修改业务表数据，不继承 Q 的旧安装审批作为 S 当前授权。
+
+### 8.1 S 基线权威重绑的最小实现
+
+切流终态确认 S binding 已由 cutover 从 revision4 推进到 revision6。因此新增
+`scripts/a0v_s_product_preflight.py`：复用只读 Product 图和 source-selection 校验，但将
+create Receipt 固定为 S、cutover resume 固定为 S 本轮 Receipt，并要求
+`active@5 / binding revision6 / epoch3 / generation e621100a-… / current config`。
+
+`scripts/a0v_q_advisor_baseline.py` 保留原文件名以维持已冻结任务入口，但内部 runtime plane、
+preflight、输出 outcome 与所有新 idempotency key 改为 S namespace；它不得读取 Q 的
+`currentInstallationRef` 或 generation。原 Product TaskBrief 仅作为内容需求 exact ref 使用，
+不作为安装或来源授权。prepare 的成功条件增加 S identity、S resumed cutover 和当前时间窗内
+的新 source-selection draft，随后 Case/Policy 写入形成的 control receipt 也必须绑定 S epoch3。
+
+### 8.2 Schedule revalidation 的只读锁修复
+
+首次真实 Policy 提交在事务写入前失败：`SchedulePutHostService.revalidate` 对 Case head 使用
+`SELECT ... FOR SHARE`，而 `aos_runtime` 按最小权限只有这些权威表的 SELECT；PostgreSQL
+行锁还要求 UPDATE，因此正确拒绝为 `InsufficientPrivilege`。相同方法还对 Policy head 和
+dispatch route 使用 `FOR SHARE`，后两者也只有 SELECT 权限。
+
+最小修复限定为 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py`：SchedulePut
+的三处当前性读取及 ScheduleTrigger 对 Policy head 的同类读取
+改为普通 SELECT。事务本身为 SERIALIZABLE；实际 SchedulePolicy 写函数会对 Case/Policy 执行
+`FOR UPDATE` 并校验 expected revision；新增的 schedule-control SECURITY DEFINER 函数会再次
+锁定 Policy、Case、审批和 route，并在同一事务绑定 Receipt。因此移除前置冗余行锁不放宽 CAS，
+也不向 runtime 授予 UPDATE。补一项回归测试，要求只读头和 route 查询不带行锁，而审批事件和
+proposal 的既有锁保持不变。
+
+### 8.3 已部署 a0v_078 的 Case hash 修复迁移
+
+移除冗余前置行锁后，真实事务推进到 control Receipt 函数并再次整体回滚：已部署的
+`ecommerce_schedule_policy_control_put_a0v_078` 从
+`ecommerce_investigation_case_head` 读取 `content_hash`，但该列只存在于 Case revision 表。
+这是 a0v_078 函数定义缺陷；当前数据库已经到 a0v_078，不允许回改历史迁移或手工替换函数。
+
+新增 `services/aos-api/alembic/versions/a0v_079_schedule_policy_control_case_hash.py`，只用
+`CREATE OR REPLACE FUNCTION` 更新同一函数：锁定 Case head 后，按 head.current_revision 联接
+`ecommerce_investigation_case_revision` 取得 content_hash；其余请求形状、审批、command Receipt、
+route、幂等和插入校验逐字保持。`scripts/a0v_s_advisor_baseline_migration.py` 只执行冻结的
+`a0v_078→a0v_079` 单步迁移，迁移前后所有业务表行数必须一致，control Receipt 仍为 0，
+canary 为 0。然后才允许再次提交原 Policy intent。
+
+### 8.4 Approval exact-ref 时间序列化修复
+
+a0v_079 后原事务推进到审批哈希复核并再次回滚。逐字段只读诊断确认审批、proposal、payload、
+过期时间均正确；差异只在哈希序列化：应用 `canonical_hash(..., default=str)` 将 Python
+`datetime` 编码为 `2026-09-16 23:19:27.088899+00:00`，而 a0v_078 函数把 timestamptz 直接
+放进 jsonb，编码成 `2026-09-16T23:19:27.088899+00:00`。两者语义相同但字节不同。
+
+新增 `a0v_080_schedule_policy_control_approval_hash.py`，继续 CREATE OR REPLACE 同一函数，
+仅把审批的 `expires_at/created_at` 规范为应用当前既有 Python datetime 字符串（UTC、空格分隔、
+非零微秒六位、`+00:00`）后计算 exact-ref hash。迁移前先用只读 SQL 证明新算法得到冻结审批 ref
+`sha256:1484b2...`；迁移仍要求业务行数、control Receipt、canary 均不变。后续应统一全局
+canonical datetime profile，但本切片不改历史审批哈希合同。
+
+### 8.5 审批 policyHash 与最终 authority hash 分层修复
+
+a0v_080 后逐项复核确认时间哈希已一致，剩余拒绝来自 policyHash 语义混用：审批 proposal
+批准的是 `PutBusinessInvestigationSchedulePolicyRequest` 的内容哈希；control 函数却把它与写入后
+包含 tenant/revision/contentHash/createdAt 的 `SchedulePolicyRevision.contentHash` 比较。两者本应
+不同。新增 a0v_081，仅将该条件改为：从 command Receipt 的 `policy_authority` 删除
+`schemaVersion,tenant,revision,version,priorRef,contentHash,createdBy,createdAt`，得到原 Put request
+投影，以 canonical JSON 计算并核对 proposal.policyHash；最终 Policy exact ref 仍独立核对
+revision contentHash。其余条件不变。
+
+### 8.6 首次自然 occurrence 的前置读模型修复与恢复边界
+
+Policy v1 写入成功后，唯一 Runtime Host 自然枚举出 occurrence
+`3c927751-b91a-53d0-8a42-7c5223ea109d`，随后在 baseline discovery 阶段以
+`UndefinedTable` 进入 `needs_attention`。只读核验确认缺失对象是代码误写的
+`ecommerce_investigation_run_revision`；数据库的既有权威模型从 biw4_002 起就是不可变
+`ecommerce_investigation_run`，活动槽 `ecommerce_investigation_run_active_slot` 也明确外键到该表。
+同一 occurrence 没有 `ecommerce_growth_runtime_command_receipt`、没有 target Receipt、没有新 Run，
+因此失败位于目标命令前，但 dispatch attempt 仍按既有规则保留 `unknown`，禁止原 occurrence 盲重发。
+
+最小代码修复限定为 `ecommerce_baseline_assessment_discovery.py`：活动槽直接联接
+`ecommerce_investigation_run` 读取 `trigger_key`，并移除 analysis dispatch 的冗余 `FOR SHARE`；
+这些表对 runtime 只有 SELECT，串行化事务、后续 dispatch 当前性校验和真正写路径的 CAS 不变。
+补充查询形状测试，防止再次引用不存在的 revision 表或要求只读路由的 UPDATE 权限。
+
+既有 v1 occurrence 只允许通过可审计的“已证明目标前失败”终结路径关闭；若当前产品没有该正式
+接口，则保持 `needs_attention`，不得直接 DML。后续重试必须续签审批并写 Policy v2，使 once
+绑定产生新的确定性 occurrence；新 occurrence 只能由加载修复后代码的唯一 Host 执行。
+
+### 8.7 唯一 Host 的 crash-rehydrate 代码换代
+
+当前唯一 Host 在 07:07 启动，进程内仍装载修复前的 discovery；优雅停止会主动释放 S 的三项
+资源，不能为代码换代而制造一次无意义卸载。S 当前三项 lease 均为 `pending / observedRelease=false`，
+容器 identity 完整且租约持续续期；`PostgresPendingPreparationDirectory` 与
+`PreparationWorker.resume_current` 已提供正式 `rehydrate` 路径。
+
+本轮采用真实 crash-recovery 验证：先确认零 running execution、零 unresolved attempt 和 closure
+终态，再强制终止旧 Host 及仅负责 attach 的本地 docker client；不停止容器、不改数据库。旧进程
+singleton 锁释放后，立刻以原固定参数启动唯一新 Host。新 Host 必须通过正式 rehydrate 重新接管
+同一 S generation，保持三项 lease 未释放、binding/route/epoch 不变，并在状态文件公开新的 PID。
+若 rehydrate 失败或任一 lease 过期/释放，则停止本次 Policy v2，不以第二执行器或手工 worker 绕过。
+
+### 8.8 Policy v2 的自然重试
+
+新 Host PID 38768 已经通过正式 rehydrate 接管同一 S generation；三项容器 identity 未变、lease
+继续续期、binding revision6/epoch3 和九条 route revision33/group60 均未变化。旧 v1 occurrence
+已有 closure Receipt，tenant unresolved attempt 为 0。
+
+v2 不复用已过期审批，也不重发 v1：读取当前 Case rev3 与 Policy rev1，构造相同业务语义但绑定
+当前 exact Case 的 Put request，以新的 proposal/idempotency namespace 获得独立审批；随后按
+`expectedPolicyRevision=1 / expectedCaseVersion=3` 写入 Policy rev2。SchedulePut 必须在同一事务
+生成新的 control Receipt，并把 Case 推进到绑定 Policy rev2 的下一 revision。新 once binding
+必须自然产生一个新的确定性 occurrence，唯一新 Host 从 discovery 开始执行；v1 始终保持
+`cancelled/closed_unaccepted`，不得复活或复用其 target idempotency key。
+
+### 8.9 第二次 discovery 拒绝后的停线穷尽检查
+
+Policy v2 自然生成 occurrence `34733f17-f1ce-582d-b1b6-585a96aee2ff`，修复后 Host 已越过
+缺表位置，但活动 Run 查询的 `analysis_type` 同时存在于 slot 与 Run 表，PostgreSQL 以
+`AmbiguousColumn` 在目标调用前拒绝。该 occurrence 同样没有 RuntimeCommandReceipt、Run 或目标
+Receipt。由于同一 discovery 阶段连续两次失败，本轮停止继续写 Policy revision。
+
+最小修复把谓词限定为 `s.analysis_type`，并在测试中固定完整查询形状。随后必须使用真实
+`aos_runtime` 租户连接，对 discovery 的活动 Run、当前 Plan、analysis route、ScheduleControl 和
+Product snapshot 五段只读 SQL 逐段执行并校验列形状、权限与唯一性；同时检查当前 Case/Policy
+exact refs。只有该离线穷尽检查全绿、v2 occurrence 经 a0v_082 正式 closure、唯一 Host 再次
+rehydrate 新代码后，才允许新审批与 Policy v3。任何新 SQL/权限错误都回到方案与测试，不再消耗
+新的真实 occurrence。
+
+### 8.10 S 自有十二源 governed snapshot group
+
+真实 runtime 只读角色执行五段 discovery SQL 后，前四段已经通过，但 Product snapshot group 为
+空。现有最近成功 65 行属于已卸载 Q generation；S 没有自己的
+`pipeline_source_selection_revision / pipeline_runtime_control_revision /
+pipeline_schedule_control_binding`，因此不能借用 Q 的 claim 或 snapshot 作为 S 来源权威。
+
+首次按 P02 正式链路执行后，S 已生成 Product selection/control/binding，并通过受控 API
+真实读取 65 行，形成一个绑定 S installation/generation 的
+`pipeline_controlled_source_claim`。但该单源 schedule run 不负责组装
+`pipeline_snapshot_group_input/member`；组表为空是既有职责分离的正确结果，不能把单源 claim
+描述成完整 snapshot group，也不能手工补表。
+
+在允许 Policy v3 前，改为按现有十二源 snapshot schedule 正式链路为 S 生成一致性组：
+
+1. 从当前 S 签名包一次性编译 P01-P12 的 graph、mapping/schema/masking exact refs；逐管线读取
+   current selection/control/binding，以 exact previousRef 做 CAS，用 S 专属且每管线唯一的
+   idempotency key 写入；已完成的 P02 只允许 exact readback，不重复提交；
+2. 十二个既有 schedule 必须全部保持 disabled，且 `ingest.kind=pipeline-live-v1`、pipelineId 与
+   schedule 一一对应；将每个 schedule 绑定到同一 S installation/generation/epoch 的 current
+   control，禁止跨安装继承 Q/J 的 control 或 claim；
+3. 调用 `PipelineSnapshotScheduleService.options` 反向验证十二成员和签名包导出的
+   SnapshotRelationshipPolicy；以新 definition id 配置 disabled definition，再用 exact predecessor
+   transition enable。配置与 enable 只授权组调度，不直接写商城源库；
+4. 启动既有 independent snapshot worker。worker 必须从 enabled definition 自然 claim 同一 group，
+   经十二个 current schedule 读取真实商城，并在正式 completion 路径写入唯一
+   group/input/12 members；每个 member 的 run/claim/control/selection 均绑定 S，组的
+   readCompletedAt 在 24 小时内；
+5. 任一源失败时由既有 recovery/Receipt 路径处理，不手工插入 snapshot 表、不复制或回写旧代
+   claim、不把部分组供经营参谋使用。执行结束将 definition disable，十二个源 schedule 继续保持
+   disabled；要求 canary 组为 0，随后再让真实 runtime 角色重跑 discovery 五段 SQL；
+6. discovery 只在恰好一个当前 S 完整组时才允许 Policy v3。若 Host/worker 没有装配该正式能力，
+   先补运行时接线及生命周期测试并完成 crash-rehydrate，不能用一次性脚本冒充自然链路。
+
+### 8.11 首个十二源 group 的预算前拒绝与正式关闭
+
+S definition rev5 以一分钟验收节奏自然产生 group `f8d6b5af-f7a3-5f15-88ee-6432012f9537`，
+并原子预留 12 个 schedule run。随后 group claim 在任何源调用前命中
+`SourceCallBudgetExhausted`：P02 control rev1 的 `maxSourceCalls=1` 已被之前的单源 65 行验证消费。
+只读核验和回滚复演共同证明：该 group 没有 `pipeline_snapshot_group_claim`、没有本组
+`pipeline_controlled_source_claim`、没有 ingress journal、没有 snapshot input/member；12 个 run
+仍为未受理的 `running / executor_stopped=false`。因此不能提高旧 control 的预算、复用旧 claim，
+也不能让 worker 把未知源结果当作可重试。
+
+新增 `a0v_083_snapshot_unaccepted_group_closure.py`，提供受限 maintainer 函数和不可变 Receipt：
+
+1. 只接受 exact group、current definition ref、12 个原始 run，要求 definition 先 disabled；
+2. 在同一 SERIALIZABLE 事务锁定 schedule claim、definition、12 个 run，并再次证明 group claim、
+   source claim、ingress journal、snapshot input/member 全部为零；
+3. 写 `pipeline_snapshot_unaccepted_group_closure_receipt` 后，将 12 个 run 终结为
+   `failed / ec-live-v1 / executor_stopped=true`，错误码固定为
+   `SOURCE_BUDGET_REJECTED_BEFORE_GROUP_CLAIM`；该 Receipt 明确 `businessAccepted=false`；
+4. 关闭后为 P02 写新的 selection/control revision 和 binding，获得新的单次源调用预算；其余 11
+   个 current S control 不变。definition 在 disabled 状态以 12 个 current binding CAS 重配并重新
+   enable，新 minute slot 由 worker 自然产生；
+5. 若任一“零副作用”断言不成立，closure 必须拒绝并转人工 receipt reconciliation，不得覆盖 run。
+
+### 8.12 已关闭未受理组退出 dispatch pending 集合
+
+a0v_083 已证明原 rev5 group 在任何 group/source/ingress 接受前因 P02 单次预算耗尽而失败，
+并以不可变 Receipt 将 12 个悬挂 schedule run 终结。rev8 启用后未产生新 group；只读诊断确认
+`PipelineSnapshotScheduleDispatch.inspect` 仍把所有非 12/12 succeeded 的历史 group 放入
+`original_group_pending`，没有识别正式 closure Receipt，因此新 definition revision 被旧失败历史永久阻塞。
+
+最小修复限定为 `pipeline_snapshot_schedule_dispatch.py`：候选历史查询左联
+`pipeline_snapshot_unaccepted_group_closure_receipt`，仅无 closure Receipt 的未完成组继续进入 pending；
+已关闭组仍保留完整 claim/member/run/Receipt，不删除、不改成成功，也不进入 saved-input recovery。新增回归测试固定
+“有 Receipt 排除、无 Receipt 仍阻塞”的 SQL 形状。由于唯一 Host 已加载旧模块，测试通过后按 8.7 的
+crash-rehydrate 路径换代，保持 S installation/generation/epoch、route 和 lease 不变；新 Host 自然枚举 rev8。
+若重启后仍无自然 group，则禁用定义并回到只读诊断，不直接调用 `run_definition`。
+
+### 8.13 独立 worker 的无敏感信息失败分类
+
+rev8 在加载 8.12 修复后已由正式 runtime 只读状态确认处于 `due`，独立 worker 也持续按 15 秒节奏
+建立数据库连接，但没有生成新 group。现有 `PipelineSnapshotScheduleWorker.tick` 会把单个 definition 的
+所有异常统一收敛为 `SNAPSHOT_EXECUTION_UNCONFIRMED`，同时不写任何安全分类日志；这保持了未知结果不重发，
+却使“claim 前整体回滚”无法与源调用后的未知结果区分，不能据此安全修复。
+
+最小诊断改动限定为 worker：捕获异常时继续返回原有 unknown 合同、继续禁止自动补写 failed/stopped，
+只用既有结构化 logger 写入固定事件名、definition id 与 Python 异常类名。禁止写异常消息、traceback、
+SQL、连接信息、源数据或 actor。回归测试必须证明外部 outcome 不变、日志不含异常消息且仅包含安全分类。
+加载补丁后只重启独立 API/worker，不重启唯一 Runtime Host；等待自然 tick 暴露分类，再针对真实根因另起
+方案切片。不得为了诊断直接调用 `run_definition`，也不得在 unknown 结果下重复提交任何源副作用。
+
+### 8.14 PermissionError 的安全来源定位
+
+8.13 自然 tick 已稳定确认异常类为 `PermissionError`；十二个 current binding 的 actor 又经 runtime
+只读角色逐项核验，均与 definition executor 一致。为避免读取或输出异常消息，诊断继续只在 worker
+边界增加末端 traceback 函数名分类：函数名必须匹配受限 ASCII identifier，超界一律归为 `unknown`。
+日志仍只含固定事件、definition id、异常类名和该安全函数名；不输出文件路径、行号、异常消息或调用栈。
+测试固定安全函数名，并证明命名不合法时降级。重启独立 worker 后，以自然 tick 的来源函数决定下一项
+修复；正式 claim、unknown 合同、重试和业务表均保持不变。
+
+### 8.15 S 租约释放后的禁入与 clean successor
+
+安全来源定位得到 `PermissionError / run_guarded`。随后以 runtime 只读身份复核权威状态：S binding 已为
+`observed_state=unknown / enabled=false / operation_fence=true / execution_epoch=4`，三项资源租约均在
+`2026-09-17T00:30:35.436590Z` 后由正式恢复器记录为 `released / observed_release=true`；唯一 Host 的
+liveTargets 为空。该终态解释了门禁拒绝，也证明 SSH、商城源表和 cron 不是阻点。
+
+rev8 definition 仍 enabled 但已无可执行安装权威，先通过原 SnapshotScheduleService 的 exact rev8
+transition 正式 disable，停止无意义 unknown tick；不得直接更新 definition。S generation 不允许原地
+复活、续租或改回 ready。下一波复用已评审的 clean-successor 生命周期建立新 installation/generation，
+完成 prepare/verify/configure/enable 与九路 successor cutover；随后为新代重新签发十二源 selection、
+control、binding 和 definition，旧 S 的 closure、rev8 与资源释放历史全部保持不可变。只有新代
+ready/unfenced、唯一 Host liveTarget 和 canary=0 后，才恢复自然 snapshot group。

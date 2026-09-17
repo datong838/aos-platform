@@ -1,6 +1,9 @@
 """Dispatch candidates are routing evidence, never execution authority."""
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
+import psycopg
 import pytest
+from psycopg.types.json import Jsonb
 from aos_api.tenant_scope import TenantScope
 from aos_api.pipeline_snapshot_schedule_dispatch import snapshot_slot_group_id,PipelineSnapshotScheduleDispatch
 
@@ -38,6 +41,32 @@ def test_original_unfinished_group_blocks_later_slot_without_source(runtime_case
         failed=dispatch.inspect(conn,**(read|dict(now=read['now']+timedelta(minutes=2))))
         assert failed['status']=='original_group_pending' and failed['groupIds']==[args['group_id']]
         assert conn.execute('SELECT count(*) AS n FROM meta_schedule_run').fetchone()['n']==12
+    assert state['calls']==0
+
+
+def test_formally_closed_unaccepted_group_does_not_block_later_slot(runtime_case):
+    runtime,args,state,api,common,enabled,database=runtime_case
+    dispatch=PipelineSnapshotScheduleDispatch(definitions=runtime._definitions,claims=runtime._claims)
+    with runtime._transaction(args['scope']) as conn:
+        bindings=runtime._definitions._saved_bindings(conn,args['scope'],enabled['body'])
+        runtime._claims.claim(conn,**{k:v for k,v in args.items() if k!='definition_ref'},
+            definition_ref=args['definition_ref'],bindings=bindings)
+    with runtime._transaction(args['scope']) as conn:
+        conn.execute("UPDATE meta_schedule_run SET status='failed',executor_stopped=true,finished_at=clock_timestamp()")
+    # Routing fixture only: the closure function itself is exercised by its dedicated integration path.
+    with psycopg.connect(database) as admin:
+        admin.execute('''INSERT INTO pipeline_snapshot_unaccepted_group_closure_receipt(
+            org_id,project_id,receipt_id,group_id,idempotency_key,request_hash,actor,
+            authority_data,content_hash,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,clock_timestamp())''',
+            (*args['scope'].key,uuid4(),args['group_id'],'closed-before-source','sha256:'+'1'*64,
+             common['actor'],Jsonb({}),'sha256:'+'2'*64))
+    with runtime._transaction(args['scope']) as conn:
+        due=args['scheduled_for'].replace(hour=0,minute=0)+timedelta(days=1)
+        next_slot=dispatch.inspect(conn,scope=args['scope'],definition_id=common['definition_id'],
+            now=due)
+        assert next_slot['status']=='due' and next_slot['executionAuthorized'] is False
+        assert next_slot['groupId']!=args['group_id']
+        assert next_slot['definitionRef']==enabled['ref']
     assert state['calls']==0
 
 

@@ -94,8 +94,10 @@ class Connection:
             "selection_revision": 2, "selection_hash": "sha256:" + "d" * 64,
         }]
         self.control = control
+        self.queries = []
 
     def execute(self, query, _params=()):
+        self.queries.append(query)
         if "run_active_slot" in query:
             return Result(many=self.active)
         if "growth_plan_head" in query:
@@ -154,8 +156,9 @@ def install_authority_fakes(monkeypatch, *, occurrence=None):
 
 def test_discovers_one_current_plan_empty_baseline(monkeypatch):
     case, policy = install_authority_fakes(monkeypatch)
+    connection = Connection()
     route = module.BaselineAssessmentDiscovery().read(
-        HostTransaction(Connection()), SCOPE, claim(), observed_at=NOW,
+        HostTransaction(connection), SCOPE, claim(), observed_at=NOW,
     )
     assert route.case is case and route.policy is policy
     assert route.source_group_id == GROUP
@@ -164,6 +167,15 @@ def test_discovers_one_current_plan_empty_baseline(monkeypatch):
     assert route.source_selection_ref.resource_id.startswith("source-selection-")
     assert route.schedule_control.approval_ref.resource_id == "approval-1"
     assert route.installation_id == INSTALLATION and route.generation == GENERATION
+    active_query = next(query for query in connection.queries if "run_active_slot" in query)
+    dispatch_query = next(
+        query for query in connection.queries
+        if "operation_id='ecommerce_growth_analysis_advance'" in query
+    )
+    assert "ecommerce_investigation_run_revision" not in active_query
+    assert "JOIN ecommerce_investigation_run r" in active_query
+    assert "s.analysis_type='initial_store_analysis'" in active_query
+    assert "FOR SHARE" not in dispatch_query
 
 
 @pytest.mark.parametrize(

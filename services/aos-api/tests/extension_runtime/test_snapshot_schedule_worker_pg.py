@@ -57,8 +57,14 @@ def test_tick_records_unknown_without_exposing_exception_or_marking_stopped(runt
     runtime,args,state,_,common,_,_=runtime_case
     worker=worker_for(runtime,args['scope'])
     import aos_api.pipeline_snapshot_schedule_dispatch as dispatch
+    import aos_api.pipeline_snapshot_schedule_worker as worker_module
     monkeypatch.setattr(dispatch,'cron_matches',lambda *_:True)
+    warnings=[]
+    monkeypatch.setattr(worker_module.log,'warning',lambda *args:warnings.append(args))
     def fail(**_):raise RuntimeError('named secret must not be exposed')
     monkeypatch.setattr(runtime,'execute',fail)
     assert worker.tick()==[dict(definitionId=common['definition_id'],status='unknown',errorCode='SNAPSHOT_EXECUTION_UNCONFIRMED')]
+    assert warnings==[('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s',
+        common['definition_id'],'RuntimeError','fail')]
+    assert 'named secret' not in repr(warnings)
     assert state['calls']==0

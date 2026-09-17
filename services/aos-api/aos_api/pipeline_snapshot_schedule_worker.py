@@ -2,6 +2,7 @@
 from datetime import datetime
 import asyncio
 from math import isfinite
+import re
 from threading import Event
 from psycopg.pq import TransactionStatus
 from aos_api.asset_registry.canonical_json import canonical_sha256
@@ -12,6 +13,25 @@ from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleR
 from aos_api.pipeline_snapshot_group_recovery_runtime import PipelineSnapshotGroupRecoveryRuntime
 from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt
 from aos_api.tenant_scope import TenantScope
+from aos_api.logging_facade import get_logger
+
+
+log = get_logger('aos-api.snapshot-schedule-worker')
+_SAFE_ORIGIN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]{0,79}$')
+
+
+def _safe_origin_name(name):
+    return name if type(name) is str and _SAFE_ORIGIN.fullmatch(name) else 'unknown'
+
+
+def _error_origin(exc):
+    traceback = exc.__traceback__
+    if traceback is None:
+        return 'unknown'
+    while traceback.tb_next is not None:
+        traceback = traceback.tb_next
+    name = traceback.tb_frame.f_code.co_name
+    return _safe_origin_name(name)
 
 
 class PipelineSnapshotScheduleWorker:
@@ -121,10 +141,12 @@ class PipelineSnapshotScheduleWorker:
             identifier=str(row['definition_id'])
             try:
                 result=self.run_definition(identifier,**active)
-            except Exception:
+            except Exception as exc:
                 # Original Runtime preserves its durable claim/unknown facts.
                 # No synthetic failed/stopped row and no raw exception leakage.
                 _check_active(**active)
+                log.warning('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s',
+                    identifier,type(exc).__name__,_error_origin(exc))
                 result=dict(status='unknown',errorCode='SNAPSHOT_EXECUTION_UNCONFIRMED')
             outcomes.append(dict(result,definitionId=identifier))
         return outcomes

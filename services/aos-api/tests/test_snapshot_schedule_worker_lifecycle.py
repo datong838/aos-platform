@@ -2,7 +2,17 @@
 import asyncio
 from threading import Event
 import pytest
-from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker
+from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker,_error_origin,_safe_origin_name
+
+
+def test_error_origin_is_bounded_and_never_uses_exception_message():
+    try:
+        raise PermissionError('secret source text')
+    except PermissionError as exc:
+        assert _error_origin(exc)=='test_error_origin_is_bounded_and_never_uses_exception_message'
+    assert _error_origin(PermissionError('unraised secret'))=='unknown'
+    assert _safe_origin_name('bad-origin/name')=='unknown'
+    assert _safe_origin_name('x'*81)=='unknown'
 
 
 async def until(predicate):

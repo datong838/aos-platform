@@ -3252,7 +3252,7 @@ class SchedulePutHostService:
         )
         case_head = transaction.execute(
             """SELECT current_revision FROM ecommerce_investigation_case_head
-                WHERE org_id=%s AND project_id=%s AND case_id=%s FOR SHARE""",
+                WHERE org_id=%s AND project_id=%s AND case_id=%s""",
             (*scope.key, case_id),
         ).fetchone()
         if case_head is None or int(case_head["current_revision"]) != expected_case_version:
@@ -3268,7 +3268,7 @@ class SchedulePutHostService:
             raise ValueError("schedule policy does not bind the current exact Case")
         policy_head = transaction.execute(
             """SELECT current_revision FROM ecommerce_investigation_schedule_policy_head
-                WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s FOR SHARE""",
+                WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s""",
             (*scope.key, policy.schedule_policy_id),
         ).fetchone()
         actual_policy_revision = 0 if policy_head is None else int(policy_head["current_revision"])
@@ -3324,7 +3324,7 @@ class SchedulePutHostService:
                           operation_fence,cutover_group_id,cutover_group_revision
                      FROM extension_operation_dispatch_binding
                     WHERE org_id=%s AND project_id=%s
-                      AND operation_id='ecommerce_growth_schedule_trigger' FOR SHARE""",
+                      AND operation_id='ecommerce_growth_schedule_trigger'""",
                 scope.key,
             ).fetchone()
             if (
@@ -3411,7 +3411,7 @@ class ScheduleTriggerHostService:
         )
         head = transaction.execute(
             """SELECT current_revision FROM ecommerce_investigation_schedule_policy_head
-                WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s FOR SHARE""",
+                WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s""",
             (*scope.key, policy_ref.resource_id),
         ).fetchone()
         if head is None or int(head["current_revision"]) != policy_ref.revision:

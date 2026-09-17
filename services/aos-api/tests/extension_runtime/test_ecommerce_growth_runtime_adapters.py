@@ -450,8 +450,10 @@ def test_schedule_put_revalidates_case_policy_and_exact_approval(monkeypatch, mu
     class Connection:
         def execute(self, sql, _params):
             if "case_head" in sql:
+                assert "FOR SHARE" not in sql
                 return Cursor({"current_revision": 1})
             if "schedule_policy_head" in sql:
+                assert "FOR SHARE" not in sql
                 return Cursor(None)
             if "aip_action_approval_event" in sql:
                 return Cursor(approval_row)
@@ -579,9 +581,11 @@ def test_schedule_put_returns_and_rereads_policy_and_case(monkeypatch):
         "cutover_group_id": runtime.cutover_group_id,
         "cutover_group_revision": runtime.cutover_group_revision,
     }
-    transaction = HostTransaction(SimpleNamespace(
-        execute=lambda *_: SimpleNamespace(fetchone=lambda: route)
-    ))
+    def read_route(sql, *_):
+        assert "FOR SHARE" not in sql
+        return SimpleNamespace(fetchone=lambda: route)
+
+    transaction = HostTransaction(SimpleNamespace(execute=read_route))
     response = service.execute(
         transaction=transaction,
         scope=scope,
@@ -643,8 +647,11 @@ def test_schedule_trigger_revalidates_exact_enabled_policy(monkeypatch):
 
     monkeypatch.setattr(runtime_adapters, "BusinessInvestigationScheduleStore", Schedules)
     service = runtime_adapters.ScheduleTriggerHostService()
+    def read_policy(sql, *_):
+        assert "FOR SHARE" not in sql
+        return Cursor()
     service.revalidate(
-        transaction=HostTransaction(SimpleNamespace(execute=lambda *_: Cursor())),
+        transaction=HostTransaction(SimpleNamespace(execute=read_policy)),
         scope=scope,
         dispatch=SimpleNamespace(
             operation_id="ecommerce_growth_schedule_trigger",

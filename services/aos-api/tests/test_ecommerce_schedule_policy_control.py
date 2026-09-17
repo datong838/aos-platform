@@ -15,6 +15,10 @@ from aos_api.tenant_scope import TenantScope
 
 
 MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_078_schedule_policy_control_receipt.py"
+REPAIR_MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_079_schedule_policy_control_case_hash.py"
+APPROVAL_HASH_MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_080_schedule_policy_control_approval_hash.py"
+REQUEST_HASH_MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_081_schedule_policy_control_request_hash.py"
+SCHEDULE_CLOSURE_MIGRATION = Path(__file__).parents[1] / "alembic/versions/a0v_082_schedule_unaccepted_analysis_closure.py"
 SCOPE = TenantScope("org-org", "dev-project")
 
 
@@ -101,5 +105,77 @@ def test_migration_is_single_successor_immutable_rls_and_exact_approval_bound():
     assert "ecommerce_growth_schedule_put" in sql
     assert "aip_action_approval_event" in sql
     assert "expectedPolicyRevision" in sql and "expectedCaseVersion" in sql
+    with pytest.raises(RuntimeError, match="must be retained"):
+        module.downgrade()
+
+
+def test_repair_migration_reads_case_hash_from_current_revision():
+    spec = util.spec_from_file_location("a0v_079", REPAIR_MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.revision == "a0v_079" and module.down_revision == "a0v_078"
+    statements = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+    sql = "\n".join(statements)
+    assert "CREATE OR REPLACE FUNCTION public.ecommerce_schedule_policy_control_put_a0v_078" in sql
+    assert "JOIN public.ecommerce_investigation_case_revision r" in sql
+    assert "r.revision=h.current_revision" in sql
+    assert "SELECT current_revision,content_hash INTO v_case_head FROM public.ecommerce_investigation_case_head" not in sql
+    with pytest.raises(RuntimeError, match="must be retained"):
+        module.downgrade()
+
+
+def test_approval_hash_repair_matches_application_datetime_profile():
+    spec = util.spec_from_file_location("a0v_080", APPROVAL_HASH_MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.revision == "a0v_080" and module.down_revision == "a0v_079"
+    statements = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+    sql = "\n".join(statements)
+    assert "CREATE OR REPLACE FUNCTION public.ecommerce_schedule_policy_control_put_a0v_078" in sql
+    assert "AT TIME ZONE 'UTC'" in sql
+    assert "YYYY-MM-DD HH24:MI:SS" in sql
+    assert "||'+00:00'" in sql
+    assert "'expires_at',v_approval.expires_at" not in sql
+    assert "'created_at',v_approval.created_at" not in sql
+
+
+def test_request_hash_repair_compares_approved_put_projection():
+    spec = util.spec_from_file_location("a0v_081", REQUEST_HASH_MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.revision == "a0v_081" and module.down_revision == "a0v_080"
+    statements = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+    sql = "\n".join(statements)
+    assert "v_command.policy_authority-" in sql
+    assert "'schemaVersion','tenant','revision','version','priorRef','contentHash','createdBy','createdAt'" in sql
+    assert "v_proposal.payload->>'policyHash' IS DISTINCT FROM v_policy->>'contentHash'" not in sql
+
+
+def test_schedule_closure_requires_exact_control_and_proves_no_target_acceptance():
+    spec = util.spec_from_file_location("a0v_082", SCHEDULE_CLOSURE_MIGRATION)
+    assert spec and spec.loader
+    module = util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.revision == "a0v_082" and module.down_revision == "a0v_081"
+    statements = []
+    with patch.object(module.op, "execute", statements.append):
+        module.upgrade()
+    sql = "\n".join(statements)
+    assert "ecommerce_unaccepted_schedule_analysis_close_a0v_082" in sql
+    assert "trigger_source<>'schedule'" in sql
+    assert "operation_id<>'ecommerce_growth_schedule_trigger'" in sql
+    assert "ecommerce_schedule_policy_control_receipt" in sql
+    assert "ecommerce_growth_runtime_command_receipt" in sql
+    assert "ecommerce_investigation_run" in sql
+    assert "status='cancelled'" in sql and "status='closed_unaccepted'" in sql
     with pytest.raises(RuntimeError, match="must be retained"):
         module.downgrade()

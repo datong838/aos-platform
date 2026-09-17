@@ -114,12 +114,10 @@ class BaselineAssessmentDiscovery:
 
         active = transaction.execute(
             """SELECT s.run_id,r.trigger_key FROM ecommerce_investigation_run_active_slot s
-                JOIN ecommerce_investigation_run_revision r
+                JOIN ecommerce_investigation_run r
                   ON r.org_id=s.org_id AND r.project_id=s.project_id AND r.run_id=s.run_id
-                 AND r.version=(SELECT max(x.version) FROM ecommerce_investigation_run_revision x
-                    WHERE x.org_id=s.org_id AND x.project_id=s.project_id AND x.run_id=s.run_id)
                 WHERE s.org_id=%s AND s.project_id=%s AND s.case_id=%s
-                  AND analysis_type='initial_store_analysis' LIMIT 2""",
+                  AND s.analysis_type='initial_store_analysis' LIMIT 2""",
             (*scope.key, case.case_id),
         ).fetchall()
         if active and (len(active) != 1 or active[0].get("trigger_key") != claimed.target_idempotency_key):
@@ -141,7 +139,7 @@ class BaselineAssessmentDiscovery:
             """SELECT handler_kind,installation_id,generation,execution_epoch,operation_fence
                  FROM extension_operation_dispatch_binding
                 WHERE org_id=%s AND project_id=%s
-                  AND operation_id='ecommerce_growth_analysis_advance' FOR SHARE""",
+                  AND operation_id='ecommerce_growth_analysis_advance'""",
             scope.key,
         ).fetchone()
         if (
