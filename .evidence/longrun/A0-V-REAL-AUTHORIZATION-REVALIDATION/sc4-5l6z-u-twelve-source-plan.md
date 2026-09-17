@@ -713,6 +713,14 @@ AJ 验收必须同时证明：新 attempt terminal succeeded；十二 Run 同批
 Receipt 仍每个 Run 一份且总数不增加；relationship 精确复用，link command 与 retirement 只各落唯一合法记录；definition 随即
 禁用；无 dev-org 写入、无外部动作、无手工 `run_definition`。任一 exact precondition 不符即停止在当前阶段，不猜测修表。
 
+执行 pause 前发现旧 Worker 已在第一笔 failed 后于 `2026-09-17T22:27:38.255561Z` 自然创建第二笔 attempt
+`17ab28a9-7623-45fc-ba15-c0cb38c17ea5`，并持续 heartbeat 到本次有序停机；此前只读状态脚本固定查询第一笔 attempt，因而漏报。
+pause-failed 门禁正确拒绝了在途状态，没有写 definition。Host/Worker 已通过原 launchd job bootout 停止，第二笔 lease 于
+`2026-09-17T23:45:28.294609Z` 到期。当前优先走系统原生 `ExpiredSignedReadAttemptRecovery`：新 Worker 只能先把过期 running
+attempt 标为 abandoned，再由 current enabled binding 和同一 operation/request hash 创建下一 ordinal；这不重读来源，也不重放
+外部动作。Host 先加载 `9bfc5438` 并恢复 current target，Worker 后启动；若自然下一 attempt 成功则无需 AJ，随即按完整组路径
+disable definition。只有再次 terminal failed 且无 running attempt 时，才进入上段 AI→AJ 正式接续。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
