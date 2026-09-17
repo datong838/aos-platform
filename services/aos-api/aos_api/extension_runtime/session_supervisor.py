@@ -81,8 +81,12 @@ class RuntimeSession:
     async def check_health(self):
         """Check protocol responsiveness only; never return business readiness."""
         try:
-            async with asyncio.timeout(3):
-                async with self.lock:
+            # A business invoke already owns this serial protocol session and
+            # has its own 30-second exchange bound.  Waiting for that local
+            # owner is not a heartbeat failure; start the three-second health
+            # budget only after the session becomes ours.
+            async with self.lock:
+                async with asyncio.timeout(3):
                     nonce=uuid.uuid4().hex
                     result=await self._exchange('heartbeat','heartbeat',{'nonce':nonce},3)
                     if result!={'nonce':nonce,'protocol':'aos-extension/1','status':'alive'}:
