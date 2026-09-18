@@ -365,3 +365,16 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   均在串行及隔离连接工厂下消除，不属于产品运行失败。
 - 浏览器只读复验稳定加载 AOS v1.6.5，但电商目录仍为“暂无可见工作台入口”；没有点击“重新读取目录”，浏览器门禁
   保持 NOT GREEN。测试绿与页面存活均未被当作 AM 或真实经营闭环成功证明。
+
+## 17:03–17:19Z 提交后边界复核与进程采样
+
+- 权限复用改动以 m1 `f5de30e4` 提交且未 push；只精确提交恢复入口的一行接线，未夹带该文件既有未提交改动。当前
+  runtime host 仍为提交前进程，未重启、热替换或宣称已使用新实现。
+- AM 从 revision524 连续推进至 revision555/running。revision548 的权威复核保持 members=12、running Run=12、
+  dataset Receipt=12、relationship=1、link command=1/linkCount=1168、retirement=0、原 key link Store Receipt=0、
+  `ecom_link`=0、link outbox=0、projection pending=0、live resources=3、dev-org canary=0；未知 Store 结果未越界。
+- 瞬时 `pg_stat_activity` 未见长期事务，三个 runner 容器仍 Up 5 小时且服务进程等待。host PID 99810 瞬时约 9.4% CPU；
+  三秒只读采样显示主线程多数时间在事件循环等待、三个容器管理线程在 `waitpid`，活跃片段主要为周期任务建立 PostgreSQL
+  连接时的 SCRAM 认证。该采样只能解释部分 host CPU，不能证明 AM 业务步骤推进、停滞或失败。
+- `pg_stat_statements` 未启用，未伪造累计 SQL 归因。AM 固定收口脚本离线专项 4 passed；浏览器沿上一轮只读结果保持
+  AOS v1.6.5 与“暂无可见工作台入口”，门禁仍 NOT GREEN。本区间未运行 definition、未重发、未改变治理或运行态。
