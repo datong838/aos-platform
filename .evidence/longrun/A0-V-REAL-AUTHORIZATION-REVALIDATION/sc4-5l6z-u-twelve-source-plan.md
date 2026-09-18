@@ -771,6 +771,13 @@ ref 生成 rev16 enabled，`sourceReads=0`。原 group、manifest、十二 datas
 各自 exact hash 重放；Store link batch 只能使用已持久化 command 的原 idempotency key，禁止另造 command 或手工调用
 `run_definition`。自然 Worker 是唯一 Attempt 入口。
 
+本轮实现清单固定为：先新增 `scripts/a0v_al_replacement_recovery.py` 与
+`services/aos-api/tests/extension_runtime/test_a0v_al_replacement_recovery.py`，只完成 AK detach Receipt 直接后继的标准安装生命周期；
+取得实际 installation、generation、lock、config 后，再新增 `scripts/a0v_al_successor_business.py`、
+`scripts/a0v_al_successor_cutover.py`、`scripts/a0v_al_saved_snapshot_recovery.py` 及三个同名专项测试。AL 预分配 generation
+`129ea944-4adc-4822-acf3-9c288683708a`、configuration `85e84b3f-235e-48c5-b160-a8e222372933`、cutover operation
+`239d8393-05ac-4797-9e9d-eeddd756e100`；若原 Owner 产生的实际身份不一致则停止，不替换数据库事实。
+
 AL 验收须同时满足：Attempt terminal succeeded；十二 Run 同批 succeeded/executorStopped=true/finishedAt 非空；dataset
 Receipt 总数仍为12；relationship/link/retirement 各唯一一条；Store 当前 link 为原 command 的 1,168 条且 projection
 completion pending=0；definition 随即禁用；canary0、无新源读取、无越权外部动作。执行期间必须保持机器接入电源并阻止系统

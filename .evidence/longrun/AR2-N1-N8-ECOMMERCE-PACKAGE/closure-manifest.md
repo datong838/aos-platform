@@ -1552,6 +1552,21 @@ AK 因宿主低电量休眠越过实时 lease 后已被原 Host 围栏并释放�
 | `scripts/a0v_ak_released_retirement.py` | A0-V 运维执行器 | exact AK released retirement；只调用原 Disable Owner | `78d326f8c7df49120360ad188ab00e52b26c3e12b2120fc64815b02bb145ae2d` |
 | `services/aos-api/tests/extension_runtime/test_a0v_ak_released_retirement.py` | 测试 | 固定 AK 身份、定义/路由修订与无 Run 写入边界 | `95d37de0aa3812c74f0a8e2a1bce135c0541ea549b536f530791c4344fcb61ca` |
 
+### A0-V AL direct successor executors（2026-09-18）
+
+AL 只允许以 AK 的正式 detach Receipt 为直接前驱，依次复用原安装生命周期、successor registration、原子 cutover 与保存输入恢复 Owner。它不增加源读取，不直接更新 runtime/Run/Store，也不授予外部业务动作。
+
+| 文件 | 去向 | 边界 | 初始 hash |
+| --- | --- | --- | --- |
+| `scripts/a0v_al_replacement_recovery.py` | A0-V 运维执行器 | exact AK detach 后继安装生命周期 | `a2aa70e8f44dfebff229d82dd172b5f600965c77b99fc64afbe7c6996c648d44` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_replacement_recovery.py` | 测试 | 固定前驱、动作序列与禁止直接 runtime 更新 | `971ebd1a4a839416cc20866670687a3e41a3149d03442f807d865cd8c92b888b` |
+| `scripts/a0v_al_successor_business.py` | A0-V 运维执行器 | exact successor registration；无 cutover 权限 | `NEW` |
+| `scripts/a0v_al_successor_cutover.py` | A0-V 运维执行器 | exact 九路原子 cutover；无外部 effect | `NEW` |
+| `scripts/a0v_al_saved_snapshot_recovery.py` | A0-V 运维执行器 | rev15→rev16 保存恢复；sourceReads=0 | `NEW` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_business.py` | 测试 | 固定 registration direct predecessor | `NEW` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_cutover.py` | 测试 | 固定 cutover 身份与旧组 revision | `NEW` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_saved_snapshot_recovery.py` | 测试 | 固定保存恢复继承与禁用边界 | `NEW` |
+
 ### SC4-5l6f3 Fixed snapshot coordinator Host
 
 The coordinator composes existing current Owners from one immutable Outbox route. It has no public endpoint, model-selected control flow, Outbox completion authority, Provider invocation, or external business effect authority. This append-only classification does not alter historical preHash entries or verifier rules.
