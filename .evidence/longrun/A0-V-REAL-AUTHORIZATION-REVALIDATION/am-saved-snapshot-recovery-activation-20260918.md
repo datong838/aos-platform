@@ -161,3 +161,16 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   而提升权限；继续只以权威 attempt、当前 authority、容器生命周期和正式终态记录判断。
 - 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
 - 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 14:33–14:36Z 自动接续观察
+
+- AM 唯一 attempt 自然推进至 revision232/running；heartbeat `2026-09-18T14:35:34Z`、lease
+  `14:37:34Z`，completedAt 仍为空。十二 Run、dataset Receipt=12、relationship=1、link command=1/linkCount=1168、
+  live resources=3 保持一致；Store Receipt/link/outbox、retirement、projection pending 均为 0，canary=0。
+- attempt 事件表共 232 条，sequence 1–232 连续，其中仅 1 条 `attempt_accepted`、0 条 `attempt_failed`，其余为
+  连续 heartbeat；未出现重复接受、失败事件或未知重发边界。
+- runtime host 状态文件仍为 `RUNTIME_HOST_ACTIVE`，只含 AM 一个 live target，`caffeinate` 存活。此前观察的三个短生命周期
+  runner 容器已不在当前 `docker ps` 清单中；当前两项 PostgreSQL 基础服务保持 running，其中开发库为 healthy。该容器清单变化
+  本身既不证明 Store 已提交，也不证明 attempt 失败，终态仍以权威 attempt 与正式提交记录为准。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
+  电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
