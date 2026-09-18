@@ -431,3 +431,38 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   `automaticAction=false`。
 - 浏览器在不刷新目录、不点击任何动作的前提下再次读取：AOS v1.6.5 仍正常加载，
   电商工作台仍是“暂无可见工作台入口”；门禁维持 NOT GREEN。
+
+## 17:45Z 主恢复事务阶段持锁证据
+
+- guard 读到 revision606/running、elapsed=18382s、控制剩余 3176s。主恢复会话仍是自
+  `17:25:10.859591Z` 开始的同一事务，已约 20 分钟，162 个 granted lock、0 个 waiting lock、
+  `pg_blocking_pids={}`。
+- owner 视角的只读持锁清单显示 12 个 advisory lock，且已读取 schedule/control/source、
+  `snapshot_relationship_exact_assessment`、installation/composition 和 AIP 四类当前策略；未持有
+  `ecom_object`、`ecom_link`、`ecom_ingest_receipt` 或 `projection_outbox` 关系锁。结合 Store Receipt=0，
+  当前可收窄为关系 assessment/当前授权复核阶段，尚无证据表明跨入 link Store 提交边界。
+## 2026-09-19 首笔失败与同窗第二笔自然 attempt
+
+- 首笔 AM attempt `7d6cc3aa-881d-4aff-ac30-58978d06e85d` 已于
+  `2026-09-18T17:55:05.142739Z` 以 revision 627 `failed` 终结；revision 626 的最后心跳为
+  `17:54:57.521636Z`。终态边界为 members/running Runs/dataset receipts=`12/12/12`、
+  relationship/link command/link count=`1/1/1168`、retirement/link Store Receipt/ecom_link/
+  link outbox/projection pending=`0/0/0/0/0`、live resources=3、dev-org canary=0。
+- attempt event 只持久化 `attempt_failed`，没有异常正文；本次 Host 输出也没有对应的
+  `snapshot_execution_unconfirmed` 安全日志，因此精确异常类型不可追溯。不得把推测写成失败原因，后续需把
+  安全 reason code 持久化到 attempt 终态或独立 Receipt。
+- enabled definition 的自然 Worker 于 `17:55:41.975476Z` 创建同一 generation/epoch/operation、同一
+  request hash `sha256:94aa1a7f326409e2685048c81b9bc01a13548b0683b7e7d6bba2c37a8b08340e`
+  的第二笔 attempt `38e5c7b9-fa37-4d3f-8f3f-769b995b4db3`；其幂等 key 为原 operation 的 ordinal 2。
+  `18:17Z` 该 attempt 仍为 running 且 Lease 正常，所以 AM 尚未进入退休空窗，不得 pause/detach 或创建
+  direct successor。
+
+## 18:23–18:25Z 第二笔守护与续窗身份修复 Green
+
+- 第二笔 AM attempt 推进至 revision56/running，heartbeat `18:23:28.303785Z`、lease
+  `18:25:28.282168Z`；十二个控制统一到期 `18:38:10.986989Z`，当时剩余 882 秒。未改变运行态。
+- recovery request identity 修复的 PostgreSQL 主证为两路 2 passed（1788.78 秒），相邻 attempt/Lease
+  回归为 11 passed、3 skipped；静态编译和差异格式检查通过。该修复只保护以后跨新控制窗的合法恢复，
+  当前第二笔 attempt 仍由已加载旧 Host 自然执行，没有热替换或重发。
+- 浏览器只读复验 AOS v1.6.5 正常加载，电商工作台仍为“暂无可见工作台入口”；未点击“重新读取目录”，
+  门禁保持 NOT GREEN。

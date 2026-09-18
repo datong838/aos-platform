@@ -7,6 +7,13 @@
 - 只有权威 attempt 进入 `failed`，并固定 terminal event、错误原点和 Store 未知提交边界后，才进入本预案的实现与执行阶段。
 - 若 AM `succeeded`，本预案立即失效，按既有 `a0v_am_saved_snapshot_recovery.py enable → inspect → disable` 收口。
 
+### 2026-09-19 状态修订
+
+- 首笔 AM attempt 已 failed，但 definition 仍 enabled，Worker 已自然创建第二笔同 request hash attempt
+  `38e5c7b9-fa37-4d3f-8f3f-769b995b4db3`。只要该 attempt 为 running，本预案全部写阶段继续禁入。
+- 首笔终态没有持久化可审计的安全 reason code；这构成可观测性缺口。退休门禁仍必须以唯一 running=0、
+  terminal events、原 Store key Receipt、关系/投影边界及资源状态共同判定，不得用猜测的错误类型替代证据。
+
 ## 2. 失败边界判定
 
 1. 锁定 exact attempt、installation、generation、execution epoch、definition rev53、recovery rev17 和十二个原 Run。
