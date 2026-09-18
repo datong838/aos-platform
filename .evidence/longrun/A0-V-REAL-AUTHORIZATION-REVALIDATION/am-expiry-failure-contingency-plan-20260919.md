@@ -27,6 +27,14 @@
 
 ## 3. 方案文件级清单（仅 failed 后实施）
 
+### `scripts/a0v_am_saved_snapshot_recovery.py`（先行暂停）
+
+- 先增加 `pause-failed`，只接受首笔 `7d6cc3aa…` revision627 与第二笔 `38e5c7b9…` revision86 均 failed、
+  同 generation 无其他 attempt、running=0、12 个 latest control 全部过期、Store 零提交及 canary=0。
+- 只调用正式 snapshot definition transition，把 rev53 enabled 推进为 rev54 disabled；不触碰 12 Run、
+  installation、binding、resource、route 或 Store，不调用 `run_definition`。
+- 对应专项为 `services/aos-api/tests/extension_runtime/test_a0v_am_saved_snapshot_recovery.py`。
+
 ### `scripts/a0v_am_failed_retirement.py`
 
 - 以 AL 正式失败退休脚本为结构参考，但所有常量、revision、Receipt 和路由版本均从 AM 当前权威重新固定，不复制历史值。

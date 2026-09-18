@@ -466,3 +466,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   当前第二笔 attempt 仍由已加载旧 Host 自然执行，没有热替换或重发。
 - 浏览器只读复验 AOS v1.6.5 正常加载，电商工作台仍为“暂无可见工作台入口”；未点击“重新读取目录”，
   门禁保持 NOT GREEN。
+
+## 18:38–18:44Z 第二笔终结与 definition 正式暂停
+
+- 第二笔 attempt 于 `18:38:11.427241Z` failed/revision86；AM 当前只有两笔 failed attempt，running=0，
+  Store/retirement/projection/canary 零边界不变。
+- exact `pause-failed` 门禁确认两笔 terminal、无其他 attempt、12 control 过期、12 Run/12 dataset Receipt、
+  1 relationship、1 link command/1168 links、三资源及租户边界后，通过正式 Owner 将 rev53 enabled 推进为
+  rev54 disabled；`sourceReads=0`。
+- 第一次新增门禁查询的参数数量错误在只读 SQL 阶段关闭，未写状态；增加 66/66 执行前校验后使用同一幂等 key
+  成功。私有结果权限 0600。

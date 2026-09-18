@@ -24,5 +24,12 @@ def test_exact_am_saved_snapshot_authority():
     assert "'a0v-am-saved-input-recovery-v17'" in source
     assert "get('revision')!=17" in source
     assert "get('revision')!=53" in source
+    assert "'pause-failed'" in source
+    assert "('7d6cc3aa-881d-4aff-ac30-58978d06e85d',627)" in source
+    assert "('38e5c7b9-fa37-4d3f-8f3f-769b995b4db3',86)" in source
+    assert "'failed_attempts':2" in source and "'unexpected_attempts':0" in source
+    assert "'expired_controls':12" in source and "'store_receipt':0" in source
+    assert "query.count('%s')!=len(parameters)" in source
+    assert "'a0v-am-saved-snapshot-pause-failed-v1'" in source
     assert "'sourceReads':0" in source
     assert "run_definition" not in source
