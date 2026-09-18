@@ -334,3 +334,20 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - 对象批次和对象+关系混合批次的查询上界专项测试通过；Store 全文件回归 62 passed（随后新增混合关系覆盖后继续执行全量复验）。
   AM/AL 及 group relationship/link/retirement/completion 相邻回归为 9 passed、24 skipped、7 条既有 warning。
 - 浏览器仍稳定加载 AOS v1.6.5，电商目录为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发“重新读取目录”。
+
+## 16:29–16:42Z 提交后守护与当前授权重验线索
+
+- Store 批量复核实现以 m1 `bc768a24` 提交且未 push；正式 D-waves 与 AOS 接续上下文在 docs/m1
+  `e79a4e9` 登记。当前 runtime host 已加载旧代码，未重启、热替换或以新实现干预 AM。
+- AM 从 revision458 连续推进至 revision481/running；权威边界在 revision476 时仍为 members=12、running Run=12、
+  dataset Receipt=12、relationship=1、link command=1、retirement=0、link Store Receipt=0、`ecom_link`=0、
+  link outbox=0、projection pending=0、live resources=3、dev-org canary=0。事件为 1 条 accepted 与 475 条 heartbeat。
+- 两次组合只读查询先后误用了 dataset Receipt 的 `group_id` 和 attempt event 的 `kind` 列，事务均回滚且没有写入；
+  通过 information_schema 确认正式列后，第三次只读查询成功。该过程未触发业务执行或未知结果重发。
+- `pg_stat_activity` 显示主恢复会话自 16:28Z 保持同一事务，最后查询时间在 16:39Z、16:41Z 持续更新；三个
+  runner 容器均 Up，恢复 PostgreSQL 瞬时 CPU 约 25%。现场反复查询为当前安装 composition/lock 核验，说明 AM
+  正在慢速重验而非停死，Store 逐实体复核不是唯一潜在耗时段。两条长期 advisory-lock 会话无 blocker 证据。
+- Prime Agent 两个进程存活；00:31 本地健康快照为 `GREEN_WITH_WARNINGS`，7 个强一致投影 CURRENT、1 个异步投影
+  PENDING_ASYNC。其 delivery status 仍为较早 AR2 门禁，只作为开发记忆辅助，不作为 AM 当前事实权威。
+- 浏览器既有页面仍为 AOS v1.6.5 且电商目录“暂无可见工作台入口”，门禁 NOT GREEN。下一波方案先行评估同一
+  恢复事务内已加锁当前安装权限的安全复用，保留跨事务、跨连接、跨租户和回调后非权限事实的完整重验。
