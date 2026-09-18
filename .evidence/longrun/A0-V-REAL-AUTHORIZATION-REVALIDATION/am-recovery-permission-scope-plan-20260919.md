@@ -18,16 +18,21 @@
 
 ## 3. 最小实现清单
 
+### `services/aos-api/aos_api/extension_runtime/configuration_authorization.py`
+
+- 由原 `CurrentConfigurationPermission` 增加显式事务限定的复用作用域；默认调用不启用缓存。
+- 作用域内部使用 `ContextVar`，缓存键绑定 permission 实例、连接身份、租户、installation、generation 与 actor。
+- 每次命中前仍检查连接处于显式事务；只有完整原校验严格返回 `True` 后才写入缓存。
+
 ### `services/aos-api/aos_api/pipeline_snapshot_group_recovery_authority.py`
 
-- 增加 `ContextVar` 保存当前动态调用链的 permission cache，避免线程或协程之间共享。
-- 外层 `run_current()` 创建并在 `finally` 中 reset；嵌套 `run_current()` 复用已有作用域。
-- 新增私有 `_permission_current()`，仅缓存原 `_definitions._permission(...) is True` 的 exact key。
-- `_load()` 改走该私有入口；`attempt_target_current()` 保持非缓存直接校验。
+- `run_current()` 进入上述显式作用域并在 `finally`/上下文退出时 reset；嵌套 `run_current()` 复用已有作用域。
+- `_load()`、group policy 等共享原 permission 实例的调用均可命中；Receipt、definition、facts、bindings、policy 与回调后比较不缓存。
+- `attempt_target_current()` 保持非缓存直接校验。
 
 ### `services/aos-api/tests/extension_runtime/test_snapshot_group_recovery_authority_pg.py`
 
-- Red：同一连接、同一外层 `run_current()` 中嵌套一次 recovery 权威消费，原实现产生 4 次完整 permission 调用；目标为 1 次。
+- Red：同一连接、同一外层 `run_current()` 中嵌套一次 recovery 权威消费，现场旧实现产生 8 次完整 permission 调用；目标为 1 次。
 - 验证第二次独立顶层调用会再次校验；不同连接不共享。
 - 保留现有 membership 撤销、definition 回调中变化、window 到期、tenant 与 member 漂移拒绝测试。
 
