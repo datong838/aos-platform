@@ -950,6 +950,23 @@ running/unresolved/pending/canary，且 lifecycle 恰有 fence/detach 两张 Rec
 守卫、单次 outbox claim 与 direct successor 所需 detach Receipt。退休 GREEN 后才新增 AM replacement 文件，避免把尚未取得的
 AL detach Receipt 写入后继安装权威。
 
+#### AM direct successor 文件级施工清单（2026-09-18 续）
+
+AL 已通过 operation `c9328938-3b56-4a8d-ac38-54f7abf70416` 正式 detach；唯一 detach Receipt 为
+`bd92aa48-77b6-4c34-82f9-0ede171083b3`，hash
+`sha256:b8990ed467aed1bdfc40e5fb56e4455e2ece7114045f37a15f8f4099a313e1df`。AL 终态固定为
+binding rev8/epoch4 disabled+fenced+unknown、三资源 released、九路 legacy rev89/group116、definition rev51 disabled。
+
+新增 `scripts/a0v_am_replacement_recovery.py`，仅允许上述 AL 终态作为 direct predecessor；使用与 AL 相同的四包正式版本和
+当前受信 signed bundle 树，新建唯一 AM approved installation。动作固定为
+`preflight/create-am/prepare-am/verify-am/stage-am/configure-am/enable-am/observe`，每一步依赖前一步私有 immutable result；
+create 前冻结数据库备份和 predecessor ref，未知结果不得再次创建。
+
+stage/configure 必须读取刚续签的 budget/runtime policy rev8 与 model/route rev7，不得复用 AL 的旧 configuration ref；enable
+终态要求新 generation ready+enabled+unfenced、三资源 pending、零 canary。新增
+`services/aos-api/tests/extension_runtime/test_a0v_am_replacement_recovery.py` 固定 direct predecessor、版本、唯一 create intent、
+动作顺序和禁止手工 `run_definition`。AM enable 后再单独形成 successor registration 方案和代码，不在安装脚本中偷做九路切换。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
