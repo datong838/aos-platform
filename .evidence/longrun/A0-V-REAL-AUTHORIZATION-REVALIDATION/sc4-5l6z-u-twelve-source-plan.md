@@ -834,6 +834,24 @@ Prime Agent 只作为开发过程的独立长记忆辅助，不进入 AOS 产品
 本切片文件级清单仅包含本方案文档与 `scripts/prime-agent-safe-daemon.sh`。若任一运行入口缺失则 fail closed，
 不得回退为命令行明文密钥或环境变量凭据。
 
+重启恢复执行记录：宿主于 `2026-09-18T15:25:55+08:00` 从 Hibernate 唤醒，Docker `colima-aos-extension`
+中的 `aos-a0v-recovery-pg` 保持运行，8434 与 5173 均恢复。只读数据库复核至
+`2026-09-18T09:42:52Z` 时，AL attempt 仍为 `running@revision186`，heartbeat/Lease 持续推进；固定 definition
+`cb0dba8c-803f-5caf-8011-b763d349f2ba` 为 rev50 enabled 并绑定 AL installation/generation。十二 Run 均为
+`running/executorStopped=false`，dataset Receipt=12、relationship=1、link command=1（1,168 links）、
+retirement=0、当前 `ecom_link`=0、projection pending=0、三资源 pending、canary=0。因原 attempt 仍健康，未重启
+Host/Worker、未切 successor、未重发 Store；已恢复独立 `caffeinate -dimsu`。
+
+浏览器只读验收确认 `org-org/dev-project` 的本体管理页完整加载，AOS v1.6.5、对象类型与图谱健康可见；电商工作台
+目录仍显示暂无可见入口，按当前阶段记录为未完成，不以页面可访问替代经营闭环验收。AL 专项 5 tests passed；
+session/resource health 与 link/retirement 累计回归 9 passed、41 个需独立 PostgreSQL fixture 的用例 skipped。
+全局 closure verifier 仍报告工作树中既有经营链文件的 hash drift，因此本波不宣称全局 closure green，也不吸收或
+覆盖这些既有改动。
+
+Prime 安全启动器已改用 WorkBuddy `22.22.2-2/bin/node` 与仓库内构建 CLI；`--check`、shell 语法、socket 持有者
+和 `prime-agent status --json` 均通过，daemon 为 `current`、协议版本7、版本0.7.1。修复已以 m1 提交
+`4ba931c4` 固化且未 push；Prime 继续只作为独立开发长记忆辅助。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
