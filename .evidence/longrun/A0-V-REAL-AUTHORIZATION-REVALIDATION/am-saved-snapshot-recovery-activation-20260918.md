@@ -275,3 +275,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   第四段监视器继续运行。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；复用浏览器页复验仍为“暂无可见工作台入口”，
   门禁 NOT GREEN，未触发重读。测试与页面可见性均未被当作真实经营闭环完成证明。
+
+## 15:43–15:50Z 持续只读监视波
+
+- 第四段只读监视器继续观察 AM revision365 至 revision373 后按预设长度正常退出；同一任务立即续建第五段监视器，
+  连续观察 revision375 至 revision379。最新 heartbeat `2026-09-18T15:49:53Z`、lease `15:51:52Z`，
+  各次均为 running、completedAt 为空。revision374 未出现在变更输出窗口，不代表权威状态缺失或执行中断。
+- 本区间没有 succeeded/failed，未执行 `enable/inspect/disable`，也未改变 definition、Run、Store、资源或治理策略；
+  第五段监视器继续运行。
+- 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器稳定加载 AOS v1.6.5，
+  电商目录仍为“暂无可见工作台入口”，门禁 NOT GREEN，未触发“重新读取目录”。
