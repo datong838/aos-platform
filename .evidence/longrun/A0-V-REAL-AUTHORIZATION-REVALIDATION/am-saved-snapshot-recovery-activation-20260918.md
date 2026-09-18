@@ -109,3 +109,15 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   OOM=false。该事实排除了当前锁等待和容器重启循环，但不替代终态提交证明。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
 - 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 13:51–13:54Z 自动接续观察与事务归因更正
+
+- AM 唯一 attempt 推进至 revision145/running；heartbeat `2026-09-18T13:51:34Z`、lease `13:53:33Z`；
+  十二 Run、dataset Receipt=12、relationship=1、link command=1/linkCount=1168、live resources=3 保持一致，
+  Store/retirement/projection 仍未显现，canary=0。
+- 容器瞬时 CPU 为 0.00%–0.01%，均仅 1 PID；同库另有持有事务 ID 的受限会话，但其 PID/锁数相对上一观察发生变化。
+  进一步读取确认本次只读探针 PID 与该会话不同，但当前角色仍无法把该会话唯一绑定到 AM Worker。因此更正前两节解释边界：
+  它们只能证明同库存在另一个事务，不能单独证明 AM 长事务正在执行具体 SQL；提交 `62382fc8`/`38443ec1` 的事实数字保留，
+  对“AM 活跃事务”的归因由本节收窄。AM 健康仍以唯一 running attempt、连续 heartbeat/lease、容器未退出和终态记录为准。
+- 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；浏览器稳定态仍为“暂无可见工作台入口”，
+  继续 NOT GREEN，未触发重读。
