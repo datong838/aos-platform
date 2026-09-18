@@ -285,3 +285,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   第五段监视器继续运行。
 - 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器稳定加载 AOS v1.6.5，
   电商目录仍为“暂无可见工作台入口”，门禁 NOT GREEN，未触发“重新读取目录”。
+
+## 15:50–15:56Z 跨旧失败点持续观察
+
+- 第五段只读监视器连续观察 AM revision380 至 revision391；最新 heartbeat `2026-09-18T15:55:56Z`、
+  lease `15:57:56Z`，各次均为 running、completedAt 为空。AM 已自然跨过 AL 曾因治理过期而失败的 revision382，
+  当前正式续签治理有效窗仍充足，未出现相同失败信号。
+- 跨过旧 revision 只证明恢复链路继续推进，不等于 attempt、十二 Run 或经营闭环成功；本区间未执行
+  `enable/inspect/disable`，未手工运行 definition，也未重发任何未知结果。
+- 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器仍显示“暂无可见工作台入口”，
+  门禁保持 NOT GREEN，未触发“重新读取目录”。
