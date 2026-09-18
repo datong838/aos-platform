@@ -774,9 +774,9 @@ ref 生成 rev16 enabled，`sourceReads=0`。原 group、manifest、十二 datas
 本轮实现清单固定为：先新增 `scripts/a0v_al_replacement_recovery.py` 与
 `services/aos-api/tests/extension_runtime/test_a0v_al_replacement_recovery.py`，只完成 AK detach Receipt 直接后继的标准安装生命周期；
 取得实际 installation、generation、lock、config 后，再新增 `scripts/a0v_al_successor_business.py`、
-`scripts/a0v_al_successor_cutover.py`、`scripts/a0v_al_saved_snapshot_recovery.py` 及三个同名专项测试。AL 预分配 generation
-`129ea944-4adc-4822-acf3-9c288683708a`、configuration `85e84b3f-235e-48c5-b160-a8e222372933`、cutover operation
-`239d8393-05ac-4797-9e9d-eeddd756e100`；若原 Owner 产生的实际身份不一致则停止，不替换数据库事实。
+`scripts/a0v_al_successor_cutover.py`、`scripts/a0v_al_saved_snapshot_recovery.py` 及三个同名专项测试。generation 与
+configuration 身份必须采用原 preparation/configuration Owner 返回并由数据库提交的不可变值，不允许执行器预分配或替换；
+cutover operation 固定使用新的 `239d8393-05ac-4797-9e9d-eeddd756e100`，并由原 cutover Owner 校验和落账。
 
 AL 验收须同时满足：Attempt terminal succeeded；十二 Run 同批 succeeded/executorStopped=true/finishedAt 非空；dataset
 Receipt 总数仍为12；relationship/link/retirement 各唯一一条；Store 当前 link 为原 command 的 1,168 条且 projection

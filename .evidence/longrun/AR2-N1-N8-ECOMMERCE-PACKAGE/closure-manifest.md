@@ -1560,12 +1560,12 @@ AL 只允许以 AK 的正式 detach Receipt 为直接前驱，依次复用原安
 | --- | --- | --- | --- |
 | `scripts/a0v_al_replacement_recovery.py` | A0-V 运维执行器 | exact AK detach 后继安装生命周期 | `a2aa70e8f44dfebff229d82dd172b5f600965c77b99fc64afbe7c6996c648d44` |
 | `services/aos-api/tests/extension_runtime/test_a0v_al_replacement_recovery.py` | 测试 | 固定前驱、动作序列与禁止直接 runtime 更新 | `971ebd1a4a839416cc20866670687a3e41a3149d03442f807d865cd8c92b888b` |
-| `scripts/a0v_al_successor_business.py` | A0-V 运维执行器 | exact successor registration；无 cutover 权限 | `NEW` |
-| `scripts/a0v_al_successor_cutover.py` | A0-V 运维执行器 | exact 九路原子 cutover；无外部 effect | `NEW` |
-| `scripts/a0v_al_saved_snapshot_recovery.py` | A0-V 运维执行器 | rev15→rev16 保存恢复；sourceReads=0 | `NEW` |
-| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_business.py` | 测试 | 固定 registration direct predecessor | `NEW` |
-| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_cutover.py` | 测试 | 固定 cutover 身份与旧组 revision | `NEW` |
-| `services/aos-api/tests/extension_runtime/test_a0v_al_saved_snapshot_recovery.py` | 测试 | 固定保存恢复继承与禁用边界 | `NEW` |
+| `scripts/a0v_al_successor_business.py` | A0-V 运维执行器 | exact successor registration；无 cutover 权限 | `424584cbad7e5dbba766a26e83dc5cdf371bd054ddc9a13ede5cd4df550c6a50` |
+| `scripts/a0v_al_successor_cutover.py` | A0-V 运维执行器 | exact 九路原子 cutover；无外部 effect | `097d2a748767074ef62f7fecf8b3f58bb865512c87e30047afc23573c7161560` |
+| `scripts/a0v_al_saved_snapshot_recovery.py` | A0-V 运维执行器 | rev15→rev16 保存恢复；sourceReads=0 | `2c9c829546d8493daa2cfea706d1f9839ecb2a031ea6462b599b0f5f2009232b` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_business.py` | 测试 | 固定 registration direct predecessor | `f10854d7f7a4190982079a6e50390184e9ae9152e5f96fc8dca88ac634288c32` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_successor_cutover.py` | 测试 | 固定 cutover 身份与旧组 revision | `441efdef720020185aa78cbdb6a52638be393c1ef4651041111a135d80728822` |
+| `services/aos-api/tests/extension_runtime/test_a0v_al_saved_snapshot_recovery.py` | 测试 | 固定保存恢复继承与禁用边界 | `56610b5b88865caca27c5f9c32e82c368fc257ce647fc10a7cd9c62e76d73a0b` |
 
 ### SC4-5l6f3 Fixed snapshot coordinator Host
 
