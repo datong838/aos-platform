@@ -187,3 +187,14 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   现场 schema 与正式实现确认 Run 权威表为 `meta_schedule_run` 并完成上述复核。该命令漂移不改变 AM 状态，也不授权干预。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
   电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 14:52–14:54Z 自动接续观察
+
+- AM 唯一 attempt 自然推进至 revision268/running；heartbeat `2026-09-18T14:53:47Z`、lease
+  `14:55:47Z`，completedAt 仍为空。事件 sequence 1–268 连续，仅 1 条 `attempt_accepted`、0 条
+  `attempt_failed`、0 条 `attempt_succeeded`。
+- group 仍为 members=12、running Run=12；AM live resources=3、dev-org canary=0。正式续签后的 budget/runtime
+  policy rev8 与 model/route rev7 有效窗止于 `2026-09-19T11:48:51Z`，距离本次观察约 21 小时，不接近 AL 曾发生的
+  治理到期边界；本轮没有续签或修改任何策略。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
+  电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
