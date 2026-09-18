@@ -985,6 +985,36 @@ revision90/group117；AL 保持 detached，definition 保持 rev51 disabled。
 新增 business/cutover 两个专项测试，固定 AM/AL/ref/group/revision、禁止 fallback/外部效应和阶段跳跃。浏览器验收只在 AM
 九路路由已注册且保存输入尚未启用时做只读检查，不触发业务动作；完成后再进入 definition/recovery 转移。
 
+#### AM 保存输入转移文件级清单（2026-09-18 续）
+
+新增 `scripts/a0v_am_saved_snapshot_recovery.py`，只允许 AM installation
+`fd28d180-db24-4568-a848-101fcd3aa3c5`、generation `d6bc117e-d19d-4413-beb4-02884206e290`、binding
+rev6/epoch3 ready、九路 rev90/group117 与 definition rev51 disabled 进入。prepare/schedule-ingest/controls 只复核十二来源和现有
+control binding，不读取商城源表正文。
+
+transfer 必须以 AL rev51 disabled 为 expected ref，并以 AL recovery rev16 的 immutable ref 为 expected recovery ref，将 definition
+生成 AM rev52 disabled；renew 只允许原 group/manifest 与十二 Run，生成 recovery rev17 和 rev53 enabled，固定 key
+`a0v-am-saved-input-recovery-v17`，`sourceReads=0`。任一步漂移均在自然执行前停止。
+
+新增 `services/aos-api/tests/extension_runtime/test_a0v_am_saved_snapshot_recovery.py` 固定 AM/AL 身份、rev51→52→53、recovery
+16→17、原 group/manifest、禁止 `run_definition`。enable 只确认 definition/recovery 当前权威，不调用执行器；自然 Worker 是唯一
+attempt 创建入口。随后监控唯一 AM attempt 的 heartbeat/lease、十二 Run、Store Receipt、1,168 links、retirement、projection 与
+dev-org canary；未知结果不得重发。
+
+#### AM 保存输入恢复启动实绩（2026-09-18 续）
+
+`prepare/schedule-ingest/controls` 已确认 AM installation `fd28d180-db24-4568-a848-101fcd3aa3c5`、generation
+`d6bc117e-d19d-4413-beb4-02884206e290` 与十二个当前 control binding。`transfer` 已将 AL rev51 disabled 精确推进为 AM
+rev52 disabled；`renew` 已以 recovery rev16 为前代生成 rev17，并由 Owner 生成 rev53 enabled；两步均记录
+`sourceReads=0`。
+
+自然 Worker 随后创建唯一 AM `recoverable_store` attempt `7d6cc3aa-881d-4aff-ac30-58978d06e85d`。12:41Z 只读观察为
+revision6/running，heartbeat 与 lease 正常前移；十二 Run 仍 running，dataset Receipt=12、relationship=1、link command=1/
+linkCount=1168、retirement=0、projection pending=0、三资源 live、dev-org canary=0。运行期两次调用只读 `enable` 核对均因
+Worker 持有 installation tuple lock 而 lock timeout，未生成 `enable-result.json`，也未重发 transfer/renew；随后用无锁只读 SQL
+确认 definition rev53 enabled、binding rev6/epoch3 ready+enabled+unfenced。下一波只读守护该唯一 attempt；终态成功后再执行
+`enable`/`inspect` 与既有 complete-group `disable`，失败则先核对 Store 与未知提交边界。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
