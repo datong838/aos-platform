@@ -23,6 +23,7 @@ from aos_api.extension_runtime.generation_attempts import (
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
 from aos_api.extension_runtime.recoverable_store_attempt import RecoverableStoreAttemptOwner
 from aos_api.extension_runtime.consumer_connection import consumer_connection
+from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.tenant_scope import TenantScope
 
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
@@ -39,6 +40,16 @@ def attempt_case(database):
     spec.loader.exec_module(migration)
     migration.op = SimpleNamespace(execute=conn.execute)
     migration.upgrade()
+    for name in (
+        "a0v_088_recoverable_store_attempt.py",
+        "a0v_089_runtime_attempt_terminal_reason.py",
+    ):
+        path = Path(__file__).resolve().parents[2] / "alembic/versions" / name
+        spec = importlib.util.spec_from_file_location("attempt_current_" + name, path)
+        current = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(current)
+        current.op = SimpleNamespace(execute=conn.execute)
+        current.upgrade()
     conn.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(role)))
     installation, _ = seed(conn)
     generation = uuid.uuid4()
@@ -58,14 +69,12 @@ def attempt_case(database):
 
 @pytest.fixture
 def recoverable_case(attempt_case):
-    conn, installation, generation, role, schema = attempt_case
-    path = Path(__file__).resolve().parents[2] / "alembic/versions/a0v_088_recoverable_store_attempt.py"
-    spec = importlib.util.spec_from_file_location("a0v_recoverable_attempt_migration", path)
-    migration = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(migration)
-    migration.op = SimpleNamespace(execute=conn.execute)
-    migration.upgrade()
-    return conn, installation, generation, role, schema
+    return attempt_case
+
+
+@pytest.fixture
+def terminal_reason_case(recoverable_case):
+    return recoverable_case
 
 
 def _begin(store, conn, installation, generation, **changes):
@@ -149,7 +158,8 @@ def test_heartbeat_and_settle_require_exact_owner_and_revision(attempt_case):
     with pytest.raises(PermissionError, match="token mismatch"):
         with conn.transaction():
             store.settle(conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
-                         owner_token="wrong-token-" + "w" * 32, state="failed")
+                         owner_token="wrong-token-" + "w" * 32, state="failed",
+                         terminal_reason_code="RECOVERABLE_EXECUTION_EXCEPTION")
     with conn.transaction():
         renewed = store.heartbeat(
             conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1, owner_token=TOKEN,
@@ -159,7 +169,8 @@ def test_heartbeat_and_settle_require_exact_owner_and_revision(attempt_case):
     with pytest.raises(RuntimeRevisionConflict):
         with conn.transaction():
             store.settle(conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
-                         owner_token=TOKEN, state="failed")
+                         owner_token=TOKEN, state="failed",
+                         terminal_reason_code="RECOVERABLE_EXECUTION_EXCEPTION")
 
 
 def test_recoverable_store_attempt_retries_only_after_terminal_failure(recoverable_case):
@@ -181,7 +192,8 @@ def test_recoverable_store_attempt_retries_only_after_terminal_failure(recoverab
     assert active.attempt_id == first.attempt_id and active.execute_once is False
     with conn.transaction():
         store.settle(conn, **SCOPE, attempt_id=first.attempt_id, expected_revision=1,
-                     owner_token=TOKEN, state="failed")
+                     owner_token=TOKEN, state="failed",
+                     terminal_reason_code="RECOVERABLE_EXECUTION_EXCEPTION")
     with conn.transaction():
         second = store.begin_recoverable_store(conn, **args)
     assert second.execute_once is True and second.attempt_id != first.attempt_id
@@ -423,3 +435,161 @@ def test_committed_attempt_survives_owner_exit_and_other_process_recovers_it(att
                 recovery, **SCOPE, installation_id=installation,
                 generation=generation, fence_epoch=2,
             ) is True
+
+
+def test_terminal_reason_is_atomic_bounded_and_matches_event(terminal_reason_case):
+    conn, installation, generation, _, _ = terminal_reason_case
+    store = PostgresRuntimeAttemptStore()
+    lease = _begin(store, conn, installation, generation)
+    with pytest.raises(ValueError, match="terminal reason"):
+        with conn.transaction():
+            store.settle(
+                conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
+                owner_token=TOKEN, state="failed",
+            )
+    with pytest.raises(ValueError, match="terminal reason"):
+        with conn.transaction():
+            store.settle(
+                conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
+                owner_token=TOKEN, state="failed", terminal_reason_code="RAW_FAILURE",
+            )
+    with conn.transaction():
+        settled = store.settle(
+            conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
+            owner_token=TOKEN, state="failed",
+            terminal_reason_code="RECOVERABLE_EXECUTION_EXCEPTION",
+            terminal_error_type="IngressJournalConflict",
+        )
+    assert settled.state == "failed"
+    assert conn.execute(
+        "SELECT terminal_reason_code,terminal_error_type FROM extension_runtime_execution_attempt "
+        "WHERE attempt_id=%s", (lease.attempt_id,),
+    ).fetchone() == ("RECOVERABLE_EXECUTION_EXCEPTION", "IngressJournalConflict")
+    assert conn.execute(
+        "SELECT terminal_reason_code,terminal_error_type FROM extension_runtime_execution_attempt_event "
+        "WHERE attempt_id=%s ORDER BY sequence DESC LIMIT 1", (lease.attempt_id,),
+    ).fetchone() == ("RECOVERABLE_EXECUTION_EXCEPTION", "IngressJournalConflict")
+    second = _begin(
+        store, conn, installation, generation,
+        idempotency_key="missing-reason", operation_key="missing-reason.read",
+    )
+    with pytest.raises(psycopg.errors.RaiseException, match="attempt failure"):
+        conn.execute(
+            "UPDATE extension_runtime_execution_attempt SET state='failed',revision=2,"
+            "completed_at=clock_timestamp() WHERE attempt_id=%s", (second.attempt_id,),
+        )
+
+
+def test_recoverable_context_classifies_deadline_without_raw_message(terminal_reason_case):
+    conn, installation, generation, _, schema = terminal_reason_case
+    conn.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+
+    @contextmanager
+    def connect():
+        with psycopg.connect(
+            host="127.0.0.1", port=18432, user="postgres", dbname="postgres",
+            autocommit=True, row_factory=dict_row,
+        ) as worker:
+            worker.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            worker.execute("SET SESSION AUTHORIZATION aos_runtime")
+            yield worker
+
+    scope = TenantScope("org-org", "dev-project")
+    owner = RecoverableStoreAttemptOwner(connect=connect, heartbeat_seconds=.05, lease_seconds=.2)
+    with consumer_connection(connect, SCOPE) as worker:
+        attempt = owner.claim(
+            worker, scope=scope, installation_id=installation, generation=generation,
+            execution_epoch=1, operation_key="snapshot-group:deadline",
+            idempotency_key="snapshot-group:deadline", request_hash=HASH,
+        )
+    with pytest.raises(IngressJournalConflict, match="INGRESS_DEADLINE_EXCEEDED"):
+        with attempt:
+            raise IngressJournalConflict("INGRESS_DEADLINE_EXCEEDED")
+    assert conn.execute(
+        "SELECT state,terminal_reason_code,terminal_error_type "
+        "FROM extension_runtime_execution_attempt WHERE attempt_id=%s", (attempt.attempt_id,),
+    ).fetchone() == (
+        "failed", "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", "IngressJournalConflict",
+    )
+
+
+def test_expired_attempt_uses_fixed_terminal_reason(terminal_reason_case):
+    conn, installation, generation, _, _ = terminal_reason_case
+    lease = _begin(
+        PostgresRuntimeAttemptStore(), conn, installation, generation,
+        lease_until=datetime.now(timezone.utc) + timedelta(milliseconds=100),
+    )
+    conn.execute("SELECT pg_sleep(.12)")
+    with conn.transaction():
+        assert PostgresRuntimeAttemptStore().abandon_expired_reads(conn, **SCOPE) == (lease.attempt_id,)
+    assert conn.execute(
+        "SELECT state,terminal_reason_code,terminal_error_type "
+        "FROM extension_runtime_execution_attempt WHERE attempt_id=%s", (lease.attempt_id,),
+    ).fetchone() == ("abandoned", "ATTEMPT_LEASE_EXPIRED", None)
+
+
+def test_a0v089_preserves_historical_terminal_rows_with_unknown_reason(database):
+    conn, _, schema = database
+    path = Path(__file__).resolve().parents[2] / "alembic/versions/ar1_004_runtime_execution_attempt.py"
+    spec = importlib.util.spec_from_file_location("historical_attempt_migration", path)
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=conn.execute)
+    migration.upgrade()
+    installation, _ = seed(conn)
+    generation = uuid.uuid4()
+    attempt_id = uuid.uuid4()
+    conn.execute(
+        """INSERT INTO extension_runtime_binding
+           (org_id,project_id,installation_id,generation,installation_revision,package_lock_ref,
+            profile_ref,config_ref,desired_state,observed_state,enabled,operation_fence)
+           VALUES('org-org','dev-project',%s,%s,1,'{}','test','{}','enabled','ready',true,false)""",
+        (installation, generation),
+    )
+    conn.execute(
+        "SELECT set_config('aos.org_id','org-org',false),"
+        "set_config('aos.project_id','dev-project',false)"
+    )
+    conn.execute(
+        """INSERT INTO extension_runtime_execution_attempt
+           (org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+            operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,state,lease_until)
+           VALUES('org-org','dev-project',%s,%s,%s,1,'signed_read','historical.read',
+                  'historical',%s,%s,'running',clock_timestamp()+interval '1 minute')""",
+        (attempt_id, installation, generation, HASH, HASH),
+    )
+    conn.execute(
+        """INSERT INTO extension_runtime_execution_attempt_event
+           (org_id,project_id,attempt_id,sequence,event_id,type,state,revision)
+           VALUES('org-org','dev-project',%s,1,%s,'attempt_accepted','running',1)""",
+        (attempt_id, uuid.uuid4()),
+    )
+    conn.execute(
+        "UPDATE extension_runtime_execution_attempt SET state='failed',revision=2,"
+        "completed_at=clock_timestamp() WHERE attempt_id=%s", (attempt_id,),
+    )
+    conn.execute(
+        """INSERT INTO extension_runtime_execution_attempt_event
+           (org_id,project_id,attempt_id,sequence,event_id,type,state,revision)
+           VALUES('org-org','dev-project',%s,2,%s,'attempt_failed','failed',2)""",
+        (attempt_id, uuid.uuid4()),
+    )
+    for name in (
+        "a0v_088_recoverable_store_attempt.py",
+        "a0v_089_runtime_attempt_terminal_reason.py",
+    ):
+        path = Path(__file__).resolve().parents[2] / "alembic/versions" / name
+        spec = importlib.util.spec_from_file_location("historical_" + name, path)
+        current = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(current)
+        current.op = SimpleNamespace(execute=conn.execute)
+        current.upgrade()
+    assert conn.execute(
+        "SELECT state,terminal_reason_code,terminal_error_type "
+        "FROM extension_runtime_execution_attempt WHERE attempt_id=%s", (attempt_id,),
+    ).fetchone() == ("failed", None, None)
+    assert conn.execute(
+        "SELECT state,terminal_reason_code,terminal_error_type "
+        "FROM extension_runtime_execution_attempt_event WHERE attempt_id=%s AND sequence=2",
+        (attempt_id,),
+    ).fetchone() == ("failed", None, None)

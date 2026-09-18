@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import re
 import secrets
 from threading import Event, Lock, Thread
 
@@ -10,6 +11,26 @@ from aos_api.tenant_scope import TenantScope
 from .consumer_connection import consumer_connection
 from .generation_attempts import PostgresRuntimeAttemptStore, RuntimeAttemptLease
 from .lifecycle_store import RuntimeConflict
+
+
+def _error_type(error: BaseException | None) -> str:
+    name = type(error).__name__ if error is not None else "RuntimeConflict"
+    return name if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]{0,159}", name) else "Exception"
+
+
+def _terminal_failure(exc: BaseException | None, heartbeat_error: BaseException | None,
+                      heartbeat_stopped: bool) -> tuple[str, str]:
+    if not heartbeat_stopped:
+        return "RECOVERABLE_HEARTBEAT_STOP_TIMEOUT", "RuntimeConflict"
+    if heartbeat_error is not None:
+        return "RECOVERABLE_HEARTBEAT_FAILED", _error_type(heartbeat_error)
+    error_type = _error_type(exc)
+    code = str(exc) if exc is not None else ""
+    if code == "INGRESS_CANCELLED":
+        return "RECOVERABLE_INGRESS_CANCELLED", error_type
+    if code == "INGRESS_DEADLINE_EXCEEDED":
+        return "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", error_type
+    return "RECOVERABLE_EXECUTION_EXCEPTION", error_type
 
 
 class RecoverableStoreAttempt:
@@ -69,11 +90,16 @@ class RecoverableStoreAttempt:
 
     def __exit__(self, exc_type, exc, traceback):
         self._stop.set()
+        heartbeat_stopped = True
         if self._thread is not None:
             self._thread.join(timeout=max(5.0, self._heartbeat_seconds + 5.0))
             if self._thread.is_alive():
+                heartbeat_stopped = False
                 self._error = RuntimeConflict("recoverable Store heartbeat did not stop")
         failure = exc is not None or self._error is not None
+        reason = error_type = None
+        if failure:
+            reason, error_type = _terminal_failure(exc, self._error, heartbeat_stopped)
         with self._lock:
             expected = self._lease.revision
         with consumer_connection(self._connect, dict(
@@ -83,6 +109,7 @@ class RecoverableStoreAttempt:
                 conn, org_id=self._scope.org_id, project_id=self._scope.project_id,
                 attempt_id=self._lease.attempt_id, expected_revision=expected,
                 owner_token=self._token, state="failed" if failure else "succeeded",
+                terminal_reason_code=reason, terminal_error_type=error_type,
             )
         with self._lock:
             self._lease = settled

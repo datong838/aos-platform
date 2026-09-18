@@ -86,7 +86,8 @@ def complete_ui_read(*,conn,scope:TenantScope,claim:UiReadClaim,result=None,fail
     result_hash=canonical_sha256(stored_result) if stored_result is not None else None
     PostgresRuntimeAttemptStore().settle(conn,org_id=scope.org_id,project_id=scope.project_id,
         attempt_id=claim.attempt_id,expected_revision=1,owner_token=claim.owner_token,
-        state='succeeded' if state=='succeeded' else 'failed')
+        state='succeeded' if state=='succeeded' else 'failed',
+        terminal_reason_code=None if state=='succeeded' else failure_code)
     conn.execute('''UPDATE extension_runtime_ui_read_request SET state=%s,revision=3,completed_at=clock_timestamp(),
         result_json=%s,result_hash=%s,failure_code=%s WHERE org_id=%s AND project_id=%s AND request_id=%s''',
         (state,Jsonb(stored_result) if stored_result is not None else None,result_hash,failure_code,*scope.key,claim.request_id))

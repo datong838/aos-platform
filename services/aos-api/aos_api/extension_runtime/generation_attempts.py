@@ -14,7 +14,22 @@ from .lifecycle_store import RuntimeConflict, RuntimeRevisionConflict, _require_
 from .storage_ports import require_runtime_role
 
 _HASH = re.compile(r"^sha256:[0-9a-f]{64}$")
+_ERROR_TYPE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.]{0,159}$")
 _TERMINAL = ("succeeded", "failed", "abandoned")
+_TERMINAL_REASONS = frozenset({
+    "RECOVERABLE_EXECUTION_EXCEPTION",
+    "RECOVERABLE_INGRESS_CANCELLED",
+    "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED",
+    "RECOVERABLE_HEARTBEAT_FAILED",
+    "RECOVERABLE_HEARTBEAT_STOP_TIMEOUT",
+    "ATTEMPT_LEASE_EXPIRED",
+    "READ_ACCESS_REVOKED",
+    "READ_FAILED",
+    "READ_RESULT_INVALID",
+    "READ_OUTCOME_UNKNOWN",
+    "READ_DEADLINE_EXPIRED",
+    "READ_RUNTIME_CHANGED",
+})
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,12 +65,16 @@ def _scope(conn, org_id: str, project_id: str) -> None:
 
 
 def _event(conn, *, org_id: str, project_id: str, attempt_id: UUID, sequence: int,
-           event_type: str, state: str, revision: int) -> None:
+           event_type: str, state: str, revision: int,
+           terminal_reason_code: str | None = None,
+           terminal_error_type: str | None = None) -> None:
     conn.execute(
         """INSERT INTO extension_runtime_execution_attempt_event
-           (org_id,project_id,attempt_id,sequence,event_id,type,state,revision)
-           VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
-        (org_id, project_id, attempt_id, sequence, uuid4(), event_type, state, revision),
+           (org_id,project_id,attempt_id,sequence,event_id,type,state,revision,
+            terminal_reason_code,terminal_error_type)
+           VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+        (org_id, project_id, attempt_id, sequence, uuid4(), event_type, state, revision,
+         terminal_reason_code, terminal_error_type),
     )
 
 
@@ -273,12 +292,23 @@ class PostgresRuntimeAttemptStore:
         return RuntimeAttemptLease(attempt_id, "running", revision, False)
 
     def settle(self, conn, *, org_id: str, project_id: str, attempt_id,
-               expected_revision: int, owner_token: str, state: str) -> RuntimeAttemptLease:
+               expected_revision: int, owner_token: str, state: str,
+               terminal_reason_code: str | None = None,
+               terminal_error_type: str | None = None) -> RuntimeAttemptLease:
         _require_transaction(conn)
         _scope(conn, org_id, project_id)
         attempt_id = _identity(attempt_id, "attempt id")
         if state not in ("succeeded", "failed"):
             raise ValueError("known runtime attempt terminal state required")
+        if state == "succeeded":
+            if terminal_reason_code is not None or terminal_error_type is not None:
+                raise ValueError("successful runtime attempt has no terminal reason")
+        elif terminal_reason_code not in _TERMINAL_REASONS:
+            raise ValueError("known runtime attempt terminal reason required")
+        if terminal_error_type is not None and (
+            type(terminal_error_type) is not str or _ERROR_TYPE.fullmatch(terminal_error_type) is None
+        ):
+            raise ValueError("safe runtime attempt terminal error type required")
         if type(expected_revision) is not int or expected_revision < 1:
             raise ValueError("positive attempt revision required")
         row = conn.execute(
@@ -298,12 +328,16 @@ class PostgresRuntimeAttemptStore:
         revision += 1
         conn.execute(
             """UPDATE extension_runtime_execution_attempt
-                  SET state=%s,completed_at=clock_timestamp(),revision=%s
+                  SET state=%s,completed_at=clock_timestamp(),revision=%s,
+                      terminal_reason_code=%s,terminal_error_type=%s
                 WHERE org_id=%s AND project_id=%s AND attempt_id=%s""",
-            (state, revision, org_id, project_id, attempt_id),
+            (state, revision, terminal_reason_code, terminal_error_type,
+             org_id, project_id, attempt_id),
         )
         _event(conn, org_id=org_id, project_id=project_id, attempt_id=attempt_id,
-               sequence=revision, event_type="attempt_" + state, state=state, revision=revision)
+               sequence=revision, event_type="attempt_" + state, state=state, revision=revision,
+               terminal_reason_code=terminal_reason_code,
+               terminal_error_type=terminal_error_type)
         return RuntimeAttemptLease(attempt_id, state, revision, False)
 
     def abandon_expired_reads(self, conn, *, org_id: str, project_id: str, limit: int = 100) -> tuple[UUID, ...]:
@@ -325,12 +359,14 @@ class PostgresRuntimeAttemptStore:
             revision += 1
             conn.execute(
                 """UPDATE extension_runtime_execution_attempt
-                      SET state='abandoned',completed_at=clock_timestamp(),revision=%s
+                      SET state='abandoned',completed_at=clock_timestamp(),revision=%s,
+                          terminal_reason_code='ATTEMPT_LEASE_EXPIRED',terminal_error_type=NULL
                     WHERE org_id=%s AND project_id=%s AND attempt_id=%s""",
                 (revision, org_id, project_id, attempt_id),
             )
             _event(conn, org_id=org_id, project_id=project_id, attempt_id=attempt_id,
-                   sequence=revision, event_type="attempt_abandoned", state="abandoned", revision=revision)
+                   sequence=revision, event_type="attempt_abandoned", state="abandoned", revision=revision,
+                   terminal_reason_code="ATTEMPT_LEASE_EXPIRED")
             result.append(attempt_id)
         return tuple(result)
 

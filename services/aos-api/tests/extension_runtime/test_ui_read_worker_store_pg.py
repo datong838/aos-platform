@@ -30,7 +30,9 @@ def test_once_claim_and_atomic_success_without_token_in_repr(queue):
     assert claim(conn,request) is None
     assert complete(conn,value,result={})=='succeeded'
     assert claim(conn,request) is None
-    assert conn.execute('SELECT state FROM extension_runtime_execution_attempt').fetchone()==('succeeded',)
+    assert conn.execute(
+        'SELECT state,terminal_reason_code,terminal_error_type FROM extension_runtime_execution_attempt'
+    ).fetchone()==('succeeded',None,None)
     with pytest.raises(RuntimeConflict):complete(conn,value,result={})
 
 
@@ -57,7 +59,10 @@ def test_failure_and_claim_identity(queue,kind):
         if kind=='stale-runtime':conn.execute("UPDATE extension_runtime_binding SET enabled=false,operation_fence=true,observed_state='draining',execution_epoch=2,revision=revision+1")
         assert complete(conn,value,**({'failure_code':'READ_FAILED'} if kind=='failure' else {'result':{}}))=='failed'
         assert conn.execute('SELECT result_json FROM extension_runtime_ui_read_request').fetchone()==(None,)
-        assert conn.execute('SELECT state FROM extension_runtime_execution_attempt').fetchone()==('failed',)
+        expected='READ_FAILED' if kind=='failure' else 'READ_RUNTIME_CHANGED'
+        assert conn.execute(
+            'SELECT state,terminal_reason_code,terminal_error_type FROM extension_runtime_execution_attempt'
+        ).fetchone()==('failed',expected,None)
 
 
 def test_two_connections_only_one_claim(queue):
@@ -95,6 +100,9 @@ def test_expired_claim_discards_result(queue):
     conn.execute('SELECT pg_sleep(0.6)')
     assert complete(conn,value,result={})=='expired'
     assert conn.execute('SELECT result_json,failure_code FROM extension_runtime_ui_read_request WHERE request_id=%s',(short,)).fetchone()==(None,'READ_DEADLINE_EXPIRED')
+    assert conn.execute(
+        'SELECT terminal_reason_code,terminal_error_type FROM extension_runtime_execution_attempt'
+    ).fetchone()==('READ_DEADLINE_EXPIRED',None)
 
 
 def test_result_storage_failure_rolls_back_attempt_settlement(queue):
