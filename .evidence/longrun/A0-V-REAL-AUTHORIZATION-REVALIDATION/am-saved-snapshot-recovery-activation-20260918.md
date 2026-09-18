@@ -416,3 +416,6 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - 因此当前更精确的判断是：AM 没有被 PostgreSQL blocker 卡住，而是在旧 host 进程中慢速重复完整当前
   权限/composition 验证。m1 `f5de30e4` 已将同事务的该类完整权限检查从 8 次降为 1 次，
   但 AM 仍是旧进程；为保护 unknown Store 边界，本段未重启、热替换、终止或重发。
+- 修正诊断后 AM/AL 收口专项 12 passed，7 条既有 warning，`diff --check` 通过。浏览器只读树确认
+  AOS v1.6.5 正常加载，但电商工作台仍显示“暂无可见工作台入口”；未点击“重新读取目录”，
+  因此浏览器门禁仍为 NOT GREEN，不以页面存活替代真实首链完成。
