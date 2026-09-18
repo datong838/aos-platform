@@ -35,3 +35,15 @@ rev6/epoch3 ready+enabled+unfenced。`enable-result.json` 留待 attempt 终态�
 恢复已进入唯一自然 attempt 的运行期，尚未完成完整经营链路，也未达到本波终态 GREEN。下一波保持只读守护 heartbeat/lease、
 十二 Run、原 link command 的 Store 提交、retirement、projection 与 canary。attempt succeeded 后执行 `enable/inspect/disable`；
 attempt failed 时先固定失败原点及未知提交边界，禁止猜测重发。
+
+## 12:49–12:52Z 自动接续观察
+
+- 自动接续任务已从已退休 AL 纠正为当前 AM attempt，不改变 5 分钟频率和本任务串行边界。
+- attempt 从 revision11 连续推进到 revision26；事件历史为 1 次 `attempt_accepted` 加 25 次连续
+  `attempt_heartbeat`，最后事件发生于 `2026-09-18T12:51:29Z`，未见跳号、失败或第二 attempt。
+- 12 个 Run 仍为 running；dataset Receipt=12、relationship=1、link command=1、linkCount=1168、retirement=0、
+  Store links=0、projection pending=0、live resources=3、dev-org canary=0。
+- 原 link idempotency key 对应 `ecom_ingest_receipt` 仍为空，authoritative Store link outbox 仍为空；因此当前是
+  Store 尚未提交的已知边界，不是未知结果，禁止重发。
+- 浏览器复验：AOS v1.6.5 首页与主导航可加载；“电商工作台”仍显示“正在读取工作台目录”，所以浏览器门禁继续保持
+  NOT GREEN，待 attempt 终态和 complete-group disable 后复验。
