@@ -77,3 +77,12 @@
 - 任一步出现 unknown Receipt、CAS 漂移、第二 owner、租户串扰、资源状态矛盾或新控制窗口不足，停止后续写动作并只读对账。
 - 已成功提交的正式 Receipt 不回滚、不删除；恢复只走查询原 key、正式 retry/retire/direct successor 服务。
 - 本预案不触碰 230 L0，不 push，不扩大现有授权范围。
+
+## 6. AM 正式退休实绩
+
+- exact preflight GREEN 后创建唯一 disable operation `6d94d641-6fc3-4edd-801c-69114d633c0c`；常驻 Host
+  完成领取，脚本没有重发。
+- binding rev8/epoch4 disabled/unknown/fenced、三资源 released、九路 legacy rev92/group119、definition
+  rev54 disabled；running/unresolved/pending/canary=0。
+- Store Receipt/ecom_link/projection 仍为 0，12 Run 保持原冻结批次；`AM_FAILED_RETIREMENT_GREEN`。
+- 本预案的 AM 退休阶段完成；下一阶段按文件级清单进入 AN direct successor，不能复活 AM。
