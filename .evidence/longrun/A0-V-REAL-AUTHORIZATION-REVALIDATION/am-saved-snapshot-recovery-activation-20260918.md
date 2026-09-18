@@ -174,3 +174,16 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   本身既不证明 Store 已提交，也不证明 attempt 失败，终态仍以权威 attempt 与正式提交记录为准。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
   电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 14:42–14:46Z 自动接续观察
+
+- AM 唯一 attempt 自然推进至 revision252/running；heartbeat `2026-09-18T14:45:40Z`、lease
+  `14:47:40Z`，completedAt 仍为空。事件 sequence 1–252 连续，仅 1 条 `attempt_accepted`、0 条
+  `attempt_failed`、0 条 `attempt_succeeded`，没有第二受理或未知重发边界。
+- 沿正式 group 表复核：members=12、running Run=12、冻结 input=1、累计 recovery Receipt=17、AM live
+  resources=3、dev-org canary=0。runtime host PID 99810 仍存活，状态文件持续刷新且只含 AM 一个 live target；
+  `caffeinate` 存活。
+- 本轮首个只读组合查询使用了已不存在的旧表名 `extension_runtime_execution_run`，事务按数据库语义回滚且无写入；随后通过
+  现场 schema 与正式实现确认 Run 权威表为 `meta_schedule_run` 并完成上述复核。该命令漂移不改变 AM 状态，也不授权干预。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
+  电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
