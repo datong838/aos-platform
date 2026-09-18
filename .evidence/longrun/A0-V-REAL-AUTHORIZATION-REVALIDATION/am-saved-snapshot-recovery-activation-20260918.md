@@ -99,3 +99,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   当前角色按设计隐藏其 state/query/xact 时间，因此该观察只证明事务身份仍在，不能证明成功或推断具体 SQL，也不授权干预。
 - 相同 AM 专项及相邻回归 `5 passed`，7 条既有 warning，退出码 0；未修改产品代码。
 - 浏览器稳定加载 AOS v1.6.5 后，电商目录仍为“暂无可见工作台入口”；浏览器门禁继续 NOT GREEN，未触发重读。
+
+## 13:43–13:45Z 自动接续观察
+
+- AM 唯一 attempt 推进至 revision129/running；heartbeat `2026-09-18T13:43:30Z`、lease `13:45:30Z`，
+  十二 Run、12 份 dataset Receipt、relationship=1、link command=1/linkCount=1168、live resources=3 保持一致；
+  Store/retirement/projection 尚未显现，canary=0。
+- 同一受限数据库会话继续持有事务 ID 与 161 个已授予锁，等待锁为 0；三个容器均 running、restartCount=0、
+  OOM=false。该事实排除了当前锁等待和容器重启循环，但不替代终态提交证明。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
+- 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
