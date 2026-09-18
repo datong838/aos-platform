@@ -80,3 +80,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - runtime host 保持 `RUNTIME_HOST_ACTIVE`，只含 AM 一个 live target，三个受管容器仍附着；`caffeinate` 存活。
 - AM 专项及 replacement/successor/cutover、AL 保存恢复相邻回归共 `5 passed`；7 条既有框架 warning，退出码 0。
 - 浏览器稳定加载 AOS v1.6.5，“电商工作台”仍显示“暂无可见工作台入口”；浏览器门禁保持 NOT GREEN，未触发重读。
+
+## 13:27–13:29Z 自动接续观察
+
+- AM 唯一 attempt 自然推进至 revision97/running；heartbeat `2026-09-18T13:27:21Z`、lease `13:29:21Z`，
+  未出现终态、失败或第二 attempt。
+- 十二 Run running、dataset Receipt=12、relationship=1、link command=1/linkCount=1168；retirement=0、精确
+  Store Receipt=0、Store links=0、projection pending=0、dev-org canary=0。继续保持原子提交前的已知边界，不重发。
+- runtime host 仍为 `RUNTIME_HOST_ACTIVE`，仅含 AM 一个 live target；三个受管容器与 `caffeinate` 存活。
+- 相同 AM 专项及 replacement/successor/cutover、AL 保存恢复相邻回归再次 `5 passed`，7 条既有 warning，退出码 0。
+- 浏览器稳定加载 AOS v1.6.5；电商目录仍为“暂无可见工作台入口”，门禁继续 NOT GREEN，未触发重读。
