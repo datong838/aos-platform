@@ -2,7 +2,7 @@
 import asyncio
 from threading import Event
 import pytest
-from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker,_error_origin,_safe_origin_name
+from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker,_error_origin,_error_reason,_safe_origin_name
 
 
 def test_error_origin_is_bounded_and_never_uses_exception_message():
@@ -13,6 +13,14 @@ def test_error_origin_is_bounded_and_never_uses_exception_message():
     assert _error_origin(PermissionError('unraised secret'))=='unknown'
     assert _safe_origin_name('bad-origin/name')=='unknown'
     assert _safe_origin_name('x'*81)=='unknown'
+
+
+def test_error_reason_only_maps_registered_static_guard_messages():
+    assert _error_reason(ValueError('recovery bindings are not current'))=='RECOVERY_BINDINGS_NOT_CURRENT'
+    assert _error_reason(ValueError('canonical object required'))=='CANONICAL_RELATIONSHIP_OBJECT_REQUIRED'
+    assert _error_reason(PermissionError('runtime request is not currently admitted'))=='RUNTIME_REQUEST_NOT_CURRENTLY_ADMITTED'
+    assert _error_reason(RuntimeError('named secret must not be exposed'))=='RUNTIMEERROR'
+    assert _error_reason(RuntimeError('recovery bindings are not current','extra'))=='RUNTIMEERROR'
 
 
 async def until(predicate):

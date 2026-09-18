@@ -1,4 +1,5 @@
 """Saved-command recovery with real SQLite receipt/CAS owner, mocked PG journal."""
+from copy import deepcopy
 from contextlib import nullcontext
 from unittest.mock import Mock
 
@@ -40,7 +41,9 @@ def test_saved_command_replay_keeps_one_derived_receipt(store, prepared):
     assert resume(store,prepared)[0].replayed is True
     with store._engine.connect() as c:
         assert c.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one() == 1
-    assert journal.verify_running_schedule.call_count == 2
+    # Before and after each independent Store replay, current authority is
+    # reopened instead of retaining one metadata lock across the Store call.
+    assert journal.verify_running_schedule.call_count == 6
     assert journal.save.call_count == 0
 
 
@@ -156,6 +159,24 @@ def test_saved_wrong_watermark_never_submits(store,prepared):
     with pytest.raises(IngressJournalConflict,match='INGRESS_DERIVED_WATERMARK_DRIFT'):
         resume(store,prepared)
     store.update_derived_metrics.assert_not_called()
+
+
+def test_saved_metadata_drift_after_store_commit_preserves_and_replays_original_receipt(store,prepared):
+    command,journal,_=prepared
+    store.apply_batch(command)
+    saved=journal.read_derived.return_value
+    changed=deepcopy(saved)
+    changed['commands'][0]['idempotencyKey']='metric-drifted-after-commit'
+    journal.read_derived.side_effect=[saved,saved,changed]
+    with pytest.raises(IngressJournalConflict,match='INGRESS_SAVED_COMMAND_CHANGED'):
+        resume(store,prepared)
+    with store._engine.connect() as c:
+        assert c.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==1
+    journal.read_derived.side_effect=None
+    journal.read_derived.return_value=saved
+    assert resume(store,prepared)[0].replayed is True
+    with store._engine.connect() as c:
+        assert c.execute(select(func.count()).select_from(ecom_derived_receipt)).scalar_one()==1
 
 
 def test_old_unprepared_batch_without_input_never_applies_base(store,prepared):

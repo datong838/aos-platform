@@ -18,6 +18,11 @@ def test_profile_keeps_single_external_host_and_original_defaults():
     from a0v_event_complete_product_api import load_launcher
     original=load_launcher()
     assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED' not in original.API_FLAGS
+    assert set(m.CODE_HASHES) >= {
+        'services/aos-api/aos_api/pipeline_snapshot_group_completion.py',
+        'services/aos-api/aos_api/extension_runtime/recoverable_store_attempt.py',
+    }
+    assert all(value.startswith('sha256:') and len(value) == 71 for value in m.CODE_HASHES.values())
 
 
 def test_api_lock_conflict_prevents_second_owner(tmp_path):

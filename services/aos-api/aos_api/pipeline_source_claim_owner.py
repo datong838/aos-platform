@@ -36,6 +36,34 @@ class SourceClaimReservation:
     created: bool
 
 
+@dataclass(frozen=True)
+class _SavedRecoveryAdmission:
+    original_controls: tuple
+    successor: bool
+
+
+def _validate_saved_recovery_context(admission,record,ref,draft,original):
+    if (original.ref!=record.control_ref or original.actor!=record.actor
+            or (record.installation_id,record.generation,record.pipeline_id)!=(
+                original.draft.installation_ref.installation_id,original.draft.generation,
+                original.draft.pipeline_id)):
+        raise RuntimeConflict('saved recovery context differs')
+    if record.control_ref.resource_id==ref.resource_id:
+        if ref.revision<=record.control_ref.revision:
+            raise RuntimeConflict('saved recovery control family differs')
+        excluded={'not_before','expires_at','source_selection_ref'}
+    else:
+        if type(admission) is not _SavedRecoveryAdmission or admission.successor is not True:
+            raise RuntimeConflict('saved recovery control family differs')
+        facts=[value for value in admission.original_controls if value.ref==record.control_ref]
+        if len(facts)!=1 or facts[0]!=original:
+            raise RuntimeConflict('saved recovery context differs')
+        excluded={'not_before','expires_at','source_selection_ref','installation_ref',
+            'generation','execution_epoch','configuration_ref','package_ref'}
+    if original.draft.model_dump(mode='json',exclude=excluded)!=draft.model_dump(mode='json',exclude=excluded):
+        raise RuntimeConflict('saved recovery context differs')
+
+
 def _decode(row):
     ref = PipelineExactRef(resource_type='PipelineRuntimeControlRevision',
         resource_id='pipeline-control-'+str(row['control_id']),revision=row['control_revision'],content_hash=row['control_hash'])
@@ -86,7 +114,7 @@ class PipelineSourceClaimOwner:
         return self._operate(conn,scope=scope,run_id=run_id,control_ref=control_ref,actor=actor,create=False).record
 
     def read_saved_current(self, conn, *, scope, run_id, control_ref, actor):
-        """Authorize only saved input under an exact same-scope window renewal.
+        """Authorize only saved input under an exact current renewal or successor.
 
         The original claim remains unchanged. This path cannot reserve or grant
         another source call, including when the original outcome is unknown.
@@ -114,7 +142,13 @@ class PipelineSourceClaimOwner:
         if self._recovery is not None:
             if (PipelineExactRef.model_validate(control_ref),run_id) not in self._recovery_bindings:
                 raise PermissionError('saved recovery fixed member differs')
-            return self._recovery.run_current(conn,scope=scope,actor=actor,bindings=self._recovery_bindings,execute=lambda _:None)
+            def admit(value):
+                original=value.facts.controls[0].draft
+                current=value.execution.group.members[0][1]
+                successor=(original.installation_ref,original.generation)!=(current.installation_ref,current.generation)
+                return _SavedRecoveryAdmission(value.facts.controls,successor)
+            return self._recovery.run_current(conn,scope=scope,actor=actor,
+                bindings=self._recovery_bindings,execute=admit)
         # Lazy import avoids the existing schedule/control Owner dependency cycle.
         from aos_api.pipeline_snapshot_schedule_guard import guard_snapshot_schedule_run
         guard_snapshot_schedule_run(conn,scope=scope,run_id=run_id,actor=actor,
@@ -135,7 +169,7 @@ class PipelineSourceClaimOwner:
 
         def current(draft, spec):
             # Global lock order: current installation first, then immutable run.
-            self._guard_schedule(conn,scope=scope,run_id=run_id,control_ref=ref,actor=actor)
+            recovery_admission=self._guard_schedule(conn,scope=scope,run_id=run_id,control_ref=ref,actor=actor)
             self._journal.lock_run(conn,scope,run_id)
             verify=self._journal.verify_completed_schedule_binding if completed_read else self._journal.verify_schedule_binding
             verify(conn,scope,run_id=run_id,pipeline_id=draft.pipeline_id,
@@ -170,22 +204,19 @@ class PipelineSourceClaimOwner:
                     if self._journal.read(conn,scope,run_id) is None:
                         raise RuntimeConflict('saved recovery requires original input')
                     if record.control_ref != ref:
-                        if (record.control_ref.resource_id != ref.resource_id
-                                or ref.revision <= record.control_ref.revision):
-                            raise RuntimeConflict('saved recovery control family differs')
+                        original_identity=UUID(_ref_identity(record.control_ref,
+                            'PipelineRuntimeControlRevision','pipeline-control-'))
                         original_row=cursor.execute('''SELECT * FROM pipeline_runtime_control_revision
                             WHERE org_id=%s AND project_id=%s AND control_id=%s AND revision=%s''',
-                            (*scope.key,identity,record.control_ref.revision)).fetchone()
+                            (*scope.key,original_identity,record.control_ref.revision)).fetchone()
                         if original_row is None:
                             raise RuntimeConflict('original control unavailable')
                         original=decode_control_row(original_row)
-                        excluded={'not_before','expires_at','source_selection_ref'}
-                        if (original.ref != record.control_ref or original.actor != record.actor
-                                or original.draft.model_dump(mode='json',exclude=excluded)
-                                   != draft.model_dump(mode='json',exclude=excluded)):
-                            raise RuntimeConflict('saved recovery context differs')
-                if (record.scope != scope or record.run_id != run_id or record.installation_id != draft.installation_ref.installation_id
-                    or record.generation != draft.generation or record.pipeline_id != draft.pipeline_id
+                        _validate_saved_recovery_context(recovery_admission,record,ref,draft,original)
+                successor=(type(recovery_admission) is _SavedRecoveryAdmission and recovery_admission.successor is True)
+                if (record.scope != scope or record.run_id != run_id
+                    or ((record.installation_id,record.generation)!=(draft.installation_ref.installation_id,draft.generation)
+                        and not (saved_recovery and successor)) or record.pipeline_id != draft.pipeline_id
                     or (record.control_ref != ref and not saved_recovery)
                     or record.actor != actor or record.call_ordinal > draft.max_source_calls):
                     raise RuntimeConflict('source claim current binding differs')

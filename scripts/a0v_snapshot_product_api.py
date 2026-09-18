@@ -15,7 +15,9 @@ STATE=ROOT.parent/'.aos-recovery-20260916/state/snapshot-product-api'
 TASK='SC4-5L6Y6C-SPLIT-WORKER-20260916'
 CODE_HASHES={str(p.relative_to(ROOT)):'sha256:'+hashlib.sha256(p.read_bytes()).hexdigest() for p in (
     Path(__file__),ROOT/'services/aos-api/aos_api/main.py',
-    ROOT/'services/aos-api/aos_api/routers/pipeline_snapshot_schedules.py')}
+    ROOT/'services/aos-api/aos_api/routers/pipeline_snapshot_schedules.py',
+    ROOT/'services/aos-api/aos_api/pipeline_snapshot_group_completion.py',
+    ROOT/'services/aos-api/aos_api/extension_runtime/recoverable_store_attempt.py')}
 
 
 @contextmanager
