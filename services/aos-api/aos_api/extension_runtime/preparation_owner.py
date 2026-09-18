@@ -132,11 +132,17 @@ class PreparationOwner:
         if self._health_clock is None:
             await self._check_health()
             return datetime.now(timezone.utc)
-        # Anchor before probing: probe and transaction latency consume freshness.
-        observed = await self._health_clock()
-        if not isinstance(observed, datetime) or observed.utcoffset() is None:
+        # Refuse resource probing when the trusted clock is unavailable, then
+        # timestamp the completed probe so multi-resource latency isn't
+        # mistaken for a stale observation by the atomic commit.
+        started = await self._health_clock()
+        if not isinstance(started, datetime) or started.utcoffset() is None:
             raise ValueError('trusted database health clock required')
         await self._check_health()
+        observed = await self._health_clock()
+        if (not isinstance(observed, datetime) or observed.utcoffset() is None
+                or observed<started):
+            raise ValueError('monotonic database health clock required')
         return observed
 
     async def verify(self, commit):
@@ -206,7 +212,17 @@ class PreparationOwner:
         if not callable(commit):
             raise TypeError('trusted lease commit required')
         async def execute(observed):
-            expires = await commit(observed)
+            from .verification_commit import HealthObservationStale
+            try:
+                expires = await commit(observed)
+            except HealthObservationStale:
+                # Lock acquisition may outlive the three-second observation.
+                # The failed transaction has settled before this callback raises;
+                # re-probe the still-owned whole resource group exactly once.
+                if self._stopping or self._cleaning or self._task.done():
+                    raise
+                observed = await self._health_observation()
+                expires = await commit(observed)
             if not isinstance(expires, datetime) or expires.utcoffset() is None:
                 raise ValueError('durable lease expiry required')
             remaining = (expires - datetime.now(timezone.utc)).total_seconds()

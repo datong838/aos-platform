@@ -16,13 +16,19 @@ from .preparation_commit import _expected_backend_claims, _registered_resources
 from .runtime_gate import _reject_deferred
 
 
+class HealthObservationStale(RuntimeConflict):
+    """A healthy probe expired while entering its atomic control transaction."""
+
+
 def _fresh_health(conn, checked_at):
     if not isinstance(checked_at,datetime) or checked_at.utcoffset() is None:
         raise RuntimeConflict('trusted health time required')
     row=conn.execute('SELECT clock_timestamp() AS now').fetchone()
     age=(_values(row,('now',))[0]-checked_at).total_seconds()
-    if not 0 <= age <= 3:
+    if age < 0:
         raise RuntimeConflict('health observation is stale or in the future')
+    if age > 3:
+        raise HealthObservationStale('health observation is stale or in the future')
 
 
 def commit_verified(conn, *, installation_store, revalidator, check_current_permission,
@@ -62,6 +68,9 @@ def commit_verified(conn, *, installation_store, revalidator, check_current_perm
         WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
         (org_id,project_id,installation_id)).fetchall()
     if binding:raise RuntimeConflict('existing binding requires lifecycle reconciliation')
+    # Admit only a probe fresh after current verification/preparation locks.
+    # Subsequent deterministic revalidation remains in this same transaction.
+    _fresh_health(conn,health_checked_at)
     checked=revalidator.revalidate_in_transaction(conn,lock=lock)
     expected=_expected_backend_claims(lock,checked)
     proofs,expiries=_registered_resources(conn,preparation,generation,expected,min(deadline,pdeadline))
@@ -82,7 +91,6 @@ def commit_verified(conn, *, installation_store, revalidator, check_current_perm
     conditions=check_current_conditions(conn=conn,locked=locked,lock=lock,actor=actor)
     _reject_deferred(conditions)
     if conditions is not True:raise RuntimeConflict('current schema and platform conditions required')
-    _fresh_health(conn,health_checked_at)
     operations=RuntimeOperationStore()
     for next_phase in ('validating','committing'):
         revision=operations.advance(conn,org_id=org_id,project_id=project_id,

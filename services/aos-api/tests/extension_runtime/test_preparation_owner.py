@@ -267,7 +267,7 @@ def test_owner_failure_is_observable_and_cleanup_is_not_lost(failure):
     asyncio.run(run())
 
 
-def test_database_health_anchor_precedes_probe_for_verify_and_control():
+def test_database_health_anchor_brackets_probe_for_verify_and_control():
     from datetime import datetime,timezone,timedelta
     from types import SimpleNamespace
     from aos_api.extension_runtime.verification_commit import _fresh_health
@@ -289,11 +289,63 @@ def test_database_health_anchor_precedes_probe_for_verify_and_control():
         await owner.prepared()
         assert await owner.verify(commit)=='checked'
         assert await owner.control(commit)=='checked'
-        assert order==['clock','health','commit']*2
+        assert order==['clock','health','clock','commit']*2
         class Connection:
             def execute(self,query):return SimpleNamespace(fetchone=lambda:{'now':anchor+timedelta(seconds=4)})
         with pytest.raises(RuntimeConflict,match='stale'):_fresh_health(Connection(),anchor)
         await owner.stop()
+    asyncio.run(run())
+
+
+def test_renew_reprobes_once_after_stale_transaction_entry():
+    from datetime import datetime,timezone,timedelta
+    from aos_api.extension_runtime.verification_commit import HealthObservationStale
+    async def run():
+        checked=[];commits=[]
+        anchor=datetime(2001,1,1,tzinfo=timezone.utc)
+        clocks=iter((anchor,anchor,anchor+timedelta(seconds=1),anchor+timedelta(seconds=1)))
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process=Process()
+                async def check_health(self):checked.append('health')
+            yield Session()
+        async def prepared():return 'ready'
+        async def clock():return next(clocks)
+        async def commit(observed):
+            commits.append(observed)
+            if len(commits)==1:raise HealthObservationStale('lock wait')
+            return datetime.now(timezone.utc)+timedelta(seconds=30)
+        owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock,
+            already_verified=True)
+        await owner.prepared()
+        assert await owner.renew(commit)>datetime.now(timezone.utc)
+        assert checked==['health','health']
+        assert commits==[anchor,anchor+timedelta(seconds=1)]
+        await owner.stop()
+    asyncio.run(run())
+
+
+def test_database_health_clock_cannot_move_backwards_after_probe():
+    from datetime import datetime,timezone,timedelta
+    async def run():
+        values=iter((datetime(2001,1,1,tzinfo=timezone.utc),
+            datetime(2001,1,1,tzinfo=timezone.utc)-timedelta(seconds=1)))
+        seen=[]
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process=Process()
+                async def check_health(self):seen.append('health')
+            yield Session()
+        async def prepared():return 'ready'
+        async def clock():return next(values)
+        owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock)
+        await owner.prepared()
+        with pytest.raises(ValueError,match='monotonic'):await owner.verify(lambda _:None)
+        try:await owner.wait_closed()
+        except ValueError:pass
+        assert seen==['health']
     asyncio.run(run())
 
 
