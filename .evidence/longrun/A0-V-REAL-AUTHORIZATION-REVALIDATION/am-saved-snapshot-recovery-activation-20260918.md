@@ -90,3 +90,12 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - runtime host 仍为 `RUNTIME_HOST_ACTIVE`，仅含 AM 一个 live target；三个受管容器与 `caffeinate` 存活。
 - 相同 AM 专项及 replacement/successor/cutover、AL 保存恢复相邻回归再次 `5 passed`，7 条既有 warning，退出码 0。
 - 浏览器稳定加载 AOS v1.6.5；电商目录仍为“暂无可见工作台入口”，门禁继续 NOT GREEN，未触发重读。
+
+## 13:35–13:37Z 自动接续观察
+
+- AM 唯一 attempt 推进至 revision113/running；heartbeat `2026-09-18T13:35:25Z`、lease `13:37:25Z`，
+  十二 Run 与既有 dataset/relationship/link command 边界不变，Store/retirement/projection 尚未原子显现，canary=0。
+- 三个受管容器均为 running，未 paused/restarting/OOM/dead；只读 `pg_stat_activity` 可见受限会话仍持有事务 ID。
+  当前角色按设计隐藏其 state/query/xact 时间，因此该观察只证明事务身份仍在，不能证明成功或推断具体 SQL，也不授权干预。
+- 相同 AM 专项及相邻回归 `5 passed`，7 条既有 warning，退出码 0；未修改产品代码。
+- 浏览器稳定加载 AOS v1.6.5 后，电商目录仍为“暂无可见工作台入口”；浏览器门禁继续 NOT GREEN，未触发重读。
