@@ -390,3 +390,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   AM 正式退休与 direct successor AN 文件级施工清单；当前 running 明确禁入，未创建 AN、未续签、未禁用、未重发。
 - 若 AM 先 succeeded，失败预案立即失效并执行既有 enable/inspect/disable；若 failed，必须先固定 terminal event 和原 key
   Store Receipt，再按方案测试先行实施。浏览器门禁继续 NOT GREEN，230 L0 继续挂起。
+
+## 17:24–17:29Z 确定性只读 guard
+
+- AM 监视继续到 revision574/running。为替代易受 schema 漂移影响的临时 SQL，方案先行新增
+  `scripts/a0v_am_attempt_guard.py`：只读取 exact identity、definition/recovery、12 Run、Store/投影、资源、canary 与控制窗口，
+  仅输出 `RUNNING_NO_ACTION`、`SUCCEEDED_RUN_CLOSURE` 或 `FAILED_DIAGNOSE_BOUNDARY`，不自动执行动作。
+- Red 为脚本缺失；Green 专项 11 passed，相邻 AM saved recovery 合计 12 passed，静态编译与差异检查通过。真实运行输出
+  revision574、`automaticAction=false`，权威边界与人工核对一致，控制剩余 4147 秒。
+- guard 运行前后没有业务状态写入；自然 heartbeat 可继续推进 revision。该工具不替代 Store Receipt 对账、终态收口、浏览器
+  门禁或真实经营闭环验收。
