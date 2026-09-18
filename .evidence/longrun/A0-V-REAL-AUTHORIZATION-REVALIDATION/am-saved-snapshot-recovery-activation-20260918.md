@@ -429,3 +429,5 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   真实 guard 读到 AM acceptedAt `2026-09-18T12:38:52.369786Z`、elapsed=18208s、
   revision601/running，控制剩余 3350s、expired=false；原 Store/Run/resource/canary 边界不变，
   `automaticAction=false`。
+- 浏览器在不刷新目录、不点击任何动作的前提下再次读取：AOS v1.6.5 仍正常加载，
+  电商工作台仍是“暂无可见工作台入口”；门禁维持 NOT GREEN。
