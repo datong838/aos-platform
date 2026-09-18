@@ -310,3 +310,15 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   host PID 99810 持续运行并更新状态文件，未发现本轮新异常终止记录。
 - 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器电商目录没有可见性变化，
   门禁保持 NOT GREEN，未触发“重新读取目录”。
+
+## 16:07–16:13Z 对象重放边界与持续观察
+
+- 第六段监视器继续观察 AM revision414 至 revision415 后按预设长度正常退出；同一任务续建第七段监视器并连续观察至
+  revision425。最新 heartbeat `2026-09-18T16:13:07Z`、lease `16:15:07Z`，state=running、completedAt 为空。
+- Store 对象侧按 stream 复核：P01–P12 均已有原始 `ecom_ingest_receipt`；authoritative Store 对象 outbox 累计
+  objects_written=1558、objects_tombstoned=183，二者 pending 均为 0。最新对象 Receipt/投影均早于 AM attempt，说明 AM
+  正在复核并重放既有幂等结果，没有制造重复对象写入。
+- runtime host 状态文件仍按 2 秒刷新，主循环未被恢复任务阻塞；进程线程与 attempt heartbeat 均保持存活。Store link
+  Receipt 仍未出现，因此本轮仍禁止重发、手工 run_definition 或执行终态收口。
+- 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器 accessibility tree 无变化，电商目录
+  继续保持 NOT GREEN，未触发任何页面动作。
