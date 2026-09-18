@@ -41,3 +41,17 @@
 - 专项 11 passed；与 AM saved recovery 相邻回归合计 12 passed；`py_compile` 与 `git diff --check` 通过。
 - 真实运行输出 revision574/running、`RUNNING_NO_ACTION`、`automaticAction=false`，12 Run、12 dataset Receipt、1 relationship、1 条 1168-link command，Store/link/outbox/pending 为 0，live resources=3、dev-org canary=0，控制剩余 4147 秒。
 - guard 没有执行或暴露任何业务动作；终态出现后仍须由既有固定收口脚本或 failed 预案接管。
+
+## 6. 长运行观测扩展（2026-09-19）
+
+- 现场证明 heartbeat/Lease 持续更新不能表达 attempt 已累计运行多久。guard 在原同一个
+  SELECT-only 事务中补读 `accepted_at`，输出 `attemptElapsedSeconds` 和 `controlExpired`。
+- 新字段只用于观测；`running` 即使越过控制窗口也仍只能输出 `RUNNING_NO_ACTION`，不得
+  为 guard 增加退休、终止、续签、重启或重发逻辑。
+- 分类函数对累计秒数、剩余秒数与过期布尔值的一致性 fail closed；专项测试覆盖正数、负数
+  和矛盾输入。其他 exact identity、Store 边界和无动作合同保持不变。
+- Red 记录为 4 个观测一致性用例失败；实现后 guard 与 AM 收口相邻测试合计 17 passed，
+  7 条既有 warning，`py_compile` 与 `diff --check` 通过。
+- 真实只读运行输出 acceptedAt `2026-09-18T12:38:52.369786Z`、attemptElapsedSeconds=18208、
+  controlSecondsRemaining=3350、controlExpired=false，同时仍为 revision601/running 且
+  `automaticAction=false`。

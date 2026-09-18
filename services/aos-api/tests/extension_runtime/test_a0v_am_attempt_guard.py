@@ -21,6 +21,10 @@ def facts(**changes):
         "operationKind": "recoverable_store",
         "state": "running",
         "revision": 565,
+        "acceptedAt": "2026-09-18T12:39:00+00:00",
+        "attemptElapsedSeconds": 18000,
+        "controlSecondsRemaining": 3600,
+        "controlExpired": False,
         "definitionRevision": 53,
         "definitionState": "enabled",
         "recoveryRevision": 17,
@@ -64,6 +68,22 @@ def test_exact_state_only_routes_to_a_non_executing_decision(state, outcome):
 def test_identity_or_boundary_drift_fails_closed(field, value):
     with pytest.raises(RuntimeError, match="AM guard authority differs"):
         guard.classify(facts(**{field: value}))
+
+
+@pytest.mark.parametrize(("changes",), (
+    ({"attemptElapsedSeconds": -1},),
+    ({"controlSecondsRemaining": -1, "controlExpired": False},),
+    ({"controlSecondsRemaining": 0, "controlExpired": True},),
+    ({"controlSecondsRemaining": 1, "controlExpired": True},),
+))
+def test_elapsed_observation_drift_fails_closed(changes):
+    with pytest.raises(RuntimeError, match="AM guard authority differs"):
+        guard.classify(facts(**changes))
+
+
+def test_expired_running_attempt_remains_observation_only():
+    result = guard.classify(facts(controlSecondsRemaining=-1, controlExpired=True))
+    assert result == {"outcome": "RUNNING_NO_ACTION", "automaticAction": False}
 
 
 def test_script_is_select_only_and_contains_no_business_action():

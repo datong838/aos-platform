@@ -56,6 +56,18 @@ def classify(facts: dict) -> dict:
         value = facts.get(key)
         if type(value) is not int or value < minimum or (maximum is not None and value > maximum):
             raise RuntimeError("AM guard authority differs")
+    elapsed = facts.get("attemptElapsedSeconds")
+    remaining = facts.get("controlSecondsRemaining")
+    expired = facts.get("controlExpired")
+    if (
+        facts.get("acceptedAt") is None
+        or type(elapsed) is not int
+        or elapsed < 0
+        or type(remaining) is not int
+        or type(expired) is not bool
+        or expired is not (remaining < 0)
+    ):
+        raise RuntimeError("AM guard authority differs")
     outcomes = {
         "running": "RUNNING_NO_ACTION",
         "succeeded": "SUCCEEDED_RUN_CLOSURE",
@@ -68,7 +80,8 @@ def read_facts(conn) -> dict:
     scope = ("org-org", "dev-project")
     attempt = conn.execute(
         """SELECT attempt_id::text,installation_id::text,generation::text,
-          operation_kind,state,revision,heartbeat_at,lease_until,completed_at
+          operation_kind,state,revision,accepted_at,heartbeat_at,lease_until,completed_at,
+          floor(extract(epoch FROM clock_timestamp()-accepted_at))::bigint elapsed_seconds
           FROM extension_runtime_execution_attempt
           WHERE org_id=%s AND project_id=%s AND attempt_id=%s""",
         (*scope, ATTEMPT),
@@ -136,12 +149,15 @@ def read_facts(conn) -> dict:
           SELECT DISTINCT ON (pipeline_id) pipeline_id,payload
           FROM pipeline_runtime_control_revision
           WHERE org_id=%s AND project_id=%s AND generation=%s
-          ORDER BY pipeline_id,revision DESC)
+          ORDER BY pipeline_id,revision DESC), boundary AS (
           SELECT count(*) members,
             min((payload->'draft'->>'expiresAt')::timestamptz) expires_at,
-            extract(epoch FROM min((payload->'draft'->>'expiresAt')::timestamptz)
-              - clock_timestamp())::bigint seconds_remaining
-          FROM latest""",
+            clock_timestamp() observed_at
+          FROM latest)
+          SELECT members,expires_at,
+            floor(extract(epoch FROM expires_at-observed_at))::bigint seconds_remaining,
+            expires_at<observed_at expired
+          FROM boundary""",
         (*scope, GENERATION),
     ).fetchone()
     if definition is None or recovery is None or controls is None or controls["members"] != 12:
@@ -153,6 +169,8 @@ def read_facts(conn) -> dict:
         "operationKind": attempt["operation_kind"],
         "state": attempt["state"],
         "revision": attempt["revision"],
+        "acceptedAt": attempt["accepted_at"],
+        "attemptElapsedSeconds": attempt["elapsed_seconds"],
         "heartbeatAt": attempt["heartbeat_at"],
         "leaseUntil": attempt["lease_until"],
         "completedAt": attempt["completed_at"],
@@ -162,6 +180,7 @@ def read_facts(conn) -> dict:
         "manifestHash": recovery["manifest_hash"],
         "controlExpiresAt": controls["expires_at"],
         "controlSecondsRemaining": controls["seconds_remaining"],
+        "controlExpired": controls["expired"],
         "members": boundary["members"],
         "runningRuns": boundary["running_runs"],
         "datasetReceipts": boundary["dataset_receipts"],

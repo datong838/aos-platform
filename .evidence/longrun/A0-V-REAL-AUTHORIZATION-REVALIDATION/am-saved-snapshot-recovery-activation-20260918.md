@@ -419,3 +419,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - 修正诊断后 AM/AL 收口专项 12 passed，7 条既有 warning，`diff --check` 通过。浏览器只读树确认
   AOS v1.6.5 正常加载，但电商工作台仍显示“暂无可见工作台入口”；未点击“重新读取目录”，
   因此浏览器门禁仍为 NOT GREEN，不以页面存活替代真实首链完成。
+
+## 17:39–17:42Z attempt 累计时长只读观测
+
+- 在原 guard 方案内先补充观测扩展，再用 4 个 Red 用例证明既有分类器不校验累计时长和
+  窗口过期一致性。最小修改仅在同一 SELECT-only 事务内读取 `accepted_at`，输出累计秒数、
+  控制剩余秒数和过期标志；过期 running 仍只返回 `RUNNING_NO_ACTION`。
+- 实现后专项与 AM 收口相邻回归 17 passed，7 条既有 warning，静态编译和差异检查通过。
+  真实 guard 读到 AM acceptedAt `2026-09-18T12:38:52.369786Z`、elapsed=18208s、
+  revision601/running，控制剩余 3350s、expired=false；原 Store/Run/resource/canary 边界不变，
+  `automaticAction=false`。
