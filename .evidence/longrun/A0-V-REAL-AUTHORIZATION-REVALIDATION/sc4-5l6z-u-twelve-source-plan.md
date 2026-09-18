@@ -933,6 +933,23 @@ attempt、Receipt 和 Store 边界重新诊断，不把本节授权外推为重�
 `scripts/a0v_al_saved_snapshot_recovery.py`、
 `services/aos-api/tests/extension_runtime/test_a0v_al_saved_snapshot_recovery.py`，随后才按相同书面门禁新增 AM 生命周期文件。
 
+#### AL detach 文件级施工清单（2026-09-18 续）
+
+当前只读基线已固定：AL installation head 为 etag5 active、lock
+`sha256:49d7d8b367e19f3c7f8c920d061757477af9a0bf6bc3847101ca7ce348006608`；binding rev6/epoch3
+enabled+unfenced+ready；三资源 pending；九路 extension rev87/group114；definition rev51 disabled；全租户 running attempt=0、
+AL unresolved occurrence=0、pending runtime operation=0、dev-org canary=0。
+
+新增 `scripts/a0v_al_failed_retirement.py`，动作固定为 `preflight/request-disable/process-disable/audit`。preflight 只接受上述
+完整基线和 failed attempt revision382、十二 Run running、Store 零提交；request 使用原 Runtime Disable Owner、etag5 与
+bindingRevision6，先冻结唯一 intent；process 只 claim 该 operation 的既有 outbox delivery，禁止重发。终态必须为 binding
+rev8/epoch4 disabled+fenced+unknown、三资源 released、九路 legacy rev89/group116、definition 仍 rev51 disabled、零
+running/unresolved/pending/canary，且 lifecycle 恰有 fence/detach 两张 Receipt。
+
+新增 `services/aos-api/tests/extension_runtime/test_a0v_al_failed_retirement.py` 固定身份、前后 revision、Definition/Run/Store
+守卫、单次 outbox claim 与 direct successor 所需 detach Receipt。退休 GREEN 后才新增 AM replacement 文件，避免把尚未取得的
+AL detach Receipt 写入后继安装权威。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
