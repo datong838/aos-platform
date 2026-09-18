@@ -378,3 +378,15 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   连接时的 SCRAM 认证。该采样只能解释部分 host CPU，不能证明 AM 业务步骤推进、停滞或失败。
 - `pg_stat_statements` 未启用，未伪造累计 SQL 归因。AM 固定收口脚本离线专项 4 passed；浏览器沿上一轮只读结果保持
   AOS v1.6.5 与“暂无可见工作台入口”，门禁仍 NOT GREEN。本区间未运行 definition、未重发、未改变治理或运行态。
+
+## 17:19–17:24Z 独立控制窗口核对与失败预案
+
+- AM 从 revision556 连续推进至 revision565/running；heartbeat 与两分钟 Lease 持续更新。首次窗口查询误用了 member 表不存在的
+  `control_ref` 列，事务回滚且无写入；随后按 information_schema 与正式 payload 结构完成只读核对。
+- 十二个 AM 当前控制均为 revision2，有效窗 `2026-09-18T12:38:10.986989Z` 至 `18:38:10.986989Z`；本次成功读取时
+  距截止约 1 小时 16 分。budget policy rev8 有效至 `2026-09-19T11:48:51.753918Z`。attempt heartbeat 不能延长控制窗，
+  因此不以 Lease 健康替代业务时效判断。
+- 仓库尚无 AN 后继脚本。新增 `am-expiry-failure-contingency-plan-20260919.md`，只定义 failed 后的 Store unknown 边界、
+  AM 正式退休与 direct successor AN 文件级施工清单；当前 running 明确禁入，未创建 AN、未续签、未禁用、未重发。
+- 若 AM 先 succeeded，失败预案立即失效并执行既有 enable/inspect/disable；若 failed，必须先固定 terminal event 和原 key
+  Store Receipt，再按方案测试先行实施。浏览器门禁继续 NOT GREEN，230 L0 继续挂起。
