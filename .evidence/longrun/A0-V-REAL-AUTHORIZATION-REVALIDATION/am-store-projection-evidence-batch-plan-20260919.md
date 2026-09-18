@@ -49,3 +49,11 @@
 - 批量查询可能返回同租户范围内的交叉组合候选；实现必须在内存以完整 identity 精确索引，未命中或多义仍 fail closed。
 - `IN` 集合过大可能触及驱动参数限制；本链单批命令受 8 MiB 输入与十二成员边界约束，但测试仍覆盖多项集合。若方言出现限制，改为固定大小分块，不能退回逐实体往返。
 - 回退只需还原两个代码/测试文件；Receipt、Store 和运行态均无迁移或数据变更。
+
+## 6. 实施与验证结果
+
+- Red：24 个对象的证据读取在原实现产生 98 条涉及 `ecom_object`/`projection_outbox` 的 SELECT，证明随实体数线性增长且发生两次完整复核。
+- Green：对象批次限制为不超过 4 条相关 SELECT；24 个对象加 12 条关系的混合批次限制为不超过 6 条相关 SELECT，证据数量分别与原命令 24/36 个实体严格相等。
+- `test_ecom_consistency_store.py` 全量通过；当前记录漂移、关系端点、墓碑、outbox 缺失或歧义、ignored 复用、派生 Receipt 与前序有效事件语义保持 fail closed。
+- AM/AL saved snapshot、replacement、successor 及 group relationship/link/retirement/completion 相邻回归通过；环境条件不满足的 PostgreSQL 项按既有标记跳过，没有改写为假通过。
+- 当前 runtime host 已加载旧代码，AM 只读守护继续；本改动没有热替换、重启或干预 AM，也没有改变 Receipt、Store、definition、Run 或资源状态。

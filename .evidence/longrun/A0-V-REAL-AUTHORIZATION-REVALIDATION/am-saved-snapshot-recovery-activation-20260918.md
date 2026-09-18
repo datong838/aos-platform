@@ -322,3 +322,15 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   Receipt 仍未出现，因此本轮仍禁止重发、手工 run_definition 或执行终态收口。
 - 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器 accessibility tree 无变化，电商目录
   继续保持 NOT GREEN，未触发任何页面动作。
+
+## 16:13–16:29Z Store 投影证据性能修复与持续观察
+
+- AM 只读监视从 revision426 连续推进至 revision457/running；最新 heartbeat `2026-09-18T16:29:17Z`、lease
+  `16:31:17Z`，completedAt 为空。期间没有手工运行 definition、重发未知结果或热替换当前 runtime host。
+- 根因复核确认 `read_batch_projection_evidence()` 会先经 `read_committed_batch_revision()` 完整复核，再在第二个事务重复复核；
+  `_reconcile_base_events()` 又逐实体读取当前记录与 outbox。24 个对象的 Red 测试记录到 98 条相关 SELECT。
+- 按独立方案文档完成最小批量化：当前对象、当前关系、关系端点及候选 outbox 各按作用域批量读取，并在同一事务内复核一次、
+  计算 revision；Receipt、完整 identity、payload hash、唯一 outbox、墓碑端点和 derived binding 规则不变。
+- 对象批次和对象+关系混合批次的查询上界专项测试通过；Store 全文件回归 62 passed（随后新增混合关系覆盖后继续执行全量复验）。
+  AM/AL 及 group relationship/link/retirement/completion 相邻回归为 9 passed、24 skipped、7 条既有 warning。
+- 浏览器仍稳定加载 AOS v1.6.5，电商目录为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发“重新读取目录”。

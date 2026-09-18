@@ -533,26 +533,119 @@ class EcomConsistencyStore:
         )).scalar_one()
         if actual != written:
             raise EcomConsistencyError('BASE_OUTBOX_INCOMPLETE','base outbox evidence is incomplete')
-        events = {}
-        for entity in (*command.objects,*command.links):
-            is_object = isinstance(entity,CoreObjectRecord)
-            table = ecom_object if is_object else ecom_link
-            clause = _object_clause(entity.identity,entity.object_type) if is_object else _link_clause(entity)
-            current = conn.execute(select(table.c.payload_hash).where(clause)).scalar_one_or_none()
-            if current != entity.payload_hash():
-                raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT','original base record is missing or has been superseded')
-            if not is_object and (not self._object_exists(conn,entity.source,entity.source_type,allow_tombstone=entity.is_deleted)
-                                  or not self._object_exists(conn,entity.target,entity.target_type,allow_tombstone=entity.is_deleted)):
-                raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT','original base record has unavailable link endpoints')
-            outcome = ('objects_' if is_object else 'links_')+('tombstoned' if entity.is_deleted else 'written')
-            payload = {'schemaVersion':1,'entityKind':'object' if is_object else 'link','changeKind':outcome,
-                       'record':entity.model_dump(mode='json')}
-            if is_object:
-                payload.update(objectType=entity.object_type,identity=entity.identity.model_dump(mode='json'))
-            digest = hashlib.sha256(json.dumps(_jsonable(payload),ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-            matches = conn.execute(select(projection_outbox.c.event_key,projection_outbox.c.payload_hash,projection_outbox.c.input_revision,projection_outbox.c.projected).where(
-                *scope_filter,projection_outbox.c.change_kind == outcome,projection_outbox.c.payload_hash == digest,
+
+        objects = tuple(command.objects)
+        links = tuple(command.links)
+        current_objects = {}
+        if objects:
+            rows = conn.execute(select(
+                ecom_object.c.object_type,
+                ecom_object.c.external_id,
+                ecom_object.c.payload_hash,
+            ).where(
+                ecom_object.c.org_id == command.scope.org_id,
+                ecom_object.c.workspace_id == command.scope.workspace_id,
+                ecom_object.c.platform == command.scope.platform,
+                ecom_object.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                ecom_object.c.object_type.in_({item.object_type for item in objects}),
+                ecom_object.c.external_id.in_({item.identity.external_id for item in objects}),
             )).mappings().all()
+            current_objects = {
+                (row['object_type'], row['external_id']): row['payload_hash'] for row in rows
+            }
+
+        current_links = {}
+        endpoints = {}
+        if links:
+            rows = conn.execute(select(
+                ecom_link.c.link_type,
+                ecom_link.c.source_object_type,
+                ecom_link.c.source_external_id,
+                ecom_link.c.target_object_type,
+                ecom_link.c.target_external_id,
+                ecom_link.c.payload_hash,
+            ).where(
+                ecom_link.c.org_id == command.scope.org_id,
+                ecom_link.c.workspace_id == command.scope.workspace_id,
+                ecom_link.c.source_platform == command.scope.platform,
+                ecom_link.c.source_shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                ecom_link.c.target_platform == command.scope.platform,
+                ecom_link.c.target_shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                ecom_link.c.link_type.in_({item.link_type for item in links}),
+                ecom_link.c.source_object_type.in_({item.source_type for item in links}),
+                ecom_link.c.source_external_id.in_({item.source.external_id for item in links}),
+                ecom_link.c.target_object_type.in_({item.target_type for item in links}),
+                ecom_link.c.target_external_id.in_({item.target.external_id for item in links}),
+            )).mappings().all()
+            current_links = {
+                (row['link_type'], row['source_object_type'], row['source_external_id'],
+                 row['target_object_type'], row['target_external_id']): row['payload_hash']
+                for row in rows
+            }
+            endpoint_types = {item.source_type for item in links} | {item.target_type for item in links}
+            endpoint_ids = ({item.source.external_id for item in links}
+                            | {item.target.external_id for item in links})
+            rows = conn.execute(select(
+                ecom_object.c.object_type,
+                ecom_object.c.external_id,
+                ecom_object.c.deleted_at,
+            ).where(
+                ecom_object.c.org_id == command.scope.org_id,
+                ecom_object.c.workspace_id == command.scope.workspace_id,
+                ecom_object.c.platform == command.scope.platform,
+                ecom_object.c.shop_or_marketplace_id == command.scope.shop_or_marketplace_id,
+                ecom_object.c.object_type.in_(endpoint_types),
+                ecom_object.c.external_id.in_(endpoint_ids),
+            )).mappings().all()
+            endpoints = {
+                (row['object_type'], row['external_id']): row['deleted_at'] for row in rows
+            }
+
+        expected_events = []
+        for entity in (*objects, *links):
+            is_object = isinstance(entity, CoreObjectRecord)
+            if is_object:
+                current = current_objects.get((entity.object_type, entity.identity.external_id))
+            else:
+                identity = (entity.link_type, entity.source_type, entity.source.external_id,
+                            entity.target_type, entity.target.external_id)
+                current = current_links.get(identity)
+                for endpoint in ((entity.source_type, entity.source.external_id),
+                                 (entity.target_type, entity.target.external_id)):
+                    if endpoint not in endpoints or (not entity.is_deleted and endpoints[endpoint] is not None):
+                        raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT',
+                                                   'original base record has unavailable link endpoints')
+            if current != entity.payload_hash():
+                raise EcomConsistencyError('BASE_RECORD_NOT_CURRENT',
+                                           'original base record is missing or has been superseded')
+            outcome = ('objects_' if is_object else 'links_') + ('tombstoned' if entity.is_deleted else 'written')
+            payload = {'schemaVersion': 1, 'entityKind': 'object' if is_object else 'link',
+                       'changeKind': outcome, 'record': entity.model_dump(mode='json')}
+            if is_object:
+                payload.update(objectType=entity.object_type,
+                               identity=entity.identity.model_dump(mode='json'))
+            digest = hashlib.sha256(json.dumps(_jsonable(payload), ensure_ascii=False,
+                sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+            expected_events.append((outcome, digest))
+
+        candidates = conn.execute(select(
+            projection_outbox.c.event_key,
+            projection_outbox.c.payload_hash,
+            projection_outbox.c.input_revision,
+            projection_outbox.c.projected,
+            projection_outbox.c.change_kind,
+        ).where(
+            *scope_filter,
+            projection_outbox.c.change_kind.in_(('objects_written', 'objects_tombstoned',
+                                                  'links_written', 'links_tombstoned')),
+            projection_outbox.c.payload_hash.in_({digest for _, digest in expected_events}),
+        )).mappings().all()
+        grouped = {}
+        for row in candidates:
+            grouped.setdefault((row['change_kind'], row['payload_hash']), []).append(row)
+        events = {}
+        for outcome, digest in expected_events:
+            matches = grouped.get((outcome, digest), ())
             if len(matches) != 1 or int(matches[0]['input_revision']) <= 0:
                 raise EcomConsistencyError('BASE_OUTBOX_INCOMPLETE','exact original base outbox evidence is missing or ambiguous')
             events[matches[0]['event_key']] = matches[0]
@@ -632,12 +725,11 @@ class EcomConsistencyStore:
         """
         command = BatchCommand.model_validate(command.model_dump(mode='python'))
         derived = [DerivedMetricCommand.model_validate(item.model_dump(mode='python')) for item in derived_commands]
-        revision = self.read_committed_batch_revision(command)
         allowed = {(item.object_type,item.identity.scoped_key()) for item in command.objects if not item.is_deleted}
         seen = set()
         for item in derived:
             key = (item.object_type,item.identity.scoped_key())
-            if key not in allowed or key in seen or item.stream != command.scope.stream or item.input_revision != revision:
+            if key not in allowed or key in seen or item.stream != command.scope.stream:
                 raise EcomConsistencyError('DERIVED_BINDING_DRIFT','derived command binding does not match original batch')
             seen.add(key)
         with self._engine.begin() as conn:
@@ -646,6 +738,9 @@ class EcomConsistencyStore:
             if base is None or not self._receipt_matches_request(command=command,receipt=base,request_hash=command.request_hash()):
                 raise EcomConsistencyError('BASE_RECEIPT_REQUIRED','exact base receipt required')
             base_events = self._reconcile_base_events(conn,command,base)
+            revision = max(int(row['input_revision']) for row in base_events)
+            if any(item.input_revision != revision for item in derived):
+                raise EcomConsistencyError('DERIVED_BINDING_DRIFT','derived command binding does not match original batch')
             groups = []
             for item in derived:
                 receipt = self._read_derived_receipt(conn,item)

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, event, select, update
 from sqlalchemy.pool import StaticPool
 
 from aos_api.ecom_consistency_store import (
@@ -835,6 +835,61 @@ def test_exact_completion_tracks_only_original_events(store):
         conn.execute(delete(projection_outbox).where(projection_outbox.c.authority_tx_id==derived.request_hash()))
     with pytest.raises(EcomConsistencyError,match='outbox evidence'):
         store.read_batch_projection_completion(base,[derived])
+
+
+def test_bulk_projection_evidence_uses_bounded_store_queries(store):
+    records = tuple(obj('Shop', f'shop-{index:03d}') for index in range(24))
+    command = batch(*records, key='bulk-evidence')
+    store.apply_batch(command)
+    statements = []
+
+    def record(_conn, _cursor, statement, _parameters, _context, _many):
+        normalized = statement.lower()
+        if normalized.lstrip().startswith('select') and (
+                'ecom_object' in normalized or 'projection_outbox' in normalized):
+            statements.append(normalized)
+
+    event.listen(store._engine, 'before_cursor_execute', record)
+    try:
+        evidence = store.read_batch_projection_evidence(command, [])
+    finally:
+        event.remove(store._engine, 'before_cursor_execute', record)
+
+    assert len(evidence) == len(records)
+    assert len(statements) <= 4
+
+
+def test_bulk_link_projection_evidence_uses_bounded_store_queries(store):
+    shops = tuple(obj('Shop', f'shop-{index:03d}') for index in range(12))
+    products = tuple(obj('Product', f'product-{index:03d}') for index in range(12))
+    links = [CoreLinkRecord(
+        link_type='Shop.sellsProduct',
+        source_type='Shop',
+        source=shop.identity,
+        target_type='Product',
+        target=product.identity,
+        source_updated_at=NOW,
+        cursor_external_id=f'shop-product-{index:03d}',
+        is_deleted=False,
+    ) for index, (shop, product) in enumerate(zip(shops, products, strict=True))]
+    command = batch(*shops, *products, links=links, key='bulk-link-evidence')
+    store.apply_batch(command)
+    statements = []
+
+    def record(_conn, _cursor, statement, _parameters, _context, _many):
+        normalized = statement.lower()
+        if normalized.lstrip().startswith('select') and any(
+                table in normalized for table in ('ecom_object', 'ecom_link', 'projection_outbox')):
+            statements.append(normalized)
+
+    event.listen(store._engine, 'before_cursor_execute', record)
+    try:
+        evidence = store.read_batch_projection_evidence(command, [])
+    finally:
+        event.remove(store._engine, 'before_cursor_execute', record)
+
+    assert len(evidence) == len(shops) + len(products) + len(links)
+    assert len(statements) <= 6
 
 
 def test_exact_completion_rejects_duplicate_or_unrelated_derived(store):
