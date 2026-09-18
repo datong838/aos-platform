@@ -295,3 +295,18 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   `enable/inspect/disable`，未手工运行 definition，也未重发任何未知结果。
 - 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器仍显示“暂无可见工作台入口”，
   门禁保持 NOT GREEN，未触发“重新读取目录”。
+
+## 15:56–16:07Z 持续观察与 Store 前边界诊断
+
+- 第五段监视器观察 AM revision392 至 revision394 后按预设长度正常退出；同一任务续建第六段监视器并连续观察至
+  revision413。最新 heartbeat `2026-09-18T16:07:02Z`、lease `16:09:02Z`，state=running、completedAt 为空。
+- 权威 Run 逐行复核显示 12 个成员仍为 running、`executor_id` 为空、`rows_written=0`、`finished_at` 为空；三个
+  `colima-aos-extension` runner 容器均 Up、未重启，但容器内等待服务进程瞬时 CPU/网络/块 I/O 为 0。容器日志驱动不支持
+  读取，因此这些状态不能单独证明业务执行推进或失败。
+- Store 边界仍为 dataset receipts=12、relationship journal=1、link command=1/linkCount=1168、retirement=0、
+  原 idempotency key Store Receipt=0、ecom_link=0、link outbox=0、projection pending=0；resources=3、dev-org canary=0。
+  attempt 事件只有 1 条 accepted 与连续 heartbeat，数据库会话无 blocker。未知结果尚未跨 Store 提交边界，禁止重发。
+- 首次 Run 逐行查询误用了不存在的 `snapshot_group_id` 列，事务回滚且无写入；随后按正式 member→run 连接键完成复核。
+  host PID 99810 持续运行并更新状态文件，未发现本轮新异常终止记录。
+- 相同 5 项 AM/AL 专项与相邻回归再次通过：5 passed、7 条既有 warning。浏览器电商目录没有可见性变化，
+  门禁保持 NOT GREEN，未触发“重新读取目录”。
