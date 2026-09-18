@@ -8,8 +8,12 @@
   group completion 已在真实 AM 前序和本轮 PostgreSQL 场景中使用，但 parent feature 尚未形成完整 Git 闭包。
 - 本轮 request identity 修复位于该未提交 parent feature 内；必须先形成可独立检出的可运行闭包，不能只提交
   子 hunk 并留下缺失 migration/Owner 的 HEAD。
-- AM 首笔 attempt 已 failed；第二笔同 request hash attempt 仍 running。任何 schema 部署、Host 重载、暂停、
-  disable、退休或 successor 动作继续禁入。
+- AM 两笔同 request hash attempt 均已 failed；第二笔在十二个 runtime control 同时到期后约 440ms 进入终态，
+  当前实现没有持久化 exact failure reason，不能从时间相关性反推原因。
+- definition 已按 exact failed-attempt gate 从 rev53 enabled 变为 rev54 disabled；installation 已经正式 detach，
+  disable operation 成功、binding fenced、三项资源释放、九条 route 回到 legacy，AM 不再是合法运行对象。
+- 当前没有 running attempt、runtime pending、authoritative outbox 或 dev-org canary；允许完成 parent Git 闭包，
+  但 successor 仍须等待本闭包、相邻 Host 续租闭包、终态原因持久化与安全 reload 完成。
 
 ## 2. parent feature 最小闭包
 
@@ -58,11 +62,12 @@ parent feature 收口后新增 a0v089，不回写历史猜测：
    专项；耗时 PostgreSQL 场景不并发。
 3. `py_compile`、Alembic single head、`git diff --check` 通过；浏览器门禁独立保持。
 4. 只 stage parent 最小闭包并审查 cached diff，提交后确认工作树其他改动仍在。
-5. 再进入 a0v089 Red/Green；在 AM/后继运行空窗前只写方案与代码，不部署、不重载。
+5. 再进入 a0v089 Red/Green；只在空窗完成迁移与 Host 安全 reload，随后才允许 Worker 通过正式 definition
+   自然产生 direct successor，仍禁止手工 `run_definition`。
 
 ## 5. 停止和安全条件
 
-- 当前或新 AM attempt running 时禁止 retirement 及 schema/runtime reload。
+- 当前或新 attempt running 时禁止 retirement 及 schema/runtime reload。
 - Store Receipt 查询未知、出现第二个并行 running owner、request hash 漂移、dev-org 非零或 migration 多 head 时，
   停止写动作并只读对账。
 - 不触碰 230 L0，不 push，不重置、不清理、不覆盖现有未提交文件。

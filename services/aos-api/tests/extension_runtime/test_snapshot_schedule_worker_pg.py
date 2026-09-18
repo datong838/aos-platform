@@ -64,7 +64,7 @@ def test_tick_records_unknown_without_exposing_exception_or_marking_stopped(runt
     def fail(**_):raise RuntimeError('named secret must not be exposed')
     monkeypatch.setattr(runtime,'execute',fail)
     assert worker.tick()==[dict(definitionId=common['definition_id'],status='unknown',errorCode='SNAPSHOT_EXECUTION_UNCONFIRMED')]
-    assert warnings==[('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s',
-        common['definition_id'],'RuntimeError','fail')]
+    assert warnings==[('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s reason_code=%s',
+        common['definition_id'],'RuntimeError','fail','RUNTIMEERROR')]
     assert 'named secret' not in repr(warnings)
     assert state['calls']==0

@@ -98,6 +98,6 @@ class PipelineSnapshotGroupLinkCommandJournal:
                 elif command is not None:
                     raise IngressJournalConflict('GROUP_EMPTY_LINK_COMMAND_DRIFT')
                 return PreparedSnapshotGroupLinkCommand(current.content_hash, row['command_hash'], command, False)
-        read = (self._relationships._assessments.run_completed_current if completed_read
-                else self._relationships._assessments.run_current)
+        read = (self._relationships.run_completed_current if completed_read
+                else self._relationships.run_current)
         return read(conn, **args, execute=consume)

@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from uuid import uuid4
 import pytest
 from aos_api.ec_ingress_journal import IngressJournalConflict
+from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.pipeline_snapshot_group_completion import PipelineSnapshotGroupCompletion
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 
@@ -42,6 +43,28 @@ def test_all_original_stopped_failed_runs_reopen_atomically(stopped_case):
     assert state['calls']==1
 
 
+def test_recovery_attempt_commits_before_full_saved_recovery_authority(stopped_case,monkeypatch):
+    runtime,command,state,build,call=stopped_case
+    completion=build()
+    completion._retirement.execute=type(completion._retirement).execute.__get__(completion._retirement)
+    recovery=completion._claims._recovery
+
+    def stop_after_committed_attempt(*args,**kwargs):
+        with runtime._transaction(command['scope']) as conn:
+            row=conn.execute("""SELECT state,revision FROM extension_runtime_execution_attempt
+                WHERE operation_kind='recoverable_store' ORDER BY accepted_at DESC LIMIT 1""").fetchone()
+        assert row=={'state':'running','revision':1}
+        raise RuntimeError('named full recovery after committed attempt')
+
+    monkeypatch.setattr(recovery,'run_current',stop_after_committed_attempt)
+    with pytest.raises(RuntimeError,match='full recovery after committed attempt'):
+        completion.complete(**call)
+    with runtime._transaction(command['scope']) as conn:
+        assert conn.execute("""SELECT state,revision FROM extension_runtime_execution_attempt
+            WHERE operation_kind='recoverable_store'""").fetchone()=={'state':'failed','revision':2}
+    assert state['calls']==1
+
+
 def test_twelfth_recovery_failure_rolls_back_all_original_runs(stopped_case,monkeypatch):
     import aos_api.ec_ingress_claim as module
     runtime,command,state,build,call=stopped_case
@@ -69,12 +92,14 @@ def test_unknown_commit_ack_recovers_original_all_running_state(stopped_case,mon
     with pytest.raises(OSError,match='acknowledgement'):completion.complete(**call)
     with runtime._transaction(command['scope']) as conn:
         before=conn.execute('SELECT run_id,claim_id,payload_hash FROM ecommerce_ingress_recovery_claim ORDER BY run_id').fetchall()
-        assert len(before)==12
-    # New executor/connection observes all running; never claims a replacement.
-    with pytest.raises(RuntimeError,match='before Store'):build().complete(**call)
+        assert before==[]
+    # The attempt commit was acknowledged by PostgreSQL but not by the caller.
+    # A new executor must observe it as live and never enter Store work.
+    with pytest.raises(RuntimeConflict,match='already active'):build().complete(**call)
     with runtime._transaction(command['scope']) as conn:
         assert conn.execute('SELECT run_id,claim_id,payload_hash FROM ecommerce_ingress_recovery_claim ORDER BY run_id').fetchall()==before
-        assert conn.execute("SELECT count(*) AS n FROM meta_schedule_run WHERE status='running'").fetchone()['n']==12
+        assert conn.execute("SELECT count(*) AS n FROM meta_schedule_run WHERE status='failed' AND executor_stopped").fetchone()['n']==12
+        assert conn.execute("SELECT count(*) AS n FROM extension_runtime_execution_attempt WHERE operation_kind='recoverable_store' AND state='running'").fetchone()['n']==1
     assert state['calls']==1
 
 

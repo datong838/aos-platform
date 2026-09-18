@@ -18,6 +18,45 @@ from aos_api.logging_facade import get_logger
 
 log = get_logger('aos-api.snapshot-schedule-worker')
 _SAFE_ORIGIN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]{0,79}$')
+_SAFE_REASONS = {
+    'recovery receipt is not current':'RECOVERY_RECEIPT_NOT_CURRENT',
+    'recovery definition is not current':'RECOVERY_DEFINITION_NOT_CURRENT',
+    'recovery original schedule members differ':'RECOVERY_ORIGINAL_SCHEDULE_MEMBERS_DIFFER',
+    'snapshot recovery receipt is not current':'SNAPSHOT_RECOVERY_RECEIPT_NOT_CURRENT',
+    'recovery original authority differs':'RECOVERY_ORIGINAL_AUTHORITY_DIFFERS',
+    'recovery definition is not current enabled authority':'RECOVERY_DEFINITION_NOT_CURRENT_ENABLED',
+    'saved-only recovery definition required':'SAVED_ONLY_RECOVERY_DEFINITION_REQUIRED',
+    'saved recovery transfer authority differs':'SAVED_RECOVERY_TRANSFER_AUTHORITY_DIFFERS',
+    'recovery definition actor or policy differs':'RECOVERY_DEFINITION_ACTOR_OR_POLICY_DIFFERS',
+    'recovery bindings are not current':'RECOVERY_BINDINGS_NOT_CURRENT',
+    'recovery requires complete exact current control and original run pairs':'RECOVERY_CONTROL_RUN_PAIRS_DIFFER',
+    'recovery current schedule membership differs':'RECOVERY_SCHEDULE_MEMBERSHIP_DIFFERS',
+    'recovery current control unavailable':'RECOVERY_CURRENT_CONTROL_UNAVAILABLE',
+    'recovery execution control differs':'RECOVERY_EXECUTION_CONTROL_DIFFERS',
+    'canonical recovery mappings required':'CANONICAL_RECOVERY_MAPPINGS_REQUIRED',
+    'saved recovery mapping differs':'SAVED_RECOVERY_MAPPING_DIFFERS',
+    'current recovery facts changed during consumption':'RECOVERY_FACTS_CHANGED',
+    'source claim loop identity differs or expired':'SOURCE_CLAIM_LOOP_IDENTITY_DIFFERS_OR_EXPIRED',
+    'source claim loop transaction changed':'SOURCE_CLAIM_LOOP_TRANSACTION_CHANGED',
+    'source claim loop original members differ':'SOURCE_CLAIM_LOOP_ORIGINAL_MEMBERS_DIFFER',
+    'source claim loop member differs':'SOURCE_CLAIM_LOOP_MEMBER_DIFFERS',
+    'source claim loop group differs':'SOURCE_CLAIM_LOOP_GROUP_DIFFERS',
+    'runtime control reference differs':'RUNTIME_CONTROL_REFERENCE_DIFFERS',
+    'runtime control was superseded':'RUNTIME_CONTROL_WAS_SUPERSEDED',
+    'source call claim unavailable':'SOURCE_CALL_CLAIM_UNAVAILABLE',
+    'saved recovery requires original input':'SAVED_RECOVERY_REQUIRES_ORIGINAL_INPUT',
+    'saved recovery control family differs':'SAVED_RECOVERY_CONTROL_FAMILY_DIFFERS',
+    'original control unavailable':'ORIGINAL_CONTROL_UNAVAILABLE',
+    'saved recovery context differs':'SAVED_RECOVERY_CONTEXT_DIFFERS',
+    'source claim current binding differs':'SOURCE_CLAIM_CURRENT_BINDING_DIFFERS',
+    'snapshot group claim unavailable':'SNAPSHOT_GROUP_CLAIM_UNAVAILABLE',
+    'SNAPSHOT_GROUP_BINDING_DIFFERS':'SNAPSHOT_GROUP_BINDING_DIFFERS',
+    'SNAPSHOT_GROUP_MEMBERS_DIFFER':'SNAPSHOT_GROUP_MEMBERS_DIFFER',
+    'canonical object required':'CANONICAL_RELATIONSHIP_OBJECT_REQUIRED',
+    'exact original parent pipelines required':'EXACT_ORIGINAL_PARENT_PIPELINES_REQUIRED',
+    'current and original parent pipelines differ':'CURRENT_AND_ORIGINAL_PARENT_PIPELINES_DIFFER',
+    'runtime request is not currently admitted':'RUNTIME_REQUEST_NOT_CURRENTLY_ADMITTED',
+}
 
 
 def _safe_origin_name(name):
@@ -32,6 +71,12 @@ def _error_origin(exc):
         traceback = traceback.tb_next
     name = traceback.tb_frame.f_code.co_name
     return _safe_origin_name(name)
+
+
+def _error_reason(exc):
+    if len(exc.args) == 1 and type(exc.args[0]) is str and exc.args[0] in _SAFE_REASONS:
+        return _SAFE_REASONS[exc.args[0]]
+    return type(exc).__name__.upper()
 
 
 class PipelineSnapshotScheduleWorker:
@@ -145,8 +190,8 @@ class PipelineSnapshotScheduleWorker:
                 # Original Runtime preserves its durable claim/unknown facts.
                 # No synthetic failed/stopped row and no raw exception leakage.
                 _check_active(**active)
-                log.warning('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s',
-                    identifier,type(exc).__name__,_error_origin(exc))
+                log.warning('snapshot_execution_unconfirmed definition_id=%s error_type=%s error_origin=%s reason_code=%s',
+                    identifier,type(exc).__name__,_error_origin(exc),_error_reason(exc))
                 result=dict(status='unknown',errorCode='SNAPSHOT_EXECUTION_UNCONFIRMED')
             outcomes.append(dict(result,definitionId=identifier))
         return outcomes

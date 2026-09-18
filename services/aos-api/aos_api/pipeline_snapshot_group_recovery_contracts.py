@@ -57,3 +57,31 @@ def validate_saved_group_control_renewal(original,current):
         if (next_.not_before<first.not_before or next_.expires_at<=first.expires_at
                 or first.model_dump(mode='json',exclude=excluded)!=next_.model_dump(mode='json',exclude=excluded)):
             raise ValueError('renewal may only advance execution window and selection')
+
+
+def validate_saved_group_successor_transfer(original,current):
+    """Require the replacement controls to preserve the saved read semantics.
+
+    Runtime identity and immutable control families necessarily change when a
+    failed installation is replaced.  They are resolved by the current Owners;
+    this comparison only permits those replacement fields and the fresh window.
+    """
+    old,new=_records(original),_records(current)
+    excluded={'not_before','expires_at','source_selection_ref','installation_ref',
+        'generation','execution_epoch','configuration_ref','package_ref'}
+    for pipeline in CANONICAL_QYH_PIPELINE_IDS:
+        before,after=old[pipeline],new[pipeline]
+        if before.actor!=after.actor:
+            raise ValueError('successor recovery actor differs')
+        if (before.draft.model_dump(mode='json',exclude=excluded)
+                !=after.draft.model_dump(mode='json',exclude=excluded)):
+            raise ValueError('successor recovery read semantics differ')
+
+
+def exact_saved_recovery_transfer_request(request,*,scope,current,group_id,recovery_ref,actor):
+    """Match the complete immutable definition request; reading it grants nothing."""
+    expected=dict(orgId=scope.org_id,projectId=scope.project_id,
+        definitionId=current['definitionId'],actor=actor,intent='transfer_saved_recovery',
+        expectedRef=current['priorRef'],settings=None,
+        transfer=dict(groupId=group_id,expectedRecoveryRef=recovery_ref))
+    return type(request) is dict and request==expected

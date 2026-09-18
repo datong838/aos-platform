@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
+import time
 import uuid
 
 import psycopg
@@ -20,6 +21,9 @@ from aos_api.extension_runtime.generation_attempts import (
     PostgresRuntimeAttemptStore,
 )
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
+from aos_api.extension_runtime.recoverable_store_attempt import RecoverableStoreAttemptOwner
+from aos_api.extension_runtime.consumer_connection import consumer_connection
+from aos_api.tenant_scope import TenantScope
 
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 TOKEN = "owner-token-" + "x" * 32
@@ -49,6 +53,18 @@ def attempt_case(database):
         "SELECT set_config('aos.org_id','org-org',false),"
         "set_config('aos.project_id','dev-project',false)"
     )
+    return conn, installation, generation, role, schema
+
+
+@pytest.fixture
+def recoverable_case(attempt_case):
+    conn, installation, generation, role, schema = attempt_case
+    path = Path(__file__).resolve().parents[2] / "alembic/versions/a0v_088_recoverable_store_attempt.py"
+    spec = importlib.util.spec_from_file_location("a0v_recoverable_attempt_migration", path)
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=conn.execute)
+    migration.upgrade()
     return conn, installation, generation, role, schema
 
 
@@ -144,6 +160,118 @@ def test_heartbeat_and_settle_require_exact_owner_and_revision(attempt_case):
         with conn.transaction():
             store.settle(conn, **SCOPE, attempt_id=lease.attempt_id, expected_revision=1,
                          owner_token=TOKEN, state="failed")
+
+
+def test_recoverable_store_attempt_retries_only_after_terminal_failure(recoverable_case):
+    conn, installation, generation, _, _ = recoverable_case
+    store = PostgresRuntimeAttemptStore()
+    args = dict(
+        **SCOPE, installation_id=installation, generation=generation, execution_epoch=1,
+        operation_key="snapshot-group:group-1", idempotency_key="snapshot-group:group-1",
+        request_hash=HASH, owner_token=TOKEN,
+        lease_until=datetime.now(timezone.utc) + timedelta(minutes=1),
+    )
+    with conn.transaction():
+        first = store.begin_recoverable_store(conn, **args)
+    assert first.execute_once is True and first.state == "running"
+    with conn.transaction():
+        active = store.begin_recoverable_store(
+            conn, **{**args, "owner_token": "another-owner-" + "a" * 32}
+        )
+    assert active.attempt_id == first.attempt_id and active.execute_once is False
+    with conn.transaction():
+        store.settle(conn, **SCOPE, attempt_id=first.attempt_id, expected_revision=1,
+                     owner_token=TOKEN, state="failed")
+    with conn.transaction():
+        second = store.begin_recoverable_store(conn, **args)
+    assert second.execute_once is True and second.attempt_id != first.attempt_id
+    assert conn.execute(
+        "SELECT idempotency_key FROM extension_runtime_execution_attempt "
+        "WHERE operation_kind='recoverable_store' ORDER BY accepted_at,attempt_id"
+    ).fetchall() == [("snapshot-group:group-1:1",), ("snapshot-group:group-1:2",)]
+    with conn.transaction():
+        store.settle(conn, **SCOPE, attempt_id=second.attempt_id, expected_revision=1,
+                     owner_token=TOKEN, state="succeeded")
+    with conn.transaction():
+        completed = store.begin_recoverable_store(conn, **args)
+    assert completed.attempt_id == second.attempt_id and completed.execute_once is False
+
+
+def test_recoverable_store_attempt_participates_in_fence_drain(recoverable_case):
+    conn, installation, generation, _, _ = recoverable_case
+    store = PostgresRuntimeAttemptStore()
+    with conn.transaction():
+        attempt = store.begin_recoverable_store(
+            conn, **SCOPE, installation_id=installation, generation=generation,
+            execution_epoch=1, operation_key="snapshot-group:group-2",
+            idempotency_key="snapshot-group:group-2", request_hash=HASH,
+            owner_token=TOKEN, lease_until=datetime.now(timezone.utc) + timedelta(minutes=1),
+        )
+    _fence(conn)
+    with conn.transaction():
+        assert GenerationDrainReader()(
+            conn, **SCOPE, installation_id=installation, generation=generation, fence_epoch=2
+        ) is False
+    with pytest.raises(PermissionError, match="not accepting"):
+        with conn.transaction():
+            store.begin_recoverable_store(
+                conn, **SCOPE, installation_id=installation, generation=generation,
+                execution_epoch=2, operation_key="snapshot-group:new",
+                idempotency_key="snapshot-group:new", request_hash=HASH,
+                owner_token=TOKEN,
+                lease_until=datetime.now(timezone.utc) + timedelta(minutes=1),
+            )
+    with conn.transaction():
+        store.settle(conn, **SCOPE, attempt_id=attempt.attempt_id, expected_revision=1,
+                     owner_token=TOKEN, state="succeeded")
+    with conn.transaction():
+        assert GenerationDrainReader()(
+            conn, **SCOPE, installation_id=installation, generation=generation, fence_epoch=2
+        ) is True
+
+
+def test_recoverable_store_owner_heartbeats_across_fence_then_settles(recoverable_case):
+    conn, installation, generation, _, schema = recoverable_case
+    conn.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+
+    @contextmanager
+    def connect():
+        with psycopg.connect(
+            host="127.0.0.1", port=18432, user="postgres", dbname="postgres",
+            autocommit=True, row_factory=dict_row,
+        ) as worker:
+            worker.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            worker.execute("SET SESSION AUTHORIZATION aos_runtime")
+            yield worker
+
+    scope = TenantScope("org-org", "dev-project")
+    owner = RecoverableStoreAttemptOwner(
+        connect=connect, heartbeat_seconds=.05, lease_seconds=.2,
+    )
+    with consumer_connection(connect, SCOPE) as worker:
+        attempt = owner.claim(
+            worker, scope=scope, installation_id=installation, generation=generation,
+            execution_epoch=1, operation_key="snapshot-group:heartbeat",
+            idempotency_key="snapshot-group:heartbeat", request_hash=HASH,
+        )
+    with attempt:
+        time.sleep(.12)
+        _fence(conn)
+        with conn.transaction():
+            assert GenerationDrainReader()(
+                conn, **SCOPE, installation_id=installation,
+                generation=generation, fence_epoch=2,
+            ) is False
+        time.sleep(.12)
+    row = conn.execute(
+        "SELECT state,revision,heartbeat_at IS NOT NULL FROM extension_runtime_execution_attempt "
+        "WHERE attempt_id=%s", (attempt.attempt_id,),
+    ).fetchone()
+    assert row[0] == "succeeded" and row[1] >= 3 and row[2] is True
+    with conn.transaction():
+        assert GenerationDrainReader()(
+            conn, **SCOPE, installation_id=installation, generation=generation, fence_epoch=2
+        ) is True
 
 
 def test_drain_rejects_unfenced_and_attempt_identity_is_immutable(attempt_case):

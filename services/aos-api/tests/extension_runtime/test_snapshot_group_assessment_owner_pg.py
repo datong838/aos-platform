@@ -13,7 +13,7 @@ from test_controlled_snapshot_ingress_pg import executor_case
 from test_snapshot_group_claim_owner_pg import group_claim_case
 from test_controlled_snapshot_group_ingress_pg import prepared_case
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef,PipelineSourceSelectionDraft
-from aos_api.pipeline_snapshot_group_assessment_owner import PipelineSnapshotGroupAssessmentOwner
+from aos_api.pipeline_snapshot_group_assessment_owner import PipelineSnapshotGroupAssessmentOwner,_outputs_by_pipeline
 
 @pytest.fixture
 def assessment_case(prepared_case):
@@ -54,6 +54,17 @@ def test_current_policy_and_original_inputs_yield_stable_bound_assessment(assess
     assert first==again and first.content_hash.startswith('sha256:')
     assert first.input.manifest_hash==prepared.manifest_hash and first.policy_ref==ref
     assert len(first.assessment.candidate_links)==(0 if empty else 1) and state['calls']==1
+
+
+def test_original_parents_join_by_pipeline_not_control_family_order(assessment_case):
+    executor,conn,args,state,owner,ref=assessment_case;executor.prepare(**args)
+    with conn.transaction():current=owner.run_current(conn,**args,policy_ref=ref,execute=lambda value:value)
+    outputs=_outputs_by_pipeline(current.input.group,tuple(reversed(current.input.parents)))
+    assert set(outputs)=={'Shop','Weapp'}
+    assert all(all(row['ot']==object_type for row in rows) for object_type,rows in outputs.items())
+    with pytest.raises(ValueError,match='parent pipelines'):
+        _outputs_by_pipeline(current.input.group,current.input.parents[:-1])
+    assert state['calls']==1
 
 
 def test_missing_input_does_not_initiate_source(assessment_case):

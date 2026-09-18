@@ -137,6 +137,95 @@ class PostgresRuntimeAttemptStore:
                sequence=1, event_type="attempt_accepted", state="running", revision=1)
         return RuntimeAttemptLease(attempt_id, "running", 1, True)
 
+    def begin_recoverable_store(
+        self, conn, *, org_id: str, project_id: str, installation_id, generation,
+        execution_epoch: int, operation_key: str, idempotency_key: str,
+        request_hash: str, owner_token: str, lease_until: datetime,
+    ) -> RuntimeAttemptLease:
+        """Claim one retry generation for an exact idempotent Store operation.
+
+        A live or succeeded generation is never re-executed.  Only a terminal
+        failed/abandoned generation permits the next ordinal, under one
+        transaction advisory lock.  The caller still owns current authority
+        and must commit this transaction before starting Store work.
+        """
+        _require_transaction(conn)
+        _scope(conn, org_id, project_id)
+        installation_id = _identity(installation_id, "installation id")
+        generation = _identity(generation, "generation")
+        if type(execution_epoch) is not int or execution_epoch < 1:
+            raise ValueError("positive execution epoch required")
+        if type(operation_key) is not str or not 1 <= len(operation_key) <= 160:
+            raise ValueError("exact runtime operation key required")
+        if type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 220:
+            raise ValueError("bounded recoverable idempotency key required")
+        if type(request_hash) is not str or _HASH.fullmatch(request_hash) is None:
+            raise ValueError("canonical runtime request hash required")
+        if not isinstance(lease_until, datetime) or lease_until.tzinfo is None:
+            raise ValueError("aware runtime attempt lease required")
+        owner_hash = _token_hash(owner_token)
+        conn.execute(
+            """SELECT pg_advisory_xact_lock(hashtextextended(
+               'recoverable-runtime-attempt:'||jsonb_build_array(%s::text,%s::text,%s::uuid::text,
+               %s::uuid::text,%s::bigint,%s::text)::text,0))""",
+            (org_id, project_id, installation_id, generation, execution_epoch, operation_key),
+        )
+        rows = conn.execute(
+            """SELECT attempt_id,idempotency_key,request_hash,state,revision
+                 FROM extension_runtime_execution_attempt
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                  AND execution_epoch=%s AND operation_kind='recoverable_store'
+                  AND operation_key=%s ORDER BY accepted_at,attempt_id FOR UPDATE""",
+            (org_id, project_id, installation_id, generation, execution_epoch, operation_key),
+        ).fetchall()
+        columns = ("attempt_id", "idempotency_key", "request_hash", "state", "revision")
+        if any(_values(row, columns)[2] != request_hash for row in rows):
+            raise RuntimeConflict("recoverable runtime attempt request drifted")
+        if rows:
+            attempt_id, _, _, state, revision = _values(
+                rows[-1], columns
+            )
+            if state in ("running", "succeeded"):
+                return RuntimeAttemptLease(attempt_id, state, revision, False)
+            if state not in ("failed", "abandoned"):
+                raise RuntimeConflict("recoverable runtime attempt state differs")
+        ordinal = len(rows) + 1
+        stored_key = f"{idempotency_key}:{ordinal}"
+        if len(stored_key) > 240:
+            raise ValueError("recoverable idempotency key exceeds storage limit")
+        valid_lease = conn.execute(
+            "SELECT %s > clock_timestamp() AND %s <= clock_timestamp()+interval '5 minutes' AS valid",
+            (lease_until, lease_until),
+        ).fetchone()
+        if valid_lease is None or _values(valid_lease, ("valid",))[0] is not True:
+            raise ValueError("runtime attempt lease must be current and bounded")
+        binding = conn.execute(
+            """SELECT enabled,operation_fence,execution_epoch
+                 FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                FOR SHARE""",
+            (org_id, project_id, installation_id, generation),
+        ).fetchone()
+        if binding is None:
+            raise PermissionError("runtime binding unavailable")
+        enabled, fenced, current_epoch = _values(
+            binding, ("enabled", "operation_fence", "execution_epoch")
+        )
+        if enabled is not True or fenced is not False or current_epoch != execution_epoch:
+            raise PermissionError("runtime generation is not accepting attempts")
+        attempt_id = uuid4()
+        conn.execute(
+            """INSERT INTO extension_runtime_execution_attempt
+               (org_id,project_id,attempt_id,installation_id,generation,execution_epoch,
+                operation_kind,operation_key,idempotency_key,request_hash,owner_token_hash,state,lease_until)
+               VALUES(%s,%s,%s,%s,%s,%s,'recoverable_store',%s,%s,%s,%s,'running',%s)""",
+            (org_id, project_id, attempt_id, installation_id, generation, execution_epoch,
+             operation_key, stored_key, request_hash, owner_hash, lease_until),
+        )
+        _event(conn, org_id=org_id, project_id=project_id, attempt_id=attempt_id,
+               sequence=1, event_type="attempt_accepted", state="running", revision=1)
+        return RuntimeAttemptLease(attempt_id, "running", 1, True)
+
     def heartbeat(self, conn, *, org_id: str, project_id: str, attempt_id,
                   expected_revision: int, owner_token: str, lease_until: datetime) -> RuntimeAttemptLease:
         _require_transaction(conn)
@@ -224,7 +313,8 @@ class PostgresRuntimeAttemptStore:
             raise ValueError("attempt recovery limit must be 1..100")
         rows = conn.execute(
             """SELECT attempt_id,revision FROM extension_runtime_execution_attempt
-                WHERE org_id=%s AND project_id=%s AND operation_kind='signed_read'
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_kind IN ('signed_read','recoverable_store')
                   AND state='running' AND lease_until<=clock_timestamp()
                 ORDER BY attempt_id FOR UPDATE SKIP LOCKED LIMIT %s""",
             (org_id, project_id, limit),

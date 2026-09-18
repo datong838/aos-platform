@@ -9,7 +9,8 @@ from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef,PipelineRuntimeControlDraft
 from aos_api.pipeline_runtime_control_owner import RuntimeControlRecord,build_control_payload
 from aos_api.source_readiness_contracts import CANONICAL_QYH_PIPELINE_IDS
-from aos_api.pipeline_snapshot_group_recovery_contracts import validate_saved_group_control_renewal
+from aos_api.pipeline_snapshot_group_recovery_contracts import (exact_saved_recovery_transfer_request,
+    validate_saved_group_control_renewal,validate_saved_group_successor_transfer)
 
 
 def record(draft,*,identity=None,revision=1,previous=None,actor='test-executor'):
@@ -115,3 +116,36 @@ def test_immediate_successor_must_reference_original_control_hash(controls):
         revision=2,previous='sha256:'+'0'*64)
     with pytest.raises(ValueError,match='predecessor'):
         validate_saved_group_control_renewal(old,(bad,)+new[1:])
+
+
+def test_replacement_controls_may_change_runtime_identity_but_not_read_semantics(controls):
+    old,_=controls;replacement=[]
+    for item in old:
+        selection=item.draft.source_selection_ref.model_copy(update={
+            'resource_id':'source-selection-'+str(uuid4()),'revision':1,'content_hash':'sha256:'+'a'*64})
+        draft=item.draft.model_copy(update={'generation':'77777777-7777-4777-8777-777777777777',
+            'execution_epoch':item.draft.execution_epoch+1,'source_selection_ref':selection,
+            'not_before':item.draft.not_before+timedelta(hours=2),
+            'expires_at':item.draft.expires_at+timedelta(hours=2)})
+        replacement.append(record(draft))
+    replacement=tuple(replacement)
+    assert validate_saved_group_successor_transfer(old,replacement) is None
+    drift=replacement[0].draft.model_copy(update={'row_limit':replacement[0].draft.row_limit-1})
+    with pytest.raises(ValueError,match='semantics'):
+        validate_saved_group_successor_transfer(old,(record(drift),)+replacement[1:])
+
+
+def test_transfer_request_must_match_every_saved_authority_field():
+    class Scope:org_id='org-org';project_id='dev-project'
+    ref={'resourceType':'SnapshotScheduleDefinitionRevision','resourceId':'snapshot-schedule-d',
+        'revision':4,'contentHash':'sha256:'+'1'*64}
+    recovery={'resourceType':'SnapshotGroupRecoveryRevision','resourceId':'snapshot-recovery-g',
+        'revision':1,'contentHash':'sha256:'+'2'*64}
+    current={'definitionId':'d','priorRef':ref}
+    request={'orgId':'org-org','projectId':'dev-project','definitionId':'d','actor':'executor',
+        'intent':'transfer_saved_recovery','expectedRef':ref,'settings':None,
+        'transfer':{'groupId':'g','expectedRecoveryRef':recovery}}
+    assert exact_saved_recovery_transfer_request(request,scope=Scope(),current=current,
+        group_id='g',recovery_ref=recovery,actor='executor')
+    assert not exact_saved_recovery_transfer_request(request|{'settings':{}},scope=Scope(),current=current,
+        group_id='g',recovery_ref=recovery,actor='executor')

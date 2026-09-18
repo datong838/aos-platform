@@ -12,7 +12,8 @@ from aos_api.pipeline_runtime_control_contracts import PipelineExactRef,Pipeline
 from aos_api.pipeline_runtime_control_owner import decode_control_row
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.pipeline_snapshot_group_completion import PipelineSnapshotGroupCompletion
-from aos_api.pipeline_snapshot_group_recovery_contracts import validate_saved_group_control_renewal
+from aos_api.pipeline_snapshot_group_recovery_contracts import (exact_saved_recovery_transfer_request,
+    validate_saved_group_control_renewal,validate_saved_group_successor_transfer)
 from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt,recovery_body,decode_recovery_receipt
 from aos_api.pipeline_snapshot_group_saved_facts import SnapshotSavedFactsReader
 from aos_api.pipeline_snapshot_schedule_claim import _group_id,_member
@@ -66,8 +67,16 @@ class PipelineSnapshotGroupRecoveryOwner:
             if current is None or current['ref']!=expected or (prior['ref'] if prior else None)!=recovery:
                 raise ValueError('recovery predecessor is not current')
             body=current['body']
-            if body['state']=='retired' or any(body[k]!=original[k] for k in
-                    ('installationId','generation','executor','cron','timezone','policyRef')):
+            transferred=(body['installationId'],body['generation'])!=(original['installationId'],original['generation'])
+            transfer_authority=False
+            if transferred:
+                row=conn.execute('''SELECT request FROM public.pipeline_snapshot_schedule_definition_revision
+                    WHERE org_id=%s AND project_id=%s AND definition_id=%s AND revision=%s''',
+                    (*scope.key,identifier,body['revision'])).fetchone()
+                transfer_authority=(row is not None and exact_saved_recovery_transfer_request(row['request'],scope=scope,
+                    current=body,group_id=group_id,recovery_ref=recovery,actor=actor))
+            if (body['state']=='retired' or any(body[k]!=original[k] for k in
+                    ('executor','cron','timezone','policyRef')) or (transferred and not transfer_authority)):
                 raise ValueError('recovery definition business scope differs')
             executor=original['executor']
             if self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
@@ -80,11 +89,11 @@ class PipelineSnapshotGroupRecoveryOwner:
             if {b.schedule_id for b in bindings}!=set(original_members):raise ValueError('recovery schedule members differ')
             latest=PipelineScheduleControlOwner.read_latest_many(conn,scope=scope,schedule_ids=tuple(b.schedule_id for b in bindings))
             if latest!=bindings:raise ValueError('recovery bindings are not current')
-            old_by_pipeline={c.draft.pipeline_id:c for c in facts.controls}
             predecessors=[]
             for b in bindings:
                 member=original_members[b.schedule_id]
-                if b.pipeline_id!=member['pipelineId'] or b.control_ref.resource_id!=member['controlRef']['resourceId']:
+                if (b.pipeline_id!=member['pipelineId'] or
+                        (not transferred and b.control_ref.resource_id!=member['controlRef']['resourceId'])):
                     raise ValueError('recovery control family differs')
                 row=conn.execute('''SELECT * FROM public.pipeline_runtime_control_revision
                     WHERE org_id=%s AND project_id=%s AND control_id=%s AND revision=%s''',
@@ -93,7 +102,9 @@ class PipelineSnapshotGroupRecoveryOwner:
                 control=decode_control_row(row)
                 if control.ref!=b.control_ref:raise ValueError('recovery control hash differs')
                 predecessors.append(control)
-            if {c.ref for c in predecessors}!={c.ref for c in facts.controls}:
+            if transferred:
+                validate_saved_group_successor_transfer(facts.controls,tuple(predecessors))
+            elif {c.ref for c in predecessors}!={c.ref for c in facts.controls}:
                 validate_saved_group_control_renewal(facts.controls,tuple(predecessors))
             if start<max(c.draft.not_before for c in predecessors) or end<=max(c.draft.expires_at for c in predecessors):
                 raise ValueError('recovery window must advance its predecessor')
@@ -102,8 +113,7 @@ class PipelineSnapshotGroupRecoveryOwner:
                 return 'snapshot-recovery:'+canonical_sha256([*scope.key,group_id,key,request,stage,pipeline]).removeprefix('sha256:')
             renewed=[];new_controls=[]
             for binding,previous in zip(bindings,predecessors):
-                original_control=old_by_pipeline[binding.pipeline_id]
-                data=original_control.draft.model_dump(exclude={'schema_version','source_selection_ref'})
+                data=previous.draft.model_dump(exclude={'schema_version','source_selection_ref'})
                 data.update(not_before=start,expires_at=end)
                 selection=self._controls._selections.append(conn,draft=PipelineSourceSelectionDraft.model_validate(data),actor=executor,
                     previous_ref=previous.draft.source_selection_ref,idempotency_key=internal_key('selection',binding.pipeline_id))
@@ -116,7 +126,7 @@ class PipelineSnapshotGroupRecoveryOwner:
                 renewed.append(PipelineScheduleControlOwner(controls=self._controls).bind(conn,scope=scope,
                     schedule_id=binding.schedule_id,actor=executor,control_ref=ref,previous_ref=binding.ref,
                     expected_pipeline_id=binding.pipeline_id,idempotency_key=internal_key('binding',binding.pipeline_id)))
-            validate_saved_group_control_renewal(facts.controls,tuple(new_controls))
+            validate_saved_group_control_renewal(tuple(predecessors),tuple(new_controls))
             conn.execute('SET CONSTRAINTS '+_CONSTRAINTS+',snapshot_recovery_complete DEFERRED')
             def save(current_group):
                 object_types={d.pipeline_id:m.read_spec.object_type for _,d,m in current_group.group.members}

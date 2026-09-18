@@ -1,5 +1,8 @@
 """Actual PG object, projection and dataset Owners; source and release are fixtures."""
 from contextlib import contextmanager
+from types import SimpleNamespace
+import psycopg
+from psycopg import sql
 import pytest
 from test_lifecycle_pg import database,pytestmark
 from test_pipeline_source_selection_schema_pg import ledger
@@ -77,6 +80,31 @@ def test_current_denial_prevents_any_object_write(object_case):
     with pytest.raises(PermissionError):executor.execute(**args)
     assert conn.execute('SELECT count(*) AS n FROM ecom_object').fetchone()['n']==0
     assert state['calls']==1
+
+
+def test_saved_recovery_assessment_runs_after_installation_lock_commit(object_case,monkeypatch):
+    executor,conn,args,_=object_case
+    marker=SimpleNamespace()
+    schema=conn.execute('SELECT current_schema() AS name').fetchone()['name']
+    installation=conn.execute('SELECT installation_id FROM bundle_installation LIMIT 1').fetchone()['installation_id']
+    def materialize(db,**kwargs):
+        db.execute('SELECT 1 FROM bundle_installation WHERE installation_id=%s FOR UPDATE',(installation,))
+        return marker
+    class Assessed(Exception):pass
+    def assess(value):
+        assert value is marker
+        competing=psycopg.connect(host='127.0.0.1',port=18432,user='postgres',dbname='postgres',autocommit=True)
+        try:
+            competing.execute(sql.SQL('SET search_path TO {}').format(sql.Identifier(schema)))
+            competing.execute("SET lock_timeout='100ms'")
+            competing.execute('SELECT 1 FROM bundle_installation WHERE installation_id=%s FOR UPDATE NOWAIT',(installation,))
+        finally:competing.close()
+        raise Assessed
+    monkeypatch.setattr(executor._claims,'_recovery',object())
+    monkeypatch.setattr(executor._journal,'prepare_or_materialize',materialize)
+    monkeypatch.setattr(executor._journal._assessments,'assess_materialized',assess)
+    with pytest.raises(Assessed):executor.execute(**args)
+    assert conn.execute('SELECT count(*) AS n FROM ecom_object').fetchone()['n']==0
 
 
 def test_historical_dataset_success_cannot_hide_superseded_object(object_case):

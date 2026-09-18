@@ -29,7 +29,12 @@ class ControlledSnapshotGroupObjectExecutor:
         active=dict(deadline=deadline,cancel_event=cancel_event)
         _check_active(**active)
         with self._transaction(scope) as conn:
-            prepared=self._journal.prepare(conn,**args)
+            prepared=self._journal.prepare_or_materialize(conn,**args)
+        if self._claims._recovery is not None and not hasattr(prepared,'assessment_hash'):
+            assessed=self._journal._assessments.assess_materialized(prepared)
+            _check_active(**active)
+            with self._transaction(scope) as conn:
+                prepared=self._journal.prepare_assessed_current(conn,assessed,**args)
         # The preparation transaction and connection both exited successfully.
         _check_active(**active)
         results=[]
@@ -56,7 +61,7 @@ class ControlledSnapshotGroupObjectExecutor:
                     if completion['pending']!=0:raise IngressJournalConflict('GROUP_OBJECT_PROJECTION_PENDING')
                     completions[run]=completion
                 return completions
-            completions=self._journal._assessments.run_current(conn,**args,execute=verify)
+            completions=self._journal.run_current(conn,**args,execute=verify)
             _check_active(**active)
         for result in results:result['completion']=completions[result['run_id']]
         return dict(group_id=group_id,input_manifest_hash=prepared.payload['inputManifestHash'],

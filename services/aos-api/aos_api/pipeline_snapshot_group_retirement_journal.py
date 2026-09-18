@@ -109,8 +109,8 @@ class PipelineSnapshotGroupRetirementJournal:
                 return PreparedSnapshotGroupRetirement(audit_hash, row['preparation_hash'], command, False, applied)
             return self._commands._relationships._assessments._policies.run_current(conn, scope=args['scope'],
                 refs=tuple(ref for ref, _ in args['bindings']), actor=args['actor'], policy_ref=args['policy_ref'], execute=policy_guard)
-        read = (self._commands._relationships._assessments.run_completed_current if completed_read
-                else self._commands._relationships._assessments.run_current)
+        read = (self._commands._relationships.run_completed_current if completed_read
+                else self._commands._relationships.run_current)
         return read(conn, **args, execute=consume)
 
     @staticmethod

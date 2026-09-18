@@ -13,6 +13,7 @@ from aos_api.pipeline_snapshot_group_retirement_executor import ControlledSnapsh
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.qyh_cron_scheduler import _persist_schedule_result
 from aos_api.tenant_scope import TenantScope
+from aos_api.extension_runtime.recoverable_store_attempt import RecoverableStoreAttemptOwner
 
 
 class PipelineSnapshotGroupCompletion:
@@ -28,6 +29,7 @@ class PipelineSnapshotGroupCompletion:
             claims=claims, store=store, connect=connect, eng=eng,
         )
         self._projection = PipelineSnapshotGroupProjectionOwner(claims=claims, store=store)
+        self._attempts = RecoverableStoreAttemptOwner(connect=connect)
 
     @staticmethod
     def _lock_key(scope, group_id):
@@ -151,9 +153,42 @@ class PipelineSnapshotGroupCompletion:
                 raise IngressJournalConflict('GROUP_SCHEDULE_RESULT_MISSING')
         return projection, retirement, audit
 
+    def _recovery_attempt_target(self, conn, args):
+        """Bind a short current-authority transaction before expensive assessment."""
+        authority = self._claims._recovery
+        if authority is None:
+            raise PermissionError('fixed original recovery group required')
+        current = authority.attempt_target_current(
+            conn, scope=args['scope'], actor=args['actor'], bindings=args['bindings'],
+        )
+        receipt = current.receipt
+        if receipt['body']['policyRef'] != PipelineExactRef.model_validate(
+                args['policy_ref']).model_dump(mode='json', by_alias=True, exclude_none=True):
+            raise ValueError('recovery completion policy differs')
+        target = (current.installation_id, current.generation, current.execution_epoch)
+        request_hash = self._attempt_request_hash(
+            scope=args['scope'], group_id=args['group_id'], actor=args['actor'],
+            source_claim_hash=receipt['body']['originalSourceClaimHash'],
+            manifest_hash=receipt['body']['inputManifestHash'],
+            policy_content_hash=PipelineExactRef.model_validate(receipt['body']['policyRef']).content_hash,
+            runs=(run for _, run in args['bindings']),
+        )
+        return target, request_hash
+
+    @staticmethod
+    def _attempt_request_hash(*, scope, group_id, actor, source_claim_hash,
+                              manifest_hash, policy_content_hash, runs):
+        return canonical_sha256(dict(
+            schemaVersion='aos.recoverable-store-attempt-request/v2',
+            tenant={'orgId': scope.org_id, 'projectId': scope.project_id},
+            groupId=group_id, actor=actor, originalSourceClaimHash=source_claim_hash,
+            inputManifestHash=manifest_hash, policyContentHash=policy_content_hash,
+            runIds=sorted(runs),
+        ))
+
     def _finish(self, args, execution, duration_ms, *, deadline, cancel_event):
         scope, bindings = args['scope'], args['bindings']
-        assessment = self._retirement._retirement._commands._relationships._assessments
+        assessment = self._retirement._retirement._commands._relationships
         with self._transaction(scope) as conn:
             current = assessment.run_current(conn, **args, execute=lambda value: value)
             rows = self._rows(conn, scope, bindings, lock=True)
@@ -196,14 +231,11 @@ class PipelineSnapshotGroupCompletion:
             if locked is not True:
                 raise IngressJournalConflict('GROUP_COMPLETION_BUSY')
             try:
+                attempt = None
+                recover_stopped = False
                 with self._transaction(scope) as conn:
                     rows = self._rows(conn, scope, bindings, lock=False)
                     route = self._route_with_recovery(rows)
-                    if route == 'stopped_failed':
-                        self._recover_stopped_group(conn,args,deadline=deadline,cancel_event=cancel_event)
-                        rows=self._rows(conn,scope,bindings,lock=False)
-                        route=self._route(rows)
-                        _check_active(deadline,cancel_event)
                     if route == 'completed':
                         projection, retirement, audit = self._read_completed(conn, args, rows)
                         attention = any(counts[key] for counts in audit.counts.values()
@@ -213,15 +245,56 @@ class PipelineSnapshotGroupCompletion:
                                     runs=sorted(rows), projection_hash=projection.content_hash,
                                     preparation_hash=retirement.preparation_hash,
                                     reconciliation_status=('requires_attention' if attention else 'complete'))
-                started = monotonic()
-                execution = self._retirement.execute(
-                    **args, deadline=deadline, cancel_event=cancel_event,
-                )
-                _check_active(deadline, cancel_event)
-                duration_ms = max(1, int((monotonic() - started) * 1000))
-                runs, projection, retirement = self._finish(
-                    args, execution, duration_ms, deadline=deadline, cancel_event=cancel_event,
-                )
+                    recover_stopped = route == 'stopped_failed'
+                    if self._claims._recovery is not None:
+                        target, request_hash = self._recovery_attempt_target(conn, args)
+                        installation_id, generation, execution_epoch = target
+                    else:
+                        current = self._retirement._retirement._commands._relationships._assessments.run_current(
+                            conn, **args, execute=lambda value: value,
+                        )
+                        drafts = tuple(item[1] for item in current.input.group.members)
+                        targets = {
+                            (draft.installation_ref.installation_id, draft.generation, draft.execution_epoch)
+                            for draft in drafts
+                        }
+                        if len(drafts) != len(bindings) or len(targets) != 1:
+                            raise IngressJournalConflict('GROUP_RUNTIME_TARGET_DIFFERS')
+                        installation_id, generation, execution_epoch = targets.pop()
+                        request_hash = self._attempt_request_hash(
+                            scope=scope, group_id=group_id, actor=actor,
+                            source_claim_hash=current.input.claim.request_hash,
+                            manifest_hash=current.input.manifest_hash,
+                            policy_content_hash=current.policy_ref.content_hash,
+                            runs=(run for _, run in bindings),
+                        )
+                    attempt = self._attempts.claim(
+                        conn, scope=scope, installation_id=installation_id,
+                        generation=generation, execution_epoch=execution_epoch,
+                        operation_key='snapshot-group-completion:'+group_id,
+                        idempotency_key='snapshot-group:'+group_id,
+                        request_hash=request_hash,
+                    )
+                with attempt:
+                    if recover_stopped:
+                        with self._transaction(scope) as conn:
+                            rows=self._rows(conn,scope,bindings,lock=False)
+                            if self._route_with_recovery(rows)!='stopped_failed':
+                                raise IngressJournalConflict('GROUP_RUN_STATE_CHANGED')
+                            self._recover_stopped_group(
+                                conn,args,deadline=deadline,cancel_event=cancel_event)
+                            if self._route(self._rows(conn,scope,bindings,lock=False))!='running':
+                                raise IngressJournalConflict('GROUP_RUN_STATE_CHANGED')
+                            _check_active(deadline,cancel_event)
+                    started = monotonic()
+                    execution = self._retirement.execute(
+                        **args, deadline=deadline, cancel_event=cancel_event,
+                    )
+                    _check_active(deadline, cancel_event)
+                    duration_ms = max(1, int((monotonic() - started) * 1000))
+                    runs, projection, retirement = self._finish(
+                        args, execution, duration_ms, deadline=deadline, cancel_event=cancel_event,
+                    )
                 return dict(status='succeeded', replayed=False, group_id=group_id,
                             runs=runs, projection_hash=projection.content_hash,
                             preparation_hash=retirement.preparation_hash,

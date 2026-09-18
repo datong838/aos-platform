@@ -6,7 +6,8 @@ from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.pipeline_runtime_control_owner import _ref_identity,decode_control_row
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.pipeline_snapshot_group_policy_owner import CurrentSnapshotGroupPolicy
-from aos_api.pipeline_snapshot_group_recovery_contracts import validate_saved_group_control_renewal
+from aos_api.pipeline_snapshot_group_recovery_contracts import (exact_saved_recovery_transfer_request,
+    validate_saved_group_control_renewal,validate_saved_group_successor_transfer)
 from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt
 from aos_api.pipeline_snapshot_group_saved_facts import SnapshotSavedFactsReader,HistoricalSnapshotInput
 from aos_api.pipeline_source_claim_owner import _text
@@ -20,6 +21,16 @@ class CurrentSavedGroupRecovery:
     execution: CurrentSnapshotGroupPolicy
 
 
+@dataclass(frozen=True)
+class CurrentRecoveryAttemptTarget:
+    """Current identity for attempt admission; never permits recovery or Store."""
+    receipt: dict
+    definition: dict
+    installation_id: str
+    generation: str
+    execution_epoch: int
+
+
 class SnapshotGroupRecoveryAuthority:
     def __init__(self,*,definitions,claims,ref):
         self._facts=SnapshotSavedFactsReader(definitions=definitions,claims=claims)
@@ -29,10 +40,9 @@ class SnapshotGroupRecoveryAuthority:
         self._ref=PipelineExactRef.model_validate(ref)
         self._group_id=_ref_identity(self._ref,'SnapshotGroupRecoveryRevision','snapshot-recovery-')
 
-    def run_current(self,conn,*,scope,actor,bindings,execute):
-        PipelineScheduleControlOwner._identity(conn,scope)
-        actor=_text(actor,240)
-        if not callable(execute) or type(bindings) is not tuple or len(bindings)!=12:
+    @staticmethod
+    def _pairs(bindings):
+        if type(bindings) is not tuple or len(bindings)!=12:
             raise ValueError('complete synchronous recovery consumer required')
         pairs=[]
         for item in bindings:
@@ -42,8 +52,96 @@ class SnapshotGroupRecoveryAuthority:
             pairs.append((ref,_text(item[1],200)))
         if len({r for _,r in pairs})!=12 or len({ref.resource_id for ref,_ in pairs})!=12:
             raise ValueError('unique recovery members required')
+        return tuple(pairs)
+
+    def attempt_target_current(self,conn,*,scope,actor,bindings):
+        """Authorize only a durable attempt envelope without reading saved row facts."""
+        PipelineScheduleControlOwner._identity(conn,scope)
+        actor=_text(actor,240)
+        pairs=self._pairs(bindings)
+        with conn.transaction():
+            receipt=read_recovery_receipt(conn,scope=scope,group_id=self._group_id)
+            if receipt is None:raise LookupError('snapshot recovery receipt unavailable')
+            if receipt['ref']!=self._ref.model_dump(mode='json',by_alias=True,exclude_none=True):
+                raise ValueError('snapshot recovery receipt is not current')
+            body=receipt['body']
+            if actor!=body['executor']:raise PermissionError('original recovery executor required')
+            definition_ref=PipelineExactRef.model_validate(body['currentDefinitionRef'])
+            identifier=_ref_identity(definition_ref,'SnapshotScheduleDefinitionRevision','snapshot-schedule-')
+            conn.execute('''SELECT revision FROM public.pipeline_snapshot_schedule_definition_head
+                WHERE org_id=%s AND project_id=%s AND definition_id=%s FOR UPDATE''',(*scope.key,identifier))
+            definition=self._definitions.read(conn,scope=scope,definition_id=identifier)
+            if definition is None or definition['ref']!=body['currentDefinitionRef'] or definition['body']['state']!='enabled':
+                raise ValueError('recovery definition is not current enabled authority')
+            row=conn.execute('''SELECT request FROM public.pipeline_snapshot_schedule_definition_revision
+                WHERE org_id=%s AND project_id=%s AND definition_id=%s AND revision=%s''',
+                (*scope.key,identifier,definition['ref']['revision'])).fetchone()
+            if row is None or row['request'].get('intent')!='renew_saved_group':
+                raise ValueError('saved-only recovery definition required')
+            if (definition['body']['executor']!=actor or definition['body']['policyRef']!=body['policyRef']
+                    or self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
+                        installation_id=definition['body']['installationId'],generation=definition['body']['generation'],
+                        actor=actor) is not True):
+                raise PermissionError('current recovery definition permission required')
+            current_bindings=self._definitions._saved_bindings(conn,scope,definition['body'])
+            latest=PipelineScheduleControlOwner.read_latest_many(
+                conn,scope=scope,schedule_ids=tuple(b.schedule_id for b in current_bindings))
+            if latest!=current_bindings:
+                raise ValueError('recovery bindings are not current')
+            saved=conn.execute('''SELECT ordinal,schedule_id,run_id FROM public.pipeline_snapshot_schedule_member
+                WHERE org_id=%s AND project_id=%s AND group_id=%s ORDER BY ordinal''',
+                (*scope.key,self._group_id)).fetchall()
+            if (len(saved)!=12 or [r['ordinal'] for r in saved]!=list(range(1,13))
+                    or len({r['schedule_id'] for r in saved})!=12 or len({r['run_id'] for r in saved})!=12):
+                raise ValueError('saved snapshot schedule membership differs')
+            runs={r['schedule_id']:r['run_id'] for r in saved}
+            if ({b.schedule_id for b in current_bindings}!=set(runs)
+                    or set(pairs)!={(b.control_ref,runs[b.schedule_id]) for b in current_bindings}):
+                raise ValueError('recovery requires complete exact current control and original run pairs')
+            schedules=conn.execute('''SELECT id,pipeline_id,enabled,ingest FROM public.meta_schedule
+                WHERE org_id=%s AND project_id=%s AND id=ANY(%s) ORDER BY id COLLATE "C" FOR UPDATE''',
+                (*scope.key,list(runs))).fetchall()
+            indexed={r['id']:r for r in schedules}
+            members=conn.execute('''SELECT schedule_id,definition_id,revision
+                FROM public.pipeline_snapshot_schedule_current_member
+                WHERE org_id=%s AND project_id=%s AND schedule_id=ANY(%s)''',
+                (*scope.key,list(runs))).fetchall()
+            member_by_id={m['schedule_id']:m for m in members}
+            targets=set()
+            for binding in current_bindings:
+                schedule=indexed.get(binding.schedule_id);member=member_by_id.get(binding.schedule_id)
+                if (binding.actor!=actor or binding.installation_id!=definition['body']['installationId']
+                        or binding.generation!=definition['body']['generation'] or schedule is None or member is None
+                        or schedule['enabled'] is not True
+                        or (str(member['definition_id']),member['revision'])!=(identifier,definition['ref']['revision'])
+                        or schedule['pipeline_id']!=binding.pipeline_id or type(schedule['ingest']) is not dict
+                        or schedule['ingest'].get('kind')!='pipeline-live-v1'
+                        or schedule['ingest'].get('pipelineId')!=binding.pipeline_id):
+                    raise ValueError('recovery current schedule membership differs')
+                ref=binding.control_ref
+                control=conn.execute('''SELECT * FROM public.pipeline_runtime_control_revision
+                    WHERE org_id=%s AND project_id=%s AND control_id=%s AND revision=%s''',
+                    (*scope.key,ref.resource_id.removeprefix('pipeline-control-'),ref.revision)).fetchone()
+                record=decode_control_row(control) if control is not None else None
+                if (record is None or record.ref!=ref or record.actor!=actor
+                        or record.draft.pipeline_id!=binding.pipeline_id
+                        or record.draft.installation_ref.installation_id!=binding.installation_id
+                        or record.draft.generation!=binding.generation):
+                    raise ValueError('recovery execution control differs')
+                targets.add((binding.installation_id,binding.generation,record.draft.execution_epoch))
+            if len(targets)!=1:
+                raise ValueError('recovery runtime target differs')
+            installation_id,generation,execution_epoch=targets.pop()
+            return CurrentRecoveryAttemptTarget(receipt,definition,installation_id,generation,execution_epoch)
+
+    def run_current(self,conn,*,scope,actor,bindings,execute):
+        PipelineScheduleControlOwner._identity(conn,scope)
+        actor=_text(actor,240)
+        if not callable(execute):
+            raise ValueError('complete synchronous recovery consumer required')
+        pairs=self._pairs(bindings)
         with conn.transaction(), self._definitions._permission.reuse_locked_transaction(conn):
-            before=self._load(conn,scope,actor,tuple(pairs))
+            before=self._load(conn,scope,actor,pairs)
             receipt,facts,definition,current_bindings=before
             def consume(execution):
                 controls=[]
@@ -55,7 +153,10 @@ class SnapshotGroupRecoveryAuthority:
                     record=decode_control_row(row)
                     if record.ref!=ref or record.draft!=draft:raise ValueError('recovery execution control differs')
                     controls.append(record)
-                validate_saved_group_control_renewal(facts.controls,tuple(controls))
+                transferred=(definition['body']['installationId'],definition['body']['generation'])!=(
+                    facts.definition['body']['installationId'],facts.definition['body']['generation'])
+                if transferred:validate_saved_group_successor_transfer(facts.controls,tuple(controls))
+                else:validate_saved_group_control_renewal(facts.controls,tuple(controls))
                 types={d.pipeline_id:m.read_spec.object_type for _,d,m in execution.group.members}
                 if types!={s.pipeline_id:s.object_type for s in CANONICAL_QYH_SOURCES}:
                     raise ValueError('canonical recovery mappings required')
@@ -63,7 +164,7 @@ class SnapshotGroupRecoveryAuthority:
                     raise ValueError('saved recovery mapping differs')
                 result=execute(CurrentSavedGroupRecovery(receipt,facts,execution))
                 _reject_deferred(result)
-                if self._load(conn,scope,actor,tuple(pairs))!=before:
+                if self._load(conn,scope,actor,pairs)!=before:
                     raise ValueError('current recovery facts changed during consumption')
                 return result
             return self._definitions._groups.run_current(conn,scope=scope,actor=actor,
@@ -84,9 +185,6 @@ class SnapshotGroupRecoveryAuthority:
                 or facts.definition['body']['executor']!=actor):
             raise ValueError('recovery original authority differs')
         identifier=facts.definition['body']['definitionId']
-        if self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
-                installation_id=facts.definition['body']['installationId'],generation=facts.definition['body']['generation'],actor=actor) is not True:
-            raise PermissionError('current recovery executor permission required')
         conn.execute('''SELECT revision FROM public.pipeline_snapshot_schedule_definition_head
             WHERE org_id=%s AND project_id=%s AND definition_id=%s FOR UPDATE''',(*scope.key,identifier))
         definition=self._definitions.read(conn,scope=scope,definition_id=identifier)
@@ -97,6 +195,19 @@ class SnapshotGroupRecoveryAuthority:
             (*scope.key,identifier,definition['ref']['revision'])).fetchone()
         if row is None or row['request'].get('intent')!='renew_saved_group':
             raise ValueError('saved-only recovery definition required')
+        transferred=(definition['body']['installationId'],definition['body']['generation'])!=(
+            facts.definition['body']['installationId'],facts.definition['body']['generation'])
+        if transferred:
+            prior=definition['body']['priorRef']
+            transfer=conn.execute('''SELECT request,body FROM public.pipeline_snapshot_schedule_definition_revision
+                WHERE org_id=%s AND project_id=%s AND definition_id=%s AND revision=%s AND content_hash=%s''',
+                (*scope.key,identifier,prior['revision'],prior['contentHash'])).fetchone()
+            if (transfer is None or not exact_saved_recovery_transfer_request(transfer['request'],scope=scope,
+                    current=transfer['body'],group_id=self._group_id,recovery_ref=body['priorRef'],actor=actor)):
+                raise ValueError('saved recovery transfer authority differs')
+        if self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
+                installation_id=definition['body']['installationId'],generation=definition['body']['generation'],actor=actor) is not True:
+            raise PermissionError('current recovery executor permission required')
         if definition['body']['executor']!=actor or definition['body']['policyRef']!=body['policyRef']:
             raise ValueError('recovery definition actor or policy differs')
         bindings=self._definitions._saved_bindings(conn,scope,definition['body'])

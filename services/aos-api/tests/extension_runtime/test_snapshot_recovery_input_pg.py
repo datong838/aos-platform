@@ -1,7 +1,12 @@
 """Saved recovery retains source facts and cannot reserve another read."""
+from dataclasses import replace
 import pytest
 from types import SimpleNamespace as NS
-from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
+from aos_api.pipeline_source_claim_owner import (PipelineSourceClaimOwner,_SavedRecoveryAdmission,
+    _validate_saved_recovery_context)
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
+from aos_api.pipeline_runtime_control_owner import decode_control_row
+from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.pipeline_snapshot_group_input_owner import PipelineSnapshotGroupInputOwner
 from aos_api.pipeline_snapshot_group_claim_owner import PipelineSnapshotGroupClaimOwner
 
@@ -26,6 +31,35 @@ def test_original_input_uses_current_window_without_changing_original_claims(aut
         old={m.control_ref.resource_id:m.control_ref for m in source.claim.members}
         assert all(ref.revision==old[ref.resource_id].revision+1 for ref,_,_ in source.group.members)
         assert conn.execute('SELECT count(*) AS n FROM pipeline_controlled_source_claim').fetchone()['n']==12
+    assert state['calls']==1
+
+
+def test_successor_family_requires_authority_admission_and_same_read_semantics(authority_case):
+    runtime,_,command,state,_,authority,args=authority_case
+    claims=recovered_claims(authority_case);ref,run=args['bindings'][0]
+    with runtime._transaction(command['scope']) as conn:
+        admission=claims._guard_schedule(conn,scope=command['scope'],run_id=run,control_ref=ref,actor=command['actor'])
+        row=conn.execute('''SELECT r.* FROM pipeline_controlled_source_claim c
+            JOIN pipeline_runtime_control_revision r ON r.org_id=c.org_id AND r.project_id=c.project_id
+                AND r.control_id=c.control_id AND r.revision=c.control_revision
+            WHERE c.org_id=%s AND c.project_id=%s AND c.run_id=%s''',(*command['scope'].key,run)).fetchone()
+        original=decode_control_row(row)
+        current=next(draft for current_ref,draft,_ in authority.run_current(conn,**args,execute=lambda value:value.execution.group).members
+            if current_ref==ref)
+        successor_ref=PipelineExactRef(resourceType='PipelineRuntimeControlRevision',
+            resourceId='pipeline-control-00000000-0000-0000-0000-000000000001',revision=1,
+            contentHash='sha256:'+'0'*64)
+        proof=_SavedRecoveryAdmission(admission.original_controls,True)
+        _validate_saved_recovery_context(proof,claims.read_saved_current(conn,scope=command['scope'],run_id=run,
+            control_ref=ref,actor=command['actor']),successor_ref,current,original)
+        with pytest.raises(RuntimeConflict,match='family'):
+            _validate_saved_recovery_context(_SavedRecoveryAdmission(admission.original_controls,False),
+                claims.read_saved_current(conn,scope=command['scope'],run_id=run,control_ref=ref,actor=command['actor']),
+                successor_ref,current,original)
+        claimed=claims.read_saved_current(conn,scope=command['scope'],run_id=run,control_ref=ref,actor=command['actor'])
+        with pytest.raises(RuntimeConflict,match='context'):
+            _validate_saved_recovery_context(proof,replace(claimed,generation='00000000-0000-0000-0000-000000000002'),
+                successor_ref,current,original)
     assert state['calls']==1
 
 

@@ -54,6 +54,11 @@ def test_original_partial_store_commit_recovers_under_new_window_once(recovery_c
     call=dict(scope=command['scope'],actor=command['actor'],recovery_ref=receipt['ref'])
     result=runtime_for(runtime,owner).resume_saved(**call)
     assert result['status']=='succeeded' and result['input_replayed'] is True
+    with runtime._transaction(command['scope']) as conn:
+        attempt_hashes=conn.execute('''SELECT request_hash FROM extension_runtime_execution_attempt
+            WHERE org_id=%s AND project_id=%s AND operation_kind='recoverable_store'
+            ORDER BY accepted_at,attempt_id''',command['scope'].key).fetchall()
+        assert len(attempt_hashes)==2 and len({row['request_hash'] for row in attempt_hashes})==1
     before=counts(runtime,command['scope'])
     assert before==dict(meta_schedule_run=12,pipeline_controlled_source_claim=12,ecom_object=12,ecom_ingest_receipt=13,
         ecommerce_ingress_dataset_receipt=12,ecom_link=1)

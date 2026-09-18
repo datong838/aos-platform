@@ -1,6 +1,7 @@
 """Group configuration CAS and stop behavior with original PG controls."""
 import hashlib
 import json
+from dataclasses import replace
 from types import SimpleNamespace as NS
 from uuid import uuid4
 
@@ -14,7 +15,7 @@ from tests.asset_registry.test_installation_store import _composition_inputs
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
-from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotScheduleDefinitionOwner
+from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotScheduleDefinitionOwner, _reference
 from aos_api.source_readiness_contracts import CANONICAL_QYH_SOURCES
 
 
@@ -89,6 +90,27 @@ def test_configure_enable_disable_retire_keeps_history(definition_case):
     assert conn.execute('SELECT count(*) AS n FROM pipeline_snapshot_schedule_definition_revision').fetchone()['n']==4
     assert owner.transition(conn,**common,intent='enable',expected_ref=first['ref'],idempotency_key='enable')==enabled
     assert owner.read(conn,scope=args['scope'],definition_id=args['definition_id'])==retired
+
+
+def test_disabled_definition_can_retire_after_formal_installation_release(definition_case,monkeypatch):
+    conn,owner,args=definition_case
+    first=owner.configure(conn,**args)
+    monkeypatch.setattr(owner,'_released_retirement_allowed',lambda *a,**k:True)
+    monkeypatch.setattr(owner,'_permission',lambda *a,**k:(_ for _ in ()).throw(AssertionError('released path reopened permission')))
+    retired=owner.transition(conn,scope=args['scope'],definition_id=args['definition_id'],actor=args['actor'],
+        intent='retire',expected_ref=first['ref'],idempotency_key='released-retire')
+    assert retired['body']['state']=='retired'
+    assert conn.execute('SELECT count(*) AS n FROM pipeline_snapshot_schedule_current_member').fetchone()['n']==0
+
+
+def test_released_retirement_never_bypasses_non_retire_permission(definition_case,monkeypatch):
+    conn,owner,args=definition_case
+    first=owner.configure(conn,**args)
+    monkeypatch.setattr(owner,'_released_retirement_allowed',lambda *a,**k:True)
+    monkeypatch.setattr(owner,'_permission',lambda *a,**k:False)
+    with pytest.raises(PermissionError,match='current installation'):
+        owner.transition(conn,scope=args['scope'],definition_id=args['definition_id'],actor=args['actor'],
+            intent='enable',expected_ref=first['ref'],idempotency_key='released-cannot-enable')
 
 
 def test_membership_and_revision_conflicts_do_not_change_configuration(definition_case):
@@ -192,3 +214,77 @@ def test_edit_disabled_definition_creates_exact_successor(definition_case):
     assert edited['body']['cron']=='*/15 9 * * *'
     assert edited['body']['state']=='disabled'
     assert conn.execute('SELECT count(*) AS n FROM pipeline_snapshot_schedule_current_member WHERE revision=2').fetchone()['n']==12
+
+
+def test_ordinary_configure_cannot_transfer_installation(definition_case,monkeypatch):
+    conn,owner,args=definition_case
+    first=owner.configure(conn,**args)
+    target_installation,target_generation=str(uuid4()),str(uuid4())
+    transferred=tuple(replace(binding,installation_id=target_installation,generation=target_generation)
+                      for binding in args['bindings'])
+    monkeypatch.setattr(owner,'_permission',lambda *a,**k:True)
+    with pytest.raises(ValueError,match='cannot transfer'),conn.transaction():
+        owner.configure(conn,**(args|{'bindings':transferred,'expected_ref':first['ref'],
+            'idempotency_key':'ordinary-transfer-denied'}))
+    assert owner.read(conn,scope=args['scope'],definition_id=args['definition_id'])==first
+
+
+def test_saved_recovery_transfer_uses_dedicated_gate(definition_case,monkeypatch):
+    conn,owner,args=definition_case
+    first=owner.configure(conn,**args)
+    target_installation,target_generation=str(uuid4()),str(uuid4())
+    transferred=tuple(replace(binding,installation_id=target_installation,generation=target_generation)
+                      for binding in args['bindings'])
+    monkeypatch.setattr(owner,'_permission',lambda *a,**k:True)
+    def blocked(*_args,**_kwargs):
+        raise ValueError('saved recovery gate reached')
+    monkeypatch.setattr(owner,'_require_saved_recovery_transfer',blocked)
+    with pytest.raises(ValueError,match='gate reached'),conn.transaction():
+        owner.transfer_saved_recovery(conn,scope=args['scope'],definition_id=args['definition_id'],
+            group_id=str(uuid4()),actor=args['actor'],bindings=transferred,expected_ref=first['ref'],
+            expected_recovery_ref={'resourceType':'SnapshotGroupRecoveryRevision',
+                'resourceId':'snapshot-recovery-'+str(uuid4()),'revision':1,
+                'contentHash':'sha256:'+'a'*64},idempotency_key='dedicated-transfer')
+    assert owner.read(conn,scope=args['scope'],definition_id=args['definition_id'])==first
+
+
+def test_saved_recovery_anchor_allows_only_an_exact_chained_transfer():
+    from aos_api.asset_registry.canonical_json import canonical_sha256
+    from aos_api.tenant_scope import TenantScope
+
+    scope=TenantScope('org-org','dev-project')
+    definition_id=str(uuid4())
+    recovery_ref={'resourceType':'SnapshotGroupRecoveryRevision','resourceId':'snapshot-recovery-group-a',
+        'revision':1,'contentHash':'sha256:'+'7'*64}
+    anchor_hash='sha256:'+'3'*64
+    def body(revision,prior,installation):
+        return {'schemaVersion':'aos.snapshot-schedule-definition/v1','orgId':scope.org_id,
+            'projectId':scope.project_id,'definitionId':definition_id,'revision':revision,
+            'priorRef':prior,'installationId':installation,'generation':str(uuid4()),'state':'disabled',
+            'cron':'0 8 * * *','timezone':'Asia/Shanghai','policyRef':{},'members':[{} for _ in range(12)],
+            'executor':'owner','actor':'owner','createdAt':'2026-09-17T00:00:00+00:00'}
+    ref3={'resourceType':'SnapshotScheduleDefinitionRevision','resourceId':'snapshot-schedule-'+definition_id,
+        'revision':3,'contentHash':anchor_hash}
+    previous=body(4,ref3,str(uuid4()))
+    ref4=_reference(previous)
+    current=body(5,ref4,str(uuid4()))
+    request5={'orgId':scope.org_id,'projectId':scope.project_id,'definitionId':definition_id,
+        'actor':'owner','intent':'transfer_saved_recovery','expectedRef':ref4,'settings':None,
+        'transfer':{'groupId':'group-a','expectedRecoveryRef':recovery_ref}}
+    rows={
+        (5,None):{'body':current,'content_hash':_reference(current)['contentHash'],'revision':5,
+            'state':'disabled','request':request5,'request_hash':canonical_sha256(request5)},
+        (4,ref4['contentHash']):{'body':previous,'content_hash':ref4['contentHash'],'revision':4,
+            'state':'disabled','request':{},'request_hash':canonical_sha256({})},
+    }
+    class Connection:
+        def execute(self,_sql,args):
+            revision=args[-1] if len(args)==4 else args[-2]
+            content_hash=None if len(args)==4 else args[-1]
+            return NS(fetchone=lambda:rows.get((revision,content_hash)))
+    assert PipelineSnapshotScheduleDefinitionOwner._saved_recovery_anchor(Connection(),scope=scope,
+        prior=current,group_id='group-a',recovery_ref=recovery_ref,
+        recovery_revision=3,recovery_hash=anchor_hash) is True
+    assert PipelineSnapshotScheduleDefinitionOwner._saved_recovery_anchor(Connection(),scope=scope,
+        prior=current,group_id='group-b',recovery_ref=recovery_ref,
+        recovery_revision=3,recovery_hash=anchor_hash) is False

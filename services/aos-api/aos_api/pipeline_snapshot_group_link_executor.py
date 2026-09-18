@@ -34,9 +34,10 @@ class ControlledSnapshotGroupLinkExecutor:
 
         with self._transaction(scope) as conn:
             saved = current(conn)
-            _check_active(**active)
-            result = self._store.apply_strict_link_batch(saved.command) if saved.command is not None else None
-            _check_active(**active)
+        _check_active(**active)
+        result = self._store.apply_strict_link_batch(saved.command) if saved.command is not None else None
+        _check_active(**active)
+        with self._transaction(scope) as conn:
             current(conn)
         # A Store commit is independently durable. On any later failure, retain
         # this original command and recover via its exact idempotency Receipt.

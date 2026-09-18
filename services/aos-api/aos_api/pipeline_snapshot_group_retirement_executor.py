@@ -33,9 +33,10 @@ class ControlledSnapshotGroupRetirementExecutor:
 
         with self._transaction(scope) as conn:
             saved = current(conn)
-            _check_active(**active)
-            result = self._store.apply_strict_link_retirement_batch(saved.command) if saved.command is not None else None
-            _check_active(**active)
+        _check_active(**active)
+        result = self._store.apply_strict_link_retirement_batch(saved.command) if saved.command is not None else None
+        _check_active(**active)
+        with self._transaction(scope) as conn:
             current(conn)
         # Store effects are already committed; failures after here recover the
         # same original command and conditional Receipt, never a guessed batch.

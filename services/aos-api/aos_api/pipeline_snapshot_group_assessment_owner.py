@@ -16,6 +16,14 @@ class CurrentSnapshotGroupAssessment:
     content_hash: str
 
 
+@dataclass(frozen=True)
+class CurrentSnapshotGroupAssessmentMaterial:
+    """Complete saved input and policy captured by one current transaction."""
+    input: CurrentSnapshotGroupInput
+    policy_ref: PipelineExactRef
+    policy: object
+
+
 def assessment_payload(current):
     """Canonical JSON-compatible preparation body, not a caller-issued receipt."""
     source=current.input
@@ -25,6 +33,20 @@ def assessment_payload(current):
         policyRef=current.policy_ref.model_dump(mode='json',by_alias=True),policyHash=current.assessment.policy_hash,
         readStartedAt=source.read_started_at.isoformat(),readCompletedAt=source.read_completed_at.isoformat(),
         counts=current.assessment.counts,candidateLinks=[dict(link,source_updated_at=link['source_updated_at'].isoformat()) for link in current.assessment.candidate_links])
+
+
+def _outputs_by_pipeline(group,parents):
+    if type(parents) is not tuple or len(parents)!=len(group.members):
+        raise ValueError('exact original parent pipelines required')
+    indexed={}
+    for parent in parents:
+        if type(parent) is not dict or type(parent.get('pipelineId')) is not str or parent['pipelineId'] in indexed:
+            raise ValueError('exact original parent pipelines required')
+        indexed[parent['pipelineId']]=parent
+    current={draft.pipeline_id:mapping for _,draft,mapping in group.members}
+    if len(current)!=len(group.members) or set(current)!=set(indexed):
+        raise ValueError('current and original parent pipelines differ')
+    return {mapping.read_spec.object_type:indexed[pipeline]['outputRows'] for pipeline,mapping in current.items()}
 
 
 class PipelineSnapshotGroupAssessmentOwner:
@@ -40,6 +62,29 @@ class PipelineSnapshotGroupAssessmentOwner:
         return self._run(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,
             policy_ref=policy_ref,execute=execute,completed_read=True)
 
+    def materialize_current(self,conn,*,scope,group_id,actor,bindings,policy_ref,completed_read=False):
+        """Freeze input and policy without performing the potentially long assessment."""
+        ref=PipelineExactRef.model_validate(policy_ref)
+        def consume_input(source):
+            policy=self._policies._load(conn,scope,source.group,ref)
+            current=CurrentSnapshotGroupAssessmentMaterial(source,ref,policy)
+            if self._policies._load(conn,scope,source.group,ref)!=policy:
+                raise ValueError('current group policy changed during materialization')
+            return current
+        read=self._inputs.run_completed_current if completed_read else self._inputs.run_current
+        return read(conn,scope=scope,group_id=group_id,actor=actor,bindings=bindings,execute=consume_input)
+
+    @staticmethod
+    def assess_materialized(current):
+        """Pure deterministic work. The caller must not retain a database transaction."""
+        if type(current) is not CurrentSnapshotGroupAssessmentMaterial:
+            raise TypeError('exact current assessment material required')
+        outputs=_outputs_by_pipeline(current.input.group,current.input.parents)
+        assessment=assess_snapshot_relationships(
+            outputs,current.policy,observed_at=current.input.read_completed_at)
+        provisional=CurrentSnapshotGroupAssessment(current.input,current.policy_ref,assessment,'')
+        return replace(provisional,content_hash=observed_rows_hash([assessment_payload(provisional)]))
+
     def _run(self,conn,*,scope,group_id,actor,bindings,policy_ref,execute,completed_read):
         if not callable(execute):raise TypeError('synchronous assessment consumer required')
         def consume_input(source):
@@ -49,7 +94,7 @@ class PipelineSnapshotGroupAssessmentOwner:
             # Keep the original installed-policy loader and both revalidations.
             ref=PipelineExactRef.model_validate(policy_ref)
             policy=self._policies._load(conn,scope,source.group,ref)
-            outputs={mapping.read_spec.object_type:parent['outputRows'] for (_,_,mapping),parent in zip(source.group.members,source.parents)}
+            outputs=_outputs_by_pipeline(source.group,source.parents)
             assessment=assess_snapshot_relationships(outputs,policy,observed_at=source.read_completed_at)
             provisional=CurrentSnapshotGroupAssessment(source,ref,assessment,'')
             bound=replace(provisional,content_hash=observed_rows_hash([assessment_payload(provisional)]))

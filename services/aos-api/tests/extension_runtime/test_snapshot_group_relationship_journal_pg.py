@@ -1,5 +1,6 @@
 """Immutable relationship journal with original PG inputs and explicit asset fixtures."""
 from copy import deepcopy
+from dataclasses import replace
 import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,7 +15,9 @@ from test_controlled_snapshot_ingress_pg import executor_case
 from test_snapshot_group_claim_owner_pg import group_claim_case
 from test_controlled_snapshot_group_ingress_pg import prepared_case
 from test_snapshot_group_assessment_owner_pg import assessment_case
-from aos_api.pipeline_snapshot_group_assessment_owner import assessment_payload
+from aos_api.pipeline_snapshot_group_assessment_owner import (
+    CurrentSnapshotGroupAssessmentMaterial,assessment_payload,
+)
 from aos_api.pipeline_snapshot_group_relationship_journal import PipelineSnapshotGroupRelationshipJournal
 from aos_api.source_read_observation import observed_rows_hash
 
@@ -112,3 +115,32 @@ def test_shape_valid_but_false_counts_cannot_be_consumed_as_current(journal_case
             (*args['scope'].key,args['group_id'],current.input.manifest_hash,Jsonb(body['policyRef']),body['policyHash'],observed_rows_hash([body]),Jsonb(body)))
     with pytest.raises(IngressJournalConflict,match='RELATIONSHIP_PREPARATION_DRIFT'),conn.transaction():journal.read_current(conn,**args)
     assert state['calls']==1
+
+
+def test_saved_recovery_persists_outside_assessment_without_recomputing(journal_case,monkeypatch):
+    conn,args,_,journal,executor=journal_case
+    with conn.transaction():
+        current=journal._assessments.run_current(conn,**args,execute=lambda value:value)
+        policy=journal._assessments._policies._load(conn,args['scope'],current.input.group,current.policy_ref)
+    material=CurrentSnapshotGroupAssessmentMaterial(current.input,current.policy_ref,policy)
+    monkeypatch.setattr(executor._claims,'_recovery',object())
+    monkeypatch.setattr(journal._assessments,'materialize_current',lambda *a,**kw:material)
+    monkeypatch.setattr(journal._assessments,'assess_materialized',
+        lambda value:pytest.fail('assessment must remain outside persistence transaction'))
+    with conn.transaction():saved=journal.prepare_assessed_current(conn,current,**args)
+    assert saved.created and saved.assessment_hash==current.content_hash
+
+
+def test_saved_recovery_rejects_material_drift_before_persistence(journal_case,monkeypatch):
+    from aos_api.ec_ingress_journal import IngressJournalConflict
+    conn,args,_,journal,executor=journal_case
+    with conn.transaction():
+        current=journal._assessments.run_current(conn,**args,execute=lambda value:value)
+        policy=journal._assessments._policies._load(conn,args['scope'],current.input.group,current.policy_ref)
+    changed=replace(current.input,manifest_hash='sha256:'+'f'*64)
+    monkeypatch.setattr(executor._claims,'_recovery',object())
+    monkeypatch.setattr(journal._assessments,'materialize_current',lambda *a,**kw:
+        CurrentSnapshotGroupAssessmentMaterial(changed,current.policy_ref,policy))
+    with pytest.raises(IngressJournalConflict,match='MATERIAL_CHANGED'),conn.transaction():
+        journal.prepare_assessed_current(conn,current,**args)
+    assert conn.execute('SELECT count(*) AS n FROM pipeline_snapshot_group_relationship').fetchone()['n']==0
