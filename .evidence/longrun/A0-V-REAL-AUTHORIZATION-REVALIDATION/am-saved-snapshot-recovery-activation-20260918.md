@@ -223,3 +223,12 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   未写数据库、未重复业务执行，也未改变 AM 状态。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；浏览器稳定态仍为“暂无可见工作台入口”，门禁 NOT GREEN，
   未触发重读。测试与浏览器结果均未被当作真实经营闭环完成证明。
+
+## 15:05–15:10Z 持续只读监视波
+
+- 在同一任务内启动只读监视会话，未等待定时任务；AM 连续输出 revision291 至 revision299，最新 heartbeat
+  `2026-09-18T15:09:29Z`、lease `15:11:29Z`，全程 state=running、completedAt 为空。
+- 阶段性权威事件读取为 sequence 1–287 连续，仅 1 条 accepted、0 条 failed/succeeded；正确
+  `colima-aos-extension` context 下三 runner 均 running、未 restarting/OOM/dead。没有启动第二业务执行或写入探针。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；复用已打开的浏览器页复验仍为“暂无可见工作台入口”，
+  门禁 NOT GREEN，未触发重读。监视会话在本波提交时继续运行。
