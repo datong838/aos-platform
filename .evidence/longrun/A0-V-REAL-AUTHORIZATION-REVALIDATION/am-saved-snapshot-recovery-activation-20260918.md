@@ -212,3 +212,14 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   冒充具体 SQL、Store 提交或 attempt 成功证明。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；浏览器稳定加载 AOS v1.6.5，电商目录仍为
   “暂无可见工作台入口”，门禁保持 NOT GREEN，未触发重读。
+
+## 15:01–15:05Z 连续执行下一波
+
+- 未等待定时任务，上一波提交后直接进入本波。AM 从 revision284/running 连续推进至 revision290/running；最新
+  heartbeat `2026-09-18T15:04:55Z`、lease `15:06:55Z`，completedAt 为空。十二 Run 始终全部 running。
+- 中间事件读取为 sequence 1–287 连续，仅 1 条 accepted、0 条 failed/succeeded；正确
+  `colima-aos-extension` context 下三 runner 均 running、未 restarting/OOM/dead。
+- 一次跨周期只读命令在工具 30 秒输出窗结束时尚处模块初始化，随后确认没有遗留探针进程，并重新读取权威 attempt；该观察
+  未写数据库、未重复业务执行，也未改变 AM 状态。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；浏览器稳定态仍为“暂无可见工作台入口”，门禁 NOT GREEN，
+  未触发重读。测试与浏览器结果均未被当作真实经营闭环完成证明。
