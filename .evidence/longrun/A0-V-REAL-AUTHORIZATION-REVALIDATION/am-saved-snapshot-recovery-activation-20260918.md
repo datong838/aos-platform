@@ -57,3 +57,15 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - runtime status 为 `RUNTIME_HOST_ACTIVE`，仅一个 AM live target；主进程仍持有三个受管 Docker attach 子进程，数据库侧
   存在活动事务身份。日志中检出的异常属于旧 pid 的历史终止记录，不是当前 attempt 的新失败。
 - 浏览器稳定加载 AOS v1.6.5 后，“电商工作台”目录终态为“暂无可见工作台入口”；继续保持浏览器 NOT GREEN。
+
+## 13:07–13:10Z 自动接续观察
+
+- AM 仍只有 attempt `7d6cc3aa-881d-4aff-ac30-58978d06e85d`，推进至 revision59/running；最新 heartbeat
+  `2026-09-18T13:08:10Z`、lease `13:10:10Z`，未出现终态或第二 attempt。
+- 十二 Run running、dataset Receipt=12、relationship=1、原 link command=1/linkCount=1168；retirement=0、精确
+  Store Receipt=0、Store links=0、authoritative Store outbox=0、projection pending=0、live resources=3、canary=0。
+- 复核正式实现后确认：30 秒 heartbeat/120 秒 lease 由独立守护路径续租；昂贵的 retirement/Store 阶段完成后，
+  `_finish` 才在同一收口事务中关闭十二 Run 并写入 projection/retirement。因而 attempt 尚为 running 时，外部只读视图中
+  “十二 Run 仍 running 且 Store/retirement/projection 为 0”符合原子可见性设计，不能据此判定停滞，也不构成重发授权。
+- 浏览器稳定加载 AOS v1.6.5；“电商工作台”仍显示“暂无可见工作台入口”，继续保持浏览器 NOT GREEN；未点击
+  “重新读取目录”，未改变运行态。
