@@ -240,3 +240,12 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - 本次观察区间未出现终态，因此未执行 `enable/inspect/disable`，也未改变 definition、Run、Store 或资源状态。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；复用浏览器页复验仍为“暂无可见工作台入口”，
   门禁 NOT GREEN，未触发重读。监视会话在本波提交时继续运行。
+
+## 15:15–15:23Z 持续只读监视波
+
+- 首段监视器按预设 30 次读取正常退出，末端 revision311/running；同一任务立即续建只读监视器，连续观察
+  revision312 至 revision325。最新 heartbeat `2026-09-18T15:22:36Z`、lease `15:24:36Z`，均为 running。
+- 监视器轮换只读取 attempt，不创建业务 attempt、Run、Receipt 或 Store 写入；本区间未出现 succeeded/failed，因而没有执行
+  收口或失败退休动作。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；复用浏览器页复验仍为“暂无可见工作台入口”，
+  门禁 NOT GREEN，未触发重读。第二段监视器在本波提交时继续运行。
