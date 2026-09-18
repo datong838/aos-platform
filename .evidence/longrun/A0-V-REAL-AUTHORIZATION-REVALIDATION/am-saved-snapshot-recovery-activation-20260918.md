@@ -400,3 +400,19 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   revision574、`automaticAction=false`，权威边界与人工核对一致，控制剩余 4147 秒。
 - guard 运行前后没有业务状态写入；自然 heartbeat 可继续推进 revision。该工具不替代 Store Receipt 对账、终态收口、浏览器
   门禁或真实经营闭环验收。
+
+## 17:29–17:37Z 运行角色可见性纠正与 AM 无锁等待诊断
+
+- guard 继续读到 revision582/running，heartbeat `2026-09-18T17:32:39Z`、lease `17:34:39Z`，控制窗口
+  剩余 3921 秒；12 Run、12 dataset Receipt、1 relationship、1 link command/linkCount=1168 均不变，
+  link Store Receipt、`ecom_link`、link outbox、retirement 仍为 0，未发生未知结果重发。
+- 前一次 20 秒 `pg_stat_activity` 采样使用的是限权 runtime 角色；该角色对其他后端的
+  state/query 只能看到 `NULL/<insufficient privilege>`。因此“未见活动 SQL”的原判断无效，
+  不再用作 AM 进度或停滞证据。
+- 改用恢复库容器内 owner 的 `BEGIN READ ONLY` 视角后，确认 AM 主恢复会话处于同一个持续事务中；
+  当时事务已运行约 12 分钟，持有 162 个已授予锁、0 个等待锁，`pg_blocking_pids` 为空。
+  15 秒/0.05 秒高频只读观察中，该会话持续轮询 composition lock（180/302 个有效样本），
+  并穿插读取当前 pipeline graph、ingress command、budget/model/runtime/guard policy 及 installation 锁。
+- 因此当前更精确的判断是：AM 没有被 PostgreSQL blocker 卡住，而是在旧 host 进程中慢速重复完整当前
+  权限/composition 验证。m1 `f5de30e4` 已将同事务的该类完整权限检查从 8 次降为 1 次，
+  但 AM 仍是旧进程；为保护 unknown Store 边界，本段未重启、热替换、终止或重发。
