@@ -9,7 +9,7 @@
 
 ## 2. 安全不变量
 
-1. 复用范围只限一次最外层 `SnapshotGroupRecoveryAuthority.run_current()` 动态调用链；退出或异常后立即清除。
+1. 复用范围只限一次最外层 `SnapshotGroupRecoveryAuthority.run_current()` 自身建立或加入的事务动态调用链；退出或异常后立即清除。
 2. 缓存键至少绑定数据库连接身份、租户、installation、generation 与 actor；不同连接、事务、租户、安装、代次或主体必须重新校验。
 3. 只有首次 `CurrentConfigurationPermission` 返回严格 `True` 后才能登记；异常、拒绝或 deferred 结果不得缓存。
 4. 首次校验仍取得原 installation `FOR UPDATE`、membership/marking `FOR SHARE` 与 composition 完整性证据，这些锁保持至外层事务结束。
@@ -48,3 +48,13 @@
 - 若 psycopg 锁范围或嵌套事务语义不能证明首次权限依据在外层事务结束前稳定，则放弃缓存，不以性能为由削弱重验。
 - 若并发测试发现 cache 泄漏到第二连接、第二事务或异常后的调用，立即回退实现并保留 Red 证据。
 - 回退仅还原 authority 与测试文件；无迁移、数据写入或运行态变更。
+
+## 6. 实施与验证结果
+
+- Red：在同一连接和同一外层恢复事务中嵌套一次 `run_current()`，旧实现实际进入完整安装控制权限检查 8 次。
+- Green：`CurrentConfigurationPermission` 新增显式 `reuse_locked_transaction()` 作用域；仅在该作用域内缓存严格为 `True` 的 exact permission 结果，键绑定 permission 实例、连接对象、PostgreSQL backend PID、租户、installation、generation 与 actor。
+- `SnapshotGroupRecoveryAuthority.run_current()` 保留原先自行建立/加入事务的调用合同，并在事务内建立、在异常/正常退出时清理复用作用域；嵌套调用复用，`attempt_target_current()` 与其他调用路径不进入该作用域。
+- 新测试确认同一事务的 8 次完整控制权限检查降为 1 次，第二个顶层事务重新检查；既有成员资格撤销用例确认撤权后仍拒绝。
+- 专项结果：recovery authority 7 passed；owner/service/completion 与 AM saved/replacement/successor 相邻链 23 passed；配置/生产入口 3 passed；`py_compile` 与 `git diff --check` 通过。
+- 验证期间曾出现一次并行迁移对共享测试角色执行 `ALTER ROLE` 的 `tuple concurrently updated`，改为串行后通过；另修复原测试从 `conn.info.dsn` 丢失密码后重连的测试夹具问题，改为复用隔离运行时连接工厂。
+- 当前 AM runtime host 已在本提交前加载旧代码，未重启或热替换；本结果只证明后续加载新代码的恢复调用具备该优化，不证明当前 AM 提速、成功或经营闭环完成。

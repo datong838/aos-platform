@@ -1,6 +1,5 @@
 """Fixed recovery receipt requires fresh current authority on every use."""
 from datetime import timedelta
-import psycopg
 import pytest
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.pipeline_snapshot_group_recovery_authority import SnapshotGroupRecoveryAuthority
@@ -37,6 +36,29 @@ def test_exact_current_receipt_retains_original_facts_and_new_execution_window(a
         assert authority.run_current(conn,**args,execute=inspect)=='verified'
         assert conn.execute('SELECT count(*) AS n FROM pipeline_controlled_source_claim').fetchone()['n']==12
     assert state['calls']==1
+
+
+def test_nested_current_recovery_reuses_locked_permission_only_in_outer_call(
+        authority_case, monkeypatch):
+    runtime,_,command,_,_,authority,args=authority_case
+    permission=authority._definitions._permission
+    calls=[]
+    current_control_permission=permission._permission
+
+    def counted(**kwargs):
+        calls.append((id(kwargs['conn']),id(kwargs['locked']),kwargs['actor']))
+        return current_control_permission(**kwargs)
+
+    monkeypatch.setattr(permission,'_permission',counted)
+    with runtime._transaction(command['scope']) as conn:
+        def nested(_current):
+            return authority.run_current(conn,**args,execute=lambda _nested:'verified')
+        assert authority.run_current(conn,**args,execute=nested)=='verified'
+    assert len(calls)==1
+
+    with runtime._transaction(command['scope']) as conn:
+        assert authority.run_current(conn,**args,execute=lambda _current:'separate')=='separate'
+    assert len(calls)==2
 
 
 def test_wrong_executor_tenant_and_member_pairs_never_enter_consumer(authority_case):
@@ -88,9 +110,8 @@ def test_second_renewal_invalidates_fixed_prior_receipt(authority_case):
 
 def test_current_persisted_permission_is_rechecked_on_use(authority_case):
     runtime,_,command,state,_,authority,args=authority_case
-    with runtime._completion._connect() as connection:dsn=connection.info.dsn
     # Named isolated test database administration; never touch a real tenant.
-    with psycopg.connect(dsn) as admin:
+    with runtime._completion._connect() as admin:
         admin.execute('DELETE FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',
             (*command['scope'].key,command['actor']))
     with runtime._transaction(command['scope']) as conn:

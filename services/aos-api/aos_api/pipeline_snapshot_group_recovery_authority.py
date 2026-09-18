@@ -42,7 +42,7 @@ class SnapshotGroupRecoveryAuthority:
             pairs.append((ref,_text(item[1],200)))
         if len({r for _,r in pairs})!=12 or len({ref.resource_id for ref,_ in pairs})!=12:
             raise ValueError('unique recovery members required')
-        with conn.transaction():
+        with conn.transaction(), self._definitions._permission.reuse_locked_transaction(conn):
             before=self._load(conn,scope,actor,tuple(pairs))
             receipt,facts,definition,current_bindings=before
             def consume(execution):

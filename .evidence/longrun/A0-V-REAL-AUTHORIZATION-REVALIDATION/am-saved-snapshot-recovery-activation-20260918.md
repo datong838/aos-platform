@@ -351,3 +351,17 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   PENDING_ASYNC。其 delivery status 仍为较早 AR2 门禁，只作为开发记忆辅助，不作为 AM 当前事实权威。
 - 浏览器既有页面仍为 AOS v1.6.5 且电商目录“暂无可见工作台入口”，门禁 NOT GREEN。下一波方案先行评估同一
   恢复事务内已加锁当前安装权限的安全复用，保留跨事务、跨连接、跨租户和回调后非权限事实的完整重验。
+
+## 16:42–17:03Z 恢复事务权限复用实现与持续守护
+
+- AM 只读监视从 revision482 连续推进至 revision523/running；最新 heartbeat `2026-09-18T17:02:44Z`、lease
+  `17:04:44Z`，completedAt 为空。runtime host PID 99810 与 `caffeinate` PID 9489 均存活；未手工运行 definition、
+  未重发未知结果、未重启或热替换当前 host。
+- 方案先行实现当前安装权限的事务内 exact 复用：首次完整检查仍取得原安装/成员资格/标记/组合证据锁，只有严格 `True`
+  才缓存；作用域退出或异常立即 reset。Receipt、definition、saved facts、十二 bindings、schedule/control、policy 与回调后
+  `_load()` 比较仍逐层重读。
+- Red 记录嵌套恢复进入完整控制权限 8 次；Green 降为 1 次，第二个顶层事务重新检查。recovery authority 7 passed，
+  相邻恢复链 23 passed，配置/生产入口 3 passed，静态编译和差异检查通过。并行测试库角色争用与原测试 DSN 丢密码问题
+  均在串行及隔离连接工厂下消除，不属于产品运行失败。
+- 浏览器只读复验稳定加载 AOS v1.6.5，但电商目录仍为“暂无可见工作台入口”；没有点击“重新读取目录”，浏览器门禁
+  保持 NOT GREEN。测试绿与页面存活均未被当作 AM 或真实经营闭环成功证明。

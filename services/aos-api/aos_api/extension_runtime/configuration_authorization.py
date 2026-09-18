@@ -1,4 +1,6 @@
 """Trusted composition of current readers, not a business authority or permit."""
+from contextlib import contextmanager
+from contextvars import ContextVar
 from types import MappingProxyType
 
 from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
@@ -6,7 +8,11 @@ from aos_api.asset_registry.installation_store import PostgresInstallationStore
 
 from .configuration_contracts import ConfigurationDocument
 from .configuration_store import _target
+from .lifecycle_store import _require_transaction
 from .runtime_gate import _reject_deferred
+
+
+_LOCKED_PERMISSION_CACHE = ContextVar('locked_configuration_permission_cache', default=None)
 
 
 class ConfigurationAuthorization:
@@ -75,6 +81,20 @@ class CurrentConfigurationPermission:
             operation=CONFIGURE_RUNTIME_OPERATION
         )
 
+    @contextmanager
+    def reuse_locked_transaction(self, conn):
+        """Reuse one proven permission only inside the caller-owned transaction."""
+        _require_transaction(conn)
+        current = _LOCKED_PERMISSION_CACHE.get()
+        token = None
+        if current is None:
+            token = _LOCKED_PERMISSION_CACHE.set({})
+        try:
+            yield
+        finally:
+            if token is not None:
+                _LOCKED_PERMISSION_CACHE.reset(token)
+
     def __call__(
         self,
         conn,
@@ -86,6 +106,14 @@ class CurrentConfigurationPermission:
         actor,
         **_context,
     ):
+        _require_transaction(conn)
+        cache = _LOCKED_PERMISSION_CACHE.get()
+        key = (
+            id(self), id(conn), conn.info.backend_pid,
+            org_id, project_id, str(installation_id), str(generation), actor,
+        )
+        if cache is not None and key in cache:
+            return True
         row = conn.execute(
             """SELECT etag_version FROM bundle_installation
                WHERE org_id=%s AND project_id=%s AND installation_id=%s
@@ -102,7 +130,10 @@ class CurrentConfigurationPermission:
             installation_id=installation_id,
             expected_etag_version=etag,
         )
-        return self._permission(conn=conn, locked=locked, actor=actor)
+        allowed = self._permission(conn=conn, locked=locked, actor=actor)
+        if allowed is True and cache is not None:
+            cache[key] = True
+        return allowed
 
 
 class CurrentFourSourceConfigurationAuthorization(ConfigurationAuthorization):
