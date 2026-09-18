@@ -721,6 +721,26 @@ attempt 标为 abandoned，再由 current enabled binding 和同一 operation/re
 外部动作。Host 先加载 `9bfc5438` 并恢复 current target，Worker 后启动；若自然下一 attempt 成功则无需 AJ，随即按完整组路径
 disable definition。只有再次 terminal failed 且无 running attempt 时，才进入上段 AI→AJ 正式接续。
 
+AJ 已按上述正式路径完成安装、successor registration 与九路 cutover：installation
+`cc6b62cf-1d0c-4f6c-bf6f-5cfc80679244`、generation `6dc4f34a-5cc6-4b20-bfb8-8a002a7dcd76`，九路为
+extension routeRevision81/groupRevision108，claim resumed。保存定义由 AI rev42 disabled 转移为 AJ rev43 disabled，
+再由 recovery rev14 生成 rev44 enabled；manifest 与十二份 dataset Receipt 全部复用，`sourceReads=0`。自然 Worker 于
+`2026-09-18T00:07:37.489280Z` 创建 attempt `cc6db008-f9fa-4400-bed2-7585fcd159cd`，证明重启后的自然接管入口有效。
+
+本轮为排查权限读取的 installation 行锁，先后短暂停止 Host 与 Worker。Worker 停止后 AJ attempt 在 lease
+`2026-09-18T00:15:10.078923Z` 到期，并由原生过期恢复于 `2026-09-18T00:15:26.924957Z` 标为 abandoned revision13；
+Host 空窗跨过资源租约后按 fail-closed 规则释放三项资源，并把 AJ binding 推进为 revision7/epoch4、disabled/fenced/unknown。
+十二 Run 仍为 running，relationship1/link0/retirement0，未增加 dataset Receipt 或 source read。该事实说明系统没有在重启窗口
+越权续跑，但 AJ 已失去执行权，不能原地复活。rev44 已在 members12/running12/savedInput1/recovery14/fencedBinding1/
+releasedResources3 的 exact 守卫下暂停为 rev45 disabled。
+
+下一步固定为 AJ→AK direct successor：先由正式 disable Owner 对 AJ 完成 fence/detach，取得唯一 detach Receipt，并确认九路回到
+legacy、无 running/unresolved/pending/canary；随后在当前源码上创建 AK，走安装、配置、启用、successor registration、九路原子
+cutover。保存定义只能从 AJ rev45 disabled 转移到 AK disabled，再以 recovery rev14 的 exact ref 续签 rev15 并启用，仍保持
+`sourceReads=0`。本次不再中断 Host/Worker；自然 AK attempt 运行期间只用不争用 installation current 行锁的 runtime 只读查询观察
+attempt heartbeat、三资源续租和完成产物。只有 attempt succeeded、十二 Run 原子完成、dataset Receipt 总数仍为12、relationship1/
+link1/retirement1 且 canary0，才允许立即 disable definition。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
