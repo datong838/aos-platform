@@ -6,4 +6,7 @@ SPEC=importlib.util.spec_from_file_location("a0v_al_saved_snapshot_recovery",PAT
 def test_exact():
  s=PATH.read_text();assert "current['body']['revision']!=48" in s
  assert "'a0v-al-saved-input-recovery-v16'" in s and "'recoveries':16" in s
+ assert "'pause-failed'" in s and "FAILED_ATTEMPT='3e319ca5-9e8d-4b0e-a034-295cd3e5b645'" in s
+ assert "'failed_attempt':1" in s and "'link_count':1168" in s and "'store_receipt':0" in s
+ assert "'a0v-al-saved-snapshot-pause-failed-v1'" in s
  assert "run_definition" not in s and "'sourceReads':0" in s

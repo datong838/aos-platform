@@ -17,7 +17,11 @@ from a0v_qyh_current_product_event_first_chain import freeze
 STATE=snapshot.STATE.parent/'al-saved-snapshot-recovery-v1'
 GROUP='c5ff1926-45b0-56de-b6b3-07d5b7d053a1'
 MANIFEST='sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01'
-ACTIONS=('prepare','schedule-ingest','controls','transfer','renew','enable','inspect','pause','disable')
+ACTIONS=('prepare','schedule-ingest','controls','transfer','renew','enable','inspect','pause-failed','pause','disable')
+FAILED_ATTEMPT='3e319ca5-9e8d-4b0e-a034-295cd3e5b645'
+LINK_COMMAND_HASH='sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970'
+LINK_IDEMPOTENCY_KEY=('snapshot-group-links:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:'
+                      'bc77b98d9144f128154e876db40e4ebf8850b90c0d9196a7e67d0a908de33d4b')
 
 
 def profile():
@@ -136,6 +140,91 @@ def enable(plane):
 def inspect(plane):
     profile()
     return snapshot.inspect(plane)|{'outcome':'AL_SAVED_SNAPSHOT_INSPECTED'}
+
+
+def pause_failed(plane):
+    """Stop scheduling after AL crossed its exact budget-policy window."""
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+    from aos_api.tenant_scope import TenantScope
+    installation,generation=profile()
+    scope=TenantScope(**snapshot.baseline.SCOPE)
+    service=plane.pipeline_control_factory.build_snapshot_schedule(scope,source_controls=True)
+    status=service.read_runtime_status(definition_id=snapshot.DEFINITION_ID,actor=snapshot.ACTOR)
+    if status.get('configurationState')!='enabled' or status['definitionRef']['revision']!=50:
+        raise RuntimeError('exact enabled AL failed recovery definition revision50 required')
+    with consumer_connection(runtime_worker_connection,snapshot.baseline.SCOPE) as conn:
+        facts=dict(conn.execute('''SELECT
+          (SELECT count(*) FROM extension_runtime_execution_attempt WHERE org_id=%s AND project_id=%s
+            AND attempt_id=%s AND installation_id=%s AND generation=%s AND state='failed'
+            AND revision=382) failed_attempt,
+          (SELECT count(*) FROM extension_runtime_execution_attempt WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s AND state='running') running_attempts,
+          (SELECT count(*) FROM pipeline_snapshot_schedule_member
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) members,
+          (SELECT count(*) FROM meta_schedule_run r JOIN pipeline_snapshot_schedule_member m
+            ON (m.org_id,m.project_id,m.run_id)=(r.org_id,r.project_id,r.id)
+            WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s
+              AND r.status='running' AND r.executor_stopped IS FALSE AND r.finished_at IS NULL) running,
+          (SELECT count(*) FROM pipeline_snapshot_group_input
+            WHERE org_id=%s AND project_id=%s AND group_id=%s AND manifest_hash=%s) saved_input,
+          (SELECT count(*) FROM pipeline_snapshot_group_recovery_receipt
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) recoveries,
+          (SELECT count(*) FROM ecommerce_ingress_dataset_receipt d JOIN pipeline_snapshot_schedule_member m
+            ON (m.org_id,m.project_id,m.run_id)=(d.org_id,d.project_id,d.run_id)
+            WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s) dataset_receipts,
+          (SELECT count(*) FROM pipeline_snapshot_group_relationship
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) relationships,
+          (SELECT count(*) FROM pipeline_snapshot_group_link_command
+            WHERE org_id=%s AND project_id=%s AND group_id=%s
+              AND command_hash=%s) links,
+          (SELECT coalesce(max(link_count),0) FROM pipeline_snapshot_group_link_command
+            WHERE org_id=%s AND project_id=%s AND group_id=%s
+              AND command_hash=%s) link_count,
+          (SELECT count(*) FROM pipeline_snapshot_group_retirement
+            WHERE org_id=%s AND project_id=%s AND group_id=%s) retirements,
+          (SELECT count(*) FROM ecom_ingest_receipt WHERE org_id=%s AND workspace_id=%s
+            AND idempotency_key=%s) store_receipt,
+          (SELECT count(*) FROM ecom_link WHERE org_id=%s AND workspace_id=%s) store_links,
+          (SELECT count(*) FROM projection_outbox WHERE org_id=%s AND workspace_id=%s
+            AND event_source='authoritative_store'
+            AND change_kind=ANY(ARRAY['links_written','links_tombstoned'])) store_outbox,
+          (SELECT count(*) FROM projection_outbox WHERE org_id=%s AND workspace_id=%s
+            AND projected IS FALSE) projection_pending,
+          (SELECT count(*) FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+            AND installation_id=%s AND generation=%s AND revision=6 AND execution_epoch=3
+            AND enabled IS TRUE AND operation_fence IS FALSE AND desired_state='enabled'
+            AND observed_state='ready') live_binding,
+          (SELECT count(*) FROM extension_runtime_resource_lease WHERE org_id=%s AND project_id=%s
+            AND generation=%s AND cleanup_state='pending' AND observed_release IS FALSE) live_resources,
+          (SELECT count(*) FROM aip_model_governance_policy_head h
+            JOIN aip_model_governance_policy_revision r
+              ON (r.org_id,r.project_id,r.policy_kind,r.policy_id,r.revision)=
+                 (h.org_id,h.project_id,h.policy_kind,h.policy_id,h.current_revision)
+            WHERE h.org_id=%s AND h.project_id=%s AND h.policy_kind='budget'
+              AND h.policy_id='a0v-ecommerce-budget-policy-v1' AND h.current_revision=7
+              AND r.lifecycle='active' AND r.effective_until<=clock_timestamp()) expired_budget_policy,
+          (SELECT count(*) FROM extension_runtime_binding WHERE org_id='dev-org'
+            AND project_id='dev-project') canary''',
+          (*scope.key,FAILED_ATTEMPT,installation,generation,*scope.key,installation,generation,
+           *scope.key,GROUP,*scope.key,GROUP,*scope.key,GROUP,MANIFEST,*scope.key,GROUP,
+           *scope.key,GROUP,*scope.key,GROUP,*scope.key,GROUP,LINK_COMMAND_HASH,
+           *scope.key,GROUP,LINK_COMMAND_HASH,*scope.key,GROUP,
+           scope.org_id,scope.project_id,LINK_IDEMPOTENCY_KEY,
+           scope.org_id,scope.project_id,scope.org_id,scope.project_id,
+           scope.org_id,scope.project_id,*scope.key,installation,generation,
+           *scope.key,generation,*scope.key)).fetchone())
+    expected={'failed_attempt':1,'running_attempts':0,'members':12,'running':12,
+        'saved_input':1,'recoveries':16,'dataset_receipts':12,'relationships':1,
+        'links':1,'link_count':1168,'retirements':0,'store_receipt':0,'store_links':0,
+        'store_outbox':0,'projection_pending':0,'live_binding':1,'live_resources':3,
+        'expired_budget_policy':1,'canary':0}
+    if facts!=expected:
+        raise RuntimeError('exact failed AL saved-input recovery facts required')
+    result=service.transition(definition_id=snapshot.DEFINITION_ID,actor=snapshot.ACTOR,intent='disable',
+        expected_ref=status['definitionRef'],idempotency_key='a0v-al-saved-snapshot-pause-failed-v1')
+    return {'outcome':'AL_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED','facts':expected,
+        'definition':result,'sourceReads':0}
 
 
 def pause(plane):

@@ -877,6 +877,62 @@ AL generation/epoch、最新完成快照组及当前 SchedulePolicyControlReceip
 实现只复用现有 Case/Policy/Approval/router/自然 Worker，不修改业务服务；只有专项测试证明 exact CAS、旧 closure、
 AL runtime 与 canary 守卫后才可在主库执行。
 
+### AL 预算治理窗口到期后的失败边界与 AM 正式接续方案（2026-09-18）
+
+#### 第 1/6：失败原点与提交边界
+
+AL 自然 `recoverable_store` attempt `3e319ca5-9e8d-4b0e-a034-295cd3e5b645` 从
+`2026-09-18T08:09:23.025906Z` 持续运行到 `2026-09-18T11:21:54.803374Z`，最终以 revision382
+`failed` 结算。Worker 安全日志把失败固定为 `PermissionError/error_origin=_load_governance_policy`；当前 budget policy
+`a0v-ecommerce-budget-policy-v1@7` 的有效期精确终止于 `2026-09-18T11:21:54.706218Z`，比 attempt 终态早约
+97 毫秒。quota policy 仍有效。因此本次失败是长任务跨过既有预算治理时间窗后的当前授权拒绝，不是模型、商城来源、
+关系计算或 Store 性能错误，不允许通过放宽有效期判断、改系统时钟或伪造旧策略继续。
+
+失败边界已经完整只读对账：十二 Run 仍为 `running/executorStopped=false/finishedAt=null`；dataset Receipt=12；
+relationship=1；link command=1、`linkCount=1168`、command hash
+`sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970`；retirement=0。
+该 command 对应的 `ecom_ingest_receipt=0`、当前 `ecom_link=0`、authoritative link outbox=0、projection pending=0，
+所以失败发生在不可变 link command 提交之后、Store batch 提交之前，不存在未知 Store 提交或可猜测重发的副作用。
+dev-org canary=0，且 AL generation 下没有第二笔 running attempt。definition rev50 仍 enabled，Worker 后续周期只在
+当前治理读取处失败关闭，没有新增 attempt 或业务写入。
+
+#### 第 2/6：先暂停失败 definition
+
+先给 `scripts/a0v_al_saved_snapshot_recovery.py` 增加 `pause-failed`，只接受上述 exact 失败事实：attempt id/revision382、
+零 running attempt、members12/running12、savedInput1/recovery16、dataset12、relationship1、link1/linkCount1168、
+retirement0、Store receipt/link/outbox/pending 全零、AL binding rev6/epoch3 ready+enabled+unfenced、三资源 pending、canary0。
+守卫全等后才允许用原 Definition Owner 将 rev50 推进为 rev51 disabled；任一事实漂移均在写前停止。不得手工
+`run_definition`、不得另造 link command、不得把 failed attempt 改写为 succeeded。
+
+#### 第 3/6：正式续签治理权威
+
+沿已评审的 `text-readiness-v2` 路径建立全新私有 evidence/journal：三个公共合成探针各最多一次 Provider 调用，
+不读取商城正文、不修改业务 Run、不发送外部消息。三例通过后由 `a0v_formal_text_model_renewal.py` 冻结并按 head CAS
+发布新的 budget/runtimePolicy/price/model/route revision；失败或未知结果不换 key 重发。新策略必须具有足以覆盖 AM
+完整恢复和后续经营参谋观察的有限窗口，仍保持费用暂不计价、无 fallback、一次模型 attempt 的既有约束。
+
+#### 第 4/6：AL 正式 detach 与 AM direct successor
+
+rev51 disabled 后只使用原 disable Owner 完成 AL fence/detach，要求九路回到 legacy、binding disabled/fenced/unknown、
+三资源 released、running/unresolved/pending/canary 全零，并取得唯一 detach Receipt。AM 必须以该 Receipt 为唯一 direct
+predecessor，走安装、验证、使用新治理 ref 重新 stage 配置、configure、enable、successor registration 与九路原子 cutover；
+不得复用 AL configuration 或 generation。
+
+#### 第 5/6：保存输入恢复与完整组验收
+
+definition 只从 AL rev51 disabled 转移为 AM disabled，再沿 recovery rev16 的 exact ref 生成 rev17 enabled；原 group、
+manifest、十二 Run、十二 dataset Receipt、relationship 与 link command 全部精确复用，`sourceReads=0`。自然 Worker 是
+唯一新 attempt 入口；Store 只能用原 command 的原 idempotency key。GREEN 必须同时看到 attempt succeeded、十二 Run
+同批 succeeded/stopped、Store Receipt 与 1,168 links 落账、retirement 唯一、projection pending0、definition 立即 disabled、
+canary0。
+
+#### 第 6/6：下一波
+
+AM 完整组 GREEN 后重新校验快照新鲜度，再执行已写好的经营参谋 Policy v3 方案；若 AM 仍失败，先按其不可变
+attempt、Receipt 和 Store 边界重新诊断，不把本节授权外推为重发许可。本波文件级清单为本方案、
+`scripts/a0v_al_saved_snapshot_recovery.py`、
+`services/aos-api/tests/extension_runtime/test_a0v_al_saved_snapshot_recovery.py`，随后才按相同书面门禁新增 AM 生命周期文件。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
