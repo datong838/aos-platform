@@ -852,6 +852,31 @@ Prime 安全启动器已改用 WorkBuddy `22.22.2-2/bin/node` 与仓库内构建
 和 `prime-agent status --json` 均通过，daemon 为 `current`、协议版本7、版本0.7.1。修复已以 m1 提交
 `4ba931c4` 固化且未 push；Prime 继续只作为独立开发长记忆辅助。
 
+### AL 完整组后的经营参谋 Policy v3 自然首链方案（待 AL GREEN 后执行）
+
+主库只读盘点确认当前经营权威不是空白：`case-qyh-advisor-baseline-20260917` 为 ACTIVE rev4；
+`schedule-qyh-advisor-baseline-once-20260917` 为 enabled rev2。rev1/rev2 两个 schedule occurrence 均已
+cancelled，对应 dispatch attempt 均为 `closed_unaccepted`；两份不可变 closure Receipt 都声明
+`businessAccepted=false`、target runCount=0，当前该 Case 下 AnalysisRun=0，dev-org Case/occurrence=0。
+因此不得另建平行 Case，也不得重开旧 occurrence。
+
+AL 完整组 terminal succeeded、十二 Run 原子完成、definition rev51 disabled 且最新快照仍满足经营时间窗后，才允许
+新增 `scripts/a0v_al_advisor_baseline_v3.py`。它必须先冻结以下 exact 前置：Case rev4/hash、Policy rev2/hash、两份
+closure Receipt、AL installation/generation/epoch3、完整组/manifest/十二父 Run 引用、当前角色与
+`ecommerce_growth_schedule_put` Action snapshot。随后以 maker/checker 分离的短时 Approval，按
+`expectedPolicyRevision=2`、`expectedCaseVersion=4` 提交同一 Policy 的 v3；Policy 必须引用 Case rev4，并由 canonical
+router 绑定当前 AL runtime。不得直接 INSERT/UPDATE 权威表。
+
+Policy v3 保存后只能由 `BaselineAssessmentWorker` 的 15 秒自然轮询生成新的 once occurrence；禁止脚本创建 occurrence、
+claim、AnalysisRun、Evidence 或 Fulfillment。验收先等待 occurrence 自然出现并由 Worker 受理，再验证它引用 Policy v3、
+AL generation/epoch、最新完成快照组及当前 SchedulePolicyControlReceipt。若 Worker 返回 `needs_attention`，先按 Receipt
+和 unknown/reconcile 规则诊断，不续签 Policy v4，不手工重放。
+
+当前波文件级清单预定为：本方案；`scripts/a0v_al_advisor_baseline_v3.py`；
+`services/aos-api/tests/extension_runtime/test_a0v_al_advisor_baseline_v3.py`；以及 closure manifest 的对应分类/哈希。
+实现只复用现有 Case/Policy/Approval/router/自然 Worker，不修改业务服务；只有专项测试证明 exact CAS、旧 closure、
+AL runtime 与 canary 守卫后才可在主库执行。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
