@@ -265,3 +265,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
 - 本区间未出现终态，未执行 `enable/inspect/disable`，也未改变 definition、Run、Store、资源或治理策略。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；浏览器仍为“暂无可见工作台入口”，门禁 NOT GREEN，
   未触发重读。监视器在本波提交时继续运行。
+
+## 15:34–15:43Z 持续只读监视波
+
+- 第三段只读监视器连续观察 AM revision349 至 revision352 后按预设长度正常退出；同一任务立即续建第四段监视器，
+  连续观察 revision354 至 revision364。最新 heartbeat `2026-09-18T15:42:18Z`、lease `15:44:18Z`，
+  各次均为 running、completedAt 为空。revision353 未出现在监视器的变更输出窗口中，不代表权威状态缺失或执行中断。
+- 本区间未出现 succeeded/failed，未执行 `enable/inspect/disable`，也未改变 definition、Run、Store、资源或治理策略；
+  第四段监视器继续运行。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning；复用浏览器页复验仍为“暂无可见工作台入口”，
+  门禁 NOT GREEN，未触发重读。测试与页面可见性均未被当作真实经营闭环完成证明。
