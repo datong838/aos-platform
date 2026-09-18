@@ -1543,6 +1543,15 @@ The new module composes existing current group, Registry release, signature evid
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_analysis_snapshot_policy_set.py` | Host原路径 | Resolve and compile six exact policies from the original group's current installed published package; no data or execution grant | `cd7700bd8fb9c41a1154bd1c6e4085b7428e2b3b420e73af076ece2a9e2a19ae` |
 
+### A0-V AK released recovery retirement executor（2026-09-18）
+
+AK 因宿主低电量休眠越过实时 lease 后已被原 Host 围栏并释放资源；该执行器只在精确 released/fenced、十二 Run 未完成、definition rev48 disabled、零在途与 canary0 的事实下调用原 Disable Owner，形成正式 fence/detach Receipt。它不修改 Run、保存输入、关系命令或 Store，也不授予下一 successor 权限。
+
+| 文件 | 去向 | 边界 | 初始 hash |
+| --- | --- | --- | --- |
+| `scripts/a0v_ak_released_retirement.py` | A0-V 运维执行器 | exact AK released retirement；只调用原 Disable Owner | `78d326f8c7df49120360ad188ab00e52b26c3e12b2120fc64815b02bb145ae2d` |
+| `services/aos-api/tests/extension_runtime/test_a0v_ak_released_retirement.py` | 测试 | 固定 AK 身份、定义/路由修订与无 Run 写入边界 | `95d37de0aa3812c74f0a8e2a1bce135c0541ea549b536f530791c4344fcb61ca` |
+
 ### SC4-5l6f3 Fixed snapshot coordinator Host
 
 The coordinator composes existing current Owners from one immutable Outbox route. It has no public endpoint, model-selected control flow, Outbox completion authority, Provider invocation, or external business effect authority. This append-only classification does not alter historical preHash entries or verifier rules.

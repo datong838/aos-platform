@@ -741,6 +741,50 @@ cutover。保存定义只能从 AJ rev45 disabled 转移到 AK disabled，再以
 attempt heartbeat、三资源续租和完成产物。只有 attempt succeeded、十二 Run 原子完成、dataset Receipt 总数仍为12、relationship1/
 link1/retirement1 且 canary0，才允许立即 disable definition。
 
+### AK 睡眠中断后的 AL 正式接续方案（2026-09-18）
+
+AK 已证明 `9bfc5438` 的 successor parent/current-control 排序修复越过原 AI 确定性故障点：自然
+`recoverable_store` attempt `47787577-c2a4-401e-ace2-540304f79ef4` 从
+`2026-09-18T00:36:38.589944Z` 连续运行，revision 508 及以后仍保持 running，最终在睡眠前推进到
+revision 683。原 relationship 精确复用；唯一 link command 已提交，`linkCount=1168`、command hash
+`sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970`。该事实证明完成链已越过
+AI 的 `saved recovery fixed member differs`，不是原 PermissionError 重现。
+
+本次未完成的直接外因由 macOS 电源日志精确确认：机器电量降至 1% 后，于
+`2026-09-18 14:21:38 +0800` 因 `Clamshell Sleep` 睡眠，`14:29:41 +0800` 转入 `Low Power Sleep`，
+到 `15:25:55 +0800` 才从 Hibernate 唤醒。Attempt 最后 heartbeat 为
+`2026-09-18T06:21:11.390155Z`，lease 于 `06:23:11.161153Z` 到期；Host 按既有 fail-closed 规则停止
+会话、释放三项资源并把 AK binding 推进到 revision7/epoch4 disabled/fenced/unknown。唤醒后原线程不能再取得当前
+运行权，于 `2026-09-18T07:26:04.132058Z` 以 revision684 failed 结算。该失败属于宿主休眠越过实时租约，不能通过
+延长 TTL、补写 heartbeat、复活 AK 或直接重放规避。
+
+失败终态保持原子：十二 Run 仍全部 running/executorStopped=false/finishedAt=null；dataset Receipt 仍为12，
+relationship1、link command1、retirement0。link command 虽已不可变持久化，但 Store 尚未应用，正向租户
+`ecom_link=0`，因此不存在未知提交或需要猜测重发的外部副作用；definition rev47 仍 enabled，保存 manifest 与 recovery
+rev15 不变，canary0。后续执行必须先在 members12/running12/savedInput1/recovery15/fencedBinding1/
+releasedResources3 的 exact 事实下暂停 rev47，再由正式 disable Owner 完成 AK fence/detach；九路回到 legacy 且零
+running/unresolved/pending/canary 后，detach Receipt 才能成为 AL 的唯一 direct predecessor。
+
+AL 继续沿原不可变 successor 路径：创建全新 installation/generation/config，完成安装、验证、配置、启用、successor
+registration 与九路原子 cutover；保存定义只允许从 AK disabled revision 转移为 AL disabled，再以 recovery rev15 的 exact
+ref 生成 rev16 enabled，`sourceReads=0`。原 group、manifest、十二 dataset Receipt、relationship 及 link command 全部按
+各自 exact hash 重放；Store link batch 只能使用已持久化 command 的原 idempotency key，禁止另造 command 或手工调用
+`run_definition`。自然 Worker 是唯一 Attempt 入口。
+
+AL 验收须同时满足：Attempt terminal succeeded；十二 Run 同批 succeeded/executorStopped=true/finishedAt 非空；dataset
+Receipt 总数仍为12；relationship/link/retirement 各唯一一条；Store 当前 link 为原 command 的 1,168 条且 projection
+completion pending=0；definition 随即禁用；canary0、无新源读取、无越权外部动作。执行期间必须保持机器接入电源并阻止系统
+睡眠；该环境保护只维持现有进程运行，不修改产品租约、授权或失败语义。任一 exact precondition 不符即停止当前阶段并诊断。
+
+AK 的正式退役已于 `2026-09-18T07:46:57Z` 完成：definition 先精确暂停为 rev48 disabled，随后原 Disable Owner
+接受 operation `6d44d780-3a8e-4311-8bd5-be028e6e098b`。fence Receipt
+`44fa2b0b-0835-4527-a79b-9d4ad8c5b777`（`sha256:0e16397a9f17700db9a43dd7bbff5cb2f15e8bb88c1fc767fe860cf281d799b5`）
+与 detach Receipt `ec99c80b-ad80-47aa-af4a-4fb45fd0602d`
+（`sha256:150a01e8b8eda58d8ed74736a3283c509d2af06e143a82b0faaed88f38351ae9`）均已不可变提交。九路为
+legacy routeRevision86/groupRevision113，AK binding rev9/epoch5 disabled/fenced/unknown，三项资源 released，
+running/unresolved/pending/canary 均为0；执行器确认 `resendDisable=false`、`externalEffects=0`。该 detach Receipt 是
+AL 唯一允许的 direct predecessor。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
