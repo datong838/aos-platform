@@ -792,6 +792,21 @@ legacy routeRevision86/groupRevision113，AK binding rev9/epoch5 disabled/fenced
 running/unresolved/pending/canary 均为0；执行器确认 `resendDisable=false`、`externalEffects=0`。该 detach Receipt 是
 AL 唯一允许的 direct predecessor。
 
+AL 已沿该 direct predecessor 完成标准生命周期：installation
+`071e1c31-c464-4735-952e-17adf0ac97f7`、generation `d50a7eed-18e1-491a-9323-ab3ca693dc3a`、lock
+`sha256:49d7d8b367e19f3c7f8c920d061757477af9a0bf6bc3847101ca7ce348006608`、configuration
+`4dae773b-1938-4419-b1d8-0ffc32f52dd0` / `sha256:025bacc0c4ece109bda582f5fc280610f7ed81db5e12b81d714c6f5d17ed8d5c`。
+runtime-apply、verify、configure、enable 四个 operation 均由原 Host 成功结算；binding rev4/epoch3 ready，三资源 pending，canary0。
+successor registration Receipt `cffd46f0-3c95-46bd-be11-01efb0526e49` 以 AK detach Receipt 为唯一前驱；cutover operation
+`239d8393-05ac-4797-9e9d-eeddd756e100` 已完成 prepare/pause/commit/validate/resume，九路为 extension
+routeRevision87/groupRevision114，claim resumed，且切换窗口无 claimed/unknown/running attempt。
+
+保存输入随后只复用原十二源：definition rev48 disabled → rev49 AL disabled；recovery rev15 → rev16
+`sha256:c742a6a8d65025354ec0779fdcabb567250eda8ba6e3e0e2fc7e241af8ebed99`，同时生成 definition rev50 enabled，
+manifest 保持 `sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01`，`sourceReads=0`。自然 Worker 于
+`2026-09-18T08:09:23.025906Z` 创建 recoverable_store attempt `3e319ca5-9e8d-4b0e-a034-295cd3e5b645`；
+执行期间由独立 `caffeinate -dimsu` 保护宿主不休眠，该进程不修改 AOS 租约或授权。
+
 ## 第 5/6：立即 disable 与终态验证
 
 完整组确认后立即用当前 ref disable definition。验证 definition disabled、无 pending/claimed/unknown、U 资源与
