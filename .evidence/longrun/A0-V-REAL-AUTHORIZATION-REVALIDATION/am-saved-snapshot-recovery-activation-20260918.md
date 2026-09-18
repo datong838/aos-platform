@@ -121,3 +121,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   对“AM 活跃事务”的归因由本节收窄。AM 健康仍以唯一 running attempt、连续 heartbeat/lease、容器未退出和终态记录为准。
 - 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；浏览器稳定态仍为“暂无可见工作台入口”，
   继续 NOT GREEN，未触发重读。
+
+## 14:00–14:02Z 自动接续观察
+
+- AM 唯一 attempt 推进至 revision162/running；heartbeat `2026-09-18T14:00:09Z`、lease `14:02:09Z`；
+  十二 Run、dataset Receipt=12、relationship=1、link command=1/linkCount=1168、live resources=3 保持一致，
+  Store Receipt/link/outbox、retirement 与 projection pending 均为 0，canary=0。
+- 三个容器均为隔离 runner `-I /aos/runner.py --serve`，running、restartCount=0、OOM=false。其日志驱动明确不支持
+  `docker logs` 回读；因此本轮只把容器生命周期作为证据，不把无日志误作内部步骤成功或失败。
+- 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
+- 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
