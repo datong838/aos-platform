@@ -151,3 +151,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   仍为 revision17、previousRevision16、currentDefinitionRevision53，input manifest hash 精确匹配，未见授权漂移。
 - 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
 - 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 14:25–14:28Z 自动接续观察
+
+- AM 唯一 attempt 推进至 revision212/running；heartbeat `2026-09-18T14:25:27Z`、lease `14:27:27Z`；
+  十二 Run、dataset Receipt=12、relationship=1、link command=1/linkCount=1168、live resources=3 保持一致，
+  Store Receipt/link/outbox、retirement、projection pending 均为 0，canary=0。
+- 复核正式连接实现：web/runtime/directory 为三种独立最小权限身份，没有额外管理连接。本轮不为读取其他会话 SQL/wait
+  而提升权限；继续只以权威 attempt、当前 authority、容器生命周期和正式终态记录判断。
+- 相同 5 项专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。
+- 浏览器稳定加载 AOS v1.6.5，电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
