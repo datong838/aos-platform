@@ -818,6 +818,22 @@ Host 正常、canary0；组完成时间与十二源新鲜度满足 24 小时经�
 自然产生 occurrence → Case/Run/暂停分析链，随后继续 exact 评审、内部内容任务、能力预算审批、产物评审续跑、
 总控复盘与 Wiki 候选。不得手工创建 occurrence、Run、Evidence 或 Fulfillment。
 
+### AL 执行期间的重启恢复与 Prime 长记忆辅助（2026-09-18）
+
+宿主休眠唤醒后先按数据库权威状态核对 AL attempt、Lease、binding、十二 Run 与完成链事实；只要原 attempt 仍为
+`running`、心跳和 Lease 持续推进，就不得切换 successor、重发 Store 或重启 Host/Worker。重新启动独立
+`caffeinate -dimsu` 仅保护宿主环境，不改变产品租约和执行权限。
+
+Prime Agent 只作为开发过程的独立长记忆辅助，不进入 AOS 产品逻辑，也不提供业务授权。当前用户级 launchd
+安全启动器所引用的 WorkBuddy `22.22.2` 目录已被升级替换为 `22.22.2-2`，而新目录不再安装 Prime CLI。
+最小恢复限定为 `scripts/prime-agent-safe-daemon.sh`：使用该目录的 Node 执行仓库内已构建的
+`prime-agent/packages/coding-agent/dist/bundle/cli.js`，继续只从权限 `0600` 的 `~/.prime/agent/auth.json`
+读取认证。`--check` 必须同时验证认证文件、Node 与 CLI 入口；验证只允许安全预检、daemon 状态回读和共享记忆
+健康回读，不得写 AOS 数据库或替代本文件、Receipt、数据库与浏览器证据。
+
+本切片文件级清单仅包含本方案文档与 `scripts/prime-agent-safe-daemon.sh`。若任一运行入口缺失则 fail closed，
+不得回退为命令行明文密钥或环境变量凭据。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。

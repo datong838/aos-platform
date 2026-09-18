@@ -2,8 +2,9 @@
 
 set -eu
 
-readonly PRIME_AGENT_BIN="/Users/ddt/.workbuddy/binaries/node/versions/22.22.2/bin/prime-agent"
-readonly PRIME_AGENT_NODE_DIR="/Users/ddt/.workbuddy/binaries/node/versions/22.22.2/bin"
+readonly PRIME_AGENT_NODE_DIR="/Users/ddt/.workbuddy/binaries/node/versions/22.22.2-2/bin"
+readonly PRIME_AGENT_NODE="${PRIME_AGENT_NODE_DIR}/node"
+readonly PRIME_AGENT_ENTRY="/Users/ddt/work/projects/ai_agent/prime-agent/packages/coding-agent/dist/bundle/cli.js"
 readonly PRIME_AGENT_AUTH="/Users/ddt/.prime/agent/auth.json"
 readonly PRIME_AGENT_CWD="/Users/ddt/work/projects/ai_agent"
 
@@ -49,6 +50,14 @@ if [[ "${1:-}" == "--check" ]]; then
     print -u2 "usage: ${0:t} [--check]"
     exit 64
   fi
+  if [[ ! -x "${PRIME_AGENT_NODE}" ]]; then
+    print -u2 "Prime Agent Node runtime is unavailable: ${PRIME_AGENT_NODE}"
+    exit 69
+  fi
+  if [[ ! -r "${PRIME_AGENT_ENTRY}" ]]; then
+    print -u2 "Prime Agent CLI entry is unavailable: ${PRIME_AGENT_ENTRY}"
+    exit 69
+  fi
   print "Prime Agent safe-start preflight: OK"
   exit 0
 fi
@@ -58,8 +67,12 @@ if (( $# != 0 )); then
   exit 64
 fi
 
-if [[ ! -x "${PRIME_AGENT_BIN}" ]]; then
-  print -u2 "Prime Agent executable is unavailable: ${PRIME_AGENT_BIN}"
+if [[ ! -x "${PRIME_AGENT_NODE}" ]]; then
+  print -u2 "Prime Agent Node runtime is unavailable: ${PRIME_AGENT_NODE}"
+  exit 69
+fi
+if [[ ! -r "${PRIME_AGENT_ENTRY}" ]]; then
+  print -u2 "Prime Agent CLI entry is unavailable: ${PRIME_AGENT_ENTRY}"
   exit 69
 fi
 
@@ -67,7 +80,7 @@ cd "${PRIME_AGENT_CWD}"
 export PATH="${PRIME_AGENT_NODE_DIR}:/usr/bin:/bin:/usr/sbin:/sbin"
 unset AGNES_API_KEY
 
-exec "${PRIME_AGENT_BIN}" \
+exec "${PRIME_AGENT_NODE}" "${PRIME_AGENT_ENTRY}" \
   --provider agnes \
   --model agnes-2.5-flash \
   --mode daemon
