@@ -47,3 +47,13 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   Store 尚未提交的已知边界，不是未知结果，禁止重发。
 - 浏览器复验：AOS v1.6.5 首页与主导航可加载；“电商工作台”仍显示“正在读取工作台目录”，所以浏览器门禁继续保持
   NOT GREEN，待 attempt 终态和 complete-group disable 后复验。
+
+## 12:59–13:01Z 自动接续观察
+
+- AM 仍只有 attempt `7d6cc3aa-881d-4aff-ac30-58978d06e85d`，已推进至 revision42；最新 heartbeat
+  `2026-09-18T12:59:35Z`、lease `13:01:34Z`，防休眠进程仍存活。
+- 十二 Run running、dataset Receipt=12、relationship=1、原 link command=1/linkCount=1168；retirement=0、精确
+  Store Receipt=0、Store links=0、authoritative Store outbox=0、projection pending=0、live resources=3、canary=0。
+- runtime status 为 `RUNTIME_HOST_ACTIVE`，仅一个 AM live target；主进程仍持有三个受管 Docker attach 子进程，数据库侧
+  存在活动事务身份。日志中检出的异常属于旧 pid 的历史终止记录，不是当前 attempt 的新失败。
+- 浏览器稳定加载 AOS v1.6.5 后，“电商工作台”目录终态为“暂无可见工作台入口”；继续保持浏览器 NOT GREEN。
