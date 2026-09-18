@@ -198,3 +198,17 @@ attempt failed 时先固定失败原点及未知提交边界，禁止猜测重�
   治理到期边界；本轮没有续签或修改任何策略。
 - 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；未修改产品代码。浏览器稳定加载 AOS v1.6.5，
   电商目录仍为“暂无可见工作台入口”；门禁保持 NOT GREEN，未触发重读。
+
+## 14:58–15:01Z 连续执行观察与 Docker context 更正
+
+- AM 唯一 attempt 自然推进至 revision280/running；heartbeat `2026-09-18T14:59:52Z`、lease
+  `15:01:52Z`。事件 sequence 1–277 的阶段性读取连续，仅 1 条 accepted、0 条 failed/succeeded；members=12、
+  running Run=12、succeeded Run=0、live resources=3、dev-org canary=0。
+- runtime host PID 99810 仍存活并持续刷新状态文件，且持有三个 `docker --context colima-aos-extension start --attach`
+  子进程。切换到正确 context 后，三个 runner 均为 running、未 paused/restarting/OOM/dead，启动时间保持
+  `2026-09-18T12:11:01Z` 至 `12:11:03Z`；当前各 1 PID，瞬时 CPU 为 0%，恢复数据库瞬时 CPU 约 11.6%。
+- 更正 14:33–14:36Z 一节的容器解释：当时的 `docker ps` 使用默认 Docker context，只能说明默认 context 中看不到三个
+  runner，不能说明 runner 已回收。正确 `colima-aos-extension` context 证明三者持续运行；该更正不把容器或数据库活跃度
+  冒充具体 SQL、Store 提交或 attempt 成功证明。
+- 相同 5 项 AM/AL 专项与相邻回归通过，7 条既有 warning，退出码 0；浏览器稳定加载 AOS v1.6.5，电商目录仍为
+  “暂无可见工作台入口”，门禁保持 NOT GREEN，未触发重读。
