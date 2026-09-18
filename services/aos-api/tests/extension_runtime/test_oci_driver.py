@@ -33,6 +33,33 @@ def test_missing_resource_is_not_positive_deletion(monkeypatch,message):
         with pytest.raises(subprocess.CalledProcessError):driver.remove_owned('aos-ext-test','owner')
 
 
+def test_recovery_confirms_both_persisted_identifiers_absent(monkeypatch):
+    import subprocess
+    driver=OciDriver(context='colima-aos-extension')
+    expected='a'*64
+    calls=[]
+    def run(*args):
+        calls.append(args)
+        raise subprocess.CalledProcessError(1,['docker'],stderr='Error: No such object: '+args[-1])
+    monkeypatch.setattr(driver,'_run',run)
+    assert driver.confirm_absent('aos-ext-test','owner',expected_container_id=expected) is True
+    assert [call[-1] for call in calls]==['aos-ext-test',expected]
+
+
+@pytest.mark.parametrize('present', ['name','container'])
+def test_recovery_absence_confirmation_rejects_any_present_identifier(monkeypatch,present):
+    import subprocess
+    driver=OciDriver(context='colima-aos-extension')
+    expected='a'*64
+    def run(*args):
+        identifier=args[-1]
+        if identifier==('aos-ext-test' if present=='name' else expected):
+            return expected+' owner'
+        raise subprocess.CalledProcessError(1,['docker'],stderr='Error: No such object: '+identifier)
+    monkeypatch.setattr(driver,'_run',run)
+    assert driver.confirm_absent('aos-ext-test','owner',expected_container_id=expected) is False
+
+
 def test_cleanup_uses_observed_container_id_not_reusable_name(monkeypatch):
     driver=OciDriver(context="colima-aos-extension")
     calls=[]

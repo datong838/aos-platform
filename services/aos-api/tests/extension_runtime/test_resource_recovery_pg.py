@@ -42,7 +42,8 @@ def setup(database, *, claimed=True, known=True, expired=True):
     return conn,intent,connect
 
 
-@pytest.mark.parametrize('mode',['known','unknown','absent','error','unclaimed','live','tenant','context','name'])
+@pytest.mark.parametrize('mode',['known','unknown','absent','confirmed_absent','still_present',
+    'confirm_error','error','unclaimed','live','tenant','context','name'])
 def test_recovery_commits_fence_before_owned_cleanup(database,mode):
     from aos_api.extension_runtime.resource_recovery import ExpiredResourceRecovery
     conn,intent,connect=setup(database,claimed=mode!='unclaimed',known=mode not in ('unknown','unclaimed'),expired=mode!='live')
@@ -55,7 +56,11 @@ def test_recovery_commits_fence_before_owned_cleanup(database,mode):
             assert conn.execute('SELECT enabled,operation_fence FROM extension_runtime_binding').fetchone()==(False,True)
             assert conn.execute('SELECT cleanup_state FROM extension_runtime_resource_lease').fetchone()==('uncertain',)
             if mode=='error':raise RuntimeError('engine failure')
-            return mode!='absent'
+            return mode not in ('absent','confirmed_absent','still_present','confirm_error')
+        def confirm_absent(self,name,owner,*,expected_container_id):
+            calls.append(('confirm',name,owner,expected_container_id))
+            if mode=='confirm_error':raise RuntimeError('engine read failed')
+            return mode=='confirmed_absent'
     if mode=='name':conn.execute("UPDATE extension_runtime_resource_lease SET resource_name='aos-ext-wrong'")
     target=SCOPE if mode!='tenant' else {**SCOPE,'org_id':'dev-org'}
     recovery=ExpiredResourceRecovery(connect=connect,driver=Driver())
@@ -66,9 +71,13 @@ def test_recovery_commits_fence_before_owned_cleanup(database,mode):
         assert conn.execute('SELECT enabled FROM extension_runtime_binding').fetchone()==(True,)
         return
     result=recovery.run_one(**target,resource_id=intent.resource_id)
-    assert result==('uncertain' if mode in ('absent','error') else 'released')
-    assert len(calls)==(0 if mode=='unclaimed' else 1)
-    if calls:assert calls[0]==(intent.identity.name,intent.identity.owner,None if mode=='unknown' else 'a'*64)
+    assert result==('uncertain' if mode in ('absent','still_present','confirm_error','error') else 'released')
+    assert len(calls)==(0 if mode=='unclaimed' else 2 if mode in (
+        'absent','confirmed_absent','still_present','confirm_error') else 1)
+    if calls:
+        assert calls[0]==(intent.identity.name,intent.identity.owner,None if mode=='unknown' else 'a'*64)
+    if len(calls)==2:
+        assert calls[1]==('confirm',intent.identity.name,intent.identity.owner,'a'*64)
     before=len(calls)
     if result=='released':
         assert ExpiredResourceRecovery(connect=connect,driver=Driver()).run_one(**target,resource_id=intent.resource_id)=='released'

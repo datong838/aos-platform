@@ -116,6 +116,26 @@ class OciDriver:
         self._run("rm", "--force", "--volumes", observation[0])
         return True
 
+    def confirm_absent(self, name: str, owner: str, *, expected_container_id: str) -> bool:
+        """Confirm both persisted identifiers are absent after an unknown cleanup outcome."""
+        if (not re.fullmatch(r"aos-ext-[a-z0-9-]+", name)
+                or not re.fullmatch(r"[a-zA-Z0-9-]+", owner)
+                or not re.fullmatch(r"[0-9a-f]{64}", expected_container_id)):
+            raise ValueError("invalid persisted cleanup identity")
+        for identifier in (name, expected_container_id):
+            try:
+                observed = self._run(
+                    "inspect", "--format",
+                    '{{.Id}} {{index .Config.Labels "aos.extension.owner"}}', identifier,
+                ).strip().split()
+            except subprocess.CalledProcessError as exc:
+                if "no such" in (exc.stderr or "").lower():
+                    continue
+                raise
+            if observed:
+                return False
+        return True
+
 
 class CleanupOnlyOciDriver:
     """Composition facade for recovery; intentionally has no create/start surface."""
@@ -134,5 +154,10 @@ class CleanupOnlyOciDriver:
 
     def remove_owned(self, name: str, owner: str, *, expected_container_id: str | None = None) -> bool:
         return self.__driver.remove_owned(
+            name, owner, expected_container_id=expected_container_id
+        )
+
+    def confirm_absent(self, name: str, owner: str, *, expected_container_id: str) -> bool:
+        return self.__driver.confirm_absent(
             name, owner, expected_container_id=expected_container_id
         )
