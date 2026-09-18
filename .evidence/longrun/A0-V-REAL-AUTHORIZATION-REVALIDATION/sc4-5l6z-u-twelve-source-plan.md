@@ -967,6 +967,24 @@ stage/configure 必须读取刚续签的 budget/runtime policy rev8 与 model/ro
 `services/aos-api/tests/extension_runtime/test_a0v_am_replacement_recovery.py` 固定 direct predecessor、版本、唯一 create intent、
 动作顺序和禁止手工 `run_definition`。AM enable 后再单独形成 successor registration 方案和代码，不在安装脚本中偷做九路切换。
 
+#### AM successor registration 与 cutover 文件级清单（2026-09-18 续）
+
+新增 `scripts/a0v_am_successor_business.py`：严格读取 AM installation
+`fd28d180-db24-4568-a848-101fcd3aa3c5`、generation `d6bc117e-d19d-4413-beb4-02884206e290`、
+lock `sha256:f2bcef04d615b0c6a19b2a0465be392130eb6a85627135a8c58a1177901942cc`、config
+`05602ff4-db16-4519-bb68-ed790307fa5b@1` 与 binding rev4/epoch3 ready；父权威只接受 AL detach Receipt
+`bd92aa48-77b6-4c34-82f9-0ede171083b3` 及 hash
+`sha256:b8990ed467aed1bdfc40e5fb56e4455e2ece7114045f37a15f8f4099a313e1df`。注册 expectedGroupRevision=116，
+九路必须全为 legacy rev89/group116，且 running/unresolved/runtime pending/canary 均为零。
+
+新增 `scripts/a0v_am_successor_cutover.py`，固定 cutover operation
+`23bc8ec0-1a67-4ae8-9210-de67114f7a6a`，依次执行 approve/prepare/pause/commit/validate/resume；每阶段先冻结
+immutable intent，已有 intent 时只允许 inspect，不允许重发。resume 后九路必须精确指向 AM generation、epoch3、unfenced，
+revision90/group117；AL 保持 detached，definition 保持 rev51 disabled。
+
+新增 business/cutover 两个专项测试，固定 AM/AL/ref/group/revision、禁止 fallback/外部效应和阶段跳跃。浏览器验收只在 AM
+九路路由已注册且保存输入尚未启用时做只读检查，不触发业务动作；完成后再进入 definition/recovery 转移。
+
 ## 文件与验证
 
 - 新增 `scripts/a0v_u_twelve_source_snapshot.py` 与专项测试；在 Definition Owner 仅增加已卸载前代的严格退休守卫。
