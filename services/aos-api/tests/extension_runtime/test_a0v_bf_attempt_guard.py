@@ -18,11 +18,12 @@ SPEC.loader.exec_module(guard)
 def facts(**changes):
     observed = datetime(2026, 9, 19, 23, 20, tzinfo=UTC)
     value = {
-        "attemptId": guard.ATTEMPT_ID, "attemptCount": 1,
+        "attemptId": guard.ATTEMPT_ID, "attemptCount": 2,
         "operationKey": guard.OPERATION_KEY, "idempotencyKey": guard.IDEMPOTENCY_KEY,
-        "requestHash": guard.REQUEST_HASH, "terminalReason": None, "terminalErrorType": None,
+        "requestHash": guard.REQUEST_HASH, "terminalReason": "RECOVERABLE_INGRESS_CANCELLED",
+        "terminalErrorType": "IngressJournalConflict",
         "installationId": guard.successor.BF_ID, "generation": guard.successor.BF_GENERATION,
-        "operationKind": "recoverable_store", "state": "running", "revision": 2,
+        "operationKind": "recoverable_store", "state": "failed", "revision": 10,
         "acceptedAt": observed - timedelta(seconds=120), "attemptElapsedSeconds": 120,
         "heartbeatAt": observed - timedelta(seconds=10), "leaseUntil": observed + timedelta(seconds=110),
         "observedAt": observed, "controlSecondsRemaining": 18000, "controlExpired": False,
@@ -32,21 +33,27 @@ def facts(**changes):
         "linkCommands": 1, "linkCount": 1168, "retirements": 0, "linkStoreReceipts": 0,
         "ecomLinks": 0, "linkOutbox": 0, "projectionPending": 0, "routes": 9,
         "liveResources": 3, "devOrgCanary": 0,
+        "attemptHistory": [
+            {"attempt_id": guard.ORIGINAL_ATTEMPT_ID,
+             "idempotency_key": guard.BASE_IDEMPOTENCY_KEY + ":1",
+             "request_hash": guard.REQUEST_HASH, "state": "failed",
+             "terminal_reason_code": "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED",
+             "terminal_error_type": "IngressJournalConflict"},
+            {"attempt_id": guard.ATTEMPT_ID, "idempotency_key": guard.IDEMPOTENCY_KEY,
+             "request_hash": guard.REQUEST_HASH, "state": "failed",
+             "terminal_reason_code": "RECOVERABLE_INGRESS_CANCELLED",
+             "terminal_error_type": "IngressJournalConflict"},
+        ],
     }
     value.update(changes)
     return value
 
 
-def test_running_and_terminal_boundaries():
-    assert guard.classify(facts())["outcome"] == "RUNNING_HEALTHY_NO_ACTION"
-    failed = facts(state="failed", terminalReason="RECOVERABLE_INGRESS_DEADLINE_EXCEEDED",
-                   terminalErrorType="IngressJournalConflict")
-    assert guard.classify(failed)["outcome"] == "FAILED_FREEZE_BOUNDARY"
-    abandoned = facts(state="abandoned", terminalReason="ATTEMPT_LEASE_EXPIRED")
-    assert guard.classify(abandoned)["outcome"] == "ABANDONED_FREEZE_BOUNDARY"
+def test_exact_two_failed_attempts_freeze_boundary():
+    assert guard.classify(facts())["outcome"] == "FAILED_FREEZE_BOUNDARY"
 
 
-@pytest.mark.parametrize(("field", "value"), (("attemptCount", 2), ("attemptId", "wrong"),
+@pytest.mark.parametrize(("field", "value"), (("attemptCount", 1), ("attemptId", "wrong"),
     ("definitionRevision", 98), ("recoveryRevision", 31), ("routes", 8)))
 def test_identity_drift_fails_closed(field, value):
     with pytest.raises(RuntimeError, match="BF guard authority differs"):

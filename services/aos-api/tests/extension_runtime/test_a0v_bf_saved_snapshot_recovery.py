@@ -13,5 +13,6 @@ def test_bf_saved_recovery_is_exact_and_fail_closed():
     assert "recovery.RECOVERY_REVISION = 32" in source
     assert "recovery.ENABLED_DEFINITION_REVISION = 99" in source
     assert "recovery.PAUSED_DEFINITION_REVISION = 100" in source
+    assert "recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT = 2" in source
     assert 'recovery.PREDECESSOR_RECOVERY_STATE = "be-saved-snapshot-recovery-v1"' in source
     assert "run_definition" not in source

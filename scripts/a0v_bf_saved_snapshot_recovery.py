@@ -24,7 +24,7 @@ recovery.TRANSFER_KEY = "a0v-bf-saved-definition-transfer-v1"
 recovery.RENEW_KEY = "a0v-bf-saved-input-recovery-v32"
 recovery.PAUSE_KEY = "a0v-bf-saved-snapshot-pause-terminal-v1"
 recovery.TERMINAL_FREEZE_OUTCOMES = {"FAILED_FREEZE_BOUNDARY", "ABANDONED_FREEZE_BOUNDARY"}
-recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT = 1
+recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT = 2
 
 MANIFEST = recovery.MANIFEST
 GROUP = recovery.GROUP
