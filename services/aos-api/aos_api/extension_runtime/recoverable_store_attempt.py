@@ -16,6 +16,9 @@ from .generation_attempts import PostgresRuntimeAttemptStore, RuntimeAttemptLeas
 from .lifecycle_store import RuntimeConflict
 
 
+MAX_RECOVERABLE_STORE_EXECUTION_SECONDS = 1800.0
+
+
 def _error_type(error: BaseException | None) -> str:
     name = type(error).__name__ if error is not None else "RuntimeConflict"
     return name if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.]{0,159}", name) else "Exception"
@@ -174,13 +177,15 @@ class RecoverableStoreAttemptOwner:
     """Create one committed attempt handle; caller starts it only after commit."""
 
     def __init__(self, *, connect, heartbeat_seconds: float = 30.0,
-                 lease_seconds: float = 120.0, max_execution_seconds: float = 300.0) -> None:
+                 lease_seconds: float = 120.0,
+                 max_execution_seconds: float = MAX_RECOVERABLE_STORE_EXECUTION_SECONDS) -> None:
         if not callable(connect):
             raise TypeError("trusted runtime connection factory required")
         if (type(max_execution_seconds) not in (int, float)
                 or not isfinite(max_execution_seconds)
                 or not 0.05 <= heartbeat_seconds < lease_seconds <= 300.0
-                or not heartbeat_seconds < max_execution_seconds <= 300.0):
+                or not heartbeat_seconds < max_execution_seconds
+                <= MAX_RECOVERABLE_STORE_EXECUTION_SECONDS):
             raise ValueError("bounded recoverable Store heartbeat required")
         self._connect = connect
         self._heartbeat_seconds = heartbeat_seconds
@@ -212,4 +217,8 @@ class RecoverableStoreAttemptOwner:
         )
 
 
-__all__ = ["RecoverableStoreAttempt", "RecoverableStoreAttemptOwner"]
+__all__ = [
+    "MAX_RECOVERABLE_STORE_EXECUTION_SECONDS",
+    "RecoverableStoreAttempt",
+    "RecoverableStoreAttemptOwner",
+]

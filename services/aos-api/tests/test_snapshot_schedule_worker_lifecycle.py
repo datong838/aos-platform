@@ -2,7 +2,17 @@
 import asyncio
 from threading import Event
 import pytest
-from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker,_error_origin,_error_reason,_safe_origin_name
+from aos_api.pipeline_snapshot_schedule_worker import (
+    PipelineSnapshotScheduleWorker,
+    _SAVED_RECOVERY_TIMEOUT_SECONDS,
+    _error_origin,
+    _error_reason,
+    _safe_origin_name,
+)
+
+
+def test_saved_recovery_budget_matches_bounded_store_attempt():
+    assert _SAVED_RECOVERY_TIMEOUT_SECONDS == 1800.0
 
 
 def test_error_origin_is_bounded_and_never_uses_exception_message():

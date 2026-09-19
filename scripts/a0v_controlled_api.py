@@ -17,6 +17,7 @@ TRUST_ROOTS = ROOT.parent/'.aos-recovery-20260910/state/a0v-canonical-ecommerce-
 API_FLAGS = {
     'AOS_DB_MIGRATION_MODE': 'disabled',
     'AOS_QYH_CRON_ENABLED': 'false',
+    'AOS_SNAPSHOT_GROUP_WORKER_ENABLED': 'false',
     'AOS_AIP_LOGIC_AUTOMATION_ENABLED': 'false',
     'AOS_AIP_TEXT_HEALTH_MAINTENANCE_ENABLED': 'false',
     'AOS_EXTENSION_RUNTIME_HOST_ENABLED': '0',

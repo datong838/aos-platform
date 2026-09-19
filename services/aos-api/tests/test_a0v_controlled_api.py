@@ -25,6 +25,7 @@ def test_api_flags_do_not_start_other_writers(launcher,monkeypatch):
     for key,value in launcher.API_FLAGS.items():assert os.environ[key]==value
     assert os.environ['AOS_EXTENSION_RUNTIME_HOST_ENABLED']=='0'
     assert os.environ['AOS_QYH_CRON_ENABLED']=='false'
+    assert os.environ['AOS_SNAPSHOT_GROUP_WORKER_ENABLED']=='false'
     assert os.environ['AOS_JDBC_SSH_PREBUILD_ENABLED']=='false'
     assert os.environ['AOS_DB_MIGRATION_MODE']=='disabled'
 
@@ -38,6 +39,7 @@ def test_product_profile_uses_niushop_1_23_current_signed_root(monkeypatch):
         '.aos-recovery-20260915/state/niushop-1.23-current-package/registry/signed-bundles-niushop-1.23-current')
     assert launcher.API_FLAGS['AOS_EXTENSION_RUNTIME_HOST_ENABLED']=='0'
     assert launcher.API_FLAGS['AOS_QYH_CRON_ENABLED']=='false'
+    assert launcher.API_FLAGS['AOS_SNAPSHOT_GROUP_WORKER_ENABLED']=='false'
     assert launcher.API_FLAGS['AOS_JDBC_SSH_PREBUILD_ENABLED']=='false'
     assert launcher.API_FLAGS['AOS_DB_MIGRATION_MODE']=='disabled'
 

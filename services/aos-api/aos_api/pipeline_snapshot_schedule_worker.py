@@ -15,10 +15,13 @@ from aos_api.pipeline_snapshot_group_recovery_runtime import PipelineSnapshotGro
 from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt
 from aos_api.tenant_scope import TenantScope
 from aos_api.logging_facade import get_logger
+from aos_api.extension_runtime.recoverable_store_attempt import (
+    MAX_RECOVERABLE_STORE_EXECUTION_SECONDS,
+)
 
 
 log = get_logger('aos-api.snapshot-schedule-worker')
-_SAVED_RECOVERY_TIMEOUT_SECONDS = 300.0
+_SAVED_RECOVERY_TIMEOUT_SECONDS = MAX_RECOVERABLE_STORE_EXECUTION_SECONDS
 _SAFE_ORIGIN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]{0,79}$')
 _SAFE_REASONS = {
     'recovery receipt is not current':'RECOVERY_RECEIPT_NOT_CURRENT',
