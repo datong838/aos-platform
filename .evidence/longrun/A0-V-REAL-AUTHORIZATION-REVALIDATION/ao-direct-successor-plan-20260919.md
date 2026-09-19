@@ -44,6 +44,18 @@ Before disabling a successful definition, `inspect` must reconcile in one curren
 2. Never repeat an action whose immutable intent exists; inspect authoritative results instead.
 3. Never call `run_definition`, write business tables directly, reread the 12 upstream sources, or change the original Store idempotency key.
 4. A naturally running AO attempt is observation-only while heartbeat and Lease advance.
+
+### Stage C1 — lock-free running observer
+
+The generic saved-snapshot `inspect` reads Product authorization and can be rejected by the installation row lock that the legitimate recovery owner holds. During `running`, use a dedicated read-only observer instead:
+
+- add `scripts/a0v_ao_attempt_guard.py` and `services/aos-api/tests/extension_runtime/test_a0v_ao_attempt_guard.py`;
+- pin the exact AO attempt, installation, generation, definition revision 59, recovery revision 19, manifest, 12 members/datasets, relationship, 1,168-link command, routes/resources boundary and negative tenant canary;
+- derive heartbeat and Lease health from the database observation time;
+- emit only a non-executing route: healthy running, stale-running diagnosis, strict succeeded closure, or failed-boundary diagnosis;
+- contain no DML, manual `run_definition`, source read, retry or automatic business action.
+
+Only `succeeded` opens the existing strict `inspect` and `disable` gate. A lock timeout, stale heartbeat, failed state or partial Store boundary never authorizes a resend.
 5. Success requires terminal Store Receipt, link/projection reconciliation, human-review continuation, management recap and Wiki candidate evidence; mere registration, cutover or test green is not business completion.
 
 ## First exit condition
