@@ -31,6 +31,7 @@ DISABLE_KEY = "a0v-av-saved-snapshot-disable-complete-v1"
 TRANSFER_KEY = "a0v-av-saved-definition-transfer-v1"
 RENEW_KEY = "a0v-av-saved-input-recovery-v24"
 PAUSE_KEY = "a0v-av-saved-snapshot-pause-terminal-v1"
+TERMINAL_FREEZE_OUTCOMES = {"ABANDONED_WAIT_NATURAL_SUCCESSOR"}
 
 
 def attempt_guard_module():
@@ -233,15 +234,13 @@ def pause_terminal(plane):
         facts = guard.read_facts(conn)
     classified = guard.classify(facts)
     expected = {
-        "outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "attemptCount": 1,
+        "attemptCount": 1,
         "runningRuns": 12, "succeededRuns": 0, "failedRuns": 0,
         "retirements": 0, "linkStoreReceipts": 0, "ecomLinks": 0,
         "linkOutbox": 0, "projectionPending": 0,
     }
-    observed = {"outcome": classified["outcome"]} | {
-        key: facts[key] for key in expected if key != "outcome"
-    }
-    if observed != expected:
+    observed = {key: facts[key] for key in expected}
+    if classified["outcome"] not in TERMINAL_FREEZE_OUTCOMES or observed != expected:
         raise RuntimeError(f"exact terminal {INSTALLATION_LABEL} saved recovery facts required: {observed}")
     result = service.transition(
         definition_id=snapshot.DEFINITION_ID,
@@ -255,7 +254,8 @@ def pause_terminal(plane):
         raise RuntimeError(f"exact disabled {INSTALLATION_LABEL} terminal definition required")
     return {
         "outcome": f"{INSTALLATION_LABEL}_SAVED_SNAPSHOT_TERMINAL_RECOVERY_PAUSED",
-        "attemptId": guard.ATTEMPT_ID, "facts": expected,
+        "attemptId": guard.ATTEMPT_ID,
+        "facts": {"outcome": classified["outcome"]} | expected,
         "definition": result, "sourceReads": 0,
     }
 
