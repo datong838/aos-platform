@@ -33,7 +33,7 @@ Any mismatch stops before a proposal or Policy write. A failed or abandoned AO r
 - add `scripts/a0v_ao_advisor_baseline_v3.py`;
 - add `services/aos-api/tests/extension_runtime/test_a0v_ao_advisor_baseline_v3.py`.
 
-The executor will bind the exact AO installation/generation/epoch, Case rev4, Policy rev2, both cancellation/closure facts and the successful snapshot group. It will expose separate `preflight`, `approve`, `put`, `observe` and terminal `disable` actions. Every action freezes intent before mutation and refuses an existing unknown intent rather than resending.
+The executor will bind the exact AO installation/generation/epoch, Case rev4, Policy rev2, both cancellation/closure facts and the successful snapshot group. It will expose separate `preflight`, `approval`, `put`, `observe` and terminal `disable` readiness actions. Every mutating action freezes intent before mutation and refuses an existing unknown intent rather than resending. Terminal disable readiness is read-only; a later fresh approval and canonical write are required before Policy disabling.
 
 ### B. Natural occurrence and analysis verification
 
