@@ -31,6 +31,7 @@ from sqlalchemy import (
     or_,
     select,
     text,
+    tuple_,
     update,
 )
 from sqlalchemy.engine import Connection, Engine
@@ -52,6 +53,7 @@ from aos_api.ecom_core_models import (
 
 metadata = MetaData()
 _PROCESS_IDEMPOTENCY_LOCKS = tuple(RLock() for _ in range(64))
+_NOT_PRELOADED = object()
 
 ecom_object = Table(
     "ecom_object",
@@ -332,8 +334,9 @@ class EcomConsistencyStore:
                     workspace_id=command.scope.workspace_id,
                 )
                 self._lock_idempotency_key(conn, lock_key)
+                strict_snapshot = None
                 if strict_links:
-                    self._lock_strict_link_records(conn, command)
+                    strict_snapshot = self._lock_strict_link_records(conn, command)
                 replay = self._get_receipt(conn, command)
                 if replay is not None:
                     if not self._receipt_matches_request(
@@ -387,15 +390,28 @@ class EcomConsistencyStore:
                 # instead of aborting the entire batch
                 dangling_links: list[CoreLinkRecord] = []
                 for link in command.ordered_links():
-                    if not self._object_exists(
-                        conn, link.source, link.source_type, allow_tombstone=link.is_deleted
-                    ) or not self._object_exists(
-                        conn, link.target, link.target_type, allow_tombstone=link.is_deleted
-                    ):
+                    if strict_snapshot is None:
+                        source_exists = self._object_exists(
+                            conn, link.source, link.source_type, allow_tombstone=link.is_deleted
+                        )
+                        target_exists = self._object_exists(
+                            conn, link.target, link.target_type, allow_tombstone=link.is_deleted
+                        )
+                        existing = _NOT_PRELOADED
+                    else:
+                        endpoints, links = strict_snapshot
+                        source_exists = self._locked_endpoint_exists(
+                            endpoints, link.source, link.source_type, allow_tombstone=link.is_deleted
+                        )
+                        target_exists = self._locked_endpoint_exists(
+                            endpoints, link.target, link.target_type, allow_tombstone=link.is_deleted
+                        )
+                        existing = links.get(self._link_identity(link))
+                    if not source_exists or not target_exists:
                         dangling_links.append(link)
                         counters["links_ignored"] += 1
                         continue
-                    outcome = self._upsert_link_checked(conn, link)
+                    outcome = self._upsert_link_checked(conn, link, existing=existing)
                     counters[outcome] += 1
                     if outcome in {"links_written", "links_tombstoned"}:
                         self._write_projection_event(
@@ -448,23 +464,80 @@ class EcomConsistencyStore:
             ) from exc
 
     @staticmethod
-    def _lock_strict_link_records(conn: Connection, command: BatchCommand) -> None:
+    def _link_identity(link: CoreLinkRecord) -> tuple[str, ...]:
+        return (
+            link.link_type,
+            link.source.platform,
+            link.source.shop_or_marketplace_id,
+            link.source_type,
+            link.source.external_id,
+            link.target.platform,
+            link.target.shop_or_marketplace_id,
+            link.target_type,
+            link.target.external_id,
+        )
+
+    @staticmethod
+    def _endpoint_identity(identity: StorageIdentity, object_type: str) -> tuple[str, ...]:
+        return (
+            object_type,
+            identity.platform,
+            identity.shop_or_marketplace_id,
+            identity.external_id,
+        )
+
+    @staticmethod
+    def _locked_endpoint_exists(endpoints, identity: StorageIdentity, object_type: str,
+                                *, allow_tombstone: bool) -> bool:
+        row = endpoints.get(EcomConsistencyStore._endpoint_identity(identity, object_type))
+        return row is not None and (allow_tombstone or row["deleted_at"] is None)
+
+    @staticmethod
+    def _lock_strict_link_records(conn: Connection, command: BatchCommand):
         # Preserve endpoint state until commit; lock endpoints before links,
         # matching the original object's cascade-write order.
-        endpoints = {}
+        endpoint_keys = set()
         for link in command.links:
             for identity, object_type in ((link.source, link.source_type), (link.target, link.target_type)):
-                key = (object_type, identity.platform, identity.shop_or_marketplace_id, identity.external_id)
-                endpoints[key] = (identity, object_type)
-        for key in sorted(endpoints):
-            identity, object_type = endpoints[key]
-            conn.execute(select(ecom_object.c.external_id).where(
-                _object_clause(identity, object_type)
-            ).with_for_update(read=True)).all()
-        for link in command.ordered_links():
-            conn.execute(select(ecom_link.c.payload_hash).where(
-                _link_clause(link)
-            ).with_for_update()).all()
+                endpoint_keys.add(EcomConsistencyStore._endpoint_identity(identity, object_type))
+        endpoint_columns = (
+            ecom_object.c.object_type,
+            ecom_object.c.platform,
+            ecom_object.c.shop_or_marketplace_id,
+            ecom_object.c.external_id,
+        )
+        endpoint_rows = conn.execute(select(ecom_object).where(
+            ecom_object.c.org_id == command.scope.org_id,
+            ecom_object.c.workspace_id == command.scope.workspace_id,
+            tuple_(*endpoint_columns).in_(sorted(endpoint_keys)),
+        ).order_by(*endpoint_columns).with_for_update(read=True)).mappings().all()
+        endpoints = {
+            (row["object_type"], row["platform"], row["shop_or_marketplace_id"], row["external_id"]): row
+            for row in endpoint_rows
+        }
+
+        link_columns = (
+            ecom_link.c.link_type,
+            ecom_link.c.source_platform,
+            ecom_link.c.source_shop_or_marketplace_id,
+            ecom_link.c.source_object_type,
+            ecom_link.c.source_external_id,
+            ecom_link.c.target_platform,
+            ecom_link.c.target_shop_or_marketplace_id,
+            ecom_link.c.target_object_type,
+            ecom_link.c.target_external_id,
+        )
+        link_keys = sorted(EcomConsistencyStore._link_identity(link) for link in command.links)
+        link_rows = conn.execute(select(ecom_link).where(
+            ecom_link.c.org_id == command.scope.org_id,
+            ecom_link.c.workspace_id == command.scope.workspace_id,
+            tuple_(*link_columns).in_(link_keys),
+        ).order_by(*link_columns).with_for_update()).mappings().all()
+        links = {
+            tuple(row[column.name] for column in link_columns): row
+            for row in link_rows
+        }
+        return endpoints, links
 
     def read_committed_batch(self, command: BatchCommand) -> BatchResult | None:
         """Read exact committed evidence without replaying a batch or advancing it."""
@@ -1263,15 +1336,17 @@ class EcomConsistencyStore:
             )
         return self._upsert_link_checked(conn, link)
 
-    def _upsert_link_checked(self, conn: Connection, link: CoreLinkRecord) -> str:
+    def _upsert_link_checked(self, conn: Connection, link: CoreLinkRecord,
+                             *, existing=_NOT_PRELOADED) -> str:
         """Upsert link after endpoint existence is already verified (by apply_batch)."""
 
         clause = _link_clause(link)
-        existing = (
-            conn.execute(select(ecom_link).where(clause).with_for_update())
-            .mappings()
-            .first()
-        )
+        if existing is _NOT_PRELOADED:
+            existing = (
+                conn.execute(select(ecom_link).where(clause).with_for_update())
+                .mappings()
+                .first()
+            )
         payload_hash = link.payload_hash()
         now = _utcnow()
         values = {

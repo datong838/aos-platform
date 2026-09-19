@@ -1011,6 +1011,40 @@ def test_strict_links_apply_and_exact_replay(store):
     assert store.read_committed_batch_revision(command) > 0
 
 
+def test_strict_link_batch_uses_bounded_endpoint_and_link_reads(store):
+    shops = tuple(obj("Shop", f"strict-shop-{index:03d}") for index in range(12))
+    products = tuple(obj("Product", f"strict-product-{index:03d}") for index in range(12))
+    store.apply_batch(batch(*shops, *products, key="strict-bulk-endpoints"))
+    links = [CoreLinkRecord(
+        link_type="Shop.sellsProduct",
+        source_type="Shop",
+        source=shop.identity,
+        target_type="Product",
+        target=product.identity,
+        source_updated_at=NOW,
+        cursor_external_id=f"strict-link-{index:03d}",
+        is_deleted=False,
+    ) for index, (shop, product) in enumerate(zip(shops, products, strict=True))]
+    command = batch(links=links, key="strict-bulk-links",
+                    batch_scope=scope(stream="strict-bulk-links"))
+    reads = []
+
+    def record(_conn, _cursor, statement, _parameters, _context, _many):
+        normalized = statement.lower().lstrip()
+        if normalized.startswith("select") and (
+                "ecom_object" in normalized or "ecom_link" in normalized):
+            reads.append(normalized)
+
+    event.listen(store._engine, "before_cursor_execute", record)
+    try:
+        result = store.apply_strict_link_batch(command)
+    finally:
+        event.remove(store._engine, "before_cursor_execute", record)
+
+    assert result.links_written == len(links)
+    assert len(reads) <= 5
+
+
 def test_strict_links_partial_batch_rolls_back_all_evidence(store):
     command = _strict_link_setup(store)
     missing = shop_product_link().model_copy(update={'target': ident('missing'),
