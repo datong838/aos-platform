@@ -1,6 +1,7 @@
 """Original twelve-run completion: Store effects recover, metadata closes atomically."""
 import hashlib
 import json
+from threading import Event
 
 import pytest
 
@@ -132,3 +133,27 @@ def test_group_advisory_lock_is_fail_closed(completion_case):
                 "SELECT pg_advisory_unlock(hashtextextended(%s,0))",
                 (service._lock_key(args['scope'], args['group_id']),),
             )
+
+
+def test_lost_attempt_heartbeat_cancels_before_group_store(completion_case, monkeypatch):
+    service, conn, args, state = completion_case
+    heartbeat_lost = Event()
+    heartbeat_lost.set()
+
+    class LostAttempt:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_):
+            return False
+
+        def cancellation(self, caller_event):
+            assert caller_event is None
+            return heartbeat_lost
+
+    monkeypatch.setattr(service._attempts, 'claim', lambda *_args, **_kwargs: LostAttempt())
+    with pytest.raises(IngressJournalConflict, match='INGRESS_CANCELLED'):
+        service.complete(**args)
+
+    assert conn.execute('SELECT count(*) AS n FROM ecom_ingest_receipt').fetchone()['n'] == 0
+    assert state['calls'] == 1

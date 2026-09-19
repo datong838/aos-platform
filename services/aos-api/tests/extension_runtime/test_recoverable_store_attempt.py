@@ -1,8 +1,37 @@
+from threading import Event
+
 import pytest
 
 from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
-from aos_api.extension_runtime.recoverable_store_attempt import _terminal_failure
+from aos_api.extension_runtime.recoverable_store_attempt import (
+    RecoverableStoreAttempt,
+    _terminal_failure,
+)
+
+
+def _attempt_for_cancellation():
+    attempt = object.__new__(RecoverableStoreAttempt)
+    attempt._stop = Event()
+    return attempt
+
+
+def test_attempt_cancellation_combines_heartbeat_and_caller_stop():
+    caller = Event()
+    attempt = _attempt_for_cancellation()
+    combined = attempt.cancellation(caller)
+
+    assert combined.is_set() is False
+    assert combined.wait(0.01) is False
+
+    caller.set()
+    assert combined.is_set() is True
+    assert combined.wait(0) is True
+
+    caller.clear()
+    attempt._stop.set()
+    assert combined.is_set() is True
+    assert combined.wait(0) is True
 
 
 @pytest.mark.parametrize(

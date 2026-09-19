@@ -276,6 +276,7 @@ class PipelineSnapshotGroupCompletion:
                         request_hash=request_hash,
                     )
                 with attempt:
+                    cancel_event = attempt.cancellation(cancel_event)
                     if recover_stopped:
                         with self._transaction(scope) as conn:
                             rows=self._rows(conn,scope,bindings,lock=False)

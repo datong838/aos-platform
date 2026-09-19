@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 import re
 import secrets
 from threading import Event, Lock, Thread
+from time import monotonic
 
 from aos_api.tenant_scope import TenantScope
 
@@ -33,6 +34,27 @@ def _terminal_failure(exc: BaseException | None, heartbeat_error: BaseException 
     return "RECOVERABLE_EXECUTION_EXCEPTION", error_type
 
 
+class _CombinedCancelEvent:
+    """Event-compatible view that fails closed when either owner stops."""
+
+    def __init__(self, *events) -> None:
+        self._events = events
+
+    def is_set(self) -> bool:
+        return any(event.is_set() for event in self._events)
+
+    def wait(self, timeout: float | None = None) -> bool:
+        if self.is_set():
+            return True
+        deadline = None if timeout is None else monotonic() + max(0.0, timeout)
+        while deadline is None or monotonic() < deadline:
+            remaining = None if deadline is None else max(0.0, deadline - monotonic())
+            self._events[0].wait(.05 if remaining is None else min(.05, remaining))
+            if self.is_set():
+                return True
+        return self.is_set()
+
+
 class RecoverableStoreAttempt:
     def __init__(self, *, connect, scope: TenantScope, lease: RuntimeAttemptLease,
                  owner_token: str, heartbeat_seconds: float, lease_seconds: float) -> None:
@@ -52,6 +74,12 @@ class RecoverableStoreAttempt:
     @property
     def attempt_id(self):
         return self._lease.attempt_id
+
+    def cancellation(self, caller_event=None):
+        """Combine caller shutdown with loss of the attempt heartbeat Lease."""
+        if caller_event is None:
+            return self._stop
+        return _CombinedCancelEvent(self._stop, caller_event)
 
     def _heartbeat(self) -> None:
         store = PostgresRuntimeAttemptStore()
