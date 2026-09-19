@@ -13,6 +13,7 @@ from aos_api.extension_runtime.runtime_connections import runtime_worker_connect
 
 
 HEARTBEAT_FRESHNESS = timedelta(seconds=90)
+SAVED_RECOVERY_EXECUTION_LIMIT_SECONDS = 300
 
 
 def _as_datetime(value) -> datetime:
@@ -61,6 +62,9 @@ def classify(facts: dict) -> dict:
         raise RuntimeError("AO guard authority differs")
     if type(facts.get("revision")) is not int or facts["revision"] < 1:
         raise RuntimeError("AO guard authority differs")
+    elapsed = facts.get("attemptElapsedSeconds")
+    if facts.get("acceptedAt") is None or type(elapsed) is not int or elapsed < 0:
+        raise RuntimeError("AO guard authority differs")
     remaining, expired = facts.get("controlSecondsRemaining"), facts.get("controlExpired")
     if type(remaining) is not int or type(expired) is not bool or expired is not (remaining < 0):
         raise RuntimeError("AO guard authority differs")
@@ -71,6 +75,20 @@ def classify(facts: dict) -> dict:
         heartbeat = _as_datetime(facts.get("heartbeatAt"))
         lease = _as_datetime(facts.get("leaseUntil"))
         healthy = heartbeat >= observed - HEARTBEAT_FRESHNESS and lease > observed
+        store_progress = any(facts[key] for key in (
+            "retirements", "linkStoreReceipts", "ecomLinks", "linkOutbox",
+        ))
+        if (
+            healthy
+            and elapsed > SAVED_RECOVERY_EXECUTION_LIMIT_SECONDS
+            and not store_progress
+        ):
+            return {
+                "outcome": "RUNNING_HEARTBEAT_ONLY_DIAGNOSE",
+                "automaticAction": False,
+                "heartbeatHealthy": True,
+                "executionLimitExceeded": True,
+            }
         return {
             "outcome": "RUNNING_HEALTHY_NO_ACTION" if healthy else "RUNNING_STALE_DIAGNOSE_ONLY",
             "automaticAction": False,

@@ -72,6 +72,11 @@ def test_running_and_terminal_attempt_routes_are_deterministic():
         "heartbeatHealthy": True,
     })["nextAction"] == "OBSERVE_AO_RECOVERY"
 
+    assert router.classify(running, {}, attempt_guard={
+        "outcome": "RUNNING_HEARTBEAT_ONLY_DIAGNOSE", "automaticAction": False,
+        "heartbeatHealthy": True, "executionLimitExceeded": True,
+    })["nextAction"] == "DIAGNOSE_AO_BOUNDED_EXECUTION"
+
     succeeded = _snapshot("succeeded", "enabled", 59)
     assert router.classify(succeeded, {}, attempt_guard={
         "outcome": "SUCCEEDED_STRICT_CLOSURE", "automaticAction": False,

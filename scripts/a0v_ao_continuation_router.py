@@ -99,6 +99,7 @@ def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
             raise RuntimeError("exact AO attempt guard result required")
         next_actions = {
             "RUNNING_HEALTHY_NO_ACTION": "OBSERVE_AO_RECOVERY",
+            "RUNNING_HEARTBEAT_ONLY_DIAGNOSE": "DIAGNOSE_AO_BOUNDED_EXECUTION",
             "RUNNING_STALE_DIAGNOSE_ONLY": "DIAGNOSE_AO_HEARTBEAT",
             "FAILED_FREEZE_BOUNDARY": "FREEZE_AO_FAILURE_BOUNDARY",
             "SUCCEEDED_STRICT_CLOSURE": "RUN_AO_INSPECT_THEN_DISABLE",

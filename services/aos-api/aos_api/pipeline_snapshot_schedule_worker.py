@@ -4,6 +4,7 @@ import asyncio
 from math import isfinite
 import re
 from threading import Event
+from time import monotonic
 from psycopg.pq import TransactionStatus
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.ec_ingress_recovery import _check_active
@@ -17,6 +18,7 @@ from aos_api.logging_facade import get_logger
 
 
 log = get_logger('aos-api.snapshot-schedule-worker')
+_SAVED_RECOVERY_TIMEOUT_SECONDS = 300.0
 _SAFE_ORIGIN = re.compile(r'^[A-Za-z_][A-Za-z0-9_]{0,79}$')
 _SAFE_REASONS = {
     'recovery receipt is not current':'RECOVERY_RECEIPT_NOT_CURRENT',
@@ -162,9 +164,14 @@ class PipelineSnapshotScheduleWorker:
                     # The immutable approval is the durable routing intent.
                     # The original fixed Authority rechecks every permission,
                     # window and saved-input fact before any Store operation.
+                    recovery_deadline=monotonic()+_SAVED_RECOVERY_TIMEOUT_SECONDS
+                    if deadline is not None:
+                        recovery_deadline=min(deadline,recovery_deadline)
+                    recovery_active=dict(deadline=recovery_deadline,cancel_event=cancel_event)
+                    _check_active(**recovery_active)
                     self.active_definition_id=definition_id
                     return self._recovery.resume_saved(scope=self.scope,actor=recovery['body']['executor'],
-                        recovery_ref=recovery['ref'],**active)
+                        recovery_ref=recovery['ref'],**recovery_active)
                 if candidate['status']!='due':return candidate
                 self.active_definition_id=definition_id
                 return self._runtime.execute(scope=self.scope,definition_ref=candidate['definitionRef'],

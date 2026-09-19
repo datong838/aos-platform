@@ -1,5 +1,8 @@
 """Real approval routing to the original Runtime; execution is a named seam."""
+import os
+from time import monotonic
 import pytest
+from aos_api.ec_ingress_journal import IngressJournalConflict
 from test_snapshot_schedule_worker_pg import worker_for
 
 pytest_plugins=('test_snapshot_group_recovery_authority_pg',)
@@ -21,8 +24,29 @@ def test_formal_recovery_uses_original_receipt_executor_under_same_lock(authorit
     assert worker.run_definition(definition)['status']=='succeeded'
     assert calls[0]['recovery_ref']==receipt['ref'] and calls[0]['actor']==receipt['body']['executor']
     assert calls[0]['scope']==command['scope']
+    assert monotonic() < calls[0]['deadline'] <= monotonic()+300
     assert worker.run_definition(definition)['status'] in ('slot_completed','recovery_only')
     assert len(calls)==1 and state['calls']==1
+
+
+def test_formal_recovery_preserves_earlier_caller_deadline(authority_case,monkeypatch):
+    runtime,owner,command,state,receipt,authority,args=authority_case
+    worker=worker_for(runtime,command['scope'])
+    definition=receipt['body']['currentDefinitionRef']['resourceId'].removeprefix('snapshot-schedule-')
+    earlier=monotonic()+30
+    calls=[]
+    monkeypatch.setattr(worker._recovery,'resume_saved',lambda **call:calls.append(call) or {'status':'held'})
+    assert worker.run_definition(definition,deadline=earlier)['status']=='held'
+    assert calls[0]['deadline']==earlier
+
+
+def test_formal_recovery_rejects_expired_caller_deadline(authority_case,monkeypatch):
+    runtime,owner,command,state,receipt,authority,args=authority_case
+    worker=worker_for(runtime,command['scope'])
+    definition=receipt['body']['currentDefinitionRef']['resourceId'].removeprefix('snapshot-schedule-')
+    monkeypatch.setattr(worker._recovery,'resume_saved',lambda **_:pytest.fail('expired recovery executed'))
+    with pytest.raises(IngressJournalConflict,match='INGRESS_DEADLINE_EXCEEDED'):
+        worker.run_definition(definition,deadline=monotonic()-1)
 
 
 def test_disabled_recovery_never_enters_runtime(authority_case,monkeypatch):
@@ -42,9 +66,8 @@ def test_automatic_recovery_rechecks_persisted_permission_before_store(authority
     runtime,owner,command,state,receipt,authority,args=authority_case
     worker=worker_for(runtime,command['scope'])
     definition=receipt['body']['currentDefinitionRef']['resourceId'].removeprefix('snapshot-schedule-')
-    with runtime._connect() as conn:dsn=conn.info.dsn
     # Named isolated administration, not a production identity mutation.
-    with psycopg.connect(dsn) as admin:
+    with psycopg.connect(os.environ['AOS_DATABASE_URL']) as admin:
         admin.execute('DELETE FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',
             (*command['scope'].key,command['actor']))
     monkeypatch.setattr(worker._recovery._store,'apply_batch',lambda *_:pytest.fail('revoked Store access'))

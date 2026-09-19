@@ -23,6 +23,8 @@ def facts(**changes):
         "operationKind": "recoverable_store",
         "state": "running",
         "revision": 92,
+        "acceptedAt": observed - timedelta(seconds=120),
+        "attemptElapsedSeconds": 120,
         "heartbeatAt": observed - timedelta(seconds=10),
         "leaseUntil": observed + timedelta(seconds=110),
         "observedAt": observed,
@@ -61,6 +63,20 @@ def test_healthy_running_attempt_is_observation_only():
     }
 
 
+def test_healthy_heartbeat_without_store_progress_past_execution_limit_is_diagnosis_only():
+    assert guard.classify(facts(attemptElapsedSeconds=301)) == {
+        "outcome": "RUNNING_HEARTBEAT_ONLY_DIAGNOSE",
+        "automaticAction": False,
+        "heartbeatHealthy": True,
+        "executionLimitExceeded": True,
+    }
+
+
+def test_store_progress_does_not_claim_heartbeat_only_boundary():
+    result = guard.classify(facts(attemptElapsedSeconds=301, linkStoreReceipts=1))
+    assert result["outcome"] == "RUNNING_HEALTHY_NO_ACTION"
+
+
 @pytest.mark.parametrize("changes", (
     {"heartbeatAt": datetime(2026, 9, 19, 3, 28, tzinfo=UTC)},
     {"leaseUntil": datetime(2026, 9, 19, 3, 30, tzinfo=UTC)},
@@ -96,6 +112,8 @@ def test_failed_attempt_only_routes_to_frozen_diagnosis():
     ("routes", 8),
     ("devOrgCanary", 1),
     ("ecomLinks", 1169),
+    ("attemptElapsedSeconds", -1),
+    ("acceptedAt", None),
 ))
 def test_identity_or_boundary_drift_fails_closed(field, value):
     with pytest.raises(RuntimeError, match="AO guard authority differs"):
