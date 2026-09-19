@@ -28,6 +28,11 @@ LINK_KEY = ("snapshot-group-links:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:"
 PREFIX = "a0v-qyh-failed-aq-retirement-20260919-v1"
 SCOPE = {"org_id": "org-org", "project_id": "dev-project"}
 ACTIONS = ("preflight", "request-disable", "process-disable", "audit")
+DEFINITION_REVISION = 66
+ACTIVE_ROUTE_REVISION = 102
+ACTIVE_GROUP_REVISION = 129
+DETACHED_ROUTE_REVISION = 104
+DETACHED_GROUP_REVISION = 131
 
 
 def freeze(path: Path, value: dict[str, Any]) -> None:
@@ -164,7 +169,7 @@ def snapshot(phase: str, operation_id: str | None = None) -> dict[str, Any]:
     if (head is None or dict(head) != expected_head or runtime is None or dict(runtime) != expected_runtime
             or resources != ({"total": 3, "released": 3} if detached else {"total": 3, "released": 0})
             or len(routes) != 9 or definition is None
-            or dict(definition) != {"revision": 66, "state": "disabled"}
+            or dict(definition) != {"revision": DEFINITION_REVISION, "state": "disabled"}
             or safety != expected_safety or attempts != expected_attempts
             or boundary != {"unexpected_attempts": 0, "members": 12, "saved_runs": 12,
                             "dataset_receipts": 12, "store_receipts": 0,
@@ -173,13 +178,13 @@ def snapshot(phase: str, operation_id: str | None = None) -> dict[str, Any]:
     if detached:
         if any(row["handler_kind"] != "legacy" or row["installation_id"] is not None
                or row["generation"] is not None or row["execution_epoch"] is not None
-               or row["operation_fence"] is not True or row["revision"] != 104
-               or row["cutover_group_revision"] != 131 for row in routes):
+               or row["operation_fence"] is not True or row["revision"] != DETACHED_ROUTE_REVISION
+               or row["cutover_group_revision"] != DETACHED_GROUP_REVISION for row in routes):
             raise ValueError("exact detached AQ routes required")
     elif any(row["handler_kind"] != "extension" or row["installation_id"] != AQ_ID
              or row["generation"] != GENERATION or row["execution_epoch"] != 3
-             or row["operation_fence"] is not False or row["revision"] != 102
-             or row["cutover_group_revision"] != 129 for row in routes):
+             or row["operation_fence"] is not False or row["revision"] != ACTIVE_ROUTE_REVISION
+             or row["cutover_group_revision"] != ACTIVE_GROUP_REVISION for row in routes):
         raise ValueError("exact attached AQ routes required")
     if phase == "accepted" and (operation is None or operation["kind"] != "disable"
             or operation["status"] != "accepted" or operation["phase"] != "accepted"
@@ -191,7 +196,7 @@ def snapshot(phase: str, operation_id: str | None = None) -> dict[str, Any]:
             or lifecycle != {"operations": 1, "receipts": 2, "phases": ["fence", "detach"]}):
         raise ValueError("exact detached AQ lifecycle required")
     return {"phase": phase, "runtime": dict(runtime), "resources": resources,
-            "routeCount": 9, "groupRevision": 131 if detached else 129,
+            "routeCount": 9, "groupRevision": DETACHED_GROUP_REVISION if detached else ACTIVE_GROUP_REVISION,
             "definition": dict(definition), "safety": safety,
             "attempts": attempts, "boundary": boundary,
             "operation": None if operation is None else dict(operation), "lifecycle": lifecycle}
