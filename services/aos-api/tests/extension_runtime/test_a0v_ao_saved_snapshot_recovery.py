@@ -27,5 +27,15 @@ def test_exact_ao_saved_snapshot_authority():
     assert recovery.ACTIONS == (
         "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable"
     )
+    assert recovery.ATTEMPT_ID == "67c2331d-b73f-4863-b881-0d67e6c55508"
+    assert recovery.LINK_COMMAND_HASH == (
+        "sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970"
+    )
+    assert '"store_receipts": 1' in source
+    assert '"live_links": 1168' in source
+    assert '"store_outbox": 1168' in source
+    assert '"projection_pending": 0' in source
+    assert '"routes": 9' in source
+    assert "facts = require_terminal_facts()" in source
     assert '"sourceReads": 0' in source
     assert "run_definition" not in source

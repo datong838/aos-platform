@@ -36,6 +36,8 @@ Register AO only from the exact AN detach Receipt and group revision 122. Cut ov
 
 Transfer definition revision 57 to AO as disabled revision 58, renew recovery revision 19 and enable definition revision 59 without source reads. The independent worker alone may claim the definition. It must reuse the original Store idempotency key and the heartbeat-loss cancellation fix loaded in commit `4fcf7a5e`.
 
+Before disabling a successful definition, `inspect` must reconcile in one current read: the exact single AO attempt and its terminal-success revision, 12 terminal Runs, 12 dataset Receipts, one relationship, one 1,168-link command, one retirement, one Store Receipt for the original key, 1,168 stored links, zero projection pending, nine AO routes, three live resources and zero `dev-org/dev-project` canary state. `disable` repeats the same read and refuses any drift; a merely terminal attempt is insufficient.
+
 ## Stop rules
 
 1. Stop on any mismatch in predecessor identity, detach Receipt/hash, installation state, route revision, resource state, recovery ref, frozen manifest, Store counts or canary counts.
