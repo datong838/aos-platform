@@ -1642,3 +1642,19 @@ This append-only classification changes no historical preHash or dynamic-referen
 | file | destination | boundary | initial hash |
 | --- | --- | --- | --- |
 | `services/aos-api/aos_api/ecommerce_baseline_assessment_discovery.py` | Host original path | Read-only current eligibility and exact schedule/source lineage discovery; no Case/Run creation, occurrence settlement, Provider call or effect grant | `dec823feceb9905c087692cd30de795bb54d9d747c17cbe61d3b487c21ffac18` |
+
+### A0-V AT direct successor executors（2026-09-19）
+
+AT 只接受 AS 正式 detach Receipt，经既有安装生命周期、successor registration 与原子 cutover Owner 成为当前九路目标；
+健康观察器仅 SELECT 并写私有本地证据。该组脚本不读取商城源数据、不运行 snapshot definition、不授予外部效果。
+
+| 文件 | 去向 | 边界 | 初始 hash |
+| --- | --- | --- | --- |
+| `scripts/a0v_at_replacement_recovery.py` | A0-V 运维执行器 | exact AS detach 后继安装生命周期 | `c90b2ef4ba5493bc0dae17c0b22b27a05c6b651f81f43311361da7026c5c533c` |
+| `scripts/a0v_at_successor_business.py` | A0-V 运维执行器 | exact registration Receipt；无 cutover 权限 | `bea1033b9c6edaab3a997c489ec857c194620014a72aecb752c5149af63c80ff` |
+| `scripts/a0v_at_successor_cutover.py` | A0-V 运维执行器 | 九路原子 cutover；外部效果关闭 | `2613a31e8a1c15d7ec53ef34a5e0bbbd8aac41152e27c59c9d8c632dcffc5a1e` |
+| `scripts/a0v_at_health_observation.py` | A0-V 只读观察器 | exact AT/route/resource/attempt/canary 长续租门 | `2115c6539768b2c2b0bdbc259bd0bcdefab47ec056fa100a7b9f135585cc6062` |
+| `services/aos-api/tests/extension_runtime/test_a0v_at_replacement_recovery.py` | 测试 | 固定前驱、动作序列与禁止直接 runtime 更新 | `04e78459af900da8f0806c0bad9d6631c134f40772fc487c8068d9c2a6c47228` |
+| `services/aos-api/tests/extension_runtime/test_a0v_at_successor_business.py` | 测试 | 固定 registration direct predecessor | `2624ea8084422bbc054471fbb36899ba3a6e6830f24b0bf6546db17bca103190` |
+| `services/aos-api/tests/extension_runtime/test_a0v_at_successor_cutover.py` | 测试 | 固定 cutover 身份、旧组与 no-effect policy | `a81536feb0513f073509a20b68dfe9946ae965133dbe2fa7f00264f9f61298c8` |
+| `services/aos-api/tests/extension_runtime/test_a0v_at_health_observation.py` | 测试 | 只读观察与十二续租门禁 | `1b4d7020c9213a7fad23003688c4fbe2c964f0b109ac1b3421cb131cabf5c26a` |
