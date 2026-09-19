@@ -24,6 +24,10 @@ def test_exact_as_saved_snapshot_authority():
     assert 'idempotency_key="a0v-as-saved-input-recovery-v22"' in source
     assert 'get("revision") != 22' in source
     assert 'get("revision") != 69' in source
-    assert recovery.ACTIONS == ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable")
+    assert recovery.ATTEMPT_ID == "af7c1fc1-8283-40d7-ab62-f7d6145417c6"
+    assert recovery.ACTIONS == ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable")
+    assert 'status["definitionRef"]["revision"] != 69' in source
+    assert 'idempotency_key="a0v-as-saved-snapshot-pause-failed-v1"' in source
+    assert 'get("revision") != 70' in source
     assert '"sourceReads": 0' in source
     assert "run_definition" not in source
