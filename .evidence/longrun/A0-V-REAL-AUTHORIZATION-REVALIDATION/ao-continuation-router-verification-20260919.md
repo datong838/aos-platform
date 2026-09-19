@@ -59,3 +59,16 @@ No runtime authority or business behavior changes in this hardening.
 - live stdout parsed directly with `json.load`: AO revision 156, 12 running Runs, 0 succeeded, 0 failed, `nextAction=OBSERVE_AO_RECOVERY`; 14 framework diagnostic lines remained on stderr;
 - AR2-7 verification remained clean across 1988 scanned modules;
 - browser reload passed through `正在读取工作台目录` and settled on `暂无可见工作台入口`.
+
+## Closed-runtime current-authority hardening plan
+
+An exact historical `disable-result.json` is necessary but cannot alone authorize continuation if current database state has drifted to another attempt or runtime. Before any Policy v3 step, the router will require the current snapshot to match the same AO attempt, installation, generation, operation, recovery revision and manifest; 12 succeeded Runs and dataset Receipts; the one relationship/link command/retirement/Store Receipt; 1168 links and outbox rows; zero pending projection; nine routes, three resources and zero negative-tenant binding. Any mismatch blocks before reading or routing a Policy write.
+
+### Closed-runtime authority verification
+
+- the current closed snapshot contract covers 25 exact identity, lifecycle, Store, projection, route, resource and isolation fields plus non-null completion time;
+- 15 independent drift mutations are rejected before Policy routing;
+- 27 focused tests and 56 affected cumulative tests passed;
+- live AO remained healthy at revision 162 with 12 running Runs and 0 failed, so the closed-state branch was correctly not opened;
+- AR2-7 verification remained clean across 1988 modules;
+- browser directory loading settled after about 4.3 seconds on `暂无可见工作台入口`.

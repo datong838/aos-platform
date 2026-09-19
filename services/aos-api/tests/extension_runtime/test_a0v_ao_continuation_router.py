@@ -22,6 +22,7 @@ def _snapshot(state="succeeded", definition_state="disabled", definition_revisio
         "operationKind": "recoverable_store",
         "state": state,
         "revision": 200,
+        "completedAt": "2026-09-19T04:00:00+00:00" if state == "succeeded" else None,
         "observedAt": "2026-09-19T04:00:00+00:00",
         "heartbeatAt": "2026-09-19T03:59:50+00:00",
         "leaseUntil": "2026-09-19T04:01:00+00:00",
@@ -146,6 +147,35 @@ def test_unknown_or_inconsistent_state_fails_closed():
         router.classify(
             _snapshot(), _artifacts(v3Approval=True),
             policy={"revision": 2, "enabled": True},
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("attemptId", "wrong-attempt"),
+        ("installationId", "wrong-installation"),
+        ("generation", "wrong-generation"),
+        ("operationKind", "wrong-operation"),
+        ("recoveryRevision", 18),
+        ("manifestHash", "sha256:wrong"),
+        ("succeededRuns", 11),
+        ("datasetReceipts", 11),
+        ("linkStoreReceipts", 0),
+        ("ecomLinks", 1167),
+        ("projectionPending", 1),
+        ("routes", 8),
+        ("liveResources", 2),
+        ("devOrgCanary", 1),
+        ("completedAt", None),
+    ],
+)
+def test_closed_recovery_rejects_current_authority_drift(field, value):
+    snapshot = _snapshot()
+    snapshot[field] = value
+    with pytest.raises(RuntimeError, match="closed-runtime authority"):
+        router.classify(
+            snapshot, _artifacts(), policy={"revision": 2, "enabled": True}
         )
 
 

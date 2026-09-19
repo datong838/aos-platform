@@ -28,6 +28,34 @@ TERMINAL_FACTS = {
     "canary": 0,
 }
 
+CLOSED_SNAPSHOT = {
+    "attemptId": "67c2331d-b73f-4863-b881-0d67e6c55508",
+    "installationId": "d4186607-c93f-4fd0-8daa-46e349184ab9",
+    "generation": "00bb99df-d436-483d-86df-496718c6f129",
+    "operationKind": "recoverable_store",
+    "state": "succeeded",
+    "definitionRevision": 60,
+    "definitionState": "disabled",
+    "recoveryRevision": 19,
+    "manifestHash": "sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01",
+    "members": 12,
+    "runningRuns": 0,
+    "succeededRuns": 12,
+    "failedRuns": 0,
+    "datasetReceipts": 12,
+    "relationships": 1,
+    "linkCommands": 1,
+    "linkCount": 1168,
+    "retirements": 1,
+    "linkStoreReceipts": 1,
+    "ecomLinks": 1168,
+    "linkOutbox": 1168,
+    "projectionPending": 0,
+    "liveResources": 3,
+    "devOrgCanary": 0,
+    "routes": 9,
+}
+
 
 def _artifact(path: Path, outcome: str, *, terminal: bool = False) -> bool:
     if not path.exists():
@@ -54,6 +82,13 @@ def _require_artifact_prefix(artifacts: dict) -> None:
         raise RuntimeError("continuation artifact prefix differs")
 
 
+def _require_closed_snapshot(snapshot: dict) -> None:
+    if any(snapshot.get(key) != value for key, value in CLOSED_SNAPSHOT.items()):
+        raise RuntimeError("current AO closed-runtime authority differs")
+    if snapshot.get("completedAt") is None:
+        raise RuntimeError("current AO closed-runtime authority differs")
+
+
 def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
              phase: str | None = None, attempt_guard: dict | None = None) -> dict:
     state = snapshot.get("state")
@@ -74,9 +109,8 @@ def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
             raise RuntimeError("read-only AO attempt guard required")
         return attempt_guard | {"nextAction": next_actions[attempt_guard["outcome"]]}
 
-    if state != "succeeded" or snapshot.get("definitionState") != "disabled":
-        raise RuntimeError("unknown AO continuation state")
-    if snapshot.get("definitionRevision") != 60 or not artifacts.get("recoveryClosed"):
+    _require_closed_snapshot(snapshot)
+    if not artifacts.get("recoveryClosed"):
         raise RuntimeError("exact AO disabled recovery closure required")
     _require_artifact_prefix(artifacts)
     if policy is None:
