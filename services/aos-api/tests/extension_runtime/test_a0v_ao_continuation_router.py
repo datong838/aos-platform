@@ -1,5 +1,7 @@
 import importlib.util
+import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
@@ -14,9 +16,9 @@ SPEC.loader.exec_module(router)
 
 def _snapshot(state="succeeded", definition_state="disabled", definition_revision=60):
     return {
-        "attemptId": router.recovery.ATTEMPT_ID,
-        "installationId": router.guard.successor.AO_ID,
-        "generation": router.guard.successor.AO_GENERATION,
+        "attemptId": "67c2331d-b73f-4863-b881-0d67e6c55508",
+        "installationId": "d4186607-c93f-4fd0-8daa-46e349184ab9",
+        "generation": "00bb99df-d436-483d-86df-496718c6f129",
         "operationKind": "recoverable_store",
         "state": state,
         "revision": 200,
@@ -26,7 +28,7 @@ def _snapshot(state="succeeded", definition_state="disabled", definition_revisio
         "definitionRevision": definition_revision,
         "definitionState": definition_state,
         "recoveryRevision": 19,
-        "manifestHash": router.recovery.MANIFEST,
+        "manifestHash": "sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01",
         "members": 12,
         "runningRuns": 0 if state == "succeeded" else 12,
         "succeededRuns": 12 if state == "succeeded" else 0,
@@ -64,15 +66,22 @@ def _artifacts(**values):
 
 def test_running_and_terminal_attempt_routes_are_deterministic():
     running = _snapshot("running", "enabled", 59)
-    assert router.classify(running, {})["nextAction"] == "OBSERVE_AO_RECOVERY"
+    assert router.classify(running, {}, attempt_guard={
+        "outcome": "RUNNING_HEALTHY_NO_ACTION", "automaticAction": False,
+        "heartbeatHealthy": True,
+    })["nextAction"] == "OBSERVE_AO_RECOVERY"
 
     succeeded = _snapshot("succeeded", "enabled", 59)
-    assert router.classify(succeeded, {})["nextAction"] == "RUN_AO_INSPECT_THEN_DISABLE"
+    assert router.classify(succeeded, {}, attempt_guard={
+        "outcome": "SUCCEEDED_STRICT_CLOSURE", "automaticAction": False,
+    })["nextAction"] == "RUN_AO_INSPECT_THEN_DISABLE"
 
     failed = _snapshot("failed", "enabled", 59)
     failed["runningRuns"] = 0
     failed["failedRuns"] = 12
-    assert router.classify(failed, {})["nextAction"] == "FREEZE_AO_FAILURE_BOUNDARY"
+    assert router.classify(failed, {}, attempt_guard={
+        "outcome": "FAILED_FREEZE_BOUNDARY", "automaticAction": False,
+    })["nextAction"] == "FREEZE_AO_FAILURE_BOUNDARY"
 
 
 @pytest.mark.parametrize(
@@ -150,3 +159,16 @@ def test_router_source_is_read_only_and_never_runs_an_executor():
     assert "DELETE FROM" not in source
     assert "router.dispatch" not in source
     assert "run_definition" not in source
+
+
+def test_router_module_import_has_no_stdout_and_main_contract_is_single_json():
+    command = [sys.executable, "-c", (
+        "import importlib.util;"
+        f"s=importlib.util.spec_from_file_location('router',{str(PATH)!r});"
+        "m=importlib.util.module_from_spec(s);s.loader.exec_module(m);"
+        "m.observe=lambda:(print('runtime-log'),{'outcome':'TEST_ROUTED'})[1];"
+        "raise SystemExit(m.main())"
+    )]
+    result = subprocess.run(command, check=True, text=True, capture_output=True)
+    assert json.loads(result.stdout) == {"outcome": "TEST_ROUTED"}
+    assert "runtime-log" in result.stderr

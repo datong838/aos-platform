@@ -39,3 +39,23 @@ Only the existing governed executors own mutations. The router must remain usefu
 - no source read, business write, approval, Policy mutation, dispatch, `run_definition`, resend or external action was performed by the router.
 
 The browser locator wait reported a deadline even though its own diagnostics already showed one visible matching element. A fresh complete accessibility read immediately confirmed the element. This is recorded as an acceptance-tool wait anomaly rather than product evidence loss.
+
+## Machine-readable stdout hardening plan
+
+The first shell consumer found that importing the AOS runtime emits structured service logs to stdout before and after the router JSON. The router decision was correct, but a consumer using `json.load` could not parse the mixed stream. The next minimal change will:
+
+- remove runtime-heavy imports from module import time so pure classification stays side-effect free;
+- load runtime modules and execute read-only observations while stdout is redirected to stderr;
+- emit exactly one JSON object on stdout from `main`;
+- add a subprocess test that parses the complete stdout with `json.loads`, while preserving existing pure decision tests.
+
+No runtime authority or business behavior changes in this hardening.
+
+### Stdout hardening verification
+
+- runtime-heavy imports now occur only inside the live observer while stdout is redirected to stderr;
+- a subprocess contract injects a runtime log and proves that complete stdout is one parseable JSON object while the log remains on stderr;
+- 12 focused tests and 41 affected cumulative tests passed;
+- live stdout parsed directly with `json.load`: AO revision 156, 12 running Runs, 0 succeeded, 0 failed, `nextAction=OBSERVE_AO_RECOVERY`; 14 framework diagnostic lines remained on stderr;
+- AR2-7 verification remained clean across 1988 scanned modules;
+- browser reload passed through `正在读取工作台目录` and settled on `暂无可见工作台入口`.

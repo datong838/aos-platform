@@ -2,16 +2,11 @@
 """Read-only deterministic continuation router for AO and its first natural chain."""
 from __future__ import annotations
 
+from contextlib import redirect_stdout
 import json
 import os
 from pathlib import Path
-
-import a0v_ao_advisor_baseline_v3 as v3
-import a0v_ao_advisor_baseline_v3_observe as chain
-import a0v_ao_attempt_guard as guard
-import a0v_ao_saved_snapshot_recovery as recovery
-from aos_api.extension_runtime.consumer_connection import consumer_connection
-from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+import sys
 
 
 TERMINAL_FACTS = {
@@ -60,19 +55,24 @@ def _require_artifact_prefix(artifacts: dict) -> None:
 
 
 def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
-             phase: str | None = None) -> dict:
+             phase: str | None = None, attempt_guard: dict | None = None) -> dict:
     state = snapshot.get("state")
     if state in {"running", "failed"} or (
         state == "succeeded" and snapshot.get("definitionState") == "enabled"
     ):
-        guarded = guard.classify(snapshot)
+        if attempt_guard is None:
+            raise RuntimeError("exact AO attempt guard result required")
         next_actions = {
             "RUNNING_HEALTHY_NO_ACTION": "OBSERVE_AO_RECOVERY",
             "RUNNING_STALE_DIAGNOSE_ONLY": "DIAGNOSE_AO_HEARTBEAT",
             "FAILED_FREEZE_BOUNDARY": "FREEZE_AO_FAILURE_BOUNDARY",
             "SUCCEEDED_STRICT_CLOSURE": "RUN_AO_INSPECT_THEN_DISABLE",
         }
-        return guarded | {"nextAction": next_actions[guarded["outcome"]]}
+        if attempt_guard.get("outcome") not in next_actions:
+            raise RuntimeError("unknown AO attempt guard result")
+        if attempt_guard.get("automaticAction") is not False:
+            raise RuntimeError("read-only AO attempt guard required")
+        return attempt_guard | {"nextAction": next_actions[attempt_guard["outcome"]]}
 
     if state != "succeeded" or snapshot.get("definitionState") != "disabled":
         raise RuntimeError("unknown AO continuation state")
@@ -121,7 +121,7 @@ def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
     }
 
 
-def _artifacts() -> dict:
+def _artifacts(recovery, v3) -> dict:
     return {
         "recoveryClosed": _artifact(
             recovery.STATE / "disable-result.json",
@@ -151,13 +151,23 @@ def _artifacts() -> dict:
 
 
 def observe() -> dict:
+    import a0v_ao_advisor_baseline_v3 as v3
+    import a0v_ao_advisor_baseline_v3_observe as chain
+    import a0v_ao_attempt_guard as guard
+    import a0v_ao_saved_snapshot_recovery as recovery
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+
     guard.shared.baseline.setup()
     with consumer_connection(runtime_worker_connection, guard.shared.baseline.SCOPE) as conn:
         snapshot = guard.read_facts(conn)
     if snapshot["state"] != "succeeded" or snapshot["definitionState"] == "enabled":
-        return {"snapshot": snapshot, **classify(snapshot, {})}
+        return {
+            "snapshot": snapshot,
+            **classify(snapshot, {}, attempt_guard=guard.classify(snapshot)),
+        }
 
-    artifacts = _artifacts()
+    artifacts = _artifacts(recovery, v3)
     previous, _profile, _plane = v3.setup()
     baseline = v3._current_facts(previous)
     policy = baseline["policy"]
@@ -187,7 +197,9 @@ def observe() -> dict:
 
 def main() -> int:
     try:
-        print(json.dumps(observe(), ensure_ascii=False, indent=2, default=str))
+        with redirect_stdout(sys.stderr):
+            result = observe()
+        print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
         return 0
     except Exception as error:
         print(json.dumps({
