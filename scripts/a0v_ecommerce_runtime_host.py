@@ -148,6 +148,15 @@ def _build_business_workers(control_plane):
     return product_event, analysis_data, baseline
 
 
+def _recoverable_store_execution_limit_seconds() -> int:
+    if str(API) not in sys.path:
+        sys.path.insert(0, str(API))
+    from aos_api.extension_runtime.recoverable_store_attempt import (
+        MAX_RECOVERABLE_STORE_EXECUTION_SECONDS,
+    )
+    return int(MAX_RECOVERABLE_STORE_EXECUTION_SECONDS)
+
+
 def _business_status(public, control_plane, product_event_worker, baseline_worker):
     targets = control_plane.live_job_directory.current_targets()
     return {**public,
@@ -178,6 +187,7 @@ async def _serve(args: argparse.Namespace) -> None:
         "positiveTenant": "org-org/dev-project",
         "canaryTenantCount": 0,
         "intervalSeconds": args.interval_seconds,
+        "recoverableStoreExecutionLimitSeconds": _recoverable_store_execution_limit_seconds(),
         "businessWorkers": ["product-event", "baseline-assessment", "analysis-data-requirement"],
     }
     _write(args.status_file.resolve(), _business_status(

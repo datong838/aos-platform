@@ -117,6 +117,7 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     assert result["outcome"] == "RUNTIME_HOST_STOPPED"
     assert result["tenantCount"] == 1
     assert result["canaryTenantCount"] == 0
+    assert result["recoverableStoreExecutionLimitSeconds"] == 1800
     assert result["businessWorkers"] == ["product-event", "baseline-assessment", "analysis-data-requirement"]
     assert "baselineAssessmentWorker" in result
 
