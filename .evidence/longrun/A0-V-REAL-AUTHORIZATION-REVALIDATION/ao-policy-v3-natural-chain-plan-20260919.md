@@ -51,6 +51,16 @@ When a readable, sourced GrowthPlan candidate exists, the next waves are exact p
 
 - focused contract and PostgreSQL isolation tests, affected cumulative regression, AR2 phase validation and browser acceptance are mandatory;
 - browser visibility requires the current AO package/catalog authority. A route or test green alone is not UI acceptance;
+
+### D. Terminal one-shot Policy closure
+
+After the exact v3 chain has one succeeded occurrence, one exact linked GrowthPlan and no active Business Run, close the one-shot schedule through three separate actions:
+
+1. `disable` performs a fresh read-only observer pass and freezes readiness only;
+2. `disable-approval` creates and approves a new maker/checker proposal for the disabled Policy body, expected Policy revision 3 and Case version 4;
+3. `disable-put` sends one canonical `ecommerce_growth_schedule_put` command with a new idempotency key, producing Policy revision 4 with `enabled=false` and disabling schedule bindings.
+
+Each step freezes its intent before mutation and refuses an existing unknown intent. A failed/cancelled occurrence, unrelated GrowthPlan, active Run, missing Receipt or negative-tenant state cannot open closure. The earlier v3 approval cannot authorize the v4 disable write.
 - unknown proposal, Policy write, dispatch, model or Store result is reconciled read-only and never resent;
 - no external publication, outreach, price change, ad spend or 230 L0 action is authorized by this plan;
 - completion of Policy v3 configuration is not completion of the business chain. Only source-backed plan, exact review, governed artifacts, human continuation, recap and Wiki candidate close the first-chain target.

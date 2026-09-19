@@ -22,6 +22,8 @@ DEFINITION_ID = snapshot.snapshot.DEFINITION_ID
 GROUP_ID = snapshot.GROUP
 POLICY_KEY = "a0v-ao-advisor-baseline-policy-put-20260919-v3"
 APPROVAL_KEY = "a0v-ao-advisor-baseline-schedule-approval-20260919-v3"
+DISABLE_POLICY_KEY = "a0v-ao-advisor-baseline-policy-disable-20260919-v4"
+DISABLE_APPROVAL_KEY = "a0v-ao-advisor-baseline-disable-approval-20260919-v4"
 EXPECTED_OCCURRENCES = {
     "3c927751-b91a-53d0-8a42-7c5223ea109d",
     "34733f17-f1ce-582d-b1b6-585a96aee2ff",
@@ -425,29 +427,132 @@ def observe(previous, _profile, _plane) -> dict:
     }
 
 
-def disable(_previous, _profile, _plane) -> dict:
-    observed = _load("observe")
-    policy = observed["facts"]["policy"]
+def disable(previous, _profile, _plane) -> dict:
+    import a0v_ao_advisor_baseline_v3_observe as exact_observer
+
+    observed = exact_observer.observe(previous)
+    policy = observed["baseline"]["policy"]
     current_occurrences = [
-        row for row in observed["facts"]["occurrences"] if row["policy_revision"] == 3
+        row for row in observed["occurrences"] if row["policy_revision"] == 3
     ]
+    target_keys = {
+        row["target_idempotency_key"] for row in observed["dispatchAttempts"]
+        if row["occurrence_id"] in {item["occurrence_id"] for item in current_occurrences}
+    }
+    current_runs = [row for row in observed["runs"] if row["trigger_key"] in target_keys]
     if (
-        policy.get("revision") != 3
+        observed["phase"] != "growth_plan_ready"
+        or policy.get("revision") != 3
+        or policy.get("enabled") is not True
         or len(current_occurrences) != 1
-        or current_occurrences[0]["status"] not in {"succeeded", "failed", "cancelled"}
-        or observed["facts"]["activeRuns"] != 0
+        or current_occurrences[0]["status"] != "succeeded"
+        or len(target_keys) != 1
+        or len(observed["targetReceipts"]) != 1
+        or len(current_runs) != 1
+        or str(current_runs[0]["lifecycle"]).lower() != "succeeded"
+        or observed["baseline"]["activeRuns"] != 0
+        or len(observed["growthPlans"]) != 1
+        or observed["growthPlans"][0]["payload"].get("lifecycle") != "draft"
+        or observed["canary"] != {"bindings": 0, "occurrences": 0, "runs": 0}
     ):
         raise RuntimeError("terminal AO Policy v3 occurrence required before disable")
     return {
         "outcome": "AO_ADVISOR_BASELINE_V3_DISABLE_READY",
-        "policy": _policy(observed["facts"]["case"], enabled=False),
-        "note": "a fresh approval and canonical write are required; no mutation was performed",
+        "policy": _policy(observed["baseline"]["case"], enabled=False),
+        "occurrence": current_occurrences[0],
+        "run": current_runs[0],
+        "growthPlan": observed["growthPlans"][0],
+        "note": "a fresh approval and canonical write are required",
     }
+
+
+def disable_approval(previous, _profile, _plane) -> dict:
+    from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
+    from aos_api.aip_action_policy import classify_action_risk
+    from aos_api.aip_action_store import AipActionStore
+    from aos_api.aip_budget_reservation_store import canonical_hash
+    from aos_api.aip_contracts import ApprovalDecision
+    from aos_api.tenant_scope import TenantScope
+
+    ready = _load("disable")
+    policy = ready["policy"]
+    payload = {
+        "caseId": base.CASE_ID,
+        "schedulePolicyId": base.POLICY_ID,
+        "expectedPolicyRevision": 3,
+        "expectedCaseVersion": 4,
+        "policyHash": canonical_hash(policy, prefixed=True),
+    }
+    intent = {"maker": base.MAKER, "checker": base.CHECKER, "payload": payload}
+    base.freeze_or_match(STATE / "disable-approval-intent.json", intent)
+    scope = TenantScope(**base.SCOPE)
+    store = AipActionStore(previous._web_connection)
+    snapshot_row = store.action_type_snapshot(scope, "ecommerce_growth_schedule_put")
+    body = CreateActionProposalRequest(
+        actionTypeId="ecommerce_growth_schedule_put",
+        purpose="栖月汇经营参谋 Policy v3 首链完成后关闭一次性调度",
+        payload=payload,
+        expiresAt=datetime.now(timezone.utc) + timedelta(hours=2),
+    )
+    risk = classify_action_risk(
+        "ecommerce_growth_schedule_put", snapshot_row, payload, body.risk_hint
+    )
+    reviewed = store.create_proposal(
+        scope, base.MAKER, DISABLE_APPROVAL_KEY + ":proposal", body, snapshot_row, risk
+    )
+    reviewed = store.decide(
+        scope,
+        base.CHECKER,
+        reviewed.proposal.id,
+        DISABLE_APPROVAL_KEY + ":approval:1",
+        DecideActionProposalRequest(
+            expectedProposalVersion=reviewed.proposal.version,
+            expectedProposalHash=reviewed.proposal.proposal_hash,
+            decision=ApprovalDecision.APPROVED,
+            reason="已核验唯一 v3 occurrence、Business Run 与 exact GrowthPlan，关闭一次性调度",
+            approvalExpiresAt=reviewed.proposal.expires_at - timedelta(minutes=5),
+        ),
+        ("admin",),
+    )
+    if reviewed.proposal.status.value != "approved":
+        raise RuntimeError("approved AO Policy v4 disable proposal required")
+    return {
+        "outcome": "AO_ADVISOR_BASELINE_V4_DISABLE_APPROVED",
+        "proposalId": reviewed.proposal.id,
+        "approvalRef": base._approval_ref(reviewed),
+        "policy": policy,
+        "payload": payload,
+    }
+
+
+def disable_put(previous, profile, plane) -> dict:
+    scope, router, target = base._router(
+        previous, profile, plane, subject=base.ACTOR, roles=["admin"]
+    )
+    approved = _load("disable-approval")
+    command = {
+        "idempotencyKey": DISABLE_POLICY_KEY,
+        "caseId": base.CASE_ID,
+        "expectedPolicyRevision": 3,
+        "expectedCaseVersion": 4,
+        "policy": approved["policy"],
+        "approvalRef": approved["approvalRef"],
+    }
+    base.freeze_or_match(STATE / "disable-policy-intent.json", command)
+    result = router.dispatch(
+        scope=scope,
+        operation_id="ecommerce_growth_schedule_put",
+        command=command,
+        expected_runtime=target,
+    )
+    return {"outcome": "AO_ADVISOR_BASELINE_V4_DISABLED", **result}
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("preflight", "approval", "put", "observe", "disable"))
+    parser.add_argument("action", choices=(
+        "preflight", "approval", "put", "observe", "disable", "disable-approval", "disable-put"
+    ))
     args = parser.parse_args()
     output = STATE / f"{args.action}-result.json"
     if output.exists():
@@ -459,6 +564,8 @@ def main() -> None:
         "put": put,
         "observe": observe,
         "disable": disable,
+        "disable-approval": disable_approval,
+        "disable-put": disable_put,
     }[args.action](previous, profile, plane)
     base.freeze(output, result)
     print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
