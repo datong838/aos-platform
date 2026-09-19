@@ -23,6 +23,18 @@ FAILED_ATTEMPTS = (
     ("af7c1fc1-8283-40d7-ab62-f7d6145417c6", 5, "failed",
      "RECOVERABLE_INGRESS_CANCELLED", "IngressJournalConflict"),
 )
+INSTALLATION_LABEL = "AS"
+SUCCESSOR_MODULE = "a0v_as_successor_business"
+ACTIVE_BINDING_REVISION = 6
+ACTIVE_EXECUTION_EPOCH = 3
+ACTIVE_ROUTE_EXECUTION_EPOCH = 3
+DETACHED_BINDING_REVISION = 8
+DETACHED_EXECUTION_EPOCH = 4
+DEFINITION_REVISION = 70
+ACTIVE_ROUTE_REVISION = 108
+ACTIVE_GROUP_REVISION = 135
+DETACHED_ROUTE_REVISION = 110
+DETACHED_GROUP_REVISION = 137
 LINK_KEY = ("snapshot-group-links:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:"
             "bc77b98d9144f128154e876db40e4ebf8850b90c0d9196a7e67d0a908de33d4b")
 PREFIX = "a0v-qyh-failed-as-retirement-20260919-v1"
@@ -67,13 +79,12 @@ def profile():
 
 
 def setup():
-    import a0v_as_successor_business as current
-    return current.setup()
+    return __import__(SUCCESSOR_MODULE).setup()
 
 
 def snapshot(phase: str, operation_id: str | None = None) -> dict[str, Any]:
     if phase not in {"active", "accepted", "detached"}:
-        raise ValueError("fixed AS retirement phase required")
+        raise ValueError(f"fixed {INSTALLATION_LABEL} retirement phase required")
     detached = phase == "detached"
     with connect()() as conn:
         head = conn.execute("""SELECT i.installation_id::text,i.etag_version,r.state,r.lock_hash,r.overlay_revision
@@ -157,48 +168,51 @@ def snapshot(phase: str, operation_id: str | None = None) -> dict[str, Any]:
     expected_runtime = ({"revision": 8, "execution_epoch": 4, "enabled": False,
                          "operation_fence": True, "desired_state": "disabled", "observed_state": "unknown"}
                         if detached else
-                        {"revision": 6, "execution_epoch": 3, "enabled": True,
+                        {"revision": ACTIVE_BINDING_REVISION, "execution_epoch": ACTIVE_EXECUTION_EPOCH, "enabled": True,
                          "operation_fence": False, "desired_state": "enabled", "observed_state": "ready"})
+    if detached:
+        expected_runtime.update(revision=DETACHED_BINDING_REVISION,
+                                execution_epoch=DETACHED_EXECUTION_EPOCH)
     expected_safety = {"running": 0, "unresolved": 0,
                        "runtime_pending": 0 if phase != "accepted" else 1, "canary": 0}
     if (head is None or dict(head) != expected_head or runtime is None or dict(runtime) != expected_runtime
             or resources != ({"total": 3, "released": 3} if detached else {"total": 3, "released": 0})
             or len(routes) != 9 or definition is None
-            or dict(definition) != {"revision": 70, "state": "disabled"}
+            or dict(definition) != {"revision": DEFINITION_REVISION, "state": "disabled"}
             or safety != expected_safety or attempts != expected_attempts
             or boundary != {"unexpected_attempts": 0, "members": 12, "saved_runs": 12,
                             "dataset_receipts": 12, "store_receipts": 0,
                             "store_links": 0, "projection_pending": 0}):
-        raise ValueError("exact failed AS retirement authority differs")
+        raise ValueError(f"exact blocked {INSTALLATION_LABEL} retirement authority differs")
     if detached:
         if any(row["handler_kind"] != "legacy" or row["installation_id"] is not None
                or row["generation"] is not None or row["execution_epoch"] is not None
-               or row["operation_fence"] is not True or row["revision"] != 110
-               or row["cutover_group_revision"] != 137 for row in routes):
-            raise ValueError("exact detached AS routes required")
+               or row["operation_fence"] is not True or row["revision"] != DETACHED_ROUTE_REVISION
+               or row["cutover_group_revision"] != DETACHED_GROUP_REVISION for row in routes):
+            raise ValueError(f"exact detached {INSTALLATION_LABEL} routes required")
     elif any(row["handler_kind"] != "extension" or row["installation_id"] != AS_ID
-             or row["generation"] != GENERATION or row["execution_epoch"] != 3
-             or row["operation_fence"] is not False or row["revision"] != 108
-             or row["cutover_group_revision"] != 135 for row in routes):
-        raise ValueError("exact attached AS routes required")
+             or row["generation"] != GENERATION or row["execution_epoch"] != ACTIVE_ROUTE_EXECUTION_EPOCH
+             or row["operation_fence"] is not False or row["revision"] != ACTIVE_ROUTE_REVISION
+             or row["cutover_group_revision"] != ACTIVE_GROUP_REVISION for row in routes):
+        raise ValueError(f"exact attached {INSTALLATION_LABEL} routes required")
     if phase == "accepted" and (operation is None or operation["kind"] != "disable"
             or operation["status"] != "accepted" or operation["phase"] != "accepted"
-            or operation["expected_binding_revision"] != 6
+            or operation["expected_binding_revision"] != ACTIVE_BINDING_REVISION
             or lifecycle != {"operations": 0, "receipts": 0, "phases": []}):
-        raise ValueError("exact accepted AS disable required")
+        raise ValueError(f"exact accepted {INSTALLATION_LABEL} disable required")
     if detached and (operation is None or operation["status"] != "succeeded"
             or operation["phase"] != "succeeded"
             or lifecycle != {"operations": 1, "receipts": 2, "phases": ["fence", "detach"]}):
-        raise ValueError("exact detached AS lifecycle required")
+        raise ValueError(f"exact detached {INSTALLATION_LABEL} lifecycle required")
     return {"phase": phase, "runtime": dict(runtime), "resources": resources,
-            "routeCount": 9, "groupRevision": 137 if detached else 135,
+            "routeCount": 9, "groupRevision": DETACHED_GROUP_REVISION if detached else ACTIVE_GROUP_REVISION,
             "definition": dict(definition), "safety": safety,
             "attempts": attempts, "boundary": boundary,
             "operation": None if operation is None else dict(operation), "lifecycle": lifecycle}
 
 
 def preflight() -> dict[str, Any]:
-    return {"outcome": "AS_FAILED_RETIREMENT_PREFLIGHT_GREEN",
+    return {"outcome": f"{INSTALLATION_LABEL}_BLOCKED_RETIREMENT_PREFLIGHT_GREEN",
             "state": snapshot("active"), "externalEffects": 0}
 
 
@@ -216,7 +230,7 @@ def request_disable() -> dict[str, Any]:
         idempotency_key=intent["idempotencyKey"], if_match='"5"',
         target={"generation": GENERATION, "bindingRevision": command["bindingRevision"]})
     operation_id = receipt.response_json["operationId"]
-    return {"outcome": "AS_FAILED_DISABLE_ACCEPTED", "operationId": operation_id,
+    return {"outcome": f"{INSTALLATION_LABEL}_BLOCKED_DISABLE_ACCEPTED", "operationId": operation_id,
             "receipt": receipt.response_json, "replayed": receipt.replayed,
             "state": snapshot("accepted", operation_id)}
 
@@ -231,7 +245,7 @@ def process_disable() -> dict[str, Any]:
         intent_path = STATE / "process-disable-intent.json"
         intent = {"operationId": operation_id, "claimedByHost": True, "resendDisable": False}
         freeze_or_match(intent_path, intent)
-        return {"outcome": "AS_NINE_ROUTES_DETACHED", "operationId": operation_id,
+        return {"outcome": f"{INSTALLATION_LABEL}_NINE_ROUTES_DETACHED", "operationId": operation_id,
                 "claimedByHost": True, "resendDisable": False, "state": completed}
     snapshot("accepted", operation_id)
     setup()
@@ -252,21 +266,21 @@ def process_disable() -> dict[str, Any]:
     with consumer._connection(SCOPE) as conn:
         lease = consumer.outbox.claim(conn, **SCOPE, operation_kind="disable", installation_id=AS_ID)
     if lease is None or str(lease.operation_id) != operation_id:
-        raise ValueError("exact AS disable delivery required")
+        raise ValueError(f"exact {INSTALLATION_LABEL} disable delivery required")
     freeze_or_match(STATE / "process-disable-intent.json",
                     {"operationId": operation_id, "eventId": str(lease.event_id), "resendDisable": False})
     delivery = consumer.finish_claimed(ClaimedDisableDelivery(scope, lease, UUID(AS_ID)))
     if (str(delivery.operation_id) != operation_id or delivery.operation_status != "succeeded"
             or delivery.delivery_status != "acknowledged"):
-        raise ValueError("AS disable delivery did not settle")
-    return {"outcome": "AS_NINE_ROUTES_DETACHED", "operationId": operation_id,
+        raise ValueError(f"{INSTALLATION_LABEL} disable delivery did not settle")
+    return {"outcome": f"{INSTALLATION_LABEL}_NINE_ROUTES_DETACHED", "operationId": operation_id,
             "claimedByHost": False, "resendDisable": False,
             "deliveryStatus": delivery.delivery_status, "state": snapshot("detached", operation_id)}
 
 
 def audit() -> dict[str, Any]:
     operation_id = load("process-disable")["operationId"]
-    return {"outcome": "AS_FAILED_RETIREMENT_GREEN",
+    return {"outcome": f"{INSTALLATION_LABEL}_BLOCKED_RETIREMENT_GREEN",
             "state": snapshot("detached", operation_id), "externalEffects": 0}
 
 
