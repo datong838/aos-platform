@@ -28,6 +28,8 @@ def test_exact_ao_saved_snapshot_authority():
         "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable"
     )
     assert recovery.ATTEMPT_ID == "67c2331d-b73f-4863-b881-0d67e6c55508"
+    assert '"abandoned_attempts": 1' in source
+    assert '"attempts": 2' in source
     assert recovery.LINK_COMMAND_HASH == (
         "sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970"
     )

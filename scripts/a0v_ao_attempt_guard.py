@@ -14,6 +14,10 @@ from aos_api.extension_runtime.runtime_connections import runtime_worker_connect
 
 HEARTBEAT_FRESHNESS = timedelta(seconds=90)
 SAVED_RECOVERY_EXECUTION_LIMIT_SECONDS = 300
+ORIGINAL_ATTEMPT_ID = recovery.ATTEMPT_ID
+OPERATION_KEY = "snapshot-group-completion:c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
+BASE_IDEMPOTENCY_KEY = "snapshot-group:c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
+REQUEST_HASH = "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7"
 
 
 def _as_datetime(value) -> datetime:
@@ -24,7 +28,6 @@ def _as_datetime(value) -> datetime:
 
 def classify(facts: dict) -> dict:
     expected = {
-        "attemptId": recovery.ATTEMPT_ID,
         "installationId": successor.AO_ID,
         "generation": successor.AO_GENERATION,
         "operationKind": "recoverable_store",
@@ -40,10 +43,25 @@ def classify(facts: dict) -> dict:
         "routes": 9,
         "liveResources": 3,
         "devOrgCanary": 0,
+        "operationKey": OPERATION_KEY,
+        "requestHash": REQUEST_HASH,
     }
     if any(facts.get(key) != value for key, value in expected.items()):
         raise RuntimeError("AO guard authority differs")
-    if facts.get("state") not in {"running", "succeeded", "failed"}:
+    if facts.get("state") not in {"running", "succeeded", "failed", "abandoned"}:
+        raise RuntimeError("AO guard authority differs")
+    count = facts.get("attemptCount")
+    if count not in {1, 2}:
+        raise RuntimeError("AO guard authority differs")
+    if count == 1:
+        if (facts.get("attemptId") != ORIGINAL_ATTEMPT_ID
+                or facts.get("idempotencyKey") != BASE_IDEMPOTENCY_KEY + ":1"
+                or facts.get("originalAttemptState") != facts.get("state")):
+            raise RuntimeError("AO guard authority differs")
+    elif (facts.get("attemptId") == ORIGINAL_ATTEMPT_ID
+            or facts.get("idempotencyKey") != BASE_IDEMPOTENCY_KEY + ":2"
+            or facts.get("originalAttemptState") != "abandoned"
+            or facts.get("originalTerminalReason") != "ATTEMPT_LEASE_EXPIRED"):
         raise RuntimeError("AO guard authority differs")
     for key, maximum in {
         "runningRuns": 12,
@@ -70,6 +88,10 @@ def classify(facts: dict) -> dict:
         raise RuntimeError("AO guard authority differs")
 
     state = facts["state"]
+    if state == "abandoned":
+        if count != 1 or facts.get("originalTerminalReason") != "ATTEMPT_LEASE_EXPIRED":
+            raise RuntimeError("AO guard authority differs")
+        return {"outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "automaticAction": False}
     if state == "running":
         observed = _as_datetime(facts.get("observedAt"))
         heartbeat = _as_datetime(facts.get("heartbeatAt"))
@@ -102,12 +124,30 @@ def classify(facts: dict) -> dict:
 
 
 def read_facts(conn) -> dict:
-    shared.ATTEMPT = recovery.ATTEMPT_ID
+    scope = ("org-org", "dev-project")
+    attempts = conn.execute(
+        """SELECT attempt_id::text,state,operation_key,idempotency_key,request_hash,
+          terminal_reason_code
+          FROM extension_runtime_execution_attempt
+          WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+            AND execution_epoch=3 AND operation_kind='recoverable_store'
+            AND operation_key=%s ORDER BY accepted_at,attempt_id""",
+        (*scope, successor.AO_ID, successor.AO_GENERATION, OPERATION_KEY),
+    ).fetchall()
+    if not attempts or len(attempts) > 2:
+        raise RuntimeError("AO guard authority differs")
+    rows = [dict(row) for row in attempts]
+    if any(row["request_hash"] != REQUEST_HASH or row["operation_key"] != OPERATION_KEY
+           for row in rows):
+        raise RuntimeError("AO guard authority differs")
+    original, latest = rows[0], rows[-1]
+    if original["attempt_id"] != ORIGINAL_ATTEMPT_ID:
+        raise RuntimeError("AO guard authority differs")
+    shared.ATTEMPT = latest["attempt_id"]
     shared.INSTALLATION = successor.AO_ID
     shared.GENERATION = successor.AO_GENERATION
     shared.LINK_KEY = recovery.LINK_IDEMPOTENCY_KEY
     facts = shared.read_facts(conn)
-    scope = ("org-org", "dev-project")
     extra = conn.execute(
         """SELECT clock_timestamp() observed_at,
           (SELECT count(*) FROM extension_operation_dispatch_binding
@@ -133,6 +173,12 @@ def read_facts(conn) -> dict:
         ),
     ).fetchone()
     return facts | {
+        "attemptCount": len(rows),
+        "operationKey": latest["operation_key"],
+        "idempotencyKey": latest["idempotency_key"],
+        "requestHash": latest["request_hash"],
+        "originalAttemptState": original["state"],
+        "originalTerminalReason": original["terminal_reason_code"],
         "observedAt": extra["observed_at"],
         "routes": extra["routes"],
         "succeededRuns": extra["succeeded_runs"],

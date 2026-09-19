@@ -18,6 +18,12 @@ def facts(**changes):
     observed = datetime(2026, 9, 19, 3, 30, tzinfo=UTC)
     value = {
         "attemptId": guard.recovery.ATTEMPT_ID,
+        "attemptCount": 1,
+        "operationKey": guard.OPERATION_KEY,
+        "idempotencyKey": guard.BASE_IDEMPOTENCY_KEY + ":1",
+        "requestHash": guard.REQUEST_HASH,
+        "originalAttemptState": "running",
+        "originalTerminalReason": None,
         "installationId": guard.successor.AO_ID,
         "generation": guard.successor.AO_GENERATION,
         "operationKind": "recoverable_store",
@@ -90,6 +96,7 @@ def test_stale_running_attempt_never_executes(changes):
 def test_terminal_success_only_routes_to_strict_closure():
     result = guard.classify(facts(
         state="succeeded", runningRuns=0, succeededRuns=12,
+        originalAttemptState="succeeded",
         heartbeatAt=None, leaseUntil=None,
     ))
     assert result == {"outcome": "SUCCEEDED_STRICT_CLOSURE", "automaticAction": False}
@@ -98,13 +105,45 @@ def test_terminal_success_only_routes_to_strict_closure():
 def test_failed_attempt_only_routes_to_frozen_diagnosis():
     result = guard.classify(facts(
         state="failed", runningRuns=0, failedRuns=12,
+        originalAttemptState="failed",
         heartbeatAt=None, leaseUntil=None,
     ))
     assert result == {"outcome": "FAILED_FREEZE_BOUNDARY", "automaticAction": False}
 
 
+def test_expired_original_waits_for_natural_successor_only():
+    result = guard.classify(facts(
+        state="abandoned", originalAttemptState="abandoned",
+        originalTerminalReason="ATTEMPT_LEASE_EXPIRED",
+        heartbeatAt=None, leaseUntil=None,
+    ))
+    assert result == {
+        "outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "automaticAction": False,
+    }
+
+
+def test_exact_second_attempt_is_observed_without_manual_execution():
+    result = guard.classify(facts(
+        attemptId="11111111-1111-4111-8111-111111111111", attemptCount=2,
+        idempotencyKey=guard.BASE_IDEMPOTENCY_KEY + ":2",
+        originalAttemptState="abandoned",
+        originalTerminalReason="ATTEMPT_LEASE_EXPIRED",
+    ))
+    assert result["outcome"] == "RUNNING_HEALTHY_NO_ACTION"
+
+
+@pytest.mark.parametrize("changes", (
+    {"attemptCount": 3},
+    {"attemptCount": 2, "attemptId": "second", "idempotencyKey": guard.BASE_IDEMPOTENCY_KEY + ":3",
+     "originalAttemptState": "abandoned", "originalTerminalReason": "ATTEMPT_LEASE_EXPIRED"},
+    {"requestHash": "sha256:" + "0" * 64},
+))
+def test_attempt_chain_drift_fails_closed(changes):
+    with pytest.raises(RuntimeError, match="AO guard authority differs"):
+        guard.classify(facts(**changes))
+
+
 @pytest.mark.parametrize(("field", "value"), (
-    ("attemptId", "another"),
     ("definitionRevision", 58),
     ("recoveryRevision", 18),
     ("datasetReceipts", 11),

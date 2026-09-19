@@ -207,8 +207,13 @@ def terminal_facts():
     query = """SELECT
       (SELECT count(*) FROM extension_runtime_execution_attempt
         WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
-          AND attempt_id=%s AND operation_kind='recoverable_store' AND state='succeeded'
+          AND operation_kind='recoverable_store' AND operation_key=%s AND state='succeeded'
           AND completed_at IS NOT NULL AND terminal_reason_code IS NULL) succeeded_attempt,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+          AND attempt_id=%s AND operation_kind='recoverable_store' AND state='abandoned'
+          AND terminal_reason_code='ATTEMPT_LEASE_EXPIRED'
+          AND terminal_error_type IS NULL) abandoned_attempts,
       (SELECT count(*) FROM extension_runtime_execution_attempt
         WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
           AND operation_kind='recoverable_store') attempts,
@@ -250,6 +255,8 @@ def terminal_facts():
       (SELECT count(*) FROM extension_runtime_binding
         WHERE org_id='dev-org' AND project_id='dev-project') canary"""
     parameters = (
+        *scope.values(), installation, generation,
+        "snapshot-group-completion:" + GROUP,
         *scope.values(), installation, generation, ATTEMPT_ID,
         *scope.values(), installation, generation,
         *scope.values(), GROUP,
@@ -276,7 +283,8 @@ def require_terminal_facts() -> dict:
     facts = terminal_facts()
     expected = {
         "succeeded_attempt": 1,
-        "attempts": 1,
+        "abandoned_attempts": 1,
+        "attempts": 2,
         "members": 12,
         "succeeded_runs": 12,
         "dataset_receipts": 12,

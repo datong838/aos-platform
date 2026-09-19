@@ -11,7 +11,8 @@ import sys
 
 TERMINAL_FACTS = {
     "succeeded_attempt": 1,
-    "attempts": 1,
+    "abandoned_attempts": 1,
+    "attempts": 2,
     "members": 12,
     "succeeded_runs": 12,
     "dataset_receipts": 12,
@@ -29,7 +30,6 @@ TERMINAL_FACTS = {
 }
 
 CLOSED_SNAPSHOT = {
-    "attemptId": "67c2331d-b73f-4863-b881-0d67e6c55508",
     "installationId": "d4186607-c93f-4fd0-8daa-46e349184ab9",
     "generation": "00bb99df-d436-483d-86df-496718c6f129",
     "operationKind": "recoverable_store",
@@ -54,6 +54,12 @@ CLOSED_SNAPSHOT = {
     "liveResources": 3,
     "devOrgCanary": 0,
     "routes": 9,
+    "attemptCount": 2,
+    "operationKey": "snapshot-group-completion:c5ff1926-45b0-56de-b6b3-07d5b7d053a1",
+    "idempotencyKey": "snapshot-group:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:2",
+    "requestHash": "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7",
+    "originalAttemptState": "abandoned",
+    "originalTerminalReason": "ATTEMPT_LEASE_EXPIRED",
 }
 
 
@@ -92,7 +98,7 @@ def _require_closed_snapshot(snapshot: dict) -> None:
 def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
              phase: str | None = None, attempt_guard: dict | None = None) -> dict:
     state = snapshot.get("state")
-    if state in {"running", "failed"} or (
+    if state in {"running", "failed", "abandoned"} or (
         state == "succeeded" and snapshot.get("definitionState") == "enabled"
     ):
         if attempt_guard is None:
@@ -101,6 +107,7 @@ def classify(snapshot: dict, artifacts: dict, policy: dict | None = None,
             "RUNNING_HEALTHY_NO_ACTION": "OBSERVE_AO_RECOVERY",
             "RUNNING_HEARTBEAT_ONLY_DIAGNOSE": "DIAGNOSE_AO_BOUNDED_EXECUTION",
             "RUNNING_STALE_DIAGNOSE_ONLY": "DIAGNOSE_AO_HEARTBEAT",
+            "ABANDONED_WAIT_NATURAL_SUCCESSOR": "WAIT_AO_NATURAL_SUCCESSOR",
             "FAILED_FREEZE_BOUNDARY": "FREEZE_AO_FAILURE_BOUNDARY",
             "SUCCEEDED_STRICT_CLOSURE": "RUN_AO_INSPECT_THEN_DISABLE",
         }

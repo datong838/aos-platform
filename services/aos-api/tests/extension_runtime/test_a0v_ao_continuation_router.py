@@ -17,6 +17,12 @@ SPEC.loader.exec_module(router)
 def _snapshot(state="succeeded", definition_state="disabled", definition_revision=60):
     return {
         "attemptId": "67c2331d-b73f-4863-b881-0d67e6c55508",
+        "attemptCount": 2,
+        "operationKey": "snapshot-group-completion:c5ff1926-45b0-56de-b6b3-07d5b7d053a1",
+        "idempotencyKey": "snapshot-group:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:2",
+        "requestHash": "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7",
+        "originalAttemptState": "abandoned",
+        "originalTerminalReason": "ATTEMPT_LEASE_EXPIRED",
         "installationId": "d4186607-c93f-4fd0-8daa-46e349184ab9",
         "generation": "00bb99df-d436-483d-86df-496718c6f129",
         "operationKind": "recoverable_store",
@@ -89,6 +95,11 @@ def test_running_and_terminal_attempt_routes_are_deterministic():
         "outcome": "FAILED_FREEZE_BOUNDARY", "automaticAction": False,
     })["nextAction"] == "FREEZE_AO_FAILURE_BOUNDARY"
 
+    abandoned = _snapshot("abandoned", "enabled", 59)
+    assert router.classify(abandoned, {}, attempt_guard={
+        "outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "automaticAction": False,
+    })["nextAction"] == "WAIT_AO_NATURAL_SUCCESSOR"
+
 
 @pytest.mark.parametrize(
     ("artifacts", "expected"),
@@ -158,7 +169,6 @@ def test_unknown_or_inconsistent_state_fails_closed():
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        ("attemptId", "wrong-attempt"),
         ("installationId", "wrong-installation"),
         ("generation", "wrong-generation"),
         ("operationKind", "wrong-operation"),
