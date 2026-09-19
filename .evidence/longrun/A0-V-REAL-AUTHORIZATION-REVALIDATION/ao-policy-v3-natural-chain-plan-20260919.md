@@ -37,10 +37,11 @@ The executor will bind the exact AO installation/generation/epoch, Case rev4, Po
 
 ### B. Natural occurrence and analysis verification
 
-- add a read-only verification script only if existing `observe` output cannot prove occurrence, dispatch, Case/Run, compilation, DataNeed and stage progression from current authority;
+- add `scripts/a0v_ao_advisor_baseline_v3_observe.py` because the original `observe` output does not join schedule binding, dispatch attempt, target Receipt and Run trigger authority;
+- add `services/aos-api/tests/extension_runtime/test_a0v_ao_advisor_baseline_v3_observe.py`;
 - add a verification document under this evidence directory.
 
-The new Policy must be revision 3 and its `SchedulePolicyControlReceipt` must bind AO epoch 3 plus a fresh exact `ActionApprovalEvent`. The host alone creates the deterministic v3 occurrence and starts the Run. A missing business plan is handled by the existing baseline analysis path; it is not filled by fixture or developer input.
+The read-only observer classifies deterministic phases from one current read: awaiting Policy/control/binding, awaiting occurrence, occurrence pending, awaiting dispatch Receipt, awaiting Run, analysis running, or GrowthPlan ready. The new Policy must be revision 3 and its `SchedulePolicyControlReceipt` must bind AO epoch 3 plus a fresh exact `ActionApprovalEvent`. The host alone creates the deterministic v3 occurrence and starts the Run. A missing business plan is handled by the existing baseline analysis path; it is not filled by fixture or developer input.
 
 ### C. Product acceptance continuation
 

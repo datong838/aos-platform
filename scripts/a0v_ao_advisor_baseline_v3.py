@@ -150,14 +150,14 @@ def _current_facts(previous) -> dict:
                   AND execution_epoch=3 AND operation_fence IS FALSE
                   AND revision=96 AND cutover_group_revision=123) routes,
               (SELECT count(*) FROM extension_runtime_resource_lease
-                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                WHERE org_id=%s AND project_id=%s AND generation=%s
                   AND cleanup_state='pending' AND observed_release IS FALSE) live_resources,
               (SELECT count(*) FROM extension_runtime_binding
                 WHERE org_id='dev-org' AND project_id='dev-project'
                   AND installation_id=%s) canary_bindings""",
             (
                 *base.SCOPE.values(), successor.AO_ID, successor.AO_GENERATION,
-                *base.SCOPE.values(), successor.AO_ID, successor.AO_GENERATION,
+                *base.SCOPE.values(), successor.AO_GENERATION,
                 successor.AO_ID,
             ),
         ).fetchone()
