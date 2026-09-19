@@ -24,5 +24,13 @@ def test_exact_ap_saved_snapshot_authority():
     assert 'idempotency_key="a0v-ap-saved-input-recovery-v20"' in source
     assert 'get("revision") != 20' in source
     assert 'get("revision") != 62' in source
+    assert recovery.ACTIONS == (
+        "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable"
+    )
+    assert recovery.ATTEMPT_ID == "93e2fc05-ebcb-46e1-8288-2bb0be32ae31"
+    assert "AP_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED" in source
+    assert "a0v-ap-saved-snapshot-pause-failed-v1" in source
+    assert '"linkStoreReceipts": 0' in source
+    assert '"ecomLinks": 0' in source
     assert '"sourceReads": 0' in source
     assert "run_definition" not in source

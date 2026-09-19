@@ -16,7 +16,9 @@ from a0v_qyh_current_product_event_first_chain import freeze
 STATE = snapshot.STATE.parent / "ap-saved-snapshot-recovery-v1"
 GROUP = "c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
 MANIFEST = "sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01"
-ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable")
+ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable")
+ATTEMPT_ID = "93e2fc05-ebcb-46e1-8288-2bb0be32ae31"
+ATTEMPT_REQUEST_HASH = "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7"
 LINK_COMMAND_HASH = "sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970"
 LINK_IDEMPOTENCY_KEY = (
     "snapshot-group-links:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:"
@@ -201,6 +203,53 @@ def enable(plane):
 def inspect(plane):
     profile()
     return snapshot.inspect(plane) | {"outcome": "AP_SAVED_SNAPSHOT_INSPECTED", "sourceReads": 0}
+
+
+def pause_failed(plane):
+    """Disable only the exact failed AP boundary before successor work."""
+    import a0v_ap_attempt_guard as guard
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+
+    profile()
+    service = snapshot_service(plane)
+    status = service.read_runtime_status(definition_id=snapshot.DEFINITION_ID, actor=snapshot.ACTOR)
+    if status.get("configurationState") != "enabled" or status["definitionRef"]["revision"] != 62:
+        raise RuntimeError("exact enabled AP failed recovery definition revision62 required")
+    with consumer_connection(runtime_worker_connection, snapshot.baseline.SCOPE) as conn:
+        facts = guard.read_facts(conn)
+    classified = guard.classify(facts)
+    expected = {
+        "outcome": "FAILED_CHAIN_PAUSE_REQUIRED",
+        "runningRuns": 12,
+        "succeededRuns": 0,
+        "failedRuns": 0,
+        "retirements": 0,
+        "linkStoreReceipts": 0,
+        "ecomLinks": 0,
+        "linkOutbox": 0,
+        "projectionPending": 0,
+    }
+    observed = {"outcome": classified["outcome"]} | {
+        key: facts[key] for key in expected if key != "outcome"
+    }
+    if observed != expected:
+        raise RuntimeError(f"exact failed AP saved recovery facts required: {observed}")
+    result = service.transition(
+        definition_id=snapshot.DEFINITION_ID,
+        actor=snapshot.ACTOR,
+        intent="disable",
+        expected_ref=status["definitionRef"],
+        idempotency_key="a0v-ap-saved-snapshot-pause-failed-v1",
+    )
+    if result.get("ref", {}).get("revision") != 63 or result.get("body", {}).get("state") != "disabled":
+        raise RuntimeError("exact disabled AP definition revision63 required")
+    return {
+        "outcome": "AP_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED",
+        "facts": expected,
+        "definition": result,
+        "sourceReads": 0,
+    }
 
 
 def disable(plane):
