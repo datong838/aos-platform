@@ -14,28 +14,79 @@ import a0v_q_advisor_baseline as base
 
 
 STATE = v3.STATE / "observation"
+AO_OPERATION = "ecommerce_growth_schedule_trigger"
+
+
+def _ao_identity(row: dict) -> bool:
+    return (
+        row.get("installation_id") == v3.successor.AO_ID
+        and str(row.get("generation")) == v3.successor.AO_GENERATION
+        and row.get("execution_epoch") == 3
+    )
+
+
+def _valid_control(row: dict) -> bool:
+    return (
+        row.get("policy_revision") == 3
+        and row.get("case_id") == base.CASE_ID
+        and row.get("case_revision") == 4
+        and bool(row.get("approval_event_id"))
+        and _ao_identity(row)
+    )
+
+
+def _valid_binding(row: dict) -> bool:
+    return (
+        row.get("policy_revision") == 3
+        and row.get("operation_id") == AO_OPERATION
+        and row.get("approved") is True
+        and row.get("enabled") is True
+        and _ao_identity(row)
+    )
+
+
+def _valid_occurrence(row: dict) -> bool:
+    return (
+        row.get("policy_revision") == 3
+        and row.get("operation_id") == AO_OPERATION
+        and _ao_identity(row)
+    )
+
+
+def _valid_target_receipt(row: dict) -> bool:
+    return row.get("operation_id") == AO_OPERATION and _ao_identity(row)
 
 
 def _phase(facts: dict) -> str:
     policy = facts["baseline"]["policy"]
     if policy.get("revision") != 3:
         return "awaiting_policy_v3"
-    if not any(row["policy_revision"] == 3 for row in facts["controls"]):
+    controls = [row for row in facts["controls"] if row.get("policy_revision") == 3]
+    if len(controls) != 1 or not _valid_control(controls[0]):
         return "awaiting_control_v3"
-    if not any(row["policy_revision"] == 3 and row["enabled"] for row in facts["bindings"]):
+    bindings = [row for row in facts["bindings"] if row.get("policy_revision") == 3]
+    if len(bindings) != 1 or not _valid_binding(bindings[0]):
         return "awaiting_binding_v3"
-    occurrences = [row for row in facts["occurrences"] if row["policy_revision"] == 3]
-    if not occurrences:
+    occurrences = [row for row in facts["occurrences"] if row.get("policy_revision") == 3]
+    if len(occurrences) != 1 or not all(_valid_occurrence(row) for row in occurrences):
         return "awaiting_occurrence_v3"
     if any(row["status"] in {"pending", "claimed"} for row in occurrences):
         return "occurrence_pending"
+    occurrence_ids = {item["occurrence_id"] for item in occurrences}
     attempts = {
         row["occurrence_id"]: row for row in facts["dispatchAttempts"]
-        if row["occurrence_id"] in {item["occurrence_id"] for item in occurrences}
+        if row["occurrence_id"] in occurrence_ids
     }
-    if not attempts or any(row["status"] != "receipt_recorded" for row in attempts.values()):
+    if set(attempts) != occurrence_ids or any(
+        row["status"] != "receipt_recorded" for row in attempts.values()
+    ):
         return "awaiting_dispatch_receipt"
-    if len(facts["targetReceipts"]) != len(occurrences):
+    receipts = [row for row in facts["targetReceipts"] if _valid_target_receipt(row)]
+    target_keys = {row["target_idempotency_key"] for row in attempts.values()}
+    if (
+        len(receipts) != len(occurrences)
+        or {row["idempotency_key"] for row in receipts} != target_keys
+    ):
         return "awaiting_target_receipt"
     if not facts["runs"]:
         return "awaiting_run"

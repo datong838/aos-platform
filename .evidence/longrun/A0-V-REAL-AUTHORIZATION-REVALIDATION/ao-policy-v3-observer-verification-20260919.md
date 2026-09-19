@@ -45,6 +45,28 @@ The fixed order is: awaiting Policy v3 → awaiting control Receipt → awaiting
 
 AO terminal success and saved-snapshot disable remain prerequisites. Only afterward may the v3 executor create the fresh approval and canonical Policy write. The observer will then prove each naturally produced downstream authority without developer-created Case/Run wiring.
 
+## AO identity-chain hardening plan
+
+Before Policy v3 is allowed to advance the phase classifier, every authority row must belong to the exact AO runtime. A matching revision alone is insufficient:
+
+- the control Receipt must bind Policy v3 to Case v4, AO installation `d4186607-c93f-4fd0-8daa-46e349184ab9`, generation `00bb99df-d436-483d-86df-496718c6f129`, execution epoch 3, and a non-empty approval event;
+- the enabled binding must use operation `ecommerce_growth_schedule_trigger` and the same AO installation, generation and epoch;
+- every Policy v3 occurrence considered by the classifier must use that operation and AO identity;
+- rows with Policy revision 3 but any mismatched identity remain visible as diagnostic evidence, but cannot advance the natural-chain phase;
+- the once Policy requires exactly one v3 control, binding and occurrence, one recorded dispatch attempt for that occurrence, and an exact target Receipt key match;
+- tests must cover valid identity and wrong installation, generation, epoch, Case revision and operation independently.
+
+This is a read-only observer hardening. It does not modify Policy, schedule, occurrence, Case, Run, GrowthPlan or source data.
+
+### Identity-chain verification result
+
+- the observer now uses one exact AO identity predicate across control Receipt, enabled binding, occurrence and target runtime Receipt;
+- functional tests reject wrong installation, generation, execution epoch, Case revision, approval event, operation, approval state and enabled state at their respective phase boundary;
+- focused tests: 25 passed; affected AO recovery/cutover/Policy cumulative regression: 29 passed;
+- the hardened observer executed against `org-org/dev-project` and remained at `awaiting_policy_v3`: current Policy rev2, target Receipts 0, exact Runs 0, exact GrowthPlans 0, canary 0 / 0 / 0;
+- AO remained healthy at revision 130 with 12 running Runs, 0 succeeded and 0 failed; no automatic action was authorized;
+- browser reload settled on `暂无可见工作台入口`, consistent with the incomplete recovery and absent Policy v3.
+
 ## Exact GrowthPlan lineage hardening
 
 The initial observer selected every tenant GrowthPlan head. That was safe while the tenant had zero plans, but it could later misclassify an unrelated plan as this natural chain's output. The observer now accepts a GrowthPlan only through this exact join:
