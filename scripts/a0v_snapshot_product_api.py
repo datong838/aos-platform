@@ -11,8 +11,8 @@ import sys
 from a0v_event_complete_product_api import load_launcher as original_launcher
 
 ROOT=Path(__file__).resolve().parents[1]
-STATE=ROOT.parent/'.aos-recovery-20260920/state/q-advisor-baseline/replacement-bd/snapshot-worker'
-TASK='A0V-BD-SNAPSHOT-WORKER-20260920'
+STATE=ROOT.parent/'.aos-recovery-20260920/state/q-advisor-baseline/replacement-be/snapshot-worker'
+TASK='A0V-BE-SNAPSHOT-WORKER-20260920'
 CODE_HASHES={str(p.relative_to(ROOT)):'sha256:'+hashlib.sha256(p.read_bytes()).hexdigest() for p in (
     Path(__file__),ROOT/'services/aos-api/aos_api/main.py',
     ROOT/'services/aos-api/aos_api/routers/pipeline_snapshot_schedules.py',
