@@ -1028,12 +1028,16 @@ def test_strict_link_batch_uses_bounded_endpoint_and_link_reads(store):
     command = batch(links=links, key="strict-bulk-links",
                     batch_scope=scope(stream="strict-bulk-links"))
     reads = []
+    writes = []
 
     def record(_conn, _cursor, statement, _parameters, _context, _many):
         normalized = statement.lower().lstrip()
         if normalized.startswith("select") and (
                 "ecom_object" in normalized or "ecom_link" in normalized):
             reads.append(normalized)
+        if normalized.startswith("insert") and (
+                "ecom_link" in normalized or "projection_outbox" in normalized):
+            writes.append(normalized)
 
     event.listen(store._engine, "before_cursor_execute", record)
     try:
@@ -1043,6 +1047,7 @@ def test_strict_link_batch_uses_bounded_endpoint_and_link_reads(store):
 
     assert result.links_written == len(links)
     assert len(reads) <= 5
+    assert len(writes) == 2
 
 
 def test_strict_links_partial_batch_rolls_back_all_evidence(store):

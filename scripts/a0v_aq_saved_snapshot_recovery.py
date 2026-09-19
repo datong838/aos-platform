@@ -16,7 +16,8 @@ from a0v_qyh_current_product_event_first_chain import freeze
 STATE = snapshot.STATE.parent / "aq-saved-snapshot-recovery-v1"
 GROUP = "c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
 MANIFEST = "sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01"
-ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable")
+ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable")
+ATTEMPT_ID = "16ca3c76-4dbe-48c3-9ff3-4f06eb9fbc82"
 
 def profile():
     snapshot.STATE = STATE
@@ -195,6 +196,54 @@ def enable(plane):
 def inspect(plane):
     profile()
     return snapshot.inspect(plane) | {"outcome": "AQ_SAVED_SNAPSHOT_INSPECTED", "sourceReads": 0}
+
+
+def pause_failed(plane):
+    """Disable only the exact failed AQ boundary before successor work."""
+    import a0v_aq_attempt_guard as guard
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+
+    profile()
+    service = snapshot_service(plane)
+    status = service.read_runtime_status(definition_id=snapshot.DEFINITION_ID, actor=snapshot.ACTOR)
+    if status.get("configurationState") != "enabled" or status["definitionRef"]["revision"] != 65:
+        raise RuntimeError("exact enabled AQ failed recovery definition revision65 required")
+    with consumer_connection(runtime_worker_connection, snapshot.baseline.SCOPE) as conn:
+        facts = guard.read_facts(conn)
+    classified = guard.classify(facts)
+    expected = {
+        "outcome": "FAILED_FREEZE_BOUNDARY",
+        "runningRuns": 12,
+        "succeededRuns": 0,
+        "failedRuns": 0,
+        "retirements": 0,
+        "linkStoreReceipts": 0,
+        "ecomLinks": 0,
+        "linkOutbox": 0,
+        "projectionPending": 0,
+    }
+    observed = {"outcome": classified["outcome"]} | {
+        key: facts[key] for key in expected if key != "outcome"
+    }
+    if observed != expected:
+        raise RuntimeError(f"exact failed AQ saved recovery facts required: {observed}")
+    result = service.transition(
+        definition_id=snapshot.DEFINITION_ID,
+        actor=snapshot.ACTOR,
+        intent="disable",
+        expected_ref=status["definitionRef"],
+        idempotency_key="a0v-aq-saved-snapshot-pause-failed-v1",
+    )
+    if result.get("ref", {}).get("revision") != 66 or result.get("body", {}).get("state") != "disabled":
+        raise RuntimeError("exact disabled AQ definition revision66 required")
+    return {
+        "outcome": "AQ_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED",
+        "attemptId": ATTEMPT_ID,
+        "facts": expected,
+        "definition": result,
+        "sourceReads": 0,
+    }
 
 
 def disable(plane):

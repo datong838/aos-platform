@@ -26,6 +26,7 @@ from sqlalchemy import (
     Table,
     Text,
     and_,
+    bindparam,
     func,
     insert,
     or_,
@@ -358,8 +359,10 @@ class EcomConsistencyStore:
 
                 if retire_links:
                     for link in command.links:
-                        original = conn.execute(select(ecom_link.c.payload_hash, ecom_link.c.deleted_at)
-                            .where(_link_clause(link))).mappings().first()
+                        original = (strict_snapshot[1].get(self._link_identity(link))
+                                    if strict_snapshot is not None else
+                                    conn.execute(select(ecom_link.c.payload_hash, ecom_link.c.deleted_at)
+                                        .where(_link_clause(link))).mappings().first())
                         if (original is None or original["deleted_at"] is not None
                                 or original["payload_hash"] != link.properties["retirementExpectedPayloadHash"]):
                             raise EcomConsistencyError("RETIREMENT_PRIOR_PAYLOAD_CHANGED", "exact active prior link payload required")
@@ -386,41 +389,45 @@ class EcomConsistencyStore:
                             authority_tx_id=request_hash,
                         )
 
-                # Phase 2: upsert links, collecting dangling links for DLQ
-                # instead of aborting the entire batch
+                # Phase 2: strict links already own one complete locked snapshot,
+                # so persist their links and outbox rows in bounded batches.  The
+                # ordinary path retains its original per-row behavior.
                 dangling_links: list[CoreLinkRecord] = []
-                for link in command.ordered_links():
-                    if strict_snapshot is None:
+                if strict_snapshot is not None:
+                    outcomes, dangling_links, changed = self._apply_locked_link_batch(
+                        conn, command, strict_snapshot
+                    )
+                    for outcome in outcomes:
+                        counters[outcome] += 1
+                    self._write_projection_events(
+                        conn, command=command, changes=changed,
+                        authority_tx_id=request_hash,
+                    )
+                else:
+                    for link in command.ordered_links():
                         source_exists = self._object_exists(
                             conn, link.source, link.source_type, allow_tombstone=link.is_deleted
                         )
                         target_exists = self._object_exists(
                             conn, link.target, link.target_type, allow_tombstone=link.is_deleted
                         )
-                        existing = _NOT_PRELOADED
-                    else:
-                        endpoints, links = strict_snapshot
-                        source_exists = self._locked_endpoint_exists(
-                            endpoints, link.source, link.source_type, allow_tombstone=link.is_deleted
+                        target_exists = self._object_exists(
+                            conn, link.target, link.target_type, allow_tombstone=link.is_deleted
                         )
-                        target_exists = self._locked_endpoint_exists(
-                            endpoints, link.target, link.target_type, allow_tombstone=link.is_deleted
-                        )
-                        existing = links.get(self._link_identity(link))
-                    if not source_exists or not target_exists:
-                        dangling_links.append(link)
-                        counters["links_ignored"] += 1
-                        continue
-                    outcome = self._upsert_link_checked(conn, link, existing=existing)
-                    counters[outcome] += 1
-                    if outcome in {"links_written", "links_tombstoned"}:
-                        self._write_projection_event(
-                            conn,
-                            command=command,
-                            outcome=outcome,
-                            entity=link,
-                            authority_tx_id=request_hash,
-                        )
+                        if not source_exists or not target_exists:
+                            dangling_links.append(link)
+                            counters["links_ignored"] += 1
+                            continue
+                        outcome = self._upsert_link_checked(conn, link)
+                        counters[outcome] += 1
+                        if outcome in {"links_written", "links_tombstoned"}:
+                            self._write_projection_event(
+                                conn,
+                                command=command,
+                                outcome=outcome,
+                                entity=link,
+                                authority_tx_id=request_hash,
+                            )
 
                 # Store dangling link info for DLQ (accessible via get_dangling_links)
                 if dangling_links:
@@ -538,6 +545,99 @@ class EcomConsistencyStore:
             for row in link_rows
         }
         return endpoints, links
+
+    @classmethod
+    def _apply_locked_link_batch(cls, conn: Connection, command: BatchCommand, snapshot):
+        """Apply an exact locked strict-link snapshot with bounded round trips."""
+        endpoints, existing_links = snapshot
+        inserts, updates, outcomes, dangling, changed = [], [], [], [], []
+        for link in command.ordered_links():
+            source_exists = cls._locked_endpoint_exists(
+                endpoints, link.source, link.source_type, allow_tombstone=link.is_deleted
+            )
+            target_exists = cls._locked_endpoint_exists(
+                endpoints, link.target, link.target_type, allow_tombstone=link.is_deleted
+            )
+            if not source_exists or not target_exists:
+                outcomes.append("links_ignored")
+                dangling.append(link)
+                continue
+            identity = cls._link_identity(link)
+            existing = existing_links.get(identity)
+            payload_hash = link.payload_hash()
+            now = _utcnow()
+            values = {
+                "properties": _jsonable(link.properties),
+                "source_updated_at": link.source_updated_at,
+                "payload_hash": payload_hash,
+                "deleted_at": link.source_updated_at if link.is_deleted else None,
+                "updated_at": now,
+            }
+            if existing:
+                stored_time = _db_time(existing["source_updated_at"])
+                if link.source_updated_at < stored_time:
+                    outcomes.append("links_ignored")
+                    continue
+                if link.source_updated_at == stored_time:
+                    if existing["payload_hash"] == payload_hash:
+                        outcomes.append("links_ignored")
+                        continue
+                    raise EcomConsistencyError(
+                        "SOURCE_VERSION_CONFLICT",
+                        "same source version has a different link payload",
+                        details={"linkType": link.link_type},
+                    )
+                if existing["deleted_at"] is not None and link.source_updated_at <= _db_time(existing["deleted_at"]):
+                    outcomes.append("links_ignored")
+                    continue
+                updates.append({
+                    **values,
+                    "pk_org_id": link.source.org_id,
+                    "pk_workspace_id": link.source.workspace_id,
+                    **{f"pk_{name}": value for name, value in zip((
+                        "link_type", "source_platform", "source_shop_or_marketplace_id",
+                        "source_object_type", "source_external_id", "target_platform",
+                        "target_shop_or_marketplace_id", "target_object_type", "target_external_id",
+                    ), identity, strict=True)},
+                })
+            else:
+                inserts.append({
+                    "org_id": link.source.org_id,
+                    "workspace_id": link.source.workspace_id,
+                    "link_type": link.link_type,
+                    "source_platform": link.source.platform,
+                    "source_shop_or_marketplace_id": link.source.shop_or_marketplace_id,
+                    "source_object_type": link.source_type,
+                    "source_external_id": link.source.external_id,
+                    "target_platform": link.target.platform,
+                    "target_shop_or_marketplace_id": link.target.shop_or_marketplace_id,
+                    "target_object_type": link.target_type,
+                    "target_external_id": link.target.external_id,
+                    "created_at": now,
+                    **values,
+                })
+            outcome = "links_tombstoned" if link.is_deleted else "links_written"
+            outcomes.append(outcome)
+            changed.append((outcome, link))
+        if inserts:
+            conn.execute(insert(ecom_link), inserts)
+        if updates:
+            keys = (
+                "link_type", "source_platform", "source_shop_or_marketplace_id",
+                "source_object_type", "source_external_id", "target_platform",
+                "target_shop_or_marketplace_id", "target_object_type", "target_external_id",
+            )
+            statement = update(ecom_link).where(
+                ecom_link.c.org_id == bindparam("pk_org_id"),
+                ecom_link.c.workspace_id == bindparam("pk_workspace_id"),
+                *(ecom_link.c[name] == bindparam(f"pk_{name}") for name in keys),
+            ).values(
+                properties=bindparam("properties"), source_updated_at=bindparam("source_updated_at"),
+                payload_hash=bindparam("payload_hash"), deleted_at=bindparam("deleted_at"),
+                updated_at=bindparam("updated_at"),
+            )
+            conn.execute(statement, updates)
+        return outcomes, dangling, changed
 
     def read_committed_batch(self, command: BatchCommand) -> BatchResult | None:
         """Read exact committed evidence without replaying a batch or advancing it."""
@@ -1409,21 +1509,24 @@ class EcomConsistencyStore:
         )
 
     @classmethod
-    def _write_projection_event(
-        cls,
-        conn: Connection,
-        *,
-        command: BatchCommand,
-        outcome: str,
-        entity: CoreObjectRecord | CoreLinkRecord,
-        authority_tx_id: str,
-    ) -> None:
+    def _next_projection_revisions(cls, conn: Connection, count: int) -> list[int]:
+        if count <= 0:
+            return []
+        if conn.dialect.name == "postgresql":
+            return [int(row[0]) for row in conn.execute(
+                text("SELECT nextval('projection_input_revision_seq') FROM generate_series(1, :count)"),
+                {"count": count},
+            ).all()]
+        return [cls._next_projection_revision(conn) for _ in range(count)]
+
+    @classmethod
+    def _projection_event_values(
+        cls, *, command: BatchCommand, outcome: str,
+        entity: CoreObjectRecord | CoreLinkRecord, authority_tx_id: str,
+        input_revision: int,
+    ) -> dict[str, Any]:
         if isinstance(entity, CoreObjectRecord):
             identity = entity.identity
-            identity_material = (
-                entity.object_type,
-                identity.external_id,
-            )
             payload = {
                 "schemaVersion": 1,
                 "entityKind": "object",
@@ -1441,13 +1544,6 @@ class EcomConsistencyStore:
             }
         else:
             identity = entity.source
-            identity_material = (
-                entity.link_type,
-                entity.source_type,
-                entity.source.external_id,
-                entity.target_type,
-                entity.target.external_id,
-            )
             payload = {
                 "schemaVersion": 1,
                 "entityKind": "link",
@@ -1461,30 +1557,56 @@ class EcomConsistencyStore:
                 "source_external_id": entity.source.external_id,
                 "target_external_id": entity.target.external_id,
             }
-
         payload_json = json.dumps(
             _jsonable(payload), ensure_ascii=False, sort_keys=True, separators=(",", ":")
         )
-        event_key = cls._base_projection_event_key(command,entity,outcome)
-        conn.execute(
-            insert(projection_outbox).values(
-                org_id=identity.org_id,
-                project_id=identity.workspace_id,
-                workspace_id=identity.workspace_id,
-                input_revision=cls._next_projection_revision(conn),
-                change_kind=outcome,
-                platform=identity.platform,
-                shop_or_marketplace_id=identity.shop_or_marketplace_id,
-                payload=json.loads(payload_json),
-                event_key=event_key,
-                payload_hash=hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
-                event_source="authoritative_store",
-                authority_tx_id=authority_tx_id,
-                projected=False,
-                created_at=_utcnow(),
-                **identity_columns,
-            )
-        )
+        return {
+            "org_id": identity.org_id,
+            "project_id": identity.workspace_id,
+            "workspace_id": identity.workspace_id,
+            "input_revision": input_revision,
+            "change_kind": outcome,
+            "platform": identity.platform,
+            "shop_or_marketplace_id": identity.shop_or_marketplace_id,
+            "payload": json.loads(payload_json),
+            "event_key": cls._base_projection_event_key(command, entity, outcome),
+            "payload_hash": hashlib.sha256(payload_json.encode("utf-8")).hexdigest(),
+            "event_source": "authoritative_store",
+            "authority_tx_id": authority_tx_id,
+            "projected": False,
+            "created_at": _utcnow(),
+            **identity_columns,
+        }
+
+    @classmethod
+    def _write_projection_events(cls, conn: Connection, *, command: BatchCommand,
+                                 changes, authority_tx_id: str) -> None:
+        changes = tuple(changes)
+        revisions = cls._next_projection_revisions(conn, len(changes))
+        if changes:
+            conn.execute(insert(projection_outbox), [
+                cls._projection_event_values(
+                    command=command, outcome=outcome, entity=entity,
+                    authority_tx_id=authority_tx_id, input_revision=revision,
+                )
+                for (outcome, entity), revision in zip(changes, revisions, strict=True)
+            ])
+
+    @classmethod
+    def _write_projection_event(
+        cls,
+        conn: Connection,
+        *,
+        command: BatchCommand,
+        outcome: str,
+        entity: CoreObjectRecord | CoreLinkRecord,
+        authority_tx_id: str,
+    ) -> None:
+        conn.execute(insert(projection_outbox).values(**cls._projection_event_values(
+            command=command, outcome=outcome, entity=entity,
+            authority_tx_id=authority_tx_id,
+            input_revision=cls._next_projection_revision(conn),
+        )))
 
     @classmethod
     def _write_derived_projection_event(

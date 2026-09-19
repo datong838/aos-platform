@@ -26,8 +26,12 @@ def test_exact_aq_saved_snapshot_authority():
     assert 'get("revision") != 21' in source
     assert 'get("revision") != 65' in source
     assert recovery.ACTIONS == (
-        "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable"
+        "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable"
     )
+    assert recovery.ATTEMPT_ID == "16ca3c76-4dbe-48c3-9ff3-4f06eb9fbc82"
+    assert "AQ_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED" in source
+    assert "a0v-aq-saved-snapshot-pause-failed-v1" in source
+    assert '"linkStoreReceipts": 0' in source
+    assert '"ecomLinks": 0' in source
     assert '"sourceReads": 0' in source
     assert "run_definition" not in source
-    assert "pause_failed" not in source
