@@ -16,8 +16,16 @@ from a0v_qyh_current_product_event_first_chain import freeze
 STATE = snapshot.STATE.parent / "ao-saved-snapshot-recovery-v1"
 GROUP = "c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
 MANIFEST = "sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01"
-ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable")
+ACTIONS = ("prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable")
 ATTEMPT_ID = "67c2331d-b73f-4863-b881-0d67e6c55508"
+FAILED_ATTEMPTS = (
+    (ATTEMPT_ID, 255, "abandoned", "ATTEMPT_LEASE_EXPIRED", None),
+    ("dbcde37a-95ef-4f95-a586-61ab283cf5bb", 11, "failed",
+     "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", "IngressJournalConflict"),
+    ("70241ae9-7b18-40f5-9309-563594cd3e37", 2, "abandoned",
+     "ATTEMPT_LEASE_EXPIRED", None),
+)
+ATTEMPT_REQUEST_HASH = "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7"
 LINK_COMMAND_HASH = "sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970"
 LINK_IDEMPOTENCY_KEY = (
     "snapshot-group-links:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:"
@@ -195,6 +203,121 @@ def enable(plane):
         "definition": status,
         "recoveryRef": renewed["ref"],
         "sourceReads": 0,
+    }
+
+
+def pause_failed(plane):
+    """Disable only the exact terminal AO chain before any fourth attempt."""
+    from aos_api.extension_runtime.consumer_connection import consumer_connection
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
+    from aos_api.tenant_scope import TenantScope
+
+    installation, generation = profile()
+    scope = TenantScope(**snapshot.baseline.SCOPE)
+    service = plane.pipeline_control_factory.build_snapshot_schedule(scope, source_controls=True)
+    status = service.read_runtime_status(definition_id=snapshot.DEFINITION_ID, actor=snapshot.ACTOR)
+    if status.get("configurationState") != "enabled" or status["definitionRef"]["revision"] != 59:
+        raise RuntimeError("exact enabled AO failed recovery definition revision59 required")
+    query = """SELECT
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+          AND operation_kind='recoverable_store') attempts,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+          AND operation_kind='recoverable_store' AND state='running') running_attempts,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+          AND request_hash=%s) matching_hash,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND attempt_id=%s AND revision=%s AND state=%s
+          AND terminal_reason_code=%s AND terminal_error_type IS NOT DISTINCT FROM %s) first_terminal,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND attempt_id=%s AND revision=%s AND state=%s
+          AND terminal_reason_code=%s AND terminal_error_type IS NOT DISTINCT FROM %s) second_terminal,
+      (SELECT count(*) FROM extension_runtime_execution_attempt
+        WHERE org_id=%s AND project_id=%s AND attempt_id=%s AND revision=%s AND state=%s
+          AND terminal_reason_code=%s AND terminal_error_type IS NOT DISTINCT FROM %s) third_terminal,
+      (SELECT count(*) FROM pipeline_snapshot_schedule_member
+        WHERE org_id=%s AND project_id=%s AND group_id=%s) members,
+      (SELECT count(*) FROM meta_schedule_run r JOIN pipeline_snapshot_schedule_member m
+        ON (m.org_id,m.project_id,m.run_id)=(r.org_id,r.project_id,r.id)
+        WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s
+          AND r.status='running' AND r.executor_stopped IS FALSE AND r.finished_at IS NULL) running_runs,
+      (SELECT count(*) FROM ecommerce_ingress_dataset_receipt d JOIN pipeline_snapshot_schedule_member m
+        ON (m.org_id,m.project_id,m.run_id)=(d.org_id,d.project_id,d.run_id)
+        WHERE m.org_id=%s AND m.project_id=%s AND m.group_id=%s) dataset_receipts,
+      (SELECT count(*) FROM pipeline_snapshot_group_relationship
+        WHERE org_id=%s AND project_id=%s AND group_id=%s) relationships,
+      (SELECT count(*) FROM pipeline_snapshot_group_link_command
+        WHERE org_id=%s AND project_id=%s AND group_id=%s AND command_hash=%s) link_commands,
+      (SELECT coalesce(max(link_count),0) FROM pipeline_snapshot_group_link_command
+        WHERE org_id=%s AND project_id=%s AND group_id=%s AND command_hash=%s) link_count,
+      (SELECT count(*) FROM pipeline_snapshot_group_retirement
+        WHERE org_id=%s AND project_id=%s AND group_id=%s) retirements,
+      (SELECT count(*) FROM ecom_ingest_receipt
+        WHERE org_id=%s AND workspace_id=%s AND idempotency_key=%s) store_receipts,
+      (SELECT count(*) FROM ecom_link
+        WHERE org_id=%s AND workspace_id=%s AND deleted_at IS NULL) live_links,
+      (SELECT count(*) FROM projection_outbox
+        WHERE org_id=%s AND workspace_id=%s AND event_source='authoritative_store'
+          AND change_kind=ANY(ARRAY['links_written','links_tombstoned'])) store_outbox,
+      (SELECT count(*) FROM projection_outbox
+        WHERE org_id=%s AND workspace_id=%s AND projected IS FALSE) projection_pending,
+      (SELECT count(*) FROM extension_operation_dispatch_binding
+        WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+          AND execution_epoch=3 AND operation_fence IS FALSE
+          AND revision=96 AND cutover_group_revision=123) routes,
+      (SELECT count(*) FROM extension_runtime_resource_lease
+        WHERE org_id=%s AND project_id=%s AND generation=%s
+          AND cleanup_state='pending' AND observed_release IS FALSE) live_resources,
+      (SELECT count(*) FROM (SELECT DISTINCT ON (pipeline_id) payload
+        FROM pipeline_runtime_control_revision
+        WHERE org_id=%s AND project_id=%s AND generation=%s
+        ORDER BY pipeline_id,revision DESC) latest
+        WHERE (payload->'draft'->>'expiresAt')::timestamptz>clock_timestamp()) current_controls,
+      (SELECT count(*) FROM extension_runtime_binding
+        WHERE org_id='dev-org' AND project_id='dev-project') canary"""
+    first, second, third = FAILED_ATTEMPTS
+    parameters = (
+        *scope.key, installation, generation,
+        *scope.key, installation, generation,
+        *scope.key, installation, generation, ATTEMPT_REQUEST_HASH,
+        *scope.key, *first, *scope.key, *second, *scope.key, *third,
+        *scope.key, GROUP, *scope.key, GROUP, *scope.key, GROUP,
+        *scope.key, GROUP, *scope.key, GROUP, LINK_COMMAND_HASH,
+        *scope.key, GROUP, LINK_COMMAND_HASH, *scope.key, GROUP,
+        scope.org_id, scope.project_id, LINK_IDEMPOTENCY_KEY,
+        scope.org_id, scope.project_id, scope.org_id, scope.project_id,
+        scope.org_id, scope.project_id,
+        *scope.key, installation, generation, *scope.key, generation,
+        *scope.key, generation,
+    )
+    if query.count("%s") != len(parameters):
+        raise RuntimeError("failed AO gate query binding differs")
+    with consumer_connection(runtime_worker_connection, snapshot.baseline.SCOPE) as conn:
+        facts = dict(conn.execute(query, parameters).fetchone())
+    expected = {
+        "attempts": 3, "running_attempts": 0, "matching_hash": 3,
+        "first_terminal": 1, "second_terminal": 1, "third_terminal": 1,
+        "members": 12, "running_runs": 12, "dataset_receipts": 12,
+        "relationships": 1, "link_commands": 1, "link_count": 1168,
+        "retirements": 0, "store_receipts": 0, "live_links": 0,
+        "store_outbox": 0, "projection_pending": 0, "routes": 9,
+        "live_resources": 3, "current_controls": 12, "canary": 0,
+    }
+    if facts != expected:
+        raise RuntimeError(f"exact failed AO saved recovery facts required: {facts}")
+    result = service.transition(
+        definition_id=snapshot.DEFINITION_ID, actor=snapshot.ACTOR, intent="disable",
+        expected_ref=status["definitionRef"],
+        idempotency_key="a0v-ao-saved-snapshot-pause-failed-v1",
+    )
+    if (result.get("ref", {}).get("revision") != 60
+            or result.get("body", {}).get("state") != "disabled"):
+        raise RuntimeError("exact disabled AO definition revision60 required")
+    return {
+        "outcome": "AO_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED",
+        "facts": expected, "definition": result, "sourceReads": 0,
     }
 
 

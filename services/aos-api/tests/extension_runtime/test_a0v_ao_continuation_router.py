@@ -100,6 +100,10 @@ def test_running_and_terminal_attempt_routes_are_deterministic():
         "outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "automaticAction": False,
     })["nextAction"] == "WAIT_AO_NATURAL_SUCCESSOR"
 
+    assert router.classify(abandoned, {}, attempt_guard={
+        "outcome": "FAILED_CHAIN_PAUSE_REQUIRED", "automaticAction": False,
+    })["nextAction"] == "RUN_AO_FAILED_PAUSE"
+
 
 @pytest.mark.parametrize(
     ("artifacts", "expected"),

@@ -24,6 +24,11 @@ def facts(**changes):
         "requestHash": guard.REQUEST_HASH,
         "originalAttemptState": "running",
         "originalTerminalReason": None,
+        "secondAttemptId": None,
+        "secondAttemptState": None,
+        "secondTerminalReason": None,
+        "secondTerminalErrorType": None,
+        "latestTerminalReason": None,
         "installationId": guard.successor.AO_ID,
         "generation": guard.successor.AO_GENERATION,
         "operationKind": "recoverable_store",
@@ -124,7 +129,7 @@ def test_expired_original_waits_for_natural_successor_only():
 
 def test_exact_second_attempt_is_observed_without_manual_execution():
     result = guard.classify(facts(
-        attemptId="11111111-1111-4111-8111-111111111111", attemptCount=2,
+        attemptId=guard.SECOND_ATTEMPT_ID, attemptCount=2,
         idempotencyKey=guard.BASE_IDEMPOTENCY_KEY + ":2",
         originalAttemptState="abandoned",
         originalTerminalReason="ATTEMPT_LEASE_EXPIRED",
@@ -132,10 +137,32 @@ def test_exact_second_attempt_is_observed_without_manual_execution():
     assert result["outcome"] == "RUNNING_HEALTHY_NO_ACTION"
 
 
+def test_exact_three_attempt_failure_chain_routes_to_pause():
+    result = guard.classify(facts(
+        attemptId=guard.THIRD_ATTEMPT_ID, attemptCount=3, state="abandoned",
+        idempotencyKey=guard.BASE_IDEMPOTENCY_KEY + ":3",
+        originalAttemptState="abandoned",
+        originalTerminalReason="ATTEMPT_LEASE_EXPIRED",
+        secondAttemptId=guard.SECOND_ATTEMPT_ID,
+        secondAttemptState="failed",
+        secondTerminalReason="RECOVERABLE_INGRESS_DEADLINE_EXCEEDED",
+        secondTerminalErrorType="IngressJournalConflict",
+        latestTerminalReason="ATTEMPT_LEASE_EXPIRED",
+        heartbeatAt=None, leaseUntil=None,
+    ))
+    assert result == {"outcome": "FAILED_CHAIN_PAUSE_REQUIRED", "automaticAction": False}
+
+
 @pytest.mark.parametrize("changes", (
-    {"attemptCount": 3},
+    {"attemptCount": 4},
     {"attemptCount": 2, "attemptId": "second", "idempotencyKey": guard.BASE_IDEMPOTENCY_KEY + ":3",
      "originalAttemptState": "abandoned", "originalTerminalReason": "ATTEMPT_LEASE_EXPIRED"},
+    {"attemptId": guard.THIRD_ATTEMPT_ID, "attemptCount": 3,
+     "idempotencyKey": guard.BASE_IDEMPOTENCY_KEY + ":3",
+     "originalAttemptState": "abandoned", "originalTerminalReason": "ATTEMPT_LEASE_EXPIRED",
+     "secondAttemptId": guard.SECOND_ATTEMPT_ID, "secondAttemptState": "failed",
+     "secondTerminalReason": "wrong", "secondTerminalErrorType": "IngressJournalConflict",
+     "latestTerminalReason": "ATTEMPT_LEASE_EXPIRED"},
     {"requestHash": "sha256:" + "0" * 64},
 ))
 def test_attempt_chain_drift_fails_closed(changes):

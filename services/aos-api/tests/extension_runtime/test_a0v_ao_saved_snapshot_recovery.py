@@ -25,11 +25,16 @@ def test_exact_ao_saved_snapshot_authority():
     assert 'get("revision") != 19' in source
     assert 'get("revision") != 59' in source
     assert recovery.ACTIONS == (
-        "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "disable"
+        "prepare", "schedule-ingest", "controls", "transfer", "renew", "enable", "inspect", "pause-failed", "disable"
     )
     assert recovery.ATTEMPT_ID == "67c2331d-b73f-4863-b881-0d67e6c55508"
     assert '"abandoned_attempts": 1' in source
     assert '"attempts": 2' in source
+    assert "AO_SAVED_SNAPSHOT_FAILED_RECOVERY_PAUSED" in source
+    assert '"attempts": 3' in source
+    assert '"running_attempts": 0' in source
+    assert '"current_controls": 12' in source
+    assert "a0v-ao-saved-snapshot-pause-failed-v1" in source
     assert recovery.LINK_COMMAND_HASH == (
         "sha256:f16b566f1974831e0c662ea67049c77acc1febd12c7bd8ff98e9651d0d396970"
     )

@@ -15,6 +15,8 @@ from aos_api.extension_runtime.runtime_connections import runtime_worker_connect
 HEARTBEAT_FRESHNESS = timedelta(seconds=90)
 SAVED_RECOVERY_EXECUTION_LIMIT_SECONDS = 300
 ORIGINAL_ATTEMPT_ID = recovery.ATTEMPT_ID
+SECOND_ATTEMPT_ID = "dbcde37a-95ef-4f95-a586-61ab283cf5bb"
+THIRD_ATTEMPT_ID = "70241ae9-7b18-40f5-9309-563594cd3e37"
 OPERATION_KEY = "snapshot-group-completion:c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
 BASE_IDEMPOTENCY_KEY = "snapshot-group:c5ff1926-45b0-56de-b6b3-07d5b7d053a1"
 REQUEST_HASH = "sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7"
@@ -51,17 +53,28 @@ def classify(facts: dict) -> dict:
     if facts.get("state") not in {"running", "succeeded", "failed", "abandoned"}:
         raise RuntimeError("AO guard authority differs")
     count = facts.get("attemptCount")
-    if count not in {1, 2}:
+    if count not in {1, 2, 3}:
         raise RuntimeError("AO guard authority differs")
     if count == 1:
         if (facts.get("attemptId") != ORIGINAL_ATTEMPT_ID
                 or facts.get("idempotencyKey") != BASE_IDEMPOTENCY_KEY + ":1"
                 or facts.get("originalAttemptState") != facts.get("state")):
             raise RuntimeError("AO guard authority differs")
-    elif (facts.get("attemptId") == ORIGINAL_ATTEMPT_ID
+    elif count == 2 and (facts.get("attemptId") != SECOND_ATTEMPT_ID
             or facts.get("idempotencyKey") != BASE_IDEMPOTENCY_KEY + ":2"
             or facts.get("originalAttemptState") != "abandoned"
             or facts.get("originalTerminalReason") != "ATTEMPT_LEASE_EXPIRED"):
+        raise RuntimeError("AO guard authority differs")
+    elif count == 3 and (
+            facts.get("attemptId") != THIRD_ATTEMPT_ID
+            or facts.get("idempotencyKey") != BASE_IDEMPOTENCY_KEY + ":3"
+            or facts.get("originalAttemptState") != "abandoned"
+            or facts.get("originalTerminalReason") != "ATTEMPT_LEASE_EXPIRED"
+            or facts.get("secondAttemptId") != SECOND_ATTEMPT_ID
+            or facts.get("secondAttemptState") != "failed"
+            or facts.get("secondTerminalReason") != "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED"
+            or facts.get("secondTerminalErrorType") != "IngressJournalConflict"
+            or facts.get("latestTerminalReason") != "ATTEMPT_LEASE_EXPIRED"):
         raise RuntimeError("AO guard authority differs")
     for key, maximum in {
         "runningRuns": 12,
@@ -89,6 +102,8 @@ def classify(facts: dict) -> dict:
 
     state = facts["state"]
     if state == "abandoned":
+        if count == 3:
+            return {"outcome": "FAILED_CHAIN_PAUSE_REQUIRED", "automaticAction": False}
         if count != 1 or facts.get("originalTerminalReason") != "ATTEMPT_LEASE_EXPIRED":
             raise RuntimeError("AO guard authority differs")
         return {"outcome": "ABANDONED_WAIT_NATURAL_SUCCESSOR", "automaticAction": False}
@@ -127,14 +142,14 @@ def read_facts(conn) -> dict:
     scope = ("org-org", "dev-project")
     attempts = conn.execute(
         """SELECT attempt_id::text,state,operation_key,idempotency_key,request_hash,
-          terminal_reason_code
+          terminal_reason_code,terminal_error_type
           FROM extension_runtime_execution_attempt
           WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
             AND execution_epoch=3 AND operation_kind='recoverable_store'
             AND operation_key=%s ORDER BY accepted_at,attempt_id""",
         (*scope, successor.AO_ID, successor.AO_GENERATION, OPERATION_KEY),
     ).fetchall()
-    if not attempts or len(attempts) > 2:
+    if not attempts or len(attempts) > 3:
         raise RuntimeError("AO guard authority differs")
     rows = [dict(row) for row in attempts]
     if any(row["request_hash"] != REQUEST_HASH or row["operation_key"] != OPERATION_KEY
@@ -179,6 +194,11 @@ def read_facts(conn) -> dict:
         "requestHash": latest["request_hash"],
         "originalAttemptState": original["state"],
         "originalTerminalReason": original["terminal_reason_code"],
+        "secondAttemptId": None if len(rows) < 2 else rows[1]["attempt_id"],
+        "secondAttemptState": None if len(rows) < 2 else rows[1]["state"],
+        "secondTerminalReason": None if len(rows) < 2 else rows[1]["terminal_reason_code"],
+        "secondTerminalErrorType": None if len(rows) < 2 else rows[1].get("terminal_error_type"),
+        "latestTerminalReason": latest["terminal_reason_code"],
         "observedAt": extra["observed_at"],
         "routes": extra["routes"],
         "succeededRuns": extra["succeeded_runs"],
