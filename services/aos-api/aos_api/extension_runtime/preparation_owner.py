@@ -8,6 +8,9 @@ from .journaled_session import _settle
 from .oci_driver import CleanupUncertainError
 
 
+_MAX_HEALTH_STALE_REPROBES = 3
+
+
 def _observe(future):
     if not future.cancelled():
         future.exception()
@@ -213,16 +216,19 @@ class PreparationOwner:
             raise TypeError('trusted lease commit required')
         async def execute(observed):
             from .verification_commit import HealthObservationStale
-            try:
-                expires = await commit(observed)
-            except HealthObservationStale:
-                # Lock acquisition may outlive the three-second observation.
-                # The failed transaction has settled before this callback raises;
-                # re-probe the still-owned whole resource group exactly once.
-                if self._stopping or self._cleaning or self._task.done():
-                    raise
-                observed = await self._health_observation()
-                expires = await commit(observed)
+            for stale_reprobes in range(_MAX_HEALTH_STALE_REPROBES + 1):
+                try:
+                    expires = await commit(observed)
+                    break
+                except HealthObservationStale:
+                    # Lock acquisition may span several three-second windows.
+                    # Each failed transaction is settled before this callback
+                    # raises. Re-probe only while the exact owner remains live,
+                    # and preserve a hard bound so persistent contention closes.
+                    if (stale_reprobes == _MAX_HEALTH_STALE_REPROBES
+                            or self._stopping or self._cleaning or self._task.done()):
+                        raise
+                    observed = await self._health_observation()
             if not isinstance(expires, datetime) or expires.utcoffset() is None:
                 raise ValueError('durable lease expiry required')
             remaining = (expires - datetime.now(timezone.utc)).total_seconds()

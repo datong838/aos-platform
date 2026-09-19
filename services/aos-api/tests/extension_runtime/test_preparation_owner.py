@@ -297,13 +297,15 @@ def test_database_health_anchor_brackets_probe_for_verify_and_control():
     asyncio.run(run())
 
 
-def test_renew_reprobes_once_after_stale_transaction_entry():
+def test_renew_reprobes_twice_after_stale_transaction_entry():
     from datetime import datetime,timezone,timedelta
     from aos_api.extension_runtime.verification_commit import HealthObservationStale
     async def run():
         checked=[];commits=[]
         anchor=datetime(2001,1,1,tzinfo=timezone.utc)
-        clocks=iter((anchor,anchor,anchor+timedelta(seconds=1),anchor+timedelta(seconds=1)))
+        clocks=iter((anchor,anchor,
+            anchor+timedelta(seconds=1),anchor+timedelta(seconds=1),
+            anchor+timedelta(seconds=2),anchor+timedelta(seconds=2)))
         @asynccontextmanager
         async def resource():
             class Session:
@@ -314,15 +316,48 @@ def test_renew_reprobes_once_after_stale_transaction_entry():
         async def clock():return next(clocks)
         async def commit(observed):
             commits.append(observed)
-            if len(commits)==1:raise HealthObservationStale('lock wait')
+            if len(commits)<=2:raise HealthObservationStale('lock wait')
             return datetime.now(timezone.utc)+timedelta(seconds=30)
         owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock,
             already_verified=True)
         await owner.prepared()
         assert await owner.renew(commit)>datetime.now(timezone.utc)
-        assert checked==['health','health']
-        assert commits==[anchor,anchor+timedelta(seconds=1)]
+        assert checked==['health','health','health']
+        assert commits==[anchor,anchor+timedelta(seconds=1),anchor+timedelta(seconds=2)]
         await owner.stop()
+    asyncio.run(run())
+
+
+def test_renew_stale_reprobe_limit_remains_fail_closed():
+    from datetime import datetime,timezone,timedelta
+    from aos_api.extension_runtime.verification_commit import HealthObservationStale
+    async def run():
+        checked=[];commits=[]
+        anchor=datetime(2001,1,1,tzinfo=timezone.utc)
+        values=[]
+        for offset in range(4):
+            values.extend((anchor+timedelta(seconds=offset),)*2)
+        clocks=iter(values)
+        @asynccontextmanager
+        async def resource():
+            class Session:
+                process=Process()
+                async def check_health(self):checked.append('health')
+            yield Session()
+        async def prepared():return 'ready'
+        async def clock():return next(clocks)
+        async def commit(observed):
+            commits.append(observed)
+            raise HealthObservationStale('persistent lock wait')
+        owner=PreparationOwner([resource],prepared,lease_seconds=5,health_clock=clock,
+            already_verified=True)
+        await owner.prepared()
+        with pytest.raises(HealthObservationStale,match='persistent'):
+            await owner.renew(commit)
+        with pytest.raises(HealthObservationStale,match='persistent'):
+            await owner.wait_closed()
+        assert checked==['health']*4
+        assert commits==[anchor+timedelta(seconds=offset) for offset in range(4)]
     asyncio.run(run())
 
 
