@@ -24,6 +24,15 @@ def test_exact_an_saved_snapshot_authority():
     assert "'a0v-an-saved-input-recovery-v18'" in source
     assert "get('revision')!=18" in source
     assert "get('revision')!=56" in source
+    assert "'pause-expired'" in source
+    assert recovery.EXPIRED_ATTEMPT == ('1d01cb93-3e8e-4063-b372-bdfb027d2ba3', 11)
+    assert "terminal_reason_code='ATTEMPT_LEASE_EXPIRED'" in source
+    assert "'abandoned_attempts':1" in source and "'unexpected_attempts':0" in source
+    assert "'released_resources':3" in source and "'store_receipt':0" in source
+    assert "'current_controls':12" in source
+    assert "query.count('%s')!=len(parameters)" in source
+    assert "'a0v-an-saved-snapshot-pause-expired-v1'" in source
+    assert "get('revision')!=57" in source
     assert "LINK_IDEMPOTENCY_KEY" in source
     assert "'sourceReads':0" in source
     assert "run_definition" not in source
