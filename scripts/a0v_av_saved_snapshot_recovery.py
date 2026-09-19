@@ -32,6 +32,7 @@ TRANSFER_KEY = "a0v-av-saved-definition-transfer-v1"
 RENEW_KEY = "a0v-av-saved-input-recovery-v24"
 PAUSE_KEY = "a0v-av-saved-snapshot-pause-terminal-v1"
 TERMINAL_FREEZE_OUTCOMES = {"ABANDONED_WAIT_NATURAL_SUCCESSOR"}
+EXPECTED_TERMINAL_ATTEMPT_COUNT = 1
 
 
 def attempt_guard_module():
@@ -234,7 +235,7 @@ def pause_terminal(plane):
         facts = guard.read_facts(conn)
     classified = guard.classify(facts)
     expected = {
-        "attemptCount": 1,
+        "attemptCount": EXPECTED_TERMINAL_ATTEMPT_COUNT,
         "runningRuns": 12, "succeededRuns": 0, "failedRuns": 0,
         "retirements": 0, "linkStoreReceipts": 0, "ecomLinks": 0,
         "linkOutbox": 0, "projectionPending": 0,

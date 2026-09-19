@@ -34,6 +34,7 @@ def test_exact_av_saved_snapshot_authority():
     assert "def pause_failed" not in source
     assert 'INSTALLATION_LABEL = "AV"' in source
     assert recovery.PAUSE_KEY == "a0v-av-saved-snapshot-pause-terminal-v1"
-    assert '"attemptCount": 1' in source
+    assert recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT == 1
+    assert '"attemptCount": EXPECTED_TERMINAL_ATTEMPT_COUNT' in source
     assert "run_definition" not in source
     assert 'a0v-at-saved-snapshot-pause-failed-v1' not in source

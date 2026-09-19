@@ -24,6 +24,7 @@ recovery.TRANSFER_KEY = "a0v-az-saved-definition-transfer-v1"
 recovery.RENEW_KEY = "a0v-az-saved-input-recovery-v26"
 recovery.PAUSE_KEY = "a0v-az-saved-snapshot-pause-terminal-v1"
 recovery.TERMINAL_FREEZE_OUTCOMES = {"FAILED_FREEZE_BOUNDARY", "ABANDONED_FREEZE_BOUNDARY"}
+recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT = 2
 
 # Re-export the immutable manifest so the AZ-only read guard does not need to
 # reach through the shared implementation module.

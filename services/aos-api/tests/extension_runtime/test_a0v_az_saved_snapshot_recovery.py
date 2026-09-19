@@ -24,5 +24,6 @@ def test_exact_az_saved_snapshot_authority():
     assert MODULE.recovery.PAUSED_DEFINITION_REVISION == 82
     assert MODULE.recovery.TERMINAL_FREEZE_OUTCOMES == {
         "FAILED_FREEZE_BOUNDARY", "ABANDONED_FREEZE_BOUNDARY"}
+    assert MODULE.recovery.EXPECTED_TERMINAL_ATTEMPT_COUNT == 2
     assert '"sourceReads": 0' in base
     assert "run_definition" not in PATH.read_text(encoding="utf-8")
