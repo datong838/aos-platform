@@ -9,6 +9,7 @@ import a0v_av_successor_business as successor
 STATE = successor.STATE.parent / "cutover-av"
 OPERATION = "9346c5d1-184d-44e0-a0ed-77b71c2d36c6"
 PREFIX = "a0v-qyh-clean-generation-av-cutover-v1"
+PREDECESSOR_GROUP_REVISION = 143
 
 
 def load(phase):
@@ -36,14 +37,16 @@ def target(registration):
             or str(inner.installationRef.installation_id) != successor.AV_ID
             or str(inner.generation) != successor.AV_GENERATION
             or inner.bindingRevision != 4 or inner.executionEpoch != 3
-            or str(inner.groupId) != successor.GROUP or request.expectedGroupRevision != 143):
+            or str(inner.groupId) != successor.GROUP
+            or request.expectedGroupRevision != PREDECESSOR_GROUP_REVISION):
         raise ValueError("exact AV registered target required")
     policy = {"schemaVersion": "aos.runtime-cutover-policy/v1",
         "policyId": "qyh-clean-generation-av-activation", "revision": 1,
         "tenant": {"orgId": "org-org", "projectId": "dev-project"},
         "targetInstallationId": successor.AV_ID, "externalEffectsAllowed": False,
         "fallbackAllowed": False, "checkpoint": {"legacyEntry": "canonical-router", "version": 1}}
-    value = {"cutoverGroupId": successor.GROUP, "expectedGroupRevision": 143,
+    value = {"cutoverGroupId": successor.GROUP,
+        "expectedGroupRevision": PREDECESSOR_GROUP_REVISION,
         "targetInstallationId": successor.AV_ID, "targetGeneration": successor.AV_GENERATION,
         "targetExecutionEpoch": 3, "targetRuntimeRevision": 4,
         "operationIds": sorted(ECOMMERCE_GROWTH_OPERATIONS),

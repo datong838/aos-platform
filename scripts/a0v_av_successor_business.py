@@ -20,6 +20,10 @@ DETACH_HASH = "sha256:a3155cdf8c5fe13995faac9de8f6d8eedbf83609239303f09d9fcee811
 GROUP = "6a402d31-83ad-546c-807f-508c87498ce1"
 KEY = "a0v-qyh-clean-generation-av-successor-v1"
 ACTOR = "a0v-ecommerce-growth-1.4-runtime-owner"
+PREDECESSOR_BINDING_REVISION = 9
+PREDECESSOR_EXECUTION_EPOCH = 5
+PREDECESSOR_ROUTE_REVISION = 116
+PREDECESSOR_GROUP_REVISION = 143
 
 
 def setup():
@@ -27,6 +31,11 @@ def setup():
     sys.path.insert(0, str(ROOT / "scripts"))
     import a0v_aa_successor_business as prior
     return prior.setup()
+
+
+def replacement_module():
+    import a0v_av_replacement_recovery as replacement
+    return replacement
 
 
 def request_from(w, v, parent, routes):
@@ -49,7 +58,8 @@ def request_from(w, v, parent, routes):
     old = v["bindings"]
     if (str(v["head"]["installation_id"]) != AU_ID or v["head"]["state"] != "active"
             or len(old) != 1 or str(old[0]["generation"]) != AU_GENERATION
-            or (old[0]["revision"], old[0]["execution_epoch"]) != (9, 5)
+            or (old[0]["revision"], old[0]["execution_epoch"]) != (
+                PREDECESSOR_BINDING_REVISION, PREDECESSOR_EXECUTION_EPOCH)
             or old[0]["enabled"] is not False or old[0]["operation_fence"] is not True
             or old[0]["desired_state"] != "disabled" or old[0]["observed_state"] != "unknown"):
         raise ValueError("exact detached AU predecessor required")
@@ -61,12 +71,12 @@ def request_from(w, v, parent, routes):
             or [row["operation_id"] for row in routes] != sorted(ECOMMERCE_GROWTH_OPERATIONS)
             or any(row["handler_kind"] != "legacy" or row["installation_id"] is not None
                    or row["generation"] is not None or row["execution_epoch"] is not None
-                   or row["operation_fence"] is not True or row["revision"] != 116
-                   or row["cutover_group_revision"] != 143 for row in routes)):
+                   or row["operation_fence"] is not True or row["revision"] != PREDECESSOR_ROUTE_REVISION
+                   or row["cutover_group_revision"] != PREDECESSOR_GROUP_REVISION for row in routes)):
         raise ValueError("exact detached AU route group required")
     return SuccessorDispatchRegistrationRequest.model_validate({
         "schemaVersion": "aos.ecommerce.successor-dispatch-registration/v1",
-        "expectedGroupRevision": 143,
+        "expectedGroupRevision": PREDECESSOR_GROUP_REVISION,
         "predecessorDetachReceiptRef": {"resourceType": "DispatchDisableDetachReceipt",
             "resourceId": DETACH, "revision": 1, "contentHash": DETACH_HASH},
         "registration": {"schemaVersion": "aos.ecommerce.first-dispatch-registration/v1",
@@ -77,7 +87,7 @@ def request_from(w, v, parent, routes):
 
 
 def current_request():
-    import a0v_av_replacement_recovery as replacement
+    replacement = replacement_module()
     from a0v_formal_text_model_renewal import database_connect
     profile = replacement.load_profile()
     w, v = profile.observe_installation(AV_ID), profile.observe_installation(AU_ID)

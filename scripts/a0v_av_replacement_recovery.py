@@ -26,6 +26,12 @@ VERSIONS = {"domain.ecommerce.core": "1.4.0", "platform.ecommerce.niushop": "1.2
 PREFIX = "a0v-qyh-clean-av-20260919"
 ACTIONS = ("preflight", "create-av", "prepare-av", "verify-av", "stage-av",
            "configure-av", "enable-av", "observe")
+PREDECESSOR_ROUTE_REVISION = 116
+PREDECESSOR_GROUP_REVISION = 143
+DEFINITION_REVISION = 73
+PREDECESSOR_BINDING_REVISION = 9
+PREDECESSOR_EXECUTION_EPOCH = 5
+INSTALLATION_LABEL = "av"
 
 
 def load_profile():
@@ -38,7 +44,7 @@ def load_profile():
     profile.VERSIONS = dict(VERSIONS)
 
     def initial(label: str):
-        if label != "av":
+        if label != INSTALLATION_LABEL:
             raise ValueError("only fixed AV installation allowed")
         value = json.loads((AV_DIR / "create-result.json").read_text(encoding="utf-8"))
         identity = value.get("installationId")
@@ -71,7 +77,8 @@ def detached_au(profile) -> dict:
     if (str(head["installation_id"]) != AU_ID or head["state"] != "active"
             or head["etag_version"] != 5 or head["lock_hash"] != LOCK or len(bindings) != 1
             or str(bindings[0]["generation"]) != AU_GENERATION
-            or (bindings[0]["revision"], bindings[0]["execution_epoch"]) != (9, 5)
+            or (bindings[0]["revision"], bindings[0]["execution_epoch"]) != (
+                PREDECESSOR_BINDING_REVISION, PREDECESSOR_EXECUTION_EPOCH)
             or bindings[0]["enabled"] is not False or bindings[0]["operation_fence"] is not True
             or bindings[0]["desired_state"] != "disabled" or bindings[0]["observed_state"] != "unknown"
             or len(snapshot["resources"]) != 3
@@ -101,13 +108,13 @@ def detached_au(profile) -> dict:
           ("cb0dba8c-803f-5caf-8011-b763d349f2ba",)).fetchone()
     if (len(routes) != 9 or any(row["handler_kind"] != "legacy" or row["installation_id"] is not None
             or row["generation"] is not None or row["execution_epoch"] is not None
-            or row["operation_fence"] is not True or row["revision"] != 116
-            or row["cutover_group_revision"] != 143 for row in routes)
+            or row["operation_fence"] is not True or row["revision"] != PREDECESSOR_ROUTE_REVISION
+            or row["cutover_group_revision"] != PREDECESSOR_GROUP_REVISION for row in routes)
             or operation is None or dict(operation) != {"status": "succeeded", "phase": "succeeded"}
             or [row["phase"] for row in lifecycle] != ["fence", "detach"]
             or lifecycle[1]["receipt_id"] != AU_DETACH_RECEIPT
             or lifecycle[1]["content_hash"] != AU_DETACH_HASH
-            or definition is None or dict(definition) != {"revision": 73, "state": "disabled"}):
+            or definition is None or dict(definition) != {"revision": DEFINITION_REVISION, "state": "disabled"}):
         raise ValueError("exact AU detach Receipt and disabled definition required")
     return snapshot
 
@@ -147,19 +154,20 @@ def create_av(profile) -> dict:
 
 def lifecycle(profile, action: str) -> dict:
     load("create-av" if action == "prepare" else "prepare-av")
-    return profile.lifecycle("av", action)
+    return profile.lifecycle(INSTALLATION_LABEL, action)
 
 
 def configured(profile, action: str) -> dict:
     predecessor = {"stage": "verify-av", "configure": "stage-av", "enable": "configure-av"}[action]
     load(predecessor)
-    return profile.configure("av", action)
+    return profile.configure(INSTALLATION_LABEL, action)
 
 
 def observe(profile) -> dict:
     value = {"outcome": "AV_REPLACEMENT_OBSERVED", "au": profile.observe_installation(AU_ID)}
     if (AV_DIR / "create-result.json").exists():
-        value["av"] = profile.observe_installation(profile._initial("av")["installationId"])
+        value[INSTALLATION_LABEL] = profile.observe_installation(
+            profile._initial(INSTALLATION_LABEL)["installationId"])
     return value
 
 

@@ -11,9 +11,9 @@ def test_av_successor_consumes_exact_au_detach():
     assert 'AV_GENERATION = "17104053-f4c9-47e1-89b0-f3f353076dda"' in source
     assert 'AU_ID = "eddc89f9-1e91-4e42-be4e-7d81dc941c1d"' in source
     assert 'DETACH = "7e223943-906f-4efe-8d4b-da7fc2424e48"' in source
-    assert '(old[0]["revision"], old[0]["execution_epoch"]) != (9, 5)' in source
-    assert '"expectedGroupRevision": 143' in source
-    assert 'row["revision"] != 116' in source
-    assert 'row["cutover_group_revision"] != 143' in source
+    assert "PREDECESSOR_BINDING_REVISION = 9" in source
+    assert "PREDECESSOR_EXECUTION_EPOCH = 5" in source
+    assert "PREDECESSOR_ROUTE_REVISION = 116" in source
+    assert "PREDECESSOR_GROUP_REVISION = 143" in source
     assert '"bindingRevision": 4, "executionEpoch": 3' in source
     assert "run_definition" not in source

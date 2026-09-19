@@ -12,9 +12,10 @@ SPEC.loader.exec_module(cutover)
 
 def test_exact_av_cutover_is_registration_bound_and_no_effect():
     assert cutover.OPERATION == "9346c5d1-184d-44e0-a0ed-77b71c2d36c6"
+    assert cutover.PREDECESSOR_GROUP_REVISION == 143
     source = PATH.read_text(encoding="utf-8")
-    assert 'request.expectedGroupRevision != 143' in source
-    assert '"expectedGroupRevision": 143' in source
+    assert 'request.expectedGroupRevision != PREDECESSOR_GROUP_REVISION' in source
+    assert '"expectedGroupRevision": PREDECESSOR_GROUP_REVISION' in source
     assert 'qyh-clean-generation-av-activation' in source
     assert 'successor.AV_ID' in source and 'successor.AV_GENERATION' in source
     assert 'successor.AU_ID' not in source and 'successor.AU_GENERATION' not in source
