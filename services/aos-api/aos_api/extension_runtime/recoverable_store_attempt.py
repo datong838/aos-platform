@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from math import isfinite
 import re
 import secrets
 from threading import Event, Lock, Thread
 from time import monotonic
 
+from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.tenant_scope import TenantScope
 
 from .consumer_connection import consumer_connection
@@ -23,6 +25,8 @@ def _terminal_failure(exc: BaseException | None, heartbeat_error: BaseException 
                       heartbeat_stopped: bool) -> tuple[str, str]:
     if not heartbeat_stopped:
         return "RECOVERABLE_HEARTBEAT_STOP_TIMEOUT", "RuntimeConflict"
+    if heartbeat_error is not None and str(heartbeat_error) == "INGRESS_DEADLINE_EXCEEDED":
+        return "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", _error_type(heartbeat_error)
     if heartbeat_error is not None:
         return "RECOVERABLE_HEARTBEAT_FAILED", _error_type(heartbeat_error)
     error_type = _error_type(exc)
@@ -57,7 +61,8 @@ class _CombinedCancelEvent:
 
 class RecoverableStoreAttempt:
     def __init__(self, *, connect, scope: TenantScope, lease: RuntimeAttemptLease,
-                 owner_token: str, heartbeat_seconds: float, lease_seconds: float) -> None:
+                 owner_token: str, heartbeat_seconds: float, lease_seconds: float,
+                 max_execution_seconds: float) -> None:
         if not lease.execute_once or lease.state != "running":
             raise RuntimeConflict("recoverable Store attempt is not executable")
         self._connect = connect
@@ -66,6 +71,8 @@ class RecoverableStoreAttempt:
         self._token = owner_token
         self._heartbeat_seconds = heartbeat_seconds
         self._lease_seconds = lease_seconds
+        self._max_execution_seconds = max_execution_seconds
+        self._execution_deadline: float | None = None
         self._stop = Event()
         self._lock = Lock()
         self._error: BaseException | None = None
@@ -83,7 +90,23 @@ class RecoverableStoreAttempt:
 
     def _heartbeat(self) -> None:
         store = PostgresRuntimeAttemptStore()
-        while not self._stop.wait(self._heartbeat_seconds):
+        while True:
+            deadline = self._execution_deadline
+            if deadline is None:
+                self._error = RuntimeConflict("recoverable Store attempt deadline unavailable")
+                self._stop.set()
+                return
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                self._error = IngressJournalConflict("INGRESS_DEADLINE_EXCEEDED")
+                self._stop.set()
+                return
+            if self._stop.wait(min(self._heartbeat_seconds, remaining)):
+                return
+            if monotonic() >= deadline:
+                self._error = IngressJournalConflict("INGRESS_DEADLINE_EXCEEDED")
+                self._stop.set()
+                return
             try:
                 with self._lock:
                     expected = self._lease.revision
@@ -108,6 +131,7 @@ class RecoverableStoreAttempt:
     def __enter__(self):
         if self._thread is not None:
             raise RuntimeConflict("recoverable Store attempt already started")
+        self._execution_deadline = monotonic() + self._max_execution_seconds
         self._thread = Thread(
             target=self._heartbeat,
             name=f"aos-store-attempt-{self._lease.attempt_id}",
@@ -150,14 +174,18 @@ class RecoverableStoreAttemptOwner:
     """Create one committed attempt handle; caller starts it only after commit."""
 
     def __init__(self, *, connect, heartbeat_seconds: float = 30.0,
-                 lease_seconds: float = 120.0) -> None:
+                 lease_seconds: float = 120.0, max_execution_seconds: float = 300.0) -> None:
         if not callable(connect):
             raise TypeError("trusted runtime connection factory required")
-        if not 0.05 <= heartbeat_seconds < lease_seconds <= 300.0:
+        if (type(max_execution_seconds) not in (int, float)
+                or not isfinite(max_execution_seconds)
+                or not 0.05 <= heartbeat_seconds < lease_seconds <= 300.0
+                or not heartbeat_seconds < max_execution_seconds <= 300.0):
             raise ValueError("bounded recoverable Store heartbeat required")
         self._connect = connect
         self._heartbeat_seconds = heartbeat_seconds
         self._lease_seconds = lease_seconds
+        self._max_execution_seconds = float(max_execution_seconds)
 
     def claim(self, conn, *, scope: TenantScope, installation_id, generation,
               execution_epoch: int, operation_key: str, idempotency_key: str,
@@ -180,6 +208,7 @@ class RecoverableStoreAttemptOwner:
         return RecoverableStoreAttempt(
             connect=self._connect, scope=scope, lease=lease, owner_token=token,
             heartbeat_seconds=self._heartbeat_seconds, lease_seconds=self._lease_seconds,
+            max_execution_seconds=self._max_execution_seconds,
         )
 
 

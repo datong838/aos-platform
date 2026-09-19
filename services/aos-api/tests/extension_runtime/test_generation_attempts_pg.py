@@ -513,6 +513,42 @@ def test_recoverable_context_classifies_deadline_without_raw_message(terminal_re
     )
 
 
+def test_recoverable_context_stops_heartbeat_at_absolute_lifetime(terminal_reason_case):
+    conn, installation, generation, _, schema = terminal_reason_case
+    conn.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
+
+    @contextmanager
+    def connect():
+        with psycopg.connect(
+            host="127.0.0.1", port=18432, user="postgres", dbname="postgres",
+            autocommit=True, row_factory=dict_row,
+        ) as worker:
+            worker.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(schema)))
+            worker.execute("SET SESSION AUTHORIZATION aos_runtime")
+            yield worker
+
+    scope = TenantScope("org-org", "dev-project")
+    owner = RecoverableStoreAttemptOwner(
+        connect=connect, heartbeat_seconds=.05, lease_seconds=.2,
+        max_execution_seconds=.12,
+    )
+    with consumer_connection(connect, SCOPE) as worker:
+        attempt = owner.claim(
+            worker, scope=scope, installation_id=installation, generation=generation,
+            execution_epoch=1, operation_key="snapshot-group:absolute-deadline",
+            idempotency_key="snapshot-group:absolute-deadline", request_hash=HASH,
+        )
+    with pytest.raises(RuntimeConflict, match="heartbeat failed"):
+        with attempt:
+            assert attempt.cancellation().wait(.5) is True
+    assert conn.execute(
+        "SELECT state,terminal_reason_code,terminal_error_type "
+        "FROM extension_runtime_execution_attempt WHERE attempt_id=%s", (attempt.attempt_id,),
+    ).fetchone() == (
+        "failed", "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", "IngressJournalConflict",
+    )
+
+
 def test_expired_attempt_uses_fixed_terminal_reason(terminal_reason_case):
     conn, installation, generation, _, _ = terminal_reason_case
     lease = _begin(

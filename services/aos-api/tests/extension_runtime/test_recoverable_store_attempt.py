@@ -6,6 +6,7 @@ from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.extension_runtime.recoverable_store_attempt import (
     RecoverableStoreAttempt,
+    RecoverableStoreAttemptOwner,
     _terminal_failure,
 )
 
@@ -60,3 +61,19 @@ def test_terminal_failure_replaces_unsafe_exception_type():
     assert _terminal_failure(unsafe("secret"), None, True) == (
         "RECOVERABLE_EXECUTION_EXCEPTION", "Exception",
     )
+
+
+def test_heartbeat_deadline_uses_execution_deadline_reason():
+    deadline = IngressJournalConflict("INGRESS_DEADLINE_EXCEEDED")
+    assert _terminal_failure(None, deadline, True) == (
+        "RECOVERABLE_INGRESS_DEADLINE_EXCEEDED", "IngressJournalConflict",
+    )
+
+
+@pytest.mark.parametrize("seconds", (0.05, 301, float("inf")))
+def test_attempt_owner_requires_bounded_execution_lifetime(seconds):
+    with pytest.raises(ValueError, match="bounded recoverable Store heartbeat"):
+        RecoverableStoreAttemptOwner(
+            connect=lambda: None, heartbeat_seconds=.05,
+            lease_seconds=.2, max_execution_seconds=seconds,
+        )
