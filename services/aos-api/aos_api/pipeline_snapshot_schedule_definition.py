@@ -301,27 +301,12 @@ class PipelineSnapshotScheduleDefinitionOwner:
             raise ValueError('one exact resumable saved group required')
         old_installation,old_generation=prior['installationId'],prior['generation']
         new_installation,new_generation=bindings[0].installation_id,bindings[0].generation
-        old=conn.execute('''SELECT i.current_revision,r.state,r.lock_hash,r.overlay_revision
-            FROM public.bundle_installation i JOIN public.bundle_installation_revision r
-              ON (r.org_id,r.project_id,r.installation_pk,r.revision)=
-                 (i.org_id,i.project_id,i.installation_pk,i.current_revision)
-            WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s''',
-            (*scope.key,old_installation)).fetchone()
-        new=conn.execute('''SELECT r.state,l.lock_payload FROM public.bundle_installation i
-            JOIN public.bundle_installation_revision r ON (r.org_id,r.project_id,r.installation_pk,r.revision)=
-              (i.org_id,i.project_id,i.installation_pk,i.current_revision)
-            JOIN public.bundle_composition_lock l ON (l.org_id,l.project_id,l.composition_pk,l.revision)=
-              (r.org_id,r.project_id,r.composition_pk,r.lock_revision)
-            WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s''',
-            (*scope.key,new_installation)).fetchone()
-        predecessor=None if new is None else new['lock_payload'].get('currentInstallationRef')
-        if (old is None or new is None or old['state']!='active' or new['state']!='active'
-                or predecessor!={'installationId':old_installation,'revision':old['current_revision'],
-                    'lockHash':old['lock_hash'],'overlayRevision':old['overlay_revision']}):
-            raise ValueError('exact active replacement lineage required')
+        lineage=self._exact_active_replacement_lineage(conn,scope=scope,
+            old_installation=old_installation,new_installation=new_installation)
+        retired_installations=lineage[:-1]
         runtimes=conn.execute('''SELECT installation_id,generation,enabled,operation_fence,desired_state,observed_state
             FROM public.extension_runtime_binding WHERE org_id=%s AND project_id=%s
-              AND installation_id=ANY(%s) FOR SHARE''',(*scope.key,[old_installation,new_installation])).fetchall()
+              AND installation_id=ANY(%s) FOR SHARE''',(*scope.key,lineage)).fetchall()
         by_id={str(row['installation_id']):row for row in runtimes}
         before,after=by_id.get(old_installation),by_id.get(new_installation)
         if (before is None or str(before['generation'])!=old_generation or before['enabled'] is not False
@@ -330,26 +315,71 @@ class PipelineSnapshotScheduleDefinitionOwner:
                 or after['enabled'] is not True or after['operation_fence'] is not False
                 or after['desired_state']!='enabled' or after['observed_state']!='ready'):
             raise ValueError('exact drained predecessor and ready successor required')
-        resources=conn.execute('''SELECT count(*) AS total,
-              count(*) FILTER(WHERE l.cleanup_state='released' AND l.observed_release IS TRUE) AS released
-            FROM public.extension_runtime_resource_lease l JOIN public.extension_runtime_operation o
-              ON (o.org_id,o.project_id,o.operation_id)=(l.org_id,l.project_id,l.operation_id)
-            WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s AND l.generation=%s''',
-            (*scope.key,old_installation,old_generation)).fetchone()
-        detached=conn.execute('''SELECT count(*) AS n FROM public.extension_dispatch_lifecycle_operation d
-            JOIN public.extension_runtime_operation o ON (o.org_id,o.project_id,o.operation_id)=
-              (d.org_id,d.project_id,d.runtime_operation_id)
-            WHERE d.org_id=%s AND d.project_id=%s AND o.installation_id=%s
-              AND o.kind='disable' AND o.status='succeeded' AND d.status='detached'
-              AND (SELECT count(*) FROM public.extension_dispatch_lifecycle_receipt x
-                   WHERE x.org_id=d.org_id AND x.project_id=d.project_id
-                     AND x.runtime_operation_id=d.runtime_operation_id AND x.phase IN ('fence','detach'))=2''',
-            (*scope.key,old_installation)).fetchone()
+        if (len(by_id)!=len(lineage) or any(
+                by_id[installation]['enabled'] is not False
+                or by_id[installation]['operation_fence'] is not True
+                or by_id[installation]['desired_state']!='disabled'
+                or by_id[installation]['observed_state']!='unknown'
+                for installation in retired_installations)):
+            raise ValueError('exact drained replacement chain required')
+        for installation in retired_installations:
+            generation=str(by_id[installation]['generation'])
+            resources=conn.execute('''SELECT count(*) AS total,
+                  count(*) FILTER(WHERE l.cleanup_state='released' AND l.observed_release IS TRUE) AS released
+                FROM public.extension_runtime_resource_lease l JOIN public.extension_runtime_operation o
+                  ON (o.org_id,o.project_id,o.operation_id)=(l.org_id,l.project_id,l.operation_id)
+                WHERE o.org_id=%s AND o.project_id=%s AND o.installation_id=%s AND l.generation=%s''',
+                (*scope.key,installation,generation)).fetchone()
+            detached=conn.execute('''SELECT count(*) AS n FROM public.extension_dispatch_lifecycle_operation d
+                JOIN public.extension_runtime_operation o ON (o.org_id,o.project_id,o.operation_id)=
+                  (d.org_id,d.project_id,d.runtime_operation_id)
+                WHERE d.org_id=%s AND d.project_id=%s AND o.installation_id=%s
+                  AND o.kind='disable' AND o.status='succeeded' AND d.status='detached'
+                  AND (SELECT count(*) FROM public.extension_dispatch_lifecycle_receipt x
+                       WHERE x.org_id=d.org_id AND x.project_id=d.project_id
+                         AND x.runtime_operation_id=d.runtime_operation_id AND x.phase IN ('fence','detach'))=2''',
+                (*scope.key,installation)).fetchone()
+            if (resources['total'],resources['released'],detached['n'])!=(3,3,1):
+                raise ValueError('replacement cleanup or dispatch evidence incomplete')
         routes=conn.execute('''SELECT count(*) AS n FROM public.extension_operation_dispatch_binding
             WHERE org_id=%s AND project_id=%s AND handler_kind='extension' AND installation_id=%s
               AND generation=%s AND operation_fence IS FALSE''',(*scope.key,new_installation,new_generation)).fetchone()
-        if (resources['total'],resources['released'],detached['n'],routes['n'])!=(3,3,1,9):
+        if routes['n']!=9:
             raise ValueError('replacement cleanup or dispatch evidence incomplete')
+
+    @staticmethod
+    def _exact_active_replacement_lineage(conn,*,scope,old_installation,new_installation):
+        """Return an exact finite direct-successor chain from old to new."""
+        current=new_installation
+        expected=None
+        reverse=[]
+        seen=set()
+        for _ in range(32):
+            if current in seen:
+                raise ValueError('exact active replacement lineage required')
+            seen.add(current)
+            row=conn.execute('''SELECT i.current_revision,r.state,r.lock_hash,r.overlay_revision,l.lock_payload
+                FROM public.bundle_installation i JOIN public.bundle_installation_revision r
+                  ON (r.org_id,r.project_id,r.installation_pk,r.revision)=
+                     (i.org_id,i.project_id,i.installation_pk,i.current_revision)
+                JOIN public.bundle_composition_lock l ON (l.org_id,l.project_id,l.composition_pk,l.revision)=
+                  (r.org_id,r.project_id,r.composition_pk,r.lock_revision)
+                WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s''',
+                (*scope.key,current)).fetchone()
+            actual=None if row is None else {'installationId':current,'revision':row['current_revision'],
+                'lockHash':row['lock_hash'],'overlayRevision':row['overlay_revision']}
+            if row is None or row['state']!='active' or (expected is not None and actual!=expected):
+                raise ValueError('exact active replacement lineage required')
+            reverse.append(current)
+            if current==old_installation:
+                return list(reversed(reverse))
+            predecessor=row['lock_payload'].get('currentInstallationRef')
+            if (type(predecessor) is not dict or type(predecessor.get('installationId')) is not str
+                    or predecessor['installationId']==current):
+                raise ValueError('exact active replacement lineage required')
+            expected=predecessor
+            current=predecessor['installationId']
+        raise ValueError('exact active replacement lineage required')
 
     @classmethod
     def _saved_recovery_anchor(cls,conn,*,scope,prior,group_id,recovery_ref,

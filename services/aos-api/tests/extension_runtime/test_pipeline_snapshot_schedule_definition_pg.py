@@ -248,6 +248,46 @@ def test_saved_recovery_transfer_uses_dedicated_gate(definition_case,monkeypatch
     assert owner.read(conn,scope=args['scope'],definition_id=args['definition_id'])==first
 
 
+def test_saved_recovery_accepts_only_exact_finite_active_replacement_chain():
+    scope=NS(key=('org-org','dev-project'))
+    old,intermediate,new=(str(uuid4()) for _ in range(3))
+
+    def ref(installation,revision):
+        return {'installationId':installation,'revision':revision,
+            'lockHash':f'sha256:{revision:064x}','overlayRevision':'overlay-v1'}
+
+    rows={
+        old:{'current_revision':5,'state':'active','lock_hash':ref(old,5)['lockHash'],
+            'overlay_revision':'overlay-v1','lock_payload':{'currentInstallationRef':None}},
+        intermediate:{'current_revision':5,'state':'active','lock_hash':ref(intermediate,5)['lockHash'],
+            'overlay_revision':'overlay-v1','lock_payload':{'currentInstallationRef':ref(old,5)}},
+        new:{'current_revision':5,'state':'active','lock_hash':ref(new,5)['lockHash'],
+            'overlay_revision':'overlay-v1','lock_payload':{'currentInstallationRef':ref(intermediate,5)}},
+    }
+
+    class Connection:
+        def execute(self,_sql,args):
+            return NS(fetchone=lambda:rows.get(args[-1]))
+
+    method=PipelineSnapshotScheduleDefinitionOwner._exact_active_replacement_lineage
+    assert method(Connection(),scope=scope,old_installation=old,new_installation=new)==[
+        old,intermediate,new]
+    rows[new]['lock_payload']['currentInstallationRef']=ref(old,5)
+    assert method(Connection(),scope=scope,old_installation=old,new_installation=new)==[old,new]
+
+    rows[new]['lock_payload']['currentInstallationRef']=ref(intermediate,4)
+    with pytest.raises(ValueError,match='exact active replacement lineage'):
+        method(Connection(),scope=scope,old_installation=old,new_installation=new)
+    rows[new]['lock_payload']['currentInstallationRef']=ref(intermediate,5)
+    rows[intermediate]['state']='disabled'
+    with pytest.raises(ValueError,match='exact active replacement lineage'):
+        method(Connection(),scope=scope,old_installation=old,new_installation=new)
+    rows[intermediate]['state']='active'
+    rows[intermediate]['lock_payload']['currentInstallationRef']=ref(new,5)
+    with pytest.raises(ValueError,match='exact active replacement lineage'):
+        method(Connection(),scope=scope,old_installation=old,new_installation=new)
+
+
 def test_saved_recovery_anchor_allows_only_an_exact_chained_transfer():
     from aos_api.asset_registry.canonical_json import canonical_sha256
     from aos_api.tenant_scope import TenantScope
