@@ -40,6 +40,10 @@ def test_v3_observer_is_read_only_and_joins_authority_chain():
         "ecommerce_analyst_growth_plan_revision",
     ):
         assert table in source
+    assert "generationArtifactRef,resourceId" in source
+    assert "JOIN aip_agent_run" in source
+    assert "JOIN aip_task_run" in source
+    assert "goal#>>'{runRef,resourceId}'=ANY" in source
     assert '"sourceReads": 0' in source
     assert '"businessWrites": 0' in source
     assert "INSERT INTO" not in source

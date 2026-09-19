@@ -44,3 +44,17 @@ The fixed order is: awaiting Policy v3 → awaiting control Receipt → awaiting
 ## Next boundary
 
 AO terminal success and saved-snapshot disable remain prerequisites. Only afterward may the v3 executor create the fresh approval and canonical Policy write. The observer will then prove each naturally produced downstream authority without developer-created Case/Run wiring.
+
+## Exact GrowthPlan lineage hardening
+
+The initial observer selected every tenant GrowthPlan head. That was safe while the tenant had zero plans, but it could later misclassify an unrelated plan as this natural chain's output. The observer now accepts a GrowthPlan only through this exact join:
+
+`GrowthPlan.generationArtifactRef → aip_artifact.source.agentRunId → aip_agent_run.task_run_id → aip_task_run.task_id → aip_task.goal.runRef`
+
+The final `goal.runRef.resourceId` must equal a Business Run whose trigger key is one of the Policy v3 occurrence target keys. A plan from another Run or task is excluded even when it belongs to the same tenant.
+
+- focused observer, Policy v3 and AO guard regression: 18 passed;
+- the tightened SQL executed successfully against `org-org/dev-project`;
+- current phase remains `awaiting_policy_v3`, with zero exact Runs and zero exact GrowthPlans;
+- AO was still running at revision 109 during this observation;
+- browser reload again settled on `暂无可见工作台入口`.

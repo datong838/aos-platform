@@ -120,15 +120,34 @@ def observe(previous) -> dict:
                 WHERE r.org_id=%s AND r.project_id=%s AND r.case_id=%s ORDER BY r.created_at""",
             (*base.SCOPE.values(), base.CASE_ID),
         ).fetchall()
+        v3_run_ids = {
+            row["run_id"] for row in runs if row["trigger_key"] in set(target_keys)
+        }
         plans = conn.execute(
             """SELECT h.plan_id,h.current_revision,h.version,r.content_hash,r.receipt_id,
-                      r.payload,r.created_by,r.created_at
+                      r.payload,r.created_by,r.created_at,a.artifact_id,
+                      ar.agent_run_id,ar.task_run_id,
+                      t.goal#>>'{runRef,resourceId}' business_run_id
                  FROM ecommerce_analyst_growth_plan_head h
                  JOIN ecommerce_analyst_growth_plan_revision r
                    ON (r.org_id,r.project_id,r.plan_id,r.revision)=
                       (h.org_id,h.project_id,h.plan_id,h.current_revision)
-                WHERE h.org_id=%s AND h.project_id=%s ORDER BY h.updated_at""",
-            tuple(base.SCOPE.values()),
+                 JOIN aip_artifact a
+                   ON (a.org_id,a.project_id,a.artifact_id)=
+                      (r.org_id,r.project_id,r.payload#>>'{generationArtifactRef,resourceId}')
+                  AND a.content_hash=r.payload#>>'{generationArtifactRef,contentHash}'
+                 JOIN aip_agent_run ar
+                   ON (ar.org_id,ar.project_id,ar.agent_run_id)=
+                      (a.org_id,a.project_id,a.source->>'agentRunId')
+                 JOIN aip_task_run tr
+                   ON (tr.org_id,tr.project_id,tr.run_id)=
+                      (ar.org_id,ar.project_id,ar.task_run_id)
+                 JOIN aip_task t
+                   ON (t.org_id,t.project_id,t.task_id)=(tr.org_id,tr.project_id,tr.task_id)
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND t.goal#>>'{runRef,resourceId}'=ANY(%s)
+                ORDER BY h.updated_at""",
+            (*base.SCOPE.values(), list(v3_run_ids)),
         ).fetchall()
         canary = conn.execute(
             """SELECT

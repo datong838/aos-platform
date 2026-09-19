@@ -41,7 +41,7 @@ The executor will bind the exact AO installation/generation/epoch, Case rev4, Po
 - add `services/aos-api/tests/extension_runtime/test_a0v_ao_advisor_baseline_v3_observe.py`;
 - add a verification document under this evidence directory.
 
-The read-only observer classifies deterministic phases from one current read: awaiting Policy/control/binding, awaiting occurrence, occurrence pending, awaiting dispatch Receipt, awaiting Run, analysis running, or GrowthPlan ready. The new Policy must be revision 3 and its `SchedulePolicyControlReceipt` must bind AO epoch 3 plus a fresh exact `ActionApprovalEvent`. The host alone creates the deterministic v3 occurrence and starts the Run. A missing business plan is handled by the existing baseline analysis path; it is not filled by fixture or developer input.
+The read-only observer classifies deterministic phases from one current read: awaiting Policy/control/binding, awaiting occurrence, occurrence pending, awaiting dispatch Receipt, awaiting Run, analysis running, or GrowthPlan ready. A GrowthPlan counts only when its `generationArtifactRef` joins to the producing AgentRun and TaskRun, and that Task's immutable intent `goal.runRef` identifies the Business Run triggered by the v3 occurrence target key. A tenant-level plan count is insufficient. The new Policy must be revision 3 and its `SchedulePolicyControlReceipt` must bind AO epoch 3 plus a fresh exact `ActionApprovalEvent`. The host alone creates the deterministic v3 occurrence and starts the Run. A missing business plan is handled by the existing baseline analysis path; it is not filled by fixture or developer input.
 
 ### C. Product acceptance continuation
 
