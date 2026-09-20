@@ -412,3 +412,50 @@ def test_br_health_observation_is_read_only_and_exact():
     assert "IsolationLevel.REPEATABLE_READ" in source
     assert "return health.snapshot()" in source
     assert "run_definition" not in source
+
+
+def test_br_saved_snapshot_profile_and_revision_chain_are_exact():
+    api = (ROOT / "scripts/a0v_br_product_controlled_api.py").read_text(encoding="utf-8")
+    source = (ROOT / "scripts/a0v_br_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'AOS_QYH_CRON_ENABLED="false"' in api
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in api
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in api
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "17ba9792-9f24-42e4-9557-4d84547c7d97"' in source
+    assert 'recovery.PREDECESSOR_DEFINITION_REVISION = 124' in source
+    assert 'recovery.TRANSFERRED_DEFINITION_REVISION = 125' in source
+    assert 'recovery.RECOVERY_REVISION = 41' in source
+    assert 'recovery.ENABLED_DEFINITION_REVISION = 126' in source
+    assert 'recovery.PAUSED_DEFINITION_REVISION = 127' in source
+    assert 'or recovery_ref.get("revision") != 40' in source
+    assert "run_definition" not in api + source
+
+
+def test_br_terminal_supervisor_allows_only_one_natural_attempt():
+    source = (ROOT / "scripts/a0v_br_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert "successor.BR_ID, successor.BR_GENERATION, OPERATION_KEY" in source
+    assert 'raise RuntimeError("BR attempt must be zero before supervisor starts worker")' in source
+    assert 'TERMINAL_STATES = {"succeeded", "failed", "abandoned"}' in source
+    assert 'time.sleep(interval_seconds)' in source
+    assert 'os.killpg(worker.pid, signal.SIGTERM)' in source
+    assert 'WORKER = ROOT / "scripts/a0v_br_snapshot_product_api.py"' in source
+    assert "run_definition" not in source
+
+
+def test_br_snapshot_worker_uses_exact_br_lease_and_state():
+    source = (ROOT / "scripts/a0v_br_snapshot_product_api.py").read_text(encoding="utf-8")
+    assert "import a0v_br_successor_business as successor" in source
+    assert 'worker.TASK = "A0V-BR-SNAPSHOT-WORKER-20260920"' in source
+    assert 'worker.STATE = successor.STATE.parent / "snapshot-worker"' in source
+    assert "run_definition" not in source
+
+
+def test_br_attempt_guard_freezes_exact_single_terminal_failure():
+    source = (ROOT / "scripts/a0v_br_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "256207c9-4bc4-4c89-b00f-146f58012011"' in source
+    assert '"state": "failed", "revision": 8' in source
+    assert '"terminalReason": "RECOVERABLE_EXECUTION_EXCEPTION"' in source
+    assert '"terminalErrorType": "IngressJournalConflict"' in source
+    assert '"definitionRevision": 127, "definitionState": "disabled", "recoveryRevision": 41' in source
+    assert 'AND revision=177 AND cutover_group_revision=204' in source
+    assert '"attemptCount": 1' in source
+    assert "run_definition" not in source
