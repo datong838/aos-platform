@@ -20,6 +20,7 @@ DATABASE = "aos_meta_head"
 INSTALLATION_ID = "c1eb714f-56de-4f28-ba06-c3440b3d18cb"
 ACTOR = "a0v-ecommerce-growth-1.4-runtime-owner"
 KEY = "a0v-ecommerce-invalid-1.4-uninstall-v1"
+UNINSTALL_REASON = "Signed runtime API declarations are absent"
 
 
 class UninstallBlocked(RuntimeError):
@@ -118,7 +119,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
     command = dict(
         installation_id=INSTALLATION_ID,
-        request=UninstallInstallationRequest(reason="Signed runtime API declarations are absent"),
+        request=UninstallInstallationRequest(reason=UNINSTALL_REASON),
         org_id=ORG_ID, project_id=PROJECT_ID, actor=ACTOR,
         roles=frozenset({"admin"}), markings=frozenset(),
         idempotency_key=KEY, if_match='"3"',
