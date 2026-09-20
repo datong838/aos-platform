@@ -143,3 +143,71 @@ def test_bo_terminal_pause_is_exact_stop_only_recovery():
     assert 'result["ref"]["revision"] != 121' in source
     assert "PipelineSnapshotScheduleDefinitionOwner" in source
     assert "run_definition" not in source
+
+
+def test_bo_terminal_retirement_uses_exact_two_failed_attempts():
+    source = (ROOT / "scripts/a0v_bo_terminal_retirement.py").read_text(encoding="utf-8")
+    assert "retirement.AR_ID = successor.BO_ID" in source
+    assert '"57881020-86fe-44cc-be3e-2cd90787205e", 2, "failed"' in source
+    assert '"9d1fc481-7eb2-426f-8b0b-65627f06ec97", 2, "failed"' in source
+    assert source.count('"RECOVERABLE_EXECUTION_EXCEPTION", "RuntimeConflict"') == 2
+    assert "retirement.DEFINITION_REVISION = 121" in source
+    assert "retirement.ACTIVE_ROUTE_REVISION = 168" in source
+    assert "retirement.DETACHED_ROUTE_REVISION = 170" in source
+    assert "retirement.DETACHED_GROUP_REVISION = 197" in source
+    assert "retirement.profile = profile" in source
+    assert "a0v_ar_released_retirement" in source
+    assert "run_definition" not in source
+
+
+def test_released_retirement_revisions_are_injectable():
+    source = (ROOT / "scripts/a0v_ar_released_retirement.py").read_text(encoding="utf-8")
+    assert "DEFINITION_REVISION = 67" in source
+    assert "ACTIVE_ROUTE_REVISION = 105" in source
+    assert "DETACHED_ROUTE_REVISION = 107" in source
+    assert '{"revision": DEFINITION_REVISION, "state": "disabled"}' in source
+    assert 'row["revision"] != ACTIVE_ROUTE_REVISION' in source
+    assert 'row["revision"] != DETACHED_ROUTE_REVISION' in source
+
+
+def test_bp_replacement_uses_exact_bo_detach():
+    source = (ROOT / "scripts/a0v_bp_replacement_recovery.py").read_text(encoding="utf-8")
+    assert 'replacement.AU_ID = "307399a0-21bb-4d55-95b2-8b0fee238913"' in source
+    assert 'replacement.AU_DISABLE_OPERATION = "70cb9fec-1a8c-477c-bbdf-8134931ff3f6"' in source
+    assert 'replacement.AU_DETACH_RECEIPT = "01853eba-d3d7-4e2a-a5c5-a6c346e1679c"' in source
+    assert "replacement.PREDECESSOR_ROUTE_REVISION = 170" in source
+    assert "replacement.PREDECESSOR_GROUP_REVISION = 197" in source
+    assert "replacement.DEFINITION_REVISION = 121" in source
+    assert "replacement.PREDECESSOR_BINDING_REVISION = 9" in source
+    assert "replacement.PREDECESSOR_EXECUTION_EPOCH = 5" in source
+    assert "run_definition" not in source
+
+
+def test_bp_registration_targets_exact_detached_bo():
+    source = (ROOT / "scripts/a0v_bp_successor_business.py").read_text(encoding="utf-8")
+    assert 'successor.AV_ID = "17ba9792-9f24-42e4-9557-4d84547c7d97"' in source
+    assert 'successor.AU_ID = "307399a0-21bb-4d55-95b2-8b0fee238913"' in source
+    assert 'successor.DETACH = "01853eba-d3d7-4e2a-a5c5-a6c346e1679c"' in source
+    assert "successor.PREDECESSOR_ROUTE_REVISION = 170" in source
+    assert "successor.PREDECESSOR_GROUP_REVISION = 197" in source
+    assert 'os.environ["AOS_ECOMMERCE_REGISTRATION_CREDENTIAL_FILE"]' in source
+    assert "run_definition" not in source
+
+
+def test_bp_cutover_advances_exact_bo_group_once():
+    source = (ROOT / "scripts/a0v_bp_successor_cutover.py").read_text(encoding="utf-8")
+    assert 'cutover.OPERATION = "46da254e-6842-4a33-9540-e6a47065a65a"' in source
+    assert "cutover.PREDECESSOR_GROUP_REVISION = 197" in source
+    assert 'cutover.PREFIX = "a0v-qyh-clean-generation-bp-cutover-v1"' in source
+    assert "a0v_bp_successor_business" in source
+    assert "run_definition" not in source
+
+
+def test_bp_health_observation_is_read_only_and_exact():
+    source = (ROOT / "scripts/a0v_bp_health_observation.py").read_text(encoding="utf-8")
+    assert 'health.OPERATION = "4fd9f7d4-71ba-4451-8e60-1357f63b17ce"' in source
+    assert "health.ROUTE_REVISION = 171" in source
+    assert "health.GROUP_REVISION = 198" in source
+    assert "health.DEFINITION_REVISION = 121" in source
+    assert "return health.snapshot()" in source
+    assert "run_definition" not in source

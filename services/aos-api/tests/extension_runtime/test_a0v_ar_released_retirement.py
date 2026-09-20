@@ -13,12 +13,17 @@ def test_exact_ar_generation_definition_and_route_revisions_are_fixed():
     assert retirement.AR_ID == "90e9b84e-225c-4c91-a1d4-7d2751d7c7f2"
     assert retirement.GENERATION == "b41dc281-a6f7-4357-948b-88519e8b8146"
     assert retirement.FAILED_ATTEMPTS == ()
+    assert retirement.DEFINITION_REVISION == 67
+    assert retirement.ACTIVE_ROUTE_REVISION == 105
+    assert retirement.ACTIVE_GROUP_REVISION == 132
+    assert retirement.DETACHED_ROUTE_REVISION == 107
+    assert retirement.DETACHED_GROUP_REVISION == 134
     source = PATH.read_text(encoding="utf-8")
-    assert '{"revision": 67, "state": "disabled"}' in source
-    assert 'row["revision"] != 105' in source
-    assert 'row["cutover_group_revision"] != 132' in source
-    assert 'row["revision"] != 107' in source
-    assert 'row["cutover_group_revision"] != 134' in source
+    assert '{"revision": DEFINITION_REVISION, "state": "disabled"}' in source
+    assert 'row["revision"] != ACTIVE_ROUTE_REVISION' in source
+    assert 'row["cutover_group_revision"] != ACTIVE_GROUP_REVISION' in source
+    assert 'row["revision"] != DETACHED_ROUTE_REVISION' in source
+    assert 'row["cutover_group_revision"] != DETACHED_GROUP_REVISION' in source
     assert '"revision": 9, "execution_epoch": 5' in source
 
 
