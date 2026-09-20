@@ -1006,3 +1006,50 @@ def test_by_health_observation_is_read_only_and_exact():
     assert "observer.health.DEFINITION_REVISION = 139" in source
     assert "IsolationLevel.REPEATABLE_READ" in shared
     assert "run_definition" not in source + shared
+
+
+def test_by_saved_snapshot_recovery_is_exact_and_has_no_source_read_or_manual_run():
+    source = (ROOT / "scripts/a0v_by_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "45db7b1e-6463-40f2-bf3c-c4e64ce3fd78"' in source
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 139" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 140" in source
+    assert "recovery.RECOVERY_REVISION = 46" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 141" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 142" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:f00d142e1b579f6452bd7aa57ffdde273454ce2a4ed6a8cf6fe564f1ff0463da"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_by_product_controlled_api_is_pure_http():
+    source = (ROOT / "scripts/a0v_by_product_controlled_api.py").read_text(encoding="utf-8")
+    inherited = (ROOT / "scripts/a0v_bw_product_controlled_api.py").read_text(encoding="utf-8")
+    assert "controlled.load_launcher" in source
+    assert 'AOS_QYH_CRON_ENABLED="false"' in inherited
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in inherited
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in inherited
+
+
+def test_by_worker_and_supervisor_are_single_attempt_bounded():
+    worker = (ROOT / "scripts/a0v_by_snapshot_product_api.py").read_text(encoding="utf-8")
+    wrapper = (ROOT / "scripts/a0v_by_terminal_supervisor.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bw_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert 'worker.TASK = "A0V-BY-SNAPSHOT-WORKER-20260921"' in worker
+    assert 'supervisor.WORKER = ROOT / "scripts/a0v_by_snapshot_product_api.py"' in wrapper
+    assert "len(rows) != 1" in shared
+    assert "budget_seconds: int = 1800" in shared
+    assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
+    assert "run_definition" not in worker + wrapper + shared
+
+
+def test_by_attempt_guard_freezes_exact_terminal_boundary():
+    source = (ROOT / "scripts/a0v_by_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "72876c75-a853-488a-b1e6-4c334b635f91"' in source
+    assert '"state": "failed", "revision": 4' in source
+    assert '"terminalReason": "RECOVERABLE_EXECUTION_EXCEPTION"' in source
+    assert '"terminalErrorType": "IngressJournalConflict"' in source
+    assert '"definitionRevision": 141' in source
+    assert '"definitionState": "enabled"' in source
+    assert '"recoveryRevision": 46' in source
+    assert "revision=198 AND cutover_group_revision=225" in source
+    assert "run_definition" not in source
