@@ -1283,6 +1283,45 @@ def test_ca_worker_and_supervisor_are_single_attempt_bounded():
     assert "len(rows) != 1" in shared
     assert "budget_seconds: int = 1800" in shared
     assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
+
+
+def test_cb_saved_snapshot_recovery_is_exact_and_has_no_source_read_or_manual_run():
+    source = (ROOT / "scripts/a0v_cb_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "0d834ab1-fd2b-4dbc-b9a5-0f0dee712647"' in source
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 148" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 149" in source
+    assert "recovery.RECOVERY_REVISION = 49" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 150" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 151" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:d6549653845e2e3bad2766bc8dbbdf5b43ff9497efc72e455d4d5fa75b25e728"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_cb_product_controlled_api_is_pure_http():
+    source = (ROOT / "scripts/a0v_cb_product_controlled_api.py").read_text(encoding="utf-8")
+    inherited = (ROOT / "scripts/a0v_bw_product_controlled_api.py").read_text(encoding="utf-8")
+    assert "controlled.load_launcher" in source
+    assert 'AOS_QYH_CRON_ENABLED="false"' in inherited
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in inherited
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in inherited
+
+
+def test_cb_worker_and_supervisor_are_single_attempt_bounded():
+    worker = (ROOT / "scripts/a0v_cb_snapshot_product_api.py").read_text(encoding="utf-8")
+    wrapper = (ROOT / "scripts/a0v_cb_terminal_supervisor.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bw_terminal_supervisor.py").read_text(encoding="utf-8")
+    guard = (ROOT / "scripts/a0v_cb_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'worker.TASK = "A0V-CB-SNAPSHOT-WORKER-20260921"' in worker
+    assert 'supervisor.WORKER = ROOT / "scripts/a0v_cb_snapshot_product_api.py"' in wrapper
+    assert 'ATTEMPT_ID = "727af369-a8ce-4500-86a7-1cf412a42cb3"' in guard
+    assert '"definitionRevision": 150' in guard
+    assert '"recoveryRevision": 49' in guard
+    assert "revision=207 AND cutover_group_revision=234" in guard
+    assert "len(rows) != 1" in shared
+    assert "budget_seconds: int = 1800" in shared
+    assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
+    assert "run_definition" not in worker + wrapper + guard
     assert "run_definition" not in worker + wrapper + shared
 
 
