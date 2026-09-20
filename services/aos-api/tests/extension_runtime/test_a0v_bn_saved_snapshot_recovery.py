@@ -1103,3 +1103,50 @@ def test_bz_health_observation_is_read_only_and_exact():
     assert "observer.health.DEFINITION_REVISION = 142" in source
     assert "IsolationLevel.REPEATABLE_READ" in shared
     assert "run_definition" not in source + shared
+
+
+def test_bz_saved_snapshot_recovery_is_exact_and_has_no_source_read_or_manual_run():
+    source = (ROOT / "scripts/a0v_bz_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "ed64db1a-45eb-442e-8f1b-49ed899731dc"' in source
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 142" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 143" in source
+    assert "recovery.RECOVERY_REVISION = 47" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 144" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 145" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:a0e1a232f699d30d97c95cf7143665c6976033b6cf011b55ff783e20bc586142"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_bz_product_controlled_api_is_pure_http():
+    source = (ROOT / "scripts/a0v_bz_product_controlled_api.py").read_text(encoding="utf-8")
+    inherited = (ROOT / "scripts/a0v_bw_product_controlled_api.py").read_text(encoding="utf-8")
+    assert "controlled.load_launcher" in source
+    assert 'AOS_QYH_CRON_ENABLED="false"' in inherited
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in inherited
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in inherited
+
+
+def test_bz_worker_and_supervisor_are_single_attempt_bounded():
+    worker = (ROOT / "scripts/a0v_bz_snapshot_product_api.py").read_text(encoding="utf-8")
+    wrapper = (ROOT / "scripts/a0v_bz_terminal_supervisor.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bw_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert 'worker.TASK = "A0V-BZ-SNAPSHOT-WORKER-20260921"' in worker
+    assert 'supervisor.WORKER = ROOT / "scripts/a0v_bz_snapshot_product_api.py"' in wrapper
+    assert "len(rows) != 1" in shared
+    assert "budget_seconds: int = 1800" in shared
+    assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
+    assert "run_definition" not in worker + wrapper + shared
+
+
+def test_bz_attempt_guard_freezes_exact_terminal_boundary():
+    source = (ROOT / "scripts/a0v_bz_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "b7044a35-43f8-4089-ba79-4da3d92cbf64"' in source
+    assert '"state": "failed", "revision": 4' in source
+    assert '"terminalReason": "RECOVERABLE_EXECUTION_EXCEPTION"' in source
+    assert '"terminalErrorType": "IngressJournalConflict"' in source
+    assert '"definitionRevision": 144' in source
+    assert '"definitionState": "enabled"' in source
+    assert '"recoveryRevision": 47' in source
+    assert "revision=201 AND cutover_group_revision=228" in source
+    assert "run_definition" not in source
