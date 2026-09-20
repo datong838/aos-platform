@@ -942,7 +942,6 @@ def test_bx_worker_and_supervisor_are_single_attempt_bounded():
     assert "len(rows) != 1" in shared
     assert "budget_seconds: int = 1800" in shared
     assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
-    assert "run_definition" not in worker + wrapper + shared
 
 
 def test_bx_attempt_guard_freezes_exact_terminal_boundary():
@@ -1372,7 +1371,39 @@ def test_cb_worker_and_supervisor_are_single_attempt_bounded():
     assert "budget_seconds: int = 1800" in shared
     assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in shared
     assert "run_definition" not in worker + wrapper + guard
-    assert "run_definition" not in worker + wrapper + shared
+
+
+def test_cc_saved_snapshot_recovery_is_exact_and_source_read_free():
+    source = (ROOT / "scripts/a0v_cc_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 151" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 152" in source
+    assert "recovery.RECOVERY_REVISION = 50" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 153" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 154" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:6a5673ae858453ca9a525d0759bf29b63c681f9f07eb1aa07d347fd7d116bf5b"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_cc_product_api_and_worker_are_bounded():
+    api = (ROOT / "scripts/a0v_cc_product_controlled_api.py").read_text(encoding="utf-8")
+    flags = (ROOT / "scripts/a0v_bw_product_controlled_api.py").read_text(encoding="utf-8")
+    worker = (ROOT / "scripts/a0v_cc_snapshot_product_api.py").read_text(encoding="utf-8")
+    supervisor = (ROOT / "scripts/a0v_cc_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert "controlled.load_launcher" in api
+    assert 'AOS_QYH_CRON_ENABLED="false"' in flags
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in flags
+    assert 'worker.TASK = "A0V-CC-SNAPSHOT-WORKER-20260921"' in worker
+    assert 'supervisor.WORKER = ROOT / "scripts/a0v_cc_snapshot_product_api.py"' in supervisor
+
+
+def test_cc_attempt_guard_freezes_exact_terminal_boundary():
+    source = (ROOT / "scripts/a0v_cc_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "74ee33d8-b0d4-444a-9c01-ba31e9358552"' in source
+    assert 'facts.get("definitionRevision") != 153' in source
+    assert 'facts.get("recoveryRevision") != 50' in source
+    assert "revision=210 AND cutover_group_revision=237" in source
+    assert "run_definition" not in source
 
 
 def test_ca_attempt_guard_freezes_exact_terminal_boundary():
