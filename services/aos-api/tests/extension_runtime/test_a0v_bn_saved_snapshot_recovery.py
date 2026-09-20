@@ -211,3 +211,68 @@ def test_bp_health_observation_is_read_only_and_exact():
     assert "health.DEFINITION_REVISION = 121" in source
     assert "return health.snapshot()" in source
     assert "run_definition" not in source
+
+
+def test_bp_pure_http_profile_disables_all_in_process_background_execution():
+    source = (ROOT / "scripts/a0v_bp_product_controlled_api.py").read_text(encoding="utf-8")
+    assert 'AOS_QYH_CRON_ENABLED="false"' in source
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in source
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in source
+    assert "bm-runtime-credentials/runtime-host-identities.json" in source
+    assert "bn-canonical-alias-registry/signed-bundles" in source
+    assert "run_definition" not in source
+
+
+def test_bp_saved_snapshot_recovery_uses_exact_unconsumed_revision_chain():
+    source = (ROOT / "scripts/a0v_bp_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_DEFINITION_REVISION = 121' in source
+    assert 'recovery.TRANSFERRED_DEFINITION_REVISION = 122' in source
+    assert 'recovery.RECOVERY_REVISION = 40' in source
+    assert 'recovery.ENABLED_DEFINITION_REVISION = 123' in source
+    assert 'recovery.PAUSED_DEFINITION_REVISION = 124' in source
+    assert 'recovery.PREDECESSOR_RECOVERY_STATE = "bo-saved-snapshot-recovery-v1"' in source
+    assert "recovery.snapshot.baseline.setup = _setup" in source
+    assert "runtime_host.DEFAULT_CREDENTIALS = bp_replacement.canonical.CREDENTIALS" in source
+    assert "product_api.BUNDLE_ROOT = bp_replacement.replacement.BUNDLE_ROOT" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:39ca604ec957db0f8a7b20fedecd11f25e3ed8d60e3cc0feea56d6568d8cc2ec"' in source
+    assert "recovery.transfer = transfer" in source
+    assert 'or recovery_ref.get("revision") != 39' in source
+    assert "run_definition" not in source
+
+
+def test_bp_terminal_supervisor_allows_only_one_natural_attempt():
+    source = (ROOT / "scripts/a0v_bp_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert "successor.BP_ID, successor.BP_GENERATION, OPERATION_KEY" in source
+    assert 'raise RuntimeError("BP attempt must be zero before supervisor starts worker")' in source
+    assert '"SAFE_BLOCKED_MULTIPLE_ATTEMPTS"' in source
+    assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in source
+    assert 'parser.add_argument("--budget-seconds", type=int, default=1800)' in source
+    assert "successor.setup()" in source
+    assert 'WORKER = ROOT / "scripts/a0v_bp_snapshot_product_api.py"' in source
+    assert "result = classify(read_rows(), budget_seconds)" in source
+    assert 'if worker.poll() is not None:' in source
+    assert source.index("result = classify(read_rows(), budget_seconds)") < source.index(
+        'raise RuntimeError(f"BP worker exited before attempt boundary: {worker.returncode}")')
+    assert "run_definition" not in source
+
+
+def test_bp_snapshot_worker_uses_exact_bp_lease_and_state():
+    source = (ROOT / "scripts/a0v_bp_snapshot_product_api.py").read_text(encoding="utf-8")
+    assert "successor.setup()" in source
+    assert 'worker.STATE = successor.STATE.parent / "snapshot-worker"' in source
+    assert 'worker.TASK = "A0V-BP-SNAPSHOT-WORKER-20260920"' in source
+    assert "worker.main()" in source
+    assert "run_definition" not in source
+
+
+def test_bp_attempt_guard_freezes_exact_single_terminal_failure():
+    source = (ROOT / "scripts/a0v_bp_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "051397ad-7027-4ee5-9d4c-f32374841cd9"' in source
+    assert '"attemptCount": 1' in source
+    assert '"state": "failed", "revision": 5' in source
+    assert '"terminalErrorType": "IngressJournalConflict"' in source
+    assert '"definitionRevision": 124' in source
+    assert '"definitionState": "disabled"' in source
+    assert '"recoveryRevision": 40' in source
+    assert '"outcome": "FAILED_FREEZE_BOUNDARY"' in source
+    assert "run_definition" not in source
