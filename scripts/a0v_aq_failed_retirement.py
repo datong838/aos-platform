@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Any
+from uuid import UUID
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +58,28 @@ def load(name: str) -> dict[str, Any]:
     if not path.is_file() or path.stat().st_mode & 0o777 != 0o600:
         raise ValueError(f"private {name} result required")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def recover_completed_intent(path: Path, operation_id: str) -> bool:
+    """Preserve the exact delivery intent when commit preceded final audit."""
+    host_intent = {"operationId": operation_id, "claimedByHost": True,
+                   "resendDisable": False}
+    if not path.exists():
+        freeze(path, host_intent)
+        return True
+    intent = json.loads(path.read_text(encoding="utf-8"))
+    if intent == host_intent:
+        return True
+    if (type(intent) is not dict or set(intent) != {"operationId", "eventId", "resendDisable"}
+            or intent.get("operationId") != operation_id or intent.get("resendDisable") is not False
+            or type(intent.get("eventId")) is not str):
+        raise ValueError("immutable AQ retirement intent differs")
+    try:
+        if str(UUID(intent["eventId"])) != intent["eventId"]:
+            raise ValueError("immutable AQ retirement intent differs")
+    except (TypeError, ValueError) as error:
+        raise ValueError("immutable AQ retirement intent differs") from error
+    return False
 
 
 def connect():
@@ -234,14 +257,13 @@ def process_disable() -> dict[str, Any]:
         completed = None
     if completed is not None:
         intent_path = STATE / "process-disable-intent.json"
-        intent = {"operationId": operation_id, "claimedByHost": True, "resendDisable": False}
-        freeze_or_match(intent_path, intent)
+        claimed_by_host = recover_completed_intent(intent_path, operation_id)
         return {"outcome": "AQ_NINE_ROUTES_DETACHED", "operationId": operation_id,
-                "claimedByHost": True, "resendDisable": False, "state": completed}
+                "claimedByHost": claimed_by_host, "resendDisable": False,
+                "recoveredAfterCommit": True, "state": completed}
     snapshot("accepted", operation_id)
     setup()
     current = profile()
-    from uuid import UUID
     from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
     from aos_api.ecommerce_growth_lifecycle import EcommerceGrowthDisableDependent
     from aos_api.extension_runtime.current_permission import CurrentControlPermission

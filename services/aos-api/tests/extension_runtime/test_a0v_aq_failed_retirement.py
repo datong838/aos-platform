@@ -1,8 +1,19 @@
+import importlib.util
+import json
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[4]
 SCRIPT = ROOT / "scripts/a0v_aq_failed_retirement.py"
+
+
+def load_module():
+    spec = importlib.util.spec_from_file_location("a0v_aq_failed_retirement_test", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_failed_aq_retirement_is_exact_and_single_delivery():
@@ -18,3 +29,24 @@ def test_failed_aq_retirement_is_exact_and_single_delivery():
     assert 'operation_kind="disable", installation_id=AQ_ID' in source
     assert '"resendDisable": False' in source
     assert "run_definition" not in source
+
+
+def test_completed_disable_preserves_local_claim_intent(tmp_path):
+    module = load_module()
+    path = tmp_path / "intent.json"
+    operation_id = "6db4b69b-0dbf-4a77-ac71-23cef91c6f50"
+    intent = {"operationId": operation_id,
+              "eventId": "89c74783-9aff-4afd-8368-834db39dff21",
+              "resendDisable": False}
+    path.write_text(json.dumps(intent), encoding="utf-8")
+    assert module.recover_completed_intent(path, operation_id) is False
+    assert json.loads(path.read_text(encoding="utf-8")) == intent
+
+
+def test_completed_disable_rejects_changed_local_claim_intent(tmp_path):
+    module = load_module()
+    path = tmp_path / "intent.json"
+    path.write_text(json.dumps({"operationId": "wrong", "eventId": "wrong",
+                                "resendDisable": False}), encoding="utf-8")
+    with pytest.raises(ValueError, match="immutable AQ retirement intent differs"):
+        module.recover_completed_intent(path, "6db4b69b-0dbf-4a77-ac71-23cef91c6f50")
