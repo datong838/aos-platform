@@ -10,7 +10,10 @@ import a0v_av_replacement_recovery as replacement
 
 
 ROOT = Path(__file__).resolve().parents[1]
-replacement.STATE = ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline/replacement-bm"
+RECOVERY = ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline"
+TRUST_STATE = RECOVERY / "bm-trust-root-rotation"
+CREDENTIALS = RECOVERY / "bm-runtime-credentials/runtime-host-identities.json"
+replacement.STATE = ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline/replacement-bm-activation"
 replacement.AV_DIR = replacement.STATE / "bm"
 replacement.AU_ID = "ac9b3ec8-68ad-4e05-9f30-b2f8f6a473bc"
 replacement.AU_GENERATION = "116d12fc-93bc-4071-a973-fdc6830ea8b1"
@@ -25,6 +28,36 @@ replacement.DEFINITION_REVISION = 118
 replacement.PREDECESSOR_BINDING_REVISION = 8
 replacement.PREDECESSOR_EXECUTION_EPOCH = 4
 replacement.INSTALLATION_LABEL = "bm"
+replacement.BUNDLE_ROOT = TRUST_STATE / "signed-bundles"
+replacement.VERSIONS = {
+    "domain.ecommerce.core": "1.4.1",
+    "platform.ecommerce.niushop": "1.23.1",
+    "solution.ecommerce.growth": "1.10.1",
+    "solution.ecommerce.operations-base": "1.2.1",
+}
+
+
+_base_load_profile = replacement.load_profile
+
+
+def _load_profile():
+    profile = _base_load_profile()
+    profile.TRUST_STATE = TRUST_STATE
+    profile.BUNDLE_ROOT = replacement.BUNDLE_ROOT
+    profile.VERSIONS = dict(replacement.VERSIONS)
+    original_load = profile._load
+
+    def load(name: str):
+        module = original_load(name)
+        if name == "a0v_ecommerce_runtime_host":
+            module.DEFAULT_CREDENTIALS = CREDENTIALS
+        return module
+
+    profile._load = load
+    return profile
+
+
+replacement.load_profile = _load_profile
 
 
 def run(action: str) -> dict:

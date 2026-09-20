@@ -871,6 +871,7 @@ def publish_canonical_releases(*, connect_factory: Any, state_dir: Path) -> dict
 def create_approved_first_installation(
     *, connect_factory: Any, state_dir: Path, core_version: str = "1.1.0",
     adapter_version: str = "1.1.0", growth_version: str = "1.4.0",
+    operations_version: str = "1.2.0",
     idempotency_prefix: str = INSTALL_IDEMPOTENCY_PREFIX,
     current_installation_ref: Any | None = None
 ) -> dict[str, Any]:
@@ -933,7 +934,7 @@ def create_approved_first_installation(
                     {
                         "publisher": "aos",
                         "id": "solution.ecommerce.operations-base",
-                        "version": "1.2.0",
+                        "version": operations_version,
                     },
                 ],
                 "platformApiVersion": "1.7.0",
@@ -959,7 +960,7 @@ def create_approved_first_installation(
             ("domain.ecommerce.core", core_version),
             ("platform.ecommerce.niushop", adapter_version),
             ("solution.ecommerce.growth", growth_version),
-            ("solution.ecommerce.operations-base", "1.2.0"),
+            ("solution.ecommerce.operations-base", operations_version),
         }
         coordinates = {(item.id, item.version) for item in lock.payload.resolved}
         if coordinates != expected_coordinates:

@@ -145,6 +145,7 @@ def create_av(profile) -> dict:
         state_dir=profile.TRUST_STATE, core_version=VERSIONS["domain.ecommerce.core"],
         adapter_version=VERSIONS["platform.ecommerce.niushop"],
         growth_version=VERSIONS["solution.ecommerce.growth"],
+        operations_version=VERSIONS["solution.ecommerce.operations-base"],
         idempotency_prefix=PREFIX, current_installation_ref=predecessor)
     if result["installationState"] != "approved":
         raise ValueError("approved AV replacement required")
