@@ -92,3 +92,18 @@ def test_pre_stopped_host_and_duplicate_loop_never_start_extra_thread():
         with pytest.raises(RuntimeError,match='already serving'):
             await worker.serve(asyncio.Event(),host_ready=lambda:True,interval=.01)
     asyncio.run(scenario())
+
+
+def test_unknown_tick_stops_before_an_automatic_retry():
+    async def scenario():
+        worker=object.__new__(PipelineSnapshotScheduleWorker)
+        calls=[]
+        def tick(**_):
+            calls.append(1)
+            return [{'status':'unknown','errorCode':'SNAPSHOT_EXECUTION_UNCONFIRMED'}]
+        worker.tick=tick
+        await worker.serve(asyncio.Event(),host_ready=lambda:True,interval=.01)
+        assert calls==[1]
+        assert worker.last_error=='SNAPSHOT_TICK_UNCONFIRMED'
+        assert worker.status=='STOPPED'
+    asyncio.run(scenario())

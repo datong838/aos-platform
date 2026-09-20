@@ -63,6 +63,37 @@ def test_successor_family_requires_authority_admission_and_same_read_semantics(a
     assert state['calls']==1
 
 
+def test_successor_context_allows_only_digest_identical_alias_revisions(authority_case):
+    runtime,_,command,state,_,authority,args=authority_case
+    claims=recovered_claims(authority_case);ref,run=args['bindings'][0]
+    with runtime._transaction(command['scope']) as conn:
+        admission=claims._guard_schedule(conn,scope=command['scope'],run_id=run,
+            control_ref=ref,actor=command['actor'])
+        row=conn.execute('''SELECT r.* FROM pipeline_controlled_source_claim c
+            JOIN pipeline_runtime_control_revision r ON r.org_id=c.org_id AND r.project_id=c.project_id
+                AND r.control_id=c.control_id AND r.revision=c.control_revision
+            WHERE c.org_id=%s AND c.project_id=%s AND c.run_id=%s''',
+            (*command['scope'].key,run)).fetchone()
+        original=decode_control_row(row)
+        current=next(draft for current_ref,draft,_ in authority.run_current(
+            conn,**args,execute=lambda value:value.execution.group).members if current_ref==ref)
+        changed={field:getattr(current,field).model_copy(update={'revision':'1.23.2'})
+            for field in ('mapping_ref','schema_ref','masking_policy_ref')}
+        alias=current.model_copy(update=changed)
+        successor_ref=PipelineExactRef(resourceType='PipelineRuntimeControlRevision',
+            resourceId='pipeline-control-00000000-0000-0000-0000-000000000001',revision=1,
+            contentHash='sha256:'+'0'*64)
+        proof=_SavedRecoveryAdmission(admission.original_controls,True)
+        claimed=claims.read_saved_current(conn,scope=command['scope'],run_id=run,
+            control_ref=ref,actor=command['actor'])
+        _validate_saved_recovery_context(proof,claimed,successor_ref,alias,original)
+        bad=alias.model_copy(update={'mapping_ref':alias.mapping_ref.model_copy(
+            update={'content_hash':'sha256:'+'f'*64})})
+        with pytest.raises(RuntimeConflict,match='context'):
+            _validate_saved_recovery_context(proof,claimed,successor_ref,bad,original)
+    assert state['calls']==1
+
+
 def test_recovery_instance_cannot_reserve_prepare_or_adopt_another_run(authority_case):
     runtime,owner,command,state,receipt,authority,args=authority_case
     claims=recovered_claims(authority_case)

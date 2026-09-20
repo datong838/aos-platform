@@ -131,6 +131,15 @@ class PipelineSnapshotScheduleDefinitionOwner:
             intent='transfer_saved_recovery',settings=None,bindings=bindings,
             expected_ref=expected_ref,idempotency_key=idempotency_key,transfer=transfer)
 
+    def _current_transfer_policy(self,conn,*,scope,bindings,prior):
+        """Resolve the predecessor policy path from the target release under its group guard."""
+        previous=PipelineExactRef.model_validate(prior['policyRef'])
+        def resolve(group):
+            return self._groups._resolve_exported_ref(conn,scope,group,
+                resource_type='SnapshotRelationshipPolicy',path=previous.resource_id)
+        return self._groups._groups.run_current(conn,scope=scope,
+            refs=tuple(b.control_ref for b in bindings),actor=bindings[0].actor,execute=resolve)
+
     @staticmethod
     def _released_retirement_allowed(conn, *, scope, installation_id, actor):
         """Allow an admin to retire disabled configuration left by an uninstalled package."""
@@ -214,6 +223,8 @@ class PipelineSnapshotScheduleDefinitionOwner:
                     settings['members']=[_member(b) for b in bindings]
                     self._require_saved_recovery_transfer(conn,scope=scope,prior=prior,bindings=bindings,
                         group_id=transfer['groupId'],expected_recovery_ref=transfer['expectedRecoveryRef'])
+                    settings['policyRef']=_wire(self._current_transfer_policy(
+                        conn,scope=scope,bindings=bindings,prior=prior))
             if (bindings[0].installation_id,bindings[0].generation)!=(installation,generation):
                 raise ValueError('configuration cannot transfer installation authority')
             def save(_current=None):

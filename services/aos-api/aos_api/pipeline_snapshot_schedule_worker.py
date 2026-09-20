@@ -120,9 +120,13 @@ class PipelineSnapshotScheduleWorker:
                     await asyncio.wait({active},timeout=.05)
                 if cancel.is_set():break
                 try:
-                    self.last_outcomes=active.result();self.last_error=None
+                    self.last_outcomes=active.result()
+                    if any(item.get('status')=='unknown' for item in self.last_outcomes):
+                        self.last_error='SNAPSHOT_TICK_UNCONFIRMED'
+                        break
+                    self.last_error=None
                 except Exception:
-                    self.last_error='SNAPSHOT_TICK_UNCONFIRMED'
+                    self.last_error='SNAPSHOT_TICK_UNCONFIRMED';break
                 active=None;self.status='IDLE'
                 try:await asyncio.wait_for(stop.wait(),timeout=interval)
                 except TimeoutError:pass

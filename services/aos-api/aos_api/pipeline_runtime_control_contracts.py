@@ -53,6 +53,15 @@ class PipelineExactRef(InvestigationExactRef):
         return self
 
 
+def validate_digest_identical_alias_ref(original, current) -> None:
+    """Allow only a canonical alias revision over the same immutable artifact."""
+    before = PipelineExactRef.model_validate(original)
+    after = PipelineExactRef.model_validate(current)
+    if ((before.resource_type, before.resource_id, before.content_hash)
+            != (after.resource_type, after.resource_id, after.content_hash)):
+        raise ValueError('successor recovery artifact semantics differ')
+
+
 class PipelinePackageRef(AipContractModel):
     model_config = _FROZEN
     publisher: str = Field(min_length=1, max_length=160, pattern=BUNDLE_ID_PATTERN)

@@ -248,6 +248,37 @@ def test_saved_recovery_transfer_uses_dedicated_gate(definition_case,monkeypatch
     assert owner.read(conn,scope=args['scope'],definition_id=args['definition_id'])==first
 
 
+def test_saved_recovery_resolves_same_policy_path_from_target_release():
+    old=PipelineExactRef(resourceType='SnapshotRelationshipPolicy',
+        resourceId='content/policies/native.json',revision='1.0.0',contentHash='sha256:'+'1'*64)
+    new=old.model_copy(update={'revision':'2.0.0','content_hash':'sha256:'+'2'*64})
+    control_ref=PipelineExactRef(resourceType='PipelineRuntimeControlRevision',
+        resourceId='pipeline-control-'+str(uuid4()),revision=1,contentHash='sha256:'+'3'*64)
+    binding=NS(control_ref=control_ref,actor='owner')
+    current_group=object()
+
+    class CurrentGroups:
+        def run_current(self,_conn,**kwargs):
+            assert kwargs['refs']==(control_ref,)
+            assert kwargs['actor']=='owner'
+            return kwargs['execute'](current_group)
+
+    class Policies:
+        _groups=CurrentGroups()
+        def _resolve_exported_ref(self,_conn,scope,group,*,resource_type,path):
+            assert scope.key==('org-org','dev-project')
+            assert group is current_group
+            assert resource_type=='SnapshotRelationshipPolicy'
+            assert path==old.resource_id
+            return new
+
+    owner=object.__new__(PipelineSnapshotScheduleDefinitionOwner)
+    owner._groups=Policies()
+    result=owner._current_transfer_policy(object(),scope=NS(key=('org-org','dev-project')),
+        bindings=(binding,),prior={'policyRef':old.model_dump(mode='json',by_alias=True)})
+    assert result==new
+
+
 def test_saved_recovery_accepts_only_exact_finite_active_replacement_chain():
     scope=NS(key=('org-org','dev-project'))
     old,intermediate,new=(str(uuid4()) for _ in range(3))

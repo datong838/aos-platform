@@ -7,7 +7,8 @@ from psycopg.rows import dict_row
 from aos_api.ec_ingress_journal import IngressJournal
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.pipeline_control_errors import SourceCallBudgetExhausted
-from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
+from aos_api.pipeline_runtime_control_contracts import (PipelineExactRef,
+    validate_digest_identical_alias_ref)
 from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner, _ref_identity, decode_control_row
 from aos_api.tenant_scope import TenantScope
 
@@ -43,6 +44,7 @@ class _SavedRecoveryAdmission:
 
 
 def _validate_saved_recovery_context(admission,record,ref,draft,original):
+    alias_refs=set()
     if (original.ref!=record.control_ref or original.actor!=record.actor
             or (record.installation_id,record.generation,record.pipeline_id)!=(
                 original.draft.installation_ref.installation_id,original.draft.generation,
@@ -60,8 +62,16 @@ def _validate_saved_recovery_context(admission,record,ref,draft,original):
             raise RuntimeConflict('saved recovery context differs')
         excluded={'not_before','expires_at','source_selection_ref','installation_ref',
             'generation','execution_epoch','configuration_ref','package_ref'}
+        alias_refs={'mapping_ref','schema_ref','masking_policy_ref'}
+        excluded|=alias_refs
     if original.draft.model_dump(mode='json',exclude=excluded)!=draft.model_dump(mode='json',exclude=excluded):
         raise RuntimeConflict('saved recovery context differs')
+    try:
+        for field in alias_refs:
+            validate_digest_identical_alias_ref(
+                getattr(original.draft,field),getattr(draft,field))
+    except ValueError as error:
+        raise RuntimeConflict('saved recovery context differs') from error
 
 
 def _decode(row):

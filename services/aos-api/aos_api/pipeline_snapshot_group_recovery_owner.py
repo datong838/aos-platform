@@ -13,7 +13,8 @@ from aos_api.pipeline_runtime_control_owner import decode_control_row
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
 from aos_api.pipeline_snapshot_group_completion import PipelineSnapshotGroupCompletion
 from aos_api.pipeline_snapshot_group_recovery_contracts import (exact_saved_recovery_transfer_request,
-    validate_saved_group_control_renewal,validate_saved_group_successor_transfer)
+    validate_saved_group_control_renewal,validate_saved_group_policy_transfer,
+    validate_saved_group_successor_transfer)
 from aos_api.pipeline_snapshot_group_recovery_receipt import read_recovery_receipt,recovery_body,decode_recovery_receipt
 from aos_api.pipeline_snapshot_group_saved_facts import SnapshotSavedFactsReader
 from aos_api.pipeline_snapshot_schedule_claim import _group_id,_member
@@ -75,8 +76,14 @@ class PipelineSnapshotGroupRecoveryOwner:
                     (*scope.key,identifier,body['revision'])).fetchone()
                 transfer_authority=(row is not None and exact_saved_recovery_transfer_request(row['request'],scope=scope,
                     current=body,group_id=group_id,recovery_ref=recovery,actor=actor))
-            if (body['state']=='retired' or any(body[k]!=original[k] for k in
-                    ('executor','cron','timezone','policyRef')) or (transferred and not transfer_authority)):
+            policy_transfer=False
+            if transferred and transfer_authority:
+                validate_saved_group_policy_transfer(original['policyRef'],body['policyRef'])
+                policy_transfer=True
+            scope_drift=any(body[k]!=original[k] for k in ('executor','cron','timezone'))
+            policy_drift=body['policyRef']!=original['policyRef'] and not policy_transfer
+            if (body['state']=='retired' or scope_drift or policy_drift
+                    or (transferred and not transfer_authority)):
                 raise ValueError('recovery definition business scope differs')
             executor=original['executor']
             if self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,

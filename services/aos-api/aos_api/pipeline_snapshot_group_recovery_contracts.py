@@ -1,8 +1,17 @@
 """Saved-input renewal differences only: validation never grants execution."""
 from aos_api.asset_registry.canonical_json import canonical_sha256
-from aos_api.pipeline_runtime_control_contracts import PipelineExactRef,PipelineRuntimeControlDraft
+from aos_api.pipeline_runtime_control_contracts import (PipelineExactRef,PipelineRuntimeControlDraft,
+    validate_digest_identical_alias_ref)
 from aos_api.pipeline_runtime_control_owner import RuntimeControlRecord,build_control_payload,_ref_identity
 from aos_api.source_readiness_contracts import CANONICAL_QYH_PIPELINE_IDS
+
+
+def validate_saved_group_policy_transfer(original,current):
+    """Permit only the same exported policy path resolved from a successor release."""
+    before=PipelineExactRef.model_validate(original)
+    after=PipelineExactRef.model_validate(current)
+    if (before.resource_type,before.resource_id)!=(after.resource_type,after.resource_id):
+        raise ValueError('successor recovery policy family differs')
 
 
 def _records(values):
@@ -67,8 +76,9 @@ def validate_saved_group_successor_transfer(original,current):
     this comparison only permits those replacement fields and the fresh window.
     """
     old,new=_records(original),_records(current)
+    alias_refs={'mapping_ref','schema_ref','masking_policy_ref'}
     excluded={'not_before','expires_at','source_selection_ref','installation_ref',
-        'generation','execution_epoch','configuration_ref','package_ref'}
+        'generation','execution_epoch','configuration_ref','package_ref'}|alias_refs
     for pipeline in CANONICAL_QYH_PIPELINE_IDS:
         before,after=old[pipeline],new[pipeline]
         if before.actor!=after.actor:
@@ -76,6 +86,9 @@ def validate_saved_group_successor_transfer(original,current):
         if (before.draft.model_dump(mode='json',exclude=excluded)
                 !=after.draft.model_dump(mode='json',exclude=excluded)):
             raise ValueError('successor recovery read semantics differ')
+        for field in alias_refs:
+            validate_digest_identical_alias_ref(
+                getattr(before.draft,field),getattr(after.draft,field))
 
 
 def exact_saved_recovery_transfer_request(request,*,scope,current,group_id,recovery_ref,actor):

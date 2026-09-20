@@ -10,7 +10,8 @@ from aos_api.pipeline_runtime_control_contracts import PipelineExactRef,Pipeline
 from aos_api.pipeline_runtime_control_owner import RuntimeControlRecord,build_control_payload
 from aos_api.source_readiness_contracts import CANONICAL_QYH_PIPELINE_IDS
 from aos_api.pipeline_snapshot_group_recovery_contracts import (exact_saved_recovery_transfer_request,
-    validate_saved_group_control_renewal,validate_saved_group_successor_transfer)
+    validate_saved_group_control_renewal,validate_saved_group_policy_transfer,
+    validate_saved_group_successor_transfer)
 
 
 def record(draft,*,identity=None,revision=1,previous=None,actor='test-executor'):
@@ -135,6 +136,22 @@ def test_replacement_controls_may_change_runtime_identity_but_not_read_semantics
         validate_saved_group_successor_transfer(old,(record(drift),)+replacement[1:])
 
 
+def test_replacement_controls_allow_only_digest_identical_artifact_alias_revisions(controls):
+    old,_=controls;replacement=[]
+    for item in old:
+        updates={'generation':'77777777-7777-4777-8777-777777777777',
+            'execution_epoch':item.draft.execution_epoch+1}
+        for field in ('mapping_ref','schema_ref','masking_policy_ref'):
+            updates[field]=getattr(item.draft,field).model_copy(update={'revision':'2.0.0'})
+        replacement.append(record(item.draft.model_copy(update=updates)))
+    replacement=tuple(replacement)
+    assert validate_saved_group_successor_transfer(old,replacement) is None
+    bad_ref=replacement[0].draft.mapping_ref.model_copy(update={'content_hash':'sha256:'+'0'*64})
+    bad=record(replacement[0].draft.model_copy(update={'mapping_ref':bad_ref}))
+    with pytest.raises(ValueError,match='artifact semantics'):
+        validate_saved_group_successor_transfer(old,(bad,)+replacement[1:])
+
+
 def test_transfer_request_must_match_every_saved_authority_field():
     class Scope:org_id='org-org';project_id='dev-project'
     ref={'resourceType':'SnapshotScheduleDefinitionRevision','resourceId':'snapshot-schedule-d',
@@ -149,3 +166,14 @@ def test_transfer_request_must_match_every_saved_authority_field():
         group_id='g',recovery_ref=recovery,actor='executor')
     assert not exact_saved_recovery_transfer_request(request|{'settings':{}},scope=Scope(),current=current,
         group_id='g',recovery_ref=recovery,actor='executor')
+
+
+def test_successor_policy_may_advance_only_the_same_exported_path():
+    old={'resourceType':'SnapshotRelationshipPolicy','resourceId':'content/policies/native.json',
+        'revision':'1.0.0','contentHash':'sha256:'+'1'*64}
+    new=old|{'revision':'2.0.0','contentHash':'sha256:'+'2'*64}
+    assert validate_saved_group_policy_transfer(old,new) is None
+    with pytest.raises(ValueError,match='policy family'):
+        validate_saved_group_policy_transfer(old,new|{'resourceId':'content/policies/other.json'})
+    with pytest.raises(ValueError,match='policy family'):
+        validate_saved_group_policy_transfer(old,new|{'resourceType':'OtherPolicy'})
