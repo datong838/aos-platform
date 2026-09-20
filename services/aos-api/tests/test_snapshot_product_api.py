@@ -13,8 +13,8 @@ def load():
 
 def test_profile_keeps_single_external_host_and_original_defaults():
     m=load();p=m.load_launcher()
-    assert m.TASK=='A0V-BJ-SNAPSHOT-WORKER-20260920'
-    assert str(m.STATE).endswith('.aos-recovery-20260920/state/q-advisor-baseline/replacement-bj/snapshot-worker')
+    assert m.TASK=='A0V-BK-SNAPSHOT-WORKER-20260920'
+    assert str(m.STATE).endswith('.aos-recovery-20260920/state/q-advisor-baseline/replacement-bk/snapshot-worker')
     assert p.API_FLAGS['AOS_SNAPSHOT_GROUP_WORKER_ENABLED']=='true'
     assert p.API_FLAGS['AOS_SNAPSHOT_GROUP_WORKER_TOPOLOGY']=='independent'
     for key in ('AOS_EXTENSION_RUNTIME_HOST_ENABLED','AOS_QYH_CRON_ENABLED','AOS_AIP_LOGIC_AUTOMATION_ENABLED'):
