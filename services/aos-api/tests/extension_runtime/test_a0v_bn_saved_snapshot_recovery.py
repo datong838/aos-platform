@@ -276,3 +276,60 @@ def test_bp_attempt_guard_freezes_exact_single_terminal_failure():
     assert '"recoveryRevision": 40' in source
     assert '"outcome": "FAILED_FREEZE_BOUNDARY"' in source
     assert "run_definition" not in source
+
+
+def test_bp_terminal_retirement_uses_exact_single_failed_attempt():
+    source = (ROOT / "scripts/a0v_bp_terminal_retirement.py").read_text(encoding="utf-8")
+    assert "retirement.AR_ID = successor.BP_ID" in source
+    assert '"051397ad-7027-4ee5-9d4c-f32374841cd9", 5, "failed"' in source
+    assert '"RECOVERABLE_EXECUTION_EXCEPTION", "IngressJournalConflict"' in source
+    assert "retirement.DEFINITION_REVISION = 124" in source
+    assert "retirement.ACTIVE_ROUTE_REVISION = 171" in source
+    assert "retirement.DETACHED_ROUTE_REVISION = 173" in source
+    assert "retirement.DETACHED_GROUP_REVISION = 200" in source
+    assert "retirement.profile = profile" in source
+    assert "a0v_ar_released_retirement" in source
+    assert "run_definition" not in source
+
+
+def test_bq_replacement_uses_exact_bp_detach():
+    source = (ROOT / "scripts/a0v_bq_replacement_recovery.py").read_text(encoding="utf-8")
+    assert 'replacement.AU_ID = "17ba9792-9f24-42e4-9557-4d84547c7d97"' in source
+    assert 'replacement.AU_DISABLE_OPERATION = "90021097-2b72-4ecc-94dc-54dd571e1bfd"' in source
+    assert 'replacement.AU_DETACH_RECEIPT = "ae6695f9-42bf-41a3-a09d-0f3c092e4793"' in source
+    assert "replacement.PREDECESSOR_ROUTE_REVISION = 173" in source
+    assert "replacement.PREDECESSOR_GROUP_REVISION = 200" in source
+    assert "replacement.DEFINITION_REVISION = 124" in source
+    assert "replacement.PREDECESSOR_BINDING_REVISION = 9" in source
+    assert "replacement.PREDECESSOR_EXECUTION_EPOCH = 5" in source
+    assert "run_definition" not in source
+
+
+def test_bq_registration_targets_exact_detached_bp():
+    source = (ROOT / "scripts/a0v_bq_successor_business.py").read_text(encoding="utf-8")
+    assert 'successor.AV_ID = "4faaf3b7-2d10-4961-99db-5bf52b7b8a63"' in source
+    assert 'successor.AU_ID = "17ba9792-9f24-42e4-9557-4d84547c7d97"' in source
+    assert 'successor.DETACH = "ae6695f9-42bf-41a3-a09d-0f3c092e4793"' in source
+    assert "successor.PREDECESSOR_ROUTE_REVISION = 173" in source
+    assert "successor.PREDECESSOR_GROUP_REVISION = 200" in source
+    assert 'os.environ["AOS_ECOMMERCE_REGISTRATION_CREDENTIAL_FILE"]' in source
+    assert "run_definition" not in source
+
+
+def test_bq_cutover_advances_exact_bp_group_once():
+    source = (ROOT / "scripts/a0v_bq_successor_cutover.py").read_text(encoding="utf-8")
+    assert 'cutover.OPERATION = "fc19b7bd-d506-4e85-a528-a3b0ce9e6ff4"' in source
+    assert "cutover.PREDECESSOR_GROUP_REVISION = 200" in source
+    assert 'cutover.PREFIX = "a0v-qyh-clean-generation-bq-cutover-v1"' in source
+    assert "a0v_bq_successor_business" in source
+    assert "run_definition" not in source
+
+
+def test_bq_health_observation_is_read_only_and_exact():
+    source = (ROOT / "scripts/a0v_bq_health_observation.py").read_text(encoding="utf-8")
+    assert 'health.OPERATION = "8ede7aca-fcb4-47ba-9493-ea917c334fb1"' in source
+    assert "health.ROUTE_REVISION = 174" in source
+    assert "health.GROUP_REVISION = 201" in source
+    assert "health.DEFINITION_REVISION = 124" in source
+    assert "return health.snapshot()" in source
+    assert "run_definition" not in source
