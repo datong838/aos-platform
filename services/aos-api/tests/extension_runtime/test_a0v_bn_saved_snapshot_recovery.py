@@ -333,3 +333,18 @@ def test_bq_health_observation_is_read_only_and_exact():
     assert "health.DEFINITION_REVISION = 124" in source
     assert "return health.snapshot()" in source
     assert "run_definition" not in source
+
+
+def test_bq_saved_snapshot_profile_and_revision_chain_are_exact():
+    api = (ROOT / "scripts/a0v_bq_product_controlled_api.py").read_text(encoding="utf-8")
+    source = (ROOT / "scripts/a0v_bq_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'AOS_QYH_CRON_ENABLED="false"' in api
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in api
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in api
+    assert 'recovery.PREDECESSOR_DEFINITION_REVISION = 124' in source
+    assert 'recovery.TRANSFERRED_DEFINITION_REVISION = 125' in source
+    assert 'recovery.RECOVERY_REVISION = 41' in source
+    assert 'recovery.ENABLED_DEFINITION_REVISION = 126' in source
+    assert 'recovery.PAUSED_DEFINITION_REVISION = 127' in source
+    assert 'or recovery_ref.get("revision") != 40' in source
+    assert "run_definition" not in api + source
