@@ -721,3 +721,48 @@ def test_bv_health_observation_is_read_only_and_exact():
     assert "health.DEFINITION_REVISION = 130" in source
     assert "IsolationLevel.REPEATABLE_READ" in source
     assert "run_definition" not in source
+
+
+def test_bv_saved_snapshot_recovery_is_exact_and_has_no_source_read_or_manual_run():
+    source = (ROOT / "scripts/a0v_bv_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "d1dcf5c2-f6ff-48b2-b6f1-fb05d17b7895"' in source
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 130" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 131" in source
+    assert "recovery.RECOVERY_REVISION = 43" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 132" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 133" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:2f137e718e768aa98116af8dfa8c28a5eb66d2f3270fe8ac4c1f87b16d7cd963"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_bv_product_controlled_api_is_pure_http():
+    source = (ROOT / "scripts/a0v_bv_product_controlled_api.py").read_text(encoding="utf-8")
+    assert 'AOS_QYH_CRON_ENABLED="false"' in source
+    assert 'AOS_SNAPSHOT_GROUP_WORKER_ENABLED="false"' in source
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in source
+    assert "bm-runtime-credentials/runtime-host-identities.json" in source
+
+
+def test_bv_worker_and_supervisor_are_single_attempt_bounded():
+    worker = (ROOT / "scripts/a0v_bv_snapshot_product_api.py").read_text(encoding="utf-8")
+    supervisor = (ROOT / "scripts/a0v_bv_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert 'worker.TASK = "A0V-BV-SNAPSHOT-WORKER-20260920"' in worker
+    assert 'WORKER = ROOT / "scripts/a0v_bv_snapshot_product_api.py"' in supervisor
+    assert "len(rows) != 1" in supervisor
+    assert "budget_seconds: int = 1800" in supervisor
+    assert 'parser.add_argument("--interval-seconds", type=int, default=50)' in supervisor
+    assert "run_definition" not in worker + supervisor
+
+
+def test_bv_attempt_guard_freezes_exact_terminal_boundary():
+    source = (ROOT / "scripts/a0v_bv_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "3afcfcae-b78c-4d15-8c64-4ec4e53325f3"' in source
+    assert '"state": "failed", "revision": 4' in source
+    assert '"terminalReason": "RECOVERABLE_EXECUTION_EXCEPTION"' in source
+    assert '"terminalErrorType": "IngressJournalConflict"' in source
+    assert '"definitionRevision": 132' in source
+    assert '"definitionState": "enabled"' in source
+    assert '"recoveryRevision": 43' in source
+    assert "revision=189 AND cutover_group_revision=216" in source
+    assert "run_definition" not in source
