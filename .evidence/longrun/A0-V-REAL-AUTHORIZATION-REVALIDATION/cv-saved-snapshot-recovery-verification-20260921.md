@@ -1,0 +1,58 @@
+# CV 保存快照恢复正式终态验证（2026-09-21）
+
+## 结论
+
+`CV_SAVED_SNAPSHOT_SINGLE_NATURAL_ATTEMPT_FAILED_FROZEN`。唯一自然 attempt
+`88c9a09f-e5f3-4c65-9f5c-dc35cc1252e6` 正式 failed **rev4**，原因为
+`RECOVERABLE_EXECUTION_EXCEPTION / IngressJournalConflict`；worker stop-only 退出，definition
+已推进到 rev208 disabled。全过程未读取商城源数据、未调用 `run_definition`、未重发。本波从
+CU installation `2c2d5506-1f80-4557-bf4b-00ead0258002` rev205/recovery67 转入 CV。
+本波无页面改动，未开浏览器。
+
+## 1/6 plan 与基线
+
+HEAD `a7978ef7`；CV `f94149ca-a01e-4a20-836f-3f5132e0dbb7` / generation
+`82aec2b8-072d-4f2e-9624-f9539c8890a6`，binding rev6/epoch3 ready、九路 rev267/group294、
+唯一 Host PID 27622；definition 为 CU `2c2d5506-1f80-4557-bf4b-00ead0258002` rev205
+disabled、recovery67、attempt=0，12/12 与零副作用。configuration rev1 已引用
+RuntimePolicy rev11。
+
+## 2/6 纯 HTTP 18181
+
+`check`/`serve` 读回 Cron=false、snapshot worker=false、进程内 Host=false、sourceCalls=0；
+`/v1/health`=200，prepare/schedule-ingest/controls 各确认 12 项，随后 18181 python PID 31076
+SIGTERM 释放，第二 Host=0，PID 27622 保持在线。prepare 在 binding rev6/epoch3 上一次通过，
+previewHash `sha256:2483a0c512ed57ebb88363a7773646007a980933bf700c21228af4cc133babae`。
+
+## 3/6 冻结输入转移
+
+transfer 生成 rev206 disabled/hash
+`sha256:09178bef74995f1e480f0847017b465087589e50b4c1d133c414b3285b25bd38`；
+renew 生成 recovery68/hash
+`sha256:741c9bffd2ee51a680fd7617638e35f32d461c241e0cd95692a660c49f68caa1`；
+enable 生成 rev207 enabled/hash
+`sha256:6a499fcfd0c922220e0751cf7c5c242d2e5c1e9474cb5d6d7686a72a197de096`。
+manifest 仍为 `sha256:03ccccacfda079e3318abbea3a39dfa232d655560c309ff511ad0ecace335e01`，
+各阶段 sourceReads=0。
+
+## 4/6 唯一自然 worker
+
+Lease `A0V-CV-SNAPSHOT-WORKER-20260921` 已在 worker 启动前登记；唯一 worker PID 31735
+自然创建上述 attempt，幂等键
+`snapshot-group:c5ff1926-45b0-56de-b6b3-07d5b7d053a1:1`，request hash
+`sha256:6674e5010b0de24c6740dc383b2f272a8e10fd84b9071cc681e3ad42780c27f7`。
+
+## 5/6 连续观察
+
+50 秒只读采样见 running rev2，随后见到 failed rev4；accepted_at
+`2026-09-21T14:52:50.380696Z`，completed_at `2026-09-21T14:54:15.794905Z`。
+不是 deadline 情形；worker SIGTERM returnCode=-15，未升级 kill。
+
+## 6/6 终态、零副作用与下一波
+
+exact guard 冻结 rev207/recovery68/failed rev4；pause-terminal 生成 rev208 disabled/hash
+`sha256:579cce9df45c51b3db39d85b1456fc21364cef67561f20155e360255c3b4f8df`。
+最终 12 members、12 running Run、12 Dataset Receipt、Store Receipt=0、`ecom_link`=0、
+projection pending=0、canary=0、worker=0、18181=0，Host PID 27622 仍在。
+注意终态为 **rev4**，guard overlay 仍需 predecessor_view revision=4。本提交完成后自动进入
+CV 正式退休与 CW direct successor。不使用定时 wake。本波无页面改动。
