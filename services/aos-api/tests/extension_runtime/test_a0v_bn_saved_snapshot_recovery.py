@@ -2747,3 +2747,57 @@ def test_cs_attempt_guard_freezes_exact_terminal_boundary():
     assert '"definitionState": "enabled"' in source
     assert "run_definition" not in source
 
+
+def test_cs_terminal_retirement_uses_exact_failed_snapshot_boundary():
+    source = (ROOT / "scripts/a0v_cs_terminal_retirement.py").read_text(encoding="utf-8")
+    assert 'retirement.AR_ID = successor.CS_ID' in source
+    assert '("b7d12c25-6673-48b3-aaba-dc803edb9169", 5, "failed"' in source
+    assert '"RECOVERABLE_EXECUTION_EXCEPTION", "IngressJournalConflict"' in source
+    assert "retirement.DEFINITION_REVISION = 199" in source
+    assert "retirement.ACTIVE_ROUTE_REVISION = 258" in source
+    assert "retirement.ACTIVE_GROUP_REVISION = 285" in source
+    assert "retirement.DETACHED_ROUTE_REVISION = 260" in source
+    assert "retirement.DETACHED_GROUP_REVISION = 287" in source
+    assert "run_definition" not in source
+
+
+def test_ct_replacement_is_bound_to_exact_cs_detach_receipt():
+    source = (ROOT / "scripts/a0v_ct_replacement_recovery.py").read_text(encoding="utf-8")
+    assert 'replacement.AU_ID = "ff72acba-1e59-4da3-b92a-18737e18e9d2"' in source
+    assert 'replacement.AU_DISABLE_OPERATION = "fa96b3bf-b140-466b-bb10-3a0d604dde1e"' in source
+    assert 'replacement.AU_DETACH_RECEIPT = "13c4d61c-ea9b-4f13-94d7-12e21e8a09a4"' in source
+    assert 'replacement.AU_DETACH_HASH = "sha256:f745d09717dbf72734a3792e67b2f9b88c692f23fe7c03fd903291bccfcb99a6"' in source
+    assert "replacement.PREDECESSOR_ROUTE_REVISION = 260" in source
+    assert "replacement.PREDECESSOR_GROUP_REVISION = 287" in source
+    assert "replacement.PREDECESSOR_BINDING_REVISION = 9" in source
+    assert "replacement.PREDECESSOR_EXECUTION_EPOCH = 5" in source
+    assert "replacement.DEFINITION_REVISION = 199" in source
+    assert "run_definition" not in source
+
+
+def test_ct_registration_and_cutover_are_exact():
+    business = (ROOT / "scripts/a0v_ct_successor_business.py").read_text(encoding="utf-8")
+    cutover = (ROOT / "scripts/a0v_ct_successor_cutover.py").read_text(encoding="utf-8")
+    assert 'successor.AV_ID = "b4847c85-b452-4c87-bf56-8a57bc9f8d25"' in business
+    assert 'successor.AV_GENERATION = "0d234db2-8b76-4ec8-a14a-a8c6eec9bbc6"' in business
+    assert 'successor.DETACH = "13c4d61c-ea9b-4f13-94d7-12e21e8a09a4"' in business
+    assert "successor.PREDECESSOR_BINDING_REVISION = 9" in business
+    assert "successor.PREDECESSOR_EXECUTION_EPOCH = 5" in business
+    assert "successor.PREDECESSOR_ROUTE_REVISION = 260" in business
+    assert "successor.PREDECESSOR_GROUP_REVISION = 287" in business
+    assert 'cutover.OPERATION = "057d41ab-6558-4946-b677-30152ed7046b"' in cutover
+    assert "cutover.PREDECESSOR_GROUP_REVISION = 287" in cutover
+    assert "run_definition" not in business + cutover
+
+
+def test_ct_health_observation_is_read_only_and_exact():
+    source = (ROOT / "scripts/a0v_ct_health_observation.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bx_health_observation.py").read_text(encoding="utf-8")
+    assert 'observer.health.OPERATION = "31b9552d-d58f-48e8-a905-2534fe334ef5"' in source
+    assert 'observer.health.INSTALLATION_ID = "b4847c85-b452-4c87-bf56-8a57bc9f8d25"' in source
+    assert "observer.health.ROUTE_REVISION = 261" in source
+    assert "observer.health.GROUP_REVISION = 288" in source
+    assert "observer.health.DEFINITION_REVISION = 199" in source
+    assert "IsolationLevel.REPEATABLE_READ" in shared
+    assert "run_definition" not in source + shared
+
