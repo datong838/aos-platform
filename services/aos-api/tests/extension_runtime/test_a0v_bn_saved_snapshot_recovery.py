@@ -2578,3 +2578,44 @@ def test_cq_health_observation_is_read_only_and_exact():
     assert "IsolationLevel.REPEATABLE_READ" in shared
     assert "run_definition" not in source + shared
 
+
+def test_cr_replacement_is_bound_to_exact_cq_detach_receipt():
+    source = (ROOT / "scripts/a0v_cr_replacement_recovery.py").read_text(encoding="utf-8")
+    assert 'replacement.AU_ID = "fff0b0d3-bf8f-44b0-b1b7-6a2972daeb80"' in source
+    assert 'replacement.AU_DISABLE_OPERATION = "36c3d6ca-db24-4553-a0ec-8748006b3dd8"' in source
+    assert 'replacement.AU_DETACH_RECEIPT = "2d8a382b-90f1-46c3-9100-c2310a949914"' in source
+    assert 'replacement.AU_DETACH_HASH = "sha256:3b618e589557064bf049dd344fa9bdc345236d22a38ec2c1558d2a968d08b432"' in source
+    assert "replacement.PREDECESSOR_ROUTE_REVISION = 254" in source
+    assert "replacement.PREDECESSOR_GROUP_REVISION = 281" in source
+    assert "replacement.PREDECESSOR_BINDING_REVISION = 11" in source
+    assert "replacement.PREDECESSOR_EXECUTION_EPOCH = 6" in source
+    assert "replacement.DEFINITION_REVISION = 193" in source
+    assert "run_definition" not in source
+
+
+def test_cr_registration_and_cutover_are_exact():
+    business = (ROOT / "scripts/a0v_cr_successor_business.py").read_text(encoding="utf-8")
+    cutover = (ROOT / "scripts/a0v_cr_successor_cutover.py").read_text(encoding="utf-8")
+    assert 'successor.AV_ID = "913cb7a1-4912-471a-abbf-452e3ce999a9"' in business
+    assert 'successor.AV_GENERATION = "a4a16448-5581-4948-b962-777ff601e855"' in business
+    assert 'successor.DETACH = "2d8a382b-90f1-46c3-9100-c2310a949914"' in business
+    assert "successor.PREDECESSOR_BINDING_REVISION = 11" in business
+    assert "successor.PREDECESSOR_EXECUTION_EPOCH = 6" in business
+    assert "successor.PREDECESSOR_ROUTE_REVISION = 254" in business
+    assert "successor.PREDECESSOR_GROUP_REVISION = 281" in business
+    assert 'cutover.OPERATION = "59e26a0e-c144-479b-ba78-b8cba414b006"' in cutover
+    assert "cutover.PREDECESSOR_GROUP_REVISION = 281" in cutover
+    assert "run_definition" not in business + cutover
+
+
+def test_cr_health_observation_is_read_only_and_exact():
+    source = (ROOT / "scripts/a0v_cr_health_observation.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bx_health_observation.py").read_text(encoding="utf-8")
+    assert 'observer.health.OPERATION = "38aadd42-6693-467f-abde-cc36924fef2f"' in source
+    assert 'observer.health.INSTALLATION_ID = "913cb7a1-4912-471a-abbf-452e3ce999a9"' in source
+    assert "observer.health.ROUTE_REVISION = 255" in source
+    assert "observer.health.GROUP_REVISION = 282" in source
+    assert "observer.health.DEFINITION_REVISION = 193" in source
+    assert "IsolationLevel.REPEATABLE_READ" in shared
+    assert "run_definition" not in source + shared
+
