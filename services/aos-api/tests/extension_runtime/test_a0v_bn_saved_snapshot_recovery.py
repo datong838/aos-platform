@@ -3347,3 +3347,40 @@ def test_cz_health_observation_is_read_only_and_exact():
     assert "IsolationLevel.REPEATABLE_READ" in shared
     assert "run_definition" not in source + shared
 
+
+def test_cz_saved_snapshot_recovery_is_exact_and_source_read_free():
+    source = (ROOT / "scripts/a0v_cz_saved_snapshot_recovery.py").read_text(encoding="utf-8")
+    assert 'recovery.PREDECESSOR_INSTALLATION_ID = "917cd341-96a5-4428-9508-03c716c587ad"' in source
+    assert "recovery.PREDECESSOR_DEFINITION_REVISION = 217" in source
+    assert "recovery.TRANSFERRED_DEFINITION_REVISION = 218" in source
+    assert "recovery.RECOVERY_REVISION = 72" in source
+    assert "recovery.ENABLED_DEFINITION_REVISION = 219" in source
+    assert "recovery.PAUSED_DEFINITION_REVISION = 220" in source
+    assert 'PREDECESSOR_RECOVERY_HASH = "sha256:3f085ba307099ce825c33f8b75c8a5a7f62da436ae0b134c3825e3e050ea8131"' in source
+    assert '"sourceReads": 0' in source
+    assert "run_definition" not in source
+
+
+def test_cz_product_api_and_worker_are_bounded():
+    api = (ROOT / "scripts/a0v_cz_product_controlled_api.py").read_text(encoding="utf-8")
+    flags = (ROOT / "scripts/a0v_bw_product_controlled_api.py").read_text(encoding="utf-8")
+    worker = (ROOT / "scripts/a0v_cz_snapshot_product_api.py").read_text(encoding="utf-8")
+    supervisor = (ROOT / "scripts/a0v_cz_terminal_supervisor.py").read_text(encoding="utf-8")
+    assert "controlled.load_launcher" in api
+    assert 'AOS_QYH_CRON_ENABLED="false"' in flags
+    assert 'AOS_EXTENSION_RUNTIME_HOST_ENABLED="0"' in flags
+    assert 'worker.TASK = "A0V-CZ-SNAPSHOT-WORKER-20260921"' in worker
+    assert 'supervisor.WORKER = ROOT / "scripts/a0v_cz_snapshot_product_api.py"' in supervisor
+
+
+def test_cz_attempt_guard_freezes_exact_terminal_boundary():
+    source = (ROOT / "scripts/a0v_cz_attempt_guard.py").read_text(encoding="utf-8")
+    assert 'ATTEMPT_ID = "d5ca4825-decb-4263-ac0f-f87d2fe8a7b0"' in source
+    assert 'facts.get("revision") != 4' in source
+    assert 'facts.get("definitionRevision") != 219' in source
+    assert 'facts.get("recoveryRevision") != 72' in source
+    assert "revision=279 AND cutover_group_revision=306" in source
+    assert '"revision": 4' in source
+    assert '"definitionState": "enabled"' in source
+    assert "run_definition" not in source
+
