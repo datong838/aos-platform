@@ -51,8 +51,10 @@ class PipelineSnapshotScheduleDispatch:
                 ON (r.org_id,r.project_id,r.id)=(m.org_id,m.project_id,m.run_id)
             LEFT JOIN public.pipeline_snapshot_unaccepted_group_closure_receipt u
                 ON (u.org_id,u.project_id,u.group_id)=(c.org_id,c.project_id,c.group_id)
+            LEFT JOIN public.pipeline_snapshot_stalled_group_closure_receipt g
+                ON (g.org_id,g.project_id,g.group_id)=(c.org_id,c.project_id,c.group_id)
             WHERE c.org_id=%s AND c.project_id=%s AND c.request->'definitionRef'->>'resourceId'=%s
-                AND u.group_id IS NULL
+                AND u.group_id IS NULL AND g.group_id IS NULL
             GROUP BY c.group_id,c.scheduled_for
             HAVING count(r.id) FILTER (WHERE r.status='succeeded' AND r.executor_id='ec-live-v1'
                 AND r.executor_stopped IS TRUE AND r.finished_at IS NOT NULL)<>12 OR c.scheduled_for=%s
