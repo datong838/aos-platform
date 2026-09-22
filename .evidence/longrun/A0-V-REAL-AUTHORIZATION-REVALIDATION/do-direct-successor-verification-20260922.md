@@ -22,7 +22,7 @@
 | active routes | 324 / group 351 |
 | Host | PID **22443** unique；18181=0 |
 | definition | 262 disabled |
-| health | baseline 2 → renewals TBD（+12）`DO_HEALTH_OBSERVATION_GREEN` |
+| health | baseline 2 → renewals 14（+12）`DO_HEALTH_OBSERVATION_GREEN`；samples=35 |
 
 ## Tests
 
