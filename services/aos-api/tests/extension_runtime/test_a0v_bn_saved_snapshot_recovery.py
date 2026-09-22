@@ -4112,3 +4112,44 @@ def test_dh_attempt_guard_freezes_exact_terminal_boundary():
     assert '"definitionState": "enabled"' in source
     assert "run_definition" not in source
 
+
+def test_di_replacement_is_bound_to_exact_dh_detach_receipt():
+    source = (ROOT / "scripts/a0v_di_replacement_recovery.py").read_text(encoding="utf-8")
+    assert 'replacement.AU_ID = "10d583ad-96ee-4b1a-bb18-92e428abe16e"' in source
+    assert 'replacement.AU_DISABLE_OPERATION = "c1750709-45a0-4c1a-ad89-63de6f2ca3e4"' in source
+    assert 'replacement.AU_DETACH_RECEIPT = "6a8a6daa-1c32-45af-89f4-3bb2cf7ac80c"' in source
+    assert 'replacement.AU_DETACH_HASH = "sha256:505640a22de3ee4b9cec5c9de036c7d3ff05e55bb2472f9d1bdadc5150220ea3"' in source
+    assert "replacement.PREDECESSOR_ROUTE_REVISION = 305" in source
+    assert "replacement.PREDECESSOR_GROUP_REVISION = 332" in source
+    assert "replacement.PREDECESSOR_BINDING_REVISION = 9" in source
+    assert "replacement.PREDECESSOR_EXECUTION_EPOCH = 5" in source
+    assert "replacement.DEFINITION_REVISION = 244" in source
+    assert "run_definition" not in source
+
+
+def test_di_registration_and_cutover_are_exact():
+    business = (ROOT / "scripts/a0v_di_successor_business.py").read_text(encoding="utf-8")
+    cutover = (ROOT / "scripts/a0v_di_successor_cutover.py").read_text(encoding="utf-8")
+    assert 'successor.AV_ID = "c8298a5d-9d94-4c37-81c9-508e2f0faf60"' in business
+    assert 'successor.AV_GENERATION = "56950fc1-4007-497a-8a09-df133a1950c1"' in business
+    assert 'successor.DETACH = "6a8a6daa-1c32-45af-89f4-3bb2cf7ac80c"' in business
+    assert "successor.PREDECESSOR_BINDING_REVISION = 9" in business
+    assert "successor.PREDECESSOR_EXECUTION_EPOCH = 5" in business
+    assert "successor.PREDECESSOR_ROUTE_REVISION = 305" in business
+    assert "successor.PREDECESSOR_GROUP_REVISION = 332" in business
+    assert 'cutover.OPERATION = "818723c0-2995-441d-9409-dc1530f093e7"' in cutover
+    assert "cutover.PREDECESSOR_GROUP_REVISION = 332" in cutover
+    assert "run_definition" not in business + cutover
+
+
+def test_di_health_observation_is_read_only_and_exact():
+    source = (ROOT / "scripts/a0v_di_health_observation.py").read_text(encoding="utf-8")
+    shared = (ROOT / "scripts/a0v_bx_health_observation.py").read_text(encoding="utf-8")
+    assert 'observer.health.OPERATION = "d366b2d3-9456-4178-9a21-cc516cca507d"' in source
+    assert 'observer.health.INSTALLATION_ID = "c8298a5d-9d94-4c37-81c9-508e2f0faf60"' in source
+    assert "observer.health.ROUTE_REVISION = 306" in source
+    assert "observer.health.GROUP_REVISION = 333" in source
+    assert "observer.health.DEFINITION_REVISION = 244" in source
+    assert "IsolationLevel.REPEATABLE_READ" in shared
+    assert "run_definition" not in source + shared
+
