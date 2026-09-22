@@ -126,9 +126,14 @@ class ExpiredResourceRecovery:
                     self.driver.require_isolation()
                     removed=self.driver.remove_owned(intent.identity.name,intent.identity.owner,expected_container_id=container)
                     if removed is not True:
-                        removed=self.driver.confirm_absent(
-                            intent.identity.name,intent.identity.owner,
-                            expected_container_id=container)
+                        if container is None:
+                            # Claimed create never recorded a container ID: name-only proof.
+                            removed=self.driver.confirm_name_absent(
+                                intent.identity.name,intent.identity.owner)
+                        else:
+                            removed=self.driver.confirm_absent(
+                                intent.identity.name,intent.identity.owner,
+                                expected_container_id=container)
                 except Exception:
                     # Fixed persisted failure state; never store engine errors/secrets.
                     return 'uncertain'

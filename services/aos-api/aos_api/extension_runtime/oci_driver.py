@@ -136,6 +136,22 @@ class OciDriver:
                 return False
         return True
 
+    def confirm_name_absent(self, name: str, owner: str) -> bool:
+        """Name-only absence for claimed create that never recorded a container ID."""
+        if (not re.fullmatch(r"aos-ext-[a-z0-9-]+", name)
+                or not re.fullmatch(r"[a-zA-Z0-9-]+", owner)):
+            raise ValueError("invalid persisted cleanup identity")
+        try:
+            observed = self._run(
+                "inspect", "--format",
+                '{{.Id}} {{index .Config.Labels "aos.extension.owner"}}', name,
+            ).strip().split()
+        except subprocess.CalledProcessError as exc:
+            if "no such" in (exc.stderr or "").lower():
+                return True
+            raise
+        return not observed
+
 
 class CleanupOnlyOciDriver:
     """Composition facade for recovery; intentionally has no create/start surface."""
@@ -161,3 +177,6 @@ class CleanupOnlyOciDriver:
         return self.__driver.confirm_absent(
             name, owner, expected_container_id=expected_container_id
         )
+
+    def confirm_name_absent(self, name: str, owner: str) -> bool:
+        return self.__driver.confirm_name_absent(name, owner)

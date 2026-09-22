@@ -46,6 +46,25 @@ def test_recovery_confirms_both_persisted_identifiers_absent(monkeypatch):
     assert [call[-1] for call in calls]==['aos-ext-test',expected]
 
 
+@pytest.mark.parametrize('message',['Error: No such object: aos-ext-test','error: no such object: aos-ext-test'])
+def test_claimed_null_container_confirms_name_absent(monkeypatch,message):
+    import subprocess
+    driver=OciDriver(context='colima-aos-extension')
+    calls=[]
+    def run(*args):
+        calls.append(args)
+        raise subprocess.CalledProcessError(1,['docker'],stderr=message)
+    monkeypatch.setattr(driver,'_run',run)
+    assert driver.confirm_name_absent('aos-ext-test','owner') is True
+    assert [call[-1] for call in calls]==['aos-ext-test']
+
+
+def test_claimed_null_container_name_still_present(monkeypatch):
+    driver=OciDriver(context='colima-aos-extension')
+    monkeypatch.setattr(driver,'_run',lambda *args: 'a'*64+' owner')
+    assert driver.confirm_name_absent('aos-ext-test','owner') is False
+
+
 @pytest.mark.parametrize('present', ['name','container'])
 def test_recovery_absence_confirmation_rejects_any_present_identifier(monkeypatch,present):
     import subprocess
