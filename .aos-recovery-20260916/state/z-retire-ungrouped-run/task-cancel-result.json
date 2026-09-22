@@ -1,0 +1,64 @@
+{
+  "task": {
+    "id": "task-19f4698041d34fd9bcda",
+    "type": "ecommerce.business-investigation",
+    "title": "全店经营基线分析",
+    "status": "cancelled",
+    "priority": 50,
+    "createdBy": {
+      "actorType": "user",
+      "actorId": "a0v-ecommerce-growth-1.4-runtime-owner"
+    },
+    "createdAt": "2026-09-16T00:10:45.678295Z",
+    "currentPlanRevisionId": "plan-bf6514bf8d7f49f2871e",
+    "version": 6,
+    "description": "根据原始数据与来源完成经营画像、问题诊断和方案设计。",
+    "goal": {
+      "runRef": {
+        "revision": 1,
+        "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+        "contentHash": "f2ee4b711682aeb25a08a6c2e1d8c1e0c40a25fc2b0dd48f96d89a12f306e9e0",
+        "resourceType": "BusinessInvestigationRun"
+      },
+      "caseRef": {
+        "revision": 9,
+        "resourceId": "case-qyh-full-store-baseline-20260915",
+        "contentHash": "482477564f343f8eb80b3e7ac3777572535468026bc055a1c93b351a1198f45a",
+        "resourceType": "BusinessInvestigationCaseRevision"
+      },
+      "analysisType": "initial_store_analysis",
+      "schemaVersion": "aos.aip.business-investigation-task-brief-intent/v2",
+      "compilerProfile": "ecommerce.business-investigation.readonly",
+      "domainProfileRef": {
+        "revision": 1,
+        "resourceId": "ecommerce.initial-store-analysis",
+        "contentHash": "267e3ec1a06662793ef1c71a7a70cc4952fbe3833e910caa63bc8e5399ae96fb",
+        "resourceType": "InvestigationProfileRevision"
+      }
+    },
+    "selectionRef": null,
+    "policyRevision": null,
+    "updatedAt": "2026-09-16T20:41:24.164499Z"
+  },
+  "run": {
+    "id": "run-6b3ca4f7c21347b684d9",
+    "taskId": "task-19f4698041d34fd9bcda",
+    "planRevisionId": "plan-bf6514bf8d7f49f2871e",
+    "status": "cancelled",
+    "startedAt": "2026-09-16T00:10:45.678295Z",
+    "finishedAt": "2026-09-16T20:41:24.164499Z",
+    "lastCheckpointId": "checkpoint-02a75f9b7493418993c0",
+    "logicGraphId": "ecommerce.logic.D01",
+    "logicRevision": 2,
+    "dependencySnapshotHash": "b29f247386e7346b439c5c362ee0dc450e5ab4edb21eb8852d8fa4230704fb4f",
+    "pauseRequestedAt": "2026-09-16T00:10:45.678295Z",
+    "pauseReason": "analysis initialization: first input not executed",
+    "version": 4,
+    "createdBy": {
+      "actorType": "user",
+      "actorId": "a0v-ecommerce-growth-1.4-runtime-owner"
+    },
+    "createdAt": "2026-09-16T00:10:45.678295Z",
+    "updatedAt": "2026-09-16T20:41:24.164499Z"
+  }
+}

@@ -1,0 +1,3 @@
+interface:
+  display_name: "栖月汇数据语义"
+  short_description: "只读AOS本体数据产品，缺口通过DataNeed补证"

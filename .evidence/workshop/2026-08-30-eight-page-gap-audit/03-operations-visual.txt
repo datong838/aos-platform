@@ -1,0 +1,263 @@
+- navigation:
+  - generic "菜单":
+  - generic "首页":
+  - generic "搜索":
+  - generic "通知":
+  - generic "历史":
+  - generic "项目":
+  - generic "应用":
+  - generic "数据":
+  - generic "帮助":
+  - generic "用户":
+- banner:
+  - link "AOS":
+    - /url: index.html
+  - generic: /
+  - generic: 态势大屏
+  - searchbox "搜索资源…"
+  - button "Discard"
+  - button "Save to branch"
+- complementary:
+  - generic "折叠/展开侧栏":
+  - link "概览":
+    - /url: index.html
+    - generic: 概览
+  - text: 工作台
+  - link "应用列表":
+    - /url: workshop.html
+    - generic: 应用列表
+  - link "订单管理":
+    - /url: workshop-app-order.html
+    - generic: 订单管理
+  - link "风险告警管理":
+    - /url: workshop-module.html
+    - generic: 风险告警管理
+  - link "经营态势":
+    - /url: workshop-analyst.html
+    - generic: 经营态势
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - text: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "组件注册表":
+    - /url: workshop-widget-registry.html
+    - generic: 组件注册表
+  - link "变量管理器":
+    - /url: workshop-variables.html
+    - generic: 变量管理器
+  - link "主题与样式":
+    - /url: workshop-styles.html
+    - generic: 主题与样式
+  - link "模块接口":
+    - /url: workshop-module-interface.html
+    - generic: 模块接口
+  - link "事件配置":
+    - /url: workshop-events.html
+    - generic: 事件配置
+  - link "发布入口":
+    - /url: workshop-publish.html
+    - generic: 发布入口
+  - text: AIP 决策引擎
+  - generic: 应用层
+  - link "AIP 助手":
+    - /url: aip-assist.html
+    - generic: AIP 助手
+  - link "对话机器人":
+    - /url: agents.html
+    - generic: 对话机器人
+  - link "AIP 分析师":
+    - /url: aip-analyst.html
+    - generic: AIP 分析师
+  - generic: 逻辑编排层
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Agent 工具面板":
+    - /url: aip-tools.html
+    - generic: Agent 工具面板
+  - link "成熟度楼梯":
+    - /url: aip-maturity.html
+    - generic: 成熟度楼梯
+  - generic: 智能体
+  - link "智能体目录":
+    - /url: agent-registry.html
+    - generic: 智能体目录
+  - link "智能体插件":
+    - /url: aip-capabilities.html
+    - generic: 智能体插件
+  - generic: 评测与治理
+  - link "Evals 门控":
+    - /url: aip-evals.html
+    - generic: Evals 门控
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+  - generic: 决策谱系
+  - link "决策谱系":
+    - /url: aip-decision-lineage.html
+    - generic: 决策谱系
+  - link "可观测性":
+    - /url: aip-observability.html
+    - generic: 可观测性
+  - text: 模型管理
+  - link "模型目录":
+    - /url: aip-model-catalog.html
+    - generic: 模型目录
+  - link "模型供应商":
+    - /url: aip-model-providers.html
+    - generic: 模型供应商
+  - link "模型路由":
+    - /url: aip-model-router.html
+    - generic: 模型路由
+  - link "容量管理":
+    - /url: aip-capacity-management.html
+    - generic: 容量管理
+  - text: 本体 · 数字孪生
+  - link "本体管理":
+    - /url: ontology.html
+    - generic: 本体管理
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - link "本体提案":
+    - /url: ontology-funnel.html
+    - generic: 本体提案
+  - link "图谱健康度":
+    - /url: ontology-graph-health.html
+    - generic: 图谱健康度
+  - link "活知识 Wiki":
+    - /url: ontology-wiki-index.html
+    - generic: 活知识 Wiki
+  - link "OKF funnel":
+    - /url: funnel.html
+    - generic: OKF funnel
+  - link "OKF 概览":
+    - /url: okf-funnel.html
+    - generic: OKF 概览
+  - link "分支管理":
+    - /url: ontology-branches.html
+    - generic: 分支管理
+  - text: 管道与数据治理
+  - link "管道构建":
+    - /url: pipeline-list.html
+    - generic: 管道构建
+  - link "管道提案":
+    - /url: pipeline-proposals.html
+    - generic: 管道提案
+  - link "计划编辑器":
+    - /url: schedules.html
+    - generic: 计划编辑器
+  - link "搭建":
+    - /url: builds.html
+    - generic: 搭建
+  - link "数据集预览":
+    - /url: dataset.html
+    - generic: 数据集预览
+  - link "代码库":
+    - /url: code-repositories.html
+    - generic: 代码库
+  - link "数据沿袭":
+    - /url: lineage.html
+    - generic: 数据沿袭
+  - link "数据健康":
+    - /url: health.html
+    - generic: 数据健康
+  - text: 数据源与同步
+  - link "数据链接器":
+    - /url: data-connection.html
+    - generic: 数据链接器
+  - link "边缘代理":
+    - /url: data-connection-agents.html
+    - generic: 边缘代理
+  - link "同步配置":
+    - /url: sync.html
+    - generic: 同步配置
+  - link "同步路由":
+    - /url: sync-routing.html
+    - generic: 同步路由
+  - link "媒体集":
+    - /url: media-sets.html
+    - generic: 媒体集
+  - link "文档智能":
+    - /url: document-intelligence.html
+    - generic: 文档智能
+  - text: 运维交付
+  - link "Hub 舰队":
+    - /url: apollo-hub.html
+    - generic: Hub 舰队
+  - link "Release 通道":
+    - /url: apollo-release.html
+    - generic: Release 通道
+  - link "Spoke 详情":
+    - /url: apollo-spoke.html
+    - generic: Spoke 详情
+  - link "Ferry 摆渡":
+    - /url: apollo-ferry.html
+    - generic: Ferry 摆渡
+  - link "FDE 资产包":
+    - /url: apollo-assets.html
+    - generic: FDE 资产包
+  - link "变更审批":
+    - /url: apollo-change-mgmt.html
+    - generic: 变更审批
+  - link "配置与密钥":
+    - /url: apollo-config.html
+    - generic: 配置与密钥
+  - link "接入案例":
+    - /url: integration-cases.html
+    - generic: 接入案例
+- main:
+  - generic: 在途订单
+  - generic: 12,480
+  - text: +8.2% vs 上周
+  - generic: 缺货 SKU
+  - generic: "86"
+  - text: +12 本周新增
+  - generic: 周转天数
+  - generic: "18.2"
+  - text: "-1.5 天改善"
+  - generic: 风险工厂
+  - generic: "3"
+  - generic: 须干预 · 华南仓
+  - heading "供应链网络态势" [level=2]
+  - generic: 7 仓库 · 4 工厂 · 覆盖 3 大区
+  - heading "钻取详情 · 选择工厂" [level=2]
+  - button "华东 F1 · 上海 正常 在产 1,247 件 · 产能 92% · 交期 3.2d":
+    - generic: 华东 F1 · 上海
+    - generic: 正常
+    - generic: 在产 1,247 件 · 产能 92% · 交期 3.2d
+  - button "华东 F2 · 苏州 正常 在产 892 件 · 产能 87% · 交期 4.1d":
+    - generic: 华东 F2 · 苏州
+    - generic: 正常
+    - generic: 在产 892 件 · 产能 87% · 交期 4.1d
+  - button "华南 F3 · 深圳 预警 在产 621 件 · 产能 64% · SLA 缺口 23%":
+    - generic: 华南 F3 · 深圳
+    - generic: 预警
+    - generic: 在产 621 件 · 产能 64% · SLA 缺口 23%
+  - button "🟡 调拨 · 华南紧急补货"
+  - link "打开运营 Inbox →":
+    - /url: workshop-module.html
+  - heading "风险工厂详情" [level=2]
+  - generic: 3 家须关注
+  - generic: 华南 F3 · 深圳 SLA 缺口 23%
+  - generic: 电容组件缺料 · 预计 7 天恢复
+  - generic: 华北前置仓 FD-2 周转 24d
+  - generic: 库存积压 · 建议调拨华南
+  - generic: 华东 CDC-3 出库延迟 2.1h
+  - generic: WMS 批次作业排队中
+  - heading "实时事件 · Action 记录" [level=2]
+  - link "全部事件 →":
+    - /url: workshop-events.html
+  - generic: 调拨完成 F1 → 华南仓 · 电容组件 500 件
+  - generic: 2 分钟前
+  - generic: SLA 预警 华南 F3 · 交期超时 12 单
+  - generic: 8 分钟前
+  - generic: 库存盘点 CDC-1 · 差异率 0.03% · 通过
+  - generic: 25 分钟前
+  - generic: 订单履约 ORD-8821 · 发货完成 · 物流 SF
+  - generic: 42 分钟前
+  - generic: AIP 决策 Buddy 建议对华南 F3 发起调拨
+  - generic: 1 小时前

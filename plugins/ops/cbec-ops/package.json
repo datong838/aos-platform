@@ -1,0 +1,17 @@
+{
+  "name": "@cbec-ops/skills",
+  "version": "0.1.0",
+  "description": "Cross-border e-commerce operations skills suite for AI agents. Covers the full seller lifecycle: market research, product selection, supplier sourcing, listing optimization, pricing, inventory, advertising, fulfillment, customer service, financials, brand building, analytics, compliance, risk management, seasonal planning, and multi-platform expansion.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "keywords": [
+    "cross-border-ecommerce",
+    "amazon",
+    "shopee",
+    "tiktok-shop",
+    "ai-agent",
+    "skills",
+    "claude-code-plugin"
+  ]
+}

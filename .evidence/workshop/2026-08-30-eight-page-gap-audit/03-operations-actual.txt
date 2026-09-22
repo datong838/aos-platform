@@ -1,0 +1,230 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - strong: 栖月汇微商城
+  - generic: /
+  - generic: 统一运营驾驶舱
+  - searchbox
+  - button "筛选"
+  - button "＋ 新建处理"
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - heading "统一运营驾驶舱" [level=1]
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.operations · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.operations · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "统一运营驾驶舱只读视图":
+      - generic: 统一运营 · 正式业务只读模型
+      - button "重新读取"
+      - region "运营驾驶舱业务指标":
+        - generic: 业务视图
+        - strong: "7"
+        - generic: 固定展示顺序
+        - generic: 读取可用
+        - strong: "6"
+        - generic: 正式来源闭合
+        - generic: 待补条件
+        - strong: "1"
+        - generic: 未伪装为可操作
+        - generic: 来源总量
+        - strong: "219"
+        - generic: 七类业务合计
+        - generic: 已挂接
+        - strong: "210"
+        - generic: 当前页 210
+        - generic: 待核对
+        - strong: "9"
+        - generic: 未匹配 + 冲突
+        - generic: 数据截止
+        - strong: 2026/8/30 10:08:18
+        - generic: 评估 2026/8/30 10:08:18
+      - generic: ✦
+      - heading "跨域只读分诊" [level=2]
+      - paragraph: 页面只汇总正式业务数据、数量守恒与待补条件；未接入退款、发货、库存调整或 AI 代执行。
+      - strong: 保持待核对
+      - complementary:
+        - heading "统一待办 · 业务切片" [level=2]
+        - generic: 1 项待补条件
+        - button "订单 业务视图 50 可读":
+          - strong: 订单
+          - generic: 业务视图
+          - generic: "50"
+          - emphasis: 可读
+        - button "订单明细 业务视图 50 可读":
+          - strong: 订单明细
+          - generic: 业务视图
+          - generic: "50"
+          - emphasis: 可读
+        - button "库存 业务视图 41 可读":
+          - strong: 库存
+          - generic: 业务视图
+          - generic: "41"
+          - emphasis: 可读
+        - button "履约 业务视图 19 可读":
+          - strong: 履约
+          - generic: 业务视图
+          - generic: "19"
+          - emphasis: 可读
+        - button "支付 业务视图 50 可读":
+          - strong: 支付
+          - generic: 业务视图
+          - generic: "50"
+          - emphasis: 可读
+        - button "售后事件 业务视图 0 可读":
+          - strong: 售后事件
+          - generic: 业务视图
+          - generic: "0"
+          - emphasis: 可读
+        - button "运营工单 业务视图 0 等待条件" [pressed]:
+          - strong: 运营工单
+          - generic: 业务视图
+          - generic: "0"
+          - emphasis: 等待条件
+      - region "运营详情":
+        - text: 当前业务视图
+        - heading "运营工单" [level=2]
+        - strong: 等待业务条件
+        - region "数量守恒账本":
+          - generic: 来源总量
+          - strong: "0"
+          - generic: 已挂接
+          - strong: "0"
+          - generic: 未匹配
+          - strong: "0"
+          - generic: 冲突
+          - strong: "0"
+        - heading "同一数据截止" [level=3]
+        - paragraph: 2026/8/30 10:08:18
+        - generic: 各业务视图的数据截止时间必须完全一致。
+        - heading "正式数据来源" [level=3]
+        - paragraph: 当前没有合格的正式数据来源，未以计划、提交或零值替代。
+      - complementary:
+        - heading "证据链 · 边界" [level=2]
+        - generic: 1 项待补条件
+        - list:
+          - strong: 需要补充同租户、同数据截止的正式业务来源
+          - generic: 当前业务视图保持待核对
+          - generic "查看审计状态码"
+        - heading "专业贡献归因" [level=3]
+        - list "专业贡献归因路径":
+          - generic: 原子技能
+          - strong: 待核对
+          - generic: 逻辑编排
+          - strong: 待核对
+          - generic: 数字同事
+          - strong: 待核对
+          - generic: 工作台贡献
+          - strong: 以正式运营事件聚合支撑可逆分诊与时效观察
+        - paragraph: 当前视图没有可验证的数字同事运行记录，因此不制造运行事实。
+        - region "统一运营动作建议":
+          - text: 动作安全预检
+          - heading "运营动作建议" [level=3]
+          - generic: 0 / 6 可提交
+          - paragraph: 客户、金额、建议或执行授权缺失时，点击动作只返回安全预检结果，不生成示例事实。
+          - button "分类事件 涉及内部业务状态 安全预检":
+            - strong: 分类事件
+            - generic: 涉及内部业务状态
+            - emphasis: 安全预检
+          - button "创建运营工单 涉及内部业务状态 安全预检":
+            - strong: 创建运营工单
+            - generic: 涉及内部业务状态
+            - emphasis: 安全预检
+          - button "调整工单成员 涉及内部业务状态 安全预检":
+            - strong: 调整工单成员
+            - generic: 涉及内部业务状态
+            - emphasis: 安全预检
+          - button "管理服务时限 涉及内部业务状态 安全预检":
+            - strong: 管理服务时限
+            - generic: 涉及内部业务状态
+            - emphasis: 安全预检
+          - button "停止自动化 涉及内部业务状态 安全预检":
+            - strong: 停止自动化
+            - generic: 涉及内部业务状态
+            - emphasis: 安全预检
+          - button "退款 涉及外部操作 安全预检":
+            - strong: 退款
+            - generic: 涉及外部操作
+            - emphasis: 安全预检
+        - region "请求级命令证据":
+          - heading "请求级命令证据" [level=3]
+          - paragraph: 仅按当前租户的正式提案与租约读取回执；结果待核对时不自动重放。
+          - generic: 提案编号
+          - textbox "提案编号"
+          - generic: 租约编号
+          - textbox "租约编号"
+          - button "读取证据" [disabled]
+          - generic: 尚未提供请求级引用；不从页面、清单或提交推断执行状态。
+        - heading "不可推断" [level=3]
+        - paragraph: 页面可读不等于发布、迁移、外部服务或真实业务动作已获授权。
+      - generic: 租户 org-org/dev-project
+      - generic: 来源 219
+      - generic: 已挂接 210
+      - generic: 未匹配 9
+      - generic: 冲突 0
+      - generic: 无后续页：是
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 9 项数据审计信息"

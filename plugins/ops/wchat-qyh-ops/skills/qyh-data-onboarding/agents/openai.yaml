@@ -1,0 +1,3 @@
+interface:
+  display_name: "栖月汇数据接入与水合"
+  short_description: "Data FDE从远程源库逐层形成数据集和本体候选"

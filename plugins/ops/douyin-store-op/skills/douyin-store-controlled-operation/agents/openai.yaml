@@ -1,0 +1,3 @@
+interface:
+  display_name: "抖店单目标受控操作"
+  short_description: "仅在明确授权后执行一个可核验的抖店动作"

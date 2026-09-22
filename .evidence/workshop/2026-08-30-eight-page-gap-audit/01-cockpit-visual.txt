@@ -1,0 +1,227 @@
+- navigation:
+  - generic "菜单":
+  - generic "首页":
+  - generic "运营驾驶舱":
+  - generic "总控大屏":
+  - generic "应用":
+  - generic "数据":
+  - generic "帮助":
+  - generic "设置":
+- heading "日常任务总控大屏" [level=1]
+- banner:
+  - link "栖月汇微商城":
+    - /url: "#"
+  - generic: /
+  - generic: 日常任务总控大屏
+  - textbox "搜索任务、同事、关键词…"
+  - generic: 2026-08-11 周二
+  - button "日历视图":
+    - text: 日历视图
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - generic: ¥18,260
+  - generic: 今日GMV
+  - generic: ↑ 12.5% vs 昨日
+  - generic: "92"
+  - generic: 今日订单
+  - generic: ↑ 8
+  - generic: "7"
+  - generic: 达人邀约
+  - generic: ↑ 3
+  - generic: "5"
+  - generic: 价格异常
+  - generic: ↓ 2
+  - generic: "9"
+  - generic: 内容产出
+  - generic: ↑ 4
+  - generic: "2"
+  - generic: 活动进行中
+  - generic: — 持平
+  - generic: "28"
+  - generic: 今日任务总数
+  - generic: 派发28 · 执行12 · 完成8
+  - generic: 六数字同事在线
+  - textbox "描述任务需求，AI自动分配给数字同事并调度技能Agent…"
+  - button "下达"
+  - generic: 跟一下张姐的过敏投诉
+  - generic: 临时推一款滞销品
+  - generic: 拉一份本周比价报告
+  - generic: 执行组
+  - generic: 🎧
+  - generic: 客服专员
+  - generic: 执行中
+  - generic: 1/1 进行中
+  - generic: 💬
+  - generic: 私域管家
+  - generic: 执行中
+  - generic: 3/4 进行中
+  - generic: 🛒
+  - generic: 导购顾问
+  - generic: 待确认
+  - generic: 2/3 进行中
+  - text: 当日任务流 · 执行进度
+  - generic: 28 项
+  - generic: 全部
+  - generic: 达人 7
+  - generic: 价格 5
+  - generic: 内容 9
+  - generic: 订单 4
+  - generic: 活动 3
+  - generic: DA-08
+  - generic: 达人「美妆小甜」沟通样寄送
+  - generic: 执行中
+  - generic: 🎧
+  - generic: 客服专员
+  - generic: 素材采集Agent
+  - generic: 达人工作台
+  - generic: CN-03
+  - generic: 七夕种草图文 · 玫瑰精粹面霜
+  - generic: 待确认
+  - generic: 🛒
+  - generic: 导购顾问
+  - generic: ·
+  - generic: 需确认选品
+  - generic: 文案生成Agent · 等待确认
+  - generic: 内容工作台
+  - generic: 活动工作台
+  - generic: PR-05
+  - generic: 全网比价扫描 · 维生素C安瓶异常
+  - generic: 自动扫描中
+  - generic: 📊
+  - generic: 数据参谋
+  - generic: 素材采集Agent · 爬取中
+  - generic: 价格工作台
+  - generic: OM-01
+  - generic: 退款审批 · 过敏反应客诉 ¥199
+  - generic: 待审批
+  - generic: 🎧
+  - generic: 客服专员
+  - generic: ·
+  - generic: 截止 17:30
+  - generic: 运营驾驶舱
+  - generic: CP-02
+  - generic: 七夕促销活动方案 · 第三轮调优
+  - generic: 执行中
+  - generic: 🎫
+  - generic: 活动策划师
+  - generic: 策略规划Agent
+  - generic: 活动工作台
+  - generic: CN-05
+  - generic: 每日朋友圈内容 · 3条自动排期
+  - generic: 已完成
+  - generic: 📝
+  - generic: 内容官
+  - generic: 文案生成Agent · 完成
+  - generic: 内容工作台
+  - text: 历史任务 · 查看归档与复盘记录
+  - generic: 本周 186 项 · 复盘 42 篇 · 经验 28 条 →
+  - generic: 策划组
+  - generic: 📊
+  - generic: 数据参谋
+  - generic: 调度中
+  - generic: 5/5 已派发
+  - generic: 📝
+  - generic: 内容官
+  - generic: 待确认
+  - generic: 5/8 进行中
+  - generic: 🎫
+  - generic: 活动策划师
+  - generic: 执行中
+  - generic: 0/2 待启动
+  - generic: 复盘 · 经验沉淀 2026-08-11
+  - text: 今日复盘 · 8项已完成
+  - generic: ✅ 有效 6 · ⚠ 待定 1 · ❌ 有害 1
+  - generic: CN-05 · 朋友圈3条内容
+  - generic: ✅ 有效
+  - generic: 阅读 230 ↑15% · 互动 18 · 经验已入库 ✅
+  - generic: PR-03 · 拼多多价格异常处理
+  - generic: ✅ 有效
+  - generic: 竞品恢复正价 · 我方无需跟价 · Episodic已记录
+  - generic: MID-02 · 中差评挽回
+  - generic: ⚠ 无结论
+  - generic: 挽回话术未触达 · 客户未回复 · 需人工判断
+  - generic: AFT-03 · 过敏投诉误判
+  - generic: ❌ 有害
+  - generic: 将正常咨询误判为过敏客诉 · 已标记Evals待修正
+  - generic: AI 改进建议
+  - generic: 💡 客服专员 · 过敏识别优化
+  - generic: AFT-03 误判原因：客户提到"刺痛"但非实际过敏。建议在过敏SOP中增加"刺痛≠过敏"判断条件。已生成Wiki候选。
+  - generic: 📈 内容官 · 最佳发布时间
+  - generic: 近7天数据显示朋友圈 10:00-11:00 互动率比 14:00 高 32%。建议调整默认排期时间。
+  - text: 经验沉淀 Wiki · 今日入库
+  - generic: 可复用 3 · Episodic 7
+  - generic: 📖
+  - generic: VIP3过敏处理SOP · v3
+  - generic: 客服专员 · 步骤优化 · 待审批
+  - generic: 📖
+  - generic: 拼多多跟价判断规则 · v2
+  - generic: 数据参谋 · 新增3条判断条件
+  - generic: 📖
+  - generic: 达人寄样跟进模板 · v1
+  - generic: 客服专员 · 从DA-08提取
+  - generic: 共享技能 Agent
+  - generic: 素材采集
+  - generic: 策略规划
+  - generic: 文案生成
+  - generic: 脚本撰写
+  - generic: 语音合成
+  - generic: 视频合成
+  - generic: 内容审核
+  - generic: 直播编排
+  - generic: 平台适配
+  - generic: 数据复盘
+  - text: 明日预告 · 2026-08-12 周三
+  - generic: ●
+  - text: 18项已排期（计划表）
+  - generic: ●
+  - text: 3项待确认（需导购确认选品）
+  - generic: ●
+  - text: 阻塞 0项
+  - generic: ●
+  - text: CN-05 朋友圈内容已预排
+  - generic: ●
+  - text: CP-02 七夕方案待批准发布
+- tooltip

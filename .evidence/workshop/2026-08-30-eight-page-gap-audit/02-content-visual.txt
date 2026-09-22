@@ -1,0 +1,310 @@
+- navigation:
+  - generic "菜单":
+  - generic "首页":
+  - generic "搜索":
+  - generic "通知":
+  - generic "总控大屏":
+  - generic "应用":
+  - generic "数据":
+  - generic "帮助":
+  - generic "用户":
+- heading "内容与活动工作台" [level=1]
+- banner:
+  - link "AOS":
+    - /url: index.html
+  - generic: /
+  - link "电商业务":
+    - /url: "#"
+  - generic: /
+  - generic: 内容与活动工作台
+  - searchbox "搜索活动、内容、商品…"
+  - button "保存草稿"
+  - button "批准并发布"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - tablist "内容与活动主视图":
+    - tab "活动策划" [selected]:
+      - text: 活动策划
+    - tab "内容日历":
+      - text: 内容日历
+    - tab "日常模板":
+      - text: 日常模板
+    - generic: 栖月汇微商城
+    - button "新建活动":
+      - text: 新建活动
+  - tabpanel "活动策划":
+    - generic: 活动列表
+    - button "筛选":
+    - generic: 进行中 · 2
+    - generic: 七夕促销活动「爱的520」
+    - generic: 方案审阅中
+    - generic: 8/15-8/20
+    - generic: 秋季新品发布会
+    - generic: 素材产出中
+    - generic: 9/1-9/7
+    - generic: 已批准 · 3
+    - generic: 每日朋友圈内容推送
+    - generic: 运行中
+    - generic: 每日 · 周期
+    - generic: 每周经营数据复盘
+    - generic: 运行中
+    - generic: 每周一 · 周期
+    - generic: 每周全网比价巡检
+    - generic: 运行中
+    - generic: 每周三 · 周期
+    - generic: 已完成 · 5
+    - generic: 618 年中大促
+    - generic: 已复盘
+    - generic: 6/15-6/20
+    - generic: 母亲节感恩活动
+    - generic: 已复盘
+    - generic: 5/8-5/12
+    - generic: AI 策划助手
+    - generic: · 素材采集 Agent 已完成数据拉取
+    - textbox "描述你要做的活动或日常任务，例如：策划七夕促销活动，预算3万，主推护肤品类": 策划七夕促销活动「爱的520」，8/15-8/20，预算3万元，主推护肤品类，目标GMV 15万
+    - button "生成方案":
+      - text: 生成方案
+    - generic: 基于当前库存和数据，AI 建议：
+    - generic: 七夕限定礼盒 · 库存充足
+    - generic: 夏季清仓 · 8款临期品
+    - generic: 会员日联动 · 8/18
+    - strong: AI 已生成完整方案
+    - text: — 请审阅以下 2 个关键决策点，确认无误后直接点右上角"批准并发布"
+    - generic: AI 实时计算就绪
+    - text: 活动概览
+    - text: AI 已完成
+    - generic: 活动名称
+    - generic: 七夕促销「爱的520」 ✎
+    - generic: 活动周期
+    - generic: 8/15 00:00 — 8/20 23:59 ✎
+    - generic: 预算上限
+    - generic: ¥30,000 ✎
+    - generic: 目标 GMV
+    - generic: ¥150,000 ✎
+    - generic: ¥150K
+    - generic: 预估 GMV
+    - generic: 22.4%
+    - generic: 预估毛利率
+    - generic: ¥28.5K
+    - generic: 预估成本
+    - generic: 5.3x
+    - generic: 预估 ROI
+    - text: 选品与定价 · 8 款商品
+    - generic: ⚠ 2 项需关注
+    - button "展开全部"
+    - table:
+      - rowgroup:
+        - row "商品 原价 活动价 折扣率 毛利率 库存 预估销量":
+          - columnheader "商品"
+          - columnheader "原价"
+          - columnheader "活动价"
+          - columnheader "折扣率"
+          - columnheader "毛利率"
+          - columnheader "库存"
+          - columnheader "预估销量"
+      - rowgroup:
+        - row "玻尿酸保湿精华 30ml SKU-HA-030 · 主推款 ¥168 ¥118 ✎ 7.0折 ✎ 31.2% 320件 ~180件":
+          - cell "玻尿酸保湿精华 30ml SKU-HA-030 · 主推款":
+            - strong: 玻尿酸保湿精华 30ml
+            - text: SKU-HA-030 · 主推款
+          - cell "¥168"
+          - cell "¥118 ✎":
+            - generic: ¥118 ✎
+          - cell "7.0折 ✎":
+            - generic: 7.0折 ✎
+          - cell "31.2%"
+          - cell "320件"
+          - cell "~180件"
+        - row "烟酰胺亮肤精华 30ml SKU-NA-030 · 联动款 ¥198 ¥138 ✎ 7.0折 ✎ 28.5% 150件 ~95件":
+          - cell "烟酰胺亮肤精华 30ml SKU-NA-030 · 联动款":
+            - strong: 烟酰胺亮肤精华 30ml
+            - text: SKU-NA-030 · 联动款
+          - cell "¥198"
+          - cell "¥138 ✎":
+            - generic: ¥138 ✎
+          - cell "7.0折 ✎":
+            - generic: 7.0折 ✎
+          - cell "28.5%"
+          - cell "150件"
+          - cell "~95件"
+        - row "玫瑰精粹面霜 50g ⚠ 利润率偏低 ¥328 ¥198 ⚠ 6.0折 ⚠ 12.3% ⚠ 80件 ~60件":
+          - cell "玫瑰精粹面霜 50g ⚠ 利润率偏低":
+            - strong: 玫瑰精粹面霜 50g
+            - text: ⚠ 利润率偏低
+          - cell "¥328"
+          - cell "¥198 ⚠":
+            - generic: ¥198 ⚠
+          - cell "6.0折 ⚠":
+            - generic: 6.0折 ⚠
+          - cell "12.3% ⚠"
+          - cell "80件"
+          - cell "~60件"
+        - row "维生素C安瓶 10支 ⚠ 库存缺口 ¥258 ¥178 ⚠ 6.9折 ⚠ 26.8% 28件 ⚠ ~100件":
+          - cell "维生素C安瓶 10支 ⚠ 库存缺口":
+            - strong: 维生素C安瓶 10支
+            - text: ⚠ 库存缺口
+          - cell "¥258"
+          - cell "¥178 ⚠":
+            - generic: ¥178 ⚠
+          - cell "6.9折 ⚠":
+            - generic: 6.9折 ⚠
+          - cell "26.8%"
+          - cell "28件 ⚠"
+          - cell "~100件"
+        - row "七夕限定礼盒（精华+面霜） SKU-GIFT-520 · 新品 ¥588 ¥399 ✎ 6.8折 ✎ 35.0% 200件 ~45件":
+          - cell "七夕限定礼盒（精华+面霜） SKU-GIFT-520 · 新品":
+            - strong: 七夕限定礼盒（精华+面霜）
+            - text: SKU-GIFT-520 · 新品
+          - cell "¥588"
+          - cell "¥399 ✎":
+            - generic: ¥399 ✎
+          - cell "6.8折 ✎":
+            - generic: 6.8折 ✎
+          - cell "35.0%"
+          - cell "200件"
+          - cell "~45件"
+        - row "还有 3 款商品 · 展开查看":
+          - cell "还有 3 款商品 · 展开查看":
+            - text: 还有 3 款商品 ·
+            - link "展开查看":
+              - /url: "#"
+    - text: 内容排期 · 9 条内容 · 3 个平台
+    - button "编辑排期"
+    - text: 8/13 周三
+    - text: 预热
+    - generic: 小红书 · 种草
+    - generic: 「520护肤攻略」图文
+    - generic: 朋友圈 · 预热
+    - generic: 活动倒计时海报
+    - text: 8/14 周四
+    - text: 预热
+    - generic: 抖音 · 短视频
+    - generic: 「精华对比测评」视频
+    - generic: 小红书 · 种草
+    - generic: 「七夕礼物推荐」合集
+    - text: 8/15 周五
+    - text: ★ 开卖
+    - generic: 全平台 · 开卖
+    - generic: 活动正式启动
+    - generic: 抖音 · 直播
+    - generic: 七夕专场直播 2h
+    - text: 8/16 周六
+    - text: 爆发
+    - generic: 抖音 · 直播
+    - generic: 达人专场 · 张小雨
+    - generic: 小红书 · 种草
+    - generic: 「开箱实测」视频
+    - text: 8/17 周日
+    - text: 爆发
+    - generic: 朋友圈 · 促销
+    - generic: 限时闪购 4h
+    - text: 8/18 周一
+    - text: 长尾
+    - generic: 小红书 · 回顾
+    - generic: 「买家秀合集」
+    - text: 8/20 周三
+    - text: 收官
+    - generic: 朋友圈 · 收官
+    - generic: 感谢 + 下次预告
+    - generic: 方案审阅中
+    - generic: AI 已完成方案生成 · 2 项需关注 · 等待您的审批
+    - button "保存为草稿"
+    - button "让 AI 重新生成"
+    - button "批准并发布 →"
+    - generic: AI 策划助手
+    - generic: 实时计算
+    - strong: 方案已生成。
+    - text: 我基于当前库存、近 30 天销量和竞品定价，为你选了 8 款商品，其中 5 款主推 + 3 款联动。内容排期覆盖
+    - strong: 小红书/抖音/朋友圈
+    - text: 三个平台，共 9 条内容。
+    - text: 风险决策 1/2 · 需您确认
+    - strong: 玫瑰精粹面霜
+    - text: 当前折扣 6.0 折，毛利率仅
+    - strong: 12.3%
+    - text: ，低于品牌平均 25%。
+    - generic: AI 建议：调整为 6.5 折（¥213），毛利率升至 18.7%，预估销量从 60 件降至 45 件，但总利润更高。
+    - button "采纳建议 (6.5折)"
+    - button "保持 6.0 折"
+    - button "自定义"
+    - text: 风险决策 2/2 · 需您确认
+    - strong: 维生素C安瓶
+    - text: 当前库存仅
+    - strong: 28 件
+    - text: ，但预估销量 100 件，存在缺口 72 件。
+    - generic: AI 建议两个方案：A) 限购 2 件/人，库存够卖但GMV减少 ¥4,000；B) 从 8/14 到货批次中调拨 50 件（需联系供应链确认）。
+    - button "方案A · 限购"
+    - button "方案B · 调拨"
+    - button "不处理"
+    - generic: 追加约束（AI 会全局重算）
+    - textbox "如：面霜利润不能低于15%"
+    - button "应用"
+    - generic: 方案批准后将自动拆解为任务
+    - generic: 批准后任务写入「任务计划表」，到期自动推送至「日常任务总控大屏」
+    - generic: 8/13
+    - generic: 小红书种草图文 ×2
+    - generic: 内容官 · 素材采集Agent + 文案生成Agent
+    - generic: 8/13
+    - generic: 朋友圈预热海报
+    - generic: 内容官 · 素材采集Agent + 文案生成Agent
+    - generic: 8/14
+    - generic: 抖音短视频 ×1
+    - generic: 内容官 · 脚本撰写Agent + 视频合成Agent
+    - generic: 8/15
+    - generic: 七夕专场直播 2h
+    - generic: 导购顾问 · 直播编排Agent + 平台适配Agent
+    - generic: 8/15
+    - generic: 活动正式启动 · 全平台上架
+    - generic: 活动策划师 · 平台适配Agent
+    - generic: 8/16
+    - generic: 达人专场直播 · 张小雨
+    - generic: 活动策划师 · 达人邀约前置任务
+    - generic: 8/15-20
+    - generic: 实时转化监控 · 每日复盘
+    - generic: 数据参谋 · 数据复盘Agent
+    - generic: 8/21
+    - generic: 活动效果复盘 · 经验沉淀
+    - generic: 数据参谋 · 数据复盘Agent → Episodic Memory
+    - generic: 共 8 个任务 · 批准后写入计划表

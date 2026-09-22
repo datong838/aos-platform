@@ -1,0 +1,6 @@
+{
+  "operation": "verify-cancelled-run",
+  "runId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+  "expectedVersion": 3,
+  "sourceIdempotencyKey": "a0v-z-ungrouped-run-20260917-v1-reject-requirement"
+}

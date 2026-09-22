@@ -1,0 +1,122 @@
+[
+  {
+    "route": "cockpit",
+    "scrolled": [
+      {
+        "before": {
+          "cls": "",
+          "h": 504,
+          "i": 0,
+          "max": 2502,
+          "scrollTop": 0,
+          "w": 972,
+          "x": 794,
+          "y": 972
+        },
+        "after": {
+          "lastText": "",
+          "max": 2502,
+          "scrollTop": 0
+        }
+      }
+    ]
+  },
+  {
+    "route": "content-campaign",
+    "scrolled": []
+  },
+  {
+    "route": "operations",
+    "scrolled": [
+      {
+        "before": {
+          "cls": "operations-inbox",
+          "h": 553,
+          "i": 0,
+          "max": 155,
+          "scrollTop": 0,
+          "w": 340,
+          "x": 478,
+          "y": 398.5
+        },
+        "after": {
+          "lastText": "统一待办 · 业务切片\n1 项待补条件\n订单\n业务视图\n50\n可读\n订单明细\n业务视图\n50\n可读\n库存\n业务视图\n41\n可读\n履约\n业务视图\n19\n可读\n支付\n业务视图\n50\n可读\n售后事件\n业务视图\n0\n可读\n运营工单\n业务视图\n0\n等待条件",
+          "max": 155,
+          "scrollTop": 155
+        }
+      },
+      {
+        "before": {
+          "cls": "operations-evidence",
+          "h": 553,
+          "i": 1,
+          "max": 998,
+          "scrollTop": 0,
+          "w": 320,
+          "x": 1120,
+          "y": 398.5
+        },
+        "after": {
+          "lastText": "全预检\n运营动作建议\n0 / 6 可提交\n\n客户、金额、建议或执行授权缺失时，点击动作只返回安全预检结果，不生成示例事实。\n\n分类事件\n涉及内部业务状态\n安全预检\n创建运营工单\n涉及内部业务状态\n安全预检\n调整工单成员\n涉及内部业务状态\n安全预检\n管理服务时限\n涉及内部业务状态\n安全预检\n停止自动化\n涉及内部业务状态\n安全预检\n退款\n涉及外部操作\n安全预检\n请求级命令证据\n\n仅按当前租户的正式提案与租约读取回执；结果待核对时不自动重放。\n\n提案编号\n租约编号\n读取证据\n尚未提供请求级引用；不从页面、清单或提交推断执行状态。\n不可推断\n\n页面可读不等于发布、迁移、外部服务或真实业务动作已获授权。",
+          "max": 998,
+          "scrollTop": 998
+        }
+      }
+    ]
+  },
+  {
+    "route": "creator-growth",
+    "scrolled": [
+      {
+        "before": {
+          "cls": "content-campaign-nav",
+          "h": 630,
+          "i": 0,
+          "max": 51,
+          "scrollTop": 0,
+          "w": 280,
+          "x": 448,
+          "y": 389
+        },
+        "after": {
+          "lastText": "业务阶段\n5 项待补条件\n达人检索与分群\n本地只读 · 不触发外部检索\n全部达人合作状态内容领域\n范围：全部达人 · 检索：全部 · 当前 0 项\n候选\n候选画像与匹配\n0 条正式数据\n邀约准备\n邀约批次与启动记录\n0 条正式数据\n合同\n合同与条款差异\n0 条正式数据\n履约\n履约证据\n0 条正式数据\n关系\n长期关系评估\n0 条正式数据",
+          "max": 51,
+          "scrollTop": 50.5
+        }
+      },
+      {
+        "before": {
+          "cls": "content-campaign-evidence creator-growth-analysis",
+          "h": 630,
+          "i": 1,
+          "max": 52,
+          "scrollTop": 0,
+          "w": 340,
+          "x": 1110,
+          "y": 389
+        },
+        "after": {
+          "lastText": "AI 达人分析\n1 项待补条件\n匹配与合作建议\n当前没有可回链建议\n\n无可验证候选、内容表现与合作证据时，不生成匹配分、经营判断或联系方式。\n\n下一步\n读取达人档案\n读取分析建议\n操作只重新核对当前只读数据，不触发外部检索或邀约。\n证据链与审计详情\n决策摘要\n\n缺少正式数据依据，当前阶段保持可信空。\n\n关键假设和不确定性\n\n客户敏感信息只显示受控引用；页面不复制联系方式、合同正文、地址或账号密钥。\n\n治理轴、专业贡献与生命周期审计\n租户 org-org/dev-project\n统一数据截止 2026/8/30 10:30:51\n当前为单页视图\n重新读取",
+          "max": 52,
+          "scrollTop": 51.5
+        }
+      }
+    ]
+  },
+  {
+    "route": "media-studio",
+    "scrolled": []
+  },
+  {
+    "route": "analyst",
+    "scrolled": []
+  },
+  {
+    "route": "price-governance",
+    "scrolled": []
+  },
+  {
+    "route": "customer",
+    "scrolled": []
+  }
+]

@@ -1,0 +1,32 @@
+"""V recovery transfers one saved group and never rereads the source."""
+import importlib.util
+from pathlib import Path
+import sys
+
+
+PATH=Path(__file__).resolve().parents[4]/'scripts/a0v_v_saved_snapshot_recovery.py'
+sys.path.insert(0,str(PATH.parent))
+SPEC=importlib.util.spec_from_file_location('a0v_v_saved_snapshot_recovery',PATH)
+recovery=importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(recovery)
+
+
+def test_v_recovery_uses_new_controls_and_same_saved_group():
+    source=PATH.read_text(encoding='utf-8')
+    assert recovery.GROUP=='c5ff1926-45b0-56de-b6b3-07d5b7d053a1'
+    assert recovery.MANIFEST.startswith('sha256:03cccc')
+    assert "snapshot.CONTROL_PREFIX='a0v-v-snapshot'" in source
+    assert 'service.transfer_saved_recovery(' in source
+    assert 'service.renew_saved_group(' in source
+    assert "'sourceReads':0" in source
+
+
+def test_v_recovery_has_no_direct_run_or_source_mutation():
+    source=PATH.read_text(encoding='utf-8')
+    assert 'run_definition' not in source
+    assert 'pipeline_snapshot_group_input' not in source
+    assert 'UPDATE meta_schedule_run' not in source
+    assert "ACTIONS=('prepare','schedule-ingest','controls','transfer','renew','enable','inspect','disable')" in source
+    enable=source[source.index('def enable('):source.index('\ndef inspect(')]
+    assert 'service.transition(' not in enable
+    assert 'read_runtime_status(' in enable and 'read_recovery_context(' in enable

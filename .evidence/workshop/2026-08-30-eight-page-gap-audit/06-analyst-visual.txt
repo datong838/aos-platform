@@ -1,0 +1,258 @@
+- navigation:
+  - text: AOS
+  - link "日常总控":
+    - /url: workshop-task-cockpit.html
+  - link "运营驾驶舱":
+    - /url: workshop-app-order.html
+  - link "价格治理":
+    - /url: workshop-price-governance.html
+  - link "客户关系":
+    - /url: workshop-customer.html
+  - link "Buddy":
+    - /url: workshop-aip-chat.html
+- banner:
+  - heading "经营参谋 · 增长指挥中心" [level=1]
+  - generic: 工作台 › 增长指挥域 › 经营参谋
+  - generic: 渠道视角
+  - combobox "渠道视角":
+    - option "全部渠道"
+    - option "私域商城"
+    - option "微信小店" [selected]
+    - option "抖音"
+    - option "淘宝"
+    - option "拼多多"
+  - generic: 🤖 经营参谋（军师 · 总控）
+  - button "📋 查看今日方案"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - generic: 📍 微信小店 · 2026-08-23
+  - generic: 🤖 经营参谋（owner · 军师）
+  - generic: 数据截止 17:00 · 新鲜度 OK
+  - generic: 🟢 在售商品 0
+  - generic: 🔴 30 个草稿待首发
+  - generic: 🟡 3 项首发硬门
+  - tablist "页面主视图":
+    - tab "生意探究 11/28" [selected]:
+      - text: 生意探究
+      - generic: 11/28
+    - tab "🎯 经营总览"
+    - tab "📋 增长方案 1":
+      - text: 📋 增长方案
+      - generic: "1"
+    - tab "🔗 任务协同 5":
+      - text: 🔗 任务协同
+      - generic: "5"
+    - tab "📊 执行监控"
+    - tab "🔄 复盘记忆"
+    - tab "🌐 经营态势"
+    - tab "📈 数据分析"
+  - tabpanel "生意探究 11/28":
+    - region "当前生意探究案例":
+      - generic: Business investigation case
+      - generic: 首次全店经营分析
+      - generic: AN-WX-QYH-20260823-001
+      - generic: 等待首发门
+      - generic: 演示 Case
+      - radiogroup "经营实体":
+        - generic: 经营实体
+        - radio "栖月汇 待首发" [checked]:
+          - generic: 栖月汇
+          - generic: 待首发
+        - radio "裕威参行 存量复盘":
+          - generic: 裕威参行
+          - generic: 存量复盘
+      - generic: 分析类型：新店从 0 到 1 基线
+      - generic: 范围：草稿商品 / 首发 readiness / 只读
+      - generic: 负责人：经营负责人
+      - generic: 计划：首发事实补齐后复跑
+      - button "分析记录 ▼":
+        - generic: 分析记录
+        - generic: ▼
+      - button "计划与定时"
+      - button "继续分析"
+    - strong: 演示边界
+    - generic: 本页用于验证“渠道 → 经营实体 → 独立 Case”的通用生意探究工作区；当前为 栖月汇（微信小店）实例。数字、步骤和状态是产品演示，不代表外部动作已经完成。
+    - region "生意探究三个串行波次":
+      - button "1 经营画像进行中 · 第 11/28 步 · 等待首发事实":
+        - generic: "1"
+        - generic: 经营画像进行中 · 第 11/28 步 · 等待首发事实
+      - button "2 问题与机会待进入 · 需要首发画像质量门":
+        - generic: "2"
+        - generic: 问题与机会待进入 · 需要首发画像质量门
+      - button "3 方案设计待进入 · 需要问题/机会评审":
+        - generic: "3"
+        - generic: 方案设计待进入 · 需要问题/机会评审
+    - generic: 本 Case 要回答的经营问题
+    - generic: 30 个商品仍在草稿箱：如何选择 3～5 个首发商品，安全完成“可售、可买、可履约、可复盘”的最小闭环？
+    - generic: 11/28
+    - generic: 冻结首发商品组合与发布硬门
+    - generic: WAITING_LAUNCH_FACTS
+    - generic: Checkpoint CP-011
+    - generic "分析进度 8/28"
+    - generic: 正在对照候选商品的类目、参数、库存、成本、物流、售后与内容包。当前只形成“399 元核心品 + 99/199 元入门体验品”的条件候选，不代表已经批准发布。
+    - generic: 数据与运行门
+    - generic: 3 项硬门
+    - generic: 店铺与草稿盘点完成新店、30 个商品草稿、在售 0；首次分析范围已冻结。
+    - generic: 首发商品事实未闭合成本、库存、有效期、类目参数、重量、售后和供货责任仍有 UNKNOWN。
+    - generic: 履约起跑条件未关闭默认发货地址、运费模板和首单客服/售后值守需逐项确认。
+    - generic: 当前分析工作区
+    - generic: Wave 1 · 经营画像
+    - button "查看证据"
+    - generic: 已知事实
+    - generic: 在售 0、草稿 30；已有候选供给但没有可成交供给
+    - generic: 当前假设
+    - generic: 问题不是转化率，而是首发商品与履约系统尚未 READY
+    - generic: 高影响未知
+    - generic: 哪 3～5 品能承担审核校准、核心成交、体验获客与复购观察
+    - generic: 微信小店后台观察
+    - generic: 商品草稿、物流、营销和成长能力已完成只读语义盘点。
+    - generic: 旧微商城商品线索
+    - generic: 历史销量只用于候选排序，不继承为微信小店当前事实。
+    - generic: 首发批准包
+    - generic: 399 白钻/焕白、99 元入门品、199 元体验品进入条件候选。
+    - generic: WX-QYH-D1～D5
+    - generic: 曝光、点击、支付、退款、成本、库存与履约需逐层水合。
+    - button "提交数据需求"
+    - button "请求人工确认"
+    - button "回到 Checkpoint"
+    - generic: 已切换到“首次全店经营分析”；本视觉稿仅演示记录选择，不读取真实数据。
+    - generic: Case 控制台
+    - generic: 只读
+    - generic: 11:18
+    - generic: "11"
+    - strong: 首发组合暂停
+    - text: 成本、库存与有效期仍待店主/供应商确认
+    - generic: 10:54
+    - generic: "10"
+    - strong: 草稿商品质量体检完成
+    - text: 30 个草稿中只保留 3～5 品首发候选
+    - generic: 10:26
+    - generic: "09"
+    - strong: 履约硬门登记
+    - text: 默认发货地址和运费模板进入阻断清单
+    - generic: 09:48
+    - generic: "08"
+    - strong: 平台冷启动画像完成
+    - text: 确认在售 0、交易漏斗尚未起跑
+    - generic: 停止条件：数据跨租户、来源不明、PII 超范围、预算超限、需要未批准外部动作或结论无法回链证据。
+    - generic: 三个阶段成果
+    - generic: 点击卡片切换上方分析阶段
+    - generic: "1"
+    - generic: 经营画像 v0.6
+    - generic: 补证中
+    - list:
+      - listitem: 新店、30 个草稿、在售 0
+      - listitem: 候选供给不等于可售供给
+      - listitem: 首发事实与履约门仍未闭合
+    - generic: "2"
+    - generic: 问题树与机会图
+    - generic: 候选
+    - list:
+      - listitem: 根因：首发 readiness 不足
+      - listitem: 机会：用最小组合低成本学习
+      - listitem: 边界：不继承旧店当前事实
+    - generic: "3"
+    - generic: 首发运行方案
+    - generic: 未评审
+    - list:
+      - listitem: 单品审核校准
+      - listitem: 3～5 品最小组合
+      - listitem: 10+ 有效外部订单后复盘
+    - generic: 候选方向 · 从候选供给到第一笔可复盘订单
+    - generic: 待评审
+    - generic: 不是已批准策略
+    - generic: 商品与信任侧
+    - generic: 冻结英雄品、体验品与复购品角色
+    - generic: 补齐类目、参数、内容、物流与售后
+    - generic: 用知识内容解释“适合谁、为什么信”
+    - strong: AOS 经营参谋
+    - text: 证据 → 判断 → 方案
+    - text: 人工批准后 Handoff
+    - generic: 冷启动与履约侧
+    - generic: 小范围外部客户验证，不刷单
+    - generic: 首单客服、发货、退款和评价闭环
+    - generic: 每笔订单保留来源—商品—履约证据
+    - generic: 六数字同事 · 分析协作状态
+    - generic: 1 执行中
+    - generic: 3 等待
+    - generic: 数据参谋
+    - generic: 经营画像、问题树和方案比较 owner
+    - generic: 执行中 · Step 8
+    - generic: 内容官
+    - generic: 商品知识与信任内容缺口研究
+    - generic: 等待画像
+    - generic: 导购顾问
+    - generic: 客户问题与职业销售 SOP 候选
+    - generic: 等待数据
+    - generic: 客服专员
+    - generic: 售前售后异议与服务失败聚类
+    - generic: 已交付线索
+    - generic: 私域管家
+    - generic: 同意、绑定、分群与旅程约束
+    - generic: DataNeed 阻断
+    - generic: 活动策划师
+    - generic: 体验战役、预算与停止条件草案
+    - generic: 等待方案阶段
+    - generic: 本 Case 将沉淀的可追溯资产
+    - strong: BusinessDossierRevision
+    - generic: 经营画像、覆盖度和未知区域
+    - strong: ProblemMap / OpportunityMap
+    - generic: 根因、反证、机会与优先级
+    - strong: DecisionEvidenceBundle
+    - generic: 事实、冲突、假设与不确定性
+    - strong: GrowthPlanCandidate
+    - generic: 目标、预算、风险、停止条件与依赖
+    - generic: 批准后 Handoff
+    - generic: 当前未授权
+    - button "增长方案"
+    - button "任务协同"
+    - link "达人邀约":
+      - /url: workshop-creator-outreach.html
+    - link "客户关系":
+      - /url: workshop-customer.html
+    - link "内容活动":
+      - /url: workshop-content-campaign.html
+    - generic: 只传精确 revision 与最小必要上下文；专业工作台继续执行各自审批、权限、Lease、Receipt 与 EffectReview。

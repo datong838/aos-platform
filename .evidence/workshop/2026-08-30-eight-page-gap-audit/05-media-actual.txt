@@ -1,0 +1,178 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - strong: 栖月汇微商城
+  - generic: /
+  - generic: 多媒体内容生产
+  - searchbox
+  - generic: 栖月汇微商城
+  - button "查看内容计划"
+  - button "＋ 新建内容任务"
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - heading "多媒体任务全过程闭环工作台" [level=1]
+  - paragraph: 菜单名：多媒体内容生产
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.media-studio · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.media-studio · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "多媒体工作台只读视图":
+      - button "重新读取"
+      - generic: 栖月汇微商城
+      - generic: 内容官（负责人未绑定）
+      - generic: 场景：未绑定
+      - generic: 数据截止 2026/8/30 10:08:48
+      - generic: 今日计划：待核对
+      - generic "全过程治理与累计审计"
+      - region "多媒体生产权威摘要":
+        - article:
+          - generic: 种草文案
+          - strong: 待核对
+          - generic: 数据来源未闭合
+        - article:
+          - generic: 短视频
+          - strong: 待核对
+          - generic: 数据来源未闭合
+        - article:
+          - generic: 数字人直播
+          - strong: 待核对
+          - generic: 数据来源未闭合
+        - article:
+          - generic: 整体成交贡献
+          - strong: 待核对
+          - generic: 当前合同未提供该指标
+      - tablist "媒体只读切片":
+        - tab "种草文案 等待条件" [selected]:
+          - strong: 种草文案
+          - generic: 等待条件
+        - tab "短视频 等待条件":
+          - strong: 短视频
+          - generic: 等待条件
+        - tab "数字人直播 等待条件":
+          - strong: 数字人直播
+          - generic: 等待条件
+      - tabpanel "种草文案 等待条件":
+        - text: 当前内容类型
+        - heading "生产上下文" [level=2]
+        - strong: 等待数据
+        - complementary:
+          - generic: 文案任务
+          - heading "任务列表" [level=3]
+          - generic: 1 项待核验
+          - strong: 当前没有可审阅文案任务
+          - paragraph: 生产上下文未闭合，不用演示素材补齐任务列表。
+          - generic "查看数据审计信息"
+        - generic: 当前内容类型
+        - strong: 等待生产上下文
+        - paragraph: 当前只显示目标与缺口；未形成可审阅内容、版本或交付结果。
+        - article:
+          - strong: 业务模块
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 生产能力
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 负责人
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 生产服务
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 预算
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 发布条件
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - text: 需要补充正式业务数据
+          - generic "查看数据审计信息"
+        - paragraph: 当前没有可挂接的媒体业务数据；空数据与待补条件分开表达。
+        - complementary:
+          - generic: 内容官建议
+          - strong: 尚无可回链内容建议
+          - paragraph: 建议必须来自可验证数据与同一截止面的证据。
+          - heading "所需条件与下一步" [level=3]
+          - generic "补充正式生产数据"
+      - generic: 租户 org-org/dev-project
+      - generic: 统一数据截止 2026/8/30 10:08:48
+      - generic: 当前为单页视图
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 27 项数据审计信息"

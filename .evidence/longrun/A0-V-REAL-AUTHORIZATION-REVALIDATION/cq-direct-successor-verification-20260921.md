@@ -57,7 +57,7 @@ unresolved=0、runtime pending=0、routes=9、canary=0，definition rev193 disab
 ## 6/6 零副作用、测试与下一波
 
 最终 12 members、12 running Run、12 Dataset Receipt；Store Receipt=0、`ecom_link`=0、
-projection pending=0。目标回归 `test_a0v_bn_saved_snapshot_recovery.py`。下一波为 CQ saved-snapshot recovery：
+projection pending=0。目标回归 `214 passed, 7 warnings`。下一波为 CQ saved-snapshot recovery：
 纯 HTTP 18181 证明 Cron=false/snapshot worker=false/第二 Host=0；随后 transfer rev194、
 recovery64、enable rev195，关闭端口后启动唯一自然 worker，观察唯一 attempt 到正式终态，
 并按既定 fail-closed/1800 秒规则收敛。注意上一 attempt 终态为 **rev4**，guard overlay 仍需

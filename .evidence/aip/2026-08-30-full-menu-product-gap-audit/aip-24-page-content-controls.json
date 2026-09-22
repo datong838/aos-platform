@@ -1,0 +1,4638 @@
+[
+  {
+    "index": 1,
+    "slug": "assist",
+    "label": "任务协作助手",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "收起上下文",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "专注模式",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "取消任务运行",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "请选择\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 精确阻断有界验收",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agents",
+        "tag": "A",
+        "text": "智能体列表",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic",
+        "tag": "A",
+        "text": "业务逻辑编排",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "智能体目录",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/observability",
+        "tag": "A",
+        "text": "可观测性",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agents",
+        "tag": "A",
+        "text": "打开智能体列表",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "INPUT",
+        "text": "向当前智能体运行提问",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "发送",
+        "type": "submit",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "任务协作助手"
+      },
+      {
+        "tag": "H3",
+        "text": "运行上下文"
+      },
+      {
+        "tag": "H4",
+        "text": "选择最近真实任务"
+      },
+      {
+        "tag": "H3",
+        "text": "等待上游上下文"
+      }
+    ],
+    "text": "任务协作助手\n\n围绕真实任务持续协作，并保留可审计的服务端事件；缺少运行上下文时明确关闭输入。\n\n上下文\n缺失\n对话线程\n未建立\n事件数\n0\n侧栏\n展开\n取消任务\n不可用\n输入\n禁用\n收起上下文\n专注模式\n取消任务运行\n缺少任务运行引用，暂不能查看谱系\n运行上下文\n尚无可执行上下文\n\n请从真实任务或智能体运行工作流进入。页面不会创建默认测试智能体，也不会猜测缺失引用。\n\n选择最近真实任务\n请选择\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 单次真实 模型服务 验收\n数据参谋 精确阻断有界验收\n\n选择任务只确定上游任务；仍需从真实运行流程补齐任务运行和智能体运行引用，完成前输入保持禁用。\n\n智能体列表\n业务逻辑编排\n智能体目录\n可观测性\n所需技术引用（审计用）\n等待上游上下文\n\n缺少精确引用时输入和发送保持禁用。可先从智能体列表或业务逻辑编排进入真实工作流。\n\n打开智能体列表\n\n发送"
+  },
+  {
+    "index": 2,
+    "slug": "studio",
+    "label": "智能体配置",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装数字同事…",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "私域管家\n任务专用 · 运行中\n运行中\n8 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客服专员\n任务专用 · 运行中\n运行中\n0 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "导购顾问\n任务专用 · 运行中\n运行中\n0 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动策划师\n任务专用 · 运行中\n运行中\n0 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据参谋\n任务专用 · 运行中\n运行中\n0 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容官\n任务专用 · 运行中\n运行中\n0 工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "提示词",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "工具箱",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "护栏",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "试运行",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "发布",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "system-prompt",
+        "type": null,
+        "value": "\n"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "保存提示词",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体配置"
+      },
+      {
+        "tag": "H2",
+        "text": "私域管家"
+      }
+    ],
+    "text": "智能体配置\n\n配置智能体指令、工具、本体与知识上下文；只有正式评测和草稿审批均通过后，才允许受控自动化。\n\n正在读取 AIP 跨页权威投影…\n智能体数\n6\n当前\n私域管家\n状态\n运行中\n已启用工具\n8\n当前配置\n提示词\n数据状态\n已加载\n智能体列表\n安装数字同事…\n私域管家\n任务专用 · 运行中\n运行中\n8 工具\n客服专员\n任务专用 · 运行中\n运行中\n0 工具\n导购顾问\n任务专用 · 运行中\n运行中\n0 工具\n活动策划师\n任务专用 · 运行中\n运行中\n0 工具\n数据参谋\n任务专用 · 运行中\n运行中\n0 工具\n内容官\n任务专用 · 运行中\n运行中\n0 工具\n私域管家\n\n配置智能体指令、工具、本体与知识上下文；自动化能力须通过正式评测和草稿审批\n\n运行中\n任务专用\n提示词\n工具箱\n护栏\n试运行\n发布\n系统指令 *\n订单状态字段\n服务时效知识\n模型路由 → 未就绪（等待权威运行状态）\n保存提示词"
+  },
+  {
+    "index": 3,
+    "slug": "analyst",
+    "label": "AIP 分析师",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据参谋\n可查询\n读取订单与支付事实，识别经营变化；指标权威缺失时保持阻断。\n订单 · 6 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容官\n可查询\n读取真实商品与评价事实，为内容选题和复盘提供证据。\n商品 · 8 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "导购顾问\n可查询\n读取在售商品和 SKU 事实，支撑选品与导购建议。\n商品 · 6 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客服专员\n可查询\n读取脱敏订单与客户事实，支撑服务诊断和升级判断。\n订单 · 6 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "私域管家\n可查询\n读取脱敏客户与订单事实，支撑关系分层和触达准备。\n客户 · 5 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动策划师\n可查询\n读取商品与订单事实，支撑活动节奏和复盘准备。\n商品 · 6 项业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "收起查询",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "收起证据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "专注模式",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "语义对象\n行业知识\n权威指标",
+        "type": null,
+        "value": "semantic"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "栖月汇-类目\n栖月汇-会员\n订单\n订单明细\n栖月汇-订单明细\n栖月汇-支付\n栖月汇-商品\n栖月汇-商品评价\n栖月汇-商品SKU\n栖月汇-发货\n栖月汇-店铺\n站点\n栖月汇-系统配置\n栖月汇-小程序\n工单",
+        "type": null,
+        "value": "Order"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "内容到成交归因与优化 · 修订 1\n互动线索识别与交接 · 修订 1\n事实品牌与合规审核 · 修订 1\n多平台适配 · 修订 1\n短视频策划 · 修订 1\n文案与种草内容生产 · 修订 1\n热点竞品与获客机会研究 · 修订 1\n活动复盘 · 修订 1\n执行监控与止损 · 修订 1\n跨同事任务编排 · 修订 1\n预算与毛利模拟 · 修订 1\n活动机会与目标 · 修订 1\n服务结果与反馈复盘 · 修订 1\n投诉与人工升级 · 修订 1\n物流只读分流 · 修订 1\n身份与订单安全查询 · 修订 1\n意图与情绪分流 · 修订 1\n促单与成交交接 · 修订 1\n异议识别与处理 · 修订 1\n成分分析 · 修订 1\n产品检索与推荐 · 修订 1\n需求诊断 · 修订 1\n关系反馈 · 修订 1\n沉默客户与复购机会 · 修订 1\n跟进与触达排期 · 修订 1\n客户身份沉淀 · 修订 1\n效果归因与复盘 · 修订 1\n执行监控与调整建议 · 修订 1\n审批后任务拆解 · 修订 1\n内外机会研究 · 修订 1\n数据与经营健康巡检 · 修订 1\n视频草稿方案生成 · 修订 1\n视觉草稿方案生成 · 修订 1\n活动策划方案生成 · 修订 1\n私域经营计划生成 · 修订 1\n售后策略生成 · 修订 1\n商品对比推荐生成 · 修订 1\n内容策略生成 · 修订 1\n增长方案生成 · 修订 1\n权威运行验收 · 修订 1",
+        "type": null,
+        "value": "ecommerce.logic.C08"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic?graph=ecommerce.logic.C08",
+        "tag": "A",
+        "text": "打开业务逻辑画布 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "运行真实查询",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "表格",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "图表",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "地图",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "原始结果",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "AIP 分析师"
+      },
+      {
+        "tag": "H3",
+        "text": "查询构造器"
+      },
+      {
+        "tag": "H4",
+        "text": "业务逻辑挂载点"
+      },
+      {
+        "tag": "H3",
+        "text": "尚未运行查询"
+      },
+      {
+        "tag": "H3",
+        "text": "证据详情"
+      }
+    ],
+    "text": "AIP 分析师\n\n受治理的语义、知识和指标查询；结果绑定单一修订，不生成演示数据\n\n查询类型\n语义\n运行门\n可跑\n结果态\n未跑\n行数\n—\n对象类型\n15\n六角色模板\n6/6\n业务逻辑\n已挂载\n六数字同事治理工作面\n模板来自已版本化电商方案包；选择角色只装配查询，不代表 Agent 已执行。\n模板目录技术标识（审计用）\n数据参谋\n可查询\n读取订单与支付事实，识别经营变化；指标权威缺失时保持阻断。\n订单 · 6 项业务逻辑\n内容官\n可查询\n读取真实商品与评价事实，为内容选题和复盘提供证据。\n商品 · 8 项业务逻辑\n导购顾问\n可查询\n读取在售商品和 SKU 事实，支撑选品与导购建议。\n商品 · 6 项业务逻辑\n客服专员\n可查询\n读取脱敏订单与客户事实，支撑服务诊断和升级判断。\n订单 · 6 项业务逻辑\n私域管家\n可查询\n读取脱敏客户与订单事实，支撑关系分层和触达准备。\n客户 · 5 项业务逻辑\n活动策划师\n可查询\n读取商品与订单事实，支撑活动节奏和复盘准备。\n商品 · 6 项业务逻辑\n收起查询\n收起证据\n专注模式\n查询构造器\n查询类型\n语义对象\n行业知识\n权威指标\n业务对象类型\n栖月汇-类目\n栖月汇-会员\n订单\n订单明细\n栖月汇-订单明细\n栖月汇-支付\n栖月汇-商品\n栖月汇-商品评价\n栖月汇-商品SKU\n栖月汇-发货\n栖月汇-店铺\n站点\n栖月汇-系统配置\n栖月汇-小程序\n工单\n业务逻辑挂载点\n已保存业务逻辑\n内容到成交归因与优化 · 修订 1\n互动线索识别与交接 · 修订 1\n事实品牌与合规审核 · 修订 1\n多平台适配 · 修订 1\n短视频策划 · 修订 1\n文案与种草内容生产 · 修订 1\n热点竞品与获客机会研究 · 修订 1\n活动复盘 · 修订 1\n执行监控与止损 · 修订 1\n跨同事任务编排 · 修订 1\n预算与毛利模拟 · 修订 1\n活动机会与目标 · 修订 1\n服务结果与反馈复盘 · 修订 1\n投诉与人工升级 · 修订 1\n物流只读分流 · 修订 1\n身份与订单安全查询 · 修订 1\n意图与情绪分流 · 修订 1\n促单与成交交接 · 修订 1\n异议识别与处理 · 修订 1\n成分分析 · 修订 1\n产品检索与推荐 · 修订 1\n需求诊断 · 修订 1\n关系反馈 · 修订 1\n沉默客户与复购机会 · 修订 1\n跟进与触达排期 · 修订 1\n客户身份沉淀 · 修订 1\n效果归因与复盘 · 修订 1\n执行监控与调整建议 · 修订 1\n审批后任务拆解 · 修订 1\n内外机会研究 · 修订 1\n数据与经营健康巡检 · 修订 1\n视频草稿方案生成 · 修订 1\n视觉草稿方案生成 · 修订 1\n活动策划方案生成 · 修订 1\n私域经营计划生成 · 修订 1\n售后策略生成 · 修订 1\n商品对比推荐生成 · 修订 1\n内容策略生成 · 修订 1\n增长方案生成 · 修订 1\n权威运行验收 · 修订 1\n精确修订 1\n技术标识（审计用）\n打开业务逻辑画布 →\n运行真实查询\n\n不接受任意 SQL；业务对象类型与业务逻辑均来自权威接口；租户由当前登录身份决定。\n\n表格图表地图原始结果\n尚未运行查询\n\n选择治理查询类型后读取真实 authority；服务不可用时保持失败关闭。\n\n证据详情\n业务逻辑挂载\n内容到成交归因与优化 · 修订 1\n挂载不等于已执行；不会冒充任务图已生成。\n技术标识（审计用）\n\n运行受治理查询后显示来源、血缘、截点与不确定性。"
+  },
+  {
+    "index": 4,
+    "slug": "logic",
+    "label": "业务逻辑编排",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "编辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "运行历史",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "自动化",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "新建业务逻辑草稿",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/drafts",
+        "tag": "A",
+        "text": "草稿审批台",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测门控",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/production-contracts",
+        "tag": "A",
+        "text": "上线执行审批",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/production-contracts",
+        "tag": "A",
+        "text": "打开上线执行审批 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "保存",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安全试跑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/drafts",
+        "tag": "A",
+        "text": "草稿审批台",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测门控",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "业务逻辑名称",
+        "type": null,
+        "value": "C08 内容到成交归因与优化"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "业务逻辑描述",
+        "type": null,
+        "value": "基于闭合窗口、同 cutoff 对账和充分样本形成内容复盘草稿；禁止无依据归因或自动提升记忆。"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "应用试跑输入",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "安全试跑输入 JSON",
+        "type": null,
+        "value": "{}"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "−",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "+",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "1:1",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "收起属性",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "入\n业务输入\n定义业务逻辑输入",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "变\n创建变量\n创建中间变量",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "取\n获取属性\n读取本体属性",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "模\n使用大模型\n调用大模型能力",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "工\n使用工具\n调用已注册工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "换\n数据变换\n执行数据变换",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "动\n应用动作\n产生可审计的动作提议",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执\n执行结果\n提交执行结果",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "支\n条件分支\n按条件选择路径",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "汇\n上下文交接\n汇聚上游上下文",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "×",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "×",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "TRANSFORM\n收敛 Draft 输出契约",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "连接到 contract 的 in 端口",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "从 contract 的 out 端口建立连接",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "×",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "USE_LLM\n内容到成交归因与优化",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "连接到 draft 的 in 端口",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "从 draft 的 out 端口建立连接",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "×",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "INPUT\n校验内容事实与治理护栏",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "连接到 input 的 in 端口",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "从 input 的 out 端口建立连接",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "×",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新 / 对账",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "创建任务、执行计划并批准",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "SELECT",
+        "text": "选择评测套件",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "读取证据中…",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "发布当前 revision",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "绑定自动化（禁用）",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "逻辑编排"
+      },
+      {
+        "tag": "H3",
+        "text": "安全试运行输入"
+      },
+      {
+        "tag": "H3",
+        "text": "BLOCK 组件库 · 中英并列 · 10 种"
+      },
+      {
+        "tag": "H3",
+        "text": "Block 属性"
+      },
+      {
+        "tag": "H3",
+        "text": "权威任务运行"
+      },
+      {
+        "tag": "H3",
+        "text": "发布治理"
+      },
+      {
+        "tag": "H4",
+        "text": "发布历史"
+      },
+      {
+        "tag": "H4",
+        "text": "发布详情"
+      },
+      {
+        "tag": "H4",
+        "text": "自动化"
+      }
+    ],
+    "text": "逻辑编排\n\n用自由画布编排权威业务逻辑；保存后必须与服务端严格回读一致。编辑、运行历史和自动化分区各司其职。\n\n编辑\n运行历史\n自动化\n分区\n编辑\n图\n已确认\n历史条\n0\n生产流程\n3\n更多\n无\n互跳\n观测/谱系\n新建业务逻辑草稿\n生产旁路已关闭：本画布不提供「一键创建 / 批准生产任务」。请经 草稿审批台 · 评测门控 · 上线执行审批 完成发布与启动；安全试跑不写生产。\n数字同事就绪（只读）：正在读取目录…\n可被引用的生产流程（只读）\n打开上线执行审批 →\n\n来自阶段模板和职责计划权威表；空表不伪造生产流程，画布不可由此旁路启动生产。\n\n电商标准生产流程 · 阶段 1/1 就绪 · 职责 0/1 就绪\necommerce.business-investigation · 阶段 1/1 就绪 · 职责 0/0 就绪\necommerce.business-investigation.readonly · 阶段 0/0 就绪 · 职责 0/1 就绪\n保存\n刷新\n安全试跑\n请先显式应用安全试跑输入\n草稿审批台\n评测门控\n已确认修订 1\n业务逻辑名称\n描述\n安全试运行输入\n\n独立 JSON 对象；仅显式应用后用于安全试跑，不写入画布或生产数据。\n\n应用试跑输入\n试跑输入尚未应用\n−\n100%\n+\n1:1\n节点 3 · 连接 2\n收起属性\nBLOCK 组件库 · 中英并列 · 10 种\n入\n业务输入\n定义业务逻辑输入\n变\n创建变量\n创建中间变量\n取\n获取属性\n读取本体属性\n模\n使用大模型\n调用大模型能力\n工\n使用工具\n调用已注册工具\n换\n数据变换\n执行数据变换\n动\n应用动作\n产生可审计的动作提议\n执\n执行结果\n提交执行结果\n支\n条件分支\n按条件选择路径\n汇\n上下文交接\n汇聚上游上下文\n×\n×\nTRANSFORM\n收敛 Draft 输出契约\n×\nUSE_LLM\n内容到成交归因与优化\n×\nINPUT\n校验内容事实与治理护栏\n×\nBlock 属性\n\n选择一个 Block 查看和编辑属性\n\n服务端权威记录 · 任务 / 执行计划 / 运行实例\n权威任务运行\n\n绑定 C08 内容到成交归因与优化 · 修订 1；刷新后从服务端恢复，不使用本地完成状态。\n\n刷新 / 对账\n创建任务、执行计划并批准\n\n正在读取服务端任务运行记录…\n\n发布 Eval suite\n选择评测套件\n读取证据中…\n发布治理\n\n只发布服务端已保存的精确 revision/hash；POST 后必须完成 publication 详情回读才算成功。\n\n发布当前 revision\n当前 Graph\necommerce.logic.C08 · revision 1\n当前 Graph hash\nfae407244f715bdaa826005d115636ae73911542df6d2cf75b1a7d158dfced7c\nEval suite\n未选择\nEval report\n未选择\n\n尚未读取与当前 revision/hash 绑定的真实 Eval 门控证据。\n\n请读取与当前 revision/hash 绑定且通过的 Eval report\n发布历史\n\n正在读取发布历史…\n\n发布详情\n\n选择一条服务端发布记录查看不可变详情。\n\n自动化\n\n自动化仅可绑定不可变 publication；不能绑定当前可编辑草稿 revision。\n\n绑定自动化（禁用）\n\n生产调度与执行器尚未闭环；自动化只能绑定不可变 publication，当前保持禁用"
+  },
+  {
+    "index": 5,
+    "slug": "tools",
+    "label": "智能体工具配置",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "tools-object-type",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "tools-object-id",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "试跑当前工具",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/assist",
+        "tag": "A",
+        "text": "从智能助手带入任务上下文 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "私域管家\n客服专员\n导购顾问\n活动策划师\n数据参谋\n内容官",
+        "type": null,
+        "value": "ecommerce.content_officer.default"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "并行调用\n逐项调用",
+        "type": null,
+        "value": "native"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/capabilities",
+        "tag": "A",
+        "text": "重能力 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/maturity",
+        "tag": "A",
+        "text": "← 成熟度",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic",
+        "tag": "A",
+        "text": "业务逻辑编排 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/studio?instance=ecommerce.content_officer.default",
+        "tag": "A",
+        "text": "智能体配置 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/studio",
+        "tag": "A",
+        "text": "返回智能体列表",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "写回动作（须人工确认）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "对象查询（属性子集查询）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "业务逻辑（已发布流程）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "应用变量（更新应用变量）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "命令（命令类工具）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "澄清（向用户澄清）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "专业能力（平台代调重能力）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "Wiki 字段（结构化 Wiki）",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/capabilities",
+        "tag": "A",
+        "text": "登记专业能力 →\n平台代调 · 写回须人工确认",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "业务对象查询\n属性子集 · 含 Wiki 字段",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "知识字段读取\n结构化字段优先",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "连通性校验\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容到成交归因与优化\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "互动线索识别与交接\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "事实品牌与合规审核\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "多平台适配\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "短视频策划\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "文案与种草内容生产\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "热点竞品与获客机会研究\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动复盘\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执行监控与止损\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "跨同事任务编排\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预算与毛利模拟\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动机会与目标\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "满意度与问题反哺\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "投诉与人工升级\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "物流查询与异常分诊\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "身份与订单安全查询\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "意图与情绪识别\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "促单与成交交接\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "异议识别与处理\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "成分分析\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "产品检索与推荐\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "需求诊断\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "关系反馈\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "沉默客户与复购机会\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "跟进与触达排期\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客户身份沉淀\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "效果归因与复盘\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执行监控与调整建议\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "审批后任务拆解\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内外机会研究\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据与经营健康巡检\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "视频草稿方案生成\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "视觉草稿方案生成\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "人群商品与机制设计\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客户标签与分层\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "售后资格与工单草拟\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "产品对比\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "人群与内容策略\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "增长方案生成\n已发布的业务逻辑",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "关闭或写回（需人工确认）\n人工确认后执行",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "素材采集\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "策略规划\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "文案生成\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "脚本撰写\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "语音合成\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "视频合成\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容审核\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "直播编排\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "平台适配\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据复盘\n写回经受控业务动作 · 由平台代为调用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测门控",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/ontology/wiki",
+        "tag": "A",
+        "text": "打开知识库 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/studio",
+        "tag": "A",
+        "text": "智能体配置",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "保存当前实例配置",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体工具配置"
+      },
+      {
+        "tag": "H2",
+        "text": "业务对象查询"
+      }
+    ],
+    "text": "智能体工具配置\n\n为每个数字同事配置可使用的查询、业务逻辑和专业能力；平台按当前组织权限代为调用。\n\n正在读取 AIP 跨页权威投影…\n工具总数\n53\n筛选命中\n53\n分类开\n5\n调用方式\n并行调用\n人工确认\n表单人工确认\n同事\n已绑\n默认工具包\n当前智能体默认工具包\n配置来源：当前数字同事实例（与智能体配置页使用同一份数据）· 当前 内容官\n受控试跑对象\n业务对象类型\n真实对象标识\n试跑当前工具\n从智能助手带入任务上下文 →\n\n缺少精确的业务对象类型和真实对象标识；禁止使用演示对象\n\n数字同事实例\n私域管家\n客服专员\n导购顾问\n活动策划师\n数据参谋\n内容官\n调用模式\n并行调用\n逐项调用\n刷新\n重能力 →\n← 成熟度\n业务逻辑编排 →\n智能体配置 →\n返回智能体列表\n|\n当前智能体：\n内容官\n已启用\n需要人工确认\n53 个工具已启用 / 5 类可配\n工具目录\n写回动作\n须人工确认\n对象查询\n属性子集查询\n业务逻辑\n已发布流程\n应用变量\n更新应用变量\n命令\n命令类工具\n澄清\n向用户澄清\n专业能力\n平台代调重能力\nWiki 字段\n结构化 Wiki\n\n优先使用结构化知识字段和授权属性子集\n\n登记专业能力 →\n平台代调 · 写回须人工确认\n已启用\n业务对象查询\n属性子集 · 含 Wiki 字段\n知识字段读取\n结构化字段优先\n连通性校验\n已发布的业务逻辑\n内容到成交归因与优化\n已发布的业务逻辑\n互动线索识别与交接\n已发布的业务逻辑\n事实品牌与合规审核\n已发布的业务逻辑\n多平台适配\n已发布的业务逻辑\n短视频策划\n已发布的业务逻辑\n文案与种草内容生产\n已发布的业务逻辑\n热点竞品与获客机会研究\n已发布的业务逻辑\n活动复盘\n已发布的业务逻辑\n执行监控与止损\n已发布的业务逻辑\n跨同事任务编排\n已发布的业务逻辑\n预算与毛利模拟\n已发布的业务逻辑\n活动机会与目标\n已发布的业务逻辑\n满意度与问题反哺\n已发布的业务逻辑\n投诉与人工升级\n已发布的业务逻辑\n物流查询与异常分诊\n已发布的业务逻辑\n身份与订单安全查询\n已发布的业务逻辑\n意图与情绪识别\n已发布的业务逻辑\n促单与成交交接\n已发布的业务逻辑\n异议识别与处理\n已发布的业务逻辑\n成分分析\n已发布的业务逻辑\n产品检索与推荐\n已发布的业务逻辑\n需求诊断\n已发布的业务逻辑\n关系反馈\n已发布的业务逻辑\n沉默客户与复购机会\n已发布的业务逻辑\n跟进与触达排期\n已发布的业务逻辑\n客户身份沉淀\n已发布的业务逻辑\n效果归因与复盘\n已发布的业务逻辑\n执行监控与调整建议\n已发布的业务逻辑\n审批后任务拆解\n已发布的业务逻辑\n内外机会研究\n已发布的业务逻辑\n数据与经营健康巡检\n已发布的业务逻辑\n视频草稿方案生成\n已发布的业务逻辑\n视觉草稿方案生成\n已发布的业务逻辑\n人群商品与机制设计\n已发布的业务逻辑\n客户标签与分层\n已发布的业务逻辑\n售后资格与工单草拟\n已发布的业务逻辑\n产品对比\n已发布的业务逻辑\n人群与内容策略\n已发布的业务逻辑\n增长方案生成\n已发布的业务逻辑\n关闭或写回（需人工确认）\n人工确认后执行\n素材采集\n写回经受控业务动作 · 由平台代为调用\n策略规划\n写回经受控业务动作 · 由平台代为调用\n文案生成\n写回经受控业务动作 · 由平台代为调用\n脚本撰写\n写回经受控业务动作 · 由平台代为调用\n语音合成\n写回经受控业务动作 · 由平台代为调用\n视频合成\n写回经受控业务动作 · 由平台代为调用\n内容审核\n写回经受控业务动作 · 由平台代为调用\n直播编排\n写回经受控业务动作 · 由平台代为调用\n平台适配\n写回经受控业务动作 · 由平台代为调用\n数据复盘\n写回经受控业务动作 · 由平台代为调用\n质量评分\n未评分\n尚未绑定权威评测套件和真实用例，因此不显示推测分数。请到 评测门控 完成绑定后查看结果。\n业务对象查询\n\n只读取当前组织和工作区授权的业务属性。\n\n☑ 对象标识\n☑ 业务状态\n☑ 知识风险等级\n☐ 原始载荷\n技术标识（审计用）\n打开知识库 →\n支持受控写回、业务逻辑、专业能力和对象查询。可前往 智能体配置 进行试聊。\n保存当前实例配置"
+  },
+  {
+    "index": 6,
+    "slug": "maturity",
+    "label": "成熟度楼梯",
+    "controls": [],
+    "headings": [],
+    "text": ""
+  },
+  {
+    "index": 7,
+    "slug": "production-contracts",
+    "label": "上线执行审批",
+    "controls": [],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "上线执行审批"
+      }
+    ],
+    "text": "上线执行审批\n\n统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；审批资料冻结只表示内容不可变，不代表已经启动运行。\n\n正在读取上线执行审批权威记录…"
+  },
+  {
+    "index": 8,
+    "slug": "capabilities",
+    "label": "智能体插件",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "智能体目录 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/capability-import",
+        "tag": "A",
+        "text": "能力导入 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（快照不可用）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "激活（快照不可用）",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体插件"
+      },
+      {
+        "tag": "H3",
+        "text": "内容审核"
+      },
+      {
+        "tag": "H3",
+        "text": "文案生成"
+      },
+      {
+        "tag": "H3",
+        "text": "直播编排"
+      },
+      {
+        "tag": "H3",
+        "text": "素材采集"
+      },
+      {
+        "tag": "H3",
+        "text": "数据复盘"
+      },
+      {
+        "tag": "H3",
+        "text": "平台适配"
+      },
+      {
+        "tag": "H3",
+        "text": "脚本撰写"
+      },
+      {
+        "tag": "H3",
+        "text": "语音合成"
+      },
+      {
+        "tag": "H3",
+        "text": "策略规划"
+      },
+      {
+        "tag": "H3",
+        "text": "视频合成"
+      }
+    ],
+    "text": "智能体插件\n\n10 类共享专业能力：组织绑定与定义八维分栏阅读\n\n正在读取 AIP 跨页权威投影…\n定义\n10\n目录可用\n1\n组织绑定\n48\n已激活\n12\n技能绑定\n41\n刷新\n智能体目录 →\n能力导入 →\n密表卡片 · 组织绑定 ≠ 定义八维\n两层状态请分开看：组织绑定表示本租户是否已创建 Binding；定义就绪是目录八维投影，blocked 不等于「未绑定」。\n内容审核\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 高 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n文案生成\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 中 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n直播编排\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 严重 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：模型供应商未知；公共上线审批记录尚未就绪；模型路由权威尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n素材采集\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 中 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n数据复盘\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 中 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n平台适配\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 高 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n脚本撰写\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 中 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：公共上线审批记录尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n语音合成\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 高 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：模型供应商未知；公共上线审批记录尚未就绪；模型路由权威尚未就绪\n预检（快照不可用）\n激活（快照不可用）\n策略规划\n组织绑定：未就绪\n定义就绪：定义可用\n\n风险 中 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：定义层投影可用。\n预检（快照不可用）\n激活（快照不可用）\n视频合成\n组织绑定：未就绪\n定义就绪：定义未就绪\n\n风险 高 · 组织绑定行数 1\n\n供应商 ✓\n路由 ✓\n评测门 ✓\n许可 ✓\n数据依赖 ✓\n工具依赖 ✓\n预算策略 ✓\n组织绑定侧：模型路由被阻断；供应商健康检查不可用\n定义层：模型供应商未知；公共上线审批记录尚未就绪；模型路由权威尚未就绪\n预检（快照不可用）\n激活（快照不可用）"
+  },
+  {
+    "index": 9,
+    "slug": "agent-registry",
+    "label": "智能体目录",
+    "controls": [
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "六数字同事已安装（≠可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-marketplace",
+        "tag": "A",
+        "text": "市场发现（只读）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-marketplace",
+        "tag": "A",
+        "text": "市场发现",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/maturity",
+        "tag": "A",
+        "text": "成熟度",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/capabilities",
+        "tag": "A",
+        "text": "智能体插件",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-runtime",
+        "tag": "A",
+        "text": "运行就绪",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic",
+        "tag": "A",
+        "text": "逻辑画布",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新运行准备",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预检（不可派发）",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体目录"
+      },
+      {
+        "tag": "H3",
+        "text": "活动策划师"
+      },
+      {
+        "tag": "H3",
+        "text": "内容官"
+      },
+      {
+        "tag": "H3",
+        "text": "客服专员"
+      },
+      {
+        "tag": "H3",
+        "text": "数据参谋"
+      },
+      {
+        "tag": "H3",
+        "text": "私域管家"
+      },
+      {
+        "tag": "H3",
+        "text": "导购顾问"
+      }
+    ],
+    "text": "智能体目录\n\n绑定真相台 · 安装、技能与专业能力就绪（非市场发现壳）\n\n正在读取 AIP 跨页权威投影…\n角色定义\n6\n已安装\n6\n可派发\n0\n技能绑定记录\n41/41\n活跃 / 全部\n能力绑定记录\n12/48\n活跃 / 全部\n技能定义\n37\n专业能力类\n10\n六数字同事已安装（≠可派发）\n刷新\n市场发现（只读）\n已安装 ≠ 可派发。可派发须完整通过 published → installed → binding → evaluated → operational → runnable。\n快照 2026/8/30 11:08:41 · 15 分钟有效期内\n市场发现\n评测\n成熟度\n智能体插件\n运行就绪\n逻辑画布\n当前状态\n部分智能体暂不可派发\n责任方\nAIP 智能体运行平台 / 模型供应商\n证据时间\n生成 2026/8/30 11:08:41\n证据到期 2026/8/20 10:25:07\n需要处理\n能力绑定状态需要刷新；技能绑定状态需要刷新\n刷新运行准备\n技术标识（审计用）\n活动策划师\n活动策划协同\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 6/6 已绑定\n专业能力 3/3 已绑定\n查看 6 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）\n内容官\n内容生产协同\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 8/8 已绑定\n专业能力 7/7 已绑定\n查看 8 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）\n客服专员\n售后服务与升级\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 6/6 已绑定\n专业能力 4/4 已绑定\n查看 6 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）\n数据参谋\n增长协同\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 6/6 已绑定\n专业能力 3/3 已绑定\n查看 6 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）\n私域管家\n私域关系经营\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 5/5 已绑定\n专业能力 4/4 已绑定\n查看 5 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）\n导购顾问\n导购与成交顾问\n已启用\n已发布\n已安装\n已绑定\n已评测\n可运营\n可派发\n已安装未可派发 · 卡在「可运营」\n技能 6/6 已绑定\n专业能力 3/3 已绑定\n查看 6 个技能状态\n当前不可派发；请按页面上方“刷新运行准备”完成重评。\n预检（不可派发）"
+  },
+  {
+    "index": 10,
+    "slug": "agent-marketplace",
+    "label": "智能体市场",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新目录",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "智能体目录",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agents",
+        "tag": "A",
+        "text": "智能体列表",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-import",
+        "tag": "A",
+        "text": "外部智能体预检",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "进入智能体目录刷新运行准备",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体市场"
+      },
+      {
+        "tag": "H2",
+        "text": "电商增长与客户运营方案包"
+      }
+    ],
+    "text": "智能体市场\n\n真实版本包只读发现 · 安装、审批与绑定保持权威分离\n\n刷新目录\n智能体目录\n智能体列表\n外部智能体预检\n市场只投影已版本化资产包，不把发现等同安装。安装必须经过审批、Overlay 和精确绑定；本页没有直接写入按钮。\n当前状态\n方案包已安装，但运行准备尚未完成\n责任方\nAIP 智能体运行平台 / 模型供应商\n证据时间\n生成 未提供\n证据到期 未提供\n需要处理\n能力绑定状态需要刷新；技能绑定状态需要刷新\n进入智能体目录刷新运行准备\n技术标识（审计用）\n电商增长与客户运营方案包\n\n发布方：aos · 使用许可：internal\n\n方案包技术标识（审计用）\n智能体 6\n技能 37\n能力 10\n可派发 0/6\n活动策划师\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n内容官\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n客服专员\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n数据参谋\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n私域管家\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n导购顾问\n已安装·受阻\n\n当前不可派发；请按页面上方处理指引完成运行准备。\n\n安装授权：未授权（需进入智能体目录完成审批与绑定）"
+  },
+  {
+    "index": 11,
+    "slug": "agents",
+    "label": "智能体列表",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "智能体目录",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-marketplace",
+        "tag": "A",
+        "text": "市场发现",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/tools",
+        "tag": "A",
+        "text": "工具面板",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "筛选智能体",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "私域管家\n私域关系经营\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客服专员\n售后服务与升级\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "导购顾问\n导购与成交顾问\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动策划师\n活动策划协同\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据参谋\n增长协同\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容官\n内容生产协同\n已启用\n不可派发",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "概览",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "工具箱",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "试运行",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "发布",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "检查目录与绑定",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/studio",
+        "tag": "A",
+        "text": "智能体配置",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体列表"
+      },
+      {
+        "tag": "H2",
+        "text": "私域管家"
+      }
+    ],
+    "text": "智能体列表\n\n已安装数字同事 · 左列表右配置壳（对齐蓝图密度，权威不写演示样例）\n\n刷新\n智能体目录\n市场发现\n工具面板\n实例 6\n可派发 0/6（已安装≠可派发）\n私域管家\n私域关系经营\n已启用\n不可派发\n客服专员\n售后服务与升级\n已启用\n不可派发\n导购顾问\n导购与成交顾问\n已启用\n不可派发\n活动策划师\n活动策划协同\n已启用\n不可派发\n数据参谋\n增长协同\n已启用\n不可派发\n内容官\n内容生产协同\n已启用\n不可派发\n私域管家\n\n工作区 dev-project · 版本 5 · 私域关系经营\n\n已启用\n目录不可派发\n概览\n工具箱\n试运行\n发布\n\n已安装≠可派发：能力绑定状态需要刷新；技能绑定状态需要刷新\n\n检查目录与绑定\n智能体配置"
+  },
+  {
+    "index": 12,
+    "slug": "skill-publish",
+    "label": "技能发布",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "仅已评测\n已发布\n全部",
+        "type": null,
+        "value": "evaluated"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测门控",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "智能体目录",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/maturity",
+        "tag": "A",
+        "text": "成熟度",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动机会与目标\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "人群商品与机制设计\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预算与毛利模拟\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "跨同事任务编排\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执行监控与止损\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "活动复盘\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "热点竞品与获客机会研究\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "人群与内容策略\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "文案与种草内容生产\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "短视频策划\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "多平台适配\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "事实品牌与合规审核\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "互动线索识别与交接\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内容到成交归因与优化\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数据与经营健康巡检\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "内外机会研究\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "增长方案生成\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "审批后任务拆解\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执行监控与调整建议\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "效果归因与复盘\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "需求诊断\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "产品检索与推荐\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "成分分析\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "产品对比\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "异议识别与处理\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "促单与成交交接\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "视觉草稿方案生成\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客户身份沉淀\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "客户标签与分层\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "跟进与触达排期\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "沉默客户与复购机会\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "关系反馈\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "意图与情绪识别\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "身份与订单安全查询\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "物流查询与异常分诊\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "售后资格与工单草拟\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "投诉与人工升级\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "满意度与问题反哺\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "视频草稿方案生成\n修订 1 · 仅已评测",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "发布此修订",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "去评测确认门绿",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "打开智能体目录绑定",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "我已完成绑定",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "技能发布"
+      },
+      {
+        "tag": "H2",
+        "text": "活动机会与目标"
+      },
+      {
+        "tag": "H3",
+        "text": "绑定向导（发布后）"
+      }
+    ],
+    "text": "技能发布\n\n把已通过评测的技能提交发布，并继续完成智能体绑定；缺少证据时失败关闭。\n\n刷新\n筛选 \n仅已评测\n已发布\n全部\n评测门控\n智能体目录\n成熟度\n共 39 条\n首批发布对账：已发布技能 39 个 · 仍待业务逻辑进入权威存储 0 个 · 列表共 80 条修订。缺少业务逻辑时保持关闭，不在此页伪造发布。\n活动机会与目标\n修订 1 · 仅已评测\n人群商品与机制设计\n修订 1 · 仅已评测\n预算与毛利模拟\n修订 1 · 仅已评测\n跨同事任务编排\n修订 1 · 仅已评测\n执行监控与止损\n修订 1 · 仅已评测\n活动复盘\n修订 1 · 仅已评测\n热点竞品与获客机会研究\n修订 1 · 仅已评测\n人群与内容策略\n修订 1 · 仅已评测\n文案与种草内容生产\n修订 1 · 仅已评测\n短视频策划\n修订 1 · 仅已评测\n多平台适配\n修订 1 · 仅已评测\n事实品牌与合规审核\n修订 1 · 仅已评测\n互动线索识别与交接\n修订 1 · 仅已评测\n内容到成交归因与优化\n修订 1 · 仅已评测\n数据与经营健康巡检\n修订 1 · 仅已评测\n内外机会研究\n修订 1 · 仅已评测\n增长方案生成\n修订 1 · 仅已评测\n审批后任务拆解\n修订 1 · 仅已评测\n执行监控与调整建议\n修订 1 · 仅已评测\n效果归因与复盘\n修订 1 · 仅已评测\n需求诊断\n修订 1 · 仅已评测\n产品检索与推荐\n修订 1 · 仅已评测\n成分分析\n修订 1 · 仅已评测\n产品对比\n修订 1 · 仅已评测\n异议识别与处理\n修订 1 · 仅已评测\n促单与成交交接\n修订 1 · 仅已评测\n视觉草稿方案生成\n修订 1 · 仅已评测\n客户身份沉淀\n修订 1 · 仅已评测\n客户标签与分层\n修订 1 · 仅已评测\n跟进与触达排期\n修订 1 · 仅已评测\n沉默客户与复购机会\n修订 1 · 仅已评测\n关系反馈\n修订 1 · 仅已评测\n意图与情绪识别\n修订 1 · 仅已评测\n身份与订单安全查询\n修订 1 · 仅已评测\n物流查询与异常分诊\n修订 1 · 仅已评测\n售后资格与工单草拟\n修订 1 · 仅已评测\n投诉与人工升级\n修订 1 · 仅已评测\n满意度与问题反哺\n修订 1 · 仅已评测\n视频草稿方案生成\n修订 1 · 仅已评测\n活动机会与目标\n\n生命周期：仅已评测 · 修订 1\n\n发布此修订\n去评测确认门绿\n绑定向导（发布后）\n确认技能修订已经发布\n在目录为对应数字同事创建或激活技能绑定\n目录「刷新」重评就绪快照\n打开智能体目录绑定\n我已完成绑定"
+  },
+  {
+    "index": 13,
+    "slug": "agent-import",
+    "label": "智能体导入",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "来源资源 ID",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "精确提交号",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "许可证",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "软件物料清单标识",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "目标标识",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "显示名称",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "源码相对路径",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "低\n中\n高\n关键",
+        "type": null,
+        "value": "low"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "网络策略引用",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "Secret ref",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "源码快照",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "生成预检证据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/agent-registry",
+        "tag": "A",
+        "text": "返回智能体目录",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "智能体导入预检"
+      }
+    ],
+    "text": "智能体导入预检\n\n五步证据化预检 · 不抓取远端、不执行源码、不创建导入任务、不直接安装\n\n请粘贴已经独立取得的不可变源码快照。预检只做确定性扫描和契约校验；连通测试、模型供应商调用、导入任务、审批及安装均保持未执行。\n来源资源 ID\n精确提交号\n许可证\n软件物料清单标识\n目标标识\n显示名称\n源码相对路径\n风险等级\n低\n中\n高\n关键\n网络策略引用（高/关键必填）\n密钥引用（可空）\n源码快照\n生成预检证据\n返回智能体目录"
+  },
+  {
+    "index": 14,
+    "slug": "capability-import",
+    "label": "能力导入",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "来源资源 ID",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "精确提交号",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "许可证",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "软件物料清单标识",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "目标标识",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "显示名称",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "源码相对路径",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "低\n中\n高\n关键",
+        "type": null,
+        "value": "low"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "网络策略引用",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "Secret ref",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "输入 Schema JSON",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "输出 Schema JSON",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "TEXTAREA",
+        "text": "源码快照",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "生成预检证据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/capabilities",
+        "tag": "A",
+        "text": "返回能力目录",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "能力导入预检"
+      }
+    ],
+    "text": "能力导入预检\n\n五步证据化预检 · 不抓取远端、不执行源码、不创建导入任务、不直接安装\n\n请粘贴已经独立取得的不可变源码快照。预检只做确定性扫描和契约校验；连通测试、模型供应商调用、导入任务、审批及安装均保持未执行。\n来源资源 ID\n精确提交号\n许可证\n软件物料清单标识\n目标标识\n显示名称\n源码相对路径\n风险等级\n低\n中\n高\n关键\n网络策略引用（高/关键必填）\n密钥引用（可空）\n输入 Schema（JSON）\n输出 Schema（JSON）\n源码快照\n生成预检证据\n返回能力目录"
+  },
+  {
+    "index": 15,
+    "slug": "evals",
+    "label": "评测门控",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "选择评测套件\n内容到成交归因与优化治理契约门 v1（隔离试运行）\n互动线索识别与交接治理契约门 v1（隔离试运行）\n事实品牌与合规审核治理契约门 v1（隔离试运行）\n多平台适配治理契约门 v1（隔离试运行）\n短视频策划治理契约门 v1（隔离试运行）\n文案与种草内容生产治理契约门 v1（隔离试运行）\n热点竞品与获客机会研究治理契约门 v1（隔离试运行）\n活动复盘治理契约门 v1（隔离试运行）\n执行监控与止损治理契约门 v1（隔离试运行）\n跨同事任务编排治理契约门 v1（隔离试运行）\n预算与毛利模拟治理契约门 v1（隔离试运行）\n活动机会与目标治理契约门 v1（隔离试运行）\n服务结果与反馈复盘治理契约门 v1（隔离试运行）\n投诉与人工升级治理契约门 v1（隔离试运行）\n物流只读分流治理契约门 v1（隔离试运行）\n身份与订单安全查询治理契约门 v1（隔离试运行）\n意图与情绪分流治理契约门 v1（隔离试运行）\n促单与成交交接治理契约门 v1（隔离试运行）\n异议识别与处理治理契约门 v1（隔离试运行）\n成分分析治理契约门 v1（隔离试运行）\n产品检索与推荐治理契约门 v1（隔离试运行）\n需求诊断治理契约门 v1（隔离试运行）\n关系反馈治理契约门 v1（隔离试运行）\n沉默客户与复购机会治理契约门 v1（隔离试运行）\n跟进与触达排期治理契约门 v1（隔离试运行）\n客户身份沉淀治理契约门 v1（隔离试运行）\n效果归因与复盘契约门 v1（隔离试运行）\n执行监控与调整建议契约门 v1（隔离试运行）\n审批后任务拆解契约门 v1（隔离试运行）\n内外机会研究契约门 v1（隔离试运行）\n数据与经营健康巡检契约门 v1（隔离试运行）\n视频草稿方案生成契约门 v1（隔离试运行，非模型效果证据）\n视觉草稿方案生成契约门 v1（隔离试运行，非模型效果证据）\n活动策划方案生成契约门 v1（隔离试运行，非模型效果证据）\n私域经营计划生成契约门 v1（隔离试运行，非模型效果证据）\n售后策略生成契约门 v1（隔离试运行，非模型效果证据）\n商品对比推荐生成契约门 v1（隔离试运行，非模型效果证据）\n内容策略生成契约门 v1（隔离试运行，非模型效果证据）\n增长方案生成契约门 v1（隔离试运行，非模型效果证据）",
+        "type": null,
+        "value": "ecommerce.logic.C08.contract.v1"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "选择已保存业务逻辑\n内容到成交归因与优化 · 修订 1\n互动线索识别与交接 · 修订 1\n事实品牌与合规审核 · 修订 1\n多平台适配 · 修订 1\n短视频策划 · 修订 1\n文案与种草内容生产 · 修订 1\n热点竞品与获客机会研究 · 修订 1\n活动复盘 · 修订 1\n执行监控与止损 · 修订 1\n跨同事任务编排 · 修订 1\n预算与毛利模拟 · 修订 1\n活动机会与目标 · 修订 1\n服务结果与反馈复盘 · 修订 1\n投诉与人工升级 · 修订 1\n物流只读分流 · 修订 1\n身份与订单安全查询 · 修订 1\n意图与情绪分流 · 修订 1\n促单与成交交接 · 修订 1\n异议识别与处理 · 修订 1\n成分分析 · 修订 1\n产品检索与推荐 · 修订 1\n需求诊断 · 修订 1\n关系反馈 · 修订 1\n沉默客户与复购机会 · 修订 1\n跟进与触达排期 · 修订 1\n客户身份沉淀 · 修订 1\n效果归因与复盘 · 修订 1\n执行监控与调整建议 · 修订 1\n审批后任务拆解 · 修订 1\n内外机会研究 · 修订 1\n数据与经营健康巡检 · 修订 1\n视频草稿方案生成 · 修订 1\n视觉草稿方案生成 · 修订 1\n活动策划方案生成 · 修订 1\n私域经营计划生成 · 修订 1\n售后策略生成 · 修订 1\n商品对比推荐生成 · 修订 1\n内容策略生成 · 修订 1\n增长方案生成 · 修订 1\n权威运行验收 · 修订 1",
+        "type": null,
+        "value": "ecommerce.logic.C08"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "运行套件并检查门控",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "读取最新报告",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "创建基础评测套件",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/maturity",
+        "tag": "A",
+        "text": "← 成熟度",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/drafts",
+        "tag": "A",
+        "text": "查看草稿审批 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "eval-authority-run-id",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "读取权威评测运行",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/maturity",
+        "tag": "A",
+        "text": "成熟度楼梯",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic",
+        "tag": "A",
+        "text": "业务逻辑编排",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/drafts",
+        "tag": "A",
+        "text": "草稿审批台",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/lineage",
+        "tag": "A",
+        "text": "决策谱系",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "评测门控"
+      },
+      {
+        "tag": "H3",
+        "text": "权威评测运行核查"
+      }
+    ],
+    "text": "评测门控\n\n自动化业务逻辑上线前必须通过真实评测；未达标时禁止发布或自动执行。\n\n正在读取 AIP 跨页权威投影…\n套件数\n39\n图目标\n40\n门控\n未跑\n通过率\n—\n用例\n—\n权威运行\n暂无\n选择评测套件\n内容到成交归因与优化治理契约门 v1（隔离试运行）\n互动线索识别与交接治理契约门 v1（隔离试运行）\n事实品牌与合规审核治理契约门 v1（隔离试运行）\n多平台适配治理契约门 v1（隔离试运行）\n短视频策划治理契约门 v1（隔离试运行）\n文案与种草内容生产治理契约门 v1（隔离试运行）\n热点竞品与获客机会研究治理契约门 v1（隔离试运行）\n活动复盘治理契约门 v1（隔离试运行）\n执行监控与止损治理契约门 v1（隔离试运行）\n跨同事任务编排治理契约门 v1（隔离试运行）\n预算与毛利模拟治理契约门 v1（隔离试运行）\n活动机会与目标治理契约门 v1（隔离试运行）\n服务结果与反馈复盘治理契约门 v1（隔离试运行）\n投诉与人工升级治理契约门 v1（隔离试运行）\n物流只读分流治理契约门 v1（隔离试运行）\n身份与订单安全查询治理契约门 v1（隔离试运行）\n意图与情绪分流治理契约门 v1（隔离试运行）\n促单与成交交接治理契约门 v1（隔离试运行）\n异议识别与处理治理契约门 v1（隔离试运行）\n成分分析治理契约门 v1（隔离试运行）\n产品检索与推荐治理契约门 v1（隔离试运行）\n需求诊断治理契约门 v1（隔离试运行）\n关系反馈治理契约门 v1（隔离试运行）\n沉默客户与复购机会治理契约门 v1（隔离试运行）\n跟进与触达排期治理契约门 v1（隔离试运行）\n客户身份沉淀治理契约门 v1（隔离试运行）\n效果归因与复盘契约门 v1（隔离试运行）\n执行监控与调整建议契约门 v1（隔离试运行）\n审批后任务拆解契约门 v1（隔离试运行）\n内外机会研究契约门 v1（隔离试运行）\n数据与经营健康巡检契约门 v1（隔离试运行）\n视频草稿方案生成契约门 v1（隔离试运行，非模型效果证据）\n视觉草稿方案生成契约门 v1（隔离试运行，非模型效果证据）\n活动策划方案生成契约门 v1（隔离试运行，非模型效果证据）\n私域经营计划生成契约门 v1（隔离试运行，非模型效果证据）\n售后策略生成契约门 v1（隔离试运行，非模型效果证据）\n商品对比推荐生成契约门 v1（隔离试运行，非模型效果证据）\n内容策略生成契约门 v1（隔离试运行，非模型效果证据）\n增长方案生成契约门 v1（隔离试运行，非模型效果证据）\n选择已保存业务逻辑\n内容到成交归因与优化 · 修订 1\n互动线索识别与交接 · 修订 1\n事实品牌与合规审核 · 修订 1\n多平台适配 · 修订 1\n短视频策划 · 修订 1\n文案与种草内容生产 · 修订 1\n热点竞品与获客机会研究 · 修订 1\n活动复盘 · 修订 1\n执行监控与止损 · 修订 1\n跨同事任务编排 · 修订 1\n预算与毛利模拟 · 修订 1\n活动机会与目标 · 修订 1\n服务结果与反馈复盘 · 修订 1\n投诉与人工升级 · 修订 1\n物流只读分流 · 修订 1\n身份与订单安全查询 · 修订 1\n意图与情绪分流 · 修订 1\n促单与成交交接 · 修订 1\n异议识别与处理 · 修订 1\n成分分析 · 修订 1\n产品检索与推荐 · 修订 1\n需求诊断 · 修订 1\n关系反馈 · 修订 1\n沉默客户与复购机会 · 修订 1\n跟进与触达排期 · 修订 1\n客户身份沉淀 · 修订 1\n效果归因与复盘 · 修订 1\n执行监控与调整建议 · 修订 1\n审批后任务拆解 · 修订 1\n内外机会研究 · 修订 1\n数据与经营健康巡检 · 修订 1\n视频草稿方案生成 · 修订 1\n视觉草稿方案生成 · 修订 1\n活动策划方案生成 · 修订 1\n私域经营计划生成 · 修订 1\n售后策略生成 · 修订 1\n商品对比推荐生成 · 修订 1\n内容策略生成 · 修订 1\n增长方案生成 · 修订 1\n权威运行验收 · 修订 1\n实际执行绑定已保存业务逻辑的精确修订与内容摘要，不接受独立目标表达式\n运行套件并检查门控\n读取最新报告\n创建基础评测套件\n← 成熟度\n快速开始 · 套件“快速开始：加一函数” · 用例：输入 x=1，期望 2（精确匹配） · 门控阈值 100%。 创建动作会真实保存评测套件，但不会生成评测报告；运行时必须绑定已保存业务逻辑的精确版本。\n—\n总体通过率\n尚未运行真实评测\n10\n测试用例\n来自所选套件\n未检查\n评测门控检查\n以 gate-check 回包为准\n用例\t评判\t期望\t实际\t结果\t详情\n真实门控口径 · 本页不提供手工绿灯。只有服务端门控检查返回通过才显示评测通过；受控自动化仍须草稿审批与其他发布护栏 · 查看草稿审批 →\n权威评测运行核查\n\n旧评测入口保持兼容；此处只读不可变的评测运行引用，不允许手工修改状态或版本摘要。\n\n读取权威评测运行\n\n尚未选择权威评测运行。\n\n成熟度楼梯\n业务逻辑编排\n草稿审批台\n决策谱系"
+  },
+  {
+    "index": 16,
+    "slug": "drafts",
+    "label": "草稿审批台",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "搜索受控业务动作",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新 / 对账",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "待审批 1",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "已批准 0",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "执行与对账 0",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "已结束 0",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "待审批\n2026/8/20 11:10:02\n关闭工单\n\n评测通过后的工单关闭申请\n\n工单 · 低风险 · 版本 1",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee",
+        "tag": "A",
+        "text": "决策谱系（action/proposal-1d4…）→",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals?suite=ecommerce.logic.A02.contract.v1&proposal=proposal-1d4d878cd36e45cfb8ee",
+        "tag": "A",
+        "text": "评测套件 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "批准精确版本",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "拒绝",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "重读详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee",
+        "tag": "A",
+        "text": "决策谱系 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals?proposal=proposal-1d4d878cd36e45cfb8ee",
+        "tag": "A",
+        "text": "评测门控 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/logic",
+        "tag": "A",
+        "text": "业务逻辑编排 →",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "草稿审批台"
+      },
+      {
+        "tag": "H3",
+        "text": "关闭工单"
+      },
+      {
+        "tag": "H2",
+        "text": "关闭工单"
+      },
+      {
+        "tag": "H3",
+        "text": "动作与效果边界"
+      },
+      {
+        "tag": "H3",
+        "text": "草稿变更"
+      },
+      {
+        "tag": "H3",
+        "text": "评测与决策谱系证据链"
+      },
+      {
+        "tag": "H3",
+        "text": "审批事实（0）"
+      },
+      {
+        "tag": "H3",
+        "text": "执行租约"
+      },
+      {
+        "tag": "H3",
+        "text": "不可变交付凭证链（0）"
+      }
+    ],
+    "text": "草稿审批台\n\n执行提案 → 变更草稿 → 审批 → 执行租约 → 交付凭证；批准不等于已执行，只有交付凭证才能证明外部结果。\n\n加载态\n就绪\n合计\n1\n待批\n1\n已批\n0\n执行中\n0\n已关\n0\n真实受控动作权威链 · 页面不注入示例草稿，也不在浏览器维护第二套状态机。\n\n原子 Skill → Logic 编排 → 数字同事 → 工作台贡献视图；需要外部副作用时，再进入独立 Action / Effect 边界。\n\n刷新 / 对账\n待审批 1\n已批准 0\n执行与对账 0\n已结束 0\n待审批\n2026/8/20 11:10:02\n关闭工单\n\n评测通过后的工单关闭申请\n\n工单 · 低风险 · 版本 1\n\n待审批\n低风险\n版本 1\n关闭工单\n\n评测通过后的工单关闭申请\n\n动作与效果边界\n\n专业产物完成 ≠ Action 成功 ≠ Effect 已复核\n\n只读 canonical 投影\n专业产物\n已闭合\n\nRecommendation / ActionDraft 已形成；这不代表外部动作已执行\n\n执行提案\n已闭合\n\nProposal v1 已从服务端回读\n\n人工审批\n待继续\n\n等待 maker-checker 审批\n\n执行租约\n待继续\n\n尚无服务端执行租约\n\n外部尝试\n待继续\n\n尚无交付凭证，不能推导 Provider 调用\n\n动作结果\n待继续\n\n尚无交付凭证，Action 未闭合\n\n效果复核\n待继续\n\n尚无 exact EffectReview 引用\n\n提案标识（审计用）\n内容摘要（审计用）\n任务与运行标识（审计用）\n到期时间2026/8/21 11:10:02\n草稿变更\n{\n  \"status\": {\n    \"to\": \"closed\",\n    \"from\": \"open\"\n  }\n}\n评测与决策谱系证据链\n决策谱系（action/proposal-1d4…）→\n评测套件 →\n审批事实（0）\n\n尚无审批事件。\n\n执行租约\n\n尚未获取执行租约。\n\n不可变交付凭证链（0）\n\n尚无交付凭证，不能宣称已执行。\n\n权威事件时间线（1）\n批准精确版本\n拒绝\n重读详情\n决策谱系 →\n评测门控 →\n业务逻辑编排 →"
+  },
+  {
+    "index": 17,
+    "slug": "lineage",
+    "label": "决策谱系",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "任务运行\n受控动作\n评测运行\n发布记录\n研究任务\n历史决策谱系",
+        "type": null,
+        "value": "task_run"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "lineage-root-id",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "查询权威谱系",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/ontology/graph-health",
+        "tag": "A",
+        "text": "图谱健康 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/evals",
+        "tag": "A",
+        "text": "评测门控",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/drafts",
+        "tag": "A",
+        "text": "草稿审批台 →",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "决策谱系"
+      }
+    ],
+    "text": "决策谱系\n\n从服务端权威事件还原任务运行、受控动作、评测、发布与研究任务之间的因果链；无真实标识时保持空态，不伪造链路。\n\n起点类型\n任务运行\n加载态\n空闲\n事件数\n0\n谱系标识\n—\n输入\n待填\n错误\n无\n起点类型 \n任务运行\n受控动作\n评测运行\n发布记录\n研究任务\n历史决策谱系\n起点标识 \n查询权威谱系\n请选择起点类型并输入真实业务记录标识；页面不会展示示例链路或固定步骤。\n可观测证据（需先读取谱系）\n图谱健康 →\n评测门控\n草稿审批台 →"
+  },
+  {
+    "index": 18,
+    "slug": "observability",
+    "label": "可观测性",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "observability-lineage-id",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "读取权威证据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "导出（需先读取）",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "概览",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "调用轨迹",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "用量凭证",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "运行可观测性"
+      }
+    ],
+    "text": "运行可观测性\n\n按真实决策谱系查询调用轨迹与用量凭证；不推算趋势，不回填演示数据。\n\n加载态\n空闲\n视图\n概览\n调用轨迹\n0\n用量凭证\n0\n筛选命中\n0\n输入\n待填\n谱系标识\n读取权威证据\n导出（需先读取）\n概览\n调用轨迹\n用量凭证\n请输入真实谱系标识。页面不会显示固定调用链、合成趋势或推算用量。"
+  },
+  {
+    "index": 19,
+    "slug": "memory-governance",
+    "label": "记忆与知识治理",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "知识候选（0）",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "正式记忆（0）",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "数字同事记忆",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "知识检索",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "知识管道（0）",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "冷启动与检索",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新权威状态",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/ontology/wiki",
+        "tag": "A",
+        "text": "活知识 Wiki →",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "记忆与知识治理"
+      },
+      {
+        "tag": "H2",
+        "text": "知识候选"
+      },
+      {
+        "tag": "H2",
+        "text": "治理证据与事件"
+      }
+    ],
+    "text": "记忆与知识治理\n\n知识候选 → 审批证据 → 正式记忆 → 带来源引用的知识检索；全部来自权威链，不回填示例知识。\n\n当前视图\n知识候选\n加载\n就绪\n候选\n0\n正式记忆\n0\n管道运行\n0\n查询状态\nidle\n知识候选（0）\n正式记忆（0）\n数字同事记忆\n知识检索\n知识管道（0）\n冷启动与检索\n刷新权威状态\n活知识 Wiki →\n知识候选\n空态策略：当前租户没有待治理或历史知识候选。页面不注入静态或演示候选；有真实来源写入后再出现条目，再经审批晋升为正式记忆。\n治理证据与事件\n选择记忆候选项，查看内容摘要、来源、新鲜度、适用范围及不可变事件。"
+  },
+  {
+    "index": 20,
+    "slug": "model-catalog",
+    "label": "模型目录",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "目录浏览 (3)",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "平台设置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "模型启用",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "已注册 (3)",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "catalog-search",
+        "type": "search",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "所有供应商\nagnes",
+        "type": null,
+        "value": "all"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "所有能力\n对话生成\n工具调用\n图像理解",
+        "type": null,
+        "value": "all"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "所有价位\n免费\n低价 (<$1/1M)\n中价 ($1-$5/1M)\n高价 (>$5/1M)\n价格未知/单位待补",
+        "type": null,
+        "value": "all"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "将 Agnes 2.5 Flash（文本） 加入模型对比",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-router",
+        "tag": "A",
+        "text": "路由配置 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "将 Agnes Image 2.1 Flash 加入模型对比",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-router",
+        "tag": "A",
+        "text": "路由配置 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "INPUT",
+        "text": "将 Agnes Video v2.0 加入模型对比",
+        "type": "checkbox",
+        "value": "on"
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-router",
+        "tag": "A",
+        "text": "路由配置 →",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "模型目录"
+      }
+    ],
+    "text": "模型目录\n\n浏览、筛选并注册当前组织可用的真实模型；读取失败时不回落本地演示目录。\n\n真实数据\n模型目录和已注册列表均来自当前组织的权威服务\n供应商配置\n模型供应商\n凭证管理\n进入 →\n路由策略\n模型路由\n流量策略 · 熔断\n进入 →\n模型目录 · 当前\n模型目录\n可发现 → 注册\n智能体应用\n智能体调用\n选模型 → 推理\n3\n目录模型总数\n3\n已注册\n1\n供应商数\n3\n当前筛选\n目录浏览 (3)\n平台设置\n模型启用\n已注册 (3)\n所有供应商\nagnes\n所有能力\n对话生成\n工具调用\n图像理解\n所有价位\n免费\n低价 (<$1/1M)\n中价 ($1-$5/1M)\n高价 (>$5/1M)\n价格未知/单位待补\n筛选命中 3 / 3\n找到 3 个模型\nA\nAgnes 2.5 Flash（文本）\nagnes\n已注册\n参数量 —\n上下文 128K\n输入 已审批免费\n输出 已审批免费\n对话生成\n工具调用\n对比\n路由配置 →\nA\nAgnes Image 2.1 Flash\nagnes\n已注册\n参数量 —\n上下文 4K\n输入 计价单位待补\n输出 计价单位待补\n图像理解\n对比\n路由配置 →\nA\nAgnes Video v2.0\nagnes\n已注册\n参数量 —\n上下文 4K\n输入 计价单位待补\n输出 计价单位待补\n图像理解\n对比\n路由配置 →"
+  },
+  {
+    "index": 21,
+    "slug": "model-providers",
+    "label": "模型供应商",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "插件工作室",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "适配器管理",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-router",
+        "tag": "A",
+        "text": "路由策略 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "SELECT",
+        "text": "Agnes（环境）· agnes-2.5-flash\nAgnes Image（内网）（插件就绪）· agnes-image-2.1-flash\nAgnes Text（内网）（插件就绪）· agnes-2.5-flash",
+        "type": null,
+        "value": "agnes"
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "保存为默认",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/agnes-2.5-flash",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/agnes-image-2.1-flash",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/agnes-image",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "取消插件就绪",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/agnes-text",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "取消插件就绪",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/vllm",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "启用插件就绪",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers/zhipu-glm",
+        "tag": "A",
+        "text": "详情",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "管理凭据",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "启用插件就绪",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "▾ 可安装插件\n38 / 共 42 · DeepSeek 必选 · 文本/图片/视频",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "安装并配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "详情",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "插件工作室",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-router",
+        "tag": "A",
+        "text": "模型路由",
+        "type": null,
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "模型供应商"
+      },
+      {
+        "tag": "H2",
+        "text": "兼容默认网关（非权威运行链）"
+      },
+      {
+        "tag": "H2",
+        "text": "兼容网关发现 / 已安装插件"
+      }
+    ],
+    "text": "模型供应商\n\n每种供应商对应一个插件：先安装，再填类型化配置；运行时经平台网关，不直连厂商。\n\n供应商配置 · 当前\n模型供应商\n凭证管理\n进入 →\n路由策略\n模型路由\n流量策略 · 熔断\n进入 →\n模型目录\n模型目录\n可发现 → 注册\n智能体应用\n智能体调用\n选模型 → 推理\n权威供应商\n—\n权威路由\n0/0\n已安装插件\n4\n目录待装\n38\n刷新\n插件工作室\n适配器管理\n路由策略 →\n已配置大模型仅使用 secretRef；请勿从业务座舱进入 Vault/网关运维台\n权威模型运行状态： 0/0 条路由已就绪。 当前没有可核验的就绪解析结果。 下方旧网关与插件状态仅作兼容诊断，不代表供应商当前可运行。\n兼容默认网关（非权威运行链）\n仅用于旧网关兼容 · 权威运行链未全部就绪时禁止切换\n当前默认\nAgnes（环境）· agnes-2.5-flash\nAgnes Image（内网）（插件就绪）· agnes-image-2.1-flash\nAgnes Text（内网）（插件就绪）· agnes-2.5-flash\n保存为默认\n\n当前：agnes-openai-compatible · agnes-2.5-flash · 源 env-fallback。候选含环境 Agnes、已「启用就绪」的插件、LiteLLM。\n\n兼容网关发现 / 已安装插件\n插件 4 · 兼容发现 2\nAgnes Text\ntext · agnes-2.5-flash · 兼容网关发现\n非运行权威\n详情\n配置\n管理凭据\n兼容来源：环境/边车\nAgnes Image\nimage · agnes-image-2.1-flash · 兼容网关发现\n非运行权威\n详情\n配置\n管理凭据\n兼容来源：环境/边车\nAgnes Image（内网）\nagnes-image · v0.1.0 · 高端 · 图片 · agnes-image-2.1-flash\n插件配置就绪\n详情\n配置\n管理凭据\n取消插件就绪\nAgnes Text（内网）\nagnes-text · v0.1.1 · 高端 · 文本 · agnes-2.5-flash\n插件配置就绪\n详情\n配置\n管理凭据\n取消插件就绪\nvLLM（本地）\nvllm · v0.1.0 · 免费档 · 文本\n已安装\n详情\n配置\n管理凭据\n启用插件就绪\n智谱 GLM\nzhipu-glm · v0.1.0 · 中端 · 文本\n已安装\n详情\n配置\n管理凭据\n启用插件就绪\n▾ 可安装插件\n38 / 共 42 · DeepSeek 必选 · 文本/图片/视频\nAgnes Video（内网）\n\n平台内网视频\n\n高端\n视频\n安装并配置\n详情\nAmazon Bedrock\n\nAWS 托管多模型\n\n高端\n文本\n安装并配置\n详情\nAnthropic Claude\n\nClaude 系列\n\n高端\n文本\n安装并配置\n详情\nAzure OpenAI\n\n区域 · 部署名 · API 版本\n\n高端\n文本\n安装并配置\n详情\n文心一言\n\n百度千帆\n\n中端\n文本\n安装并配置\n详情\nCohere\n\nCommand 系列\n\n中端\n文本\n安装并配置\n详情\n自定义 Adapter 包\n\n非标准协议 · 钩子 · 容器\n\n中端\n文本\n安装并配置\n详情\n通义万相\n\n阿里图像生成\n\n中端\n图片\n安装并配置\n详情\n深度求索\n\nDeepSeek Chat / Reasoner · OpenAI 兼容\n\n免费档\n文本\n安装并配置\n详情\nFireworks\n\n高速开源推理\n\n中端\n文本\n安装并配置\n详情\nFlux 图像\n\nFlux 高质量生图\n\n中端\n图片\n安装并配置\n详情\nGemini\n\n谷歌 Gemini 多模态\n\n中端\n文本·图片\n安装并配置\n详情\nVertex AI\n\nGCP Vertex 企业接入\n\n高端\n文本\n安装并配置\n详情\nGroq\n\n高速推理 · 免费档友好\n\n免费档\n文本\n安装并配置\n详情\nHugging Face Endpoint\n\nHF Inference Endpoint\n\n免费档\n文本\n安装并配置\n详情\n可灵 Kling 视频\n\n快手可灵文生视频\n\n高端\n视频\n安装并配置\n详情\nLM Studio\n\n桌面本地模型\n\n免费档\n文本\n安装并配置\n详情\nLuma 视频\n\nDream Machine\n\n高端\n视频\n安装并配置\n详情\nMiniMax\n\n海螺 / abab 系列\n\n中端\n文本\n安装并配置\n详情\nMistral\n\nMistral / Mixtral\n\n中端\n文本\n安装并配置\n详情\n月之暗面 Kimi\n\nKimi 长上下文\n\n中端\n文本\n安装并配置\n详情\nOllama（本地）\n\n本机免费本地模型\n\n免费档\n文本\n安装并配置\n详情\nOpenAI\n\nGPT 文本与图像模型\n\n高端\n文本·图片\n安装并配置\n详情\nOpenAI 兼容通用\n\n任意 OpenAI 兼容端点\n\n中端\n文本\n安装并配置\n详情\nOpenAI 图像\n\nGPT Image / DALL·E\n\n高端\n图片\n安装并配置\n详情\nOpenRouter\n\n多供应商聚合路由\n\n中端\n文本\n安装并配置\n详情\nPerplexity\n\n联网问答模型\n\n中端\n文本\n安装并配置\n详情\n通义千问\n\n阿里云百炼 / 通义\n\n中端\n文本·图片\n安装并配置\n详情\nRunway 视频\n\nGen-3 视频生成\n\n高端\n视频\n安装并配置\n详情\n硅基流动\n\n国产聚合 · 免费档友好\n\n免费档\n文本·图片\n安装并配置\n详情\n讯飞星火\n\n科大讯飞星火\n\n中端\n文本\n安装并配置\n详情\nStability AI\n\nStable Diffusion 系\n\n中端\n图片\n安装并配置\n详情\n腾讯混元\n\n腾讯云混元\n\n中端\n文本\n安装并配置\n详情\nTogether AI\n\n开源模型托管\n\n中端\n文本\n安装并配置\n详情\n火山豆包\n\n字节火山方舟\n\n中端\n文本\n安装并配置\n详情\n即梦（图/视频）\n\n火山即梦多模态生成\n\n中端\n图片·视频\n安装并配置\n详情\nxAI Grok\n\nGrok 系列\n\n高端\n文本\n安装并配置\n详情\n零一万物\n\nYi 系列开源友好\n\n中端\n文本\n安装并配置\n详情\n\n按需还可扩展接入更多供应商。使用 插件工作室 在线定制并发布。接入 ≠ 路由；任务策略见 模型路由。"
+  },
+  {
+    "index": 22,
+    "slug": "model-router",
+    "label": "模型路由",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "刷新",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/model-providers",
+        "tag": "A",
+        "text": "大模型接入(插件)",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": "/aip/tools",
+        "tag": "A",
+        "text": "工具面板 →",
+        "type": null,
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预热与试聊 →",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "agnes-2.5-flash"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "禁公网"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "agnes-2.5-flash"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "禁公网"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "审批后"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "继承"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "—\nagnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "—"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "强制不出域"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "agnes-2.5-flash\nagnes-image-2.1-flash",
+        "type": null,
+        "value": "agnes-2.5-flash"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "SELECT",
+        "text": "禁公网\n审批后\n继承\n强制不出域\nfallback",
+        "type": null,
+        "value": "fallback"
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "保存配置草稿",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": true,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "熔断演练",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "导出审计快照",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "权重分配",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "熔断器配置",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "故障回退链",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "路由测试",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "模型路由策略"
+      },
+      {
+        "tag": "H2",
+        "text": "路由规则"
+      },
+      {
+        "tag": "H2",
+        "text": "高级配置"
+      }
+    ],
+    "text": "模型路由策略\n\n任务类型 · 出境 · 熔断降级。供应商安装与类型化配置见大模型接入(插件)。\n\n供应商配置\n模型供应商\n凭证管理\n进入 →\n路由策略 · 当前\n模型路由\n流量策略 · 熔断\n进入 →\n模型目录\n模型目录\n可发现 → 注册\n智能体应用\n智能体调用\n选模型 → 推理\n路由规则\n6\n候选模型\n2\n配置版本\n4\n预热就绪\n是\n刷新\n大模型接入(插件)\n工具面板 →\n预热与试聊 →\n权威模型运行状态： 0/0 条路由已就绪。 当前没有可核验的就绪解析结果。 路由配置仍可编辑并保存；熔断演练、路由测试和试聊继续失败关闭。\n\n本页配置与运行分门：配置完成权威读取后即可维护；只有 Provider Health、价格、评测等运行证据全部就绪时，才允许演练、路由测试和试聊。\n\n路由规则\n任务类型 / 回退 / 出境 · 草稿可编辑 · 草稿版本 v4\n任务类型\t首选\t回退\t出境\n摘要 / 分类\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n\n业务问答 + Wiki\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n\nLogic 长上下文 (>32k)\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n\nChatbot 日常对话\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n\n含 PII 字段\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n—\nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n\nProvider 不可用\t熔断降级 → \nagnes-2.5-flash\nagnes-image-2.1-flash\n\t\n禁公网\n审批后\n继承\n强制不出域\nfallback\n保存配置草稿\n熔断演练\n导出审计快照\n高级配置\n权重分配\n熔断器配置\n故障回退链\n路由测试\n摘要 / 分类策略: failover\nagnes-2.5-flash · 100%\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s\n业务问答 + Wiki策略: failover\nagnes-2.5-flash · 100%\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s\nLogic 长上下文 (>32k)策略: failover\n—（failover 模式 · 无权重分配）\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s\nChatbot 日常对话策略: failover\n—（failover 模式 · 无权重分配）\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s\n含 PII 字段策略: failover\n—（failover 模式 · 无权重分配）\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s\nProvider 不可用策略: failover\n—（failover 模式 · 无权重分配）\n熔断: 5xx > 10%\n·\np99 > 3000ms\n·\n恢复: 30s"
+  },
+  {
+    "index": 23,
+    "slug": "capacity",
+    "label": "容量管理",
+    "controls": [
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "用量仪表盘",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "速率限制",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "预留容量",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "今日",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "本周",
+        "type": "button",
+        "value": ""
+      },
+      {
+        "disabled": false,
+        "href": null,
+        "tag": "BUTTON",
+        "text": "本月",
+        "type": "button",
+        "value": ""
+      }
+    ],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "容量管理"
+      },
+      {
+        "tag": "H3",
+        "text": "模型配额使用"
+      }
+    ],
+    "text": "容量管理\n\n查看用量、项目与用户限速及预留容量；数据来自容量权威接口，读取失败时不回落到本地演示数据\n\n数据源\n读取中\n今日请求\n0\n今日模型用量\n0\n用户限额条\n0\n配额告警\n0\n权威成本\n未观测\n当前视图\n用量\n用量仪表盘\n速率限制\n预留容量\n\n当前仅展示租户内已发布的兼容限额与精确容量池；未发布的预留比例不会按静态演示值推断。\n\n今日\n本周\n本月\n总请求数\n0\n今日累计\n模型用量\n0\n0 个模型用量单位\n成本汇总\n未观测\n用量凭证为权威；未观测不等于 0\n模型配额使用\n\n各模型当前分钟级用量与配额\n\n暂无配额数据"
+  },
+  {
+    "index": 24,
+    "slug": "model-runtime",
+    "label": "运行就绪",
+    "controls": [],
+    "headings": [
+      {
+        "tag": "H1",
+        "text": "模型运行就绪"
+      }
+    ],
+    "text": "模型运行就绪\n\n汇总供应商、模型、路由、策略、评测、价格与容量的精确权威快照；控制面就绪不等于外部供应商已可调用\n\n正在读取 AIP 跨页权威投影…\n正在读取当前组织的精确模型运行权威…"
+  }
+]

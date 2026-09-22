@@ -1,0 +1,181 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - strong: 栖月汇微商城
+  - generic: /
+  - generic: 日常任务总控大屏
+  - searchbox "搜索任务、同事、关键词…"
+  - generic: 2026/08/30周日
+  - button "日历视图":
+    - text: 日历视图
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - heading "电商日常任务总控大屏" [level=1]
+  - paragraph: 菜单名：日常任务总控大屏
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.task-cockpit · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.task-cockpit · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "日常任务总控只读视图":
+      - region "日常任务总控大屏":
+        - generic "实时经营与任务概览":
+          - strong: "0"
+          - generic: 今日经营任务
+          - generic: 已排除系统验收记录
+          - strong: "0"
+          - generic: 执行中
+          - generic: 活跃状态
+          - strong: "0"
+          - generic: 已绑定执行记录
+          - generic: 不补造缺失记录
+          - strong: "0"
+          - generic: 待补条件
+          - generic: 影响任务执行
+          - strong: "0"
+          - generic: 待规划
+          - generic: 尚未进入执行
+          - strong: "2"
+          - generic: 待接入
+          - generic: 需要补充数据
+          - generic "评估 2026/8/30 10:08:13 · 数据截止 2026/8/30 10:08:13":
+            - strong: 10:08
+            - generic: 评估截止
+            - generic: 2026/8/30
+        - generic "任务指令与筛选":
+          - generic: ϟ
+          - textbox "任务指令":
+            - /placeholder: 描述业务任务需求，系统将先做安全预检…
+          - button "下达"
+          - text: 任务状态
+          - combobox "任务状态":
+            - option "全部状态" [selected]
+            - option "待规划"
+            - option "规划中"
+            - option "待审批"
+            - option "已批准"
+            - option "执行中"
+            - option "已暂停"
+            - option "已完成"
+            - option "失败"
+            - option "已取消"
+            - option "已回滚"
+          - button "重新读取"
+        - complementary "执行组":
+          - heading "执行组" [level=2]
+          - button "客服专员 客户服务与售后风险处置专家 个人运行状态待核对":
+            - strong: 客服专员
+            - generic: 客户服务与售后风险处置专家
+            - emphasis: 个人运行状态待核对
+          - button "私域管家 客户关系沉淀与生命周期运营专家 个人运行状态待核对":
+            - strong: 私域管家
+            - generic: 客户关系沉淀与生命周期运营专家
+            - emphasis: 个人运行状态待核对
+          - button "导购顾问 购物决策支持与转化优化专家 个人运行状态待核对":
+            - strong: 导购顾问
+            - generic: 购物决策支持与转化优化专家
+            - emphasis: 个人运行状态待核对
+        - region "当日经营任务流 · 执行进度":
+          - heading "当日经营任务流 · 执行进度" [level=2]
+          - generic: 0 项
+          - status:
+            - strong: 当前没有可验证的经营任务
+            - paragraph: 当前没有正式业务任务，页面不会用演示任务填充。
+        - complementary "策划组":
+          - heading "策划组" [level=2]
+          - button "数据参谋 经营洞察、任务编排与效果复盘专家 个人运行状态待核对":
+            - strong: 数据参谋
+            - generic: 经营洞察、任务编排与效果复盘专家
+            - emphasis: 个人运行状态待核对
+          - button "内容官 全平台内容策略与生产编排专家 个人运行状态待核对":
+            - strong: 内容官
+            - generic: 全平台内容策略与生产编排专家
+            - emphasis: 个人运行状态待核对
+          - button "活动策划师 增长活动设计、协同与止损专家 个人运行状态待核对":
+            - strong: 活动策划师
+            - generic: 增长活动设计、协同与止损专家
+            - emphasis: 个人运行状态待核对
+        - complementary "复盘与权威缺口":
+          - heading "复盘 · 权威缺口" [level=2]
+          - generic: 2 项
+          - list:
+            - strong: 经营复盘所需数据尚未完整
+            - generic: 需要补充正式业务数据
+            - paragraph: 当前任务保持待核对，不自动执行。
+            - generic "查看审计状态码"
+            - strong: 经营复盘所需数据尚未完整
+            - generic: 需要补充正式业务数据
+            - paragraph: 当前任务保持待核对，不自动执行。
+            - generic "查看审计状态码"
+        - strong: 共享业务能力
+        - generic: 内容生产编排
+        - generic: 业务数据准备
+        - generic: 明日预告 · 仅显示已排期业务任务
+        - strong: 0 项待规划
+      - generic "运行、发布与审计上下文 保持原完整功能；默认收起以恢复视觉稿首屏结构":
+        - generic: 运行、发布与审计上下文
+        - generic: 保持原完整功能；默认收起以恢复视觉稿首屏结构
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 13 项数据审计信息"

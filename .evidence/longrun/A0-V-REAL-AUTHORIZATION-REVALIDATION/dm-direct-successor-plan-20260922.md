@@ -23,9 +23,11 @@
 
 ## 串行 1–6
 
-1. plan（本文件）
-2. SIGTERM Host + released retirement
-3. DM create→enable
-4. 注册 + cutover
-5. health +12
-6. verification/commit → 自动 DM saved-snapshot
+| 步 | 状态 | 说明 |
+|---|---|---|
+| 1 | GREEN | plan（本文件） |
+| 2 | GREEN | SIGTERM Host + released retirement（detach `dac9f81b…`） |
+| 3 | GREEN | DM create→enable（install `5103c27a…` / gen `4da719c7…`） |
+| 4 | GREEN | 注册 + cutover **318/345** |
+| 5 | GREEN | health +12（baseline 5→17；binding rev6/epoch3） |
+| 6 | GREEN | verification/commit → 自动 DM saved-snapshot |

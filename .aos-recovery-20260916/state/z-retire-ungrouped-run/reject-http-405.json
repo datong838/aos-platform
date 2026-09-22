@@ -1,0 +1,6 @@
+{
+  "outcome": "TRANSPORT_ROUTE_UNAVAILABLE",
+  "httpStatus": 405,
+  "businessHandlerInvoked": false,
+  "databaseWritesObserved": false
+}

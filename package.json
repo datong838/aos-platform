@@ -12,6 +12,6 @@
     "typecheck": "pnpm --filter @aos/web exec tsc --noEmit -p tsconfig.json && pnpm --filter @aos/desktop typecheck"
   },
   "dependencies": {
-    "playwright-core": "^1.62.1"
+    "playwright-core": "^1.63.0"
   }
 }

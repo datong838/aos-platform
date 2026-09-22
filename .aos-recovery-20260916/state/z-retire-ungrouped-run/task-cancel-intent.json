@@ -1,0 +1,9 @@
+{
+  "operation": "cancel-aip-task-run",
+  "taskId": "task-19f4698041d34fd9bcda",
+  "taskRunId": "run-6b3ca4f7c21347b684d9",
+  "expectedTaskVersion": 5,
+  "expectedTaskRunVersion": 3,
+  "idempotencyKey": "a0v-z-ungrouped-run-20260917-v1-cancel-task-run",
+  "reason": "关联领域 Run 因原源缺失完整 snapshot group 已正式取消。"
+}

@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-22T18:46:50.511Z",
+  "sourceCommit": "b98d210473cc53b7adc03f8967e89f2ff557168f",
+  "tenant": "org-org/dev-project",
+  "summary": {
+    "routeCount": 14,
+    "navigationGreen": 14,
+    "expectedHeadingGreen": 14,
+    "tenantVisible": 14,
+    "wrongTenantVisible": 0,
+    "consoleErrorPages": 0,
+    "badResponsePages": 0,
+    "requestFailurePages": 0,
+    "horizontalOverflowPages": 0,
+    "interactionGreen": 4,
+    "interactionCount": 4
+  },
+  "failures": [],
+  "interactions": [
+    {
+      "page": "/aip/agents",
+      "label": "工具箱",
+      "pressed": "true",
+      "expectedText": "完整三栏见工具面板",
+      "visibleText": true,
+      "ok": true
+    },
+    {
+      "page": "/aip/agents",
+      "label": "试运行",
+      "pressed": "true",
+      "expectedText": "试运行禁用",
+      "visibleText": true,
+      "ok": true
+    },
+    {
+      "page": "/aip/agents",
+      "label": "发布",
+      "pressed": "true",
+      "expectedText": "技能发布见独立发布台",
+      "visibleText": true,
+      "ok": true
+    },
+    {
+      "page": "/aip/agents",
+      "label": "概览",
+      "pressed": "true",
+      "expectedText": "已安装≠可派发",
+      "visibleText": true,
+      "ok": true
+    }
+  ],
+  "interactionErrors": [],
+  "results": [
+    {
+      "route": "/aip/doc-intelligence",
+      "expected": "文档智能",
+      "navigationError": null,
+      "state": {
+        "title": "文档智能 · AOS",
+        "headings": [
+          "文档智能"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 932,
+        "horizontalOverflow": false,
+        "bodySnippet": "数据源 / 文档智能 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活知识"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__doc-intelligence--deep-desktop.png"
+    },
+    {
+      "route": "/aip/evals?proposal=proposal-1d4d878cd36e45cfb8ee",
+      "expected": "Evals",
+      "navigationError": null,
+      "state": {
+        "title": "Evals 门控 · AOS",
+        "headings": [
+          "Evals 门控"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 3865,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / Evals 门控 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__evals--proposal-proposal-1d4d878cd36e45cfb8ee--deep-desktop.png"
+    },
+    {
+      "route": "/aip/evals?suite=ecommerce.logic.A02.contract.v1&proposal=proposal-1d4d878cd36e45cfb8ee",
+      "expected": "Evals",
+      "navigationError": null,
+      "state": {
+        "title": "Evals 门控 · AOS",
+        "headings": [
+          "Evals 门控"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 3903,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / Evals 门控 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__evals--suite-ecommerce.logic.A02.contract.v1--proposal-proposal-1d4d878cd36e45cfb8ee--deep-desktop.png"
+    },
+    {
+      "route": "/aip/lineage?rootType=action&rootId=proposal-1d4d878cd36e45cfb8ee",
+      "expected": "决策谱系",
+      "navigationError": null,
+      "state": {
+        "title": "决策谱系 · AOS",
+        "headings": [
+          "决策谱系"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 1312,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / 决策谱系 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活知识"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__lineage--rootType-action--rootId-proposal-1d4d878cd36e45cfb8ee--deep-desktop.png"
+    },
+    {
+      "route": "/aip/logic?graph=ecommerce.logic.C08",
+      "expected": "AIP 逻辑画布",
+      "navigationError": null,
+      "state": {
+        "title": "逻辑编排 · AOS",
+        "headings": [
+          "逻辑编排"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 5051,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / 逻辑画布 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活知识"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__logic--graph-ecommerce.logic.C08--deep-desktop.png"
+    },
+    {
+      "route": "/aip/memory-governance?view=candidates",
+      "expected": "记忆与知识治理",
+      "navigationError": null,
+      "state": {
+        "title": "记忆与知识治理 · AOS",
+        "headings": [
+          "记忆与知识治理",
+          "知识候选",
+          "治理证据与事件"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 988,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / 记忆与知识治理 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 "
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__memory-governance--view-candidates--deep-desktop.png"
+    },
+    {
+      "route": "/aip/memory-governance?view=readiness",
+      "expected": "记忆与知识治理",
+      "navigationError": null,
+      "state": {
+        "title": "记忆与知识治理 · AOS",
+        "headings": [
+          "记忆与知识治理",
+          "知识冷启动与检索就绪度"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 1391,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / 记忆与知识治理 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 "
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__memory-governance--view-readiness--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/agnes-2.5-flash",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "agnes-2.5-flash运行权威 · AOS",
+        "headings": [
+          "agnes-2.5-flash运行权威"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 883,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__agnes-2.5-flash--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/agnes-image",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "Agnes 图像运行权威 · AOS",
+        "headings": [
+          "Agnes 图像运行权威",
+          "Provider exact revision",
+          "Endpoint 与凭据绑定",
+          "Health 已过期",
+          "插件审批权威",
+          "关联 exact 模型 · 1",
+          "容量池 · 1",
+          "路由解析 · 1"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 1550,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__agnes-image--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/agnes-image-2.1-flash",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "Agnes 图像运行权威 · AOS",
+        "headings": [
+          "Agnes 图像运行权威"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 882,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__agnes-image-2.1-flash--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/agnes-text",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "Agnes 文本运行权威 · AOS",
+        "headings": [
+          "Agnes 文本运行权威",
+          "Provider exact revision",
+          "Endpoint 与凭据绑定",
+          "Health 已过期",
+          "插件审批权威",
+          "关联 exact 模型 · 1",
+          "容量池 · 1",
+          "路由解析 · 1"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 1539,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__agnes-text--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/vllm",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "vllm运行权威 · AOS",
+        "headings": [
+          "vllm运行权威"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 861,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__vllm--deep-desktop.png"
+    },
+    {
+      "route": "/aip/model-providers/zhipu-glm",
+      "expected": "运行权威",
+      "navigationError": null,
+      "state": {
+        "title": "zhipu-glm运行权威 · AOS",
+        "headings": [
+          "zhipu-glm运行权威"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 871,
+        "horizontalOverflow": false,
+        "bodySnippet": "模型管理 / 模型供应商 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__model-providers__zhipu-glm--deep-desktop.png"
+    },
+    {
+      "route": "/aip/studio?instance=ecommerce.content_officer.default",
+      "expected": "对话机器人",
+      "navigationError": null,
+      "state": {
+        "title": "对话机器人 Studio · AOS",
+        "headings": [
+          "对话机器人 Studio",
+          "内容官"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 1389,
+        "horizontalOverflow": false,
+        "bodySnippet": "AIP / 对话机器人 组织 · 栖月汇商贸有限公司 默认工作区 AI操作系统 AOS 企业AI转型方案 概览 工作台 应用列表 风险告警管理 态势大屏 Buddy · 智能助手 分析建模 日常任务总控大屏 待验证 内容与活动工作台 待验证 统一运营驾驶舱 待验证 达人邀约驾驶舱 待验证 多媒体内容生产 待验证 经营参谋 · 增长指挥中心 待验证 价格治理驾驶舱 待验证 客户关系工作台 待验证 应用程序构建工具 画布编辑 组件注册表 占位 变量管理器 占位 主题与样式 占位 模块接口 事件配置 发布入口 AIP 决策引擎 应用层 AIP 助手 对话机器人 AIP 分析师 逻辑编排层 AIP 逻辑画布 Agent 工具面板 成熟度楼梯 智能体 生产契约 智能体插件 智能体目录 智能体市场 智能体列表 技能发布 智能体导入 能力导入 评测与治理 Evals 门控 Draft 审批台 决策谱系 可观测性 记忆与知识治理 模型管理 模型目录 模型供应商 模型路由 容量管理 运行就绪 本体 · 数字孪生 本体管理 对象探索 Funnel 管道 OKF funnel OKF 概览 图谱健康度 活知"
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestFailures": [],
+      "badResponses": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__studio--instance-ecommerce.content_officer.default--deep-desktop.png"
+    }
+  ]
+}

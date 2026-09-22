@@ -1,0 +1,10 @@
+{
+  "operation": "confirm-data-requirement",
+  "runId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+  "expectedVersion": 2,
+  "idempotencyKey": "a0v-z-ungrouped-run-20260917-v1-reject-requirement",
+  "body": {
+    "decision": "reject",
+    "reason": "原源 Run 缺少完整 snapshot group claim/input，无法证明十二源同一截止时点；Requirement 已过期，禁止补造旧组或重领 failed Outbox。"
+  }
+}

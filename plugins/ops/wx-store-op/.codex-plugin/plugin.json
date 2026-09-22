@@ -1,0 +1,18 @@
+{
+  "name": "wx-store-op",
+  "version": "0.2.0",
+  "description": "微信小店后台的只读观察、页面定位、证据化经营探究、证据记录与受控操作技能。",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "微信小店运营研究",
+    "shortDescription": "直接定位微信小店页面并形成可追溯经营认知。",
+    "longDescription": "沉淀微信小店页面语义地图，并将多实体只读观察转化为新店冷启动、存量店复盘、竞争假设、机会评估、方案波次和八工作台交接；仅在明确授权后支持单目标受控操作。",
+    "developerName": "Local developer",
+    "category": "Data & Analytics",
+    "capabilities": [],
+    "defaultPrompt": "请按只读、隐私与证据边界研究微信小店，并区分平台能力、店铺事实、假设和未知。"
+  }
+}

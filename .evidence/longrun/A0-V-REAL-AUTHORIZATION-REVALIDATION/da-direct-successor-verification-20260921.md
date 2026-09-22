@@ -50,9 +50,8 @@ rev282/group309。
 
 ## 5/6 唯一 Host 健康观察
 
-Host 45786 全程唯一；第二 Host=0、18181=0、snapshot worker=0。health baseline 4，HEALTH_SAMPLES
-samples，renewals HEALTH_RENEWALS/sequence HEALTH_SEQUENCE，delta +12。binding rev6/epoch3
-enabled/ready，attempt=0。
+Host 45786 全程唯一；第二 Host=0、18181=0、snapshot worker=0。health baseline 4，35 samples，
+renewals 16/sequence 29，delta +12。binding rev6/epoch3 enabled/ready，attempt=0。
 
 ## 6/6 终态、零副作用与下一波
 

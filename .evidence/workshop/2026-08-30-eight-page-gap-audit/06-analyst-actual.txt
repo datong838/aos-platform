@@ -1,0 +1,182 @@
+- navigation "全局导航":
+  - generic: AOS
+  - link "日常总控":
+    - /url: /workshop/cockpit
+  - link "运营驾驶舱":
+    - /url: /workshop/operations
+  - link "价格治理":
+    - /url: /workshop/price-governance
+  - link "客户关系":
+    - /url: /workshop/customer
+  - link "Buddy":
+    - /url: /workshop/buddy
+  - link "经营参谋":
+    - /url: /workshop/analyst
+  - button "帮助":
+  - button "用户":
+- banner:
+  - heading "经营参谋 · 增长指挥中心" [level=1]
+  - generic: 工作台 › 增长指挥域 › 经营参谋
+  - generic: 渠道视角
+  - combobox "渠道视角":
+    - option "渠道未知" [selected]
+  - generic "经营参谋（负责人未绑定）"
+  - button "查看今日方案":
+    - text: 查看今日方案
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - generic: 渠道未选择 · 数据截止未验证
+  - generic: 经营参谋（负责人未绑定）
+  - generic: 数据截止未验证 · 新鲜度待核对
+  - generic: 业务操作：只读
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.analyst · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.analyst · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "经营参谋只读视图":
+      - generic: 经营计划 · 正式业务数据只读视图
+      - button "重新读取"
+      - generic "经营参谋说明 只读 · 指标、证据与质量同截止面":
+        - generic: 经营参谋说明
+        - generic: 只读 · 指标、证据与质量同截止面
+      - generic "跨域贡献与学习治理说明 正式业务能力 → 数字同事 → 工作台贡献":
+        - generic: 跨域贡献与学习治理说明
+        - generic: 正式业务能力 → 数字同事 → 工作台贡献
+      - tablist "经营参谋只读视图":
+        - tab "生意探究 只读" [selected]:
+          - strong: 生意探究
+          - generic: 只读
+        - tab "经营总览 可读取":
+          - strong: 经营总览
+          - generic: 可读取
+        - tab "驱动因素 等待条件":
+          - strong: 驱动因素
+          - generic: 等待条件
+        - tab "问题诊断 等待条件":
+          - strong: 问题诊断
+          - generic: 等待条件
+        - tab "增长计划 等待条件":
+          - strong: 增长计划
+          - generic: 等待条件
+        - tab "效果复盘 等待条件":
+          - strong: 效果复盘
+          - generic: 等待条件
+        - tab "证据链 等待条件":
+          - strong: 证据链
+          - generic: 等待条件
+        - tab "数据质量 可读取":
+          - strong: 数据质量
+          - generic: 可读取
+      - tabpanel "生意探究 只读":
+        - text: 经营分析 · 证据驱动
+        - heading "生意探究" [level=2]
+        - strong: 只读
+        - complementary "生意探究只读边界":
+          - strong: 只读边界
+          - generic: 仅当前租户可见的正式分析记录
+          - generic: 按渠道、经营实体与分析记录三级选择
+          - generic: 当前为只读模式；周期计划、评审与交接未开启
+          - generic "查看数据审计信息"
+        - region "当前生意探究案例为空":
+          - generic: 经营分析记录
+          - strong: 当前没有可见分析记录
+          - generic: 可信空
+          - generic: 只读
+          - generic: 经营实体
+          - generic: 未选择经营实体
+          - generic: 等待正式分析记录
+          - generic: 分析类型：待核对
+          - generic: 范围：当前租户 / 只读
+          - generic: 负责人：未绑定
+          - generic: 周期计划：尚未建立
+          - button "重新读取列表"
+        - complementary "可信空展示边界":
+          - strong: 可信空边界
+          - generic: 当前租户没有正式分析记录；页面仅呈现可信空工作区，不注入演示经营事实。
+        - region "生意探究三个业务阶段":
+          - article:
+            - generic: "1"
+            - strong: 经营画像
+            - text: 待进入 · 需要正式分析记录
+          - article:
+            - generic: "2"
+            - strong: 问题与机会
+            - text: 待进入 · 需要正式分析记录
+          - article:
+            - generic: "3"
+            - strong: 方案设计
+            - text: 待进入 · 需要正式分析记录
+        - region "生意探究可信空工作区":
+          - article:
+            - text: 当前阶段工作区
+            - strong: 等待正式分析记录
+            - paragraph: 未知或未创建不能显示为 0，也不以演示记录补齐。
+          - complementary:
+            - strong: 依赖与下一证据
+            - paragraph: 先读取当前租户可见的正式分析记录；没有正式数据来源时保持可信空。
+            - text: 数据读取 0 · 分析服务 0 · 外部操作 0
+        - generic: 租户 org-org/dev-project · 只读 · 未读取真实源系统
+      - generic: 租户 org-org/dev-project
+      - generic: 统一数据截止 2026/8/30 10:08:50
+      - generic: 待核对项不显示为 0
+      - region "统一异步任务抽屉":
+        - text: 经营研究 · 只读
+        - heading "研究任务与业务进度" [level=2]
+        - button "重新读取"
+        - paragraph: 研究、查询与知识整理任务分别展示；阶段结果、待核对状态和正式回读结果均以当前租户数据为准。
+        - strong: 可信空集合
+        - generic: 当前租户没有可读取的异步任务。
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 13 项数据审计信息"

@@ -1,0 +1,235 @@
+- navigation:
+  - generic "菜单":
+  - generic "首页":
+  - generic "搜索":
+  - generic "通知":
+  - generic "总控大屏":
+  - generic "应用":
+  - generic "数据":
+  - generic "帮助":
+  - generic "用户":
+- heading "达人邀约驾驶舱" [level=1]
+- banner:
+  - link "AOS":
+    - /url: index.html
+  - generic: /
+  - link "电商业务":
+    - /url: "#"
+  - generic: /
+  - generic: 达人邀约驾驶舱
+  - searchbox "搜索达人、机构、邀约记录…"
+  - generic: 栖月汇微商城
+  - button "导入达人"
+  - button "+ 新建邀约批次"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - tablist "页面主视图":
+    - tab "达人库 147" [selected]:
+      - text: 达人库
+      - generic: "147"
+    - tab "招募漏斗"
+    - tab "商务签约"
+    - tab "履约效果"
+    - tab "长期关系"
+  - tabpanel "达人库 147":
+    - generic: 达人 / 机构
+    - generic: 达人
+    - generic: 机构
+    - searchbox "昵称 / 平台 ID / 机构名…"
+    - generic: 全部平台
+    - generic: 抖音
+    - generic: 微信小店
+    - generic: 淘宝
+    - generic: 全部层级
+    - generic: 核心
+    - generic: 成长
+    - generic: 试合作
+    - generic: 退订中 2
+    - generic: 张
+    - text: 张小雨
+    - generic: 抖音
+    - generic: 核心
+    - text: 128.5万粉丝 · 美妆护肤 ·
+    - generic: 合作3次 GMV ¥18.2万
+    - generic: 李
+    - text: 李美妆日记
+    - generic: 微信
+    - generic: 成长
+    - text: 56.2万粉丝 · 美妆 ·
+    - generic: 合作1次 GMV ¥3.5万
+    - generic: 王
+    - text: 王博士说护肤
+    - generic: 抖音
+    - generic: 试合作
+    - text: 23.8万粉丝 · 成分护肤 ·
+    - generic: 邀约已回复 待确认
+    - generic: 赵
+    - text: 赵小美的种草
+    - generic: 淘宝
+    - generic: 候选
+    - text: 8.6万粉丝 · 护肤 ·
+    - generic: 尚未邀约
+    - generic: 陈
+    - text: 陈美妆达人
+    - generic: 抖音
+    - generic: 候选
+    - text: 42.1万粉丝 · 美妆 ·
+    - generic: 尚未邀约
+    - generic: 林
+    - text: 林小C
+    - generic: 抖音
+    - generic: 核心
+    - text: 310万粉丝 · 美妆 ·
+    - generic: 合作5次 GMV ¥52.8万
+    - generic: 刘
+    - text: 刘美丽
+    - generic: 抖音
+    - generic: 退订
+    - text: 15.3万粉丝 · 美妆 ·
+    - generic: 已退订 邀约已阻断
+    - generic: "147"
+    - generic: 达人总数
+    - generic: "12"
+    - generic: 核心合作
+    - generic: "35"
+    - generic: 成长中
+    - generic: "86"
+    - generic: 待邀约
+    - generic: "2"
+    - generic: 退订 / 冷却
+    - generic: ¥86.5万
+    - generic: 累计 GMV
+    - generic: +12.3% 环比
+    - generic: 张
+    - generic: 张小雨
+    - generic: 抖音 · 128.5万粉丝 · 美妆护肤 · 核心合作
+    - button "写邀约信"
+    - button "新建合作"
+    - generic: 达人画像
+    - generic: 平台身份
+    - generic: douyin_zhangxy_8892 （已核验）
+    - generic: 所属机构
+    - generic: 星耀传媒 MCN
+    - generic: 擅长品类
+    - generic: 美妆护肤 / 面部护理 / 精油芳疗
+    - generic: 受众画像
+    - generic: 女性 89% · 25-34岁 52% · 一二线城市 61%
+    - generic: 开播频率
+    - generic: 每周 3-4 场 · 平均时长 2.5h
+    - generic: 来源
+    - generic: 平台同步（抖音精选联盟）
+    - generic: 入池时间
+    - generic: 2026-06-15（邀约沉淀）
+    - generic: 合作历史
+    - table:
+      - rowgroup:
+        - row "日期 商品 类型 GMV ROI 结果":
+          - columnheader "日期"
+          - columnheader "商品"
+          - columnheader "类型"
+          - columnheader "GMV"
+          - columnheader "ROI"
+          - columnheader "结果"
+      - rowgroup:
+        - row "2026-08-03 玫瑰精粹面霜 ×2 直播 ¥8.2万 3.8x 优秀":
+          - cell "2026-08-03"
+          - cell "玫瑰精粹面霜 ×2"
+          - cell "直播"
+          - cell "¥8.2万"
+          - cell "3.8x"
+          - cell "优秀":
+            - generic: 优秀
+        - row "2026-07-18 透明质酸精华液 短视频 ¥5.6万 2.9x 良好":
+          - cell "2026-07-18"
+          - cell "透明质酸精华液"
+          - cell "短视频"
+          - cell "¥5.6万"
+          - cell "2.9x"
+          - cell "良好":
+            - generic: 良好
+        - row "2026-06-20 七夕限定礼盒 直播 ¥4.4万 2.2x 合格":
+          - cell "2026-06-20"
+          - cell "七夕限定礼盒"
+          - cell "直播"
+          - cell "¥4.4万"
+          - cell "2.2x"
+          - cell "合格":
+            - generic: 合格
+    - generic: 关系阶段 & 频控
+    - generic: 关系阶段
+    - generic: CORE
+    - text: 多周期稳定贡献
+    - generic: 最后接触
+    - generic: 2026-08-05（合作结束感谢）
+    - generic: 频控状态
+    - generic: 正常 · 下次可复邀窗口 8/20
+    - generic: 退订/拒绝
+    - generic: 无
+    - generic: owner
+    - generic: 活动策划师 · 私域管家（关系维护）
+    - generic: AI 达人分析 · 数据参谋
+    - strong: 匹配评分 92/100
+    - text: 张小雨受众与栖月汇面霜目标人群重合度 87%，历史 3 次合作 ROI 均 > 2x，建议优先复邀七夕新品专场。
+    - strong: 建议合作方式
+    - text: • 专场直播（ROI 预估 3.5x+）
+    - text: • 搭配 2 条预热短视频
+    - text: • 佣金建议 20-25%（历史 18-22%）
+    - strong: 注意事项
+    - text: 张小雨 9 月档期已近满，建议 8/15 前确认 8/22-8/25 档期。上次合作退货率 3.2%（行业均值内）。
+    - generic: 下一步建议动作
+    - generic: "1."
+    - text: 内容官生成个性化复邀文案（含新品卖点）
+    - generic: "2."
+    - text: 活动策划师确认档期 + 佣金边界
+    - generic: "3."
+    - text: 导购顾问准备选品匹配卡
+    - generic: "4."
+    - text: 私域管家确认联系方式有效性
+    - generic: 共享技能 Agent 编排
+    - generic: 素材采集 Agent
+    - generic: 文案生成 Agent
+    - generic: 内容审核 Agent
+    - generic: 三个共享技能 Agent 已就绪。点击「写邀约信」触发邀约文案生成链路 →

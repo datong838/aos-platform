@@ -1,0 +1,162 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - strong: 栖月汇微商城
+  - generic: /
+  - generic: 内容与活动工作台
+  - searchbox
+  - button "保存草稿"
+  - button "批准并发布"
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - heading "内容与活动工作台" [level=1]
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.content-campaign · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.content-campaign · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "内容与活动工作台只读视图":
+      - navigation "内容与活动主视图":
+        - button "活动策划"
+        - button "内容日历"
+        - button "日常模板"
+        - generic: 栖月汇微商城
+        - button "＋ 新建活动"
+      - complementary:
+        - heading "主视图" [level=2]
+        - generic: 3 项待补条件
+        - button "活动计划 活动目标与节奏 0 / 0" [pressed]:
+          - strong: 活动计划
+          - generic: 活动目标与节奏
+          - generic: 0 / 0
+        - button "内容日历 日期、渠道与负责人 0 / 0":
+          - strong: 内容日历
+          - generic: 日期、渠道与负责人
+          - generic: 0 / 0
+        - button "主内容与变体 主内容与渠道版本 0 / 0":
+          - strong: 主内容与变体
+          - generic: 主内容与渠道版本
+          - generic: 0 / 0
+      - region "内容与活动详情":
+        - strong: AI 策划助手
+        - generic: 仅消费当前正式业务数据
+        - textbox "活动意图": 当前没有可编辑活动意图；请选择具有可验证来源的计划
+        - button "生成方案"
+        - region "AI 策划结论":
+          - strong: 尚未形成可审阅方案
+          - generic: 正式数据来源未闭合，助手不生成活动、预算、经营指标或风险建议。
+          - emphasis: 等待数据
+        - region "活动概览":
+          - text: 当前业务视图
+          - heading "活动概览" [level=2]
+          - strong: 等待数据
+          - paragraph:
+            - strong: 活动计划
+            - generic: 等待正式业务数据
+          - generic: 可评估
+          - strong: "0"
+          - generic: 已挂接
+          - strong: "0"
+          - generic: 未匹配
+          - strong: "0"
+          - generic: 冲突
+          - strong: "0"
+          - region "活动计划正式数据":
+            - paragraph: 当前没有合格的正式业务数据；空数据与待补条件由右侧证据区分。
+        - generic "活动审批操作":
+          - strong: 等待正式数据
+          - generic: 操作会先执行安全预检；当前不会创建草稿、重新生成或发布。
+          - button "保存为草稿"
+          - button "重新生成"
+          - button "批准并发布"
+      - complementary:
+        - heading "证据链 · 边界" [level=2]
+        - generic: 1 项待补条件
+        - list:
+          - strong: 补充同一数据截止面的正式业务数据
+          - generic: 当前不能形成活动方案
+          - generic "查看数据审计信息"
+        - heading "专业贡献归因" [level=3]
+        - list "专业贡献归因路径":
+          - generic: 原子技能
+          - strong: 待核对
+          - generic: 逻辑编排
+          - strong: 待核对
+          - generic: 数字同事
+          - strong: 待核对
+          - generic: 工作台贡献
+          - strong: 以正式活动计划作为内容与活动规划依据
+        - paragraph: 当前视图没有可验证的数字同事运行记录，因此不制造运行事实。
+        - heading "决策摘要" [level=3]
+        - paragraph: 所需证据不完整，当前保持可信空。
+        - heading "关键假设和不确定性" [level=3]
+        - paragraph: 页面不展示正文、提示词、外部服务信息或客户敏感信息，也不把代码通过推断为运营可用。
+        - generic "数量守恒与只读边界"
+        - generic: 租户 org-org/dev-project
+        - generic: 评估 2026/8/30 10:08:16
+        - generic: 无后续页：是
+        - button "重新读取"
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 16 项数据审计信息"

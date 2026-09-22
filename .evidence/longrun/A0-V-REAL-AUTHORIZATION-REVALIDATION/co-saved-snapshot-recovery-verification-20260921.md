@@ -49,5 +49,5 @@ exact guard 冻结 rev189/recovery62/failed rev4；pause-terminal 生成 rev190 
 `sha256:5dcbb95bdc7a8d8740e279514b07cb0da084185cad71a73e62d99499454993f9`。
 最终 12 members、12 running Run、12 Dataset Receipt、Store Receipt=0、`ecom_link`=0、
 projection pending=0、canary=0、worker=0、18181=0，Host PID 4016 仍在。
-下一波为 CO 正式退休与 CP direct successor。注意终态为 **rev4**，guard overlay 仍需
+目标回归 `203 passed, 7 warnings`。下一波为 CO 正式退休与 CP direct successor。注意终态为 **rev4**，guard overlay 仍需
 predecessor_view revision=4。本提交完成后自动进入该波。

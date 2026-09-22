@@ -1,0 +1,250 @@
+- navigation:
+  - text: AOS
+  - link "日常总控":
+    - /url: workshop-task-cockpit.html
+  - link "运营驾驶舱":
+    - /url: workshop-app-order.html
+  - link "价格治理":
+    - /url: workshop-price-governance.html
+  - link "达人邀约":
+    - /url: workshop-creator-outreach.html
+  - link "Buddy":
+    - /url: workshop-aip-chat.html
+- banner:
+  - heading "价格治理驾驶舱" [level=1]
+  - generic: 工作台 › 增长引擎域 › 价格治理
+  - generic: 栖月汇微商城
+  - button "导出报告"
+  - button "+ 新建监测策略"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - generic: 📍 栖月汇 · 3 品牌 · 47 核心 SKU
+  - generic: 🤖 数据参谋（owner）+ 活动策划师 + 导购顾问
+  - generic: 监测策略 rev-2026-08-10 · L1每小时 / L2每4h / L3每日
+  - generic: 🔴 3 条疑似乱价待复核
+  - generic: 🟡 8 条竞品价格异动
+  - button "刷新数据"
+  - tablist "页面主视图":
+    - tab "同款价格治理" [selected]
+    - tab "竞品比价"
+    - tab "调度控制台"
+  - tabpanel "同款价格治理":
+    - generic: 核心 SKU 列表（47）
+    - generic: 疑似异常 3
+    - generic: 待补证 5
+    - generic: 正常 34
+    - generic: 数据过期 5
+    - generic: 玫瑰精粹面霜 50g
+    - generic: "SKU: RM-FACE-C50 · 品牌：栖月汇"
+    - generic: BELOW_POLICY
+    - generic: 抖音
+    - text: ¥168 vs ¥198
+    - generic: 透明质酸精华液 30ml
+    - generic: "SKU: HA-SER-30 · 品牌：栖月汇"
+    - generic: 正常
+    - generic: 4 平台
+    - text: ¥128-138
+    - generic: 烟酰胺亮肤精华 20ml
+    - generic: "SKU: NI-SER-20 · 品牌：栖月汇"
+    - generic: UNUSUAL_DROP
+    - generic: 淘宝
+    - text: ¥89 vs ¥118
+    - generic: 多肽紧致眼霜 15g
+    - generic: "SKU: MP-EYE-15 · 品牌：栖月汇"
+    - generic: IDENTITY_UNCERTAIN
+    - text: 规格存疑
+    - generic: 积雪草舒缓喷雾 100ml
+    - generic: "SKU: CA-SPR-100 · 品牌：栖月汇"
+    - generic: 正常
+    - generic: 3 平台
+    - text: ¥68-78
+    - generic: 神经酰胺修护面霜 50g
+    - generic: "SKU: CR-FACE-C50 · 品牌：栖月汇"
+    - generic: STALE
+    - text: 数据 6h 前
+    - generic: 视黄醇抗皱精华 30ml
+    - generic: "SKU: RT-SER-30 · 品牌：栖月汇"
+    - generic: 正常
+    - generic: 4 平台
+    - text: ¥158-168
+    - generic: 水杨酸控油洁面 120ml
+    - generic: "SKU: SA-CLE-120 · 品牌：栖月汇"
+    - generic: 正常
+    - generic: 2 平台
+    - text: ¥48-58
+    - generic: 玫瑰精粹面霜 50g
+    - generic: BELOW_POLICY_CANDIDATE
+    - generic: EXACT_SKU 已确认
+    - generic: 政策价 ¥198 · 最后成功采集 22 分钟前
+    - table:
+      - rowgroup:
+        - row "平台 店铺 标价 券后 补贴 运费 可得价 vs 政策价 状态":
+          - columnheader "平台"
+          - columnheader "店铺"
+          - columnheader "标价"
+          - columnheader "券后"
+          - columnheader "补贴"
+          - columnheader "运费"
+          - columnheader "可得价"
+          - columnheader "vs 政策价"
+          - columnheader "状态"
+      - rowgroup:
+        - row "抖音 栖月汇官方旗舰 ¥168 — — 免 ¥168 -15.2% BELOW_POLICY":
+          - cell "抖音"
+          - cell "栖月汇官方旗舰"
+          - cell "¥168"
+          - cell "—"
+          - cell "—"
+          - cell "免"
+          - cell "¥168"
+          - cell "-15.2%"
+          - cell "BELOW_POLICY":
+            - generic: BELOW_POLICY
+        - row "微信小店 栖月汇微商城 ¥198 — — 免 ¥198 0% 正常":
+          - cell "微信小店"
+          - cell "栖月汇微商城"
+          - cell "¥198"
+          - cell "—"
+          - cell "—"
+          - cell "免"
+          - cell "¥198"
+          - cell "0%"
+          - cell "正常":
+            - generic: 正常
+        - row "淘宝 栖月汇旗舰店 ¥198 -¥10(满减) — 免 ¥188 -5.1% 促销解释":
+          - cell "淘宝"
+          - cell "栖月汇旗舰店"
+          - cell "¥198"
+          - cell "-¥10(满减)"
+          - cell "—"
+          - cell "免"
+          - cell "¥188"
+          - cell "-5.1%"
+          - cell "促销解释":
+            - generic: 促销解释
+        - row "京东 栖月汇自营 ¥198 — — 免 ¥198 0% 正常":
+          - cell "京东"
+          - cell "栖月汇自营"
+          - cell "¥198"
+          - cell "—"
+          - cell "—"
+          - cell "免"
+          - cell "¥198"
+          - cell "0%"
+          - cell "正常":
+            - generic: 正常
+    - generic: 治理任务 DAG — G01→G13
+    - generic: G05 异常检测
+    - generic: G07 二次取证
+    - generic: 数据参谋 owner
+    - generic "G01 读取策略": G01✓
+    - generic "G02 获取价格": G02✓
+    - generic "G03 匹配": G03✓
+    - generic "G04 归一": G04✓
+    - generic "G05 异常检测 → BELOW_POLICY": G05●
+    - generic "G06 活动解释": G06✓
+    - generic "G07 二次取证进行中": G07🔄
+    - generic "G08 人工确认": G08⏸
+    - generic "G09 草稿": G09
+    - generic "G10 批准执行": G10
+    - generic "G11 复查": G11
+    - generic "G12 恢复/关闭": G12
+    - generic "G13 复盘": G13
+    - strong: G05 检测结论
+    - text: ：抖音渠道 ¥168 vs 政策价 ¥198 = -15.2%，超出容忍阈值 ±5%。
+    - strong: G06 活动解释
+    - text: ：活动策划师核查 — 抖音平台无大促补贴、无券叠加、无会员专享价，低价非平台补贴所致。
+    - strong: G07 二次取证
+    - text: ：等待第二次独立观察（间隔 30 分钟），确认价格可复现。
+    - generic: 等待中（已过 12/30 min）
+    - generic: 📋 证据链（PriceObservationEvidence）
+    - generic: 2 条已采集
+    - generic: Citations：每条异常可追溯到具体 API 响应/截图 hash
+    - strong: EVD-001 · 抖音 API 响应
+    - generic: hash 一致
+    - text: 采集时间：2026-08-11 21:44:12 · 来源：抖音开放平台商品 API · 登录态：店铺 token
+    - text: "sha256: a3f8e2c1d4b5...f7e9a0 ·"
+    - link "查看原始响应":
+      - /url: "#"
+    - strong: EVD-002 · 公开页面截图
+    - generic: hash 一致
+    - text: 采集时间：2026-08-11 21:44:15 · 来源：抖音商品详情页 · 登录态：未登录观察
+    - text: "sha256: b4c9d3e2f1a6...8c0b7d ·"
+    - link "查看截图":
+      - /url: "#"
+    - strong: EVD-003 · 第二次取证（待生成）
+    - generic: 排队中 · 预计 21:58
+    - generic: 触发条件：G07 二次取证，间隔 30 分钟后自动执行 · 独立 adapter 调用
+    - generic: 数字同事协作
+    - strong: 📊 数据参谋
+    - text: （owner）
+    - text: 玫瑰精粹面霜 50g 抖音渠道检测到 -15.2% 价格异常。已排除平台补贴（G06 通过），正在等待第二次取证确认价格可复现（G07）。
+    - strong: 🎯 活动策划师
+    - text: （只读核验）
+    - text: 核查结论：当前抖音无平台级大促（七夕预热未启动）、无品牌专区补贴。标价 ¥168 应为商家自主定价行为，非活动机制导致。
+    - generic: PromotionPriceExplanation rev-1
+    - strong: 🛍️ 导购顾问
+    - text: （只读核验）
+    - text: 规格确认：50g 正装，无小样/赠品/套装差异。EXACT_SKU 匹配可靠，单价对比有效。
+    - generic: ProductComparableDecision rev-1
+    - generic: ⚠️ 处置门控（G08→G10）
+    - strong: 前置条件
+    - text: （全部满足才可进入处置）：
+    - text: ✓ G07 二次取证完成（价格可复现）
+    - text: ✓ G06 活动解释排除平台补贴
+    - text: ✓ 导购确认 EXACT_SKU 规格匹配
+    - text: ⏳ 等待人工确认（品牌/渠道负责人）
+    - strong: 处置草稿
+    - text: （系统只生成草稿，不自动发送）：
+    - text: · 通知函草稿 →
+    - generic: PriceCommunicationDraft
+    - text: · 渠道沟通话术 →
+    - generic: 由客服专员起草
+    - strong: 红线
+    - text: ：系统不得自动认定"违法倾销"；不得自动发送通知/申诉/举报；不得自动改价。
+    - button "查看通知函草稿"
+    - button "生成竞品价值卡"
+    - button "手动触发即时采集"

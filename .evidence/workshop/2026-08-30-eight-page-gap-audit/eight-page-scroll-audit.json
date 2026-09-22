@@ -1,0 +1,213 @@
+[
+  {
+    "route": "cockpit",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/cockpit",
+    "scrollables": [
+      {
+        "aria": null,
+        "clientHeight": 503,
+        "cls": "",
+        "i": 0,
+        "role": null,
+        "scrollHeight": 7389,
+        "scrollTop": 0,
+        "tag": "DIV"
+      }
+    ],
+    "title": "AOS"
+  },
+  {
+    "route": "content-campaign",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/content-campaign",
+    "scrollables": [
+      {
+        "aria": null,
+        "clientHeight": 630,
+        "cls": "content-campaign-evidence",
+        "i": 0,
+        "role": null,
+        "scrollHeight": 833,
+        "scrollTop": 0,
+        "tag": "ASIDE"
+      }
+    ],
+    "title": "AOS"
+  },
+  {
+    "route": "operations",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/operations",
+    "scrollables": [
+      {
+        "aria": null,
+        "clientHeight": 552,
+        "cls": "operations-inbox",
+        "i": 0,
+        "role": null,
+        "scrollHeight": 707,
+        "scrollTop": 0,
+        "tag": "ASIDE"
+      },
+      {
+        "aria": null,
+        "clientHeight": 553,
+        "cls": "operations-evidence",
+        "i": 1,
+        "role": null,
+        "scrollHeight": 1551,
+        "scrollTop": 0,
+        "tag": "ASIDE"
+      }
+    ],
+    "title": "AOS"
+  },
+  {
+    "route": "creator-growth",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/creator-growth",
+    "scrollables": [
+      {
+        "aria": null,
+        "clientHeight": 629,
+        "cls": "content-campaign-nav",
+        "i": 0,
+        "role": null,
+        "scrollHeight": 680,
+        "scrollTop": 0,
+        "tag": "ASIDE"
+      },
+      {
+        "aria": null,
+        "clientHeight": 630,
+        "cls": "content-campaign-evidence creator-growth-analysis",
+        "i": 1,
+        "role": null,
+        "scrollHeight": 682,
+        "scrollTop": 0,
+        "tag": "ASIDE"
+      }
+    ],
+    "title": "AOS"
+  },
+  {
+    "route": "media-studio",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/media-studio",
+    "scrollables": [
+      {
+        "aria": null,
+        "clientHeight": 482,
+        "cls": "media-studio-center",
+        "i": 0,
+        "role": null,
+        "scrollHeight": 1053,
+        "scrollTop": 0,
+        "tag": "DIV"
+      }
+    ],
+    "title": "AOS"
+  },
+  {
+    "route": "analyst",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 6,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/analyst",
+    "scrollables": [],
+    "title": "AOS"
+  },
+  {
+    "route": "price-governance",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/price-governance",
+    "scrollables": [],
+    "title": "AOS"
+  },
+  {
+    "route": "customer",
+    "body": {
+      "clientHeight": 720,
+      "scrollHeight": 720
+    },
+    "nav": {
+      "clientHeight": 720,
+      "links": 0,
+      "overflowY": "visible",
+      "scrollHeight": 720,
+      "scrollTop": 0
+    },
+    "path": "/workshop/customer",
+    "scrollables": [],
+    "title": "AOS"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "name": "cbec-ops-local",
+  "owner": {
+    "name": "yangzhihong"
+  },
+  "plugins": [
+    {
+      "name": "cbec-ops",
+      "source": "./",
+      "description": "Cross-border e-commerce operations skills suite. From product selection to listing to full business operations.",
+      "version": "0.1.0"
+    }
+  ]
+}

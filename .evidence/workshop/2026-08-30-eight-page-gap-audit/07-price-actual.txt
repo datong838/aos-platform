@@ -1,0 +1,153 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - heading "价格治理驾驶舱" [level=1]
+  - generic: /
+  - generic: 工作台 › 增长引擎域 › 价格治理
+  - generic: 栖月汇微商城
+  - button "导出报告"
+  - button "＋ 新建监测策略"
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - strong: 价格治理驾驶舱
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.price-governance · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.price-governance · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "价格治理只读视图":
+      - generic: 栖月汇 · 品牌待核对 · 核心商品待核对
+      - generic: 数据参谋（负责人未绑定）+ 活动策划师 + 导购顾问
+      - generic: 价格治理视图已读取
+      - generic: 3 个视图待复核
+      - button "刷新数据"
+      - generic "价格治理全过程与累计审计"
+      - tablist "价格治理只读视图":
+        - tab "同款价格治理 等待条件" [selected]:
+          - strong: 同款价格治理
+          - generic: 等待条件
+        - tab "竞品比价 等待条件":
+          - strong: 竞品比价
+          - generic: 等待条件
+        - tab "调度控制台 等待条件":
+          - strong: 调度控制台
+          - generic: 等待条件
+      - tabpanel "同款价格治理 等待条件":
+        - text: 当前业务视图
+        - heading "同款价格治理" [level=2]
+        - strong: 等待数据
+        - text: 价格治理流程
+        - heading "价格治理任务链" [level=2]
+        - article:
+          - strong: 采集证据
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 同款判定
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 策略与业务事项
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 通知就绪
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 建议交接
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+          - generic "查看数据审计信息"
+        - article:
+          - strong: 自动调价
+          - generic: 待核对
+          - paragraph: 专业调价能力未开启
+          - generic "查看数据审计信息"
+        - strong: 核心商品列表
+        - generic: 待核对
+        - generic: 异常候选
+        - generic: 未挂接
+        - generic: 待复核商品
+        - generic: 未挂接
+        - generic: 可比报价
+        - generic: 待核对
+        - paragraph: 当前没有可挂接的价格观察；可信空与待补条件分开表达。
+        - complementary:
+          - text: 数字同事
+          - heading "数字同事协作" [level=3]
+          - strong: 数据参谋主责 · 正式数据待挂接
+          - paragraph: 活动策划师与导购顾问只读校验，不生成价格结论。
+          - heading "所需条件与下一步" [level=3]
+          - generic "补充正式价格数据"
+      - generic: 租户 org-org/dev-project
+      - generic: 统一数据截止 2026/8/30 10:08:52
+      - generic: 自动调价关闭
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 15 项数据审计信息"

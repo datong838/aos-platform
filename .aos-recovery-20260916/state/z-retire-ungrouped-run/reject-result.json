@@ -1,0 +1,42 @@
+{
+  "tenant": {
+    "orgId": "org-org",
+    "projectId": "dev-project"
+  },
+  "requirementRef": {
+    "resourceType": "DataRequirementRevision",
+    "resourceId": "data-requirement-5af070de068be456d80b81d9b043ecd17c3d0749f47df63c1b9b27365812d206",
+    "revision": 2,
+    "contentHash": "sha256:f0145e85393e64629ce08e520620e47fb45f59299b7ba8de8e12a9c7ade89765",
+    "receiptId": null
+  },
+  "requirementStatus": "rejected",
+  "runAuthority": {
+    "schemaVersion": "aos.ecommerce.business-investigation-run-state/v1",
+    "tenant": {
+      "orgId": "org-org",
+      "projectId": "dev-project"
+    },
+    "runId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+    "version": 3,
+    "priorRef": {
+      "resourceType": "BusinessInvestigationRunStateRevision",
+      "resourceId": "analysis-e5b19a5fe290ce1bf60d5038cb1d6cf6",
+      "revision": 2,
+      "contentHash": "sha256:afa7b4c7a430e08abb408f2d7a503f7a73adfac17d51c2bf1240e37c13d93cf4",
+      "receiptId": null
+    },
+    "lifecycle": "PREPARING",
+    "control": "CANCELLED",
+    "eventSequence": 3,
+    "contentHash": "sha256:3bb67fb09e10c81192844754c1c9aec9785271ea943cc8155aa14da6146487e9",
+    "pendingRequirementRef": null,
+    "uncertainCommand": null,
+    "createdBy": "a0v-ecommerce-growth-1.4-runtime-owner",
+    "createdAt": "2026-09-16T20:37:09.953283Z"
+  },
+  "dataReplayed": true,
+  "runReplayed": false,
+  "sourceReadPerformed": false,
+  "externalEffectAuthorized": false
+}

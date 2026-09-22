@@ -1,0 +1,1351 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-22T18:34:55.710Z",
+  "base": "http://192.168.0.5:5173",
+  "tenant": "org-org/dev-project",
+  "sourceCommit": "b98d210473cc53b7adc03f8967e89f2ff557168f",
+  "routeCount": 1,
+  "viewportCount": 1,
+  "resultCount": 1,
+  "summary": {
+    "navigationGreen": 1,
+    "expectedTitleGreen": 1,
+    "tenantVisible": 1,
+    "wrongTenantVisible": 0,
+    "consoleErrorPages": 1,
+    "requestFailurePages": 0,
+    "horizontalOverflowPages": 0,
+    "interactionFailures": 0,
+    "apiFailurePages": 0
+  },
+  "failures": [
+    {
+      "route": "/aip/capability-import",
+      "expected": "能力导入",
+      "viewport": "mobile",
+      "durationMs": 1955,
+      "navigationError": null,
+      "state": {
+        "title": "能力导入预检 · AOS",
+        "h1": [
+          "能力导入预检"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 898,
+        "buttons": [
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "组织 · 栖月汇商贸有限公司",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "默认工作区",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "工作台",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "应用程序构建工具",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "AIP 决策引擎",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "模型管理",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "本体 · 数字孪生",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "管道与数据治理",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "数据源与同步",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "运维交付",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "生成预检证据",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          }
+        ],
+        "links": [
+          {
+            "text": "概览",
+            "href": "/"
+          },
+          {
+            "text": "应用列表",
+            "href": "/workshop"
+          },
+          {
+            "text": "风险告警管理",
+            "href": "/workshop/inbox"
+          },
+          {
+            "text": "态势大屏",
+            "href": "/workshop/cop"
+          },
+          {
+            "text": "Buddy · 智能助手",
+            "href": "/workshop/buddy"
+          },
+          {
+            "text": "分析建模",
+            "href": "/analytics"
+          },
+          {
+            "text": "日常任务总控大屏待验证",
+            "href": "/workshop/cockpit"
+          },
+          {
+            "text": "内容与活动工作台待验证",
+            "href": "/workshop/content-campaign"
+          },
+          {
+            "text": "统一运营驾驶舱待验证",
+            "href": "/workshop/operations"
+          },
+          {
+            "text": "达人邀约驾驶舱待验证",
+            "href": "/workshop/creator-growth"
+          },
+          {
+            "text": "多媒体内容生产待验证",
+            "href": "/workshop/media-studio"
+          },
+          {
+            "text": "经营参谋 · 增长指挥中心待验证",
+            "href": "/workshop/analyst"
+          },
+          {
+            "text": "价格治理驾驶舱待验证",
+            "href": "/workshop/price-governance"
+          },
+          {
+            "text": "客户关系工作台待验证",
+            "href": "/workshop/customer"
+          },
+          {
+            "text": "画布编辑",
+            "href": "/workshop/canvas"
+          },
+          {
+            "text": "组件注册表占位",
+            "href": "/workshop/widget-registry"
+          },
+          {
+            "text": "变量管理器占位",
+            "href": "/workshop/variables"
+          },
+          {
+            "text": "主题与样式占位",
+            "href": "/workshop/styles"
+          },
+          {
+            "text": "模块接口",
+            "href": "/workshop/module-interface"
+          },
+          {
+            "text": "事件配置",
+            "href": "/workshop/events"
+          },
+          {
+            "text": "发布入口",
+            "href": "/workshop/publish"
+          },
+          {
+            "text": "AIP 助手",
+            "href": "/aip/assist"
+          },
+          {
+            "text": "对话机器人",
+            "href": "/aip/studio"
+          },
+          {
+            "text": "AIP 分析师",
+            "href": "/aip/analyst"
+          },
+          {
+            "text": "AIP 逻辑画布",
+            "href": "/aip/logic"
+          },
+          {
+            "text": "Agent 工具面板",
+            "href": "/aip/tools"
+          },
+          {
+            "text": "成熟度楼梯",
+            "href": "/aip/maturity"
+          },
+          {
+            "text": "生产契约",
+            "href": "/aip/production-contracts"
+          },
+          {
+            "text": "智能体插件",
+            "href": "/aip/capabilities"
+          },
+          {
+            "text": "智能体目录",
+            "href": "/aip/agent-registry"
+          },
+          {
+            "text": "智能体市场",
+            "href": "/aip/agent-marketplace"
+          },
+          {
+            "text": "智能体列表",
+            "href": "/aip/agents"
+          },
+          {
+            "text": "技能发布",
+            "href": "/aip/skill-publish"
+          },
+          {
+            "text": "智能体导入",
+            "href": "/aip/agent-import"
+          },
+          {
+            "text": "能力导入",
+            "href": "/aip/capability-import"
+          },
+          {
+            "text": "Evals 门控",
+            "href": "/aip/evals"
+          },
+          {
+            "text": "Draft 审批台",
+            "href": "/aip/drafts"
+          },
+          {
+            "text": "决策谱系",
+            "href": "/aip/lineage"
+          },
+          {
+            "text": "可观测性",
+            "href": "/aip/observability"
+          },
+          {
+            "text": "记忆与知识治理",
+            "href": "/aip/memory-governance"
+          },
+          {
+            "text": "模型目录",
+            "href": "/aip/model-catalog"
+          },
+          {
+            "text": "模型供应商",
+            "href": "/aip/model-providers"
+          },
+          {
+            "text": "模型路由",
+            "href": "/aip/model-router"
+          },
+          {
+            "text": "容量管理",
+            "href": "/aip/capacity"
+          },
+          {
+            "text": "运行就绪",
+            "href": "/aip/model-runtime"
+          },
+          {
+            "text": "本体管理",
+            "href": "/ontology"
+          },
+          {
+            "text": "对象探索",
+            "href": "/workshop/graph"
+          },
+          {
+            "text": "Funnel 管道",
+            "href": "/ontology/funnel"
+          },
+          {
+            "text": "OKF funnel",
+            "href": "/ontology/okf-funnel"
+          },
+          {
+            "text": "OKF 概览",
+            "href": "/ontology/okf-overview"
+          },
+          {
+            "text": "图谱健康度",
+            "href": "/ontology/graph-health"
+          },
+          {
+            "text": "活知识 Wiki",
+            "href": "/ontology/wiki"
+          },
+          {
+            "text": "Wiki 索引",
+            "href": "/ontology/wiki-index"
+          },
+          {
+            "text": "分支与 Overlay",
+            "href": "/ontology/branches"
+          },
+          {
+            "text": "管道构建",
+            "href": "/data/pipelines"
+          },
+          {
+            "text": "管道提案",
+            "href": "/data/pipeline-proposals"
+          },
+          {
+            "text": "计划编辑器",
+            "href": "/data/schedules"
+          },
+          {
+            "text": "搭建",
+            "href": "/data/builds"
+          },
+          {
+            "text": "数据集预览",
+            "href": "/data/datasets"
+          },
+          {
+            "text": "代码库",
+            "href": "/data/code-repos"
+          },
+          {
+            "text": "数据沿袭",
+            "href": "/data/lineage"
+          },
+          {
+            "text": "数据健康",
+            "href": "/data/health"
+          },
+          {
+            "text": "数据源管理",
+            "href": "/data"
+          },
+          {
+            "text": "连接器目录",
+            "href": "/data/connections"
+          },
+          {
+            "text": "边缘代理",
+            "href": "/data/agents"
+          },
+          {
+            "text": "同步配置",
+            "href": "/data/sync-config"
+          },
+          {
+            "text": "同步路由",
+            "href": "/data/sync-routes"
+          },
+          {
+            "text": "媒体集",
+            "href": "/data/media-sets"
+          },
+          {
+            "text": "文档智能",
+            "href": "/aip/doc-intelligence"
+          },
+          {
+            "text": "返回能力目录",
+            "href": "/aip/capabilities"
+          }
+        ],
+        "tabs": [],
+        "selects": [
+          {
+            "label": "风险等级",
+            "value": "low",
+            "options": 4,
+            "disabled": false
+          }
+        ],
+        "inputs": [
+          {
+            "label": "搜索资源…",
+            "disabled": false,
+            "type": "search"
+          },
+          {
+            "label": "来源资源 ID",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "精确提交号",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "许可证",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "SBOM 资源 ID",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "目标标识",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "显示名称",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "源码相对路径",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "网络策略引用",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "Secret ref",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "输入 Schema JSON",
+            "disabled": false,
+            "type": "textarea"
+          },
+          {
+            "label": "输出 Schema JSON",
+            "disabled": false,
+            "type": "textarea"
+          },
+          {
+            "label": "源码快照",
+            "disabled": false,
+            "type": "textarea"
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "documentSize": {
+          "width": 390,
+          "height": 844
+        },
+        "mainRect": {
+          "width": 342,
+          "height": 458
+        },
+        "horizontalOverflow": false,
+        "alertTexts": [],
+        "statusTexts": []
+      },
+      "interactions": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "apiResponses": [
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/client.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/desktopClient.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/apiBase.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/tenant.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/index.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/parser.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/contracts.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/client.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/me"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/index.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/contracts.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/parser.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/orgs"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/workspaces"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/health"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/orgs"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/workspaces"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/health"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/ecommerce-workshop/modules"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/ecommerce-workshop/modules"
+        }
+      ],
+      "apiFailures": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__capability-import--mobile.png"
+    }
+  ],
+  "results": [
+    {
+      "route": "/aip/capability-import",
+      "expected": "能力导入",
+      "viewport": "mobile",
+      "durationMs": 1955,
+      "navigationError": null,
+      "state": {
+        "title": "能力导入预检 · AOS",
+        "h1": [
+          "能力导入预检"
+        ],
+        "expectedVisible": true,
+        "realTenantVisible": true,
+        "wrongTenantVisible": false,
+        "textLength": 898,
+        "buttons": [
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "组织 · 栖月汇商贸有限公司",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "默认工作区",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "工作台",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "应用程序构建工具",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "AIP 决策引擎",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "模型管理",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "本体 · 数字孪生",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "管道与数据治理",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "数据源与同步",
+            "disabled": false,
+            "expanded": "true",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "运维交付",
+            "disabled": false,
+            "expanded": "false",
+            "pressed": null,
+            "testId": null
+          },
+          {
+            "text": "生成预检证据",
+            "disabled": false,
+            "expanded": null,
+            "pressed": null,
+            "testId": null
+          }
+        ],
+        "links": [
+          {
+            "text": "概览",
+            "href": "/"
+          },
+          {
+            "text": "应用列表",
+            "href": "/workshop"
+          },
+          {
+            "text": "风险告警管理",
+            "href": "/workshop/inbox"
+          },
+          {
+            "text": "态势大屏",
+            "href": "/workshop/cop"
+          },
+          {
+            "text": "Buddy · 智能助手",
+            "href": "/workshop/buddy"
+          },
+          {
+            "text": "分析建模",
+            "href": "/analytics"
+          },
+          {
+            "text": "日常任务总控大屏待验证",
+            "href": "/workshop/cockpit"
+          },
+          {
+            "text": "内容与活动工作台待验证",
+            "href": "/workshop/content-campaign"
+          },
+          {
+            "text": "统一运营驾驶舱待验证",
+            "href": "/workshop/operations"
+          },
+          {
+            "text": "达人邀约驾驶舱待验证",
+            "href": "/workshop/creator-growth"
+          },
+          {
+            "text": "多媒体内容生产待验证",
+            "href": "/workshop/media-studio"
+          },
+          {
+            "text": "经营参谋 · 增长指挥中心待验证",
+            "href": "/workshop/analyst"
+          },
+          {
+            "text": "价格治理驾驶舱待验证",
+            "href": "/workshop/price-governance"
+          },
+          {
+            "text": "客户关系工作台待验证",
+            "href": "/workshop/customer"
+          },
+          {
+            "text": "画布编辑",
+            "href": "/workshop/canvas"
+          },
+          {
+            "text": "组件注册表占位",
+            "href": "/workshop/widget-registry"
+          },
+          {
+            "text": "变量管理器占位",
+            "href": "/workshop/variables"
+          },
+          {
+            "text": "主题与样式占位",
+            "href": "/workshop/styles"
+          },
+          {
+            "text": "模块接口",
+            "href": "/workshop/module-interface"
+          },
+          {
+            "text": "事件配置",
+            "href": "/workshop/events"
+          },
+          {
+            "text": "发布入口",
+            "href": "/workshop/publish"
+          },
+          {
+            "text": "AIP 助手",
+            "href": "/aip/assist"
+          },
+          {
+            "text": "对话机器人",
+            "href": "/aip/studio"
+          },
+          {
+            "text": "AIP 分析师",
+            "href": "/aip/analyst"
+          },
+          {
+            "text": "AIP 逻辑画布",
+            "href": "/aip/logic"
+          },
+          {
+            "text": "Agent 工具面板",
+            "href": "/aip/tools"
+          },
+          {
+            "text": "成熟度楼梯",
+            "href": "/aip/maturity"
+          },
+          {
+            "text": "生产契约",
+            "href": "/aip/production-contracts"
+          },
+          {
+            "text": "智能体插件",
+            "href": "/aip/capabilities"
+          },
+          {
+            "text": "智能体目录",
+            "href": "/aip/agent-registry"
+          },
+          {
+            "text": "智能体市场",
+            "href": "/aip/agent-marketplace"
+          },
+          {
+            "text": "智能体列表",
+            "href": "/aip/agents"
+          },
+          {
+            "text": "技能发布",
+            "href": "/aip/skill-publish"
+          },
+          {
+            "text": "智能体导入",
+            "href": "/aip/agent-import"
+          },
+          {
+            "text": "能力导入",
+            "href": "/aip/capability-import"
+          },
+          {
+            "text": "Evals 门控",
+            "href": "/aip/evals"
+          },
+          {
+            "text": "Draft 审批台",
+            "href": "/aip/drafts"
+          },
+          {
+            "text": "决策谱系",
+            "href": "/aip/lineage"
+          },
+          {
+            "text": "可观测性",
+            "href": "/aip/observability"
+          },
+          {
+            "text": "记忆与知识治理",
+            "href": "/aip/memory-governance"
+          },
+          {
+            "text": "模型目录",
+            "href": "/aip/model-catalog"
+          },
+          {
+            "text": "模型供应商",
+            "href": "/aip/model-providers"
+          },
+          {
+            "text": "模型路由",
+            "href": "/aip/model-router"
+          },
+          {
+            "text": "容量管理",
+            "href": "/aip/capacity"
+          },
+          {
+            "text": "运行就绪",
+            "href": "/aip/model-runtime"
+          },
+          {
+            "text": "本体管理",
+            "href": "/ontology"
+          },
+          {
+            "text": "对象探索",
+            "href": "/workshop/graph"
+          },
+          {
+            "text": "Funnel 管道",
+            "href": "/ontology/funnel"
+          },
+          {
+            "text": "OKF funnel",
+            "href": "/ontology/okf-funnel"
+          },
+          {
+            "text": "OKF 概览",
+            "href": "/ontology/okf-overview"
+          },
+          {
+            "text": "图谱健康度",
+            "href": "/ontology/graph-health"
+          },
+          {
+            "text": "活知识 Wiki",
+            "href": "/ontology/wiki"
+          },
+          {
+            "text": "Wiki 索引",
+            "href": "/ontology/wiki-index"
+          },
+          {
+            "text": "分支与 Overlay",
+            "href": "/ontology/branches"
+          },
+          {
+            "text": "管道构建",
+            "href": "/data/pipelines"
+          },
+          {
+            "text": "管道提案",
+            "href": "/data/pipeline-proposals"
+          },
+          {
+            "text": "计划编辑器",
+            "href": "/data/schedules"
+          },
+          {
+            "text": "搭建",
+            "href": "/data/builds"
+          },
+          {
+            "text": "数据集预览",
+            "href": "/data/datasets"
+          },
+          {
+            "text": "代码库",
+            "href": "/data/code-repos"
+          },
+          {
+            "text": "数据沿袭",
+            "href": "/data/lineage"
+          },
+          {
+            "text": "数据健康",
+            "href": "/data/health"
+          },
+          {
+            "text": "数据源管理",
+            "href": "/data"
+          },
+          {
+            "text": "连接器目录",
+            "href": "/data/connections"
+          },
+          {
+            "text": "边缘代理",
+            "href": "/data/agents"
+          },
+          {
+            "text": "同步配置",
+            "href": "/data/sync-config"
+          },
+          {
+            "text": "同步路由",
+            "href": "/data/sync-routes"
+          },
+          {
+            "text": "媒体集",
+            "href": "/data/media-sets"
+          },
+          {
+            "text": "文档智能",
+            "href": "/aip/doc-intelligence"
+          },
+          {
+            "text": "返回能力目录",
+            "href": "/aip/capabilities"
+          }
+        ],
+        "tabs": [],
+        "selects": [
+          {
+            "label": "风险等级",
+            "value": "low",
+            "options": 4,
+            "disabled": false
+          }
+        ],
+        "inputs": [
+          {
+            "label": "搜索资源…",
+            "disabled": false,
+            "type": "search"
+          },
+          {
+            "label": "来源资源 ID",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "精确提交号",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "许可证",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "SBOM 资源 ID",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "目标标识",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "显示名称",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "源码相对路径",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "网络策略引用",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "Secret ref",
+            "disabled": false,
+            "type": "input"
+          },
+          {
+            "label": "输入 Schema JSON",
+            "disabled": false,
+            "type": "textarea"
+          },
+          {
+            "label": "输出 Schema JSON",
+            "disabled": false,
+            "type": "textarea"
+          },
+          {
+            "label": "源码快照",
+            "disabled": false,
+            "type": "textarea"
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "documentSize": {
+          "width": 390,
+          "height": 844
+        },
+        "mainRect": {
+          "width": 342,
+          "height": 458
+        },
+        "horizontalOverflow": false,
+        "alertTexts": [],
+        "statusTexts": []
+      },
+      "interactions": [],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "apiResponses": [
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/client.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/desktopClient.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/apiBase.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/tenant.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/index.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/parser.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/contracts.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/ecommerceWorkshop/client.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/me"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/index.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/contracts.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/src/api/aipMarketplaceImport/parser.ts"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/orgs"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/workspaces"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/health"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/orgs"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/workspaces"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/health"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/ecommerce-workshop/modules"
+        },
+        {
+          "status": 200,
+          "method": "GET",
+          "url": "/api/v1/ecommerce-workshop/modules"
+        }
+      ],
+      "apiFailures": [],
+      "screenshot": "/Users/ddt/work/projects/ai_agent/aos-platform/.evidence/aip/2026-08-23-r32-browser-final/aip__capability-import--mobile.png"
+    }
+  ]
+}

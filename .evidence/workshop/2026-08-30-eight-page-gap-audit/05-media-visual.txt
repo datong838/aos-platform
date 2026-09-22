@@ -1,0 +1,329 @@
+- navigation:
+  - generic "首页":
+  - generic "多媒体生产":
+  - generic "应用":
+  - generic "数据":
+  - generic "帮助":
+  - generic "设置":
+- heading "多媒体内容生产" [level=1]
+- banner:
+  - link "栖月汇微商城":
+    - /url: "#"
+  - generic: /
+  - generic: 多媒体内容生产
+  - searchbox "搜索文案、视频、直播任务…"
+  - generic: 栖月汇微商城
+  - button "查看内容计划"
+  - button "+ 新建内容任务"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - generic: 📍 栖月汇 · 微商城
+  - generic: 🤖 内容官（owner）
+  - generic: 场景：七夕活动专场 · 2026-08-15 开卖 · D-5
+  - generic: 今日计划：8 篇文案 + 12 条视频 + 2 场数字人直播
+  - button "查看内容计划"
+  - button "+ 新建内容任务"
+  - generic: 今日文案产出
+  - generic: "8"
+  - generic: ↑ 草稿 6 · 已通过 2
+  - generic: 视频成片
+  - generic: 12 /16
+  - generic: ↑ 投产比 3.2x
+  - generic: 数字人直播（进行中）
+  - generic: 1 / 2
+  - generic: ↑ 在线 1,247
+  - generic: 整体 GMV 贡献
+  - generic: ¥186,420
+  - generic: ↑ 较昨日 +24.6%
+  - tablist "页面主视图":
+    - tab "种草文案 2/8" [selected]:
+      - text: 种草文案
+      - generic: 2/8
+    - tab "短视频 3/12":
+      - text: 短视频
+      - generic: 3/12
+    - tab "数字人直播 1":
+      - text: 数字人直播
+      - generic: "1"
+  - tabpanel "种草文案 2/8":
+    - complementary:
+      - generic: 文案任务
+      - button "+ 新建"
+      - textbox "按商品名 / SKU / 关键词搜索"
+      - generic: 全部
+      - generic: 草稿 6
+      - generic: 审核中 1
+      - generic: 已通过 2
+      - generic: 渠道就绪 1
+      - generic: 🟢 已通过
+      - generic: 七夕礼盒种草长文
+      - generic: 玫瑰精粹礼盒 · ¥399
+      - generic: 小红书 + 朋友圈
+      - generic: 已分诊导购顾问 / 客服
+      - generic: 2 小时前
+      - generic: ✏️ 草稿待审
+      - generic: 七夕专题banner文案
+      - generic: 活动主视觉 · 5 套
+      - generic: 详情页 + 朋友圈
+      - generic: 真实体感评分 86
+      - generic: 10 分钟前生成
+      - generic: 🟢 已通过
+      - generic: 新品预告小红书笔记
+      - generic: 玻尿酸精华 · ¥168
+      - generic: 小红书
+      - generic: 🔄 审核中
+      - generic: 客服话术库新增
+      - generic: 敏感肌适用问答 · 12 句
+      - generic: 客服知识库
+      - generic: ⏳ 待生成
+      - generic: VIP3 客户关怀短信
+      - generic: 复购邀约 · 23 人
+      - generic: 私域推送
+      - generic: ⏳ 待生成
+      - generic: 日常朋友圈转发
+      - generic: 本周 5 条 · 自动排程
+      - generic: 导购顾问
+      - generic: ✏️ 草稿待审
+      - generic: 七夕直播预告推文
+      - generic: 微信视频号 · 数字人
+      - generic: 视频号+朋友圈
+      - generic: ⏳ 待生成
+      - generic: 8 月品牌月度推文
+      - generic: 品牌故事 + 复购主题
+      - generic: 公众号
+    - heading "七夕专题 banner 文案（5 套）" [level=2]
+    - generic: ✏️ 草稿待审
+    - generic: 主视觉 / 详情页头部 / 朋友圈卡片
+    - generic: ·
+    - generic: 玫瑰精粹礼盒 · ¥399
+    - generic: ·
+    - generic: 草稿生成于 10 分钟前 · 内容官 · AGnes-2.5-flash
+    - button "查看历史版本"
+    - button "导出"
+    - button "批准发布"
+    - generic "当前任务运行上下文":
+      - strong: 生产档位
+      - generic: STANDARD
+      - generic: 内容官确认启动
+      - strong: 冻结输入
+      - generic: Brief r4
+      - generic: Evidence r7
+      - generic: Eval r5
+      - strong: 当前
+      - generic: 评估/审核
+      - generic: 责任覆盖 6/6
+      - generic: CP-04
+      - generic: Draft-only
+    - text: 什么时候必要做 — 内容官自动触发判定
+    - generic: 5/6 项命中
+    - generic: ① 是否有进行中的大促/节日活动？
+    - generic: ✓ 命中 · 七夕专场 D-5（8/15 0:00 开卖）
+    - generic: ② 主推商品是否有新素材/新卖点？
+    - generic: ✓ 命中 · 玫瑰精粹礼盒本周换装（新增"七夕限定"标识）
+    - generic: ③ 历史同款 banner 模板是否疲劳？
+    - generic: ⚠ 已复用 3 次 · 系统建议重新生成，避免 CTR 衰减
+    - generic: ④ 同款商品最近一次种草何时发布？
+    - generic: ✓ 命中 · 8 天前，需保持节奏
+    - generic: ⑤ 主推渠道（Dou+ / 小红书）是否在活跃窗口？
+    - generic: ✓ 命中 · 小红书七夕话题热度 +340%
+    - generic: ⑥ 是否有合规/平台规则变化？
+    - generic: ✗ 未命中 · 无新合规要求，启用常规模板
+    - text: 📌 内容官判定：
+    - strong: 5 项触发条件命中
+    - text: → 建议启动文案生成链路；内容官确认 Brief/Evidence/Eval exact revision 后才开始执行。
+    - text: 怎么做 — 内容官编排 · 专业责任与本次执行者
+    - generic: ✓
+    - generic: 素材责任 · 采集 Agent
+    - generic: 先齐料 — 商品事实 + 合规素材 + 历史素材
+    - generic: 去 niushop / OT 取真实商品数据 + 调品牌合规库 + 拉历史文案库；不齐则阻断。
+    - strong: 📦 素材包输出：
+    - text: 商品 SKU 4 项 · 卖点 6 条 · 价格/库存实时 · 禁用词清单 47 条 · 历史 CTR 0.078 · 历史爆款笔记 3 篇
+    - generic: ✓
+    - generic: 策划责任 · 策略 Agent
+    - generic: 编排平台 Harness · 匹配调性
+    - generic: 根据渠道（详情页/朋友圈）和商品（礼盒调性）匹配内容风格：温柔叙事 + 价格优势 + 限时紧迫。
+    - strong: 🎯 内容策略：
+    - text: 风格=情感叙事 + 价值锚定 · 卖点排序=心意/性价比/工艺 · 禁忌=过度价格刺激 · 适配平台=通用
+    - generic: ✓
+    - generic: 编剧责任 · 文案 Agent
+    - generic: 出 A/B 两版草稿 · Script r3
+    - generic: 基于策略生成主标题、副标题、详情页文案、朋友圈卡片；A 版情感导向、B 版价值导向。
+    - strong: 📝 草稿产出：
+    - text: 2 版主标题 + 4 套详情页文案 + 5 条朋友圈卡片（见下方预览）
+    - generic: "4"
+    - generic: 评估责任 · 审核 Agent
+    - generic: 合规质检 — 违禁词 / 功效宣称 / 平台规则
+    - generic: 比对禁用词 47 条 / 功效边界 / 平台规则 / 品牌调性；不通过打回重写。
+    - strong: 🛡 质检结果：
+    - text: 5 套草稿 · 通过 4 套 · 打回 1 套（"祛斑"涉嫌功效宣称）· 真实体感评分 86/100
+    - generic "当前评估阶段可干预操作":
+      - strong: 当前可干预
+      - text: · ReviewIssue RI-17 指向 D 版第 1 段；退回会生成 Script r4，历史不覆盖
+      - button "查看输入与证据"
+      - button "暂停任务"
+      - button "退回编剧"
+      - button "改派/人工接管"
+    - generic: "5"
+    - generic: 批准责任 · 内容官
+    - generic: 人工批准 → ActionProposal
+    - generic: 运营在 AIP 控制室确认；金额/规模 R4 级走 maker-checker 双人门禁。批准后 ActionProposal 触发下游分诊。
+    - strong: ⏳ 等待审批
+    - text: · 已在审批中心排号第 2 位 · 默认 Draft-only 不自动群发
+    - generic: "6"
+    - generic: 交付责任 · 6 同事接力
+    - generic: Handoff — 导购 / 客服 / 私域 / 数据复盘
+    - generic: 按草稿内容生成下游 Handoff 建议：朋友圈卡 → 导购顾问；高意向问答 → 客服知识库；详情页长文 → 内容官归档；投放数据回流 → 数据参谋复盘。用户可调整接收方后确认。
+    - text: 文案预览 · 5 套草稿（已通过 4 套）
+    - generic: A 版 · 情感导向
+    - generic: 已通过审核
+    - generic: 详情页头部
+    - paragraph:
+      - emphasis: 把心意，封存在一朵玫瑰里
+    - paragraph: —— 七夕限定 · 玫瑰精粹礼盒
+    - paragraph: 玫瑰精萃 × 神经酰胺 × 玻尿酸，3 重润养；一盒配齐早晚护肤；礼盒精装，送出仪式感。
+    - generic: B 版 · 价值导向
+    - generic: 已通过审核
+    - generic: 朋友圈卡片
+    - paragraph:
+      - emphasis: ¥399 三件套：玫瑰精萃 + 神经酰胺 + 玻尿酸
+    - paragraph:
+      - text: ⚡ 七夕限定，
+      - emphasis: 立省 ¥180
+      - text: ，仅剩 5 天
+    - generic: C 版 · 朋友圈 5 条
+    - generic: 已通过审核
+    - generic: 私域推送
+    - text: ①
+    - emphasis: 「七夕想好送什么了吗？」
+    - text: 这盒玫瑰精粹礼盒 ¥399 立省 ¥180，含 3 件早晚配齐。
+    - text: ② 一直在回购的玫瑰精粹，终于做了礼盒装。
+    - text: ③ 不知道送她什么？送"每天早晚都用得上"的东西最稳。
+    - text: ④
+    - emphasis: 七夕限定 5 天
+    - text: ，玫瑰精粹礼盒 ¥399 立省 ¥180。
+    - text: ⑤ 送自己也是爱：玫瑰精粹礼盒，七夕限定 5 天。
+    - generic: D 版 · 功效宣称嫌疑
+    - generic: ⚠ 审核打回
+    - generic: 详情页长尾
+    - paragraph:
+      - text: 玫瑰精萃 7 天
+      - emphasis: 祛斑
+      - text: 、
+      - emphasis: 美白
+      - text: 、淡化细纹…
+    - generic: 💬 审核建议：替换为"提亮肤色、淡化暗沉"等允许表述，去掉"祛斑/治疗/治愈"等敏感词。
+    - text: 完成后 · 6 同事协同闭环（待批准后确认 Handoff）
+    - text: 导购顾问（朋友圈私域）
+    - generic: 2 条
+    - generic: "待发:"
+    - generic: 朋友圈 5 条卡片（B/C 版）
+    - generic: "待推送:"
+    - generic: VIP3 客户复购短信 23 人
+    - text: 客服专员（应答话术库）
+    - generic: 12 句
+    - generic: "写入:"
+    - generic: 敏感肌适用/孕妇可用/价格/物流 12 句
+    - generic: "绑定:"
+    - generic: FAQ 知识库 auto_replay
+    - text: 数据参谋（投放复盘）
+    - generic: D+3
+    - generic: "跟踪:"
+    - generic: CTR / 加购率 / 实际成交
+    - generic: "回流:"
+    - generic: 哪版文案 ROI 最高
+    - complementary:
+      - generic: 🎯 内容官建议
+      - strong: 5 套草稿已生成
+      - text: ，其中 4 套通过审核。建议批准并确认 → 向 3 位同事发起 Handoff。
+      - text: ⚠ D 版因功效宣称已被打回，建议改写后再生成。
+      - strong: 历史同款 CTR 0.078
+      - text: （高于行业 0.045 平均），本次 4 套文案预计 C 进入验场景表现可超 0.085。
+      - strong: 合规提醒：
+      - text: 平台新规（小红书 8/15 起）"用后效果"类表述需注明个体差异。A/B/C 三版需补充脚注。
+      - generic: 🚀 投放决策（G6 受控 Action 预告）
+      - generic: 朋友圈 → 私域（S0 草稿推送）
+      - generic: 建议分诊导购顾问 · 待确认
+      - generic: L2
+      - generic: 详情页 → 上架（S0 内嵌）
+      - generic: 商品页头图替换 Draft · 待批准
+      - generic: L2
+      - generic: 小红书种草笔记 → 发布
+      - generic: 手工发布 · platform_no_api
+      - generic: L4
+      - generic: 抖音 Dou+ 投流 (¥500 测试)
+      - generic: maker-checker 双人门禁
+      - generic: R4
+      - generic: 🤝 6 同事实时接力
+      - generic: 导购顾问 · 朋友圈卡预备
+      - generic: 12 分钟后待命
+      - generic: 客服专员 · 话术写入
+      - generic: 同步进行
+      - generic: 活动策划师 · 嵌入七夕方案
+      - generic: P42 任务串接中
+      - generic: 数据参谋 · D+3 复盘
+      - generic: 自动日程预留
+      - generic: 📊 历史同期文案效果
+      - generic: "0.078"
+      - generic: CTR
+      - generic: 高于行业 73%
+      - table:
+        - rowgroup:
+          - row "情感导向 3.2% 7.2%":
+            - cell "情感导向"
+            - cell "3.2%"
+            - cell "7.2%"
+          - row "价值导向 2.8% 6.5%":
+            - cell "价值导向"
+            - cell "2.8%"
+            - cell "6.5%"
+          - row "紧迫感 2.1% 8.1%":
+            - cell "紧迫感"
+            - cell "2.1%"
+            - cell "8.1%"
+          - row "权威背书 2.4% 5.8%":
+            - cell "权威背书"
+            - cell "2.4%"
+            - cell "5.8%"

@@ -1,0 +1,9 @@
+{
+  "name": "isolated-persistent-playwright-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Profile-isolated persistent Playwright tooling (launchPersistentContext + system Chrome)",
+  "dependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}

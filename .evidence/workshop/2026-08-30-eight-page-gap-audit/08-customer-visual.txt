@@ -1,0 +1,205 @@
+- navigation:
+  - text: AOS
+  - link "日常总控":
+    - /url: workshop-task-cockpit.html
+  - link "运营驾驶舱":
+    - /url: workshop-app-order.html
+  - link "价格治理":
+    - /url: workshop-price-governance.html
+  - link "客户关系":
+    - /url: workshop-customer.html
+  - link "Buddy":
+    - /url: workshop-aip-chat.html
+- banner:
+  - heading "客户关系工作台" [level=1]
+  - generic: 工作台 › 运营执行域 › 客户关系
+  - generic: 栖月汇微商城 · 4,207 客户
+  - button "导入客户"
+  - button "+ 新建触达任务"
+- complementary "工作台主导航":
+  - button "收纳左侧菜单" [expanded]:
+  - generic: 工作台
+  - link "日常任务总控大屏":
+    - /url: workshop-task-cockpit.html
+    - generic: 日常任务总控大屏
+  - link "内容与活动工作台":
+    - /url: workshop-content-campaign.html
+    - generic: 内容与活动工作台
+  - link "统一运营驾驶舱":
+    - /url: workshop-app-order.html
+    - generic: 统一运营驾驶舱
+  - link "达人邀约驾驶舱":
+    - /url: workshop-creator-outreach.html
+    - generic: 达人邀约驾驶舱
+  - link "多媒体内容生产":
+    - /url: workshop-media-studio.html
+    - generic: 多媒体内容生产
+  - link "经营参谋 · 增长指挥中心":
+    - /url: workshop-analyst.html
+    - generic: 经营参谋 · 增长指挥中心
+  - link "价格治理驾驶舱":
+    - /url: workshop-price-governance.html
+    - generic: 价格治理驾驶舱
+  - link "客户关系工作台":
+    - /url: workshop-customer.html
+    - generic: 客户关系工作台
+  - link "Buddy · 智能助手":
+    - /url: workshop-aip-chat.html
+    - generic: Buddy · 智能助手
+  - generic: 应用程序构建工具
+  - link "画布编辑":
+    - /url: workshop-canvas.html
+    - generic: 画布编辑
+  - link "对象探索":
+    - /url: workshop-object-view.html
+    - generic: 对象探索
+  - generic: AIP 决策引擎
+  - link "AIP 逻辑画布":
+    - /url: aip-logic.html
+    - generic: AIP 逻辑画布
+  - link "Draft 审批台":
+    - /url: aip-draft-inbox.html
+    - generic: Draft 审批台
+- main:
+  - generic: 📍 栖月汇 · 4,207 客户
+  - generic: 🤖 私域管家（owner）
+  - generic: 任务驱动 · Plan Mode · Artifact 产出
+  - generic: 高价值 38 · 潜力 156 · 活跃 892
+  - generic: 沉睡 1,203 · 流失预警 67
+  - generic: 今日任务（8）
+  - generic: 全部 8
+  - generic: 进行中 2
+  - generic: 待确认 3
+  - generic: 已完成 3
+  - generic: 私
+  - generic: 沉睡客户唤醒（67人）
+  - generic: 私域管家 · Step 2/4 · 50%
+  - generic: 🔄
+  - generic: 导
+  - generic: VIP 复购推荐（38人）
+  - generic: 导购顾问 · Step 3/4 · 75%
+  - generic: 🔄
+  - generic: 私
+  - generic: 新客企微导入（30人）
+  - generic: 私域管家 · Step 3/4 ⏸待审批
+  - generic: ⚠️
+  - generic: 内
+  - generic: 七夕活动专属邀约
+  - generic: 内容官 · 待启动
+  - generic: ⚪
+  - generic: 私
+  - generic: 客户分层 RFM 更新
+  - generic: 私域管家 · ✅已完成
+  - generic: ✅
+  - generic: 客户分群（RFM）
+  - generic: 高价值
+  - generic: 38 人
+  - generic: R≤7 F≥5 M≥2000
+  - generic: 潜力
+  - generic: 156 人
+  - generic: R≤30 F≥2 M≥500
+  - generic: 活跃
+  - generic: 892 人
+  - generic: R≤90 F≥1
+  - generic: 沉睡
+  - generic: 1,203 人
+  - generic: "90"
+  - generic: 流失预警
+  - generic: 67 人
+  - generic: R>180 F≥3
+  - generic: 已流失
+  - generic: 1,851 人
+  - generic: R>180 F≤2
+  - generic: 私
+  - generic: 沉睡客户唤醒（67人）
+  - generic: 私域管家 · 运行中 · Step 2/4 · 已用 3m24s · Token 1,240/5,000
+  - button "⏸ 暂停"
+  - button "🔄 重试"
+  - generic: 📋 Plan Mode — 执行计划（可编辑）
+  - generic: Claude 范式：先想后做
+  - strong: "Step 1: 查询沉睡客户"
+  - generic: ✅ 已完成 · 1.2s
+  - generic: 查询条件：90 < R ≤ 180 · F ≥ 1 · M ≥ 200 → 命中 67 人
+  - strong: "Step 2: 生成个性化唤醒话术"
+  - generic: 🔄 执行中 · 34/67
+  - generic: 调用文案生成 Agent · 每条话术 ≤30 字 · 含客户昵称 + 最近购买商品引用
+  - strong: "Step 3: 分批发送企微好友申请"
+  - generic: ⏸ 等待审批
+  - generic: 风险等级 Medium · 预估影响 67 人 × 1 条消息 · 需人工确认后执行
+  - generic: ⚠️ Claude 范式：权限门控 — 高风险动作必须人工 Diff 审阅
+  - strong: "Step 4: 记录触达结果并更新客户状态"
+  - generic: ⏸ 未开始
+  - generic: 📊 执行进度
+  - generic: Step 2/4 — 生成个性化唤醒话术
+  - generic: 已用 3m24s · 预估剩余 2m30s · Token 1,240/5,000
+  - generic: 📝 执行日志
+  - generic: 结构化日志 · 非聊天记录
+  - generic: "[21:50:05] ▶️ 任务启动：沉睡客户唤醒（67人）"
+  - generic: "[21:50:06] ✅ Step 1 完成：查询到 67 人（1.2s）"
+  - generic: "[21:50:08] 🔄 Step 2 开始：生成话术"
+  - generic: "[21:51:12] ⚠️ 验证失败：3 条话术超 30 字 → 自动截断重试（第 1 次）"
+  - generic: "[21:51:15] ✅ 重试成功，全部合规"
+  - generic: "[21:51:20] 🔄 继续生成：34/67 条"
+  - generic: "[21:50:06] 🔵 Checkpoint #1 @ Step 1 · completed · 可回滚"
+  - generic: ⚠️ 权限门控 — Step 3 预览（Step 2 完成后激活）
+  - strong: 操作
+  - text: ：向 67 个沉睡客户发送企微好友申请
+  - strong: 风险等级
+  - text: ：Medium ·
+  - strong: 预估影响
+  - text: ：67 人 × 1 条消息 ·
+  - strong: Token
+  - text: ：~1,000
+  - generic: 📋 Diff 视图 — 话术预览（精确呈现变更）：
+  - generic: 1. 张姐，上次买的精华用得怎么样？搭配这款面霜效果更好哦~ — 22字 ✅
+  - generic: 2. 李姐，新品面霜到货了，给您留了一瓶~ — 18字 ✅
+  - generic: 3. 王姐，上次您买的面膜用完了吧？这款新品面膜超好用，推荐给您！ — 32字 ❌ 超限
+  - generic: 3. 王姐，面膜用完了？新品面膜超好用，推荐给您！ — 22字 ✅ 已自动截断
+  - generic: 📊 验证结果：67/67 合规（3 条已自动截断修复）· 全部 ≤30 字 · 无违禁词
+  - generic: Artifact 产出
+  - generic: 📋 话术清单
+  - generic: 34/67 条已生成
+  - strong: "1."
+  - text: "\"张姐，上次买的精华用得怎么样？搭配面霜效果更好~\""
+  - text: → 张某兰 · VIP3 · 最近购：透明质酸精华 · 22字 ✅
+  - strong: "2."
+  - text: "\"李姐，新品面霜到货了，给您留了一瓶~\""
+  - text: → 李某芳 · VIP2 · 最近购：面霜 · 18字 ✅
+  - strong: "3."
+  - text: "\"王姐，面膜用完了？新品面膜超好用，推荐给您！\""
+  - text: → 王某英 · VIP2 · 最近购：积雪草面膜 · 22字 ✅（截断修复）
+  - generic: ……（共 34 条已生成，33 条待生成）
+  - button "查看全部话术"
+  - generic: 📊 客户分层结果
+  - generic: "38"
+  - generic: 高价值
+  - generic: "156"
+  - generic: 潜力
+  - generic: "892"
+  - generic: 活跃
+  - generic: 1,203
+  - generic: 沉睡
+  - generic: 客户 360° 抽样
+  - generic: 张
+  - text: 张某兰
+  - generic: VIP3
+  - generic: R:7天 F:8次 M:¥3,420 · 偏好：精华/面霜
+  - generic: R
+  - generic: F
+  - generic: M
+  - generic: 李
+  - text: 李某芳
+  - generic: VIP2
+  - generic: R:15天 F:5次 M:¥1,860 · 偏好：面霜/眼霜
+  - generic: R
+  - generic: F
+  - generic: M
+  - generic: 生命周期阶段
+  - generic: 拉新
+  - generic: 激活
+  - generic: 留存 ●
+  - generic: 增值
+  - generic: 挽留
+  - text: 张某兰 当前处于
+  - strong: 留存期
+  - text: · 已进入增值阶段入口 · 下一步：推荐组合装提升客单价

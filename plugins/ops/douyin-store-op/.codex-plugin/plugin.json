@@ -1,0 +1,18 @@
+{
+  "name": "douyin-store-op",
+  "version": "0.1.0",
+  "description": "抖店后台的只读观察、直接定位、证据化生意探究与受控操作技能。",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "抖店运营研究",
+    "shortDescription": "直接定位抖店页面并形成可追溯经营认知。",
+    "longDescription": "沉淀抖店、精选联盟与电商罗盘的页面语义地图，把商品、内容、搜索、直播、达人、用户、履约和售后证据转化为经营画像、竞争假设、方案波次和八工作台交接；仅在明确授权后支持单目标受控操作。",
+    "developerName": "Local developer",
+    "category": "Data & Analytics",
+    "capabilities": [],
+    "defaultPrompt": "请按只读、隐私与证据边界研究抖店，并区分平台能力、店铺事实、行业基准、推断和未知。"
+  }
+}

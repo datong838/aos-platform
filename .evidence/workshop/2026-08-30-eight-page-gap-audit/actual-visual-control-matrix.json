@@ -1,0 +1,1948 @@
+[
+  {
+    "route": "cockpit",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "日历视图"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "下达"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "客服专员客户服务与售后风险处置专家个人运行状态待核对"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "私域管家客户关系沉淀与生命周期运营专家个人运行状态待核对"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导购顾问购物决策支持与转化优化专家个人运行状态待核对"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "数据参谋经营洞察、任务编排与效果复盘专家个人运行状态待核对"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "内容官全平台内容策略与生产编排专家个人运行状态待核对"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "活动策划师增长活动设计、协同与止损专家个人运行状态待核对"
+        }
+      ],
+      "h1": [
+        "电商日常任务总控大屏"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索任务、同事、关键词…",
+          "tag": "INPUT",
+          "type": "search"
+        },
+        {
+          "aria": "任务指令",
+          "ph": "描述业务任务需求，系统将先做安全预检…",
+          "tag": "INPUT",
+          "type": null
+        },
+        {
+          "aria": null,
+          "ph": null,
+          "tag": "SELECT",
+          "type": null
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "日历视图"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "下达"
+        }
+      ],
+      "h1": [
+        "日常任务总控大屏"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索任务、同事、关键词…",
+          "tag": "INPUT",
+          "type": "text"
+        },
+        {
+          "aria": null,
+          "ph": "描述任务需求，AI自动分配给数字同事并调度技能Agent…",
+          "tag": "INPUT",
+          "type": "text"
+        }
+      ],
+      "links": [
+        "栖月汇微商城",
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台"
+      ],
+      "tabs": []
+    }
+  },
+  {
+    "route": "content-campaign",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "保存草稿"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准并发布"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "活动策划"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "内容日历"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "日常模板"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建活动"
+        }
+      ],
+      "h1": [
+        "内容与活动工作台"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索活动、内容、商品…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "保存草稿"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准并发布"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "新建活动"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "生成方案"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "展开全部"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "编辑排期"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "保存为草稿"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "让 AI 重新生成"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准并发布 →"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "采纳建议 (6.5折)"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "保持 6.0 折"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "自定义"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "方案A · 限购"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "方案B · 调拨"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "不处理"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "应用"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "暂停模板"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "编辑参数"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看生成记录"
+        }
+      ],
+      "h1": [
+        "内容与活动工作台"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索活动、内容、商品…",
+          "tag": "INPUT",
+          "type": "search"
+        },
+        {
+          "aria": null,
+          "ph": "描述你要做的活动或日常任务，例如：策划七夕促销活动，预算3万，主推护肤品类",
+          "tag": "TEXTAREA",
+          "type": null
+        },
+        {
+          "aria": null,
+          "ph": "如：面霜利润不能低于15%",
+          "tag": "INPUT",
+          "type": "text"
+        }
+      ],
+      "links": [
+        "AOS",
+        "电商业务",
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "展开查看"
+      ],
+      "tabs": [
+        {
+          "selected": "true",
+          "t": "活动策划"
+        },
+        {
+          "selected": "false",
+          "t": "内容日历"
+        },
+        {
+          "selected": "false",
+          "t": "日常模板"
+        },
+        {
+          "selected": "true",
+          "t": "内容排期"
+        },
+        {
+          "selected": "false",
+          "t": "任务计划表"
+        }
+      ]
+    }
+  },
+  {
+    "route": "operations",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "筛选"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建处理"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        }
+      ],
+      "h1": [
+        "统一运营驾驶舱"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索订单号、SKU、告警关键词…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "Discard"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "Save to branch"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "华东 F1 · 上海 正常 在产 1,247 件 · 产能 92% · 交期 3.2d"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "华东 F2 · 苏州 正常 在产 892 件 · 产能 87% · 交期 4.1d"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "华南 F3 · 深圳 预警 在产 621 件 · 产能 64% · SLA 缺口 23%"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "🟡 调拨 · 华南紧急补货"
+        }
+      ],
+      "h1": [],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索资源…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "AOS",
+        "概览",
+        "应用列表",
+        "订单管理",
+        "风险告警管理",
+        "经营态势",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "组件注册表",
+        "变量管理器",
+        "主题与样式",
+        "模块接口",
+        "事件配置",
+        "发布入口",
+        "AIP 助手",
+        "对话机器人",
+        "AIP 分析师",
+        "AIP 逻辑画布",
+        "Agent 工具面板",
+        "成熟度楼梯",
+        "智能体目录",
+        "智能体插件",
+        "Evals 门控",
+        "Draft 审批台",
+        "决策谱系",
+        "可观测性",
+        "模型目录",
+        "模型供应商",
+        "模型路由",
+        "容量管理",
+        "本体管理",
+        "对象探索",
+        "本体提案",
+        "图谱健康度",
+        "活知识 Wiki",
+        "OKF funnel",
+        "OKF 概览",
+        "分支管理",
+        "管道构建",
+        "管道提案",
+        "计划编辑器",
+        "搭建",
+        "数据集预览",
+        "代码库",
+        "数据沿袭",
+        "数据健康",
+        "数据链接器",
+        "边缘代理",
+        "同步配置",
+        "同步路由",
+        "媒体集",
+        "文档智能",
+        "Hub 舰队",
+        "Release 通道",
+        "Spoke 详情",
+        "Ferry 摆渡",
+        "FDE 资产包",
+        "变更审批",
+        "配置与密钥",
+        "接入案例",
+        "打开运营 Inbox →",
+        "全部事件 →"
+      ],
+      "tabs": []
+    }
+  },
+  {
+    "route": "creator-growth",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导入达人"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建邀约批次"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "达人库"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "招募漏斗"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "商务签约"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "履约效果"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "长期关系"
+        }
+      ],
+      "h1": [
+        "达人邀约与签约驾驶舱"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索达人、机构、邀约记录…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导入达人"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建邀约批次"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "写邀约信"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "新建合作"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "编辑"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "编辑"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准"
+        }
+      ],
+      "h1": [
+        "达人邀约驾驶舱"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索达人、机构、邀约记录…",
+          "tag": "INPUT",
+          "type": "search"
+        },
+        {
+          "aria": null,
+          "ph": "昵称 / 平台 ID / 机构名…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "AOS",
+        "电商业务",
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台"
+      ],
+      "tabs": [
+        {
+          "selected": "true",
+          "t": "达人库 147"
+        },
+        {
+          "selected": "false",
+          "t": "招募漏斗"
+        },
+        {
+          "selected": "false",
+          "t": "商务签约"
+        },
+        {
+          "selected": "false",
+          "t": "履约效果"
+        },
+        {
+          "selected": "false",
+          "t": "长期关系"
+        }
+      ]
+    }
+  },
+  {
+    "route": "media-studio",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看内容计划"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建内容任务"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        }
+      ],
+      "h1": [
+        "多媒体任务全过程闭环工作台"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索文案、视频、直播任务…",
+          "tag": "INPUT",
+          "type": "search"
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看内容计划"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建内容任务"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看内容计划"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建内容任务"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看历史版本"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导出"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准发布"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看输入与证据"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "暂停任务"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "退回编剧"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "改派/人工接管"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 批量产"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看样片"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "切换模板"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准发布"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看输入与证据"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "暂停任务"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "退回分镜"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "改派/人工接管"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 排期"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "打开 LiveControlRoom"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "暂停直播"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看输入与规则"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "跳过待播话术"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "切换人工接管"
+        }
+      ],
+      "h1": [
+        "多媒体内容生产"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": "搜索文案、视频、直播任务…",
+          "tag": "INPUT",
+          "type": "search"
+        },
+        {
+          "aria": null,
+          "ph": "按商品名 / SKU / 关键词搜索",
+          "tag": "INPUT",
+          "type": "text"
+        },
+        {
+          "aria": null,
+          "ph": "按商品名 / SKU 搜索",
+          "tag": "INPUT",
+          "type": "text"
+        }
+      ],
+      "links": [
+        "栖月汇微商城",
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台"
+      ],
+      "tabs": [
+        {
+          "selected": "true",
+          "t": "种草文案 2/8"
+        },
+        {
+          "selected": "false",
+          "t": "短视频 3/12"
+        },
+        {
+          "selected": "false",
+          "t": "数字人直播 1"
+        }
+      ]
+    }
+  },
+  {
+    "route": "analyst",
+    "actual": {
+      "buttons": [
+        {
+          "aria": "帮助",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看今日方案"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        }
+      ],
+      "h1": [
+        "经营参谋 · 增长指挥中心"
+      ],
+      "inputs": [
+        {
+          "aria": "渠道视角",
+          "ph": null,
+          "tag": "SELECT",
+          "type": null
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "📋 查看今日方案"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "栖月汇待首发"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "裕威参行存量复盘"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "分析记录▼"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "首次全店经营分析等待首发门新店基线 11/28 · 当前打开"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "首发后每周经营复盘未启动首批真实订单形成后启用"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "首发商品 readiness 专题补证中类目、参数、库存、履约与售后"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "达人/联盟冷启动专题后置100 单与内容底盘形成后再评估"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "首发商品结构专题草稿30 选 3～5 · 商品角色与单位经济"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "已关闭的历史分析3▼"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "每周经营复盘 · 08/15已关闭AN-QYH-20260815-004 · 完成于 2026-08-15 18:40"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "每周经营复盘 · 08/08已关闭AN-QYH-20260808-003 · 完成于 2026-08-08 17:55"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "商品结构专题分析 · 07/30已关闭AN-QYH-20260730-002 · 完成于 2026-07-30 16:20"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "计划与定时"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "继续分析"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "新建经营画像 Case"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "1 经营画像进行中 · 第 11/28 步 · 等待首发事实"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "2 问题与机会待进入 · 需要首发画像质量门"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "3 方案设计待进入 · 需要问题/机会评审"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看证据"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "提交数据需求"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "请求人工确认"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "回到 Checkpoint"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "增长方案"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "任务协同"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "📋 查看方案详情"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "🔗 查看任务 DAG"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "✓ 批准"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "✗ 驳回"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看决策摘要与证据链"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "📋 查看历史版本"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "✓ 批准"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "✗ 驳回"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "批准"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看证据"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "前往价格治理驾驶舱 →"
+        }
+      ],
+      "h1": [
+        "经营参谋 · 增长指挥中心"
+      ],
+      "inputs": [
+        {
+          "aria": "渠道视角",
+          "ph": null,
+          "tag": "SELECT",
+          "type": null
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "达人邀约",
+        "客户关系",
+        "内容活动"
+      ],
+      "tabs": [
+        {
+          "selected": "true",
+          "t": "生意探究 11/28"
+        },
+        {
+          "selected": "false",
+          "t": "🎯 经营总览"
+        },
+        {
+          "selected": "false",
+          "t": "📋 增长方案 1"
+        },
+        {
+          "selected": "false",
+          "t": "🔗 任务协同 5"
+        },
+        {
+          "selected": "false",
+          "t": "📊 执行监控"
+        },
+        {
+          "selected": "false",
+          "t": "🔄 复盘记忆"
+        },
+        {
+          "selected": "false",
+          "t": "🌐 经营态势"
+        },
+        {
+          "selected": "false",
+          "t": "📈 数据分析"
+        },
+        {
+          "selected": "true",
+          "t": "指标对比"
+        },
+        {
+          "selected": "false",
+          "t": "异常检测"
+        },
+        {
+          "selected": "false",
+          "t": "归因分析"
+        },
+        {
+          "selected": "false",
+          "t": "AI 洞察"
+        }
+      ]
+    }
+  },
+  {
+    "route": "price-governance",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导出报告"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建监测策略"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "刷新数据"
+        }
+      ],
+      "h1": [
+        "价格治理驾驶舱"
+      ],
+      "inputs": [],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导出报告"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建监测策略"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "刷新数据"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看通知函草稿"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "生成竞品价值卡"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "手动触发即时采集"
+        }
+      ],
+      "h1": [
+        "价格治理驾驶舱"
+      ],
+      "inputs": [
+        {
+          "aria": null,
+          "ph": null,
+          "tag": "SELECT",
+          "type": null
+        }
+      ],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "查看原始响应",
+        "查看截图"
+      ],
+      "tabs": [
+        {
+          "selected": "true",
+          "t": "同款价格治理"
+        },
+        {
+          "selected": "false",
+          "t": "竞品比价"
+        },
+        {
+          "selected": "false",
+          "t": "调度控制台"
+        }
+      ]
+    }
+  },
+  {
+    "route": "customer",
+    "actual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导入客户"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "＋ 新建触达任务"
+        },
+        {
+          "aria": "折叠侧栏",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "专注模式"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "重新读取"
+        }
+      ],
+      "h1": [
+        "客户关系工作台"
+      ],
+      "inputs": [],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台",
+        "跳到模块主内容"
+      ],
+      "tabs": []
+    },
+    "visual": {
+      "buttons": [
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "导入客户"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "+ 新建触达任务"
+        },
+        {
+          "aria": "收纳左侧菜单",
+          "disabled": false,
+          "t": ""
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "⏸ 暂停"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "🔄 重试"
+        },
+        {
+          "aria": null,
+          "disabled": false,
+          "t": "查看全部话术"
+        }
+      ],
+      "h1": [
+        "客户关系工作台"
+      ],
+      "inputs": [],
+      "links": [
+        "日常任务总控大屏",
+        "内容与活动工作台",
+        "统一运营驾驶舱",
+        "达人邀约驾驶舱",
+        "多媒体内容生产",
+        "经营参谋 · 增长指挥中心",
+        "价格治理驾驶舱",
+        "客户关系工作台",
+        "Buddy · 智能助手",
+        "画布编辑",
+        "对象探索",
+        "AIP 逻辑画布",
+        "Draft 审批台"
+      ],
+      "tabs": []
+    }
+  }
+]

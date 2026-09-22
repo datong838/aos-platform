@@ -1,0 +1,151 @@
+- navigation "全局导航":
+  - button "菜单":
+  - button "首页":
+  - button "搜索":
+  - button "通知":
+  - button "历史":
+  - button "项目":
+  - button "应用":
+  - button "数据":
+  - button "帮助":
+  - button "用户":
+- banner:
+  - heading "客户关系工作台" [level=1]
+  - generic: /
+  - generic: 工作台 › 运营执行域 › 客户关系
+  - generic: 栖月汇微商城 · 客户待核对
+  - button "导入客户"
+  - button "＋ 新建触达任务"
+- complementary:
+  - button "折叠侧栏" [expanded]:
+  - navigation "经营参谋视觉稿主导航":
+    - generic: 工作台
+    - link "日常任务总控大屏":
+      - /url: /workshop/cockpit
+      - generic: 日常任务总控大屏
+    - link "内容与活动工作台":
+      - /url: /workshop/content-campaign
+      - generic: 内容与活动工作台
+    - link "统一运营驾驶舱":
+      - /url: /workshop/operations
+      - generic: 统一运营驾驶舱
+    - link "达人邀约驾驶舱":
+      - /url: /workshop/creator-growth
+      - generic: 达人邀约驾驶舱
+    - link "多媒体内容生产":
+      - /url: /workshop/media-studio
+      - generic: 多媒体内容生产
+    - link "经营参谋 · 增长指挥中心":
+      - /url: /workshop/analyst
+      - generic: 经营参谋 · 增长指挥中心
+    - link "价格治理驾驶舱":
+      - /url: /workshop/price-governance
+      - generic: 价格治理驾驶舱
+    - link "客户关系工作台":
+      - /url: /workshop/customer
+      - generic: 客户关系工作台
+    - link "Buddy · 智能助手":
+      - /url: /workshop/buddy
+      - generic: Buddy · 智能助手
+    - generic: 应用程序构建工具
+    - link "画布编辑":
+      - /url: /workshop/canvas
+      - generic: 画布编辑
+    - link "对象探索":
+      - /url: /workshop/graph
+      - generic: 对象探索
+    - generic: AIP 决策引擎
+    - link "AIP 逻辑画布":
+      - /url: /aip/logic
+      - generic: AIP 逻辑画布
+    - link "Draft 审批台":
+      - /url: /aip/drafts
+      - generic: Draft 审批台
+- main:
+  - link "跳到模块主内容":
+    - /url: "#ecommerce-workshop-main"
+  - paragraph: 已安装电商工作台
+  - strong: 客户关系工作台
+  - generic: 等待条件
+  - button "专注模式"
+  - generic "模块安装上下文 ecommerce.customer · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z":
+    - generic: 模块安装上下文
+    - generic: ecommerce.customer · 模块能力等待条件 · 安装目录截止 2026-08-15T07:10:40.852071Z
+  - region "模块主内容":
+    - alert:
+      - strong: 模块能力等待条件
+      - generic: 安装目录尚未给出可用结论；下方业务视图按自身当前 canonical GET 独立判定。
+    - region "客户关系只读视图":
+      - button "重新读取"
+      - generic: 栖月汇 · 客户状态待核对
+      - generic: 私域管家（负责人未绑定）
+      - generic: 任务驱动 · 只读计划 · 客户产物
+      - generic: 高价值待核对 · 潜力待核对 · 活跃待核对
+      - emphasis: 沉睡待核对 · 流失预警待核对
+      - generic "客户治理全过程与累计审计"
+      - tablist "客户关系只读视图":
+        - tab "客户最小投影 等待条件 · 正式来源 54" [selected]:
+          - strong: 客户最小投影
+          - generic: 等待条件 · 正式来源 54
+        - tab "客户分群 等待条件 · 正式来源 54":
+          - strong: 客户分群
+          - generic: 等待条件 · 正式来源 54
+        - tab "生命周期旅程 等待条件 · 正式来源 54":
+          - strong: 生命周期旅程
+          - generic: 等待条件 · 正式来源 54
+        - tab "对话与批次 等待条件 · 正式来源 54":
+          - strong: 对话与批次
+          - generic: 等待条件 · 正式来源 54
+      - tabpanel "客户最小投影 等待条件 · 正式来源 54":
+        - text: 客户关系视图
+        - heading "客户最小投影" [level=2]
+        - strong: 等待必要条件
+        - article:
+          - strong: 客户最小集
+          - generic: 可读取
+          - paragraph: CustomerLiteSourceWindow · r29800860
+        - article:
+          - strong: 同意依据
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+        - article:
+          - strong: 分群投影
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+        - article:
+          - strong: 旅程投影
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+        - article:
+          - strong: 对话摘要
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+        - article:
+          - strong: 触达批次
+          - generic: 等待条件
+          - paragraph: 暂无可验证来源
+        - paragraph: 已读取正式来源 54 条；允许披露 0 条，54 条因同意、目的或留存条件未闭合而不展示客户明细。
+        - complementary:
+          - heading "所需条件与下一步" [level=3]
+          - strong: 补充同租户、同数据截止的客户最小化正式数据
+          - generic: 客户关系正式数据来源
+          - generic "查看审计状态码"
+          - strong: 补充同租户、同数据截止的客户最小化正式数据
+          - generic: 客户关系正式数据来源
+          - generic "查看审计状态码"
+          - strong: 补充同租户、同数据截止的客户最小化正式数据
+          - generic: 客户关系正式数据来源
+          - generic "查看审计状态码"
+          - strong: 补充同租户、同数据截止的客户最小化正式数据
+          - generic: 客户关系正式数据来源
+          - generic "查看审计状态码"
+          - strong: 补充同租户、同数据截止的客户最小化正式数据
+          - generic: 客户关系正式数据来源
+          - generic "查看审计状态码"
+      - generic: 租户 org-org/dev-project
+      - generic: 统一数据截止 2026/8/30 10:08:54
+      - generic: 同意与留存规则已执行
+    - region "所需业务条件":
+      - heading "所需业务条件" [level=2]
+      - paragraph: 以下条件尚未取得可验证的正式业务数据，页面保持只读并允许重新读取。
+      - generic "查看 16 项数据审计信息"
