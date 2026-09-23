@@ -9,7 +9,7 @@ import uuid
 from hashlib import sha256
 from typing import Any
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.logging_facade import get_logger
 from aos_api.module_identity import resolve_module_pk, stable_module_pk
 from aos_api.module_templates import (
@@ -328,11 +328,31 @@ _SEED = [
 ]
 
 
+def _module_schema_present() -> bool:
+    """True when the alembic-managed module schema already exists."""
+
+    try:
+        with connect_platform() as conn:
+            row = conn.execute(
+                "SELECT to_regclass('public.meta_module') AS present"
+            ).fetchone()
+    except Exception:  # noqa: BLE001 — probe failure means "not ready"
+        log.debug("module_schema_probe_skip", exc_info=True)
+        return False
+    return row["present"] is not None
+
+
 def ensure_module_schema() -> None:
     from aos_api.tenant_scope import current_tenant_scope
 
     if current_tenant_scope() is not None:
         # Startup/migrations own DDL; request-scoped runtime roles cannot create.
+        return
+    if _module_schema_present():
+        # Alembic owns this schema. The startup role holds no CREATE on schema
+        # "public", so issuing the DDL below raised "permission denied for
+        # schema public" — which, via seed_modules_if_empty, aborted the whole
+        # module seed at startup.
         return
     with connect() as conn:
         conn.execute(

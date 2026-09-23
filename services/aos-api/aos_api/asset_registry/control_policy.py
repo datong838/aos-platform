@@ -63,6 +63,23 @@ _STRONG_ETAG = re.compile(r'^"([1-9][0-9]*)"$')
 _MAX_IDEMPOTENCY_KEY_LENGTH = 160
 _MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807
 
+# ``meta_membership`` speaks the tenant vocabulary (owner/admin/editor/viewer)
+# while this module speaks the frozen asset-control vocabulary. The two only
+# intersected on "admin", and a freshly created tenant seeds its creator as
+# ``owner`` — so a new tenant's most privileged member could not perform any
+# asset-control operation at all. "owner" outranks "admin", so fold it in;
+# "editor"/"viewer" stay out on purpose.
+_MEMBERSHIP_ROLE_ALIASES = {"owner": "admin"}
+
+
+def _normalized_roles(values: Collection[str]) -> set[str]:
+    """Normalize membership roles, then fold them onto the control vocabulary."""
+
+    return {
+        _MEMBERSHIP_ROLE_ALIASES.get(role, role)
+        for role in _normalized_values(values)
+    }
+
 
 def require_control_role(*, roles: Collection[str], operation: str) -> None:
     """Require the exact frozen operation role set."""
@@ -70,7 +87,7 @@ def require_control_role(*, roles: Collection[str], operation: str) -> None:
     allowed = CONTROL_OPERATION_ROLES.get(operation)
     if allowed is None:
         raise ValueError("unknown asset control operation")
-    if not _normalized_values(roles).intersection(allowed):
+    if not _normalized_roles(roles).intersection(allowed):
         raise DutySeparationRequiredError(
             "asset control operation requires an authorized role"
         )
@@ -79,7 +96,7 @@ def require_control_role(*, roles: Collection[str], operation: str) -> None:
 def require_control_read_role(*, roles: Collection[str]) -> None:
     """Allow every M2-B participant role to review immutable plans."""
 
-    if not _normalized_values(roles).intersection(READ_CONTROL_ROLES):
+    if not _normalized_roles(roles).intersection(READ_CONTROL_ROLES):
         raise DutySeparationRequiredError(
             "asset control read requires an authorized role"
         )

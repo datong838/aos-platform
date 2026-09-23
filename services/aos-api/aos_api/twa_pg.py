@@ -124,13 +124,20 @@ def mode() -> str:
         return _MODE_CACHE
     # auto
     try:
-        from aos_api.db import connect
+        from aos_api.db import connect_platform
 
-        with connect() as conn:
+        with connect_platform() as conn:
             conn.execute("SELECT 1")
         _MODE_CACHE = "pg"
     except Exception as exc:
-        log.warning("twa_store_auto_fallback_memory err=%s", exc)
+        # Degrading to memory silently loses every org/workspace/membership
+        # write for the lifetime of the process, and the result is cached, so
+        # say it loudly and unambiguously.
+        log.error(
+            "twa_store_auto_fallback_memory err=%s — tenant catalog writes are "
+            "in-memory only until this process restarts",
+            exc,
+        )
         _MODE_CACHE = "memory"
     return _MODE_CACHE
 
@@ -139,13 +146,34 @@ def enabled() -> bool:
     return mode() == "pg"
 
 
+def _twa_schema_present() -> bool:
+    """True when the twa_* legacy dual-write tables already exist."""
+
+    from aos_api.db import connect_platform
+
+    try:
+        with connect_platform() as c:
+            row = c.execute("SELECT to_regclass('public.twa_org') AS present").fetchone()
+    except Exception:  # noqa: BLE001 — probe failure means "not ready"
+        log.debug("twa_schema_probe_skip", exc_info=True)
+        return False
+    return row["present"] is not None
+
+
 def ensure_schema(conn=None) -> None:
-    from aos_api.db import connect
+    from aos_api.db import connect, connect_platform  # noqa: F401
 
     def _run(c) -> None:
         c.execute(TWA_SCHEMA_SQL)
 
     if conn is None:
+        if _twa_schema_present():
+            # Alembic owns the twa_* schema in a recovered environment. DDL needs
+            # CREATE on schema "public", which the runtime role does not have, so
+            # an unconditional attempt aborts the whole legacy bootstrap.
+            return
+        # No SET ROLE on purpose: creating these tables needs the login's own
+        # privileges; a runtime role cannot create schema objects.
         with connect() as c:
             _run(c)
             c.commit()
@@ -154,9 +182,12 @@ def ensure_schema(conn=None) -> None:
 
 
 def _with_conn(fn):
-    from aos_api.db import connect
+    from aos_api.db import connect_platform
 
-    with connect() as conn:
+    # Legacy dual-write plane: twa_* tables carry no tenant RLS, so the correct
+    # identity is the platform role. A scope-less ``connect()`` here inherited
+    # nothing outside a request and was denied on a NOINHERIT login.
+    with connect_platform() as conn:
         out = fn(conn)
         conn.commit()
         return out

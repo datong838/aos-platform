@@ -536,13 +536,17 @@ def prebuild_all_ssh_tunnels_from_meta_source() -> list[dict[str, Any]]:
     import json as _json
     results: list[dict[str, Any]] = []
     try:
-        from aos_api.db import connect
+        from aos_api.db import connect_platform
     except Exception as exc:
-        log.warning("startup_prebuild_skip: cannot import db.connect: %s", exc)
+        log.warning("startup_prebuild_skip: cannot import db.connect_platform: %s", exc)
         return results
 
     try:
-        with connect() as conn:
+        # Cross-tenant discovery over meta_source: startup has no tenant scope to
+        # inherit, so a scope-less connect() left current_user as the NOINHERIT
+        # login and the very first read failed with "permission denied for table
+        # meta_source". The platform role is the correct identity here.
+        with connect_platform() as conn:
             # 查出所有 (org_id, project_id) 对，再按 scope 查询含 sshHost 的数据源
             scopes = conn.execute(
                 """SELECT DISTINCT s.org_id, s.project_id

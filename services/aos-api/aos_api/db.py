@@ -12,6 +12,7 @@ from psycopg.rows import dict_row
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import (
     TenantScope,
+    apply_platform_role,
     apply_transaction_scope,
     current_tenant_scope,
 )
@@ -32,6 +33,7 @@ def _connect(
     inherit_scope: bool = True,
     read_only: bool = False,
     isolation_level: IsolationLevel | None = None,
+    platform_role: bool = False,
 ) -> Iterator[psycopg.Connection]:
     dsn = get_dsn()
     log.debug("db_connect host_port_from_env=%s", "AOS_DATABASE_URL" in os.environ)
@@ -52,6 +54,11 @@ def _connect(
         )
         if effective_scope is not None:
             apply_transaction_scope(conn, effective_scope)
+        elif platform_role:
+            # Scope-less but still authenticated as the runtime role: needed on
+            # a NOINHERIT login where omitting SET ROLE means "no privileges at
+            # all". Never grants tenant visibility — the GUCs stay unset.
+            apply_platform_role(conn)
         yield conn
 
 
@@ -62,6 +69,16 @@ def connect(
 ) -> Iterator[psycopg.Connection]:
     """Open the existing read-write tenant transaction."""
     return _connect(scope, inherit_scope=inherit_scope, read_only=False)
+
+
+def connect_platform() -> Iterator[psycopg.Connection]:
+    """Open a scope-less transaction authenticated as the runtime DB role.
+
+    For platform-level paths that operate across tenants on tables without
+    tenant RLS (membership catalog load, bootstrap probes). Passing a tenant
+    ``scope`` here would be a bug: use :func:`connect` for tenant data.
+    """
+    return _connect(None, inherit_scope=False, read_only=False, platform_role=True)
 
 
 def connect_read_only(
@@ -237,7 +254,44 @@ CREATE INDEX IF NOT EXISTS idx_meta_schedule_run_history
 """
 
 
+def _login_can_create_schema() -> bool:
+    """Whether the *login* user may run DDL in schema "public".
+
+    The recovered runtime login (``aos_a0v_runtime_*``) does not:
+    ``has_schema_privilege(current_user, 'public', 'CREATE')`` is false, so every
+    statement in :func:`init_schema` below can only raise "permission denied for
+    schema public" — and that exception used to abort the whole startup seed
+    block behind it. Probing the privilege (not table existence) keeps the DDL
+    running wherever it can actually succeed, e.g. the superuser-backed
+    migration test database.
+    """
+
+    try:
+        # No SET ROLE: the question is about the login user's own privileges.
+        with connect() as conn:
+            row = conn.execute(
+                "SELECT has_schema_privilege(current_user, 'public', 'CREATE') AS ok"
+            ).fetchone()
+    except Exception:  # noqa: BLE001 — probe failure means "assume not"
+        log.debug("core_schema_privilege_probe_skip", exc_info=True)
+        return False
+    return bool(row["ok"])
+
+
+def _bootstrap_twa_store() -> None:
+    try:
+        from aos_api.twa_pg import bootstrap as twa_bootstrap
+
+        twa_bootstrap()
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover
+        log.warning("twa_store_bootstrap_skip err=%s", exc)
+
+
 def init_schema() -> None:
+    if not _login_can_create_schema():
+        log.debug("db_schema_init_skipped login_cannot_create")
+        _bootstrap_twa_store()
+        return
     with connect() as conn:
         conn.execute(SCHEMA_SQL)
         # Existing DBs created before scheme 55
@@ -309,12 +363,7 @@ def init_schema() -> None:
         )
         conn.commit()
     log.info("db_schema_ready")
-    try:
-        from aos_api.twa_pg import bootstrap as twa_bootstrap
-
-        twa_bootstrap()
-    except Exception as exc:  # noqa: BLE001  # pragma: no cover
-        log.warning("twa_store_bootstrap_skip err=%s", exc)
+    _bootstrap_twa_store()
 
 
 def repair_demo_workorders(conn=None) -> None:
@@ -366,7 +415,7 @@ def repair_demo_workorders(conn=None) -> None:
             )
 
     if conn is None:
-        with connect() as c:
+        with connect_platform() as c:
             _run(c)
             c.commit()
     else:
@@ -404,7 +453,7 @@ def ensure_field_marking_seed(conn=None) -> None:
         log.info("field_marking_seed_ensured objectType=WorkOrder field=internalCost")
 
     if conn is None:
-        with connect() as c:
+        with connect_platform() as c:
             _run(c)
             c.commit()
     else:
@@ -429,7 +478,7 @@ def ensure_inherit_openfga_seed(conn=None) -> None:
         log.info("inherit_openfga_seed_ensured objectType=Site schema_only")
 
     if conn is None:
-        with connect() as c:
+        with connect_platform() as c:
             _run(c)
             c.commit()
     else:
@@ -448,7 +497,7 @@ def ensure_system_meta() -> None:
     **不**包含：dev-org / dev-project / 工单样例 / 订单 / 模块等测试数据。
     测试数据请用 ``aos_api.demo.seed_test_org()``。
     """
-    with connect() as conn:
+    with connect_platform() as conn:
         ensure_field_marking_seed(conn)
         ensure_inherit_openfga_seed(conn)
         from aos_api.apollo_catalog import ensure_seed as ensure_apollo_catalog_seed

@@ -1,12 +1,18 @@
 """Boot / schema for Org · Workspace · Membership persistence (164 v1.1)."""
 from __future__ import annotations
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.tenant-catalog")
 
 _schema_ready = False
+
+# Created by alembic migrations. The runtime login has USAGE but not CREATE on
+# ``public`` (verified: has_schema_privilege(..., 'public', 'CREATE') = false),
+# so any DDL attempt fails even with IF NOT EXISTS — PostgreSQL checks the
+# privilege before it checks object existence. Probe instead of issuing DDL.
+_CATALOG_TABLES = ("meta_org", "meta_workspace", "meta_membership")
 
 
 def persistence_enabled() -> bool:
@@ -21,11 +27,36 @@ def persistence_enabled() -> bool:
     return twa_pg.enabled()
 
 
+def _catalog_tables_present() -> bool:
+    """True when every catalog table already exists in this database."""
+
+    try:
+        with connect_platform() as conn:
+            row = conn.execute(
+                """
+                SELECT count(*) AS n
+                FROM pg_class
+                WHERE relkind = 'r' AND relname = ANY(%s)
+                """,
+                (list(_CATALOG_TABLES),),
+            ).fetchone()
+    except Exception:  # noqa: BLE001 — treat probe failure as "not ready"
+        log.debug("tenant_catalog_probe_skip", exc_info=True)
+        return False
+    return int(row["n"]) == len(_CATALOG_TABLES)
+
+
 def ensure_tenant_catalog_schema() -> None:
     global _schema_ready
     if not persistence_enabled():
         return
     if _schema_ready:
+        return
+    if _catalog_tables_present():
+        # Normal production path: migrations own the schema, the runtime role
+        # only reads/writes rows. Short-circuit before any DDL so a privilege
+        # error can never be mistaken for "persistence unavailable".
+        _schema_ready = True
         return
     with connect(inherit_scope=False) as conn:
         conn.execute(

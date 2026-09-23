@@ -247,8 +247,18 @@ async def _lifespan_body(_app: FastAPI):
     }
     if legacy_bootstrap:
         try:
-            init_schema()
-            ensure_system_meta()
+            # Isolated on purpose: a DDL permission error here ("permission
+            # denied for schema public") used to abort every later seed in this
+            # block — system meta, tenant catalogs and the 12-OT daily
+            # schedules — because they all shared a single try.
+            try:
+                init_schema()
+            except Exception:
+                log.exception("startup_init_schema_failed_continue")
+            try:
+                ensure_system_meta()
+            except Exception:
+                log.exception("startup_system_meta_failed_continue")
             try:
                 seed_modules_if_empty(TenantScope("dev-org", "dev-project"))
             except Exception:

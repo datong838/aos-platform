@@ -60,7 +60,16 @@ def bind_tenant_scope(scope: TenantScope) -> Iterator[TenantScope]:
 
 
 def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
-    """Set transaction-local GUCs; values disappear at transaction end."""
+    """Set transaction-local role and GUCs.
+
+    Both the role and the tenant GUCs are transaction-local on purpose: a
+    session-scoped setting would leak the previous caller's tenant into the
+    next statement. The cost is the inverse discipline — any intermediate
+    ``commit()``/``rollback()`` discards them, after which ``current_user``
+    reverts to the NOINHERIT login (every table denies) and the RLS policy sees
+    no ``aos.org_id`` (every row is filtered out). Do the whole unit of work in
+    one transaction; use :func:`apply_platform_role` for cross-tenant paths.
+    """
     conn.execute(f"SET LOCAL ROLE {RUNTIME_DB_ROLE}")
     conn.execute(
         """
@@ -69,6 +78,30 @@ def apply_transaction_scope(conn: Any, scope: TenantScope) -> None:
         """,
         scope.key,
     )
+
+
+def apply_platform_role(conn: Any) -> None:
+    """Adopt the runtime DB role WITHOUT tenant GUCs.
+
+    The connection user is NOINHERIT (``aos_a0v_runtime_*``), so a scope-less
+    connection never adopts ``aos_runtime`` and is denied on any table the
+    runtime role owns or was granted. Paths that legitimately work across
+    tenants — bootstrap DDL probes, the membership catalog load — still need
+    the role, they just must not carry a tenant GUC.
+
+    Session-scoped on purpose (``SET ROLE``, not ``SET LOCAL ROLE``): a LOCAL
+    role is discarded by any intermediate COMMIT, after which ``current_user``
+    silently reverts to the NOINHERIT login and the very next statement raises
+    "permission denied for table ..." (verified — this is what broke
+    ``ensure_system_meta``, whose seed helpers commit midway). Platform
+    connections are always freshly created and carry no tenant state, so a
+    session-scoped role cannot leak across callers.
+
+    Only use for platform-level maintenance on tables that are **not** guarded
+    by tenant RLS. Tenant-scoped reads/writes must go through
+    ``apply_transaction_scope`` so the RLS policy can see the GUCs.
+    """
+    conn.execute(f"SET ROLE {RUNTIME_DB_ROLE}")
 
 
 def filter_by_tenant(

@@ -6,7 +6,7 @@ from typing import Any
 
 from aos_api import membership as mem
 from aos_api import workspaces_catalog as ws_cat
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.logging_facade import get_logger
 
 log = get_logger("aos-api.orgs")
@@ -39,23 +39,27 @@ def reset_org_store(*, purge_db: bool = False) -> None:
     if not purge_db:
         return
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             conn.execute("DELETE FROM meta_org")
             conn.commit()
     except Exception:  # noqa: BLE001 — tests may run before schema
         log.debug("org_store_purge_skip", exc_info=True)
 
 
-def _persist_org(row: dict[str, Any]) -> None:
+def _persist_org(row: dict[str, Any]) -> bool:
+    """Write the org row; return whether it reached PostgreSQL."""
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    persisted = False
     try:
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
         ensure_tenant_catalog_schema()
-        with connect() as conn:
+        # meta_org has no project dimension — the org *is* the tenant root —
+        # so there is no scope to adopt; the platform role is the correct identity.
+        with connect_platform() as conn:
             conn.execute(
                 """
                 INSERT INTO meta_org (id, name, kind, join_policy, discoverable, updated_at)
@@ -76,6 +80,7 @@ def _persist_org(row: dict[str, Any]) -> None:
                 ),
             )
             conn.commit()
+        persisted = True
     except Exception:  # noqa: BLE001
         log.warning("org_persist_fail id=%s", row.get("id"), exc_info=True)
     try:
@@ -84,17 +89,20 @@ def _persist_org(row: dict[str, Any]) -> None:
         twa_pg.upsert_org(row)
     except Exception:  # noqa: BLE001
         log.debug("org_twa_dual_write_skip", exc_info=True)
+    return persisted
 
 
-def _delete_org_db(org_id: str) -> None:
+def _delete_org_db(org_id: str) -> bool:
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    deleted = False
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             conn.execute("DELETE FROM meta_org WHERE id=%s", (org_id,))
             conn.commit()
+        deleted = True
     except Exception:  # noqa: BLE001
         log.warning("org_delete_fail id=%s", org_id, exc_info=True)
     try:
@@ -103,12 +111,13 @@ def _delete_org_db(org_id: str) -> None:
         twa_pg.delete_org(org_id)
     except Exception:  # noqa: BLE001
         log.debug("org_twa_delete_skip", exc_info=True)
+    return deleted
 
 
 def load_orgs_from_db() -> int:
     _ORGS.clear()
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             rows = conn.execute(
                 "SELECT id, name, kind, join_policy, discoverable FROM meta_org ORDER BY id"
             ).fetchall()

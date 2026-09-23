@@ -14,6 +14,7 @@ from aos_api.aip_logic_automation_models import (
     UpdateLogicAutomationRequest,
 )
 from aos_api.db import connect as db_connect
+from aos_api.db import connect_platform as db_connect_platform
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
 
@@ -42,8 +43,20 @@ class LogicAutomationPersistenceError(LogicAutomationError):
 
 
 class LogicAutomationStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None) -> None:
+    def __init__(
+        self,
+        connect_factory: ConnectFactory | None = None,
+        *,
+        platform_connect_factory: ConnectFactory | None = None,
+    ) -> None:
         self._connect_factory = connect_factory or db_connect
+        # The scheduler's global discovery runs from a background asyncio loop,
+        # i.e. outside any request, so there is no tenant scope to inherit. A
+        # scope-less connect() is denied on a NOINHERIT login, which made every
+        # tick fail closed with permission denied on aip_logic_automation_policy.
+        self._platform_connect_factory = (
+            platform_connect_factory or db_connect_platform
+        )
 
     def list(self, org_id: str, project_id: str, graph_id: str) -> list[LogicAutomationPolicy]:
         try:
@@ -227,7 +240,7 @@ class LogicAutomationStore:
     def list_active_cron_targets(self) -> list[tuple[str, str, LogicAutomationPolicy]]:
         """Global scheduler discovery; every subsequent read/write is rebound to the row tenant."""
         try:
-            with self._connect_factory() as conn:
+            with self._platform_connect_factory() as conn:
                 rows = conn.execute(
                     """SELECT * FROM aip_logic_automation_policy
                        WHERE status='active' AND trigger_type='cron'

@@ -9,7 +9,7 @@ from typing import Any
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
-from aos_api.tenant_scope import TenantScope, apply_transaction_scope
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.apollo_catalog")
 
@@ -96,7 +96,8 @@ def ensure_seed(conn=None) -> None:
                 "dev-project",
             ),
         ]
-        apply_transaction_scope(c, TenantScope("dev-org", "dev-project"))
+        # Scope comes from the dedicated connection created below; this helper
+        # must never rebind or reset the caller's session.
         for row in spokes:
             c.execute(
                 """
@@ -110,14 +111,16 @@ def ensure_seed(conn=None) -> None:
             )
         log.info("apollo_catalog_seed_ensured channels=%s spokes=%s", len(channels), len(spokes))
         _apply_full_spoke_mode(c)
-        c.execute("RESET ROLE")
 
-    if conn is None:
-        with connect() as c:
-            _run(c)
-            c.commit()
-    else:
-        _run(conn)
+    # apollo_spoke is tenant-RLS guarded, so the seed needs a dev-org scoped
+    # transaction. Run it on a dedicated connection: the previous revision
+    # called apply_transaction_scope on the CALLER's connection and then issued
+    # RESET ROLE, which stripped the caller's DB role entirely — the next
+    # statement in ensure_system_meta then failed with "permission denied for
+    # table meta_link_type". A seed helper must not mutate its caller's session.
+    with connect(TenantScope("dev-org", "dev-project")) as c:
+        _run(c)
+        c.commit()
 
 
 def full_spoke_mode() -> str:

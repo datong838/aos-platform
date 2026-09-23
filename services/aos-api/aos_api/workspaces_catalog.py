@@ -4,8 +4,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.workspaces-catalog")
 
@@ -31,23 +32,27 @@ def reset_workspace_catalog(*, purge_db: bool = False) -> None:
     if not purge_db:
         return
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             conn.execute("DELETE FROM meta_workspace")
             conn.commit()
     except Exception:  # noqa: BLE001
         log.debug("workspace_purge_skip", exc_info=True)
 
 
-def _persist_ws(row: dict[str, Any]) -> None:
+def _persist_ws(row: dict[str, Any]) -> bool:
+    """Write the workspace row; return whether it reached PostgreSQL."""
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    persisted = False
     try:
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
         ensure_tenant_catalog_schema()
-        with connect() as conn:
+        # Explicit scope for the same reason as membership: the runtime login
+        # is NOINHERIT, and this row belongs to a tenant.
+        with connect(scope=TenantScope(row["orgId"], row["id"])) as conn:
             conn.execute(
                 """
                 INSERT INTO meta_workspace
@@ -68,6 +73,7 @@ def _persist_ws(row: dict[str, Any]) -> None:
                 ),
             )
             conn.commit()
+        persisted = True
     except Exception:  # noqa: BLE001
         log.warning(
             "workspace_persist_fail org=%s project=%s",
@@ -81,20 +87,23 @@ def _persist_ws(row: dict[str, Any]) -> None:
         twa_pg.upsert_workspace(row)
     except Exception:  # noqa: BLE001
         log.debug("workspace_twa_dual_write_skip", exc_info=True)
+    return persisted
 
 
-def _delete_ws_db(org_id: str, project_id: str) -> None:
+def _delete_ws_db(org_id: str, project_id: str) -> bool:
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    deleted = False
     try:
-        with connect() as conn:
+        with connect(scope=TenantScope(org_id, project_id)) as conn:
             conn.execute(
                 "DELETE FROM meta_workspace WHERE org_id=%s AND project_id=%s",
                 (org_id, project_id),
             )
             conn.commit()
+        deleted = True
     except Exception:  # noqa: BLE001
         log.warning(
             "workspace_delete_fail org=%s project=%s", org_id, project_id, exc_info=True
@@ -105,12 +114,13 @@ def _delete_ws_db(org_id: str, project_id: str) -> None:
         twa_pg.delete_workspace(org_id, project_id)
     except Exception:  # noqa: BLE001
         log.debug("workspace_twa_delete_skip", exc_info=True)
+    return deleted
 
 
 def load_workspaces_from_db() -> int:
     _WS.clear()
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             rows = conn.execute(
                 """
                 SELECT org_id, project_id, name, deletable, kind

@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.logging_facade import get_logger
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.membership")
 
@@ -35,23 +36,33 @@ def reset_membership_store(*, purge_db: bool = False) -> None:
     if not purge_db:
         return
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             conn.execute("DELETE FROM meta_membership")
             conn.commit()
     except Exception:  # noqa: BLE001
         log.debug("membership_purge_skip", exc_info=True)
 
 
-def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> None:
+def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> bool:
+    """Write the membership row; return whether it reached PostgreSQL.
+
+    Returns ``False`` when persistence is disabled **or** the write failed, so
+    callers that must not report success without durability can check it.
+    """
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    persisted = False
     try:
         from aos_api.tenant_catalog import ensure_tenant_catalog_schema
 
         ensure_tenant_catalog_schema()
-        with connect() as conn:
+        # Explicit scope: the runtime login is NOINHERIT, so a scope-less
+        # connect() never adopts aos_runtime and is denied on meta_membership
+        # (the whole write used to be swallowed below). The scope also keeps
+        # the row compatible with a future tenant RLS policy on this catalog.
+        with connect(scope=TenantScope(org_id, project_id)) as conn:
             conn.execute(
                 """
                 INSERT INTO meta_membership (org_id, project_id, subject, role, updated_at)
@@ -63,6 +74,7 @@ def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> No
                 (org_id, project_id, subject, role),
             )
             conn.commit()
+        persisted = True
     except Exception:  # noqa: BLE001
         log.warning(
             "membership_persist_fail org=%s project=%s subject=%s",
@@ -77,15 +89,17 @@ def _persist_member(org_id: str, project_id: str, subject: str, role: str) -> No
         twa_pg.upsert_member(org_id, project_id, subject, role)
     except Exception:  # noqa: BLE001
         log.debug("membership_twa_dual_write_skip", exc_info=True)
+    return persisted
 
 
-def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
+def _delete_member_db(org_id: str, project_id: str, subject: str) -> bool:
     from aos_api.tenant_catalog import persistence_enabled
 
     if not persistence_enabled():
-        return
+        return False
+    deleted = False
     try:
-        with connect() as conn:
+        with connect(scope=TenantScope(org_id, project_id)) as conn:
             conn.execute(
                 """
                 DELETE FROM meta_membership
@@ -94,6 +108,7 @@ def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
                 (org_id, project_id, subject),
             )
             conn.commit()
+        deleted = True
     except Exception:  # noqa: BLE001
         log.warning(
             "membership_delete_fail org=%s project=%s subject=%s",
@@ -108,12 +123,16 @@ def _delete_member_db(org_id: str, project_id: str, subject: str) -> None:
         twa_pg.delete_member(org_id, project_id, subject)
     except Exception:  # noqa: BLE001
         log.debug("membership_twa_delete_skip", exc_info=True)
+    return deleted
 
 
 def load_memberships_from_db() -> int:
     _MEMBERS.clear()
     try:
-        with connect() as conn:
+        # Cross-tenant catalog load: platform role, no tenant GUC. meta_membership
+        # carries no tenant RLS today, and a scoped read here would only ever
+        # return one tenant's rows.
+        with connect_platform() as conn:
             rows = conn.execute(
                 """
                 SELECT org_id, project_id, subject, role
@@ -223,12 +242,27 @@ def upsert_member(
     if role not in ROLES:
         raise ValueError(f"invalid role {role}")
     _MEMBERS[(org_id, project_id, subject)] = role
-    _persist_member(org_id, project_id, subject, role)
+    persisted = _persist_member(org_id, project_id, subject, role)
+    if not persisted:
+        from aos_api.tenant_catalog import persistence_enabled
+
+        if persistence_enabled():
+            log.error(
+                "membership_durability_degraded org=%s project=%s subject=%s "
+                "— in-memory only, lost on restart",
+                org_id,
+                project_id,
+                subject,
+            )
     row = {
         "subject": subject,
         "role": role,
         "orgId": org_id,
         "projectId": project_id,
+        # Additive durability signal: False means the row is in-memory only.
+        # ``person.enrich_member_row`` passes dicts through, so existing
+        # callers that ignore it are unaffected.
+        "persisted": persisted,
     }
     append_audit(
         org_id=org_id,

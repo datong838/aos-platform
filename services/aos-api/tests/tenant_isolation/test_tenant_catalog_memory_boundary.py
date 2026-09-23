@@ -73,8 +73,22 @@ def test_pg_schema_bootstrap_does_not_inherit_request_scope(monkeypatch):
 
     monkeypatch.setattr(tenant_catalog, "persistence_enabled", lambda: True)
     monkeypatch.setattr(tenant_catalog, "connect", connect)
-    monkeypatch.setattr(tenant_catalog, "_schema_ready", False)
-    tenant_catalog.ensure_tenant_catalog_schema()
 
+    # Case A — catalog tables already exist (the production path). The runtime
+    # login holds no CREATE on schema "public", so any DDL fails with permission
+    # denied even with IF NOT EXISTS, and the failure used to be swallowed and
+    # misread as "persistence unavailable". Existing tables must short-circuit
+    # before any DDL is issued.
+    monkeypatch.setattr(tenant_catalog, "_schema_ready", False)
+    monkeypatch.setattr(tenant_catalog, "_catalog_tables_present", lambda: True)
+    tenant_catalog.ensure_tenant_catalog_schema()
+    assert calls == []
+
+    # Case B — genuinely missing tables (fresh database): DDL runs, and it must
+    # never inherit a request scope.
+    calls.clear()
+    monkeypatch.setattr(tenant_catalog, "_schema_ready", False)
+    monkeypatch.setattr(tenant_catalog, "_catalog_tables_present", lambda: False)
+    tenant_catalog.ensure_tenant_catalog_schema()
     assert calls[0] == ("connect", False)
     assert calls[-1] == "commit"
