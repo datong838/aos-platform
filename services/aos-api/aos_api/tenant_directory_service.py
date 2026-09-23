@@ -14,7 +14,12 @@ def require_workspace(scope: TenantScope) -> None:
     to validate whether that tenant boundary exists at all.
     """
     try:
-        with connect() as conn:
+        # Explicit scope: the recovery-swapped runtime DB user is NOINHERIT, so a
+        # scope-less connect() never adopts aos_runtime and gets denied on
+        # twa_workspace (503 on every authenticated route). Passing the scope
+        # performs SET LOCAL ROLE aos_runtime + tenant GUCs for this lookup;
+        # semantics unchanged (missing row still -> AUTH_TENANT_UNKNOWN 403).
+        with connect(scope=scope) as conn:
             row = conn.execute(
                 "SELECT 1 FROM twa_workspace WHERE org_id=%s AND project_id=%s",
                 scope.key,
