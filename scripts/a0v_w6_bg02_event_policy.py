@@ -442,7 +442,11 @@ def verify(plane) -> dict:
     (04:00Z); a zero candidate count before then is expected, not a failure.
     """
     with _conn() as conn:
-        head = conn.execute("""SELECT schedule_policy_id, current_revision, enabled, lifecycle
+        # NB: `ecommerce_investigation_schedule_policy_head` has no `lifecycle`
+        # column (unlike the Case head); the live columns are current_revision /
+        # case_id / analysis_type / enabled / content_hash / authority_data.
+        # Verified against information_schema 2026-09-24 before the first run.
+        head = conn.execute("""SELECT schedule_policy_id, current_revision, enabled
             FROM ecommerce_investigation_schedule_policy_head
             WHERE org_id=%s AND project_id=%s AND schedule_policy_id=%s""",
             (*SCOPE.values(), POLICY)).fetchone()
