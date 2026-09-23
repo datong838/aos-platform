@@ -44,6 +44,23 @@ KEY = "a0v-w5-ds-definition-rebuild-20260923"
 BASE = ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline"
 
 
+def _ensure_docker_on_path():
+    """Mirror of the helper in a0v_w4_stalled_close: keep the Docker CLI
+    discoverable for any control-plane path that shells out to `docker`."""
+    import shutil
+    if shutil.which("docker"):
+        return
+    for candidate in (
+        "/Users/ddt/.docker/bin",
+        "/Users/ddt/Applications/Docker.app/Contents/Resources/bin",
+        "/Applications/Docker.app/Contents/Resources/bin",
+        "/opt/homebrew/bin",
+    ):
+        if os.path.isfile(os.path.join(candidate, "docker")):
+            os.environ["PATH"] = candidate + os.pathsep + os.environ.get("PATH", "")
+            return
+
+
 def _configure():
     os.environ.update({
         "AOS_DOTENV_DISABLED": "1",
@@ -54,6 +71,7 @@ def _configure():
         "AOS_BUNDLE_TRUST_ROOTS_FILE": str(BASE / "bm-trust-root-rotation/signing/trust-roots.json"),
         "AOS_ECOMMERCE_REGISTRATION_CREDENTIAL_FILE": str(BASE / "bn-registration-credentials/registration-main-identity.json"),
     })
+    _ensure_docker_on_path()
     sys.path.insert(0, str(ROOT / "services/aos-api"))
     sys.path.insert(0, str(ROOT / "scripts"))
 

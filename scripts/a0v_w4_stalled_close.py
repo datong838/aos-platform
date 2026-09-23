@@ -34,6 +34,24 @@ REASON = "STALLED_EXECUTOR_ABANDONED_WITH_EFFECTS"
 ELIGIBLE_AFTER = "2026-09-24T02:39:44.133380+00:00"
 
 
+def _ensure_docker_on_path():
+    """The unattended/sandbox PATH may omit the Docker CLI, but the storage
+    factory shells out to `docker --context ... inspect` to discover the PG host
+    port. Expose the CLI when present so prepare/audit stay runnable headless."""
+    import shutil
+    if shutil.which("docker"):
+        return
+    for candidate in (
+        "/Users/ddt/.docker/bin",
+        "/Users/ddt/Applications/Docker.app/Contents/Resources/bin",
+        "/Applications/Docker.app/Contents/Resources/bin",
+        "/opt/homebrew/bin",
+    ):
+        if os.path.isfile(os.path.join(candidate, "docker")):
+            os.environ["PATH"] = candidate + os.pathsep + os.environ.get("PATH", "")
+            return
+
+
 def _configure():
     os.environ.update({
         "AOS_DOTENV_DISABLED": "1",
@@ -46,6 +64,7 @@ def _configure():
         "AOS_BUNDLE_ROOT": str(
             ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles"),
     })
+    _ensure_docker_on_path()
 
 
 def _write(name, value):
