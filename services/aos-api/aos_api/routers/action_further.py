@@ -380,6 +380,20 @@ def create_notification(
     return created.model_dump()
 
 
+# NOTE(route-shadow): `/notification-effects/dispatches` 是字面段 GET，必须声明在
+# 同方法 `{effect_id}` 路由之前，否则 "dispatches" 会被当作 effect_id 查询 → 永远 404。
+@router.get("/v1/actions/notification-effects/dispatches")
+def list_dispatches(
+    effect_id: str | None = None,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#63 · 列出派发记录。"""
+    _ = principal
+    eng = get_notification_engine()
+    items = eng.list_dispatches(effect_id=effect_id)
+    return {"dispatches": items, "count": len(items)}
+
+
 @router.get("/v1/actions/notification-effects/{effect_id}")
 def get_notification(
     effect_id: str,
@@ -459,18 +473,6 @@ def dispatch_notification(
     log.info("notification_dispatched id=%s dispatch=%s recipients=%s",
              effect_id, record["dispatch_id"], len(record["recipients"]))
     return record
-
-
-@router.get("/v1/actions/notification-effects/dispatches")
-def list_dispatches(
-    effect_id: str | None = None,
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    """#63 · 列出派发记录。"""
-    _ = principal
-    eng = get_notification_engine()
-    items = eng.list_dispatches(effect_id=effect_id)
-    return {"dispatches": items, "count": len(items)}
 
 
 @router.post("/v1/actions/notification-objects")

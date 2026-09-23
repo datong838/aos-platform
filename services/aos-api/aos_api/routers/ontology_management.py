@@ -68,6 +68,18 @@ def record_edit_event(
     return event.model_dump()
 
 
+# NOTE(route-shadow): `/edit-history/timeline` 是字面段 GET，必须声明在同方法
+# `{event_id}` 路由之前，否则 "timeline" 会被当作 event_id 查询 → 永远 404。
+@router.get("/v1/ontology/edit-history/timeline")
+def edit_timeline(
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#36 · 按作者合并的时间线视图。"""
+    _ = principal
+    eng = get_edit_engine()
+    return {"timeline": eng.timeline_merged_by_author()}
+
+
 @router.get("/v1/ontology/edit-history/{event_id}")
 def get_edit_event(
     event_id: str,
@@ -109,16 +121,6 @@ def rollback_by_author(
     rolled = eng.rollback_by_author(body.author)
     log.info("rollback_by_author author=%s count=%s", body.author, len(rolled))
     return {"rolledBack": len(rolled), "events": [e.model_dump() for e in rolled]}
-
-
-@router.get("/v1/ontology/edit-history/timeline")
-def edit_timeline(
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    """#36 · 按作者合并的时间线视图。"""
-    _ = principal
-    eng = get_edit_engine()
-    return {"timeline": eng.timeline_merged_by_author()}
 
 
 # ─────────────── #37 Cleanup ───────────────

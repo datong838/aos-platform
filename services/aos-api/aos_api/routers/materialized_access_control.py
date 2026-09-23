@@ -353,6 +353,13 @@ def create_agent_tool(
         raise _map_agent_tools_error(err) from err
 
 
+# NOTE(route-shadow): `/agent-tools/types` 是字面段 GET，必须声明在同方法
+# `{tool_id}` 路由之前，否则 "types" 会被当作 tool_id 查询 → 永远 404。
+@router.get("/agent-tools/types")
+def get_agent_tool_types(_principal: Principal = Depends(require_principal)):
+    return {"types": get_agent_tools_engine().get_tool_types()}
+
+
 @router.get("/agent-tools/{tool_id}")
 def get_agent_tool(
     tool_id: str, _principal: Principal = Depends(require_principal),
@@ -413,8 +420,3 @@ def execute_agent_tool(
         )
     except AgentToolsEngineError as err:
         raise _map_agent_tools_error(err) from err
-
-
-@router.get("/agent-tools/types")
-def get_agent_tool_types(_principal: Principal = Depends(require_principal)):
-    return {"types": get_agent_tools_engine().get_tool_types()}

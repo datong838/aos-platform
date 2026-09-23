@@ -80,6 +80,19 @@ def list_flows(
     return {"items": [f.model_dump() for f in items], "count": len(items)}
 
 
+# NOTE(route-shadow): `/logic-flows/executions` 是字面段 GET，必须声明在同方法
+# `{flow_id}` 路由之前，否则 "executions" 会被当作 flow_id 查询 → 永远 404。
+@router.get("/v1/logic-flows/executions")
+def list_executions(
+    flow_id: str | None = None, limit: int = 50,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#111 · 执行列表。"""
+    _ = principal
+    items = get_flow_engine().list_executions(flow_id=flow_id, limit=limit)
+    return {"items": [e.model_dump() for e in items], "count": len(items)}
+
+
 @router.get("/v1/logic-flows/{flow_id}")
 def get_flow(
     flow_id: str, principal: Principal = Depends(require_principal),
@@ -137,17 +150,6 @@ def execute_flow(
     except LogicFlowsError as exc:
         raise _map_err(exc) from exc
     return {"item": exec_.model_dump()}
-
-
-@router.get("/v1/logic-flows/executions")
-def list_executions(
-    flow_id: str | None = None, limit: int = 50,
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    """#111 · 执行列表。"""
-    _ = principal
-    items = get_flow_engine().list_executions(flow_id=flow_id, limit=limit)
-    return {"items": [e.model_dump() for e in items], "count": len(items)}
 
 
 # ════════════════════ #112 AgentProxy ════════════════════
@@ -323,6 +325,19 @@ def list_workers(
     return {"items": [w.model_dump() for w in items], "count": len(items)}
 
 
+# NOTE(route-shadow): `/agent-workers/jobs` 是字面段 GET，必须声明在同方法
+# `{worker_id}` 路由之前，否则 "jobs" 会被当作 worker_id 查询 → 永远 404。
+@router.get("/v1/agent-workers/jobs")
+def list_jobs(
+    worker_id: str | None = None, status: str | None = None,
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    """#113 · 任务列表。"""
+    _ = principal
+    items = get_worker_engine().list_jobs(worker_id=worker_id, status=status)
+    return {"items": [j.model_dump() for j in items], "count": len(items)}
+
+
 @router.get("/v1/agent-workers/{worker_id}")
 def get_worker(
     worker_id: str, principal: Principal = Depends(require_principal),
@@ -401,14 +416,3 @@ def complete_job(
     except LogicFlowsError as exc:
         raise _map_err(exc) from exc
     return {"item": job.model_dump()}
-
-
-@router.get("/v1/agent-workers/jobs")
-def list_jobs(
-    worker_id: str | None = None, status: str | None = None,
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    """#113 · 任务列表。"""
-    _ = principal
-    items = get_worker_engine().list_jobs(worker_id=worker_id, status=status)
-    return {"items": [j.model_dump() for j in items], "count": len(items)}

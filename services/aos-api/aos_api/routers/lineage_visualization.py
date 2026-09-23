@@ -179,24 +179,9 @@ def get_column(dataset_rid: str, column_name: str, _=require_principal):
         raise _map_column_err(e) from e
 
 
-@router.get("/columns/{dataset_rid}", response_model=list[ColumnIndexEntry])
-def list_columns(dataset_rid: str, _=require_principal):
-    return get_column_lineage_search_engine().list_columns(dataset_rid)
-
-
-@router.put("/columns/{dataset_rid}/{column_name}", response_model=ColumnIndexEntry)
-def update_column(dataset_rid: str, column_name: str, updates: dict, _=require_principal):
-    try:
-        return get_column_lineage_search_engine().update_column(dataset_rid, column_name, updates)
-    except ColumnLineageSearchError as e:
-        raise _map_column_err(e) from e
-
-
-@router.delete("/columns/{dataset_rid}/{column_name}")
-def delete_column(dataset_rid: str, column_name: str, _=require_principal):
-    return {"deleted": get_column_lineage_search_engine().delete_column(dataset_rid, column_name)}
-
-
+# NOTE(route-shadow): `/columns/search` 与 `/columns/trace` 是字面段 GET，必须声明在
+# 同方法 `/columns/{dataset_rid}` 之前。否则二者会被 `{dataset_rid}` 吞掉，
+# 且**不报错**——`search` / `trace` 被当成 dataset_rid，返回 200 空列表（静默错数据）。
 @router.get("/columns/search", response_model=list[ColumnIndexEntry])
 def search_columns(
     keyword: str = "",
@@ -221,6 +206,24 @@ def trace_column(
         )
     except ColumnLineageSearchError as e:
         raise _map_column_err(e) from e
+
+
+@router.get("/columns/{dataset_rid}", response_model=list[ColumnIndexEntry])
+def list_columns(dataset_rid: str, _=require_principal):
+    return get_column_lineage_search_engine().list_columns(dataset_rid)
+
+
+@router.put("/columns/{dataset_rid}/{column_name}", response_model=ColumnIndexEntry)
+def update_column(dataset_rid: str, column_name: str, updates: dict, _=require_principal):
+    try:
+        return get_column_lineage_search_engine().update_column(dataset_rid, column_name, updates)
+    except ColumnLineageSearchError as e:
+        raise _map_column_err(e) from e
+
+
+@router.delete("/columns/{dataset_rid}/{column_name}")
+def delete_column(dataset_rid: str, column_name: str, _=require_principal):
+    return {"deleted": get_column_lineage_search_engine().delete_column(dataset_rid, column_name)}
 
 
 @router.post("/columns/index/{dataset_rid}")

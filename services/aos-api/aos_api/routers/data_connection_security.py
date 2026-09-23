@@ -196,6 +196,27 @@ def list_egress_policies(
     return get_egress_policy_engine().list(effect=effect, status=status)
 
 
+# NOTE(route-shadow): 字面段 GET 路由必须声明在同方法 `{policy_id}` 路由之前，
+# 否则会被参数化路由整段吞掉（"check-allowed" 被当作 policy_id 查询 → 永远 404）。
+@router.get("/v1/egress-policies/check-allowed")
+def check_egress_allowed(
+    destination: str,
+    port: int,
+    protocol: str,
+    _=require_principal,
+):
+    return {"allowed": get_egress_policy_engine().check_allowed(destination, port, protocol)}
+
+
+@router.get("/v1/egress-policies/evaluations", response_model=list[EgressEvaluation])
+def list_egress_evaluations(
+    policy_id: str | None = None,
+    limit: int = Query(50, ge=1, le=200),
+    _=require_principal,
+):
+    return get_egress_policy_engine().list_evaluations(policy_id=policy_id, limit=limit)
+
+
 @router.get("/v1/egress-policies/{policy_id}", response_model=EgressPolicy)
 def get_egress_policy(policy_id: str, _=require_principal):
     try:
@@ -231,25 +252,6 @@ def evaluate_egress(
 def evaluate_egress_batch(requests: list[dict], _=require_principal):
     results = get_egress_policy_engine().evaluate_batch(requests)
     return {"count": len(results), "evaluations": [r.model_dump() for r in results]}
-
-
-@router.get("/v1/egress-policies/check-allowed")
-def check_egress_allowed(
-    destination: str,
-    port: int,
-    protocol: str,
-    _=require_principal,
-):
-    return {"allowed": get_egress_policy_engine().check_allowed(destination, port, protocol)}
-
-
-@router.get("/v1/egress-policies/evaluations", response_model=list[EgressEvaluation])
-def list_egress_evaluations(
-    policy_id: str | None = None,
-    limit: int = Query(50, ge=1, le=200),
-    _=require_principal,
-):
-    return get_egress_policy_engine().list_evaluations(policy_id=policy_id, limit=limit)
 
 
 @router.post("/v1/egress-policies/{policy_id}/cidrs", response_model=EgressPolicy)
@@ -306,6 +308,21 @@ def list_exportable_marking_policies(
     )
 
 
+# NOTE(route-shadow): 同 egress-policies —— 字面段 GET 必须先于 `{policy_id}` 声明。
+@router.get("/v1/exportable-markings/can-export")
+def can_export_marking(connection_id: str, markings: list[str], _=require_principal):
+    return {"can_export": get_exportable_marking_engine().can_export(connection_id, markings)}
+
+
+@router.get("/v1/exportable-markings/evaluations", response_model=list[MarkingEvaluation])
+def list_marking_evaluations(
+    policy_id: str | None = None,
+    limit: int = Query(50, ge=1, le=200),
+    _=require_principal,
+):
+    return get_exportable_marking_engine().list_evaluations(policy_id=policy_id, limit=limit)
+
+
 @router.get("/v1/exportable-markings/{policy_id}", response_model=ExportableMarkingPolicy)
 def get_exportable_marking_policy(policy_id: str, _=require_principal):
     try:
@@ -342,20 +359,6 @@ def evaluate_exportable_marking(
 def evaluate_exportable_marking_row(connection_id: str, columns: list[dict], _=require_principal):
     results = get_exportable_marking_engine().evaluate_row(connection_id, columns)
     return {"count": len(results), "evaluations": [r.model_dump() for r in results]}
-
-
-@router.get("/v1/exportable-markings/can-export")
-def can_export_marking(connection_id: str, markings: list[str], _=require_principal):
-    return {"can_export": get_exportable_marking_engine().can_export(connection_id, markings)}
-
-
-@router.get("/v1/exportable-markings/evaluations", response_model=list[MarkingEvaluation])
-def list_marking_evaluations(
-    policy_id: str | None = None,
-    limit: int = Query(50, ge=1, le=200),
-    _=require_principal,
-):
-    return get_exportable_marking_engine().list_evaluations(policy_id=policy_id, limit=limit)
 
 
 @router.post("/v1/exportable-markings/{policy_id}/columns", response_model=ExportableMarkingPolicy)
