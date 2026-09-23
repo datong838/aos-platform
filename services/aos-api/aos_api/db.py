@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -59,6 +60,18 @@ def _connect(
             # a NOINHERIT login where omitting SET ROLE means "no privileges at
             # all". Never grants tenant visibility — the GUCs stay unset.
             apply_platform_role(conn)
+        else:
+            # Scope-less AND no platform role: on a NOINHERIT login this
+            # connection can read nothing at all, and the failure surfaces as
+            # "permission denied" deep inside whichever statement runs first.
+            # Attribute the caller so the residual offenders can be census'd
+            # instead of guessed (see W6 connection-plane debt work).
+            try:
+                frame = sys._getframe(2)
+                caller = f"{frame.f_code.co_filename.rsplit('/', 1)[-1]}:{frame.f_lineno}"
+            except ValueError:  # shallow stack — never let diagnostics break a connect
+                caller = "unknown"
+            log.debug("db_connect_without_scope caller=%s", caller)
         yield conn
 
 

@@ -49,6 +49,20 @@ class ApiError(Exception):
         self.details = details
         super().__init__(message)
 
+    def model_dump(self) -> dict[str, Any]:
+        """Return the stable error body, for use as an ``HTTPException.detail``.
+
+        ``ApiError`` is deliberately not a pydantic model — it is raised, not
+        serialized — but routers consistently build their mapped
+        ``HTTPException`` detail as ``ApiError(code=…, message=…).model_dump()``.
+        That call used to raise ``AttributeError`` inside the error path itself,
+        so every mapped 4xx surfaced as a 500 ``INTERNAL_ERROR``. Forwarding to
+        :func:`error_payload` keeps the documented contract working and yields
+        the same body shape every other error path produces.
+        """
+
+        return error_payload(code=self.code, message=self.message, details=self.details)
+
 
 def aip_error(
     code: str,
