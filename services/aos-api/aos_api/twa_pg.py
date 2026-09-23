@@ -609,13 +609,18 @@ def truncate_invites() -> None:
 def count_orgs() -> int:
     if not enabled():
         return 0
-    from aos_api.db import connect
+    from aos_api.db import connect_platform
 
+    # twa_* tables carry no tenant RLS: the correct identity is the platform role.
+    # A scope-less ``connect()`` here inherited nothing outside a request and was
+    # denied on the NOINHERIT login, so the count silently came back 0 and every
+    # boot re-dumped the seed state into a database that was never empty.
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             row = conn.execute("SELECT COUNT(*) AS c FROM twa_org").fetchone()
             return int(row["c"] if row else 0)
-    except Exception:
+    except Exception as exc:
+        log.warning("twa_pg_count_orgs_skip err=%s", exc)
         return 0
 
 
@@ -655,7 +660,7 @@ def load_pg_to_memory() -> None:
     from aos_api import orgs as org_mod
     from aos_api import person_identity as person
     from aos_api import workspaces_catalog as ws_cat
-    from aos_api.db import connect
+    from aos_api.db import connect_platform
 
     org_mod._ORGS.clear()  # noqa: SLF001
     ws_cat._WS.clear()  # noqa: SLF001
@@ -665,7 +670,7 @@ def load_pg_to_memory() -> None:
     invites._INVITES.clear()  # noqa: SLF001
     invites._JOIN_REQS.clear()  # noqa: SLF001
 
-    with connect() as conn:
+    with connect_platform() as conn:
         for r in conn.execute("SELECT * FROM twa_org ORDER BY id").fetchall():
             org_mod._ORGS[r["id"]] = {  # noqa: SLF001
                 "id": r["id"],
@@ -809,10 +814,10 @@ def otp_insert(
 def otp_get(otp_id: str) -> dict[str, Any] | None:
     if not enabled():
         return None
-    from aos_api.db import connect
+    from aos_api.db import connect_platform
 
     try:
-        with connect() as conn:
+        with connect_platform() as conn:
             row = conn.execute(
                 "SELECT * FROM twa_otp WHERE id=%s", (otp_id,)
             ).fetchone()
