@@ -74,7 +74,14 @@ def authz_write_tuple(
     user = body.user or fga.user_key(principal.subject)
     scope = TenantScope(org_id=principal.org_id, project_id=principal.project_id)
     with connect(scope) as conn:
-        fga.write_tuple(conn, user, body.relation, body.object, scope=scope)
+        # Tenant-scoped write by default (dual-write shadow): rows land with
+        # org_id/project_id so `CurrentControlPermission` (exact tenant match)
+        # can see what this endpoint writes. MISMATCH is recorded as evidence,
+        # not raised. Global env `AOS_TENANT_DUAL_WRITE_AUTHZ` stays off.
+        fga.write_tuple(
+            conn, user, body.relation, body.object,
+            scope=scope, dual_write_mode="shadow",
+        )
         conn.commit()
     log.info(
         "authz_tuple_written by=%s user=%s rel=%s obj=%s",
