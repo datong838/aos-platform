@@ -38,6 +38,14 @@ def ensure_lifecycle_schema(conn=None) -> None:
         c.execute(LIFECYCLE_DDL)
 
     if conn is None:
+        # `object_lifecycle` is provisioned by Alembic. `CREATE TABLE IF NOT EXISTS`
+        # still checks CREATE on the schema before looking at the table, and the
+        # NOINHERIT runtime login holds no CREATE on `public`, so probing first keeps
+        # the already-provisioned path (the normal one) from raising.
+        from aos_api.schema_readiness import relation_exists
+
+        if relation_exists("object_lifecycle"):
+            return
         with connect() as c:
             _run(c)
             c.commit()
