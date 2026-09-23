@@ -155,6 +155,19 @@ def share_lineage_view(view_id: str, body: dict, _=require_principal):
 # ════════════════════ #131 Column Lineage Search ════════════════════
 
 
+# NOTE(route-shadow): `/columns/index/{dataset_rid}` 是**同方法**的字面段 POST，必须声明在
+# `POST /columns/{dataset_rid}/{column_name}` 之前。否则 `index` 被当成 dataset_rid、
+# `{dataset_rid}` 被当成 column_name，落到 `register_column` ——**写入型 handler**，
+# 会在列索引里静默登记一条 `dataset_rid="index"` 的假列，且 HTTP 返回 200。
+@router.post("/columns/index/{dataset_rid}")
+def rebuild_column_index(dataset_rid: str, _=require_principal):
+    try:
+        count = get_column_lineage_search_engine().build_index(dataset_rid)
+        return {"dataset_rid": dataset_rid, "indexed_columns": count}
+    except ColumnLineageSearchError as e:
+        raise _map_column_err(e) from e
+
+
 @router.post("/columns/{dataset_rid}/{column_name}", response_model=ColumnIndexEntry)
 def register_column(
     dataset_rid: str,
@@ -224,15 +237,6 @@ def update_column(dataset_rid: str, column_name: str, updates: dict, _=require_p
 @router.delete("/columns/{dataset_rid}/{column_name}")
 def delete_column(dataset_rid: str, column_name: str, _=require_principal):
     return {"deleted": get_column_lineage_search_engine().delete_column(dataset_rid, column_name)}
-
-
-@router.post("/columns/index/{dataset_rid}")
-def rebuild_column_index(dataset_rid: str, _=require_principal):
-    try:
-        count = get_column_lineage_search_engine().build_index(dataset_rid)
-        return {"dataset_rid": dataset_rid, "indexed_columns": count}
-    except ColumnLineageSearchError as e:
-        raise _map_column_err(e) from e
 
 
 # ════════════════════ #132 Build Timeline ════════════════════

@@ -246,3 +246,173 @@ def test_agent_workers_jobs_hits_list_jobs_not_get_worker(monkeypatch):
         resp = client.get("/v1/agent-workers/jobs")
     assert resp.status_code == 200, resp.text
     assert calls and calls[0][0] == "list_jobs"
+
+
+# ════════ app 级（扁平静态路由表）门禁 —— 补 AST 版的两处盲区 ════════
+#
+# AST 版 `_find_shadowed` 有两个盲区，只有按「app 扁平路由表的真实声明顺序」才能覆盖：
+#   1. `if "{" in path: continue` —— 跳过**自身含参数**的受害路由。
+#      于是 `/columns/index/{dataset_rid}`（字面段在第 3 段）被
+#      `/columns/{dataset_rid}/{column_name}` 吞掉，AST 版永远看不见。
+#   2. 只扫模块内声明顺序；`main.py` 按 domain 追加 include，
+#      **跨模块**（如 `runtime_write` 早于 `phase3_aip_lineage`）的遮蔽不可见。
+#
+# venv fastapi 0.141.1 把 `include_router` 变成惰性的 `fastapi.routing._IncludedRouter`，
+# 需递归 `effective_candidates()` 才能拿到真实扁平表；`_match()` 仍是「声明顺序首个命中」。
+
+_HTTP_METHODS_UPPER = {m.upper() for m in _HTTP_METHODS}
+
+# 同形（同段数、同 `{}` 结构）仅参数名不同的重复注册。这些是**既有**的 legacy 模块
+# （`phase4_*` / `phase5_*` / `runtime_write`）与后加扩展层（`wave_ext` / `ontology`）的
+# 路径重合：契约快照已记录（`v1.inventory.json` 的 `duplicatePairs`），后声明者结构性死亡，
+# 线上行为由先声明者提供。冻结在此 —— **新增**任一重复注册都会让本测试变红。
+_APP_SHADOW_EXEMPT_SAME_SHAPE = {
+    ("GET", "/v1/ontology/object-types/{ot_id}", "/v1/ontology/object-types/{type_id}"),
+    ("PUT", "/v1/ontology/object-types/{ot_id}", "/v1/ontology/object-types/{type_id}"),
+    ("GET", "/v1/aip/lineage/{record_id}", "/v1/aip/lineage/{lineage_id}"),
+    ("GET", "/v1/schedules/{sc_id}", "/v1/schedules/{schedule_id}"),
+    ("GET", "/v1/schedules/{sc_id}/runs", "/v1/schedules/{schedule_id}/runs"),
+    ("POST", "/v1/schedules/{sc_id}/run", "/v1/schedules/{schedule_id}/run"),
+    ("GET", "/v1/datasets/{ds_id}", "/v1/datasets/{rid}"),
+}
+
+
+def _app_flat_routes() -> list[tuple[str, str, str]]:
+    """按 app 真实声明顺序展开 (path, method, qualname)。"""
+    from fastapi.routing import _IncludedRouter
+
+    from aos_api.main import create_app
+
+    flat: list[tuple[str, str, str]] = []
+
+    def walk(candidates) -> None:
+        for candidate in candidates:
+            if isinstance(candidate, _IncludedRouter):
+                walk(candidate.effective_candidates())
+                continue
+            endpoint = getattr(candidate, "endpoint", None)
+            qual = "?"
+            if endpoint is not None:
+                qual = (
+                    f"{getattr(endpoint, '__module__', '?')}."
+                    f"{getattr(endpoint, '__qualname__', getattr(endpoint, '__name__', '?'))}"
+                )
+            for method in getattr(candidate, "methods", set()) or set():
+                if method in _HTTP_METHODS_UPPER:
+                    flat.append((candidate.path, method, qual))
+
+    walk(create_app().router.routes)
+    return flat
+
+
+def _concrete(template: str) -> str:
+    counter = [0]
+
+    def _sub(_match: re.Match[str]) -> str:
+        counter[0] += 1
+        return f"zzz{counter[0]}"
+
+    return re.sub(r"\{[^}]*\}", _sub, template)
+
+
+def _same_shape(template: str) -> str:
+    return re.sub(r"\{[^}]*\}", "{}", template)
+
+
+def _find_captures(flat: list[tuple[str, str, str]]) -> list[tuple[str, str, str, str]]:
+    """返回 (method, prev_path, prev_qual, victim_path)：受害路由被更早同方法路由吞掉。"""
+    by_method: dict[str, list[tuple[int, str, str]]] = {}
+    for order, (path, method, qual) in enumerate(flat):
+        by_method.setdefault(method, []).append((order, path, qual))
+
+    captures: list[tuple[str, str, str, str]] = []
+    for method, entries in sorted(by_method.items()):
+        for idx, (_o_victim, victim, _v_qual) in enumerate(entries):
+            probe = _concrete(victim)
+            for _o_prev, prev, prev_qual in entries[:idx]:
+                if prev == victim:
+                    break  # 精确重复：首个匹配即自身，另见契约快照 duplicatePairs
+                if _template_to_regex(prev).match(probe):
+                    captures.append((method, prev, prev_qual, victim))
+                    break
+    return captures
+
+
+def test_no_route_is_captured_at_app_level():
+    """app 扁平表中任何路由都不得被更早声明的同方法路由吞掉（含**自身带参数**的受害路由）。
+
+    AST 版门禁只覆盖「全字面段受害者 + 模块内顺序」；本测试是它的严格超集。
+    """
+    flat = _app_flat_routes()
+    assert len(flat) > 3000, f"路由表过小（{len(flat)}），app 未真正展开"
+
+    offenders = [
+        f"{method:6} {victim:50} <- {prev}  (winner={prev_qual})"
+        for method, prev, prev_qual, victim in _find_captures(flat)
+        if _same_shape(prev) != _same_shape(victim)
+    ]
+
+    assert offenders == [], (
+        "路由被更早声明的同方法路由吞掉（结构性不可达）：\n" + "\n".join(offenders)
+    )
+
+
+def test_same_shape_duplicate_registrations_are_frozen():
+    """同形不同参数名的重复注册清单必须与冻结值精确一致（新增即红）。"""
+    found = {
+        (method, victim, prev)
+        for method, prev, _pq, victim in _find_captures(_app_flat_routes())
+        if _same_shape(prev) == _same_shape(victim)
+    }
+    assert found == _APP_SHADOW_EXEMPT_SAME_SHAPE, (
+        "同形重复注册清单漂移；新增重复会让后声明者永久不可达：\n"
+        f"  新增={sorted(found - _APP_SHADOW_EXEMPT_SAME_SHAPE)}\n"
+        f"  消失={sorted(_APP_SHADOW_EXEMPT_SAME_SHAPE - found)}"
+    )
+
+
+def test_columns_index_rebuild_declared_before_register_column():
+    """`POST /columns/index/{dataset_rid}` 必须早于 `POST /columns/{dataset_rid}/{column_name}`。
+
+    否则 `index` 被当成 dataset_rid，落到**写入型** `register_column`，
+    在列索引里静默登记 `dataset_rid="index"` 的假列并返回 200。
+    """
+    source = (API_ROOT / "routers/lineage_visualization.py").read_text(encoding="utf-8")
+    routes = _collect_routes(source)
+    order = {(path, m): lineno for lineno, path, m, _name in routes}
+    literal = ("/columns/index/{dataset_rid}", "POST")
+    template = ("/columns/{dataset_rid}/{column_name}", "POST")
+    assert literal in order, "字面段路由未声明"
+    assert template in order, "模板路由未声明"
+    assert order[literal] < order[template], (
+        f"{literal[0]} 声明晚于 {template[0]}，会被吞掉"
+    )
+
+
+def test_columns_index_rebuild_hits_build_index_not_register_column(monkeypatch):
+    """行为锁：`POST /columns/index/<rid>` 必须调用 build_index，而非 register_column。"""
+    from aos_api.routers import lineage_visualization as lv
+
+    calls: list[tuple[str, tuple]] = []
+
+    class _FakeEngine:
+        def build_index(self, dataset_rid):
+            calls.append(("build_index", (dataset_rid,)))
+            return 3
+
+        def register_column(self, *args):
+            calls.append(("register_column", args))
+            raise AssertionError("不应命中 register_column（写入型 handler）")
+
+    monkeypatch.setattr(lv, "get_column_lineage_search_engine", lambda: _FakeEngine())
+
+    app, client = _light_client(lv.router)
+    app.dependency_overrides[require_principal] = _principal
+    with client:
+        resp = client.post("/lineage/columns/index/ri.aos.main.dataset.P01-shop-qyh")
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {
+        "dataset_rid": "ri.aos.main.dataset.P01-shop-qyh",
+        "indexed_columns": 3,
+    }
+    assert [c[0] for c in calls] == ["build_index"], calls
