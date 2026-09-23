@@ -20,20 +20,29 @@ from aos_api.media_set_browser_interaction import (
 router = APIRouter(prefix="/media-set-browser-interaction", tags=["media-set-browser-interaction"])
 
 
+def _is_not_found(code: str) -> bool:
+    """Engines emit ``MEDIA_SET_NOT_FOUND`` / ``ITEM_NOT_FOUND`` / ``VIEW_NOT_FOUND``
+    / ``JOB_NOT_FOUND`` -- never a bare ``NOT_FOUND``. Matching only the bare code
+    made the 404 branch dead code, so not-found answers silently degraded to 400
+    on every call site that relied on the default status (found 2026-09-24).
+    """
+    return code.endswith("NOT_FOUND")
+
+
 def _map_browser_error(err: BrowserError, status: int = 400) -> ApiError:
-    if err.code == "NOT_FOUND":
+    if _is_not_found(err.code):
         status = 404
     return ApiError(code=err.code, message=err.message, status_code=status)
 
 
 def _map_interaction_error(err: InteractionError, status: int = 400) -> ApiError:
-    if err.code == "NOT_FOUND":
+    if _is_not_found(err.code):
         status = 404
     return ApiError(code=err.code, message=err.message, status_code=status)
 
 
 def _map_transcription_error(err: TranscriptionError, status: int = 400) -> ApiError:
-    if err.code == "NOT_FOUND":
+    if _is_not_found(err.code):
         status = 404
     return ApiError(code=err.code, message=err.message, status_code=status)
 
@@ -82,12 +91,13 @@ def search_items(
 @router.get("/items/{item_id}")
 def get_item(
     item_id: str,
+    media_set_id: str = Query(...),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     _ = principal
     eng = get_browser_engine()
     try:
-        return eng.get_item(item_id).model_dump()
+        return eng.get_item(media_set_id, item_id).model_dump()
     except BrowserError as err:
         raise _map_browser_error(err, 404) from err
 
@@ -116,12 +126,13 @@ def create_item(
 @router.delete("/items/{item_id}")
 def delete_item(
     item_id: str,
+    media_set_id: str = Query(...),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     _ = principal
     eng = get_browser_engine()
     try:
-        eng.delete_item(item_id)
+        eng.delete_item(media_set_id, item_id)
     except BrowserError as err:
         raise _map_browser_error(err, 404) from err
     return {"deleted": item_id}
@@ -130,12 +141,13 @@ def delete_item(
 @router.get("/items/{item_id}/preview")
 def get_item_preview(
     item_id: str,
+    media_set_id: str = Query(...),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     _ = principal
     eng = get_browser_engine()
     try:
-        return eng.get_item_preview(item_id)
+        return eng.get_item_preview(media_set_id, item_id)
     except BrowserError as err:
         raise _map_browser_error(err, 404) from err
 
@@ -143,6 +155,7 @@ def get_item_preview(
 # ─────────────── MediaInteractionEngine 路由 ───────────────
 
 class CreateViewRequest(BaseModel):
+    media_set_id: str
     item_id: str
     view_type: str
 
@@ -157,8 +170,11 @@ class UpdateViewRequest(BaseModel):
 
 
 class AddAnnotationRequest(BaseModel):
-    type: str = "note"
-    content: dict[str, Any] = {}
+    x: float
+    y: float
+    width: float
+    height: float
+    content: str
 
 
 @router.post("/views")
@@ -169,7 +185,7 @@ def create_view(
     _ = principal
     eng = get_interaction_engine()
     try:
-        view = eng.create_view(body.item_id, body.view_type)
+        view = eng.create_view(body.media_set_id, body.item_id, body.view_type)
     except InteractionError as err:
         raise _map_interaction_error(err) from err
     return view.model_dump()
@@ -197,6 +213,16 @@ def update_view(
     _ = principal
     eng = get_interaction_engine()
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    # The engine only supports brightness/contrast/zoom; pan/rotation are not
+    # part of the view state contract -- reject explicitly instead of silently
+    # dropping them (silent-drop was found in the 2026-09-24 drift census).
+    unsupported = {"pan_x", "pan_y", "rotation"} & set(updates)
+    if unsupported:
+        raise ApiError(
+            code="UNSUPPORTED_VIEW_FIELD",
+            message=f"视图不支持的字段: {sorted(unsupported)}",
+            status_code=400,
+        )
     try:
         view = eng.update_view(view_id, **updates)
     except InteractionError as err:
@@ -241,7 +267,7 @@ def add_annotation(
     _ = principal
     eng = get_interaction_engine()
     try:
-        annotation = eng.add_annotation(view_id, body.model_dump())
+        annotation = eng.add_annotation(view_id, **body.model_dump())
     except InteractionError as err:
         raise _map_interaction_error(err) from err
     return annotation.model_dump()
@@ -265,8 +291,9 @@ def delete_annotation(
 # ─────────────── AudioTranscriptionEngine 路由 ───────────────
 
 class CreateTranscriptionJobRequest(BaseModel):
+    media_set_id: str
     item_id: str
-    language: str = "auto"
+    language: str = "en"
 
 
 @router.post("/transcription-jobs")
@@ -277,7 +304,7 @@ def create_transcription_job(
     _ = principal
     eng = get_transcription_engine()
     try:
-        job = eng.create_job(body.item_id, body.language)
+        job = eng.create_job(body.media_set_id, body.item_id, body.language)
     except TranscriptionError as err:
         raise _map_transcription_error(err) from err
     return job.model_dump()
@@ -333,19 +360,23 @@ def get_transcript(
     _ = principal
     eng = get_transcription_engine()
     try:
-        return eng.get_transcript(job_id)
+        transcript = eng.get_transcript(job_id)
     except TranscriptionError as err:
         raise _map_transcription_error(err, 404) from err
+    # The engine returns a bare str; wrap it so the HTTP contract stays an object.
+    return {"jobId": job_id, "transcript": transcript}
 
 
 @router.get("/items/{item_id}/estimate-language")
 def estimate_language(
     item_id: str,
+    media_set_id: str = Query(...),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     _ = principal
     eng = get_transcription_engine()
     try:
-        return eng.estimate_language(item_id)
+        language = eng.estimate_language(media_set_id, item_id)
     except TranscriptionError as err:
         raise _map_transcription_error(err, 404) from err
+    return {"itemId": item_id, "language": language}

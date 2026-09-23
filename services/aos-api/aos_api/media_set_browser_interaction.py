@@ -81,6 +81,15 @@ class MediaSetBrowserEngine:
             self._cache[key] = items
             self._evict_if_needed()
 
+    def _invalidate_cache(self, media_set_id: str) -> None:
+        """Drop every cache entry belonging to one MediaSet (all file_type keys)."""
+        with self._lock:
+            for key in list(self._cache.keys()):
+                if media_set_id in key:
+                    del self._cache[key]
+                    if key in self._cache_order:
+                        self._cache_order.remove(key)
+
     def browse_items(self, media_set_id: str, file_type: str | None = None) -> list[BrowserItem]:
         ms_store = _get_media_set_store()
         try:
@@ -155,11 +164,61 @@ class MediaSetBrowserEngine:
             ref_store.delete(item_id)
         except Exception:
             pass
-        with self._lock:
-            for key in list(self._cache.keys()):
-                if media_set_id in key:
-                    del self._cache[key]
-                    self._cache_order.remove(key)
+        self._invalidate_cache(media_set_id)
+
+    def create_item(
+        self,
+        media_set_id: str,
+        *,
+        file_name: str,
+        file_type: str,
+        file_size: int,
+        preview_url: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> BrowserItem:
+        """Register a media reference and attach it to the MediaSet.
+
+        Aligned with the router contract (W2-#3); the underlying stores
+        (MediaReferenceStore.register + MediaSetStore.add_media) already
+        provide the required write path.
+        """
+        ms_store = _get_media_set_store()
+        try:
+            ms_store.get(media_set_id)
+        except Exception as exc:
+            raise BrowserError("MEDIA_SET_NOT_FOUND", f"MediaSet {media_set_id!r} 不存在") from exc
+        if not file_name or not file_type:
+            raise BrowserError("BAD_FILE", "file_name 和 file_type 不能为空")
+        if file_type not in ("image", "video", "audio", "document"):
+            raise BrowserError("BAD_FILE", f"不支持的字段类型 {file_type!r}")
+        if file_size < 0:
+            raise BrowserError("BAD_FILE", "file_size 不能为负")
+        ref_store = _get_media_store()
+        bucket = (metadata or {}).get("bucket", "media-set-browser")
+        path = (metadata or {}).get("path", file_name)
+        ref = ref_store.register(
+            kind=file_type, storage="local", bucket=str(bucket), path=str(path),
+            mime=(metadata or {}).get("mime", ""), size_bytes=file_size,
+        )
+        try:
+            ms_store.add_media(media_set_id, ref.id)
+        except Exception as exc:
+            # The MediaSet is the authority on which media kinds it accepts
+            # (``media_set._TYPE_ACCEPTS``). An incompatible kind is a caller
+            # error, not a server fault -- letting ``MediaSetError`` escape here
+            # produced a 500 INTERNAL (found by the router-level test added
+            # 2026-09-24). Roll the just-registered reference back so a rejected
+            # create leaves no orphan in the reference store.
+            try:
+                ref_store.delete(ref.id)
+            except Exception:
+                pass
+            raise BrowserError("TYPE_MISMATCH", str(exc)) from exc
+        self._invalidate_cache(media_set_id)
+        return BrowserItem(
+            id=ref.id, media_ref_id=ref.id, name=path.split("/")[-1],
+            type=ref.kind, size_bytes=ref.size_bytes, created_at=ref.created_at,
+        )
 
     def get_item_preview(self, media_set_id: str, item_id: str) -> dict[str, Any]:
         ms_store = _get_media_set_store()
