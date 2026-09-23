@@ -164,12 +164,15 @@ def _normalize_documents(raw: Any) -> list[dict[str, Any]]:
 
 
 def _sample_workorder_docs(scope: TenantScope, limit: int = 8) -> list[dict[str, Any]]:
-    """Best-effort sample from PG ObjectSet; fallback mock."""
+    """Best-effort sample from the tenant's PG ObjectSet (empty when unavailable)."""
     items: list[dict[str, Any]] = []
     try:
         from aos_api.db import connect
 
-        with connect() as conn:
+        # Pass the caller's scope explicitly: the RLS policy reads the session GUC,
+        # so a bare connect() would silently filter with whatever tenant the request
+        # context holds (or deny outright outside a request).
+        with connect(scope) as conn:
             rows = conn.execute(
                 """
                 SELECT object_id, props FROM obj_instance
