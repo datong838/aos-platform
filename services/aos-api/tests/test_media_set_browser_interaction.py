@@ -466,3 +466,66 @@ class TestAudioTranscriptionEngine:
         assert len(engine._jobs) == 200
         assert jobs[0] not in engine._jobs
         assert jobs[200] in engine._jobs
+
+
+# --- 路由层契约测试 ---
+# 引擎契约由上面 49 项测试锁住，但**路由层此前完全没有测试**，因此路由与引擎
+# 的偏离一直不可见（生产上表现为 500）。以下两项锁住 grep 不到的两个缺陷。
+
+
+_DEV_HEADERS = {
+    "Authorization": "Bearer dev",
+    "X-Org-Id": "org-org",
+    "X-Project-Id": "dev-project",
+}
+
+
+def _media_set_router_client():
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from aos_api.errors import register_exception_handlers
+    from aos_api.routers.media_set_browser_interaction import router as media_set_router
+
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(media_set_router)
+    # raise_server_exceptions=False：把 500 当作响应观察，而不是让测试抛栈，
+    # 这样「错误映射缺失」才能被断言成失败。
+    return TestClient(app, raise_server_exceptions=False)
+
+
+class TestRouterContract:
+    """锁住两个曾在生产浮现、且静态读码看不出来的路由层缺陷。
+
+    1. **路由声明顺序**：``/items/{item_id}`` 曾先于 ``/items/search`` 声明，
+       把后者的请求全部吃掉，``search_items`` 成为不可达死路由。
+    2. **错误映射缺失**：``search_items`` 缺 ``except BrowserError``，业务错误
+       （``MEDIA_SET_NOT_FOUND``）曾以 500 而非 404 返回。
+    """
+
+    def test_search_route_is_not_shadowed_by_item_route(self, setup_media):
+        _, _, _, ms_audio, _, _, _, _, _, _, _ = setup_media
+        client = _media_set_router_client()
+
+        resp = client.get(
+            "/media-set-browser-interaction/items/search",
+            params={"media_set_id": ms_audio, "query": "speech"},
+            headers=_DEV_HEADERS,
+        )
+
+        # 若路由顺序回归，请求会落到 get_item("search") 并在引擎签名处炸成 500。
+        assert resp.status_code == 200, resp.text
+        assert "items" in resp.json()
+
+    def test_unknown_media_set_maps_to_404_not_500(self, setup_media):
+        client = _media_set_router_client()
+
+        resp = client.get(
+            "/media-set-browser-interaction/items/search",
+            params={"media_set_id": "no-such-set", "query": "x"},
+            headers=_DEV_HEADERS,
+        )
+
+        assert resp.status_code == 404, resp.text
+        assert resp.json()["code"] == "MEDIA_SET_NOT_FOUND"

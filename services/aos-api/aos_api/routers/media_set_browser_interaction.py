@@ -64,6 +64,21 @@ def browse_items(
     return {"items": [item.model_dump() for item in items], "count": len(items)}
 
 
+@router.get("/items/search")
+def search_items(
+    media_set_id: str = Query(...),
+    query: str = Query(...),
+    principal: Principal = Depends(require_principal),
+) -> dict[str, Any]:
+    _ = principal
+    eng = get_browser_engine()
+    try:
+        items = eng.search_items(media_set_id, query)
+    except BrowserError as err:
+        raise _map_browser_error(err, 404) from err
+    return {"items": [item.model_dump() for item in items], "count": len(items)}
+
+
 @router.get("/items/{item_id}")
 def get_item(
     item_id: str,
@@ -75,18 +90,6 @@ def get_item(
         return eng.get_item(item_id).model_dump()
     except BrowserError as err:
         raise _map_browser_error(err, 404) from err
-
-
-@router.get("/items/search")
-def search_items(
-    media_set_id: str = Query(...),
-    query: str = Query(...),
-    principal: Principal = Depends(require_principal),
-) -> dict[str, Any]:
-    _ = principal
-    eng = get_browser_engine()
-    items = eng.search_items(media_set_id, query)
-    return {"items": [item.model_dump() for item in items], "count": len(items)}
 
 
 @router.post("/items")
