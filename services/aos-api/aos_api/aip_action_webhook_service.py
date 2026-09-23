@@ -15,7 +15,7 @@ from aos_api.aip_action_webhook_models import (
     ActionWebhookObservationSnapshot,
     ActionWebhookReducerView,
 )
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.tenant_scope import TenantScope
 
 
@@ -134,7 +134,10 @@ class AipActionWebhookService:
 
     @staticmethod
     def _resolve_directory(endpoint_key: str) -> Any:
-        with connect(inherit_scope=False) as conn:
+        # The endpoint directory is a platform-wide registry without tenant RLS.
+        # ``connect(inherit_scope=False)`` alone performs no SET ROLE, so on a
+        # NOINHERIT login every lookup was denied instead of resolving.
+        with connect_platform() as conn:
             row = conn.execute(
                 """SELECT * FROM aip_action_webhook_endpoint_directory
                    WHERE endpoint_key=%s AND status='active'""",

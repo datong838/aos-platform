@@ -330,14 +330,20 @@ def _build_runtime_ui_session_resolver():
 
 
 def build_runtime_ui_resource_reader():
-    """Read published static frontend code without inheriting tenant scope."""
+    """Read published static frontend code without inheriting tenant scope.
+
+    ``asset_bundle*`` carries no tenant RLS, so the reader opens a read-only
+    connection that still authenticates as the runtime role. Passing only
+    ``inherit_scope=False`` would skip SET ROLE entirely and a NOINHERIT login
+    would be denied on the release snapshot query.
+    """
     from aos_api.db import connect_read_only
     from aos_api.asset_registry.release_policy import ReleasePolicy
     from aos_api.extension_runtime.ui_resource_reader import PublishedUiResourceReader
 
     roots = _configured_trust_roots()
     return PublishedUiResourceReader(
-        connect_factory=lambda: connect_read_only(inherit_scope=False),
+        connect_factory=lambda: connect_read_only(inherit_scope=False, platform_role=True),
         release_policy=ReleasePolicy(trust_roots=roots),
         loader=ManifestLoader(_allowlist_roots(repository_root=_REPOSITORY_ROOT), trust_roots=roots),
     )

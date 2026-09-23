@@ -98,13 +98,21 @@ def connect_read_only(
     scope: TenantScope | None = None,
     *,
     inherit_scope: bool = True,
+    platform_role: bool = False,
 ) -> Iterator[psycopg.Connection]:
-    """Open a repeatable-read, read-only transaction before applying RLS scope."""
+    """Open a repeatable-read, read-only transaction before applying RLS scope.
+
+    Pass ``scope=None, inherit_scope=False, platform_role=True`` to read
+    platform-level assets (no tenant RLS) with the runtime identity: a
+    scope-less connection performs no SET ROLE, which on a NOINHERIT login
+    leaves the session with no privileges at all.
+    """
     return _connect(
         scope,
         inherit_scope=inherit_scope,
         read_only=True,
         isolation_level=IsolationLevel.REPEATABLE_READ,
+        platform_role=platform_role,
     )
 
 

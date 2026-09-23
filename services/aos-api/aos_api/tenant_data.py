@@ -10,29 +10,41 @@ from aos_api import workspace_isolation as items
 from aos_api import workspaces_catalog as ws_cat
 from aos_api.logging_facade import get_logger
 from aos_api.routers import plugins as plugin_store
+from aos_api.tenant_scope import TenantScope
 
 log = get_logger("aos-api.tenant-data")
 
 
-def _pg_count(sql: str, params: tuple[Any, ...]) -> int:
+def _pg_count(scope: TenantScope, sql: str, params: tuple[Any, ...]) -> int:
+    """Count rows for ``scope``.
+
+    ``meta_module`` / ``draft_dataset`` / ``wiki_page`` are tenant-RLS
+    protected, so the connection must carry the same tenant the WHERE clause
+    filters on; a scope-less connection performs no SET ROLE and is denied
+    outright on a NOINHERIT login.
+    """
     try:
         from aos_api.db import connect
 
-        with connect() as conn:
+        with connect(scope) as conn:
             row = conn.execute(sql, params).fetchone()
             if not row:
                 return 0
-            return int(row[0] or 0)
+            # Connections use dict_row, so row[0] raised KeyError and the
+            # shared except below turned every count into a silent 0 even with
+            # a valid tenant scope bound.
+            value = next(iter(row.values())) if isinstance(row, dict) else row[0]
+            return int(value or 0)
     except Exception as exc:  # pragma: no cover - DB optional in unit tests
         log.warning("tenant_data_pg_count_skip err=%s", exc)
         return 0
 
 
-def _pg_execute(sql: str, params: tuple[Any, ...]) -> int:
+def _pg_execute(scope: TenantScope, sql: str, params: tuple[Any, ...]) -> int:
     try:
         from aos_api.db import connect
 
-        with connect() as conn:
+        with connect(scope) as conn:
             cur = conn.execute(sql, params)
             try:
                 return int(cur.rowcount or 0)
@@ -44,18 +56,22 @@ def _pg_execute(sql: str, params: tuple[Any, ...]) -> int:
 
 
 def summarize_workspace(org_id: str, project_id: str) -> dict[str, Any]:
+    scope = TenantScope(org_id, project_id)
     counts = {
         "workspaceItems": items.count_items(org_id, project_id),
         "pluginConfigs": plugin_store.count_configs(org_id, project_id),
         "modules": _pg_count(
+            scope,
             "SELECT COUNT(*) FROM meta_module WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
         "drafts": _pg_count(
+            scope,
             "SELECT COUNT(*) FROM draft_dataset WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
         "wikiPages": _pg_count(
+            scope,
             "SELECT COUNT(*) FROM wiki_page WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
@@ -73,24 +89,29 @@ def summarize_workspace(org_id: str, project_id: str) -> dict[str, Any]:
 def clear_workspace_data(
     org_id: str, project_id: str, *, actor_id: str
 ) -> dict[str, Any]:
+    scope = TenantScope(org_id, project_id)
     cleared = {
         "workspaceItems": items.clear_items(org_id, project_id),
         "pluginConfigs": plugin_store.clear_configs(org_id, project_id),
         "modules": _pg_execute(
+            scope,
             "DELETE FROM meta_module WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
         "drafts": _pg_execute(
+            scope,
             "DELETE FROM draft_dataset WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
         "wikiPages": _pg_execute(
+            scope,
             "DELETE FROM wiki_page WHERE org_id=%s AND project_id=%s",
             (org_id, project_id),
         ),
     }
     # wiki versions best-effort
     cleared["wikiVersions"] = _pg_execute(
+        scope,
         "DELETE FROM wiki_page_version WHERE org_id=%s AND project_id=%s",
         (org_id, project_id),
     )

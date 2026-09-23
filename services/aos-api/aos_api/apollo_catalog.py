@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_platform
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
@@ -231,7 +231,10 @@ def _spoke_row(r: Any) -> dict[str, Any]:
 
 def list_channels() -> list[dict[str, Any]]:
     ensure_seed()
-    with connect() as conn:
+    # apollo_channel carries no tenant RLS and holds one shared row set, so this
+    # reads with the platform identity: a scope-less ``connect()`` performs no
+    # SET ROLE and a NOINHERIT login is then denied outright.
+    with connect_platform() as conn:
         rows = conn.execute(
             "SELECT * FROM apollo_channel ORDER BY rank, id"
         ).fetchall()
@@ -240,7 +243,7 @@ def list_channels() -> list[dict[str, Any]]:
 
 def get_channel(channel_id: str) -> dict[str, Any]:
     ensure_seed()
-    with connect() as conn:
+    with connect_platform() as conn:
         row = conn.execute(
             "SELECT * FROM apollo_channel WHERE id=%s", (channel_id,)
         ).fetchone()
