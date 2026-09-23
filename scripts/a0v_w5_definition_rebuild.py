@@ -124,8 +124,16 @@ def verify():
     _configure()
     service = _service()
     status = service.read_runtime_status(definition_id=OLD_DEFINITION, actor=ACTOR)
+    # runtimeStatus above always describes the OLD definition, so after the wave it
+    # reads retired/executionAuthorized=false by construction — useless for the
+    # acceptance check. Report the NEW definition's status too; it may legitimately
+    # not exist yet (before `configure`), so degrade to a marker instead of raising.
+    try:
+        new_status = service.read_runtime_status(definition_id=DEFINITION, actor=ACTOR)
+    except Exception as exc:
+        new_status = {"unavailable": f"{type(exc).__name__}: {exc}"}
     return {"outcome": "W5_DS_DEFINITION_VERIFY", "oldHead": _head_ref(OLD_DEFINITION),
-            "newHead": _head_ref(), "runtimeStatus": status}
+            "newHead": _head_ref(), "runtimeStatus": status, "newRuntimeStatus": new_status}
 
 
 def _wire(value):
