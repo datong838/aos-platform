@@ -26,13 +26,18 @@ class OwnedDeliveryResult:
 
 
 class OwnedControlConsumer:
-    def __init__(self,*,connect,job,kind,org_id,project_id):
+    def __init__(self,*,connect,job,kind,org_id,project_id,host_lease=None):
         scope=TenantScope(org_id,project_id)
         if not isinstance(job,PreparedJob) or job.tenant_scope!=scope:
             raise ValueError('owned consumer requires exact PreparedJob scope')
         if kind not in ('runtime-verify','enable') or not callable(connect):
             raise ValueError('trusted owned consumer inputs required')
         self.scope=dict(org_id=org_id,project_id=project_id)
+        if host_lease is not None:
+            from .host_lease import OptInHostLease
+            if type(host_lease) is not OptInHostLease or host_lease.scope != scope:
+                raise TypeError('exact OwnedControlConsumer Host lease scope required')
+        self.host_lease=host_lease
         self.installation=UUID(str(job.plan.installation_id))
         self.connect,self.job,self.kind=connect,job,kind
         self.outbox=RuntimeOutboxStore()
@@ -49,7 +54,8 @@ class OwnedControlConsumer:
         return status,phase,revision
 
     def _claim(self):
-        with consumer_connection(self.connect,self.scope) as conn:
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        with consumer_connection(self.connect,self.scope,fence=fence) as conn:
             return self.outbox.claim(conn,**self.scope,operation_kind=self.kind,installation_id=self.installation)
 
     def _read(self,lease):
@@ -62,7 +68,8 @@ class OwnedControlConsumer:
             return status,phase,revision,matching
 
     def _finish(self,lease):
-        with consumer_connection(self.connect,self.scope) as conn:
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        with consumer_connection(self.connect,self.scope,fence=fence) as conn:
             status,_,_=self._current(conn,lease.operation_id)
             terminal=status in ('succeeded','failed','cancelled')
             if terminal:self.outbox.ack(conn,**self.scope,lease=lease)
