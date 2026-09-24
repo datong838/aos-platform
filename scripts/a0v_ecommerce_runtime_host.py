@@ -167,6 +167,16 @@ def _business_status(public, control_plane, product_event_worker, baseline_worke
         "baselineAssessmentWorker": dict(baseline_worker.last_status)}
 
 
+def _opt_in_host_lease(args):
+    if not getattr(args, "host_lease_opt_in", False):
+        return None
+    from aos_api.extension_runtime.host_lease import OptInHostLease
+    from aos_api.extension_runtime.runtime_connections import runtime_host_lease_connection
+    from aos_api.tenant_scope import TenantScope
+    return OptInHostLease(connect=runtime_host_lease_connection,
+                          scope=TenantScope("org-org", "dev-project"))
+
+
 async def _serve(args: argparse.Namespace) -> None:
     _configure_environment(
         args.credential_file,
@@ -175,6 +185,9 @@ async def _serve(args: argparse.Namespace) -> None:
     )
     host, control_plane = _build_runtime()
     product_event_worker, analysis_data_worker, baseline_worker = _build_business_workers(control_plane)
+    lease = _opt_in_host_lease(args)
+    if lease is not None:
+        await asyncio.to_thread(lease.acquire)
     stop_event = asyncio.Event()
     loop = asyncio.get_running_loop()
     for signum in (signal.SIGINT, signal.SIGTERM):
@@ -190,6 +203,8 @@ async def _serve(args: argparse.Namespace) -> None:
         "recoverableStoreExecutionLimitSeconds": _recoverable_store_execution_limit_seconds(),
         "businessWorkers": ["product-event", "baseline-assessment", "analysis-data-requirement"],
     }
+    if lease is not None:
+        public["hostLeaseOptIn"] = True
     _write(args.status_file.resolve(), _business_status(
         public, control_plane, product_event_worker, baseline_worker))
     print(json.dumps(public, ensure_ascii=False, sort_keys=True), flush=True)
@@ -197,7 +212,9 @@ async def _serve(args: argparse.Namespace) -> None:
         host.serve(stop_event, interval_seconds=args.interval_seconds),
         name="extension-runtime-host",
     )
-    host_ready = lambda: not host_task.done()
+    lease_task = (asyncio.create_task(lease.renew_until_stopped(stop_event),
+                  name="host-lease-renewal") if lease is not None else None)
+    host_ready = lambda: not host_task.done() and (lease_task is None or not lease_task.done())
     worker_tasks = (
         asyncio.create_task(
             product_event_worker.serve(stop_event, host_ready=host_ready),
@@ -224,9 +241,16 @@ async def _serve(args: argparse.Namespace) -> None:
     stop_task = asyncio.create_task(stop_event.wait(), name="runtime-host-stop")
     try:
         done, _ = await asyncio.wait(
-            (host_task, *worker_tasks, reporter_task, stop_task),
+            (host_task, *worker_tasks, reporter_task, stop_task,
+             *((lease_task,) if lease_task is not None else ())),
             return_when=asyncio.FIRST_COMPLETED,
         )
+        if lease_task is not None and lease_task in done:
+            error = lease_task.exception()
+            if error is not None:
+                raise error
+            if not stop_event.is_set():
+                raise HostBlocked("HOST_LEASE_RENEWAL_STOPPED")
         if not stop_event.is_set():
             if host_task in done:
                 error = host_task.exception()
@@ -245,12 +269,19 @@ async def _serve(args: argparse.Namespace) -> None:
                 raise HostBlocked("BUSINESS_WORKER_STOPPED")
     finally:
         stop_event.set()
-        await asyncio.gather(host_task, *worker_tasks, reporter_task, return_exceptions=True)
+        await asyncio.gather(host_task, *worker_tasks, reporter_task,
+                             *((lease_task,) if lease_task is not None else ()),
+                             return_exceptions=True)
         if not stop_task.done():
             stop_task.cancel()
         await asyncio.gather(stop_task, return_exceptions=True)
         stopped = {**_business_status(public, control_plane, product_event_worker, baseline_worker),
                    "outcome": "RUNTIME_HOST_STOPPED"}
+        if lease is not None:
+            try:
+                await asyncio.to_thread(lease.release)
+            except Exception:
+                stopped["outcome"] = "RUNTIME_HOST_STOPPED_LEASE_RELEASE_UNKNOWN"
         _write(args.status_file.resolve(), stopped)
         print(json.dumps(stopped, ensure_ascii=False, sort_keys=True), flush=True)
 
@@ -262,6 +293,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--trust-roots-file", type=Path, required=True)
     parser.add_argument("--status-file", type=Path, default=DEFAULT_STATUS)
     parser.add_argument("--interval-seconds", type=int, default=2)
+    parser.add_argument("--host-lease-opt-in", action="store_true",
+                        help="Require the additive DB Host lease; default off")
     return parser.parse_args(argv)
 
 

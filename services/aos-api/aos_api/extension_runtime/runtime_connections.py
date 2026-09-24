@@ -88,6 +88,24 @@ def runtime_directory_connection():
 
 
 @contextmanager
+def runtime_host_lease_connection():
+    """Opt-in Host lease writes use only the existing isolated directory login."""
+    reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
+    if reference:
+        identities = _runtime_file_dsns(reference)
+        dsn, web_dsn = identities["directory"], identities["web"]
+    else:
+        dsn = os.getenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "").strip()
+        web_dsn = get_dsn()
+    if not dsn or dsn == web_dsn:
+        raise RuntimeError("isolated Host lease directory identity required")
+    with psycopg.connect(dsn, row_factory=dict_row) as conn:
+        if conn.info.transaction_status != TransactionStatus.IDLE:
+            raise RuntimeError("Host lease connection must start idle")
+        yield conn
+
+
+@contextmanager
 def runtime_web_identity_connection():
     """Open the Web principal without request scope solely for identity preflight."""
     reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
