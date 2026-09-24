@@ -6,7 +6,7 @@
 
 1. 复习 `a0v_ecommerce_runtime_host.py` 固定启动器与 singleton 锁、W5c5b、正式 `a0v_091` 的 session_user/role/serializable/admin 门。
 2. 文件清单：本方案；新增 `scripts/a0v_w5c5c_host_role_topology.py`、`services/aos-api/tests/extension_runtime/test_a0v_w5c5c_host_role_topology.py`；本 verification。生产 Host/Owner/迁移零改。
-3. 只读读取本机进程命令行，按 Python 解释器执行的**精确**仓库 Host 脚本参数计数（排除 shell/搜索自身）；读取既有 18181 监听 PID 与固定历史 Host PID 状态；只读查 DB 维护者角色定义/成员关系和 actor admin。不得读取凭据正文、触碰锁、重启/启动进程或查询商城源行。
+3. 只读读取本机进程命令行，按 Python 解释器执行的**精确**仓库 Host 脚本参数计数（排除 shell/搜索自身）；沿用 W5c5b 的既有 18181/历史 Host PID 观察；只读查正式 `registration_connection` 所用独立 registration 登录角色的非特权属性、精确 `{aos_runtime,aos_extension_maintainer}` 成员关系/零 admin option。普通 Runtime 角色不具 maintainer 成员资格是预期隔离，不能误判为正式路径缺失。不得读取凭据正文、触碰锁、重启/启动进程或查询商城源行。
 4. 专项覆盖 0/1/2 精确 Host、shell 文本误报、进程信息缺失冻结、维护者 superuser/bypassrls/成员漂移冻结；任何不完整拓扑返回 INCOMPLETE，不能 GREEN。
 5. 有界累计 W5c3–W5c5c 与相关合同测试，隔离库若用则停用。
 6. 浏览器只读计划/整组入口，不点保存/运行/队列。
