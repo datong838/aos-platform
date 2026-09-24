@@ -14,7 +14,7 @@ from .lifecycle_store import _values,RuntimeConflict,RuntimeRevisionConflict
 
 class RuntimeDisableExecutor:
     def __init__(self, *, connect, installation_store, check_current_permission, check_drained,
-                 dependent=None):
+                 dependent=None,host_lease=None):
         if not all(callable(v) for v in (connect,check_current_permission,check_drained)):
             raise ValueError('trusted connection, current permission and drain readers required')
         self.connect=connect
@@ -22,6 +22,11 @@ class RuntimeDisableExecutor:
         self.permission=check_current_permission
         self.drain=check_drained
         self.dependent=dependent
+        if host_lease is not None:
+            from .host_lease import OptInHostLease
+            if type(host_lease) is not OptInHostLease:
+                raise TypeError('exact disable executor Host lease required')
+        self.host_lease=host_lease
 
     @contextmanager
     def _connection(self,scope):
@@ -32,6 +37,8 @@ class RuntimeDisableExecutor:
                 apply_asset_transaction_scope(conn,**scope)
                 if _values(conn.execute('SELECT current_user AS role').fetchone(),('role',))[0]!='aos_runtime':
                     raise RuntimeConflict('disable requires adopted runtime role')
+                if self.host_lease is not None:
+                    self.host_lease.fence_in_transaction(conn,scope)
                 yield conn
 
     def execute(self, *, org_id,project_id,operation_id,expected_revision):

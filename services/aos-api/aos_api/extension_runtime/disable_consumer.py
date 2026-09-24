@@ -30,15 +30,21 @@ class ClaimedDisableDelivery:
 
 class RuntimeDisableConsumer:
     def __init__(self,*,connect,installation_store,check_current_permission,check_drained,
-                 dependent=None):
+                 dependent=None,host_lease=None):
+        if host_lease is not None:
+            from .host_lease import OptInHostLease
+            if type(host_lease) is not OptInHostLease:
+                raise TypeError('exact disable consumer Host lease required')
+        self.host_lease=host_lease
         self.connect=connect
         self.executor=RuntimeDisableExecutor(connect=connect,installation_store=installation_store,
             check_current_permission=check_current_permission,check_drained=check_drained,
-            dependent=dependent)
+            dependent=dependent,host_lease=host_lease)
         self.outbox=RuntimeOutboxStore()
 
     def _connection(self,scope):
-        return consumer_connection(self.connect,scope)
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        return consumer_connection(self.connect,scope,fence=fence)
 
     def _current(self,conn,scope,operation):
         row=conn.execute('''SELECT installation_id,kind,status,phase,revision FROM extension_runtime_operation
