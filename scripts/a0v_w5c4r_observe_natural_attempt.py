@@ -39,6 +39,10 @@ def _worker():
     return value
 
 
+def _no_attempt_after_slot(now, slot_utc, attempts):
+    return not attempts and now >= datetime.fromisoformat(slot_utc) + timedelta(minutes=30)
+
+
 def _save(value):
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(STATE, 0o700)
@@ -118,6 +122,8 @@ def sample():
         value["observation"] = "FROZEN_AUTHORITY_DRIFT"
     elif attempts and attempts[0]["state"] in {"succeeded", "failed", "abandoned"}:
         value["observation"] = "ATTEMPT_FORMAL_TERMINAL"
+    elif _no_attempt_after_slot(now, intent["nextSlotUtc"], attempts):
+        value["observation"] = "FROZEN_NO_ATTEMPT_AFTER_SLOT"
     else:
         value["observation"] = "WAITING_FOR_NATURAL_TERMINAL"
     _save(value)

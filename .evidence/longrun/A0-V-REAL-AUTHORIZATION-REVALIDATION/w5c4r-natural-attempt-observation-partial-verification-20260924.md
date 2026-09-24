@@ -7,3 +7,7 @@
 ## 09:03 UTC 观察器修正（仍非终态）
 
 按已提交方案修订 `9a6de475`，先停止旧的**只读**观察循环，保留独立 18181 worker 与 enabled 定义。观察器现在接受合法 `IDLE/RUNNING`，仍严格核唯一 18181 listener PID、存活、独立拓扑、无本进程 Host/错误及 10 秒内状态；异常写入私有 `FROZEN_OBSERVER_ERROR`，避免到点时无痕退出。新增四项状态测试（`IDLE/RUNNING` 接受、`STOPPING/STOPPED` 拒绝）全通过；09:03 UTC 独立单次采样仍为 `WAITING_FOR_NATURAL_TERMINAL`、claim0/attempt0。接下来只重启**一个** 50 秒只读循环，不触发业务请求。
+
+## 09:08 UTC 缺失 attempt 有界修正（仍非终态）
+
+方案修订 `de02a1b5` 先行；再次仅暂停只读观察器，新增从已冻结 `nextSlotUtc` 计算的 slot+30 分钟无 attempt 冻结条件，已有唯一 attempt 不受此上限影响。五项观察器测试全通过，09:08 UTC 单次实测仍 `WAITING_FOR_NATURAL_TERMINAL`、claim0/attempt0。将恢复唯一 50 秒循环；自然调度、worker、Host、业务对象均未写入。
