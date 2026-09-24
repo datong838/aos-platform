@@ -18,6 +18,8 @@ def valid():
                   "finished_at": None, "n": 12}],
         "facts": {"members": 12, "enabled": 12, "receipts": 26,
                   "links": 0, "pending": 0, "canary": 0, "key_count": 0},
+        "member_revisions": [{"revision": 3, "n": 12}],
+        "key_revisions": [],
         "host_alive": False,
         "worker_pid": wave.WORKER_PID,
     }
@@ -56,6 +58,9 @@ def test_reused_key_or_run_change_rejected():
     assert wave._gate(value) is False
     value = valid()
     value["runs"][0]["status"] = "succeeded"
+    assert wave._gate(value) is False
+    value = valid()
+    value["member_revisions"][0]["revision"] = 2
     assert wave._gate(value) is False
 
 

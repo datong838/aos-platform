@@ -69,6 +69,8 @@ def _gate(value):
                               "finished_at": None, "n": 12}]
                 and facts == {"members": 12, "enabled": 12, "receipts": 26,
                               "links": 0, "pending": 0, "canary": 0, "key_count": 0}
+                and value["member_revisions"] == [{"revision": 3, "n": 12}]
+                and value["key_revisions"] == []
                 and value["host_alive"] is False
                 and value["worker_pid"] == WORKER_PID)
     except (KeyError, TypeError, ValueError):
@@ -99,6 +101,14 @@ def _read():
             (m.org_id,m.project_id,m.run_id) WHERE m.org_id='org-org'
           AND m.project_id='dev-project' AND m.group_id=%s
           GROUP BY r.status,r.executor_stopped,r.finished_at""", (GROUP,)).fetchall()]
+        member_revisions = [dict(row) for row in conn.execute("""SELECT revision,
+          count(*) AS n FROM pipeline_snapshot_schedule_current_member WHERE
+          org_id='org-org' AND project_id='dev-project' AND definition_id=%s
+          GROUP BY revision""", (DEFINITION,)).fetchall()]
+        key_revisions = [dict(row) for row in conn.execute("""SELECT revision,
+          content_hash,previous_hash FROM pipeline_snapshot_schedule_definition_revision
+          WHERE org_id='org-org' AND project_id='dev-project' AND definition_id=%s
+          AND idempotency_key=%s""", (DEFINITION, KEY)).fetchall()]
         facts = dict(conn.execute("""SELECT
           (SELECT count(*) FROM pipeline_snapshot_schedule_current_member WHERE
             org_id='org-org' AND project_id='dev-project' AND definition_id=%s) AS members,
@@ -123,6 +133,7 @@ def _read():
         claim["scheduled_for"] = str(claim["scheduled_for"])
     return {"head": dict(head) if head else None, "claims": claims,
             "attempts": attempts, "runs": runs, "facts": facts,
+            "member_revisions": member_revisions, "key_revisions": key_revisions,
             "host_alive": _alive(host_pid), "worker_pid": worker["pid"]}
 
 
@@ -172,6 +183,10 @@ def audit():
             or len(value["attempts"]) != 1
             or value["runs"] != [{"status": "running", "executor_stopped": False,
                                   "finished_at": None, "n": 12}]
+            or value["member_revisions"] != [{"revision": 4, "n": 12}]
+            or value["key_revisions"] != [{"revision": 4,
+                 "content_hash": result["ref"]["contentHash"],
+                 "previous_hash": HASH}]
             or result["body"]["state"] != "disabled"
             or intent["expectedRef"]["contentHash"] != HASH
             or value["host_alive"] is not False):
