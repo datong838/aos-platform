@@ -6,7 +6,7 @@
 
 1. 复习 `ar1_003` identity/assignment/历史/Receipt 合同、生产 Host selector、W5c5c 已知 launcher 边界、`a0v_091` 原组关闭门。
 2. 文件清单：本方案；新增 `scripts/a0v_w5c5f_host_directory_authority.py`、`services/aos-api/tests/extension_runtime/test_a0v_w5c5f_host_directory_authority.py`；本 verification。Host、Owner、迁移均不改。
-3. 一次只读一致性快照核 `org-org/dev-project` 唯一 assignment、当前身份及角色 OID、目录 revision/历史 head 对齐、原失败 attempt 对应 generation/operation 的现存资源租约计数、原定义/12 Run/Receipt 0。仅返回必要计数与枚举，不读取商城源行、不读取凭据、不尝试抢锁或启动 Host。任何缺字段/多行/漂移冻结；即使通过也输出 `topologyComplete=false`、`closureAuthorized=false`。
+3. 一次只读一致性快照核 `org-org/dev-project` 唯一 assignment、当前身份及角色 OID、目录 revision/历史 head 对齐、原失败代际的现存资源租约状态计数、原定义/12 Run/Receipt 0。`extension_runtime_execution_attempt` 不持有资源租约的 operation_id 外键，故本波只作精确 generation 范围审计，不声称 operation 级绑定。仅返回必要计数与枚举，不读取商城源行、不读取凭据、不尝试抢锁或启动 Host。任何缺字段/多行/漂移冻结；即使通过也输出 `topologyComplete=false`、`closureAuthorized=false`。
 4. 专项覆盖精确目录、rev/OID/历史漂移、额外租约、原组状态漂移与不完整快照；绝不把测试夹具当真实权限。
 5. 有界累计 W5c3–W5c5f 与相关合同；隔离库若启动则停用。
 6. 浏览器只读核整组 A0-V disabled；页面不证明全机/目录/DB Run。
