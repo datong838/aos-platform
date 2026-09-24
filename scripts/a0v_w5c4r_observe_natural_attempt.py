@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
@@ -23,6 +23,22 @@ GENERATION = prior.prepared.registered.GENERATION
 GROUP = prior.prepared.registered.GROUP
 
 
+def _worker():
+    if not prior.WORKER_STATUS.is_file():
+        raise ValueError("W5C4R_WORKER_STATUS_MISSING")
+    value = json.loads(prior.WORKER_STATUS.read_text())
+    observed = datetime.fromisoformat(value["observedAt"])
+    if (value.get("workerState") not in {"IDLE", "RUNNING"}
+            or value.get("workerTaskAlive") is not True
+            or value.get("workerError") is not None
+            or value.get("hostInThisProcess") is not False
+            or value.get("topology") != "independent"
+            or value.get("pid") != prior._listener(18181)
+            or datetime.now(timezone.utc) - observed > timedelta(seconds=10)):
+        raise ValueError("W5C4R_INDEPENDENT_WORKER_DRIFT")
+    return value
+
+
 def _save(value):
     STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     os.chmod(STATE, 0o700)
@@ -37,7 +53,7 @@ def _save(value):
 def sample():
     intent = prior._load("intent")
     now = datetime.now(timezone.utc)
-    worker = prior._worker()
+    worker = _worker()
     runtime = enabled.observe()
     with database_connect("aos_meta_head")() as conn:
         conn.execute("SET TRANSACTION READ ONLY")
@@ -113,7 +129,15 @@ def main():
     parser.add_argument("phase", choices=("sample", "loop"))
     phase = parser.parse_args().phase
     while True:
-        value = sample()
+        try:
+            value = sample()
+        except Exception as exc:
+            value = {"observedAt": datetime.now(timezone.utc).isoformat(),
+                     "observation": "FROZEN_OBSERVER_ERROR",
+                     "errorType": type(exc).__name__}
+            _save(value)
+            print(json.dumps(value), flush=True)
+            return
         print(json.dumps({"observedAt": value["observedAt"],
             "observation": value["observation"], "claims": len(value["claims"]),
             "attempts": [{"id": a["attempt_id"], "state": a["state"],
