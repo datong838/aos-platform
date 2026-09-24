@@ -92,7 +92,7 @@ def stage():
                 installation_id=INSTALLATION, generation=GENERATION,
                 expected_installation_etag=5, expected_binding_revision=1,
                 actor=activation.ACTOR, idempotency_key=KEY,
-                configuration=ConfigurationDocument.model_validate(before["document"]),
+                configuration=ConfigurationDocument.model_validate_json(json.dumps(before["document"])),
                 authorize=authorize, previous_ref=None)
     result = {"outcome": "W5C3K_CONFIG_STAGED", "configRef": staged.model_dump(mode="json")}
     _write("result", result)
