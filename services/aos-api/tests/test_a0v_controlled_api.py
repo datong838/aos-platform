@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
@@ -51,6 +52,32 @@ def test_invalid_lease_blocks_before_environment(launcher,monkeypatch):
     monkeypatch.setattr(launcher,'require_leases',deny)
     with pytest.raises(ValueError,match='lease unavailable'):launcher.configure_environment()
     configure.assert_not_called()
+
+
+def test_w5c4p_scoped_lease_only(launcher, monkeypatch, tmp_path):
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    leases = tmp_path / 'docs/palantier/AOS项目开发上下文/memory/leases.json'
+    leases.parent.mkdir(parents=True)
+    monkeypatch.setattr(launcher, 'ROOT', repo)
+    monkeypatch.setattr(launcher.subprocess, 'check_output', lambda *a, **kw: 'm1\n')
+    monkeypatch.setenv('AOS_CONTROLLED_API_LEASE_TASK',
+                       'A0V-W5C4P-SNAPSHOT-WORKER-20260924')
+    entry = dict(task_id='A0V-W5C4P-SNAPSHOT-WORKER-20260924', owner='m1',
+                 status='ACTIVE', scope=['local-process/aos-api-18181'],
+                 lease_expires_at='2099-01-01T00:00:00+00:00')
+    leases.write_text(json.dumps({'leases': [entry]}))
+    launcher.require_leases()
+    leases.write_text(json.dumps({'leases': [{**entry, 'scope': ['local-process/other']}]}))
+    with pytest.raises(ValueError, match='lease unavailable'):
+        launcher.require_leases()
+    leases.write_text(json.dumps({'leases': [{**entry,
+        'lease_expires_at': '2020-01-01T00:00:00+00:00'}]}))
+    with pytest.raises(ValueError, match='lease unavailable'):
+        launcher.require_leases()
+    monkeypatch.setenv('AOS_CONTROLLED_API_LEASE_TASK', 'A0V-UNRELATED')
+    with pytest.raises(ValueError, match='lease unavailable'):
+        launcher.require_leases()
 
 
 def test_product_identity_requires_matching_main_deployment(tmp_path,monkeypatch):

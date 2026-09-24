@@ -92,7 +92,9 @@ def main():
     leases=json.loads((ROOT.parent/'docs/palantier/AOS项目开发上下文/memory/leases.json').read_text())['leases']
     current=[x for x in leases if x['task_id']==TASK]
     if (len(current)!=1 or current[0]['owner']!='m1' or current[0]['status']!='ACTIVE'
-        or datetime.fromisoformat(current[0]['lease_expires_at'])<=datetime.now(timezone.utc)):
+        or datetime.fromisoformat(current[0]['lease_expires_at'])<=datetime.now(timezone.utc)
+        or (TASK=='A0V-W5C4P-SNAPSHOT-WORKER-20260924'
+            and current[0]['scope']!=['local-process/aos-api-18181'])):
         raise ValueError('current snapshot API lease required')
     launcher=load_launcher()
     if len(sys.argv)>1 and sys.argv[1]=='serve':

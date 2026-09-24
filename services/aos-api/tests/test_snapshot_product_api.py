@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import pytest
@@ -35,3 +36,27 @@ def test_api_lock_conflict_prevents_second_owner(tmp_path):
         with pytest.raises(BlockingIOError):
             with m.api_lock(lock):pytest.fail('second owner')
     with m.api_lock(lock):pass
+
+
+def test_w5c4p_worker_lease_requires_exact_port_scope(tmp_path, monkeypatch):
+    m = load()
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    leases = tmp_path / 'docs/palantier/AOS项目开发上下文/memory/leases.json'
+    leases.parent.mkdir(parents=True)
+    monkeypatch.setattr(m, 'ROOT', repo)
+    monkeypatch.setattr(m, 'TASK', 'A0V-W5C4P-SNAPSHOT-WORKER-20260924')
+    monkeypatch.setattr(sys, 'argv', ['snapshot', 'check'])
+    called = []
+    monkeypatch.setattr(m, 'load_launcher', lambda: type('Launcher', (), {
+        'main': lambda self: called.append(True)})())
+    entry = dict(task_id=m.TASK, owner='m1', status='ACTIVE',
+                 scope=['local-process/aos-api-18181'],
+                 lease_expires_at='2099-01-01T00:00:00+00:00')
+    leases.write_text(json.dumps({'leases': [entry]}))
+    m.main()
+    assert called == [True]
+    leases.write_text(json.dumps({'leases': [{**entry, 'scope': ['other']}]}))
+    with pytest.raises(ValueError, match='current snapshot API lease required'):
+        m.main()
+    assert called == [True]

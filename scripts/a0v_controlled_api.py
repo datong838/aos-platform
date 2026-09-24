@@ -27,10 +27,17 @@ API_FLAGS = {
 
 def require_leases():
     path = ROOT.parent/'docs/palantier/AOS项目开发上下文/memory/leases.json'
-    leases = {item['task_id']: item for item in json.loads(path.read_text())['leases']}
-    lease = leases['A0V-CONTROLLED-API-START-20260913']
+    task = os.environ.get('AOS_CONTROLLED_API_LEASE_TASK', 'A0V-CONTROLLED-API-START-20260913')
+    if task not in {'A0V-CONTROLLED-API-START-20260913', 'A0V-W5C4P-SNAPSHOT-WORKER-20260924'}:
+        raise ValueError('controlled API lease unavailable')
+    matches = [item for item in json.loads(path.read_text())['leases'] if item['task_id'] == task]
+    if len(matches) != 1:
+        raise ValueError('controlled API lease unavailable')
+    lease = matches[0]
     if (lease['owner'] != 'm1' or lease['status'] != 'ACTIVE'
-            or datetime.fromisoformat(lease['lease_expires_at']) <= datetime.now(timezone.utc)):
+            or datetime.fromisoformat(lease['lease_expires_at']) <= datetime.now(timezone.utc)
+            or (task == 'A0V-W5C4P-SNAPSHOT-WORKER-20260924'
+                and lease['scope'] != ['local-process/aos-api-18181'])):
         raise ValueError('controlled API lease unavailable')
     if subprocess.check_output(['git','branch','--show-current'], cwd=ROOT, text=True).strip() != 'm1':
         raise ValueError('controlled API requires m1')
