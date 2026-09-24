@@ -6,7 +6,7 @@
 
 1. 复习 `a0v_091`、`pipeline_snapshot_stalled_group_closure.py`、`test_pipeline_snapshot_schedule_definition_pg.py` 的 fixture 与 claim Owner、W5c4t 时间门。
 2. 文件清单：本方案；新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c4y_stalled_owner_success_pg.py`；本波 verification。生产 Owner/迁移不变。
-3. 最小 fixture：使用原配置 Owner configure→enable→原 claim Owner v2 产生唯一 12 Run→disable，隔离库内把 12 fixture `started_at` 置于 DB clock-25h，保持 executor_id 空/无终态；使用独立非 superuser maintainer 会话调用原 Service。测试只看 receipt、12 failed Run、业务未接受、同 key replay 无新增 Receipt、失配 key 失败回滚。
+3. 最小 fixture：使用原配置 Owner configure→enable→原 claim Owner v2 产生唯一 12 Run→disable，隔离库内先把 12 fixture `started_at` 置于 DB clock-23h 验证拒绝/无半提交，再置于 -25h，保持 executor_id 空/无终态；在同一可回滚 fixture 事务内切换 `SESSION AUTHORIZATION` 为非 superuser maintainer 调用原 Service，读回后归还测试身份。测试只看 receipt、12 failed Run、业务未接受、同 key replay 无新增 Receipt、失配 key 失败回滚；不得在 fixture 中 commit 留下跨测试污染。
 4. 专项：先验证 fixture/角色环境，RED 或明确环境修复；若隔离 DB 合同拒绝或 fixture 不能忠实构造，不修改 Owner 抢过测试，记录真缺口。
 5. 累计：合并 W5c3/W5c4、request/拒绝合同与本成功 fixture；慢集有界且按完成结果计数。
 6. 浏览器只读核 12 单路计划与整组页，绝不触发运行。
