@@ -310,7 +310,16 @@ def list_exportable_marking_policies(
 
 # NOTE(route-shadow): 同 egress-policies —— 字面段 GET 必须先于 `{policy_id}` 声明。
 @router.get("/v1/exportable-markings/can-export")
-def can_export_marking(connection_id: str, markings: list[str], _=require_principal):
+def can_export_marking(
+    connection_id: str,
+    # NOTE(get-body)：`markings: list[str]` 裸序列注解会被 FastAPI 判为 **requestBody**
+    # （实测 fastapi 0.141.1：`dependant.body_params == [("markings", Body)]`）⇒ 任何正常
+    # 查询串调用都得到 400 VALIDATION「body Field required」，浏览器/普通 HTTP 客户端
+    # 根本无法调用本端点（此前被路由遮蔽的 404 掩盖）。修法遵循仓内既有约定，
+    # 同形参照 `aip_memory_improvement.py` 的 `purpose: list[str] = Query(...)`。
+    markings: list[str] = Query(min_length=1, max_length=64),
+    _=require_principal,  # 注意：裸默认值不会注入依赖，见 tests/tenant_isolation 的鉴权覆盖门禁
+):
     return {"can_export": get_exportable_marking_engine().can_export(connection_id, markings)}
 
 
