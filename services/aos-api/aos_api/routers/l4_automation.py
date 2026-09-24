@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -129,7 +129,7 @@ def force_l4_recover(
 
 @router.get("/v1/aip/l4-circuit/alerts")
 def list_l4_alerts(
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#82 · 告警历史。"""
@@ -257,7 +257,7 @@ def remove_warmup_model(
 @router.get("/v1/aip/warmup/probe-results")
 def list_warmup_probe_results(
     model_id: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#83 · 探测历史。"""

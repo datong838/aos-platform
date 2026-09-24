@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -380,7 +380,7 @@ def failover_call(
 @router.get("/v1/aip/failover/call-records")
 def list_call_records(
     model_id: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#73 · 最近调用记录。"""

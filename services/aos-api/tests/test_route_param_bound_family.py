@@ -508,3 +508,206 @@ def test_capacity_usage_over_max_limit_is_400() -> None:
 
     resp = _client(router).get("/v1/aip/capacity/usage", params={"limit": 400})
     assert resp.status_code == 400, resp.text
+
+
+# ───────── 第三批：负 limit 走**内存切片**（静默丢行，无任何错误码） ─────────
+
+# 判据：路由参数无下界 且 被调函数体里有 `items[-<同名形参>:]` ⇒ 红。
+# 为什么状态码探针（B/E/G/K）全部漏掉：`items[-1:]`… 其实是 `items[1:]`，
+# 它**成功返回 200**，只是把最新/首条记录从结果里悄悄抹掉。唯一可观测的差异在
+# **内容**（条数 / 首元素身份），状态码一律 200 ⇒ 必须用内容判据。
+#
+# 上游一条真实先例：`triggers_and_link_output.list_fires` 写的是
+# `if limit > 0: items = items[:limit]` —— 即本仓已存在「非正数不切片」的约定。
+
+
+def _neg_slice_params(fn: ast.AST) -> set[str]:
+    """函数体里以 `[-<Name>:]` 形式切片的形参名集合。"""
+    out: set[str] = set()
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Subscript) or not isinstance(node.slice, ast.Slice):
+            continue
+        lo = node.slice.lower
+        if isinstance(lo, ast.UnaryOp) and isinstance(lo.op, ast.USub) and isinstance(lo.operand, ast.Name):
+            out.add(lo.operand.id)
+    return out
+
+
+def _module_neg_slice_funcs() -> dict[str, dict[str, set[str]]]:
+    """{模块相对路径: {函数名: 负切片形参名}}。"""
+    out: dict[str, dict[str, set[str]]] = {}
+    for path in API_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        rel = str(path.relative_to(API_ROOT.parent))
+        per: dict[str, set[str]] = {}
+        for fn in ast.walk(tree):
+            if isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                params = {a.arg for a in list(fn.args.args) + list(fn.args.kwonlyargs)}
+                hit = _neg_slice_params(fn) & params
+                if hit:
+                    per.setdefault(fn.name, set()).update(hit)
+        if per:
+            out[rel] = per
+    return out
+
+
+def _route_numeric_params(fn: ast.AST) -> dict[str, bool]:
+    """路由中的数值型形参 -> 是否声明了下界（`ge`/`gt`）。"""
+    defaults: dict[str, ast.expr] = {}
+    if fn.args.defaults:
+        for a, d in zip(list(fn.args.args)[-len(fn.args.defaults):], fn.args.defaults):
+            defaults[a.arg] = d
+    for a, d in zip(fn.args.kwonlyargs, fn.args.kw_defaults):
+        if d is not None:
+            defaults[a.arg] = d
+    out: dict[str, bool] = {}
+    for a in list(fn.args.args) + list(fn.args.kwonlyargs):
+        ann = ast.unparse(a.annotation) if a.annotation else ""
+        if ann.strip() not in ("int", "int | None", "float", "float | None"):
+            continue
+        d = defaults.get(a.arg)
+        kws = {k.arg for k in d.keywords if k.arg} if isinstance(d, ast.Call) else set()
+        out[a.arg] = bool(kws & _BOUNDED_KW)
+    return out
+
+
+def _find_neg_slice_violations(ignore_route_bound: bool = False) -> list[str]:
+    """路由无下界的数值参数传给「负切片引擎函数」⇒ 命中。
+
+    被调解析按**导入来源模块**（不是函数名全局匹配）：否则 `list_runs` 这类
+    同名方法会把 `qyh_cron_scheduler.list_runs`（SQL 夹取）与
+    `aip_extras.list_runs`（负切片）混为一谈 —— 首版就撞了这个坑。
+    工厂间接 `get_x_engine().list_runs(limit=...)` 亦覆盖。
+    """
+    neg_funcs = _module_neg_slice_funcs()
+    hits: list[str] = []
+    for path in API_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        rel = str(path.relative_to(API_ROOT.parent))
+        tgt: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("aos_api"):
+                mod = str(Path(*node.module.split(".")).with_suffix(".py"))
+                for al in node.names:
+                    tgt[al.asname or al.name] = mod
+        for fn in ast.walk(tree):
+            if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)) or not _is_route(fn):
+                continue
+            nump = _route_numeric_params(fn)
+            if not nump:
+                continue
+            for call in ast.walk(fn):
+                if not isinstance(call, ast.Call):
+                    continue
+                f = call.func
+                if isinstance(f, ast.Name):
+                    cname, root = f.id, f.id
+                elif isinstance(f, ast.Attribute) and isinstance(f.value, ast.Call) and isinstance(f.value.func, ast.Name):
+                    cname, root = f.attr, f.value.func.id  # get_x_engine().method(...)
+                elif isinstance(f, ast.Attribute) and isinstance(f.value, ast.Name):
+                    cname, root = f.attr, f.value.id
+                else:
+                    continue
+                mod = tgt.get(root, rel)
+                neg = neg_funcs.get(mod, {}).get(cname)
+                if not neg:
+                    continue
+                for kw in call.keywords:
+                    if kw.arg not in neg:
+                        continue
+                    if not isinstance(kw.value, ast.Name) or kw.value.id not in nump:
+                        continue
+                    if not ignore_route_bound and nump[kw.value.id]:
+                        continue  # 路由已给下界（ge/gt）⇒ 负值不可达，非缺陷
+                    hits.append(
+                        f"{rel}:{fn.lineno} {fn.name}() 把{'无下界的' if not nump[kw.value.id] else ''}"
+                        f"{kw.value.id} 传给 {mod}:{cname}({kw.arg}=) —— "
+                        f"函数体内 `items[-{kw.arg}:]`，负值会静默丢行"
+                    )
+    return sorted(set(hits))
+
+
+def test_no_unbounded_param_reaches_negative_slice() -> None:
+    """整族门禁：无下界的路由参数直达内存负切片 ⇒ 红（全部站点已设 `ge=1`）。"""
+    hits = _find_neg_slice_violations()
+    assert not hits, "以下路由参数无下界且被负切片消费（`-1` 会 200 + 静默丢行）：\n  " + "\n  ".join(hits)
+
+
+def test_gate_detects_negative_slice_family() -> None:
+    """自检：判据必须能认出本族（否则门禁静默失效）。"""
+    funcs = _module_neg_slice_funcs()
+    assert funcs, "未扫到任何负切片函数 —— 判据失效"
+    for rel, name in [
+        ("aos_api/aip_extras.py", "list_runs"),
+        ("aos_api/pipeline_type_semantics.py", "list_dlq"),
+        ("aos_api/l4_automation.py", "list_alerts"),
+    ]:
+        assert name in funcs.get(rel, {}), f"{rel}:{name} 未被识别为负切片函数"
+
+
+def test_gate_flags_neg_slice_when_route_bound_ignored() -> None:
+    """正对照：把路由下界视作无效后，本族必须重新判红 ⇒ 证明「绿」来自下界而非判据瞎了。"""
+    hits = _find_neg_slice_violations(ignore_route_bound=True)
+    assert len(hits) >= 10, f"关掉下界豁免后命中不足（判据被改坏）：{len(hits)}\n" + "\n".join(hits)
+    assert not _find_neg_slice_violations(), "默认判据应当为绿"
+
+
+# ── 行为断言：三族代表端点 `limit=-1` 必须是 400，而不是 200 ──
+
+_H_NEG_LIMIT_SITES = [
+    ("aos_api.routers.aip_extras", "list_automate_runs", {}),
+    ("aos_api.routers.aip_extras", "list_maturity_assessments", {}),
+    ("aos_api.routers.l4_automation", "list_l4_alerts", {}),
+    ("aos_api.routers.l4_automation", "list_warmup_probe_results", {}),
+    ("aos_api.routers.llm_extras", "list_audit_records", {}),
+    ("aos_api.routers.llm_routing", "list_call_records", {}),
+    ("aos_api.routers.pipeline_type_semantics", "list_changes", {"pipeline_id": "p-1"}),
+    ("aos_api.routers.pipeline_type_semantics", "list_windows", {"pipeline_id": "p-1"}),
+    ("aos_api.routers.pipeline_type_semantics", "list_events", {"pipeline_id": "p-1"}),
+    ("aos_api.routers.pipeline_type_semantics", "list_dlq", {"pipeline_id": "p-1"}),
+]
+
+
+def _url_for(router, func_name: str, fill: dict[str, str]) -> str:
+    import re as _re
+
+    for r in router.routes:
+        if getattr(r, "name", None) == func_name:
+            path = r.path
+            for k, v in fill.items():
+                path = _re.sub(r"\{" + k + r"(?::[^}]*)?\}", v, path)
+            assert "{" not in path, f"{func_name} 仍有未填路径参数：{path}"
+            return path
+    raise AssertionError(f"路由器里找不到 {func_name}")
+
+
+@pytest.mark.parametrize("module,name,fill", _H_NEG_LIMIT_SITES, ids=[s[1] for s in _H_NEG_LIMIT_SITES])
+def test_negative_limit_is_400_not_silent_200(module: str, name: str, fill: dict) -> None:
+    """`limit=-1` 必须被请求校验拦成 400；修复前是 200 + 静默丢首行。"""
+    import importlib
+
+    router = importlib.import_module(module).router
+    url = _url_for(router, name, fill)
+    resp = _client(router).get(url, params={"limit": -1})
+    assert resp.status_code == 400, f"{url} limit=-1 得到 {resp.status_code} {resp.text[:160]}"
+    assert resp.json()["code"] == "VALIDATION"
+
+
+@pytest.mark.parametrize("module,name,fill", _H_NEG_LIMIT_SITES, ids=[s[1] for s in _H_NEG_LIMIT_SITES])
+def test_limit_one_passes_validation(module: str, name: str, fill: dict) -> None:
+    """正对照：`limit=1` 必须不被误拦（下界设为 1，不是把参数整个作废）。"""
+    import importlib
+
+    router = importlib.import_module(module).router
+    url = _url_for(router, name, fill)
+    resp = _client(router).get(url, params={"limit": 1})
+    assert resp.status_code != 400, f"{url} limit=1 被误拦 {resp.status_code}"
+

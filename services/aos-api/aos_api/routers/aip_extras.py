@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.aip_extras import (
@@ -294,7 +294,7 @@ def fire_automate_trigger(
 @router.get("/v1/aip/automate/runs")
 def list_automate_runs(
     trigger_id: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#79 · 列出执行记录。"""
@@ -417,7 +417,7 @@ def assess_maturity(
 
 @router.get("/v1/aip/maturity/assessments")
 def list_maturity_assessments(
-    limit: int = 20,
+    limit: int = Query(20, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#80 · 历史评估列表。"""

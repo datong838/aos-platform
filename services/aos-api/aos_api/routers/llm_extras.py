@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -186,7 +186,7 @@ def evaluate_egress(
 @router.get("/v1/aip/egress/audit-records")
 def list_audit_records(
     model_id: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#74 · 列出审计记录。"""

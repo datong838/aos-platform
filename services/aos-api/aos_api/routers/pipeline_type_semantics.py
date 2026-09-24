@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
@@ -211,7 +211,7 @@ def list_changes(
     pipeline_id: str,
     op: str | None = None,
     since_watermark: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#95 · 变更列表。"""
@@ -320,7 +320,7 @@ def register_window(
 def list_windows(
     pipeline_id: str,
     open_only: bool = False,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#96 · 窗口列表。"""
@@ -353,7 +353,7 @@ def ingest_event(
 def list_events(
     pipeline_id: str,
     processed_only: bool = False,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#96 · 事件列表。"""
@@ -647,7 +647,7 @@ def send_to_dlq(
 @router.get("/v1/pipelines/{pipeline_id}/streaming-perf/dlq")
 def list_dlq(
     pipeline_id: str,
-    limit: int = 50,
+    limit: int = Query(50, ge=1),  # NOTE(neg-limit)：`items[-limit:]` 遇负值会静默丢行，故设下界
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     """#98 · 查询死信队列。"""
