@@ -14,3 +14,7 @@ W5c4q `4ad6643f` 定义 rev3 enabled、12 schedule on，下一官方时区 slot 
 ## 09:07 UTC 无 attempt 有界观察补充
 
 使用已冻结的启用意图 `nextSlotUtc` 作为唯一时钟锚点。若 slot 后 30 分钟仍无本 generation 的 attempt，即使有 group claim 也以 `FROZEN_NO_ATTEMPT_AFTER_SLOT` 停止观察，不推断业务成功、不补发、不手工触发；先独立只读对账 claim/Run/worker/Receipt，再按正式退休与 direct successor 路径处理。只要已出现唯一 attempt，仍按原规则观察至正式终态。该边界是 fail-closed 上限，不改变自然触发和运行时控制。
+
+## 等待期可并行完成的本波离线终态预审
+
+不改、不重启正在运行的 18181 worker、Runtime Host 和 W5c4r 观察器。新增 `scripts/a0v_w5c4r_terminal_assessment.py`，只读取本波私有 0600 采样 JSONL 与 W5c4q 冻结 intent/result；绝不连接商城源、发 HTTP、调用 `run_definition` 或写业务库。精确核一个启用前 baseline、一个最新正式终态、同一 rev3 定义、cron slot、唯一 group/attempt、12 Run 与 Store/link/projection 的**增量**；缺字段、身份不符或未知副作用一律 `FROZEN_ASSESSMENT_BOUNDARY`。成功只输出 `SUCCEEDED_REQUIRES_INDEPENDENT_AUDIT`，deadline 且 12 Run running/零增量只输出 `FAILED_PRESTORE_CANDIDATE_REQUIRES_INDEPENDENT_AUDIT`；二者均不授权自动恢复或宣告 GREEN。专项测试覆盖两条候选路径、非 cron/第二 attempt/Store 增量拒绝。正式终态后还必须独立 DB 回读并落最终 verification，才能收口。修改范围仅新脚本及 `services/aos-api/tests/extension_runtime/test_a0v_w5c4r_terminal_assessment.py`；回滚为不调用该离线预审，不触碰运行态。
