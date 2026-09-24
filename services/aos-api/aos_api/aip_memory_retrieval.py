@@ -35,6 +35,13 @@ from aos_api.tenant_scope import TenantScope
 
 PayloadResolver = Callable[[TenantScope, ArtifactRef], "ResolvedKnowledgePayload"]
 
+# ── purposes 列表边界（单一权威） ────────────────────────────────
+# 路由 `GET …/memory-context` 的 `purpose` 查询参数直接透传为 ``purposes``；
+# 路由侧必须复用这两个边界，否则超长列表会绕过请求校验、在 handler 内触发
+# pydantic ValidationError → 500 INTERNAL（应 400 VALIDATION）。
+PURPOSES_MIN = 1
+PURPOSES_MAX = 64
+
 
 class AgentMemoryContextRequest(BaseModel):
     """Trusted assembler input; identity and tenant are never inferred from role names."""
@@ -44,7 +51,7 @@ class AgentMemoryContextRequest(BaseModel):
     agent_instance_ref: VersionedAssetRef
     skill_ref: VersionedAssetRef
     logic_ref: VersionedAssetRef
-    purposes: list[str] = Field(min_length=1, max_length=64)
+    purposes: list[str] = Field(min_length=PURPOSES_MIN, max_length=PURPOSES_MAX)
     authorized_markings: list[str] = Field(min_length=1, max_length=32)
     time_cutoff: datetime
     max_tokens: int = Field(default=4096, ge=1, le=131072)
@@ -75,7 +82,7 @@ class AgentMemoryContext(BaseModel):
     agent_instance_ref: VersionedAssetRef
     skill_ref: VersionedAssetRef
     logic_ref: VersionedAssetRef
-    purposes: list[str] = Field(min_length=1, max_length=64)
+    purposes: list[str] = Field(min_length=PURPOSES_MIN, max_length=PURPOSES_MAX)
     authorized_markings: list[str] = Field(min_length=1, max_length=32)
     projection_refs: list[MemoryProjectionExactRef] = Field(default_factory=list)
     memory_refs: list[MemoryRevisionExactRef] = Field(default_factory=list)

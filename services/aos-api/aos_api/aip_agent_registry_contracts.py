@@ -20,6 +20,14 @@ from aos_api.aip_contracts import (
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
+# ── 资产引用标识的长度边界（单一权威） ─────────────────────────────
+# 路由层的实例 id（路径/查询参数）直接充当 ``VersionedAssetRef.asset_id``；
+# 若路由侧不引用这里的边界，越界值会绕过 FastAPI 请求校验、在 handler 内
+# 触发 pydantic ValidationError → 500 INTERNAL（而不是 400 VALIDATION）。
+# 故 routable 注入点必须复用这两个常量。
+ASSET_ID_MIN_LENGTH = 1
+ASSET_ID_MAX_LENGTH = 200
+
 
 class TemplateLifecycle(StrEnum):
     DRAFT = "draft"
@@ -64,7 +72,7 @@ class AgentRunStatus(StrEnum):
 
 class VersionedAssetRef(AipContractModel):
     asset_type: str = Field(min_length=1, max_length=80)
-    asset_id: str = Field(min_length=1, max_length=200)
+    asset_id: str = Field(min_length=ASSET_ID_MIN_LENGTH, max_length=ASSET_ID_MAX_LENGTH)
     revision: int = Field(ge=1)
     content_hash: str = Field(pattern=SHA256_PATTERN)
 

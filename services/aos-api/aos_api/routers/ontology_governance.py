@@ -3,14 +3,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Path, Query
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.ontology_governance import get_graph_engine, get_usage_engine
-from aos_api.ontology_explorer_contracts import GraphQueryDTO, GraphSnapshotDTO
+from aos_api.ontology_explorer_contracts import (
+    GRAPH_HOPS_MAX,
+    GRAPH_HOPS_MIN,
+    GraphQueryDTO,
+    GraphSnapshotDTO,
+)
 from aos_api.ontology_graph_query import get_authoritative_graph_service
 from aos_api.oidc import allow_dev
 from aos_api.tenant_scope import TenantScope
@@ -131,7 +136,11 @@ def authoritative_graph_query(
 def multi_hop_neighbors(
     object_type: str,
     object_id: str,
-    hops: int,
+    # NOTE(route-dto-bound)：hops 直接透传给 GraphQueryDTO.hops。
+    # 必须在此声明与 DTO 同源的边界，否则越界值绕过请求校验后在 handler 内
+    # 抛 pydantic ValidationError → 500 INTERNAL（应 400 VALIDATION，
+    # 与 POST /v1/ontology/graph/query 的 body 校验一致）。
+    hops: int = Path(ge=GRAPH_HOPS_MIN, le=GRAPH_HOPS_MAX),
     rel: str | None = None,
     direction: str = Query(default="out", pattern=r"^(out|in|both)$"),
     principal: Principal = Depends(require_principal),

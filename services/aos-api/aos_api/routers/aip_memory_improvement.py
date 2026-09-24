@@ -5,11 +5,15 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Path, Query, status
 from pydantic import Field
 
 from aos_api.aip_contracts import AipContractModel
-from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_agent_registry_contracts import (
+    ASSET_ID_MAX_LENGTH,
+    ASSET_ID_MIN_LENGTH,
+    VersionedAssetRef,
+)
 from aos_api.aip_memory_improvement import (
     AipMemoryImprovementBlocked,
     AipMemoryImprovementConflict,
@@ -34,6 +38,8 @@ from aos_api.aip_memory_projection_store import (
     AipMemoryProjectionStore,
 )
 from aos_api.aip_memory_retrieval import (
+    PURPOSES_MAX,
+    PURPOSES_MIN,
     AgentMemoryContextRequest,
     AgentMemoryContextView,
     AipAgentMemoryRetrieval,
@@ -263,16 +269,20 @@ def get_projection_impact(
     response_model=AgentMemoryContextView,
 )
 def get_agent_memory_context(
-    instance_id: str,
+    # NOTE(route-dto-bound)：以下三者直接充当 VersionedAssetRef.asset_id，
+    # 必须声明与契约同源的长度边界（此前仅 instance_id 无界、skill_id/logic_id
+    # 只有 min_length），越界值会绕过请求校验后在 handler 内抛
+    # pydantic ValidationError → 500 INTERNAL（应 400 VALIDATION）。
+    instance_id: str = Path(min_length=ASSET_ID_MIN_LENGTH, max_length=ASSET_ID_MAX_LENGTH),
     instance_revision: int = Query(alias="instanceRevision", ge=1),
     instance_hash: str = Query(alias="instanceHash", pattern=r"^[0-9a-f]{64}$"),
-    skill_id: str = Query(alias="skillId", min_length=1),
+    skill_id: str = Query(alias="skillId", min_length=ASSET_ID_MIN_LENGTH, max_length=ASSET_ID_MAX_LENGTH),
     skill_revision: int = Query(alias="skillRevision", ge=1),
     skill_hash: str = Query(alias="skillHash", pattern=r"^[0-9a-f]{64}$"),
-    logic_id: str = Query(alias="logicId", min_length=1),
+    logic_id: str = Query(alias="logicId", min_length=ASSET_ID_MIN_LENGTH, max_length=ASSET_ID_MAX_LENGTH),
     logic_revision: int = Query(alias="logicRevision", ge=1),
     logic_hash: str = Query(alias="logicHash", pattern=r"^[0-9a-f]{64}$"),
-    purpose: list[str] = Query(min_length=1),
+    purpose: list[str] = Query(min_length=PURPOSES_MIN, max_length=PURPOSES_MAX),
     time_cutoff: datetime = Query(alias="timeCutoff"),
     principal: Principal = Depends(require_principal),
     reader: AipAgentMemoryRetrieval = Depends(get_memory_reader),

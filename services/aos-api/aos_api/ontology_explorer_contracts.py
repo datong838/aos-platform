@@ -112,9 +112,18 @@ class GraphSeedDTO(ObjectRefDTO):
     pass
 
 
+# ── 图查询跳数边界（单一权威） ───────────────────────────────────
+# `GET /v1/objects/{object_type}/{object_id}/neighbors/{hops}` 的路径参数直接
+# 透传给 ``GraphQueryDTO.hops``；路由侧若不引用这里的边界，越界值会绕过
+# FastAPI 请求校验、在 handler 内触发 pydantic ValidationError → 500 INTERNAL
+# （而同样语义的 POST /v1/ontology/graph/query 返回 400 VALIDATION）。
+GRAPH_HOPS_MIN = 1
+GRAPH_HOPS_MAX = 5
+
+
 class GraphQueryDTO(FrozenDTO):
     seeds: list[GraphSeedDTO] = Field(min_length=1, max_length=20)
-    hops: int = Field(default=1, ge=1, le=5)
+    hops: int = Field(default=1, ge=GRAPH_HOPS_MIN, le=GRAPH_HOPS_MAX)
     maxNodes: int = Field(default=100, ge=1, le=500)
     direction: Literal["out", "in", "both"] = "both"
     objectTypes: list[str] = Field(default_factory=list, max_length=64)
