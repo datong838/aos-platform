@@ -23,10 +23,41 @@ FastAPI 只校验**它自己声明在签名上的**约束。若路由把裸标�
 本文件两条锁：
 - `test_no_route_scalar_bypasses_dto_bound`：AST 全量扫描，锁住整族（新增即红）。
 - 行为断言：越界输入必须得到 400 `VALIDATION`，而不是 500。
+
+---
+
+**第二批（同族，约束权威在下游 SQL 而不是 pydantic）**
+
+探针 K（数值型 query 参数取边界值 `0`/`-1`，覆盖 111 个端点 / 266 个变体）又抓出
+第 6 处 500，但它的约束不在任何 DTO 里，而在 **PostgreSQL**：
+
+| 注入点 | 输入 | 结果 |
+|---|---|---|
+| `GET /v1/aip/capacity/usage` | `limit=-1` | **500 INTERNAL** |
+
+栈帧：`model_capacity.py:131 list_usage` → `psycopg.errors.InvalidRowCountInLimitClause:
+LIMIT must not be negative`。路由原文是 `limit: int = Query(30, le=365)` —— **只有上界、没有下界**。
+⇒ `probe F` 的「路由 ↔ DTO 边界」判据**结构上看不到这一类**（没有 DTO 可比）。
+
+故本文件再加一条同族判据：**路由把无下界的数值参数传给「函数体内含 `LIMIT %s` / `OFFSET %s`
+的引擎函数」⇒ 红**（`test_no_unbounded_param_reaches_sql_limit`）。
+
+⚠️ 注意一条会误导人的假安全信号：很多端点在 `limit=-1` 下返回 **200**，但那只是因为**表是空的**
+（`items[:-1]` 对空列表无害）。而 **SQL `LIMIT -1` 是确定性报错**，与数据量无关
+⇒ 对「进 SQL」的这条子链，`-1` 是决定性探针；对「Python 切片」的链则不是（见 §待办）。
+
+⚠️ **判据边界：路由有下界 ≠ 唯一合法修法**。真正的判据是「值有没有**不被夹取地**到达 SQL」。
+首版门禁只认路由签名，于是把 `GET /v1/schedules/{id}/runs` 判红；复核被调端
+`qyh_cron_scheduler.list_runs` 第一行就是 `safe_limit = max(1, min(int(limit), 100))`
+⇒ **值根本没有裸奔到 SQL**，静态命中 ≠ 缺陷（本族第 2 次踩同一个坑）。
+故判据升级为：路由无下界 **且** 被调函数在 SQL 之前**未**对该参数做 `min()/max()` 夹取 ⇒ 红。
+`_callee_clamps_param()` 是启发式（只看 `min/max` 调用是否引用该形参、且行号早于 SQL 常量），
+用 `test_gate_flags_sql_limit_shape_when_clamp_ignored` 做正对照，保证豁免不是把门禁整体关掉。
 """
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 
 import pytest
@@ -264,3 +295,216 @@ def test_memory_context_overlong_asset_id_is_400(field: str) -> None:
     resp = _client(router).get(url, params=params)
     assert resp.status_code == 400, f"{field} 越界得到 {resp.status_code}"
     assert resp.json()["code"] == "VALIDATION"
+
+
+# ─────────────── 第二批：约束权威在下游 SQL（LIMIT/OFFSET） ───────────────
+
+_SQL_LIMIT_RX = re.compile(r"\b(LIMIT|OFFSET)\s+%s", re.I)
+_BOUNDED_KW = {"ge", "gt"}
+_SIZE_KW = {"limit", "offset", "page_size", "pageSize"}
+_CLAMP_FUNCS = {"min", "max"}
+_FUNC_CACHE: dict[str, dict[str, ast.AST]] = {}
+
+
+def _parse_rel(rel: str) -> ast.Module | None:
+    path = API_ROOT.parent / rel
+    return _parse(path) if path.exists() else None
+
+
+def _func_index(rel: str) -> dict[str, ast.AST]:
+    """`{函数名: 函数节点}`（带缓存）；同名重载取首个。"""
+    if rel not in _FUNC_CACHE:
+        idx: dict[str, ast.AST] = {}
+        tree = _parse_rel(rel)
+        if tree is not None:
+            for fn in ast.walk(tree):
+                if isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    idx.setdefault(fn.name, fn)
+        _FUNC_CACHE[rel] = idx
+    return _FUNC_CACHE[rel]
+
+
+def _callee_clamps_param(rel: str, func: str, param: str) -> bool:
+    """被调函数是否在 SQL `LIMIT/OFFSET` **之前**对该形参做了 `min()/max()` 夹取。
+
+    启发式（故意保守，宁可漏报夹具也不误报缺陷）：
+    - 只看直接引用该形参名的 `min()/max()` 调用（`min(int(limit), 100)` 亦覆盖）；
+    - 只认行号早于含 `LIMIT %s` 字符串常量的语句；
+    - 找不到函数体 / 找不到 SQL ⇒ 返回 False（即按「会裸奔」处理）。
+    """
+    fn = _func_index(rel).get(func)
+    if fn is None:
+        return False
+    sql_line: int | None = None
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if _SQL_LIMIT_RX.search(node.value):
+                sql_line = node.lineno if sql_line is None else min(sql_line, node.lineno)
+    if sql_line is None:
+        return False
+    for node in ast.walk(fn):
+        if not isinstance(node, ast.Call):
+            continue
+        if ast.unparse(node.func).split(".")[-1] not in _CLAMP_FUNCS:
+            continue
+        if node.lineno > sql_line:
+            continue
+        for arg in node.args:
+            if any(isinstance(n, ast.Name) and n.id == param for n in ast.walk(arg)):
+                return True
+    return False
+
+
+def _sql_limit_funcs() -> dict[str, set[str]]:
+    """{模块相对路径: {含 `LIMIT %s`/`OFFSET %s` 的函数名}}。"""
+    out: dict[str, set[str]] = {}
+    for path in API_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        names = set()
+        for fn in ast.walk(tree):
+            if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            for node in ast.walk(fn):
+                if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                    if _SQL_LIMIT_RX.search(node.value):
+                        names.add(fn.name)
+                        break
+        if names:
+            out[str(path.relative_to(API_ROOT.parent))] = names
+    return out
+
+
+def _route_unbounded_params(fn) -> set[str]:
+    """路由函数里**没有下界**（无 ge/gt，且注解为数值）的形参名。"""
+    defaults: dict[str, ast.expr] = {}
+    pos = list(fn.args.args)
+    if fn.args.defaults:
+        for a, d in zip(pos[-len(fn.args.defaults):], fn.args.defaults):
+            defaults[a.arg] = d
+    for a, d in zip(fn.args.kwonlyargs, fn.args.kw_defaults):
+        if d is not None:
+            defaults[a.arg] = d
+    out = set()
+    for a in pos + list(fn.args.kwonlyargs):
+        ann = ast.unparse(a.annotation) if a.annotation else ""
+        if any(k in ann for k in _SKIP_ANN):
+            continue
+        if ann.strip() not in ("int", "int | None", "float", "float | None"):
+            continue
+        d = defaults.get(a.arg)
+        kws = {k.arg for k in d.keywords if k.arg} if isinstance(d, ast.Call) else set()
+        if not (kws & _BOUNDED_KW):
+            out.add(a.arg)
+    return out
+
+
+def _find_sql_limit_violations(ignore_callee_clamp: bool = False) -> list[str]:
+    limit_funcs = _sql_limit_funcs()
+    hits: list[str] = []
+    for path in API_ROOT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        tree = _parse(path)
+        if tree is None:
+            continue
+        # 本文件导入的「含 SQL LIMIT 的函数」→ 定义模块
+        imported: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("aos_api"):
+                mod = str(Path(*node.module.split(".")).with_suffix(".py"))
+                for al in node.names:
+                    if mod in limit_funcs and al.name in limit_funcs[mod]:
+                        imported[al.name] = mod
+        if not imported:
+            continue
+        for fn in ast.walk(tree):
+            if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)) or not _is_route(fn):
+                continue
+            unbounded = _route_unbounded_params(fn)
+            if not unbounded:
+                continue
+            for sub in ast.walk(fn):
+                if not isinstance(sub, ast.Call):
+                    continue
+                callee = ast.unparse(sub.func).split(".")[-1]
+                if callee not in imported:
+                    continue
+                for kw in sub.keywords:
+                    if kw.arg not in _SIZE_KW:
+                        continue
+                    if not (isinstance(kw.value, ast.Name) and kw.value.id in unbounded):
+                        continue
+                    if not ignore_callee_clamp and _callee_clamps_param(
+                        imported[callee], callee, kw.value.id
+                    ):
+                        continue  # 被调端已夹取 ⇒ 值不裸奔，非缺陷
+                    hits.append(
+                        f"{path.relative_to(API_ROOT.parent)}:{fn.lineno} {fn.name}() "
+                        f"把无下界的 {kw.value.id} 传给 {callee}({kw.arg}=) "
+                        f"（{imported[callee]} 内含 SQL LIMIT/OFFSET）"
+                    )
+    return sorted(set(hits))
+
+
+def test_no_unbounded_param_reaches_sql_limit() -> None:
+    """整族门禁：无下界的路由参数**不被夹取地**直达 SQL `LIMIT/OFFSET` ⇒ 红。"""
+    hits = _find_sql_limit_violations()
+    assert not hits, (
+        "以下路由参数没有下界、被调端也没有 min()/max() 夹取，直接进 SQL LIMIT/OFFSET"
+        "（`-1` 会 500）：\n  " + "\n  ".join(hits)
+    )
+
+
+def test_gate_detects_sql_limit_shape() -> None:
+    """自检：SQL-LIMIT 判据必须能认出含 `LIMIT %s` 的函数（否则门禁失效）。"""
+    funcs = _sql_limit_funcs()
+    assert funcs, "未扫到任何含 SQL LIMIT/OFFSET 的函数 —— 判据本身失效"
+    assert any("model_capacity.py" in k for k in funcs), (
+        f"已知站点 model_capacity.py 未被识别：{sorted(funcs)[:5]}"
+    )
+
+
+def test_gate_flags_sql_limit_shape_when_clamp_ignored() -> None:
+    """正对照：关掉夹取豁免后同一形状必须判红 ⇒ 证明「绿」是豁免给的，不是判据瞎了。"""
+    hits = _find_sql_limit_violations(ignore_callee_clamp=True)
+    assert any("wave_ext.py" in h and "list_schedule_runs" in h for h in hits), (
+        f"关掉豁免后仍然扫不到已知形状（判据被改坏了）：{hits[:5]}"
+    )
+    assert not _find_sql_limit_violations(), "默认判据应当为绿"
+
+
+@pytest.mark.parametrize(
+    "rel,func,param,expected",
+    [
+        # 已夹取：list_runs 首行 safe_limit = max(1, min(int(limit), 100))
+        ("aos_api/qyh_cron_scheduler.py", "list_runs", "limit", True),
+        # 未夹取：list_usage 原样进 SQL（正是本轮修的那个站点）
+        ("aos_api/model_capacity.py", "list_usage", "limit", False),
+        # 函数不存在 ⇒ 保守判为「未夹取」
+        ("aos_api/qyh_cron_scheduler.py", "no_such_func", "limit", False),
+    ],
+)
+def test_callee_clamp_detector(rel: str, func: str, param: str, expected: bool) -> None:
+    """夹取探测器自检（含 1 正例 / 2 反例）。"""
+    assert _callee_clamps_param(rel, func, param) is expected
+
+
+def test_capacity_usage_negative_limit_is_400() -> None:
+    """修复前：`limit=-1` → PG `InvalidRowCountInLimitClause` → 500 INTERNAL。"""
+    from aos_api.routers.model_capacity import router
+
+    resp = _client(router).get("/v1/aip/capacity/usage", params={"limit": -1})
+    assert resp.status_code == 400, resp.text
+    assert resp.json()["code"] == "VALIDATION"
+
+
+def test_capacity_usage_over_max_limit_is_400() -> None:
+    """正对照：上界仍然生效（`le=365`）。"""
+    from aos_api.routers.model_capacity import router
+
+    resp = _client(router).get("/v1/aip/capacity/usage", params={"limit": 400})
+    assert resp.status_code == 400, resp.text

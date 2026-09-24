@@ -107,7 +107,11 @@ def put_user_limits_api(
 def list_usage_api(
     startDate: str | None = Query(None),
     endDate: str | None = Query(None),
-    limit: int = Query(30, le=365),
+    # NOTE(sql-limit-bound)：limit 直接进 SQL `LIMIT %s`，**必须**有下界。
+    # 此前只写了 le=365：`limit=-1` 通过 FastAPI 校验后由 PostgreSQL 抛
+    # InvalidRowCountInLimitClause（LIMIT must not be negative）⇒ 未捕获 ⇒ 500 INTERNAL。
+    # 该约束的权威在下游（PG），不是某个 pydantic DTO，故 probe F 的「路由↔DTO 边界」扫不到。
+    limit: int = Query(30, ge=0, le=365),
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
     items = list_usage(
