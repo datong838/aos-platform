@@ -14,6 +14,18 @@ from aos_api.pipeline_source_claim_owner import _text
 from aos_api.source_readiness_contracts import CANONICAL_QYH_SOURCES
 
 
+class OriginalRecoveryExecutorDenied(PermissionError):
+    """The caller is not the executor sealed in the recovery receipt."""
+
+
+class CurrentRecoveryDefinitionDenied(PermissionError):
+    """The current definition's executor or installation permission differs."""
+
+
+class CurrentRecoveryExecutorDenied(PermissionError):
+    """The current installation no longer permits the sealed executor."""
+
+
 @dataclass(frozen=True)
 class CurrentSavedGroupRecovery:
     receipt: dict
@@ -65,7 +77,7 @@ class SnapshotGroupRecoveryAuthority:
             if receipt['ref']!=self._ref.model_dump(mode='json',by_alias=True,exclude_none=True):
                 raise ValueError('snapshot recovery receipt is not current')
             body=receipt['body']
-            if actor!=body['executor']:raise PermissionError('original recovery executor required')
+            if actor!=body['executor']:raise OriginalRecoveryExecutorDenied('original recovery executor required')
             definition_ref=PipelineExactRef.model_validate(body['currentDefinitionRef'])
             identifier=_ref_identity(definition_ref,'SnapshotScheduleDefinitionRevision','snapshot-schedule-')
             conn.execute('''SELECT revision FROM public.pipeline_snapshot_schedule_definition_head
@@ -82,7 +94,7 @@ class SnapshotGroupRecoveryAuthority:
                     or self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
                         installation_id=definition['body']['installationId'],generation=definition['body']['generation'],
                         actor=actor) is not True):
-                raise PermissionError('current recovery definition permission required')
+                raise CurrentRecoveryDefinitionDenied('current recovery definition permission required')
             current_bindings=self._definitions._saved_bindings(conn,scope,definition['body'])
             latest=PipelineScheduleControlOwner.read_latest_many(
                 conn,scope=scope,schedule_ids=tuple(b.schedule_id for b in current_bindings))
@@ -177,7 +189,7 @@ class SnapshotGroupRecoveryAuthority:
         if receipt['ref']!=self._ref.model_dump(mode='json',by_alias=True,exclude_none=True):
             raise ValueError('snapshot recovery receipt is not current')
         body=receipt['body']
-        if actor!=body['executor']:raise PermissionError('original recovery executor required')
+        if actor!=body['executor']:raise OriginalRecoveryExecutorDenied('original recovery executor required')
         facts=self._facts.read(conn,scope=scope,group_id=self._group_id,actor=body['actor'],
             expected_manifest_hash=body['inputManifestHash'])
         if (facts.definition['ref']!=body['originalDefinitionRef'] or facts.source_claim_hash!=body['originalSourceClaimHash']
@@ -207,7 +219,7 @@ class SnapshotGroupRecoveryAuthority:
                 raise ValueError('saved recovery transfer authority differs')
         if self._definitions._permission(conn,org_id=scope.org_id,project_id=scope.project_id,
                 installation_id=definition['body']['installationId'],generation=definition['body']['generation'],actor=actor) is not True:
-            raise PermissionError('current recovery executor permission required')
+            raise CurrentRecoveryExecutorDenied('current recovery executor permission required')
         if definition['body']['executor']!=actor or definition['body']['policyRef']!=body['policyRef']:
             raise ValueError('recovery definition actor or policy differs')
         bindings=self._definitions._saved_bindings(conn,scope,definition['body'])
