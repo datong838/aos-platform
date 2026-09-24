@@ -973,13 +973,18 @@ def test_commit_function_itself_rejects_current_approval_drift(database):
     ).fetchone()["n"] == 9
 
 
-def test_expired_inflight_approval_can_refresh_once_without_rewriting_prepare(database):
+@pytest.mark.parametrize("post_commit", [False, True])
+def test_expired_inflight_approval_can_refresh_once_without_rewriting_prepare(
+    database, post_commit,
+):
     scope = TenantScope("org-org", "dev-project")
     prepare_request = _seed(database, scope, pending_receipt=False)
     store = EcommerceGrowthCutoverStore(_connection(database), schema=database.schema)
     prepared = store.prepare_activation(scope, prepare_request, actor="runtime-owner")
     commit_request = _commit_request(prepared)
     store.begin_activation_commit(scope, commit_request, actor="runtime-owner")
+    if post_commit:
+        store.commit_activation(scope, commit_request, actor="runtime-owner")
     database.owner.execute("UPDATE aip_action_approval_event SET expires_at=NOW()-interval '1 second'")
     database.owner.execute(
         "INSERT INTO aip_action_proposal SELECT org_id,project_id,'proposal-refresh',action_type_id,"
@@ -1012,10 +1017,24 @@ def test_expired_inflight_approval_can_refresh_once_without_rewriting_prepare(da
             "revision": approval["proposal_version"],
             "contentHash": canonical_hash(dict(approval), prefixed=True)},
     )
+    if post_commit:
+        database.owner.execute(
+            "UPDATE extension_dispatch_claim_gate SET claim_paused=false"
+        )
+        with pytest.raises(EcommerceGrowthCutoverConflict, match="claim gate finalization drifted"):
+            store.refresh_activation_approval(scope, refresh, actor="runtime-owner")
+        database.owner.execute(
+            "UPDATE extension_dispatch_claim_gate SET claim_paused=true"
+        )
     receipt = store.refresh_activation_approval(scope, refresh, actor="runtime-owner")
     assert receipt.replayed is False
     assert store.refresh_activation_approval(scope, refresh, actor="runtime-owner").replayed is True
     assert store.commit_activation(scope, commit_request, actor="runtime-owner").status == "committed"
+    if post_commit:
+        committed = store.commit_activation(scope, commit_request, actor="runtime-owner")
+        assert store.validate_activation(
+            scope, _finalize_request(committed), actor="runtime-owner"
+        ).status == "validated"
     assert database.owner.execute(
         "SELECT count(*) AS n FROM extension_dispatch_cutover_approval_refresh_receipt"
     ).fetchone()["n"] == 1

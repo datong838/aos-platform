@@ -641,8 +641,22 @@ class EcommerceGrowthCutoverStore:
                     prepareReceiptRef=request.prepare_receipt_ref,
                 ),
             )
-            if operation["status"] not in {"prepared", "draining"}:
-                raise EcommerceGrowthCutoverBlocked("cutover approval can only refresh before commit")
+            if operation["status"] in {"committed", "validated"}:
+                # The committed routes may wait behind a paused claim gate while
+                # a short-lived approval expires.  Re-authorize only that exact
+                # frozen state; never revive an unfenced or resumed cutover.
+                self._lock_final_authority(
+                    conn, scope, operation, prepare, resumed=False,
+                    check_activation_approval=False, actor=actor,
+                )
+                facts = self._execution_facts(conn, scope, prepare)
+                if (facts["claimedOccurrences"] or facts["claimedAttempts"]
+                        or facts["runningRuntimeAttempts"]):
+                    raise EcommerceGrowthCutoverBlocked(
+                        "cutover target execution is not drained"
+                    )
+            elif operation["status"] not in {"prepared", "draining"}:
+                raise EcommerceGrowthCutoverBlocked("cutover approval refresh window is closed")
             if request.approval_ref == prepare.approval_ref:
                 raise EcommerceGrowthCutoverBlocked("a new current cutover approval is required")
             reconstructed = CutoverPrepareRequest(
