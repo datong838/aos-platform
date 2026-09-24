@@ -5,8 +5,8 @@
 ## 文件级九步
 
 1. 复习 `a0v_045` group journal、`a0v_091` effectEvidence、native input fixture、231 A0-V 与原真实关闭停止条件。
-2. 文件清单：本方案；按可行性最小修改 `services/aos-api/tests/extension_runtime/test_a0v_w5c5a_remaining_effects_pg.py`，或若原合同不允许无源 fixture，则只新增本波只读诊断/verification；生产 Owner/迁移不改。
-3. 优先复用隔离库原受控 ingress Owner 的**命名合成来源**（绝不连商城）为同一 12 Run 持久化 group input/ingress command；若必须跨不可逆提交或会导致真实源副作用，停止这条测试路径并记录缺口。
+2. 文件清单：本方案；优先在 `services/aos-api/tests/extension_runtime/test_a0v_w5c4z_nonzero_effects_pg.py` 参数化现有隔离 fixture，加一个无源空观察变体；若原合同不允许，则只新增本波只读诊断/verification。生产 Owner/迁移不改。
+3. 优先复用隔离库原受控 ingress Journal 的合法 **empty observation**（不触碰商城或合成源读取）为同一 12 Run 保存 ingress command，并构造符合原 journal 约束的 group input；若必须跨不可逆提交或会导致真实源副作用，停止这条测试路径并记录缺口。
 4. 专项验证 Receipt 的相应 effectEvidence 非零且历史行不变；失败要区分环境/fixture 与生产缺陷，不能直接改生产 SQL 绕过门。
 5. 跑 W5c3/W5c4/W5c5a 有界累计回归，隔离测试库停用；中止的更宽慢集不算 GREEN。
 6. 浏览器只读验收 12 计划与整组入口，页面不可代替 DB 独立证据。
