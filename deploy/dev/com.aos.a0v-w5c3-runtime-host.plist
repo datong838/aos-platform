@@ -19,7 +19,7 @@
   </array>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>PATH</key><string>/Users/ddt/.docker/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     <key>PYTHONUNBUFFERED</key><string>1</string>
   </dict>
   <key>RunAtLoad</key><true/>
