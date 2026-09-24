@@ -19,3 +19,7 @@
 ## 15:32 UTC 离线预审逐样本连续性补强（仍非终态）
 
 方案先行提交 `07129ee0`；随后专项测试先 RED（缺 `assess_series`），再仅改离线预审及测试。CLI 现在逐条核时间递增、观察状态、原 rev3 定义与 worker/Host、held/九路/门禁/十二 schedule/canary，以及 claim/attempt 唯一 ID 不消失不更替；任一中途异常即冻结，即使末条看似正常。有效中间 `RUNNING` 样本仍只产生独立审计候选。原观察器与新专项合计 `15 passed`，`py_compile`、`git diff --check` 通过。15:32 UTC 私有真样预审仍为 `NOT_TERMINAL_NO_ACTION`；原 worker PID37241、观察器 PID39134 存活，最新 rev3 enabled、12 schedule、claim0/attempt0、Store26、live link0、pending0、canary0。无业务请求、无运行态改动；仍须等待正式终态和独立 DB 验收。
+
+## 17:44 UTC 无人值守九步门与累计回归环境阻断（仍非终态）
+
+用户追加固定九步闭环，已先在本波方案 `583908b0` 落文件级范围、浏览器验收、上下文/Prime 确定性同步和下一波分流。尝试 `PYTHONPATH=scripts ... pytest -q test_a0v_w5c3*.py test_a0v_w5c4r*.py`：59 个用例均在 session 自动隔离数据库夹具连接 `127.0.0.1:5433` 时出错，**未进入测试逻辑，不能记为代码回归失败或通过**。本机该端口无监听；测试专用 `aos-dev-pg` 容器在 17:26 UTC 以 exit 0 停止，映射 5433。没有设置 `AOS_TEST_USE_SHARED_DATABASE=1`，没有重启容器或改变自然运行拓扑；待自然终态后恢复隔离测试库重跑。17:43 UTC 原观察器/18181 仍存活且私有样本继续 `WAITING_FOR_NATURAL_TERMINAL`、claim0/attempt0/canary0。项目共享记忆状态虽报 `GREEN_WITH_WARNINGS`，authority 仍为旧 `AOS-000574`，不能当作当前 W5c4r 进度；`docs` 目标文件已有未提交改动，终态后必须精确 CAS/暂存、保护其他工作。
