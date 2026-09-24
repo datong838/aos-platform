@@ -92,3 +92,24 @@ def test_attached_generation_with_regressed_epoch_cannot_silently_skip_retiremen
             EcommerceGrowthDisableDependent(schema=database.schema).after_runtime_fenced(
                 conn,org_id=scope.org_id,project_id=scope.project_id,runtime_operation_id=op.operation_id)
     assert database.owner.execute('SELECT count(*) AS n FROM extension_dispatch_lifecycle_receipt').fetchone()['n']==0
+
+
+def test_retired_read_lock_is_runtime_only_and_requires_exact_fencing_disable(database):
+    scope = TenantScope('org-org', 'dev-project')
+    request, _ = _resumed_activation(database, scope)
+    assert database.owner.execute(
+        "SELECT has_table_privilege('aos_runtime', %s, 'UPDATE') AS allowed",
+        (f'{database.schema}.extension_dispatch_cutover_operation',),
+    ).fetchone()['allowed'] is False
+    with pytest.raises(Exception, match='exact running disable fence is required'):
+        with _connection(database, runtime=True)(scope) as conn:
+            conn.execute(
+                f'SELECT {database.schema}.extension_dispatch_retired_read_lock_a0v_092(%s,%s)',
+                (uuid4(), request.cutover_operation_id),
+            )
+    with pytest.raises(Exception, match='permission denied'):
+        with _connection(database)(scope) as conn:
+            conn.execute(
+                f'SELECT {database.schema}.extension_dispatch_retired_read_lock_a0v_092(%s,%s)',
+                (uuid4(), request.cutover_operation_id),
+            )

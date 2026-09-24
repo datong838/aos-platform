@@ -216,7 +216,8 @@ class EcommerceGrowthDisableDependent:
         # has been formally detached.  It is not a new fence authority merely
         # because a later configuration revision matches the runtime binding.
         if (not succeeded_recovery and len(activations) == 1
-                and self._retired_dispatch_group(conn, scope, activations[0])):
+                and self._retired_dispatch_group(
+                    conn, scope, runtime_operation_id, activations[0])):
             activations = []
         if not activations:
             attached = conn.execute(
@@ -473,14 +474,19 @@ class EcommerceGrowthDisableDependent:
         return dict(row)
 
     def _retired_dispatch_group(
-        self, conn: Any, scope: TenantScope, activation: dict[str, Any]
+        self, conn: Any, scope: TenantScope, runtime_operation_id: UUID,
+        activation: dict[str, Any]
     ) -> bool:
         """Recognize only a fully detached, effect-free historical activation."""
         activation_id = activation["cutover_operation_id"]
         group_id = activation["cutover_group_id"]
+        conn.execute(
+            f"SELECT {self._schema}.extension_dispatch_retired_read_lock_a0v_092(%s,%s)",
+            (runtime_operation_id, activation_id),
+        )
         current = conn.execute(
             f"""SELECT status FROM {self._schema}.extension_dispatch_cutover_operation
-                  WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s FOR UPDATE""",
+                  WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s""",
             (*scope.key, activation_id),
         ).fetchone()
         if current is None or current["status"] != "resumed":
@@ -488,7 +494,7 @@ class EcommerceGrowthDisableDependent:
         rows = conn.execute(
             f"""SELECT * FROM {self._schema}.extension_operation_dispatch_binding
                   WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
-                  ORDER BY operation_id FOR UPDATE""",
+                  ORDER BY operation_id""",
             (*scope.key, group_id),
         ).fetchall()
         if (len(rows) != len(ECOMMERCE_GROWTH_OPERATIONS)

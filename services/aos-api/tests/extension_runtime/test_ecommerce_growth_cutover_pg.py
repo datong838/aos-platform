@@ -203,6 +203,7 @@ def database():
         _migration(root, "ar2_016_ecommerce_growth_cutover_rollback.py", owner, schema=schema)
         _migration(root, "ar2_017_ecommerce_growth_disable_detach.py", owner, schema=schema)
         _migration(root, "ar2_018_runtime_uninstall_authority.py", owner, schema=schema)
+        _migration(root, "a0v_092_retired_dispatch_read_lock.py", owner, schema=schema)
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_extension_maintainer").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_runtime").format(sql.Identifier(schema)))
         owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO aos_app").format(sql.Identifier(schema)))

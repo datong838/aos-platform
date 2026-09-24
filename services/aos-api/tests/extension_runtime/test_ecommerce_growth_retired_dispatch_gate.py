@@ -31,6 +31,8 @@ class _Connection:
         self.status = status
 
     def execute(self, query, _params):
+        if "extension_dispatch_retired_read_lock_a0v_092" in query:
+            return _Result(None)
         if "FROM public.extension_dispatch_cutover_operation" in query:
             return _Result({"status": self.status})
         if "FROM public.extension_operation_dispatch_binding" in query:
@@ -61,7 +63,8 @@ def test_only_complete_detached_legacy_group_is_recognized(monkeypatch):
     checked = []
     monkeypatch.setattr(owner, "_assert_recovery_drained", lambda *_: checked.append(True))
     assert owner._retired_dispatch_group(_Connection(rows=_rows()),
-                                         TenantScope("org-org", "dev-project"), _activation())
+                                         TenantScope("org-org", "dev-project"), uuid4(),
+                                         _activation())
     assert checked == [True]
 
 
@@ -86,7 +89,8 @@ def test_incomplete_retirement_never_skips_current_gate(monkeypatch, change):
     owner = EcommerceGrowthDisableDependent()
     monkeypatch.setattr(owner, "_assert_recovery_drained", lambda *_: pytest.fail("not retired"))
     assert not owner._retired_dispatch_group(_Connection(**options),
-                                             TenantScope("org-org", "dev-project"), _activation())
+                                             TenantScope("org-org", "dev-project"), uuid4(),
+                                             _activation())
 
 
 def test_unresolved_attempt_blocks_retired_noop(monkeypatch):
@@ -96,7 +100,8 @@ def test_unresolved_attempt_blocks_retired_noop(monkeypatch):
     monkeypatch.setattr(owner, "_assert_recovery_drained", blocked)
     with pytest.raises(EcommerceGrowthLifecycleBlocked, match="unresolved attempt"):
         owner._retired_dispatch_group(_Connection(rows=_rows()),
-                                      TenantScope("org-org", "dev-project"), _activation())
+                                      TenantScope("org-org", "dev-project"), uuid4(),
+                                      _activation())
 
 
 def test_multiple_matched_activations_never_take_retired_shortcut(monkeypatch):
