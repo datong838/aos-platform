@@ -9,7 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from aos_api.auth import Principal, require_principal
-from aos_api.errors import ApiError
+from aos_api.errors import ApiError, is_not_found_code
 from aos_api.gantt import GanttError, get_engine, list_allocation_behaviors
 from aos_api.tenant_scope import TenantScope
 
@@ -18,7 +18,10 @@ PrincipalDep = Annotated[Principal, Depends(require_principal)]
 
 
 def _map_error(err: GanttError) -> ApiError:
-    return ApiError(code=err.code, message=err.message, status_code=400)
+    # NOTE(not-found-status)：``GanttError`` 发**裸** ``NOT_FOUND``（调度不存在），
+    # 按平台约定应映射为 404；``INVALID_HORIZON`` 仍是 400。此前一律硬编码 400。
+    status = 404 if is_not_found_code(err.code) else 400
+    return ApiError(code=err.code, message=err.message, status_code=status)
 
 
 @router.get("/v1/scheduling/gantt")

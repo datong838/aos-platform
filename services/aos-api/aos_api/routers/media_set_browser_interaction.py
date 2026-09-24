@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from aos_api.auth import Principal, require_principal
-from aos_api.errors import ApiError
+from aos_api.errors import ApiError, is_not_found_code
 from aos_api.media_set_browser_interaction import (
     BrowserError,
     InteractionError,
@@ -21,12 +21,16 @@ router = APIRouter(prefix="/media-set-browser-interaction", tags=["media-set-bro
 
 
 def _is_not_found(code: str) -> bool:
-    """Engines emit ``MEDIA_SET_NOT_FOUND`` / ``ITEM_NOT_FOUND`` / ``VIEW_NOT_FOUND``
-    / ``JOB_NOT_FOUND`` -- never a bare ``NOT_FOUND``. Matching only the bare code
-    made the 404 branch dead code, so not-found answers silently degraded to 400
-    on every call site that relied on the default status (found 2026-09-24).
+    """本模块的 not-found 判定：委托给平台共享判据（单一权威）。
+
+    Engines emit ``MEDIA_SET_NOT_FOUND`` / ``ITEM_NOT_FOUND`` / ``VIEW_NOT_FOUND``
+    / ``JOB_NOT_FOUND``. Matching only the bare code made the 404 branch dead code,
+    so not-found answers silently degraded to 400 on every call site that relied on
+    the default status (found 2026-09-24). The shared predicate additionally accepts
+    a bare ``NOT_FOUND`` (other engines emit it, e.g. ``gantt.GanttError``) and
+    rejects misspellings like ``XNOT_FOUND``.
     """
-    return code.endswith("NOT_FOUND")
+    return is_not_found_code(code)
 
 
 def _map_browser_error(err: BrowserError, status: int = 400) -> ApiError:

@@ -64,6 +64,22 @@ class ApiError(Exception):
         return error_payload(code=self.code, message=self.message, details=self.details)
 
 
+def is_not_found_code(code: str) -> bool:
+    """判断领域错误码是否表达「资源不存在」语义（按其映射到 404）。
+
+    平台的既有约定是「不存在的资源 → 404 + ``*_NOT_FOUND`` 码」：线上全量扫掠
+    实测 **537 处 404 vs 7 处 400**，故把 400 的那几处视为映射缺陷而非约定差异。
+
+    必须同时认两种形态，缺一即产生「404 分支从写下那天就是死代码」：
+    - 后缀式 ``MEDIA_SET_NOT_FOUND`` / ``ITEM_NOT_FOUND`` / ``SESSION_NOT_FOUND``；
+    - **裸 ``NOT_FOUND``**（部分引擎直接发裸码，如 ``gantt.GanttError``）。
+
+    不要用 ``code.endswith("NOT_FOUND")`` 代替：它会误收 ``XNOT_FOUND`` 这类拼写。
+    """
+
+    return code == "NOT_FOUND" or code.endswith("_NOT_FOUND")
+
+
 def aip_error(
     code: str,
     message: str,

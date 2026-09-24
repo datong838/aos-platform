@@ -7,14 +7,18 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from aos_api.errors import ApiError
+from aos_api.errors import ApiError, is_not_found_code
 from aos_api.web_ide import IdeError, get_engine
 
 router = APIRouter(tags=["web-ide"])
 
 
 def _map_error(err: IdeError) -> ApiError:
-    return ApiError(code=err.code, message=err.message, status_code=400)
+    # NOTE(not-found-status)：``IdeError`` 发 ``SESSION_NOT_FOUND`` / ``FILE_NOT_FOUND``，
+    # 按平台约定（539 处 404 vs 7 处 400）必须映射为 404；此前一律硬编码 400，
+    # 使 5 个 web-ide 端点把「资源不存在」当成请求错误返回。
+    status = 404 if is_not_found_code(err.code) else 400
+    return ApiError(code=err.code, message=err.message, status_code=status)
 
 
 class CreateSessionRequest(BaseModel):

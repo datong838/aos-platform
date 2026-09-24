@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from aos_api.errors import ApiError
+from aos_api.errors import ApiError, is_not_found_code
 from aos_api.object_explorer import (
     ExplorerDesign,
     ExplorerError,
@@ -23,7 +23,11 @@ router = APIRouter(tags=["object-explorer"])
 
 
 def _map_error(err: ExplorerError) -> ApiError:
-    return ApiError(code=err.code, message=err.message, status_code=400)
+    # NOTE(not-found-status)：not-found 语义必须映射为 404（平台约定：
+    # 线上实测「NOT_FOUND 类码」为 404×537 / 400×7，那 7 处是映射缺陷）。
+    # 共享判据只对 NOT_FOUND / *_NOT_FOUND 生效，其余码的状态码行为完全不变。
+    status = 404 if is_not_found_code(err.code) else 400
+    return ApiError(code=err.code, message=err.message, status_code=status)
 
 
 class MetricIn(BaseModel):
