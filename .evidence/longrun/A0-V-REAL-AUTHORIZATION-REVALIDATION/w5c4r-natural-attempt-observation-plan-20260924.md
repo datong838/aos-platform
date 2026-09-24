@@ -18,3 +18,7 @@ W5c4q `4ad6643f` 定义 rev3 enabled、12 schedule on，下一官方时区 slot 
 ## 等待期可并行完成的本波离线终态预审
 
 不改、不重启正在运行的 18181 worker、Runtime Host 和 W5c4r 观察器。新增 `scripts/a0v_w5c4r_terminal_assessment.py`，只读取本波私有 0600 采样 JSONL 与 W5c4q 冻结 intent/result；绝不连接商城源、发 HTTP、调用 `run_definition` 或写业务库。精确核一个启用前 baseline、一个最新正式终态、同一 rev3 定义、cron slot、唯一 group/attempt、12 Run 与 Store/link/projection 的**增量**；缺字段、身份不符或未知副作用一律 `FROZEN_ASSESSMENT_BOUNDARY`。成功只输出 `SUCCEEDED_REQUIRES_INDEPENDENT_AUDIT`，deadline 且 12 Run running/零增量只输出 `FAILED_PRESTORE_CANDIDATE_REQUIRES_INDEPENDENT_AUDIT`；二者均不授权自动恢复或宣告 GREEN。专项测试覆盖两条候选路径、非 cron/第二 attempt/Store 增量拒绝。正式终态后还必须独立 DB 回读并落最终 verification，才能收口。修改范围仅新脚本及 `services/aos-api/tests/extension_runtime/test_a0v_w5c4r_terminal_assessment.py`；回滚为不调用该离线预审，不触碰运行态。
+
+## 等待期离线预审连续性补强
+
+首尾对比不足以排除中途曾冻结、身份漂移、额外 claim/attempt 后又消失的情况。预审须顺序核对**全部**私有采样：时间严格递增、观察状态在末条正式终态前始终为等待、定义/worker/Host/九路/门禁/十二 schedule/canary/held 稳定、claim 与 attempt 数量不超过一且一旦出现其 ID 不再变更或消失。任一缺字段或中途异常均只输出 `FROZEN_ASSESSMENT_BOUNDARY`，不提供成功或预存储失败候选。专项测试先复现中途冻结和 ID 更替，再做最小实现；CLI 仍为纯离线建议，不替代独立数据库验收。仅修改同一离线脚本和专项测试，不改变观察器或业务运行态。
