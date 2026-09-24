@@ -50,6 +50,9 @@ def inventory():
           l.activation_operation_id::text,
           o.status AS disable_status,o.phase AS disable_phase,
           b.enabled,b.operation_fence,b.desired_state,b.observed_state,
+          (SELECT i.active_revision FROM bundle_installation i
+           WHERE i.org_id=a.org_id AND i.project_id=a.project_id
+           AND i.installation_id=a.target_installation_id) AS old_active_revision,
           (SELECT count(*) FROM extension_runtime_resource_lease lease
            WHERE lease.org_id='org-org' AND lease.project_id='dev-project'
            AND lease.generation=b.generation AND
@@ -96,6 +99,9 @@ def inventory():
           AND table_name=ANY(%s) ORDER BY table_name,ordinal_position""",
           (["pipeline_runtime_control_revision", "pipeline_schedule_control_binding",
             "pipeline_snapshot_schedule_definition_head"],)).fetchall()]
+        definition = conn.execute("""SELECT pg_get_functiondef(
+          'public.extension_dispatch_successor_register_a0v_056(jsonb,text)'::regprocedure)
+          AS body""").fetchone()["body"]
     if len(routes) != 9 or any(row["handler_kind"] != "legacy" or
             row["operation_fence"] is not True for row in routes):
         raise ValueError("W5C3N_ROUTE_GATE_DRIFT")
@@ -109,6 +115,10 @@ def inventory():
             "currentDetachAuthority": dict(current_detach) if current_detach else None,
             "newInstallationControls": dict(controls),
             "definitionHeads": definitions, "oldSchedules": schedules,
+            "uninstalledSuccessorGuardLoaded": all(token in definition for token in
+              ("v_old_binding.desired_state='uninstalled'",
+               "v_old_binding.observed_state='stopped'",
+               "i.active_revision IS NULL AND r.state='uninstalled'")),
             "metadataColumns": columns}
 
 
