@@ -60,6 +60,38 @@ PY
 )"
 }
 
+LAUNCHD_LABEL="com.aos.a0v-api-8080"
+launchd_managed() {
+  launchctl list 2>/dev/null | awk -v label="$LAUNCHD_LABEL" '$3 == label { found=1 } END { exit !found }'
+}
+
+launchd_owner_exact() {
+  local job_pid listener_pid
+  job_pid="$(launchctl list 2>/dev/null | awk -v label="$LAUNCHD_LABEL" '$3 == label && $1 ~ /^[0-9]+$/ { print $1 }')"
+  listener_pid="$(lsof -nP -t -iTCP:8080 -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -z "$job_pid" ] || [ "$listener_pid" != "$job_pid" ]; then
+    return 1
+  fi
+  printf '%s\n' "$job_pid" > "$PID_DIR/aos-api.pid"
+  runtime_owner_exact
+}
+
+if launchd_managed; then
+  if [ "$RESTART" = "1" ]; then
+    launchctl kickstart -k "gui/$(id -u)/$LAUNCHD_LABEL"
+  fi
+  for _ in $(seq 1 45); do
+    if curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null \
+      && launchd_owner_exact; then
+      echo "OK  aos-api launchd owner verified"
+      exit 0
+    fi
+    sleep 1
+  done
+  echo "FAIL managed aos-api owner or health differs; no fallback process started"
+  exit 1
+fi
+
 if [ "$RESTART" = "0" ] \
   && curl -sf --max-time 2 http://127.0.0.1:8080/v1/health >/dev/null \
   && runtime_owner_exact; then
@@ -101,6 +133,11 @@ export AOS_ENSURE_ROOT="$ROOT"
 export AOS_ENSURE_OUT="$LOG_DIR/aos-api.out.log"
 export AOS_ENSURE_ERR="$LOG_DIR/aos-api.err.log"
 export AOS_ENSURE_PID="$PID_DIR/aos-api.pid"
+export AOS_ENSURE_PYTHON="$ROOT/services/aos-api/.venv/bin/python"
+if [ ! -x "$AOS_ENSURE_PYTHON" ]; then
+  echo "FAIL aos-api workspace Python unavailable"
+  exit 1
+fi
 
 # start_new_session=True → 脱离 Cursor/Agent 进程组
 python - <<'PY'
@@ -114,7 +151,7 @@ env = os.environ.copy()
 with open(out_log, "ab") as out, open(err_log, "ab") as err:
     p = subprocess.Popen(
         [
-            sys.executable,
+            os.environ["AOS_ENSURE_PYTHON"],
             "-m",
             "uvicorn",
             "aos_api.main:app",

@@ -200,3 +200,22 @@ def test_ensure_api_already_up_path_requires_exact_runtime_owner() -> None:
 
     assert "runtime_owner_exact()" in source
     assert "&& runtime_owner_exact; then" in source
+
+
+def test_ensure_api_starts_with_workspace_python() -> None:
+    script = Path(__file__).parents[1] / "ensure-api.sh"
+    source = script.read_text(encoding="utf-8")
+
+    assert 'export AOS_ENSURE_PYTHON="$ROOT/services/aos-api/.venv/bin/python"' in source
+    assert 'os.environ["AOS_ENSURE_PYTHON"]' in source
+
+
+def test_ensure_api_prefers_launchd_owner_before_fallback_restart() -> None:
+    script = Path(__file__).parents[1] / "ensure-api.sh"
+    source = script.read_text(encoding="utf-8")
+
+    assert 'LAUNCHD_LABEL="com.aos.a0v-api-8080"' in source
+    assert 'if launchd_managed; then' in source
+    assert 'launchctl kickstart -k "gui/$(id -u)/$LAUNCHD_LABEL"' in source
+    assert source.index('if launchd_managed; then') < source.index('\nstop_api\n')
+    assert '&& launchd_owner_exact; then' in source
