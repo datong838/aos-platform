@@ -2,6 +2,9 @@
 import asyncio
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
+import re
+import traceback
 
 from .journaled_session import _settle
 from .lifecycle_store import RuntimeOperationStore, RuntimeConflict, _values
@@ -14,7 +17,32 @@ from .signed_session import open_signed_session, open_existing_signed_session
 from .verification_commit import commit_verified
 from .enable_commit import commit_enabled
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
+
+_LOG = get_logger("aos-api.extension-runtime.preparation-worker")
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+_SAFE_SYMBOL = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,79}$")
+
+
+def _safe_failure_trace(error):
+    """Bounded code locations only; never exception values or frame locals."""
+    chain, seen = [], set()
+    while error is not None and id(error) not in seen and len(chain) < 4:
+        seen.add(id(error))
+        name = type(error).__name__
+        frames = []
+        for frame in traceback.extract_tb(error.__traceback__)[-8:]:
+            try:
+                path = str(Path(frame.filename).relative_to(_REPOSITORY_ROOT))
+            except ValueError:
+                path = "<external>"
+            function = frame.name if _SAFE_SYMBOL.fullmatch(frame.name) else "<unknown>"
+            frames.append((path, function, frame.lineno))
+        chain.append({"type": name if _SAFE_SYMBOL.fullmatch(name) else "UnknownError",
+                      "frames": frames})
+        error = error.__cause__ if error.__cause__ is not None else error.__context__
+    return chain
 
 
 class PreparedJob:
@@ -46,6 +74,11 @@ class PreparedJob:
         except BaseException as exc:
             original=exc
             if isinstance(exc,TimeoutError):code='PREPARATION_EXPIRED'
+            if not self._stopping and not isinstance(exc, asyncio.CancelledError):
+                try:
+                    _LOG.error("preparation_failed_safe_trace=%s", _safe_failure_trace(exc))
+                except Exception:
+                    pass  # Diagnostics must never alter resource finalization.
         if self._stopping:code='PREPARATION_STOPPED'
         try:
             _,cancelled=await _settle(asyncio.create_task(asyncio.to_thread(self._finalize,code)))
