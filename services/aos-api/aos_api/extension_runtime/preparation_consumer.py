@@ -21,7 +21,7 @@ class PreparationDeliveryResult:
 
 class PreparationConsumer:
     def __init__(self,*,connect,worker,installation_id,org_id,project_id,live_directory=None,
-                 rehydrate=False):
+                 rehydrate=False,host_lease=None):
         self.tenant_scope=TenantScope(org_id,project_id)
         if not callable(connect) or not isinstance(worker,PreparationWorker):
             raise ValueError('trusted preparation worker and connection required')
@@ -32,6 +32,11 @@ class PreparationConsumer:
         self.scope=dict(org_id=org_id,project_id=project_id)
         self.installation=UUID(str(installation_id))
         self.connect,self.worker=connect,worker
+        if host_lease is not None:
+            from .host_lease import OptInHostLease
+            if type(host_lease) is not OptInHostLease or host_lease.scope != self.tenant_scope:
+                raise TypeError('exact PreparationConsumer Host lease scope required')
+        self.host_lease=host_lease
         self.live_directory=live_directory
         if type(rehydrate) is not bool:raise TypeError('exact rehydrate mode required')
         self.rehydrate=rehydrate
@@ -53,7 +58,8 @@ class PreparationConsumer:
         return status,phase,revision
 
     def _claim(self):
-        with consumer_connection(self.connect,self.scope) as conn:
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        with consumer_connection(self.connect,self.scope,fence=fence) as conn:
             return self.outbox.claim(conn,**self.scope,operation_kind='runtime-apply',installation_id=self.installation)
 
     def _read(self,lease):
@@ -61,7 +67,8 @@ class PreparationConsumer:
             return self._current(conn,lease.operation_id)
 
     def _finish(self,lease):
-        with consumer_connection(self.connect,self.scope) as conn:
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        with consumer_connection(self.connect,self.scope,fence=fence) as conn:
             status,_,_=self._current(conn,lease.operation_id)
             terminal=status in ('succeeded','failed','cancelled')
             if terminal:self.outbox.ack(conn,**self.scope,lease=lease)

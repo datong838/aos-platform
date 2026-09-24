@@ -7,7 +7,7 @@ from .storage_ports import require_runtime_role
 
 
 @contextmanager
-def consumer_connection(connect,scope):
+def consumer_connection(connect,scope,*,fence=None):
     with connect() as conn:
         if conn.info.transaction_status!=TransactionStatus.IDLE:
             raise RuntimeConflict('consumer requires an independent idle connection')
@@ -18,4 +18,6 @@ def consumer_connection(connect,scope):
             require_runtime_role(conn,**scope,protected_tables=('extension_runtime_operation','extension_runtime_outbox','extension_runtime_event'))
             conn.execute("SET LOCAL lock_timeout='1s'")
             conn.execute("SET LOCAL statement_timeout='10s'")
+            if fence is not None:
+                fence(conn,scope)
             yield conn

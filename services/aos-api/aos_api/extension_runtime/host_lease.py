@@ -31,6 +31,10 @@ class OptInHostLease:
         self._token: UUID | None = None
         self._epoch: int | None = None
 
+    @property
+    def scope(self) -> TenantScope:
+        return self._scope
+
     def _call(self, statement: str, values: tuple):
         try:
             with self._connect() as conn:
@@ -75,6 +79,23 @@ class OptInHostLease:
             "SELECT public.extension_runtime_host_lease_release_a0v_093(%s,%s,%s,%s)",
             (*self._scope.key, self._token, self._epoch),
         )
+
+    def fence_in_transaction(self, conn, scope: dict) -> None:
+        """Use the caller's existing runtime transaction, never a separate read."""
+        if (type(scope) is not dict or
+                (scope.get("org_id"), scope.get("project_id")) != self._scope.key or
+                self._token is None or self._epoch is None):
+            raise HostLeaseBlocked("HOST_LEASE_WORKER_FENCE_INPUT_DIFFERS")
+        try:
+            row = conn.execute(
+                "SELECT public.extension_runtime_host_lease_worker_fence_a0v_094"
+                "(%s,%s,%s,%s) AS expires_at",
+                (*self._scope.key, self._token, self._epoch),
+            ).fetchone()
+        except Exception:
+            raise HostLeaseBlocked("HOST_LEASE_WORKER_FENCE_REJECTED") from None
+        if row is None or row["expires_at"] is None:
+            raise HostLeaseBlocked("HOST_LEASE_WORKER_FENCE_READBACK_DIFFERS")
 
     async def renew_until_stopped(self, stop_event: asyncio.Event) -> None:
         if self._epoch is None:
