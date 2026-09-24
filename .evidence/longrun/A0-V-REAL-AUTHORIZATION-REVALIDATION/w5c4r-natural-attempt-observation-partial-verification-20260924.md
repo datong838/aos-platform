@@ -15,3 +15,7 @@
 ## 15:24 UTC 等待期离线终态预审（仍非终态）
 
 按本波方案增补 `277d0294`，仅新增 `scripts/a0v_w5c4r_terminal_assessment.py` 与专项测试；读取仓库外 0600 冻结 intent/result 和采样 JSONL，不连接 DB、HTTP 或商城源，不修改运行进程。测试先以缺模块 RED，再实现两条**只供独立复核**的候选分类：成功且 12 Run 正式收敛／Store 与 Link 有增量、deadline 失败且 12 Run running／Store-Link-投影零增量；非 cron、第二 attempt、失败后有 Store 增量、缺字段等均冻结。修复了实样预审暴露的“未到 slot 被误冻”分支，专项与原观察器合计 `10 passed`；`py_compile`、`git diff --check` 通过。对当前私有真样运行预审仅返回 `NOT_TERMINAL_NO_ACTION`。15:23 UTC 原 worker PID37241、原观察器 PID39134 均存活，最新仍 `WAITING_FOR_NATURAL_TERMINAL`、claim0/attempt0。预审不等于独立 DB 验证，不宣告 GREEN。
+
+## 15:32 UTC 离线预审逐样本连续性补强（仍非终态）
+
+方案先行提交 `07129ee0`；随后专项测试先 RED（缺 `assess_series`），再仅改离线预审及测试。CLI 现在逐条核时间递增、观察状态、原 rev3 定义与 worker/Host、held/九路/门禁/十二 schedule/canary，以及 claim/attempt 唯一 ID 不消失不更替；任一中途异常即冻结，即使末条看似正常。有效中间 `RUNNING` 样本仍只产生独立审计候选。原观察器与新专项合计 `15 passed`，`py_compile`、`git diff --check` 通过。15:32 UTC 私有真样预审仍为 `NOT_TERMINAL_NO_ACTION`；原 worker PID37241、观察器 PID39134 存活，最新 rev3 enabled、12 schedule、claim0/attempt0、Store26、live link0、pending0、canary0。无业务请求、无运行态改动；仍须等待正式终态和独立 DB 验收。

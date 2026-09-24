@@ -103,32 +103,73 @@ def assess(before: dict, after: dict, intent: dict, result: dict) -> dict:
         return _frozen(type(error).__name__)
 
 
+def assess_series(samples: list[dict], intent: dict, result: dict) -> dict:
+    """Reject transient authority drift hidden by an otherwise valid last sample."""
+    if not samples:
+        return _frozen("SAMPLES_EMPTY")
+    try:
+        last_time = None
+        group_id = attempt_id = None
+        for index, value in enumerate(samples):
+            observed = datetime.fromisoformat(value["observedAt"])
+            if last_time is not None and observed <= last_time:
+                return _frozen("SAMPLE_TIME_NOT_INCREASING")
+            last_time = observed
+            expected_observation = ("WAITING_FOR_NATURAL_TERMINAL"
+                                    if index < len(samples) - 1 else
+                                    value["observation"])
+            if (value["observation"] != expected_observation
+                    or value["observation"] not in {
+                        "WAITING_FOR_NATURAL_TERMINAL", "ATTEMPT_FORMAL_TERMINAL"}
+                    or not _same_definition(value, result)
+                    or value["workerPid"] != intent["workerPid"]
+                    or value["hostPid"] != intent["hostPid"]
+                    or value["workerState"] not in {"IDLE", "RUNNING"}
+                    or value["workerTaskAlive"] is not True
+                    or value["resourcesHeld"] is not True
+                    or any(value["facts"][key] != expected for key, expected in {
+                        "routes": 9, "unpaused_gate": 1,
+                        "schedules_enabled": 12, "canary": 0}.items())):
+                return _frozen("SAMPLE_AUTHORITY_OR_OBSERVATION_DIFFERS")
+            claims, attempts = value["claims"], value["attempts"]
+            if len(claims) > 1 or len(attempts) > 1:
+                return _frozen("SAMPLE_MULTIPLE_CLAIMS_OR_ATTEMPTS")
+            current_group = claims[0]["group_id"] if claims else None
+            current_attempt = attempts[0]["attempt_id"] if attempts else None
+            if ((group_id is not None and current_group != group_id)
+                    or (attempt_id is not None and current_attempt != attempt_id)
+                    or (claims and not current_group)
+                    or (attempts and not current_attempt)):
+                return _frozen("SAMPLE_CLAIM_OR_ATTEMPT_CHANGED")
+            group_id = current_group
+            attempt_id = current_attempt
+        return assess(samples[0], samples[-1], intent, result)
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        return _frozen(type(error).__name__)
+
+
 def _read_private(path: Path) -> dict:
     if not path.is_file() or S_IMODE(path.stat().st_mode) != 0o600:
         raise ValueError("W5C4R_PRIVATE_EVIDENCE_REQUIRED")
     return json.loads(path.read_text())
 
 
-def _samples() -> tuple[dict, dict]:
+def _samples() -> list[dict]:
     if not SAMPLES.is_file() or S_IMODE(SAMPLES.stat().st_mode) != 0o600:
         raise ValueError("W5C4R_PRIVATE_SAMPLES_REQUIRED")
-    first = last = None
+    samples = []
     with SAMPLES.open() as source:
         for line in source:
-            value = json.loads(line)
-            if first is None:
-                first = value
-            last = value
-    if first is None or last is None:
+            samples.append(json.loads(line))
+    if not samples:
         raise ValueError("W5C4R_SAMPLES_EMPTY")
-    return first, last
+    return samples
 
 
 def main() -> int:
     try:
-        before, after = _samples()
-        value = assess(before, after, _read_private(ENABLE / "intent.json"),
-                       _read_private(ENABLE / "result.json"))
+        value = assess_series(_samples(), _read_private(ENABLE / "intent.json"),
+                              _read_private(ENABLE / "result.json"))
     except (OSError, ValueError, TypeError, KeyError) as error:
         value = _frozen(type(error).__name__)
     print(json.dumps(value, ensure_ascii=False))

@@ -13,7 +13,9 @@ def _cases():
     result = {"ref": {"revision": 3, "contentHash": "sha256:current"}}
     before = {"observedAt": "2026-09-24T19:59:00+00:00",
               "observation": "WAITING_FOR_NATURAL_TERMINAL",
-              "workerPid": 37241, "hostPid": 17302,
+              "workerPid": 37241, "workerState": "IDLE",
+              "workerTaskAlive": True, "hostPid": 17302,
+              "resourcesHeld": True,
               "definition": {"revision": 3, "state": "enabled",
                              "content_hash": "sha256:current"},
               "claims": [], "attempts": [], "runGroups": [],
@@ -93,3 +95,66 @@ def test_failed_with_store_delta_freezes():
     after["facts"]["live_links"] = 0
 
     assert wave.assess(before, after, intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+
+
+def test_middle_frozen_sample_cannot_be_erased_by_terminal():
+    before, after, intent, result = _cases()
+    middle = deepcopy(before)
+    middle["observedAt"] = "2026-09-24T20:05:00+00:00"
+    middle["observation"] = "FROZEN_AUTHORITY_DRIFT"
+
+    value = wave.assess_series([before, middle, after], intent, result)
+
+    assert value["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+    assert value["automaticAction"] is False
+
+
+def test_valid_waiting_samples_remain_only_an_audit_candidate():
+    before, after, intent, result = _cases()
+    middle = deepcopy(before)
+    middle["observedAt"] = "2026-09-24T20:05:00+00:00"
+    middle["claims"] = deepcopy(after["claims"])
+    middle["attempts"] = deepcopy(after["attempts"])
+    middle["attempts"][0]["state"] = "running"
+    middle["workerState"] = "RUNNING"
+
+    value = wave.assess_series([before, middle, after], intent, result)
+
+    assert value["outcome"] == "SUCCEEDED_REQUIRES_INDEPENDENT_AUDIT"
+    assert value["automaticAction"] is False
+
+
+def test_middle_claim_change_or_disappearance_freezes():
+    before, after, intent, result = _cases()
+    middle = deepcopy(before)
+    middle["observedAt"] = "2026-09-24T20:05:00+00:00"
+    middle["claims"] = deepcopy(after["claims"])
+    middle["claims"][0]["group_id"] = "other"
+    assert wave.assess_series([before, middle, after], intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+
+    middle["claims"] = deepcopy(after["claims"])
+    after["claims"] = []
+    assert wave.assess_series([before, middle, after], intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+
+
+def test_middle_attempt_change_freezes():
+    before, after, intent, result = _cases()
+    middle = deepcopy(before)
+    middle["observedAt"] = "2026-09-24T20:05:00+00:00"
+    middle["claims"] = deepcopy(after["claims"])
+    middle["attempts"] = deepcopy(after["attempts"])
+    middle["attempts"][0]["attempt_id"] = "other"
+
+    assert wave.assess_series([before, middle, after], intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+
+
+def test_middle_identity_or_time_regression_freezes():
+    before, after, intent, result = _cases()
+    middle = deepcopy(before)
+    middle["observedAt"] = "2026-09-24T20:05:00+00:00"
+    middle["hostPid"] += 1
+    assert wave.assess_series([before, middle, after], intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
+
+    middle["hostPid"] = intent["hostPid"]
+    middle["observedAt"] = before["observedAt"]
+    assert wave.assess_series([before, middle, after], intent, result)["outcome"] == "FROZEN_ASSESSMENT_BOUNDARY"
