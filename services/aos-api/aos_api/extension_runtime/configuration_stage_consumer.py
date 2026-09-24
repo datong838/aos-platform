@@ -84,11 +84,14 @@ def _complete(conn, scope, identity, *, state, result, failure):
 class ConfigurationStageConsumer:
     """Production entry point with the original closed AIP authority composition."""
 
-    def __init__(self, *, connect, authorize):
+    def __init__(self, *, connect, authorize, host_lease=None):
         from .configuration_authorization import CurrentFourSourceConfigurationAuthorization
-        if not callable(connect) or type(authorize) is not CurrentFourSourceConfigurationAuthorization:
+        from .host_lease import OptInHostLease
+        if (not callable(connect) or type(authorize) is not CurrentFourSourceConfigurationAuthorization
+                or (host_lease is not None and type(host_lease) is not OptInHostLease)):
             raise TypeError('concrete current four-source Host authorization required')
         self.connect, self.authorize = connect, authorize
+        self.host_lease = host_lease
 
     def run_once(self, *, org_id, project_id):
         from aos_api.tenant_scope import TenantScope
@@ -96,7 +99,8 @@ class ConfigurationStageConsumer:
         from .storage_ports import require_runtime_role
         TenantScope(org_id, project_id)
         scope = dict(org_id=org_id, project_id=project_id)
-        with consumer_connection(self.connect, scope) as conn:
+        fence = self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        with consumer_connection(self.connect, scope, fence=fence) as conn:
             require_runtime_role(conn, **scope, protected_tables=(
                 _TABLE, 'extension_runtime_configuration',
             ))
