@@ -10,3 +10,7 @@ W5c4q `4ad6643f` 定义 rev3 enabled、12 schedule on，下一官方时区 slot 
 ## 08:57 UTC 观察器预防性修订（业务未到点）
 
 `W5c4q._worker()` 专用于启用前门禁，要求状态恰为 `IDLE`；自然执行时 worker 会合法进入 `RUNNING`，不能复用它作为 W5c4r 健康判据。W5c4r 应自行只读允许 `IDLE/RUNNING`，仍要求唯一 PID、alive、independent、无本进程 Host、无 error、status 新鲜；`STOPPING/STOPPED` 或异常需以 `FROZEN_OBSERVER_ERROR` 私有落盘并退出，不让进程无痕崩溃。修正后在尚无 claim/attempt 时重新采样验证，再继续唯一观察循环；不得启动第二观察器与正式业务请求。
+
+## 09:07 UTC 无 attempt 有界观察补充
+
+使用已冻结的启用意图 `nextSlotUtc` 作为唯一时钟锚点。若 slot 后 30 分钟仍无本 generation 的 attempt，即使有 group claim 也以 `FROZEN_NO_ATTEMPT_AFTER_SLOT` 停止观察，不推断业务成功、不补发、不手工触发；先独立只读对账 claim/Run/worker/Receipt，再按正式退休与 direct successor 路径处理。只要已出现唯一 attempt，仍按原规则观察至正式终态。该边界是 fail-closed 上限，不改变自然触发和运行时控制。
