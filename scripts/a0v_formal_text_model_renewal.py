@@ -13,7 +13,8 @@ os.environ['AOS_DOTENV_DISABLED'] = '1'
 
 def database_connect(database_name):
     from a0v_real_text_provider_health import _load_first_installer, _scoped_factory
-    if database_name not in {'aos_meta_head', 'aos_text_renewal_20260912'}:
+    if database_name not in {'aos_meta_head', 'aos_text_renewal_20260912',
+                             'aos_w5a_governance_20260924'}:
         raise ValueError('TEXT_RENEWAL_DATABASE_NOT_ALLOWED')
     base_connect = _load_first_installer().container_database_connect_factory(
         context='colima-aos-extension', container='aos-a0v-recovery-pg',
@@ -28,7 +29,7 @@ def database_connect(database_name):
         with base_connect() as conn:
             parameters = conn.info.get_parameters()
             parameters['password'] = conn.info.password
-        parameters['dbname'] = 'aos_text_renewal_20260912'
+        parameters['dbname'] = database_name
         @contextmanager
         def connect():
             with psycopg.connect(**parameters, row_factory=dict_row) as conn:

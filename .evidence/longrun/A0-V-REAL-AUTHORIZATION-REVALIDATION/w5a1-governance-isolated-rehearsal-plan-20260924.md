@@ -7,7 +7,7 @@ W5a 已在 `b8bcfb35` 冻结同一 `planHash=41813b34c4ce092d3bddd81115169ac52ca
 ## 最小范围与文件
 
 - 只读盘点 `pg_catalog`、现行治理 Owner 的精确 tenant 行及 FK；不得读取、导出、备份商城源表、订单、对象或客户数据。`org-org/dev-project` 是唯一正向租户，`dev-org/dev-project` 仅检查零 canary。
-- 拟新增 `scripts/a0v_w5a_governance_clone.py` 与相应 `services/aos-api/tests/test_a0v_w5a_governance_clone.py`；必要时对 `scripts/a0v_formal_text_model_renewal.py` 的数据库白名单做仅允许固定演练库的最小改动。实施前先证明表闭包、所需行、角色/RLS/触发器/迁移头都可不依赖商城内容而复现；否则不编码、不建库。
+- 拟新增 `scripts/a0v_w5a_governance_clone.py` 与相应 `services/aos-api/tests/extension_runtime/test_a0v_w5a_governance_clone.py`；必要时对 `scripts/a0v_formal_text_model_renewal.py` 的数据库白名单做仅允许固定演练库的最小改动。实施前先证明表闭包、所需行、角色/RLS/触发器/迁移头都可不依赖商城内容而复现；否则不编码、不建库。
 - 演练库固定为 `aos_w5a_governance_20260924`，只含 schema 与精确治理依赖行，不含任何 ecommerce/pipeline 源行。生成物放于私有 0700 目录，内容文件 0600；仓库仅保存去敏计数、hash 和结论。
 
 ## 串行门禁
