@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.aos.a0v-w5c3-runtime-host</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python</string>
+    <string>/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_ecommerce_runtime_host.py</string>
+    <string>--credential-file</string>
+    <string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bm-runtime-credentials/runtime-host-identities.json</string>
+    <string>--bundle-root</string>
+    <string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bn-canonical-alias-registry/signed-bundles</string>
+    <string>--trust-roots-file</string>
+    <string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/bm-trust-root-rotation/signing/trust-roots.json</string>
+    <string>--status-file</string>
+    <string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/20260924-w5c3a-host/runtime-host-status.json</string>
+    <string>--interval-seconds</string><string>2</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>PYTHONUNBUFFERED</key><string>1</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><false/>
+  <key>StandardOutPath</key><string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/20260924-w5c3a-host/stdout.log</string>
+  <key>StandardErrorPath</key><string>/Users/ddt/work/projects/ai_agent/.aos-recovery-20260920/state/q-advisor-baseline/20260924-w5c3a-host/stderr.log</string>
+</dict>
+</plist>
