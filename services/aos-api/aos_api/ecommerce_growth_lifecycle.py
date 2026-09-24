@@ -212,6 +212,12 @@ class EcommerceGrowthDisableDependent:
                 candidate["configuration_refresh_ref"] = refresh_ref
                 matched.append(candidate)
         activations = matched
+        # A resumed activation is historical after its complete dispatch group
+        # has been formally detached.  It is not a new fence authority merely
+        # because a later configuration revision matches the runtime binding.
+        if (not succeeded_recovery and len(activations) == 1
+                and self._retired_dispatch_group(conn, scope, activations[0])):
+            activations = []
         if not activations:
             attached = conn.execute(
                 f"""SELECT 1 FROM {self._schema}.extension_operation_dispatch_binding
@@ -465,6 +471,57 @@ class EcommerceGrowthDisableDependent:
         if row is None or row["kind"] != "disable":
             raise EcommerceGrowthLifecycleBlocked("exact runtime disable operation is required")
         return dict(row)
+
+    def _retired_dispatch_group(
+        self, conn: Any, scope: TenantScope, activation: dict[str, Any]
+    ) -> bool:
+        """Recognize only a fully detached, effect-free historical activation."""
+        activation_id = activation["cutover_operation_id"]
+        group_id = activation["cutover_group_id"]
+        current = conn.execute(
+            f"""SELECT status FROM {self._schema}.extension_dispatch_cutover_operation
+                  WHERE org_id=%s AND project_id=%s AND cutover_operation_id=%s FOR UPDATE""",
+            (*scope.key, activation_id),
+        ).fetchone()
+        if current is None or current["status"] != "resumed":
+            return False
+        rows = conn.execute(
+            f"""SELECT * FROM {self._schema}.extension_operation_dispatch_binding
+                  WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s
+                  ORDER BY operation_id FOR UPDATE""",
+            (*scope.key, group_id),
+        ).fetchall()
+        if (len(rows) != len(ECOMMERCE_GROWTH_OPERATIONS)
+                or sorted(row["operation_id"] for row in rows)
+                   != sorted(ECOMMERCE_GROWTH_OPERATIONS)
+                or any(row["handler_kind"] != "legacy"
+                       or row["installation_id"] is not None
+                       or row["generation"] is not None
+                       or row["execution_epoch"] is not None
+                       or row["operation_fence"] is not True for row in rows)):
+            return False
+        gate = conn.execute(
+            f"""SELECT 1 FROM {self._schema}.extension_dispatch_claim_gate
+                  WHERE org_id=%s AND project_id=%s AND cutover_group_id=%s""",
+            (*scope.key, group_id),
+        ).fetchone()
+        attached = conn.execute(
+            f"""SELECT 1 FROM {self._schema}.extension_operation_dispatch_binding
+                  WHERE org_id=%s AND project_id=%s AND installation_id=%s LIMIT 1""",
+            (*scope.key, activation["target_installation_id"]),
+        ).fetchone()
+        history = conn.execute(
+            f"""SELECT count(*) AS total,
+                  count(*) FILTER (WHERE status='detached') AS detached
+                  FROM {self._schema}.extension_dispatch_lifecycle_operation
+                  WHERE org_id=%s AND project_id=%s AND activation_operation_id=%s""",
+            (*scope.key, activation_id),
+        ).fetchone()
+        if (gate is not None or attached is not None or history is None
+                or history["total"] < 1 or history["total"] != history["detached"]):
+            return False
+        self._assert_recovery_drained(conn, scope, activation)
+        return True
 
     def _dispatch_rows(
         self,
