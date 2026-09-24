@@ -16,11 +16,20 @@ class ConfigurationDeliveryResult:
 
 
 class ConfigurationConsumer:
-    def __init__(self,*,connect,authorize,check_drained):
+    def __init__(self,*,connect,authorize,check_drained,host_lease=None):
         if not all(callable(value) for value in (connect,authorize,check_drained)):
             raise ValueError('trusted configuration consumers require current readers')
         self.connect,self.authorize,self.check_drained=connect,authorize,check_drained
+        if host_lease is not None:
+            from .host_lease import OptInHostLease
+            if type(host_lease) is not OptInHostLease:
+                raise TypeError('exact ConfigurationConsumer Host lease required')
+        self.host_lease=host_lease
         self.outbox=RuntimeOutboxStore()
+
+    def _connection(self,scope):
+        fence=self.host_lease.fence_in_transaction if self.host_lease is not None else None
+        return consumer_connection(self.connect,scope,fence=fence)
 
     def _current(self,conn,scope,operation):
         row=conn.execute('''SELECT kind,status,phase,revision FROM extension_runtime_operation
@@ -34,23 +43,23 @@ class ConfigurationConsumer:
     def run_once(self,*,org_id,project_id):
         TenantScope(org_id,project_id)
         scope=dict(org_id=org_id,project_id=project_id)
-        with consumer_connection(self.connect,scope) as conn:
+        with self._connection(scope) as conn:
             lease=self.outbox.claim(conn,**scope,operation_kind='configure')
         if lease is None:return None
-        with consumer_connection(self.connect,scope) as conn:
+        with self._connection(scope) as conn:
             status,phase,revision=self._current(conn,scope,lease.operation_id)
         if status not in ('succeeded','failed','cancelled'):
             if phase=='accepted':
-                with consumer_connection(self.connect,scope) as conn:
+                with self._connection(scope) as conn:
                     fenced=begin_configuration(conn,**scope,operation_id=lease.operation_id,
                         expected_revision=revision,authorize=self.authorize)
                 # No drain code runs until the preceding context committed.
                 phase,revision='fencing',fenced.revision
             if phase=='fencing':
-                with consumer_connection(self.connect,scope) as conn:
+                with self._connection(scope) as conn:
                     commit_configuration(conn,**scope,operation_id=lease.operation_id,
                         expected_revision=revision,authorize=self.authorize,check_drained=self.check_drained)
-        with consumer_connection(self.connect,scope) as conn:
+        with self._connection(scope) as conn:
             status,_,_=self._current(conn,scope,lease.operation_id)
             terminal=status in ('succeeded','failed','cancelled')
             if terminal:self.outbox.ack(conn,**scope,lease=lease)
