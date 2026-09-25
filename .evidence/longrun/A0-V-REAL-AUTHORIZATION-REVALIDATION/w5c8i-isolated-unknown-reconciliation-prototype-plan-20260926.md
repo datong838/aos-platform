@@ -12,6 +12,14 @@
 - 若 SQL canonical hash 与 Python Locator 语义、Host→Delivery 锁序、或旧入口撤权/兼容不能完整证明，本波按 RED/STOP 收笔并登记 W5c8j 缺口，绝不发明“近似授权”代码。
 - verification、D-waves、AOS 上下文、Prime 更新与 m1 提交；不 push。
 
+## 00:26 CST 收敛修订：先封旧权限旁路
+
+专用 PG 已通过新 profile + 本机代理启动；原 Worker 10/10 通过。完整正向对账涉及原 PREPARING/Occurrence/Origin/12 成员 manifest、Host lease 锁序和上游 Store 跨事务证明，不能在未有完整负例时只做一个可写半成品。因此本波实现下列**可独立验证的安全前置项**，正向受控函数顺延 W5c8j，绝不将撤权视作对账功能 GREEN：
+
+- 新增 `services/aos-api/alembic/versions/a0v_096_revoke_legacy_unknown_reconcile.py`：在真实库**不执行**，只于隔离 PG 的 head 迁移中撤 `aos_runtime` 对旧 `data_requirement_outbox_reconcile_completed_a0v_050` 的 EXECUTE；不撤正常 claimed `complete_a0v_050`。downgrade 不自动重授旧不安全权限，需 fail-closed。
+- 先新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8i_legacy_unknown_reconcile_revoke_pg.py` RED，使用隔离 PG 真实 catalog/`SET ROLE aos_runtime` 验旧函数不可执行、正常 complete 仍可执行、无 Delivery 写入。新受控入口尚不存在并继续无运行角色授权。
+- 如果迁移 head 或任何既有测试依赖旧 unknown 函数，需审计兼容并按 STOP 收笔，不通过恢复旧 EXECUTE 绿灯。后继 W5c8j 才实施完整同事务 Host+源组对账成功/拒绝原型，并更新上方的候选文件清单。
+
 ## 九步
 
 1. 复习 W5c8h、原 SQL/Store/Locator/Host Lease、产品恢复约束，核 Git/authority/测试环境。
