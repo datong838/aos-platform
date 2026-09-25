@@ -13,6 +13,10 @@
 
 专项为新测试；累计为 manifest 全套及 W5c9n/q/r/s/t/v 文档测试，无测试 PG fixture。仅 decorator 元数据最小改动，不调路由顺序、路径、鉴权或业务逻辑；若静态审发现非双 FULL、方法共享 decorator 或当前 HEAD 漂移，先停代码修改，补证据。浏览器 8080 离线，不称线上 GREEN。完成 verification 精确提交、D-waves/AOS CAS/Prime 后自动规划写方法形状切片。
 
+## 累计封印补充（RED 后、修改封印前）
+
+专项 5 passed 后的累计显示业务 route count 4511 与哈希 `3ce493dbdcb5cc3069d515983399b336187d1eda400f8e9a0a5c6bec773c0c0d` 不变；仅 OpenAPI 路径键由 2710 变 2708。AIP `{record_id}` 与 Schedules `{sc_id}/runs` 只承载目标 GET，隐藏后键消失；Ontology `{ot_id}`、Schedules `{sc_id}` 同键还承载 PUT，因此保留。`test_domain_router_manifest.py` 的静态 OpenAPI paths 封印应精确改为 2708；不改变路由数量/哈希封印，也不将变化解释为运行时路由删除。改前须再次读回这四键实际 methods。
+
 ## 九步与停止
 
 1. 上位产品/技术方案复习；2. 文件级方案先提交；3. 无执行 RED；4. 最小 decorator 修改；5. 专项与累计；6. 方案/代码/写方法一致性复审；7. 浏览器离线记录；8. verification/上下文/记忆；9. 自动下一波。
