@@ -18,7 +18,7 @@ class CreateBranchRequest(BaseModel):
     created_by: str = "system"
 
 
-@router.get("/branches")
+@router.get("/branches", include_in_schema=False)
 async def list_branches(status: str | None = Query(None)) -> dict[str, Any]:
     eng = get_engine()
     items = eng.list_branches(status=status)
@@ -32,7 +32,7 @@ async def create_branch(req: CreateBranchRequest) -> dict[str, Any]:
     return br.model_dump()
 
 
-@router.get("/graph-health")
+@router.get("/graph-health", include_in_schema=False)
 async def graph_health() -> dict[str, Any]:
     eng = get_engine()
     return eng.graph_health()

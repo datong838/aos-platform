@@ -56,7 +56,7 @@ class SetColumnMappingRequest(BaseModel):
 # ─────────── object-types ───────────
 
 
-@router.get("/object-types")
+@router.get("/object-types", include_in_schema=False)
 async def list_object_types(
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
