@@ -13,6 +13,7 @@ from aos_api.tenant_scope import TenantScope
 
 from .consumer_connection import consumer_connection
 from .generation_attempts import PostgresRuntimeAttemptStore, RuntimeAttemptLease
+from .host_lease import OptInHostLease
 from .lifecycle_store import RuntimeConflict
 
 
@@ -65,9 +66,11 @@ class _CombinedCancelEvent:
 class RecoverableStoreAttempt:
     def __init__(self, *, connect, scope: TenantScope, lease: RuntimeAttemptLease,
                  owner_token: str, heartbeat_seconds: float, lease_seconds: float,
-                 max_execution_seconds: float) -> None:
+                 max_execution_seconds: float, host_lease: OptInHostLease | None = None) -> None:
         if not lease.execute_once or lease.state != "running":
             raise RuntimeConflict("recoverable Store attempt is not executable")
+        if host_lease is not None and (type(host_lease) is not OptInHostLease or host_lease.scope != scope):
+            raise TypeError("exact recoverable Store Host lease scope required")
         self._connect = connect
         self._scope = scope
         self._lease = lease
@@ -75,6 +78,7 @@ class RecoverableStoreAttempt:
         self._heartbeat_seconds = heartbeat_seconds
         self._lease_seconds = lease_seconds
         self._max_execution_seconds = max_execution_seconds
+        self._host_lease = host_lease
         self._execution_deadline: float | None = None
         self._stop = Event()
         self._lock = Lock()
@@ -116,7 +120,8 @@ class RecoverableStoreAttempt:
                 deadline = datetime.now(timezone.utc) + timedelta(seconds=self._lease_seconds)
                 with consumer_connection(self._connect, dict(
                     org_id=self._scope.org_id, project_id=self._scope.project_id,
-                )) as conn:
+                ), fence=(self._host_lease.fence_in_transaction
+                          if self._host_lease is not None else None)) as conn:
                     renewed = store.heartbeat(
                         conn, org_id=self._scope.org_id, project_id=self._scope.project_id,
                         attempt_id=self._lease.attempt_id, expected_revision=expected,
@@ -159,7 +164,8 @@ class RecoverableStoreAttempt:
             expected = self._lease.revision
         with consumer_connection(self._connect, dict(
             org_id=self._scope.org_id, project_id=self._scope.project_id,
-        )) as conn:
+        ), fence=(self._host_lease.fence_in_transaction
+                  if self._host_lease is not None else None)) as conn:
             settled = PostgresRuntimeAttemptStore().settle(
                 conn, org_id=self._scope.org_id, project_id=self._scope.project_id,
                 attempt_id=self._lease.attempt_id, expected_revision=expected,
@@ -178,9 +184,12 @@ class RecoverableStoreAttemptOwner:
 
     def __init__(self, *, connect, heartbeat_seconds: float = 30.0,
                  lease_seconds: float = 120.0,
-                 max_execution_seconds: float = MAX_RECOVERABLE_STORE_EXECUTION_SECONDS) -> None:
+                 max_execution_seconds: float = MAX_RECOVERABLE_STORE_EXECUTION_SECONDS,
+                 host_lease: OptInHostLease | None = None) -> None:
         if not callable(connect):
             raise TypeError("trusted runtime connection factory required")
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError("exact recoverable Store Host lease required")
         if (type(max_execution_seconds) not in (int, float)
                 or not isfinite(max_execution_seconds)
                 or not 0.05 <= heartbeat_seconds < lease_seconds <= 300.0
@@ -191,12 +200,15 @@ class RecoverableStoreAttemptOwner:
         self._heartbeat_seconds = heartbeat_seconds
         self._lease_seconds = lease_seconds
         self._max_execution_seconds = float(max_execution_seconds)
+        self._host_lease = host_lease
 
     def claim(self, conn, *, scope: TenantScope, installation_id, generation,
               execution_epoch: int, operation_key: str, idempotency_key: str,
               request_hash: str) -> RecoverableStoreAttempt:
         if type(scope) is not TenantScope:
             raise TypeError("exact recoverable Store tenant required")
+        if self._host_lease is not None and self._host_lease.scope != scope:
+            raise RuntimeConflict("recoverable Store Host lease scope differs")
         token = secrets.token_urlsafe(48)
         deadline = datetime.now(timezone.utc) + timedelta(seconds=self._lease_seconds)
         lease = PostgresRuntimeAttemptStore().begin_recoverable_store(
@@ -213,7 +225,7 @@ class RecoverableStoreAttemptOwner:
         return RecoverableStoreAttempt(
             connect=self._connect, scope=scope, lease=lease, owner_token=token,
             heartbeat_seconds=self._heartbeat_seconds, lease_seconds=self._lease_seconds,
-            max_execution_seconds=self._max_execution_seconds,
+            max_execution_seconds=self._max_execution_seconds, host_lease=self._host_lease,
         )
 
 
