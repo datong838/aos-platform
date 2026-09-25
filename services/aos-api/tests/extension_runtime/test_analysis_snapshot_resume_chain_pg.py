@@ -169,6 +169,10 @@ def data_case(formal_case, publications):
     formal_case[1].source.reader._journal = ControlledIngressJournal(
         claims=source._claims, scope=args['scope'], run_id=first_run,
         control_ref=first_ref, actor=args['actor'], completed_read=True)
+    # The base event fixture shadows the real locator with a one-member group.
+    # This twelve-source path must use its committed group before analysis starts.
+    assert '_source_group' in vars(formal_case[1])
+    del formal_case[1]._source_group
     result = base_data_case.__wrapped__(formal_case)
     saved = conn.execute('SELECT read_completed_at FROM pipeline_snapshot_group_input').fetchone()
     assert result[3].cutoff_at == saved['read_completed_at'], 'analysis must use the independent source snapshot clock'

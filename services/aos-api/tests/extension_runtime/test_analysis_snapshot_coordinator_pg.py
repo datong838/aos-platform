@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from dataclasses import replace
 import hashlib
+import os
 from types import SimpleNamespace as NS
 from uuid import uuid4
 
@@ -29,8 +30,14 @@ from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirector
 from aos_api.pipeline_control_service import PipelineControlServiceFactory
 
 
+def _private_dsn(conn):
+    dsn = os.environ['AOS_DATABASE_URL']
+    assert psycopg.conninfo.conninfo_to_dict(dsn)['dbname'] == conn.info.dbname
+    return dsn
+
+
 def _runtime_connect(conn):
-    dsn = conn.info.dsn
+    dsn = _private_dsn(conn)
     identity = conn.execute('SELECT session_user AS name').fetchone()['name']
     conn.rollback()
     @contextmanager
@@ -153,20 +160,19 @@ def test_claim_route_is_the_only_input_to_fixed_coordinator(chain_case, completi
             outbox.complete(analysis.scope, attempted_claim,
                 attempted_fulfillment, attempted_analysis)
     if completion_path == 'complete':
-        with psycopg.connect(conn.info.dsn) as admin:
+        with psycopg.connect(_private_dsn(conn)) as admin:
             admin.execute('''UPDATE data_requirement_outbox_delivery
                 SET lease_expires_at=clock_timestamp()-INTERVAL '1 second'
                 WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
                 (*analysis.scope.key, claim.outbox_id))
         with pytest.raises(DataRequirementOutboxConflict):
             outbox.complete(analysis.scope, claim, fulfillment_ref, analysis_ref)
-        with psycopg.connect(conn.info.dsn) as admin:
+        with psycopg.connect(_private_dsn(conn)) as admin:
             admin.execute('''UPDATE data_requirement_outbox_delivery
                 SET lease_expires_at=clock_timestamp()+INTERVAL '300 seconds'
                 WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
                 (*analysis.scope.key, claim.outbox_id))
         completed = outbox.complete(analysis.scope, claim, fulfillment_ref, analysis_ref)
-        replay = outbox.complete(analysis.scope, claim, fulfillment_ref, analysis_ref)
     else:
         unknown = outbox.mark_unknown(analysis.scope, claim.outbox_id, claim.lease_token,
             reason_code='COMMIT_RESULT_UNKNOWN')
@@ -180,15 +186,33 @@ def test_claim_route_is_the_only_input_to_fixed_coordinator(chain_case, completi
             with pytest.raises(DataRequirementOutboxConflict):
                 outbox.reconcile_completed(analysis.scope, attempted_claim,
                     attempted_fulfillment, attempted_analysis)
-        with psycopg.connect(conn.info.dsn) as admin:
+        with psycopg.connect(_private_dsn(conn)) as admin:
             admin.execute('''UPDATE data_requirement_outbox_delivery
                 SET lease_expires_at=clock_timestamp()-INTERVAL '1 second'
                 WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
                 (*analysis.scope.key, claim.outbox_id))
         completed = outbox.reconcile_completed(
             analysis.scope, claim, fulfillment_ref, analysis_ref)
-        replay = outbox.reconcile_completed(
-            analysis.scope, claim, fulfillment_ref, analysis_ref)
+
+    # Treat the returned completion as lost: a separate runtime connection must
+    # identify the committed original attempt and both exact Receipts by SELECT.
+    with factory(analysis.scope) as reader:
+        readback = reader.execute('''SELECT state,attempt,lease_token,
+                completion_fulfillment_ref,completion_analysis_ref
+            FROM data_requirement_outbox_delivery
+            WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
+            (*analysis.scope.key, claim.outbox_id)).fetchone()
+    assert readback == dict(state='acked', attempt=claim.attempt,
+        lease_token=claim.lease_token,
+        completion_fulfillment_ref=result['fulfillmentRef'],
+        completion_analysis_ref=result['receiptRef'])
+    with factory(type(analysis.scope)(org_id='dev-org', project_id='dev-project')) as reader:
+        assert reader.execute('''SELECT state FROM data_requirement_outbox_delivery
+            WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
+            (*analysis.scope.key, claim.outbox_id)).fetchone() is None
+
+    replay = (outbox.complete if completion_path == 'complete' else outbox.reconcile_completed)(
+        analysis.scope, claim, fulfillment_ref, analysis_ref)
     assert completed.state == 'acked' and not completed.replayed
     assert replay.state == 'acked' and replay.replayed
 
