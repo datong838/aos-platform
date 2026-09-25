@@ -8,8 +8,9 @@
 
 - 最小修改 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py::AnalysisAdvanceHostService._accepted_occurrence_reference`：将原 `FOR SHARE OF o,a` 保持为默认；仅内部显式 `read_only=True` 时改用完全相同过滤/字段的无锁 SELECT，复用**同一**后续 Receipt 校验，不复制权威哈希算法。参数类型严格 bool，默认旧路径不变。
 - 最小修改 `services/aos-api/aos_api/ecommerce_analysis_data_requirement_route.py`：新增只读 `read_unknown_historical`，只接受 `unknown` 原 attempt，在已注入 `connect_read_only` 的事务里走无锁 occurrence 证据、原精确 Requirement、原 PREPARING Receipt、ProductEventOrigin 和 `PipelineSnapshotGroupLocator`；不要求当前 head/可行动状态，但必须明确输出“历史诊断”，不得替代现有 `read_unknown` 的可执行路由。若现有返回类型易混淆，则新增专用 evidence 类型。
+- 最小扩展 `services/aos-api/aos_api/ecommerce_analysis_original_attempt_receipt_resolver.py` 的诊断证据类型，携带已核的精确 Requirement/Run/Case/Occurrence 与原 PREPARING Receipt Ref，供 W5c8g 同事务只读交叉校验；不改变 W5c8d 查询谓词或 Worker 接线。
 - 新增 `services/aos-api/aos_api/ecommerce_analysis_unknown_source_group_evidence.py`：组合 W5c8d 双 Receipt 与无锁历史源组，要求同原 Requirement/Run/Case/Occurrence、唯一成员绑定和 cutoff；仅返回证据，无授权布尔、无可执行 route。
-- 新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8g_unknown_source_group_read_only_pg.py`：原链隔离 PG 正例，以及读事务/错误 tenant、attempt、occurrence、源 Run、组成员/manifest、多组、head 后移等负例；断言源调用计数不增加、旧默认 `FOR SHARE` 路径仍保持。若测试 fixture 缺适用造数，如实登记未覆盖，不删门。
+- 新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8g_unknown_source_group_read_only_pg.py` 并最小更新 W5c8d PG 断言：原链隔离 PG 正例，以及读事务/错误 tenant、attempt、occurrence、源 Run、组成员/manifest、多组、head 后移等负例；断言源调用计数不增加、旧默认 `FOR SHARE` 路径仍保持。若测试 fixture 缺适用造数，如实登记未覆盖，不删门。
 - 本目录 verification、D-waves/上下文更新；真实库不迁移，8080 不重启，Worker 不接线。
 
 ## 九步
