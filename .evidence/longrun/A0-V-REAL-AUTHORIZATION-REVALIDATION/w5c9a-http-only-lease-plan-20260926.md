@@ -10,6 +10,7 @@
 - `scripts/a0v_controlled_api.py`：只在现有两 task 白名单外新增该**精确** task ID，且如 W5c4p 一样强制 scope 精确、ACTIVE、m1、未过期；所有旧默认行为不变。`AOS_CONTROLLED_API_LEASE_TASK` 必须显式设置为新 task，不能接受任意字符串。
 - `services/aos-api/tests/test_a0v_controlled_api.py`：新增新租约正例、缺失/过期/错误 scope/owner/任意 ID 拒绝；锁定四个零执行旗标。先 RED，再最小代码 GREEN。
 - `scripts/a0v_product_controlled_api.py`、生产 API/DB/Worker 不改。运行前 `check` 的输出只读取 outcome、四 flags、sourceCalls/runsCreated，绝不打印 DSN/Env；若 preflight 因私有 identity/lease 失败，不启动 `serve`，冻结查因。
+- 前检实测旧 `DEFAULT_CREDENTIALS`、旧 trust roots、旧 Product bundle 路径均不存在，直接 `check` 以 `HostBlocked CREDENTIAL_FILE_INVALID` 停止；正式新租约已创建但不得用它绕过路径门。新增**独立** `scripts/a0v_w5c9a_http_only_api.py` wrapper，仅为本波固定新 task 与已存在、mode 0600 的 BM 私有凭据/信任根、BN canonical signed-bundles 根（含 `platform.ecommerce.niushop/1.23.2`），不改原 Product/API wrapper 的默认值。测试 wrapper 三路径、签名包目录及零执行旗标；如当前部署 identity 与这些路径不匹配，继续 STOP，不创建/改写私有凭据。
 
 ## 串行九步
 
