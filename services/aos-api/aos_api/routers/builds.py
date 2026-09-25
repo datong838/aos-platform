@@ -41,7 +41,7 @@ def create_build(req: CreateBuildRequest):
         raise _map_error(err) from err
 
 
-@router.get("/v1/builds")
+@router.get("/v1/builds", include_in_schema=False)
 def list_builds():
     return get_engine().list_jobs()
 
