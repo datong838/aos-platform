@@ -4,11 +4,15 @@ from aos_api.ec_ingress_recovery import _check_active
 from aos_api.pipeline_controlled_projection import _project_exact_command
 from aos_api.pipeline_snapshot_group_object_executor import ControlledSnapshotGroupObjectExecutor
 from aos_api.pipeline_snapshot_group_link_command import PipelineSnapshotGroupLinkCommandJournal
+from aos_api.extension_runtime.host_lease import OptInHostLease
 
 
 class ControlledSnapshotGroupLinkExecutor:
-    def __init__(self, *, claims, store, connect, eng):
-        self._objects = ControlledSnapshotGroupObjectExecutor(claims=claims, store=store, connect=connect, eng=eng)
+    def __init__(self, *, claims, store, connect, eng, host_lease=None):
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot Link Host lease required')
+        self._objects = ControlledSnapshotGroupObjectExecutor(claims=claims, store=store,
+            connect=connect, eng=eng, host_lease=host_lease)
         self._commands = PipelineSnapshotGroupLinkCommandJournal(claims=claims, store=store)
         self._store = store
 

@@ -28,6 +28,9 @@ def test_completion_transaction_delegation_still_reaches_original_ingress():
     )
     for owner, expected in chain:
         assert expected in inspect.getsource(owner._transaction)
+    for owner in (PipelineSnapshotGroupCompletion, ControlledSnapshotGroupRetirementExecutor,
+                  ControlledSnapshotGroupLinkExecutor):
+        assert 'host_lease=host_lease' in inspect.getsource(owner.__init__)
     object_transaction = inspect.getsource(ControlledSnapshotGroupObjectExecutor._transaction)
     assert 'self._single._ingress._transaction(scope)' in object_transaction
     assert 'self._host_lease.fence_in_transaction(' in object_transaction

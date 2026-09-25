@@ -30,7 +30,7 @@ class PipelineSnapshotGroupCompletion:
         self._claims, self._store, self._connect = claims, store, connect
         self._host_lease = host_lease
         self._retirement = ControlledSnapshotGroupRetirementExecutor(
-            claims=claims, store=store, connect=connect, eng=eng,
+            claims=claims, store=store, connect=connect, eng=eng, host_lease=host_lease,
         )
         self._projection = PipelineSnapshotGroupProjectionOwner(claims=claims, store=store)
         self._attempts = RecoverableStoreAttemptOwner(connect=connect,host_lease=host_lease)
