@@ -24,9 +24,13 @@
 
 复审发现 `AnalysisDataRequirementWorker._run_claim(reconcile=True)` 虽不由当前 tick 自动进入，但若被直接调用会**先运行 Coordinator**，最后才撞上已撤权 SQL；仅撤数据库 EXECUTE 不足以保证零二次 source。故再最小修改 `services/aos-api/aos_api/ecommerce_analysis_data_requirement_worker.py`：`reconcile=True` 一入函数就返回冻结/unknown，不读取 route、不调用 Coordinator/Store；`reconcile=False` 正常分支原样。先在 `services/aos-api/tests/extension_runtime/test_analysis_data_requirement_worker.py` 新增会失败的直接调用负例，随后实现并专项回归。真实 Worker 默认仍不接新对账。
 
-## 01:xx CST 补充：历史 PG 集成测试的预期迁移
+## 00:46 CST 补充：历史 PG 集成测试的预期迁移
 
 复查发现 `services/aos-api/tests/extension_runtime/test_analysis_snapshot_coordinator_pg.py::test_claim_route_is_the_only_input_to_fixed_coordinator[reconcile-completed-...]` 仍把旧 unknown 对账成功当作 head 预期。先保留现状执行一次 RED，确认新迁移使运行角色得到 `InsufficientPrivilege`；随后仅修改该测试的 unknown 参数分支：原 tuple、错误 tuple、到期 claim 均不得通过旧函数，Delivery 保持 `unknown` 且 completion refs 为空，源调用次数不增加、隔离租户不可见；正常 `complete` 参数分支及其 replay 继续保持原断言。此处测试变更是撤权后合同更新，不恢复旧 EXECUTE，也不声称新受控对账已可用。若 RED 不符合预期或正常 complete 回归失败，冻结本波排查。
+
+## 01:00 CST 补充：隔离库 DSN 测试夹具修复
+
+短累计的两个 `test_analysis_data_requirement_route_pg.py` 失败均发生在 `_runtime_connect`：其 `conn.info.dsn` 不包含口令，连接专用 PG 报 `fe_sendauth: no password supplied`，尚未进入被测逻辑。仅在该测试文件改用 `AOS_DATABASE_URL` 的当前隔离库 DSN，并先断言其中数据库名等于 fixture 连接的数据库名；不修改生产路由或降低 PG 认证。复跑原两测试和累计测试。此修复限定测试连接一致性，非本波授权功能完成证据。
 
 ## 九步
 
