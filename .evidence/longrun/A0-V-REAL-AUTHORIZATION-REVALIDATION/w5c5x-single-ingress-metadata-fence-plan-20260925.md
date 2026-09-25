@@ -5,7 +5,7 @@
 ## 文件级九步
 
 1. 复习 `pipeline_controlled_snapshot_ingress.py` 原事务、Single `_finish`、W5c5s 同形角色探针及 W5c5w Object 边界。
-2. 本方案先提交。只改 `pipeline_controlled_snapshot_ingress.py`：构造器可选精确 `OptInHostLease`，在原 `_transaction` 的租户 GUC 之后、任何业务 body/绑定检查之前 guard；`_run_transaction` 复用该入口。新增 `test_a0v_w5c5x_single_ingress_metadata_fence_pg.py`；更新 W5c5r 静态合同。Single Executor、Object 上层传参及 Store 本波不改。
+2. 本方案先提交。只改生产文件 `pipeline_controlled_snapshot_ingress.py`：构造器可选精确 `OptInHostLease`，在原 `_transaction` 的租户 GUC 之后、任何业务 body/绑定检查之前 guard；`_run_transaction` 复用该入口。新增 `test_a0v_w5c5x_single_ingress_metadata_fence_pg.py`；更新 W5c5r 静态合同及 W5c5s 无构造器测试替身的默认字段。Single Executor、Object 上层传参及 Store 本波不改。
 3. 默认 None 与原路径一致；显式 opt-in 时每笔原 metadata 事务独立校验 holder。未 acquire/错 scope/epoch/过期 fail closed；不执行真实 claim/读源/Store。
 4. 隔离 PG 同形 connector 覆盖默认、有效多笔、拒绝；旧 ingress 无 effect 边界定向测试。
 5. W5c3–W5c5x 累计分组；保留旧 Schedule 完整套件超时、Attempt PG 17 skipped 债；停隔离 PG。
