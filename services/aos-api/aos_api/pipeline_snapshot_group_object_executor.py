@@ -1,20 +1,30 @@
 """Resume original object/projection/dataset stages, never collect source again."""
+from contextlib import contextmanager
 from aos_api.ec_ingress_journal import IngressJournalConflict
 from aos_api.ec_ingress_recovery import _check_active,read_saved_projection_completion
 from aos_api.pipeline_controlled_executor import ControlledSnapshotExecutor
 from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
 from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.pipeline_snapshot_group_relationship_journal import PipelineSnapshotGroupRelationshipJournal
+from aos_api.extension_runtime.host_lease import OptInHostLease
 
 
 class ControlledSnapshotGroupObjectExecutor:
-    def __init__(self,*,claims,store,connect,eng):
+    def __init__(self,*,claims,store,connect,eng,host_lease=None):
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot Object Host lease required')
         self._single=ControlledSnapshotExecutor(claims=claims,store=store,connect=connect,eng=eng)
+        self._host_lease=host_lease
         self._claims,self._store=claims,store
         self._journal=PipelineSnapshotGroupRelationshipJournal(claims=claims)
 
+    @contextmanager
     def _transaction(self,scope):
-        return self._single._ingress._transaction(scope)
+        with self._single._ingress._transaction(scope) as conn:
+            if self._host_lease is not None:
+                self._host_lease.fence_in_transaction(
+                    conn,dict(org_id=scope.org_id,project_id=scope.project_id))
+            yield conn
 
     def execute(self,*,scope,group_id,actor,bindings,policy_ref,deadline=None,cancel_event=None):
         """Independently recoverable members; final group reconciliation is mandatory.
