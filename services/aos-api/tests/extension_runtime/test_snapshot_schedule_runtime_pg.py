@@ -29,6 +29,7 @@ def _install_test_stage_timing(runtime, monkeypatch):
         return
     aggregates = {}
     substages = {}
+    current_stages = {}
     objects = runtime._completion._retirement._links._objects
     links = runtime._completion._retirement._links
     retirement = runtime._completion._retirement._retirement
@@ -37,6 +38,29 @@ def _install_test_stage_timing(runtime, monkeypatch):
         ('link', links._commands._relationships),
         ('retirement', retirement._commands._relationships),
     ):
+        assessment = journal._assessments
+        for owner, name, suffix in (
+            (assessment, '_run', 'assessment_run'),
+            (assessment._inputs, '_run', 'input_run'),
+            (assessment._inputs, '_load', 'input_load'),
+            (assessment._policies, '_load', 'policy_load'),
+            (assessment._inputs._groups._groups, 'run_current', 'group_run_current'),
+        ):
+            original = getattr(owner, name)
+            label = f'{prefix}_{suffix}'
+            current_stages[label] = [0, 0.0]
+
+            @wraps(original)
+            def measure_current(*args, _original=original, _label=label, **kwargs):
+                start = time.perf_counter()
+                try:
+                    return _original(*args, **kwargs)
+                finally:
+                    item = current_stages[_label]
+                    item[0] += 1
+                    item[1] += time.perf_counter() - start
+
+            monkeypatch.setattr(owner, name, measure_current)
         for owner, name, suffix in (
             (journal, '_run_current', 'run_current_inner'),
             (journal, '_load', 'load'),
@@ -128,6 +152,9 @@ def _install_test_stage_timing(runtime, monkeypatch):
                     for key, (count, seconds) in substages.items():
                         print(f'W5C6W_SUBSTAGE {key} count={count} total={seconds:.3f}s',
                               file=sys.stderr, flush=True)
+                    for key, (count, seconds) in current_stages.items():
+                        print(f'W5C6X_CURRENT {key} count={count} total={seconds:.3f}s',
+                              file=sys.stderr, flush=True)
 
         monkeypatch.setattr(owner, name, timed)
 
@@ -138,9 +165,13 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     def fail(*args, **kwargs):
         raise LookupError('original failure')
     def journal():
+        assessment = SimpleNamespace(materialize_current=same, _run=same,
+            _inputs=SimpleNamespace(_run=same, _load=same,
+                _groups=SimpleNamespace(_groups=SimpleNamespace(run_current=same))),
+            _policies=SimpleNamespace(_load=same))
         return SimpleNamespace(read_current=same, run_current=same,
             _run_current=same, _load=same, _restore=same,
-            _assessments=SimpleNamespace(materialize_current=same))
+            _assessments=assessment)
     object_journal, link_journal, retirement_journal = journal(), journal(), journal()
     runtime = SimpleNamespace(
         _claims=SimpleNamespace(claim=same),
@@ -176,6 +207,9 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     assert retirement_journal._assessments.materialize_current(3) == ((3,), {})
     assert runtime._completion._retirement._links._commands._operate(3) == ((3,), {})
     assert runtime._completion._retirement._retirement._operate(3) == ((3,), {})
+    assert object_journal._assessments._run(3) == ((3,), {})
+    assert link_journal._assessments._inputs._load(3) == ((3,), {})
+    assert retirement_journal._assessments._policies._load(3) == ((3,), {})
     assert runtime._completion.complete(3) == ((3,), {})
     assert runtime._completion._retirement.execute(4) == ((4,), {})
     assert runtime._completion._retirement._links.execute(5) == ((5,), {})
@@ -196,6 +230,9 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     assert all(f'W5C6W_SUBSTAGE {label} count=1 total=' in output for label in (
         'object_load', 'link_restore', 'retirement_materialize_current',
         'link_command_operate', 'retirement_operate'))
+    assert output.count('W5C6X_CURRENT ') == 15
+    assert all(f'W5C6X_CURRENT {label} count=1 total=' in output for label in (
+        'object_assessment_run', 'link_input_load', 'retirement_policy_load'))
 
 
 @pytest.fixture
