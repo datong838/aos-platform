@@ -447,27 +447,35 @@ def _evict_cached_tunnel_if_dead(key: str, expected: _CachedTunnel) -> bool:
     return _evict_cached_tunnel(key, expected, reason="tunnel_probe_failed")
 
 
-def _cleanup_all_cached() -> None:
+def _cleanup_all_cached(*, log_events: bool = True) -> None:
     """清理所有缓存（进程退出时调用，atexit + FastAPI shutdown）。"""
-    log.info("Cleaning up JDBC cache: tunnels=%d, conns=%d", len(_TUNNEL_CACHE), len(_CONN_CACHE))
+    if log_events:
+        log.info("Cleaning up JDBC cache: tunnels=%d, conns=%d", len(_TUNNEL_CACHE), len(_CONN_CACHE))
     with _CACHE_LOCK:
         for key, cached in list(_CONN_CACHE.items()):
             try:
                 cached.conn.close()
             except Exception as exc:
-                log.warning("Cleanup DB conn (key=%s) failed: %s", key, exc)
+                if log_events:
+                    log.warning("Cleanup DB conn (key=%s) failed: %s", key, exc)
         _CONN_CACHE.clear()
 
         for key, cached in list(_TUNNEL_CACHE.items()):
             try:
                 cached.tunnel.close()
             except Exception as exc:
-                log.warning("Cleanup SSH tunnel (key=%s) failed: %s", key, exc)
+                if log_events:
+                    log.warning("Cleanup SSH tunnel (key=%s) failed: %s", key, exc)
         _TUNNEL_CACHE.clear()
 
 
+def _cleanup_all_cached_at_exit() -> None:
+    """退出阶段日志 handler 可能已拆卸；仍执行同一资源释放。"""
+    _cleanup_all_cached(log_events=False)
+
+
 # 进程退出钩子（无论有没有 FastAPI，都会执行）
-atexit.register(_cleanup_all_cached)
+atexit.register(_cleanup_all_cached_at_exit)
 
 
 def prebuild_ssh_tunnels(props_list: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -39,6 +39,48 @@ def _isolate_runtime_cache():
     _cleanup_all_cached()
 
 
+def test_atexit_cleanup_releases_resources_without_using_torn_down_logger(monkeypatch):
+    conn = MagicMock()
+    tunnel = MagicMock()
+    jdbc_runtime._CONN_CACHE['test-conn'] = MagicMock(conn=conn)
+    jdbc_runtime._TUNNEL_CACHE['test-tunnel'] = MagicMock(tunnel=tunnel)
+    logger = MagicMock()
+    monkeypatch.setattr(jdbc_runtime, 'log', logger)
+
+    jdbc_runtime._cleanup_all_cached_at_exit()
+
+    conn.close.assert_called_once_with()
+    tunnel.close.assert_called_once_with()
+    assert not jdbc_runtime._CONN_CACHE and not jdbc_runtime._TUNNEL_CACHE
+    logger.info.assert_not_called()
+    logger.warning.assert_not_called()
+
+
+def test_atexit_cleanup_continues_after_close_errors(monkeypatch):
+    conn = MagicMock()
+    conn.close.side_effect = RuntimeError('test close failure')
+    tunnel = MagicMock()
+    jdbc_runtime._CONN_CACHE['test-conn'] = MagicMock(conn=conn)
+    jdbc_runtime._TUNNEL_CACHE['test-tunnel'] = MagicMock(tunnel=tunnel)
+    logger = MagicMock()
+    monkeypatch.setattr(jdbc_runtime, 'log', logger)
+
+    jdbc_runtime._cleanup_all_cached_at_exit()
+
+    tunnel.close.assert_called_once_with()
+    assert not jdbc_runtime._CONN_CACHE and not jdbc_runtime._TUNNEL_CACHE
+    logger.warning.assert_not_called()
+
+
+def test_shutdown_cleanup_keeps_diagnostic_logging(monkeypatch):
+    logger = MagicMock()
+    monkeypatch.setattr(jdbc_runtime, 'log', logger)
+
+    jdbc_runtime.jdbc_runtime_shutdown()
+
+    logger.info.assert_called_once_with('Cleaning up JDBC cache: tunnels=%d, conns=%d', 0, 0)
+
+
 # ═══════════════════════════════════════════════
 # Section A: 配置解析与构造
 # ═══════════════════════════════════════════════
