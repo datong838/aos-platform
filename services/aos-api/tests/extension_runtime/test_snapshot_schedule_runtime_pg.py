@@ -3,6 +3,11 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
+import sys
+import time
+from functools import wraps
+from types import SimpleNamespace
 from uuid import uuid4
 
 import psycopg
@@ -16,6 +21,53 @@ from aos_api.phase5_pipeline_engine import PipelineEngine
 from aos_api.pipeline_selected_snapshot_group import SelectedSnapshotGroupResult
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleRuntime
+
+
+def _install_test_stage_timing(runtime, monkeypatch):
+    """Opt-in test diagnostics only; preserve exact arguments, returns and errors."""
+    if os.environ.get('AOS_TEST_SCHEDULE_TIMING') != '1':
+        return
+    for owner, name, label in (
+        (runtime._claims, 'claim', 'claim'),
+        (runtime._ingress, 'prepare', 'ingress_prepare'),
+        (runtime._completion, 'complete', 'completion_complete'),
+    ):
+        original = getattr(owner, name)
+
+        @wraps(original)
+        def timed(*args, _original=original, _label=label, **kwargs):
+            start = time.perf_counter()
+            try:
+                return _original(*args, **kwargs)
+            finally:
+                print(f'W5C6R_TIMING {_label} {time.perf_counter() - start:.3f}s',
+                      file=sys.stderr, flush=True)
+
+        monkeypatch.setattr(owner, name, timed)
+
+
+def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
+    def same(*args, **kwargs):
+        return args, kwargs
+    def fail(*args, **kwargs):
+        raise LookupError('original failure')
+    runtime = SimpleNamespace(
+        _claims=SimpleNamespace(claim=same),
+        _ingress=SimpleNamespace(prepare=fail),
+        _completion=SimpleNamespace(complete=same),
+    )
+    monkeypatch.delenv('AOS_TEST_SCHEDULE_TIMING', raising=False)
+    _install_test_stage_timing(runtime, monkeypatch)
+    assert runtime._claims.claim is same
+    monkeypatch.setenv('AOS_TEST_SCHEDULE_TIMING', '1')
+    _install_test_stage_timing(runtime, monkeypatch)
+    assert runtime._claims.claim(1, key='value') == ((1,), {'key': 'value'})
+    with pytest.raises(LookupError, match='original failure'):
+        runtime._ingress.prepare(2)
+    assert runtime._completion.complete(3) == ((3,), {})
+    output = capsys.readouterr().err
+    assert output.count('W5C6R_TIMING ') == 3
+    assert all(label in output for label in ('claim ', 'ingress_prepare ', 'completion_complete '))
 
 
 @pytest.fixture
@@ -74,6 +126,7 @@ def runtime_case(service,monkeypatch):
 
 def test_claim_ack_and_input_ack_loss_recover_original_group_once(runtime_case,monkeypatch):
     runtime,args,state,_,_,_,database=runtime_case
+    _install_test_stage_timing(runtime, monkeypatch)
     original=runtime._transaction
     @contextmanager
     def lost_claim(scope):
