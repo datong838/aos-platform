@@ -1,5 +1,6 @@
 """Real configuration/claims/Store; source and installed assets explicitly named."""
 from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -20,8 +21,39 @@ from aos_api.ecom_consistency_store import EcomConsistencyStore
 from aos_api.phase5_pipeline_engine import PipelineEngine
 from aos_api.pipeline_selected_snapshot_group import SelectedSnapshotGroupResult
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
+from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
+from aos_api.ec_ingress_journal import IngressJournal
 from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleRuntime
 from aos_api import pipeline_snapshot_group_input_owner as snapshot_input_owner
+
+
+def _install_bound_parent_substage_probe(monkeypatch, parent_stages):
+    """Count only calls inside a bound-parent read; never inspect payloads."""
+    active = ContextVar('a0v_test_bound_parent_active', default=False)
+    for owner, name, label in (
+        (ControlledIngressJournal, 'read', 'parent_envelope_read'),
+        (PipelineSourceClaimOwner, 'read_current', 'parent_claim_current'),
+        (PipelineSourceClaimOwner, 'read_completed_current', 'parent_claim_completed'),
+        (IngressJournal, 'verify_schedule_binding', 'parent_running_binding'),
+        (IngressJournal, 'verify_completed_schedule_binding', 'parent_completed_binding'),
+    ):
+        original = getattr(owner, name)
+        parent_stages[label] = [0, 0.0]
+
+        @wraps(original)
+        def measure(*args, _original=original, _label=label, **kwargs):
+            if not active.get():
+                return _original(*args, **kwargs)
+            start = time.perf_counter()
+            try:
+                return _original(*args, **kwargs)
+            finally:
+                item = parent_stages[_label]
+                item[0] += 1
+                item[1] += time.perf_counter() - start
+
+        monkeypatch.setattr(owner, name, measure)
+    return active
 
 
 def _install_test_stage_timing(runtime, monkeypatch):
@@ -32,6 +64,7 @@ def _install_test_stage_timing(runtime, monkeypatch):
     substages = {}
     current_stages = {}
     parent_stages = {}
+    parent_active = _install_bound_parent_substage_probe(monkeypatch, parent_stages)
     for name, label in (('_bound_parent', 'bound_parent'), ('_digest', 'digest')):
         original = getattr(snapshot_input_owner, name)
         parent_stages[label] = [0, 0.0]
@@ -39,9 +72,12 @@ def _install_test_stage_timing(runtime, monkeypatch):
         @wraps(original)
         def measure_parent(*args, _original=original, _label=label, **kwargs):
             start = time.perf_counter()
+            token = parent_active.set(True) if _label == 'bound_parent' else None
             try:
                 return _original(*args, **kwargs)
             finally:
+                if token is not None:
+                    parent_active.reset(token)
                 item = parent_stages[_label]
                 item[0] += 1
                 item[1] += time.perf_counter() - start
@@ -191,7 +227,8 @@ def _install_test_stage_timing(runtime, monkeypatch):
                         print(f'W5C6X_CURRENT {key} count={count} total={seconds:.3f}s',
                               file=sys.stderr, flush=True)
                     for key, (count, seconds) in parent_stages.items():
-                        print(f'W5C6Y_PARENT {key} count={count} total={seconds:.3f}s',
+                        label = 'W5C7M_SUBSTAGE' if key.startswith('parent_') else 'W5C6Y_PARENT'
+                        print(f'{label} {key} count={count} total={seconds:.3f}s',
                               file=sys.stderr, flush=True)
 
         monkeypatch.setattr(owner, name, timed)
@@ -281,6 +318,10 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     assert output.count('W5C6Y_PARENT ') == 8
     assert all(f'W5C6Y_PARENT {label} count=1 total=' in output for label in (
         'object_claim_read_current', 'bound_parent', 'digest'))
+    assert output.count('W5C7M_SUBSTAGE ') == 5
+    assert all(f'W5C7M_SUBSTAGE {label} count=0 total=' in output for label in (
+        'parent_envelope_read', 'parent_claim_current', 'parent_claim_completed',
+        'parent_running_binding', 'parent_completed_binding'))
 
 
 @pytest.fixture
