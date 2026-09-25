@@ -17,6 +17,8 @@
 
 专项三例 GREEN 后，累计 26 passed/3 failed：两条旧测试仍要求后置 Ontology `{ot_id}` PUT 文档，与本波目标冲突；manifest 旧 paths=2708，实际 2706。独立 OpenAPI 读回：前置 `{type_id}` 有 GET/PUT、后置 `{ot_id}` 已无方法；前置 `{schedule_id}/run` 有 POST、后置 `{sc_id}/run` 已无方法；独立 `{sc_id}/pause` POST 保留。故只改两条旧测试为“可达前置 PUT 存在、后置 PUT 不存在”，并把路径封印改为 2706；route count/hash 封印保持。不能把文档键消失说成业务路由删除。
 
+补充累计复测：更新上述三项后剩 `28 passed/1 failed`，失败是 W5c9x 同一个保留性测试还要求后置 `{sc_id}/run` POST。其断言也应改为前置 `{schedule_id}/run` POST 存在、后置 POST 不存在；保留独立 pause 文档断言。无新增业务变更。
+
 ## 九步
 
 1. 上位复习；2. 方案先提交；3. endpoint-free RED；4. 两 decorator 最小修改；5. 专项/累计；6. 代码/方案/no-effect 复审；7. 浏览器离线；8. 证据和上下文；9. 自动下一波。
