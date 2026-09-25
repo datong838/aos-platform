@@ -6,7 +6,7 @@
 
 1. 复习 Store `_apply_batch` 原事务、角色/GUC、W5c6b 真实只读结果与 W5c5k worker fence 原型。
 2. 本方案先提交。只新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c6c_isolated_store_transaction_fence_pg.py` 和 verification；不改生产 Store、真实 DB、Host flag。
-3. 在隔离 PG 用 runtime DSN 建 SQLAlchemy `engine.begin()`，原 `_apply_transaction_scope` 后用同一 SQLAlchemy transaction 的薄适配器调用 `OptInHostLease.fence_in_transaction`。不能使用第二连接作 worker guard。Store 侧仅 `SELECT`/事务范围测试；隔离 lease fixture 可写自身租约表以模拟过期，不写 Store 行。
+3. 在隔离 PG 用 runtime DSN 建与 Store 一样的读写 SQLAlchemy `engine.begin()`，原 `_apply_transaction_scope` 后用同一 SQLAlchemy transaction 的薄适配器调用 `OptInHostLease.fence_in_transaction`。函数需 `FOR SHARE`，不能强制只读事务；但测试 body 仅 `SELECT`，隔离 lease fixture 可写自身租约表以模拟过期，不写 Store 行。不能使用第二连接作 worker guard。
 4. 覆盖默认无 effect、有效 holder、未 acquire/错 scope/epoch/过期拒绝；验证失败拒绝在测试 body 前。
 5. W5c5k–z 与 W5c6a–c 累计；旧 skip/timeout 债如实报告，停隔离 PG。
 6. 浏览器只读核 A0-V rev4 disabled，不保存/运行/冲刷队列。
