@@ -4,6 +4,7 @@ from contextlib import contextmanager
 
 import psycopg
 import pytest
+from alembic import command
 from psycopg.rows import dict_row
 
 from aos_api.data_requirement_outbox_store import DataRequirementOutboxStore
@@ -120,7 +121,7 @@ def test_strict_pending_claim_freezes_expired_and_unknown_without_cross_tenant_r
 def test_strict_pending_function_denies_direct_runtime_delivery_write():
     with isolated_aip_migration_database(
         "w5c8a_strict_acl", migration_target="a0v_095"
-    ) as (_config, dsn):
+    ) as (config, dsn):
         with psycopg.connect(dsn) as admin:
             _seed(admin)
         with psycopg.connect(dsn) as conn:
@@ -134,3 +135,13 @@ def test_strict_pending_function_denies_direct_runtime_delivery_write():
                     """UPDATE data_requirement_outbox_delivery SET state='acked'
                        WHERE org_id='org-org' AND project_id='dev-project'"""
                 )
+        command.downgrade(config, "a0v_094")
+        with psycopg.connect(dsn) as admin:
+            assert admin.execute(
+                "SELECT to_regprocedure(%s)",
+                ("public.data_requirement_outbox_claim_pending_a0v_095(text,text,text,integer)",),
+            ).fetchone()[0] is None
+            assert admin.execute(
+                "SELECT to_regprocedure(%s)",
+                ("public.data_requirement_outbox_claim_biw2_004(text,text,text,integer)",),
+            ).fetchone()[0] is not None
