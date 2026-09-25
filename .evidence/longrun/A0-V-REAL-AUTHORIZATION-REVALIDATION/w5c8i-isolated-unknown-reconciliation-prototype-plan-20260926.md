@@ -20,6 +20,10 @@
 - 先新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8i_legacy_unknown_reconcile_revoke_pg.py` RED，使用隔离 PG 真实 catalog/`SET ROLE aos_runtime` 验旧函数不可执行、正常 complete 仍可执行、无 Delivery 写入。新受控入口尚不存在并继续无运行角色授权。
 - 如果迁移 head 或任何既有测试依赖旧 unknown 函数，需审计兼容并按 STOP 收笔，不通过恢复旧 EXECUTE 绿灯。后继 W5c8j 才实施完整同事务 Host+源组对账成功/拒绝原型，并更新上方的候选文件清单。
 
+## 00:35 CST 补充：冻结遗留显式 reconcile 分支
+
+复审发现 `AnalysisDataRequirementWorker._run_claim(reconcile=True)` 虽不由当前 tick 自动进入，但若被直接调用会**先运行 Coordinator**，最后才撞上已撤权 SQL；仅撤数据库 EXECUTE 不足以保证零二次 source。故再最小修改 `services/aos-api/aos_api/ecommerce_analysis_data_requirement_worker.py`：`reconcile=True` 一入函数就返回冻结/unknown，不读取 route、不调用 Coordinator/Store；`reconcile=False` 正常分支原样。先在 `services/aos-api/tests/extension_runtime/test_analysis_data_requirement_worker.py` 新增会失败的直接调用负例，随后实现并专项回归。真实 Worker 默认仍不接新对账。
+
 ## 九步
 
 1. 复习 W5c8h、原 SQL/Store/Locator/Host Lease、产品恢复约束，核 Git/authority/测试环境。
