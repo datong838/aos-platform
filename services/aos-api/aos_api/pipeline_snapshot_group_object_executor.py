@@ -13,7 +13,8 @@ class ControlledSnapshotGroupObjectExecutor:
     def __init__(self,*,claims,store,connect,eng,host_lease=None):
         if host_lease is not None and type(host_lease) is not OptInHostLease:
             raise TypeError('exact snapshot Object Host lease required')
-        self._single=ControlledSnapshotExecutor(claims=claims,store=store,connect=connect,eng=eng)
+        self._single=ControlledSnapshotExecutor(claims=claims,store=store,connect=connect,eng=eng,
+            host_lease=host_lease)
         self._host_lease=host_lease
         self._claims,self._store=claims,store
         self._journal=PipelineSnapshotGroupRelationshipJournal(claims=claims)

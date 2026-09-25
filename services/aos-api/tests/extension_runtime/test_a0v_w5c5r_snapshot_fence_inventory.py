@@ -31,6 +31,8 @@ def test_completion_transaction_delegation_still_reaches_original_ingress():
     object_transaction = inspect.getsource(ControlledSnapshotGroupObjectExecutor._transaction)
     assert 'self._single._ingress._transaction(scope)' in object_transaction
     assert 'self._host_lease.fence_in_transaction(' in object_transaction
+    assert 'host_lease=host_lease' in inspect.getsource(ControlledSnapshotGroupObjectExecutor.__init__)
+    assert 'host_lease=host_lease' in inspect.getsource(ControlledSnapshotExecutor.__init__)
     ingress = inspect.getsource(ControlledSnapshotIngress._transaction)
     assert 'apply_asset_transaction_scope' in ingress
     assert 'self._host_lease.fence_in_transaction(' in ingress

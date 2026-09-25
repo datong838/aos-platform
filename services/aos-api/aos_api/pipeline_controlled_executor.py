@@ -5,13 +5,17 @@ from aos_api.ec_ingress_recovery import _bound_parent, _check_active, recover_sa
 from aos_api.pipeline_controlled_ingress_journal import ControlledIngressJournal
 from aos_api.pipeline_controlled_projection import project_saved_batch
 from aos_api.pipeline_controlled_snapshot_ingress import ControlledSnapshotIngress, PreparedControlledSnapshot
+from aos_api.extension_runtime.host_lease import OptInHostLease
 
 
 class ControlledSnapshotExecutor:
     """Trusted host assembly with independent connections and original run keys."""
 
-    def __init__(self, *, claims, store, connect, eng, schedule_binding=None):
-        self._ingress = ControlledSnapshotIngress(claims=claims, store=store, connect=connect,schedule_binding=schedule_binding)
+    def __init__(self, *, claims, store, connect, eng, schedule_binding=None, host_lease=None):
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot Single Host lease required')
+        self._ingress = ControlledSnapshotIngress(claims=claims, store=store, connect=connect,
+            schedule_binding=schedule_binding,host_lease=host_lease)
         self._claims, self._store, self._eng = claims, store, eng
 
     def execute(self, *, scope, run_id, control_ref, actor, deadline=None, cancel_event=None):
