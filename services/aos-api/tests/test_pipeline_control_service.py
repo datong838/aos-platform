@@ -70,5 +70,29 @@ def test_snapshot_worker_factory_shares_original_authority_without_connecting(tm
         assert worker._runtime._completion._store is worker._recovery._store is store
         assert worker._runtime._connect is worker._recovery._connect is module.runtime_worker_connection
         assert worker._recovery._eng is named_engine
+        assert worker._runtime._host_lease is worker._recovery._host_lease is None
         with pytest.raises(TypeError):factory(tmp_path).build_snapshot_worker(worker.scope,store=object())
+    finally:engine.dispose()
+
+
+def test_snapshot_worker_factory_only_passes_exact_same_scope_opt_in_lease(tmp_path,monkeypatch):
+    from sqlalchemy import create_engine
+    from aos_api.ecom_consistency_store import EcomConsistencyStore
+    from aos_api.extension_runtime.host_lease import OptInHostLease
+    import aos_api.pipeline_control_service as module
+
+    monkeypatch.setattr(module,'runtime_worker_connection',lambda:pytest.fail('constructor connected'))
+    scope=TenantScope('org-org','dev-project')
+    lease=OptInHostLease(connect=lambda:pytest.fail('lease acquired'),scope=scope)
+    wrong=OptInHostLease(connect=lambda:pytest.fail('lease acquired'),
+                         scope=TenantScope('dev-org','dev-project'))
+    engine=create_engine('postgresql+psycopg://unused@127.0.0.1:1/unused')
+    try:
+        store=EcomConsistencyStore(engine)
+        worker=factory(tmp_path).build_snapshot_worker(scope,store=store,host_lease=lease)
+        assert worker._runtime._host_lease is worker._recovery._host_lease is lease
+        with pytest.raises(TypeError,match='Host lease'):
+            factory(tmp_path).build_snapshot_worker(scope,store=store,host_lease=object())
+        with pytest.raises(PermissionError,match='tenant'):
+            factory(tmp_path).build_snapshot_worker(scope,store=store,host_lease=wrong)
     finally:engine.dispose()

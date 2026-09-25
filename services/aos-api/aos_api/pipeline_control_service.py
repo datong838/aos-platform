@@ -93,15 +93,21 @@ class PipelineControlServiceFactory:
             controls=PipelineRuntimeControlOwner(selections=selections)
         return PipelineSnapshotScheduleService(scope=scope,controls=controls,installation_store=self.installation_store)
 
-    def build_snapshot_worker(self,scope,*,store):
+    def build_snapshot_worker(self,scope,*,store,host_lease=None):
         from aos_api.ecom_consistency_store import EcomConsistencyStore
+        from aos_api.extension_runtime.host_lease import OptInHostLease
         from aos_api.phase5_pipeline_engine import get_engine
         from aos_api.pipeline_snapshot_schedule_runtime import PipelineSnapshotScheduleRuntime
         from aos_api.pipeline_snapshot_group_recovery_runtime import PipelineSnapshotGroupRecoveryRuntime
         from aos_api.pipeline_snapshot_schedule_worker import PipelineSnapshotScheduleWorker
         if type(store) is not EcomConsistencyStore:raise TypeError('original snapshot Store required')
+        if host_lease is not None:
+            if type(host_lease) is not OptInHostLease:raise TypeError('exact Snapshot Host lease required')
+            if type(scope) is not TenantScope or host_lease.scope.key!=scope.key:
+                raise PermissionError('Snapshot Host lease tenant differs')
         services=self.build(scope)
-        dependencies=dict(claims=services.claims,store=store,connect=runtime_worker_connection,eng=get_engine())
+        dependencies=dict(claims=services.claims,store=store,connect=runtime_worker_connection,
+                          eng=get_engine(),host_lease=host_lease)
         return PipelineSnapshotScheduleWorker(scope=scope,runtime=PipelineSnapshotScheduleRuntime(**dependencies),
             recovery=PipelineSnapshotGroupRecoveryRuntime(**dependencies))
 
