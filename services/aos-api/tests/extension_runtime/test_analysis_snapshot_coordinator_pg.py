@@ -183,7 +183,7 @@ def test_claim_route_is_the_only_input_to_fixed_coordinator(chain_case, completi
             (claim, missing_fulfillment, analysis_ref),
             (claim, fulfillment_ref, preparing_analysis),
         ):
-            with pytest.raises(DataRequirementOutboxConflict):
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 outbox.reconcile_completed(analysis.scope, attempted_claim,
                     attempted_fulfillment, attempted_analysis)
         with psycopg.connect(_private_dsn(conn)) as admin:
@@ -191,8 +191,25 @@ def test_claim_route_is_the_only_input_to_fixed_coordinator(chain_case, completi
                 SET lease_expires_at=clock_timestamp()-INTERVAL '1 second'
                 WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
                 (*analysis.scope.key, claim.outbox_id))
-        completed = outbox.reconcile_completed(
-            analysis.scope, claim, fulfillment_ref, analysis_ref)
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            outbox.reconcile_completed(analysis.scope, claim, fulfillment_ref, analysis_ref)
+        with factory(analysis.scope) as reader:
+            readback = reader.execute('''SELECT state,attempt,lease_token,
+                    completion_fulfillment_ref,completion_analysis_ref
+                FROM data_requirement_outbox_delivery
+                WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
+                (*analysis.scope.key, claim.outbox_id)).fetchone()
+        assert readback == dict(state='unknown', attempt=claim.attempt,
+            lease_token=claim.lease_token,
+            completion_fulfillment_ref=None, completion_analysis_ref=None)
+        with factory(type(analysis.scope)(org_id='dev-org', project_id='dev-project')) as reader:
+            assert reader.execute('''SELECT state FROM data_requirement_outbox_delivery
+                WHERE org_id=%s AND project_id=%s AND outbox_id=%s''',
+                (*analysis.scope.key, claim.outbox_id)).fetchone() is None
+        assert state['calls'] == 1
+        assert before == {table: conn.execute(f'SELECT count(*) AS n FROM {table}').fetchone()['n']
+            for table in before}
+        return
 
     # Treat the returned completion as lost: a separate runtime connection must
     # identify the committed original attempt and both exact Receipts by SELECT.

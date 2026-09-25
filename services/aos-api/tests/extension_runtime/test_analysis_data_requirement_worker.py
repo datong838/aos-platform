@@ -159,6 +159,15 @@ def test_unknown_never_reenters_coordinator_even_if_it_would_fail(monkeypatch):
     assert [call[0] for call in outbox.calls] == ['read_ambiguous']
 
 
+def test_direct_legacy_reconcile_is_frozen_before_route_or_coordinator(monkeypatch):
+    worker, _, _, _ = _worker(monkeypatch)
+    seen = []
+    monkeypatch.setattr(worker, '_route', lambda *args, **kwargs:
+                        seen.append('route') or (_ for _ in ()).throw(AssertionError('no route')))
+    assert worker._run_claim(SCOPE, _claim('unknown'), reconcile=True) == 'unknown'
+    assert seen == []
+
+
 def test_tick_is_bounded_and_rotates_scopes(monkeypatch):
     worker, _, _, _ = _worker(monkeypatch)
     scopes = tuple(TenantScope('org', f'project-{n}') for n in range(5))

@@ -1,6 +1,7 @@
 """Claimed DataRequirement Outbox -> original analysis/snapshot route."""
 from contextlib import contextmanager
 from dataclasses import replace
+import os
 
 import pytest
 import psycopg
@@ -27,7 +28,8 @@ from aos_api.ecommerce_analysis_data_requirement_route import (
 
 
 def _runtime_connect(conn):
-    dsn = conn.info.dsn
+    dsn = os.environ["AOS_DATABASE_URL"]
+    assert psycopg.conninfo.conninfo_to_dict(dsn)["dbname"] == conn.info.dbname
 
     @contextmanager
     def factory(scope):

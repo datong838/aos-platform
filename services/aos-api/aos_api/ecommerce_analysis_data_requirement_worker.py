@@ -80,6 +80,13 @@ class AnalysisDataRequirementWorker:
             log.warning('analysis_data_requirement_unknown_fenced scope=%s outbox=%s', scope.key, claim.outbox_id)
 
     def _run_claim(self, scope, claim, *, reconcile):
+        if reconcile:
+            # The legacy branch would run the coordinator before the old
+            # unfenced unknown transition. A future reconciler needs a
+            # separate zero-source, Host-fenced transaction contract.
+            log.warning('analysis_data_requirement_legacy_reconcile_frozen scope=%s outbox=%s',
+                        scope.key, claim.outbox_id)
+            return 'unknown'
         try:
             route = self._route(scope, claim, reconcile=reconcile)
             self.directory.resolve(scope=scope, installation_id=route.installation_id,
