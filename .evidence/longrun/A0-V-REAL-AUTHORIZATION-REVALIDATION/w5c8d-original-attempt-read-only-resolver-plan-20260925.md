@@ -6,9 +6,10 @@
 
 ## 文件级清单与最小接口
 
-- 新增 `services/aos-api/aos_api/ecommerce_analysis_original_attempt_receipt_resolver.py`：输入精确 `TenantScope`、持久 Outbox 原 attempt（含 requirement id/revision/hash、attempt、lease token）和连接工厂；只读核对 Outbox 行仍是同一原 tuple 且状态为 `unknown` 或过期 `claimed`。按与 `AnalysisSnapshotCoordinator._resume` 完全一致的 canonical tenant+RequirementRef 公式求幂等键，直接读持久 Analysis Receipt，不调用 `_resume` 或 `coordinator.run`。
+- 新增 `services/aos-api/aos_api/ecommerce_analysis_original_attempt_receipt_resolver.py`：输入精确 `TenantScope`、持久 Outbox 原 attempt（含 requirement id/revision/hash、attempt、lease token）和连接工厂；只读核对 Outbox 行仍是同一原 tuple 且状态为 `unknown` 或过期 `claimed`。直接读持久 Analysis Receipt，不调用 `_resume` 或 `coordinator.run`。
+- 最小修改 `services/aos-api/aos_api/ecommerce_analysis_snapshot_coordinator.py`：把 `_resume`/`_replay_committed` 已共用但重复书写的 canonical tenant+RequirementRef 幂等键公式抽为同文件纯函数，由新只读 resolver 复用；不改键格式或自动执行顺序。以现有 Coordinator PG 长例和新解析器隔离 PG 验证等价，避免复制哈希权威逻辑。
 - 使用 `BoundEcommerceGrowthRuntimeStore.read` / `read_exact`、`DataFulfillmentStore.read_exact` 及 `a0v_050` 所需的严格字段谓词；只接受唯一 RUNNING、未完成、精确 Requirement/Run、精确 FulfillmentRef、同租户同源绑定。解析返回证据结构或显式冻结原因，不返回可写命令/授权。若现有 Store 响应不足以证明任一谓词，则 fail closed，不猜测。
-- 新增 `services/aos-api/tests/test_a0v_w5c8d_original_attempt_receipt_resolver_pg.py`：一次性隔离 PG 验证唯一完整证据、缺任一 Receipt、PREPARING、错误租户/Run/Requirement、重复候选、attempt/token 漂移、过期 claimed 与 dev-org 零可见；另用替身证明无 coordinator/source 或写 SQL。测试造数不得触商城源。
+- 新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8d_original_attempt_receipt_resolver_pg.py`：复用原快照链一次性隔离 PG，验证唯一完整证据、缺 Receipt、PREPARING、错误租户/Run/Requirement、重复候选、attempt/token 漂移、过期 claimed 与 dev-org 零可见；测试连接强制只读，运行后的 source 调用计数保持 1。测试造数不得触商城源。
 - 只在 `.evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/` 新增 verification；不改 Worker 自动路径、数据库迁移或真实 DB。若最小接口证明需要新持久索引/SQL，停在设计复审并另立方案，不在本波引入状态写入。
 
 ## 九步与退出
