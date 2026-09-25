@@ -33,6 +33,9 @@ def _install_test_stage_timing(runtime, monkeypatch):
         (runtime._completion, 'complete', 'completion_complete'),
         (runtime._completion._retirement, 'execute', 'retirement_execute'),
         (runtime._completion._retirement._links, 'execute', 'links_execute'),
+        (runtime._completion._retirement._links._objects, 'execute', 'objects_execute'),
+        (runtime._completion._retirement._links._objects._single,
+         'resume_saved', 'single_resume_saved'),
         (runtime._completion, '_finish', 'completion_finish'),
     ):
         original = getattr(owner, name)
@@ -60,7 +63,9 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
         _completion=SimpleNamespace(
             complete=same, _finish=same,
             _retirement=SimpleNamespace(
-                execute=same, _links=SimpleNamespace(execute=same))),
+                execute=same, _links=SimpleNamespace(
+                    execute=same, _objects=SimpleNamespace(
+                        execute=same, _single=SimpleNamespace(resume_saved=same))))),
     )
     monkeypatch.delenv('AOS_TEST_SCHEDULE_TIMING', raising=False)
     _install_test_stage_timing(runtime, monkeypatch)
@@ -73,12 +78,15 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     assert runtime._completion.complete(3) == ((3,), {})
     assert runtime._completion._retirement.execute(4) == ((4,), {})
     assert runtime._completion._retirement._links.execute(5) == ((5,), {})
-    assert runtime._completion._finish(6) == ((6,), {})
+    assert runtime._completion._retirement._links._objects.execute(6) == ((6,), {})
+    assert runtime._completion._retirement._links._objects._single.resume_saved(7) == ((7,), {})
+    assert runtime._completion._finish(8) == ((8,), {})
     output = capsys.readouterr().err
-    assert output.count('W5C6R_TIMING ') == 6
+    assert output.count('W5C6R_TIMING ') == 8
     assert all(label in output for label in (
         'claim ', 'ingress_prepare ', 'completion_complete ',
-        'retirement_execute ', 'links_execute ', 'completion_finish '))
+        'retirement_execute ', 'links_execute ', 'objects_execute ',
+        'single_resume_saved ', 'completion_finish '))
 
 
 @pytest.fixture
