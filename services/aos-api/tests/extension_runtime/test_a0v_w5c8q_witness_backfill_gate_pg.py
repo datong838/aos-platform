@@ -70,6 +70,14 @@ def test_exact_operator_binds_original_input_without_direct_table_write(chain_ca
         admin.execute(sql.SQL("GRANT aos_snapshot_witness_operator TO {}")
                       .format(sql.Identifier(caller)))
         try:
+            admin.execute("SET ROLE aos_snapshot_witness_operator")
+            admin.execute("SELECT set_config('aos.org_id',%s,false),"
+                          "set_config('aos.project_id',%s,false)", analysis.scope.key)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                admin.execute(f"SELECT {FUNCTION_NAME}(%s,%s,%s,%s,%s)",
+                              (*analysis.scope.key, row["group_id"],
+                               witness.binding_json, witness.manifest_json))
+            admin.execute("RESET ROLE")
             with psycopg.connect(dsn, row_factory=dict_row) as operator:
                 operator.execute(sql.SQL("SET SESSION AUTHORIZATION {}")
                                  .format(sql.Identifier(caller)))
@@ -85,6 +93,25 @@ def test_exact_operator_binds_original_input_without_direct_table_write(chain_ca
                 operator.rollback()
                 args = (*analysis.scope.key, row["group_id"],
                         witness.binding_json, witness.manifest_json)
+                operator.isolation_level = psycopg.IsolationLevel.READ_COMMITTED
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    operator.execute(f"SELECT {FUNCTION_NAME}(%s,%s,%s,%s,%s)", args)
+                operator.rollback()
+                operator.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+                operator.execute("RESET ROLE")
+                operator.commit()
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    operator.execute(f"SELECT {FUNCTION_NAME}(%s,%s,%s,%s,%s)", args)
+                operator.rollback()
+                operator.execute("SET ROLE aos_snapshot_witness_operator")
+                operator.execute("SELECT set_config('aos.org_id','',false)")
+                operator.commit()
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    operator.execute(f"SELECT {FUNCTION_NAME}(%s,%s,%s,%s,%s)", args)
+                operator.rollback()
+                operator.execute("SELECT set_config('aos.org_id',%s,false)",
+                                 (analysis.scope.org_id,))
+                operator.commit()
                 barrier = Barrier(2)
 
                 def compete():
