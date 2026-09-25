@@ -37,6 +37,22 @@ class AnalysisDataRequirementRoute:
     generation: str
 
 
+@dataclass(frozen=True)
+class HistoricalSourceGroupEvidence:
+    requirement_ref: InvestigationExactRef
+    run_ref: InvestigationExactRef
+    case_ref: InvestigationExactRef
+    original_analysis_ref: dict
+    occurrence_ref: dict
+    occurrence_id: str
+    actor: str
+    source_run_id: str
+    source_control_ref: PipelineExactRef
+    group_id: str
+    group_bindings: tuple[tuple[PipelineExactRef, str], ...]
+    manifest_hash: str
+
+
 class AnalysisDataRequirementRouteReader:
     """Resolve immutable lineage only; this object grants no data or Run action."""
 
@@ -123,11 +139,17 @@ class AnalysisDataRequirementRouteReader:
         InvestigationExactRef.model_validate(reference)
         return saved
 
-    def _read(self, scope, claim, *, expected_state):
+    def _read(self, scope, claim, *, expected_state, historical=False):
         if type(scope) is not TenantScope:
             raise TypeError("exact DataRequirement route tenant required")
         self._validate_claim(claim)
         with self._connect(scope) as conn:
+            if historical:
+                read_only = conn.execute("SHOW transaction_read_only").fetchone()[
+                    "transaction_read_only"
+                ]
+                if read_only != "on":
+                    raise PermissionError("historical source-group evidence requires read-only transaction")
             tx = HostTransaction(conn)
             self._outbox_current(conn, scope, claim, expected_state=expected_state)
             factory = TransactionBoundConnectFactory(tx, scope)
@@ -139,21 +161,21 @@ class AnalysisDataRequirementRouteReader:
             )
             requirements = DataRequirementStore(factory)
             requirement = requirements.get_exact(scope, reference)
-            if requirements.get_current(scope, claim.requirement_id) != requirement:
+            if not historical and requirements.get_current(scope, claim.requirement_id) != requirement:
                 raise ValueError("DataRequirement Outbox revision is no longer current")
             if requirement.status.value != "requested" or requirement.blockers:
                 raise ValueError("DataRequirement Outbox is not an actionable request")
             root = self._analysis_receipt(tx, scope, requirement)
             occurrence_id = UUID(root["occurrenceRef"]["resourceId"])
             occurrence = _occurrence_payload(tx, scope, occurrence_id)
-            historical = AnalysisAdvanceHostService._accepted_occurrence_reference(
-                tx, scope, occurrence
+            accepted_ref = AnalysisAdvanceHostService._accepted_occurrence_reference(
+                tx, scope, occurrence, read_only=historical,
             )
             if (
                 occurrence["status"] != "accepted"
                 or occurrence["triggerSource"] != "event"
                 or occurrence["operationId"] != "ecommerce_growth_analysis_advance"
-                or historical != root["occurrenceRef"]
+                or accepted_ref != root["occurrenceRef"]
             ):
                 raise ValueError("DataRequirement original occurrence differs")
             from aos_api.ecommerce_product_event_origin import ProductEventOriginStore
@@ -173,6 +195,21 @@ class AnalysisDataRequirementRouteReader:
             if len(matches) != 1:
                 raise ValueError("DataRequirement source run is not unique in its snapshot group")
             control_ref, source_run_id = matches[0]
+            if historical:
+                return HistoricalSourceGroupEvidence(
+                    requirement_ref=reference,
+                    run_ref=requirement.run_ref,
+                    case_ref=requirement.case_ref,
+                    original_analysis_ref=root["receiptRef"],
+                    occurrence_ref=root["occurrenceRef"],
+                    occurrence_id=str(occurrence_id),
+                    actor=origin["actor"],
+                    source_run_id=source_run_id,
+                    source_control_ref=control_ref,
+                    group_id=group.group_id,
+                    group_bindings=group.bindings,
+                    manifest_hash=group.manifest_hash,
+                )
             return AnalysisDataRequirementRoute(
                 requirement=requirement,
                 analysis_receipt_ref=root["receiptRef"],
@@ -192,3 +229,7 @@ class AnalysisDataRequirementRouteReader:
     def read_unknown(self, scope, claim):
         """Rebuild only the immutable route of the same unknown delivery attempt."""
         return self._read(scope, claim, expected_state="unknown")
+
+    def read_unknown_historical(self, scope, claim):
+        """Only diagnostic original lineage; no current execution authority."""
+        return self._read(scope, claim, expected_state="unknown", historical=True)

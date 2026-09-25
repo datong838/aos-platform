@@ -1343,8 +1343,11 @@ class AnalysisAdvanceHostService:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
     @staticmethod
-    def _accepted_occurrence_reference(transaction, scope, authority):
+    def _accepted_occurrence_reference(transaction, scope, authority, *, read_only=False):
         """Prove the historical claimed reference from the actual completion Receipt."""
+        if type(read_only) is not bool:
+            raise TypeError('exact occurrence read mode required')
+        lock = '' if read_only else ' FOR SHARE OF o,a'
         rows = transaction.execute(
             """SELECT o.receipt_ref,a.target_idempotency_key,a.receipt_ref AS attempt_receipt
                  FROM automation_occurrence o JOIN automation_occurrence_dispatch_attempt a
@@ -1352,8 +1355,8 @@ class AnalysisAdvanceHostService:
                 WHERE o.org_id=%s AND o.project_id=%s AND o.occurrence_id=%s
                   AND o.status='accepted' AND o.claim_owner IS NULL AND o.claim_until IS NULL
                   AND o.operation_id='ecommerce_growth_analysis_advance'
-                  AND a.status='receipt_recorded' AND a.resolved_at IS NOT NULL
-                FOR SHARE OF o,a""", (*scope.key, UUID(str(authority["occurrenceId"]))),
+                  AND a.status='receipt_recorded' AND a.resolved_at IS NOT NULL""" + lock,
+            (*scope.key, UUID(str(authority["occurrenceId"]))),
         ).fetchall()
         if len(rows) != 1 or rows[0]["receipt_ref"] != rows[0]["attempt_receipt"]:
             raise ValueError("completed analysis occurrence Receipt is not unique")

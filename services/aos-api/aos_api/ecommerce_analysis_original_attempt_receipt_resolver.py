@@ -28,6 +28,11 @@ class OriginalAttemptReceiptEvidence:
     lease_token: str
     fulfillment_ref: InvestigationExactRef
     analysis_ref: InvestigationExactRef
+    requirement_ref: InvestigationExactRef
+    run_ref: InvestigationExactRef
+    case_ref: InvestigationExactRef
+    occurrence_ref: InvestigationExactRef
+    original_analysis_ref: InvestigationExactRef
 
 
 class OriginalAttemptReceiptFrozen(ValueError):
@@ -159,8 +164,15 @@ class OriginalAttemptReceiptResolver:
                     or (fulfillment.tenant.org_id, fulfillment.tenant.project_id) != scope.key
                     or saved.get('fulfillmentRef') != fulfillment_json):
                 raise OriginalAttemptReceiptFrozen('FULFILLMENT_LINEAGE_DRIFT')
-            return OriginalAttemptReceiptEvidence(row['state'], claim.outbox_id, claim.attempt,
-                claim.lease_token, fulfillment_ref, analysis_ref)
+            return OriginalAttemptReceiptEvidence(
+                state=row['state'],outbox_id=claim.outbox_id,attempt=claim.attempt,
+                lease_token=claim.lease_token,fulfillment_ref=fulfillment_ref,
+                analysis_ref=analysis_ref,requirement_ref=requirement_ref,
+                run_ref=InvestigationExactRef.model_validate(saved['runRef']),
+                case_ref=InvestigationExactRef.model_validate(saved['caseRef']),
+                occurrence_ref=InvestigationExactRef.model_validate(saved['occurrenceRef']),
+                original_analysis_ref=InvestigationExactRef.model_validate(
+                    originals[0]['target_receipt_ref']))
 
 
 __all__ = ['OriginalAttemptReceiptEvidence', 'OriginalAttemptReceiptFrozen',
