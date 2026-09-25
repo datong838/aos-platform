@@ -69,7 +69,7 @@ async def list_schedules(
     }
 
 
-@router.post("")
+@router.post("", include_in_schema=False)
 async def create_schedule(req: CreateScheduleRequest, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     sc = eng.create_schedule(_scope(principal), **req.model_dump())

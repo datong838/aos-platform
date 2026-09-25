@@ -114,7 +114,7 @@ async def list_pipelines(
     }
 
 
-@router.post("")
+@router.post("", include_in_schema=False)
 async def create_pipeline(req: CreatePipelineRequest, principal: Annotated[Principal, Depends(require_principal)]) -> dict[str, Any]:
     eng = get_engine()
     pl = eng.create_pipeline(_scope(principal), **req.model_dump())

@@ -25,7 +25,7 @@ async def list_branches(status: str | None = Query(None)) -> dict[str, Any]:
     return {"items": [b.model_dump() for b in items], "count": len(items)}
 
 
-@router.post("/branches")
+@router.post("/branches", include_in_schema=False)
 async def create_branch(req: CreateBranchRequest) -> dict[str, Any]:
     eng = get_engine()
     br = eng.create_branch(**req.model_dump())
