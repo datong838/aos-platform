@@ -24,3 +24,7 @@
 9. 自动下一波 W5c8q：只读部署前门与真实 profile 恢复顺序方案，真实迁移/扫描/回填仍需独立明确证据门。
 
 任何未知提交边界冻结，绝不重发或手工 `run_definition`；230 L0 挂起、商城源不读、dev-org 零 canary、m1 单写不 push。
+
+## 第 3 步权限审计后收窄（2026-09-26）
+
+核对 `a0v_097` 后确认表 owner 可直接 INSERT，旧表 RLS 虽 FORCE 但不能代替专用写主体；现有 `a0v_037` 提供 NOLOGIN/NOBYPASSRLS 专用角色样例。将本波退出条件收窄为**设计审计与零新增 EXECUTE**：先明确专用角色 owner、迁移时 role-membership 校验、原表 SELECT/sidecar INSERT 的最小授权、函数所有权与执行授权、RLS/搜索路径及回滚限制。未完成独立隔离 PG 角色/并发/原输入绑定红绿测试之前不得增加 migration 或 Writer。后继 W5c8q 承接编码与测试；原第 9 步的真实部署前门顺延后续波。
