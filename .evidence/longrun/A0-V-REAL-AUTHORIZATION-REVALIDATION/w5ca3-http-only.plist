@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.aos.a0v-http-w5ca3</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/.venv/bin/python</string>
+    <string>/Users/ddt/work/projects/ai_agent/aos-platform/scripts/a0v_w5c9a_http_only_api.py</string>
+    <string>serve</string>
+    <string>--output</string>
+    <string>/tmp/aos-w5ca3-http-preflight-20260926.json</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/ddt/work/projects/ai_agent/aos-platform</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/Users/ddt/.docker/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><false/>
+  <key>StandardOutPath</key><string>/tmp/aos-w5ca3-http-stdout-20260926.log</string>
+  <key>StandardErrorPath</key><string>/tmp/aos-w5ca3-http-stderr-20260926.log</string>
+</dict>
+</plist>
