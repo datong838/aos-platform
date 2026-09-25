@@ -76,7 +76,7 @@ async def list_object_types(
     }
 
 
-@router.get("/object-types/{ot_id}")
+@router.get("/object-types/{ot_id}", include_in_schema=False)
 async def get_object_type(ot_id: str) -> dict[str, Any]:
     eng = get_engine()
     ot = eng.get_object_type(ot_id)

@@ -13,7 +13,7 @@ from aos_api.aip_lineage_engine import get_engine
 router = APIRouter(prefix="/v1/aip", tags=["aip-lineage"])
 
 
-@router.get("/lineage/{record_id}")
+@router.get("/lineage/{record_id}", include_in_schema=False)
 async def get_lineage(record_id: str) -> dict[str, Any]:
     eng = get_engine()
     rec = eng.get(record_id)

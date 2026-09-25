@@ -76,7 +76,7 @@ async def create_schedule(req: CreateScheduleRequest, principal: Principal = Dep
     return sc.model_dump()
 
 
-@router.get("/{sc_id}")
+@router.get("/{sc_id}", include_in_schema=False)
 async def get_schedule(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     sc = eng.get_schedule(_scope(principal), sc_id)
@@ -122,7 +122,7 @@ async def pause_schedule(sc_id: str, principal: Principal = Depends(require_prin
 # ─────────── Schedule runs ───────────
 
 
-@router.get("/{sc_id}/runs")
+@router.get("/{sc_id}/runs", include_in_schema=False)
 async def list_schedule_runs(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     scope = _scope(principal)

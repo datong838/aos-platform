@@ -435,7 +435,8 @@ class RouterManifestRuntimeTests(unittest.TestCase):
             "3ce493dbdcb5cc3069d515983399b336187d1eda400f8e9a0a5c6bec773c0c0d",
             result["sha256"],
         )
-        self.assertEqual(2710, result["openapi_paths"])
+        # W5c9x hides two GET-only shape aliases; the other two aliases retain PUT.
+        self.assertEqual(2708, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],
