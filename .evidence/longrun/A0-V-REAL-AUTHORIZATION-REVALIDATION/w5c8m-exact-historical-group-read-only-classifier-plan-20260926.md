@@ -7,9 +7,13 @@
 ## 文件级清单
 
 - 复习 `pipeline_snapshot_group_locator.py`、`pipeline_snapshot_group_canonical_witness.py`、`a0v_045/097`、W5c8g 同快照限制；核 role/tenant/read-only 状态和无锁历史读取。
-- 新增 `services/aos-api/aos_api/pipeline_snapshot_group_witness_classifier.py`：输入精确 `TenantScope`、UUID group 与**已开启只读事务**的连接；只读原 claim/input/member 和可选 sidecar，不读 ecommerce source。返回枚举 `READY_CANDIDATE`/`MISSING_GROUP`/`MISSING_INPUT`/`HASH_DRIFT`/`MEMBER_DRIFT`/`SIDECAR_CONFLICT` 等，不返回原 JSON 或可执行授权；查询需上限 13 个成员，避免任意宽扫。
-- 先新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8m_exact_group_classifier_pg.py`：隔离 PG RED→GREEN，真实保存组正例、错 UUID/租户、可写连接、缺 input/hash/member/sidecar 冲突负例；不可构造真实表篡改时用纯函数行集注入并注明覆盖层级，不把 mock 当 PG 正例。`dev-org` 只负例。
+- 新增 `services/aos-api/aos_api/pipeline_snapshot_group_witness_classifier.py`：输入精确 `TenantScope`、UUID group 与**已开启只读事务**的连接；只读原 claim/input/member，不读 ecommerce source。返回枚举 `READY_CANDIDATE`/`MISSING_GROUP`/`MISSING_INPUT`/`HASH_DRIFT`/`MEMBER_DRIFT` 等，不返回原 JSON 或可执行授权；查询需上限 13 个成员，避免任意宽扫。
+- 先新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c8m_exact_group_classifier_pg.py`：隔离 PG RED→GREEN，真实保存组正例、错 UUID/租户、可写连接、缺 input/hash/member 负例；不可构造真实表篡改时用纯函数行集注入并注明覆盖层级，不把 mock 当 PG 正例。`dev-org` 只负例。
 - 不新增迁移/受控 writer/ACK/Worker 入口，不读取真实历史行。未来批量扫描、真实只读扫描许可和回填审批另立计划；本波结果类型不能作为写权限。
+
+## 02:xx CST 收敛：保留 sidecar SELECT 停线
+
+W5c8l 明确只建立空表且不给运行角色任何表权限。若本波为了分类 `SIDECAR_CONFLICT` 临时授 SELECT，会改变该安全边界；而该判断并非验证原 claim/input/member 必需。故本波不查询 sidecar、不授运行角色 SELECT，返回值仅表示原历史组**候选**。sidecar 与原 input manifest hash 的精确对照移交未来受控 writer/独立权限方案，不拿缺少的状态伪装已测。
 
 ## 九步
 
