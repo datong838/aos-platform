@@ -4,7 +4,8 @@ datasets + preview + builds + health + sync-config.
 
 TI-5 C2-B：``GET /v1/datasets`` 与 ``GET /v1/datasets/{id}`` 因 Router
 注册顺序被 wave_ext Data OS 抢先匹配，本模块同名 GET 为
-``NOT_REACHABLE_DUPLICATE``（manifest 仍登记 2 条，本波不改 route 契约）。
+``NOT_REACHABLE_DUPLICATE``（manifest 仍登记 2 条，运行时 route 契约不变；
+后置两条 GET 不再作为可用端点出现在 OpenAPI）。
 POST / preview / builds / health / sync-config 仍由本模块服务，存储已 scoped。
 """
 from __future__ import annotations
@@ -48,7 +49,7 @@ class UpdateSyncConfigRequest(BaseModel):
 # ─────────── Dataset list + create ───────────
 
 
-@router.get("")
+@router.get("", include_in_schema=False)
 async def list_datasets(
     principal: Annotated[Principal, Depends(require_principal)],
     search: str | None = Query(None),
@@ -78,7 +79,7 @@ async def create_dataset(
 # ─────────── Dataset detail (metadata + statistics + schema) ───────────
 
 
-@router.get("/{ds_id}")
+@router.get("/{ds_id}", include_in_schema=False)
 async def get_dataset(
     ds_id: str,
     principal: Annotated[Principal, Depends(require_principal)],
