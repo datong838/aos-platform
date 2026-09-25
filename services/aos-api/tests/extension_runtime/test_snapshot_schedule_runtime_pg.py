@@ -27,6 +27,31 @@ def _install_test_stage_timing(runtime, monkeypatch):
     """Opt-in test diagnostics only; preserve exact arguments, returns and errors."""
     if os.environ.get('AOS_TEST_SCHEDULE_TIMING') != '1':
         return
+    aggregates = {}
+    for owner, name, label in (
+        (runtime._completion._retirement._links._objects._journal,
+         'read_current', 'object_read_current'),
+        (runtime._completion._retirement._links._objects._journal,
+         'run_current', 'object_run_current'),
+        (runtime._completion._retirement._links._commands,
+         'read_current', 'link_read_current'),
+        (runtime._completion._retirement._retirement,
+         'read_current', 'retirement_read_current'),
+    ):
+        original = getattr(owner, name)
+        aggregates[label] = [0, 0.0]
+
+        @wraps(original)
+        def aggregate(*args, _original=original, _label=label, **kwargs):
+            start = time.perf_counter()
+            try:
+                return _original(*args, **kwargs)
+            finally:
+                item = aggregates[_label]
+                item[0] += 1
+                item[1] += time.perf_counter() - start
+
+        monkeypatch.setattr(owner, name, aggregate)
     for owner, name, label in (
         (runtime._claims, 'claim', 'claim'),
         (runtime._ingress, 'prepare', 'ingress_prepare'),
@@ -48,6 +73,10 @@ def _install_test_stage_timing(runtime, monkeypatch):
             finally:
                 print(f'W5C6R_TIMING {_label} {time.perf_counter() - start:.3f}s',
                       file=sys.stderr, flush=True)
+                if _label == 'completion_complete':
+                    for key, (count, seconds) in aggregates.items():
+                        print(f'W5C6V_AGGREGATE {key} count={count} total={seconds:.3f}s',
+                              file=sys.stderr, flush=True)
 
         monkeypatch.setattr(owner, name, timed)
 
@@ -63,9 +92,13 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
         _completion=SimpleNamespace(
             complete=same, _finish=same,
             _retirement=SimpleNamespace(
-                execute=same, _links=SimpleNamespace(
-                    execute=same, _objects=SimpleNamespace(
-                        execute=same, _single=SimpleNamespace(resume_saved=same))))),
+                execute=same, _retirement=SimpleNamespace(read_current=fail),
+                _links=SimpleNamespace(
+                    execute=same, _commands=SimpleNamespace(read_current=same),
+                    _objects=SimpleNamespace(
+                        execute=same, _journal=SimpleNamespace(
+                            read_current=same, run_current=same),
+                        _single=SimpleNamespace(resume_saved=same))))),
     )
     monkeypatch.delenv('AOS_TEST_SCHEDULE_TIMING', raising=False)
     _install_test_stage_timing(runtime, monkeypatch)
@@ -75,6 +108,11 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     assert runtime._claims.claim(1, key='value') == ((1,), {'key': 'value'})
     with pytest.raises(LookupError, match='original failure'):
         runtime._ingress.prepare(2)
+    assert runtime._completion._retirement._links._objects._journal.read_current(3) == ((3,), {})
+    assert runtime._completion._retirement._links._objects._journal.run_current(3) == ((3,), {})
+    assert runtime._completion._retirement._links._commands.read_current(3) == ((3,), {})
+    with pytest.raises(LookupError, match='original failure'):
+        runtime._completion._retirement._retirement.read_current(3)
     assert runtime._completion.complete(3) == ((3,), {})
     assert runtime._completion._retirement.execute(4) == ((4,), {})
     assert runtime._completion._retirement._links.execute(5) == ((5,), {})
@@ -87,6 +125,10 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
         'claim ', 'ingress_prepare ', 'completion_complete ',
         'retirement_execute ', 'links_execute ', 'objects_execute ',
         'single_resume_saved ', 'completion_finish '))
+    assert output.count('W5C6V_AGGREGATE ') == 4
+    assert all(f'W5C6V_AGGREGATE {label} count=1 total=' in output for label in (
+        'object_read_current', 'object_run_current',
+        'link_read_current', 'retirement_read_current'))
 
 
 @pytest.fixture
