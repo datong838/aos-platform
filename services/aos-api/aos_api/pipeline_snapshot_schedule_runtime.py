@@ -15,13 +15,17 @@ from aos_api.pipeline_snapshot_schedule_claim import PipelineSnapshotScheduleCla
 from aos_api.pipeline_snapshot_schedule_definition import PipelineSnapshotScheduleDefinitionOwner
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.tenant_scope import TenantScope
+from aos_api.extension_runtime.host_lease import OptInHostLease
 
 
 class PipelineSnapshotScheduleRuntime:
-    def __init__(self,*,claims,store,connect,eng):
+    def __init__(self,*,claims,store,connect,eng,host_lease=None):
         if type(claims) is not PipelineSourceClaimOwner or type(store) is not EcomConsistencyStore or not callable(connect):
             raise TypeError('original snapshot runtime dependencies required')
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot Schedule Host lease required')
         self._connect=connect
+        self._host_lease=host_lease
         self._claims=PipelineSnapshotScheduleClaimOwner(controls=claims._controls)
         self._definitions=PipelineSnapshotScheduleDefinitionOwner(
             controls=claims._controls,installation_store=PostgresInstallationStore())
@@ -36,6 +40,9 @@ class PipelineSnapshotScheduleRuntime:
                 raise IngressJournalConflict('SCHEDULE_GROUP_REQUIRES_INDEPENDENT_TRANSACTION')
             with conn.transaction():
                 apply_asset_transaction_scope(conn,org_id=scope.org_id,project_id=scope.project_id)
+                if self._host_lease is not None:
+                    self._host_lease.fence_in_transaction(
+                        conn,dict(org_id=scope.org_id,project_id=scope.project_id))
                 yield conn
 
     def execute(self,*,scope,definition_ref,group_id,actor,scheduled_for,trigger,deadline=None,cancel_event=None):
