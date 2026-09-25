@@ -27,6 +27,7 @@ def _ingress(connect):
     ingress = object.__new__(ControlledSnapshotIngress)
     ingress._connect = connect
     ingress._schedule_binding = None
+    ingress._host_lease = None
     return ingress
 
 

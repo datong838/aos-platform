@@ -33,7 +33,7 @@ def test_completion_transaction_delegation_still_reaches_original_ingress():
     assert 'self._host_lease.fence_in_transaction(' in object_transaction
     ingress = inspect.getsource(ControlledSnapshotIngress._transaction)
     assert 'apply_asset_transaction_scope' in ingress
-    assert 'fence_in_transaction' not in ingress
+    assert 'self._host_lease.fence_in_transaction(' in ingress
     assert 'consumer_connection' not in ingress
 
 

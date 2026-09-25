@@ -19,6 +19,7 @@ from aos_api.pipeline_snapshot_materialization import materialize_snapshot
 from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner, ScheduleControlBinding
 from aos_api.extension_runtime.lifecycle_store import RuntimeRevisionConflict, RuntimeConflict
+from aos_api.extension_runtime.host_lease import OptInHostLease
 from aos_api.pipeline_schedule_claim import read_current_snapshot_definition
 
 
@@ -30,13 +31,16 @@ class PreparedControlledSnapshot:
 
 
 class ControlledSnapshotIngress:
-    def __init__(self, *, claims, store, connect, schedule_binding=None):
+    def __init__(self, *, claims, store, connect, schedule_binding=None, host_lease=None):
         if type(claims) is not PipelineSourceClaimOwner or type(store) is not EcomConsistencyStore or not callable(connect):
             raise TypeError('exact claim and consistency Owners with trusted connection required')
         self._claims,self._store,self._connect=claims,store,connect
         if schedule_binding is not None and type(schedule_binding) is not ScheduleControlBinding:
             raise TypeError('exact server-owned schedule binding required')
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot ingress Host lease required')
         self._schedule_binding=schedule_binding
+        self._host_lease=host_lease
 
     def _require_binding_args(self,scope,control_ref,actor):
         binding=self._schedule_binding
@@ -68,6 +72,9 @@ class ControlledSnapshotIngress:
                 raise IngressJournalConflict('SOURCE_CLAIM_REQUIRES_INDEPENDENT_TRANSACTION')
             with conn.transaction():
                 apply_asset_transaction_scope(conn,org_id=scope.org_id,project_id=scope.project_id)
+                if self._host_lease is not None:
+                    self._host_lease.fence_in_transaction(
+                        conn,dict(org_id=scope.org_id,project_id=scope.project_id))
                 self._guard_binding(conn,scope)
                 yield conn
                 self._guard_binding(conn,scope)
