@@ -66,6 +66,36 @@ class DataRequirementOutboxStore:
         lease_token: str,
         lease_seconds: int,
     ) -> DataRequirementOutboxClaim | None:
+        return self._claim_next(
+            scope, topic=topic, worker_id=worker_id, lease_token=lease_token,
+            lease_seconds=lease_seconds, pending_only=False,
+        )
+
+    def claim_pending_next(
+        self,
+        scope: TenantScope,
+        *,
+        topic: str,
+        worker_id: str,
+        lease_token: str,
+        lease_seconds: int,
+    ) -> DataRequirementOutboxClaim | None:
+        """Analysis-only claim: never recycle an expired, ambiguous attempt."""
+        return self._claim_next(
+            scope, topic=topic, worker_id=worker_id, lease_token=lease_token,
+            lease_seconds=lease_seconds, pending_only=True,
+        )
+
+    def _claim_next(
+        self,
+        scope: TenantScope,
+        *,
+        topic: str,
+        worker_id: str,
+        lease_token: str,
+        lease_seconds: int,
+        pending_only: bool,
+    ) -> DataRequirementOutboxClaim | None:
         self._required("topic", topic)
         self._required("worker id", worker_id)
         self._required("lease token", lease_token)
@@ -73,10 +103,14 @@ class DataRequirementOutboxStore:
             raise DataRequirementOutboxValidationError("lease seconds must be between 1 and 3600")
         try:
             with self._connect_factory(scope) as conn:
+                function = (
+                    "data_requirement_outbox_claim_pending_a0v_095"
+                    if pending_only else "data_requirement_outbox_claim_biw2_004"
+                )
                 row = conn.execute(
-                    """SELECT outbox_id,requirement_id,requirement_revision,event_id,topic,
-                              payload,content_hash,attempt,lease_token,lease_expires_at
-                         FROM data_requirement_outbox_claim_biw2_004(%s,%s,%s,%s)""",
+                    "SELECT outbox_id,requirement_id,requirement_revision,event_id,topic,"
+                    "payload,content_hash,attempt,lease_token,lease_expires_at "
+                    f"FROM {function}(%s,%s,%s,%s)",
                     (topic, worker_id, lease_token, lease_seconds),
                 ).fetchone()
                 conn.commit()
@@ -86,6 +120,32 @@ class DataRequirementOutboxStore:
         if row is None:
             return None
         return self._claim_from_row(row)
+
+    def read_ambiguous_next(
+        self, scope: TenantScope, *, topic: str
+    ) -> DataRequirementOutboxClaim | None:
+        """Read a frozen unknown or expired claim without acquiring a new attempt."""
+        self._required("topic", topic)
+        try:
+            with self._connect_factory(scope) as conn:
+                row = conn.execute(
+                    """SELECT o.outbox_id,o.requirement_id,o.requirement_revision,o.event_id,
+                              o.topic,o.payload,o.content_hash,d.attempt,d.lease_token,
+                              d.lease_expires_at
+                         FROM public.data_requirement_outbox_delivery d
+                         JOIN public.data_requirement_outbox o
+                           USING(org_id,project_id,outbox_id)
+                        WHERE d.org_id=%s AND d.project_id=%s AND o.topic=%s
+                          AND (d.state='unknown' OR
+                               (d.state='claimed' AND d.lease_expires_at<=NOW()))
+                        ORDER BY o.created_at,o.outbox_id
+                        LIMIT 1""",
+                    (*scope.key, topic),
+                ).fetchone()
+        except psycopg.Error as exc:
+            self._translate(exc)
+            raise
+        return None if row is None else self._claim_from_row(row)
 
     def read_unknown_next(
         self, scope: TenantScope, *, topic: str

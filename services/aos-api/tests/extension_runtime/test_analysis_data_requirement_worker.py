@@ -53,12 +53,12 @@ class Outbox:
         self.complete_error = complete_error
         self.calls = []
 
-    def read_unknown_next(self, scope, *, topic):
-        self.calls.append(('read_unknown', scope, topic))
+    def read_ambiguous_next(self, scope, *, topic):
+        self.calls.append(('read_ambiguous', scope, topic))
         return self.unknown
 
-    def claim_next(self, scope, **kwargs):
-        self.calls.append(('claim', scope, kwargs))
+    def claim_pending_next(self, scope, **kwargs):
+        self.calls.append(('claim_pending', scope, kwargs))
         return self.claimed
 
     def complete(self, scope, claim, fulfillment, analysis):
@@ -104,7 +104,7 @@ def _coordinator(monkeypatch, factory, *, error=False):
 
 def test_empty_live_directory_is_no_effect(monkeypatch):
     worker, _, _, _ = _worker(monkeypatch)
-    worker._outbox = SimpleNamespace(read_unknown_next=lambda *args, **kwargs:
+    worker._outbox = SimpleNamespace(read_ambiguous_next=lambda *args, **kwargs:
                                      (_ for _ in ()).throw(AssertionError('must not read')))
     assert asyncio.run(worker.tick()) == {
         'scopesChecked': 0, 'completed': 0, 'replayed': 0, 'unknown': 0, 'failed': 0,
@@ -116,17 +116,17 @@ def test_normal_claim_uses_only_coordinator_dual_receipts(monkeypatch):
     worker._outbox = outbox = Outbox(claimed=_claim())
     _coordinator(monkeypatch, factory)
     assert worker.run_scope_once(SCOPE) == 'completed'
-    assert [call[0] for call in outbox.calls] == ['read_unknown', 'claim', 'complete']
+    assert [call[0] for call in outbox.calls] == ['read_ambiguous', 'claim_pending', 'complete']
     assert outbox.calls[-1][2].resource_type == 'DataFulfillmentReceipt'
     assert outbox.calls[-1][3].resource_type == 'AnalysisRuntimeReceipt'
 
 
-def test_unknown_is_reconciled_before_any_new_claim(monkeypatch):
+def test_ambiguous_delivery_is_frozen_before_any_new_claim_or_coordinator(monkeypatch):
     worker, factory, _, _ = _worker(monkeypatch)
     worker._outbox = outbox = Outbox(unknown=_claim('unknown'), claimed=_claim('new'))
     _coordinator(monkeypatch, factory)
-    assert worker.run_scope_once(SCOPE) == 'completed'
-    assert [call[0] for call in outbox.calls] == ['read_unknown', 'reconcile']
+    assert worker.run_scope_once(SCOPE) == 'unknown'
+    assert [call[0] for call in outbox.calls] == ['read_ambiguous']
 
 
 def test_pre_coordination_rejection_is_deterministically_failed(monkeypatch):
@@ -135,7 +135,7 @@ def test_pre_coordination_rejection_is_deterministically_failed(monkeypatch):
     monkeypatch.setattr(worker, '_route', lambda *args, **kwargs:
                         (_ for _ in ()).throw(PermissionError('revoked')))
     assert worker.run_scope_once(SCOPE) == 'failed'
-    assert [call[0] for call in outbox.calls] == ['read_unknown', 'claim', 'fail']
+    assert [call[0] for call in outbox.calls] == ['read_ambiguous', 'claim_pending', 'fail']
     assert outbox.calls[-1][-1] == 'CURRENT_ROUTE_REJECTED'
 
 
@@ -151,12 +151,12 @@ def test_any_post_coordination_uncertainty_becomes_unknown(monkeypatch, stage):
         else 'OUTBOX_COMPLETION_RESULT_UNKNOWN')
 
 
-def test_unknown_reconcile_failure_never_changes_original_unknown(monkeypatch):
+def test_unknown_never_reenters_coordinator_even_if_it_would_fail(monkeypatch):
     worker, factory, _, _ = _worker(monkeypatch)
     worker._outbox = outbox = Outbox(unknown=_claim('unknown'))
     _coordinator(monkeypatch, factory, error=True)
     assert worker.run_scope_once(SCOPE) == 'unknown'
-    assert [call[0] for call in outbox.calls] == ['read_unknown']
+    assert [call[0] for call in outbox.calls] == ['read_ambiguous']
 
 
 def test_tick_is_bounded_and_rotates_scopes(monkeypatch):

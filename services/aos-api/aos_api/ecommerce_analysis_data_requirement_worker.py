@@ -120,10 +120,12 @@ class AnalysisDataRequirementWorker:
     def run_scope_once(self, scope):
         if type(scope) is not TenantScope:
             raise TypeError('exact analysis worker tenant required')
-        unknown = self._outbox.read_unknown_next(scope, topic=_TOPIC)
-        if unknown is not None:
-            return self._run_claim(scope, unknown, reconcile=True)
-        claim = self._outbox.claim_next(
+        ambiguous = self._outbox.read_ambiguous_next(scope, topic=_TOPIC)
+        if ambiguous is not None:
+            log.warning('analysis_data_requirement_ambiguous_frozen scope=%s outbox=%s',
+                        scope.key, ambiguous.outbox_id)
+            return 'unknown'
+        claim = self._outbox.claim_pending_next(
             scope, topic=_TOPIC, worker_id=self._worker_id,
             lease_token='analysis-data-lease-' + uuid4().hex,
             lease_seconds=self.lease_seconds,
