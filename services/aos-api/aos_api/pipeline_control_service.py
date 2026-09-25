@@ -8,6 +8,7 @@ from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.extension_runtime.consumer_connection import consumer_connection
+from aos_api.extension_runtime.host_lease import OptInHostLease
 from aos_api.extension_runtime.runtime_connections import runtime_worker_connection
 from aos_api.extension_runtime.runtime_release_artifacts import CurrentRuntimeReleaseArtifacts
 from aos_api.extension_runtime.storage_ports import require_runtime_role
@@ -25,6 +26,10 @@ class PipelineControlServices:
     selections: PipelineSourceSelectionOwner
     controls: PipelineRuntimeControlOwner
     claims: PipelineSourceClaimOwner | None = None
+    host_lease: OptInHostLease | None = None
+
+    def _fence_kwargs(self):
+        return {} if self.host_lease is None else {'fence':self.host_lease.fence_in_transaction}
 
     def _approve(self,*,draft,actor,idempotency_key,previous_ref,selection):
         kind=PipelineSourceSelectionDraft if selection else PipelineRuntimeControlDraft
@@ -32,7 +37,7 @@ class PipelineControlServices:
         if self.scope.key!=(draft.org_id,draft.project_id):
             raise PermissionError('pipeline approval tenant differs')
         scope=dict(org_id=self.scope.org_id,project_id=self.scope.project_id)
-        with consumer_connection(runtime_worker_connection,scope) as conn:
+        with consumer_connection(runtime_worker_connection,scope,**self._fence_kwargs()) as conn:
             require_runtime_role(conn,**scope,protected_tables=(
                 'public.pipeline_source_selection_revision','public.pipeline_runtime_control_revision'))
             owner=self.selections if selection else self.controls
@@ -47,7 +52,7 @@ class PipelineControlServices:
     def bind_schedule(self,*,pipeline_id,schedule_id,control_ref,actor,idempotency_key,previous_ref=None):
         owner=PipelineScheduleControlOwner(controls=self.controls)
         scope=dict(org_id=self.scope.org_id,project_id=self.scope.project_id)
-        with consumer_connection(runtime_worker_connection,scope) as conn:
+        with consumer_connection(runtime_worker_connection,scope,**self._fence_kwargs()) as conn:
             require_runtime_role(conn,**scope,protected_tables=(
                 'public.pipeline_schedule_control_binding','public.pipeline_runtime_control_revision'))
             return owner.bind(conn,scope=self.scope,schedule_id=schedule_id,control_ref=control_ref,
@@ -79,10 +84,14 @@ class PipelineControlServiceFactory:
             artifacts=artifacts,release_policy=self.policy)
         return selections,artifacts
 
-    def build(self,scope):
+    def build(self,scope,*,host_lease=None):
+        if host_lease is not None:
+            if type(host_lease) is not OptInHostLease:raise TypeError('exact Pipeline Owner Host lease required')
+            if type(scope) is not TenantScope or host_lease.scope.key!=scope.key:
+                raise PermissionError('Pipeline Owner Host lease tenant differs')
         selections,_artifacts=self._source_dependencies(scope)
         controls=PipelineRuntimeControlOwner(selections=selections)
-        return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls))
+        return PipelineControlServices(scope,selections,controls,PipelineSourceClaimOwner(controls=controls),host_lease)
 
     def build_snapshot_schedule(self,scope,*,source_controls=True):
         from aos_api.pipeline_snapshot_schedule_service import PipelineSnapshotScheduleService

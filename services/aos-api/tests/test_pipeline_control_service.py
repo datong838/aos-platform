@@ -1,4 +1,6 @@
 from pathlib import Path
+from contextlib import contextmanager
+from types import SimpleNamespace
 import pytest
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
@@ -96,3 +98,61 @@ def test_snapshot_worker_factory_only_passes_exact_same_scope_opt_in_lease(tmp_p
         with pytest.raises(PermissionError,match='tenant'):
             factory(tmp_path).build_snapshot_worker(scope,store=store,host_lease=wrong)
     finally:engine.dispose()
+
+
+def test_pipeline_owner_build_rejects_wrong_lease_before_connection(tmp_path,monkeypatch):
+    from aos_api.extension_runtime.host_lease import OptInHostLease
+    import aos_api.pipeline_control_service as module
+
+    monkeypatch.setattr(module,'runtime_worker_connection',lambda:pytest.fail('owner connected'))
+    scope=TenantScope('org-org','dev-project')
+    lease=OptInHostLease(connect=lambda:pytest.fail('lease acquired'),scope=scope)
+    service=factory(tmp_path).build(scope,host_lease=lease)
+    assert service.host_lease is lease
+    assert factory(tmp_path).build(scope).host_lease is None
+    with pytest.raises(TypeError,match='Host lease'):
+        factory(tmp_path).build(scope,host_lease=object())
+    wrong=OptInHostLease(connect=lambda:pytest.fail('lease acquired'),
+                         scope=TenantScope('dev-org','dev-project'))
+    with pytest.raises(PermissionError,match='tenant'):
+        factory(tmp_path).build(scope,host_lease=wrong)
+
+
+def test_pipeline_owner_three_writes_fence_before_owner_call(tmp_path,monkeypatch):
+    from aos_api.extension_runtime.host_lease import OptInHostLease
+    from aos_api.pipeline_runtime_control_owner import PipelineRuntimeControlOwner
+    from aos_api.pipeline_source_selection_owner import PipelineSourceSelectionOwner
+    from aos_api.pipeline_schedule_control_owner import PipelineScheduleControlOwner
+    import aos_api.pipeline_control_service as module
+
+    scope=TenantScope('org-org','dev-project')
+    lease=OptInHostLease(connect=lambda:pytest.fail('lease acquired'),scope=scope)
+    events=[]
+    monkeypatch.setattr(OptInHostLease,'fence_in_transaction',
+                        lambda self,conn,tenant:events.append(('fence',self,conn,tenant)))
+    @contextmanager
+    def connection(connect,tenant,*,fence=None):
+        assert fence is not None
+        conn=object()
+        fence(conn,tenant)
+        yield conn
+    monkeypatch.setattr(module,'consumer_connection',connection)
+    monkeypatch.setattr(module,'require_runtime_role',lambda *args,**kwargs:None)
+    monkeypatch.setattr(PipelineSourceSelectionOwner,'append',
+                        lambda self,conn,**kwargs:events.append(('selection',conn)))
+    monkeypatch.setattr(PipelineRuntimeControlOwner,'append',
+                        lambda self,conn,**kwargs:events.append(('control',conn)))
+    monkeypatch.setattr(PipelineScheduleControlOwner,'bind',
+                        lambda self,conn,**kwargs:(events.append(('bind',conn)) or SimpleNamespace(ref='bound')))
+    service=factory(tmp_path).build(scope,host_lease=lease)
+    body=payload();body['orgId'],body['projectId']='org-org','dev-project'
+    selection=dict(body);selection.pop('sourceSelectionRef')
+    service.approve_selection(draft=selection,actor='actor',idempotency_key='selection')
+    service.approve_control(draft=body,actor='actor',idempotency_key='control')
+    service.bind_schedule(pipeline_id='pipeline',schedule_id='schedule',control_ref={},
+                          actor='actor',idempotency_key='bind')
+    assert [event[0] for event in events]==['fence','selection','fence','control','fence','bind']
+    for index in (0,2,4):
+        assert events[index][1] is lease
+        assert events[index][2] is events[index+1][1]
+        assert events[index][3]=={'org_id':'org-org','project_id':'dev-project'}
