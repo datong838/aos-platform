@@ -61,7 +61,9 @@ def test_unrelated_read_and_write_documentation_remains() -> None:
     paths = app.openapi()["paths"]
     assert "get" in paths["/v1/aip/lineage"]
     assert "get" in paths["/v1/ontology/object-types/{ot_id}/count"]
-    assert "put" in paths["/v1/ontology/object-types/{ot_id}"]
+    assert "put" in paths["/v1/ontology/object-types/{type_id}"]
+    assert "put" not in paths.get("/v1/ontology/object-types/{ot_id}", {})
     assert "put" in paths["/v1/schedules/{sc_id}"]
-    assert "post" in paths["/v1/schedules/{sc_id}/run"]
+    assert "post" in paths["/v1/schedules/{schedule_id}/run"]
+    assert "post" not in paths.get("/v1/schedules/{sc_id}/run", {})
     assert "post" in paths["/v1/schedules/{sc_id}/pause"]

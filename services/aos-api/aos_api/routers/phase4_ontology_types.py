@@ -86,7 +86,7 @@ async def get_object_type(ot_id: str) -> dict[str, Any]:
     return ot.model_dump()
 
 
-@router.put("/object-types/{ot_id}")
+@router.put("/object-types/{ot_id}", include_in_schema=False)
 async def update_object_type(ot_id: str, req: UpdateObjectTypeRequest) -> dict[str, Any]:
     eng = get_engine()
     try:

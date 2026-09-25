@@ -29,5 +29,6 @@ def test_ontology_get_documentation_uses_first_reachable_owner(path, later_modul
 def test_ontology_write_and_unique_phase4_docs_are_not_hidden() -> None:
     paths = app.openapi()["paths"]
     assert "post" in paths["/v1/ontology/branches"]
-    assert "put" in paths["/v1/ontology/object-types/{ot_id}"]
+    assert "put" in paths["/v1/ontology/object-types/{type_id}"]
+    assert "put" not in paths.get("/v1/ontology/object-types/{ot_id}", {})
     assert "get" in paths["/v1/ontology/recent"]

@@ -99,7 +99,7 @@ async def update_schedule(sc_id: str, req: UpdateScheduleRequest, principal: Pri
 # ─────────── Run + Pause ───────────
 
 
-@router.post("/{sc_id}/run")
+@router.post("/{sc_id}/run", include_in_schema=False)
 async def run_schedule(sc_id: str, principal: Principal = Depends(require_principal)) -> dict[str, Any]:
     eng = get_engine()
     try:
