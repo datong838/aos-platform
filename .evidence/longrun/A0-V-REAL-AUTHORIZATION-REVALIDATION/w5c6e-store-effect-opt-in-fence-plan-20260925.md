@@ -5,7 +5,7 @@
 ## 文件级九步
 
 1. 复习 O1 Store/Receipt 方案、W5c6a–d 证据、`EcomConsistencyStore` 四条 effect API 与 base/derived 两个返回出口、`OptInHostLease.fence_in_transaction` 的同事务语义。
-2. 本方案先提交。只改 `services/aos-api/aos_api/ecom_consistency_store.py`；更新 `services/aos-api/tests/extension_runtime/test_a0v_w5c6d_store_fence_api_design.py`；新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c6e_store_effect_opt_in_fence_pg.py` 与本波 verification。不得动 Store schema、真实迁移或 caller。
+2. 本方案先提交。只改 `services/aos-api/aos_api/ecom_consistency_store.py`；更新 `services/aos-api/tests/extension_runtime/test_a0v_w5c6a_store_effect_boundary.py`、`test_a0v_w5c6d_store_fence_api_design.py` 两项历史静态合同，使其反映 API 已新增但 caller 尚未 opt-in；新增 `services/aos-api/tests/extension_runtime/test_a0v_w5c6e_store_effect_opt_in_fence_pg.py` 与本波 verification。不得动 Store schema、真实迁移或 caller。
 3. 四条 effect API 新增 keyword-only `host_lease: OptInHostLease | None = None`；精确类型和 command tenant scope 在开事务前验证。`None` 原路径不变；opt-in 用 SQLAlchemy 同事务薄适配器调用现有 lease fence，绝不独立连接读 holder。
 4. 在 `_apply_transaction_scope` 后、首个业务写前守卫；replay 与新写每个 return 前再守卫，derived 同样覆盖。失权异常使原 `engine.begin()` 回滚，不把 replay 当成功；不加 read API 围栏。异常不吞、不重发。
 5. 隔离 PG 用空范围构造合法 command，覆盖 base 新写/回放、derived 新写/回放及失权回滚；另测 `a0v_094 FOR SHARE` 与续租锁竞争、长事务到期。若夹在二次 guard 与 commit 间仍可能过期，明确限制而不宣称强原子排他。专项与 W5c5k–z/W5c6a–e 累计回归；旧 skips/timeout 如实保留。
