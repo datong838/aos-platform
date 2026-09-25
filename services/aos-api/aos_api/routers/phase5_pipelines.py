@@ -91,7 +91,7 @@ class CreateProposalRequest(BaseModel):
 # ─────────── Pipelines list + detail + update ───────────
 
 
-@router.get("")
+@router.get("", include_in_schema=False)
 async def list_pipelines(
     principal: Annotated[Principal, Depends(require_principal)],
     search: str | None = Query(None),
