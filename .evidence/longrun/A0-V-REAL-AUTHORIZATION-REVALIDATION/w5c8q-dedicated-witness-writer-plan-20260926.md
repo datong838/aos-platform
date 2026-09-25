@@ -24,3 +24,7 @@
 9. 自动 W5c8r：独立部署前只读门与授权主体路径；真实迁移、扫描、回填、ACK 另立顺序门。
 
 若角色/权限闭环、原值绑定或完整 PG 负例不能成立，STOP、记证据、不扩大授权。230 L0 挂起；dev-org 零 canary；unknown 不重发/不手工 `run_definition`；m1 单写不 push。
+
+## RED 后权限拆分订正
+
+`m1@47515df6` 原稿的单角色方案会让未来被授予角色成员资格的调用者也获得侧表直接 INSERT，不能实施。改为两个无登录角色：`aos_snapshot_witness_backfill` 仅作函数 owner，持原表 SELECT/sidecar SELECT+INSERT，**永不授成员给应用/调用者**；`aos_snapshot_witness_operator` 仅持函数 EXECUTE，绝无侧表 INSERT。两者都 NOLOGIN/NOBYPASSRLS/NOINHERIT，迁移验证属性与无成员。函数为 SECURITY DEFINER，固定 search_path，要求 session_user 为无超权的显式 operator 成员且当前 SET ROLE operator、精确租户 GUC；默认无任何现有应用登录身份是 operator 成员。隔离测试可创建临时无登录 caller，测试后精确撤销并删除该 caller。若无法证明无表权泄漏，STOP。
