@@ -25,6 +25,13 @@ from aos_api.extension_runtime.lifecycle_store import _require_transaction
 from aos_api.pipeline_snapshot_group_completion import PipelineSnapshotGroupCompletion
 
 
+def snapshot_route_key(scope, requirement_ref):
+    """Original tenant-bound idempotency key shared with read-only diagnostics."""
+    return 'snapshot-route-'+canonical_sha256(dict(tenant=dict(
+        orgId=scope.org_id,projectId=scope.project_id),
+        requirementRef=requirement_ref))[7:]
+
+
 class AnalysisSnapshotCoordinator:
     """Trusted synchronous composition after routing and before delivery ack."""
 
@@ -66,9 +73,7 @@ class AnalysisSnapshotCoordinator:
 
     def _resume(self, conn, route, current, root, *, requirement_ref, fulfillment_ref,
                 readiness_ref, bundle_ref, observed_at, business_ref, fulfillment):
-        key='snapshot-route-'+canonical_sha256(dict(tenant=dict(
-            orgId=self.analysis.scope.org_id,projectId=self.analysis.scope.project_id),
-            requirementRef=self._json(requirement_ref)))[7:]
+        key=snapshot_route_key(self.analysis.scope,self._json(requirement_ref))
         command=dict(operation='runtime.analysis.resume_snapshot',
             idempotencyKey=key,
             occurrenceRef=root['occurrenceRef'],caseRef=root['caseRef'],profileRef=root['profileRef'],
@@ -84,9 +89,7 @@ class AnalysisSnapshotCoordinator:
         return _AnalysisSnapshotResumeSession(context,conn,command).resume()
 
     def _replay_committed(self, conn, route, current, root, requirement_ref, fulfillment):
-        key='snapshot-route-'+canonical_sha256(dict(tenant=dict(
-            orgId=self.analysis.scope.org_id,projectId=self.analysis.scope.project_id),
-            requirementRef=self._json(requirement_ref)))[7:]
+        key=snapshot_route_key(self.analysis.scope,self._json(requirement_ref))
         saved=_HostAnalysisReceiptStore(HostTransaction(conn),self.analysis.scope).read(key)
         if saved is None:
             return None
