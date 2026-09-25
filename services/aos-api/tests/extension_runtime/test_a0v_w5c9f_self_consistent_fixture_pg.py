@@ -1,13 +1,16 @@
 """An immutable, hash-consistent original can still carry wrong row semantics."""
 
 import os
+from uuid import uuid4
 
 import psycopg
+from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 import pytest
 
 from aos_api.ec_ingress_journal import _digest
+from aos_api.pipeline_snapshot_group_canonical_witness import reconstruct_witness
 from test_a0v_w5c8n_bounded_group_report_pg import _insert_synthetic_missing_input_group
 
 pytest_plugins = ("test_analysis_snapshot_resume_chain_pg",)
@@ -67,3 +70,53 @@ def test_immutable_synthetic_group_can_commit_hash_consistent_wrong_row_claim(ch
             pipeline_snapshot_group_canonical_witness_a0v_097
             WHERE org_id=%s AND project_id=%s AND group_id=%s""",
             (*analysis.scope.key, group_id)).fetchone()["n"] == 0
+
+    with psycopg.connect(dsn, row_factory=dict_row) as admin:
+        original_group = admin.execute("""SELECT c.binding,c.request_hash,
+            i.manifest,i.manifest_hash FROM pipeline_snapshot_group_claim c
+            JOIN pipeline_snapshot_group_input i USING(org_id,project_id,group_id)
+            WHERE c.org_id=%s AND c.project_id=%s AND c.group_id=%s""",
+            (*analysis.scope.key, group_id)).fetchone()
+    witness = reconstruct_witness(original_group["binding"],
+                                  original_group["request_hash"],
+                                  original_group["manifest"],
+                                  original_group["manifest_hash"])
+    caller = "aos_test_witness_" + uuid4().hex
+    function = "public.pipeline_snapshot_group_witness_backfill_a0v_098"
+    args = (*analysis.scope.key, group_id,
+            witness.binding_json, witness.manifest_json)
+    with psycopg.connect(dsn, autocommit=True, row_factory=dict_row) as admin:
+        admin.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT")
+                      .format(sql.Identifier(caller)))
+        admin.execute(sql.SQL("GRANT aos_snapshot_witness_operator TO {}")
+                      .format(sql.Identifier(caller)))
+        try:
+            with psycopg.connect(dsn, row_factory=dict_row) as operator:
+                operator.execute(sql.SQL("SET SESSION AUTHORIZATION {}")
+                                 .format(sql.Identifier(caller)))
+                operator.execute("SET ROLE aos_snapshot_witness_operator")
+                operator.execute("SELECT set_config('aos.org_id',%s,false),"
+                                 "set_config('aos.project_id',%s,false)", analysis.scope.key)
+                operator.commit()
+                operator.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    operator.execute(f"SELECT {function}(%s,%s,%s,%s,%s)",
+                                     ("dev-org", *args[1:]))
+                operator.rollback()
+                assert operator.execute(f"SELECT {function}(%s,%s,%s,%s,%s) AS result",
+                                        args).fetchone()["result"] == "INSERTED"
+                operator.commit()
+            saved = admin.execute("""SELECT request_hash,manifest_hash,
+                binding_canonical_json,manifest_canonical_json FROM
+                pipeline_snapshot_group_canonical_witness_a0v_097
+                WHERE org_id=%s AND project_id=%s AND group_id=%s""",
+                (*analysis.scope.key, group_id)).fetchone()
+            assert saved["request_hash"] == original_group["request_hash"]
+            assert saved["manifest_hash"] == original_group["manifest_hash"]
+            assert saved["binding_canonical_json"] == witness.binding_json
+            assert saved["manifest_canonical_json"] == witness.manifest_json
+            assert wrong_hash in saved["manifest_canonical_json"]
+        finally:
+            admin.execute(sql.SQL("REVOKE aos_snapshot_witness_operator FROM {}")
+                          .format(sql.Identifier(caller)))
+            admin.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(caller)))
