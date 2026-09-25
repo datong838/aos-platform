@@ -31,6 +31,9 @@ def _install_test_stage_timing(runtime, monkeypatch):
         (runtime._claims, 'claim', 'claim'),
         (runtime._ingress, 'prepare', 'ingress_prepare'),
         (runtime._completion, 'complete', 'completion_complete'),
+        (runtime._completion._retirement, 'execute', 'retirement_execute'),
+        (runtime._completion._retirement._links, 'execute', 'links_execute'),
+        (runtime._completion, '_finish', 'completion_finish'),
     ):
         original = getattr(owner, name)
 
@@ -54,7 +57,10 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     runtime = SimpleNamespace(
         _claims=SimpleNamespace(claim=same),
         _ingress=SimpleNamespace(prepare=fail),
-        _completion=SimpleNamespace(complete=same),
+        _completion=SimpleNamespace(
+            complete=same, _finish=same,
+            _retirement=SimpleNamespace(
+                execute=same, _links=SimpleNamespace(execute=same))),
     )
     monkeypatch.delenv('AOS_TEST_SCHEDULE_TIMING', raising=False)
     _install_test_stage_timing(runtime, monkeypatch)
@@ -65,9 +71,14 @@ def test_stage_timing_is_opt_in_and_transparent(monkeypatch, capsys):
     with pytest.raises(LookupError, match='original failure'):
         runtime._ingress.prepare(2)
     assert runtime._completion.complete(3) == ((3,), {})
+    assert runtime._completion._retirement.execute(4) == ((4,), {})
+    assert runtime._completion._retirement._links.execute(5) == ((5,), {})
+    assert runtime._completion._finish(6) == ((6,), {})
     output = capsys.readouterr().err
-    assert output.count('W5C6R_TIMING ') == 3
-    assert all(label in output for label in ('claim ', 'ingress_prepare ', 'completion_complete '))
+    assert output.count('W5C6R_TIMING ') == 6
+    assert all(label in output for label in (
+        'claim ', 'ingress_prepare ', 'completion_complete ',
+        'retirement_execute ', 'links_execute ', 'completion_finish '))
 
 
 @pytest.fixture
