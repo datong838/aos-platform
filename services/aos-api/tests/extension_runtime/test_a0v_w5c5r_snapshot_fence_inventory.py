@@ -11,10 +11,10 @@ from aos_api.pipeline_snapshot_group_object_executor import ControlledSnapshotGr
 from aos_api.pipeline_snapshot_group_retirement_executor import ControlledSnapshotGroupRetirementExecutor
 
 
-def test_attempt_claim_commits_before_execution_and_is_not_host_lease_wired():
+def test_attempt_claim_commits_before_execution_and_shares_opt_in_host_lease():
     body = inspect.getsource(PipelineSnapshotGroupCompletion.complete)
     assert body.index('attempt = self._attempts.claim(') < body.index('with attempt:')
-    assert 'self._attempts = RecoverableStoreAttemptOwner(connect=connect)' in inspect.getsource(
+    assert 'self._attempts = RecoverableStoreAttemptOwner(connect=connect,host_lease=host_lease)' in inspect.getsource(
         PipelineSnapshotGroupCompletion.__init__)
     assert 'host_lease: OptInHostLease | None = None' in inspect.getsource(
         RecoverableStoreAttemptOwner.__init__)

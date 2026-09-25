@@ -14,22 +14,26 @@ from aos_api.pipeline_source_claim_owner import PipelineSourceClaimOwner
 from aos_api.qyh_cron_scheduler import _persist_schedule_result
 from aos_api.tenant_scope import TenantScope
 from aos_api.extension_runtime.recoverable_store_attempt import RecoverableStoreAttemptOwner
+from aos_api.extension_runtime.host_lease import OptInHostLease
 
 
 class PipelineSnapshotGroupCompletion:
     """Trusted host composition for Store recovery and atomic schedule closure."""
 
-    def __init__(self, *, claims, store, connect, eng):
+    def __init__(self, *, claims, store, connect, eng, host_lease=None):
         if type(claims) is not PipelineSourceClaimOwner or type(store) is not EcomConsistencyStore:
             raise TypeError('exact original snapshot Owners required')
         if not callable(connect):
             raise TypeError('trusted connection factory required')
+        if host_lease is not None and type(host_lease) is not OptInHostLease:
+            raise TypeError('exact snapshot Completion Host lease required')
         self._claims, self._store, self._connect = claims, store, connect
+        self._host_lease = host_lease
         self._retirement = ControlledSnapshotGroupRetirementExecutor(
             claims=claims, store=store, connect=connect, eng=eng,
         )
         self._projection = PipelineSnapshotGroupProjectionOwner(claims=claims, store=store)
-        self._attempts = RecoverableStoreAttemptOwner(connect=connect)
+        self._attempts = RecoverableStoreAttemptOwner(connect=connect,host_lease=host_lease)
 
     @staticmethod
     def _lock_key(scope, group_id):
@@ -37,8 +41,13 @@ class PipelineSnapshotGroupCompletion:
             raise ValueError('canonical snapshot group scope required')
         return f'aos:snapshot-group-completion:{scope.org_id}:{scope.project_id}:{group_id}'
 
+    @contextmanager
     def _transaction(self, scope):
-        return self._retirement._transaction(scope)
+        with self._retirement._transaction(scope) as conn:
+            if self._host_lease is not None:
+                self._host_lease.fence_in_transaction(
+                    conn,dict(org_id=scope.org_id,project_id=scope.project_id))
+            yield conn
 
     @staticmethod
     def _normalize_bindings(bindings):
