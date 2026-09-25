@@ -28,7 +28,7 @@ def test_link_and_retirement_store_effects_follow_preparation_commit():
         assert body.index(effect) < body.rindex('with self._transaction(scope) as conn:')
 
 
-def test_store_owns_a_separate_receipt_transaction_without_host_lease_parameter():
+def test_store_owns_a_separate_receipt_transaction_with_default_off_host_lease():
     body = inspect.getsource(EcomConsistencyStore._apply_batch)
     assert 'with process_lock, self._engine.begin() as conn:' in body
     assert body.index('replay = self._get_receipt(') < body.index('insert(ecom_ingest_receipt)')
@@ -37,7 +37,7 @@ def test_store_owns_a_separate_receipt_transaction_without_host_lease_parameter(
                    EcomConsistencyStore.apply_strict_link_batch,
                    EcomConsistencyStore.apply_strict_link_retirement_batch,
                    EcomConsistencyStore.update_derived_metrics):
-        assert 'host_lease' not in inspect.signature(method).parameters
+        assert inspect.signature(method).parameters['host_lease'].default is None
 
 
 def test_dataset_receipt_commit_precedes_in_memory_publication():

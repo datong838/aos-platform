@@ -51,6 +51,36 @@ from aos_api.ecom_core_models import (
     SyncScope,
     _jsonable,
 )
+from aos_api.extension_runtime.host_lease import HostLeaseBlocked, OptInHostLease
+from aos_api.tenant_scope import TenantScope
+
+
+class _StoreLeaseTransactionAdapter:
+    """Run the Host fence through the Store's existing SQLAlchemy transaction."""
+
+    def __init__(self, conn: Connection) -> None:
+        self._conn = conn
+
+    def execute(self, statement: str, values: tuple):
+        return self._conn.exec_driver_sql(statement, values).mappings()
+
+
+def _validate_store_host_lease(host_lease: OptInHostLease | None, *, org_id: str,
+                               workspace_id: str) -> None:
+    if host_lease is not None and (
+        type(host_lease) is not OptInHostLease
+        or host_lease.scope != TenantScope(org_id, workspace_id)
+    ):
+        raise HostLeaseBlocked("HOST_LEASE_STORE_SCOPE_DIFFERS")
+
+
+def _fence_store_transaction(conn: Connection, host_lease: OptInHostLease | None,
+                             *, org_id: str, workspace_id: str) -> None:
+    if host_lease is not None:
+        host_lease.fence_in_transaction(
+            _StoreLeaseTransactionAdapter(conn),
+            dict(org_id=org_id, project_id=workspace_id),
+        )
 
 metadata = MetaData()
 _PROCESS_IDEMPOTENCY_LOCKS = tuple(RLock() for _ in range(64))
@@ -295,23 +325,26 @@ class EcomConsistencyStore:
         self._engine = engine
         self._last_dangling_links: list[CoreLinkRecord] = []
 
-    def apply_batch(self, command: BatchCommand) -> BatchResult:
-        return self._apply_batch(command, strict_links=False)
+    def apply_batch(self, command: BatchCommand, *, host_lease: OptInHostLease | None = None) -> BatchResult:
+        return self._apply_batch(command, strict_links=False, host_lease=host_lease)
 
-    def apply_strict_link_batch(self, command: BatchCommand) -> BatchResult:
+    def apply_strict_link_batch(self, command: BatchCommand, *, host_lease: OptInHostLease | None = None) -> BatchResult:
         """Commit only if every original link and authoritative event is current."""
-        return self._apply_batch(command, strict_links=True)
+        return self._apply_batch(command, strict_links=True, host_lease=host_lease)
 
-    def apply_strict_link_retirement_batch(self, command: BatchCommand) -> BatchResult:
+    def apply_strict_link_retirement_batch(self, command: BatchCommand, *, host_lease: OptInHostLease | None = None) -> BatchResult:
         """Retire exact active link payloads under the original transaction locks."""
-        return self._apply_batch(command, strict_links=True, retire_links=True)
+        return self._apply_batch(command, strict_links=True, retire_links=True, host_lease=host_lease)
 
-    def _apply_batch(self, command: BatchCommand, *, strict_links: bool, retire_links: bool = False) -> BatchResult:
+    def _apply_batch(self, command: BatchCommand, *, strict_links: bool, retire_links: bool = False,
+                     host_lease: OptInHostLease | None = None) -> BatchResult:
         # Pydantic's frozen models are shallow: callers could otherwise mutate
         # nested lists/dicts after construction and bypass the scope and shape
         # validators.  Rebuild a detached, validated snapshot before hashing or
         # opening the transaction.
         command = BatchCommand.model_validate(command.model_dump(mode="python"))
+        _validate_store_host_lease(host_lease, org_id=command.scope.org_id,
+                                   workspace_id=command.scope.workspace_id)
         if strict_links and (command.objects or not command.links):
             raise EcomConsistencyError(
                 "LINK_ONLY_BATCH_REQUIRED", "strict application requires a nonempty link-only batch"
@@ -334,6 +367,8 @@ class EcomConsistencyStore:
                     org_id=command.scope.org_id,
                     workspace_id=command.scope.workspace_id,
                 )
+                _fence_store_transaction(conn, host_lease, org_id=command.scope.org_id,
+                                         workspace_id=command.scope.workspace_id)
                 self._lock_idempotency_key(conn, lock_key)
                 strict_snapshot = None
                 if strict_links:
@@ -355,6 +390,8 @@ class EcomConsistencyStore:
                         self._reconcile_base_events(conn, command, replay)
                     saved = dict(replay["result"])
                     saved["replayed"] = True
+                    _fence_store_transaction(conn, host_lease, org_id=command.scope.org_id,
+                                             workspace_id=command.scope.workspace_id)
                     return BatchResult.model_validate(saved)
 
                 if retire_links:
@@ -463,6 +500,8 @@ class EcomConsistencyStore:
                     self._reconcile_base_events(
                         conn, command, {"result": result_payload}
                     )
+                _fence_store_transaction(conn, host_lease, org_id=command.scope.org_id,
+                                         workspace_id=command.scope.workspace_id)
                 return result
         except IntegrityError as exc:
             raise EcomConsistencyError(
@@ -959,11 +998,14 @@ class EcomConsistencyStore:
                          for row in sorted(all_events,key=lambda row:(int(row['input_revision']),row['event_key'])))
 
     def update_derived_metrics(
-        self, command: DerivedMetricCommand, *, expected_base: CoreObjectRecord | None = None
+        self, command: DerivedMetricCommand, *, expected_base: CoreObjectRecord | None = None,
+        host_lease: OptInHostLease | None = None,
     ) -> DerivedMetricResult:
         """O1 §5.2.10：CAS、Receipt 和 Outbox 同事务的派生更新。"""
         command = DerivedMetricCommand.model_validate(command.model_dump(mode="python"))
         identity = command.identity
+        _validate_store_host_lease(host_lease, org_id=identity.org_id,
+                                   workspace_id=identity.workspace_id)
         if expected_base is not None:
             expected_base = CoreObjectRecord.model_validate(expected_base.model_dump(mode='python'))
             if expected_base.identity != identity or expected_base.object_type != command.object_type or expected_base.is_deleted:
@@ -978,6 +1020,8 @@ class EcomConsistencyStore:
             _apply_transaction_scope(
                 conn, org_id=identity.org_id, workspace_id=identity.workspace_id
             )
+            _fence_store_transaction(conn, host_lease, org_id=identity.org_id,
+                                     workspace_id=identity.workspace_id)
             self._lock_idempotency_key(conn, lock_key)
             receipt = conn.execute(
                 select(ecom_derived_receipt).where(
@@ -996,6 +1040,8 @@ class EcomConsistencyStore:
                     )
                 saved = dict(receipt["result_json"])
                 saved["replayed"] = True
+                _fence_store_transaction(conn, host_lease, org_id=identity.org_id,
+                                         workspace_id=identity.workspace_id)
                 return DerivedMetricResult.model_validate(saved)
 
             stored = conn.execute(
@@ -1114,6 +1160,8 @@ class EcomConsistencyStore:
                     result_json=result.model_dump(mode="json"),
                 )
             )
+            _fence_store_transaction(conn, host_lease, org_id=identity.org_id,
+                                     workspace_id=identity.workspace_id)
             return result
 
     def get_last_dangling_links(self) -> list[CoreLinkRecord]:

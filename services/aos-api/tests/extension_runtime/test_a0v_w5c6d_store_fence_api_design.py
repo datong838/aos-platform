@@ -20,11 +20,13 @@ def _returns(method):
     return sum(isinstance(node, ast.Return) for node in ast.walk(tree))
 
 
-def test_all_four_effect_apis_currently_lack_opt_in_lease():
+def test_all_four_effect_apis_expose_default_off_opt_in_lease():
     assert len(EFFECT_APIS) == 4
     for method in EFFECT_APIS:
-        assert 'host_lease' not in inspect.signature(method).parameters
-    assert 'host_lease' not in inspect.signature(EcomConsistencyStore._apply_batch).parameters
+        param = inspect.signature(method).parameters['host_lease']
+        assert param.kind is inspect.Parameter.KEYWORD_ONLY
+        assert param.default is None
+    assert inspect.signature(EcomConsistencyStore._apply_batch).parameters['host_lease'].default is None
 
 
 def test_base_and_derived_both_have_replay_and_new_write_commit_exits():
@@ -39,3 +41,5 @@ def test_base_and_derived_both_have_replay_and_new_write_commit_exits():
     derived = inspect.getsource(EcomConsistencyStore.update_derived_metrics)
     assert derived.index('if receipt is not None:') < derived.index('return DerivedMetricResult.model_validate(saved)')
     assert derived.index('ecom_derived_receipt') < derived.rindex('return result')
+    assert base.count('_fence_store_transaction(') == 3
+    assert derived.count('_fence_store_transaction(') == 3
