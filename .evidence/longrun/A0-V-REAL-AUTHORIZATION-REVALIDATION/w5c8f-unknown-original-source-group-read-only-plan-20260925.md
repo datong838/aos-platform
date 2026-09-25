@@ -21,6 +21,6 @@
 6. 内置浏览器只读 rev4 停用验收，不冲刷队列。
 7. 方案/代码/SQL/租户与时序复审，缺 Host 围栏不提升对账 authority。
 8. verification 提交、AOS CAS/Prime 回读和真实 gate 复核。
-9. 自动进入 W5c8g：单事务 Host-fenced `unknown` 对账先设计与隔离 PG 负例；过期 `claimed` 另立状态迁移，真实门不全不部署。
+9. 自动进入 W5c8g：若旧路由的锁定查询使纯只读不可行，先方案化不拿行锁的历史原源组读取器；待源组证据齐全后，才单独设计 Host-fenced `unknown` 对账。过期 `claimed` 另立状态迁移，真实门不全不部署。
 
 m1 单写不 push、不动其他分支；230 L0 挂起、商城源行不读、dev-org 仅零 canary、旧 attempt 不重发/不手工 `run_definition`。
