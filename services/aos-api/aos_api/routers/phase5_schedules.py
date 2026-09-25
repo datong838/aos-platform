@@ -48,7 +48,7 @@ class UpdateScheduleRequest(BaseModel):
 # ─────────── Schedules list + create + detail + update ───────────
 
 
-@router.get("")
+@router.get("", include_in_schema=False)
 async def list_schedules(
     principal: Principal = Depends(require_principal),
     search: str | None = Query(None),
