@@ -80,6 +80,51 @@ def test_w5c4p_scoped_lease_only(launcher, monkeypatch, tmp_path):
         launcher.require_leases()
 
 
+def test_w5c9a_http_only_new_scoped_lease(launcher, monkeypatch, tmp_path):
+    repo = tmp_path/'repo'
+    repo.mkdir()
+    leases = tmp_path/'docs/palantier/AOS项目开发上下文/memory/leases.json'
+    leases.parent.mkdir(parents=True)
+    monkeypatch.setattr(launcher, 'ROOT', repo)
+    monkeypatch.setattr(launcher.subprocess, 'check_output', lambda *a, **kw: 'm1\n')
+    task = 'A0V-W5C9A-HTTP-ONLY-20260926'
+    monkeypatch.setenv('AOS_CONTROLLED_API_LEASE_TASK', task)
+    entry = dict(task_id=task, owner='m1', status='ACTIVE',
+                 scope=['local-process/aos-api-18181'],
+                 lease_expires_at='2099-01-01T00:00:00+00:00')
+    leases.write_text(json.dumps({'leases': [entry]}))
+    launcher.require_leases()
+    for change in ({'scope': ['local-process/other']},
+                   {'owner': 'other'}, {'status': 'EXPIRED'},
+                   {'lease_expires_at': '2020-01-01T00:00:00+00:00'}):
+        leases.write_text(json.dumps({'leases': [{**entry, **change}]}))
+        with pytest.raises(ValueError, match='lease unavailable'):
+            launcher.require_leases()
+    leases.write_text(json.dumps({'leases': [entry]}))
+    monkeypatch.setenv('AOS_CONTROLLED_API_LEASE_TASK', 'A0V-UNRELATED')
+    with pytest.raises(ValueError, match='lease unavailable'):
+        launcher.require_leases()
+
+
+def test_w5c9a_http_only_wrapper_binds_current_private_roots(monkeypatch):
+    root = Path(__file__).resolve().parents[3]
+    monkeypatch.syspath_prepend(str(root/'scripts'))
+    spec = importlib.util.spec_from_file_location(
+        'w5c9a_http_only_wrapper_test', root/'scripts/a0v_w5c9a_http_only_api.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    launcher = module.load_launcher()
+    base = root.parent/'.aos-recovery-20260920/state/q-advisor-baseline'
+    assert module.TASK == 'A0V-W5C9A-HTTP-ONLY-20260926'
+    assert launcher.DEFAULT_CREDENTIALS == base/'bm-runtime-credentials/runtime-host-identities.json'
+    assert launcher.TRUST_ROOTS == base/'bm-trust-root-rotation/signing/trust-roots.json'
+    assert launcher.BUNDLE_ROOT == base/'bn-canonical-alias-registry/signed-bundles'
+    assert launcher.API_FLAGS['AOS_EXTENSION_RUNTIME_HOST_ENABLED'] == '0'
+    assert launcher.API_FLAGS['AOS_QYH_CRON_ENABLED'] == 'false'
+    assert launcher.API_FLAGS['AOS_SNAPSHOT_GROUP_WORKER_ENABLED'] == 'false'
+    assert launcher.API_FLAGS['AOS_DB_MIGRATION_MODE'] == 'disabled'
+
+
 def test_product_identity_requires_matching_main_deployment(tmp_path,monkeypatch):
     import json
     root=Path(__file__).resolve().parents[3]
