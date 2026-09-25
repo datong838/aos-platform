@@ -170,6 +170,50 @@ for route in iter_effective_routes(app.routes):
         ))
 pairs = collections.Counter((path, method) for path, method, _name, _tags in rows)
 schema = app.openapi()
+result = {
+    "count": len(rows),
+    "sha256": hashlib.sha256(
+        json.dumps(rows, separators=(",", ":")).encode()
+    ).hexdigest(),
+    "openapi_paths": len(schema["paths"]),
+    "duplicates": sorted(
+        [[path, method, count] for (path, method), count in pairs.items() if count > 1]
+    ),
+    "missing_critical": sorted(critical_paths - {row[0] for row in rows}),
+}
+mode = os.environ["AOS_ROUTER_PROBE_MODE"]
+if mode not in {"inventory", "boundary"}:
+    raise ValueError("exact router probe mode required")
+if mode == "inventory":
+    Path(os.environ["AOS_ROUTER_PROBE_OUTPUT"]).write_text(json.dumps(result))
+    sys.exit(0)
+
+# The inventory above never enters lifespan. Its separate boundary probe must
+# not resolve a real registration connection, start a Host, or run cold starts.
+# Keep migration/managed-boot assertions while replacing every startup port
+# before the first lifespan entry.
+control_wiring = importlib.import_module("aos_api.asset_registry.control_wiring")
+registration = importlib.import_module("aos_api.ecommerce_growth_registration_connection")
+wiki = importlib.import_module("aos_api.okf_wiki_cold_start")
+memory = importlib.import_module("aos_api.demo.seed_memory_cold_start")
+control_wiring.build_runtime_control_plane = lambda **_kwargs: types.SimpleNamespace()
+control_wiring.build_production_runtime_host_selection = lambda **_kwargs: types.SimpleNamespace(
+    status="INACTIVE", error_code=None
+)
+registration.configured_registration_connection = lambda: None
+wiki.seed_okf_wiki_cold_start = lambda: 0
+memory.seed_memory_cold_start = lambda: {"total": 0}
+main._register_pipeline_runtime = lambda: None
+main._prebuild_jdbc_ssh_tunnels = lambda: None
+main._qyh_cron_worker_enabled = lambda: False
+main._aip_logic_automation_worker_enabled = lambda: False
+main._select_provider_health_maintenance = lambda: types.SimpleNamespace(
+    maintainer=None, status="INACTIVE", error_code=None
+)
+async def _no_background_runtime(_app):
+    return None
+main._start_snapshot_group_worker = _no_background_runtime
+main._shutdown_application_runtime = _no_background_runtime
 
 async def probe_lifespan_boundaries():
     init_calls = []
@@ -193,19 +237,8 @@ async def probe_lifespan_boundaries():
 managed_skipped_bootstrap, migration_failure_propagated = asyncio.run(
     probe_lifespan_boundaries()
 )
-result = {
-    "count": len(rows),
-    "sha256": hashlib.sha256(
-        json.dumps(rows, separators=(",", ":")).encode()
-    ).hexdigest(),
-    "openapi_paths": len(schema["paths"]),
-    "duplicates": sorted(
-        [[path, method, count] for (path, method), count in pairs.items() if count > 1]
-    ),
-    "missing_critical": sorted(critical_paths - {row[0] for row in rows}),
-    "managed_skipped_bootstrap": managed_skipped_bootstrap,
-    "migration_failure_propagated": migration_failure_propagated,
-}
+result["managed_skipped_bootstrap"] = managed_skipped_bootstrap
+result["migration_failure_propagated"] = migration_failure_propagated
 Path(os.environ["AOS_ROUTER_PROBE_OUTPUT"]).write_text(json.dumps(result))
 """
 
@@ -362,12 +395,13 @@ class RouterManifestStaticTests(unittest.TestCase):
 
 
 class RouterManifestRuntimeTests(unittest.TestCase):
-    def test_runtime_routes_match_pre_manifest_baseline(self) -> None:
+    def _probe(self, mode: str) -> dict:
         with tempfile.TemporaryDirectory() as temp_dir:
             output = Path(temp_dir) / "router-probe.json"
             env = os.environ.copy()
             env["AOS_ROUTER_API_PACKAGE"] = str(API_ROOT / "aos_api")
             env["AOS_ROUTER_PROBE_OUTPUT"] = str(output)
+            env["AOS_ROUTER_PROBE_MODE"] = mode
             env["PYTHONDONTWRITEBYTECODE"] = "1"
             probed = subprocess.run(
                 [sys.executable, "-c", textwrap.dedent(RUNTIME_PROBE)],
@@ -382,7 +416,10 @@ class RouterManifestRuntimeTests(unittest.TestCase):
                     "runtime router probe failed; this is not a pass or skip:\n"
                     f"stdout={probed.stdout}\nstderr={probed.stderr}"
                 )
-            result = json.loads(output.read_text())
+            return json.loads(output.read_text())
+
+    def test_runtime_routes_match_pre_manifest_baseline(self) -> None:
+        result = self._probe("inventory")
 
         # Runtime inventory includes FastAPI's four framework routes and the
         # DataRequirement and Business Investigation canonical routes delivered
@@ -393,18 +430,21 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        self.assertEqual(4479, result["count"])
+        self.assertEqual(4511, result["count"])
         self.assertEqual(
-            "656ad39ec4b29fde3f867e370808761b812cbbe4b22df61fb7ca4a95e73c0d00",
+            "3ce493dbdcb5cc3069d515983399b336187d1eda400f8e9a0a5c6bec773c0c0d",
             result["sha256"],
         )
-        self.assertEqual(2680, result["openapi_paths"])
+        self.assertEqual(2710, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],
             [item for item in result["duplicates"] if item[0].startswith("/v1/aip/")],
         )
         self.assertEqual([], result["missing_critical"])
+
+    def test_managed_lifespan_boundaries_use_stubbed_ports(self) -> None:
+        result = self._probe("boundary")
         self.assertTrue(result["managed_skipped_bootstrap"])
         self.assertTrue(result["migration_failure_propagated"])
 
