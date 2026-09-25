@@ -73,9 +73,9 @@ def classify_rows(group_id: UUID, claim: Mapping | None, input_row: Mapping | No
     return GroupWitnessStatus.READY_CANDIDATE
 
 
-def classify_group(conn, scope: TenantScope, group_id: UUID) -> GroupWitnessClassification:
-    if type(scope) is not TenantScope or type(group_id) is not UUID:
-        raise TypeError("exact historical tenant and group required")
+def require_read_only_snapshot(conn, scope: TenantScope):
+    if type(scope) is not TenantScope:
+        raise TypeError("exact historical tenant required")
     identity = conn.execute("""SELECT current_user AS role,
         current_setting('aos.org_id',true) AS org_id,
         current_setting('aos.project_id',true) AS project_id""").fetchone()
@@ -84,6 +84,14 @@ def classify_group(conn, scope: TenantScope, group_id: UUID) -> GroupWitnessClas
     if (_single(conn.execute("SHOW transaction_read_only").fetchone()) != "on"
             or _single(conn.execute("SHOW transaction_isolation").fetchone()) != "repeatable read"):
         raise ValueError("READ_ONLY_REPEATABLE_READ_REQUIRED")
+    return conn.execute("""SELECT pg_current_snapshot()::text AS snapshot,
+        transaction_timestamp() AS started_at, pg_backend_pid() AS backend_pid""").fetchone()
+
+
+def classify_group(conn, scope: TenantScope, group_id: UUID) -> GroupWitnessClassification:
+    if type(scope) is not TenantScope or type(group_id) is not UUID:
+        raise TypeError("exact historical tenant and group required")
+    require_read_only_snapshot(conn, scope)
     claim = conn.execute("""SELECT org_id,project_id,actor,member_count,binding,request_hash
         FROM public.pipeline_snapshot_group_claim
         WHERE org_id=%s AND project_id=%s AND group_id=%s""",
