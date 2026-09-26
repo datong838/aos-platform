@@ -51,6 +51,7 @@
 - RED 先证明：同一持久 `reservation_id` 的受控结果与独立回读 `COMPLETED` 才可绑定原 TaskRun 的 `content_generate`；原 Run/Task/Plan/Artifact/预算/Provider+Usage Receipt 必须一致。`COST_PENDING`、unknown、旧安装/epoch、跨租户、非当前 attempt 均不成功；重复消费只读回同一 checkpoint，不重发 Provider。
 - 用公共 `AipTaskStore.claim_step` / 四相 TAOR 证据 / `complete_step`，对已有实质外部 Provider 调用只引用不可变 Receipt，不再调用 Provider。必须先设计持久意图/提交未知冻结与独立读回，防止“claim 成功但完成未知”被下一轮另起 attempt；严禁直接 UPDATE StepRun/Run。此段只到 `content_generate` 正式 succeeded，不替代内容 Eval、人类评审与最终 Run succeeded。
 - 之后再把已发布 Skill 的 content Eval Suite/Contract/GatePolicy exact Ref 写入原批准 Plan（需独立内容政策类型或经审查的通用政策，不能冒充媒体政策），并实现待办 Owner 的正反同库验收。生产迁移/启用仍需独立授权和完成门。
+- P2d 第一段 `51fe641f` 已证明原来源，但不授权执行。第二段在同一 serializable 事务里重读该 proof、锁当前安装 dispatch、确认该 Run 尚无任何 `content_generate` StepRun，调用公共 `AipTaskStore` 完成 claim→四相证据→complete；已存在任何非 succeeded attempt 一律冻结，已 succeeded 仅通过独立 checkpoint/Artifact 回读幂等返回。原不可变 result/预算 Receipt 是持久待处理意图，不另造可重复 Provider 命令。提交后独立读回失败或未知时停止本次、绝不自动再执行；下一次需先只读对账该 Run/StepRun/Checkpoint，不能仅因队列仍有 result 重进 claim。
 
 ## 退出／下一波
 
