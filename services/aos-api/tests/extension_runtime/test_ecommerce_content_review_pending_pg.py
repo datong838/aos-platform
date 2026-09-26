@@ -28,7 +28,7 @@ from aos_api.aip_eval_runner import AipEvalRunner, JudgeExecution, ResolvedArtif
 from aos_api.aip_logic_graph_store import LogicGraphStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import (
-    CreateEvalContractRequest, CreateReviewIssueRequest, ExactArtifactRef,
+    CreateBriefRequest, CreateEvalContractRequest, CreateReviewIssueRequest, ExactArtifactRef,
     ExactRevisionRef, RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest,
 )
 from aos_api.ecommerce_business_investigation_review_command import review_issue_exact_ref
@@ -57,7 +57,7 @@ from aos_api.ecommerce_content_step_owner import (
 )
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
-    ContentGenerateHostService, ContentReviewHostService,
+    ContentGenerateHostService, ContentReviewHostService, _analysis_command_hash,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
@@ -153,7 +153,7 @@ def _seed_original_run_and_budget(connect, *, eval_gate=None):
     now = datetime.now(UTC)
     store = AipTaskStore(connect)
     task = store.create_task(SCOPE, "fixture", "content-p2g-task", CreateTaskRequest(
-        type="analysis", title="Content review composition"))
+        type="analysis", title="栖月汇玫瑰面霜内容策划"))
     plan = store.create_plan(SCOPE, "fixture", task.id, "content-p2g-plan",
         CreatePlanRevisionRequest(expected_task_version=task.version, steps=[
             PlanStep(step_key="content_generate", title="Generate"),
@@ -259,7 +259,40 @@ def _seed_original_run_and_budget(connect, *, eval_gate=None):
         "reservation": reservation}
 
 
-def _seed_current_command_receipt(connect, proof):
+def _seed_formal_brief_sources(connect, proof, command):
+    """Create four exact source Artifacts and one draft Brief before command enqueue."""
+    store = AipTaskStore(connect)
+    sources = []
+    for sequence in range(1, 5):
+        identity = store.record_artifact(SCOPE, proof["run_id"], "fixture",
+            "ecommerce_analysis_source", {"metadata": {
+                "sourceKind": "controlled_test_source", "sequence": sequence}})
+        with connect(SCOPE) as conn:
+            row = conn.execute("""SELECT content_hash FROM aip_artifact
+                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+                (*SCOPE.key, identity)).fetchone()
+        sources.append({"resourceType": "ArtifactRevision", "resourceId": identity,
+            "revision": 1, "contentHash": "sha256:" + row["content_hash"]})
+    command["sourceArtifactRefs"] = sources
+    authorities = command["authorityRefs"]
+    brief = AipProductionContractStore(connect_factory=connect).create_brief(
+        SCOPE, "fixture", "content-p2g-formal-brief", CreateBriefRequest(
+            taskId=proof["task_id"], briefType="content_campaign",
+            schemaRef=ResourceRef(resource_type="ContentCampaignBriefSchema",
+                resource_id="schema://aos/ecommerce/content-campaign-brief/v1",
+                revision="1", authority="aos://ecommerce-workshop/content-campaign"),
+            spec={"taskRef": authorities["task"],
+                "growthPlanRef": authorities["growth_plan"],
+                "artifactRefs": sources, "externalPublicationRequested": False}))
+    authorities["brief"] = {"resourceType": "TaskBriefRevision",
+        "resourceId": brief.brief_id, "revision": brief.revision,
+        "contentHash": "sha256:" + brief.content_hash}
+    command["requestHash"] = _analysis_command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"})
+    return command
+
+
+def _seed_current_command_receipt(connect, proof, *, formal_brief_sources=False):
     """Only an isolated installation; use the formal immutable Receipt owner."""
     fixture_path = Path(__file__).resolve().parents[1] / "aip/test_aip_budget_reservation_pg.py"
     spec = importlib.util.spec_from_file_location("content_budget_command_fixture", fixture_path)
@@ -267,6 +300,8 @@ def _seed_current_command_receipt(connect, proof):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     command = module.content_generate_command(proof["request"])
+    if formal_brief_sources:
+        command = _seed_formal_brief_sources(connect, proof, command)
     reservation_id = proof["reservation"].reservation_ref.resource_id
     journal = ContentExecutionJournal()
     with connect(SCOPE) as conn:
@@ -580,7 +615,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         _upgrade_test_clone_to_head(connect)
         gate, graph, subject_pack = _register_current_content_eval_gate(connect)
         proof = _seed_original_run_and_budget(connect, eval_gate=gate)
-        command = _seed_current_command_receipt(connect, proof)
+        command = _seed_current_command_receipt(connect, proof, formal_brief_sources=True)
         consumed = _run_controlled_result_and_consume(connect, proof, command)
         reservation_id = proof["reservation"].reservation_ref.resource_id
         source = ContentGenerationStepSource(context_reader=lambda _conn, scope, saved_command: (
@@ -738,9 +773,28 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         assert resolved.status.value == "resolved" and resolved.version == 2
         review_command["reviewIssueRef"] = review_issue_exact_ref(resolved).model_dump(
             mode="json", by_alias=True)
+        review_command.update({name: consumed["artifact"][name] for name in (
+            "taskRef", "briefRef", "growthPlanRef", "sourceArtifactRefs")})
         with connect(SCOPE) as conn:
             ContentReviewHostService._issue_authority(
                 HostTransaction(conn), SCOPE, review_command)
+            artifact_body = ContentReviewHostService._artifact_authority(
+                HostTransaction(conn), SCOPE, review_command)
+            assert artifact_body == consumed["artifact"]
+            assert ContentReviewHostService._task_brief_authority(
+                HostTransaction(conn), SCOPE, review_command) == "栖月汇玫瑰面霜内容策划"
+            wrong_source = {**review_command, "sourceArtifactRefs": [
+                {**review_command["sourceArtifactRefs"][0],
+                    "contentHash": "sha256:" + "f" * 64},
+                *review_command["sourceArtifactRefs"][1:]]}
+            with pytest.raises(ValueError, match="Artifact exact projection drifted"):
+                ContentReviewHostService._artifact_authority(
+                    HostTransaction(conn), SCOPE, wrong_source)
+            wrong_brief = {**review_command, "briefRef": {
+                **review_command["briefRef"], "contentHash": "sha256:" + "f" * 64}}
+            with pytest.raises(ValueError, match="TaskBrief exact lineage drifted"):
+                ContentReviewHostService._task_brief_authority(
+                    HostTransaction(conn), SCOPE, wrong_brief)
             event = conn.execute("""SELECT event_type,issue_version,actor,payload
                 FROM aip_review_issue_event WHERE org_id=%s AND project_id=%s
                   AND issue_id=%s AND sequence=2""",

@@ -94,3 +94,9 @@
 - 仅在第七增量原 Issue 测试上用 `AipProductionContractStore.resolve_review_issue` 的正式命令，传人类 reviewer actor、expected version、理由和原 Artifact exact resolutionRef；同幂等键 replay 无第二事件。隔离测试 reviewer 只是模拟一个真实 API 调用，不宣称栖月汇人已批准。独立读回 resolved Issue、序号 2 的不可变事件与 create/resolve Receipt；不直接 UPDATE Issue。
 - 再用 `ContentReviewHostService._issue_authority` 与 `review_issue_exact_ref` 在同一库验证 Host 可读取 exact 已批准 Issue、通过的原 EvalReport/最新 StepRun 和人类事件；旧 open Issue、错 Artifact/Report 或无 resolutionRef fail closed。此波只证明 Host 的 Issue/Eval 子门，完整 `revalidate/execute/verify_receipt` 还需要合法 TaskBrief、ReviewerAuthority、九操作锁与当前安装，不用猴补称业务续跑。文件范围仍只扩同库 PG 测试；生产缺陷需 RED 后另列。
 - 专项/累计、证据、m1 提交、AOS/Prime 更新后，下一波优先组成其余 Host 门和 receipt-first review→反馈自动续跑；生产默认关闭。
+
+### P2g 第九增量：同库正式 Brief 与四个来源 Artifact（2026-09-27，编码前）
+
+- 231-5 的产物不能只有技术 ID；当前同库夹具虽有可读受控内容、结算和人工 Issue，却从预算单测复用了占位 `briefRef`/四个 `sourceArtifactRefs`。这不是完整 Review Host 权威。只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`：在原 TaskRun 上由正式 `AipTaskStore.record_artifact` 创建四个唯一不可变来源 Artifact，由 `AipProductionContractStore.create_brief` 创建同 Task、同 GrowthPlanRef/四来源/禁止外发的 draft 内容 Brief。沿原 content.generate 命令替换 exact refs 后重新计算正式 command hash，再入 journal/runtime Receipt；不直接改已提交命令。
+- 保持其余已证明的同一结果→settled→StepRun→Eval→Issue→模拟 reviewer 事件。随后用原已 resolved Issue 构造 content.review 所需 exact Artifact/Task/Brief/GrowthPlan/四来源片段，调用 `ContentReviewHostService._artifact_authority` 与 `_task_brief_authority` 的真实数据库读回；篡改 Brief/来源 ref 应 fail closed。只证明这两道 Host 子门；ReviewerAuthority、完整 review dispatch/Receipt、九操作锁、TaskRun 终态和反馈仍是独立未完成项。
+- 先 RED 暴露最小约束，再改隔离 fixture；不放宽生产校验、不读商城源、不触当前实例。专项、累计、verification、m1 精确提交、AOS/Prime 更新后进入下一波 ReviewerAuthority/完整 Host；若注册正式 Brief/来源 fixture 过大，则记录具体缺口并转做 Review 终态 Owner，而非长期死磕夹具。

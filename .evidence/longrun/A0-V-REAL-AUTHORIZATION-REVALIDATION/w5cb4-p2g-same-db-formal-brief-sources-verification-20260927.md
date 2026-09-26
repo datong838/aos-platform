@@ -1,0 +1,6 @@
+# W5CB4 P2g｜同库正式内容 Brief 与四个来源 Artifact
+
+- 基线 `m1@773abd45`，先补第九增量文件级方案；只改 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`。在正式 `a0v_105` 一次性克隆库内，原 TaskRun 经 `AipTaskStore.record_artifact` 形成四个唯一持久来源 Artifact，再由 `AipProductionContractStore.create_brief` 形成同 Task、同 GrowthPlanRef/四来源、禁止外发的 draft `content_campaign` Brief。原 content.generate 命令**入 journal/runtime Receipt 前**绑定 exact refs 并重新计算正式 requestHash，未篡改已提交命令。
+- 原受控结果→预算 settled→可读 Artifact→成功生成 StepRun/checkpoint→当前合同主体 Eval→只读候选→唯一 ReviewIssue→模拟 reviewer exact ACCEPT 事件链保持同一库/原对象。`ContentReviewHostService._artifact_authority` 正式回读并核四个来源 Artifact，`_task_brief_authority` 正式回读与原 Task/Brief/spec 同一性；错来源 hash、错 Brief hash 都 fail closed。任务标题改成有界中文业务标题，符合正式 Host 文本门。
+- 专项 `1 passed, 6 deselected, 7 warnings`；内容、通用 EvalRunner 与邻近 PG 累计 `294 passed, 35 skipped, 7 warnings`；`git diff --check` 通过。纯后端隔离库验证，浏览器验收不适用。四个来源内容、GrowthPlanRef、Provider 响应仍是受控测试材料，非真实商城事实；ReviewerAuthority、完整 review dispatch/Receipt、九操作 Host 锁、Review StepRun/TaskRun 终态、反馈自然消费未证明。没有生产外呼/迁移/商城源读取/旧十二 Run 重放或 230 L0 推进。
+- 下一波：优先补正式 ReviewerAuthority 与 review dispatch/Receipt 门；若权威 fixture 边界过大，转做 receipt-to-review-StepRun 终态 Owner 的方案和最小代码，不把本子证明误写成首链完成。
