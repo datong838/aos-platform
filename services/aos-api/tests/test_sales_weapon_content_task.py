@@ -16,6 +16,9 @@ from ecommerce_growth.ecommerce_business_investigation_review_command import (
     ReviewHandoffRequest,
 )
 from test_sales_weapon_brief import NOW, draft, ref
+from test_ecommerce_analyst_authority_contracts import sales_weapon_method
+from aos_api.ecommerce_analyst_authority_contracts import SalesWeaponMethod
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 
 
 ARTIFACTS = tuple(ExactRef("ArtifactRevision", f"artifact-{index}", 1, "sha256:" + "b" * 64)
@@ -92,3 +95,16 @@ def test_existing_exact_review_accepts_business_task_and_rejects_technical_pollu
     assert review(build()).command_payload()["taskSpec"]["audience"] == draft().audience_hypothesis.text
     with pytest.raises(ValueError, match="business text"):
         review(build(replace(draft(), product_label="API商品")))
+
+
+def test_host_review_task_values_match_package_sales_weapon_mapping():
+    task = build()
+    method = SalesWeaponMethod.model_validate(sales_weapon_method())
+    assert ReviewAdvanceHostService._sales_weapon_task_values(method) == {
+        "title": task.title,
+        "objective": task.objective,
+        "audience": task.audience,
+        "channels": list(task.channels),
+        "timeWindow": task.time_window,
+        "constraints": list(task.constraints),
+    }

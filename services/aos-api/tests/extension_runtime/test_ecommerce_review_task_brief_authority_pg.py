@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from psycopg.types.json import Jsonb
@@ -7,7 +8,9 @@ from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 from aos_api.aip_task_store import AipTaskIdempotencyConflict
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
 from aos_api.tenant_scope import TenantScope
+from test_ecommerce_analyst_authority_contracts import sales_weapon_method
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -102,6 +105,7 @@ def test_review_lineage_uses_real_task_and_brief_owners_and_outer_rollback():
         assert first["taskRef"]["contentHash"] == "sha256:" + task["request_hash"]
         assert brief["task_id"] == first["taskRef"]["resourceId"]
         assert brief["brief_type"] == "content_campaign"
+        assert brief["spec"].get("salesWeaponMethod") is None
         assert brief["spec"]["sourceHandoffRef"] == first["handoffRef"]
         assert brief["spec"]["externalPublicationRequested"] is False
         assert first["briefRef"]["contentHash"] == "sha256:" + brief["content_hash"]
@@ -142,6 +146,35 @@ def test_review_lineage_uses_real_task_and_brief_owners_and_outer_rollback():
             "SELECT count(*) AS n FROM public.aip_task WHERE org_id=%s AND project_id=%s",
             SCOPE.key,
         ).fetchone()["n"] == 0
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.aip_task_brief_revision "
+            "WHERE org_id=%s AND project_id=%s",
+            SCOPE.key,
+        ).fetchone()["n"] == 0
+
+
+def test_review_task_brief_preserves_approved_sales_weapon_provenance():
+    host = ReviewAdvanceHostService()
+    method = SalesWeaponMethod.model_validate(sales_weapon_method())
+    decision = AnalystExactRef(resource_type="DecisionSummaryRevision", resource_id="decision-1",
+                               revision=1, content_hash="a" * 64)
+    approved = SimpleNamespace(sales_weapon_method=method, decision_ref=decision)
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        result = host._review_lineage(
+            transaction=transaction, scope=SCOPE,
+            command=command(), occurred_at=NOW, approved_plan=approved,
+        )
+        row = conn.execute(
+            "SELECT schema_ref,spec FROM public.aip_task_brief_revision WHERE org_id=%s AND project_id=%s "
+            "AND brief_id=%s AND revision=1",
+            (*SCOPE.key, result["briefRef"]["resourceId"]),
+        ).fetchone()
+        assert row["spec"]["salesWeaponMethod"] == method.model_dump(mode="json", by_alias=True)
+        assert row["spec"]["decisionRef"] == decision.model_dump(mode="json", by_alias=True)
+        assert row["spec"]["sourceCutoffAt"] == method.source_cutoff_at.isoformat()
+        assert row["schema_ref"]["resourceId"] == "schema://aos/ecommerce/content-campaign-brief/v2"
+        conn.rollback()
         assert conn.execute(
             "SELECT count(*) AS n FROM public.aip_task_brief_revision "
             "WHERE org_id=%s AND project_id=%s",

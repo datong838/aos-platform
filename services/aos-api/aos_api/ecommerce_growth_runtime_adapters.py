@@ -89,8 +89,13 @@ from aos_api.ecommerce_analyst_authority_contracts import (
     AnalystExactRef,
     GrowthPlanRevision,
     GrowthPlanLifecycle,
+    SalesWeaponMethod,
 )
 from aos_api.ecommerce_analyst_authority_store import canonical_hash as analyst_canonical_hash
+from aos_api.ecommerce_analyst_growth_plan_sources import (
+    require_current_revision as require_current_analyst_revision,
+    require_growth_plan_sources,
+)
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.ecommerce_business_investigation_review_command import (
     EcommerceBusinessInvestigationReviewCommandService,
@@ -2446,7 +2451,63 @@ class ReviewAdvanceHostService:
         return budget_canonical_hash(dict(payload), prefixed=True)
 
     @staticmethod
-    def _revalidate_growth_plan(*, transaction, scope, command) -> None:
+    def _sales_weapon_task_values(method: SalesWeaponMethod) -> dict[str, Any]:
+        return {
+            "title": method.product_label + "内容说明",
+            "objective": (
+                "围绕" + method.scenario.text + "，为"
+                + method.audience_hypothesis.text + "制作有来源、待人工评审的产品说明"
+            ),
+            "audience": method.audience_hypothesis.text,
+            "channels": list(method.channels),
+            "timeWindow": method.time_window,
+            "constraints": [
+                *("适合：" + item.text for item in method.fit_for),
+                *("不适合：" + item.text for item in method.not_fit_for),
+                *("待评审主张：" + item.text for item in method.proposed_value_claims),
+                *("未知：" + item for item in method.unknown_facts),
+                *("禁说：" + item for item in method.prohibited_claims),
+                "真人交接：" + method.handoff_condition,
+            ],
+        }
+
+    @staticmethod
+    def _require_sales_weapon_method(*, transaction, scope, command, plan, checked_at) -> None:
+        method = plan.sales_weapon_method
+        if method is None:
+            return
+        if type(checked_at) is not datetime or checked_at.utcoffset() is None:
+            raise ValueError("sales weapon requires trusted review time")
+        try:
+            cutoff = datetime.fromisoformat(command["cutoffAt"])
+            expires = datetime.fromisoformat(command["expiresAt"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("sales weapon review times are unavailable") from exc
+        if (cutoff.utcoffset() is None or expires.utcoffset() is None
+                or method.source_cutoff_at != cutoff or not cutoff <= checked_at < expires
+                or expires > cutoff + timedelta(days=7)):
+            raise ValueError("sales weapon source cutoff or review lifetime drifted")
+        task = command.get("taskSpec")
+        expected = ReviewAdvanceHostService._sales_weapon_task_values(method)
+        if type(task) is not dict or any(task.get(field) != value for field, value in expected.items()):
+            raise ValueError("sales weapon task differs from approved method")
+        decision = require_growth_plan_sources(
+            transaction, scope, plan.decision_ref,
+            markings=command["markings"], now=checked_at,
+            max_source_age=expires - cutoff,
+        )
+        source_keys = {(ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+                       for ref in decision.evidence_refs}
+        method_keys = {(ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+                       for ref in method.evidence_refs}
+        if not method_keys.issubset(source_keys):
+            raise ValueError("sales weapon method evidence differs from approved Decision")
+        insight = require_current_analyst_revision(transaction, scope, decision.insight_ref)
+        if insight.cutoff_at != method.source_cutoff_at:
+            raise ValueError("sales weapon source cutoff differs from approved Insight")
+
+    @staticmethod
+    def _revalidate_growth_plan(*, transaction, scope, command) -> GrowthPlanRevision:
         supplied = InvestigationExactRef.model_validate(command["growthPlanRef"])
         if supplied.resource_type != "GrowthPlanRevision" or type(supplied.revision) is not int:
             raise ValueError("review GrowthPlan exact ref is invalid")
@@ -2514,6 +2575,7 @@ class ReviewAdvanceHostService:
             != analyst_canonical_hash(expected_owner_result)
         ):
             raise ValueError("review GrowthPlan must be current and APPROVED")
+        return plan
 
     @staticmethod
     def _revalidate_issue_eval(*, transaction, scope, command) -> ReviewIssue:
@@ -2674,7 +2736,8 @@ class ReviewAdvanceHostService:
 
     @staticmethod
     def _revalidate_analysis_runtime(
-        *, transaction, scope, command, artifact_task_run_id: str
+        *, transaction, scope, command, artifact_task_run_id: str,
+        expected_cutoff: str | None = None,
     ) -> None:
         supplied = command["analysisReceiptRef"]
         receipt_rows = transaction.execute(
@@ -2697,6 +2760,8 @@ class ReviewAdvanceHostService:
             "contentHash": _analysis_command_hash(body),
             "receiptId": supplied["resourceId"],
         }
+        if expected_cutoff is not None and response.get("cutoffAt") != expected_cutoff:
+            raise ValueError("review AnalysisRuntimeReceipt cutoff drifted")
         if (
             supplied != expected_analysis_ref
             or response.get("receiptRef") != expected_analysis_ref
@@ -2845,7 +2910,7 @@ class ReviewAdvanceHostService:
         ):
             raise ValueError("review Analysis/Plan/TaskRun/Artifact lineage drifted")
 
-    def _review_lineage(self, *, transaction, scope, command, occurred_at):
+    def _review_lineage(self, *, transaction, scope, command, occurred_at, approved_plan=None):
         if not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None:
             raise ValueError("review lineage time must include timezone")
         key = command["idempotencyKey"]
@@ -2935,27 +3000,38 @@ class ReviewAdvanceHostService:
             "revision": 1,
             "contentHash": "sha256:" + expected_task_hash,
         }
+        brief_spec = {
+            "sourceHandoffRef": handoff_ref,
+            "taskRef": task_ref,
+            "growthPlanRef": command["growthPlanRef"],
+            "artifactRefs": task_spec["artifactRefs"],
+            "objective": task_spec["objective"],
+            "channels": task_spec["channels"],
+            "audience": task_spec["audience"],
+            "timeWindow": task_spec["timeWindow"],
+            "constraints": task_spec["constraints"],
+            "externalPublicationRequested": False,
+        }
+        if approved_plan is not None and approved_plan.sales_weapon_method is not None:
+            method = approved_plan.sales_weapon_method
+            brief_spec.update({
+                "salesWeaponMethod": method.model_dump(mode="json", by_alias=True),
+                "decisionRef": approved_plan.decision_ref.model_dump(mode="json", by_alias=True),
+                "sourceCutoffAt": method.source_cutoff_at.isoformat(),
+            })
         brief_request = CreateBriefRequest(
             task_id=task.id,
             brief_type=task_spec["briefType"],
             schema_ref=ResourceRef(
                 resource_type="ContentCampaignBriefSchema",
-                resource_id="schema://aos/ecommerce/content-campaign-brief/v1",
-                revision="1",
+                resource_id=("schema://aos/ecommerce/content-campaign-brief/v2"
+                             if approved_plan is not None and approved_plan.sales_weapon_method is not None
+                             else "schema://aos/ecommerce/content-campaign-brief/v1"),
+                revision=("2" if approved_plan is not None
+                          and approved_plan.sales_weapon_method is not None else "1"),
                 authority="aos://ecommerce-workshop/content-campaign",
             ),
-            spec={
-                "sourceHandoffRef": handoff_ref,
-                "taskRef": task_ref,
-                "growthPlanRef": command["growthPlanRef"],
-                "artifactRefs": task_spec["artifactRefs"],
-                "objective": task_spec["objective"],
-                "channels": task_spec["channels"],
-                "audience": task_spec["audience"],
-                "timeWindow": task_spec["timeWindow"],
-                "constraints": task_spec["constraints"],
-                "externalPublicationRequested": False,
-            },
+            spec=brief_spec,
         )
         brief = AipProductionContractStore(factory).create_brief(
             scope,
@@ -3098,11 +3174,16 @@ class ReviewAdvanceHostService:
         case = cases.get(scope, case_ref.resource_id)
         if _case_ref(case) != command["caseRef"]:
             raise ValueError("review case lineage drifted")
-        self._revalidate_growth_plan(
+        plan = self._revalidate_growth_plan(
             transaction=transaction,
             scope=scope,
             command=command,
         )
+        if plan is not None:
+            self._require_sales_weapon_method(
+                transaction=transaction, scope=scope, command=command,
+                plan=plan, checked_at=getattr(dispatch, "checked_at", None),
+            )
         issue = self._revalidate_issue_eval(
             transaction=transaction,
             scope=scope,
@@ -3119,6 +3200,8 @@ class ReviewAdvanceHostService:
             scope=scope,
             command=command,
             artifact_task_run_id=artifact_task_run_id,
+            expected_cutoff=(command["cutoffAt"] if plan is not None
+                             and plan.sales_weapon_method is not None else None),
         )
         if not key:
             raise ValueError("review idempotencyKey is invalid")
@@ -3131,11 +3214,20 @@ class ReviewAdvanceHostService:
             replay = dict(existing)
             replay["replayed"] = True
             return replay
+        approved_plan = self._revalidate_growth_plan(
+            transaction=transaction, scope=scope, command=command,
+        )
+        if approved_plan is not None:
+            self._require_sales_weapon_method(
+                transaction=transaction, scope=scope, command=command,
+                plan=approved_plan, checked_at=checked_at,
+            )
         lineage = self._review_lineage(
             transaction=transaction,
             scope=scope,
             command=command,
             occurred_at=occurred_at or checked_at,
+            approved_plan=approved_plan,
         )
         payload = self._accept_receipt(command, lineage, scope, key, occurred_at or checked_at)
         return receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
@@ -3710,6 +3802,9 @@ _CONTENT_BRIEF_SPEC_FIELDS = frozenset(
         "externalPublicationRequested",
     }
 )
+_CONTENT_BRIEF_SPEC_FIELDS_V2 = _CONTENT_BRIEF_SPEC_FIELDS | {
+    "salesWeaponMethod", "decisionRef", "sourceCutoffAt",
+}
 
 
 def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
@@ -3979,7 +4074,7 @@ class ContentGenerateHostService:
         return response
 
     @staticmethod
-    def _task_brief(transaction, scope, authorities, source_values) -> None:
+    def _task_brief(transaction, scope, authorities, source_values, *, approved_plan=None) -> None:
         task_ref = authorities["task"]
         brief_ref = authorities["brief"]
         task = transaction.execute(
@@ -4039,6 +4134,33 @@ class ContentGenerateHostService:
         }
         goal = task["goal"]
         spec = brief["spec"]
+        method = None if approved_plan is None else approved_plan.sales_weapon_method
+        expected_method_task = (
+            None if method is None else ReviewAdvanceHostService._sales_weapon_task_values(method)
+        )
+        expected_spec_fields = (
+            _CONTENT_BRIEF_SPEC_FIELDS if method is None else _CONTENT_BRIEF_SPEC_FIELDS_V2
+        )
+        expected_v2_schema = {
+            "resourceType": "ContentCampaignBriefSchema",
+            "resourceId": "schema://aos/ecommerce/content-campaign-brief/v2",
+            "revision": "2",
+            "authority": "aos://ecommerce-workshop/content-campaign",
+        }
+        v2_matches_plan = (method is None or (
+            type(spec) is dict
+            and brief["schema_ref"] == expected_v2_schema
+            and spec.get("salesWeaponMethod") == method.model_dump(mode="json", by_alias=True)
+            and spec.get("decisionRef") == approved_plan.decision_ref.model_dump(mode="json", by_alias=True)
+            and spec.get("sourceCutoffAt") == method.source_cutoff_at.isoformat()
+            and task["title"] == expected_method_task["title"]
+            and task["description"] == expected_method_task["objective"]
+            and type(goal) is dict
+            and goal.get("objective") == expected_method_task["objective"]
+            and all(spec.get(field) == expected_method_task[field] for field in (
+                "objective", "channels", "audience", "timeWindow", "constraints"
+            ))
+        ))
         expected_handoff = authorities["handoff"].model_dump(
             mode="json", by_alias=True, exclude_none=True
         )
@@ -4085,7 +4207,8 @@ class ContentGenerateHostService:
             ).removeprefix("sha256:")
             or type(goal) is not dict
             or type(spec) is not dict
-            or set(spec) != _CONTENT_BRIEF_SPEC_FIELDS
+            or set(spec) != expected_spec_fields
+            or not v2_matches_plan
             or goal.get("sourceHandoffRef") != expected_handoff
             or spec.get("sourceHandoffRef") != expected_handoff
             or goal.get("growthPlanRef") != expected_growth_plan
@@ -5003,8 +5126,7 @@ class ContentGenerateHostService:
         review = self._review_receipt(
             transaction, scope, parsed["authorities"], source_values
         )
-        self._task_brief(transaction, scope, parsed["authorities"], source_values)
-        ReviewAdvanceHostService._revalidate_growth_plan(
+        approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
             transaction=transaction,
             scope=scope,
             command={
@@ -5013,6 +5135,8 @@ class ContentGenerateHostService:
                 )
             },
         )
+        self._task_brief(transaction, scope, parsed["authorities"], source_values,
+                         approved_plan=approved_plan)
         _agent, capability = self._agent_capability_authority(
             transaction, scope, parsed["authorities"]
         )

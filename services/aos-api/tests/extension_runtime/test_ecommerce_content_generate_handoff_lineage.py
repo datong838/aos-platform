@@ -9,7 +9,10 @@ from aos_api.ecommerce_growth_runtime_adapters import (
     _analysis_command_hash,
     _strict_content_generate_command,
 )
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
+from test_ecommerce_analyst_authority_contracts import sales_weapon_method
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -180,6 +183,80 @@ def authorities():
         },
         "command": command,
     }
+
+
+def v2_authorities():
+    values = authorities()
+    method = SalesWeaponMethod.model_validate(sales_weapon_method())
+    decision = AnalystExactRef(resource_type="DecisionSummaryRevision", resource_id="decision-1",
+                               revision=1, content_hash=HEX_A)
+    task_values = ReviewAdvanceHostService._sales_weapon_task_values(method)
+    task = values["task"]
+    task["title"] = task_values["title"]
+    task["description"] = task_values["objective"]
+    task["goal"]["objective"] = task_values["objective"]
+    task_payload = {key: task[key] for key in (
+        "type", "title", "description", "priority", "goal", "selectionRef", "policyRevision"
+    )}
+    task["request_hash"] = _analysis_command_hash(task_payload).removeprefix("sha256:")
+    task_ref = ref("Task", "task-1", digest=task["request_hash"])
+    values["command"]["authorityRefs"]["task"] = task_ref
+    spec = values["brief"]["spec"]
+    spec.update({
+        **{key: task_values[key] for key in (
+            "objective", "channels", "audience", "timeWindow", "constraints"
+        )},
+        "taskRef": task_ref,
+        "salesWeaponMethod": method.model_dump(mode="json", by_alias=True),
+        "decisionRef": decision.model_dump(mode="json", by_alias=True),
+        "sourceCutoffAt": method.source_cutoff_at.isoformat(),
+    })
+    values["brief"]["schema_ref"] = {
+        **values["brief"]["schema_ref"],
+        "resourceId": "schema://aos/ecommerce/content-campaign-brief/v2",
+        "revision": "2",
+    }
+    return values, SimpleNamespace(sales_weapon_method=method, decision_ref=decision)
+
+
+def rehash_v2_brief(values):
+    brief = values["brief"]
+    spec = brief["spec"]
+    digest = _analysis_command_hash({
+        "briefType": brief["brief_type"], "schemaRef": brief["schema_ref"], "spec": spec,
+    }).removeprefix("sha256:")
+    brief["content_hash"] = digest
+    values["command"]["authorityRefs"]["brief"] = ref("TaskBriefRevision", "brief-1", digest=digest)
+    values["receipt"]["result_ref"] = ref("TaskBriefRevision", "brief-1", digest=digest)
+    values["receipt"]["result_ref"]["contentHash"] = digest
+    values["receipt"]["request_hash"] = _analysis_command_hash({
+        "taskId": "task-1", "briefType": brief["brief_type"],
+        "schemaRef": brief["schema_ref"], "spec": spec,
+    }).removeprefix("sha256:")
+
+
+def test_content_generate_accepts_only_plan_identical_v2_sales_weapon_brief():
+    values, plan = v2_authorities()
+    rehash_v2_brief(values)
+    refs = {key: InvestigationExactRef.model_validate(ref_value)
+            for key, ref_value in values["command"]["authorityRefs"].items()}
+    ContentGenerateHostService._task_brief(
+        Transaction(values), SCOPE, refs, values["command"]["sourceArtifactRefs"],
+        approved_plan=plan,
+    )
+    with pytest.raises(ValueError, match="Task/Brief exact lineage drifted"):
+        ContentGenerateHostService._task_brief(
+            Transaction(values), SCOPE, refs, values["command"]["sourceArtifactRefs"],
+            approved_plan=None,
+        )
+    values["brief"]["spec"]["salesWeaponMethod"]["productLabel"] = "篡改后的商品"
+    rehash_v2_brief(values)
+    with pytest.raises(ValueError, match="Task/Brief exact lineage drifted"):
+        ContentGenerateHostService._task_brief(
+            Transaction(values), SCOPE, {key: InvestigationExactRef.model_validate(ref_value)
+                                         for key, ref_value in values["command"]["authorityRefs"].items()},
+            values["command"]["sourceArtifactRefs"], approved_plan=plan,
+        )
 
 
 class Transaction:

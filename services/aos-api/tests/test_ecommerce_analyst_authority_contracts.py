@@ -67,6 +67,8 @@ def sales_weapon_method() -> dict[str, object]:
         "unknownFacts": ["当前库存与真实贡献尚未核实"],
         "prohibitedClaims": ["不得承诺功效或保证收益"],
         "handoffCondition": "涉及个体适用性时交由真人核验",
+        "channels": ["内部方案"],
+        "timeWindow": "本轮内部评审前",
         "evidenceRefs": [ref("EvidenceBundleRevision", "evidence-1")],
         "sourceCutoffAt": NOW,
     }
@@ -90,6 +92,8 @@ def test_sales_weapon_method_is_hashed_plan_content_without_changing_legacy_shap
     {"unknownFacts": []},
     {"prohibitedClaims": []},
     {"evidenceRefs": []},
+    {"channels": []},
+    {"timeWindow": ""},
     {"sourceCutoffAt": datetime(2026, 8, 25)},
     {"sourceCutoffAt": datetime(2026, 8, 26, tzinfo=UTC)},
 ])

@@ -237,15 +237,19 @@ class SalesWeaponMethod(AipContractModel):
     unknown_facts: list[str] = Field(min_length=1, max_length=30)
     prohibited_claims: list[str] = Field(min_length=1, max_length=30)
     handoff_condition: str = Field(min_length=1, max_length=2000)
+    channels: list[str] = Field(min_length=1, max_length=12)
+    time_window: str = Field(min_length=1, max_length=200)
     evidence_refs: list[AnalystExactRef] = Field(min_length=1, max_length=100)
     source_cutoff_at: datetime
 
     @model_validator(mode="after")
     def _closed_sources(self) -> "SalesWeaponMethod":
         texts = [self.product_source_key, self.product_label, self.handoff_condition,
-                 *self.unknown_facts, *self.prohibited_claims]
+                 self.time_window, *self.channels, *self.unknown_facts, *self.prohibited_claims]
         if any(value != value.strip() or not value.isprintable() for value in texts):
             raise ValueError("sales weapon method business text is invalid")
+        if len(set(self.channels)) != len(self.channels) or any(len(value) > 200 for value in self.channels):
+            raise ValueError("sales weapon channels must be unique and bounded")
         if len(set(self.unknown_facts)) != len(self.unknown_facts) or len(set(self.prohibited_claims)) != len(self.prohibited_claims):
             raise ValueError("sales weapon unknown and prohibited claims must be unique")
         if self.source_cutoff_at.utcoffset() is None:

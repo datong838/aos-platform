@@ -29,3 +29,17 @@
 若 `salesWeaponMethod` 与现有 Plan 发布语义不兼容，保留 RED 并先修订方案，不复制另一份批准 Owner。专项和累计回归、方案一致性与验证仍按前述第 4–5 步执行。
 
 第 2 步代码复审发现原 `EcommerceAnalystAuthorityStore._publish` 只核对 actor/tenant/CAS/Receipt，对 `item.content_hash` 未做 payload 重算；Review Host 后续会重算，但无法让错误 hash 在发布时 fail closed。第 3 步须先改 `publish_plan` 或其窄路径，在任何 SQL 前核对原 canonical hash；RED 覆盖合法方法、漂移和旧 Plan，旧测试里的任意常量假 hash 必须改成真实计算，不能改生产 hash 算法适配假测试。随后才做 Review 当前权威/TaskSpec 接线。
+
+## 第 3/5 步 Review Host 精确施工补充
+
+Plan Owner hash 门和隔离 PG exact 读回已完成（`bf90b85a`），不再重复。当前最小剩余文件：`ecommerce_analyst_authority_contracts.py` 的 `SalesWeaponMethod` 加获批 `channels`/`timeWindow`，使全部 ContentTaskSpec 业务字段都由已批准 Plan 决定；对应合同测试先 RED。`ecommerce_growth_runtime_adapters.py` 的原 Review Host 在 `revalidate` 同一 HostTransaction 中，在原 `_revalidate_growth_plan` 读取当前 approved exact Plan 之后，仅对含 `salesWeaponMethod` 的 Plan：
+
+1. 通过现有 `require_growth_plan_sources` / `require_current_revision` 复核同租户当前 Decision→Insight、完整 EvidenceBundle/原 Evidence/marking，要求方法 Evidence refs 被 Decision exact 来源集合包含，方法 cutoff 与 Insight/canonical Review cutoff 一致；以 Host dispatch 的 DB 时钟与命令有效期作为有界 freshness 上限，过期拒绝。不得读商城源、不得另开连接。
+2. 从方法确定性派生 `title`、`objective`、`audience`、`channels`、`timeWindow`、`constraints`，与原 strict `taskSpec` 逐字段相等；商品技术来源键不进入 Task 文本。未匹配、缺 Evidence 或权限撤销都在创建 Task 前失败。
+3. `_review_lineage` 在同一事务把完整方法、Decision exact Ref 与来源 cutoff 加入现有 TaskBrief `spec`，并维持旧无字段 Plan 的原 v1 payload 完全不变；使用既有 TaskBrief Owner 的 hash/Receipt/读回，不新建 Owner。v2 成功和漂移/撤权/旧 v1 回放均用隔离 PG 与 Host 邻接测试验证；未经该门的直接私有方法调用不算授权入口。
+
+先写 RED，再实现；若 Review Host 无法获得 DB 时钟或原来源检查不能在 HostTransaction 中复用，停此切片并修订方案，不退化为 caller-supplied 授权。
+
+下游复审补充：`ContentGenerateHostService._task_brief` 目前只接受旧 `_CONTENT_BRIEF_SPEC_FIELDS`，会把新的完整武器包 Brief 当漂移拒绝。因此本波还须在同文件的原内容生成 Host 中严格区分 v1/v2：先复核当前 approved GrowthPlan exact，再以 Plan 是否含 `salesWeaponMethod` 决定 TaskBrief **唯一允许**的字段集合；v2 必须逐字等于该 Plan 的方法、DecisionRef 和 cutoff，且任务文本与已批准方法一致；v1 保持旧字段集合和旧 Receipt 回放。不能以放宽 `set(spec)` 或跳过 Plan 核对代替接线。文件级测试补 `services/aos-api/tests/extension_runtime/test_ecommerce_content_generate_handoff_lineage.py` 的 v2 合法/漂移/旧 v1，及隔离 PG Brief 读回。真实能力调用、预算与审批仍由内容生成原门负责，本波不启动 Provider。
+
+复审又发现旧 Review `_revalidate_analysis_runtime` 未核命令 cutoff 与原 AnalysisRuntimeReceipt cutoff；旧 Receipt 可无该字段。只对含批准武器包的 v2 路径，在 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 把原 Receipt 的 `cutoffAt` 与方法/Review cutoff 同版核对；旧 v1 不改。补 `services/aos-api/tests/extension_runtime/test_ecommerce_review_analysis_runtime_authority.py` 缺字段/漂移拒绝。否则 caller 可选另一 cutoff 伪装新方法来源。

@@ -99,6 +99,47 @@ def test_approved_sales_weapon_method_is_persisted_under_exact_plan_hash():
         conn.rollback()
 
 
+def test_review_rejects_task_text_not_in_approved_sales_weapon_method():
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        store = EcommerceAnalystAuthorityStore(TransactionBoundConnectFactory(transaction, SCOPE))
+        original = plan(plan_id="review-sales-weapon-task-drift", revision=1,
+                        lifecycle="approved", content_hash=HASH_A)
+        method = {**sales_weapon_method(), "sourceCutoffAt": NOW}
+        item = original.model_copy(update={
+            "sales_weapon_method": SalesWeaponMethod.model_validate(method),
+        })
+        item = item.model_copy(update={"content_hash": canonical_hash(
+            item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})
+        )})
+        store.publish_plan(SCOPE, "user:reviewer", "review-sales-weapon-task-drift-1",
+                           item, expected_version=0)
+        payload = command(item)
+        payload.update({
+            "taskSpec": {"title": "无来源的任意标题"},
+            "cutoffAt": NOW.isoformat(),
+            "expiresAt": "2026-09-10T05:00:00+00:00",
+            "markings": ["internal"],
+        })
+        approved = ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction, scope=SCOPE, command=payload,
+        )
+        with pytest.raises(ValueError, match="sales weapon task"):
+            ReviewAdvanceHostService._require_sales_weapon_method(
+                transaction=transaction, scope=SCOPE, command=payload,
+                plan=approved, checked_at=NOW,
+            )
+        payload["taskSpec"] = ReviewAdvanceHostService._sales_weapon_task_values(
+            approved.sales_weapon_method
+        )
+        with pytest.raises(ValueError, match="current analyst exact source unavailable"):
+            ReviewAdvanceHostService._require_sales_weapon_method(
+                transaction=transaction, scope=SCOPE, command=payload,
+                plan=approved, checked_at=NOW,
+            )
+        conn.rollback()
+
+
 def test_review_growth_plan_requires_current_approved_public_owner_and_rolls_back():
     host = ReviewAdvanceHostService()
     with connect_serializable(SCOPE) as conn:

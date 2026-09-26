@@ -181,6 +181,15 @@ class Transaction:
         return Result()
 
 
+def test_sales_weapon_review_requires_original_analysis_cutoff():
+    values = authorities()
+    with pytest.raises(ValueError, match="cutoff"):
+        ReviewAdvanceHostService._revalidate_analysis_runtime(
+            transaction=Transaction(values), scope=SCOPE, command=values["command"],
+            artifact_task_run_id="task-run-1", expected_cutoff=NOW.isoformat(),
+        )
+
+
 @pytest.mark.parametrize(
     "drift",
     [

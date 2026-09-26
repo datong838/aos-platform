@@ -5,7 +5,10 @@ from uuid import UUID
 import pytest
 
 from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
 from aos_api.tenant_scope import TenantScope
+from test_ecommerce_analyst_authority_contracts import sales_weapon_method
 
 SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 9, 9, 3, 0, tzinfo=UTC)
@@ -255,6 +258,63 @@ def test_accept_returns_internal_handoff_receipt_and_rereads(monkeypatch):
         )
         == response
     )
+
+
+def test_review_revalidates_approved_sales_weapon_before_task_creation(monkeypatch):
+    host, _journal = wired_host(monkeypatch)
+    approved = SimpleNamespace(sales_weapon_method=object())
+    checked = []
+    monkeypatch.setattr(host, "_revalidate_growth_plan", lambda **_: approved)
+    monkeypatch.setattr(host, "_require_sales_weapon_method", lambda **kwargs: checked.append(kwargs))
+    host.revalidate(
+        transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
+        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance", checked_at=NOW),
+        command=accept_command(),
+    )
+    assert len(checked) == 1
+    assert checked[0]["plan"] is approved
+    assert checked[0]["checked_at"] == NOW
+
+
+def test_approved_sales_weapon_requires_same_current_decision_evidence(monkeypatch):
+    from aos_api import ecommerce_growth_runtime_adapters as runtime
+
+    method = SalesWeaponMethod.model_validate({
+        **sales_weapon_method(), "sourceCutoffAt": CUTOFF,
+    })
+    decision_ref = AnalystExactRef(resource_type="DecisionSummaryRevision",
+                                   resource_id="decision-1", revision=1,
+                                   content_hash="a" * 64)
+    plan = SimpleNamespace(sales_weapon_method=method, decision_ref=decision_ref)
+    command = accept_command()
+    command["taskSpec"].update(ReviewAdvanceHostService._sales_weapon_task_values(method))
+    seen = []
+    decision = SimpleNamespace(evidence_refs=method.evidence_refs,
+                               insight_ref=AnalystExactRef(resource_type="InsightRevision",
+                                                           resource_id="insight-1", revision=1,
+                                                           content_hash="a" * 64))
+    monkeypatch.setattr(runtime, "require_growth_plan_sources", lambda *args, **kwargs: (
+        seen.append(kwargs) or decision
+    ))
+    monkeypatch.setattr(runtime, "require_current_analyst_revision",
+                        lambda *_: SimpleNamespace(cutoff_at=CUTOFF))
+    runtime.ReviewAdvanceHostService._require_sales_weapon_method(
+        transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
+        command=command, plan=plan, checked_at=CUTOFF + timedelta(hours=1),
+    )
+    assert seen[0]["markings"] == ["internal"]
+    assert seen[0]["max_source_age"] == timedelta(days=1)
+    with pytest.raises(ValueError, match="lifetime"):
+        runtime.ReviewAdvanceHostService._require_sales_weapon_method(
+            transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
+            command=command, plan=plan, checked_at=CUTOFF + timedelta(days=1),
+        )
+    decision.evidence_refs = []
+    with pytest.raises(ValueError, match="evidence differs"):
+        runtime.ReviewAdvanceHostService._require_sales_weapon_method(
+            transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
+            command=command, plan=plan, checked_at=CUTOFF + timedelta(hours=1),
+        )
 
 
 def test_return_fail_closed_until_wired(monkeypatch):
