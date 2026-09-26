@@ -423,7 +423,7 @@ def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip
     from aos_api.ecommerce_growth_host_ports import HostTransaction
     with pytest.raises(RuntimeError, match="outer rollback"):
         with connect(PRIMARY) as conn:
-            borrowed, borrowed_receipt = service.create_in_transaction(
+            borrowed, borrowed_receipt = service._create_in_transaction(
                 HostTransaction(conn), PRIMARY, borrowed_request,
                 idempotency_key=f"agent-run-{borrowed_id}", actor="pytest", occurred_at=NOW,
             )
@@ -443,6 +443,21 @@ def test_agent_run_persists_exact_instance_snapshot_and_blocks_start_without_aip
             "AND operation='agent_run.create' AND idempotency_key=%s",
             (*PRIMARY.key, f"agent-run-{borrowed_id}"),
         ).fetchone()["n"] == 0
+    with connect(PRIMARY) as conn:
+        first, first_receipt = service._create_in_transaction(
+            HostTransaction(conn), PRIMARY, borrowed_request,
+            idempotency_key=f"agent-run-{borrowed_id}", actor="pytest", occurred_at=NOW,
+        )
+        replay, replay_receipt = service._create_in_transaction(
+            HostTransaction(conn), PRIMARY, borrowed_request,
+            idempotency_key=f"agent-run-{borrowed_id}", actor="pytest", occurred_at=NOW,
+        )
+        assert replay == first and replay_receipt == first_receipt
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_agent_run WHERE org_id=%s AND project_id=%s AND agent_run_id=%s",
+            (*PRIMARY.key, borrowed_id),
+        ).fetchone()["n"] == 1
+        conn.commit()
     mismatched = request.model_copy(
         update={
             "agent_run_id": f"{ids['agent_run']}-wrong-logic",

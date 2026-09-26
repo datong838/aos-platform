@@ -11,7 +11,7 @@ from pydantic import Field, model_validator
 
 from aos_api.aip_agent_registry_contracts import CreateAgentRunRequest
 from aos_api.aip_contracts import AipContractModel
-from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_task_store import AipTaskStore, _canonical_hash
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_authority_store import canonical_hash
 from aos_api.ecommerce_analyst_portrait_inputs import (
@@ -163,8 +163,12 @@ class NaturalD01Issuer:
         timeline = self._tasks.timeline(scope, task_run_id)
         run, task, plan = timeline.run, timeline.task, timeline.plan
         stages = tuple(item.step_key for item in plan.steps)
+        plan_payload = {'steps': [item.model_dump(mode='json', by_alias=True)
+                                  for item in plan.steps],
+                        'dependencies': plan.dependencies, 'risk': plan.risk}
         if (run.id != task_run_id or run.task_id != task.id
                 or run.plan_revision_id != plan.id or plan.task_id != task.id
+                or plan.content_hash != _canonical_hash(plan_payload)
                 or _value(run.status) != 'running'
                 or _value(task.status) != 'executing'
                 or _value(plan.approval_status) != 'approved'

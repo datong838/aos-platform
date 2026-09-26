@@ -10,6 +10,7 @@ from aos_api.aip_agent_registry_contracts import (
 )
 from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_agent_run_service import AipAgentRunService
+from aos_api.aip_task_store import _canonical_hash
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_analyst_d01_issuer import (
     D01SourcePacket, NaturalD01Issuer, d01_agent_run_id,
@@ -88,14 +89,21 @@ def _timeline(*, run_status='running', task_status='executing', approval='approv
     assignee = ResourceRef(resourceType='AgentInstance', resourceId='analyst-1',
                            revision='1', authority='aip-assignee-directory')
     steps = [SimpleNamespace(step_key=key, applicability='applicable',
-                             assignee_refs=[assignee]) for key in
+                             assignee_refs=[assignee],
+                             model_dump=lambda **_kwargs: {'stepKey': key}) for key in
              ('portrait', 'diagnosis', 'solution-design')]
+    # Preserve each step's key when serializing the approved plan.
+    for step in steps:
+        step.model_dump = lambda _step=step, **_kwargs: {'stepKey': _step.step_key}
+    content_hash = _canonical_hash({'steps': [step.model_dump() for step in steps],
+                                    'dependencies': [], 'risk': {}})
     return SimpleNamespace(
         run=SimpleNamespace(id='run-1', task_id='task-1', plan_revision_id='plan-1',
                             version=2, status=run_status),
         task=SimpleNamespace(id='task-1', version=3, status=task_status),
         plan=SimpleNamespace(id='plan-1', task_id='task-1', revision=1,
-                             approval_status=approval, steps=steps),
+                             approval_status=approval, steps=steps,
+                             dependencies=[], risk={}, content_hash=content_hash),
         steps=[],
     )
 
@@ -144,6 +152,16 @@ def test_missing_source_inventory_never_calls_owner():
     issuer, calls = _issuer()
     with pytest.raises(ValueError):
         issuer.issue(SCOPE, 'run-1', _request(input_refs=[_resource('MethodRevision', 'method-1')]), _packet(),
+                     actor='analyst-owner', occurred_at=NOW)
+    assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
+
+
+def test_drifted_approved_plan_hash_never_calls_owner():
+    timeline = _timeline()
+    timeline.plan.content_hash = '0' * 64
+    issuer, calls = _issuer(timeline)
+    with pytest.raises(ValueError, match='approved D01 task lineage'):
+        issuer.issue(SCOPE, 'run-1', _request(), _packet(),
                      actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
@@ -266,12 +284,12 @@ def test_owner_borrowed_transaction_does_not_commit_and_rejects_wrong_scope():
     service._insert_receipt = lambda *_args: receipt
     service._from_row = lambda *_args: SimpleNamespace(agent_run_id=request.agent_run_id)
     tx = HostTransaction(Connection())
-    result = service.create_in_transaction(tx, SCOPE, request,
+    result = service._create_in_transaction(tx, SCOPE, request,
         idempotency_key='natural-d01:test', actor='analyst-owner', occurred_at=NOW)
     assert result[0].agent_run_id == request.agent_run_id and result[1] is receipt
     assert any('INSERT INTO aip_agent_run' in query for query in calls)
     with pytest.raises(PermissionError, match='tenant'):
-        service.create_in_transaction(tx, TenantScope('dev-org', 'dev-project'), request,
+        service._create_in_transaction(tx, TenantScope('dev-org', 'dev-project'), request,
             idempotency_key='natural-d01:test', actor='analyst-owner', occurred_at=NOW)
 
 

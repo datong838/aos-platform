@@ -61,7 +61,7 @@ class AipAgentRunService(AipAgentRegistryStore):
         self._validate_command(scope, idempotency_key, actor)
         try:
             with self._connect_factory(scope) as conn:
-                result = self.create_in_transaction(
+                result = self._create_in_transaction(
                     HostTransaction(conn), scope, request, idempotency_key=idempotency_key,
                     actor=actor, occurred_at=occurred_at,
                 )
@@ -72,7 +72,7 @@ class AipAgentRunService(AipAgentRegistryStore):
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("agent run persistence failed") from exc
 
-    def create_in_transaction(self, transaction: HostTransaction, scope: TenantScope,
+    def _create_in_transaction(self, transaction: HostTransaction, scope: TenantScope,
                               request: CreateAgentRunRequest, *, idempotency_key: str,
                               actor: str, occurred_at: datetime) -> tuple[AgentRun, RegistryReceipt]:
         """Canonical Owner write on a borrowed tenant transaction; caller owns commit."""

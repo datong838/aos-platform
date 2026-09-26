@@ -44,7 +44,9 @@ def startup_case(analysis_case,request):
     conn,service,claimed=analysis_case
     snapshot,command=service._phase(conn,claimed,lambda snapshot,request,dispatch:(snapshot,request))
     original=service.source.reader.run_event
-    event_at=conn.execute('SELECT transaction_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
+    cutoff=datetime.fromisoformat(command['cutoffAt'])
+    event_at=(cutoff if 'sourceGroup' in snapshot else
+              conn.execute('SELECT transaction_timestamp() AS now').fetchone()['now'].replace(microsecond=0))
     def event(*args,**kw):
         callback=kw.pop('execute')
         return original(*args,**kw,execute=lambda row:callback(dict(row,payload_hash='d'*64,

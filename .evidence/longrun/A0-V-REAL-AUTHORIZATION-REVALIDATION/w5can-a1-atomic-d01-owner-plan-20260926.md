@@ -20,3 +20,11 @@
 ## 第 1 步接口复审细化
 
 Owner `create` 直接在自有连接里 `commit()`；不能向它塞一个共享连接工厂再代理掉 commit。最小可行接口是在 Owner 内抽取接受 `HostTransaction` 的无提交写核心，保留公开 `create` 的原连接、异常映射和 commit；写核心必须在执行 SQL 前核对事务内 `aos.org_id`/`aos.project_id` 与 scope，拒绝错租户。W5can coordinator 由原链 `run_current` 持有同一 raw connection，向无提交写核心传 `HostTransaction`；来源包读也须改为同事务入口，不再独立开连接。RED 首测无提交/错租户/原公开 create 不回归，然后隔离 PG 证明回滚、原 Receipt 唯一和权限撤销。任何 HostTransaction 包装都不是单独授权，只有原链回调内才可发行。
+
+## 第 3 步 coordinator 文件级补充
+
+在 `services/aos-api/aos_api/ecommerce_analyst_d01_atomic.py` 新增未注册的编排器，构造参数必须是原 `AnalysisContinuationOrigin` 与 `AipAgentRunService`，不允许任意函数假扮原链。它以 `connect_serializable` 获得唯一连接，在原链回调内用 `TransactionBoundConnectFactory(HostTransaction(conn),scope)` 构造 `AipTaskStore.timeline`，用同一 `HostTransaction` 完成来源包和 Owner 写入；原 Receipt 的 TaskRun、Plan 与 cutoff 要与拟发行请求一致。Owner 原键 Receipt 必须在事务内独立回读后才由外层提交。RED/测试文件 `services/aos-api/tests/extension_runtime/test_ecommerce_analyst_d01_atomic.py` 覆盖错原链/错 cutoff、来源拒绝、Owner 结果不符、原键重复与提交未知。此阶段不做 Host 注册、Provider 调用或真实 Run 补发。
+
+复审补充：`NaturalD01Issuer` 的 approved Plan 检查还需验证 `steps/dependencies/risk` 对应的原 `content_hash`，与既有 `PortraitTaorWorker.require_portrait_stage_lineage` 一致；否则不一致计划仍可能创建 queued AgentRun。先加 RED，再复用原 `_canonical_hash`，不新造哈希算法。
+
+累计 PG fixture 时间线复审：`test_analysis_startup_evidence_pg.startup_case` 合成事件使用事务开始时间，`AnalysisStartupEvidenceService` 对 sourceGroup 明确要求 `cutoff <= event_at <= Run.created_at`；此合成值会随夹具分支违反原合同。只在测试夹具中让 sourceGroup 事件时间等于原 command cutoff，其他分支保留既有时间；生产 chronology 校验不改。对 origin/context 全套重复回归确认，不以一次偶然通过充当稳定证据。
