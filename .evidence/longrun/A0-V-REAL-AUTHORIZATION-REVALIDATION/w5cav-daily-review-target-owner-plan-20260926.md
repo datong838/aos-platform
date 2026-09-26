@@ -16,4 +16,4 @@
 
 - 必须证明 target 写入与 feedback ack 在同一个事务、失败回滚不会留下伪完成；目标 Receipt 可由独立读取函数重建，不能单靠调用返回值。
 - 若旧 claim 结果未知或真正目标是否写入不明，只读对账，绝不直接再次执行。PG 隔离测试与真实安装验收分别报告，不得互代。
-- 本波验证文件落盘、m1 精确提交、D-waves/AOS 上下文/Prime 状态对账后自动进入 W5caw：真实效果观察的 `improvement_observation`→EffectReview 接收端及其数据来源门。
+- 本波验证文件落盘、m1 精确提交、D-waves/AOS 上下文/Prime 状态对账后自动进入 W5caw。施工中确认 `run_one` 只有精确命令入口、没有生产有界 selector/进程生命周期，因此 W5caw 先补自然反馈认领/启停与真实效果观察的 `improvement_observation`→EffectReview 来源门；不能把可手动调用的内部方法称作自动续跑。
