@@ -2,6 +2,10 @@ import importlib.util
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -112,3 +116,50 @@ def test_only_serve_wires_process_guard(guard, monkeypatch, action, expected_sta
     monkeypatch.setattr(guard.sys, 'argv', ['wrapper', action, '--output', 'ignored'])
     guard.main()
     assert len(starts) == expected_starts
+
+
+@pytest.mark.parametrize('stop_reason', ['expired', 'revoked'])
+def test_isolated_serve_process_exits_on_lease_stop(guard, tmp_path, stop_reason):
+    """Exercise the actual watcher thread and SIGTERM without an API launcher."""
+    lease_path = tmp_path/'leases.json'
+    ready_path = tmp_path/'ready'
+    now = datetime.now(timezone.utc)
+    expiry = now + timedelta(seconds=5 if stop_reason == 'expired' else 45)
+    _lease(lease_path, guard.TASK, expiry)
+    script = """
+import sys
+import threading
+from pathlib import Path
+from types import SimpleNamespace
+
+sys.path.insert(0, sys.argv[1])
+import a0v_w5c9a_http_only_api as guard
+guard.LEASES = Path(sys.argv[2])
+ready = Path(sys.argv[3])
+
+def wait_without_business_start():
+    ready.write_text('ready')
+    threading.Event().wait()
+
+guard.load_launcher = lambda: SimpleNamespace(main=wait_without_business_start)
+sys.argv = ['isolated-wrapper', 'serve']
+guard.main()
+"""
+    process = subprocess.Popen(
+        [sys.executable, '-c', script, str(Path(__file__).resolve().parents[3]/'scripts'),
+         str(lease_path), str(ready_path)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+    )
+    try:
+        ready_deadline = time.monotonic() + 4
+        while not ready_path.exists() and process.poll() is None and time.monotonic() < ready_deadline:
+            time.sleep(0.05)
+        assert ready_path.exists(), f'isolated launcher did not become ready: {process.poll()}'
+        if stop_reason == 'revoked':
+            _lease(lease_path, guard.TASK, expiry, status='EXPIRED')
+        stdout, stderr = process.communicate(timeout=8 if stop_reason == 'expired' else 35)
+        assert process.returncode == -signal.SIGTERM, (stdout, stderr, process.returncode)
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate(timeout=3)
