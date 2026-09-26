@@ -140,3 +140,11 @@
 - RED 顺序：无第二段 ack/Receipt、内容 Run 非终态、旧 dispatch/runtime、错租户/Artifact/Review Receipt、第二段 body/hash 漂移均无 EffectReview；现有不足证据评估的 `accepted` 与 `effect_completed` 两轴必须分开，首次写入后独立连接读回 subject/原回执/版本/hash，重复原 command 只回读同一版本。已提交结果未知只读对账，绝不自动再次创建修订。若现有 Store 不能在当前 Host/事务锁下安全组合，先修窄事务接口和测试，再接自然 Worker；不能先启进程后补锁。
 - 只有正式不足证据 EffectReview 读回后，才在下一切片设计第三段 `memory_candidate` 为“待治理方法候选”：引用原 EffectReview 与原 exact 内容来源，不正式入库、不自动发布，不让 sample=0 被称作增长有效。总控显示复盘/未知效果/治理待办须有业务中文与来源可追。当前实例继续默认关闭，不触 Provider、微商城源、旧十二 Run 或 Wiki 发布。
 - 每切片独立 RED→最小实现→专项/累计/隔离 PG→方案/代码一致性→verification→m1 提交→AOS/Prime 同步。纯后端切片浏览器不适用；总控页面切片必须浏览器验收。不得把 AIP Store 的单元 GREEN 当同一真实首链完成。
+
+### P2g 第十五增量：第三段待治理方法候选的原子接收（2026-09-27，编码前）
+
+- 复核 231-5 §4/7、231-6 AR2-7C 与 231-9 BG-04：第三段 `memory_candidate` 只能是原内容评审已接受、原 Run 已终态、第一/二段已 ack 且正式 EffectReview 为 `insufficient` 的方法候选。不得把 `sample_count=0` 写成增长有效，不自动批准、推广或发布 Wiki。当前生产仍默认关闭，不读商城源、不调用 Provider、不手工重放旧 Run。
+- 现有 `AipMemoryStore.create_source_revision/submit_candidate` 各自开连接并提交，不能在反馈 claim/ack 已持有的 Host 事务中直接调用。文件级第一切片只改 `services/aos-api/aos_api/aip_memory_store.py` 以提供无内部 commit 的受限事务入口，并在 `services/aos-api/tests/extension_runtime/test_w_l20_memory.py`（若现有测试名不同，先只读核实）补原公共接口不回归及回滚测试。不得以跨连接“先写候选再 ack”制造未知提交边界；不得改审批/推广规则。
+- 文件级第二切片拟新增 `services/aos-api/aos_api/ecommerce_growth_memory_candidate_target.py`、`services/aos-api/tests/extension_runtime/test_ecommerce_growth_memory_candidate_target.py`，并延伸原 `test_ecommerce_content_review_pending_pg.py` 的一次性完整迁移同库链；如正式候选与反馈 segment 之间缺少可证明的唯一映射，再新增单头 `a0v_107` 限制性回执/函数迁移，先检查实际 Alembic head/RLS/ACL。不得直接 INSERT 假候选或把反馈表冒充 AIP 目标权威。
+- RED 需先证明：无原第三段 pristine claim、无正式 EffectReview、评估非 `insufficient`/`accepted=true`、第一/第二 Receipt 或原 Artifact/hash 漂移、旧安装/dispatch、非终态 Run、跨租户均不写 AIP source/candidate/第三段 ack。正向必须以原 Task/Run/Artifact 和正式 Review exact 来源创建唯一 `pending`、workspace、episodic 候选；source_revision 内容哈希绑定正式 EffectReview，payload exact 原 Artifact，marking 明示 `insufficient_evidence`。候选与第三段 ack 同事务提交，独立连接回读两个权威与 checkpoint=3；重复原 command 只读回，不新建候选/事件/attempt。
+- 如果 AIP 公共表的当前 ACL/RLS 不容许非超级 Runtime 身份按上述原子路径写入，先记录 RED 与实际权限，最小收敛到受限 SECURITY DEFINER 函数；不可放开候选表直接写权限或绕开治理。未知提交只读对账且停止自动重试。专项、累计、浏览器不适用说明、方案/代码一致性复审、verification、m1 精确提交、AOS/Prime 同步后进入下一波自然启动与总控可读投影；不以隔离同库链宣布真实首链完成。
