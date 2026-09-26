@@ -44,6 +44,64 @@ def _build_content_execution_runner():
     return CurrentContentRunner()
 
 
+def _build_ecommerce_feedback_consumer():
+    from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
+    return CurrentFeedbackConsumer()
+
+
+async def _start_ecommerce_feedback_worker(_app: FastAPI, stop: asyncio.Event) -> None:
+    _app.state.ecommerce_feedback_worker_status = 'DISABLED'
+    _app.state.ecommerce_feedback_worker_task = None
+    flag = os.getenv('AOS_ECOM_FEEDBACK_WORKER_ENABLED', 'false').strip().lower()
+    if flag in {'0', 'false', 'no', 'off'}:
+        return
+    if flag not in {'1', 'true', 'yes', 'on'}:
+        _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('feedback worker enable flag is invalid')
+    host = getattr(_app.state, 'extension_runtime_host_task', None)
+    if (getattr(_app.state, 'extension_runtime_host_status', None) != 'ACTIVE'
+        or host is None or host.done()):
+        _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('feedback worker requires active Runtime Host')
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_dsn
+    try:
+        runtime_worker_dsn()  # No Web DB identity fallback and never log the DSN.
+        consumer = _build_ecommerce_feedback_consumer()
+    except Exception:
+        _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
+        raise
+    _app.state.ecommerce_feedback_worker_status = 'STARTING'
+
+    async def run():
+        try:
+            await consumer.serve(stop, host_ready=lambda: not host.done())
+        except asyncio.CancelledError:
+            _app.state.ecommerce_feedback_worker_status = 'STOPPED'
+            raise
+        except Exception:
+            _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
+            raise
+        else:
+            _app.state.ecommerce_feedback_worker_status = 'STOPPED'
+
+    task = asyncio.create_task(run(), name='ecommerce-feedback-consumption')
+    _app.state.ecommerce_feedback_worker_task = task
+    _app.state.runtime_background_tasks.append(task)
+
+    def observe(done):
+        if not done.cancelled() and done.exception() is not None:
+            log.error('ecommerce_feedback_consumption_failed_closed')
+
+    task.add_done_callback(observe)
+    await asyncio.sleep(0)
+    if task.done():
+        if not task.cancelled() and task.exception() is not None:
+            raise RuntimeError('feedback worker failed during startup') from task.exception()
+        _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('feedback worker stopped during startup')
+    _app.state.ecommerce_feedback_worker_status = 'RUNNING'
+
+
 async def _start_content_execution_worker(_app: FastAPI, stop: asyncio.Event) -> None:
     _app.state.content_execution_worker_status = 'DISABLED'
     _app.state.content_execution_worker_task = None
@@ -552,6 +610,7 @@ async def _lifespan_body(_app: FastAPI):
         )
 
     await _start_content_execution_worker(_app, extension_runtime_stop)
+    await _start_ecommerce_feedback_worker(_app, extension_runtime_stop)
 
     async def _qyh_cron_loop() -> None:
         """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""

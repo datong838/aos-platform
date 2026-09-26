@@ -17,6 +17,7 @@ from aos_api.ecommerce_growth_feedback_port import (
     BoundEcommerceGrowthFeedbackPort,
     EcommerceGrowthFeedbackConflict,
 )
+from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
 
@@ -255,3 +256,28 @@ def test_full_current_worker_claim_target_and_ack(database):
     assert row["state"] == "acked" and row["attempt"] == 1
     assert row["target_receipt_ref"] == result["receiptRef"]
     assert database.owner.execute("SELECT count(*) AS n FROM ecommerce_growth_daily_review_target").fetchone()["n"] == 1
+
+
+def test_natural_selector_only_returns_pristine_current_command(database):
+    seed(database, claimed=False)
+    worker = DailyReviewFeedbackWorker(connect=lambda scope: runtime_connection(database, scope))
+    consumer = CurrentFeedbackConsumer(
+        connect=lambda scope: runtime_connection(database, scope), worker=worker)
+    assert consumer.list_pending(SCOPE) == ["feedback-1"]
+    assert consumer.run_once(SCOPE) == [{"commandId": "feedback-1", "status": "DAILY_REVIEW_ACKED"}]
+    assert consumer.list_pending(SCOPE) == []
+
+
+@pytest.mark.parametrize("drift", ["claimed", "unknown", "old_epoch", "disabled"])
+def test_natural_selector_excludes_unknown_or_old_origin(database, drift):
+    seed(database, claimed=drift in {"claimed", "unknown"})
+    if drift == "unknown":
+        database.owner.execute("""UPDATE ecommerce_growth_feedback_segment
+          SET state='unknown',reason_code='UNRESOLVED' WHERE sequence=1""")
+    elif drift == "old_epoch":
+        database.owner.execute("""UPDATE extension_operation_dispatch_binding
+          SET execution_epoch=4 WHERE operation_id='ecommerce_growth_content_review'""")
+    elif drift == "disabled":
+        database.owner.execute("UPDATE extension_runtime_binding SET enabled=false,operation_fence=true")
+    consumer = CurrentFeedbackConsumer(connect=lambda scope: runtime_connection(database, scope))
+    assert consumer.list_pending(SCOPE) == []
