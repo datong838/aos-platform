@@ -13,3 +13,7 @@
 7. 方案/审计结论一致：本波只修正“当前风险中的历史 skipped/未传递”两处时间语义，不删除生产 Store/Fleet/Owner/原 12 Run 禁令，也不将隔离测试冒充真实授权。
 8. 本 verification 先提交，再 CAS AOS 项目上下文/Prime 受管记忆、读回并提交精确上下文。
 9. 下一波：评估剩余 32 项中真正可安全减少的独立技术债；没有可信全机 Fleet/旧入口撤权和独立历史行证明或正式 no-business-acceptance 退休选择时，原组 ACK/closure/replay 保持冻结。230 L0 挂起，dev-org 零 canary，m1 单写不 push。
+
+## CAS 与记忆读回
+
+CAS `AOS-000730→AOS-000731`；对比提交前 authority，`incomplete` 总数 34，**仅索引 21/22 变化**，其余 32 项完全一致。docs 上下文/受管记忆 `docs/m1@a9d2a622`，`delivery_status=W5CAG_OLD_PG_RISK_WORDING_RECONCILED_REAL_A0V_FROZEN`，下一门不变。`memory-status` GREEN_WITH_WARNINGS：共享/上下文/Prime 强一致投影 CURRENT，Codex 注记 PENDING_ASYNC；`memory-validate` GREEN。真实 A0-V 仍冻结。
