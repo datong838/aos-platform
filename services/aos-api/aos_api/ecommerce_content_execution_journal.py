@@ -77,7 +77,7 @@ class ContentExecutionJournal:
                 or row['reservation_request_hash'] != row['budget_request_hash']
                 or type(response) is not dict
                 or response.get('requestHash') != command['requestHash']
-                or row['runtime_request_hash'] != command['requestHash']
+                or row['runtime_request_hash'] != 'sha256:' + row['command_hash']
                 or type(response.get('replayed')) is not bool
                 or response != ContentGenerateHostService._pending_receipt(
                     command,

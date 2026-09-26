@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 from datetime import datetime
+from types import SimpleNamespace
+from uuid import UUID, uuid4
 
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, usage_cost_minor
 from aos_api.aip_budget_reservation_store import (
@@ -11,6 +13,19 @@ from aos_api.aip_budget_reservation_store import (
 )
 from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
+from aos_api.ecommerce_growth_runtime_adapters import (
+    ContentGenerateHostService, ReviewAdvanceHostService, TransactionBoundConnectFactory,
+    _analysis_command_hash, _strict_content_generate_command,
+)
+from aos_api.ecommerce_content_agentrun_owner import ContentAgentRunOwner
+from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunOwner
+from aos_api.aip_agent_run_service import AipAgentRunService
+from aos_api.aip_agent_registry_contracts import AgentRunStatus
+from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
+from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
 
 
 class ContentBudgetCommandConflict(RuntimeError):
@@ -40,6 +55,239 @@ class ContentBudgetCommandOwner:
         if any(type(key) is not str or not key for key in keys):
             raise ContentBudgetCommandConflict("content budget selector identity drifted")
         return keys
+
+    @staticmethod
+    def _command_envelope(
+        *, authority_refs: dict[str, dict[str, Any]],
+        source_artifact_refs: list[dict[str, Any]],
+        fact_source_refs: list[dict[str, Any]],
+        approved_fen: int, max_input_tokens: int, max_output_tokens: int,
+        review_key: str,
+    ) -> dict[str, Any]:
+        # The Host cannot import the optional bundle. Its strict parser is
+        # authoritative; tests compare this envelope with the bundle contract.
+        command = {
+            "operation": "content.generate", "authorityRefs": authority_refs,
+            "sourceArtifactRefs": source_artifact_refs,
+            "factSourceRefs": fact_source_refs, "currency": "CNY",
+            "upperBoundFen": approved_fen,
+            "maxInputTokens": max_input_tokens,
+            "maxOutputTokens": max_output_tokens,
+            "idempotencyKey": review_key,
+        }
+        command["requestHash"] = _analysis_command_hash(command)
+        _strict_content_generate_command(command)
+        return command
+
+    @classmethod
+    def _build_command(
+        cls, transaction: HostTransaction, scope: TenantScope, review_key: str,
+        *, claimed_token: UUID | None = None,
+    ) -> tuple[SimpleNamespace, dict[str, Any]]:
+        if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
+                or type(review_key) is not str or not 1 <= len(review_key.strip()) <= 200
+                or review_key != review_key.strip()):
+            raise ValueError("scoped exact content budget preflight required")
+        intent = transaction.execute(
+            """SELECT state,attempt,claim_token,task_run_id,agent_run_id,capacity_reservation_id,
+                      command_key,installation_id,generation,execution_epoch
+                 FROM public.ecommerce_growth_content_budget_command_intent
+                WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
+            (*scope.key, review_key),
+        ).fetchone()
+        expected_claim = (
+            ("pending", 0, None) if claimed_token is None
+            else ("claimed", 1, claimed_token)
+        )
+        if (intent is None or (intent["state"], intent["attempt"], intent["claim_token"])
+                != expected_claim or intent["command_key"] != review_key):
+            raise ContentBudgetCommandConflict("pending content budget origin unavailable")
+        current = transaction.execute(
+            "SELECT public.ecommerce_growth_content_budget_command_current_a0v_104(%s,%s,%s) AS current",
+            (*scope.key, review_key),
+        ).fetchone()
+        if current is None or current["current"] is not True:
+            raise ContentBudgetCommandConflict("content budget origin no longer current")
+        origin, response = ContentTaskRunOwner._origin(transaction, scope, review_key)
+        if ((origin["installation_id"], origin["generation"], origin["execution_epoch"])
+                != (intent["installation_id"], intent["generation"], intent["execution_epoch"])):
+            raise ContentBudgetCommandConflict("content budget installation lineage drifted")
+        dispatch_row = transaction.execute(
+            """SELECT handler_kind,revision,installation_id,generation,execution_epoch,
+                      cutover_group_id,cutover_group_revision
+                 FROM public.extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate' FOR SHARE""",
+            scope.key,
+        ).fetchone()
+        if (dispatch_row is None or dispatch_row["handler_kind"] != "extension"
+                or (dispatch_row["installation_id"], dispatch_row["generation"],
+                    dispatch_row["execution_epoch"], dispatch_row["cutover_group_id"],
+                    dispatch_row["cutover_group_revision"])
+                != (intent["installation_id"], intent["generation"],
+                    intent["execution_epoch"], origin["cutover_group_id"],
+                    origin["cutover_group_revision"])):
+            raise ContentBudgetCommandConflict("content capability dispatch group drifted")
+        dispatch = SimpleNamespace(
+            org_id=scope.org_id, project_id=scope.project_id,
+            operation_id="ecommerce_growth_content_generate", handler_kind="extension",
+            dispatch_revision=dispatch_row["revision"],
+            installation_id=intent["installation_id"],
+            generation=intent["generation"],
+            execution_epoch=intent["execution_epoch"],
+            cutover_group_id=origin["cutover_group_id"],
+            cutover_group_revision=origin["cutover_group_revision"],
+        )
+        snapshot = LockedEcommerceGrowthHostPort._lock_and_revalidate(
+            transaction, scope, dispatch
+        )
+        request = ContentAgentRunOwner._build_request(
+            transaction, scope, review_key,
+            existing_agent_run_id=intent["agent_run_id"],
+        )
+        if request.task_run_ref.resource_id != intent["task_run_id"]:
+            raise ContentBudgetCommandConflict("content TaskRun lineage drifted")
+        bound = TransactionBoundConnectFactory(transaction, scope)
+        agent = AipAgentRunService(bound).get(scope, intent["agent_run_id"])
+        if (agent.status is not AgentRunStatus.RUNNING
+                or agent.task_run_id != intent["task_run_id"]
+                or agent.request != request.run):
+            raise ContentBudgetCommandConflict("running content AgentRun drifted")
+        assignment = ContentTaskRunOwner._assignment(transaction, scope)
+        if len(assignment["capabilities"]) != 1:
+            raise ContentBudgetCommandConflict("one content generation capability required")
+        capability = assignment["capabilities"][0]
+        checked_at = snapshot.checked_at
+        model_store = AipModelRuntimeStore(bound)
+        resolution = AipModelRuntimeResolver(model_store).resolve(
+            scope, request.run.model_route.asset_id, now=checked_at
+        )
+        if (resolution.readiness is not ModelRuntimeReadiness.READY
+                or resolution.route != request.run.model_route
+                or resolution.selected_price_snapshot is None):
+            raise ContentBudgetCommandConflict("content route or current price unavailable")
+        policy = model_store.get_policy(
+            scope, resolution.policy.asset_id, resolution.policy.revision
+        )
+        governance = AipModelGovernancePolicyStore(bound)
+        quota = governance.require_exact_active(
+            scope, policy.quota_policy_ref, now=checked_at
+        )
+        budget_policy = governance.require_exact_active(
+            scope, policy.budget_policy_ref, now=checked_at
+        )
+        price_ref = resolution.selected_price_snapshot
+        price = model_store.get_price_snapshot(
+            scope, price_ref.asset_id, price_ref.revision
+        )
+        capacity = transaction.execute(
+            """SELECT request_hash,token_units,status,expires_at FROM public.aip_model_capacity_reservation
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s
+                  AND agent_run_id=%s FOR SHARE""",
+            (*scope.key, intent["capacity_reservation_id"], intent["agent_run_id"]),
+        ).fetchone()
+        if (capacity is None or capacity["status"] != "reserved"
+                or capacity["expires_at"] <= checked_at
+                or quota.max_input_tokens + quota.max_output_tokens > capacity["token_units"]):
+            raise ContentBudgetCommandConflict("content capacity cannot cover approved token limits")
+        task_ref = BudgetExactRef.model_validate(response["taskRef"])
+        approval_ref, approved_fen = cls._approved_action(
+            transaction, scope, task_ref, checked_at=checked_at
+        )
+        cls._approved_bound(
+            price, approved_fen, max_input_tokens=quota.max_input_tokens,
+            max_output_tokens=quota.max_output_tokens,
+        )
+        approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction, scope=scope,
+            command={"growthPlanRef": response["growthPlanRef"]},
+        )
+        method = approved_plan.sales_weapon_method
+        if method is None:
+            raise ContentBudgetCommandConflict("approved content method unavailable")
+        exact = lambda kind, identity, revision, digest: {
+            "resourceType": kind, "resourceId": identity, "revision": revision,
+            "contentHash": "sha256:" + digest.removeprefix("sha256:"),
+        }
+        authorities = {
+            "handoff": response["handoffRef"], "task": response["taskRef"],
+            "brief": response["briefRef"], "growth_plan": response["growthPlanRef"],
+            "agent_instance": exact(
+                "AgentInstanceRevision", assignment["assignee"].resource_id,
+                int(assignment["assignee"].revision), assignment["agent_hash"],
+            ),
+            "responsibility_plan": assignment["plan_ref"],
+            "capability": exact(
+                "CapabilityRevision", capability.resource_id,
+                capability.revision, capability.content_hash,
+            ),
+            "model_route": exact(
+                "ModelRouteRevision", resolution.route.asset_id,
+                resolution.route.revision, resolution.route.content_hash,
+            ),
+            "budget": exact(
+                "BudgetRevision", budget_policy.budget_revision_ref.asset_id,
+                budget_policy.budget_revision_ref.revision,
+                budget_policy.budget_revision_ref.content_hash,
+            ),
+            "pricing": exact(
+                "ModelPriceSnapshotRevision", price_ref.asset_id,
+                price_ref.revision, price_ref.content_hash,
+            ),
+            "approval": approval_ref.model_dump(mode="json", by_alias=True),
+            "capacity_reservation": exact(
+                "CapacityReservation", str(intent["capacity_reservation_id"]),
+                1, capacity["request_hash"],
+            ),
+        }
+        command = cls._command_envelope(
+            authority_refs=authorities,
+            source_artifact_refs=[item["artifactRef"] for item in response["artifactBindings"]],
+            fact_source_refs=[exact(
+                "EvidenceBundleRevision", item.resource_id, item.revision,
+                item.content_hash,
+            ) for item in method.evidence_refs],
+            approved_fen=approved_fen,
+            max_input_tokens=quota.max_input_tokens,
+            max_output_tokens=quota.max_output_tokens,
+            review_key=review_key,
+        )
+        ContentGenerateHostService().revalidate(
+            transaction=transaction, scope=scope, dispatch=snapshot, command=command
+        )
+        return dispatch, command
+
+    def claim(
+        self, scope: TenantScope, review_key: str, *, token: UUID | None = None
+    ) -> UUID | None:
+        if (type(scope) is not TenantScope or type(review_key) is not str
+                or not 1 <= len(review_key.strip()) <= 200
+                or review_key != review_key.strip()):
+            raise ValueError("scoped content budget claim identity required")
+        token = uuid4() if token is None else token
+        if type(token) is not UUID:
+            raise ValueError("content budget claim token must be UUID")
+        with self._connect_write(scope) as conn:
+            self._build_command(HostTransaction(conn), scope, review_key)
+            claimed = conn.execute(
+                "SELECT public.ecommerce_growth_content_budget_command_claim_a0v_104(%s,%s) AS claimed",
+                (review_key, token),
+            ).fetchone()
+            if claimed is None or claimed["claimed"] is not True:
+                return None
+            conn.commit()
+        with self._connect_read(scope) as conn:
+            row = conn.execute(
+                """SELECT state,attempt,claim_token
+                     FROM public.ecommerce_growth_content_budget_command_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s""",
+                (*scope.key, review_key),
+            ).fetchone()
+        if row is None or (row["state"], row["attempt"], row["claim_token"]) != (
+            "claimed", 1, token
+        ):
+            raise ContentBudgetCommandConflict("content budget claim readback unknown")
+        return token
 
     @staticmethod
     def _approved_action(

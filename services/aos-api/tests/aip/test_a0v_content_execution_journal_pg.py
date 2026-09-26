@@ -10,6 +10,7 @@ from test_aip_budget_reservation_pg import (
 )
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, ContentExecutionConflict
+from aos_api.ecommerce_content_execution_journal import _payload as content_command_payload
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService, ReviewAdvanceHostService,
@@ -18,6 +19,31 @@ from aos_api.ecommerce_growth_runtime_adapters import (
 from aos_api.tenant_scope import TenantScope
 
 pytestmark = pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PostgreSQL opt-in')
+
+
+def test_list_held_uses_full_command_hash_not_inner_request_hash(monkeypatch):
+    """A real Host Receipt hashes the envelope, including its inner requestHash."""
+    scope = TenantScope('org-org', 'dev-project')
+    command = {'operation': 'content.generate', 'requestHash': 'sha256:' + 'a' * 64}
+    full_hash = content_command_payload(command)[1]
+    assert 'sha256:' + full_hash != command['requestHash']
+    response = {'requestHash': command['requestHash'], 'state': 'PENDING', 'replayed': False}
+    row = {
+        'reservation_id': 'reservation-1', 'command_payload': command,
+        'command_hash': full_hash, 'budget_request_hash': 'b' * 64,
+        'reservation_request_hash': 'b' * 64,
+        'runtime_request_hash': 'sha256:' + full_hash, 'response': response,
+    }
+    class Cursor:
+        def fetchall(self): return [row]
+    class Conn:
+        def execute(self, _query, _params): return Cursor()
+    monkeypatch.setattr(ContentGenerateHostService, '_budget_request',
+                        staticmethod(lambda *_: SimpleNamespace(request_hash=lambda: 'b' * 64)))
+    monkeypatch.setattr(AipBudgetReservationStore, 'get', lambda *_: object())
+    monkeypatch.setattr(ContentGenerateHostService, '_pending_receipt',
+                        staticmethod(lambda *_args, **_kwargs: response))
+    assert ContentExecutionJournal().list_held(Conn(), scope) == ['reservation-1']
 
 
 def test_host_budget_and_content_command_commit_or_rollback_together(database):

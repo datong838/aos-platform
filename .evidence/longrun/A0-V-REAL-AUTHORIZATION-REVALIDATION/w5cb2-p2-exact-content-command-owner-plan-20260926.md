@@ -13,6 +13,7 @@
 3. 同文件：独立新事务读 HELD 预算、PENDING Journal、Runtime Receipt 的 exact 键/hash/安装代次，通过后执行 `a0v_104` ack，并再次独立读 accepted；仅返回 `CONTENT_BUDGET_PENDING`，不得称已生成文案。
 4. `services/aos-api/aos_api/main.py`：仅在 Runtime Host ACTIVE、runtime-only 身份、当前 Dispatch/安装可证时可选启动该 Owner；默认关闭，Provider Worker 独立保持关闭。
 5. `services/aos-api/tests/extension_runtime/test_ecommerce_content_budget_command_owner.py` 及 PG 邻近测试：先 RED 验批准额度不足、未知价格、无审批、来源过期、旧 epoch、容量到期、并发 claim、同键重入、Host unknown、跨租户及 dev-org 零结果；再最小实现。补完整同库 Handoff→容量→预算交接夹具。
+6. 施工中发现 `ecommerce_content_execution_journal.py::list_held` 把 Runtime Receipt 的完整命令 hash 误与 envelope 内层 `requestHash` 比较，而正式 Host `_ExplicitRuntimeAdapter` 写入的是完整命令 hash，`a0v_104` ack 也要求完整 hash。先写 RED 并仅修正该比较，确认真实 PENDING 未来可被 Provider 消费；不得放宽其他 Receipt/预算校验。
 
 ## 验证与退出
 

@@ -3,6 +3,9 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from contextlib import contextmanager
+from pathlib import Path
+import sys
+from uuid import uuid4
 
 import pytest
 
@@ -105,6 +108,221 @@ def test_pending_selector_is_bounded_scoped_and_current_only():
     assert owner.list_pending(SCOPE, limit=2) == ["review-1"]
     with pytest.raises(ValueError):
         owner.list_pending(SCOPE, limit=17)
+
+
+def test_host_command_envelope_matches_pluggable_bundle_contract():
+    from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
+    from aos_api.ecommerce_growth_runtime_adapters import _analysis_command_hash
+
+    root = Path(__file__).resolve().parents[4]
+    for path in (root / "packages/aos-extension-sdk/python",
+                 root / "bundles/solutions/ecommerce-growth/backend"):
+        if str(path) not in sys.path:
+            sys.path.insert(0, str(path))
+    from ecommerce_growth.content_capability_runtime import ContentCapabilityRequest
+    from ecommerce_growth.sdk_ports import ExactRef
+
+    kinds = {
+        "handoff": "HandoffReceipt", "task": "Task", "brief": "TaskBriefRevision",
+        "growth_plan": "GrowthPlanRevision", "agent_instance": "AgentInstanceRevision",
+        "responsibility_plan": "ResponsibilityPlanRevision",
+        "capability": "CapabilityRevision", "model_route": "ModelRouteRevision",
+        "budget": "BudgetRevision", "pricing": "ModelPriceSnapshotRevision",
+        "approval": "ActionApprovalEvent", "capacity_reservation": "CapacityReservation",
+    }
+    refs = {name: ExactRef(kind, name + "-1", 1, "sha256:" + "1" * 64)
+            for name, kind in kinds.items()}
+    sources = tuple(ExactRef("ArtifactRevision", f"artifact-{i}", 1,
+                             "sha256:" + "2" * 64) for i in range(4))
+    facts = (ExactRef("EvidenceBundleRevision", "facts-1", 1,
+                      "sha256:" + "3" * 64),)
+    request = ContentCapabilityRequest(
+        **{name + "_ref": value for name, value in refs.items()},
+        source_artifact_refs=sources, fact_source_refs=facts, currency="CNY",
+        upper_bound_fen=500, max_input_tokens=4000, max_output_tokens=2000,
+        idempotency_key="review-1",
+    )
+    command = ContentBudgetCommandOwner._command_envelope(
+        authority_refs=request.authority_refs(),
+        source_artifact_refs=request.command_payload()["sourceArtifactRefs"],
+        fact_source_refs=request.command_payload()["factSourceRefs"],
+        approved_fen=500, max_input_tokens=4000, max_output_tokens=2000,
+        review_key="review-1",
+    )
+    assert {k: v for k, v in command.items() if k != "requestHash"} == request.command_payload()
+    assert command["requestHash"] == _analysis_command_hash(request.command_payload())
+
+
+def test_missing_budget_intent_blocks_before_any_authority_or_claim():
+    from aos_api.ecommerce_content_budget_command_owner import (
+        ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+    )
+
+    class Conn:
+        calls = 0
+        def execute(self, query, params):
+            self.calls += 1
+            assert self.calls == 1
+            assert "ecommerce_growth_content_budget_command_intent" in query
+            assert params == (*SCOPE.key, "review-1")
+            return _Cursor([])
+
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    conn = Conn()
+    with pytest.raises(ContentBudgetCommandConflict):
+        ContentBudgetCommandOwner._build_command(
+            HostTransaction(conn), SCOPE, "review-1"
+        )
+
+
+def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import (
+        ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+    )
+    from aos_api.ecommerce_growth_host_ports import HostTransaction
+    from aos_api.aip_agent_registry_contracts import AgentRunStatus
+    from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
+
+    install, generation, group = uuid4(), uuid4(), uuid4()
+    intent = dict(state="pending", attempt=0, claim_token=None, task_run_id="run-1",
+                  agent_run_id="agent-run-1", capacity_reservation_id="capacity-1",
+                  command_key="review-1", installation_id=install,
+                  generation=generation, execution_epoch=3)
+    origin = dict(installation_id=install, generation=generation, execution_epoch=3,
+                  cutover_group_id=group, cutover_group_revision=2)
+    ref = lambda kind, name, digest="1": dict(
+        resourceType=kind, resourceId=name, revision=1,
+        contentHash="sha256:" + digest * 64,
+    )
+    response = dict(
+        handoffRef=ref("HandoffReceipt", "handoff-1"),
+        taskRef=ref("Task", "task-1"), briefRef=ref("TaskBriefRevision", "brief-1"),
+        growthPlanRef=ref("GrowthPlanRevision", "growth-1"),
+        artifactBindings=[{"artifactRef": ref("ArtifactRevision", f"artifact-{i}")}
+                          for i in range(4)],
+    )
+    dispatch_row = dict(handler_kind="extension", revision=5,
+                        installation_id=install, generation=generation,
+                        execution_epoch=3, cutover_group_id=group,
+                        cutover_group_revision=2)
+    class Conn:
+        def __init__(self):
+            self.calls = []
+        def execute(self, query, params):
+            self.calls.append(query)
+            if "FROM public.ecommerce_growth_content_budget_command_intent" in query:
+                return _Cursor([intent])
+            if "content_budget_command_current_a0v_104" in query:
+                return _Cursor([{"current": True}])
+            if "FROM public.extension_operation_dispatch_binding" in query:
+                return _Cursor([dispatch_row])
+            if "FROM public.aip_model_capacity_reservation" in query:
+                return _Cursor([dict(request_hash="6" * 64, token_units=6000,
+                                     status="reserved", expires_at=NOW + timedelta(hours=1))])
+            raise AssertionError(query)
+    conn = Conn()
+    route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
+    price_ref = SimpleNamespace(asset_id="price-1", revision=1, content_hash="3" * 64)
+    run_request = SimpleNamespace(model_route=route)
+    request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request)
+    monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
+                        staticmethod(lambda *_: (origin, response)))
+    monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
+                        staticmethod(lambda *_, **__: request))
+    monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._assignment",
+                        staticmethod(lambda *_: dict(
+                            assignee=SimpleNamespace(resource_id="agent-1", revision="1"),
+                            agent_hash="4" * 64,
+                            plan_ref=ref("ResponsibilityPlanRevision", "responsibility-1"),
+                            capabilities=[SimpleNamespace(resource_id="copy.generate", revision=1,
+                                                           content_hash="5" * 64)],
+                        )))
+    monkeypatch.setattr("aos_api.ecommerce_growth_host_ports.LockedEcommerceGrowthHostPort._lock_and_revalidate",
+                        staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
+    monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
+                        lambda *_, **__: SimpleNamespace(
+                            status=AgentRunStatus.RUNNING, task_run_id="run-1", request=run_request))
+    class ModelStore:
+        def __init__(self, *_): pass
+        def get_policy(self, *_):
+            return SimpleNamespace(
+                quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
+                budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
+        def get_price_snapshot(self, *_):
+            return SimpleNamespace(development_cost_authorization=None,
+                                   input_token_price=0.5, output_token_price=1.0,
+                                   token_unit=1000)
+    monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
+    class Resolver:
+        def __init__(self, *_): pass
+        def resolve(self, *_ , **__):
+            return SimpleNamespace(readiness=ModelRuntimeReadiness.READY,
+                                   route=route, selected_price_snapshot=price_ref,
+                                   policy=SimpleNamespace(asset_id="policy-1", revision=1))
+    monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
+    class Governance:
+        def __init__(self, *_): pass
+        def require_exact_active(self, scope, policy_ref, *, now):
+            if policy_ref.asset_id == "quota-1":
+                return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
+            return SimpleNamespace(budget_revision_ref=SimpleNamespace(
+                asset_id="budget-1", revision=1, content_hash="7" * 64))
+    monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(
+        lambda *_ , **__: (BudgetExactRef(resource_type="ActionApprovalEvent",
+                                         resource_id="approval-1", revision=1,
+                                         content_hash="sha256:" + "8" * 64), 500)))
+    monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
+                        staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
+                            evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
+                                                           content_hash="9" * 64)]))))
+    validated = []
+    monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
+                        lambda self, **kwargs: validated.append(kwargs["command"]))
+    dispatch, command = ContentBudgetCommandOwner._build_command(
+        HostTransaction(conn), SCOPE, "review-1"
+    )
+    assert dispatch.execution_epoch == 3 and dispatch.installation_id == install
+    assert command["authorityRefs"]["budget"]["resourceId"] == "budget-1"
+    assert command["authorityRefs"]["capacity_reservation"]["resourceId"] == "capacity-1"
+    assert command["upperBoundFen"] == 500 and validated == [command]
+    assert not any("_claim_a0v_104" in query for query in conn.calls)
+
+    intent["execution_epoch"] = 4
+    with pytest.raises(ContentBudgetCommandConflict, match="installation lineage"):
+        ContentBudgetCommandOwner._build_command(HostTransaction(Conn()), SCOPE, "review-1")
+
+
+def test_claim_is_once_only_after_full_preflight_and_independent_readback(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
+
+    class WriteConn:
+        def __init__(self): self.commits = 0; self.claims = 0
+        def execute(self, query, params):
+            assert "content_budget_command_claim_a0v_104" in query
+            self.claims += 1
+            return _Cursor([{"claimed": True}])
+        def commit(self): self.commits += 1
+    class ReadConn:
+        def execute(self, query, params):
+            assert "ecommerce_growth_content_budget_command_intent" in query
+            return _Cursor([dict(state="claimed", attempt=1, claim_token=token)])
+    token = uuid4()
+    write = WriteConn()
+    @contextmanager
+    def connect_write(scope):
+        assert scope == SCOPE
+        yield write
+    @contextmanager
+    def connect_read(scope):
+        assert scope == SCOPE
+        yield ReadConn()
+    prepared = []
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_build_command", classmethod(
+        lambda cls, transaction, scope, key, **kwargs: prepared.append(key) or (object(), {})))
+    owner = ContentBudgetCommandOwner(connect_write=connect_write, connect_read=connect_read)
+    assert owner.claim(SCOPE, "review-1", token=token) == token
+    assert prepared == ["review-1"] and write.claims == 1 and write.commits == 1
 
 
 def test_pricing_bound_uses_exact_token_unit_and_requires_approved_cover():
