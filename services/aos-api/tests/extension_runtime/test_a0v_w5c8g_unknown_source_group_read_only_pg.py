@@ -1,9 +1,15 @@
 """Original unknown attempt must bind dual Receipts to one saved source group."""
 
 from dataclasses import replace
+from copy import deepcopy
 import hashlib
+import os
 from types import SimpleNamespace as NS
+from uuid import uuid4
 
+import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 import pytest
 
 pytest_plugins = ('test_analysis_snapshot_resume_chain_pg',)
@@ -21,6 +27,7 @@ from aos_api.ecommerce_analysis_unknown_source_group_evidence import (
     UnknownSourceGroupEvidenceReader, UnknownSourceGroupFrozen,
 )
 from aos_api.tenant_scope import TenantScope
+from aos_api.ec_ingress_journal import _digest
 from test_a0v_w5c8d_original_attempt_receipt_resolver_pg import _factory
 
 
@@ -88,4 +95,38 @@ def test_unknown_original_receipts_and_saved_group_share_read_only_snapshot(chai
         UnknownSourceGroupEvidenceReader(
             claims=analysis.source.reader._journal._claims, connect_factory=writer,
         ).resolve(analysis.scope, claim)
+    dsn = os.environ['AOS_DATABASE_URL']
+    assert psycopg.conninfo.conninfo_to_dict(dsn)['dbname'].startswith('aos_test_')
+    with psycopg.connect(dsn, row_factory=dict_row) as admin:
+        admin.execute("SELECT set_config('aos.org_id',%s,false),"
+                      "set_config('aos.project_id',%s,false)", analysis.scope.key)
+        original = admin.execute('''SELECT actor,member_count,binding FROM
+            pipeline_snapshot_group_claim WHERE org_id=%s AND project_id=%s AND group_id=%s''',
+            (*analysis.scope.key, route.group_id)).fetchone()
+        assert original is not None
+        second_group = uuid4()
+        second_binding = deepcopy(original['binding'])
+        second_binding['groupId'] = str(second_group)
+        admin.execute('''INSERT INTO pipeline_snapshot_group_claim
+            (org_id,project_id,group_id,actor,request_hash,member_count,binding)
+            VALUES(%s,%s,%s,%s,%s,%s,%s)''',
+            (*analysis.scope.key, second_group, original['actor'],
+             'sha256:' + _digest(second_binding), original['member_count'], Jsonb(second_binding)))
+        with pytest.raises(psycopg.errors.UniqueViolation):
+            admin.execute('''INSERT INTO pipeline_snapshot_group_member
+                (org_id,project_id,group_id,ordinal,run_id) VALUES(%s,%s,%s,1,%s)''',
+                (*analysis.scope.key, second_group, route.source_run_id))
+        admin.rollback()
+    with psycopg.connect(dsn, row_factory=dict_row) as admin:
+        admin.execute("SELECT set_config('aos.org_id',%s,false),"
+                      "set_config('aos.project_id',%s,false)", analysis.scope.key)
+        with pytest.raises(psycopg.errors.RaiseException, match='extension history is immutable'):
+            admin.execute('''UPDATE pipeline_snapshot_group_input
+                SET manifest=jsonb_set(manifest,'{members,0,rowCount}','999'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND group_id=%s''',
+                (*analysis.scope.key, route.group_id))
+        admin.rollback()
+    unchanged = evidence_reader.resolve(analysis.scope, claim)
+    assert unchanged.source_group.group_id == route.group_id
+    assert unchanged.source_group.manifest_hash == evidence.source_group.manifest_hash
     assert state['calls'] == 1
