@@ -331,6 +331,11 @@ from aos_api.ecommerce_workshop_task_cockpit_contracts import (
     TaskCockpitSkillContributionEnvelope,
     TaskCockpitStepPageEnvelope,
 )
+from aos_api.ecommerce_workshop_feedback_read_contracts import FeedbackReadEnvelope
+from aos_api.ecommerce_workshop_feedback_read_model import (
+    EcommerceWorkshopFeedbackReadModel, FeedbackReadUnavailable,
+)
+from aos_api.ecommerce_growth_feedback_port import EcommerceGrowthFeedbackConflict
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.public_contracts import TaskStatus
 from aos_api.source_readiness import build_source_readiness_service
@@ -397,6 +402,11 @@ def get_ecommerce_workshop_feature_activation_service() -> EcommerceWorkshopFeat
 @lru_cache(maxsize=1)
 def get_ecommerce_workshop_task_cockpit() -> EcommerceWorkshopTaskCockpit:
     return EcommerceWorkshopTaskCockpit()
+
+
+@lru_cache(maxsize=1)
+def get_ecommerce_workshop_feedback_read_model() -> EcommerceWorkshopFeedbackReadModel:
+    return EcommerceWorkshopFeedbackReadModel()
 
 
 @lru_cache(maxsize=1)
@@ -624,6 +634,9 @@ FeatureActivationServiceDependency = Annotated[
 ]
 TaskCockpitDependency = Annotated[
     EcommerceWorkshopTaskCockpit, Depends(get_ecommerce_workshop_task_cockpit)
+]
+FeedbackReadDependency = Annotated[
+    EcommerceWorkshopFeedbackReadModel, Depends(get_ecommerce_workshop_feedback_read_model)
 ]
 DispatchScenarioDependency = Annotated[
     EcommerceWorkshopDispatchScenario, Depends(get_ecommerce_workshop_dispatch_scenario)
@@ -2882,6 +2895,31 @@ def get_ecommerce_workshop_task_cockpit_core(
         raise ApiError(
             code="TASK_COCKPIT_DEPENDENCY_UNAVAILABLE",
             message="Task Cockpit read dependency is unavailable",
+            status_code=503,
+        ) from exc
+
+
+@router.get(
+    "/views/task-cockpit/feedback",
+    response_model=FeedbackReadEnvelope,
+    operation_id="ecommerceWorkshopTaskCockpitFeedbackGet",
+    responses=_ERRORS,
+)
+def get_ecommerce_workshop_task_cockpit_feedback(
+    request: Request,
+    principal: PrincipalDependency,
+    catalog: CatalogDependency,
+    feedback: FeedbackReadDependency,
+    limit: Annotated[int, Query(ge=1, le=20)] = 20,
+) -> FeedbackReadEnvelope:
+    _reject_unknown_query_parameters(request, allowed=frozenset({"limit"}))
+    _require_task_cockpit_installation(principal=principal, catalog=catalog)
+    try:
+        return feedback.read(TenantScope(principal.org_id, principal.project_id), limit=limit)
+    except (FeedbackReadUnavailable, EcommerceGrowthFeedbackConflict, ValueError) as exc:
+        raise ApiError(
+            code="TASK_COCKPIT_FEEDBACK_UNAVAILABLE",
+            message="Task Cockpit feedback authority is unavailable",
             status_code=503,
         ) from exc
 

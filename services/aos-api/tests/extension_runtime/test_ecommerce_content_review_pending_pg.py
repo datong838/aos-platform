@@ -77,6 +77,8 @@ from aos_api.ecommerce_growth_effect_review_owner import CurrentEffectReviewCons
 from aos_api.ecommerce_growth_memory_candidate_target import (
     CurrentMemoryCandidateConsumer, MemoryCandidateFeedbackWorker,
 )
+from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
+from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -1141,6 +1143,11 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["completed_sequence"] == 2
         assert ImprovementFeedbackWorker(connect=runtime_connect).run_one(
             SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_ACKED"
+        partial_feedback = EcommerceWorkshopFeedbackReadModel(connect=connect).read(SCOPE).items[0]
+        assert [segment.state for segment in partial_feedback.segments] == [
+            "acknowledged", "acknowledged", "pending"]
+        assert partial_feedback.effect_status == "待观察"
+        assert partial_feedback.candidate_status == "尚未形成"
         effect_subject = "content-effect-" + target[0]["receipt_ref"]["contentHash"][7:47]
         effect_request = CreateEffectReviewRequest(
             subject_id=effect_subject,
@@ -1208,6 +1215,9 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert rows[0]["sample_count"] == 0 and rows[0]["min_sample"] == 1
             assert rows[0]["reason_code"] == "content_accepted_effect_evidence_pending"
         assert effect_owner.run_one(SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_REVIEWED"
+        reviewed_feedback = EcommerceWorkshopFeedbackReadModel(connect=connect).read(SCOPE).items[0]
+        assert reviewed_feedback.effect_status == "证据不足"
+        assert reviewed_feedback.candidate_status == "尚未形成"
         with connect(SCOPE) as conn:
             conn.execute("""UPDATE aip_effect_review_revision SET accepted=true
                 WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
@@ -1343,3 +1353,52 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         with runtime_connect(SCOPE) as conn:
             conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
             assert conn.execute("SELECT count(*) AS n FROM aip_memory_candidate").fetchone()["n"] == 0
+        feedback_view = EcommerceWorkshopFeedbackReadModel(connect=connect).read(SCOPE)
+        assert feedback_view.tenant.org_id == SCOPE.org_id
+        assert len(feedback_view.items) == 1
+        item = feedback_view.items[0]
+        assert item.effect_status == "证据不足"
+        assert item.candidate_status == "待治理"
+        assert [segment.state for segment in item.segments] == ["acknowledged"] * 3
+        assert item.execution_authorized is False
+        assert item.audit_details.effect_review_ref is not None
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE aip_task_run SET status='running'
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, proof["run_id"]))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                EcommerceWorkshopFeedbackReadModel(connect=connect).read(SCOPE)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE aip_task_run SET status='succeeded'
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                    (*SCOPE.key, proof["run_id"]))
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE ecommerce_growth_improvement_target
+                SET body=jsonb_set(body,'{effectStatus}','\"FALSELY_MATURE\"'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                EcommerceWorkshopFeedbackReadModel(connect=connect).read(SCOPE)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE ecommerce_growth_improvement_target
+                    SET body=jsonb_set(body,'{effectStatus}',
+                    '\"AWAITING_COMPARABLE_EVIDENCE\"'::jsonb)
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                    (*SCOPE.key, review_proof.feedback_command_id))
+                conn.commit()
+        @contextmanager
+        def canary_connect(scope):
+            assert scope == TenantScope("dev-org", "dev-project")
+            with connect(SCOPE) as conn:
+                conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
+                yield conn
+
+        assert EcommerceWorkshopFeedbackReadModel(connect=canary_connect).read(
+            TenantScope("dev-org", "dev-project")).items == []

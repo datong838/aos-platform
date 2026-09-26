@@ -779,6 +779,10 @@ def test_openapi_freezes_workshop_reads_and_governed_internal_commands() -> None
             "/v1/ecommerce-workshop/views/task-cockpit",
             "get",
         ),
+        "ecommerceWorkshopTaskCockpitFeedbackGet": (
+            "/v1/ecommerce-workshop/views/task-cockpit/feedback",
+            "get",
+        ),
         "ecommerceWorkshopTaskCockpitDispatchScenarioGet": (
             "/v1/ecommerce-workshop/views/task-cockpit/dispatch-scenario",
             "get",
