@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import UTC, datetime
+import pytest
 
 from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType
 from aos_api.aip_eval_authority_store import AipEvalAuthorityNotFound
@@ -18,6 +19,7 @@ from aos_api.aip_production_contract_store import AipProductionContractStore, ca
 from aos_api.aip_production_contracts import CreateEvalContractRequest, ExactRevisionRef
 from aos_api.db import connect
 from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
+from aos_api.ecommerce_content_pre_review_authority import require_current_content_pre_review_gate
 from aos_api.tenant_scope import TenantScope
 
 from aos_api.ecommerce_content_pre_review_eval import (
@@ -310,6 +312,72 @@ def test_content_pre_review_governance_uses_formal_isolated_pg_release_path():
     assert frozen.lifecycle.value == "frozen" and frozen.readiness.value == "ready"
     assert frozen.suite_ref.resource_id == subject.suite.suite_id
     assert contracts.list_eval_contracts(TenantScope("dev-org", "dev-project")).count == 0
+    with connect(scope) as conn:
+        exact_gate = require_current_content_pre_review_gate(conn, scope)
+    assert (exact_gate.resource_type, exact_gate.resource_id, exact_gate.revision,
+            exact_gate.content_hash) == (
+        "EvalContractRevision", frozen.contract_id, frozen.revision, frozen.content_hash,
+    )
+
+    class FaultCursor:
+        def __init__(self, cursor, fault):
+            self.cursor, self.fault = cursor, fault
+
+        def fetchone(self):
+            row = self.cursor.fetchone()
+            return self.fault(row) if row is not None else row
+
+        def fetchall(self):
+            rows = self.cursor.fetchall()
+            return self.fault(rows)
+
+    class FaultTransaction:
+        def __init__(self, conn, kind):
+            self.conn, self.kind = conn, kind
+
+        def execute(self, query, params=None):
+            cursor = self.conn.execute(query, params)
+            if self.kind == "duplicate" and "FROM aip_eval_contract_head h" in query:
+                return FaultCursor(cursor, lambda rows: [*rows, dict(rows[0])])
+            if self.kind == "subject_suite" and "SELECT * FROM aip_eval_suite_revision" in query and (
+                params and params[-2] == subject.suite.suite_id
+            ):
+                return FaultCursor(cursor, lambda row: {
+                    **row, "target_ref": {**row["target_ref"], "contentHash": "f" * 64},
+                })
+            if self.kind == "gate_target" and "SELECT * FROM aip_release_gate_decision" in query:
+                return FaultCursor(cursor, lambda row: {
+                    **row, "target_ref": {**row["target_ref"], "contentHash": "f" * 64},
+                })
+            if self.kind == "publication_target" and "SELECT * FROM aip_publication_event" in query:
+                return FaultCursor(cursor, lambda row: {
+                    **row, "target_ref": {**row["target_ref"], "contentHash": "f" * 64},
+                })
+            if self.kind == "graph_hash" and "FROM aip_logic_graph WHERE" in query:
+                return FaultCursor(cursor, lambda row: {**row, "graph_hash": "f" * 64})
+            if self.kind == "contract_severity" and "SELECT * FROM aip_eval_contract_revision WHERE" in query:
+                return FaultCursor(cursor, lambda row: {
+                    **row, "severity_thresholds": {"critical": 0.5},
+                })
+            if self.kind == "expired_clock" and "SELECT clock_timestamp() AS now" in query:
+                return FaultCursor(cursor, lambda row: {
+                    "now": gate.expires_at + (gate.expires_at - gate.decided_at),
+                })
+            return cursor
+
+    for fault in (
+        "duplicate", "subject_suite", "gate_target", "publication_target",
+        "graph_hash", "contract_severity", "expired_clock",
+    ):
+        with connect(scope) as conn, pytest.raises(ValueError):
+            require_current_content_pre_review_gate(FaultTransaction(conn, fault), scope)
+    with connect(TenantScope("dev-org", "dev-project")) as conn:
+        try:
+            require_current_content_pre_review_gate(conn, TenantScope("dev-org", "dev-project"))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("isolation canary acquired a content Eval gate")
     revoked = release.revoke(
         scope, publication_id=published.publication_id, actor="test",
         request=RevokePublicationRequest(
@@ -321,3 +389,10 @@ def test_content_pre_review_governance_uses_formal_isolated_pg_release_path():
     after_revoke = contracts.get_eval_contract(scope, frozen.contract_id, frozen.revision)
     assert after_revoke.readiness.value == "blocked"
     assert {item.code for item in after_revoke.blockers} >= {"EVAL_PUBLICATION_REVOKED"}
+    with connect(scope) as conn:
+        try:
+            require_current_content_pre_review_gate(conn, scope)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("revoked publication still authorized Plan gate")

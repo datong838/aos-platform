@@ -58,3 +58,9 @@
 - 同事务核合同所绑 PublicationEvent exact hash、其 publicationId 的最新事件仍 `published`，ReleaseGate exact hash/状态/有效期、其 EvalReport/Run/Suite 当前可读且 target 为同一 Graph；治理 Suite 必须 `ecommerce.content.pre-review.governance.v1`。Graph 不得删除/归档/改版；读库 DB clock，不信调用方时钟或传入任意 READY 合同。任一缺失、多义、漂移、撤销、过期或跨租户即失败关闭。
 - 修改 `services/aos-api/aos_api/ecommerce_content_taskrun_owner.py`：在 `claim` 前和 `execute_claim` 原事务内调用上述来源门；只有取得唯一 exact `EvalContractRevision` 才在**新建** Plan 的唯一 `content_review` 步骤写一个 `gate_refs`。缺权威则不消耗 one-attempt；已有 Run/Plan 不补票。提交后独立读回仍按既有未知提交冻结规则。
 - 先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_authority.py`、邻近 Owner 测试加 RED：正向原 Plan exact gate，以及无合同、多合同、错主体 Suite、Graph target 漂移、错租户、撤销、过期和 `claim` 零 attempt。测试专用 PG 可复用第 2 步正式 API 建链，但不得在当前业务库注册。专项→邻近累计→无 UI 判定→方案复审→verification→精确提交。若旧测试夹具因真实门新增而变红，按原正式权限补充隔离发布证据或明确受阻，不能放宽门。
+
+## P2f-b 第 3/4 步完成状态（2026-09-27）
+
+- 当前权威读取器与 Owner 的创建前绑定均已编码、隔离正反用例和累计回归通过，详见同目录 `w5cb4-p2f-b-current-eval-authority-plan-gate-verification-20260927.md`。独立提交后读回额外核唯一 `content_review.gateRefs` exact ref；漂移冻结为未知结果，不再次 claim。
+- 此处仍是代码与一次性隔离 PG 门，当前生产元库没有内容主体合同，未迁移、未注册、未启 Worker。P2f-b 尚未完结。
+- 第 4/4 步先出文件级方案：受控、可重入的 Graph/Suite/Gate/Publication/Contract bootstrap 及当前实例只读预检；任何写入当前实例之前核 schema、Owner、影响范围及唯一性，不以一次性测试 PG 冒充当前安装。随后才进入 P2g 的真实 Artifact→待办→人工决定→Run/反馈路径。

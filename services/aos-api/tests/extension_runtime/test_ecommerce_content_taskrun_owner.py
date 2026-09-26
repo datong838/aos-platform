@@ -74,6 +74,22 @@ def test_missing_content_assignment_does_not_spend_taskrun_attempt(monkeypatch):
     assert calls == []
 
 
+def test_missing_current_content_eval_gate_does_not_spend_taskrun_attempt(monkeypatch):
+    class Conn:
+        def execute(self, *_args, **_kwargs):
+            raise AssertionError("claim SQL must not execute without formal content Eval")
+        def commit(self):
+            raise AssertionError("no commit without formal content Eval")
+    @contextmanager
+    def connect(_scope):
+        yield Conn()
+    monkeypatch.setattr(ContentTaskRunOwner, "_origin", staticmethod(lambda *_: ({}, {})))
+    monkeypatch.setattr(ContentTaskRunOwner, "_assignment", staticmethod(lambda *_: {}))
+    monkeypatch.setattr(owner_module, "require_current_content_pre_review_gate", lambda *_: (
+        _ for _ in ()).throw(ValueError("content Eval authority absent")))
+    assert ContentTaskRunOwner(connect_write=connect).claim(SCOPE, "review-1") is None
+
+
 def test_selector_is_tenant_bounded_and_only_pristine_pending():
     calls = []
 
@@ -122,7 +138,7 @@ def test_content_taskrun_worker_needs_active_host(monkeypatch):
     assert application.state.content_taskrun_worker_status == "FAILED_CLOSED"
 
 
-@pytest.mark.parametrize("acknowledged,committed_readback", [(True, True), (True, False), (False, False)])
+@pytest.mark.parametrize("acknowledged,committed_readback", [(True, True), (True, False), (False, False), (True, "gate_drift")])
 def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
     monkeypatch, acknowledged, committed_readback
 ):
@@ -179,12 +195,18 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
             assert "JOIN public.aip_task_run" in query
             assert params == (*SCOPE.key, "review-key-1")
             events.append("independent_readback")
-            if not committed_readback:
+            if committed_readback is False:
                 return Cursor(None)
             return Cursor({"state": "accepted", "attempt": 1, "claim_token": token,
                            "plan_revision_id": "plan-1", "run_id": "run-1",
                            "approval_status": "approved", "run_status": "running",
-                           "agent_intent_state": "pending", "agent_intent_attempt": 0})
+                           "agent_intent_state": "pending", "agent_intent_attempt": 0,
+                           "steps": [{"stepKey": "content_generate", "gateRefs": []},
+                                     {"stepKey": "content_review", "gateRefs": [{
+                                         "resourceType": "EvalContractRevision",
+                                         "resourceId": "wrong-eval" if committed_readback == "gate_drift" else "content-eval-1",
+                                         "revision": 2, "contentHash": "c" * 64,
+                                     }]}]})
 
     @contextmanager
     def connect_read(_scope):
@@ -205,6 +227,8 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
             assert body.steps[0].responsibility_slot_ids == ["content.generate"]
             assert body.steps[0].assignee_refs[0].resource_id == "content-agent-1"
             assert body.steps[0].capability_refs[0].resource_id == "copy.generate"
+            assert len(body.steps[1].gate_refs) == 1
+            assert body.steps[1].gate_refs[0].resource_id == "content-eval-1"
             assert body.dependencies[-1]["resourceType"] == "ResponsibilityPlanRevision"
             return SimpleNamespace(id="plan-1", revision=1, content_hash="a" * 64)
 
@@ -219,6 +243,10 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
             events.append("start")
 
     monkeypatch.setattr(ContentTaskRunOwner, "_origin", staticmethod(lambda *_: (origin, response)))
+    monkeypatch.setattr(owner_module, "require_current_content_pre_review_gate", lambda *_: ExactContractRef(
+        resource_type="EvalContractRevision", resource_id="content-eval-1",
+        revision=2, content_hash="c" * 64,
+    ))
     monkeypatch.setattr(ContentTaskRunOwner, "_assignment", staticmethod(lambda *_: {
         "plan_ref": {**review, "resourceType": "ResponsibilityPlanRevision"},
         "assignee": ResourceRef(resource_type="AgentInstance", resource_id="content-agent-1",
@@ -236,7 +264,7 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
     monkeypatch.setattr(owner_module.ReviewAdvanceHostService, "_require_sales_weapon_method", staticmethod(lambda **_: None))
     monkeypatch.setattr(owner_module, "AipTaskStore", Store)
     worker = ContentTaskRunOwner(connect_write=connect, connect_read=connect_read)
-    if acknowledged and committed_readback:
+    if acknowledged and committed_readback is True:
         result = worker.execute_claim(SCOPE, "review-key-1", token)
         assert result["runId"] == "run-1"
         assert events == ["plan", "approve", "run", "start", "ack", "next_intent", "commit", "independent_readback"]
@@ -245,6 +273,6 @@ def test_claimed_content_run_uses_one_outer_commit_and_fails_closed_without_ack(
             worker.execute_claim(SCOPE, "review-key-1", token)
         assert events == ["plan", "approve", "run", "start", "ack"]
     else:
-        with pytest.raises(owner_module.ContentTaskRunConflict, match="committed readback unknown"):
+        with pytest.raises(owner_module.ContentTaskRunConflict, match="committed (readback|Plan gate) unknown"):
             worker.execute_claim(SCOPE, "review-key-1", token)
         assert events == ["plan", "approve", "run", "start", "ack", "next_intent", "commit", "independent_readback"]

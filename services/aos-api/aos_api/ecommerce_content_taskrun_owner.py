@@ -14,6 +14,7 @@ from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import AssigneeKind, BriefLifecycle, ContractReadiness, Coverage
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.ecommerce_content_pre_review_authority import require_current_content_pre_review_gate
 from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService,
@@ -94,6 +95,7 @@ class ContentTaskRunOwner:
             self._origin(HostTransaction(conn), scope, review_key)
             try:
                 self._assignment(HostTransaction(conn), scope)
+                require_current_content_pre_review_gate(HostTransaction(conn), scope)
             except (ContentTaskRunConflict, ValueError):
                 return None
             row = conn.execute(
@@ -294,6 +296,7 @@ class ContentTaskRunOwner:
                 transaction, scope, authorities, source_values, approved_plan=approved
             )
             assignment = self._assignment(transaction, scope)
+            content_eval_gate = require_current_content_pre_review_gate(transaction, scope)
             checked = transaction.execute("SELECT clock_timestamp() AS checked_at").fetchone()
             if checked is None:
                 raise ContentTaskRunConflict("content TaskRun clock unavailable")
@@ -324,7 +327,10 @@ class ContentTaskRunOwner:
                             assignee_refs=[assignment["assignee"]],
                             capability_refs=assignment["capabilities"],
                         ),
-                        PlanStep(step_key="content_review", title="人工审核可读内容"),
+                        PlanStep(
+                            step_key="content_review", title="人工审核可读内容",
+                            gate_refs=[content_eval_gate],
+                        ),
                     ],
                     dependencies=[
                         response["growthPlanRef"], response["briefRef"], assignment["plan_ref"],
@@ -383,7 +389,7 @@ class ContentTaskRunOwner:
         with self._connect_read(scope) as conn:
             committed = conn.execute(
                 """SELECT i.state,i.attempt,i.claim_token,i.plan_revision_id,i.run_id,
-                          p.approval_status,r.status AS run_status,
+                          p.approval_status,p.steps,r.status AS run_status,
                           a.state AS agent_intent_state,a.attempt AS agent_intent_attempt
                      FROM public.ecommerce_growth_content_taskrun_intent i
                      JOIN public.aip_plan_revision p
@@ -407,6 +413,14 @@ class ContentTaskRunOwner:
             committed["agent_intent_state"], committed["agent_intent_attempt"],
         ) != ("accepted", 1, token, plan.id, run.id, "approved", "running", "pending", 0):
             raise ContentTaskRunConflict("content TaskRun committed readback unknown")
+        steps = committed["steps"]
+        if type(steps) is not list:
+            raise ContentTaskRunConflict("content TaskRun committed Plan gate unknown")
+        reviews = [step for step in steps if type(step) is dict and step.get("stepKey") == "content_review"]
+        if len(reviews) != 1 or reviews[0].get("gateRefs") != [
+            content_eval_gate.model_dump(mode="json", by_alias=True)
+        ]:
+            raise ContentTaskRunConflict("content TaskRun committed Plan gate unknown")
         return {"status": "CONTENT_RUN_RUNNING", "reviewKey": review_key,
                 "planRevisionId": plan.id, "runId": run.id}
 
