@@ -45,7 +45,7 @@ from aos_api.ecommerce_business_investigation_review_command import review_issue
 from aos_api.aip_release_publication_models import DeriveReleaseGateRequest, PublishReleaseRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
-from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_task_store import AipTaskStore, AipTaskTransitionBlocked
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.ecommerce_content_execution_journal import (
     ContentExecutionConflict, ContentExecutionJournal, _payload,
@@ -1092,6 +1092,23 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 require_frozen_repair_brief(conn, SCOPE, frozen_ref, prior_brief_ref,
                     decision_ref, artifact_source, task_id=proof["task_id"],
                     reason=decision.reason)
+            task_store = AipTaskStore(connect)
+            running_task = task_store.get_task(SCOPE, proof["task_id"])
+            with connect(SCOPE) as conn:
+                before_plans = conn.execute("""SELECT count(*) AS n FROM aip_plan_revision
+                    WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+                    (*SCOPE.key, proof["task_id"])).fetchone()["n"]
+            with pytest.raises(AipTaskTransitionBlocked, match="cannot create a plan"):
+                task_store.create_plan(SCOPE, "fixture", proof["task_id"],
+                    "content-p2g-repair-preview-plan-probe",
+                    CreatePlanRevisionRequest(expectedTaskVersion=running_task.version,
+                        steps=[PlanStep(stepKey="content_generate", title="Repair")],
+                        risk={"productionContract": {
+                            "productionContextRef": frozen_ref}}))
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_plan_revision
+                    WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+                    (*SCOPE.key, proof["task_id"])).fetchone()["n"] == before_plans
             repair_command = deepcopy(command)
             repair_command["authorityRefs"]["brief"] = frozen_ref
             repair_command["returnDecisionRef"] = decision_ref
