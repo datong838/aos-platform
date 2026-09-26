@@ -150,6 +150,7 @@ class AipEvalRunner:
         evidence_cutoff_at: datetime | None = None,
     ) -> EvalReportRevision:
         subject_kind = None
+        subject_payload = None
         media_refs = (
             subject_artifact_ref,
             stage_attempt_ref,
@@ -168,7 +169,9 @@ class AipEvalRunner:
             subject_kind = subject_contract.gate_policy.get("subjectKind", "media_variant")
             if subject_kind == "agent_text_output" and subject_contract.gate_policy.get("subjectInputMode") != "text-envelope-v1":
                 raise AipEvalAuthorityConflict("text subject requires explicit text-envelope-v1 input mode")
-            self._assert_media_subject(
+            if subject_kind == "ecommerce_content" and subject_contract.gate_policy.get("subjectInputMode") != "ecommerce-readable-content/v1":
+                raise AipEvalAuthorityConflict("content subject requires explicit ecommerce-readable-content/v1 input mode")
+            subject_payload = self._assert_media_subject(
                 scope, subject_artifact_ref, stage_attempt_ref, subject_kind=subject_kind
             )
         suite = self._registry.get_suite_revision(scope, suite_id, suite_revision)
@@ -225,6 +228,8 @@ class AipEvalRunner:
                 input_value = self._resolve_exact(resolve_artifact, case.input_artifact)
                 if subject_kind == "agent_text_output":
                     input_value = self._text_subject_input(resolve_artifact, subject_artifact_ref, input_value)
+                elif subject_kind == "ecommerce_content":
+                    input_value = self._content_subject_input(subject_artifact_ref, subject_payload, input_value)
                 expected_value = (
                     self._resolve_exact(resolve_artifact, case.expected_artifact)
                     if case.expected_artifact
@@ -393,12 +398,12 @@ class AipEvalRunner:
         subject_kind: str = "media_variant",
     ) -> None:
         """Resolve the contract-declared subject and canonical latest StepRun."""
-        if type(subject_kind) is not str or subject_kind not in {"media_variant", "agent_text_output"}:
+        if type(subject_kind) is not str or subject_kind not in {"media_variant", "agent_text_output", "ecommerce_content"}:
             raise AipEvalAuthorityConflict("unsupported contract eval subject kind")
         try:
             with self._connect(scope) as conn:
                 artifact = conn.execute(
-                    """SELECT artifact_id,content_hash,run_id,family_role,artifact_type
+                    """SELECT artifact_id,content_hash,run_id,family_role,artifact_type,metadata
                        FROM aip_artifact
                        WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
                     (*scope.key, artifact_ref.resource_id),
@@ -426,6 +431,10 @@ class AipEvalRunner:
             or (subject_kind == "agent_text_output" and (
                 artifact["artifact_type"] != "agent_text_output" or artifact["family_role"] is not None
             ))
+            or (subject_kind == "ecommerce_content" and (
+                artifact["artifact_type"] != "ecommerce_content" or artifact["family_role"] is not None
+                or attempt_ref.step_key != "content_generate"
+            ))
             or artifact["run_id"] != attempt_ref.run_id
         ):
             raise AipEvalAuthorityConflict("media eval Artifact is missing or drifted")
@@ -443,6 +452,26 @@ class AipEvalRunner:
             or int(latest["attempt"]) != attempt_ref.attempt
         ):
             raise AipEvalAuthorityConflict("media eval requires the latest Stage attempt")
+        if subject_kind == "ecommerce_content":
+            metadata = artifact["metadata"]
+            payload = metadata.get("ecommerceGrowthContentArtifact") if type(metadata) is dict else None
+            fields = {"artifactRef", "taskRef", "briefRef", "growthPlanRef",
+                      "sourceArtifactRefs", "factSourceRefs", "body", "productNames",
+                      "channels", "constraintChecks"}
+            if (
+                type(payload) is not dict or set(payload) != fields
+                or payload["artifactRef"] != {
+                    "resourceType": "ArtifactRevision", "resourceId": artifact_ref.resource_id,
+                    "revision": 1, "contentHash": "sha256:" + artifact_ref.content_hash,
+                }
+                or _hash({key: value for key, value in payload.items() if key != "artifactRef"})
+                    != artifact_ref.content_hash
+                or type(payload["body"]) is not str or not payload["body"].strip()
+                or any(type(payload[name]) is not list or not payload[name] for name in (
+                    "sourceArtifactRefs", "factSourceRefs", "productNames", "channels", "constraintChecks"))
+            ):
+                raise AipEvalAuthorityConflict("content eval subject body or source drifted")
+            return deepcopy(payload)
 
     def _resolve_contract(
         self, scope: TenantScope, ref: EvalContractRevisionRef
@@ -491,6 +520,14 @@ class AipEvalRunner:
         return {"schemaVersion": "aos.eval-text-subject-input/v1",
                 "subjectArtifactRef": subject.model_dump(mode="json", by_alias=True),
                 "subjectText": resolved.value, "caseInput": deepcopy(case_input)}
+
+    @staticmethod
+    def _content_subject_input(subject, payload, case_input):
+        if not isinstance(subject, EvalSubjectArtifactRef) or type(payload) is not dict:
+            raise AipEvalAuthorityConflict("exact content eval subject unavailable")
+        return {"schemaVersion": "aos.eval-ecommerce-content-input/v1",
+                "subjectArtifactRef": subject.model_dump(mode="json", by_alias=True),
+                "content": deepcopy(payload), "caseInput": deepcopy(case_input)}
 
     @staticmethod
     def _event(tenant: TenantContext, run_id: str, sequence: int, from_status: EvalRunStatus | None, to_status: EvalRunStatus, actor: str) -> EvalRunEvent:

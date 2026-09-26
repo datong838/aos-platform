@@ -1,0 +1,84 @@
+"""A current readable content Artifact is the evaluated subject, not a loose report."""
+
+from pathlib import Path
+import importlib.util
+from types import SimpleNamespace
+
+from aos_api.aip_budget_reservation_store import canonical_hash
+from aos_api.aip_contracts import PlanStep
+from aos_api.aip_eval_contracts import EvalSubjectArtifactRef, EvalStageAttemptRef, EvalGatePolicyRef
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
+from aos_api.aip_eval_runner import AipEvalRunner
+from aos_api.aip_task_models import CreateTaskRequest, CreatePlanRevisionRequest, CreateTaskRunRequest
+from aos_api.aip_task_store import AipTaskStore
+from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, SCOPE
+from test_ecommerce_analyst_method_authority import apply_migrations
+
+
+def _helpers():
+    path=Path(__file__).parent/'aip/test_aip_eval_runner.py'
+    spec=importlib.util.spec_from_file_location('content_eval_fixture_helpers',path)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.SCOPE=SCOPE
+    return module
+
+
+def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
+    helper=_helpers()
+    with disposable_database() as connect:
+        apply_migrations(connect)
+        store=AipTaskStore(connect)
+        task=store.create_task(SCOPE,'tester','content-eval-task',CreateTaskRequest(type='analysis',title='Content eval'))
+        plan=store.create_plan(SCOPE,'tester',task.id,'content-eval-plan',
+            CreatePlanRevisionRequest(expected_task_version=task.version,
+                steps=[PlanStep(step_key='content_generate',title='Generate content')]))
+        task=store.get_task(SCOPE,task.id)
+        store.approve_plan(SCOPE,'tester',task.id,plan.revision,task.version,plan.content_hash)
+        task=store.get_task(SCOPE,task.id)
+        run=store.create_run(SCOPE,'tester',task.id,'content-eval-run',
+            CreateTaskRunRequest(plan_revision_id=plan.id,expected_task_version=task.version))
+        store.start_run(SCOPE,run.id,expected_run_version=run.version,
+            expected_task_version=store.timeline(SCOPE,run.id).task.version,
+            actor='tester',idempotency_key='content-eval-start')
+        lease=store.claim_step(SCOPE,run.id,'content_generate','worker',lease_seconds=60)
+        identity='artifact-'+'a'*20
+        ref=lambda kind,name:dict(resourceType=kind,resourceId=name,revision=1,contentHash='sha256:'+'a'*64)
+        content=dict(taskRef=ref('Task',task.id),briefRef=ref('TaskBriefRevision','brief'),
+            growthPlanRef=ref('GrowthPlanRevision','plan'),
+            sourceArtifactRefs=[ref('ArtifactRevision',str(n)) for n in range(4)],
+            factSourceRefs=[ref('EvidenceBundleRevision','facts')],
+            body='玫瑰面霜草稿，仅作人工评审，不声称库存或销量。',
+            productNames=['玫瑰面霜'],channels=['微信小店'],constraintChecks=['库存待核'])
+        digest=canonical_hash(content)
+        content['artifactRef']={'resourceType':'ArtifactRevision','resourceId':identity,
+            'revision':1,'contentHash':'sha256:'+digest}
+        assert store.record_artifact(SCOPE,run.id,'tester','ecommerce_content',
+            {'contentHash':digest,'schemaRef':'aos://schemas/ecommerce-readable-content/v1',
+             'metadata':{'ecommerceGrowthContentArtifact':content}},artifact_id=identity)==identity
+        subject=EvalSubjectArtifactRef(resourceId=identity,contentHash=digest)
+        attempt=EvalStageAttemptRef(runId=run.id,stepKey='content_generate',
+            stepRunId=lease.step_run_id,attempt=lease.attempt,inputHash=lease.input_hash)
+        helper._seed(AipEvalPackRegistry(connect_factory=connect))
+        contract=helper._contract().model_copy(update={'gate_policy':{
+            'subjectKind':'ecommerce_content','subjectInputMode':'ecommerce-readable-content/v1'}})
+        runner=AipEvalRunner(connect_factory=connect,
+            production_contract_store=SimpleNamespace(get_eval_contract=lambda *args:contract))
+        received=[]
+        def target(ref,value):
+            received.append(value)
+            assert value['schemaVersion']=='aos.eval-ecommerce-content-input/v1'
+            assert value['subjectArtifactRef']==subject.model_dump(mode='json',by_alias=True)
+            assert value['content']==content
+            return helper._target(ref,value['caseInput'])
+        report=runner.run_by_contract(SCOPE,contract_id=contract.contract_id,
+            contract_revision=contract.revision,contract_content_hash=contract.content_hash,
+            idempotency_key='content-subject-eval',actor='tester',resolve_artifact=helper._resolver,
+            execute_target=target,execute_judge=helper._judge,subject_artifact_ref=subject,
+            stage_attempt_ref=attempt,gate_policy_ref=EvalGatePolicyRef(
+                resourceId='fixture-policy',revision=1,contentHash='d'*64),
+            evidence_cutoff_at=helper.NOW)
+        assert report.gate_passed and len(received)==1
+        assert report.subject_artifact_ref==subject
+        assert content['body'] not in report.model_dump_json()
+        assert runner.get_report(SCOPE,report.report_id)==report

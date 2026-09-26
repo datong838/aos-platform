@@ -5,6 +5,7 @@ from aos_api.aip_eval_runner import AipEvalRunner
 from aos_api.aip_eval_authority_store import AipEvalAuthorityConflict
 from aos_api.aip_eval_contracts import EvalSubjectArtifactRef,EvalStageAttemptRef,EvalContractRevisionRef
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_task_models import CreateTaskRequest,CreatePlanRevisionRequest,CreateTaskRunRequest
 from aos_api.tenant_scope import TenantScope
@@ -82,3 +83,41 @@ def test_default_media_family_boundary_is_unchanged(role):
     if role=='variant':runner._assert_media_subject(SCOPE,artifact,attempt)
     else:
         with pytest.raises(AipEvalAuthorityConflict):runner._assert_media_subject(SCOPE,artifact,attempt)
+
+
+@pytest.mark.parametrize('fault',[None,'hash','type','body','facts','stale_step','tenant'])
+def test_exact_readable_content_subject_requires_current_generation_attempt(fault):
+    ref=lambda kind,name:dict(resourceType=kind,resourceId=name,revision=1,contentHash='sha256:'+'a'*64)
+    payload=dict(taskRef=ref('Task','task'),briefRef=ref('TaskBriefRevision','brief'),
+        growthPlanRef=ref('GrowthPlanRevision','plan'),sourceArtifactRefs=[ref('ArtifactRevision',str(n)) for n in range(4)],
+        factSourceRefs=[ref('EvidenceBundleRevision','facts')],body='玫瑰面霜内容草稿',
+        productNames=['玫瑰面霜'],channels=['微信小店'],constraintChecks=['库存待核'])
+    digest=canonical_hash(payload)
+    payload['artifactRef']=ref('ArtifactRevision','content')|{'contentHash':'sha256:'+digest}
+    artifact=EvalSubjectArtifactRef(resourceId='content',contentHash=digest)
+    attempt=EvalStageAttemptRef(runId='run',stepKey='content_generate',stepRunId='step',attempt=1,inputHash='b'*64)
+    stored=dict(artifact_id='content',content_hash=digest,run_id='run',family_role=None,
+                artifact_type='ecommerce_content',metadata={'ecommerceGrowthContentArtifact':payload})
+    if fault=='hash':stored['content_hash']='c'*64
+    if fault=='type':stored['artifact_type']='image'
+    if fault=='body':stored['metadata']['ecommerceGrowthContentArtifact']={**payload,'body':''}
+    if fault=='facts':stored['metadata']['ecommerceGrowthContentArtifact']={**payload,'factSourceRefs':[]}
+    latest=dict(step_run_id='step' if fault!='stale_step' else 'new-step',attempt=1)
+    rows=[stored,dict(step_run_id='step',run_id='run',step_key='content_generate',attempt=1,input_hash='b'*64),latest]
+    @contextmanager
+    def connect(scope):
+        if fault=='tenant':
+            assert scope==TenantScope('dev-org','dev-project')
+            values=[None,None,None]
+        else:
+            assert scope==SCOPE
+            values=rows.copy()
+        def execute(*_):return SimpleNamespace(fetchone=lambda:values.pop(0))
+        yield SimpleNamespace(execute=execute)
+    runner=AipEvalRunner(connect_factory=connect)
+    checked_scope=TenantScope('dev-org','dev-project') if fault=='tenant' else SCOPE
+    if fault is None:
+        assert runner._assert_media_subject(checked_scope,artifact,attempt,subject_kind='ecommerce_content')==payload
+    else:
+        with pytest.raises(AipEvalAuthorityConflict):
+            runner._assert_media_subject(checked_scope,artifact,attempt,subject_kind='ecommerce_content')

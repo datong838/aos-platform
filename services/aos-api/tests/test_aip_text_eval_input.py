@@ -90,6 +90,31 @@ def test_text_protocol_must_be_explicit_before_any_subject_read():
             eval_contract_ref=object(),subject_artifact_ref=object(),stage_attempt_ref=object(),gate_policy_ref=object(),evidence_cutoff_at=object())
 
 
+def test_content_protocol_must_be_explicit_before_any_subject_read():
+    runner=AipEvalRunner()
+    runner._resolve_contract=lambda *args:SimpleNamespace(gate_policy={'subjectKind':'ecommerce_content'})
+    runner._assert_media_subject=lambda *_a,**_k:pytest.fail('no content read before protocol authorization')
+    with pytest.raises(AipEvalAuthorityConflict,match='explicit ecommerce-readable-content'):
+        runner.run(SCOPE,suite_id='suite',suite_revision=1,idempotency_key='key',actor='tester',
+            resolve_artifact=None,execute_target=None,execute_judge=None,
+            eval_contract_ref=object(),subject_artifact_ref=object(),stage_attempt_ref=object(),
+            gate_policy_ref=object(),evidence_cutoff_at=object())
+
+
+def test_content_subject_envelope_is_exact_and_case_input_is_copied():
+    subject=EvalSubjectArtifactRef(resourceId='content',contentHash='a'*64)
+    payload={'body':'玫瑰面霜草稿','factSourceRefs':[{'resourceId':'facts'}]}
+    criteria={'nested':{'value':1}}
+    first=AipEvalRunner._content_subject_input(subject,payload,criteria)
+    assert first['schemaVersion']=='aos.eval-ecommerce-content-input/v1'
+    assert first['subjectArtifactRef']==subject.model_dump(mode='json',by_alias=True)
+    assert first['content']==payload
+    first['content']['body']='tampered'
+    first['caseInput']['nested']['value']=99
+    second=AipEvalRunner._content_subject_input(subject,payload,criteria)
+    assert second['content']==payload and second['caseInput']==criteria
+
+
 def test_target_input_mutation_does_not_change_next_case():
     subject=EvalSubjectArtifactRef(resourceId='text',contentHash=sha256(TEXT.encode()).hexdigest())
     criteria={'nested':{'value':1}}

@@ -26,6 +26,13 @@
 - `services/aos-api/aos_api/ecommerce_content_taskrun_owner.py` 或最小后继 Owner 只用公共 `AipTaskStore` 的 claim／TAOR evidence／complete_step／complete_run 达成正式终态；不直接 UPDATE Run/Task。人工 ACCEPT 才允许最后 Review step 完成，RETURN 由公共 ReturnDecision 派生新 `content_generate` attempt，不重发旧 Provider。反馈原 selector 已要求 succeeded/completed，受限写门保持不动。
 - 前端仅在当前已有内容工作台缺待办显示/评审动作时改 `apps/web/src/components/workshop/ContentCampaignPage.tsx` 与相应 client/contracts/tests；页面需真实浏览器验收。每个分段先 RED，完整同库后才叫 W5CB4 通过。
 
+### P2a 复审后的最小公共 Eval 扩展（先于 ReviewIssue）
+
+- 代码核查确认现有 `AipEvalRunner` 的 subjectKind 只允许 `media_variant`／`agent_text_output`，而 W5CB3 Artifact 类型为 `ecommerce_content`；普通无 subject 的 EvalReport 不能证明评估了这个正文。先在 `services/aos-api/aos_api/aip_eval_runner.py` 为明确冻结且 READY 的 EvalContract 增加 `subjectKind=ecommerce_content`、`subjectInputMode=ecommerce-readable-content/v1`。只接受同租户 exact Artifact hash、原 Run 的最新 `content_generate` StepRun attempt、`ecommerceGrowthContentArtifact` canonical hash 与正文/来源字段完整性；提供 Eval target 的输入 envelope 必须绑定原 Artifact Ref，不可替代主体验证。
+- 先在 `services/aos-api/tests/aip/` 加 RED：合法 exact 内容主体可进入现有 EvalRunner；跨租户、旧 attempt、错类型/哈希、空正文/来源、非冻结或模式不符的合同均 fail closed。只扩展通用主体校验与输入组合，不写特定商城数据、不自动注册或启用 suite。
+- 产出的 `EvalReportRevision.subjectArtifactRef`、stage attempt 与 gate policy 才可被后续内容 ReviewIssue Owner 接受；若公共 ReviewIssue 当前仅验报告存在，应在内容路径追加同主体报告绑定检查，不能用无关 EvalReport 充数。
+- 当前 `EvalGatePolicyRef` 名义类型仍固定 `MediaGatePolicyRevision`；本段只验证 EvalRunner 对 content 主体的能力，不把测试中的 `fixture-policy` 当实际内容 GatePolicy。正式内容 EvalContract／Suite／GatePolicy 注册与 exact 当前权威是后续激活硬门，必要时先做通用 Eval 合同的增量，而不是把媒体政策冒充内容批准。
+
 ## 退出／下一波
 
 本波最多证明受控 Artifact 后的“待人评审→exact 决策→Run/反馈”代码链；没有真实人类审批不得声称自然闭环。下一波按本波证据补生产激活硬门与当前实例自然观察，而非回到旧 12 Run 的逐行补数。
