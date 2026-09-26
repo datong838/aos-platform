@@ -190,3 +190,9 @@
 - 先核 P2g19 的“8080 离线/开发默认空库”与当前 m1/docs HEAD，不将失效或空的开发默认库当生产权威。用户已说明执行部署仅当前 Mac/Colima；只在此范围用进程/容器/端口/配置键名和已有运行日志索引定位可验证入口，不读商城源、secret 值或旧十二 Run payload。
 - 文件级范围仅本 plan 与 `w5cb4-p2g-local-runtime-entry-verification-20260927.md`，以及 D-waves/AOS/Prime 上下文；不改代码、服务配置或重启生产。只读检查 Colima/Docker 是否运行、容器清单、127.0.0.1:8080/18181 等监听、可识别 AOS API/DB 进程、受控启动脚本及当前 DB 连接配置是否有精确可用来源。每个候选入口先证归属和目标库再考虑下一波启动/读回。
 - 若没有可信当前入口，明确 `NOT_VERIFIED` 并列出恢复所需的本地只读证据/命令，不创建替代实例或复制旧快照。若找到，仍只读核签名安装/Host/开关，后续启用需另波方案与安全门。验证落盘、m1 提交、文档/记忆同步后进入下一独立可做波；此波浏览器不适用。
+
+### P2g 第二十二增量：18435 恢复 PG 身份与安装/Host 元数据只读门（2026-09-27，执行前）
+
+- 复习 W5c8z/W5c9a/W5c9b 的唯一恢复 PG、纯 HTTP/READ ONLY 规则及 P2g21 新鲜容器归属。先确认 `aos-a0v-recovery-pg` image/restart/18435 loopback/pg_isready/8080 与 18181 无监听，限定恢复 profile；若任一漂移，STOP，不查询。连接只允许 `BEGIN READ ONLY`，只读 DB identity、`alembic_version`、安装/Host 相关表的存在性与**最小状态字段/计数**，不读商城源表、旧 Run payload、secret 或原始业务行。
+- 文件级范围仅本 plan、`w5cb4-p2g-recovery-pg-authority-readback-verification-20260927.md` 及 D-waves/AOS/Prime 同步；不改服务、DB 结构、安装/Host/worker 状态或代码。选既有受控只读脚本/连接路径，禁止通过默认 5433 测试库推断恢复库；如凭据/权限不可信，记录 `NOT_VERIFIED`，不探测凭据值。
+- 若恢复库确认为旧迁移版本/与 m1 代码不兼容，不能启动当前 API；下一波先形成有界迁移与回滚/备份校验方案。若迁移与签名安装/Host 元数据可读，也只证明静态状态，真实审批/来源/预算/自然尝试仍是单独门。验证落盘与提交后自动进入下一最小波；浏览器本波不适用。
