@@ -1091,7 +1091,15 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 with pytest.raises(ValueError, match="fresh approval drifted"):
                     ContentGenerateHostService._return_authority(
                         HostTransaction(conn), SCOPE, repair_command,
-                        _strict_content_generate_command(repair_command))
+                        _strict_content_generate_command(repair_command),
+                        dispatch=SimpleNamespace(
+                            operation_id="ecommerce_growth_content_generate",
+                            installation_id=binding["installation_id"],
+                            generation=binding["generation"],
+                            execution_epoch=binding["execution_epoch"],
+                            cutover_group_id=binding["cutover_group_id"],
+                            cutover_group_revision=binding["cutover_group_revision"],
+                            dispatch_revision=5, checked_at=datetime.now(UTC)))
             return
         with connect(SCOPE) as conn:
             review_proof = ContentReviewStepSource().read(

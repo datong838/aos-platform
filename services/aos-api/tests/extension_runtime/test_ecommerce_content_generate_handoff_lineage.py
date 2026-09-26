@@ -517,6 +517,11 @@ class ReturnAuthorityTransaction:
 def test_content_generate_return_requires_current_queued_attempt_and_new_approval(monkeypatch):
     command, decision = return_command()
     base = datetime(2026, 9, 27, 8, tzinfo=timezone.utc)
+    dispatch = SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+        installation_id="installation-1", generation="generation-1",
+        execution_epoch=3, cutover_group_id="group-1",
+        cutover_group_revision=2, dispatch_revision=5,
+        checked_at=base + timedelta(minutes=2))
     row = {
         "decision_id": "return-decision-1", "decision_hash": production_hash(decision),
         "issue_id": decision["issueId"], "issue_version": 1,
@@ -541,21 +546,27 @@ def test_content_generate_return_requires_current_queued_attempt_and_new_approva
         "contentHash": HEX_A,
     })
     calls = []
+    approval_calls = []
     monkeypatch.setattr(
         "aos_api.ecommerce_growth_runtime_adapters.require_repair_brief",
         lambda *args, **kwargs: calls.append((args, kwargs)),
     )
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_repair_approval_binding",
+        lambda *args, **kwargs: approval_calls.append((args, kwargs)),
+    )
     ContentGenerateHostService._return_authority(
         ReturnAuthorityTransaction(row), SCOPE, command,
-        _strict_content_generate_command(command),
+        _strict_content_generate_command(command), dispatch=dispatch,
     )
     assert len(calls) == 1
+    assert len(approval_calls) == 1
     assert calls[0][1]["task_id"] == "task-1"
     assert calls[0][1]["reason"] == decision["reason"]
     with pytest.raises(ValueError, match="versioned repair preparation"):
         ContentGenerateHostService().revalidate(
             transaction=ReturnAuthorityTransaction(row), scope=SCOPE,
-            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+            dispatch=dispatch,
             command=command,
         )
     with pytest.raises(ValueError, match="not enabled"):
@@ -571,12 +582,12 @@ def test_content_generate_return_requires_current_queued_attempt_and_new_approva
         with pytest.raises(ValueError):
             ContentGenerateHostService._return_authority(
                 ReturnAuthorityTransaction({**row, **change}), SCOPE, command,
-                _strict_content_generate_command(command),
+                _strict_content_generate_command(command), dispatch=dispatch,
             )
     with pytest.raises(ValueError):
         ContentGenerateHostService._return_authority(
             ReturnAuthorityTransaction(row), SCOPE, authorities()["command"],
-            _strict_content_generate_command(authorities()["command"]),
+            _strict_content_generate_command(authorities()["command"]), dispatch=dispatch,
         )
 
 

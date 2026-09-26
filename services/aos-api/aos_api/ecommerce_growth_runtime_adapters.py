@@ -28,6 +28,7 @@ from aos_api.aip_production_contract_store import (
     canonical_hash as production_contract_canonical_hash,
 )
 from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
+from aos_api.ecommerce_content_repair_approval_authority import require_repair_approval_binding
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_binding_readiness_service import AipBindingReadinessService
@@ -3935,7 +3936,7 @@ class ContentGenerateHostService:
     executor_identity = "ecommerce-growth-content-generate-host"
 
     @staticmethod
-    def _return_authority(transaction, scope, command, parsed) -> None:
+    def _return_authority(transaction, scope, command, parsed, *, dispatch) -> None:
         """A returned Task cannot bypass a fresh queued attempt or reuse approval."""
         task_id = parsed["authorities"]["task"].resource_id
         row = transaction.execute(
@@ -4033,6 +4034,19 @@ class ContentGenerateHostService:
                 mode="json", by_alias=True, exclude_none=True),
             prior_brief, expected_ref, expected_artifact,
             task_id=task_id, reason=row["reason"],
+        )
+        require_repair_approval_binding(
+            transaction, scope,
+            parsed["authorities"]["approval"].model_dump(
+                mode="json", by_alias=True, exclude_none=True),
+            task_id=task_id, run_id=row["run_id"],
+            decision_ref=expected_ref,
+            brief_ref=parsed["authorities"]["brief"].model_dump(
+                mode="json", by_alias=True, exclude_none=True),
+            prior_artifact_ref=expected_artifact,
+            capability_ref=parsed["authorities"]["capability"].model_dump(
+                mode="json", by_alias=True, exclude_none=True),
+            upper_bound_minor=command["upperBoundFen"], dispatch=dispatch,
         )
 
     @staticmethod
@@ -5332,7 +5346,7 @@ class ContentGenerateHostService:
         parsed = _strict_content_generate_command(command)
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
-        self._return_authority(transaction, scope, command, parsed)
+        self._return_authority(transaction, scope, command, parsed, dispatch=dispatch)
         if parsed["returnRef"] is not None:
             raise ValueError("content return generation requires a versioned repair preparation")
         source_values = [
