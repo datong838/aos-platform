@@ -13,3 +13,7 @@
 7. 旧 Single Ingress/Object fixture 自身 GREEN，仅可消除“这些文件当前仍 skipped”的叙述；其 fake 源/资产不证明真实商城数据、Store 跨事务 fence、全机 Host、原 12 Run 或 A0-V 准入。当前 34 项风险的真正生产未接线/真库未迁/外部证据缺口仍在；下一波逐项改写旧 skipped 字句时不得删除这些边界。
 8. 本 verification 提交后更新共享/Prime 受管记忆与 AOS 项目上下文，读回；保留用户其他脏文件，不 push。
 9. 下一波 W5cag：精确审计 current incomplete 21/22 中旧 PG skipped 残留措辞，用 W5caf/W5cae 证据缩减且保留真实 Store/Fleet/Owner 缺口；无新授权时不做真实 closure/ACK/replay。230 L0 挂起，dev-org 仅零 canary。
+
+## 记忆读回
+
+docs 上下文/受管记忆 `docs/m1@2cb14937`；CAS `AOS-000729→AOS-000730`，`delivery_status=W5CAF_LEGACY_SINGLE_OBJECT_24_OF_24_ISOLATED_GREEN_REAL_A0V_FROZEN`，下一门不变、`incomplete=34`。`memory-status` GREEN_WITH_WARNINGS：共享/上下文/Prime 强一致投影 CURRENT，Codex 注记 PENDING_ASYNC；`memory-validate` GREEN。无真实业务执行权。
