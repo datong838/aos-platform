@@ -18,6 +18,7 @@ from aos_api.ecommerce_analyst_portrait_inputs import (
     PortraitMetricSourceRequest, read_portrait_input_packet,
 )
 from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.openfga import openfga_api_url
 from aos_api.tenant_scope import TenantScope
 
@@ -66,11 +67,21 @@ def _packet_ref_keys(packet: D01SourcePacket):
 def require_current_d01_sources(scope: TenantScope, request: CreateAgentRunRequest,
                                 packet: D01SourcePacket, actor: str,
                                 occurred_at: datetime) -> bool:
-    """Read current governed AOS authorities; never query the mall source."""
-    if (type(scope) is not TenantScope or type(request) is not CreateAgentRunRequest
+    with connect_serializable(scope) as conn:
+        return require_current_d01_sources_in_transaction(
+            HostTransaction(conn), scope, request, packet, actor, occurred_at)
+
+
+def require_current_d01_sources_in_transaction(
+        transaction: HostTransaction, scope: TenantScope,
+        request: CreateAgentRunRequest, packet: D01SourcePacket,
+        actor: str, occurred_at: datetime) -> bool:
+    """Read governed AOS inputs on the caller's tenant transaction; no mall SQL."""
+    if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
+            or type(request) is not CreateAgentRunRequest
             or type(packet) is not D01SourcePacket or type(actor) is not str
             or not actor or actor != actor.strip()
-            or occurred_at.utcoffset() is None):
+            or type(occurred_at) is not datetime or occurred_at.utcoffset() is None):
         raise ValueError('exact D01 source read context required')
     packet = D01SourcePacket.model_validate(packet.model_dump(mode='python'))
     declared = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
@@ -79,36 +90,41 @@ def require_current_d01_sources(scope: TenantScope, request: CreateAgentRunReque
         raise ValueError('D01 packet differs from declared exact AgentRun inputs')
     if openfga_api_url():
         raise PermissionError('current remote D01 marking adapter required')
-    with connect_serializable(scope) as conn:
-        database_now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
-        if (not isinstance(database_now, datetime) or database_now.utcoffset() is None
-                or abs((database_now - occurred_at).total_seconds()) > 300
-                or packet.cutoff_at > database_now):
-            raise ValueError('D01 source clock or cutoff unavailable')
-        membership = conn.execute(
-            'SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE',
-            (*scope.key, actor),
-        ).fetchall()
-        bearer = conn.execute(
-            "SELECT object_key FROM authz_tuple WHERE org_id=%s AND project_id=%s "
-            "AND user_key=%s AND relation='bearer' AND object_key LIKE %s LIMIT 1001 FOR SHARE",
-            (*scope.key, 'user:' + actor, 'marking:%'),
-        ).fetchall()
-        granted = {row['object_key'][len('marking:'):] for row in bearer
-                   if row['object_key'].startswith('marking:')}
-        if (len(membership) != 1 or len(bearer) > 1000
-                or any(not label or label != label.strip() for label in granted)
-                or not set(packet.markings).issubset(granted)):
-            raise PermissionError('current D01 actor membership or bearer markings unavailable')
-        read_portrait_input_packet(
-            conn=conn, scope=scope, task_id=request.run.task_ref.resource_id,
-            input_refs=request.run.input_refs, actor=actor,
-            method_ref=packet.method_ref, eval_ref=packet.eval_ref,
-            metric_sources=packet.metric_sources, cutoff_at=packet.cutoff_at,
-            markings=packet.markings, now=database_now,
-            max_source_age=timedelta(seconds=packet.max_source_age_seconds),
-            max_bytes=packet.max_bytes,
-        )
+    current = transaction.execute(
+        "SELECT current_setting('aos.org_id',true) AS org_id, "
+        "current_setting('aos.project_id',true) AS project_id"
+    ).fetchone()
+    if current is None or (current['org_id'], current['project_id']) != scope.key:
+        raise PermissionError('borrowed D01 source transaction tenant differs')
+    database_now = transaction.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    if (not isinstance(database_now, datetime) or database_now.utcoffset() is None
+            or abs((database_now - occurred_at).total_seconds()) > 300
+            or packet.cutoff_at > database_now):
+        raise ValueError('D01 source clock or cutoff unavailable')
+    membership = transaction.execute(
+        'SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE',
+        (*scope.key, actor),
+    ).fetchall()
+    bearer = transaction.execute(
+        "SELECT object_key FROM authz_tuple WHERE org_id=%s AND project_id=%s "
+        "AND user_key=%s AND relation='bearer' AND object_key LIKE %s LIMIT 1001 FOR SHARE",
+        (*scope.key, 'user:' + actor, 'marking:%'),
+    ).fetchall()
+    granted = {row['object_key'][len('marking:'):] for row in bearer
+               if row['object_key'].startswith('marking:')}
+    if (len(membership) != 1 or len(bearer) > 1000
+            or any(not label or label != label.strip() for label in granted)
+            or not set(packet.markings).issubset(granted)):
+        raise PermissionError('current D01 actor membership or bearer markings unavailable')
+    read_portrait_input_packet(
+        conn=transaction, scope=scope, task_id=request.run.task_ref.resource_id,
+        input_refs=request.run.input_refs, actor=actor,
+        method_ref=packet.method_ref, eval_ref=packet.eval_ref,
+        metric_sources=packet.metric_sources, cutoff_at=packet.cutoff_at,
+        markings=packet.markings, now=database_now,
+        max_source_age=timedelta(seconds=packet.max_source_age_seconds),
+        max_bytes=packet.max_bytes,
+    )
     return True
 
 

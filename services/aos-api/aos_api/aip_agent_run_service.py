@@ -23,6 +23,7 @@ from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_runtime_store import ModelRuntimeStoreError
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.tenant_scope import TenantScope
 from aos_api.logging_facade import get_logger
 
@@ -58,82 +59,102 @@ class AipAgentRunService(AipAgentRegistryStore):
 
     def create(self, scope: TenantScope, request: CreateAgentRunRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[AgentRun, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
-        operation = "agent_run.create"
-        request_hash = self._command_hash(request, actor)
-        run = request.run
         try:
             with self._connect_factory(scope) as conn:
-                self._lock(conn, scope, operation, idempotency_key)
-                replay = self._receipt_row(conn, scope, operation, idempotency_key)
-                if replay:
-                    self._require_replay_hash(replay, request_hash)
-                    return self._from_row(scope, self._row(conn, scope, request.agent_run_id)), self._receipt_from_row(scope, replay)
-                if self._row(conn, scope, request.agent_run_id):
-                    raise AipAgentRegistryConflict("agent run id already exists")
-                task_id, task_run_id = self._require_task_run(
-                    conn, scope, run.task_ref, request.task_run_ref, run.plan_ref
+                result = self.create_in_transaction(
+                    HostTransaction(conn), scope, request, idempotency_key=idempotency_key,
+                    actor=actor, occurred_at=occurred_at,
                 )
-                instance = self._instance_row(conn, scope, run.agent_instance.asset_id)
-                if instance is None:
-                    raise AipAgentRegistryNotFound("exact agent instance revision not found")
-                snapshot = self._instance_snapshot(instance)
-                exact_instance = self._instance_from_row(scope, instance).instance_ref
-                if exact_instance != run.agent_instance:
-                    raise AipAgentRegistryNotFound("exact agent instance revision not found")
-                if instance["status"] != "active":
-                    raise AipAgentRegistryTransitionBlocked("agent instance is not active")
-                binding = conn.execute(
-                    """SELECT b.*,s.content_hash,s.canonical_logic_id,s.logic_revision_ref
-                       FROM aip_skill_binding b
-                       JOIN aip_skill_template_revision s ON s.skill_id=b.skill_id
-                        AND s.revision=b.skill_revision
-                       WHERE b.org_id=%s AND b.project_id=%s AND b.binding_id=%s""",
-                    (*scope.key, request.skill_binding_id),
-                ).fetchone()
-                if binding is None or binding["status"] != "active":
-                    raise AipAgentRegistryTransitionBlocked("skill binding is not active")
-                if binding["instance_id"] != instance["instance_id"]:
-                    raise AipAgentRegistryConflict("skill binding belongs to a different agent instance")
-                if (binding["skill_id"], int(binding["skill_revision"]), binding["content_hash"]) != (
-                    run.skill.asset_id, run.skill.revision, run.skill.content_hash
-                ):
-                    raise AipAgentRegistryConflict("skill binding exact revision drifted")
-                if (
-                    binding["canonical_logic_id"] != run.logic.asset_id
-                    or not binding["logic_revision_ref"]
-                    or VersionedAssetRef.model_validate(binding["logic_revision_ref"])
-                    != run.logic
-                ):
-                    raise AipAgentRegistryConflict(
-                        "agent run logic differs from the Skill's exact published LogicRevision"
-                    )
-                self._require_healthy_capabilities(conn, scope, binding["capability_refs"])
-                self._require_logic(conn, scope, run.logic)
-                row = conn.execute(
-                    """INSERT INTO aip_agent_run
-                       (org_id,project_id,agent_run_id,task_id,task_run_id,plan_ref,
-                        task_ref,task_run_ref,instance_id,instance_version,instance_ref,instance_snapshot,
-                        skill_binding_id,skill_ref,logic_ref,
-                        model_route_ref,policy_ref,input_refs,status,version,created_at,updated_at)
-                       VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,
-                        %s::jsonb,%s::jsonb,%s::jsonb,'queued',1,%s,%s) RETURNING *""",
-                    (*scope.key, request.agent_run_id, task_id, task_run_id,
-                     self._json(run.plan_ref), self._json(run.task_ref),
-                     self._json(request.task_run_ref), instance["instance_id"], instance["version"],
-                     self._json(run.agent_instance), self._json(snapshot),
-                     request.skill_binding_id, self._json(run.skill), self._json(run.logic),
-                     self._json(run.model_route), self._json(run.policy),
-                     self._json(run.input_refs), occurred_at, occurred_at),
-                ).fetchone()
-                receipt = self._insert_receipt(conn, scope, operation, idempotency_key,
-                    request_hash, "TaskRun", task_run_id, "AgentRun", request.agent_run_id,
-                    actor, occurred_at)
                 conn.commit()
-                return self._from_row(scope, row), receipt
+                return result
         except (AipAgentRegistryConflict, AipAgentRegistryNotFound, AipAgentRegistryTransitionBlocked):
             raise
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("agent run persistence failed") from exc
+
+    def create_in_transaction(self, transaction: HostTransaction, scope: TenantScope,
+                              request: CreateAgentRunRequest, *, idempotency_key: str,
+                              actor: str, occurred_at: datetime) -> tuple[AgentRun, RegistryReceipt]:
+        """Canonical Owner write on a borrowed tenant transaction; caller owns commit."""
+        if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
+            raise TypeError('exact tenant Host transaction required')
+        self._validate_command(scope, idempotency_key, actor)
+        current = transaction.execute(
+            "SELECT current_setting('aos.org_id',true) AS org_id, "
+            "current_setting('aos.project_id',true) AS project_id"
+        ).fetchone()
+        if current is None or (current['org_id'], current['project_id']) != scope.key:
+            raise PermissionError('borrowed AgentRun transaction tenant differs')
+        operation = "agent_run.create"
+        request_hash = self._command_hash(request, actor)
+        run = request.run
+        conn = transaction
+        self._lock(conn, scope, operation, idempotency_key)
+        replay = self._receipt_row(conn, scope, operation, idempotency_key)
+        if replay:
+            self._require_replay_hash(replay, request_hash)
+            return self._from_row(scope, self._row(conn, scope, request.agent_run_id)), self._receipt_from_row(scope, replay)
+        if self._row(conn, scope, request.agent_run_id):
+            raise AipAgentRegistryConflict("agent run id already exists")
+        task_id, task_run_id = self._require_task_run(
+            conn, scope, run.task_ref, request.task_run_ref, run.plan_ref
+        )
+        instance = self._instance_row(conn, scope, run.agent_instance.asset_id)
+        if instance is None:
+            raise AipAgentRegistryNotFound("exact agent instance revision not found")
+        snapshot = self._instance_snapshot(instance)
+        exact_instance = self._instance_from_row(scope, instance).instance_ref
+        if exact_instance != run.agent_instance:
+            raise AipAgentRegistryNotFound("exact agent instance revision not found")
+        if instance["status"] != "active":
+            raise AipAgentRegistryTransitionBlocked("agent instance is not active")
+        binding = conn.execute(
+            """SELECT b.*,s.content_hash,s.canonical_logic_id,s.logic_revision_ref
+               FROM aip_skill_binding b
+               JOIN aip_skill_template_revision s ON s.skill_id=b.skill_id
+                AND s.revision=b.skill_revision
+               WHERE b.org_id=%s AND b.project_id=%s AND b.binding_id=%s""",
+            (*scope.key, request.skill_binding_id),
+        ).fetchone()
+        if binding is None or binding["status"] != "active":
+            raise AipAgentRegistryTransitionBlocked("skill binding is not active")
+        if binding["instance_id"] != instance["instance_id"]:
+            raise AipAgentRegistryConflict("skill binding belongs to a different agent instance")
+        if (binding["skill_id"], int(binding["skill_revision"]), binding["content_hash"]) != (
+            run.skill.asset_id, run.skill.revision, run.skill.content_hash
+        ):
+            raise AipAgentRegistryConflict("skill binding exact revision drifted")
+        if (
+            binding["canonical_logic_id"] != run.logic.asset_id
+            or not binding["logic_revision_ref"]
+            or VersionedAssetRef.model_validate(binding["logic_revision_ref"])
+            != run.logic
+        ):
+            raise AipAgentRegistryConflict(
+                "agent run logic differs from the Skill's exact published LogicRevision"
+            )
+        self._require_healthy_capabilities(conn, scope, binding["capability_refs"])
+        self._require_logic(conn, scope, run.logic)
+        row = conn.execute(
+            """INSERT INTO aip_agent_run
+               (org_id,project_id,agent_run_id,task_id,task_run_id,plan_ref,
+                task_ref,task_run_ref,instance_id,instance_version,instance_ref,instance_snapshot,
+                skill_binding_id,skill_ref,logic_ref,
+                model_route_ref,policy_ref,input_refs,status,version,created_at,updated_at)
+               VALUES (%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s::jsonb,%s::jsonb,%s,%s::jsonb,%s::jsonb,
+                %s::jsonb,%s::jsonb,%s::jsonb,'queued',1,%s,%s) RETURNING *""",
+            (*scope.key, request.agent_run_id, task_id, task_run_id,
+             self._json(run.plan_ref), self._json(run.task_ref),
+             self._json(request.task_run_ref), instance["instance_id"], instance["version"],
+             self._json(run.agent_instance), self._json(snapshot),
+             request.skill_binding_id, self._json(run.skill), self._json(run.logic),
+             self._json(run.model_route), self._json(run.policy),
+             self._json(run.input_refs), occurred_at, occurred_at),
+        ).fetchone()
+        receipt = self._insert_receipt(conn, scope, operation, idempotency_key,
+            request_hash, "TaskRun", task_run_id, "AgentRun", request.agent_run_id,
+            actor, occurred_at)
+        return self._from_row(scope, row), receipt
 
     def transition(self, scope: TenantScope, agent_run_id: str, *, expected_version: int, from_status: AgentRunStatus, to_status: AgentRunStatus, actor: str, occurred_at: datetime) -> AgentRun:
         allowed = {

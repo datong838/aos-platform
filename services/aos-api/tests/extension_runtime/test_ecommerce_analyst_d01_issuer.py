@@ -9,9 +9,11 @@ from aos_api.aip_agent_registry_contracts import (
     AgentRunRequest, CreateAgentRunRequest, VersionedAssetRef,
 )
 from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_agent_run_service import AipAgentRunService
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_analyst_d01_issuer import (
     D01SourcePacket, NaturalD01Issuer, d01_agent_run_id,
-    require_current_d01_sources,
+    require_current_d01_sources, require_current_d01_sources_in_transaction,
 )
 import aos_api.ecommerce_analyst_d01_issuer as issuer_module
 from aos_api.tenant_scope import TenantScope
@@ -193,6 +195,9 @@ def test_production_reader_requires_current_actor_markings_before_source_materia
     seen = []
     class Connection:
         def execute(self, query, params=None):
+            if 'current_setting' in query:
+                return SimpleNamespace(fetchone=lambda: {'org_id': SCOPE.org_id,
+                                                         'project_id': SCOPE.project_id})
             if 'clock_timestamp()' in query:
                 return SimpleNamespace(fetchone=lambda: {'now': NOW})
             assert params[:2] == SCOPE.key
@@ -222,3 +227,78 @@ def test_production_reader_requires_current_actor_markings_before_source_materia
     with pytest.raises(PermissionError, match='remote'):
         require_current_d01_sources(SCOPE, _request(), _packet(), 'analyst-owner', NOW)
     assert len(seen) == 1
+
+
+def test_owner_borrowed_transaction_does_not_commit_and_rejects_wrong_scope():
+    request = _request()
+    calls = []
+    class Connection:
+        def execute(self, query, params=()):
+            calls.append(query)
+            if 'current_setting' in query:
+                return SimpleNamespace(fetchone=lambda: {'org_id': SCOPE.org_id,
+                                                         'project_id': SCOPE.project_id})
+            if 'FROM aip_skill_binding' in query:
+                return SimpleNamespace(fetchone=lambda: {
+                    'status': 'active', 'instance_id': 'analyst-1',
+                    'skill_id': 'ecommerce.skill.D01',
+                    'skill_revision': 1, 'content_hash': HASH,
+                    'canonical_logic_id': 'ecommerce.logic.D01',
+                    'logic_revision_ref': request.run.logic.model_dump(mode='json', by_alias=True),
+                    'capability_refs': [],
+                })
+            if 'INSERT INTO aip_agent_run' in query:
+                return SimpleNamespace(fetchone=lambda: {'agent_run_id': request.agent_run_id})
+            raise AssertionError(query)
+        def commit(self):
+            raise AssertionError('borrowed Owner transaction must not commit')
+    service = AipAgentRunService()
+    service._lock = lambda *_args: None
+    service._receipt_row = lambda *_args: None
+    service._row = lambda *_args: None
+    service._require_task_run = lambda *_args: ('task-1', 'run-1')
+    service._instance_row = lambda *_args: {'status': 'active', 'instance_id': 'analyst-1', 'version': 1}
+    service._instance_snapshot = lambda *_args: {}
+    service._instance_from_row = lambda *_args: SimpleNamespace(instance_ref=request.run.agent_instance)
+    service._require_healthy_capabilities = lambda *_args: None
+    service._require_logic = lambda *_args: None
+    receipt = SimpleNamespace(operation='agent_run.create')
+    service._insert_receipt = lambda *_args: receipt
+    service._from_row = lambda *_args: SimpleNamespace(agent_run_id=request.agent_run_id)
+    tx = HostTransaction(Connection())
+    result = service.create_in_transaction(tx, SCOPE, request,
+        idempotency_key='natural-d01:test', actor='analyst-owner', occurred_at=NOW)
+    assert result[0].agent_run_id == request.agent_run_id and result[1] is receipt
+    assert any('INSERT INTO aip_agent_run' in query for query in calls)
+    with pytest.raises(PermissionError, match='tenant'):
+        service.create_in_transaction(tx, TenantScope('dev-org', 'dev-project'), request,
+            idempotency_key='natural-d01:test', actor='analyst-owner', occurred_at=NOW)
+
+
+def test_source_reader_uses_borrowed_transaction_only(monkeypatch):
+    seen = []
+    class Connection:
+        def execute(self, query, params=()):
+            if 'current_setting' in query:
+                return SimpleNamespace(fetchone=lambda: {'org_id': SCOPE.org_id,
+                                                         'project_id': SCOPE.project_id})
+            if 'clock_timestamp()' in query:
+                return SimpleNamespace(fetchone=lambda: {'now': NOW})
+            if 'meta_membership' in query:
+                return SimpleNamespace(fetchall=lambda: [{'role': 'analyst'}])
+            if 'authz_tuple' in query:
+                return SimpleNamespace(fetchall=lambda: [{'object_key': 'marking:internal'}])
+            raise AssertionError(query)
+    monkeypatch.setattr(issuer_module, 'connect_serializable',
+                        lambda *_args: (_ for _ in ()).throw(AssertionError('new connection')))
+    monkeypatch.setattr(issuer_module, 'openfga_api_url', lambda: None)
+    monkeypatch.setattr(issuer_module, 'read_portrait_input_packet',
+                        lambda **kwargs: seen.append(kwargs))
+    tx = HostTransaction(Connection())
+    assert require_current_d01_sources_in_transaction(
+        tx, SCOPE, _request(), _packet(), 'analyst-owner', NOW) is True
+    assert len(seen) == 1 and seen[0]['conn'] is tx
+    with pytest.raises(PermissionError, match='tenant'):
+        require_current_d01_sources_in_transaction(
+            tx, TenantScope('dev-org', 'dev-project'), _request(),
+            _packet(), 'analyst-owner', NOW)

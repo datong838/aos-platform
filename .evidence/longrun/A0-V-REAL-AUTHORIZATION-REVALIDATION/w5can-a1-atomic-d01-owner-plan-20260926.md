@@ -16,3 +16,7 @@
 6. 方案/代码一致性复审、verification、m1 commit、AOS/Prime 上下文同步；自动进入 D02/D03 或最早未闭合的 A1 核心波。
 
 停止门：未知提交不重发、不换键；旧 12 Run 不手动重播；不读商城源；权限/时钟/来源/原链任一不可证即无发行。m1 单写者、不 push、dev-org 仅零 canary。真实执行仍须另证预算/能力/审批，不因 AgentRun queued 而假定成功。
+
+## 第 1 步接口复审细化
+
+Owner `create` 直接在自有连接里 `commit()`；不能向它塞一个共享连接工厂再代理掉 commit。最小可行接口是在 Owner 内抽取接受 `HostTransaction` 的无提交写核心，保留公开 `create` 的原连接、异常映射和 commit；写核心必须在执行 SQL 前核对事务内 `aos.org_id`/`aos.project_id` 与 scope，拒绝错租户。W5can coordinator 由原链 `run_current` 持有同一 raw connection，向无提交写核心传 `HostTransaction`；来源包读也须改为同事务入口，不再独立开连接。RED 首测无提交/错租户/原公开 create 不回归，然后隔离 PG 证明回滚、原 Receipt 唯一和权限撤销。任何 HostTransaction 包装都不是单独授权，只有原链回调内才可发行。
