@@ -13,3 +13,7 @@
 7. 代码和方案一致：只新增测试变体和断言，不改变旧两变体，`git diff --check` 通过。该行是**空命令的持久 journal 行**，因此本波只缩小 effect 计数/回滚覆盖债，不能证明非空业务输入、派生业务命令或 Dataset Receipt。Fleet 宇宙/旧入口撤权/Owner 绑定/独立历史原始行仍缺，原 12 Run 不关闭、不重跑；A0-V/BG-00 未通过。
 8. 本 verification 与测试代码精确提交；随后将 AOS 上下文/Prime 受管记忆记为 W5cad no-authority，并读回。用户的两个 W5c8i 未跟踪文件保留不动。
 9. 下一波：只读核对剩余外部门禁与可安全补证项；如果无可信 Fleet/原始行证明或正式不接受业务结果的退休选择，停止任何真实 effect，不制造授权。230 L0/dev-org 零 canary/m1 单写不 push 继续。
+
+## 记忆读回
+
+测试/verification `085de919`、docs 上下文及受管记忆提交 `docs/m1@b733fa97`。CAS `AOS-000727→AOS-000728`，`delivery_status=W5CAD_EMPTY_DERIVED_ROW_ISOLATED_GREEN_REAL_A0V_FROZEN`，下一门仍为 `EXTERNAL_FLEET_ROW_PROOF_OR_FORMAL_RETIREMENT_DECISION`，`incomplete=34` 未清除真实风险。`memory-status` GREEN_WITH_WARNINGS：共享、上下文和 Prime 强一致投影 CURRENT，Codex 注记 PENDING_ASYNC；`memory-validate` GREEN。该回读不扩展真实业务执行权。
