@@ -132,3 +132,11 @@
 - 目标 body 只写原 exact refs、第一段 Receipt、业务标题/摘要、同一安装代次及 `effectStatus=AWAITING_COMPARABLE_EVIDENCE`；不写“效果改善”“成交增长”“Wiki 已入库”。数据库函数用当前 scope/RLS、原命令/Segment/Lease/Checkpoint、当前 dispatch/runtime、原 Run 终态及第一段已 ack 回执共同约束，并在同一事务内写唯一目标；不得借超级用户或跨连接提交绕门。未知提交只读对账，不重发。
 - 本增量不调用 Provider、商城源、AIP 效果评估或 Wiki 发布；当前实例不开 worker。第三段 `memory_candidate` 及正式 EffectReview/总控投影在下一波。专项→累计→方案/代码一致性复审→verification→m1 精确提交→AOS/Prime 更新；纯后端且生产默认关闭，浏览器验收不适用。若受控同库证明缺门，记录具体失败并修最小权威，不放宽当前边界。
 - RED 权限探针发现数据库对新表应用了 `aos_runtime=arwd` 默认授权，单纯 `REVOKE ... FROM PUBLIC` 后 `GRANT SELECT` 并不能收回该运行角色的直接 INSERT/UPDATE/DELETE。第十三增量迁移须显式撤销新目标表及同类第一段 `ecommerce_growth_daily_review_target` 的直接写权限，仅保留 SELECT 与受控函数 EXECUTE；同库以实际 `has_table_privilege` 和原第一段回归证明权限收紧不破坏合法消费。不能放宽 RLS 或给运行角色表级写权。
+
+### P2g 第十四增量：正式 EffectReview 的不足证据状态先于 Wiki 候选（2026-09-27，编码前）
+
+- 231-5 §4/7 明确反馈顺序是原 Run 终态→EffectReview→总控/WikiCandidate；231-9 首链与产品方案禁止把内容获批等同效果成熟。第十三增量第二段只是 `ImprovementPendingReceipt`，不能跳过正式 EffectReview 直接把第三段当已成立 Wiki 候选。先复核 `AipEffectReviewStore`/`CreateEffectReviewRequest`、AIP 记忆治理与总控投影的实际合同。`sample_count=0` 只能得 `insufficient`/`effect_completed=false`；不可编造销量、ROI 或可比较 cohort。
+- 文件级第一切片：新增 `services/aos-api/aos_api/ecommerce_growth_effect_review_owner.py` 与 `services/aos-api/tests/extension_runtime/test_ecommerce_growth_effect_review_owner.py`；必要时最小扩展 `services/aos-api/aos_api/aip_effect_review_store.py` 以接收调用者已持有的受限事务，而不是让 Store 内部另开连接或提前 commit。原 `test_ecommerce_content_review_pending_pg.py` 继续同一原命令、同一第二段 Receipt，使用正式 AIP EffectReview 权威 API/表，不另造第二源权威或测试假评估。若需要新映射/回执迁移，先检唯一 head 与 ACL，并单列后续精确文件，禁止在此计划外直接 DDL。
+- RED 顺序：无第二段 ack/Receipt、内容 Run 非终态、旧 dispatch/runtime、错租户/Artifact/Review Receipt、第二段 body/hash 漂移均无 EffectReview；现有不足证据评估的 `accepted` 与 `effect_completed` 两轴必须分开，首次写入后独立连接读回 subject/原回执/版本/hash，重复原 command 只回读同一版本。已提交结果未知只读对账，绝不自动再次创建修订。若现有 Store 不能在当前 Host/事务锁下安全组合，先修窄事务接口和测试，再接自然 Worker；不能先启进程后补锁。
+- 只有正式不足证据 EffectReview 读回后，才在下一切片设计第三段 `memory_candidate` 为“待治理方法候选”：引用原 EffectReview 与原 exact 内容来源，不正式入库、不自动发布，不让 sample=0 被称作增长有效。总控显示复盘/未知效果/治理待办须有业务中文与来源可追。当前实例继续默认关闭，不触 Provider、微商城源、旧十二 Run 或 Wiki 发布。
+- 每切片独立 RED→最小实现→专项/累计/隔离 PG→方案/代码一致性→verification→m1 提交→AOS/Prime 同步。纯后端切片浏览器不适用；总控页面切片必须浏览器验收。不得把 AIP Store 的单元 GREEN 当同一真实首链完成。
