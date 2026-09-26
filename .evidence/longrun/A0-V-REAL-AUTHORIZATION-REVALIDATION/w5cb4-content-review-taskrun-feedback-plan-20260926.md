@@ -33,6 +33,14 @@
 - 产出的 `EvalReportRevision.subjectArtifactRef`、stage attempt 与 gate policy 才可被后续内容 ReviewIssue Owner 接受；若公共 ReviewIssue 当前仅验报告存在，应在内容路径追加同主体报告绑定检查，不能用无关 EvalReport 充数。
 - 当前 `EvalGatePolicyRef` 名义类型仍固定 `MediaGatePolicyRevision`；本段只验证 EvalRunner 对 content 主体的能力，不把测试中的 `fixture-policy` 当实际内容 GatePolicy。正式内容 EvalContract／Suite／GatePolicy 注册与 exact 当前权威是后续激活硬门，必要时先做通用 Eval 合同的增量，而不是把媒体政策冒充内容批准。
 
+### P2c 当前权威与待办 Owner 文件级细化（P2b 后）
+
+- 复审结果：`ecommerce_analyst_stage_review_command.py` 已有“原批准 Plan 的 exact EvalContract → 当前冻结 READY 合同 → Suite/Skill/ReleaseGate → 同 Artifact/attempt Report”的可复用校验范式；`ecommerce_analysis_startup_eval.py` 可按已发布 Skill 派生合同，但不是对当前可读内容的自动批准。W5CB3 内容 TaskRun 的 Plan 目前只有 `content_generate`、`content_review` 两步，尚未声明内容产物的 exact EvalContract；不能从任意现存合同或 fixture 推断生产可用。公共 ReviewIssue REST 路由已有 create/resolve/return，不新增审批表。
+- 先补 `services/aos-api/tests/extension_runtime/` 的隔离 PG RED：已结算 `ecommerce_content` Artifact、最新生成 attempt、当前安装与原 Task/Brief/Plan、同主体 EvalReport 构成**一个**待办候选；无报告、错合同/主体/attempt、旧安装、错租户、未结算或原 Run 不匹配均为零候选。不得为了待办而生成报告或 Issue。
+- 最小代码入口候选：`services/aos-api/aos_api/ecommerce_content_review_pending.py` 只读候选投影；必要时在 `ecommerce_content_taskrun_owner.py` 原 Plan 上持久化受控 exact EvalContract gate ref，但须先证明来自当前已发布内容 Skill 与 READY 合同。公共 `aip_eval_runner.py` 与 `aip_production_contract_store.py` 不再为页面方便而放宽。
+- 内容 Eval 的生产激活另设硬门：先有经正式 Publication/ReleaseGate 的内容 Suite/Contract、当前受控 GatePolicy 类型/Ref、同原 Plan exact 绑定，再运行 Eval；`fixture-policy`、普通无主体 Report、仅有未冻结草案一律不认。若本轮只有代码门，待办 GET 返回空/明确 blocked，不虚构可评审项。
+- 之后才接公共 ReviewIssue 创建与人类 resolve/return、ContentReview Host Receipt、TAOR 终态；最后读回反馈/总控/Wiki 候选。UI 改动必须随后真浏览器验收。本细化不启 worker、Provider、商城源读或外部 Effect。
+
 ## 退出／下一波
 
 本波最多证明受控 Artifact 后的“待人评审→exact 决策→Run/反馈”代码链；没有真实人类审批不得声称自然闭环。下一波按本波证据补生产激活硬门与当前实例自然观察，而非回到旧 12 Run 的逐行补数。
