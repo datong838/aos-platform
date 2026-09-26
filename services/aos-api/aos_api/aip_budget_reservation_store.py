@@ -144,27 +144,11 @@ class AipBudgetReservationStore:
 
             invocation_id = uuid.uuid4()
             reservation_id = uuid.uuid4()
-            immutable = {
-                "operationId": request.operation_id,
-                "invocationKey": request.invocation_key,
-                "requestHash": request_hash,
-                "taskRef": exact_ref_payload(request.task_ref),
-                "policyRef": exact_ref_payload(request.policy_ref),
-                "pricingRef": exact_ref_payload(request.pricing_ref),
-                "approvalRef": exact_ref_payload(request.approval_ref),
-                "currency": request.currency,
-                "upperBoundMinor": request.upper_bound_minor,
-            }
-            invocation_payload = {
-                "invocationId": str(invocation_id),
-                **immutable,
-                "state": "prepared",
-                "revision": 1,
-            }
-            invocation_hash = canonical_hash(invocation_payload, prefixed=True)
-            content_hash = canonical_hash(
-                {**immutable, "state": "held", "revision": 1}, prefixed=True
+            initial_invocation, initial_reservation = self.initial_hold_refs(
+                request, invocation_id=invocation_id, reservation_id=reservation_id
             )
+            invocation_hash = initial_invocation.content_hash
+            content_hash = initial_reservation.content_hash
             conn.execute(
                 f"""INSERT INTO {self._storage_schema}.aip_capability_invocation(
                 org_id,project_id,invocation_id,operation_id,invocation_key,request_hash,
@@ -256,6 +240,40 @@ class AipBudgetReservationStore:
             )
             row = self._reservation_by_id(conn, scope, reservation_id, lock=False)
             return self._view(conn, scope, row, replayed=False)
+
+    @staticmethod
+    def initial_hold_refs(
+        request: ReserveBudgetRequest, *, invocation_id: str | uuid.UUID,
+        reservation_id: str | uuid.UUID,
+    ) -> tuple[BudgetExactRef, BudgetExactRef]:
+        """Original immutable refs, including after the current budget state advances."""
+        immutable = {
+            "operationId": request.operation_id,
+            "invocationKey": request.invocation_key,
+            "requestHash": request.request_hash(),
+            "taskRef": exact_ref_payload(request.task_ref),
+            "policyRef": exact_ref_payload(request.policy_ref),
+            "pricingRef": exact_ref_payload(request.pricing_ref),
+            "approvalRef": exact_ref_payload(request.approval_ref),
+            "currency": request.currency,
+            "upperBoundMinor": request.upper_bound_minor,
+        }
+        invocation_ref = BudgetExactRef(
+            resourceType="CapabilityInvocationRevision",
+            resourceId=str(invocation_id), revision=1,
+            contentHash=canonical_hash(
+                {"invocationId": str(invocation_id), **immutable,
+                 "state": "prepared", "revision": 1}, prefixed=True,
+            ),
+        )
+        reservation_ref = BudgetExactRef(
+            resourceType="BudgetReservationRevision",
+            resourceId=str(reservation_id), revision=1,
+            contentHash=canonical_hash(
+                {**immutable, "state": "held", "revision": 1}, prefixed=True,
+            ),
+        )
+        return invocation_ref, reservation_ref
 
     def get(self, scope: TenantScope, reservation_id: str) -> BudgetReservationRevision:
         with self._connect_factory(scope) as conn:

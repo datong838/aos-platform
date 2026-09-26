@@ -3897,7 +3897,7 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
 
 
 class ContentGenerateHostService:
-    """Current-authority content capability with a receipt-first no-effect result."""
+    """Current-authority content acceptance; v2 queues, legacy v1 stays no-effect."""
 
     executor_identity = "ecommerce-growth-content-generate-host"
 
@@ -4032,6 +4032,46 @@ class ContentGenerateHostService:
             "upperBoundFen": command["upperBoundFen"],
             "actualFen": None,
             "retryDirective": "RETRYABLE_NO_EFFECT",
+            "replayed": replayed,
+            "sideEffects": {
+                "providerInvocationCount": 0,
+                "approvalCreatedCount": 0,
+                "taskRunCreatedCount": 0,
+                "externalPublicationCount": 0,
+                "externalBusinessMutationCount": 0,
+            },
+        }
+
+    @staticmethod
+    def _pending_receipt(command, reservation, request, *, replayed):
+        if reservation.state is BudgetReservationState.HELD and (
+            reservation.provider_request_receipt_ref is not None
+            or reservation.provider_receipt_ref is not None
+            or reservation.usage_receipt_refs
+            or reservation.actual_minor is not None
+        ):
+            raise ValueError("content pending budget state drifted")
+        invocation_ref, reservation_ref = AipBudgetReservationStore.initial_hold_refs(
+            request,
+            invocation_id=reservation.invocation_ref.resource_id,
+            reservation_id=reservation.reservation_ref.resource_id,
+        )
+        return {
+            "receiptRef": budget_exact_ref_payload(invocation_ref),
+            "requestHash": command["requestHash"],
+            "state": "PENDING",
+            "authorityRefs": deepcopy(command["authorityRefs"]),
+            "sourceArtifactRefs": deepcopy(command["sourceArtifactRefs"]),
+            "budgetReservationRef": budget_exact_ref_payload(reservation_ref),
+            "budgetState": "HELD",
+            "providerRequestReceiptRef": None,
+            "providerReceiptRef": None,
+            "usageReceiptRefs": [],
+            "artifact": None,
+            "currency": "CNY",
+            "upperBoundFen": command["upperBoundFen"],
+            "actualFen": None,
+            "retryDirective": "WAIT_FOR_RESULT",
             "replayed": replayed,
             "sideEffects": {
                 "providerInvocationCount": 0,
@@ -5236,8 +5276,27 @@ class ContentGenerateHostService:
                 raise ValueError("content generate persisted Receipt drifted")
             return persisted
         request = self._budget_request(command)
+        approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
+            transaction=transaction,
+            scope=scope,
+            command={"growthPlanRef": command["authorityRefs"]["growth_plan"]},
+        )
         store = self._budget_store(transaction, scope)
         reservation = store.reserve(scope, request, actor=self.executor_identity)
+        if approved_plan.sales_weapon_method is not None:
+            if reservation.state is not BudgetReservationState.HELD:
+                raise ValueError("content generate pending invocation crossed Provider boundary")
+            if type(transaction) is not HostTransaction:
+                raise TypeError("content pending requires the locked Host transaction")
+            stored_command = transaction.enqueue_content_command(
+                scope=scope,
+                reservation_id=reservation.reservation_ref.resource_id,
+                budget_request_hash=request.request_hash(),
+                command=command,
+            )
+            if stored_command != command:
+                raise ValueError("content pending durable command drifted")
+            return self._pending_receipt(command, reservation, request, replayed=reservation.replayed)
         if reservation.state not in {
             BudgetReservationState.HELD,
             BudgetReservationState.RELEASED,
@@ -5285,10 +5344,25 @@ class ContentGenerateHostService:
             or reservation.currency != request.currency
             or reservation.upper_bound_minor != request.upper_bound_minor
             or reservation.request_hash != request.request_hash()
-            or _request_hash(budget_exact_ref_payload(reservation.reservation_ref))
-            != _request_hash(raw_reservation_ref)
+            or (
+                receipt.get("state") != "PENDING"
+                and _request_hash(budget_exact_ref_payload(reservation.reservation_ref))
+                != _request_hash(raw_reservation_ref)
+            )
         ):
             return {}
+        if receipt.get("state") == "PENDING":
+            if type(transaction) is not HostTransaction:
+                return {}
+            evidence = transaction.read_content_command(
+                scope=scope, reservation_id=reservation_ref.resource_id
+            )
+            if evidence is None or evidence["command"] != command:
+                return {}
+            expected = self._pending_receipt(
+                command, reservation, request, replayed=receipt["replayed"]
+            )
+            return expected if _request_hash(receipt) == _request_hash(expected) else {}
         expected = self._no_effect_receipt(
             command,
             reservation,

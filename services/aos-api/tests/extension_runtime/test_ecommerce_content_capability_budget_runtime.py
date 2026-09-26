@@ -158,6 +158,39 @@ def capability_receipt(
     return value
 
 
+def pending_receipt(command, **overrides):
+    value = capability_receipt(command, state="FAILED_NO_EFFECT")
+    value.update(state="PENDING", budgetState="HELD", retryDirective="WAIT_FOR_RESULT")
+    value.update(overrides)
+    return value
+
+
+def test_pending_is_only_a_durable_no_effect_acceptance_not_content_completion():
+    request = capability_request()
+    accepted = execute_content_capability(
+        CapabilityPort(pending_receipt), dispatch_ref=dispatch(), request=request
+    )
+    assert accepted.state == "PENDING"
+    assert accepted.budget_state == "HELD"
+    assert accepted.provider_invocation_count == 0
+    assert accepted.artifact is None
+    for drift in (
+        {"budgetState": "RELEASED"},
+        {"providerRequestReceiptRef": exact_ref_payload(ref("CapabilityProviderRequestReceipt", "sent"))},
+        {"artifact": artifact_payload({"authorityRefs": request.authority_refs(),
+                                       "sourceArtifactRefs": [exact_ref_payload(item) for item in request.source_artifact_refs],
+                                       "factSourceRefs": [exact_ref_payload(item) for item in request.fact_source_refs]})},
+        {"sideEffects": {"providerInvocationCount": 1, "approvalCreatedCount": 0,
+                         "taskRunCreatedCount": 0, "externalPublicationCount": 0,
+                         "externalBusinessMutationCount": 0}},
+    ):
+        with pytest.raises(ValueError, match="PENDING"):
+            execute_content_capability(
+                CapabilityPort(lambda command, drift=drift: pending_receipt(command, **drift)),
+                dispatch_ref=dispatch(), request=request,
+            )
+
+
 class CapabilityPort:
     def __init__(self, responder=capability_receipt, *, epoch=17, org="org-org"):
         self.responder = responder

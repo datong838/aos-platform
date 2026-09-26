@@ -260,7 +260,19 @@ class ContentCapabilityReceipt:
             or (self.actual_fen is not None and type(self.actual_fen) is not int)
         ):
             raise ValueError("capability Receipt exact request lineage drifted")
-        if self.state == "COMPLETED":
+        if self.state == "PENDING":
+            if (
+                self.budget_state != "HELD"
+                or self.provider_request_receipt_ref is not None
+                or self.provider_receipt_ref is not None
+                or self.usage_receipt_refs
+                or self.artifact is not None
+                or self.actual_fen is not None
+                or self.retry_directive != "WAIT_FOR_RESULT"
+                or self.provider_invocation_count != 0
+            ):
+                raise ValueError("PENDING capability Receipt is not a no-effect acceptance")
+        elif self.state == "COMPLETED":
             cost_accounted = (
                 self.budget_state == "SETTLED"
                 and type(self.actual_fen) is int

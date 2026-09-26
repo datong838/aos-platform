@@ -9,8 +9,10 @@ from aos_api.aip_budget_reservation_contracts import (
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateAdapter,
     ContentGenerateHostService,
+    ReviewAdvanceHostService,
     _analysis_command_hash,
 )
+from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_store import RuntimeReceiptRecord
 
 
@@ -111,7 +113,15 @@ class _Store:
         return self.released
 
 
+def _plan(monkeypatch, *, v2=False):
+    monkeypatch.setattr(
+        ReviewAdvanceHostService, "_revalidate_growth_plan",
+        staticmethod(lambda **_: SimpleNamespace(sales_weapon_method=object() if v2 else None)),
+    )
+
+
 def test_execute_reserves_before_releasing_and_returns_strict_no_effect(monkeypatch):
+    _plan(monkeypatch)
     command = _command()
     store = _Store(command)
     monkeypatch.setattr(
@@ -155,6 +165,7 @@ def test_execute_reserves_before_releasing_and_returns_strict_no_effect(monkeypa
 
 
 def test_execute_rejects_an_invocation_that_crossed_provider_boundary(monkeypatch):
+    _plan(monkeypatch)
     command = _command()
     store = _Store(command, reserve_state=BudgetReservationState.SUBMITTED)
     monkeypatch.setattr(
@@ -176,6 +187,55 @@ def test_execute_rejects_an_invocation_that_crossed_provider_boundary(monkeypatc
             command=command,
             checked_at=None,
             occurred_at=None,
+        )
+    assert [call[0] for call in store.calls] == ["reserve"]
+
+
+def test_v2_execute_persists_pending_command_without_provider_or_release(monkeypatch):
+    _plan(monkeypatch, v2=True)
+    command = _command()
+    store = _Store(command)
+    observed = []
+    monkeypatch.setattr(ContentGenerateHostService, "_budget_store",
+                        staticmethod(lambda *_: store))
+    monkeypatch.setattr(ContentGenerateHostService, "_runtime_command_authority",
+                        staticmethod(lambda *_: None))
+    monkeypatch.setattr(HostTransaction, "enqueue_content_command",
+                        lambda self, **kwargs: observed.append(kwargs) or kwargs["command"])
+    monkeypatch.setattr(HostTransaction, "read_content_command",
+                        lambda self, **kwargs: {"command": command, "result": None})
+    transaction = HostTransaction(object())
+    service = ContentGenerateHostService()
+    receipt = service.execute(transaction=transaction, scope=object(), dispatch_ref=object(),
+                              command=command, checked_at=None, occurred_at=None)
+    assert receipt["state"] == "PENDING" and receipt["budgetState"] == "HELD"
+    assert receipt["sideEffects"]["providerInvocationCount"] == 0
+    assert [call[0] for call in store.calls] == ["reserve"]
+    assert observed[0]["budget_request_hash"] == service._budget_request(command).request_hash()
+    assert observed[0]["command"] == command
+    assert service.verify_receipt(transaction=transaction, scope=object(), dispatch=None,
+                                  command=command, receipt=receipt) == receipt
+    # A later budget state must not reclassify the immutable acceptance as completion.
+    assert store.released.state is BudgetReservationState.RELEASED
+    drift = {**receipt, "providerRequestReceiptRef": _ref("CapabilityProviderRequestReceipt", "a")}
+    assert service.verify_receipt(transaction=transaction, scope=object(), dispatch=None,
+                                  command=command, receipt=drift) == {}
+
+
+def test_v2_execute_does_not_release_when_durable_enqueue_fails(monkeypatch):
+    _plan(monkeypatch, v2=True)
+    command = _command()
+    store = _Store(command)
+    monkeypatch.setattr(ContentGenerateHostService, "_budget_store", staticmethod(lambda *_: store))
+    monkeypatch.setattr(ContentGenerateHostService, "_runtime_command_authority",
+                        staticmethod(lambda *_: None))
+    def failed_enqueue(self, **kwargs):
+        raise RuntimeError("journal unavailable")
+    monkeypatch.setattr(HostTransaction, "enqueue_content_command", failed_enqueue)
+    with pytest.raises(RuntimeError, match="journal unavailable"):
+        ContentGenerateHostService().execute(
+            transaction=HostTransaction(object()), scope=object(), dispatch_ref=object(),
+            command=command, checked_at=None, occurred_at=None,
         )
     assert [call[0] for call in store.calls] == ["reserve"]
 
@@ -246,6 +306,7 @@ def test_runtime_command_authority_rejects_full_command_hash_drift():
 
 
 def test_adapter_journal_replay_keeps_first_persisted_receipt(monkeypatch):
+    _plan(monkeypatch)
     command = _command()
     store = _Store(command)
 

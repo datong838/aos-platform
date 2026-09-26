@@ -25,6 +25,7 @@ from aos_api.aip_budget_reservation_store import (
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService,
+    ReviewAdvanceHostService,
     TransactionBoundConnectFactory,
     _analysis_command_hash,
 )
@@ -180,7 +181,7 @@ def direct_runtime_connection(database, scope: TenantScope):
 
 
 def seed(database, scope: TenantScope, *, task_id: str, upper: int = 400, now=None):
-    now = now or datetime(2026, 9, 8, 2, tzinfo=UTC)
+    now = now or datetime.now(UTC)
     owner = database.owner
     owner.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
     budget_hash = "1" * 64
@@ -424,6 +425,10 @@ def test_content_generate_host_persists_and_replays_no_provider_receipt(
     scope = TenantScope("org-org", "dev-project")
     request, _refs, _now = seed(database, scope, task_id="task-content-host")
     command = content_generate_command(request)
+    monkeypatch.setattr(
+        ReviewAdvanceHostService, "_revalidate_growth_plan",
+        staticmethod(lambda **_: SimpleNamespace(sales_weapon_method=None)),
+    )
 
     def store_for(transaction, bound_scope):
         return AipBudgetReservationStore(

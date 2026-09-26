@@ -179,6 +179,24 @@ class HostTransaction:
         from aos_api.automation_occurrence_store import AutomationOccurrenceStore
         return AutomationOccurrenceStore._lock_claim(self.__connection, scope, claimed)
 
+    def enqueue_content_command(
+        self, *, scope, reservation_id, budget_request_hash, command,
+        storage_schema="public",
+    ):
+        """Persist one content command in this Host transaction, without a send."""
+        from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+        return ContentExecutionJournal(storage_schema=storage_schema).enqueue(
+            self.__connection, scope, reservation_id,
+            budget_request_hash=budget_request_hash, command=command,
+        )
+
+    def read_content_command(self, *, scope, reservation_id, storage_schema="public"):
+        """Read the exact content journal on the same scoped connection."""
+        from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+        return ContentExecutionJournal(storage_schema=storage_schema).read(
+            self.__connection, scope, reservation_id
+        )
+
 
 def _normalized_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", value.casefold())
