@@ -6,12 +6,15 @@ must be reconciled from persisted rows, never interpreted as permission to retry
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, replace
 from types import SimpleNamespace
 from uuid import UUID
 
 from aos_api.aip_task_store import AipTaskStore
-from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
+from aos_api.ecommerce_growth_host_ports import (
+    EcommerceGrowthHostError, HostTransaction, LockedEcommerceGrowthHostPort,
+)
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentReviewHostService, TransactionBoundConnectFactory,
     _analysis_command_hash, _request_hash, _strict_content_review_command,
@@ -235,6 +238,33 @@ class ContentReviewStepOwner:
         if any(type(value) is not str or not value for value in values) or len(values) != len(set(values)):
             raise ContentReviewStepConflict("review selector identity drifted")
         return values
+
+    def run_once(self, scope: TenantScope, *, limit: int = 16) -> list[dict[str, str]]:
+        statuses = []
+        for receipt_id in self.list_pending(scope, limit=limit):
+            try:
+                result = self.run_one(scope, receipt_id)
+            except ContentReviewStepUnknown:
+                raise  # Unknown commit/readback freezes the entire worker.
+            except (ContentReviewStepConflict, EcommerceGrowthHostError):
+                statuses.append({"receiptId": receipt_id,
+                                 "status": "BLOCKED_CURRENT_AUTHORITY"})
+                continue
+            statuses.append({"receiptId": receipt_id, "status": result["status"]})
+        return statuses
+
+    async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:
+        if type(interval_seconds) is not int or not 1 <= interval_seconds <= 300:
+            raise ValueError("content review step worker interval invalid")
+        scope = TenantScope("org-org", "dev-project")
+        while not stop.is_set():
+            if not host_ready():
+                raise RuntimeError("content review step Runtime Host unavailable")
+            await asyncio.to_thread(self.run_once, scope)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+            except TimeoutError:
+                pass
 
     def run_one(self, scope: TenantScope, receipt_id: str) -> dict[str, str]:
         with self.connect_write(scope) as conn:

@@ -981,6 +981,9 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         runtime_connect = lambda scope: _runtime_role_connection(connect, scope)
         runtime_owner = ContentReviewStepOwner(
             connect_read=runtime_connect, connect_write=runtime_connect)
+        natural_batch = runtime_owner.run_once(SCOPE)
+        assert natural_batch == [{"receiptId": review_proof.receipt_id,
+            "status": "CONTENT_REVIEW_RUN_SUCCEEDED"}]
         terminal = runtime_owner.run_one(SCOPE, review_proof.receipt_id)
         assert terminal["status"] == "CONTENT_REVIEW_RUN_SUCCEEDED"
         assert terminal["runId"] == proof["run_id"]

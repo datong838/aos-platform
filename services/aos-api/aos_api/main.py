@@ -49,6 +49,11 @@ def _build_content_generation_step_owner():
     return ContentGenerationStepOwner()
 
 
+def _build_content_review_step_owner():
+    from aos_api.ecommerce_content_review_step_owner import ContentReviewStepOwner
+    return ContentReviewStepOwner()
+
+
 def _build_ecommerce_feedback_consumer():
     from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
     return CurrentFeedbackConsumer()
@@ -439,6 +444,61 @@ async def _start_content_generation_step_worker(_app: FastAPI, stop: asyncio.Eve
         _app.state.content_generation_step_worker_status = 'FAILED_CLOSED'
         raise RuntimeError('content step worker stopped during startup')
     _app.state.content_generation_step_worker_status = 'RUNNING'
+
+
+async def _start_content_review_step_worker(_app: FastAPI, stop: asyncio.Event) -> None:
+    _app.state.content_review_step_worker_status = 'DISABLED'
+    _app.state.content_review_step_worker_task = None
+    flag = os.getenv('AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED', 'false').strip().lower()
+    if flag in {'0', 'false', 'no', 'off'}:
+        return
+    if flag not in {'1', 'true', 'yes', 'on'}:
+        _app.state.content_review_step_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('content review step worker enable flag is invalid')
+    host = getattr(_app.state, 'extension_runtime_host_task', None)
+    if (getattr(_app.state, 'extension_runtime_host_status', None) != 'ACTIVE'
+        or host is None or host.done()):
+        _app.state.content_review_step_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('content review step worker requires active Runtime Host')
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_dsn
+    try:
+        runtime_worker_dsn()  # No Web DB identity fallback and never log the DSN.
+        owner = _build_content_review_step_owner()
+    except Exception:
+        _app.state.content_review_step_worker_status = 'FAILED_CLOSED'
+        raise
+    _app.state.content_review_step_worker_status = 'STARTING'
+
+    async def run():
+        try:
+            await owner.serve(stop, host_ready=lambda: not host.done())
+        except asyncio.CancelledError:
+            _app.state.content_review_step_worker_status = 'STOPPED'
+            raise
+        except Exception:
+            _app.state.content_review_step_worker_status = 'FAILED_CLOSED'
+            raise
+        else:
+            _app.state.content_review_step_worker_status = 'STOPPED'
+
+    task = asyncio.create_task(run(), name='ecommerce-content-review-step')
+    _app.state.content_review_step_worker_task = task
+    _app.state.runtime_background_tasks.append(task)
+
+    def observe(done):
+        if not done.cancelled() and done.exception() is not None:
+            log.error('ecommerce_content_review_step_failed_closed')
+
+    task.add_done_callback(observe)
+    await asyncio.sleep(0)
+    if task.done():
+        _app.state.runtime_background_tasks.remove(task)
+        _app.state.content_review_step_worker_task = None
+        if not task.cancelled() and task.exception() is not None:
+            raise RuntimeError('content review step worker failed during startup') from task.exception()
+        _app.state.content_review_step_worker_status = 'FAILED_CLOSED'
+        raise RuntimeError('content review step worker stopped during startup')
+    _app.state.content_review_step_worker_status = 'RUNNING'
 
 
 async def _start_snapshot_group_worker(_app: FastAPI) -> None:
@@ -899,6 +959,7 @@ async def _lifespan_body(_app: FastAPI):
 
     await _start_content_execution_worker(_app, extension_runtime_stop)
     await _start_content_generation_step_worker(_app, extension_runtime_stop)
+    await _start_content_review_step_worker(_app, extension_runtime_stop)
     await _start_content_taskrun_worker(_app, extension_runtime_stop)
     await _start_content_agentrun_worker(_app, extension_runtime_stop)
     await _start_content_capacity_worker(_app, extension_runtime_stop)
