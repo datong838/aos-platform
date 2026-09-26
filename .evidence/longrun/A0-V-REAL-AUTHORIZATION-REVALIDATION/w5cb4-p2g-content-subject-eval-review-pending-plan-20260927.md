@@ -82,3 +82,9 @@
 - 只在同一 `test_ecommerce_content_review_pending_pg.py` 的第五增量原对象上扩断言，不另建报告或插入伪 Issue。以显式业务 context Source（其余查询正式）调用 `ContentReviewPendingReader.read_one` 两次，要求同一 `(Reservation,Run,Artifact,StepRun,Report@revision)` 候选，读取前后 EvalRun/Report/Issue/StepRun 计数不变；独立 SQL 核身份。
 - 紧邻负例先限于不改不可变生产记录的错租户和错 reservation，及隔离事务内可回滚的当前 dispatch fence/合同撤销；任何 blocked/None 均不可写、不可重发。若读取器发现实际约束错配，先 RED，再对生产最小修复并覆盖旧单测；不通过猴补读取器/报告/合同过门。此波仍不开放 GET、Issue、Provider 或自然 Worker；后续单独波做更多多义/旧 attempt/人工 Issue。
 - 专项、累计、浏览器不适用说明、verification、精确提交、AOS/Prime 同步之后才进入下一波。
+
+### P2g 第七增量：同库候选→正式人工 Issue（2026-09-27，编码前）
+
+- 依据 231-5 首链“可读产物→人工评审”和 231-9 BG-04，优先在同一原 TaskRun/Artifact/StepRun/Report 的隔离正式库，把第六增量只读候选交给 `AipProductionContractStore.register_review_rule_revision` 与 `create_review_issue` 的公共 API；不从候选读取器增加写入，也不直接 INSERT Issue。文件只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`，生产规则有真实 RED 缺陷才另列最小文件。
+- `CreateReviewIssueRequest` 必须绑定候选 exact Artifact/hash、通过的主体 EvalReport/revision/hash、当前人工 Rule；明确 location/returnStage。RED→GREEN 后独立 SQL 读回唯一 Issue、原 Run/Artifact/Report refs；重复同 idempotency key 不产生第二 Issue，已有 Issue 时 `ContentReviewPendingReader.read_one` 返回 None。此段不自动 ACCEPT、不完成 review StepRun、不外发；正式人类决策与 Host Receipt 留下一波。
+- 若公共 API 对同库原对象拒绝，先查完整错误/约束，禁止改库填伪 Report 或放宽 gate；可转做更直接的首链 review command 接线，但 verification 必须标出未通。错合同、旧 attempt、重复/失败报告等已有单测仍累计回归；其余同库负例作为待办，不压住主线。专项、累计、浏览器不适用、证据、m1 精确提交、AOS/Prime 更新后自动续波。

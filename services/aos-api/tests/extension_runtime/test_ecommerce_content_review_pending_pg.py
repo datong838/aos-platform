@@ -27,7 +27,10 @@ from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.aip_eval_runner import AipEvalRunner, JudgeExecution, ResolvedArtifact
 from aos_api.aip_logic_graph_store import LogicGraphStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
-from aos_api.aip_production_contracts import CreateEvalContractRequest, ExactRevisionRef
+from aos_api.aip_production_contracts import (
+    CreateEvalContractRequest, CreateReviewIssueRequest, ExactArtifactRef,
+    ExactRevisionRef, RegisterReviewRuleRevisionRequest,
+)
 from aos_api.aip_release_publication_models import DeriveReleaseGateRequest, PublishReleaseRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
@@ -673,3 +676,42 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 WHERE org_id=%s AND project_id=%s AND run_id=%s
                   AND step_key='content_generate'""",
                 (*SCOPE.key, proof["run_id"])).fetchone()["n"] == 1
+        contracts = AipProductionContractStore(connect_factory=connect)
+        rule = contracts.register_review_rule_revision(SCOPE, "fixture",
+            "content-p2g-review-rule", RegisterReviewRuleRevisionRequest(
+                ruleId="content-p2g-review-rule", revision=1,
+                spec={"subjectKind": "ecommerce_content",
+                    "checks": ["facts", "prohibited_claims"]}))
+        issue_request = CreateReviewIssueRequest(
+            ruleRef=ExactRevisionRef(resourceType="EvalRuleRevision",
+                resourceId=rule.rule_id, revision=rule.revision,
+                contentHash=rule.content_hash),
+            severity="warning",
+            artifactRef=ExactArtifactRef(artifactId=first.artifact_id,
+                contentHash=first.artifact_hash),
+            evalReportRef=ExactRevisionRef(resourceType="EvalReportRevision",
+                resourceId=first.report_id, revision=first.report_revision,
+                contentHash=first.report_hash),
+            location={"stage": "content_generate"},
+            suggestedFix="请人工核对内容事实", returnStage="content_generate")
+        issue = contracts.create_review_issue(
+            SCOPE, "fixture", "content-p2g-original-issue", issue_request)
+        assert contracts.create_review_issue(
+            SCOPE, "fixture", "content-p2g-original-issue", issue_request) == issue
+        with connect(SCOPE) as conn:
+            saved_issue = conn.execute("""SELECT artifact_id,artifact_hash,
+                eval_report_id,eval_report_revision,eval_report_hash,status
+                FROM aip_review_issue WHERE org_id=%s AND project_id=%s
+                  AND issue_id=%s""", (*SCOPE.key, issue.issue_id)).fetchone()
+            assert saved_issue == {
+                "artifact_id": first.artifact_id,
+                "artifact_hash": first.artifact_hash,
+                "eval_report_id": first.report_id,
+                "eval_report_revision": first.report_revision,
+                "eval_report_hash": first.report_hash,
+                "status": "open",
+            }
+            assert conn.execute("""SELECT count(*) AS n FROM aip_review_issue
+                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+                (*SCOPE.key, first.artifact_id)).fetchone()["n"] == 1
+        assert reader.read_one(SCOPE, reservation_id) is None
