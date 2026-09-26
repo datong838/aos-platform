@@ -88,3 +88,9 @@
 - 依据 231-5 首链“可读产物→人工评审”和 231-9 BG-04，优先在同一原 TaskRun/Artifact/StepRun/Report 的隔离正式库，把第六增量只读候选交给 `AipProductionContractStore.register_review_rule_revision` 与 `create_review_issue` 的公共 API；不从候选读取器增加写入，也不直接 INSERT Issue。文件只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`，生产规则有真实 RED 缺陷才另列最小文件。
 - `CreateReviewIssueRequest` 必须绑定候选 exact Artifact/hash、通过的主体 EvalReport/revision/hash、当前人工 Rule；明确 location/returnStage。RED→GREEN 后独立 SQL 读回唯一 Issue、原 Run/Artifact/Report refs；重复同 idempotency key 不产生第二 Issue，已有 Issue 时 `ContentReviewPendingReader.read_one` 返回 None。此段不自动 ACCEPT、不完成 review StepRun、不外发；正式人类决策与 Host Receipt 留下一波。
 - 若公共 API 对同库原对象拒绝，先查完整错误/约束，禁止改库填伪 Report 或放宽 gate；可转做更直接的首链 review command 接线，但 verification 必须标出未通。错合同、旧 attempt、重复/失败报告等已有单测仍累计回归；其余同库负例作为待办，不压住主线。专项、累计、浏览器不适用、证据、m1 精确提交、AOS/Prime 更新后自动续波。
+
+### P2g 第八增量：同库 exact 人工 ACCEPT 事件与 Host 读取（2026-09-27，编码前）
+
+- 仅在第七增量原 Issue 测试上用 `AipProductionContractStore.resolve_review_issue` 的正式命令，传人类 reviewer actor、expected version、理由和原 Artifact exact resolutionRef；同幂等键 replay 无第二事件。隔离测试 reviewer 只是模拟一个真实 API 调用，不宣称栖月汇人已批准。独立读回 resolved Issue、序号 2 的不可变事件与 create/resolve Receipt；不直接 UPDATE Issue。
+- 再用 `ContentReviewHostService._issue_authority` 与 `review_issue_exact_ref` 在同一库验证 Host 可读取 exact 已批准 Issue、通过的原 EvalReport/最新 StepRun 和人类事件；旧 open Issue、错 Artifact/Report 或无 resolutionRef fail closed。此波只证明 Host 的 Issue/Eval 子门，完整 `revalidate/execute/verify_receipt` 还需要合法 TaskBrief、ReviewerAuthority、九操作锁与当前安装，不用猴补称业务续跑。文件范围仍只扩同库 PG 测试；生产缺陷需 RED 后另列。
+- 专项/累计、证据、m1 提交、AOS/Prime 更新后，下一波优先组成其余 Host 门和 receipt-first review→反馈自动续跑；生产默认关闭。

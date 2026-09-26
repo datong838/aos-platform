@@ -29,8 +29,9 @@ from aos_api.aip_logic_graph_store import LogicGraphStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import (
     CreateEvalContractRequest, CreateReviewIssueRequest, ExactArtifactRef,
-    ExactRevisionRef, RegisterReviewRuleRevisionRequest,
+    ExactRevisionRef, RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest,
 )
+from aos_api.ecommerce_business_investigation_review_command import review_issue_exact_ref
 from aos_api.aip_release_publication_models import DeriveReleaseGateRequest, PublishReleaseRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
@@ -55,7 +56,9 @@ from aos_api.ecommerce_content_step_owner import (
     ContentGenerationStepOwner, ContentGenerationStepSource, ContentStepConflict,
 )
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
-from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
+from aos_api.ecommerce_growth_runtime_adapters import (
+    ContentGenerateHostService, ContentReviewHostService,
+)
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
@@ -715,3 +718,41 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
                 (*SCOPE.key, first.artifact_id)).fetchone()["n"] == 1
         assert reader.read_one(SCOPE, reservation_id) is None
+        review_command = {"decision": "ACCEPT",
+            "artifactRef": consumed["artifact"]["artifactRef"],
+            "reviewIssueRef": review_issue_exact_ref(issue).model_dump(
+                mode="json", by_alias=True)}
+        with connect(SCOPE) as conn:
+            with pytest.raises(ValueError, match="exact lineage drifted"):
+                ContentReviewHostService._issue_authority(
+                    HostTransaction(conn), SCOPE, review_command)
+        resolution = ResolveReviewIssueRequest(expectedVersion=issue.version,
+            reason="隔离测试 reviewer 已核对事实与禁止表达",
+            resolutionRefs=[ExactRevisionRef(resourceType="Artifact",
+                resourceId=first.artifact_id, revision=1,
+                contentHash=first.artifact_hash)])
+        resolved = contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
+            issue.issue_id, "content-p2g-original-accept", resolution)
+        assert contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
+            issue.issue_id, "content-p2g-original-accept", resolution) == resolved
+        assert resolved.status.value == "resolved" and resolved.version == 2
+        review_command["reviewIssueRef"] = review_issue_exact_ref(resolved).model_dump(
+            mode="json", by_alias=True)
+        with connect(SCOPE) as conn:
+            ContentReviewHostService._issue_authority(
+                HostTransaction(conn), SCOPE, review_command)
+            event = conn.execute("""SELECT event_type,issue_version,actor,payload
+                FROM aip_review_issue_event WHERE org_id=%s AND project_id=%s
+                  AND issue_id=%s AND sequence=2""",
+                (*SCOPE.key, issue.issue_id)).fetchone()
+            assert event["event_type"] == "resolved"
+            assert event["issue_version"] == 2
+            assert event["actor"] == "fixture-reviewer"
+            assert event["payload"]["resolutionRefs"] == [
+                resolution.resolution_refs[0].model_dump(mode="json", by_alias=True)]
+            assert conn.execute("""SELECT count(*) AS n
+                FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation='review_issue.resolve'
+                  AND idempotency_key='content-p2g-original-accept'""",
+                SCOPE.key).fetchone()["n"] == 1
