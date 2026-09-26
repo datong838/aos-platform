@@ -82,6 +82,8 @@ def test_build_request_binds_immutable_plan_assignment_and_published_skill(monke
         def fetchall(self):
             return self.row
     class Transaction:
+        existing_agents = []
+
         def execute(self, query, _params=()):
             if "FROM public.ecommerce_growth_content_taskrun_intent p" in query:
                 return Cursor({"review_receipt_ref": response["receiptRef"], "task_id": "task-1",
@@ -93,7 +95,7 @@ def test_build_request_binds_immutable_plan_assignment_and_published_skill(monke
             if "FROM public.aip_skill_binding b" in query:
                 return Cursor([skill])
             if "FROM public.aip_agent_run" in query:
-                return Cursor([])
+                return Cursor(self.existing_agents)
             raise AssertionError(query)
 
     method = SimpleNamespace(source_cutoff_at=datetime(2026, 9, 26, tzinfo=UTC))
@@ -111,12 +113,20 @@ def test_build_request_binds_immutable_plan_assignment_and_published_skill(monke
     monkeypatch.setattr(owner_module, "AipModelRuntimeResolver", lambda _store: SimpleNamespace(
         resolve=lambda *_args, **_kwargs: SimpleNamespace(
             readiness=ModelRuntimeReadiness.READY, route=route, policy=policy)))
-    request = ContentAgentRunOwner._build_request(HostTransaction(Transaction()), SCOPE, "review-1")
+    transaction = Transaction()
+    request = ContentAgentRunOwner._build_request(HostTransaction(transaction), SCOPE, "review-1")
     assert request.run.agent_instance.asset_id == "agent-1"
     assert request.run.skill.asset_id == "skill-1"
     assert request.run.model_route == route
     assert request.task_run_ref.resource_id == "run-1"
     assert len(request.run.input_refs) == 5
+    transaction.existing_agents = [{"agent_run_id": request.agent_run_id}]
+    assert ContentAgentRunOwner._build_request(
+        HostTransaction(transaction), SCOPE, "review-1",
+        existing_agent_run_id=request.agent_run_id,
+    ) == request
+    with pytest.raises(ContentAgentRunConflict, match="already has an AgentRun"):
+        ContentAgentRunOwner._build_request(HostTransaction(transaction), SCOPE, "review-1")
 
 
 def test_selector_requires_accepted_running_content_run_in_exact_tenant():

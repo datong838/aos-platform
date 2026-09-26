@@ -126,3 +126,17 @@ def test_capacity_worker_needs_active_host(monkeypatch):
     with pytest.raises(RuntimeError, match="active Runtime Host"):
         asyncio.run(_start_content_capacity_worker(application, asyncio.Event()))
     assert application.state.content_capacity_worker_status == "FAILED_CLOSED"
+
+
+def test_existing_or_unknown_capacity_never_consumes_another_attempt(monkeypatch):
+    from aos_api.ecommerce_content_capacity_owner import ContentCapacityConflict, ContentCapacityOwner
+
+    @contextmanager
+    def forbidden_connect(_scope):
+        raise AssertionError("capacity claim must not be sent")
+        yield
+
+    owner = ContentCapacityOwner(connect_write=forbidden_connect)
+    monkeypatch.setattr(owner, "_preflight", lambda *_: (
+        _ for _ in ()).throw(ContentCapacityConflict("already reserved; reconcile")))
+    assert owner.claim(SCOPE, "review-1") is None
