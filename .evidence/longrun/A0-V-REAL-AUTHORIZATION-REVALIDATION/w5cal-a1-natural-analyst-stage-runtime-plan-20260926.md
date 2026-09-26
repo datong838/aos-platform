@@ -16,3 +16,7 @@
 6. **收口**：verification、AOS/D-waves/Prime 同步、m1 精确提交，下一波继续首链最早阻断处。旧 12 Run 正式退休列维护待办；不读商城源、不重发、230 L0 挂起、dev-org 零 canary、不 push。
 
 停止条件：任何原 Task/Occurrence/安装映射不唯一、维护围栏无法保持、当前授权/容量不可证、执行结果未知、DB 与包合同不一致，停对应真实动作并留原状态；无副作用代码/隔离测试可继续，不扩大全项目停工。
+
+## 2026-09-26 第 1 步复核后的实施收窄
+
+当前 PG 没有 running TaskRun、MethodRevision、Insight/Decision/GrowthPlan，也没有合法的自然 D01 输入。因而本波不得宣称完成三阶段执行、不得伪造 D01 方法/来源或从旧事件重放。第 2–4 步先落一个 **Host 内只读、租户有界的 stage discovery/readiness worker**：扫描原分析 Receipt 和当前 dispatch/runtime/TaskRun，输出明确的 `blocked`/`reconcile`/`awaiting-authority` 状态；只向 Host 报状态，不建 AgentRun、不开 Provider、不推进 Task。无完整 authority 时永不返回“可执行”。专项测试覆盖有界、跨租户、旧代、暂停/终态、重复/unknown 和缺前驱。Host 接线只影响监测，不视为真实运行授权。D01 真实 provision/execute 与 D02/D03 串联单列下一波的最早核心阻断，不能用本波绿色测试冒充闭环。
