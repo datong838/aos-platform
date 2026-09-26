@@ -59,6 +59,21 @@ def _build_ecommerce_feedback_consumer():
     return CurrentFeedbackConsumer()
 
 
+def _build_ecommerce_improvement_consumer():
+    from aos_api.ecommerce_growth_improvement_target import CurrentImprovementConsumer
+    return CurrentImprovementConsumer()
+
+
+def _build_ecommerce_effect_review_consumer():
+    from aos_api.ecommerce_growth_effect_review_owner import CurrentEffectReviewConsumer
+    return CurrentEffectReviewConsumer()
+
+
+def _build_ecommerce_memory_candidate_consumer():
+    from aos_api.ecommerce_growth_memory_candidate_target import CurrentMemoryCandidateConsumer
+    return CurrentMemoryCandidateConsumer()
+
+
 def _build_content_taskrun_owner():
     from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunOwner
     return ContentTaskRunOwner()
@@ -342,6 +357,95 @@ async def _start_ecommerce_feedback_worker(_app: FastAPI, stop: asyncio.Event) -
         _app.state.ecommerce_feedback_worker_status = 'FAILED_CLOSED'
         raise RuntimeError('feedback worker stopped during startup')
     _app.state.ecommerce_feedback_worker_status = 'RUNNING'
+
+
+async def _start_feedback_downstream_workers(_app: FastAPI, stop: asyncio.Event) -> None:
+    """Independently gated downstream feedback; all flags default off."""
+    specs = (
+        ('ecommerce_improvement_worker', 'AOS_ECOM_IMPROVEMENT_WORKER_ENABLED',
+         _build_ecommerce_improvement_consumer, 'ecommerce-improvement-feedback'),
+        ('ecommerce_effect_review_worker', 'AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED',
+         _build_ecommerce_effect_review_consumer, 'ecommerce-effect-review'),
+        ('ecommerce_memory_candidate_worker', 'AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED',
+         _build_ecommerce_memory_candidate_consumer, 'ecommerce-memory-candidate'),
+    )
+    selected = []
+    for name, flag_name, builder, task_name in specs:
+        setattr(_app.state, name + '_status', 'DISABLED')
+        setattr(_app.state, name + '_task', None)
+        flag = os.getenv(flag_name, 'false').strip().lower()
+        if flag in {'0', 'false', 'no', 'off'}:
+            continue
+        if flag not in {'1', 'true', 'yes', 'on'}:
+            setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+            raise RuntimeError(f'{name} enable flag is invalid')
+        selected.append((name, builder, task_name))
+    if not selected:
+        return
+    host = getattr(_app.state, 'extension_runtime_host_task', None)
+    if (getattr(_app.state, 'extension_runtime_host_status', None) != 'ACTIVE'
+        or host is None or host.done()):
+        for name, _, _ in selected:
+            setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+        raise RuntimeError('downstream feedback workers require active Runtime Host')
+    from aos_api.extension_runtime.runtime_connections import runtime_worker_dsn
+    try:
+        runtime_worker_dsn()  # Check isolated identity without logging credentials.
+        built = [(name, builder(), task_name) for name, builder, task_name in selected]
+    except Exception:
+        for name, _, _ in selected:
+            setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+        raise
+
+    tasks = []
+    for name, consumer, task_name in built:
+        setattr(_app.state, name + '_status', 'STARTING')
+
+        async def run(*, name=name, consumer=consumer):
+            try:
+                await consumer.serve(stop, host_ready=lambda: (
+                    getattr(_app.state, 'extension_runtime_host_status', None) == 'ACTIVE'
+                    and not host.done()))
+            except asyncio.CancelledError:
+                setattr(_app.state, name + '_status', 'STOPPED')
+                raise
+            except Exception:
+                setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+                raise
+            else:
+                if stop.is_set():
+                    setattr(_app.state, name + '_status', 'STOPPED')
+                else:
+                    setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+                    raise RuntimeError(f'{name} stopped without shutdown')
+
+        task = asyncio.create_task(run(), name=task_name)
+        setattr(_app.state, name + '_task', task)
+        _app.state.runtime_background_tasks.append(task)
+        tasks.append((name, task))
+
+        def observe(done, *, worker_name=name):
+            if not done.cancelled() and done.exception() is not None:
+                log.error('%s_failed_closed', worker_name)
+
+        task.add_done_callback(observe)
+    await asyncio.sleep(0)
+    failed = next(((name, task) for name, task in tasks if task.done()), None)
+    if failed is not None:
+        for name, task in tasks:
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(*(task for _, task in tasks), return_exceptions=True)
+        for name, task in tasks:
+            if task in _app.state.runtime_background_tasks:
+                _app.state.runtime_background_tasks.remove(task)
+            setattr(_app.state, name + '_task', None)
+            if getattr(_app.state, name + '_status') == 'STARTING':
+                setattr(_app.state, name + '_status', 'FAILED_CLOSED')
+        cause = failed[1].exception() if not failed[1].cancelled() else None
+        raise RuntimeError('downstream feedback worker failed during startup') from cause
+    for name, _ in tasks:
+        setattr(_app.state, name + '_status', 'RUNNING')
 
 
 async def _start_content_execution_worker(_app: FastAPI, stop: asyncio.Event) -> None:
@@ -965,6 +1069,7 @@ async def _lifespan_body(_app: FastAPI):
     await _start_content_capacity_worker(_app, extension_runtime_stop)
     await _start_content_budget_command_worker(_app, extension_runtime_stop)
     await _start_ecommerce_feedback_worker(_app, extension_runtime_stop)
+    await _start_feedback_downstream_workers(_app, extension_runtime_stop)
 
     async def _qyh_cron_loop() -> None:
         """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""

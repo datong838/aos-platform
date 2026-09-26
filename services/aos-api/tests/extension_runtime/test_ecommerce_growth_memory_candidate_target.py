@@ -1,5 +1,6 @@
 """A governed candidate is never a promoted Wiki item or a retryable unknown."""
 
+import asyncio
 from contextlib import contextmanager
 
 import pytest
@@ -77,3 +78,16 @@ def test_unknown_write_boundary_is_not_swallowed_by_batch_consumer():
     )
     with pytest.raises(MemoryCandidateUnknown):
         consumer.run_once(SCOPE)
+    with pytest.raises(MemoryCandidateUnknown):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True))
+
+
+def test_natural_candidate_serve_requires_host_and_bounded_interval():
+    consumer = CurrentMemoryCandidateConsumer(
+        connect=lambda scope: connect(Connection()), worker=Worker(),
+    )
+    with pytest.raises(ValueError, match="interval"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True,
+            interval_seconds=0))
+    with pytest.raises(RuntimeError, match="Runtime Host"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: False))

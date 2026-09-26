@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
@@ -255,6 +256,19 @@ class CurrentEffectReviewConsumer:
                 continue
             statuses.append({"commandId": command_id, "status": result["status"]})
         return statuses
+
+    async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:
+        if type(interval_seconds) is not int or not 1 <= interval_seconds <= 300:
+            raise ValueError("effect review worker interval is invalid")
+        scope = TenantScope("org-org", "dev-project")
+        while not stop.is_set():
+            if not host_ready():
+                raise RuntimeError("effect review worker Runtime Host became unavailable")
+            await asyncio.to_thread(self.run_once, scope)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+            except TimeoutError:
+                pass
 
 
 __all__ = ["EffectReviewOwner", "CurrentEffectReviewConsumer", "EffectReviewUnknown"]

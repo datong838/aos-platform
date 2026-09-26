@@ -1,5 +1,6 @@
 """A formal effect review is routed only after the original pending receipt."""
 
+import asyncio
 from contextlib import contextmanager
 from types import SimpleNamespace
 
@@ -99,3 +100,15 @@ def test_post_commit_readback_failure_is_unknown_and_not_a_retryable_block(monke
         connect=lambda scope: connect(Connection()), owner=UnknownOwner())
     with pytest.raises(EffectReviewUnknown):
         consumer.run_once(SCOPE)
+    with pytest.raises(EffectReviewUnknown):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True))
+
+
+def test_natural_effect_review_serve_requires_host_and_bounded_interval():
+    consumer = CurrentEffectReviewConsumer(
+        connect=lambda scope: connect(Connection()), owner=Owner())
+    with pytest.raises(ValueError, match="interval"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True,
+            interval_seconds=0))
+    with pytest.raises(RuntimeError, match="Runtime Host"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: False))
