@@ -2284,6 +2284,9 @@ class AipProductionContractStore:
                 return self.get_review_issue(scope, replay["resourceId"], conn=conn)
             self._require_artifact(conn, scope, body.artifact_ref)
             self._require_eval_report(conn, scope, body.eval_report_ref)
+            self._require_content_eval_subject(
+                conn, scope, body.artifact_ref, body.eval_report_ref
+            )
             self._require_evidence(conn, scope, body.evidence_refs)
             self._require_review_rule(conn, scope, body.rule_ref)
             issue_id = f"review-issue-{uuid.uuid4().hex[:20]}"
@@ -4224,6 +4227,52 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked("EVAL_REPORT_MISSING")
         if row["content_hash"] != ref.content_hash:
             raise ProductionContractDependencyBlocked("EVAL_REPORT_DRIFTED")
+
+    @staticmethod
+    def _require_content_eval_subject(
+        conn: Any, scope: TenantScope, artifact_ref: ExactArtifactRef,
+        report_ref: ExactRevisionRef,
+    ) -> None:
+        artifact = conn.execute(
+            """SELECT artifact_type,run_id FROM aip_artifact
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (*scope.key, artifact_ref.artifact_id),
+        ).fetchone()
+        if artifact["artifact_type"] != "ecommerce_content":
+            return
+        report = conn.execute(
+            """SELECT subject_artifact_ref,stage_attempt_ref,eval_contract_ref,gate_policy_ref
+            FROM aip_eval_report_revision
+            WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
+            (*scope.key, report_ref.resource_id, report_ref.revision),
+        ).fetchone()
+        subject = AipProductionContractStore._load(report["subject_artifact_ref"])
+        attempt = AipProductionContractStore._load(report["stage_attempt_ref"])
+        if (
+            subject != {
+                "resourceType": "Artifact", "resourceId": artifact_ref.artifact_id,
+                "contentHash": artifact_ref.content_hash,
+            }
+            or not isinstance(attempt, dict)
+            or attempt.get("runId") != artifact["run_id"]
+            or attempt.get("stepKey") != "content_generate"
+            or not report["eval_contract_ref"]
+            or not report["gate_policy_ref"]
+        ):
+            raise ProductionContractDependencyBlocked("CONTENT_EVAL_SUBJECT_MISMATCH")
+        step = conn.execute(
+            """SELECT step_run_id,attempt,input_hash FROM aip_step_run
+            WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_generate'
+            ORDER BY attempt DESC LIMIT 1""",
+            (*scope.key, artifact["run_id"]),
+        ).fetchone()
+        if (
+            step is None
+            or attempt.get("stepRunId") != step["step_run_id"]
+            or attempt.get("attempt") != int(step["attempt"])
+            or attempt.get("inputHash") != step["input_hash"]
+        ):
+            raise ProductionContractDependencyBlocked("CONTENT_EVAL_SUBJECT_ATTEMPT_DRIFTED")
 
     @staticmethod
     def _require_evidence(

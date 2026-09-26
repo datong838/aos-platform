@@ -4,6 +4,8 @@ from pathlib import Path
 import importlib.util
 from types import SimpleNamespace
 
+import pytest
+
 from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_eval_contracts import EvalSubjectArtifactRef, EvalStageAttemptRef, EvalGatePolicyRef
@@ -11,6 +13,9 @@ from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.aip_eval_runner import AipEvalRunner
 from aos_api.aip_task_models import CreateTaskRequest, CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_production_contract_store import AipProductionContractStore, ProductionContractDependencyBlocked
+from aos_api.aip_production_contracts import (CreateReviewIssueRequest, ExactArtifactRef,
+    ExactRevisionRef, RegisterReviewRuleRevisionRequest)
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, SCOPE
 from test_ecommerce_analyst_method_authority import apply_migrations
 
@@ -82,3 +87,26 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
         assert report.subject_artifact_ref==subject
         assert content['body'] not in report.model_dump_json()
         assert runner.get_report(SCOPE,report.report_id)==report
+
+        contracts=AipProductionContractStore(connect_factory=connect)
+        rule=contracts.register_review_rule_revision(SCOPE,'tester','content-review-rule',
+            RegisterReviewRuleRevisionRequest(ruleId='content-review-rule',revision=1,
+                spec={'subjectKind':'ecommerce_content','checks':['facts','prohibited_claims']}))
+        request=CreateReviewIssueRequest(
+            ruleRef=ExactRevisionRef(resourceType='EvalRuleRevision',resourceId=rule.rule_id,
+                revision=rule.revision,contentHash=rule.content_hash),severity='warning',
+            artifactRef=ExactArtifactRef(artifactId=identity,contentHash=digest),
+            evalReportRef=ExactRevisionRef(resourceType='EvalReportRevision',
+                resourceId=report.report_id,revision=report.revision,contentHash=report.content_hash),
+            location={'stage':'content_generate'},suggestedFix='请人工核对内容事实',
+            returnStage='content_generate')
+        assert contracts.create_review_issue(SCOPE,'tester','content-issue',request).artifact_ref.artifact_id==identity
+        other_identity='artifact-'+'b'*20
+        other_content={**content,'artifactRef':{**content['artifactRef'],'resourceId':other_identity}}
+        store.record_artifact(SCOPE,run.id,'tester','ecommerce_content',
+            {'contentHash':digest,'schemaRef':'aos://schemas/ecommerce-readable-content/v1',
+             'metadata':{'ecommerceGrowthContentArtifact':other_content}},artifact_id=other_identity)
+        unrelated=request.model_copy(update={'artifact_ref':ExactArtifactRef(
+            artifactId=other_identity,contentHash=digest)})
+        with pytest.raises(ProductionContractDependencyBlocked,match='CONTENT_EVAL_SUBJECT'):
+            contracts.create_review_issue(SCOPE,'tester','unrelated-content-issue',unrelated)
