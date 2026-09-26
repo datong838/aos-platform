@@ -23,3 +23,8 @@
 - 经带容器身份核验的 `aos_meta_head` 只读连接重查：`alembic_version=a0v_092`、`org-org/dev-project` 内容预审 Graph 数 0、`subjectKind=ecommerce_content` 合同数 0。当前实例不具备 `a0v_101`–`105` 内容链 schema，不得进入安装写阶段。
 - API 存在多个独立 commit：Graph、Dataset/Suite、EvalRun/Report、ReleaseGate、Publication、合同 create/freeze。第一子步先做只读 preflight：精确 schema、目标 Graph、专用 Suite 与主体合同 inventory；全空才标记 `INSTALLABLE`，现有完整权威经既有 reader 验证才标记 `INSTALLED`，任一部分状态标记 `RECONCILE_REQUIRED` 且不写。该子步不能声称覆盖未知提交后的正式退休/恢复，后续安装 executor 必须逐边界独立读回。
 - 本子步先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_bootstrap.py` 写 RED，再新增 `services/aos-api/aos_api/ecommerce_content_pre_review_bootstrap.py`。只读预检可在当前实例运行，预期报告 schema 不足，不迁移；下一子步才实现受控安装。
+
+## 第 2 项接口复核后的优先级调整（2026-09-27）
+
+- `LogicGraphStore.create`、Dataset/Suite 注册、`AipEvalRunner.run` 内部 Run 状态转换/报告、ReleaseGate、Publication、合同 create/freeze 均各有独立提交；其中 `AipEvalRunner.run` 内还可能在报告形成前已有持久 Run。未知提交不可仅凭相同幂等键自动重调。正式 executor 需要按 Run/Report/Receipt 逐节点只读对账和退休路径，不能在当前 `a0v_092` 实例上直接试安装。
+- 因当前实例缺 13 个版本且 Worker/旧 Run 边界未作安装前确认，暂不把完整 bootstrap executor 当作 P2g **离线无副作用编码**的前置门。保留本波 P2f-b 为部分门，受控安装 executor、迁移和真实实例注册列为恢复队列；优先推进真实 Artifact→主体 Eval→人工待办/决定的隔离实现，待安装门可安全执行再接通自然链。此调整遵守“主要可信数据够用后不为边角补数拖主线”，但不放宽运行时门禁。
