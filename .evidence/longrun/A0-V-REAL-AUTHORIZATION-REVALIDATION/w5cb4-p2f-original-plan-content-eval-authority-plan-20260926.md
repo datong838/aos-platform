@@ -34,3 +34,14 @@
 - 已实现仅用于隔离用例的草稿 Graph 构造及只读执行函数；Graph 只有 input/transform，无外部 effect。对空正文、缺商品/渠道/来源/约束、错误封套/Artifact 引用、篡改 Graph 均失败关闭。
 - 此步不是正式 Eval 权威：尚无隔离 PG 的 Suite、ReleaseGate/Publication 和冻结 READY 内容 EvalContract；不得把 helper 输出视作生产可接受报告，也不得创建自然 Plan gate 或开启 Worker。
 - 下一步：在 AIP 正式注册／发布路径上做隔离 PG 正反用例，证明 Graph/Suite 与 exact subject 输入、当前发布权威一致，再处理 Owner 的原 Plan 创建前绑定。
+
+## P2f-b 第 2/4 步接口复核与文件级修订（编码前）
+
+- `AipEvalRunner.run` 对 `subjectKind=ecommerce_content` 会把 Suite case 的 input 替换为该次 exact Artifact 的内容封套。因此治理发布用的正/负多例 Suite 与未来每篇内容的主体 Eval 必须分别证明：前者证明 Graph 规则可发布，后者证明当前 Artifact/最新 attempt 在冻结合同下被评估。不得拿治理用例通过冒充某篇内容的通过。
+- `AipProductionContractStore._eval_blockers` 目前只独立查 Suite ref、Publication、ReleaseGate 存在/有效，未交叉校验三者 target/suite 的 exact 同一性。P2f-b 的来源读取器必须额外核对同一 Graph id/revision/hash、同一 Suite、发布事件及门决定，并拒绝不一致；先不改变无关旧合同的全局 readiness 语义。
+- 本段先在 `services/aos-api/aos_api/ecommerce_content_pre_review_eval.py` 增加持久 Graph target 的只读执行入口，要求 `AssetType.LOGIC_GRAPH`、目标 id/revision/hash 与持久快照一致，Graph 内容与代码审定规格一致，且执行结果只输出布尔值；拒绝未持久、篡改、错目标、失败或 effect 节点。`services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_eval.py` 先 RED 覆盖。随后再以隔离 PG 的正式 registry/runner/release/contract API 形成新权威，不对当前实例写入。
+
+## P2f-b 第 2/4 步中间状态
+
+- 已增加调用方提供的 Graph 快照与 target exact 对齐的无 effect 执行入口，并在一次性测试 PG 通过 `LogicGraphStore.create/get` 读回。它还未自行回读 Store/Publication，因此不能作为生产当前权威选择器；正式调用方必须先按同租户从 Store 读取并另验当前 Publication/ReleaseGate。
+- 下一段集中接 AIP registry→governance Eval→ReleaseGate/Publication→冻结 READY 合同与错租户/撤销反例；只有全链同 target/suite 的交叉证明后，才可使 Owner 新 Plan 使用 exact gate。

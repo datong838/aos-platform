@@ -9,6 +9,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType
+from aos_api.aip_eval_runner import TargetExecution
 from aos_api.aip_logic_dry_run_executor import LogicDryRunExecutor
 from aos_api.aip_logic_graph_models import (
     CreateLogicGraphRequest,
@@ -66,21 +68,7 @@ def build_content_pre_review_graph() -> CreateLogicGraphRequest:
 def evaluate_content_pre_review(graph: CreateLogicGraphRequest, payload: dict[str, Any]) -> bool:
     """Evaluate an isolated fixture; false means no authority to enter review."""
     canonical = build_content_pre_review_graph()
-    if graph != canonical or not isinstance(payload, dict):
-        return False
-    content = payload.get("content")
-    artifact = payload.get("subjectArtifactRef")
-    if not isinstance(content, dict) or not isinstance(artifact, dict):
-        return False
-    if artifact.get("resourceType") != "Artifact" or not all(
-        isinstance(artifact.get(key), str) and artifact[key].strip()
-        for key in ("resourceId", "contentHash")
-    ):
-        return False
-    if not isinstance(content.get("body"), str) or not content["body"].strip():
-        return False
-    if any(not isinstance(content.get(key), list) or not content[key]
-           for key in _REQUIRED_CONTENT if key != "body"):
+    if graph != canonical:
         return False
     now = datetime.now(UTC)
     snapshot = LogicGraphSnapshot(
@@ -98,6 +86,55 @@ def evaluate_content_pre_review(graph: CreateLogicGraphRequest, payload: dict[st
         updated_at=now,
         persisted=False,
     )
+    return _evaluate_snapshot(snapshot, payload)
+
+
+def execute_content_pre_review_target(
+    target: AssetRevisionRef, graph: LogicGraphSnapshot, payload: dict[str, Any],
+) -> TargetExecution:
+    """Run an exact persisted target; publication is checked by its caller.
+
+    A governance Eval may run the draft target before publication. This entry
+    point therefore never treats a successful dry-run as release authority.
+    """
+    expected = build_content_pre_review_graph()
+    if (
+        target.asset_type is not AssetType.LOGIC_GRAPH
+        or target.asset_id != GRAPH_ID
+        or target.revision != str(graph.revision)
+        or target.content_hash != graph.graph_hash
+        or not graph.persisted
+        or graph.status != "draft"
+        or graph.id != GRAPH_ID
+        or graph.name != expected.name
+        or graph.description != expected.description
+        or graph.schema_version != expected.schema_version
+        or graph.nodes != expected.nodes
+        or graph.edges != expected.edges
+        or graph.entry_node_ids != expected.entry_node_ids
+        or graph.graph_hash != compute_logic_graph_hash(expected)
+    ):
+        raise ValueError("content pre-review target is not the exact persisted Graph")
+    return TargetExecution(target=target, value=_evaluate_snapshot(graph, payload))
+
+
+def _evaluate_snapshot(snapshot: LogicGraphSnapshot, payload: dict[str, Any]) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    content = payload.get("content")
+    artifact = payload.get("subjectArtifactRef")
+    if not isinstance(content, dict) or not isinstance(artifact, dict):
+        return False
+    if artifact.get("resourceType") != "Artifact" or not all(
+        isinstance(artifact.get(key), str) and artifact[key].strip()
+        for key in ("resourceId", "contentHash")
+    ):
+        return False
+    if not isinstance(content.get("body"), str) or not content["body"].strip():
+        return False
+    if any(not isinstance(content.get(key), list) or not content[key]
+           for key in _REQUIRED_CONTENT if key != "body"):
+        return False
     try:
         result = LogicDryRunExecutor().execute(snapshot, payload)
     except (ValueError, TypeError):
