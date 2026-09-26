@@ -10,6 +10,7 @@
 - 原则上不改生产/测试代码。使用 `colima-aos-a0v-test-only:5433`、`aos-a0v-test-pg`、项目 `.venv`、`AOS_DOTENV_DISABLED=1`、`AOS_TEST_USE_SHARED_DATABASE` 非 1、标准自动创建销毁 `aos_test_*_ti4_test` fixture。不得连接 18435 真库或读商城源。
 - 单次运行上述三文件，`a0v_w5c7j_monotonic_test_runner.py` 硬界 1500 秒、SIGINT 5 秒宽限；不得并行重复。正式结果只认 runner `CHILD_EXITED/childExitCode=0` 且 pytest **18 passed**。若 timeout/失败，冻结该结果、收集有限诊断和测试库残留，不自动重试，不把旧 W5c7n 单项通过冒充本波通过。
 - test DB 余量 0、18181 原 PID/8080 离线、`git diff --check`。本目录 audit/verification、D-waves/AOS 上下文/Prime CAS、精确提交；若超时或测试库残留，先处置仅该测试资源的安全清理，不能碰真实进程。
+- 收口订正：若同会话正式 18/18 GREEN，AOS `incomplete` 中旧 17/17 未绿/长例未终态/180–903 秒历史超时条目应经逐项 audit 退出**当前风险**，但保留 Git/verification 历史；其中“同一 `_load` claim 复用尚未证明等价”、真库未迁和下游业务 effect 无生产围栏要继续保留。顺手将同一前段仍写“严格 24h 等待”的非空 effect 风险改成“时间已到但无授权”；先审计再 CAS，不凭测试 GREEN 升级真实业务。
 
 ## 九步
 
