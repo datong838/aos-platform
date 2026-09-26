@@ -64,3 +64,9 @@
 - 继续只改 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 与必要的生产缺陷最小文件；仍用正式 Alembic head 的一次性克隆、同一原 Task/Run/Reservation/command/runtime Receipt。先读现有 `ContentExecutionWorker`、`ContentResultConsumer`、`ContentUsageRecorder` 与 ProviderInstanceRevision 权威，形成文件级测试夹具；需要的 Provider/route/price 必须经正式数据库约束和现有 Owner API，不以猴补 `_provider_authority` 过门。
 - 在测试中使用受控本地响应，不做网络 Provider 外呼；`ContentExecutionWorker` 正式提交预算并先持久 Provider 请求 Receipt，随后持久结果；单独 `ContentResultConsumer` 记两条 measured Usage Receipt、可读 Artifact 和 settled 预算。受控 prepare/context 接缝必须逐项标注，不能写成当前真实方法/商品来源已验收；无结果/未知边界不重发。
 - RED 先证明已持久结果能由原消费路径结算且同一 invocation 的 Receipt/Artifact/TaskRun 身份一致；负向注入结算失败应整个 Usage/Artifact 事务回滚并保留原结果供只读对账。若最小正式 Provider 权威 fixture 过大，列明 API/表/FK 缺口后转做不依赖它的首链 Review Owner 安全门，不把单一测试夹具无限延期。
+
+### P2g 第四增量：同库生成 StepRun/checkpoint（2026-09-27，编码前）
+
+- 仅延伸 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`。在正式 `a0v_105` 一次性库中复用上段原 Task/Run/Reservation 的 settled Artifact/Provider+Usage refs；`ContentGenerationStepSource.read` 保留唯一显式业务 context 接缝，其余预算、journal、Artifact、Run 正式查询。RED 要求 `ContentGenerationStepOwner._complete_transaction` 经真实 AIP Store 写同一 `content_generate` 四相 TAOR 与 succeeded StepRun，再由独立连接 `_readback` 验 checkpoint、observe 中 exact Artifact/Reservation；重复原对象只回读，不新增 attempt。
+- 由于完整九操作 Host 锁、非超级用户 serializable 隔离身份尚未组成，本段**不调用** `run_one`/自然 worker，也不猴补 `CurrentContentPreparation._lock_dispatch` 后声称运行授权。内部原子提交子证明与生产外层 Host 门分列；若 StepRun/Checkpoint 发生未知提交，停止重跑并只读对账。负例错 Artifact/ref 要 fail closed，不能靠手工构造第二 Run。
+- 专项、累计、verification、m1 commit、AOS/Prime 同步后，下一段在同一原 Artifact 上接正式当前 EvalContract/Plan gate 和主体 EvalRunner；若合同注册 fixture 仍大，先明确缺口，不开放 GET/Issue。

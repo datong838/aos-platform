@@ -32,7 +32,9 @@ from aos_api.ecommerce_content_execution_composition import CurrentContentPrepar
 from aos_api.ecommerce_content_execution_composition import CurrentContentStatusReader
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation
 from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
-from aos_api.ecommerce_content_step_owner import ContentGenerationStepOwner, ContentGenerationStepSource
+from aos_api.ecommerce_content_step_owner import (
+    ContentGenerationStepOwner, ContentGenerationStepSource, ContentStepConflict,
+)
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
@@ -423,3 +425,51 @@ def test_controlled_result_settlement_failure_keeps_result_without_artifact(monk
             assert conn.execute("""SELECT count(*) AS n FROM ecommerce_content_execution_result
                 WHERE org_id=%s AND project_id=%s AND reservation_id=%s""",
                 (*SCOPE.key, reservation_id)).fetchone()["n"] == 1
+
+
+def test_original_settled_result_completes_one_generation_step_and_checkpoint():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        command = _seed_current_command_receipt(connect, proof)
+        consumed = _run_controlled_result_and_consume(connect, proof, command)
+        reservation_id = proof["reservation"].reservation_ref.resource_id
+        wrong_run_source = ContentGenerationStepSource(
+            context_reader=lambda _conn, _scope, _command: {"runId": "wrong-run"})
+        with connect(SCOPE) as conn:
+            with pytest.raises(ContentStepConflict, match="original Run output"):
+                wrong_run_source.read(conn, SCOPE, reservation_id)
+            assert conn.execute("""SELECT count(*) AS n FROM aip_step_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, proof["run_id"])).fetchone()["n"] == 0
+        source = ContentGenerationStepSource(context_reader=lambda _conn, scope, saved_command: (
+            {"runId": proof["run_id"]} if scope == SCOPE and saved_command == command else None))
+        owner = ContentGenerationStepOwner(source=source, connect_write=connect,
+            connect_read=connect)
+        with connect(SCOPE) as conn:
+            settled = source.read(conn, SCOPE, reservation_id)
+            checkpoint_id = owner._complete_transaction(conn, SCOPE, settled)
+        assert checkpoint_id is not None
+        with connect(SCOPE) as conn:
+            readback = owner._readback(conn, SCOPE, settled, checkpoint_id)
+            assert readback["status"] == "GENERATION_STEP_SUCCEEDED"
+            assert readback["runId"] == proof["run_id"]
+            assert readback["checkpointId"] == checkpoint_id
+            assert owner._complete_transaction(conn, SCOPE, settled) is None
+        with connect(SCOPE) as conn:
+            steps = conn.execute("""SELECT step_run_id,status,attempt,
+                think_ref,action_ref,verify_ref,observe_ref FROM aip_step_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s
+                  AND step_key='content_generate'""",
+                (*SCOPE.key, proof["run_id"])).fetchall()
+            assert len(steps) == 1
+            assert steps[0]["step_run_id"] == readback["stepRunId"]
+            assert steps[0]["status"] == "succeeded" and steps[0]["attempt"] == 1
+            assert all(steps[0][key] is not None for key in (
+                "think_ref", "action_ref", "verify_ref", "observe_ref"))
+            observed = conn.execute("""SELECT payload FROM aip_evidence
+                WHERE org_id=%s AND project_id=%s AND evidence_id=%s
+                  AND evidence_type='taor.observe'""",
+                (*SCOPE.key, steps[0]["observe_ref"]["evidenceId"])).fetchone()["payload"]
+            assert observed["payload"]["reservationId"] == reservation_id
+            assert observed["payload"]["artifactRef"] == consumed["artifact"]["artifactRef"]
