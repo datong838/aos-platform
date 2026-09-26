@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,6 +18,8 @@ for dependency in (SDK_ROOT, GROWTH_ROOT):
         sys.path.insert(0, str(dependency))
 
 from aos_extension_sdk import DispatchRef
+import aos_api.ecommerce_growth_runtime_adapters as runtime_adapters
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 from ecommerce_growth.ecommerce_business_investigation_application import (
     EcommerceGrowthApplication,
 )
@@ -207,6 +210,58 @@ def test_application_routes_review_without_n1_write_port() -> None:
     app = EcommerceGrowthApplication(WritePort(), review_port=port)
     result = app.advance_review(dispatch_ref=dispatch(), request=request())
     assert result.brief_ref.resource_type == "TaskBriefRevision"
+
+
+def test_v2_handoff_enqueues_one_content_run_intent_in_original_transaction(monkeypatch):
+    class Tx:
+        calls = []
+
+        def execute(self, query, params=()):
+            self.calls.append((query, params))
+            return Result("intent" if "FROM public.ecommerce_growth_content_taskrun_intent" in query else "put")
+
+    class Result:
+        def __init__(self, kind):
+            self.kind = kind
+
+        def fetchone(self):
+            if self.kind == "put":
+                return {"inserted": True}
+            return {
+                "review_receipt_ref": exact_ref_payload(ref("ReviewDecisionReceipt", "receipt-v2")),
+                "task_id": "task-v2", "brief_id": "brief-v2",
+                "origin_request_hash": HASH_A, "state": "pending", "attempt": 0,
+                "claim_token": None, "plan_revision_id": None, "run_id": None,
+            }
+
+    class Receipts:
+        def read(self, _key):
+            return None
+
+        def put(self, _key, payload, **_kwargs):
+            return payload
+
+    monkeypatch.setattr(runtime_adapters, "_strict_review_accept_command", lambda _command: ("review-v2", None, None))
+    monkeypatch.setattr(ReviewAdvanceHostService, "_components", staticmethod(lambda *_: (None, None, Receipts())))
+    monkeypatch.setattr(ReviewAdvanceHostService, "_revalidate_growth_plan", staticmethod(lambda **_: SimpleNamespace(sales_weapon_method=object())))
+    monkeypatch.setattr(ReviewAdvanceHostService, "_require_sales_weapon_method", staticmethod(lambda **_: None))
+    monkeypatch.setattr(ReviewAdvanceHostService, "_review_lineage", lambda self, **_: {
+        "taskRef": exact_ref_payload(ref("Task", "task-v2")),
+        "briefRef": exact_ref_payload(ref("TaskBriefRevision", "brief-v2")),
+    })
+    monkeypatch.setattr(ReviewAdvanceHostService, "_accept_receipt", lambda self, *_: {
+        "receiptRef": exact_ref_payload(ref("ReviewDecisionReceipt", "receipt-v2")),
+        "requestHash": HASH_A,
+    })
+    transaction = Tx()
+    result = ReviewAdvanceHostService().execute(
+        transaction=transaction, scope=SimpleNamespace(key=("org-org", "dev-project")), dispatch_ref=None,
+        command={}, checked_at=CUTOFF, occurred_at=CUTOFF,
+    )
+    assert result["receiptRef"]["resourceId"] == "receipt-v2"
+    assert len(transaction.calls) == 2
+    assert "ecommerce_growth_content_taskrun_intent_put_a0v_101" in transaction.calls[0][0]
+    assert transaction.calls[0][1] == ("review-v2",)
 
 
 def test_return_creates_no_handoff_task_or_brief() -> None:

@@ -3230,7 +3230,32 @@ class ReviewAdvanceHostService:
             approved_plan=approved_plan,
         )
         payload = self._accept_receipt(command, lineage, scope, key, occurred_at or checked_at)
-        return receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
+        receipt = receipts.put(key, payload, dispatch_ref=dispatch_ref, checked_at=checked_at)
+        if approved_plan is not None and approved_plan.sales_weapon_method is not None:
+            enqueued = transaction.execute(
+                "SELECT public.ecommerce_growth_content_taskrun_intent_put_a0v_101(%s) AS inserted",
+                (key,),
+            ).fetchone()
+            intent = transaction.execute(
+                """SELECT review_receipt_ref,task_id,brief_id,origin_request_hash,
+                          state,attempt,claim_token,plan_revision_id,run_id
+                     FROM public.ecommerce_growth_content_taskrun_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s""",
+                (*scope.key, key),
+            ).fetchone()
+            if (
+                enqueued is None or enqueued["inserted"] is not True
+                or intent is None or intent["review_receipt_ref"] != receipt["receiptRef"]
+                or intent["task_id"] != lineage["taskRef"]["resourceId"]
+                or intent["brief_id"] != lineage["briefRef"]["resourceId"]
+                or intent["origin_request_hash"] != receipt["requestHash"]
+                or intent["state"] != "pending" or intent["attempt"] != 0
+                or any(intent[name] is not None for name in (
+                    "claim_token", "plan_revision_id", "run_id"
+                ))
+            ):
+                raise ValueError("content TaskRun intent readback drifted")
+        return receipt
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)

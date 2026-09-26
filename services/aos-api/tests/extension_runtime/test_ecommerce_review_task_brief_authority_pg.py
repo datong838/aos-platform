@@ -6,8 +6,10 @@ from psycopg.types.json import Jsonb
 
 from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
-from aos_api.aip_task_store import AipTaskIdempotencyConflict
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, TransactionBoundConnectFactory
+from aos_api.aip_task_store import AipTaskIdempotencyConflict, AipTaskStore
+from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
+from aos_api.aip_contracts import PlanStep
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_authority_contracts import sales_weapon_method
@@ -179,4 +181,59 @@ def test_review_task_brief_preserves_approved_sales_weapon_provenance():
             "SELECT count(*) AS n FROM public.aip_task_brief_revision "
             "WHERE org_id=%s AND project_id=%s",
             SCOPE.key,
+        ).fetchone()["n"] == 0
+
+
+def test_content_plan_and_run_owner_can_share_outer_review_transaction_without_partial_commit():
+    host = ReviewAdvanceHostService()
+    method = SalesWeaponMethod.model_validate(sales_weapon_method())
+    decision = AnalystExactRef(resource_type="DecisionSummaryRevision", resource_id="decision-1",
+                               revision=1, content_hash="a" * 64)
+    approved = SimpleNamespace(sales_weapon_method=method, decision_ref=decision)
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        lineage = host._review_lineage(
+            transaction=transaction, scope=SCOPE, command=command(),
+            occurred_at=NOW, approved_plan=approved,
+        )
+        task_id = lineage["taskRef"]["resourceId"]
+        store = AipTaskStore(TransactionBoundConnectFactory(transaction, SCOPE))
+        plan = store.create_plan(
+            SCOPE, "ecommerce-growth-content-owner", task_id, "review-task-brief-1:plan",
+            CreatePlanRevisionRequest(
+                expected_task_version=1,
+                steps=[PlanStep(step_key="content_generate", title="生成可读内容"),
+                       PlanStep(step_key="content_review", title="人工审核内容")],
+                dependencies=[lineage["briefRef"]],
+                risk={"externalPublicationAllowed": False},
+            ),
+        )
+        task = store.get_task(SCOPE, task_id)
+        store.approve_plan(
+            SCOPE, "ecommerce-growth-content-owner", task_id, plan.revision,
+            task.version, plan.content_hash,
+        )
+        task = store.get_task(SCOPE, task_id)
+        run = store.create_run(
+            SCOPE, "ecommerce-growth-content-owner", task_id, "review-task-brief-1:run",
+            CreateTaskRunRequest(plan_revision_id=plan.id, expected_task_version=task.version),
+        )
+        started = store.start_run(
+            SCOPE, run.id, expected_run_version=run.version,
+            expected_task_version=task.version, actor="ecommerce-growth-content-owner",
+            idempotency_key="review-task-brief-1:start",
+        )
+        assert started.run.status.value == "running"
+        assert store.create_run(
+            SCOPE, "ecommerce-growth-content-owner", task_id, "review-task-brief-1:run",
+            CreateTaskRunRequest(plan_revision_id=plan.id, expected_task_version=task.version),
+        ).id == run.id
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s",
+            (*SCOPE.key, task_id),
+        ).fetchone()["n"] == 1
+        conn.rollback()
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.aip_task_run WHERE org_id=%s AND project_id=%s AND task_id=%s",
+            (*SCOPE.key, task_id),
         ).fetchone()["n"] == 0
