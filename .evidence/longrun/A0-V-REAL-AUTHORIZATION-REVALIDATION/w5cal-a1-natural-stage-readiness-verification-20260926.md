@@ -18,6 +18,8 @@
 
 `pytest` 覆盖新 scanner、Host、Host lease、DataRequirement、D01/D02/D03 worker、snapshot resume：**178 passed、9 skipped、7 warnings**。9 skipped 包括需 disposable PG 的图测试，不能算真实自然三阶段。`py_compile` 与 `git diff --check` 通过。没有启动 Host，没有收费 Provider 调用。
 
+与计划的 RED 顺序有偏差：本波新测试与实现同批落地，没有保留“先失败再变绿”的独立运行证据；因此仅按最终专项/累计 GREEN 记账，不声称完成 RED-first。下一波需先记录 RED 再实现。
+
 ## 第 5/6 步：浏览器/真实门
 
 本波纯 Host 后端状态接线，无 UI 修改；本机 8080 无监听，不能伪称浏览器验收。真实 PG 当前无合法 running TaskRun，且 A0-V 原路径仍冻结；未起真实 Host、未重放旧事件、未读取商城源、未做正向 canary。真实业务结果仍 **未验收**。
