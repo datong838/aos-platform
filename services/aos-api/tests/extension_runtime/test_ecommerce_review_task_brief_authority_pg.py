@@ -9,7 +9,7 @@ from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, TransactionBoundConnectFactory
 from aos_api.aip_task_store import AipTaskIdempotencyConflict, AipTaskStore
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
-from aos_api.aip_contracts import PlanStep
+from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_authority_contracts import sales_weapon_method
@@ -202,7 +202,14 @@ def test_content_plan_and_run_owner_can_share_outer_review_transaction_without_p
             SCOPE, "ecommerce-growth-content-owner", task_id, "review-task-brief-1:plan",
             CreatePlanRevisionRequest(
                 expected_task_version=1,
-                steps=[PlanStep(step_key="content_generate", title="生成可读内容"),
+                steps=[PlanStep(step_key="content_generate", title="生成可读内容",
+                                responsibility_slot_ids=["content.generate"],
+                                assignee_refs=[ResourceRef(resource_type="AgentInstance",
+                                                           resource_id="content-agent-1", revision="1",
+                                                           authority="aip-assignee-directory")],
+                                capability_refs=[ExactContractRef(resource_type="CapabilityRevision",
+                                                                   resource_id="copy.generate", revision=1,
+                                                                   content_hash="a" * 64)]),
                        PlanStep(step_key="content_review", title="人工审核内容")],
                 dependencies=[lineage["briefRef"]],
                 risk={"externalPublicationAllowed": False},

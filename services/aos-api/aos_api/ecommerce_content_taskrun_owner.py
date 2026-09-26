@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import timedelta
 from types import SimpleNamespace
 from uuid import UUID, uuid4
 
-from aos_api.aip_contracts import PlanStep
+from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
+from aos_api.aip_agent_registry_store import AipAgentRegistryStore
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import AssigneeKind, BriefLifecycle, ContractReadiness, Coverage
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
@@ -88,6 +92,10 @@ class ContentTaskRunOwner:
             # Do not spend the one durable attempt when the full cutover group
             # is not currently executable, even if the review row alone is ready.
             self._origin(HostTransaction(conn), scope, review_key)
+            try:
+                self._assignment(HostTransaction(conn), scope)
+            except (ContentTaskRunConflict, ValueError):
+                return None
             row = conn.execute(
                 "SELECT public.ecommerce_growth_content_taskrun_claim_a0v_101(%s,%s) AS claimed",
                 (review_key, token),
@@ -146,6 +154,98 @@ class ContentTaskRunOwner:
             raise ContentTaskRunConflict("content Review runtime revision drifted")
         return origin, response
 
+    @staticmethod
+    def _assignment(transaction: HostTransaction, scope: TenantScope):
+        """One current governed content slot, not a caller-chosen digital colleague."""
+        candidates = transaction.execute(
+            """SELECT h.plan_id,h.current_revision FROM public.aip_responsibility_plan_head h
+                 JOIN public.aip_responsibility_plan_revision r
+                   ON r.org_id=h.org_id AND r.project_id=h.project_id
+                  AND r.plan_id=h.plan_id AND r.revision=h.current_revision
+                WHERE h.org_id=%s AND h.project_id=%s
+                  AND r.lifecycle='frozen' AND r.slots @> %s::jsonb
+                ORDER BY h.plan_id LIMIT 17 FOR SHARE OF h""",
+            (*scope.key, json.dumps([{"slotId": "content.generate"}])),
+        ).fetchall()
+        if not candidates or len(candidates) > 16:
+            raise ContentTaskRunConflict("content responsibility slot unavailable or unbounded")
+        plans = AipProductionContractStore()
+        ready = []
+        for candidate in candidates:
+            plan = plans.get_responsibility_plan(
+                scope, candidate["plan_id"], candidate["current_revision"], conn=transaction
+            )
+            slots = [slot for slot in plan.slots if slot.slot_id == "content.generate"]
+            if (
+                plan.lifecycle is BriefLifecycle.FROZEN
+                and plan.readiness is ContractReadiness.READY
+                and plan.coverage is Coverage.COMPLETE
+                and not plan.blockers and not plan.uncovered_slots
+                and len(slots) == 1
+                and slots[0].assignee.kind is AssigneeKind.AGENT_INSTANCE
+                and slots[0].required_capability_ids
+            ):
+                ready.append((plan, slots[0]))
+        if len(ready) != 1:
+            raise ContentTaskRunConflict("content responsibility slot is absent or ambiguous")
+        plan, slot = ready[0]
+        agent_row = transaction.execute(
+            """SELECT i.*,t.content_hash FROM public.aip_agent_instance i
+                 JOIN public.aip_agent_template_revision t
+                   ON t.template_id=i.template_id AND t.revision=i.template_revision
+                WHERE i.org_id=%s AND i.project_id=%s AND i.instance_id=%s
+                FOR SHARE OF i""",
+            (*scope.key, slot.assignee.resource_id),
+        ).fetchone()
+        if agent_row is None:
+            raise ContentTaskRunConflict("content assignee instance missing")
+        agent = AipAgentRegistryStore._instance_from_row(scope, agent_row)
+        if agent.status.value != "active" or agent.version != slot.assignee.version:
+            raise ContentTaskRunConflict("content assignee instance is not current")
+        refs = {
+            "agent_instance": _content_exact_ref({
+                "resourceType": "AgentInstanceRevision", "resourceId": agent.instance_id,
+                "revision": agent.version, "contentHash": "sha256:" + agent.instance_ref.content_hash,
+            }, "AgentInstanceRevision"),
+            "responsibility_plan": _content_exact_ref({
+                "resourceType": "ResponsibilityPlanRevision", "resourceId": plan.plan_id,
+                "revision": plan.revision, "contentHash": "sha256:" + plan.content_hash,
+            }, "ResponsibilityPlanRevision"),
+        }
+        capabilities = []
+        for capability_id in slot.required_capability_ids:
+            row = transaction.execute(
+                """SELECT capability_id,revision,content_hash
+                     FROM public.aip_capability_revision
+                    WHERE capability_id=%s AND lifecycle='published'
+                    ORDER BY revision DESC LIMIT 1""",
+                (capability_id,),
+            ).fetchone()
+            if row is None:
+                raise ContentTaskRunConflict("content capability revision missing")
+            capability = _content_exact_ref({
+                "resourceType": "CapabilityRevision", "resourceId": row["capability_id"],
+                "revision": row["revision"], "contentHash": "sha256:" + row["content_hash"],
+            }, "CapabilityRevision")
+            ContentGenerateHostService._agent_capability_authority(
+                transaction, scope, {**refs, "capability": capability}
+            )
+            capabilities.append(ExactContractRef(
+                resource_type="CapabilityRevision", resource_id=row["capability_id"],
+                revision=row["revision"], content_hash=row["content_hash"],
+            ))
+        return {
+            "plan_ref": refs["responsibility_plan"].model_dump(
+                mode="json", by_alias=True, exclude_none=True
+            ),
+            "assignee": ResourceRef(
+                resource_type="AgentInstance", resource_id=agent.instance_id,
+                revision=str(agent.version), authority="aip-assignee-directory",
+            ),
+            "agent_hash": agent.instance_ref.content_hash,
+            "capabilities": capabilities,
+        }
+
     def execute_claim(self, scope: TenantScope, review_key: str, token: UUID) -> dict[str, str]:
         if type(scope) is not TenantScope or type(review_key) is not str or type(token) is not UUID:
             raise ValueError("exact claimed content Review identity required")
@@ -193,6 +293,7 @@ class ContentTaskRunOwner:
             ContentGenerateHostService._task_brief(
                 transaction, scope, authorities, source_values, approved_plan=approved
             )
+            assignment = self._assignment(transaction, scope)
             checked = transaction.execute("SELECT clock_timestamp() AS checked_at").fetchone()
             if checked is None:
                 raise ContentTaskRunConflict("content TaskRun clock unavailable")
@@ -217,12 +318,20 @@ class ContentTaskRunOwner:
                 CreatePlanRevisionRequest(
                     expected_task_version=1,
                     steps=[
-                        PlanStep(step_key="content_generate", title="生成有来源的可读内容"),
+                        PlanStep(
+                            step_key="content_generate", title="生成有来源的可读内容",
+                            responsibility_slot_ids=["content.generate"],
+                            assignee_refs=[assignment["assignee"]],
+                            capability_refs=assignment["capabilities"],
+                        ),
                         PlanStep(step_key="content_review", title="人工审核可读内容"),
                     ],
-                    dependencies=[response["growthPlanRef"], response["briefRef"]],
+                    dependencies=[
+                        response["growthPlanRef"], response["briefRef"], assignment["plan_ref"],
+                    ],
                     risk={
                         "reviewReceiptRef": response["receiptRef"],
+                        "responsibilityPlanRef": assignment["plan_ref"],
                         "externalPublicationAllowed": False,
                         "providerInvocationAuthorized": False,
                     },
@@ -262,13 +371,20 @@ class ContentTaskRunOwner:
                 readback["plan_revision_id"], readback["run_id"],
             ) != ("accepted", 1, token, plan.id, run.id):
                 raise ContentTaskRunConflict("content TaskRun ack readback drifted")
+            next_intent = transaction.execute(
+                "SELECT public.ecommerce_growth_content_agentrun_put_a0v_102(%s) AS inserted",
+                (review_key,),
+            ).fetchone()
+            if next_intent is None or next_intent["inserted"] is not True:
+                raise ContentTaskRunConflict("content AgentRun intent unavailable")
             conn.commit()
         # The in-transaction readback above is not proof that the commit became
         # visible. A failed independent read is an unknown result, never a retry.
         with self._connect_read(scope) as conn:
             committed = conn.execute(
                 """SELECT i.state,i.attempt,i.claim_token,i.plan_revision_id,i.run_id,
-                          p.approval_status,r.status AS run_status
+                          p.approval_status,r.status AS run_status,
+                          a.state AS agent_intent_state,a.attempt AS agent_intent_attempt
                      FROM public.ecommerce_growth_content_taskrun_intent i
                      JOIN public.aip_plan_revision p
                        ON p.org_id=i.org_id AND p.project_id=i.project_id
@@ -277,6 +393,10 @@ class ContentTaskRunOwner:
                        ON r.org_id=i.org_id AND r.project_id=i.project_id
                       AND r.run_id=i.run_id AND r.task_id=i.task_id
                       AND r.plan_revision_id=i.plan_revision_id
+                     JOIN public.ecommerce_growth_content_agentrun_intent a
+                       ON a.org_id=i.org_id AND a.project_id=i.project_id
+                      AND a.review_key=i.review_key AND a.task_id=i.task_id
+                      AND a.plan_revision_id=i.plan_revision_id AND a.task_run_id=i.run_id
                     WHERE i.org_id=%s AND i.project_id=%s AND i.review_key=%s""",
                 (*scope.key, review_key),
             ).fetchone()
@@ -284,7 +404,8 @@ class ContentTaskRunOwner:
             committed["state"], committed["attempt"], committed["claim_token"],
             committed["plan_revision_id"], committed["run_id"],
             committed["approval_status"], committed["run_status"],
-        ) != ("accepted", 1, token, plan.id, run.id, "approved", "running"):
+            committed["agent_intent_state"], committed["agent_intent_attempt"],
+        ) != ("accepted", 1, token, plan.id, run.id, "approved", "running", "pending", 0):
             raise ContentTaskRunConflict("content TaskRun committed readback unknown")
         return {"status": "CONTENT_RUN_RUNNING", "reviewKey": review_key,
                 "planRevisionId": plan.id, "runId": run.id}

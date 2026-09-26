@@ -422,6 +422,11 @@ def test_content_generate_reads_canonical_public_agent_plan_and_capability():
                 plan_hash,
             ),
         )
+        from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunOwner
+        assignment = ContentTaskRunOwner._assignment(HostTransaction(conn), SCOPE)
+        assert assignment["plan_ref"]["resourceId"] == plan_id
+        assert assignment["assignee"].resource_id == agent_id
+        assert assignment["capabilities"][0].resource_id == capability_id
         bool_slot = json.loads(json.dumps(slot))
         bool_slot["assignee"]["version"] = True
         conn.execute(
