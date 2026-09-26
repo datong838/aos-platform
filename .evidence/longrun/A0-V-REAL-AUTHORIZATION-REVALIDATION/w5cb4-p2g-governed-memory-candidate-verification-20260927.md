@@ -1,0 +1,7 @@
+# W5CB4 P2g 第十五增量：第三段待治理候选同库验证
+
+- 基线 `m1@82847f98`、Alembic 单头 `a0v_106`。本切片只新增 `ecommerce_growth_memory_candidate_target.py`、对应专项测试，并延伸原 `test_ecommerce_content_review_pending_pg.py` 的同一 Task/Run/Artifact/ReviewReceipt/反馈命令；未修改当前实例、迁移、AIP 治理审批或发布门。
+- RED：新增原链测试首次在模块导入时因第三段 target/consumer 尚不存在失败。GREEN：一次性完整迁移库中，非超级 serializable Runtime 身份在原第一/二段 ack 与正式 `insufficient` EffectReview 后，第三段 `claim_current → require_current_origin → AIP source revision + pending candidate → exact target Receipt readback → acknowledge` 同事务提交，独立连接读回 checkpoint=3、第三段 `acked/attempt=1`、唯一 source/candidate/初始事件，`aip_memory_item=0`。候选为 `episodic/workspace/pending`、confidence=0，标记 `insufficient_evidence/pending_governance`，source hash 指向原 EffectReview，payload hash 指向原内容 Artifact；重复原命令只读回原回执。
+- 负向同库证明：无正式 EffectReview、被改为 accepted 的评估、当前 content.review dispatch fence、原 Run 非终态、第二段 target body 漂移时，不产生 AIP candidate，第三段仍 `pending/attempt=0`；`dev-org/dev-project` 候选读回为 0。目标读取器还核同一 feedback 命令、原 Artifact/Task/Review Receipt、正式评估与初始候选事件；已存在候选或来源但第三段 pristine 时拒绝重新提交。未知 commit 或提交后独立读回抛出 `MemoryCandidateUnknown`，批消费不吞掉该边界。
+- 专项 `12 passed, 7 warnings`；相关电商扩展与 AIP Memory Store 累计 `968 passed, 191 skipped, 9 warnings`。跳过不计成功；`compileall`、`git diff --check` 和 Alembic head 检查通过。纯后端、当前实例不开 worker，无可适用的浏览器验收对象。
+- 方案/代码边界：AIP 现有候选表仍按原 ACL/RLS 工作，本波未加新直接写授权、未批准/推广候选、未发布 Wiki、未读商城源、未调用 Provider、未重放旧十二 Run。受控来源、模拟人类与测试模板不能冒充真实业务闭环。下一波须把第二段、正式 EffectReview、第三段消费者接入独立默认关闭的自然启动门，并为总控提供中文且有来源的复盘/待治理回流；真实签名安装、当前授权与自然周期仍另验。

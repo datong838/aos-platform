@@ -74,6 +74,9 @@ from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
 from aos_api.ecommerce_growth_daily_review_target import DailyReviewFeedbackWorker
 from aos_api.ecommerce_growth_improvement_target import CurrentImprovementConsumer, ImprovementFeedbackWorker
 from aos_api.ecommerce_growth_effect_review_owner import CurrentEffectReviewConsumer, EffectReviewOwner
+from aos_api.ecommerce_growth_memory_candidate_target import (
+    CurrentMemoryCandidateConsumer, MemoryCandidateFeedbackWorker,
+)
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -1162,6 +1165,12 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 (*SCOPE.key, effect_subject)).fetchone()["n"] == 0
         effect_owner = EffectReviewOwner(connect=runtime_connect)
         effect_consumer = CurrentEffectReviewConsumer(connect=runtime_connect, owner=effect_owner)
+        memory_worker = MemoryCandidateFeedbackWorker(connect=runtime_connect)
+        with pytest.raises(Exception, match="formal effect review is missing"):
+            memory_worker.run_one(SCOPE, review_proof.feedback_command_id)
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n FROM aip_memory_candidate
+                WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
         assert effect_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
         with connect(SCOPE) as conn:
             conn.execute("""UPDATE ecommerce_growth_improvement_target
@@ -1213,3 +1222,124 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                     WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
                     (*SCOPE.key, effect_subject))
                 conn.commit()
+        memory_consumer = CurrentMemoryCandidateConsumer(
+            connect=runtime_connect, worker=memory_worker)
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE aip_effect_review_revision SET accepted=true
+                WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                (*SCOPE.key, effect_subject))
+            conn.commit()
+        try:
+            assert memory_consumer.list_pending(SCOPE) == []
+            with pytest.raises(Exception, match="lineage or maturity drifted"):
+                memory_worker.run_one(SCOPE, review_proof.feedback_command_id)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_memory_candidate
+                    WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE aip_effect_review_revision SET accepted=false
+                    WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                    (*SCOPE.key, effect_subject))
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=true
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+            conn.commit()
+        try:
+            assert memory_consumer.list_pending(SCOPE) == []
+            with pytest.raises(Exception):
+                memory_worker.run_one(SCOPE, review_proof.feedback_command_id)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=false
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE aip_task_run SET status='running'
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, proof["run_id"]))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                memory_worker.run_one(SCOPE, review_proof.feedback_command_id)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_memory_candidate
+                    WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE aip_task_run SET status='succeeded'
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                    (*SCOPE.key, proof["run_id"]))
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE ecommerce_growth_improvement_target
+                SET body=jsonb_set(body,'{effectStatus}','\"FALSELY_MATURE\"'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                memory_worker.run_one(SCOPE, review_proof.feedback_command_id)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_memory_candidate
+                    WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE ecommerce_growth_improvement_target
+                    SET body=jsonb_set(body,'{effectStatus}','\"AWAITING_COMPARABLE_EVIDENCE\"'::jsonb)
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                    (*SCOPE.key, review_proof.feedback_command_id))
+                conn.commit()
+        with connect(SCOPE) as conn:
+            pristine = conn.execute("""SELECT state,attempt,target_receipt_ref
+                FROM ecommerce_growth_feedback_segment WHERE org_id=%s AND project_id=%s
+                  AND command_id=%s AND sequence=3""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchone()
+            assert pristine == {"state": "pending", "attempt": 0, "target_receipt_ref": None}
+        assert memory_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
+        assert memory_consumer.run_once(SCOPE) == [{
+            "commandId": review_proof.feedback_command_id,
+            "status": "MEMORY_CANDIDATE_ACKED",
+        }]
+        assert memory_consumer.list_pending(SCOPE) == []
+        with connect(SCOPE) as conn:
+            rows = conn.execute("""SELECT candidate_id,status,memory_layer,scope,
+                payload_ref,source_id,source_revision,markings
+                FROM aip_memory_candidate WHERE org_id=%s AND project_id=%s""",
+                SCOPE.key).fetchall()
+            assert len(rows) == 1
+            assert rows[0]["status"] == "pending"
+            assert rows[0]["memory_layer"] == "episodic"
+            assert rows[0]["scope"] == "workspace"
+            assert "insufficient_evidence" in rows[0]["markings"]
+            assert rows[0]["payload_ref"]["artifactId"] == settled.artifact_id
+            assert rows[0]["payload_ref"]["contentHash"] == settled.artifact_hash
+            assert conn.execute("""SELECT count(*) AS n FROM aip_memory_candidate_event
+                WHERE org_id=%s AND project_id=%s AND candidate_id=%s""",
+                (*SCOPE.key, rows[0]["candidate_id"])).fetchone()["n"] == 1
+            assert conn.execute("""SELECT count(*) AS n FROM aip_memory_item
+                WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+            source = conn.execute("""SELECT source_ref,content_hash FROM aip_memory_source_revision
+                WHERE org_id=%s AND project_id=%s AND source_id=%s AND revision=%s""",
+                (*SCOPE.key, rows[0]["source_id"], rows[0]["source_revision"])).fetchone()
+            formal_review_id = conn.execute("""SELECT review_id FROM aip_effect_review_revision
+                WHERE org_id=%s AND project_id=%s AND subject_id=%s AND revision=1""",
+                (*SCOPE.key, effect_subject)).fetchone()["review_id"]
+            assert source["source_ref"]["resourceId"] == formal_review_id
+            assert len(source["content_hash"]) == 64
+            segment = conn.execute("""SELECT state,attempt,target_receipt_ref FROM
+                ecommerce_growth_feedback_segment WHERE org_id=%s AND project_id=%s
+                  AND command_id=%s AND sequence=3""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchone()
+            assert segment["state"] == "acked" and segment["attempt"] == 1
+            assert segment["target_receipt_ref"]["resourceId"] == rows[0]["candidate_id"]
+            assert conn.execute("""SELECT completed_sequence FROM ecommerce_growth_feedback_checkpoint
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["completed_sequence"] == 3
+        assert memory_worker.run_one(SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_ACKED"
+        with runtime_connect(SCOPE) as conn:
+            conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
+            assert conn.execute("SELECT count(*) AS n FROM aip_memory_candidate").fetchone()["n"] == 0
