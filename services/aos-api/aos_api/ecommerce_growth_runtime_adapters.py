@@ -5520,7 +5520,7 @@ class ContentReviewHostService:
         row = transaction.execute(
             """SELECT artifact_id,run_id,artifact_type,content_hash,metadata,family_revision
                  FROM public.aip_artifact
-                WHERE org_id=%s AND project_id=%s AND artifact_id=%s FOR SHARE""",
+                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
             (*scope.key, command["artifactRef"]["resourceId"]),
         ).fetchone()
         if row is None or type(row["metadata"]) is not dict:

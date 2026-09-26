@@ -469,7 +469,7 @@ def test_artifact_owner_rejects_boolean_exact_ref_alias():
             self.stored = stored
 
         def execute(self, query, _params=()):
-            if "artifact_id=%s FOR SHARE" in query:
+            if "artifact_id=%s" in query:
                 return Result({
                     "artifact_id": "content-1", "run_id": "run-1",
                     "artifact_type": "content_campaign", "content_hash": content_hash,

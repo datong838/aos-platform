@@ -4,6 +4,7 @@ Each assertion below is only a staged subproof; no test Provider is a live call.
 """
 
 from datetime import UTC, datetime, timedelta
+from contextlib import contextmanager
 import importlib.util
 import json
 from pathlib import Path
@@ -59,11 +60,15 @@ from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
 from aos_api.ecommerce_content_step_owner import (
     ContentGenerationStepOwner, ContentGenerationStepSource, ContentStepConflict,
 )
+from aos_api.ecommerce_content_review_step_owner import (
+    ContentReviewStepConflict, ContentReviewStepOwner, ContentReviewStepSource,
+)
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService, ContentReviewHostService, _analysis_command_hash,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
+from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -90,6 +95,25 @@ def _upgrade_test_clone_to_head(connect):
         assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_105"
         assert conn.execute("SELECT to_regprocedure(%s) AS procedure",
             ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
+
+
+@contextmanager
+def _runtime_role_connection(connect, scope):
+    """Use this disposable clone's non-superuser runtime role and serializable scope."""
+    with connect(scope) as conn:
+        conn.execute("SET SESSION AUTHORIZATION aos_runtime")
+        conn.execute("SET ROLE aos_runtime")
+        conn.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+        conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+        identity = conn.execute("""SELECT session_user AS session_user,
+            current_setting('role') AS role_name,
+            current_setting('transaction_isolation') AS isolation,
+            (SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname=session_user)
+              AS elevated""").fetchone()
+        assert identity == {"session_user": "aos_runtime", "role_name": "aos_runtime",
+            "isolation": "serializable", "elevated": False}
+        yield conn
 
 
 def _register_current_content_eval_gate(connect):
@@ -913,3 +937,60 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_feedback_command
                 WHERE org_id=%s AND project_id=%s AND review_receipt_ref=%s::jsonb""",
                 (*SCOPE.key, json.dumps(review_receipt["receiptRef"]))).fetchone()["n"] == 1
+            review_proof = ContentReviewStepSource().read(
+                conn, SCOPE, review_receipt["receiptRef"]["resourceId"])
+            assert review_proof.run_id == proof["run_id"]
+            assert review_proof.command == review_command
+            conn.execute("SAVEPOINT review_dispatch_drift")
+            conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=true
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+            with pytest.raises(ContentReviewStepConflict, match="Receipt unavailable"):
+                ContentReviewStepSource().read(conn, SCOPE, review_proof.receipt_id)
+            conn.execute("ROLLBACK TO SAVEPOINT review_dispatch_drift")
+            conn.execute("SAVEPOINT review_decision_drift")
+            conn.execute("""UPDATE ecommerce_growth_runtime_command_receipt
+                SET response=jsonb_set(response,'{decision}','\"RETURN\"'::jsonb)
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review'
+                  AND idempotency_key='content-p2g-original-review-receipt'""", SCOPE.key)
+            with pytest.raises(ContentReviewStepConflict):
+                ContentReviewStepSource().read(conn, SCOPE, review_proof.receipt_id)
+            conn.execute("ROLLBACK TO SAVEPOINT review_decision_drift")
+        terminal_owner = ContentReviewStepOwner(connect_read=connect, connect_write=connect)
+        assert terminal_owner.list_pending(SCOPE) == [review_proof.receipt_id]
+        with pytest.raises(Exception, match="scoped runtime dispatch lock required"):
+            terminal_owner.run_one(SCOPE, review_proof.receipt_id)
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n FROM aip_step_run WHERE
+                org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_review'""",
+                (*SCOPE.key, review_proof.run_id)).fetchone()["n"] == 0
+            for operation in (
+                "ecommerce_growth_investigation_describe", "ecommerce_growth_case_put",
+                "ecommerce_growth_schedule_put", "ecommerce_growth_schedule_trigger",
+                "ecommerce_growth_data_fulfill", "ecommerce_growth_analysis_advance",
+                "ecommerce_growth_review_advance",
+            ):
+                insert(conn, "extension_operation_dispatch_binding",
+                    operation_id=operation, handler_kind="extension",
+                    installation_id=binding["installation_id"], generation=binding["generation"],
+                    execution_epoch=binding["execution_epoch"], operation_fence=False,
+                    revision=5, cutover_group_id=binding["cutover_group_id"],
+                    cutover_group_revision=binding["cutover_group_revision"],
+                    updated_by="fixture")
+        runtime_connect = lambda scope: _runtime_role_connection(connect, scope)
+        runtime_owner = ContentReviewStepOwner(
+            connect_read=runtime_connect, connect_write=runtime_connect)
+        terminal = runtime_owner.run_one(SCOPE, review_proof.receipt_id)
+        assert terminal["status"] == "CONTENT_REVIEW_RUN_SUCCEEDED"
+        assert terminal["runId"] == proof["run_id"]
+        assert runtime_owner.list_pending(SCOPE) == []
+        assert runtime_owner.run_one(SCOPE, review_proof.receipt_id) == terminal
+        with connect(SCOPE) as conn:
+            with pytest.raises(Exception, match="attempt already exists"):
+                terminal_owner._complete_transaction(conn, SCOPE, review_proof)
+            assert conn.execute("""SELECT count(*) AS n FROM aip_step_run WHERE
+                org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_review'""",
+                (*SCOPE.key, review_proof.run_id)).fetchone()["n"] == 1
+        assert CurrentFeedbackConsumer(connect=runtime_connect).list_pending(SCOPE) == [
+            review_proof.feedback_command_id]
