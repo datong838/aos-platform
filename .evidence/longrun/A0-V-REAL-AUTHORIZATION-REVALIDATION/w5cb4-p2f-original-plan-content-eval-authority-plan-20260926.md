@@ -28,3 +28,9 @@
 - 复用 AIP 可发布的 `LogicGraph`，在图的输入 schema 与纯表达式 `transform` 中实现确定性 completeness 判定；无 LLM/Tool/Action。发布门只能针对确有持久版本/哈希的 Graph，不能用未登记的代码常量冒充 target。新 Graph 的 EvalSuite 应有正向、空正文、缺来源、错商品/渠道等隔离用例；在发布门与 Publication 后才创建/冻结 `subjectKind=ecommerce_content`、`subjectInputMode=ecommerce-readable-content/v1`、`requiresHumanDecision=true` 的 EvalContract。批准合同只证明结构门可运行，不替代每篇内容的主体 EvalRun。
 - 文件顺序：`services/aos-api/aos_api/ecommerce_content_pre_review_eval.py` 定义 Graph 请求、输入/结果边界与确定性执行；`services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_eval.py` 先 RED 覆盖正/负与无外部调用；受控注册脚本/Owner 后续另加，复用 `LogicGraphStore`、`AipEvalPackRegistry`、`AipReleasePublicationService`、`AipProductionContractStore`，不得直写其表。`ecommerce_content_taskrun_owner.py` 仅从当前唯一已发布/未撤销的此 Graph 对应冻结 READY 合同选择并在新 Plan 创建前绑定；选择为零/多义/过期一律在 claim 前停，不消耗 one-attempt。
 - 先完成纯 Graph 规格和执行专项测试，再做隔离 PG 的 Suite/Release/Publication/Contract 正向证明与错租户/撤销反例；未能证明完整正式来源时 P2f-b 保持未完成，生产元库不迁移、不注册、不启 Worker。将候选包升级和真实安装留到精确签名/安装波次，不修改既有冻结 1.11.0 候选包。
+
+## P2f-b 第 1/4 步状态
+
+- 已实现仅用于隔离用例的草稿 Graph 构造及只读执行函数；Graph 只有 input/transform，无外部 effect。对空正文、缺商品/渠道/来源/约束、错误封套/Artifact 引用、篡改 Graph 均失败关闭。
+- 此步不是正式 Eval 权威：尚无隔离 PG 的 Suite、ReleaseGate/Publication 和冻结 READY 内容 EvalContract；不得把 helper 输出视作生产可接受报告，也不得创建自然 Plan gate 或开启 Worker。
+- 下一步：在 AIP 正式注册／发布路径上做隔离 PG 正反用例，证明 Graph/Suite 与 exact subject 输入、当前发布权威一致，再处理 Owner 的原 Plan 创建前绑定。
