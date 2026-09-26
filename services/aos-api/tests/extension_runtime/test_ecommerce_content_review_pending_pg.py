@@ -18,6 +18,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_effect_review import CreateEffectReviewRequest, EffectMaturityStatus
+from aos_api.aip_effect_review_store import AipEffectReviewStore
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, ReserveBudgetRequest
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
 from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
@@ -71,6 +73,7 @@ from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeSt
 from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
 from aos_api.ecommerce_growth_daily_review_target import DailyReviewFeedbackWorker
 from aos_api.ecommerce_growth_improvement_target import CurrentImprovementConsumer, ImprovementFeedbackWorker
+from aos_api.ecommerce_growth_effect_review_owner import CurrentEffectReviewConsumer, EffectReviewOwner
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -1135,3 +1138,78 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["completed_sequence"] == 2
         assert ImprovementFeedbackWorker(connect=runtime_connect).run_one(
             SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_ACKED"
+        effect_subject = "content-effect-" + target[0]["receipt_ref"]["contentHash"][7:47]
+        effect_request = CreateEffectReviewRequest(
+            subject_id=effect_subject,
+            subject_ref=ResourceRef(resource_type="ImprovementPendingReceipt",
+                resource_id=target[0]["receipt_ref"]["resourceId"], revision="1",
+                authority="ecommerce-growth"),
+            observation_refs=[], metric_keys=[], sample_count=0, min_sample=1,
+            cutoff_at=datetime.now(UTC), event_time_at=datetime.now(UTC) - timedelta(seconds=1),
+            accepted=False, expected_revision=0,
+            reason_code="content_accepted_effect_evidence_pending")
+        with runtime_connect(SCOPE) as conn:
+            effect = AipEffectReviewStore().create_review_in_transaction(
+                SCOPE, effect_request, "ecommerce-effect-review", now=datetime.now(UTC),
+                transaction=HostTransaction(conn))
+            assert effect.accepted is False
+            assert effect.effect_completed is False
+            assert effect.maturity_status is EffectMaturityStatus.INSUFFICIENT
+            conn.rollback()
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n FROM aip_effect_review_revision
+                WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                (*SCOPE.key, effect_subject)).fetchone()["n"] == 0
+        effect_owner = EffectReviewOwner(connect=runtime_connect)
+        effect_consumer = CurrentEffectReviewConsumer(connect=runtime_connect, owner=effect_owner)
+        assert effect_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE ecommerce_growth_improvement_target
+                SET body=jsonb_set(body,'{effectStatus}','\"FALSELY_MATURE\"'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                effect_owner.run_one(SCOPE, review_proof.feedback_command_id)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_effect_review_revision
+                    WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                    (*SCOPE.key, effect_subject)).fetchone()["n"] == 0
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE ecommerce_growth_improvement_target
+                    SET body=jsonb_set(body,'{effectStatus}','\"AWAITING_COMPARABLE_EVIDENCE\"'::jsonb)
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                    (*SCOPE.key, review_proof.feedback_command_id))
+                conn.commit()
+        assert effect_consumer.run_once(SCOPE) == [{"commandId": review_proof.feedback_command_id,
+            "status": "EFFECT_REVIEW_INSUFFICIENT"}]
+        assert effect_consumer.list_pending(SCOPE) == []
+        with connect(SCOPE) as conn:
+            rows = conn.execute("""SELECT subject_ref,accepted,effect_completed,
+                maturity_status,sample_count,min_sample,reason_code
+                FROM aip_effect_review_revision WHERE org_id=%s AND project_id=%s
+                  AND subject_id=%s""", (*SCOPE.key, effect_subject)).fetchall()
+            assert len(rows) == 1
+            assert rows[0]["subject_ref"]["resourceId"] == target[0]["receipt_ref"]["resourceId"]
+            assert rows[0]["accepted"] is False
+            assert rows[0]["effect_completed"] is False
+            assert rows[0]["maturity_status"] == "insufficient"
+            assert rows[0]["sample_count"] == 0 and rows[0]["min_sample"] == 1
+            assert rows[0]["reason_code"] == "content_accepted_effect_evidence_pending"
+        assert effect_owner.run_one(SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_REVIEWED"
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE aip_effect_review_revision SET accepted=true
+                WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                (*SCOPE.key, effect_subject))
+            conn.commit()
+        try:
+            with pytest.raises(Exception, match="lineage or maturity drifted"):
+                effect_owner.run_one(SCOPE, review_proof.feedback_command_id)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE aip_effect_review_revision SET accepted=false
+                    WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+                    (*SCOPE.key, effect_subject))
+                conn.commit()

@@ -76,106 +76,117 @@ class AipEffectReviewStore:
         if not actor.strip():
             raise ValueError("actor is required")
         with connect(scope) as conn:
-            head = conn.execute(
-                """SELECT current_revision FROM aip_effect_review_head
-                   WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
-                (*scope.key, request.subject_id),
-            ).fetchone()
-            current = 0 if head is None else int(head["current_revision"])
-            if request.expected_revision != current:
-                raise AipEffectReviewConflict(
-                    f"effect review CAS expected={request.expected_revision} current={current}"
-                )
-            revision = current + 1
-            maturity = _decide_maturity(
-                sample_count=request.sample_count,
-                min_sample=request.min_sample,
-                cutoff_at=request.cutoff_at,
-                observed_at=now,
+            review = self.create_review_in_transaction(
+                scope, request, actor, now=now, transaction=conn
             )
-            # accepted never forces effect_completed; completion follows maturity only.
-            effect_completed = maturity is EffectMaturityStatus.MATURE
-            payload = {
-                "subjectId": request.subject_id,
-                "revision": revision,
-                "subjectRef": request.subject_ref.model_dump(mode="json", by_alias=True),
-                "observationRefs": [
-                    ref.model_dump(mode="json", by_alias=True)
-                    for ref in request.observation_refs
-                ],
-                "metricKeys": request.metric_keys,
-                "sampleCount": request.sample_count,
-                "minSample": request.min_sample,
-                "cutoffAt": request.cutoff_at.isoformat(),
-                "eventTimeAt": request.event_time_at.isoformat(),
-                "accepted": request.accepted,
-                "effectCompleted": effect_completed,
-                "maturityStatus": maturity.value,
-                "reasonCode": request.reason_code,
-            }
-            content_hash = _hash(payload)
-            review_id = _id("effect-review", scope, request.subject_id, revision)
-            conn.execute(
-                """INSERT INTO aip_effect_review_revision(
-                  org_id,project_id,review_id,subject_id,revision,subject_ref,
-                  observation_refs,metric_keys,sample_count,min_sample,cutoff_at,
-                  event_time_at,accepted,effect_completed,maturity_status,
-                  reason_code,content_hash,actor,created_at)
-                  VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,
-                         %s,%s,%s,%s,%s,%s,%s)""",
-                (
-                    *scope.key,
-                    review_id,
-                    request.subject_id,
-                    revision,
-                    _json(payload["subjectRef"]),
-                    _json(payload["observationRefs"]),
-                    _json(request.metric_keys),
-                    request.sample_count,
-                    request.min_sample,
-                    request.cutoff_at,
-                    request.event_time_at,
-                    request.accepted,
-                    effect_completed,
-                    maturity.value,
-                    request.reason_code,
-                    content_hash,
-                    actor,
-                    now,
-                ),
-            )
-            if head is None:
-                conn.execute(
-                    """INSERT INTO aip_effect_review_head(
-                      org_id,project_id,subject_id,current_revision,version,updated_at)
-                      VALUES(%s,%s,%s,%s,1,%s)""",
-                    (*scope.key, request.subject_id, revision, now),
-                )
-            else:
-                updated = conn.execute(
-                    """UPDATE aip_effect_review_head
-                       SET current_revision=%s, version=version+1, updated_at=%s
-                       WHERE org_id=%s AND project_id=%s AND subject_id=%s
-                         AND current_revision=%s""",
-                    (
-                        revision,
-                        now,
-                        *scope.key,
-                        request.subject_id,
-                        current,
-                    ),
-                )
-                if updated.rowcount != 1:
-                    raise AipEffectReviewConflict("effect review head CAS lost")
             conn.commit()
-            return self._review_row(
-                scope,
-                conn.execute(
-                    """SELECT * FROM aip_effect_review_revision
-                       WHERE org_id=%s AND project_id=%s AND review_id=%s""",
-                    (*scope.key, review_id),
-                ).fetchone(),
+            return review
+
+    def create_review_in_transaction(
+        self,
+        scope: TenantScope,
+        request: CreateEffectReviewRequest,
+        actor: str,
+        *,
+        now: datetime,
+        transaction: Any,
+    ) -> EffectReviewRevision:
+        """Use the caller's scoped transaction; never open or commit a connection."""
+        if type(scope) is not TenantScope or not actor.strip() or not hasattr(transaction, "execute"):
+            raise ValueError("scoped effect review transaction and actor are required")
+        head = transaction.execute(
+            """SELECT current_revision FROM aip_effect_review_head
+               WHERE org_id=%s AND project_id=%s AND subject_id=%s""",
+            (*scope.key, request.subject_id),
+        ).fetchone()
+        current = 0 if head is None else int(head["current_revision"])
+        if request.expected_revision != current:
+            raise AipEffectReviewConflict(
+                f"effect review CAS expected={request.expected_revision} current={current}"
             )
+        revision = current + 1
+        maturity = _decide_maturity(
+            sample_count=request.sample_count,
+            min_sample=request.min_sample,
+            cutoff_at=request.cutoff_at,
+            observed_at=now,
+        )
+        # accepted never forces effect_completed; completion follows maturity only.
+        effect_completed = maturity is EffectMaturityStatus.MATURE
+        payload = {
+            "subjectId": request.subject_id,
+            "revision": revision,
+            "subjectRef": request.subject_ref.model_dump(mode="json", by_alias=True),
+            "observationRefs": [
+                ref.model_dump(mode="json", by_alias=True)
+                for ref in request.observation_refs
+            ],
+            "metricKeys": request.metric_keys,
+            "sampleCount": request.sample_count,
+            "minSample": request.min_sample,
+            "cutoffAt": request.cutoff_at.isoformat(),
+            "eventTimeAt": request.event_time_at.isoformat(),
+            "accepted": request.accepted,
+            "effectCompleted": effect_completed,
+            "maturityStatus": maturity.value,
+            "reasonCode": request.reason_code,
+        }
+        content_hash = _hash(payload)
+        review_id = _id("effect-review", scope, request.subject_id, revision)
+        transaction.execute(
+            """INSERT INTO aip_effect_review_revision(
+              org_id,project_id,review_id,subject_id,revision,subject_ref,
+              observation_refs,metric_keys,sample_count,min_sample,cutoff_at,
+              event_time_at,accepted,effect_completed,maturity_status,
+              reason_code,content_hash,actor,created_at)
+              VALUES(%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s,%s,%s,%s,
+                     %s,%s,%s,%s,%s,%s,%s)""",
+            (
+                *scope.key,
+                review_id,
+                request.subject_id,
+                revision,
+                _json(payload["subjectRef"]),
+                _json(payload["observationRefs"]),
+                _json(request.metric_keys),
+                request.sample_count,
+                request.min_sample,
+                request.cutoff_at,
+                request.event_time_at,
+                request.accepted,
+                effect_completed,
+                maturity.value,
+                request.reason_code,
+                content_hash,
+                actor,
+                now,
+            ),
+        )
+        if head is None:
+            transaction.execute(
+                """INSERT INTO aip_effect_review_head(
+                  org_id,project_id,subject_id,current_revision,version,updated_at)
+                  VALUES(%s,%s,%s,%s,1,%s)""",
+                (*scope.key, request.subject_id, revision, now),
+            )
+        else:
+            updated = transaction.execute(
+                """UPDATE aip_effect_review_head
+                   SET current_revision=%s, version=version+1, updated_at=%s
+                   WHERE org_id=%s AND project_id=%s AND subject_id=%s
+                     AND current_revision=%s""",
+                (revision, now, *scope.key, request.subject_id, current),
+            )
+            if updated.rowcount != 1:
+                raise AipEffectReviewConflict("effect review head CAS lost")
+        row = transaction.execute(
+            """SELECT * FROM aip_effect_review_revision
+               WHERE org_id=%s AND project_id=%s AND review_id=%s""",
+            (*scope.key, review_id),
+        ).fetchone()
+        if row is None:
+            raise AipEffectReviewConflict("effect review transaction readback failed")
+        return self._review_row(scope, row)
 
     def get_latest_review(
         self, scope: TenantScope, subject_id: str
