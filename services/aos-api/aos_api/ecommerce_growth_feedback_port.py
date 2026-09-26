@@ -8,10 +8,11 @@ from datetime import datetime
 import hashlib
 import json
 import re
+from types import SimpleNamespace
 from typing import Any, Mapping
 from uuid import UUID
 
-from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
 from aos_api.tenant_scope import TenantScope
 
 
@@ -259,6 +260,7 @@ class BoundEcommerceGrowthFeedbackPort:
             raise EcommerceGrowthFeedbackConflict("feedback command could not be read") from exc
 
     def claim(self, *, command_id: str, worker: str, lease_seconds: int = 60) -> Mapping[str, Any] | None:
+        """Low-level AR2-7C claim; production workers must call claim_current."""
         if not command_id.strip() or not worker.strip() or not 1 <= lease_seconds <= 300:
             raise ValueError("bounded feedback claim identity is required")
         try:
@@ -281,6 +283,84 @@ class BoundEcommerceGrowthFeedbackPort:
             raise
         except Exception as exc:
             raise EcommerceGrowthFeedbackConflict("feedback segment could not be claimed") from exc
+
+    def require_current_origin(self, *, command_id: str) -> Mapping[str, Any]:
+        """Lock current Host authority and prove this command's unique review origin."""
+
+        if type(command_id) is not str or not command_id.strip():
+            raise ValueError("feedback command identity is required")
+        try:
+            command = self._transaction.execute(
+                """SELECT decision,review_receipt_ref,artifact_ref,task_ref,brief_ref
+                     FROM public.ecommerce_growth_feedback_command
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*self._scope.key, command_id.strip()),
+            ).fetchone()
+            if command is None:
+                raise EcommerceGrowthFeedbackConflict("feedback origin command is missing")
+            review_ref = _strict_exact_ref(command["review_receipt_ref"], name="review origin")
+            if review_ref["resourceType"] != "ContentReviewReceipt":
+                raise EcommerceGrowthFeedbackConflict("feedback origin is not a content review")
+            origins = self._transaction.execute(
+                """SELECT request_hash,dispatch_revision,installation_id,generation,
+                          execution_epoch,cutover_group_id,cutover_group_revision,
+                          runtime_revision,response,target_receipt_ref
+                     FROM public.ecommerce_growth_runtime_command_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_content_review'
+                      AND target_receipt_ref=%s::jsonb LIMIT 2""",
+                (*self._scope.key, json.dumps(review_ref, sort_keys=True)),
+            ).fetchall()
+            if len(origins) != 1:
+                raise EcommerceGrowthFeedbackConflict("feedback review origin is missing or ambiguous")
+            origin = origins[0]
+            response = origin["response"]
+            if (
+                type(response) is not dict
+                or _strict_exact_ref(response.get("receiptRef"), name="review response") != review_ref
+                or _strict_exact_ref(origin["target_receipt_ref"], name="review target") != review_ref
+                or response.get("decision") != command["decision"]
+                or any(
+                    response.get(key) != command[column]
+                    for key, column in (
+                        ("artifactRef", "artifact_ref"),
+                        ("taskRef", "task_ref"),
+                        ("briefRef", "brief_ref"),
+                    )
+                )
+            ):
+                raise EcommerceGrowthFeedbackConflict("feedback review origin content drifted")
+            snapshot = LockedEcommerceGrowthHostPort._lock_and_revalidate(
+                self._transaction,
+                self._scope,
+                SimpleNamespace(
+                    org_id=self._scope.org_id,
+                    project_id=self._scope.project_id,
+                    operation_id="ecommerce_growth_content_review",
+                    handler_kind="extension",
+                    dispatch_revision=origin["dispatch_revision"],
+                    installation_id=origin["installation_id"],
+                    generation=origin["generation"],
+                    execution_epoch=origin["execution_epoch"],
+                    cutover_group_id=origin["cutover_group_id"],
+                    cutover_group_revision=origin["cutover_group_revision"],
+                ),
+            )
+            if snapshot.runtime_revision != origin["runtime_revision"]:
+                raise EcommerceGrowthFeedbackConflict("feedback runtime revision drifted")
+            return {"reviewReceiptRef": deepcopy(review_ref), "dispatch": snapshot}
+        except (ValueError, EcommerceGrowthFeedbackError):
+            raise
+        except Exception as exc:
+            raise EcommerceGrowthFeedbackConflict("feedback current origin could not be proven") from exc
+
+    def claim_current(
+        self, *, command_id: str, worker: str, lease_seconds: int = 60
+    ) -> Mapping[str, Any] | None:
+        """The only claim entry intended for a real feedback worker."""
+
+        self.require_current_origin(command_id=command_id)
+        return self.claim(command_id=command_id, worker=worker, lease_seconds=lease_seconds)
 
     def mark_unknown(self, *, command_id: str, claim: Mapping[str, Any], reason_code: str) -> None:
         lease = self._claim_identity(claim)
