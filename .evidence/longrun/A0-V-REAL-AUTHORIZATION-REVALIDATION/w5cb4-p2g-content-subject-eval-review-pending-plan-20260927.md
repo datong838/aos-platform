@@ -223,3 +223,10 @@
 - 文件级范围仅 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的 `content.generate` 严格命令解析/Host 返工校验，以及 `services/aos-api/tests/extension_runtime/test_ecommerce_content_generate_handoff_lineage.py` 的 RED/正负测试；若真实同库正向需要跨 Task/Artifact 新版本生产者或批准 API，留下一波，不在本波造假。保留原十字段首次生成命令及 requestHash 完全不变。
 - 返工命令只允许在原字段外增加唯一 `returnDecisionRef` 精确引用（`ReturnDecision`、revision=1、无 receiptId），并由 Host 在执行前用同租户当前事务核该 decision 的不可变 hash、原 Run/Task、最新 queued StepRun 的 id/attempt/input refs、原 ReviewIssue 已 returned 与原 Artifact、命令幂等键等于该 decision 的 attempt key、选定批准事件创建于决定之后。不存在、旧 attempt、已运行/终态、错租户、旧批准、错 hash/额外字段均拒绝；任何未知查询结果不放行。旧首生路径不能携带返工字段，不修改其行为。
 - 测试先 RED：结构严格性、错类型/hash/key、缺 queued/current decision、旧批准、错 Task 等；再做最小实现与专项/累计、编译/方案一致性审查。该门是**必要但非充分**条件：新批准对新产物版本的完整绑定、全新容量/预算 reservation、返工命令生产者与 settled result→第二次 StepRun 的 Owner 分波实现并验证前，不允许调用 Provider 或称返工已闭环。纯后端且当前实例停用，浏览器不适用。verification 落盘、m1 精确提交和 AOS/Prime 同步后，下一波优先新版本/批准/预算的正式生产链。
+
+### P2g 第二十七增量：返工新版 Brief 的正式来源与准入（2026-09-27，编码前）
+
+- 复习 231-5 §4/5“退回需新版本与新批准”、P2g26 双重禁入和现有公共 `AipProductionContractStore.revise_brief`。当前 `ContentGenerateHostService._task_brief` 只接受 `task_brief.create` Receipt，故即便经正式 API 形成同一 Brief 的 revision>1，Host 也不能识别；必须先区分首生与返工，不得放宽首生路径。原 Artifact 不可变，返工理由/ReturnDecision 必须进入新版准备的精确来源，不能把旧 Brief 简单改个版本号后重试。
+- 本波文件级范围：`services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的返工 Brief 校验；新增 `services/aos-api/aos_api/ecommerce_content_repair_brief_authority.py` 和 `services/aos-api/tests/extension_runtime/test_ecommerce_content_repair_brief_authority.py`；必要时仅扩 `test_ecommerce_content_generate_handoff_lineage.py` 的首生不回归。先核 `ReviseBriefRequest`、v2 schema 的允许字段和公共 Receipt 形状；如需变更 schema/产品输入，先追加方案，不直接编码。
+- RED：旧 Brief revision、伪造 revise Receipt、只换版本未含 ReturnDecision/原 Artifact/人类返工理由、跨 Task/租户、非最新 queued attempt、错原 Issue/hash、旧 approval 都不得作为新版准备。正向必须从公共 revise API 的真实不可变 revision/Receipt 和 P2g24 原 RETURN 决定组成同库只读 exact 证明；不得测试直接 INSERT 假 Brief/Receipt。保留 P2g26 `revalidate/execute` 禁入，不调用 Provider，不造新预算。
+- 完成专项/邻近累计、同库权限与事务复核、编译/方案一致性、verification、m1 提交、D-waves/AOS/Prime 更新后，下一波再做新批准提案与新容量/预算的正式生产链。当前恢复 PG `a0v_092`、无可核当前备份，API/worker 保持停止；本波纯后端不做假浏览器验收。
