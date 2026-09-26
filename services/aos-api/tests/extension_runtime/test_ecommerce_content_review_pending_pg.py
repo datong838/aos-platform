@@ -4,6 +4,7 @@ Each assertion below is only a staged subproof; no test Provider is a live call.
 """
 
 from datetime import UTC, datetime, timedelta
+from copy import deepcopy
 from contextlib import contextmanager
 import importlib.util
 import json
@@ -35,6 +36,7 @@ from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvalContractRequest, CreateResponsibilityPlanRequest,
     CreateReviewIssueRequest, ExactArtifactRef, ExactRevisionRef,
     RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest, ReturnReviewIssueRequest,
+    ReviseBriefRequest,
     ResponsibilitySlot,
 )
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
@@ -69,6 +71,7 @@ from aos_api.ecommerce_content_review_step_owner import (
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService, ContentReviewHostService, _analysis_command_hash,
+    _strict_content_generate_command,
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
@@ -81,6 +84,7 @@ from aos_api.ecommerce_growth_memory_candidate_target import (
 from aos_api.ecommerce_growth_content_return_target import (
     BoundContentReturnTarget, ContentReturnFeedbackWorker, CurrentContentReturnConsumer,
 )
+from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
 from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
@@ -1049,6 +1053,45 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                     WHERE org_id=%s AND project_id=%s AND run_id=%s
                       AND step_key='content_generate' AND attempt=2 AND status='queued'""",
                     (*SCOPE.key, proof["run_id"])).fetchone()["n"] == 1
+            prior_brief_ref = consumed["artifact"]["briefRef"]
+            original_brief = contracts.get_brief(SCOPE, prior_brief_ref["resourceId"])
+            decision_ref = {"resourceType": "ReturnDecision",
+                "resourceId": decision.decision_id, "revision": 1,
+                "contentHash": "sha256:" + decision.decision_hash}
+            artifact_source = {"resourceType": "Artifact",
+                "resourceId": settled.artifact_id, "contentHash": settled.artifact_hash}
+            revised_spec = {**original_brief.spec, "repair": {
+                "returnDecisionRef": decision_ref, "priorArtifactRef": artifact_source,
+                "humanReason": decision.reason}}
+            revised = contracts.revise_brief(SCOPE, "fixture-reviewer",
+                original_brief.brief_id, "content-p2g-original-repair-brief",
+                ReviseBriefRequest(expectedVersion=original_brief.version,
+                    briefType=original_brief.brief_type,
+                    schemaRef=original_brief.schema_ref, spec=revised_spec))
+            assert revised.revision == prior_brief_ref["revision"] + 1
+            revised_ref = {"resourceType": "TaskBriefRevision",
+                "resourceId": revised.brief_id, "revision": revised.revision,
+                "contentHash": "sha256:" + revised.content_hash}
+            with runtime_connect(SCOPE) as conn:
+                require_repair_brief(conn, SCOPE, revised_ref, prior_brief_ref,
+                    decision_ref, artifact_source, task_id=proof["task_id"],
+                    reason=decision.reason)
+                with pytest.raises(ValueError):
+                    require_repair_brief(conn, SCOPE, prior_brief_ref, prior_brief_ref,
+                        decision_ref, artifact_source, task_id=proof["task_id"],
+                        reason=decision.reason)
+            repair_command = deepcopy(command)
+            repair_command["authorityRefs"]["brief"] = revised_ref
+            repair_command["returnDecisionRef"] = decision_ref
+            repair_command["idempotencyKey"] = decision.attempt_idempotency_key
+            repair_command["requestHash"] = _analysis_command_hash({
+                key: value for key, value in repair_command.items()
+                if key != "requestHash"})
+            with runtime_connect(SCOPE) as conn:
+                with pytest.raises(ValueError, match="fresh approval drifted"):
+                    ContentGenerateHostService._return_authority(
+                        HostTransaction(conn), SCOPE, repair_command,
+                        _strict_content_generate_command(repair_command))
             return
         with connect(SCOPE) as conn:
             review_proof = ContentReviewStepSource().read(

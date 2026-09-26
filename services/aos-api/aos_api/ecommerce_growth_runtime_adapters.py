@@ -27,6 +27,7 @@ from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
     canonical_hash as production_contract_canonical_hash,
 )
+from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_binding_readiness_service import AipBindingReadinessService
@@ -3952,6 +3953,7 @@ class ContentGenerateHostService:
                       i.status AS issue_status,i.version AS current_issue_version,
                       i.artifact_id,i.artifact_hash,
                       artifact.content_hash AS persisted_artifact_hash,
+                      artifact.metadata AS artifact_metadata,
                       approval.created_at AS approval_created_at
                  FROM public.aip_return_decision d
                  JOIN public.aip_task_run r ON r.org_id=d.org_id AND r.project_id=d.project_id
@@ -4018,6 +4020,20 @@ class ContentGenerateHostService:
             or row["approval_created_at"] <= row["decision_created_at"]
         ):
             raise ValueError("content generate ReturnDecision or fresh approval drifted")
+        metadata = row.get("artifact_metadata")
+        content = (metadata.get("ecommerceGrowthContentArtifact")
+                   if type(metadata) is dict else None)
+        prior_brief = content.get("briefRef") if type(content) is dict else None
+        if type(prior_brief) is not dict:
+            raise ValueError("content generate reviewed Brief source unavailable")
+        _content_exact_ref(prior_brief, "TaskBriefRevision")
+        require_repair_brief(
+            transaction, scope,
+            parsed["authorities"]["brief"].model_dump(
+                mode="json", by_alias=True, exclude_none=True),
+            prior_brief, expected_ref, expected_artifact,
+            task_id=task_id, reason=row["reason"],
+        )
 
     @staticmethod
     def _fact_source_authority(transaction, scope, fact_values, approved_plan, *, checked_at):

@@ -514,7 +514,7 @@ class ReturnAuthorityTransaction:
         return SimpleNamespace(fetchone=lambda: row)
 
 
-def test_content_generate_return_requires_current_queued_attempt_and_new_approval():
+def test_content_generate_return_requires_current_queued_attempt_and_new_approval(monkeypatch):
     command, decision = return_command()
     base = datetime(2026, 9, 27, 8, tzinfo=timezone.utc)
     row = {
@@ -532,16 +532,26 @@ def test_content_generate_return_requires_current_queued_attempt_and_new_approva
         "artifact_id": "content-artifact-1",
         "artifact_hash": HEX_A,
         "persisted_artifact_hash": HEX_A,
+        "artifact_metadata": {"ecommerceGrowthContentArtifact": {
+            "briefRef": ref("TaskBriefRevision", "brief-1")}},
         "approval_created_at": base + timedelta(seconds=1),
     }
     row["input_refs"].append({
         "resourceType": "Artifact", "resourceId": "content-artifact-1",
         "contentHash": HEX_A,
     })
+    calls = []
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_repair_brief",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
     ContentGenerateHostService._return_authority(
         ReturnAuthorityTransaction(row), SCOPE, command,
         _strict_content_generate_command(command),
     )
+    assert len(calls) == 1
+    assert calls[0][1]["task_id"] == "task-1"
+    assert calls[0][1]["reason"] == decision["reason"]
     with pytest.raises(ValueError, match="versioned repair preparation"):
         ContentGenerateHostService().revalidate(
             transaction=ReturnAuthorityTransaction(row), scope=SCOPE,
