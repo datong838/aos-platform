@@ -228,5 +228,6 @@
 
 - 复习 231-5 §4/5“退回需新版本与新批准”、P2g26 双重禁入和现有公共 `AipProductionContractStore.revise_brief`。当前 `ContentGenerateHostService._task_brief` 只接受 `task_brief.create` Receipt，故即便经正式 API 形成同一 Brief 的 revision>1，Host 也不能识别；必须先区分首生与返工，不得放宽首生路径。原 Artifact 不可变，返工理由/ReturnDecision 必须进入新版准备的精确来源，不能把旧 Brief 简单改个版本号后重试。
 - 本波文件级范围：`services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的返工 Brief 校验；新增 `services/aos-api/aos_api/ecommerce_content_repair_brief_authority.py` 和 `services/aos-api/tests/extension_runtime/test_ecommerce_content_repair_brief_authority.py`；必要时仅扩 `test_ecommerce_content_generate_handoff_lineage.py` 的首生不回归。先核 `ReviseBriefRequest`、v2 schema 的允许字段和公共 Receipt 形状；如需变更 schema/产品输入，先追加方案，不直接编码。
+- 复核后发现现有 `test_ecommerce_content_review_pending_pg.py` 已在同一原对象链形成正式 RETURN 和原 Artifact，故将此文件纳入范围，仅在 RETURN 分支用公共 `revise_brief` API 增同库只读正/负证明；不新造另一套 fixture 或直接 INSERT Brief/Receipt。
 - RED：旧 Brief revision、伪造 revise Receipt、只换版本未含 ReturnDecision/原 Artifact/人类返工理由、跨 Task/租户、非最新 queued attempt、错原 Issue/hash、旧 approval 都不得作为新版准备。正向必须从公共 revise API 的真实不可变 revision/Receipt 和 P2g24 原 RETURN 决定组成同库只读 exact 证明；不得测试直接 INSERT 假 Brief/Receipt。保留 P2g26 `revalidate/execute` 禁入，不调用 Provider，不造新预算。
 - 完成专项/邻近累计、同库权限与事务复核、编译/方案一致性、verification、m1 提交、D-waves/AOS/Prime 更新后，下一波再做新批准提案与新容量/预算的正式生产链。当前恢复 PG `a0v_092`、无可核当前备份，API/worker 保持停止；本波纯后端不做假浏览器验收。
