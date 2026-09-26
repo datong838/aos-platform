@@ -34,7 +34,8 @@ from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import (
     CreateBriefRequest, CreateEvalContractRequest, CreateResponsibilityPlanRequest,
     CreateReviewIssueRequest, ExactArtifactRef, ExactRevisionRef,
-    RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest, ResponsibilitySlot,
+    RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest, ReturnReviewIssueRequest,
+    ResponsibilitySlot,
 )
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
 from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
@@ -76,6 +77,9 @@ from aos_api.ecommerce_growth_improvement_target import CurrentImprovementConsum
 from aos_api.ecommerce_growth_effect_review_owner import CurrentEffectReviewConsumer, EffectReviewOwner
 from aos_api.ecommerce_growth_memory_candidate_target import (
     CurrentMemoryCandidateConsumer, MemoryCandidateFeedbackWorker,
+)
+from aos_api.ecommerce_growth_content_return_target import (
+    BoundContentReturnTarget, ContentReturnFeedbackWorker,
 )
 from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
 from aos_api.tenant_scope import TenantScope
@@ -197,7 +201,7 @@ def _seed_original_run_and_budget(connect, *, eval_gate=None):
             PlanStep(step_key="content_generate", title="Generate"),
             PlanStep(step_key="content_review", title="Review",
                 gate_refs=[] if eval_gate is None else [eval_gate]),
-        ]))
+        ], dependencies=[{"fromStepKey": "content_generate", "toStepKey": "content_review"}]))
     task = store.get_task(SCOPE, task.id)
     store.approve_plan(SCOPE, "fixture", task.id, plan.revision, task.version, plan.content_hash)
     task = store.get_task(SCOPE, task.id)
@@ -648,7 +652,8 @@ def test_original_settled_result_completes_one_generation_step_and_checkpoint():
             assert observed["payload"]["artifactRef"] == consumed["artifact"]["artifactRef"]
 
 
-def test_original_settled_artifact_runs_current_content_subject_eval():
+@pytest.mark.parametrize("review_decision", ("ACCEPT", "RETURN"))
+def test_original_settled_artifact_runs_current_content_subject_eval(review_decision):
     with disposable_database() as connect:
         _upgrade_test_clone_to_head(connect)
         gate, graph, subject_pack = _register_current_content_eval_gate(connect)
@@ -799,16 +804,30 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             with pytest.raises(ValueError, match="exact lineage drifted"):
                 ContentReviewHostService._issue_authority(
                     HostTransaction(conn), SCOPE, review_command)
-        resolution = ResolveReviewIssueRequest(expectedVersion=issue.version,
-            reason="隔离测试 reviewer 已核对事实与禁止表达",
-            resolutionRefs=[ExactRevisionRef(resourceType="Artifact",
-                resourceId=first.artifact_id, revision=1,
-                contentHash=first.artifact_hash)])
-        resolved = contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
-            issue.issue_id, "content-p2g-original-accept", resolution)
-        assert contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
-            issue.issue_id, "content-p2g-original-accept", resolution) == resolved
-        assert resolved.status.value == "resolved" and resolved.version == 2
+        if review_decision == "ACCEPT":
+            resolution = ResolveReviewIssueRequest(expectedVersion=issue.version,
+                reason="隔离测试 reviewer 已核对事实与禁止表达",
+                resolutionRefs=[ExactRevisionRef(resourceType="Artifact",
+                    resourceId=first.artifact_id, revision=1,
+                    contentHash=first.artifact_hash)])
+            resolved = contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
+                issue.issue_id, "content-p2g-original-accept", resolution)
+            assert contracts.resolve_review_issue(SCOPE, "fixture-reviewer",
+                issue.issue_id, "content-p2g-original-accept", resolution) == resolved
+            assert resolved.status.value == "resolved" and resolved.version == 2
+        else:
+            return_request = ReturnReviewIssueRequest(expectedVersion=issue.version,
+                runId=proof["run_id"], targetStage="content_generate",
+                reason="人工要求重新核对商品事实并修改内容",
+                attemptIdempotencyKey="content-p2g-original-return-attempt")
+            decision = contracts.return_review_issue(SCOPE, "fixture-reviewer",
+                issue.issue_id, "content-p2g-original-return", return_request)
+            assert contracts.return_review_issue(SCOPE, "fixture-reviewer",
+                issue.issue_id, "content-p2g-original-return", return_request) == decision
+            assert decision.attempt == 2 and decision.step_key == "content_generate"
+            resolved = contracts.get_review_issue(SCOPE, issue.issue_id)
+            assert resolved.status.value == "returned" and resolved.version == 2
+        review_command["decision"] = review_decision
         review_command["reviewIssueRef"] = review_issue_exact_ref(resolved).model_dump(
             mode="json", by_alias=True, exclude_none=True)
         review_command.update({name: consumed["artifact"][name] for name in (
@@ -882,21 +901,25 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 FROM aip_review_issue_event WHERE org_id=%s AND project_id=%s
                   AND issue_id=%s AND sequence=2""",
                 (*SCOPE.key, issue.issue_id)).fetchone()
-            assert event["event_type"] == "resolved"
+            assert event["event_type"] == ("resolved" if review_decision == "ACCEPT" else "returned")
             assert event["issue_version"] == 2
             assert event["actor"] == "fixture-reviewer"
-            assert event["payload"]["resolutionRefs"] == [
-                resolution.resolution_refs[0].model_dump(mode="json", by_alias=True)]
-            assert conn.execute("""SELECT count(*) AS n
-                FROM aip_production_contract_receipt
-                WHERE org_id=%s AND project_id=%s
-                  AND operation='review_issue.resolve'
-                  AND idempotency_key='content-p2g-original-accept'""",
-                SCOPE.key).fetchone()["n"] == 1
+            if review_decision == "ACCEPT":
+                assert event["payload"]["resolutionRefs"] == [
+                    resolution.resolution_refs[0].model_dump(mode="json", by_alias=True)]
+                assert conn.execute("""SELECT count(*) AS n
+                    FROM aip_production_contract_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='review_issue.resolve'
+                      AND idempotency_key='content-p2g-original-accept'""",
+                    SCOPE.key).fetchone()["n"] == 1
+            else:
+                assert event["payload"]["decisionHash"] == decision.decision_hash
+                assert event["payload"]["stepRunId"] == decision.step_run_id
         review_command.update({
             "operation": "content.review",
             "artifactContentHash": review_command["artifactRef"]["contentHash"],
-            "returnStage": None,
+            "returnStage": None if review_decision == "ACCEPT" else "content_generation",
             "idempotencyKey": "content-p2g-original-review-receipt",
         })
         review_command["requestHash"] = _analysis_command_hash(review_command)
@@ -947,6 +970,83 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_feedback_command
                 WHERE org_id=%s AND project_id=%s AND review_receipt_ref=%s::jsonb""",
                 (*SCOPE.key, json.dumps(review_receipt["receiptRef"]))).fetchone()["n"] == 1
+        if review_decision == "RETURN":
+            runtime_connect = lambda scope: _runtime_role_connection(connect, scope)
+            worker = ContentReturnFeedbackWorker(
+                connect=runtime_connect, connect_read=runtime_connect)
+            with connect(SCOPE) as conn:
+                feedback_id = conn.execute("""SELECT command_id
+                    FROM ecommerce_growth_feedback_command WHERE org_id=%s AND project_id=%s
+                      AND review_receipt_ref=%s::jsonb""",
+                    (*SCOPE.key, json.dumps(review_receipt["receiptRef"]))).fetchone()["command_id"]
+            with pytest.raises(Exception, match="feedback current origin could not be proven"):
+                worker.run_one(SCOPE, feedback_id)
+            with connect(SCOPE) as conn:
+                for operation in (
+                    "ecommerce_growth_investigation_describe", "ecommerce_growth_case_put",
+                    "ecommerce_growth_schedule_put", "ecommerce_growth_schedule_trigger",
+                    "ecommerce_growth_data_fulfill", "ecommerce_growth_analysis_advance",
+                    "ecommerce_growth_review_advance",
+                ):
+                    insert(conn, "extension_operation_dispatch_binding",
+                        operation_id=operation, handler_kind="extension",
+                        installation_id=binding["installation_id"], generation=binding["generation"],
+                        execution_epoch=binding["execution_epoch"], operation_fence=False,
+                        revision=5, cutover_group_id=binding["cutover_group_id"],
+                        cutover_group_revision=binding["cutover_group_revision"],
+                        updated_by="fixture")
+            with runtime_connect(SCOPE) as conn:
+                target_id = conn.execute("""SELECT target_id FROM ecommerce_growth_feedback_segment
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s AND sequence=1""",
+                    (*SCOPE.key, feedback_id)).fetchone()["target_id"]
+                assert BoundContentReturnTarget(
+                    HostTransaction(conn), SCOPE)._source(target_id, require_queued=True)[
+                        "decision_id"] == decision.decision_id
+            other_scope = TenantScope("dev-org", "dev-project")
+            with runtime_connect(SCOPE) as conn:
+                with pytest.raises(Exception, match="unique durable return target unavailable"):
+                    BoundContentReturnTarget(HostTransaction(conn), other_scope)._source(target_id)
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=true
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+                conn.commit()
+            try:
+                with pytest.raises(Exception):
+                    worker.run_one(SCOPE, feedback_id)
+            finally:
+                with connect(SCOPE) as conn:
+                    conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=false
+                        WHERE org_id=%s AND project_id=%s
+                          AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+                    conn.commit()
+            with connect(SCOPE) as conn:
+                conn.execute("SAVEPOINT return_decision_drift")
+                with pytest.raises(Exception, match="AIP4_APPEND_ONLY"):
+                    conn.execute("""UPDATE aip_return_decision SET decision_hash=%s
+                        WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                        ("f" * 64, *SCOPE.key, decision.decision_id))
+                conn.execute("ROLLBACK TO SAVEPOINT return_decision_drift")
+            result = worker.run_one(SCOPE, feedback_id)
+            assert result["status"] == "CONTENT_RETURN_ACKED"
+            assert worker.run_one(SCOPE, feedback_id)["status"] == "ALREADY_ACKED"
+            with connect(SCOPE) as conn:
+                checkpoint = conn.execute("""SELECT completed_sequence FROM ecommerce_growth_feedback_checkpoint
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                    (*SCOPE.key, feedback_id)).fetchone()
+                assert checkpoint["completed_sequence"] == 1
+                segment = conn.execute("""SELECT state,attempt,target_receipt_ref
+                    FROM ecommerce_growth_feedback_segment WHERE org_id=%s AND project_id=%s
+                      AND command_id=%s AND sequence=1""",
+                    (*SCOPE.key, feedback_id)).fetchone()
+                assert segment["state"] == "acked" and segment["attempt"] == 1
+                assert segment["target_receipt_ref"] == result["receiptRef"]
+                assert conn.execute("""SELECT count(*) AS n FROM aip_step_run
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s
+                      AND step_key='content_generate' AND attempt=2 AND status='queued'""",
+                    (*SCOPE.key, proof["run_id"])).fetchone()["n"] == 1
+            return
+        with connect(SCOPE) as conn:
             review_proof = ContentReviewStepSource().read(
                 conn, SCOPE, review_receipt["receiptRef"]["resourceId"])
             assert review_proof.run_id == proof["run_id"]
