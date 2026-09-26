@@ -74,6 +74,64 @@ def artifact(item):
     }
 
 
+def test_content_review_keeps_handoff_task_creation_ref_after_task_progresses():
+    item = command()
+    task_payload = {
+        "type": "ecommerce.workshop.business_task",
+        "title": "七夕会员复购内容策划",
+        "description": "根据已批准方案制作内容",
+        "priority": 50,
+        "goal": {"sourceHandoffRef": ref("HandoffReceipt", "handoff-1")},
+        "selectionRef": None,
+        "policyRevision": None,
+    }
+    task_hash = _analysis_command_hash(task_payload).removeprefix("sha256:")
+    item["taskRef"] = ref("Task", "task-1") | {"contentHash": "sha256:" + task_hash}
+    brief_spec = {
+        "taskRef": item["taskRef"],
+        "growthPlanRef": item["growthPlanRef"],
+        "artifactRefs": item["sourceArtifactRefs"],
+        "externalPublicationRequested": False,
+    }
+    brief_payload = {
+        "briefType": "content_campaign",
+        "schemaRef": ref("ContentCampaignBriefSchema", "schema-1"),
+        "spec": brief_spec,
+    }
+    brief_hash = _analysis_command_hash(brief_payload).removeprefix("sha256:")
+    item["briefRef"] = ref("TaskBriefRevision", "brief-1") | {"contentHash": "sha256:" + brief_hash}
+    rows = (
+        {"task_id": "task-1", "task_type": task_payload["type"],
+         "title": task_payload["title"], "description": task_payload["description"],
+         "priority": 50, "goal": task_payload["goal"], "selection_ref": None,
+         "policy_revision": None, "request_hash": task_hash, "version": 4},
+        {"task_id": "task-1", "current_revision": 1, "version": 1},
+        {"task_id": "task-1", "brief_type": "content_campaign",
+         "schema_ref": brief_payload["schemaRef"], "spec": brief_spec,
+         "content_hash": brief_hash, "lifecycle": "draft"},
+    )
+
+    class Tx:
+        def __init__(self, values):
+            self.values = values
+            self.index = 0
+
+        def execute(self, _query, _params=()):
+            row = self.values[self.index]
+            self.index += 1
+            return Result(row)
+
+    assert ContentReviewHostService._task_brief_authority(
+        HostTransaction(Tx(rows)), SCOPE, item
+    ) == task_payload["title"]
+    drifted = deepcopy(item)
+    drifted["taskRef"]["contentHash"] = "sha256:" + "f" * 64
+    with pytest.raises(ValueError, match="Task exact authority drifted"):
+        ContentReviewHostService._task_brief_authority(
+            HostTransaction(Tx(rows)), SCOPE, drifted
+        )
+
+
 class Result:
     def __init__(self, one=None, many=None):
         self.one = one

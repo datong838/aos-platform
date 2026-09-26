@@ -5587,11 +5587,14 @@ class ContentReviewHostService:
         expected_task = {
             "resourceType": "Task",
             "resourceId": task["task_id"],
-            "revision": int(task["version"]),
+            # Handoff/Brief/Artifact pin the immutable creation ref. Plan/Run
+            # transitions advance the mutable Task row version separately.
+            "revision": 1,
             "contentHash": "sha256:" + _analysis_command_hash(task_payload).removeprefix("sha256:"),
         }
         if (
-            _request_hash(command["taskRef"]) != _request_hash(expected_task)
+            int(task["version"]) < 1
+            or _request_hash(command["taskRef"]) != _request_hash(expected_task)
             or task["request_hash"] != expected_task["contentHash"].removeprefix("sha256:")
         ):
             raise ValueError("content review Task exact authority drifted")
