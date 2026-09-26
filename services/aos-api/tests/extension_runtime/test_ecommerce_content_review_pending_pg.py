@@ -1010,7 +1010,15 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         feedback_consumer = CurrentFeedbackConsumer(
             connect=runtime_connect, worker=feedback_worker)
         assert feedback_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
-        improvement_worker = ImprovementFeedbackWorker(connect=runtime_connect)
+        improvement_read_connections = []
+        @contextmanager
+        def improvement_independent_read(scope):
+            improvement_read_connections.append(scope)
+            with runtime_connect(scope) as read_conn:
+                yield read_conn
+
+        improvement_worker = ImprovementFeedbackWorker(
+            connect=runtime_connect, connect_read=improvement_independent_read)
         improvement = CurrentImprovementConsumer(connect=runtime_connect,
             worker=improvement_worker)
         assert improvement.list_pending(SCOPE) == []
@@ -1100,6 +1108,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                 conn.commit()
         assert improvement.run_once(SCOPE) == [{"commandId": review_proof.feedback_command_id,
             "status": "IMPROVEMENT_PENDING_ACKED"}]
+        assert improvement_read_connections == [SCOPE]
         assert improvement.list_pending(SCOPE) == []
         with runtime_connect(SCOPE) as conn:
             conn.execute("SELECT set_config('aos.org_id','dev-org',true)")

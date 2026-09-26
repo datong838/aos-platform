@@ -18,6 +18,10 @@ from aos_api.ecommerce_growth_runtime_connection import connect_read_only, conne
 from aos_api.tenant_scope import TenantScope
 
 
+class ImprovementFeedbackUnknown(RuntimeError):
+    """The second target may have committed; reconcile read-only, never resend."""
+
+
 def _unwired_target(**_kwargs):
     raise EcommerceGrowthFeedbackConflict("feedback target is not wired")
 
@@ -105,8 +109,12 @@ class BoundImprovementPendingTarget:
 class ImprovementFeedbackWorker:
     """Consume only a pristine second segment after the original daily Receipt."""
 
-    def __init__(self, *, connect=connect_serializable) -> None:
+    def __init__(self, *, connect=connect_serializable, connect_read=None) -> None:
         self._connect = connect
+        self._connect_read = (
+            connect_read if connect_read is not None
+            else connect_read_only if connect is connect_serializable else connect
+        )
 
     def run_one(
         self, scope: TenantScope, command_id: str, *, worker: str = "ecommerce-improvement"
@@ -172,8 +180,49 @@ class ImprovementFeedbackWorker:
                 or readback["segments"][1]["targetReceiptRef"] != receipt
             ):
                 raise EcommerceGrowthFeedbackConflict("improvement checkpoint drifted")
-            conn.commit()
-            return {"status": "IMPROVEMENT_PENDING_ACKED", "commandId": command_id, "receiptRef": receipt}
+            try:
+                conn.commit()
+            except Exception as exc:
+                raise ImprovementFeedbackUnknown(
+                    "improvement commit result unknown; reconcile without resend"
+                ) from exc
+        try:
+            with self._connect_read(scope) as conn:
+                transaction = HostTransaction(conn)
+                read_target = BoundImprovementPendingTarget(transaction, scope)
+                read_target.read_receipt(target_id=claim["targetId"], expected_receipt=receipt)
+                read_port = BoundEcommerceGrowthFeedbackPort(
+                    transaction, scope, actor=worker, checked_at=datetime.now(UTC),
+                    target_receipt_readers={
+                        "daily_review": _unwired_target,
+                        "improvement_observation": read_target.read_receipt,
+                        "memory_candidate": _unwired_target,
+                        "content_return_target": _unwired_target,
+                    },
+                )
+                current = read_port.read(command_id=command_id)
+                if (
+                    current is None or current["decision"] != "ACCEPT"
+                    or current["reviewReceiptRef"] != command["reviewReceiptRef"]
+                    or current["artifactRef"] != command["artifactRef"]
+                    or current["taskRef"] != command["taskRef"]
+                    or current["briefRef"] != command["briefRef"]
+                    or current["checkpoint"]["completedSequence"] != 2
+                    or len(current["segments"]) != 3
+                    or current["segments"][0]["state"] != "acked"
+                    or current["segments"][0]["targetReceiptRef"] != segments[0]["targetReceiptRef"]
+                    or current["segments"][1]["state"] != "acked"
+                    or current["segments"][1]["attempt"] != 1
+                    or current["segments"][1]["targetReceiptRef"] != receipt
+                    or current["segments"][1]["payload"]["targetId"] != claim["targetId"]
+                ):
+                    raise EcommerceGrowthFeedbackConflict(
+                        "improvement independent readback drifted")
+        except Exception as exc:
+            raise ImprovementFeedbackUnknown(
+                "improvement post-commit result unknown; reconcile without resend"
+            ) from exc
+        return {"status": "IMPROVEMENT_PENDING_ACKED", "commandId": command_id, "receiptRef": receipt}
 
 
 _PENDING_CURRENT_IMPROVEMENT = """SELECT c.command_id
@@ -280,4 +329,4 @@ class CurrentImprovementConsumer:
                 pass
 
 
-__all__ = ["BoundImprovementPendingTarget", "ImprovementFeedbackWorker", "CurrentImprovementConsumer"]
+__all__ = ["BoundImprovementPendingTarget", "ImprovementFeedbackWorker", "CurrentImprovementConsumer", "ImprovementFeedbackUnknown"]
