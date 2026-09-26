@@ -635,3 +635,41 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert conn.execute("""SELECT count(*) AS n FROM aip_eval_report_revision
                 WHERE org_id=%s AND project_id=%s AND run_id=%s""",
                 (*SCOPE.key, report.run_id)).fetchone()["n"] == 1
+        reader = ContentReviewPendingReader(source=source, connect_read=connect)
+        first = reader.read_one(SCOPE, reservation_id)
+        assert first is not None
+        assert (first.reservation_id, first.run_id, first.task_id,
+            first.artifact_id, first.artifact_hash, first.step_run_id,
+            first.report_id, first.report_revision, first.report_hash) == (
+            reservation_id, proof["run_id"], proof["task_id"],
+            settled.artifact_id, settled.artifact_hash, step["step_run_id"],
+            report.report_id, report.revision, report.content_hash)
+        assert reader.read_one(SCOPE, reservation_id) == first
+        other_scope = type(SCOPE)("dev-org", "dev-project")
+        with connect(SCOPE) as conn:
+            with pytest.raises(ContentExecutionConflict, match="reservation unavailable"):
+                source.read(conn, other_scope, reservation_id)
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE extension_operation_dispatch_binding
+                SET operation_fence=true WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate'""", SCOPE.key)
+        with pytest.raises(ContentReviewPendingBlocked, match="dispatch"):
+            reader.read_one(SCOPE, reservation_id)
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE extension_operation_dispatch_binding
+                SET operation_fence=false WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate'""", SCOPE.key)
+        assert reader.read_one(SCOPE, reservation_id) == first
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n FROM aip_review_issue
+                WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+            assert conn.execute("""SELECT count(*) AS n FROM aip_eval_run
+                WHERE org_id=%s AND project_id=%s AND idempotency_key=%s""",
+                (*SCOPE.key, "content-p2g-original-subject-eval")).fetchone()["n"] == 1
+            assert conn.execute("""SELECT count(*) AS n FROM aip_eval_report_revision
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, report.run_id)).fetchone()["n"] == 1
+            assert conn.execute("""SELECT count(*) AS n FROM aip_step_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s
+                  AND step_key='content_generate'""",
+                (*SCOPE.key, proof["run_id"])).fetchone()["n"] == 1

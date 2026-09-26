@@ -76,3 +76,9 @@
 - 只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 的一次性正式 `a0v_105` 同库测试与必要 helper，不改生产合同/Runner 门。先依现有 `ecommerce_content_pre_review_eval.py`、pack、`AipEvalPackRegistry`、`LogicGraphStore`、`AipReleasePublicationService` 和 `AipProductionContractStore` 正式 API 注册 Graph、治理及主体 Suite、发布门/事件、冻结 READY 内容合同；当前 gate 必须在**原** Plan 创建前写入 `content_review.gateRefs`，不能事后改批准 Plan。
 - 原内容结果、settled 预算、Provider/Usage Receipt、Artifact 与唯一 succeeded `content_generate` StepRun/checkpoint 保持同一对象。用 `AipEvalRunner.run_by_contract` 对该可读原 Artifact 和最新成功 attempt 跑主体结构 Eval，独立读回报告/EvalRun、exact 合同、Artifact、StepRun 和无正文泄漏；受控 Graph target/judge 是隔离测试执行接缝，不代表真实商品事实通过。首个 RED 先暴露正式 fixture 的最小缺口，禁止直写伪报告。
 - 同库组合成本若超本增量，先落可验证的正式合同/Plan gate 子证明、列出缺口与下一步，不放宽 `ContentReviewPendingReader`。对失败/未知提交只读对账；不重复 Eval/Provider，不开放 GET/Issue/自然 worker。专项、累计、verification、m1 精确提交、AOS/Prime 同步后继续下一波候选读回。
+
+### P2g 第六增量：原对象只读待办候选（2026-09-27，编码前）
+
+- 只在同一 `test_ecommerce_content_review_pending_pg.py` 的第五增量原对象上扩断言，不另建报告或插入伪 Issue。以显式业务 context Source（其余查询正式）调用 `ContentReviewPendingReader.read_one` 两次，要求同一 `(Reservation,Run,Artifact,StepRun,Report@revision)` 候选，读取前后 EvalRun/Report/Issue/StepRun 计数不变；独立 SQL 核身份。
+- 紧邻负例先限于不改不可变生产记录的错租户和错 reservation，及隔离事务内可回滚的当前 dispatch fence/合同撤销；任何 blocked/None 均不可写、不可重发。若读取器发现实际约束错配，先 RED，再对生产最小修复并覆盖旧单测；不通过猴补读取器/报告/合同过门。此波仍不开放 GET、Issue、Provider 或自然 Worker；后续单独波做更多多义/旧 attempt/人工 Issue。
+- 专项、累计、浏览器不适用说明、verification、精确提交、AOS/Prime 同步之后才进入下一波。
