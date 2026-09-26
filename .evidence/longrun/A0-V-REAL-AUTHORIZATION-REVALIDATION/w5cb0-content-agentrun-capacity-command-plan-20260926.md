@@ -20,5 +20,7 @@
 
 ## 验证与停止
 
+- 施工分段裁决：公共 AgentRun `create` 只留下 queued Receipt，`transition` 才有容量预留；`content.generate` Host 才有预算 HELD/PENDING，Provider Worker 又有单次外呼提交边界。三者不能由 W5CB0 的 queued 事务伪装为同一效果。W5CB0 退出门限为“不可变 Plan 责任绑定→唯一 queued AgentRun/Receipt 的安全代码门”；容量、预算与自然命令是紧接的 W5CB1 实施目标，不把 queued 当内容完成。W5CB0 verification 必须逐项列出尚未达成的原计划第 4 项，不能改写成完成。
+
 - 先 RED→最小实现→专项/累计/隔离 PG→浏览器（无活体明确记未验）→方案/代码一致性→verification→m1 commit→D-waves/AOS/Prime 更新→下一波。只读业务实例状态，不读商城源。旧 12 Run 不重放、230 L0 挂起；dev-org 仅零 canary。
 - 任何 commit/Provider 结果不明：停止该 intent，独立 Receipt 对账；不手工 `run_definition`、不重发。无当前 Provider 出境、预算、审批和安装权威时真实外呼保持关闭。
