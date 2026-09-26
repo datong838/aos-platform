@@ -231,3 +231,10 @@
 - 复核后发现现有 `test_ecommerce_content_review_pending_pg.py` 已在同一原对象链形成正式 RETURN 和原 Artifact，故将此文件纳入范围，仅在 RETURN 分支用公共 `revise_brief` API 增同库只读正/负证明；不新造另一套 fixture 或直接 INSERT Brief/Receipt。
 - RED：旧 Brief revision、伪造 revise Receipt、只换版本未含 ReturnDecision/原 Artifact/人类返工理由、跨 Task/租户、非最新 queued attempt、错原 Issue/hash、旧 approval 都不得作为新版准备。正向必须从公共 revise API 的真实不可变 revision/Receipt 和 P2g24 原 RETURN 决定组成同库只读 exact 证明；不得测试直接 INSERT 假 Brief/Receipt。保留 P2g26 `revalidate/execute` 禁入，不调用 Provider，不造新预算。
 - 完成专项/邻近累计、同库权限与事务复核、编译/方案一致性、verification、m1 提交、D-waves/AOS/Prime 更新后，下一波再做新批准提案与新容量/预算的正式生产链。当前恢复 PG `a0v_092`、无可核当前备份，API/worker 保持停止；本波纯后端不做假浏览器验收。
+
+### P2g 第二十八增量：新版返工批准的 exact 绑定门（2026-09-27，编码前）
+
+- 上位 231-5 §5/6 要求批准绑定具体 input/preview/artifact revision/hash、能力、预算与当前代次。P2g27 已证明公共 `revise_brief` 新版来源。代码审计发现现有 `AipBudgetReservationStore._approval_authority` 对内容调用只核 Task/operation/上限及通用 proposal hash；P2g26 的“批准时间晚于退回”不能证明批准所见正是新版 Brief/ReturnDecision/原产物/当前安装。故先补精确绑定，旧批准、空 payload 或只加新时间均不得过门。
+- 文件级范围：新增 `services/aos-api/aos_api/ecommerce_content_repair_approval_authority.py`、`tests/extension_runtime/test_ecommerce_content_repair_approval_authority.py`；只在 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的 RETURN 校验接线；如需同库原链证明，仅扩 `test_ecommerce_content_review_pending_pg.py`，但不可直接 INSERT 假批准称真人决定。公共 Action/预算模型、首次生成路径和当前 worker flag 不改。
+- 合同：RETURN 的已批准 proposal 与 draft snapshot 的不可变 payload 必须在同租户 exact 绑定 `returnDecisionRef`、新版 `briefRef`、原 `priorArtifactRef`、执行 `installationBindingRef`、`budgetUpperBoundMinor` 和生成能力；值均同 command/当前 Host lock 与正式 AIP 行核对，proposal/event/draft 的 hash、版本、当前批准状态及到期仍沿公共 API/Store 复核。先 RED 覆盖缺一字段、旧版 Brief、旧安装、错原 Artifact、错租户、旧事件、预算上限漂移与只有 draft 无正式批准。
+- 本波只做消费端安全门与公共合同可行性验证，不能自己替人批准。若公共 Action 提案/决策 API 无法表达上述 payload 或权限不支持，应以精确 RED 记录并转下一波最小生产者修复，不伪造批准行。即使绑定门通过，返工 Host `revalidate/execute` 双重禁入继续保持，直到全新容量/预算、受控 prompt 和 attempt=2 结果链同库证明。专项/累计、方案审查、verification、m1/文档/记忆收口；当前恢复库/API/worker 继续停止，浏览器本波不适用。
