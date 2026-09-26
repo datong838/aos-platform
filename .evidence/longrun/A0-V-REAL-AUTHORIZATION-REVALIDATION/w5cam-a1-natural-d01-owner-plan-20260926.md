@@ -18,3 +18,7 @@
 ## 第 1 步后文件级细化（编码前）
 
 `AipAgentRunService.create` 只核 exact Task/TaskRun/Plan 版本、当前实例/Skill/Logic/Capability，不核 TaskRun running/Task executing/Plan approved；D01 Worker 才核运行态。W5cam 第 2 步先新增 `services/aos-api/tests/extension_runtime/test_ecommerce_analyst_d01_issuer.py` 的 RED：错误 scope、paused/terminal、未批准 Plan、缺完整 inputRefs、已有 AgentRun/未知结果、单一合法正例。实现仅在 `services/aos-api/aos_api/ecommerce_analyst_d01_issuer.py`，用原 `AipTaskStore.timeline`、原 D01 来源 reader 与 `AipAgentRunService.create`，稳定 ID/key；不改泛型 AIP Owner。Host 尚不能无来源包自动发 D01，因真实 MethodRevision=0；本波后续须做自然 packet selector 的隔离 PG 证据后才注册发行路径。任何 mock 正例都只证明代码，不是现实业务执行。
+
+## 第 2 步复审纠偏（下一代码改动前）
+
+m1 `4423c87c` 的布尔 `require_current_sources` 只有注入式测试，没有把 exact Method/Eval/Metric/Query/EvidenceBundle 包传入 reader；不能作为生产来源门。先在 `services/aos-api/tests/extension_runtime/test_ecommerce_analyst_d01_issuer.py` 写缺包/错包 RED，再改 `services/aos-api/aos_api/ecommerce_analyst_d01_issuer.py` 接收严格来源包；在 `services/aos-api/aos_api/ecommerce_analyst_portrait_inputs.py` 抽取共用的“拟签发请求输入”只读核验，保持既有 D01 Worker 行为不变。生产来源 reader 必须实际走同租户当前 Method/Eval/Metric/Query、EvidenceBundle 与 DisclosureGrant 既有 Owner，不直接读取商城源。此门通过前不接 Host；隔离测试只证明代码，真实 MethodRevision/running TaskRun 仍缺。
