@@ -10,6 +10,10 @@ from test_aip_exact_provider_invoker import assembly
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker
 from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
+from aos_api.ecommerce_content_execution_composition import CurrentContentStatusReader
+from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict
+from aos_api.tenant_scope import TenantScope
+from content_consumer_pg_baseline import install_artifact,install_lineage
 
 pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='isolated PostgreSQL opt-in')
 
@@ -32,8 +36,8 @@ def test_usage_artifact_and_budget_commit_or_rollback_together(database,monkeypa
     pending_spec=importlib.util.spec_from_file_location('pending_migration',ROOT/'alembic/versions/a0v_002_cost_pending.py')
     pending=importlib.util.module_from_spec(pending_spec);pending_spec.loader.exec_module(pending)
     pending.op=SimpleNamespace(execute=database.owner.execute);pending.upgrade()
-    database.owner.execute('CREATE TABLE aip_lineage_event (LIKE public.aip_lineage_event INCLUDING ALL)')
-    database.owner.execute('CREATE TABLE aip_artifact (LIKE public.aip_artifact INCLUDING ALL)')
+    install_lineage(database.owner)
+    install_artifact(database.owner)
     database.owner.execute('CREATE TABLE aip_task_run(org_id text,project_id text,run_id text,task_id text)')
     database.owner.execute("INSERT INTO aip_task_run SELECT org_id,project_id,'run',task_ref->>'resourceId' FROM aip_budget_reservation")
     database.owner.execute('GRANT SELECT,INSERT ON aip_artifact,aip_lineage_event,aip_usage_receipt TO aos_runtime')
@@ -45,6 +49,7 @@ def test_usage_artifact_and_budget_commit_or_rollback_together(database,monkeypa
     worker=ContentExecutionWorker(factory,prepare=prepare,invoke=lambda *_:response,storage_schema=database.schema)
     worker.run_one(scope,rid)
     consumer=ContentResultConsumer(context_reader=lambda *_:dict(runId='run',productNames=['玫瑰面霜'],channels=['店铺首页'],constraintChecks=['内容待人工评审']),storage_schema=database.schema)
+    status_reader=CurrentContentStatusReader(storage_schema=database.schema)
     if fail_budget:
         def reject(*_a,**_k):raise RuntimeError('injected settlement failure')
         monkeypatch.setattr(AipBudgetReservationStore,'complete_cost_pending' if deferred else 'settle',reject)
@@ -55,6 +60,8 @@ def test_usage_artifact_and_budget_commit_or_rollback_together(database,monkeypa
                 assert conn.execute('SELECT count(*) AS n FROM '+table).fetchone()['n']==0
             assert conn.execute('SELECT count(*) AS n FROM ecommerce_content_execution_result').fetchone()['n']==1
         assert budget.get(scope,rid).state.value=='submitted'
+        with factory(scope) as conn:
+            assert status_reader(conn,scope,rid)=='RESULT_RECORDED_UNSETTLED'
     else:
         with factory(scope) as conn: first=consumer.consume(conn,scope,rid)
         with factory(scope) as conn:
@@ -65,3 +72,13 @@ def test_usage_artifact_and_budget_commit_or_rollback_together(database,monkeypa
             assert conn.execute('SELECT count(*) AS n FROM aip_usage_receipt').fetchone()['n']==2
         assert first['reservation'].state.value==('cost_pending' if deferred else 'settled')
         if deferred: assert first['reservation'].actual_minor is None
+        with factory(scope) as conn:
+            assert status_reader(conn,scope,rid)==('COST_PENDING' if deferred else 'COMPLETED')
+        database.owner.execute('DELETE FROM aip_artifact WHERE org_id=%s AND project_id=%s',scope.key)
+        with factory(scope) as conn:
+            with pytest.raises(ContentExecutionConflict,match='Artifact readback'):
+                status_reader(conn,scope,rid)
+    other=TenantScope('dev-org','dev-project')
+    with factory(other) as conn:
+        with pytest.raises(ContentExecutionConflict,match='reservation unavailable'):
+            status_reader(conn,other,rid)

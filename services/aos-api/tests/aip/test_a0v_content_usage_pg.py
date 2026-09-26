@@ -10,6 +10,7 @@ from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker
 from aos_api.ecommerce_content_usage import ContentUsageRecorder
 from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict
 from aos_api.tenant_scope import TenantScope
+from content_consumer_pg_baseline import install_lineage
 
 pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='isolated PostgreSQL opt-in')
 
@@ -17,7 +18,7 @@ pytestmark=pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST')!='1',reason='is
 @pytest.mark.parametrize('drift',['none','estimated','quantity','total','modality'])
 def test_persisted_result_records_owned_lineage_usage_and_budget_exact_refs(database,drift):
     scope,factory,budget,rid,prepare=setup(database)
-    database.owner.execute('CREATE TABLE aip_lineage_event (LIKE public.aip_lineage_event INCLUDING ALL)')
+    install_lineage(database.owner)
     # Budget fixture treats Usage as read-only dependency; this Owner test needs append permission.
     database.owner.execute('GRANT SELECT,INSERT ON aip_lineage_event,aip_usage_receipt TO aos_runtime')
     spec=importlib.util.spec_from_file_location('usage_lineage_migration',ROOT/'alembic/versions/a0v_004_content_usage_lineage.py')
