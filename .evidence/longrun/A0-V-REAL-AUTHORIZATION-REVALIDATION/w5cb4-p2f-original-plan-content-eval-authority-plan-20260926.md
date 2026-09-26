@@ -51,3 +51,10 @@
 
 - 已用一次性隔离 PG 经 `LogicGraphStore`、`AipEvalPackRegistry`、`AipEvalRunner`、`AipReleasePublicationService`、`AipProductionContractStore` 串起治理 Suite 正/负 5 例→报告→发布门→Publication，另建主体 Suite→冻结 READY 内容 EvalContract；撤销后合同动态 BLOCKED，`dev-org/dev-project` 对相关 Suite/Contract 仍为零。
 - 这只是隔离正式 API 的合同可行性，不是当前实例正式注册，也不是对任何真实内容 Artifact 的主体 Eval。后续仍须生产注册的可重入 bootstrap/只读预检、跨 Suite 同 target 与 Publication/Gate 交叉读回、Owner 在新 Plan 创建前唯一选择；未完成前不启用。
+
+## P2f-b 第 3/4 步文件级施工门（编码前）
+
+- 新 `services/aos-api/aos_api/ecommerce_content_pre_review_authority.py`：只读、单事务、同租户查询当前 `aip_eval_contract_head` 与当前 revision；要求候选**恰好一个**、冻结 READY、`gatePolicy.subjectKind=ecommerce_content`、`subjectInputMode=ecommerce-readable-content/v1`、`requiresHumanDecision=true`，且主体 Suite 为 `ecommerce.content.pre-review.subject.v1`。从库内验证主体 Suite canonical hash/target 与治理 Suite、当前 Graph exact id/revision/hash 相同。
+- 同事务核合同所绑 PublicationEvent exact hash、其 publicationId 的最新事件仍 `published`，ReleaseGate exact hash/状态/有效期、其 EvalReport/Run/Suite 当前可读且 target 为同一 Graph；治理 Suite 必须 `ecommerce.content.pre-review.governance.v1`。Graph 不得删除/归档/改版；读库 DB clock，不信调用方时钟或传入任意 READY 合同。任一缺失、多义、漂移、撤销、过期或跨租户即失败关闭。
+- 修改 `services/aos-api/aos_api/ecommerce_content_taskrun_owner.py`：在 `claim` 前和 `execute_claim` 原事务内调用上述来源门；只有取得唯一 exact `EvalContractRevision` 才在**新建** Plan 的唯一 `content_review` 步骤写一个 `gate_refs`。缺权威则不消耗 one-attempt；已有 Run/Plan 不补票。提交后独立读回仍按既有未知提交冻结规则。
+- 先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_authority.py`、邻近 Owner 测试加 RED：正向原 Plan exact gate，以及无合同、多合同、错主体 Suite、Graph target 漂移、错租户、撤销、过期和 `claim` 零 attempt。测试专用 PG 可复用第 2 步正式 API 建链，但不得在当前业务库注册。专项→邻近累计→无 UI 判定→方案复审→verification→精确提交。若旧测试夹具因真实门新增而变红，按原正式权限补充隔离发布证据或明确受阻，不能放宽门。
