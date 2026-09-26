@@ -3851,7 +3851,8 @@ def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
 
 
 def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, Any]:
-    if type(command) is not dict or set(command) != _CONTENT_GENERATE_FIELDS:
+    fields = set(command) if type(command) is dict else set()
+    if fields not in (_CONTENT_GENERATE_FIELDS, _CONTENT_GENERATE_FIELDS | {"returnDecisionRef"}):
         raise ValueError("content generate command envelope drifted")
     if command["operation"] != "content.generate":
         raise ValueError("content generate operation drifted")
@@ -3878,6 +3879,11 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
         name: _content_exact_ref(authorities[name], kind)
         for name, kind in _CONTENT_GENERATE_AUTHORITY_TYPES.items()
     }
+    return_ref = None
+    if "returnDecisionRef" in command:
+        return_ref = _content_exact_ref(command["returnDecisionRef"], "ReturnDecision")
+        if return_ref.revision != 1 or return_ref.receipt_id is not None:
+            raise ValueError("content generate ReturnDecision exact ref drifted")
     source_values = command["sourceArtifactRefs"]
     fact_values = command["factSourceRefs"]
     if (
@@ -3918,6 +3924,7 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
         "authorities": parsed_authorities,
         "sourceRefs": source_refs,
         "factRefs": fact_refs,
+        "returnRef": return_ref,
     }
 
 
@@ -3925,6 +3932,92 @@ class ContentGenerateHostService:
     """Current-authority content acceptance; v2 queues, legacy v1 stays no-effect."""
 
     executor_identity = "ecommerce-growth-content-generate-host"
+
+    @staticmethod
+    def _return_authority(transaction, scope, command, parsed) -> None:
+        """A returned Task cannot bypass a fresh queued attempt or reuse approval."""
+        task_id = parsed["authorities"]["task"].resource_id
+        row = transaction.execute(
+            """SELECT d.decision_id,d.decision_hash,d.issue_id,d.issue_version,
+                      d.run_id,d.step_key,d.step_run_id,d.attempt,
+                      d.attempt_idempotency_key,d.reason,d.actor,
+                      d.created_at AS decision_created_at,
+                      r.status AS run_status,r.task_id,t.status AS task_status,
+                      s.run_id AS step_run_id_owner,s.step_key AS step_key_owner,
+                      s.status AS step_status,s.attempt AS step_attempt,s.input_refs,
+                      (SELECT max(later.attempt) FROM public.aip_step_run later
+                        WHERE later.org_id=s.org_id AND later.project_id=s.project_id
+                          AND later.run_id=s.run_id AND later.step_key=s.step_key)
+                        AS latest_attempt,
+                      i.status AS issue_status,i.version AS current_issue_version,
+                      i.artifact_id,i.artifact_hash,
+                      artifact.content_hash AS persisted_artifact_hash,
+                      approval.created_at AS approval_created_at
+                 FROM public.aip_return_decision d
+                 JOIN public.aip_task_run r ON r.org_id=d.org_id AND r.project_id=d.project_id
+                   AND r.run_id=d.run_id
+                 JOIN public.aip_task t ON t.org_id=r.org_id AND t.project_id=r.project_id
+                   AND t.task_id=r.task_id
+                 JOIN public.aip_step_run s ON s.org_id=d.org_id AND s.project_id=d.project_id
+                   AND s.step_run_id=d.step_run_id
+                 JOIN public.aip_review_issue i ON i.org_id=d.org_id AND i.project_id=d.project_id
+                   AND i.issue_id=d.issue_id
+                 JOIN public.aip_artifact artifact ON artifact.org_id=i.org_id
+                   AND artifact.project_id=i.project_id
+                   AND artifact.artifact_id=i.artifact_id
+                 LEFT JOIN public.aip_action_approval_event approval
+                   ON approval.org_id=d.org_id AND approval.project_id=d.project_id
+                   AND approval.approval_event_id=%s
+                WHERE d.org_id=%s AND d.project_id=%s AND r.task_id=%s
+                ORDER BY d.created_at DESC,d.decision_id DESC LIMIT 1""",
+            (parsed["authorities"]["approval"].resource_id, *scope.key, task_id),
+        ).fetchone()
+        return_ref = parsed["returnRef"]
+        if row is None:
+            if return_ref is not None:
+                raise ValueError("content generate ReturnDecision is missing")
+            return
+        if return_ref is None:
+            raise ValueError("returned content Task requires exact ReturnDecision")
+        decision = {
+            "issueId": row["issue_id"], "issueVersion": row["issue_version"],
+            "runId": row["run_id"], "stepKey": row["step_key"],
+            "stepRunId": row["step_run_id"], "attempt": row["attempt"],
+            "attemptIdempotencyKey": row["attempt_idempotency_key"],
+            "reason": row["reason"], "actor": row["actor"],
+        }
+        expected_ref = {
+            "resourceType": "ReturnDecision", "resourceId": row["decision_id"],
+            "revision": 1, "contentHash": "sha256:" + row["decision_hash"],
+        }
+        expected_artifact = {
+            "resourceType": "Artifact", "resourceId": row["artifact_id"],
+            "contentHash": row["artifact_hash"],
+        }
+        if (
+            row["decision_hash"] != production_contract_canonical_hash(decision)
+            or return_ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+                != expected_ref
+            or command["idempotencyKey"] != row["attempt_idempotency_key"]
+            or row["task_id"] != task_id or row["run_status"] != "running"
+            or row["task_status"] != "executing"
+            or row["step_key"] != "content_generate"
+            or row["step_run_id_owner"] != row["run_id"]
+            or row["step_key_owner"] != row["step_key"]
+            or row["step_status"] != "queued"
+            or row["attempt"] < 2 or row["step_attempt"] != row["attempt"]
+            or row["latest_attempt"] != row["attempt"]
+            or row["issue_status"] != "returned"
+            or row["current_issue_version"] != row["issue_version"] + 1
+            or type(row["input_refs"]) is not list
+            or expected_ref not in row["input_refs"]
+            or expected_artifact not in row["input_refs"]
+            or row["persisted_artifact_hash"] != row["artifact_hash"]
+            or type(row["decision_created_at"]) is not datetime
+            or type(row["approval_created_at"]) is not datetime
+            or row["approval_created_at"] <= row["decision_created_at"]
+        ):
+            raise ValueError("content generate ReturnDecision or fresh approval drifted")
 
     @staticmethod
     def _fact_source_authority(transaction, scope, fact_values, approved_plan, *, checked_at):
@@ -5223,6 +5316,9 @@ class ContentGenerateHostService:
         parsed = _strict_content_generate_command(command)
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
+        self._return_authority(transaction, scope, command, parsed)
+        if parsed["returnRef"] is not None:
+            raise ValueError("content return generation requires a versioned repair preparation")
         source_values = [
             ref.model_dump(mode="json", by_alias=True, exclude_none=True)
             for ref in parsed["sourceRefs"]
@@ -5288,6 +5384,8 @@ class ContentGenerateHostService:
     def execute(
         self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at
     ):
+        if _strict_content_generate_command(command)["returnRef"] is not None:
+            raise ValueError("content return generation is not enabled")
         persisted = self._runtime_command_authority(transaction, scope, command)
         if persisted is not None:
             verified = self.verify_receipt(

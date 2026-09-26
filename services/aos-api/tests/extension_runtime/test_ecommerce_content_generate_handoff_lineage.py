@@ -1,5 +1,5 @@
 from copy import deepcopy
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +10,7 @@ from aos_api.ecommerce_growth_runtime_adapters import (
     _analysis_command_hash,
     _strict_content_generate_command,
 )
+from aos_api.aip_production_contract_store import canonical_hash as production_hash
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
@@ -366,7 +367,7 @@ def test_v2_generate_revalidation_stops_before_capacity_on_unbound_facts(monkeyp
                         staticmethod(lambda *_args, **_kwargs: pytest.fail("capacity must not be read")))
     with pytest.raises(ValueError, match="fact source"):
         ContentGenerateHostService().revalidate(
-            transaction=object(), scope=SCOPE,
+            transaction=ReturnAuthorityTransaction(None), scope=SCOPE,
             dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
             command=command,
         )
@@ -379,6 +380,8 @@ class Transaction:
 
     def execute(self, query, _params):
         self.queries.append(query)
+        if "aip_return_decision" in query:
+            return SimpleNamespace(fetchone=lambda: None)
         key = (
             "review"
             if "runtime_command_receipt" in query
@@ -461,6 +464,110 @@ def test_content_generate_strict_command_rejects_drift(path, value):
     command["requestHash"] = _analysis_command_hash(body)
     with pytest.raises(ValueError):
         _strict_content_generate_command(command)
+
+
+def return_command():
+    command = deepcopy(authorities()["command"])
+    identity = "return-decision-1"
+    decision = {
+        "issueId": "issue-1", "issueVersion": 1, "runId": "run-1",
+        "stepKey": "content_generate", "stepRunId": "step-run-2",
+        "attempt": 2, "attemptIdempotencyKey": "repair-attempt-2",
+        "reason": "内容需修改", "actor": "human-1",
+    }
+    command["returnDecisionRef"] = ref(
+        "ReturnDecision", identity, digest=production_hash(decision)
+    )
+    command["idempotencyKey"] = decision["attemptIdempotencyKey"]
+    command["requestHash"] = _analysis_command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    return command, decision
+
+
+def test_content_generate_return_envelope_is_exact_and_original_unchanged():
+    original = authorities()["command"]
+    assert _strict_content_generate_command(original)["returnRef"] is None
+    command, _ = return_command()
+    assert _strict_content_generate_command(command)["returnRef"].resource_id == "return-decision-1"
+    for change in (
+        lambda value: value.update(extra="x"),
+        lambda value: value["returnDecisionRef"].update(resourceType="Task"),
+        lambda value: value["returnDecisionRef"].update(receiptId="return-decision-1"),
+    ):
+        drift = deepcopy(command)
+        change(drift)
+        drift["requestHash"] = _analysis_command_hash(
+            {key: value for key, value in drift.items() if key != "requestHash"}
+        )
+        with pytest.raises(ValueError):
+            _strict_content_generate_command(drift)
+
+
+class ReturnAuthorityTransaction:
+    def __init__(self, row):
+        self.row = row
+
+    def execute(self, query, _params):
+        assert "aip_return_decision" in query
+        row = self.row
+        return SimpleNamespace(fetchone=lambda: row)
+
+
+def test_content_generate_return_requires_current_queued_attempt_and_new_approval():
+    command, decision = return_command()
+    base = datetime(2026, 9, 27, 8, tzinfo=timezone.utc)
+    row = {
+        "decision_id": "return-decision-1", "decision_hash": production_hash(decision),
+        "issue_id": decision["issueId"], "issue_version": 1,
+        "run_id": "run-1", "step_key": "content_generate",
+        "step_run_id": "step-run-2", "attempt": 2,
+        "attempt_idempotency_key": "repair-attempt-2", "reason": decision["reason"],
+        "actor": decision["actor"], "decision_created_at": base,
+        "run_status": "running", "task_id": "task-1", "task_status": "executing",
+        "step_run_id_owner": "run-1", "step_key_owner": "content_generate",
+        "step_status": "queued", "step_attempt": 2, "latest_attempt": 2,
+        "input_refs": [command["returnDecisionRef"]],
+        "issue_status": "returned", "current_issue_version": 2,
+        "artifact_id": "content-artifact-1",
+        "artifact_hash": HEX_A,
+        "persisted_artifact_hash": HEX_A,
+        "approval_created_at": base + timedelta(seconds=1),
+    }
+    row["input_refs"].append({
+        "resourceType": "Artifact", "resourceId": "content-artifact-1",
+        "contentHash": HEX_A,
+    })
+    ContentGenerateHostService._return_authority(
+        ReturnAuthorityTransaction(row), SCOPE, command,
+        _strict_content_generate_command(command),
+    )
+    with pytest.raises(ValueError, match="versioned repair preparation"):
+        ContentGenerateHostService().revalidate(
+            transaction=ReturnAuthorityTransaction(row), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+            command=command,
+        )
+    with pytest.raises(ValueError, match="not enabled"):
+        ContentGenerateHostService().execute(
+            transaction=object(), scope=SCOPE, dispatch_ref=object(),
+            command=command, checked_at=base, occurred_at=base,
+        )
+    for change in (
+        {"step_status": "succeeded"}, {"latest_attempt": 3},
+        {"approval_created_at": base}, {"task_id": "other-task"},
+        {"decision_hash": "b" * 64},
+    ):
+        with pytest.raises(ValueError):
+            ContentGenerateHostService._return_authority(
+                ReturnAuthorityTransaction({**row, **change}), SCOPE, command,
+                _strict_content_generate_command(command),
+            )
+    with pytest.raises(ValueError):
+        ContentGenerateHostService._return_authority(
+            ReturnAuthorityTransaction(row), SCOPE, authorities()["command"],
+            _strict_content_generate_command(authorities()["command"]),
+        )
 
 
 @pytest.mark.parametrize(
