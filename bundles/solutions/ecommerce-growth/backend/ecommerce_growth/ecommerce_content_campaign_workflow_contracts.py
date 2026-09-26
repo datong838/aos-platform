@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .sdk_ports import ExactRef
+from .sales_weapon_brief import SalesWeaponBriefDraft
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,4 +61,39 @@ class ContentTaskSpec:
         )
 
 
-__all__ = ["ContentTaskSpec"]
+def content_task_from_sales_weapon_brief(
+    brief: SalesWeaponBriefDraft,
+    *,
+    artifact_refs: tuple[ExactRef, ...],
+    channels: tuple[str, ...],
+    time_window: str,
+) -> ContentTaskSpec:
+    """Map an already-validated draft into the existing internal Task shape.
+
+    This does not publish the draft or prove current source/plan approval. The
+    Host's exact review and Handoff Owner must still perform those checks.
+    """
+    if type(brief) is not SalesWeaponBriefDraft:
+        raise ValueError("exact sales weapon brief draft required")
+    constraints = (
+        *("适合：" + item.text for item in brief.fit_for),
+        *("不适合：" + item.text for item in brief.not_fit_for),
+        *("待评审主张：" + item.text for item in brief.proposed_value_claims),
+        *("未知：" + item for item in brief.unknown_facts),
+        *("禁说：" + item for item in brief.prohibited_claims),
+        "真人交接：" + brief.handoff_condition,
+    )
+    return ContentTaskSpec(
+        title=brief.product_label + "内容说明",
+        objective=("围绕" + brief.scenario.text + "，为" + brief.audience_hypothesis.text
+                   + "制作有来源、待人工评审的产品说明"),
+        channels=channels,
+        audience=brief.audience_hypothesis.text,
+        time_window=time_window,
+        constraints=constraints,
+        growth_plan_ref=brief.plan_ref,
+        artifact_refs=artifact_refs,
+    )
+
+
+__all__ = ["ContentTaskSpec", "content_task_from_sales_weapon_brief"]
