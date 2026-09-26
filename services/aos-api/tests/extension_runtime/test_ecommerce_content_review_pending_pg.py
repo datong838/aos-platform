@@ -15,11 +15,13 @@ from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, ReserveBudgetRequest
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
 from aos_api.ecommerce_content_execution_journal import (
     ContentExecutionConflict, ContentExecutionJournal, _payload,
 )
@@ -27,7 +29,10 @@ from aos_api.ecommerce_content_review_pending import (
     ContentReviewPendingBlocked, ContentReviewPendingReader,
 )
 from aos_api.ecommerce_content_execution_composition import CurrentContentPreparation
-from aos_api.ecommerce_content_step_owner import ContentGenerationStepOwner
+from aos_api.ecommerce_content_execution_composition import CurrentContentStatusReader
+from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation
+from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
+from aos_api.ecommerce_content_step_owner import ContentGenerationStepOwner, ContentGenerationStepSource
 from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
@@ -227,6 +232,69 @@ def _seed_current_command_receipt(connect, proof):
     return command
 
 
+def _run_controlled_result_and_consume(connect, proof, command, *, consume=True):
+    """Controlled test seams: no external Provider or live business context read."""
+    reservation_id = proof["reservation"].reservation_ref.resource_id
+    with connect(SCOPE) as conn:
+        providers = conn.execute("""SELECT provider_instance_id,revision,content_hash
+            FROM aip_provider_instance_revision
+            WHERE org_id=%s AND project_id=%s AND lifecycle='active'""",
+            SCOPE.key).fetchall()
+    assert len(providers) == 1
+    provider = providers[0]
+    ref = lambda kind, identity, digest="a" * 64: VersionedAssetRef(
+        assetType=kind, assetId=identity, revision=1, contentHash=digest)
+    resolution = ModelRouteResolution(
+        tenant={"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
+        route=ref("ModelRouteRevision", "controlled-route"),
+        policy=ref("RuntimePolicyRevision", "controlled-policy"),
+        readiness=ModelRuntimeReadiness.READY,
+        selectedModel=ref("RegisteredModelRevision", "controlled-model"),
+        selectedProvider=VersionedAssetRef(assetType="ProviderInstanceRevision",
+            assetId=provider["provider_instance_id"], revision=provider["revision"],
+            contentHash=provider["content_hash"]),
+        selectedPriceSnapshot=ref("ModelPriceSnapshotRevision",
+            proof["request"].pricing_ref.resource_id,
+            proof["request"].pricing_ref.content_hash.removeprefix("sha256:")),
+        resolvedAt=datetime.now(UTC))
+    calls = []
+    def controlled_prepare(_conn, scope, saved_command):
+        assert scope == SCOPE and saved_command == command
+        return PreparedContentInvocation(resolution, "受控测试事实", "approved_internal_knowledge")
+    def controlled_response(_resolution, _prompt, _classification):
+        calls.append(1)
+        observed = datetime.now(UTC).isoformat()
+        def measured(kind, quantity):
+            return {"usageKind": kind, "quantity": quantity, "unit": "token",
+                "quality": "measured", "sourceHash": canonical_hash(
+                    {"kind": kind, "quantity": quantity}), "observedAt": observed}
+        return {"answer": "玫瑰面霜草稿，事实待人工核对。",
+            "provider": provider["provider_instance_id"], "model": "controlled-model",
+            "tokens": 12, "promptTokens": 7, "completionTokens": 5,
+            "route": "controlled-route", "providerReceiptId": "controlled-response-1",
+            "usageReceipts": [measured("input_token", 7), measured("output_token", 5)],
+            "modality": "text"}
+    worker = ContentExecutionWorker(connect, prepare=controlled_prepare,
+        invoke=controlled_response)
+    recorded = worker.run_one(SCOPE, reservation_id)
+    assert recorded["status"] == "RESULT_RECORDED"
+    assert worker.run_one(SCOPE, reservation_id) == recorded
+    assert calls == [1]
+    consumer = ContentResultConsumer(context_reader=lambda _conn, scope, saved_command: (
+        {"runId": proof["run_id"], "productNames": ["玫瑰面霜"],
+         "channels": ["微信小店"], "constraintChecks": ["事实待核"]}
+        if scope == SCOPE and saved_command == command else None))
+    if not consume:
+        return consumer
+    with connect(SCOPE) as conn:
+        consumed = consumer.consume(conn, SCOPE, reservation_id)
+    with connect(SCOPE) as conn:
+        replay = consumer.consume(conn, SCOPE, reservation_id)
+    assert replay["reservation"].replayed
+    assert replay["artifact"] == consumed["artifact"]
+    return consumed
+
+
 def test_original_content_run_can_hold_formal_budget_in_one_full_database():
     with disposable_database() as connect:
         _upgrade_test_clone_to_head(connect)
@@ -292,3 +360,66 @@ def test_original_held_content_command_has_one_formal_current_runtime_receipt(mo
             with pytest.raises(ContentReviewPendingBlocked, match="dispatch"):
                 ContentReviewPendingReader._current_dispatch(conn, SCOPE, command)
             conn.rollback()
+
+
+def test_controlled_result_settles_original_reservation_with_measured_artifact():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        command = _seed_current_command_receipt(connect, proof)
+        result = _run_controlled_result_and_consume(connect, proof, command)
+        assert result["reservation"].state.value == "settled"
+        assert result["artifact"]["taskRef"]["resourceId"] == proof["task_id"]
+        reservation_id = proof["reservation"].reservation_ref.resource_id
+        with connect(SCOPE) as conn:
+            assert CurrentContentStatusReader()(conn, SCOPE, reservation_id) == "COMPLETED"
+            row = conn.execute("""SELECT invocation_id,state,provider_request_receipt_ref,
+                provider_receipt_ref,usage_receipt_refs FROM aip_budget_reservation
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s""",
+                (*SCOPE.key, reservation_id)).fetchone()
+            assert row["state"] == "settled"
+            assert row["provider_request_receipt_ref"]["resourceType"] == "CapabilityProviderRequestReceipt"
+            assert row["provider_receipt_ref"]["resourceType"] == "CapabilityProviderReceipt"
+            assert len(row["usage_receipt_refs"]) == 2
+            assert conn.execute("""SELECT count(*) AS n FROM aip_usage_receipt
+                WHERE org_id=%s AND project_id=%s AND lineage_id=%s""",
+                (*SCOPE.key, str(row["invocation_id"]))).fetchone()["n"] == 2
+            artifact = conn.execute("""SELECT run_id,artifact_type,content_hash,source
+                FROM aip_artifact WHERE org_id=%s AND project_id=%s
+                AND artifact_id=%s""",
+                (*SCOPE.key, result["artifact"]["artifactRef"]["resourceId"])).fetchone()
+            assert artifact["run_id"] == proof["run_id"]
+            assert artifact["artifact_type"] == "ecommerce_content"
+            assert artifact["source"]["invocationId"] == str(row["invocation_id"])
+            source = ContentGenerationStepSource(context_reader=lambda *_args: {
+                "runId": proof["run_id"]})
+            settled = source.read(conn, SCOPE, reservation_id)
+            assert settled.run_id == proof["run_id"]
+            assert settled.artifact_id == result["artifact"]["artifactRef"]["resourceId"]
+            assert len(settled.usage_receipt_refs) == 2
+
+
+def test_controlled_result_settlement_failure_keeps_result_without_artifact(monkeypatch):
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        command = _seed_current_command_receipt(connect, proof)
+        consumer = _run_controlled_result_and_consume(connect, proof, command, consume=False)
+        reservation_id = proof["reservation"].reservation_ref.resource_id
+        def fail_settlement(*_args, **_kwargs):
+            raise RuntimeError("isolated settlement failure")
+        monkeypatch.setattr(AipBudgetReservationStore, "settle", fail_settlement)
+        with pytest.raises(RuntimeError, match="isolated settlement failure"):
+            with connect(SCOPE) as conn:
+                consumer.consume(conn, SCOPE, reservation_id)
+        with connect(SCOPE) as conn:
+            assert CurrentContentStatusReader()(conn, SCOPE, reservation_id) == "RESULT_RECORDED_UNSETTLED"
+            assert conn.execute("""SELECT state FROM aip_budget_reservation
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s""",
+                (*SCOPE.key, reservation_id)).fetchone()["state"] == "submitted"
+            for table in ("aip_artifact", "aip_usage_receipt", "aip_lineage_event"):
+                assert conn.execute(f"SELECT count(*) AS n FROM {table} WHERE org_id=%s AND project_id=%s",
+                    SCOPE.key).fetchone()["n"] == 0
+            assert conn.execute("""SELECT count(*) AS n FROM ecommerce_content_execution_result
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s""",
+                (*SCOPE.key, reservation_id)).fetchone()["n"] == 1

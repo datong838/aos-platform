@@ -1,0 +1,7 @@
+# W5CB4 P2g｜同一原 Reservation 的受控结果与结算子证明
+
+- 基线 `m1@68853bb8`。只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`；克隆受管旧模板成名称前缀 `a0v_growth_graph_test_*` 的一次性库并正式 Alembic 升到 `a0v_105`，未迁移当前业务库。所有 Task/Run、Budget/Price/Approval、ProviderInstance 公共身份、command journal、runtime Receipt、受控结果与结算均在**同一个**测试数据库。
+- RED：新增用例先因 `_run_controlled_result_and_consume` 缺失失败。GREEN：原 held Reservation 经 `ContentExecutionWorker` 的正式 `submit` 先落 Provider 请求 Receipt；受控本地 `invoke` 返回 measured text/两项 Usage 并持久结果；同一 Worker 重跑只读回原结果，调用次数维持 1。`ContentResultConsumer` 通过正式 Usage/Lineage/Artifact/Budget Owners 在一个事务里形成两条 Usage Receipt、可读 `ecommerce_content` Artifact 和 `settled` 预算；重复 consume 回读同一 Artifact。独立数据库读回 TaskRun、invocationId、Provider/Usage refs 和 `COMPLETED`；`ContentGenerationStepSource.read` 在仅注入业务 context 的情况下返回同一 Artifact/Run/两项 Usage。
+- 负向：对正式 `AipBudgetReservationStore.settle` 注入失败，`ContentResultConsumer` 整体回滚 Usage、Artifact、Lineage；预算仍 `submitted`，原不可变结果保留，状态 `RESULT_RECORDED_UNSETTLED`，可供只读对账而非 Provider 重发。未调用网络 Provider；测试的 prepare、业务 context 和响应为显式受控接缝，不证明真实方法、商品来源、能力路由/健康、安装锁或自然调度。
+- 专项 `4 passed, 7 warnings`；内容、通用 EvalRunner 与邻近旧 PG 文件累计 `291 passed, 35 skipped, 7 warnings`；`git diff --check` 通过。纯后端测试，浏览器验收不适用。尚未接正式 `content_generate` StepRun/checkpoint、主体 Eval/当前合同/候选及 ReviewIssue；九操作完整 Host 锁仍缺，生产不启。
+- 下一波：继续用同一已结算原结果验证 `ContentGenerationStepOwner` 的四相 TAOR 与独立 checkpoint 读回，再把原 Artifact 送正式主体 Eval；此前先补合法 Host 锁隔离环境或严格标出其测试接缝，绝不把克隆库绿色当生产执行授权。
