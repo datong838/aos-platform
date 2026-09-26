@@ -70,6 +70,7 @@ from aos_api.ecommerce_growth_runtime_adapters import (
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
 from aos_api.ecommerce_growth_daily_review_target import DailyReviewFeedbackWorker
+from aos_api.ecommerce_growth_improvement_target import CurrentImprovementConsumer, ImprovementFeedbackWorker
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -93,7 +94,7 @@ def _upgrade_test_clone_to_head(connect):
     finally:
         engine.dispose()
     with connect(SCOPE) as conn:
-        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_105"
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_106"
         assert conn.execute("SELECT to_regprocedure(%s) AS procedure",
             ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
 
@@ -1001,6 +1002,12 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         feedback_consumer = CurrentFeedbackConsumer(
             connect=runtime_connect, worker=feedback_worker)
         assert feedback_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
+        improvement_worker = ImprovementFeedbackWorker(connect=runtime_connect)
+        improvement = CurrentImprovementConsumer(connect=runtime_connect,
+            worker=improvement_worker)
+        assert improvement.list_pending(SCOPE) == []
+        with pytest.raises(Exception, match="pristine after daily review"):
+            improvement_worker.run_one(SCOPE, review_proof.feedback_command_id)
         assert feedback_consumer.run_once(SCOPE) == [{
             "commandId": review_proof.feedback_command_id, "status": "DAILY_REVIEW_ACKED"}]
         assert feedback_consumer.list_pending(SCOPE) == []
@@ -1032,3 +1039,99 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_daily_review_target
                 WHERE org_id=%s AND project_id=%s AND command_id=%s""",
                 (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["n"] == 1
+        assert improvement.list_pending(SCOPE) == [review_proof.feedback_command_id]
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=true
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+            conn.commit()
+        try:
+            assert improvement.list_pending(SCOPE) == []
+            with pytest.raises(Exception):
+                improvement_worker.run_one(SCOPE, review_proof.feedback_command_id)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE extension_operation_dispatch_binding SET operation_fence=false
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE aip_task_run SET status='running'
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, proof["run_id"]))
+            conn.commit()
+        try:
+            assert improvement.list_pending(SCOPE) == []
+            with pytest.raises(Exception):
+                improvement_worker.run_one(SCOPE, review_proof.feedback_command_id)
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE aip_task_run SET status='succeeded'
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                    (*SCOPE.key, proof["run_id"]))
+                conn.commit()
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE ecommerce_growth_daily_review_target
+                SET body=jsonb_set(body,'{effectStatus}','\"FALSELY_OBSERVED\"'::jsonb)
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id))
+            conn.commit()
+        try:
+            with pytest.raises(Exception):
+                improvement_worker.run_one(SCOPE, review_proof.feedback_command_id)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n
+                    FROM ecommerce_growth_improvement_target WHERE org_id=%s AND project_id=%s""",
+                    SCOPE.key).fetchone()["n"] == 0
+        finally:
+            with connect(SCOPE) as conn:
+                conn.execute("""UPDATE ecommerce_growth_daily_review_target
+                    SET body=jsonb_set(body,'{effectStatus}','\"AWAITING_OBSERVATION\"'::jsonb)
+                    WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                    (*SCOPE.key, review_proof.feedback_command_id))
+                conn.commit()
+        assert improvement.run_once(SCOPE) == [{"commandId": review_proof.feedback_command_id,
+            "status": "IMPROVEMENT_PENDING_ACKED"}]
+        assert improvement.list_pending(SCOPE) == []
+        with runtime_connect(SCOPE) as conn:
+            conn.execute("SELECT set_config('aos.org_id','dev-org',true)")
+            assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_improvement_target""").fetchone()["n"] == 0
+        with connect(SCOPE) as conn:
+            acl = conn.execute("""SELECT
+                has_table_privilege('aos_runtime','public.ecommerce_growth_improvement_target','SELECT') AS can_read,
+                has_table_privilege('aos_runtime','public.ecommerce_growth_improvement_target','INSERT') AS can_insert,
+                has_table_privilege('aos_runtime','public.ecommerce_growth_improvement_target','UPDATE') AS can_update,
+                has_function_privilege('aos_runtime',
+                  'public.ecommerce_growth_improvement_put_a0v_106(text,text,uuid,bigint,jsonb,jsonb,jsonb,jsonb,jsonb,jsonb)',
+                  'EXECUTE') AS can_put""").fetchone()
+            acl_source = conn.execute("""SELECT pg_get_userbyid(c.relowner) AS owner,
+                c.relacl::text AS acl, pg_has_role('aos_runtime',c.relowner,'USAGE') AS inherits_owner
+                FROM pg_class c WHERE c.oid='public.ecommerce_growth_improvement_target'::regclass""").fetchone()
+            assert acl == {"can_read": True, "can_insert": False,
+                "can_update": False, "can_put": True}, acl_source
+            daily_acl = conn.execute("""SELECT
+                has_table_privilege('aos_runtime','public.ecommerce_growth_daily_review_target','SELECT') AS can_read,
+                has_table_privilege('aos_runtime','public.ecommerce_growth_daily_review_target','INSERT') AS can_insert,
+                has_table_privilege('aos_runtime','public.ecommerce_growth_daily_review_target','UPDATE') AS can_update""").fetchone()
+            assert daily_acl == {"can_read": True, "can_insert": False, "can_update": False}
+            target = conn.execute("""SELECT command_id,receipt_ref,body,
+                'sha256:'||encode(digest(convert_to(body::text,'UTF8'),'sha256'),'hex') AS computed_hash
+                FROM ecommerce_growth_improvement_target WHERE org_id=%s AND project_id=%s""",
+                SCOPE.key).fetchall()
+            assert len(target) == 1
+            assert target[0]["command_id"] == review_proof.feedback_command_id
+            assert target[0]["receipt_ref"]["contentHash"] == target[0]["computed_hash"]
+            assert target[0]["body"]["effectStatus"] == "AWAITING_COMPARABLE_EVIDENCE"
+            segments = conn.execute("""SELECT sequence,state,attempt,target_receipt_ref
+                FROM ecommerce_growth_feedback_segment WHERE org_id=%s AND project_id=%s
+                  AND command_id=%s ORDER BY sequence""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchall()
+            assert [(row["sequence"], row["state"], row["attempt"]) for row in segments] == [
+                (1, "acked", 1), (2, "acked", 1), (3, "pending", 0)]
+            assert segments[1]["target_receipt_ref"] == target[0]["receipt_ref"]
+            assert segments[2]["target_receipt_ref"] is None
+            assert conn.execute("""SELECT completed_sequence FROM ecommerce_growth_feedback_checkpoint
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["completed_sequence"] == 2
+        assert ImprovementFeedbackWorker(connect=runtime_connect).run_one(
+            SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_ACKED"
