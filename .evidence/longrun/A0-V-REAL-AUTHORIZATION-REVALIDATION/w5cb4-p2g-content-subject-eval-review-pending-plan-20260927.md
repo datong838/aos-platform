@@ -36,3 +36,9 @@
 
 - 现有 `test_aip_ecommerce_content_eval_input.py` 的一次性完整迁移库已持久 Task/Plan/Run、四相成功 StepRun、可读 Artifact 与真实 EvalRunner 报告，但尚无预算结算/Provider/Usage/当前 dispatch。先在该测试内验证候选读取器对**真实报告/Run JSONB 和原 Plan gate**的兼容性；仅针对缺失的来源/dispatch/checkpoint 注入替身，明确只是一段组合子证据，不能取代上述全链 RED/正向。
 - 同时审既有 `test_a0v_content_result_consumer_pg.py`：它确有预算/Provider/Usage/Artifact 的正式消费测试，却运行在精简临时 schema、需 `AOS_EXTENSION_PG_TEST=1` 且本机 18432 未监听。不得把两个不同数据库的绿色结果拼成“同一对象贯通”。后续必须在一个完整迁移的一次性库里组合，或记录正式 fixture 缺口。
+
+### P2g 前半段同库 fixture 第一增量（2026-09-27）
+
+- 在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 新建只用于完整迁移一次性库的 fixture；第一 RED 仅证明**原公共 Task/Plan/Run 与正式 BudgetRevision、PriceSnapshot、ActionApprovalEvent 经 `AipBudgetReservationStore.reserve` 形成 held Reservation**。此步仍不声称 settled 内容或待办，不调用真实 Provider。
+- Seed 仅限隔离库、显式列名、完整迁移约束；不得复制精简 schema 的位置型 INSERT，也不得改生产预算/审批规则让测试通过。失败时查确切缺失字段/权威并修 fixture；若必须修改公共生产规则，另起方案波次。
+- 后续沿同一数据库和同一 Task/Run/Reservation 追加正式 journal、受控结果、Usage/Artifact/settlement、TAOR、主体 Eval 与候选读回；任何段落必须说明尚未覆盖的门。运行专项与内容累计后单独 verification/commit，防止把局部绿误称全链。
