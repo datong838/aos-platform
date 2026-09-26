@@ -16,6 +16,8 @@ from aos_api.aip_task_store import AipTaskStore
 from aos_api.aip_production_contract_store import AipProductionContractStore, ProductionContractDependencyBlocked
 from aos_api.aip_production_contracts import (CreateReviewIssueRequest, ExactArtifactRef,
     ExactRevisionRef, RegisterReviewRuleRevisionRequest)
+from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import ContentReviewHostService
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, SCOPE
 from test_ecommerce_analyst_method_authority import apply_migrations
 
@@ -100,7 +102,11 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
                 resourceId=report.report_id,revision=report.revision,contentHash=report.content_hash),
             location={'stage':'content_generate'},suggestedFix='请人工核对内容事实',
             returnStage='content_generate')
-        assert contracts.create_review_issue(SCOPE,'tester','content-issue',request).artifact_ref.artifact_id==identity
+        issue=contracts.create_review_issue(SCOPE,'tester','content-issue',request)
+        assert issue.artifact_ref.artifact_id==identity
+        with connect(SCOPE) as transaction:
+            ContentReviewHostService._issue_eval_authority(
+                HostTransaction(transaction),SCOPE,{'decision':'ACCEPT'},issue)
         other_identity='artifact-'+'b'*20
         other_content={**content,'artifactRef':{**content['artifactRef'],'resourceId':other_identity}}
         store.record_artifact(SCOPE,run.id,'tester','ecommerce_content',

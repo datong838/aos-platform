@@ -5698,6 +5698,7 @@ class ContentReviewHostService:
             or (command["decision"] == "RETURN" and issue.return_stage != "content_generate")
         ):
             raise ValueError("content review ReviewIssue exact lineage drifted")
+        ContentReviewHostService._issue_eval_authority(transaction, scope, command, issue)
         event = transaction.execute(
             """SELECT event_type,issue_version,payload_hash,payload,actor
                  FROM public.aip_review_issue_event
@@ -5760,6 +5761,72 @@ class ContentReviewHostService:
                 or decision["actor"] != event["actor"]
             ):
                 raise ValueError("content review human ReturnDecision unavailable")
+
+    @staticmethod
+    def _issue_eval_authority(transaction, scope, command, issue):
+        report = transaction.execute(
+            """SELECT content_hash,subject_artifact_ref,stage_attempt_ref,
+                      eval_contract_ref,gate_policy_ref
+                 FROM public.aip_eval_report_revision
+                WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
+            (*scope.key, issue.eval_report_ref.resource_id,
+             issue.eval_report_ref.revision),
+        ).fetchone()
+        artifact = transaction.execute(
+            """SELECT run_id,artifact_type,content_hash FROM public.aip_artifact
+                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (*scope.key, issue.artifact_ref.artifact_id),
+        ).fetchone()
+        subject = None if report is None else report["subject_artifact_ref"]
+        attempt = None if report is None else report["stage_attempt_ref"]
+        if (
+            report is None or artifact is None
+            or report["content_hash"] != issue.eval_report_ref.content_hash
+            or artifact["artifact_type"] != "ecommerce_content"
+            or artifact["content_hash"] != issue.artifact_ref.content_hash
+            or subject != {
+                "resourceType": "Artifact", "resourceId": issue.artifact_ref.artifact_id,
+                "contentHash": issue.artifact_ref.content_hash,
+            }
+            or not isinstance(attempt, dict)
+            or attempt.get("resourceType") != "StepRunAttempt"
+            or attempt.get("runId") != artifact["run_id"]
+            or attempt.get("stepKey") != "content_generate"
+            or type(attempt.get("stepRunId")) is not str
+            or not attempt["stepRunId"]
+            or type(report["eval_contract_ref"]) is not dict
+            or report["eval_contract_ref"].get("resourceType") != "EvalContractRevision"
+            or type(report["gate_policy_ref"]) is not dict
+            or report["gate_policy_ref"].get("resourceType") != "MediaGatePolicyRevision"
+        ):
+            raise ValueError("content review EvalReport subject lineage drifted")
+        step = transaction.execute(
+            """SELECT step_run_id,run_id,step_key,attempt,input_hash FROM public.aip_step_run
+                WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
+            (*scope.key, attempt["stepRunId"]),
+        ).fetchone()
+        if (
+            step is None or step["run_id"] != artifact["run_id"]
+            or step["step_key"] != "content_generate"
+            or step["step_run_id"] != attempt["stepRunId"]
+            or type(attempt.get("attempt")) is not int
+            or step["attempt"] != attempt["attempt"]
+            or step["input_hash"] != attempt.get("inputHash")
+        ):
+            raise ValueError("content review EvalReport attempt lineage drifted")
+        if command["decision"] == "ACCEPT":
+            latest = transaction.execute(
+                """SELECT step_run_id,attempt FROM public.aip_step_run
+                    WHERE org_id=%s AND project_id=%s AND run_id=%s
+                      AND step_key='content_generate'
+                    ORDER BY attempt DESC LIMIT 1""",
+                (*scope.key, artifact["run_id"]),
+            ).fetchone()
+            if (
+                latest is None or latest["step_run_id"] != step["step_run_id"]
+                or latest["attempt"] != step["attempt"]
+            ):
+                raise ValueError("content review EvalReport latest attempt drifted")
 
     @staticmethod
     def _reviewer_authority(transaction, scope, command):

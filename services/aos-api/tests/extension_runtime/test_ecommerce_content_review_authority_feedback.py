@@ -476,7 +476,8 @@ def test_artifact_owner_rejects_boolean_exact_ref_alias():
         )
 
 
-def test_review_issue_owner_requires_exact_human_resolution_event():
+def test_review_issue_owner_requires_exact_human_resolution_event(monkeypatch):
+    monkeypatch.setattr(ContentReviewHostService, "_issue_eval_authority", staticmethod(lambda *_: None))
     item = command()
     row = {
         "issue_id": "issue-1",
@@ -575,6 +576,59 @@ def test_review_issue_owner_requires_exact_human_resolution_event():
     with pytest.raises(ValueError, match="ReturnDecision"):
         ContentReviewHostService._issue_authority(
             HostTransaction(Tx(returned, return_event, wrong_decision)), SCOPE, return_item)
+
+
+def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
+    item = command()
+    issue = SimpleNamespace(
+        eval_report_ref=SimpleNamespace(
+            resource_id="eval-1", revision=1, content_hash="c" * 64),
+        artifact_ref=SimpleNamespace(artifact_id="content-1", content_hash="1" * 64),
+    )
+    subject = {"resourceType": "Artifact", "resourceId": "content-1", "contentHash": "1" * 64}
+    attempt = {"resourceType": "StepRunAttempt", "runId": "run-1",
+               "stepKey": "content_generate", "stepRunId": "step-1",
+               "attempt": 1, "inputHash": "a" * 64}
+    report = {"content_hash": "c" * 64, "subject_artifact_ref": subject,
+              "stage_attempt_ref": attempt,
+              "eval_contract_ref": {"resourceType": "EvalContractRevision"},
+              "gate_policy_ref": {"resourceType": "MediaGatePolicyRevision"}}
+    artifact = {"run_id": "run-1", "artifact_type": "ecommerce_content",
+                "content_hash": "1" * 64}
+    step = {"step_run_id": "step-1", "run_id": "run-1", "step_key": "content_generate",
+            "attempt": 1, "input_hash": "a" * 64}
+
+    class Tx:
+        def __init__(self, selected=report, latest=step):
+            self.selected, self.latest = selected, latest
+
+        def execute(self, query, *_):
+            if "aip_eval_report_revision" in query:
+                return Result(self.selected)
+            if "aip_artifact" in query:
+                return Result(artifact)
+            if "ORDER BY attempt DESC" in query:
+                return Result(self.latest)
+            if "aip_step_run" in query:
+                return Result(step)
+            raise AssertionError(query)
+
+    authority = ContentReviewHostService._issue_eval_authority
+    authority(HostTransaction(Tx()), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="EvalReport"):
+        authority(HostTransaction(Tx({**report, "subject_artifact_ref":
+            {**subject, "resourceId": "other-content"}})), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="EvalReport"):
+        authority(HostTransaction(Tx({**report, "stage_attempt_ref":
+            {**attempt, "stepRunId": None}})), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="EvalReport"):
+        authority(HostTransaction(Tx({**report, "gate_policy_ref": None})), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="EvalReport"):
+        authority(HostTransaction(Tx(latest={**step, "step_run_id": "step-2",
+            "attempt": 2})), SCOPE, item, issue)
+    returned = {**item, "decision": "RETURN", "returnStage": "content_generation"}
+    authority(HostTransaction(Tx(latest={**step, "step_run_id": "step-2",
+        "attempt": 2})), SCOPE, returned, issue)
 
 
 def _seed_runtime(scope, operation):
