@@ -70,3 +70,9 @@
 - 仅延伸 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`。在正式 `a0v_105` 一次性库中复用上段原 Task/Run/Reservation 的 settled Artifact/Provider+Usage refs；`ContentGenerationStepSource.read` 保留唯一显式业务 context 接缝，其余预算、journal、Artifact、Run 正式查询。RED 要求 `ContentGenerationStepOwner._complete_transaction` 经真实 AIP Store 写同一 `content_generate` 四相 TAOR 与 succeeded StepRun，再由独立连接 `_readback` 验 checkpoint、observe 中 exact Artifact/Reservation；重复原对象只回读，不新增 attempt。
 - 由于完整九操作 Host 锁、非超级用户 serializable 隔离身份尚未组成，本段**不调用** `run_one`/自然 worker，也不猴补 `CurrentContentPreparation._lock_dispatch` 后声称运行授权。内部原子提交子证明与生产外层 Host 门分列；若 StepRun/Checkpoint 发生未知提交，停止重跑并只读对账。负例错 Artifact/ref 要 fail closed，不能靠手工构造第二 Run。
 - 专项、累计、verification、m1 commit、AOS/Prime 同步后，下一段在同一原 Artifact 上接正式当前 EvalContract/Plan gate 和主体 EvalRunner；若合同注册 fixture 仍大，先明确缺口，不开放 GET/Issue。
+
+### P2g 第五增量：原 Artifact 的当前 Eval 权威与主体报告（2026-09-27，编码前）
+
+- 只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 的一次性正式 `a0v_105` 同库测试与必要 helper，不改生产合同/Runner 门。先依现有 `ecommerce_content_pre_review_eval.py`、pack、`AipEvalPackRegistry`、`LogicGraphStore`、`AipReleasePublicationService` 和 `AipProductionContractStore` 正式 API 注册 Graph、治理及主体 Suite、发布门/事件、冻结 READY 内容合同；当前 gate 必须在**原** Plan 创建前写入 `content_review.gateRefs`，不能事后改批准 Plan。
+- 原内容结果、settled 预算、Provider/Usage Receipt、Artifact 与唯一 succeeded `content_generate` StepRun/checkpoint 保持同一对象。用 `AipEvalRunner.run_by_contract` 对该可读原 Artifact 和最新成功 attempt 跑主体结构 Eval，独立读回报告/EvalRun、exact 合同、Artifact、StepRun 和无正文泄漏；受控 Graph target/judge 是隔离测试执行接缝，不代表真实商品事实通过。首个 RED 先暴露正式 fixture 的最小缺口，禁止直写伪报告。
+- 同库组合成本若超本增量，先落可验证的正式合同/Plan gate 子证明、列出缺口与下一步，不放宽 `ContentReviewPendingReader`。对失败/未知提交只读对账；不重复 Eval/Provider，不开放 GET/Issue/自然 worker。专项、累计、verification、m1 精确提交、AOS/Prime 同步后继续下一波候选读回。

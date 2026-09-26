@@ -18,7 +18,18 @@ from sqlalchemy.engine import URL
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, ReserveBudgetRequest
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
-from aos_api.aip_contracts import PlanStep
+from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
+from aos_api.aip_eval_contracts import (
+    AssetRevisionRef, AssetType, EvalGatePolicyRef, EvalStageAttemptRef,
+    EvalSubjectArtifactRef,
+)
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
+from aos_api.aip_eval_runner import AipEvalRunner, JudgeExecution, ResolvedArtifact
+from aos_api.aip_logic_graph_store import LogicGraphStore
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import CreateEvalContractRequest, ExactRevisionRef
+from aos_api.aip_release_publication_models import DeriveReleaseGateRequest, PublishReleaseRequest
+from aos_api.aip_release_publication_service import AipReleasePublicationService
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution, ModelRuntimeReadiness
@@ -30,6 +41,11 @@ from aos_api.ecommerce_content_review_pending import (
 )
 from aos_api.ecommerce_content_execution_composition import CurrentContentPreparation
 from aos_api.ecommerce_content_execution_composition import CurrentContentStatusReader
+from aos_api.ecommerce_content_pre_review_eval import (
+    build_content_pre_review_graph, execute_content_pre_review_target,
+)
+from aos_api.ecommerce_content_pre_review_pack import build_content_pre_review_eval_packs
+from aos_api.ecommerce_content_pre_review_authority import require_current_content_pre_review_gate
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation
 from aos_api.ecommerce_content_result_consumer import ContentResultConsumer
 from aos_api.ecommerce_content_step_owner import (
@@ -66,7 +82,67 @@ def _upgrade_test_clone_to_head(connect):
             ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
 
 
-def _seed_original_run_and_budget(connect):
+def _register_current_content_eval_gate(connect):
+    """Formal isolated Graph/Suite/release/contract authority, not production install."""
+    graph = LogicGraphStore(lambda: connect(SCOPE)).create(
+        *SCOPE.key, "fixture", build_content_pre_review_graph())
+    target = AssetRevisionRef(asset_type=AssetType.LOGIC_GRAPH, asset_id=graph.id,
+        revision=str(graph.revision), content_hash=graph.graph_hash)
+    governance, subject = build_content_pre_review_eval_packs(target)
+    registry = AipEvalPackRegistry(connect_factory=connect)
+    for pack in (governance, subject):
+        registry.register_dataset_revision(SCOPE, pack.dataset, pack.manifest, actor="fixture")
+        registry.register_suite_revision(SCOPE, pack.suite, actor="fixture")
+    report = AipEvalRunner(connect_factory=connect).run(
+        SCOPE, suite_id=governance.suite.suite_id, suite_revision=1,
+        idempotency_key="content-p2g-governance", actor="fixture",
+        resolve_artifact=lambda ref: ResolvedArtifact(
+            reference=ref, value=governance.artifacts[(ref.artifact_id, ref.revision)]),
+        execute_target=lambda ref, value: execute_content_pre_review_target(ref, graph, value),
+        execute_judge=lambda ref, actual, expected: JudgeExecution(
+            judge=ref, passed=actual is expected, detail_code="exact_bool_match"))
+    assert report.gate_passed
+    release = AipReleasePublicationService(connect)
+    gate = release.derive_gate(SCOPE, actor="fixture", request=DeriveReleaseGateRequest(
+        report_id=report.report_id, report_revision=report.revision,
+        report_hash=report.content_hash, idempotency_key="content-p2g-gate"))
+    published = release.publish(SCOPE, actor="fixture", request=PublishReleaseRequest(
+        release_gate_decision_id=gate.decision_id, reason_hash="d" * 64,
+        idempotency_key="content-p2g-published"))
+    with connect(SCOPE) as conn:
+        row = conn.execute("""SELECT * FROM aip_publication_event
+            WHERE org_id=%s AND project_id=%s AND event_id=%s""",
+            (*SCOPE.key, published.event_id)).fetchone()
+        publication_hash = canonical_hash(AipProductionContractStore._publication_snapshot(row))
+    body = CreateEvalContractRequest(
+        suite_ref=ExactRevisionRef(resource_type="EvalSuiteRevision",
+            resource_id=subject.suite.suite_id, revision=subject.suite.revision,
+            content_hash=subject.suite.content_hash),
+        publication_ref=ExactRevisionRef(resource_type="PublicationEvent",
+            resource_id=published.event_id, revision=1, content_hash=publication_hash),
+        release_gate_ref=ExactRevisionRef(resource_type="ReleaseGateDecision",
+            resource_id=gate.decision_id, revision=1, content_hash=gate.decision_hash),
+        artifact_schema_ref=ResourceRef(resource_type="Schema",
+            resource_id="ecommerce-readable-content-v1", revision="1", authority="aip"),
+        severity_thresholds={"critical": 1.0},
+        gate_policy={"subjectKind": "ecommerce_content",
+            "subjectInputMode": "ecommerce-readable-content/v1",
+            "requiresHumanDecision": True},
+        return_mapping={"critical": "content_generate"},
+        override_policy={"allowed": False})
+    contracts = AipProductionContractStore(connect_factory=connect)
+    draft = contracts.create_eval_contract(
+        SCOPE, "fixture", "content-p2g-subject-contract", body)
+    frozen = contracts.freeze_eval_contract(SCOPE, "fixture", draft.contract_id,
+        draft.version, "content-p2g-subject-freeze")
+    with connect(SCOPE) as conn:
+        exact = require_current_content_pre_review_gate(conn, SCOPE)
+    assert exact.resource_id == frozen.contract_id
+    assert exact.content_hash == frozen.content_hash
+    return exact, graph, subject
+
+
+def _seed_original_run_and_budget(connect, *, eval_gate=None):
     """Seed only external authorities in the owned clone; use public Task/Budget APIs."""
     now = datetime.now(UTC)
     store = AipTaskStore(connect)
@@ -75,7 +151,8 @@ def _seed_original_run_and_budget(connect):
     plan = store.create_plan(SCOPE, "fixture", task.id, "content-p2g-plan",
         CreatePlanRevisionRequest(expected_task_version=task.version, steps=[
             PlanStep(step_key="content_generate", title="Generate"),
-            PlanStep(step_key="content_review", title="Review"),
+            PlanStep(step_key="content_review", title="Review",
+                gate_refs=[] if eval_gate is None else [eval_gate]),
         ]))
     task = store.get_task(SCOPE, task.id)
     store.approve_plan(SCOPE, "fixture", task.id, plan.revision, task.version, plan.content_hash)
@@ -315,6 +392,23 @@ def test_original_content_run_can_hold_formal_budget_in_one_full_database():
                 WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
 
 
+def test_original_plan_binds_one_formally_published_content_eval_gate():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        gate, _, _ = _register_current_content_eval_gate(connect)
+        proof = _seed_original_run_and_budget(connect, eval_gate=gate)
+        with connect(SCOPE) as conn:
+            original = conn.execute("""SELECT p.steps,p.approval_status
+                FROM aip_task_run r JOIN aip_plan_revision p
+                  ON p.org_id=r.org_id AND p.project_id=r.project_id
+                 AND p.plan_revision_id=r.plan_revision_id AND p.task_id=r.task_id
+                WHERE r.org_id=%s AND r.project_id=%s AND r.run_id=%s""",
+                (*SCOPE.key, proof["run_id"])).fetchone()
+            assert original["approval_status"] == "approved"
+            assert original["steps"][1]["gateRefs"] == [gate.model_dump(mode="json", by_alias=True)]
+            assert require_current_content_pre_review_gate(conn, SCOPE) == gate
+
+
 def test_original_held_content_command_has_one_formal_current_runtime_receipt(monkeypatch):
     with disposable_database() as connect:
         _upgrade_test_clone_to_head(connect)
@@ -473,3 +567,71 @@ def test_original_settled_result_completes_one_generation_step_and_checkpoint():
                 (*SCOPE.key, steps[0]["observe_ref"]["evidenceId"])).fetchone()["payload"]
             assert observed["payload"]["reservationId"] == reservation_id
             assert observed["payload"]["artifactRef"] == consumed["artifact"]["artifactRef"]
+
+
+def test_original_settled_artifact_runs_current_content_subject_eval():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        gate, graph, subject_pack = _register_current_content_eval_gate(connect)
+        proof = _seed_original_run_and_budget(connect, eval_gate=gate)
+        command = _seed_current_command_receipt(connect, proof)
+        consumed = _run_controlled_result_and_consume(connect, proof, command)
+        reservation_id = proof["reservation"].reservation_ref.resource_id
+        source = ContentGenerationStepSource(context_reader=lambda _conn, scope, saved_command: (
+            {"runId": proof["run_id"]} if scope == SCOPE and saved_command == command else None))
+        owner = ContentGenerationStepOwner(source=source, connect_write=connect,
+            connect_read=connect)
+        with connect(SCOPE) as conn:
+            settled = source.read(conn, SCOPE, reservation_id)
+            checkpoint_id = owner._complete_transaction(conn, SCOPE, settled)
+        with connect(SCOPE) as conn:
+            owner._readback(conn, SCOPE, settled, checkpoint_id)
+            step = conn.execute("""SELECT step_run_id,attempt,input_hash
+                FROM aip_step_run WHERE org_id=%s AND project_id=%s AND run_id=%s
+                  AND step_key='content_generate'""",
+                (*SCOPE.key, proof["run_id"])).fetchone()
+        artifact_ref = EvalSubjectArtifactRef(resourceId=settled.artifact_id,
+            contentHash=settled.artifact_hash)
+        attempt_ref = EvalStageAttemptRef(runId=proof["run_id"],
+            stepKey="content_generate", stepRunId=step["step_run_id"],
+            attempt=step["attempt"], inputHash=step["input_hash"])
+        policy_ref = EvalGatePolicyRef(resourceType="EvalContractRevision",
+            resourceId=gate.resource_id, revision=gate.revision,
+            contentHash=gate.content_hash)
+        runner = AipEvalRunner(connect_factory=connect,
+            production_contract_store=AipProductionContractStore(connect_factory=connect))
+        def resolve(ref):
+            return ResolvedArtifact(reference=ref,
+                value=subject_pack.artifacts[(ref.artifact_id, ref.revision)])
+        actual_inputs = []
+        def execute_target(ref, value):
+            actual_inputs.append(value)
+            assert value["content"] == consumed["artifact"]
+            return execute_content_pre_review_target(ref, graph, value)
+        report = runner.run_by_contract(SCOPE, contract_id=gate.resource_id,
+            contract_revision=gate.revision, contract_content_hash=gate.content_hash,
+            idempotency_key="content-p2g-original-subject-eval", actor="fixture",
+            resolve_artifact=resolve, execute_target=execute_target,
+            execute_judge=lambda ref, actual, expected: JudgeExecution(
+                judge=ref, passed=actual == expected, detail_code="exact_bool_match"),
+            subject_artifact_ref=artifact_ref, stage_attempt_ref=attempt_ref,
+            gate_policy_ref=policy_ref, evidence_cutoff_at=datetime.now(UTC))
+        assert report.gate_passed and len(actual_inputs) == 1
+        assert report.subject_artifact_ref == artifact_ref
+        assert report.stage_attempt_ref == attempt_ref
+        assert report.eval_contract_ref.model_dump(mode="json", by_alias=True) == (
+            policy_ref.model_dump(mode="json", by_alias=True))
+        assert consumed["artifact"]["body"] not in report.model_dump_json()
+        assert runner.get_report(SCOPE, report.report_id) == report
+        with connect(SCOPE) as conn:
+            saved = conn.execute("""SELECT status,eval_contract_ref,
+                subject_artifact_ref,stage_attempt_ref FROM aip_eval_run
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, report.run_id)).fetchone()
+            assert saved["status"] == "succeeded"
+            assert saved["eval_contract_ref"] == policy_ref.model_dump(mode="json", by_alias=True)
+            assert saved["subject_artifact_ref"] == artifact_ref.model_dump(mode="json", by_alias=True)
+            assert saved["stage_attempt_ref"] == attempt_ref.model_dump(mode="json", by_alias=True)
+            assert conn.execute("""SELECT count(*) AS n FROM aip_eval_report_revision
+                WHERE org_id=%s AND project_id=%s AND run_id=%s""",
+                (*SCOPE.key, report.run_id)).fetchone()["n"] == 1
