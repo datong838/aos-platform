@@ -183,6 +183,34 @@ def test_source_and_candidate_are_idempotent_scoped_and_restart_safe(chain) -> N
         )
 
 
+def test_source_and_candidate_join_caller_transaction_without_implicit_commit(chain) -> None:
+    store = chain["store"]
+    request = chain["request"]
+    assert isinstance(store, AipMemoryStore)
+    assert isinstance(request, SubmitMemoryCandidateRequest)
+    with connect(PRIMARY) as conn:
+        store.create_source_revision_in_transaction(
+            PRIMARY, str(chain["source_id"]), 1, request.source,
+            actor="pytest", transaction=conn,
+        )
+        candidate = store.submit_candidate_in_transaction(
+            PRIMARY, str(chain["candidate_id"]), request,
+            source_id=str(chain["source_id"]), source_revision=1,
+            knowledge_scope=KnowledgeScope.WORKSPACE,
+            actor="pytest", occurred_at=NOW, transaction=conn,
+        )
+        assert candidate.status is MemoryCandidateStatus.PENDING
+        conn.rollback()
+    with pytest.raises(AipMemoryNotFound):
+        store.get_candidate(PRIMARY, str(chain["candidate_id"]))
+    with connect(PRIMARY) as conn:
+        row = conn.execute(
+            "SELECT 1 FROM aip_memory_source_revision WHERE org_id=%s AND project_id=%s "
+            "AND source_id=%s", (*PRIMARY.key, str(chain["source_id"])),
+        ).fetchone()
+        assert row is None
+
+
 def test_candidate_transition_cas_governance_and_event_timeline(chain) -> None:
     store = chain["store"]
     candidate = create_candidate(chain)

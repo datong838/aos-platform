@@ -85,7 +85,26 @@ class AipMemoryStore:
             raise ValueError("source id, revision and actor are required")
         try:
             with self._connect(scope) as conn:
-                row = conn.execute(
+                result = self.create_source_revision_in_transaction(
+                    scope, source_id, revision, source, actor=actor, transaction=conn,
+                )
+                conn.commit()
+                return result
+        except AipMemoryStoreError:
+            raise
+        except Exception as exc:
+            raise AipMemoryPersistenceError("source revision persistence failed") from exc
+
+    def create_source_revision_in_transaction(
+        self, scope: TenantScope, source_id: str, revision: int,
+        source: KnowledgeSourceRef, *, actor: str, transaction: Any,
+    ) -> KnowledgeSourceRef:
+        """Join a caller-owned scoped transaction; never commit it."""
+        self._require_scope(scope)
+        if revision < 1 or not source_id.strip() or not actor.strip():
+            raise ValueError("source id, revision and actor are required")
+        try:
+                row = transaction.execute(
                     """INSERT INTO aip_memory_source_revision (
                        org_id,project_id,source_id,revision,source_kind,source_uri,
                        source_ref,observed_at,freshness_expires_at,license_id,
@@ -114,10 +133,9 @@ class AipMemoryStore:
                     ),
                 ).fetchone()
                 if row is None:
-                    row = self._source_row(conn, scope, source_id, revision)
+                    row = self._source_row(transaction, scope, source_id, revision)
                     if row is None or self._source_from_row(row) != source:
                         raise AipMemoryConflict("source revision already has different content")
-                conn.commit()
                 return self._source_from_row(row)
         except AipMemoryStoreError:
             raise
@@ -139,13 +157,34 @@ class AipMemoryStore:
         self._require_scope(scope)
         try:
             with self._connect(scope) as conn:
-                source_row = self._source_row(conn, scope, source_id, source_revision)
+                candidate = self.submit_candidate_in_transaction(
+                    scope, candidate_id, request, source_id=source_id,
+                    source_revision=source_revision, knowledge_scope=knowledge_scope,
+                    actor=actor, occurred_at=occurred_at, transaction=conn,
+                )
+                conn.commit()
+                return candidate
+        except AipMemoryStoreError:
+            raise
+        except Exception as exc:
+            raise AipMemoryPersistenceError("candidate persistence failed") from exc
+
+    def submit_candidate_in_transaction(
+        self, scope: TenantScope, candidate_id: str,
+        request: SubmitMemoryCandidateRequest, *, source_id: str,
+        source_revision: int, knowledge_scope: KnowledgeScope,
+        actor: str, occurred_at: datetime, transaction: Any,
+    ) -> MemoryCandidate:
+        """Persist a pending candidate inside the caller's transaction only."""
+        self._require_scope(scope)
+        try:
+                source_row = self._source_row(transaction, scope, source_id, source_revision)
                 if source_row is None or self._source_from_row(source_row) != request.source:
                     raise AipMemoryConflict("candidate source revision drifted")
-                self._require_task_run(conn, scope, request.task_id, request.run_id)
-                existing = self._candidate_row(conn, scope, candidate_id)
+                self._require_task_run(transaction, scope, request.task_id, request.run_id)
+                existing = self._candidate_row(transaction, scope, candidate_id)
                 if existing is not None:
-                    candidate = self._candidate_from_row(conn, scope, existing)
+                    candidate = self._candidate_from_row(transaction, scope, existing)
                     if (
                         candidate.request != request
                         or candidate.scope is not knowledge_scope
@@ -163,7 +202,7 @@ class AipMemoryStore:
                     actor=actor,
                     occurred_at=occurred_at,
                 )
-                inserted = conn.execute(
+                inserted = transaction.execute(
                     """INSERT INTO aip_memory_candidate (
                        org_id,project_id,candidate_id,memory_layer,scope,status,
                        task_id,run_id,subject_ref,payload_ref,source_id,source_revision,
@@ -191,19 +230,18 @@ class AipMemoryStore:
                     ),
                 ).fetchone()
                 if inserted is None:
-                    replay = self._candidate_row(conn, scope, candidate_id)
+                    replay = self._candidate_row(transaction, scope, candidate_id)
                     if replay is None:
                         raise AipMemoryConflict("candidate concurrent insert disappeared")
-                    candidate = self._candidate_from_row(conn, scope, replay)
+                    candidate = self._candidate_from_row(transaction, scope, replay)
                     if candidate.request != request or candidate.scope is not knowledge_scope:
                         raise AipMemoryConflict(
                             "candidate id was reused with different content"
                         )
                     return candidate
-                self._insert_event(conn, scope, event)
-                conn.commit()
-                row = self._candidate_row(conn, scope, candidate_id)
-                return self._candidate_from_row(conn, scope, row)
+                self._insert_event(transaction, scope, event)
+                row = self._candidate_row(transaction, scope, candidate_id)
+                return self._candidate_from_row(transaction, scope, row)
         except AipMemoryStoreError:
             raise
         except Exception as exc:
