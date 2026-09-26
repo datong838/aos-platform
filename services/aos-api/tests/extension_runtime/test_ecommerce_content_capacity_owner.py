@@ -80,7 +80,8 @@ def test_capacity_owner_accepts_only_read_back_running_reservation(monkeypatch):
                 if "capacity_reservation_id" in query:
                     events.append("readback")
                     return Cursor({"state": "accepted", "attempt": 1, "claim_token": token,
-                                   "agent_run_id": "agent-1", "capacity_reservation_id": "cap-1"})
+                                   "agent_run_id": "agent-1", "capacity_reservation_id": "cap-1",
+                                   "next_state": "pending", "next_attempt": 0})
                 return Cursor({"state": "claimed", "attempt": 1, "claim_token": token,
                                "agent_run_id": "agent-1"})
             if "aip_model_capacity_reservation" in query:
@@ -89,6 +90,9 @@ def test_capacity_owner_accepts_only_read_back_running_reservation(monkeypatch):
             if "capacity_ack_a0v_103" in query:
                 events.append("ack")
                 return Cursor({"accepted": True})
+            if "budget_command_put_a0v_104" in query:
+                events.append("budget_intent")
+                return Cursor({"pending": True})
             raise AssertionError(query)
 
         def commit(self):
@@ -106,7 +110,7 @@ def test_capacity_owner_accepts_only_read_back_running_reservation(monkeypatch):
         lambda *_args, **_kwargs: request))
     result = owner.execute_claim(SCOPE, "review-1", token)
     assert result["capacityReservationId"] == "cap-1"
-    assert events == ["transition", "capacity_readback", "ack", "commit", "readback"]
+    assert events == ["transition", "capacity_readback", "ack", "budget_intent", "commit", "readback"]
 
 
 def test_capacity_worker_is_off_by_default(monkeypatch):

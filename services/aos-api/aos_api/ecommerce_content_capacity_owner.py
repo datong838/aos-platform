@@ -172,18 +172,32 @@ class ContentCapacityOwner:
             ).fetchone()
             if ack is None or ack["accepted"] is not True:
                 raise ContentCapacityConflict("content capacity ack unavailable")
+            next_intent = conn.execute(
+                "SELECT public.ecommerce_growth_content_budget_command_put_a0v_104(%s) AS pending",
+                (review_key,),
+            ).fetchone()
+            if next_intent is None or next_intent["pending"] is not True:
+                raise ContentCapacityConflict("content budget command intent unavailable")
             conn.commit()
         with self._connect_read(scope) as conn:
             committed = conn.execute(
-                """SELECT state,attempt,claim_token,agent_run_id,capacity_reservation_id
-                     FROM public.ecommerce_growth_content_capacity_intent
-                    WHERE org_id=%s AND project_id=%s AND review_key=%s""",
+                """SELECT c.state,c.attempt,c.claim_token,c.agent_run_id,
+                          c.capacity_reservation_id,n.state AS next_state,
+                          n.attempt AS next_attempt
+                     FROM public.ecommerce_growth_content_capacity_intent c
+                     JOIN public.ecommerce_growth_content_budget_command_intent n
+                       ON n.org_id=c.org_id AND n.project_id=c.project_id
+                      AND n.review_key=c.review_key
+                      AND n.agent_run_id=c.agent_run_id
+                      AND n.capacity_reservation_id=c.capacity_reservation_id
+                    WHERE c.org_id=%s AND c.project_id=%s AND c.review_key=%s""",
                 (*scope.key, review_key),
             ).fetchone()
         if committed is None or (
             committed["state"], committed["attempt"], committed["claim_token"],
             committed["agent_run_id"], committed["capacity_reservation_id"],
-        ) != ("accepted", 1, token, current.agent_run_id, reservation_id):
+            committed["next_state"], committed["next_attempt"],
+        ) != ("accepted", 1, token, current.agent_run_id, reservation_id, "pending", 0):
             raise ContentCapacityConflict("content capacity committed readback unknown")
         return {"status": "CONTENT_CAPACITY_RESERVED", "reviewKey": review_key,
                 "agentRunId": current.agent_run_id, "capacityReservationId": reservation_id}

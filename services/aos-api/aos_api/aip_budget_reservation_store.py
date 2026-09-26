@@ -100,7 +100,7 @@ class AipBudgetReservationStore:
 
             checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
             budget = self._budget_authority(conn, scope, request.policy_ref, checked_at)
-            self._task_authority(conn, scope, request.task_ref)
+            self._task_authority(conn, scope, request.task_ref, operation_id=request.operation_id)
             self._price_authority(conn, scope, request.pricing_ref, checked_at)
             self._approval_authority(
                 conn,
@@ -1112,7 +1112,48 @@ class AipBudgetReservationStore:
         ):
             raise BudgetReservationBlocked("active exact ModelPriceSnapshotRevision required")
 
-    def _task_authority(self, conn: Any, scope: TenantScope, ref: BudgetExactRef) -> None:
+    def _task_authority(
+        self, conn: Any, scope: TenantScope, ref: BudgetExactRef, *, operation_id: str | None = None
+    ) -> None:
+        # The real AIP task lifecycle is in public. Legacy isolated budget
+        # fixtures use a deliberately smaller custom-schema Task contract.
+        if operation_id == "ecommerce_growth_content_generate" and self._authority_schema == "public":
+            row = conn.execute(
+                f"""SELECT task_type,title,description,status,priority,goal,selection_ref,
+                policy_revision,request_hash,current_plan_revision_id
+                FROM {self._authority_schema}.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s""",
+                (*scope.key, ref.resource_id),
+            ).fetchone()
+            if row is None or ref.resource_type != "Task" or ref.revision != 1:
+                raise BudgetReservationBlocked("exact content Task creation authority required")
+            creation = {
+                "type": row["task_type"], "title": row["title"],
+                "description": row["description"], "priority": int(row["priority"]),
+                "goal": row["goal"], "selectionRef": row["selection_ref"],
+                "policyRevision": row["policy_revision"],
+            }
+            creation_hash = canonical_hash(creation)
+            if (
+                row["request_hash"] != creation_hash
+                or ref.content_hash != "sha256:" + creation_hash
+                or row["status"] != "executing"
+                or row["current_plan_revision_id"] is None
+            ):
+                raise BudgetReservationBlocked("current content Task creation authority drifted")
+            running = conn.execute(
+                f"""SELECT r.run_id FROM {self._authority_schema}.aip_task_run AS r
+                JOIN {self._authority_schema}.aip_plan_revision AS p
+                  ON p.org_id=r.org_id AND p.project_id=r.project_id
+                 AND p.plan_revision_id=r.plan_revision_id AND p.task_id=r.task_id
+                WHERE r.org_id=%s AND r.project_id=%s AND r.task_id=%s
+                  AND r.plan_revision_id=%s AND r.status='running'
+                  AND p.approval_status='approved' LIMIT 2""",
+                (*scope.key, ref.resource_id, row["current_plan_revision_id"]),
+            ).fetchall()
+            if len(running) != 1:
+                raise BudgetReservationBlocked("one approved running content TaskRun required")
+            return
         row = conn.execute(
             f"""SELECT task_id,task_type,title,description,status,priority,goal,selection_ref,
             policy_revision,version,created_by,created_at FROM {self._authority_schema}.aip_task

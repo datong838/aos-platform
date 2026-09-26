@@ -8,6 +8,8 @@ from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, TransactionBoundConnectFactory
 from aos_api.aip_task_store import AipTaskIdempotencyConflict, AipTaskStore
+from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, BudgetReservationBlocked
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
@@ -231,6 +233,14 @@ def test_content_plan_and_run_owner_can_share_outer_review_transaction_without_p
             idempotency_key="review-task-brief-1:start",
         )
         assert started.run.status.value == "running"
+        creation_ref = BudgetExactRef.model_validate(lineage["taskRef"])
+        AipBudgetReservationStore()._task_authority(
+            conn, SCOPE, creation_ref, operation_id="ecommerce_growth_content_generate"
+        )
+        with pytest.raises(BudgetReservationBlocked):
+            AipBudgetReservationStore()._task_authority(
+                conn, SCOPE, creation_ref, operation_id="other.operation"
+            )
         assert store.create_run(
             SCOPE, "ecommerce-growth-content-owner", task_id, "review-task-brief-1:run",
             CreateTaskRunRequest(plan_revision_id=plan.id, expected_task_version=task.version),
