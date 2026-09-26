@@ -132,6 +132,9 @@ def _build_runtime():
 
 
 def _build_business_workers(control_plane):
+    from aos_api.ecommerce_analyst_stage_runtime import (
+        build_analyst_stage_readiness_worker,
+    )
     from aos_api.ecommerce_baseline_assessment_worker import (
         build_baseline_assessment_worker,
     )
@@ -143,9 +146,10 @@ def _build_business_workers(control_plane):
     product_event = build_product_event_worker(control_plane)
     analysis_data = build_analysis_data_requirement_worker(control_plane)
     baseline = build_baseline_assessment_worker(control_plane)
-    if product_event is None or analysis_data is None or baseline is None:
+    analyst_readiness = build_analyst_stage_readiness_worker(control_plane)
+    if any(worker is None for worker in (product_event, analysis_data, baseline, analyst_readiness)):
         raise HostBlocked("BUSINESS_WORKER_DEPENDENCY_MISSING")
-    return product_event, analysis_data, baseline
+    return product_event, analysis_data, baseline, analyst_readiness
 
 
 def _recoverable_store_execution_limit_seconds() -> int:
@@ -157,14 +161,15 @@ def _recoverable_store_execution_limit_seconds() -> int:
     return int(MAX_RECOVERABLE_STORE_EXECUTION_SECONDS)
 
 
-def _business_status(public, control_plane, product_event_worker, baseline_worker):
+def _business_status(public, control_plane, product_event_worker, baseline_worker, analyst_readiness_worker):
     targets = control_plane.live_job_directory.current_targets()
     return {**public,
         "liveTargets": [{"tenant": list(scope.key), "installationId": str(installation),
                          "generation": str(generation)}
                         for scope, installation, generation in targets],
         "productEventWorker": dict(product_event_worker.last_status),
-        "baselineAssessmentWorker": dict(baseline_worker.last_status)}
+        "baselineAssessmentWorker": dict(baseline_worker.last_status),
+        "analystStageReadinessWorker": dict(analyst_readiness_worker.last_status)}
 
 
 def _opt_in_host_lease(args):
@@ -184,7 +189,7 @@ async def _serve(args: argparse.Namespace) -> None:
         trust_roots_file=args.trust_roots_file.resolve(),
     )
     host, control_plane = _build_runtime()
-    product_event_worker, analysis_data_worker, baseline_worker = _build_business_workers(control_plane)
+    product_event_worker, analysis_data_worker, baseline_worker, analyst_readiness_worker = _build_business_workers(control_plane)
     lease = _opt_in_host_lease(args)
     if lease is not None:
         await asyncio.to_thread(lease.acquire)
@@ -201,12 +206,13 @@ async def _serve(args: argparse.Namespace) -> None:
         "canaryTenantCount": 0,
         "intervalSeconds": args.interval_seconds,
         "recoverableStoreExecutionLimitSeconds": _recoverable_store_execution_limit_seconds(),
-        "businessWorkers": ["product-event", "baseline-assessment", "analysis-data-requirement"],
+        "businessWorkers": ["product-event", "baseline-assessment", "analysis-data-requirement",
+                            "analyst-stage-readiness"],
     }
     if lease is not None:
         public["hostLeaseOptIn"] = True
     _write(args.status_file.resolve(), _business_status(
-        public, control_plane, product_event_worker, baseline_worker))
+        public, control_plane, product_event_worker, baseline_worker, analyst_readiness_worker))
     print(json.dumps(public, ensure_ascii=False, sort_keys=True), flush=True)
     host_task = asyncio.create_task(
         host.serve(stop_event, interval_seconds=args.interval_seconds),
@@ -228,11 +234,15 @@ async def _serve(args: argparse.Namespace) -> None:
             baseline_worker.serve(stop_event, host_ready=host_ready),
             name="baseline-assessment",
         ),
+        asyncio.create_task(
+            analyst_readiness_worker.serve(stop_event, host_ready=host_ready),
+            name="analyst-stage-readiness",
+        ),
     )
     async def report_status():
         while not stop_event.is_set():
             _write(args.status_file.resolve(), _business_status(
-                public, control_plane, product_event_worker, baseline_worker))
+                public, control_plane, product_event_worker, baseline_worker, analyst_readiness_worker))
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=2)
             except TimeoutError:
@@ -275,7 +285,8 @@ async def _serve(args: argparse.Namespace) -> None:
         if not stop_task.done():
             stop_task.cancel()
         await asyncio.gather(stop_task, return_exceptions=True)
-        stopped = {**_business_status(public, control_plane, product_event_worker, baseline_worker),
+        stopped = {**_business_status(public, control_plane, product_event_worker, baseline_worker,
+                                      analyst_readiness_worker),
                    "outcome": "RUNTIME_HOST_STOPPED"}
         if lease is not None:
             try:

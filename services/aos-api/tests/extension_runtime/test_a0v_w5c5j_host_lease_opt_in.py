@@ -113,7 +113,7 @@ def _workers(events):
             events.append(("worker", host_ready()))
             await stop_event.wait()
 
-    return (Worker(), Worker(), Worker())
+    return (Worker(), Worker(), Worker(), Worker())
 
 
 def test_acquire_failure_never_starts_host_or_publishes_active(tmp_path, monkeypatch):

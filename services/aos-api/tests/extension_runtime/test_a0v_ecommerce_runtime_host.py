@@ -104,7 +104,7 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     plane = type('Plane', (), {'live_job_directory': type('Directory', (), {
         'current_targets': lambda self: ()})()})()
     monkeypatch.setattr(HOST, "_build_runtime", lambda: (Host(), plane))
-    monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: (Worker(), Worker(), Worker()))
+    monkeypatch.setattr(HOST, "_build_business_workers", lambda _plane: (Worker(), Worker(), Worker(), Worker()))
     asyncio.run(HOST._serve(argparse.Namespace(
         credential_file=credential_path,
         bundle_root=bundle,
@@ -118,8 +118,9 @@ def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> No
     assert result["tenantCount"] == 1
     assert result["canaryTenantCount"] == 0
     assert result["recoverableStoreExecutionLimitSeconds"] == 1800
-    assert result["businessWorkers"] == ["product-event", "baseline-assessment", "analysis-data-requirement"]
+    assert result["businessWorkers"] == ["product-event", "baseline-assessment", "analysis-data-requirement", "analyst-stage-readiness"]
     assert "baselineAssessmentWorker" in result
+    assert "analystStageReadinessWorker" in result
 
 
 def test_serve_runs_business_workers_with_same_stop_and_live_host(tmp_path, monkeypatch):
@@ -148,11 +149,11 @@ def test_serve_runs_business_workers_with_same_stop_and_live_host(tmp_path, monk
         'current_targets': lambda self: ()})()})()
     monkeypatch.setattr(HOST, '_build_runtime', lambda: (Host(), plane))
     monkeypatch.setattr(HOST, '_build_business_workers',
-        lambda _plane: (Worker('product-event'), Worker('analysis-data', stop=True), Worker('baseline')))
+        lambda _plane: (Worker('product-event'), Worker('analysis-data', stop=True), Worker('baseline'), Worker('readiness')))
     asyncio.run(HOST._serve(argparse.Namespace(credential_file=credential_path,
         bundle_root=bundle, trust_roots_file=trust, status_file=status, interval_seconds=2)))
 
-    assert [item[0] for item in seen] == ['host', 'product-event', 'analysis-data', 'baseline']
+    assert [item[0] for item in seen] == ['host', 'product-event', 'analysis-data', 'baseline', 'readiness']
     stop_events = [item[1] for item in seen]
     assert len({id(item) for item in stop_events}) == 1 and stop_events[0].is_set()
     assert seen[1][2] is True and seen[2][2] is True and seen[3][2] is True
