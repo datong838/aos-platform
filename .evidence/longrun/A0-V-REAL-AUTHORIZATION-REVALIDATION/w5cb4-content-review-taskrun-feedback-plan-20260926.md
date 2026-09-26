@@ -40,6 +40,7 @@
 - 最小代码入口候选：`services/aos-api/aos_api/ecommerce_content_review_pending.py` 只读候选投影；必要时在 `ecommerce_content_taskrun_owner.py` 原 Plan 上持久化受控 exact EvalContract gate ref，但须先证明来自当前已发布内容 Skill 与 READY 合同。公共 `aip_eval_runner.py` 与 `aip_production_contract_store.py` 不再为页面方便而放宽。
 - 内容 Eval 的生产激活另设硬门：先有经正式 Publication/ReleaseGate 的内容 Suite/Contract、当前受控 GatePolicy 类型/Ref、同原 Plan exact 绑定，再运行 Eval；`fixture-policy`、普通无主体 Report、仅有未冻结草案一律不认。若本轮只有代码门，待办 GET 返回空/明确 blocked，不虚构可评审项。
 - 之后才接公共 ReviewIssue 创建与人类 resolve/return、ContentReview Host Receipt、TAOR 终态；最后读回反馈/总控/Wiki 候选。UI 改动必须随后真浏览器验收。本细化不启 worker、Provider、商城源读或外部 Effect。
+- P2b 只封住**新建**内容 Issue；历史已存在或经其他入口留下的 Issue 仍可能被 Host 消费。先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_authority_feedback.py` 加 RED，再最小修改 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的 `ContentReviewHostService._issue_authority`：按原 Issue exact report ref 回读报告与内容 Artifact/原 Run 的最新生成 attempt；无主体、错主体、旧 attempt、缺合同/政策均拒绝。已有人工事件和 ReturnDecision 校验不降低。此为 P2c 前置补洞，不能据此声称待办或生产 Eval 已完成。
 
 ## 退出／下一波
 
