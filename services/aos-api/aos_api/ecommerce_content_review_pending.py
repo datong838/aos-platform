@@ -14,6 +14,7 @@ from aos_api.aip_release_publication_service import AipReleasePublicationError, 
 from aos_api.ecommerce_content_eval_plan_gate import require_original_content_eval_gate
 from aos_api.ecommerce_content_pre_review_authority import require_current_content_pre_review_gate
 from aos_api.ecommerce_content_step_owner import ContentGenerationStepOwner, ContentGenerationStepSource
+from aos_api.ecommerce_growth_runtime_adapters import _request_hash
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only
 from aos_api.tenant_scope import TenantScope
 
@@ -73,7 +74,7 @@ class ContentReviewPendingReader:
             (*scope.key, command["idempotencyKey"]),
         ).fetchone()
         if (
-            row is None or row["request_hash"] != command["requestHash"]
+            row is None or row["request_hash"] != _request_hash(command)
             or type(row["response"]) is not dict
             or row["response"].get("state") != "PENDING"
         ):

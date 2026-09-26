@@ -42,3 +42,19 @@
 - 在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 新建只用于完整迁移一次性库的 fixture；第一 RED 仅证明**原公共 Task/Plan/Run 与正式 BudgetRevision、PriceSnapshot、ActionApprovalEvent 经 `AipBudgetReservationStore.reserve` 形成 held Reservation**。此步仍不声称 settled 内容或待办，不调用真实 Provider。
 - Seed 仅限隔离库、显式列名、完整迁移约束；不得复制精简 schema 的位置型 INSERT，也不得改生产预算/审批规则让测试通过。失败时查确切缺失字段/权威并修 fixture；若必须修改公共生产规则，另起方案波次。
 - 后续沿同一数据库和同一 Task/Run/Reservation 追加正式 journal、受控结果、Usage/Artifact/settlement、TAOR、主体 Eval 与候选读回；任何段落必须说明尚未覆盖的门。运行专项与内容累计后单独 verification/commit，防止把局部绿误称全链。
+
+### P2g 前半段第二增量：正式 command 与 runtime Receipt（2026-09-27，编码前）
+
+- 延伸同一 `test_ecommerce_content_review_pending_pg.py` 的完整迁移一次性库，不另起精简 schema。用正式 `ContentExecutionJournal.enqueue` 持久原 held Reservation 的 exact 内容命令；用隔离库合法 `bundle_installation`、当前 `extension_runtime_binding`、`extension_operation_dispatch_binding` 与 `BoundEcommerceGrowthRuntimeStore.put` 形成同一命令的 PENDING runtime Receipt。所有测试安装行仅在自动删除的克隆库中，不代表当前实例已启用。
+- RED 首验 `ContentExecutionJournal.list_held` 只选这一条原 reservation；同命令 replay 不复制 journal 或 runtime Receipt，篡改 command/request hash 必须 fail closed。禁止直接插入 runtime Receipt 伪造成功；测试运行时不启 Worker/Provider。
+- 专项、内容累计、verification 与精确提交后，再进入受控 Provider 结果/Usage 与预算 settled。若全库的约束要求额外正式安装权威，先记录确切缺口，不调整生产规则以迎合 fixture。
+
+#### RED 发现：runtime Receipt 哈希语义错配
+
+- 完整库通过正式 `BoundEcommerceGrowthRuntimeStore.put` 写入 PENDING Receipt 后，`ContentReviewPendingReader._current_dispatch` 仍拒绝：runtime Receipt 的 `request_hash` 是 `_request_hash(command)`（含内部 `requestHash` 的**全命令哈希**），而读取器错误地对比内部 `command['requestHash']`。`CurrentContentPreparation.__call__` 与 `ContentGenerationStepOwner._current_dispatch` 有同型比较，导致真实持久命令被误挡；不是权限/Provider 错误。
+- 代码最小修复范围只含 `services/aos-api/aos_api/ecommerce_content_review_pending.py`、`ecommerce_content_execution_composition.py`、`ecommerce_content_step_owner.py`；统一复用正式 runtime writer 的 `_request_hash(command)`，不改 Receipt 格式/数据库/既有命令内部哈希。测试在完整库经正式 Store 写正向 Receipt、同命令 replay、篡改命令拒绝及 runtime fence 拒绝；其余现有 Worker/Owner/候选测试累计回归。未能完整通过真实安装链之前，不以本测试代表生产授权。
+
+#### 迁移基线校正
+
+- `disposable_database` 的模板经只读核对实际是 `a0v_011`，现有 `apply_migrations` 只手动补 `a0v_012/013` 而不推进 Alembic 版本；所以前一提交 `25e162bd` 所称“完整迁移库”应改为“旧模板加两项迁移的隔离库”。Budget held 的 API/重放证明有效，但**全迁移约束未证明**。
+- 本波先在测试中只针对 `a0v_growth_graph_test_*` 精确克隆使用 Alembic 正式 upgrade head，核版本和 dispatch lock 函数；不接触 `aos_meta_head` 或真实安装。若升级失败，记录具体迁移缺口并停止“全迁移”称谓，不逐个补函数假造环境。升级后重跑预算与 runtime Receipt 测试，再决定后续受控结果路线。

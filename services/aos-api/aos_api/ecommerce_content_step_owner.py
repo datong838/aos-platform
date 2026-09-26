@@ -16,7 +16,7 @@ from aos_api.ecommerce_content_execution_composition import (
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, ContentExecutionConflict
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_growth_host_ports import HostTransaction, EcommerceGrowthHostError
-from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory, _request_hash
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.tenant_scope import TenantScope
 
@@ -153,7 +153,7 @@ class ContentGenerationStepOwner:
             raise ContentStepConflict("original content command is unavailable")
         row = CurrentContentPreparation._runtime_row(conn, scope, command)
         if (
-            row is None or row["request_hash"] != command.get("requestHash")
+            row is None or row["request_hash"] != _request_hash(command)
             or type(row["response"]) is not dict
             or row["response"].get("state") != "PENDING"
         ):

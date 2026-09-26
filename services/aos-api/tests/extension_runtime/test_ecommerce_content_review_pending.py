@@ -10,6 +10,7 @@ from aos_api.aip_eval_contracts import (
 )
 from aos_api import ecommerce_content_review_pending as pending_module
 from aos_api.ecommerce_content_review_pending import ContentReviewPendingReader
+from aos_api.ecommerce_growth_runtime_adapters import _request_hash
 from aos_api.tenant_scope import TenantScope
 
 
@@ -32,11 +33,10 @@ def _reader(monkeypatch, *, current=True, reports=(), run_bindings=None):
     proof = SimpleNamespace(reservation_id="reservation-1", run_id="run-1",
                             task_id="task-1", artifact_id="artifact-1",
                             artifact_hash="a" * 64)
+    command = {"idempotencyKey": "generate-1", "requestHash": "sha256:" + "b" * 64}
     source = SimpleNamespace(
         read=lambda _conn, _scope, _reservation: proof,
-        journal=SimpleNamespace(read=lambda *_: {"command": {
-            "idempotencyKey": "generate-1", "requestHash": "b" * 64,
-        }}),
+        journal=SimpleNamespace(read=lambda *_: {"command": command}),
     )
 
     class Conn:
@@ -44,7 +44,8 @@ def _reader(monkeypatch, *, current=True, reports=(), run_bindings=None):
             assert params[:2] == SCOPE.key
             queries.append(query)
             if "FROM public.ecommerce_growth_runtime_command_receipt" in query:
-                return Cursor([{"request_hash": "b" * 64, "response": {"state": "PENDING"}}] if current else [])
+                return Cursor([{"request_hash": _request_hash(command),
+                    "response": {"state": "PENDING"}}] if current else [])
             if "FROM public.aip_step_run" in query:
                 return Cursor([{"step_run_id": "step-1", "attempt": 1,
                                 "input_hash": "c" * 64, "status": "succeeded"}])

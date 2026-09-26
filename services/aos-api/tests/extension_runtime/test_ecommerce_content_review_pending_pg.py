@@ -4,14 +4,59 @@ Each assertion below is only a staged subproof; no test Provider is a live call.
 """
 
 from datetime import UTC, datetime, timedelta
+import importlib.util
+from pathlib import Path
+from types import SimpleNamespace
+from uuid import uuid4
+
+import pytest
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, ReserveBudgetRequest
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.ecommerce_content_execution_journal import (
+    ContentExecutionConflict, ContentExecutionJournal, _payload,
+)
+from aos_api.ecommerce_content_review_pending import (
+    ContentReviewPendingBlocked, ContentReviewPendingReader,
+)
+from aos_api.ecommerce_content_execution_composition import CurrentContentPreparation
+from aos_api.ecommerce_content_step_owner import ContentGenerationStepOwner
+from aos_api.ecommerce_growth_host_ports import EcommerceGrowthDispatchSnapshot, HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
+from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
-from test_ecommerce_analyst_method_authority import apply_migrations
+
+
+def _upgrade_test_clone_to_head(connect):
+    """Upgrade only the exact disposable clone, never the current business DB."""
+    with connect(SCOPE) as conn:
+        params = conn.info.get_parameters()
+        database = conn.info.dbname
+        assert database.startswith("a0v_growth_graph_test_")
+        url = URL.create("postgresql+psycopg", username=params["user"],
+            password=conn.info.password, host=params["host"],
+            port=int(params["port"]), database=database)
+    root = Path(__file__).resolve().parents[2]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "alembic"))
+    engine = create_engine(url)
+    try:
+        with engine.begin() as sqlalchemy_conn:
+            cfg.attributes["connection"] = sqlalchemy_conn
+            command.upgrade(cfg, "head")
+    finally:
+        engine.dispose()
+    with connect(SCOPE) as conn:
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_105"
+        assert conn.execute("SELECT to_regprocedure(%s) AS procedure",
+            ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
 
 
 def _seed_original_run_and_budget(connect):
@@ -124,9 +169,67 @@ def _seed_original_run_and_budget(connect):
         "reservation": reservation}
 
 
+def _seed_current_command_receipt(connect, proof):
+    """Only an isolated installation; use the formal immutable Receipt owner."""
+    fixture_path = Path(__file__).resolve().parents[1] / "aip/test_aip_budget_reservation_pg.py"
+    spec = importlib.util.spec_from_file_location("content_budget_command_fixture", fixture_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    command = module.content_generate_command(proof["request"])
+    reservation_id = proof["reservation"].reservation_ref.resource_id
+    journal = ContentExecutionJournal()
+    with connect(SCOPE) as conn:
+        assert journal.enqueue(conn, SCOPE, reservation_id,
+            budget_request_hash=proof["request"].request_hash(), command=command) == command
+        assert journal.enqueue(conn, SCOPE, reservation_id,
+            budget_request_hash=proof["request"].request_hash(), command=command) == command
+    generation, group = uuid4(), uuid4()
+    with connect(SCOPE) as conn:
+        installations = conn.execute("""SELECT installation_id,current_revision
+            FROM bundle_installation WHERE org_id=%s AND project_id=%s""",
+            SCOPE.key).fetchall()
+        assert len(installations) == 1
+        installation = installations[0]["installation_id"]
+        insert(conn, "extension_runtime_binding", installation_id=installation,
+            generation=generation, installation_revision=installations[0]["current_revision"],
+            package_lock_ref={},
+            profile_ref="internal-python-v1", config_ref={}, execution_epoch=3,
+            desired_state="enabled", observed_state="ready", enabled=True,
+            operation_fence=False)
+        insert(conn, "extension_operation_dispatch_binding",
+            operation_id="ecommerce_growth_content_generate", handler_kind="extension",
+            installation_id=installation, generation=generation, execution_epoch=3,
+            operation_fence=False, revision=5, cutover_group_id=group,
+            cutover_group_revision=11, updated_by="fixture")
+        conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+        dispatch = EcommerceGrowthDispatchSnapshot(
+            operation_id="ecommerce_growth_content_generate", dispatch_revision=5,
+            installation_id=installation, generation=generation, execution_epoch=3,
+            cutover_group_id=group, cutover_group_revision=11, runtime_revision=1,
+            checked_at=datetime.now(UTC))
+        response = ContentGenerateHostService._pending_receipt(
+            command, proof["reservation"], proof["request"], replayed=False)
+        runtime = BoundEcommerceGrowthRuntimeStore(HostTransaction(conn), SCOPE)
+        first = runtime.put(operation_id=dispatch.operation_id,
+            idempotency_key=command["idempotencyKey"],
+            request_hash="sha256:" + _payload(command)[1], dispatch=dispatch,
+            response=response, target_receipt_ref=response["receiptRef"],
+            actor="fixture", occurred_at=dispatch.checked_at)
+        assert first.replayed is False and first.response == response
+        second = runtime.put(operation_id=dispatch.operation_id,
+            idempotency_key=command["idempotencyKey"],
+            request_hash="sha256:" + _payload(command)[1], dispatch=dispatch,
+            response=response, target_receipt_ref=response["receiptRef"],
+            actor="fixture", occurred_at=dispatch.checked_at)
+        assert second.replayed is True and second.response == response
+    return command
+
+
 def test_original_content_run_can_hold_formal_budget_in_one_full_database():
     with disposable_database() as connect:
-        apply_migrations(connect)
+        _upgrade_test_clone_to_head(connect)
         proof = _seed_original_run_and_budget(connect)
         assert proof["reservation"].state.value == "held"
         assert proof["reservation"].task_ref.resource_id == proof["task_id"]
@@ -140,3 +243,52 @@ def test_original_content_run_can_hold_formal_budget_in_one_full_database():
                 (*SCOPE.key, proof["task_id"])).fetchone()["n"] == 1
             assert conn.execute("""SELECT count(*) AS n FROM aip_usage_receipt
                 WHERE org_id=%s AND project_id=%s""", SCOPE.key).fetchone()["n"] == 0
+
+
+def test_original_held_content_command_has_one_formal_current_runtime_receipt(monkeypatch):
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        command = _seed_current_command_receipt(connect, proof)
+        reservation_id = proof["reservation"].reservation_ref.resource_id
+        with connect(SCOPE) as conn:
+            assert ContentExecutionJournal().list_held(conn, SCOPE) == [reservation_id]
+            assert ContentExecutionJournal().read(conn, SCOPE, reservation_id)["command"] == command
+            ContentReviewPendingReader._current_dispatch(conn, SCOPE, command)
+            with pytest.raises(ContentReviewPendingBlocked, match="dispatch"):
+                ContentReviewPendingReader._current_dispatch(conn, SCOPE,
+                    {**command, "upperBoundFen": command["upperBoundFen"] + 1})
+            with monkeypatch.context() as patch:
+                patch.setattr(CurrentContentPreparation, "_lock_dispatch",
+                    staticmethod(lambda *_args: SimpleNamespace(runtime_revision=1)))
+                ContentGenerationStepOwner._current_dispatch(conn, SCOPE, reservation_id)
+            class ReachedDispatch(Exception):
+                pass
+            def reached_dispatch(*_args):
+                raise ReachedDispatch
+            with monkeypatch.context() as patch:
+                patch.setattr(CurrentContentPreparation, "_lock_dispatch",
+                    staticmethod(reached_dispatch))
+                with pytest.raises(ReachedDispatch):
+                    CurrentContentPreparation()(conn, SCOPE, command)
+            with pytest.raises(ContentExecutionConflict, match="replay drifted"):
+                ContentExecutionJournal().enqueue(conn, SCOPE, reservation_id,
+                    budget_request_hash=proof["request"].request_hash(),
+                    command={**command, "upperBoundFen": command["upperBoundFen"] + 1})
+            assert conn.execute("""SELECT count(*) AS n
+                FROM ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate'""",
+                SCOPE.key).fetchone()["n"] == 1
+        with connect(SCOPE) as conn:
+            conn.execute("""UPDATE extension_runtime_binding
+                SET desired_state='disabled',observed_state='stopped',
+                    enabled=false,operation_fence=true
+                WHERE org_id=%s AND project_id=%s AND generation=(
+                    SELECT generation FROM extension_operation_dispatch_binding
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_content_generate')""",
+                (*SCOPE.key, *SCOPE.key))
+            with pytest.raises(ContentReviewPendingBlocked, match="dispatch"):
+                ContentReviewPendingReader._current_dispatch(conn, SCOPE, command)
+            conn.rollback()

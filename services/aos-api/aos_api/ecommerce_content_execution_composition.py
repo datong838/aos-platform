@@ -28,6 +28,7 @@ from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService,
     ReviewAdvanceHostService,
     TransactionBoundConnectFactory,
+    _request_hash,
     _strict_content_generate_command,
 )
 from aos_api.tenant_scope import TenantScope
@@ -107,7 +108,7 @@ class CurrentContentPreparation:
     def __call__(self, conn, scope, command):
         parsed=_strict_content_generate_command(command)
         row=self._runtime_row(conn,scope,command)
-        if (row is None or row['request_hash']!=command['requestHash']
+        if (row is None or row['request_hash']!=_request_hash(command)
             or type(row['response']) is not dict
             or row['response'].get('state')!='PENDING'):
             raise ContentExecutionConflict('current content PENDING Receipt unavailable')

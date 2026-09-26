@@ -16,6 +16,7 @@ from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
 from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict
 from aos_api.ecommerce_content_execution_composition import CurrentContentPreparation
+from aos_api.ecommerce_growth_runtime_adapters import _request_hash
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database
 from test_ecommerce_analyst_method_authority import apply_migrations
 
@@ -68,11 +69,12 @@ def test_generation_owner_never_claims_existing_unknown_step():
 
 
 def test_generation_owner_requires_current_original_installation(monkeypatch):
+    command = {"idempotencyKey": "content-1", "requestHash": "sha256:" + "a" * 64}
     monkeypatch.setattr(ContentExecutionJournal, "read", lambda *_: {
-        "command": {"idempotencyKey": "content-1", "requestHash": "request-1"},
+        "command": command,
         "result": {"answer": "已生成"}})
     monkeypatch.setattr(CurrentContentPreparation, "_runtime_row",
-        staticmethod(lambda *_: {"request_hash": "request-1",
+        staticmethod(lambda *_: {"request_hash": _request_hash(command),
             "response": {"state": "PENDING"}, "runtime_revision": 3}))
     monkeypatch.setattr(CurrentContentPreparation, "_lock_dispatch",
         staticmethod(lambda *_: SimpleNamespace(runtime_revision=4)))
