@@ -19,3 +19,9 @@
 
 - 在当前实例无正式内容预审包、无合法真实 Artifact/报告时，只能给出默认关闭的代码与隔离验证，不开放生产 GET 的虚假待办。任何未知提交/当前安装不明、Report/Plan/attempt 不一致都失败关闭。
 - 不读商城源，不回放原 12 Run，不推进 230 L0；`dev-org/dev-project` 仅零 canary；m1 单写、不 push。
+
+## P2g 待办候选第一子步文件级细化（2026-09-27）
+
+- `services/aos-api/aos_api/ecommerce_content_review_pending.py` 先只提供内部 `read_one(scope,reservation_id)`，不加 GET 路由、不创建 Issue。复用 `ContentGenerationStepSource.read` 的已结算 Result/Provider/Usage/Artifact/Task/Brief 来源读回和 `ContentGenerationStepOwner._readback` 的 TAOR/checkpoint；另核原内容操作 Receipt 与当前 dispatch/runtime binding exact 相等。后续 Host 仍需完整安装锁，不把 GET 的只读快照当写授权。
+- 同一只读事务读取唯一内容报告、EvalRun、最新生成 StepRun、原 Plan gate 和当前内容合同；要求 report canonical hash、gate_passed、同 Artifact/attempt/合同、EvalRun succeeded。无报告返回 `None`；任一多义/漂移/撤销/旧安装抛出 `ContentReviewPendingBlocked`，不能自动造报告或审批。候选身份用 `(scope,reservationId,runId,artifactId,stepRunId,reportId@revision)`；重复只读返回相同值。
+- 测试先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending.py` 用无写连接验证无报告、错租户、旧 attempt、错合同/失败报告、重复读稳定；再用隔离 PG 组合真正 settled Artifact/StepRun/EvalReport 的正向证明。若本子步做不到同库正向，verification 必须标为部分代码门，不得暴露生产 GET。
