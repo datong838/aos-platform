@@ -19,6 +19,8 @@ from aos_api.aip_production_contracts import (CreateReviewIssueRequest, ExactArt
     ExactRevisionRef, RegisterReviewRuleRevisionRequest)
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ContentReviewHostService
+from aos_api import ecommerce_content_review_pending as pending_module
+from aos_api.ecommerce_content_review_pending import ContentReviewPendingReader
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, SCOPE
 from test_ecommerce_analyst_method_authority import apply_migrations
 
@@ -32,7 +34,7 @@ def _helpers():
     return module
 
 
-def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
+def test_exact_content_artifact_runs_governed_eval_without_body_in_report(monkeypatch):
     helper=_helpers()
     with disposable_database() as connect:
         apply_migrations(connect)
@@ -121,6 +123,27 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
         assert report.subject_artifact_ref==subject
         assert content['body'] not in report.model_dump_json()
         assert runner.get_report(SCOPE,report.report_id)==report
+
+        # Isolated subproof: the real persisted Report/Run JSONB and original
+        # Plan are read by the candidate kernel. Settlement/dispatch/checkpoint
+        # seams remain injected here and are NOT full-chain acceptance.
+        proof=SimpleNamespace(reservation_id='isolated-reservation',run_id=run.id,
+            task_id=task.id,artifact_id=identity,artifact_hash=digest)
+        source=SimpleNamespace(read=lambda *_:proof,journal=SimpleNamespace(
+            read=lambda *_:{'command':{'idempotencyKey':'isolated-key','requestHash':'a'*64}}))
+        gate_ref=ExactContractRef(resourceType='EvalContractRevision',
+            resourceId=contract.contract_id,revision=contract.revision,
+            contentHash=contract.content_hash)
+        with monkeypatch.context() as patch:
+            patch.setattr(pending_module.ContentGenerationStepOwner,'_readback',staticmethod(lambda *_:None))
+            patch.setattr(pending_module.ContentReviewPendingReader,'_current_dispatch',staticmethod(lambda *_:None))
+            patch.setattr(pending_module,'require_current_content_pre_review_gate',lambda *_:gate_ref)
+            patch.setattr(pending_module,'AipProductionContractStore',lambda:SimpleNamespace(
+                get_eval_contract=lambda *_args,**_kwargs:contract))
+            candidate=ContentReviewPendingReader(source=source,connect_read=connect).read_one(
+                SCOPE,'isolated-reservation')
+        assert candidate is not None and candidate.report_id==report.report_id
+        assert candidate.step_run_id==lease.step_run_id
 
         contracts=AipProductionContractStore(connect_factory=connect)
         rule=contracts.register_review_rule_revision(SCOPE,'tester','content-review-rule',

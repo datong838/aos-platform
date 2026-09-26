@@ -31,3 +31,8 @@
 - 新 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`，仅用一次性 `disposable_database` 和正式迁移；可复用现有 `test_ecommerce_content_generation_step_owner.py` 的公共 Task/Run/四相 TAOR、`test_ecommerce_content_pre_review_eval.py` 的正式 Graph/两 Suite/Gate/Publication/冻结合同，以及 `test_aip_ecommerce_content_eval_input.py` 的主体 EvalRunner。不得将其中任一夹具单独当正向候选；必须是**同一**原 TaskRun、reservation/invocation、已结算预算与 Provider/Usage Receipt、可读 Artifact、succeeded StepRun/checkpoint 和主体报告。
 - 首个 RED 应直调新的 `ContentReviewPendingReader.read_one` 且不 monkeypatch 来源、当前 dispatch、合同、报告或 Run 校验；在同一数据库里读回稳定候选。随后分别篡改/撤销当前合同或发布、换租户、换安装代次、旧 StepRun、失败/重复报告、已有 Issue，证明零候选或明确 blocked；测试对故障做回滚/独立作用域，不污染后续用例。
 - 若真实 Provider 结果/预算结算 fixture 需要仍未定义的外部权威，不向当前实例调用 Provider；先在隔离库通过已存在 `ContentResultConsumer` 的受控持久结果/Usage Receipt 路径构造。若该路径无法在测试环境形成正式 Receipt，记录具体缺口并先补测试可复用的正式最小 fixture，不放宽读取器、不返回 mock 候选。当前实例 `a0v_092` 仍不迁移、不启 Worker。
+
+### 分段验证入口
+
+- 现有 `test_aip_ecommerce_content_eval_input.py` 的一次性完整迁移库已持久 Task/Plan/Run、四相成功 StepRun、可读 Artifact 与真实 EvalRunner 报告，但尚无预算结算/Provider/Usage/当前 dispatch。先在该测试内验证候选读取器对**真实报告/Run JSONB 和原 Plan gate**的兼容性；仅针对缺失的来源/dispatch/checkpoint 注入替身，明确只是一段组合子证据，不能取代上述全链 RED/正向。
+- 同时审既有 `test_a0v_content_result_consumer_pg.py`：它确有预算/Provider/Usage/Artifact 的正式消费测试，却运行在精简临时 schema、需 `AOS_EXTENSION_PG_TEST=1` 且本机 18432 未监听。不得把两个不同数据库的绿色结果拼成“同一对象贯通”。后续必须在一个完整迁移的一次性库里组合，或记录正式 fixture 缺口。
