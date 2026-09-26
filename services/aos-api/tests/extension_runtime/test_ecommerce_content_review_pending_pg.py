@@ -79,7 +79,7 @@ from aos_api.ecommerce_growth_memory_candidate_target import (
     CurrentMemoryCandidateConsumer, MemoryCandidateFeedbackWorker,
 )
 from aos_api.ecommerce_growth_content_return_target import (
-    BoundContentReturnTarget, ContentReturnFeedbackWorker,
+    BoundContentReturnTarget, ContentReturnFeedbackWorker, CurrentContentReturnConsumer,
 )
 from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
 from aos_api.tenant_scope import TenantScope
@@ -1002,6 +1002,8 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 assert BoundContentReturnTarget(
                     HostTransaction(conn), SCOPE)._source(target_id, require_queued=True)[
                         "decision_id"] == decision.decision_id
+            consumer = CurrentContentReturnConsumer(connect=runtime_connect, worker=worker)
+            assert consumer.list_pending(SCOPE) == [feedback_id]
             other_scope = TenantScope("dev-org", "dev-project")
             with runtime_connect(SCOPE) as conn:
                 with pytest.raises(Exception, match="unique durable return target unavailable"):
@@ -1012,6 +1014,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                       AND operation_id='ecommerce_growth_content_review'""", SCOPE.key)
                 conn.commit()
             try:
+                assert consumer.list_pending(SCOPE) == []
                 with pytest.raises(Exception):
                     worker.run_one(SCOPE, feedback_id)
             finally:
@@ -1029,6 +1032,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 conn.execute("ROLLBACK TO SAVEPOINT return_decision_drift")
             result = worker.run_one(SCOPE, feedback_id)
             assert result["status"] == "CONTENT_RETURN_ACKED"
+            assert consumer.list_pending(SCOPE) == []
             assert worker.run_one(SCOPE, feedback_id)["status"] == "ALREADY_ACKED"
             with connect(SCOPE) as conn:
                 checkpoint = conn.execute("""SELECT completed_sequence FROM ecommerce_growth_feedback_checkpoint

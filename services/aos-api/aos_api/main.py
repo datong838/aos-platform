@@ -74,6 +74,11 @@ def _build_ecommerce_memory_candidate_consumer():
     return CurrentMemoryCandidateConsumer()
 
 
+def _build_ecommerce_content_return_consumer():
+    from aos_api.ecommerce_growth_content_return_target import CurrentContentReturnConsumer
+    return CurrentContentReturnConsumer()
+
+
 def _build_content_taskrun_owner():
     from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunOwner
     return ContentTaskRunOwner()
@@ -368,6 +373,8 @@ async def _start_feedback_downstream_workers(_app: FastAPI, stop: asyncio.Event)
          _build_ecommerce_effect_review_consumer, 'ecommerce-effect-review'),
         ('ecommerce_memory_candidate_worker', 'AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED',
          _build_ecommerce_memory_candidate_consumer, 'ecommerce-memory-candidate'),
+        ('ecommerce_content_return_worker', 'AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED',
+         _build_ecommerce_content_return_consumer, 'ecommerce-content-return'),
     )
     selected = []
     for name, flag_name, builder, task_name in specs:

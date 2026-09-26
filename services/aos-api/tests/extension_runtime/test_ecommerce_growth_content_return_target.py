@@ -2,17 +2,20 @@
 
 from copy import deepcopy
 from contextlib import contextmanager
+import asyncio
 
 import pytest
 
 from aos_api.ecommerce_growth_content_return_target import (
     BoundContentReturnTarget, ContentReturnFeedbackWorker, ContentReturnUnknown,
+    CurrentContentReturnConsumer,
 )
 from aos_api.aip_budget_reservation_store import canonical_hash as budget_hash
 from aos_api.aip_production_contract_store import canonical_hash as decision_hash
 from aos_api.ecommerce_growth_feedback_port import EcommerceGrowthFeedbackConflict
 from aos_api.ecommerce_growth_feedback_port import BoundEcommerceGrowthFeedbackPort
 from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_host_ports import EcommerceGrowthHostError
 from aos_api.ecommerce_growth_runtime_adapters import _analysis_command_hash, _request_hash
 from aos_api.tenant_scope import TenantScope
 
@@ -74,6 +77,7 @@ def source_row():
         "attempt_idempotency_key": "return-1", "reason": "内容事实需修改",
         "decision_hash": decision_hash(return_decision), "actor": "reviewer-1",
         "impact_decisions": [], "step_status": "queued", "step_attempt": 2,
+        "latest_attempt": 2,
         "input_refs": [
             {"resourceType": "ReturnDecision", "resourceId": "decision-1",
                 "revision": 1, "contentHash": decision_hash(return_decision)},
@@ -122,7 +126,7 @@ def test_exact_return_decision_and_repair_step_have_stable_read_receipt():
 @pytest.mark.parametrize("key,value", [
     ("decision_hash", "0" * 64), ("step_run_id", "other-step"),
     ("artifact_hash", "f" * 64), ("issue_status", "open"),
-    ("run_status", "succeeded"),
+    ("run_status", "succeeded"), ("latest_attempt", 3),
 ])
 def test_tampered_return_source_is_not_accepted(key, value):
     target_id, row = source_row()
@@ -195,6 +199,97 @@ def test_unknown_return_boundary_does_not_report_success_or_reclaim(monkeypatch,
             SCOPE, "feedback-1")
     assert calls == {"claim": 1, "commit": 1,
         "read": 0 if failure == "commit" else 1, "acked": True}
+
+
+class PendingRows:
+    def fetchall(self):
+        return [{"command_id": "feedback-1"}]
+
+
+class PendingConnection:
+    def __init__(self):
+        self.calls = []
+
+    def execute(self, query, params):
+        self.calls.append((query, params))
+        return PendingRows()
+
+
+class ReturnWorker:
+    def run_one(self, scope, command_id):
+        assert scope == SCOPE and command_id == "feedback-1"
+        return {"status": "CONTENT_RETURN_ACKED"}
+
+
+@contextmanager
+def pending_connect(connection):
+    yield connection
+
+
+def test_natural_return_selector_requires_current_pristine_origin():
+    connection = PendingConnection()
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(connection), worker=ReturnWorker())
+    assert consumer.run_once(SCOPE, limit=7) == [{
+        "commandId": "feedback-1", "status": "CONTENT_RETURN_ACKED"}]
+    query, params = connection.calls[0]
+    assert "p.completed_sequence=0" in query
+    assert "s.state='pending' AND s.attempt=0" in query
+    assert "aip_return_decision" in query and "aip_step_run" in query
+    assert "extension_operation_dispatch_binding" in query
+    assert "extension_runtime_binding" in query
+    assert params == ("org-org", "dev-project", 7)
+
+
+@pytest.mark.parametrize("limit", (0, 33, True))
+def test_return_selector_rejects_unbounded_limit(limit):
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(PendingConnection()), worker=ReturnWorker())
+    with pytest.raises(ValueError, match="bounded"):
+        consumer.run_once(SCOPE, limit=limit)
+
+
+def test_natural_return_unknown_stops_serve_without_second_attempt():
+    class UnknownWorker:
+        def run_one(self, *_args):
+            raise ContentReturnUnknown("unknown commit")
+
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(PendingConnection()), worker=UnknownWorker())
+    with pytest.raises(ContentReturnUnknown):
+        consumer.run_once(SCOPE)
+    with pytest.raises(ContentReturnUnknown):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True))
+
+
+def test_return_consumer_blocks_only_known_authority_conflicts():
+    class BlockedWorker:
+        def run_one(self, *_args):
+            raise EcommerceGrowthHostError("current Host fence")
+
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(PendingConnection()), worker=BlockedWorker())
+    assert consumer.run_once(SCOPE) == [{
+        "commandId": "feedback-1", "status": "BLOCKED_CURRENT_AUTHORITY"}]
+
+    class BrokenWorker:
+        def run_one(self, *_args):
+            raise RuntimeError("unexpected read failure")
+
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(PendingConnection()), worker=BrokenWorker())
+    with pytest.raises(RuntimeError, match="unexpected"):
+        consumer.run_once(SCOPE)
+
+
+def test_natural_return_serve_requires_live_host_and_bounded_interval():
+    consumer = CurrentContentReturnConsumer(
+        connect=lambda scope: pending_connect(PendingConnection()), worker=ReturnWorker())
+    with pytest.raises(ValueError, match="interval"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: True,
+            interval_seconds=0))
+    with pytest.raises(RuntimeError, match="Runtime Host"):
+        asyncio.run(consumer.serve(asyncio.Event(), host_ready=lambda: False))
 
 
 class NoDatabase:

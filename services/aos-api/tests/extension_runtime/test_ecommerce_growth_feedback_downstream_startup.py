@@ -12,16 +12,19 @@ FLAGS = (
     "AOS_ECOM_IMPROVEMENT_WORKER_ENABLED",
     "AOS_ECOM_EFFECT_REVIEW_WORKER_ENABLED",
     "AOS_ECOM_MEMORY_CANDIDATE_WORKER_ENABLED",
+    "AOS_ECOM_CONTENT_RETURN_WORKER_ENABLED",
 )
 STATES = (
     "ecommerce_improvement_worker_status",
     "ecommerce_effect_review_worker_status",
     "ecommerce_memory_candidate_worker_status",
+    "ecommerce_content_return_worker_status",
 )
 TASKS = (
     "ecommerce_improvement_worker_task",
     "ecommerce_effect_review_worker_task",
     "ecommerce_memory_candidate_worker_task",
+    "ecommerce_content_return_worker_task",
 )
 
 
@@ -42,12 +45,12 @@ def test_all_downstream_workers_are_off_by_default(monkeypatch):
     clear_flags(monkeypatch)
     application = app()
     asyncio.run(_start_feedback_downstream_workers(application, asyncio.Event()))
-    assert [getattr(application.state, name) for name in STATES] == ["DISABLED"] * 3
-    assert [getattr(application.state, name) for name in TASKS] == [None] * 3
+    assert [getattr(application.state, name) for name in STATES] == ["DISABLED"] * 4
+    assert [getattr(application.state, name) for name in TASKS] == [None] * 4
     assert application.state.runtime_background_tasks == []
 
 
-@pytest.mark.parametrize("index", range(3))
+@pytest.mark.parametrize("index", range(4))
 def test_invalid_flag_and_missing_host_fail_before_any_task(monkeypatch, index):
     clear_flags(monkeypatch)
     monkeypatch.setenv(FLAGS[index], "maybe")
@@ -65,7 +68,7 @@ def test_invalid_flag_and_missing_host_fail_before_any_task(monkeypatch, index):
     assert application.state.runtime_background_tasks == []
 
 
-@pytest.mark.parametrize("index", range(3))
+@pytest.mark.parametrize("index", range(4))
 def test_each_worker_uses_distinct_runtime_identity_and_host_stop(monkeypatch, index):
     clear_flags(monkeypatch)
     monkeypatch.setenv(FLAGS[index], "true")
@@ -104,6 +107,7 @@ def test_each_worker_uses_distinct_runtime_identity_and_host_stop(monkeypatch, i
         "_build_ecommerce_improvement_consumer",
         "_build_ecommerce_effect_review_consumer",
         "_build_ecommerce_memory_candidate_consumer",
+        "_build_ecommerce_content_return_consumer",
     )
     monkeypatch.setattr(main, builders[index], lambda: Runner())
 
@@ -127,7 +131,7 @@ def test_each_worker_uses_distinct_runtime_identity_and_host_stop(monkeypatch, i
     asyncio.run(exercise_active())
 
 
-@pytest.mark.parametrize("index", range(3))
+@pytest.mark.parametrize("index", range(4))
 def test_later_unknown_result_fails_worker_closed_without_restarting(monkeypatch, index):
     clear_flags(monkeypatch)
     monkeypatch.setenv(FLAGS[index], "true")
@@ -139,6 +143,7 @@ def test_later_unknown_result_fails_worker_closed_without_restarting(monkeypatch
         "_build_ecommerce_improvement_consumer",
         "_build_ecommerce_effect_review_consumer",
         "_build_ecommerce_memory_candidate_consumer",
+        "_build_ecommerce_content_return_consumer",
     )
     trigger = asyncio.Event()
     calls = []

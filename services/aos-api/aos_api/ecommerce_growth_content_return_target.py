@@ -6,6 +6,7 @@ ReturnDecision and the queued StepRun are its persistent target authority.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any, Mapping
 
@@ -14,7 +15,7 @@ from aos_api.aip_budget_reservation_store import canonical_hash as budget_hash
 from aos_api.ecommerce_growth_feedback_port import (
     BoundEcommerceGrowthFeedbackPort, EcommerceGrowthFeedbackConflict, _strict_exact_ref,
 )
-from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_host_ports import EcommerceGrowthHostError, HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentReviewHostService, _analysis_command_hash, _request_hash,
     _strict_content_review_command,
@@ -53,6 +54,10 @@ class BoundContentReturnTarget:
                       decision.attempt,decision.attempt_idempotency_key,decision.reason,
                       decision.decision_hash,decision.actor,decision.impact_decisions,
                       step.status AS step_status,step.input_refs,step.attempt AS step_attempt,
+                      (SELECT max(later.attempt) FROM public.aip_step_run later
+                        WHERE later.org_id=step.org_id AND later.project_id=step.project_id
+                          AND later.run_id=step.run_id AND later.step_key=step.step_key)
+                        AS latest_attempt,
                       run.status AS run_status,task.task_id,task.status AS task_status
                  FROM public.ecommerce_growth_feedback_command c
                  JOIN public.ecommerce_growth_feedback_segment s
@@ -126,6 +131,7 @@ class BoundContentReturnTarget:
                 or row["step_status"] not in {"queued", "running", "succeeded", "failed", "skipped", "unknown"}
                 or (require_queued and row["step_status"] != "queued")
                 or row["step_attempt"] != row["attempt"] or row["attempt"] < 2
+                or (require_queued and row["latest_attempt"] != row["attempt"])
                 or (require_queued and (
                     row["run_status"] != "running" or row["task_status"] != "executing"))
                 or type(row["payload"]) is not dict
@@ -282,4 +288,107 @@ class ContentReturnFeedbackWorker:
         return {"status": "CONTENT_RETURN_ACKED", "commandId": command_id, "receiptRef": receipt}
 
 
-__all__ = ["BoundContentReturnTarget", "ContentReturnFeedbackWorker", "ContentReturnUnknown"]
+_PENDING_RETURN = """SELECT c.command_id
+  FROM public.ecommerce_growth_feedback_command c
+  JOIN public.ecommerce_growth_feedback_checkpoint p
+    ON p.org_id=c.org_id AND p.project_id=c.project_id AND p.command_id=c.command_id
+  JOIN public.ecommerce_growth_feedback_segment s
+    ON s.org_id=c.org_id AND s.project_id=c.project_id
+   AND s.command_id=c.command_id AND s.sequence=1
+  JOIN public.ecommerce_growth_runtime_command_receipt origin
+    ON origin.org_id=c.org_id AND origin.project_id=c.project_id
+   AND origin.operation_id='ecommerce_growth_content_review'
+   AND origin.target_receipt_ref=c.review_receipt_ref
+  JOIN public.extension_operation_dispatch_binding d
+    ON d.org_id=c.org_id AND d.project_id=c.project_id
+   AND d.operation_id='ecommerce_growth_content_review'
+  JOIN public.extension_runtime_binding b
+    ON b.org_id=d.org_id AND b.project_id=d.project_id
+   AND b.installation_id=d.installation_id AND b.generation=d.generation
+  JOIN public.aip_review_issue issue
+    ON issue.org_id=c.org_id AND issue.project_id=c.project_id
+   AND issue.issue_id=origin.response->'reviewIssueRef'->>'resourceId'
+  JOIN public.aip_return_decision decision
+    ON decision.org_id=issue.org_id AND decision.project_id=issue.project_id
+   AND decision.issue_id=issue.issue_id AND decision.issue_version=issue.version-1
+  JOIN public.aip_step_run step
+    ON step.org_id=decision.org_id AND step.project_id=decision.project_id
+   AND step.step_run_id=decision.step_run_id AND step.run_id=decision.run_id
+  JOIN public.aip_task_run run
+    ON run.org_id=step.org_id AND run.project_id=step.project_id
+   AND run.run_id=step.run_id
+  JOIN public.aip_task task
+    ON task.org_id=run.org_id AND task.project_id=run.project_id
+   AND task.task_id=run.task_id
+ WHERE c.org_id=%s AND c.project_id=%s AND c.decision='RETURN'
+   AND p.completed_sequence=0 AND s.kind='content_return_target'
+   AND s.state='pending' AND s.attempt=0 AND s.target_receipt_ref IS NULL
+   AND s.payload->>'targetId'=s.target_id
+   AND s.payload->>'targetPhase'='content_generation'
+   AND origin.response->>'decision'='RETURN'
+   AND origin.response->>'returnStage'='content_generation'
+   AND origin.dispatch_revision=d.revision
+   AND origin.installation_id=d.installation_id AND origin.generation=d.generation
+   AND origin.execution_epoch=d.execution_epoch
+   AND origin.cutover_group_id=d.cutover_group_id
+   AND origin.cutover_group_revision=d.cutover_group_revision
+   AND origin.runtime_revision=b.revision
+   AND d.handler_kind='extension' AND d.operation_fence=false
+   AND b.execution_epoch=d.execution_epoch AND b.desired_state='enabled'
+   AND b.observed_state='ready' AND b.enabled=true AND b.operation_fence=false
+   AND issue.status='returned' AND step.step_key='content_generate'
+   AND step.status='queued' AND step.attempt=decision.attempt
+   AND NOT EXISTS (SELECT 1 FROM public.aip_step_run later
+      WHERE later.org_id=step.org_id AND later.project_id=step.project_id
+        AND later.run_id=step.run_id AND later.step_key=step.step_key
+        AND later.attempt>step.attempt)
+   AND run.status='running' AND task.status='executing'
+ ORDER BY c.created_at,c.command_id LIMIT %s"""
+
+
+class CurrentContentReturnConsumer:
+    """Bounded current selector; the owner revalidates under the Host locks."""
+
+    def __init__(self, *, connect=connect_read_only, worker=None) -> None:
+        self._connect = connect
+        self._worker = worker if worker is not None else ContentReturnFeedbackWorker()
+
+    def list_pending(self, scope: TenantScope, *, limit: int = 32) -> list[str]:
+        if type(scope) is not TenantScope or type(limit) is not int or not 1 <= limit <= 32:
+            raise ValueError("bounded scoped return selector required")
+        with self._connect(scope) as conn:
+            rows = conn.execute(_PENDING_RETURN, (*scope.key, limit)).fetchall()
+        values = [row["command_id"] for row in rows]
+        if any(type(value) is not str or not value for value in values) or len(values) != len(set(values)):
+            raise EcommerceGrowthFeedbackConflict("return selector identity drifted")
+        return values
+
+    def run_once(self, scope: TenantScope, *, limit: int = 32) -> list[dict[str, str]]:
+        statuses = []
+        for command_id in self.list_pending(scope, limit=limit):
+            try:
+                result = self._worker.run_one(scope, command_id)
+            except ContentReturnUnknown:
+                raise
+            except (EcommerceGrowthFeedbackConflict, EcommerceGrowthHostError):
+                statuses.append({"commandId": command_id, "status": "BLOCKED_CURRENT_AUTHORITY"})
+                continue
+            statuses.append({"commandId": command_id, "status": result["status"]})
+        return statuses
+
+    async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:
+        if type(interval_seconds) is not int or not 1 <= interval_seconds <= 300:
+            raise ValueError("return worker interval is invalid")
+        scope = TenantScope("org-org", "dev-project")
+        while not stop.is_set():
+            if not host_ready():
+                raise RuntimeError("return worker Runtime Host became unavailable")
+            await asyncio.to_thread(self.run_once, scope)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+            except TimeoutError:
+                pass
+
+
+__all__ = ["BoundContentReturnTarget", "ContentReturnFeedbackWorker",
+    "CurrentContentReturnConsumer", "ContentReturnUnknown"]
