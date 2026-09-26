@@ -7,7 +7,7 @@
 ## 文件级/动作
 
 - 只读复查 W5c5x/y 和 W5caf verification、当前 authority incomplete 两条及三文件 collect；不改任何生产/测试代码，不启动 PG 或真实 worker。
-- 用 authority CAS 把两条当前风险改写为：旧 PG 当前 12/4/8 通过已证，但 **Single Executor/Object/Link/Retirement 的当前生产租约传递、Store 跨独立提交 effect、真实库迁移/全机 Host 排他仍未证**。不删除风险条目，不改变 next gate/硬边界。
+- 同时复习 W5c5y/z：Completion→Retirement→Link→Object→Single→Ingress **显式 opt-in 的同租约传递已在隔离夹具证明**，历史“未传递”也已过时。用 authority CAS 把两条当前风险改写为：旧 PG 当前 12/4/8 通过、显式 opt-in 链已证，但 **生产尚未接线/启用、Store 跨独立提交 effect、真实库迁移/全机 Host 排他仍未证**。不删除风险条目，不改变 next gate/硬边界。
 - 本目录 audit/verification、AOS 项目上下文/Prime 受管记忆更新与精确提交；无关脏文件保留。
 
 ## 九步/停止
