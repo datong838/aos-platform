@@ -170,3 +170,10 @@
 - 文件级清单：`apps/web/src/api/ecommerceWorkshop/contracts.ts` 加严格反馈 DTO，`parser.ts` 加 schema/租户/三段顺序/状态/Receipt/executionAuthorized=false 校验，`client.ts` 加只读 GET 且 limit 1–20；导出经 `index.ts`。`apps/web/src/components/workshop/TaskCockpitPage.tsx` 独立加载状态与只读三段业务卡，审计 exact refs 默认折叠，空态/租户切换/失败保持失败关闭；不加命令按钮、不改变既有任务、复盘、Wiki 页面语义。测试范围是 `apps/web/src/api/ecommerceWorkshop/{parser,client}.test.ts`、`apps/web/src/components/workshop/TaskCockpitPage.test.tsx`，必要时仅改邻近样式。
 - 先 RED：后端三段状态与中文标题/摘要显示，effect “证据不足”、candidate “待治理” 与 promoted “已入库”分开；截断/错顺序/伪造执行授权/坏 exact ref/跨租户响应被拒；空态、403/503/网络失败不会用旧成功卡或 fixture 伪装；审计折叠不泄露在默认业务层。再最小实现、专项与累计前端回归、构建，检查对旧面板和数据的影响。
 - 浏览器验收先核当前 8080、API 实例与可用签名安装；可用时在真实浏览器检查空/失败及有权三段。若没有真实当前业务反馈，只允许标记页面结构/空态验收，绝不以静态 fixture 称自然业务成功；无法安全启动时明确保留浏览器门待办，不阻塞随后独立后端主线。最后落 verification、m1 提交、AOS/Prime 同步，再进入签名安装/来源/审批/Host 的自然生产门。
+
+### P2g 第十九增量：真实首链启用前只读权威清点（2026-09-27，执行前）
+
+- 上位复习 231-5/231-6 AR2-7C、产品首链与第十六至十八增量证据：默认关闭的 worker 和隔离同库 GREEN 均不是当前实例自然运行许可。浏览器门因 8080 无 API 停在目录读取失败。此波只读清点，不为测试绿强启当前实例，不读取商城源或旧十二 Run 的 payload。
+- 文件级范围仅本 plan、对应 `w5cb4-p2g-current-authority-preflight-verification-20260927.md`、D-waves/上下文/记忆；如发现明确的纯代码缺口，另立编码波方案，不在此波临时改生产文件。检查 m1 与 docs 精确 HEAD、工作树已有文件归属、8080/18181/5173 监听、当前进程/环境开关（只报状态不输出秘密）、单迁移头、当前签名 Bundle/安装/权限/来源/预算/真人审批与 Runtime Host 的可查询入口。
+- 对第二段 `ImprovementPendingReceipt` 增加提交后独立读回的**测试/代码需求评估**；当前现成单元/同库证据若不足，则列为下一编码波优先项。对真实自然链只报告 `VERIFIED`/`NOT_VERIFIED`/`BLOCKED` 和具体证据，不把准备条件写成已满足。若生产 API 离线且恢复需要不明授权/安全边界，本波不启动；仍可继续独立代码安全门。
+- 验证文件落盘并 m1 精确提交，再同步 AOS/Prime。随后自动进入可独立推进的最小代码波（优先第二段独立读回或真实启用前门）；真正启用须当前签名安装、当前 Host、来源/审批/预算与未知提交安全边界全部读回。
