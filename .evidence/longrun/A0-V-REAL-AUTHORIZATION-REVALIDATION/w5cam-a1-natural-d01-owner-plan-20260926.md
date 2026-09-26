@@ -14,3 +14,7 @@
 6. verification 落盘、提交、AOS/Prime 上下文同步，自动进入 D02/D03 或最早未闭合核心波。旧 12 Run 正式退休及历史逐行来源列后置待办。
 
 停止条件：原链不唯一、当前 authority/方法/来源/预算/模型不可证或提交未知，冻结该动作并只读对账；绝不重发、造来源、绕 Owner、拿旧数据当今天新鲜。m1 单写者、不 push、230 L0 挂起、dev-org 仅零 canary。
+
+## 第 1 步后文件级细化（编码前）
+
+`AipAgentRunService.create` 只核 exact Task/TaskRun/Plan 版本、当前实例/Skill/Logic/Capability，不核 TaskRun running/Task executing/Plan approved；D01 Worker 才核运行态。W5cam 第 2 步先新增 `services/aos-api/tests/extension_runtime/test_ecommerce_analyst_d01_issuer.py` 的 RED：错误 scope、paused/terminal、未批准 Plan、缺完整 inputRefs、已有 AgentRun/未知结果、单一合法正例。实现仅在 `services/aos-api/aos_api/ecommerce_analyst_d01_issuer.py`，用原 `AipTaskStore.timeline`、原 D01 来源 reader 与 `AipAgentRunService.create`，稳定 ID/key；不改泛型 AIP Owner。Host 尚不能无来源包自动发 D01，因真实 MethodRevision=0；本波后续须做自然 packet selector 的隔离 PG 证据后才注册发行路径。任何 mock 正例都只证明代码，不是现实业务执行。
