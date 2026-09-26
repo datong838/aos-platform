@@ -7,7 +7,7 @@
 5. 一次性 `aos_test_*` 数据库数 0；原 18181 PID36529 未变、`/docs` HTTP200，8080 无 listener；无生产/测试代码变化。
 6. 业务浏览器验收不适用：8080 离线，18181 仅文档。
 7. 方案一致性：同会话累计仅为 isolated PG GREEN；没有真实 Schedule enable、源读取、Store effect、ACK/closure 或 claim 优化等价证明。
-8. 同波 audit/verification、D-waves/AOS/Prime、精确提交；记忆 CAS 与读回在 docs 更新后补记。
+8. 同波 audit/verification `m1@d8e39f8e`；AOS CAS 000726→000727，`incomplete` 41→34、`next_steps=1`、`hard_boundaries=13`；`memory-validate=GREEN`、`memory-status=GREEN_WITH_WARNINGS`、Prime 三投影 CURRENT，Codex 注记 PENDING_ASYNC。D-waves/docs 精确提交，不把异步注记算 GREEN。
 9. 下一波继续可独立安全债；原组 Fleet/历史行或正式退休决策仍是外部门。
 
 230 L0 挂起、dev-org 零 canary、未知 attempt 不重发、不手工 run_definition、m1 单写不 push。
