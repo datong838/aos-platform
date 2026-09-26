@@ -57,3 +57,10 @@
 ## 退出／下一波
 
 本波最多证明受控 Artifact 后的“待人评审→exact 决策→Run/反馈”代码链；没有真实人类审批不得声称自然闭环。下一波按本波证据补生产激活硬门与当前实例自然观察，而非回到旧 12 Run 的逐行补数。
+
+### P2e 内容 Eval 策略引用修正（P2d 后，正式待办前）
+
+- 现场复核：`EvalContractRevision.gate_policy` 已进入不可变合同 `content_hash`；公共 `EvalGatePolicyRef` 与 `w7_004` 的 Run/Report 约束却只允许 `MediaGatePolicyRevision`。P2a 的 `fixture-policy` 仅是主体能力测试，绝非内容 GatePolicy 权威。内容正式 Eval 不得再以媒体名义或任意夹具策略产出报告。
+- 最小模型：允许内容 Eval 的 `gatePolicyRef` 为同一个已冻结 READY `EvalContractRevision` 的 exact `{resourceId,revision,contentHash}`，表示嵌入合同且受合同 hash 保护的 `gate_policy` 快照；不新增独立策略表、批准或权限。`AipEvalRunner` 在任何 EvalRun 写入前强制内容策略 ref 与本次合同 ref 完全相同；媒体/文本旧路径保持原合同。内容 ReviewIssue/Host 也要求报告策略 ref 与报告合同 ref exact 相同，防止绕过 Runner 的历史/伪造报告进入人工待办。
+- 文件级清单：`aip_eval_contracts.py` 扩展引用类型；`aip_eval_runner.py` 增加 content-only exact 校验；`ecommerce_growth_runtime_adapters.py` 与 `aip_production_contract_store.py` 内容路径复核报告；`alembic/versions/a0v_105_*.py` 仅替换两处 JSONB 类型约束并保留原媒体值；相应 `tests/aip/`、`tests/extension_runtime/` 先 RED 后 GREEN。不得修改已发布 `w7_004` 迁移。
+- 退出仍需原 Plan exact 合同、正式 Publication/ReleaseGate、Suite、冻结 READY、真实同主体 EvalReport 与人工授权决定；本小步不注册套件、不运行评估、不启 worker/Provider，也不代表生产迁移已应用。
