@@ -83,6 +83,16 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
         helper._seed(AipEvalPackRegistry(connect_factory=connect))
         runner=AipEvalRunner(connect_factory=connect,
             production_contract_store=SimpleNamespace(get_eval_contract=lambda *args:contract))
+        with pytest.raises(AipEvalAuthorityConflict,match='succeeded'):
+            runner._assert_media_subject(SCOPE,subject,attempt,subject_kind='ecommerce_content')
+        for phase,payload in (
+            ('think',{'kind':'settled_content_reconciliation'}),
+            ('act',{'kind':'already_completed_provider_result'}),
+            ('verify',{'passed':True}),
+            ('observe',{'artifactRef':content['artifactRef']}),
+        ):
+            store.record_step_phase(SCOPE,lease.step_run_id,'worker',lease.fence,'tester',phase,payload)
+        store.complete_step(SCOPE,lease.step_run_id,'worker',lease.fence,'tester')
         policy=EvalGatePolicyRef(resourceType='EvalContractRevision',
             resourceId=contract.contract_id,revision=contract.revision,
             contentHash=contract.content_hash)
@@ -126,6 +136,13 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
             returnStage='content_generate')
         issue=contracts.create_review_issue(SCOPE,'tester','content-issue',request)
         assert issue.artifact_ref.artifact_id==identity
+        with connect(SCOPE) as transaction:
+            transaction.execute("UPDATE aip_step_run SET status='running' WHERE org_id=%s AND project_id=%s AND step_run_id=%s",
+                (*SCOPE.key,lease.step_run_id))
+            with pytest.raises(ProductionContractDependencyBlocked,match='ATTEMPT'):
+                AipProductionContractStore._require_content_eval_subject(
+                    transaction,SCOPE,request.artifact_ref,request.eval_report_ref)
+            transaction.rollback()
         with connect(SCOPE) as transaction:
             ContentReviewHostService._issue_eval_authority(
                 HostTransaction(transaction),SCOPE,{'decision':'ACCEPT'},issue)

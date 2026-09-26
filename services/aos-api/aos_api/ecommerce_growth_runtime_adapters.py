@@ -5808,7 +5808,7 @@ class ContentReviewHostService:
             transaction, scope, artifact["run_id"], report["eval_contract_ref"]
         )
         step = transaction.execute(
-            """SELECT step_run_id,run_id,step_key,attempt,input_hash FROM public.aip_step_run
+            """SELECT step_run_id,run_id,step_key,attempt,input_hash,status FROM public.aip_step_run
                 WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
             (*scope.key, attempt["stepRunId"]),
         ).fetchone()
@@ -5816,6 +5816,7 @@ class ContentReviewHostService:
             step is None or step["run_id"] != artifact["run_id"]
             or step["step_key"] != "content_generate"
             or step["step_run_id"] != attempt["stepRunId"]
+            or step["status"] != "succeeded"
             or type(attempt.get("attempt")) is not int
             or step["attempt"] != attempt["attempt"]
             or step["input_hash"] != attempt.get("inputHash")
@@ -5823,7 +5824,7 @@ class ContentReviewHostService:
             raise ValueError("content review EvalReport attempt lineage drifted")
         if command["decision"] == "ACCEPT":
             latest = transaction.execute(
-                """SELECT step_run_id,attempt FROM public.aip_step_run
+                """SELECT step_run_id,attempt,status FROM public.aip_step_run
                     WHERE org_id=%s AND project_id=%s AND run_id=%s
                       AND step_key='content_generate'
                     ORDER BY attempt DESC LIMIT 1""",
@@ -5832,6 +5833,7 @@ class ContentReviewHostService:
             if (
                 latest is None or latest["step_run_id"] != step["step_run_id"]
                 or latest["attempt"] != step["attempt"]
+                or latest["status"] != "succeeded"
             ):
                 raise ValueError("content review EvalReport latest attempt drifted")
 

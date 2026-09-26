@@ -597,7 +597,7 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
     artifact = {"run_id": "run-1", "artifact_type": "ecommerce_content",
                 "content_hash": "1" * 64}
     step = {"step_run_id": "step-1", "run_id": "run-1", "step_key": "content_generate",
-            "attempt": 1, "input_hash": "a" * 64}
+            "attempt": 1, "input_hash": "a" * 64, "status": "succeeded"}
     plan = {"run_plan_revision_id": "plan-1", "plan_revision_id": "plan-1",
             "current_plan_revision_id": "plan-1", "approval_status": "approved",
             "steps": [{"stepKey": "content_generate", "gateRefs": []},
@@ -622,6 +622,8 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
 
     authority = ContentReviewHostService._issue_eval_authority
     authority(HostTransaction(Tx()), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="attempt"):
+        authority(HostTransaction(Tx(latest={**step, "status": "running"})), SCOPE, item, issue)
     with pytest.raises(ValueError, match="pre-review"):
         authority(HostTransaction(Tx({**report, "gate_passed": False})), SCOPE, item, issue)
     returned_failed = {**item, "decision": "RETURN", "returnStage": "content_generation"}

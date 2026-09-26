@@ -417,7 +417,7 @@ class AipEvalRunner:
                     (*scope.key, artifact_ref.resource_id),
                 ).fetchone()
                 attempt = conn.execute(
-                    """SELECT step_run_id,run_id,step_key,attempt,input_hash
+                    """SELECT step_run_id,run_id,step_key,attempt,input_hash,status
                        FROM aip_step_run
                        WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
                     (*scope.key, attempt_ref.step_run_id),
@@ -454,6 +454,8 @@ class AipEvalRunner:
             or attempt["input_hash"] != attempt_ref.input_hash
         ):
             raise AipEvalAuthorityConflict("media eval Stage attempt is missing or drifted")
+        if subject_kind == "ecommerce_content" and attempt["status"] != "succeeded":
+            raise AipEvalAuthorityConflict("content eval requires a succeeded generation StepRun")
         if (
             latest is None
             or latest["step_run_id"] != attempt_ref.step_run_id

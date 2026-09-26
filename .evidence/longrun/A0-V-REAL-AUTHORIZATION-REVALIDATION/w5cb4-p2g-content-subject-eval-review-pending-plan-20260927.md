@@ -9,6 +9,8 @@
 
 1. 只读审 `ecommerce_content_result_consumer.py`、`ecommerce_content_step_owner.py`、`aip_eval_runner.py`、`aip_production_contract_store.py` 的 Artifact、最新生成 StepRun、EvalReport、ReviewIssue 字段和当前安装权威；选一个由原生产链持久对象组成的 exact 候选键。先不要从测试夹具的任意报告生成待办。
    - 先行安全断点：公共 `create_review_issue` 目前对内容报告只核存在、同主体/attempt/原 Plan，不核 `gate_passed`；`ContentReviewHostService._issue_eval_authority` 的 ACCEPT 也未核结构预审通过。P2g 第一小改动先 RED→GREEN 封住 ACCEPT：失败报告可保留人工 RETURN 处置，但不能作为通过结构门的 ACCEPT；不改媒体/文本旧路径，也不把结构通过写成事实/合规通过。
+   - 第二安全断点：`AipEvalRunner._assert_media_subject` 对内容只验 StepRun 身份/最新 attempt，未要求 `content_generate` 已正式 `succeeded`；现有正向测试甚至在刚 claim 的 StepRun 上跑内容 Eval。先把该隔离测试修成真正四相 TAOR 完成，再加未完成 attempt 的 RED；仅内容主体新增 succeeded 门，媒体/文本旧语义不动。主体 Eval 不可抢在已结算生成步骤前。
+   - 纵深防线：内容 `create_review_issue` 和 Host 读取历史报告时也必须核最新生成 StepRun 的 `succeeded`，防止绕过新版 Runner 的旧报告/直写报告进入人工路径；先改邻近测试 RED，再仅在内容分支核状态，不改其他领域的 StepRun 规则。
 2. 第一段先加 RED，再做 `services/aos-api/aos_api/ecommerce_content_review_pending.py` 只读候选投影。只有**已结算** Artifact、原 TaskRun 的 `content_generate` 最新 succeeded StepRun、原批准 Plan exact EvalContract gate、同一当前安装/Task/Brief、同一 Artifact/attempt/合同的通过报告才返回一个待办候选；缺失、跨租户、旧 attempt、错合同/hash、旧安装、失败报告、已有决定均为零或明确 blocked。GET 不创建 EvalRun/ReviewIssue，不写库。
 3. 第二段在单独方案/测试下接正式主体 `AipEvalRunner`，按持久 intent／唯一候选键先只读对账再调用；EvalRunner 内多提交发生未知时冻结，不自动重跑。正式报告独立读回后才走公共 `create_review_issue`，不能拿治理报告或空壳 Artifact 代替。人类 resolve/return 沿既有公共 API 和 Host exact Receipt；worker 无代批权限。
 4. 后续 ACCEPT 完成 `content_review` StepRun/TaskRun 正式终态，RETURN 形成新内部生成目标；反馈读回总控/Wiki 候选。每段都先专项、累计、隔离 PG、方案/代码复审、verification、m1 commit、AOS/Prime 上下文。若涉及页面做真实浏览器验收；纯后端段标不适用。

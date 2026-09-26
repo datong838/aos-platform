@@ -4270,7 +4270,7 @@ class AipProductionContractStore:
         except ValueError as exc:
             raise ProductionContractDependencyBlocked("CONTENT_EVAL_PLAN_GATE_MISMATCH") from exc
         step = conn.execute(
-            """SELECT step_run_id,attempt,input_hash FROM aip_step_run
+            """SELECT step_run_id,attempt,input_hash,status FROM aip_step_run
             WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_generate'
             ORDER BY attempt DESC LIMIT 1""",
             (*scope.key, artifact["run_id"]),
@@ -4280,6 +4280,7 @@ class AipProductionContractStore:
             or attempt.get("stepRunId") != step["step_run_id"]
             or attempt.get("attempt") != int(step["attempt"])
             or attempt.get("inputHash") != step["input_hash"]
+            or step["status"] != "succeeded"
         ):
             raise ProductionContractDependencyBlocked("CONTENT_EVAL_SUBJECT_ATTEMPT_DRIFTED")
 
