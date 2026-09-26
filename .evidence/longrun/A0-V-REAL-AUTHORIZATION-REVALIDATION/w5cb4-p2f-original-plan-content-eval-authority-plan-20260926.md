@@ -40,8 +40,14 @@
 - `AipEvalRunner.run` 对 `subjectKind=ecommerce_content` 会把 Suite case 的 input 替换为该次 exact Artifact 的内容封套。因此治理发布用的正/负多例 Suite 与未来每篇内容的主体 Eval 必须分别证明：前者证明 Graph 规则可发布，后者证明当前 Artifact/最新 attempt 在冻结合同下被评估。不得拿治理用例通过冒充某篇内容的通过。
 - `AipProductionContractStore._eval_blockers` 目前只独立查 Suite ref、Publication、ReleaseGate 存在/有效，未交叉校验三者 target/suite 的 exact 同一性。P2f-b 的来源读取器必须额外核对同一 Graph id/revision/hash、同一 Suite、发布事件及门决定，并拒绝不一致；先不改变无关旧合同的全局 readiness 语义。
 - 本段先在 `services/aos-api/aos_api/ecommerce_content_pre_review_eval.py` 增加持久 Graph target 的只读执行入口，要求 `AssetType.LOGIC_GRAPH`、目标 id/revision/hash 与持久快照一致，Graph 内容与代码审定规格一致，且执行结果只输出布尔值；拒绝未持久、篡改、错目标、失败或 effect 节点。`services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_eval.py` 先 RED 覆盖。随后再以隔离 PG 的正式 registry/runner/release/contract API 形成新权威，不对当前实例写入。
+- 进一步核查 `AipEvalRunner`：若同一 Suite 含正/负治理用例，真实内容主体运行时每个 case 都被同一篇 Artifact 封套替换，不可能同时满足正/负预期。因此需要**两份** exact Suite：治理 Suite 含正/负用例，用于 Graph ReleaseGate/Publication；主体 Suite 只含“该篇内容结构完整=true”的一例，用于 EvalContract 和每篇内容 EvalRun。两 Suite 的 target 必须为同一 Graph exact id/revision/hash；合同的 publication/gate 应绑定治理 Suite 的通过证据，而合同本身绑定主体 Suite。不得错误要求两 Suite ID 相同，亦不得让治理报告替代主体报告。
 
 ## P2f-b 第 2/4 步中间状态
 
 - 已增加调用方提供的 Graph 快照与 target exact 对齐的无 effect 执行入口，并在一次性测试 PG 通过 `LogicGraphStore.create/get` 读回。它还未自行回读 Store/Publication，因此不能作为生产当前权威选择器；正式调用方必须先按同租户从 Store 读取并另验当前 Publication/ReleaseGate。
-- 下一段集中接 AIP registry→governance Eval→ReleaseGate/Publication→冻结 READY 合同与错租户/撤销反例；只有全链同 target/suite 的交叉证明后，才可使 Owner 新 Plan 使用 exact gate。
+- 下一段集中接 AIP registry→governance Eval→ReleaseGate/Publication→冻结 READY 合同与错租户/撤销反例；只有全链同一 exact Graph target、治理/主体 Suite 各自正确绑定的交叉证明后，才可使 Owner 新 Plan 使用 exact gate。
+
+## P2f-b 第 2/4 步隔离正式 API 证明
+
+- 已用一次性隔离 PG 经 `LogicGraphStore`、`AipEvalPackRegistry`、`AipEvalRunner`、`AipReleasePublicationService`、`AipProductionContractStore` 串起治理 Suite 正/负 5 例→报告→发布门→Publication，另建主体 Suite→冻结 READY 内容 EvalContract；撤销后合同动态 BLOCKED，`dev-org/dev-project` 对相关 Suite/Contract 仍为零。
+- 这只是隔离正式 API 的合同可行性，不是当前实例正式注册，也不是对任何真实内容 Artifact 的主体 Eval。后续仍须生产注册的可重入 bootstrap/只读预检、跨 Suite 同 target 与 Publication/Gate 交叉读回、Owner 在新 Plan 创建前唯一选择；未完成前不启用。
