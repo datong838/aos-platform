@@ -16,3 +16,8 @@
 ## 退出条件与下一段
 
 - P2f 只在“原批准 Plan exact 绑定＋当前权威读回＋拒绝所有伪权威”后完成。随后 P2g 才实现已结算内容 Artifact/最新 StepRun/同主体 EvalReport 的有界待办与公共 ReviewIssue 人工决策；没有真实可读 Artifact 或合法 Eval 权威时待办为空，不手造审批。
+
+## 第 1/4 步审计结果与施工顺序修订
+
+- 2026-09-26 只读元库 `aos_meta_head`：head `a0v_092`，`org-org/dev-project` 的 `subjectKind=ecommerce_content` EvalContract 数为 0；C06 Skill revision 1 为 evaluated，revision 2/3 为 published，C06 现有 Suite 只有 `ecommerce.skill.C06.contract.v1@1`。该 Suite 是 Skill 隔离治理评测，不是当前可读内容 Artifact 的主体评测。`ContentPipelineRefs.evalContractRef` 仅为消费端输入，`AipContentDraftReadinessService` 只验引用存在，二者均不构成 Plan 创建前的正式内容审核合同来源。
+- 分两段施工：P2f-a 先让现有 ReviewIssue/Host 对原批准 Plan 的 exact `content_review.gateRefs` 失败关闭，防止历史/外部报告绕过批准 Plan；此段不声称具备正向生产权威。P2f-b 再形成面向 `ecommerce_content` 的正式 Suite、发布/ReleaseGate 和冻结 READY Contract 的受控来源，并在**新** Plan 创建前绑定；只有它们全链 exact 证明后才考虑自然评估。不得改写旧 Plan、拿 C06 Skill 治理 Suite 或模型生成 EvalContract 顶替产物审核。

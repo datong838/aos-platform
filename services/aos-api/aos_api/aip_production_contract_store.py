@@ -4263,6 +4263,12 @@ class AipProductionContractStore:
             or policy_ref != contract_ref
         ):
             raise ProductionContractDependencyBlocked("CONTENT_EVAL_SUBJECT_MISMATCH")
+        from aos_api.ecommerce_content_eval_plan_gate import require_original_content_eval_gate
+
+        try:
+            require_original_content_eval_gate(conn, scope, artifact["run_id"], contract_ref)
+        except ValueError as exc:
+            raise ProductionContractDependencyBlocked("CONTENT_EVAL_PLAN_GATE_MISMATCH") from exc
         step = conn.execute(
             """SELECT step_run_id,attempt,input_hash FROM aip_step_run
             WHERE org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_generate'

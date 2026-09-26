@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from aos_api.aip_budget_reservation_store import canonical_hash
-from aos_api.aip_contracts import PlanStep
+from aos_api.aip_contracts import ExactContractRef, PlanStep
 from aos_api.aip_eval_contracts import EvalSubjectArtifactRef, EvalStageAttemptRef, EvalGatePolicyRef
 from aos_api.aip_eval_authority_store import AipEvalAuthorityConflict
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
@@ -43,11 +43,17 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
         with connect(SCOPE) as conn:
             migration.op=SimpleNamespace(execute=conn.execute)
             migration.upgrade()
+        contract=helper._contract().model_copy(update={'gate_policy':{
+            'subjectKind':'ecommerce_content','subjectInputMode':'ecommerce-readable-content/v1'}})
         store=AipTaskStore(connect)
         task=store.create_task(SCOPE,'tester','content-eval-task',CreateTaskRequest(type='analysis',title='Content eval'))
         plan=store.create_plan(SCOPE,'tester',task.id,'content-eval-plan',
             CreatePlanRevisionRequest(expected_task_version=task.version,
-                steps=[PlanStep(step_key='content_generate',title='Generate content')]))
+                steps=[PlanStep(step_key='content_generate',title='Generate content'),
+                    PlanStep(step_key='content_review',title='Review content',gate_refs=[
+                        ExactContractRef(resourceType='EvalContractRevision',
+                            resourceId=contract.contract_id,revision=contract.revision,
+                            contentHash=contract.content_hash)])]))
         task=store.get_task(SCOPE,task.id)
         store.approve_plan(SCOPE,'tester',task.id,plan.revision,task.version,plan.content_hash)
         task=store.get_task(SCOPE,task.id)
@@ -75,8 +81,6 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
         attempt=EvalStageAttemptRef(runId=run.id,stepKey='content_generate',
             stepRunId=lease.step_run_id,attempt=lease.attempt,inputHash=lease.input_hash)
         helper._seed(AipEvalPackRegistry(connect_factory=connect))
-        contract=helper._contract().model_copy(update={'gate_policy':{
-            'subjectKind':'ecommerce_content','subjectInputMode':'ecommerce-readable-content/v1'}})
         runner=AipEvalRunner(connect_factory=connect,
             production_contract_store=SimpleNamespace(get_eval_contract=lambda *args:contract))
         policy=EvalGatePolicyRef(resourceType='EvalContractRevision',

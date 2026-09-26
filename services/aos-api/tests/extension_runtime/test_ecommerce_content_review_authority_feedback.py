@@ -597,10 +597,14 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
                 "content_hash": "1" * 64}
     step = {"step_run_id": "step-1", "run_id": "run-1", "step_key": "content_generate",
             "attempt": 1, "input_hash": "a" * 64}
+    plan = {"run_plan_revision_id": "plan-1", "plan_revision_id": "plan-1",
+            "current_plan_revision_id": "plan-1", "approval_status": "approved",
+            "steps": [{"stepKey": "content_generate", "gateRefs": []},
+                      {"stepKey": "content_review", "gateRefs": [report["eval_contract_ref"]]}]}
 
     class Tx:
-        def __init__(self, selected=report, latest=step):
-            self.selected, self.latest = selected, latest
+        def __init__(self, selected=report, latest=step, original_plan=plan):
+            self.selected, self.latest, self.original_plan = selected, latest, original_plan
 
         def execute(self, query, *_):
             if "aip_eval_report_revision" in query:
@@ -611,10 +615,16 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
                 return Result(self.latest)
             if "aip_step_run" in query:
                 return Result(step)
+            if "aip_plan_revision" in query:
+                return Result(self.original_plan)
             raise AssertionError(query)
 
     authority = ContentReviewHostService._issue_eval_authority
     authority(HostTransaction(Tx()), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="Plan"):
+        authority(HostTransaction(Tx(original_plan={**plan,
+            "steps": [{"stepKey": "content_generate", "gateRefs": []},
+                      {"stepKey": "content_review", "gateRefs": []}]})), SCOPE, item, issue)
     with pytest.raises(ValueError, match="EvalReport"):
         authority(HostTransaction(Tx({**report, "gate_policy_ref": {
             "resourceType": "MediaGatePolicyRevision", "resourceId": "fixture",

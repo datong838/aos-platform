@@ -5764,6 +5764,8 @@ class ContentReviewHostService:
 
     @staticmethod
     def _issue_eval_authority(transaction, scope, command, issue):
+        from aos_api.ecommerce_content_eval_plan_gate import require_original_content_eval_gate
+
         report = transaction.execute(
             """SELECT content_hash,subject_artifact_ref,stage_attempt_ref,
                       eval_contract_ref,gate_policy_ref
@@ -5800,6 +5802,9 @@ class ContentReviewHostService:
             or report["gate_policy_ref"] != report["eval_contract_ref"]
         ):
             raise ValueError("content review EvalReport subject lineage drifted")
+        require_original_content_eval_gate(
+            transaction, scope, artifact["run_id"], report["eval_contract_ref"]
+        )
         step = transaction.execute(
             """SELECT step_run_id,run_id,step_key,attempt,input_hash FROM public.aip_step_run
                 WHERE org_id=%s AND project_id=%s AND step_run_id=%s""",
