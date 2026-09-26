@@ -196,3 +196,9 @@
 - 复习 W5c8z/W5c9a/W5c9b 的唯一恢复 PG、纯 HTTP/READ ONLY 规则及 P2g21 新鲜容器归属。先确认 `aos-a0v-recovery-pg` image/restart/18435 loopback/pg_isready/8080 与 18181 无监听，限定恢复 profile；若任一漂移，STOP，不查询。连接只允许 `BEGIN READ ONLY`，只读 DB identity、`alembic_version`、安装/Host 相关表的存在性与**最小状态字段/计数**，不读商城源表、旧 Run payload、secret 或原始业务行。
 - 文件级范围仅本 plan、`w5cb4-p2g-recovery-pg-authority-readback-verification-20260927.md` 及 D-waves/AOS/Prime 同步；不改服务、DB 结构、安装/Host/worker 状态或代码。选既有受控只读脚本/连接路径，禁止通过默认 5433 测试库推断恢复库；如凭据/权限不可信，记录 `NOT_VERIFIED`，不探测凭据值。
 - 若恢复库确认为旧迁移版本/与 m1 代码不兼容，不能启动当前 API；下一波先形成有界迁移与回滚/备份校验方案。若迁移与签名安装/Host 元数据可读，也只证明静态状态，真实审批/来源/预算/自然尝试仍是单独门。验证落盘与提交后自动进入下一最小波；浏览器本波不适用。
+
+### P2g 第二十三增量：092→106 迁移无效果预检（2026-09-27，执行前）
+
+- 复习 P2g22 恢复库 READ ONLY 结果、AR2-7C 未知提交冻结与现行 `alembic` 链。该库 `a0v_092` 且 Runtime unknown/fenced/epoch mismatch；本波仅静态/只读预检，禁止 `alembic upgrade`、备份覆盖、容器重启、服务/worker 启用。
+- 文件级仅本 plan、`w5cb4-p2g-migration-092-106-preflight-verification-20260927.md` 与 D-waves/AOS/Prime 上下文。用本地 migration DAG 精确列出 093–106 的表/函数/ACL/RLS/数据回填/锁风险；读取恢复库 `pg_stat_database`/尺寸、现有备份目录的文件存在性/大小/时间/校验清单（不读备份内容与源数据），核容器空间与可恢复性证据。若备份只有历史点而无当前可核快照，不把它当可回滚。
+- 输出执行/停止门：迁移前需当前一致备份与独立校验、足够空间、API/Host/worker 零执行与锁窗口、逐迁移兼容/回滚策略；任一未知保留 `STOP_MIGRATION` 并优先做隔离克隆演练方案。无浏览器/代码变更。verification 与 m1 提交、AOS/Prime 更新后自动进下一独立波。
