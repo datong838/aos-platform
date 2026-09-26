@@ -1,0 +1,16 @@
+# W5cam｜A1 自然 D01 正式 Owner 接线计划
+
+## 上位目标与 W5cal 交接
+
+依 231 A1、231-9 BG-02/03、经营参谋 D01-D03 与栖月汇产品方案，商品更新自然 Case/Run 之后须在当前来源、exact 方案、权限/预算约束下产生有来源建议。W5cal m1 `950b9958` 只做 Host 内原分析 Receipt/代际/Task 状态的**只读发现**；它不是执行授权。当前真实 PG 无 running TaskRun/MethodRevision/Insight，旧 12 Run 不重播、不作业务输入。
+
+## 本波 1–6 步
+
+1. 复习 `AipAgentRunService.create/transition`、D01 Worker、`PostgresAipProductionCompositionSource`、Metric/MethodRevision 与方案审批/预算合同；确定单个当前自然 TaskRun→原 Occurrence/Receipt→批准 Plan→D01 绑定/输入的精确闭包。发现缺 authority，只阻断该实例，继续可隔离实现。
+2. 文件级 RED：优先复用现有 Owner，不新增平行 AgentRun 表；在 `services/aos-api/aos_api/ecommerce_analyst_stage_runtime.py` 旁新增最小 D01 issuer/coordinator，测试覆盖同租户、旧代、暂停/终态、重复领取/未知提交、当前 Method/指标/模型路由/预算缺失、唯一正例。若现有事务/Receipt API 不足，先更新本方案再改码。
+3. 最小实现：Host 仅在所有当前门为真时调用正式 `AipAgentRunService.create` 并读回原 Receipt；稳定 idempotency key，unknown 不换 ID。D01 Worker 使用原稳定 attempt，不人工 `run_definition`，不读商城源。真实 Provider 默认不开。
+4. 专项、累计、隔离 PG 重启/重复事件/撤权测试；区分 mock GREEN 与真实运行。
+5. 有运行 UI 才做浏览器只读验收；没有当前真实安装/新鲜截面/审批/预算时，不起真实 Host 或收费 Provider，不伪称自然结果。
+6. verification 落盘、提交、AOS/Prime 上下文同步，自动进入 D02/D03 或最早未闭合核心波。旧 12 Run 正式退休及历史逐行来源列后置待办。
+
+停止条件：原链不唯一、当前 authority/方法/来源/预算/模型不可证或提交未知，冻结该动作并只读对账；绝不重发、造来源、绕 Owner、拿旧数据当今天新鲜。m1 单写者、不 push、230 L0 挂起、dev-org 仅零 canary。
