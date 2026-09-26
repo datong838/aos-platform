@@ -22,3 +22,9 @@
 ## 第 2 步复审纠偏（下一代码改动前）
 
 m1 `4423c87c` 的布尔 `require_current_sources` 只有注入式测试，没有把 exact Method/Eval/Metric/Query/EvidenceBundle 包传入 reader；不能作为生产来源门。先在 `services/aos-api/tests/extension_runtime/test_ecommerce_analyst_d01_issuer.py` 写缺包/错包 RED，再改 `services/aos-api/aos_api/ecommerce_analyst_d01_issuer.py` 接收严格来源包；在 `services/aos-api/aos_api/ecommerce_analyst_portrait_inputs.py` 抽取共用的“拟签发请求输入”只读核验，保持既有 D01 Worker 行为不变。生产来源 reader 必须实际走同租户当前 Method/Eval/Metric/Query、EvidenceBundle 与 DisclosureGrant 既有 Owner，不直接读取商城源。此门通过前不接 Host；隔离测试只证明代码，真实 MethodRevision/running TaskRun 仍缺。
+
+## 第 3 步门禁边界纠偏
+
+`ecommerce_analyst_stage_runtime._SCAN` 能证明单个 TaskRun 对应唯一且当前的 AnalysisRuntimeReceipt/代际/运行态，但不证明原 Occurrence、Case/Run、初始化 Evidence 与当前源事件控制。新增 `require_unique_current_analysis_receipt` 仅作发现层的精确筛选；不可命名或使用为完整自然起点授权。完整起点须复用 `AnalysisContinuationOrigin(AnalysisContinuationContext(...)).run_current` 的原始链核验，并将其与来源包、Owner 创建组合在同一受控事务边界；做不到前 Host 发行保持未注册。测试同步改成该准确边界。
+
+当前 `require_current_d01_sources` 也只是发行前只读快照：本地 marking 表若不是权威后端，应 fail closed；从数据库时钟取新鲜度时间，不采用调用方自报时间。来源与 Owner 仍分属不同事务，不能把它当可执行授权。本波在完成专项/累计自测后，以“可复用预检模块，Host 未注册、真实自然结果未成立”落盘，下一波专攻同事务原链/来源/Owner 组合。

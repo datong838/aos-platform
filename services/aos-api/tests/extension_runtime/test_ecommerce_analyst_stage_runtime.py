@@ -5,8 +5,9 @@ from types import SimpleNamespace
 import pytest
 
 from aos_api.ecommerce_analyst_stage_runtime import (
-    AnalystStageReadinessWorker, _classify,
+    AnalystStageReadinessWorker, _classify, require_unique_current_analysis_receipt,
 )
+import aos_api.ecommerce_analyst_stage_runtime as stage_module
 from aos_api.ecommerce_growth_runtime_adapters import _analysis_command_hash
 from aos_api.extension_runtime.live_job_directory import LivePreparedJobDirectory
 from aos_api.tenant_scope import TenantScope
@@ -113,3 +114,25 @@ def test_duplicate_original_task_receipts_are_reconciliation_not_authority():
     worker = AnalystStageReadinessWorker(directory, connect=connect)
     assert worker.scan_scope(SCOPE) == dict(blocked=0, reconcile=2,
                                              awaitingAuthority=0, overflow=0)
+
+
+def test_exact_current_receipt_requires_one_live_receipt(monkeypatch):
+    state = {'rows': [_row()]}
+    class Connection:
+        def execute(self, query, params):
+            assert params == SCOPE.key and 'LIMIT 101' in query
+            return SimpleNamespace(fetchall=lambda: state['rows'])
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    monkeypatch.setattr(stage_module, 'connect_read_only', connect)
+    directory = LivePreparedJobDirectory()
+    directory.resolve = lambda **_kw: object()
+    assert require_unique_current_analysis_receipt(SCOPE, 'run-1', directory) is True
+    state['rows'] = [_row(), _row()]
+    with pytest.raises(ValueError, match='unique'):
+        require_unique_current_analysis_receipt(SCOPE, 'run-1', directory)
+    state['rows'] = [_row(current_generation='old')]
+    with pytest.raises(ValueError, match='current'):
+        require_unique_current_analysis_receipt(SCOPE, 'run-1', directory)

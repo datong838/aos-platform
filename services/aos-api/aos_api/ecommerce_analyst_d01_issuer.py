@@ -5,11 +5,20 @@ source packet can be supplied by production readers.  No Provider transition.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from pydantic import Field, model_validator
 
 from aos_api.aip_agent_registry_contracts import CreateAgentRunRequest
+from aos_api.aip_contracts import AipContractModel
 from aos_api.aip_task_store import AipTaskStore
+from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_authority_store import canonical_hash
+from aos_api.ecommerce_analyst_portrait_inputs import (
+    PortraitMetricSourceRequest, read_portrait_input_packet,
+)
+from aos_api.ecommerce_growth_runtime_connection import connect_serializable
+from aos_api.openfga import openfga_api_url
 from aos_api.tenant_scope import TenantScope
 
 
@@ -17,6 +26,90 @@ _SOURCE_KINDS = frozenset({
     'MethodRevision', 'EvalContractRevision', 'MetricDefinitionRevision',
     'QueryResultRevision', 'EvidenceBundleRevision',
 })
+
+
+class D01SourcePacket(AipContractModel):
+    method_ref: AnalystExactRef
+    eval_ref: AnalystExactRef
+    metric_sources: list[PortraitMetricSourceRequest] = Field(min_length=1, max_length=100)
+    cutoff_at: datetime
+    markings: list[str] = Field(min_length=1, max_length=50)
+    max_source_age_seconds: int = Field(strict=True, ge=1, le=31536000)
+    max_bytes: int = Field(strict=True, ge=1, le=2_000_000)
+
+    @model_validator(mode='after')
+    def _exact_packet(self):
+        if (self.method_ref.resource_type != 'MethodRevision'
+                or self.eval_ref.resource_type != 'EvalContractRevision'
+                or self.cutoff_at.utcoffset() is None
+                or len({item.metric_ref.resource_id for item in self.metric_sources})
+                    != len(self.metric_sources)
+                or any(item.metric_ref.resource_type != 'MetricDefinitionRevision'
+                       or item.result_ref.resource_type != 'QueryResultRevision'
+                       or item.source_request.bundle_ref.resource_type != 'EvidenceBundleRevision'
+                       for item in self.metric_sources)
+                or any(type(label) is not str or not label.strip() or label != label.strip()
+                       for label in self.markings)):
+            raise ValueError('complete exact D01 source packet required')
+        return self
+
+
+def _packet_ref_keys(packet: D01SourcePacket):
+    refs = [packet.method_ref, packet.eval_ref,
+            *(item.metric_ref for item in packet.metric_sources),
+            *(item.result_ref for item in packet.metric_sources),
+            *(item.source_request.bundle_ref for item in packet.metric_sources)]
+    return {(ref.resource_type, ref.resource_id, str(ref.revision), 'postgresql')
+            for ref in refs}
+
+
+def require_current_d01_sources(scope: TenantScope, request: CreateAgentRunRequest,
+                                packet: D01SourcePacket, actor: str,
+                                occurred_at: datetime) -> bool:
+    """Read current governed AOS authorities; never query the mall source."""
+    if (type(scope) is not TenantScope or type(request) is not CreateAgentRunRequest
+            or type(packet) is not D01SourcePacket or type(actor) is not str
+            or not actor or actor != actor.strip()
+            or occurred_at.utcoffset() is None):
+        raise ValueError('exact D01 source read context required')
+    packet = D01SourcePacket.model_validate(packet.model_dump(mode='python'))
+    declared = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
+                for ref in request.run.input_refs}
+    if declared != _packet_ref_keys(packet) or len(declared) != len(request.run.input_refs):
+        raise ValueError('D01 packet differs from declared exact AgentRun inputs')
+    if openfga_api_url():
+        raise PermissionError('current remote D01 marking adapter required')
+    with connect_serializable(scope) as conn:
+        database_now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        if (not isinstance(database_now, datetime) or database_now.utcoffset() is None
+                or abs((database_now - occurred_at).total_seconds()) > 300
+                or packet.cutoff_at > database_now):
+            raise ValueError('D01 source clock or cutoff unavailable')
+        membership = conn.execute(
+            'SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE',
+            (*scope.key, actor),
+        ).fetchall()
+        bearer = conn.execute(
+            "SELECT object_key FROM authz_tuple WHERE org_id=%s AND project_id=%s "
+            "AND user_key=%s AND relation='bearer' AND object_key LIKE %s LIMIT 1001 FOR SHARE",
+            (*scope.key, 'user:' + actor, 'marking:%'),
+        ).fetchall()
+        granted = {row['object_key'][len('marking:'):] for row in bearer
+                   if row['object_key'].startswith('marking:')}
+        if (len(membership) != 1 or len(bearer) > 1000
+                or any(not label or label != label.strip() for label in granted)
+                or not set(packet.markings).issubset(granted)):
+            raise PermissionError('current D01 actor membership or bearer markings unavailable')
+        read_portrait_input_packet(
+            conn=conn, scope=scope, task_id=request.run.task_ref.resource_id,
+            input_refs=request.run.input_refs, actor=actor,
+            method_ref=packet.method_ref, eval_ref=packet.eval_ref,
+            metric_sources=packet.metric_sources, cutoff_at=packet.cutoff_at,
+            markings=packet.markings, now=database_now,
+            max_source_age=timedelta(seconds=packet.max_source_age_seconds),
+            max_bytes=packet.max_bytes,
+        )
+    return True
 
 
 def d01_agent_run_id(scope: TenantScope, task_run_id: str, plan_id: str) -> str:
@@ -34,7 +127,7 @@ def _value(item):
 
 class NaturalD01Issuer:
     def __init__(self, tasks, owner, *, require_current_origin,
-                 require_current_sources):
+                 require_current_sources=require_current_d01_sources):
         if (not isinstance(tasks, AipTaskStore) and not callable(getattr(tasks, 'timeline', None))
                 or not callable(getattr(owner, 'create', None))
                 or not callable(require_current_origin)
@@ -45,8 +138,9 @@ class NaturalD01Issuer:
         self._sources = require_current_sources
 
     def issue(self, scope: TenantScope, task_run_id: str, request: CreateAgentRunRequest,
-              *, actor: str, occurred_at: datetime):
+              packet: D01SourcePacket, *, actor: str, occurred_at: datetime):
         if (type(scope) is not TenantScope or type(request) is not CreateAgentRunRequest
+                or type(packet) is not D01SourcePacket
                 or not task_run_id or type(actor) is not str or not actor.strip()
                 or not isinstance(occurred_at, datetime) or occurred_at.utcoffset() is None):
             raise ValueError('exact D01 issue context required')
@@ -90,11 +184,12 @@ class NaturalD01Issuer:
                       for ref in inputs}
         if (len(identities) != len(inputs) or not _SOURCE_KINDS.issubset(
                 {ref.resource_type for ref in inputs})
+                or identities != _packet_ref_keys(packet)
                 or any(ref.authority != 'postgresql' or ref.revision is None for ref in inputs)):
             raise ValueError('complete unique D01 exact source inventory required')
         if self._origin(scope, task_run_id) is not True:
             raise ValueError('current natural origin unavailable')
-        if self._sources(scope, request, actor, occurred_at) is not True:
+        if self._sources(scope, request, packet, actor, occurred_at) is not True:
             raise ValueError('current governed D01 source packet unavailable')
         if self._origin(scope, task_run_id) is not True:
             raise ValueError('natural origin changed during D01 preflight')

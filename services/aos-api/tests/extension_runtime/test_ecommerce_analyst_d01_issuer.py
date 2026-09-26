@@ -1,5 +1,6 @@
 """Natural D01 issuance must not bypass the canonical AIP Owner."""
 from datetime import UTC, datetime
+from contextlib import contextmanager
 from types import SimpleNamespace
 
 import pytest
@@ -8,7 +9,11 @@ from aos_api.aip_agent_registry_contracts import (
     AgentRunRequest, CreateAgentRunRequest, VersionedAssetRef,
 )
 from aos_api.aip_contracts import ResourceRef
-from aos_api.ecommerce_analyst_d01_issuer import NaturalD01Issuer, d01_agent_run_id
+from aos_api.ecommerce_analyst_d01_issuer import (
+    D01SourcePacket, NaturalD01Issuer, d01_agent_run_id,
+    require_current_d01_sources,
+)
+import aos_api.ecommerce_analyst_d01_issuer as issuer_module
 from aos_api.tenant_scope import TenantScope
 
 
@@ -51,6 +56,32 @@ def _request(*, input_refs=None):
     )
 
 
+def _packet():
+    return D01SourcePacket.model_validate(dict(
+        methodRef=dict(resourceType='MethodRevision', resourceId='method-1',
+                       revision=1, contentHash=HASH),
+        evalRef=dict(resourceType='EvalContractRevision', resourceId='eval-1',
+                     revision=1, contentHash=HASH),
+        metricSources=[dict(
+            metricRef=dict(resourceType='MetricDefinitionRevision', resourceId='metric-1',
+                           revision=1, contentHash=HASH),
+            resultRef=dict(resourceType='QueryResultRevision', resourceId='query-1',
+                           revision=1, contentHash='sha256:' + HASH),
+            sourceRequest=dict(
+                bundleRef=dict(resourceType='EvidenceBundleRevision', resourceId='bundle-1',
+                               revision=1, contentHash=HASH),
+                grants=[dict(decisionId='decision-1', request=dict(
+                    evidenceRef=dict(resourceType='Evidence', resourceId='evidence-1',
+                                     revision=1, contentHash=HASH),
+                    purpose='source', requestedLevel='l3', taskId='task-1'))],
+            ),
+            windowStart=datetime(2026, 9, 25, tzinfo=UTC), windowEnd=NOW,
+        )],
+        cutoffAt=NOW, markings=['internal'], maxSourceAgeSeconds=86400,
+        maxBytes=10000,
+    ))
+
+
 def _timeline(*, run_status='running', task_status='executing', approval='approved'):
     assignee = ResourceRef(resourceType='AgentInstance', resourceId='analyst-1',
                            revision='1', authority='aip-assignee-directory')
@@ -79,8 +110,8 @@ def _issuer(timeline=None):
     def origin(scope, run_id):
         calls.append(('origin', scope, run_id))
         return True
-    def sources(scope, request, actor, now):
-        calls.append(('sources', scope, request, actor, now))
+    def sources(scope, request, packet, actor, now):
+        calls.append(('sources', scope, request, packet, actor, now))
         return True
     return NaturalD01Issuer(tasks, owner, require_current_origin=origin,
                             require_current_sources=sources), calls
@@ -88,7 +119,7 @@ def _issuer(timeline=None):
 
 def test_current_packet_uses_one_stable_owner_key_and_no_provider():
     issuer, calls = _issuer()
-    run, receipt = issuer.issue(SCOPE, 'run-1', _request(), actor='analyst-owner', occurred_at=NOW)
+    run, receipt = issuer.issue(SCOPE, 'run-1', _request(), _packet(), actor='analyst-owner', occurred_at=NOW)
     assert run.status == 'queued' and receipt.operation == 'agent_run.create'
     owner_calls = [item for item in calls if len(item) == 3 and item[0] == SCOPE]
     assert len(owner_calls) == 1
@@ -103,22 +134,33 @@ def test_nonrunning_or_unapproved_never_calls_owner(run_status, task_status, app
     issuer, calls = _issuer(_timeline(run_status=run_status,
                                       task_status=task_status, approval=approval))
     with pytest.raises(ValueError):
-        issuer.issue(SCOPE, 'run-1', _request(), actor='analyst-owner', occurred_at=NOW)
+        issuer.issue(SCOPE, 'run-1', _request(), _packet(), actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
 
 def test_missing_source_inventory_never_calls_owner():
     issuer, calls = _issuer()
     with pytest.raises(ValueError):
-        issuer.issue(SCOPE, 'run-1', _request(input_refs=[_resource('MethodRevision', 'method-1')]),
+        issuer.issue(SCOPE, 'run-1', _request(input_refs=[_resource('MethodRevision', 'method-1')]), _packet(),
                      actor='analyst-owner', occurred_at=NOW)
+    assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
+
+
+def test_missing_or_drifted_exact_packet_never_calls_owner():
+    issuer, calls = _issuer()
+    for packet in (None, _packet().model_copy(update={
+        'method_ref': _packet().method_ref.model_copy(update={'resource_id': 'other-method'})
+    })):
+        with pytest.raises(ValueError):
+            issuer.issue(SCOPE, 'run-1', _request(), packet,
+                         actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
 
 def test_wrong_scope_or_untrusted_origin_never_calls_owner():
     issuer, calls = _issuer()
     with pytest.raises(ValueError):
-        issuer.issue(TenantScope('dev-org', 'dev-project'), 'run-1', _request(),
+        issuer.issue(TenantScope('dev-org', 'dev-project'), 'run-1', _request(), _packet(),
                      actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
@@ -131,7 +173,7 @@ def test_missing_current_authority_never_calls_owner(missing):
     else:
         issuer._sources = lambda *_args: False
     with pytest.raises(ValueError):
-        issuer.issue(SCOPE, 'run-1', _request(), actor='analyst-owner', occurred_at=NOW)
+        issuer.issue(SCOPE, 'run-1', _request(), _packet(), actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
 
@@ -143,5 +185,40 @@ def test_unknown_owner_result_is_not_retried_with_new_identity():
         raise RuntimeError('commit outcome unknown')
     issuer._owner.create = unknown
     with pytest.raises(RuntimeError, match='unknown'):
-        issuer.issue(SCOPE, 'run-1', _request(), actor='analyst-owner', occurred_at=NOW)
+        issuer.issue(SCOPE, 'run-1', _request(), _packet(), actor='analyst-owner', occurred_at=NOW)
     assert len(calls) == 1
+
+
+def test_production_reader_requires_current_actor_markings_before_source_material(monkeypatch):
+    seen = []
+    class Connection:
+        def execute(self, query, params=None):
+            if 'clock_timestamp()' in query:
+                return SimpleNamespace(fetchone=lambda: {'now': NOW})
+            assert params[:2] == SCOPE.key
+            if 'meta_membership' in query:
+                rows = [{'role': 'analyst'}]
+            elif 'authz_tuple' in query:
+                rows = [{'object_key': 'marking:internal'}]
+            else:
+                raise AssertionError('unexpected authority query')
+            return SimpleNamespace(fetchall=lambda: rows)
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    monkeypatch.setattr(issuer_module, 'connect_serializable', connect)
+    monkeypatch.setattr(issuer_module, 'openfga_api_url', lambda: None)
+    monkeypatch.setattr(issuer_module, 'read_portrait_input_packet',
+                        lambda **kwargs: seen.append(kwargs))
+    with pytest.raises(PermissionError):
+        require_current_d01_sources(SCOPE, _request(),
+            _packet().model_copy(update={'markings': ['secret']}), 'analyst-owner', NOW)
+    assert seen == []
+    assert require_current_d01_sources(SCOPE, _request(), _packet(),
+                                       'analyst-owner', NOW) is True
+    assert len(seen) == 1 and seen[0]['task_id'] == 'task-1'
+    monkeypatch.setattr(issuer_module, 'openfga_api_url', lambda: 'https://remote.example')
+    with pytest.raises(PermissionError, match='remote'):
+        require_current_d01_sources(SCOPE, _request(), _packet(), 'analyst-owner', NOW)
+    assert len(seen) == 1

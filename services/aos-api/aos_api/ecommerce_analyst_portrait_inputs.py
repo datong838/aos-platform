@@ -21,21 +21,30 @@ class PortraitMetricSourceRequest(AipContractModel):
 
 def read_portrait_inputs(*,conn,scope,run,actor,method_ref,eval_ref,metric_sources,cutoff_at,
                          markings,now,max_source_age,max_bytes):
+    if ((run.tenant.org_id,run.tenant.project_id)!=scope.key or run.request.skill.asset_type!='SkillTemplate'
+        or run.request.skill.asset_id!='ecommerce.skill.D01'):
+        raise ValueError('scoped D01 run required')
+    return read_portrait_input_packet(conn=conn,scope=scope,task_id=run.task_id,
+        input_refs=run.request.input_refs,actor=actor,method_ref=method_ref,eval_ref=eval_ref,
+        metric_sources=metric_sources,cutoff_at=cutoff_at,markings=markings,now=now,
+        max_source_age=max_source_age,max_bytes=max_bytes)
+
+
+def read_portrait_input_packet(*,conn,scope,task_id,input_refs,actor,method_ref,eval_ref,
+                               metric_sources,cutoff_at,markings,now,max_source_age,max_bytes):
     if (conn is None or type(actor) is not str or not actor or actor.strip()!=actor
+        or type(task_id) is not str or not task_id or task_id.strip()!=task_id
         or type(max_bytes) is not int or not 1<=max_bytes<=2_000_000
         or not isinstance(max_source_age,timedelta) or max_source_age<=timedelta(0)
         or any(not isinstance(t,datetime) or t.utcoffset() is None for t in (now,cutoff_at))
         or not isinstance(metric_sources,list) or not 1<=len(metric_sources)<=100):
         raise ValueError('explicit bounded portrait input context required')
-    if ((run.tenant.org_id,run.tenant.project_id)!=scope.key or run.request.skill.asset_type!='SkillTemplate'
-        or run.request.skill.asset_id!='ecommerce.skill.D01'):
-        raise ValueError('scoped D01 run required')
     items=[PortraitMetricSourceRequest.model_validate(item.model_dump() if isinstance(item,PortraitMetricSourceRequest) else item) for item in metric_sources]
     if len({item.metric_ref.resource_id for item in items})!=len(items):
         raise ValueError('unique D01 metric inventory required')
     refs=[method_ref,eval_ref,*[item.metric_ref for item in items],*[item.result_ref for item in items],
         *[item.source_request.bundle_ref for item in items]]
-    declared={(r.resource_type,r.resource_id,r.revision,r.authority) for r in run.request.input_refs}
+    declared={(r.resource_type,r.resource_id,r.revision,r.authority) for r in input_refs}
     required={(r.resource_type,r.resource_id,str(r.revision),'postgresql') for r in refs}
     if not required.issubset(declared):
         raise ValueError('D01 run did not declare complete exact input inventory')
@@ -43,7 +52,7 @@ def read_portrait_inputs(*,conn,scope,run,actor,method_ref,eval_ref,metric_sourc
         metric_refs=[item.metric_ref for item in items],eval_ref=eval_ref,now=now)
     queries=[];materials=[];bundles={}
     for item in items:
-        query,result,material=read_portrait_metric_query(conn=conn,scope=scope,task_id=run.task_id,actor=actor,
+        query,result,material=read_portrait_metric_query(conn=conn,scope=scope,task_id=task_id,actor=actor,
             request=item.source_request,markings=markings,now=now,max_source_age=max_source_age,max_bytes=max_bytes,
             metric_ref=item.metric_ref,result_ref=item.result_ref,window_start=item.window_start,window_end=item.window_end,cutoff_at=cutoff_at)
         queries.append((query,result))

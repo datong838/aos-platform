@@ -82,6 +82,26 @@ def _classify(row, scope, directory):
     return 'awaiting-authority'
 
 
+def require_unique_current_analysis_receipt(scope, task_run_id, directory):
+    """Discover one live Receipt; this is not original-origin authorization."""
+    if (type(scope) is not TenantScope or type(task_run_id) is not str
+            or not task_run_id or type(directory) is not LivePreparedJobDirectory):
+        raise ValueError('exact analysis receipt lookup required')
+    with connect_read_only(scope) as conn:
+        rows = conn.execute(_SCAN, scope.key).fetchall()
+    if len(rows) > _LIMIT:
+        raise ValueError('analysis receipt scan overflow')
+    matching = [row for row in rows
+                if type(row['response']) is dict
+                and type(row['response'].get('taskRunRef')) is dict
+                and row['response']['taskRunRef'].get('resourceId') == task_run_id]
+    if len(matching) != 1:
+        raise ValueError('unique analysis receipt required')
+    if _classify(matching[0], scope, directory) != 'awaiting-authority':
+        raise ValueError('current analysis receipt unavailable')
+    return True
+
+
 class AnalystStageReadinessWorker:
     def __init__(self, directory, *, connect=connect_read_only):
         if type(directory) is not LivePreparedJobDirectory or not callable(connect):
