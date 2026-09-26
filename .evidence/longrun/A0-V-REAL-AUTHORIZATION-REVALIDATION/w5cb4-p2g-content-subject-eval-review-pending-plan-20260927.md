@@ -184,3 +184,9 @@
 - 文件级最小范围：`services/aos-api/aos_api/ecommerce_growth_improvement_target.py` 增独立 `connect_read_only` 依赖和 `ImprovementFeedbackUnknown`；在原事务 commit 后、返回成功前，用新连接核同一租户/command/targetId/Receipt、second ack/attempt=1/checkpoint=2、第一段仍 ack、原 ACCEPT 来源不漂移。提交或提交后读回未知/异常一律抛 `Unknown`，不自动重投，消费者不得吞成普通可跳过阻断；自然 serve 因 Unknown 停止并让 app 任务 FAILED_CLOSED。原前置拒绝继续保留 `Conflict`。
 - RED 测试扩 `services/aos-api/tests/extension_runtime/test_ecommerce_growth_improvement_target.py` 的可注入连接，验证提交后第二次独立连接、丢失/漂移/读取异常、未知提交不得成功返回且没有第二次 claim；原 `test_ecommerce_content_review_pending_pg.py` 复用同一原命令及非超级运行身份做正向独立读回与重复稳定。若现有 clone connector 参数不兼容，先只改测试显式传同一 read-only connector，不改生产默认。
 - 专项、原同库与相关累计、编译/迁移头、方案代码复审；纯后端浏览器不适用。verification 文件落盘、m1 精确提交、AOS/Prime 更新。下一波继续当前签名安装/运行入口的安全恢复或其他独立首链缺口，不触商城源、旧十二 Run、230 L0。
+
+### P2g 第二十一增量：Mac/Colima 当前实例入口只读定位（2026-09-27，执行前）
+
+- 先核 P2g19 的“8080 离线/开发默认空库”与当前 m1/docs HEAD，不将失效或空的开发默认库当生产权威。用户已说明执行部署仅当前 Mac/Colima；只在此范围用进程/容器/端口/配置键名和已有运行日志索引定位可验证入口，不读商城源、secret 值或旧十二 Run payload。
+- 文件级范围仅本 plan 与 `w5cb4-p2g-local-runtime-entry-verification-20260927.md`，以及 D-waves/AOS/Prime 上下文；不改代码、服务配置或重启生产。只读检查 Colima/Docker 是否运行、容器清单、127.0.0.1:8080/18181 等监听、可识别 AOS API/DB 进程、受控启动脚本及当前 DB 连接配置是否有精确可用来源。每个候选入口先证归属和目标库再考虑下一波启动/读回。
+- 若没有可信当前入口，明确 `NOT_VERIFIED` 并列出恢复所需的本地只读证据/命令，不创建替代实例或复制旧快照。若找到，仍只读核签名安装/Host/开关，后续启用需另波方案与安全门。验证落盘、m1 提交、文档/记忆同步后进入下一独立可做波；此波浏览器不适用。
