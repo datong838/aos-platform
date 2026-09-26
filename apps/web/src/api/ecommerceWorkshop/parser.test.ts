@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseMediaStudioView, parseModuleHandoffCompile, parseOperationCommandExecution, parseOperationCommandObservation, parseOperationCommandPreview, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
+import { parseContentCampaignView, parseDispatchControlObservation, parseEcommerceWorkshopModuleList, parseEcommerceWorkshopModuleReadiness, parseMediaStudioView, parseModuleHandoffCompile, parseOperationCommandExecution, parseOperationCommandObservation, parseOperationCommandPreview, parseOperationCommandReadiness, parseOperationsView, parseResponsibilityAssignmentObservation, parseSourceReadinessEnvelope, parseTaskCockpitActionReceipts, parseTaskCockpitApprovalReview, parseTaskCockpitCheckpoints, parseTaskCockpitCore, parseTaskCockpitFeedback, parseTaskCockpitProductionContext, parseTaskCockpitResponsibilityHandoffs, parseTaskCockpitSkillContributions, parseTaskCockpitSteps, parseWorkshopSharedContext } from "./parser";
 
 const hash = (value: string) => `sha256:${value.repeat(64)}`;
 const blocker = { dependencyType: "aip_feature", dependencyId: "aip.task-runtime", state: "unknown", reasonCode: "AIP_FEATURE_UNVERIFIED", recoverable: true, requiredAction: "等待 canonical reader 回读", ref: null };
@@ -11,6 +11,23 @@ const module = {
   dependencyRefs: [], requiredObjects: ["Order"], requiredCapabilities: ["performance.review"], requiredAipFeatures: ["aip.task-runtime"], viewRefs: [], evalPackRefs: [], productionContractRefs: [], responsibilityTemplateRefs: [], impactCalculatorRefs: [], legacyAssetRefs: [], legacyRoutes: ["/workshop/orders"], minimumRuntimeVersion: "1.7.0", lastReceiptRef: null,
 };
 const list = { schemaVersion: "aos.ecommerce-workshop/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-08-14T00:00:00Z", dataCutoff: null, items: [module], count: 1 };
+const feedbackRef = { resourceType: "Receipt", resourceId: "receipt-1", revision: 1, contentHash: hash("a"), receiptId: null };
+const feedbackSegments = ["daily_review", "improvement_observation", "memory_candidate"].map((kind, index) => ({ sequence: index + 1, kind, title: ["内容复盘", "效果观察", "方法候选"][index], summary: "按原评审来源", state: "acknowledged", statusLabel: "已接收" }));
+const feedbackItem = { title: "内容复盘", createdAt: "2026-09-27T10:00:00Z", decisionLabel: "评审通过", segments: feedbackSegments, effectStatus: "证据不足", candidateStatus: "待治理", executionAuthorized: false, auditDetails: { commandId: "command-1", reviewReceiptRef: feedbackRef, artifactRef: feedbackRef, taskRef: feedbackRef, targetReceiptRefs: [feedbackRef, feedbackRef, feedbackRef], effectReviewRef: feedbackRef } };
+const feedback = { schemaVersion: "aos.ecommerce-workshop.feedback-read/v1", tenant: list.tenant, evaluatedAt: "2026-09-27T10:00:00Z", dataCutoff: "2026-09-27T10:00:00Z", items: [feedbackItem], hasMore: false };
+
+describe("task cockpit feedback strict read", () => {
+  it("保留三段、正式不足证据与待治理候选", () => {
+    expect(parseTaskCockpitFeedback(feedback, list.tenant)).toMatchObject({ items: [{ effectStatus: "证据不足", candidateStatus: "待治理", executionAuthorized: false }] });
+  });
+  it("拒绝假执行授权、跨租户、错序、部分回执和坏 hash", () => {
+    expect(() => parseTaskCockpitFeedback({ ...feedback, items: [{ ...feedbackItem, executionAuthorized: true }] })).toThrow();
+    expect(() => parseTaskCockpitFeedback(feedback, { orgId: "dev-org", projectId: "dev-project" })).toThrow("tenant");
+    expect(() => parseTaskCockpitFeedback({ ...feedback, items: [{ ...feedbackItem, segments: feedbackSegments.slice(1) }] })).toThrow();
+    expect(() => parseTaskCockpitFeedback({ ...feedback, items: [{ ...feedbackItem, auditDetails: { ...feedbackItem.auditDetails, targetReceiptRefs: [feedbackRef, feedbackRef, null] } }] })).toThrow("Receipt");
+    expect(() => parseTaskCockpitFeedback({ ...feedback, items: [{ ...feedbackItem, auditDetails: { ...feedbackItem.auditDetails, artifactRef: { ...feedbackRef, contentHash: "bad" } } }] })).toThrow("SHA-256");
+  });
+});
 
 describe("ecommerceWorkshop strict parser", () => {
   it("解析 exact module list/readiness 并保留 blocked 证据", () => {

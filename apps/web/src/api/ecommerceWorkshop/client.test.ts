@@ -204,3 +204,16 @@ describe("EcommerceWorkshopClient", () => {
     await expect(stale.getTaskCockpitCore({ cursor: " spaced " })).rejects.toBeInstanceOf(TypeError);
   });
 });
+
+describe("Task Cockpit feedback GET", () => {
+  it("只发有界只读请求，拒绝跨租户回显与非法 limit", async () => {
+    const payload = { schemaVersion: "aos.ecommerce-workshop.feedback-read/v1", tenant: { orgId: "org-org", projectId: "dev-project" }, evaluatedAt: "2026-09-27T10:00:00Z", dataCutoff: "2026-09-27T10:00:00Z", items: [], hasMore: false };
+    const fetch = vi.fn().mockResolvedValue(ok(payload));
+    const client = new EcommerceWorkshopClient({ fetch, getBaseUrl: () => "http://api.test", getAuthHeaders: () => ({ "X-Org-Id": "org-org", "X-Project-Id": "dev-project" }) });
+    await expect(client.getTaskCockpitFeedback(7)).resolves.toMatchObject({ items: [], hasMore: false });
+    expect(fetch).toHaveBeenCalledWith("http://api.test/v1/ecommerce-workshop/views/task-cockpit/feedback?limit=7", expect.objectContaining({ method: "GET" }));
+    await expect(client.getTaskCockpitFeedback(21)).rejects.toBeInstanceOf(TypeError);
+    fetch.mockResolvedValueOnce(ok({ ...payload, tenant: { orgId: "dev-org", projectId: "dev-project" } }));
+    await expect(client.getTaskCockpitFeedback()).rejects.toThrow("tenant");
+  });
+});

@@ -2,6 +2,7 @@ import {
   ECOMMERCE_WORKSHOP_SCHEMA_VERSION,
   SOURCE_READINESS_SCHEMA_VERSION,
   TASK_COCKPIT_SCHEMA_VERSION,
+  TASK_COCKPIT_FEEDBACK_SCHEMA_VERSION,
   DISPATCH_SCENARIO_SCHEMA_VERSION,
   BATCH_SCENARIO_SCHEMA_VERSION,
   LEARNING_SCENARIO_SCHEMA_VERSION,
@@ -74,6 +75,10 @@ import {
   type TaskCockpitApprovalReviewResponse,
   type TaskCockpitCheckpointPageResponse,
   type TaskCockpitCoreResponse,
+  type TaskCockpitFeedbackExactRef,
+  type TaskCockpitFeedbackItem,
+  type TaskCockpitFeedbackResponse,
+  type TaskCockpitFeedbackSegment,
   type TaskCockpitPage,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
@@ -728,6 +733,74 @@ export function parseTaskCockpitCore(value: unknown, expectedTenant?: WorkshopTe
   if (!Array.isArray(raw.items)) throw new TypeError("taskCockpit.core.items 必须是数组"); const items = raw.items.map(parseTaskCockpitTask); assertUnique(items.map((item) => item.taskId), "taskCockpit.core.items");
   const page = parseTaskCockpitPage(raw.page); if (page.count !== items.length) throw new TypeError("taskCockpit.core.page count 不一致");
   return { schemaVersion: TASK_COCKPIT_SCHEMA_VERSION, ...base, taskCutoff: timestamp(raw.taskCutoff, "taskCockpit.core.taskCutoff"), stateConsistency: "current_state_per_page", readiness: "degraded", blockers, items, page };
+}
+function parseFeedbackRef(value: unknown, label: string): TaskCockpitFeedbackExactRef {
+  const raw = record(value, label);
+  exact(raw, ["resourceType", "resourceId", "revision", "contentHash", "receiptId"], label);
+  return {
+    resourceType: boundedText(raw.resourceType, `${label}.resourceType`, 120),
+    resourceId: boundedText(raw.resourceId, `${label}.resourceId`, 240),
+    revision: integer(raw.revision, `${label}.revision`, 1),
+    contentHash: hash(raw.contentHash, `${label}.contentHash`),
+    receiptId: nullable(raw.receiptId, (item) => boundedText(item, `${label}.receiptId`, 240)),
+  };
+}
+function parseFeedbackSegment(value: unknown, index: number): TaskCockpitFeedbackSegment {
+  const raw = record(value, `feedback.segment[${index}]`);
+  exact(raw, ["sequence", "kind", "title", "summary", "state", "statusLabel"], `feedback.segment[${index}]`);
+  const kinds = ["daily_review", "improvement_observation", "memory_candidate"] as const;
+  const sequence = integer(raw.sequence, "feedback.sequence", 1);
+  if (sequence !== index + 1 || raw.kind !== kinds[index]) throw new TypeError("feedback segment order 漂移");
+  return {
+    sequence: sequence as 1 | 2 | 3, kind: kinds[index],
+    title: boundedText(raw.title, "feedback.title", 300),
+    summary: boundedText(raw.summary, "feedback.summary", 1000),
+    state: enumValue(raw.state, ["pending", "acknowledged", "unknown"] as const, "feedback.state"),
+    statusLabel: boundedText(raw.statusLabel, "feedback.statusLabel", 120),
+  };
+}
+function parseFeedbackItem(value: unknown): TaskCockpitFeedbackItem {
+  const raw = record(value, "feedback.item");
+  exact(raw, ["title", "createdAt", "decisionLabel", "segments", "effectStatus", "candidateStatus", "executionAuthorized", "auditDetails"], "feedback.item");
+  if (raw.decisionLabel !== "评审通过" || raw.executionAuthorized !== false) throw new TypeError("feedback cannot grant execution");
+  if (!Array.isArray(raw.segments) || raw.segments.length !== 3) throw new TypeError("feedback requires three segments");
+  const segments = raw.segments.map(parseFeedbackSegment);
+  const audit = record(raw.auditDetails, "feedback.auditDetails");
+  exact(audit, ["commandId", "reviewReceiptRef", "artifactRef", "taskRef", "targetReceiptRefs", "effectReviewRef"], "feedback.auditDetails");
+  if (!Array.isArray(audit.targetReceiptRefs) || audit.targetReceiptRefs.length !== 3) throw new TypeError("feedback target Receipt count 漂移");
+  const targetReceiptRefs = audit.targetReceiptRefs.map((item, index) => nullable(item, (ref) => parseFeedbackRef(ref, `feedback.targetReceiptRef[${index}]`)));
+  if (segments.some((segment, index) => (segment.state === "acknowledged") !== (targetReceiptRefs[index] !== null))) throw new TypeError("feedback segment Receipt 漂移");
+  const effectStatus = enumValue(raw.effectStatus, ["待观察", "证据不足", "状态待核对"] as const, "feedback.effectStatus");
+  const candidateStatus = enumValue(raw.candidateStatus, ["尚未形成", "待治理", "已驳回", "已隔离", "已批准待入库", "已入库"] as const, "feedback.candidateStatus");
+  const effectReviewRef = nullable(audit.effectReviewRef, (item) => parseFeedbackRef(item, "feedback.effectReviewRef"));
+  if ((effectStatus === "证据不足") !== (effectReviewRef !== null) || (candidateStatus !== "尚未形成") !== (targetReceiptRefs[2] !== null)) throw new TypeError("feedback governance evidence 漂移");
+  if ((targetReceiptRefs[1] !== null && targetReceiptRefs[0] === null) || (targetReceiptRefs[2] !== null && (targetReceiptRefs[1] === null || effectReviewRef === null))) throw new TypeError("feedback checkpoint order 漂移");
+  return {
+    title: boundedText(raw.title, "feedback.item.title", 300), createdAt: timestamp(raw.createdAt, "feedback.createdAt"),
+    decisionLabel: "评审通过", segments, effectStatus, candidateStatus, executionAuthorized: false,
+    auditDetails: {
+      commandId: boundedText(audit.commandId, "feedback.commandId", 240),
+      reviewReceiptRef: parseFeedbackRef(audit.reviewReceiptRef, "feedback.reviewReceiptRef"),
+      artifactRef: parseFeedbackRef(audit.artifactRef, "feedback.artifactRef"),
+      taskRef: parseFeedbackRef(audit.taskRef, "feedback.taskRef"),
+      targetReceiptRefs, effectReviewRef,
+    },
+  };
+}
+export function parseTaskCockpitFeedback(value: unknown, expectedTenant?: WorkshopTenant): TaskCockpitFeedbackResponse {
+  const raw = record(value, "feedback");
+  exact(raw, ["schemaVersion", "tenant", "evaluatedAt", "dataCutoff", "items", "hasMore"], "feedback");
+  if (raw.schemaVersion !== TASK_COCKPIT_FEEDBACK_SCHEMA_VERSION) throw new TypeError("feedback schemaVersion 漂移");
+  const tenant = parseTenant(raw.tenant);
+  if (expectedTenant && (tenant.orgId !== expectedTenant.orgId || tenant.projectId !== expectedTenant.projectId)) throw new TypeError("feedback tenant 漂移");
+  if (!Array.isArray(raw.items) || raw.items.length > 20) throw new TypeError("feedback items 超限");
+  const items = raw.items.map(parseFeedbackItem);
+  const keys = items.map((item) => item.auditDetails.commandId);
+  if (new Set(keys).size !== keys.length) throw new TypeError("feedback command duplicate");
+  return { schemaVersion: TASK_COCKPIT_FEEDBACK_SCHEMA_VERSION, tenant,
+    evaluatedAt: timestamp(raw.evaluatedAt, "feedback.evaluatedAt"),
+    dataCutoff: timestamp(raw.dataCutoff, "feedback.dataCutoff"), items,
+    hasMore: bool(raw.hasMore, "feedback.hasMore") };
 }
 export function parseTaskCockpitSteps(value: unknown): TaskCockpitStepPageResponse {
   const raw = record(value, "taskCockpit.steps"); exact(raw, ["schemaVersion", "tenant", "runId", "evaluatedAt", "membershipCutoff", "stateConsistency", "items", "page"], "taskCockpit.steps"); const base = parseTaskCockpitBase(raw, "taskCockpit.steps");

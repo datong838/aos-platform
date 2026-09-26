@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EcommerceWorkshopClientError, type AnalystViewResponse, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
+import { EcommerceWorkshopClientError, type AnalystViewResponse, type DispatchControlObservation, type DispatchScenarioContribution, type ResponsibilityAssignmentObservation, type TaskCockpitActionReceiptResponse, type TaskCockpitApprovalReviewResponse, type TaskCockpitCoreResponse, type TaskCockpitFeedbackResponse, type TaskCockpitProductionContextResponse, type TaskCockpitResponsibilityHandoffResponse, type TaskCockpitSkillContributionResponse } from "../../api/ecommerceWorkshop";
 import type { BatchScenarioContribution } from "../../api/ecommerceWorkshop";
 import type { AgentCatalogResponse, CapabilityCatalogResponse } from "../../api/aipAgentControl";
 import type { ArtifactRef, MemoryAuthorityItem, MemoryCandidate, MemoryImprovementObservation, VersionedAssetRef } from "../../api/aipMemory/contracts";
@@ -104,6 +104,37 @@ describe("TaskCockpitPage", () => {
   let host: HTMLDivElement; let root: Root;
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); window.history.replaceState({}, "", "/"); });
+
+  it("在独立只读区显示原评审三段，不将待治理候选当作 Wiki 已入库，审计默认折叠", async () => {
+    const ref = { resourceType: "Receipt", resourceId: "secret-receipt", revision: 1, contentHash: `sha256:${"a".repeat(64)}`, receiptId: null };
+    const feedback: TaskCockpitFeedbackResponse = {
+      schemaVersion: "aos.ecommerce-workshop.feedback-read/v1", tenant: core().tenant,
+      evaluatedAt: "2026-09-27T10:00:00Z", dataCutoff: "2026-09-27T10:00:00Z", hasMore: false,
+      items: [{ title: "内容复盘", createdAt: "2026-09-27T10:00:00Z", decisionLabel: "评审通过",
+        segments: [
+          { sequence: 1, kind: "daily_review", title: "内容复盘", summary: "原内容评审已通过", state: "acknowledged", statusLabel: "已接收" },
+          { sequence: 2, kind: "improvement_observation", title: "效果观察", summary: "等待可比较证据", state: "acknowledged", statusLabel: "已接收" },
+          { sequence: 3, kind: "memory_candidate", title: "方法候选", summary: "等待知识治理", state: "acknowledged", statusLabel: "已接收" },
+        ], effectStatus: "证据不足", candidateStatus: "待治理", executionAuthorized: false,
+        auditDetails: { commandId: "secret-command", reviewReceiptRef: ref, artifactRef: ref, taskRef: ref, targetReceiptRefs: [ref, ref, ref], effectReviewRef: ref } }],
+    };
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitFeedback: vi.fn().mockResolvedValue(feedback), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    const area = host.querySelector('[aria-label="内容评审后的经营反馈"]')!;
+    expect(area.textContent).toContain("效果：证据不足 · 方法候选：待治理");
+    expect(area.textContent).toContain("等待知识治理");
+    expect(area.querySelector("details")?.open).toBe(false);
+    expect(area.querySelector("button")).toBeNull();
+    expect(client.getTaskCockpitFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it("反馈读取失败不保留旧卡，也不伪造空成功", async () => {
+    const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), getTaskCockpitFeedback: vi.fn().mockRejectedValue(new Error("offline")), ...unreadDetails };
+    await act(async () => root.render(<TaskCockpitPage client={client} />));
+    const area = host.querySelector('[aria-label="内容评审后的经营反馈"]')!;
+    expect(area.querySelector('[role="alert"]')?.textContent).toContain("权威读取失败");
+    expect(area.querySelector("article")).toBeNull();
+  });
 
   it("shows the W8-12 release decision as NO_GO without approval flag or release controls", async () => {
     const client = { getTaskCockpitCore: vi.fn().mockResolvedValue(core()), ...unreadDetails };

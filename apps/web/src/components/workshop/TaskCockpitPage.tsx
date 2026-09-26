@@ -11,6 +11,7 @@ import {
   type TaskCockpitApprovalReviewResponse,
   type TaskCockpitCheckpointPageResponse,
   type TaskCockpitCoreResponse,
+  type TaskCockpitFeedbackResponse,
   type TaskCockpitProductionContextResponse,
   type TaskCockpitResponsibilityHandoffResponse,
   type ResponsibilityAssignmentObservation,
@@ -33,7 +34,7 @@ import type { TaskSnapshot } from "../../api/aipTasks/contracts";
 import { aipMemorySdk } from "../../api/aipMemory/client";
 import type { MemoryAuthorityItem, MemoryCandidate, MemoryImprovementObservation } from "../../api/aipMemory/contracts";
 
-type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario">>;
+type CockpitClient = Pick<typeof ecommerceWorkshopClient, "getTaskCockpitCore" | "listTaskCockpitRunSteps" | "listTaskCockpitRunCheckpoints" | "getTaskCockpitRunProductionContext" | "getTaskCockpitRunResponsibilityHandoffs" | "compileTaskCockpitRunHandoff" | "getTaskCockpitRunApprovalReview" | "getTaskCockpitRunActionReceipts" | "getTaskCockpitRunSkillContributions"> & Partial<Pick<typeof ecommerceWorkshopClient, "getAnalystView" | "getResponsibilityAssignmentObservation" | "getDispatchControlObservation" | "getTaskCockpitDispatchScenario" | "getTaskCockpitBatchScenario" | "getTaskCockpitFeedback">>;
 type HandoffCommandClient = Pick<typeof aipAgentControl, "issueHandoff" | "consumeHandoff" | "listHandoffDecisions" | "createHandoffDecision">;
 type TaskCommandClient = Pick<typeof aipTasksSdk, "createTask">;
 type CapabilityCatalogClient = Pick<typeof aipAgentControl, "listCapabilities" | "listCatalog">;
@@ -55,6 +56,7 @@ type MemoryReviewState = {
   candidates: MemorySourceState<MemoryCandidate>;
   memories: MemorySourceState<MemoryAuthorityItem>;
 };
+type FeedbackReadState = { phase: "loading" | "ready" | "failed"; response: TaskCockpitFeedbackResponse | null };
 const IDLE_MEMORY_REVIEW: MemoryReviewState = { observations: { phase: "idle", items: [] }, candidates: { phase: "idle", items: [] }, memories: { phase: "idle", items: [] } };
 const TERMINAL_TASK_STATUSES: readonly TaskCockpitTaskStatus[] = ["completed", "failed", "cancelled", "rolled_back"];
 const RUN_STATUS_LABELS: Record<string, string> = { queued: "已排队", running: "执行中", pausing: "暂停中", paused: "已暂停", succeeded: "执行成功", failed: "执行失败", cancelled: "已取消", unknown: "状态未知" };
@@ -182,6 +184,33 @@ function stateFor(phase: CorePhase): AsyncState {
   return phase;
 }
 function formatTime(value: string | null): string { return value ? new Date(value).toLocaleString("zh-CN", { hour12: false }) : "尚未发生"; }
+function TaskCockpitFeedbackRead({ state }: { state: FeedbackReadState }) {
+  return <section className="task-cockpit-review-section" aria-label="内容评审后的经营反馈">
+    <h2>内容评审后的经营反馈</h2>
+    <p>原评审通过后形成的复盘、效果观察与方法候选；这里只读，不代表当前可执行授权。</p>
+    {state.phase === "failed" ? <p role="alert">经营反馈权威读取失败；不显示旧结果，也不推断效果或 Wiki 入库。</p> : null}
+    {state.phase === "loading" ? <p role="status">正在读取原内容评审反馈</p> : null}
+    {state.phase === "ready" && state.response?.items.length === 0 ? <p role="status">当前没有可回读的内容评审反馈。</p> : null}
+    {state.phase === "ready" && state.response ? <>
+      {state.response.items.map((item) => <article key={item.auditDetails.commandId}>
+        <h3>{item.title}</h3>
+        <p>评审通过 · 效果：{item.effectStatus} · 方法候选：{item.candidateStatus}</p>
+        <ol>{item.segments.map((segment) => <li key={segment.sequence}>
+          <strong>{segment.title}</strong><span> · {segment.statusLabel}</span>
+          <p>{segment.summary}</p>
+        </li>)}</ol>
+        <details><summary>查看来源与审计引用</summary>
+          <p>反馈命令：{item.auditDetails.commandId}</p>
+          <p>原内容：{item.auditDetails.artifactRef.resourceId} · {item.auditDetails.artifactRef.contentHash}</p>
+          <p>原任务：{item.auditDetails.taskRef.resourceId}</p>
+          <p>正式效果复核：{item.auditDetails.effectReviewRef?.resourceId ?? "尚未形成"}</p>
+          <p>目标回执：{item.auditDetails.targetReceiptRefs.map((ref) => ref?.resourceId ?? "未接收").join(" · ")}</p>
+        </details>
+      </article>)}
+      {state.response.hasMore ? <p>仅显示最近 20 条；其余反馈尚未在此分页呈现。</p> : null}
+    </> : null}
+  </section>;
+}
 function blockerMatches(dependency: string, tokens: readonly string[]): boolean {
   const normalized = dependency.toLowerCase();
   return tokens.some((token) => normalized.includes(token));
@@ -602,6 +631,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
   const [analystSuggestions, setAnalystSuggestions] = useState<AnalystSuggestionState>({ phase: "idle", response: null });
   const [capabilityCatalog, setCapabilityCatalog] = useState<CapabilityCatalogState>({ phase: "idle", capabilities: null, agents: null });
   const [memoryReview, setMemoryReview] = useState<MemoryReviewState>(IDLE_MEMORY_REVIEW);
+  const [feedbackRead, setFeedbackRead] = useState<FeedbackReadState>({ phase: "loading", response: null });
   const catalogClient = capabilityClient ?? (client === ecommerceWorkshopClient ? aipAgentControl : null);
   const reviewClient = memoryClient ?? (client === ecommerceWorkshopClient ? aipMemorySdk : null);
   const coreRequest = useRef(0);
@@ -638,6 +668,13 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
     setPhase(preserve && response ? "stale" : "loading");
     setDetail(null);
     const scenarioRequestId = ++scenarioRequest.current;
+    setFeedbackRead({ phase: "loading", response: null });
+    if (client.getTaskCockpitFeedback) {
+      void client.getTaskCockpitFeedback().then(
+        (next) => { if (scenarioRequestId === scenarioRequest.current) setFeedbackRead({ phase: "ready", response: next }); },
+        () => { if (scenarioRequestId === scenarioRequest.current) setFeedbackRead({ phase: "failed", response: null }); },
+      );
+    } else setFeedbackRead({ phase: "failed", response: null });
     if (catalogClient) {
       setCapabilityCatalog({ phase: "loading", capabilities: null, agents: null });
       void Promise.all([catalogClient.listCapabilities(), catalogClient.listCatalog()]).then(
@@ -924,6 +961,7 @@ export function TaskCockpitPage({ client = ecommerceWorkshopClient, handoffClien
 
   return <section className="task-cockpit-page" aria-label="日常任务总控只读视图">
     <TaskCockpitVisualSurface response={response} analystSuggestions={analystSuggestions} capabilityCatalog={capabilityCatalog} memoryReview={memoryReview} phase={phase} status={status} onStatusChange={(next) => { setStatus(next); load(next); }} onReload={() => load(status, undefined, Boolean(response))} onCreateTask={createInternalTask} />
+    <TaskCockpitFeedbackRead state={feedbackRead} />
     <details className="task-cockpit-audit-context">
       <summary><span>运行、发布与审计上下文</span><small>保持原完整功能；默认收起以恢复视觉稿首屏结构</small></summary>
       <div>
