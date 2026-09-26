@@ -84,7 +84,9 @@ from aos_api.ecommerce_growth_memory_candidate_target import (
 from aos_api.ecommerce_growth_content_return_target import (
     BoundContentReturnTarget, ContentReturnFeedbackWorker, CurrentContentReturnConsumer,
 )
-from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
+from aos_api.ecommerce_content_repair_brief_authority import (
+    require_repair_brief, require_frozen_repair_brief,
+)
 from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
@@ -1080,8 +1082,18 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                     require_repair_brief(conn, SCOPE, prior_brief_ref, prior_brief_ref,
                         decision_ref, artifact_source, task_id=proof["task_id"],
                         reason=decision.reason)
+            frozen = contracts.freeze_brief(SCOPE, "fixture-reviewer",
+                revised.brief_id, revised.version, "content-p2g-original-freeze-repair-brief")
+            assert frozen.revision == revised.revision + 1
+            frozen_ref = {"resourceType": "TaskBriefRevision",
+                "resourceId": frozen.brief_id, "revision": frozen.revision,
+                "contentHash": "sha256:" + frozen.content_hash}
+            with runtime_connect(SCOPE) as conn:
+                require_frozen_repair_brief(conn, SCOPE, frozen_ref, prior_brief_ref,
+                    decision_ref, artifact_source, task_id=proof["task_id"],
+                    reason=decision.reason)
             repair_command = deepcopy(command)
-            repair_command["authorityRefs"]["brief"] = revised_ref
+            repair_command["authorityRefs"]["brief"] = frozen_ref
             repair_command["returnDecisionRef"] = decision_ref
             repair_command["idempotencyKey"] = decision.attempt_idempotency_key
             repair_command["requestHash"] = _analysis_command_hash({

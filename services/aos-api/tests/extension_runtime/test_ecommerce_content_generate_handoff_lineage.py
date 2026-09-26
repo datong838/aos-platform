@@ -548,7 +548,7 @@ def test_content_generate_return_requires_current_queued_attempt_and_new_approva
     calls = []
     approval_calls = []
     monkeypatch.setattr(
-        "aos_api.ecommerce_growth_runtime_adapters.require_repair_brief",
+        "aos_api.ecommerce_growth_runtime_adapters.require_frozen_repair_brief",
         lambda *args, **kwargs: calls.append((args, kwargs)),
     )
     monkeypatch.setattr(

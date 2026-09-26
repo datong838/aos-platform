@@ -27,7 +27,7 @@ from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
     canonical_hash as production_contract_canonical_hash,
 )
-from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
+from aos_api.ecommerce_content_repair_brief_authority import require_frozen_repair_brief
 from aos_api.ecommerce_content_repair_approval_authority import require_repair_approval_binding
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
@@ -4028,7 +4028,7 @@ class ContentGenerateHostService:
         if type(prior_brief) is not dict:
             raise ValueError("content generate reviewed Brief source unavailable")
         _content_exact_ref(prior_brief, "TaskBriefRevision")
-        require_repair_brief(
+        require_frozen_repair_brief(
             transaction, scope,
             parsed["authorities"]["brief"].model_dump(
                 mode="json", by_alias=True, exclude_none=True),

@@ -5,7 +5,9 @@ from types import SimpleNamespace
 import pytest
 
 from aos_api.aip_production_contract_store import canonical_hash
-from aos_api.ecommerce_content_repair_brief_authority import require_repair_brief
+from aos_api.ecommerce_content_repair_brief_authority import (
+    require_repair_brief, require_frozen_repair_brief,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -88,3 +90,49 @@ def test_repair_brief_requires_formal_revision_and_receipt():
         require_repair_brief(_Transaction(row), SCOPE, brief, prior,
                              {**decision, "contentHash": "sha256:" + "b" * 64},
                              artifact, task_id="task-1", reason="核对商品事实")
+
+
+class _FrozenTransaction:
+    def __init__(self, frozen_row, revised_row):
+        self.frozen_row = frozen_row
+        self.revised_row = revised_row
+
+    def execute(self, sql, _params):
+        if "task_brief.freeze" in sql:
+            return SimpleNamespace(fetchall=lambda: [self.frozen_row])
+        assert "task_brief.revise" in sql
+        return SimpleNamespace(fetchall=lambda: [self.revised_row])
+
+
+def test_frozen_repair_brief_requires_both_public_receipts():
+    draft, prior, decision, artifact, revised_row = _authority()
+    frozen = {**draft, "revision": 3}
+    frozen_row = {
+        "task_id": "task-1", "current_revision": 3, "version": 3,
+        "brief_type": "content_campaign", "schema_ref": revised_row["schema_ref"],
+        "spec": revised_row["spec"], "content_hash": revised_row["content_hash"],
+        "lifecycle": "frozen", "created_by": "reviewer",
+        "draft_brief_type": "content_campaign",
+        "draft_schema_ref": revised_row["schema_ref"],
+        "draft_spec": revised_row["spec"],
+        "draft_content_hash": revised_row["content_hash"],
+        "draft_lifecycle": "draft",
+        "receipt_request_hash": canonical_hash({"briefId": "brief-1", "expectedVersion": 2}),
+        "receipt_result_ref": {**frozen, "contentHash": revised_row["content_hash"]},
+        "receipt_created_by": "reviewer",
+    }
+    active_revised = {**revised_row, "current_revision": 3, "version": 3}
+    require_frozen_repair_brief(_FrozenTransaction(frozen_row, active_revised),
+        SCOPE, frozen, prior, decision, artifact, task_id="task-1", reason="核对商品事实")
+    for drift in (
+        {"draft_lifecycle": "unknown"},
+        {"draft_content_hash": HASH_A},
+        {"receipt_request_hash": HASH_A},
+        {"receipt_result_ref": {**frozen_row["receipt_result_ref"], "contentHash": HASH_A}},
+        {"current_revision": 2},
+    ):
+        with pytest.raises(ValueError):
+            require_frozen_repair_brief(
+                _FrozenTransaction({**frozen_row, **drift}, active_revised),
+                SCOPE, frozen, prior, decision, artifact, task_id="task-1",
+                reason="核对商品事实")
