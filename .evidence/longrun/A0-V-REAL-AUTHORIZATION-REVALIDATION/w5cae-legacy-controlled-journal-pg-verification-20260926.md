@@ -13,3 +13,7 @@
 7. 方案与执行一致：旧 Journal/CompletedInput 的 fake asset authority 路径回归 GREEN，但不能证明当前全机 Fleet、Owner/Store effect、非空商城源、原 12 Run 或 A0-V 真实准入。34 项 current incomplete 不因本波测试消除。
 8. 本 verification 提交后，更新 AOS 项目上下文与 Prime 受管记忆并读回，保留无关脏文件、不 push。
 9. 下一波：审计其余旧 PG 跳过项与真实外部门禁，只做安全且能缩小技术风险的工作；无 Fleet/历史行证明或正式不接受业务结果的退休选择，不执行真实 closure/ACK/replay。230 L0 挂起，dev-org 只作零 canary。
+
+## 记忆读回
+
+docs 上下文与受管记忆 `docs/m1@76d22ba7`；CAS `AOS-000728→AOS-000729`，`delivery_status=W5CAE_LEGACY_JOURNAL_16_OF_16_ISOLATED_GREEN_REAL_A0V_FROZEN`，下一门未变，`incomplete=34`。`memory-status` GREEN_WITH_WARNINGS：共享/上下文/Prime 强一致投影 CURRENT、Codex 注记 PENDING_ASYNC；`memory-validate` GREEN。不把旧测试通过提升为真实业务权威。
