@@ -13,6 +13,8 @@
 
    施工修订（RED 后、编码前）：`a0v_102` 的下一阶段 pending 意图必须由 W5CAZ 的 Run ack 所在事务同步写入；ack/put 任一失败时 Plan/Run 启动整体回滚，已持久 claim 仍不重发。此前未上线的 W5CAZ Worker 默认关闭，故不回填既有 accepted 结果；若未来发现迁移前 accepted 行，冻结并走正式对账，而非扫描补发。下一阶段 claim 与 AgentRun 创建则分离事务，提交未知一律不自动重试。
 3. 新增 `services/aos-api/aos_api/ecommerce_content_agentrun_owner.py` 的 tenant-bounded 默认关闭自然消费者，及 `main.py` 同进程 ACTIVE Host/runtime-only 身份门。先让 exact 当前 AgentInstance/Skill/Logic/Route/Policy/TaskRun 形成唯一 queued AgentRun，并独立读回 Receipt；容量和 `content.generate` 命令在另一个明确的 claim 门，不得把 queued 当可生成内容。
+
+   实码复审补充：W5CAZ 内部 PlanStep 当前尚无 `assigneeRefs`/`responsibilitySlotIds`，故单靠 AgentRun Owner 查一个“当前内容官”会发生未获批准的动态指派。先在 W5CAZ 创建内部 Plan 的事务里，从当前且唯一的 frozen/READY/COMPLETE `content.generate` 责任槽解析 AgentInstance 与 Capability，写入生成步骤的责任槽、assignee 与 exact 责任计划依赖；若无唯一当前槽，必须在 claim 前拒绝而非花费 attempt。W5CB0 之后以该不可变 Plan 绑定再重验当前责任、Skill/Logic/Route/Policy，任何漂移不创建 AgentRun。隔离 PG 与负例应证明此绑定。
 4. 复用 `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_capability_runtime.py` 的严格请求，所有 12 个 authority、价格、审批、预算上界、factSourceRefs、容量需由当前 Owner 读取并精确编译，禁止页面或工程师补引用。预算 held/PENDING 同原 Host 事务提交；Provider 提交和调用仍归原 W5CAR/AS Worker，开关不自行开启。
 5. 若上位方案所需的 AgentInstance/Skill/Route/审批/价格/容量当前权威无法证明，本波只交付不产生副作用的持久下一阶段门和证明测试，verification 明列阻断；不得捏造 Ref、硬编码角色或以 mock 绿当真实产物。
 
