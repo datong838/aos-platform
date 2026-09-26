@@ -17,3 +17,9 @@
 
 - 安装不可在生产库默默迁移或开启 Worker。应有显式目标 DB 与 scope、schema exact head、运行端口/Worker 唯一性预检；现有配置和内容合同非空/多义一律停，先只读对账。每个正式 API 有独立提交，因此未知结果必须冻结边界，不能把“幂等键相同”当成未知重发许可。
 - 本 4/4 步只有受控 bootstrap 在隔离 PG 完整正反证明、当前实例读回与安装决策均完成，才可称 P2f-b 完成。否则 verification 标记部分代码门与实际缺口。P2g 才实现真实已结算 Artifact 的主体 Eval、待办、人工决定与 TaskRun/反馈续跑；不得因安装门拖延与之不冲突的离线编码准备。
+
+## 第 1 项只读现场复核与细分施工（2026-09-27）
+
+- 经带容器身份核验的 `aos_meta_head` 只读连接重查：`alembic_version=a0v_092`、`org-org/dev-project` 内容预审 Graph 数 0、`subjectKind=ecommerce_content` 合同数 0。当前实例不具备 `a0v_101`–`105` 内容链 schema，不得进入安装写阶段。
+- API 存在多个独立 commit：Graph、Dataset/Suite、EvalRun/Report、ReleaseGate、Publication、合同 create/freeze。第一子步先做只读 preflight：精确 schema、目标 Graph、专用 Suite 与主体合同 inventory；全空才标记 `INSTALLABLE`，现有完整权威经既有 reader 验证才标记 `INSTALLED`，任一部分状态标记 `RECONCILE_REQUIRED` 且不写。该子步不能声称覆盖未知提交后的正式退休/恢复，后续安装 executor 必须逐边界独立读回。
+- 本子步先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_pre_review_bootstrap.py` 写 RED，再新增 `services/aos-api/aos_api/ecommerce_content_pre_review_bootstrap.py`。只读预检可在当前实例运行，预期报告 schema 不足，不迁移；下一子步才实现受控安装。
