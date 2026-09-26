@@ -20,9 +20,11 @@ from aos_api.pipeline_snapshot_stalled_group_closure import StalledSnapshotGroup
 
 
 @pytest.mark.parametrize("stored", ["qualified-runtime"], indirect=True)
-@pytest.mark.parametrize("with_empty_input", [False, True])
+@pytest.mark.parametrize("with_empty_input,with_empty_derived", [
+    (False, False), (True, False), (True, True),
+])
 def test_nonzero_effects_survive_and_mid_update_failure_rolls_back(
-        definition_case, stored, with_empty_input):
+        definition_case, stored, with_empty_input, with_empty_derived):
     conn, definition_owner, args = definition_case
     initial = definition_owner.configure(conn, **args)
     shared = {key: args[key] for key in ("scope", "definition_id", "actor")}
@@ -58,6 +60,8 @@ def test_nonzero_effects_survive_and_mid_update_failure_rolls_back(
                 source_id=draft.source_id,
                 source_revision=draft.source_configuration_ref.resource_id.removeprefix(
                     "source-config-"), pipeline_hash=draft.graph_hash)
+            if with_empty_derived and not leaves:
+                assert journal.save_derived(conn, args["scope"], run, ())["commands"] == []
             leaves.append({"runId": run, "envelopeHash": _digest(parent),
                            "rowsHash": observed_rows_hash([]), "rowCount": 0})
         manifest = {"members": leaves}
@@ -121,6 +125,7 @@ def test_nonzero_effects_survive_and_mid_update_failure_rolls_back(
     assert receipt["effectEvidence"]["sourceClaimCount"] == 12
     assert receipt["effectEvidence"]["groupInputCount"] == int(with_empty_input)
     assert receipt["effectEvidence"]["ingressCommandCount"] == (12 if with_empty_input else 0)
+    assert receipt["effectEvidence"]["derivedCommandCount"] == int(with_empty_derived)
     conn.execute("RESET SESSION AUTHORIZATION")
     conn.execute("RESET ROLE")
     for table, expected in (("pipeline_snapshot_group_claim", 1),
@@ -134,5 +139,7 @@ def test_nonzero_effects_survive_and_mid_update_failure_rolls_back(
                             "WHERE group_id=%s", (group_id,)).fetchone()["n"] == 1
         assert conn.execute("SELECT count(*) AS n FROM ecommerce_ingress_command "
                             "WHERE run_id=ANY(%s)", (run_ids,)).fetchone()["n"] == 12
+    assert conn.execute("SELECT count(*) AS n FROM ecommerce_ingress_derived_command "
+                        "WHERE run_id=ANY(%s)", (run_ids,)).fetchone()["n"] == int(with_empty_derived)
     assert conn.execute("SELECT count(*) AS n FROM meta_schedule_run "
                         "WHERE id=ANY(%s) AND status='failed'", (run_ids,)).fetchone()["n"] == 12
