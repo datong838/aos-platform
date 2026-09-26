@@ -13,3 +13,9 @@
 5. 方案/代码一致性和风险复审，verification 落盘后 m1 commit，更新 AOS/Prime 上下文。下一波返回首链最早缺口：D01 当前 selector/自然结果，或 BG-04 内容能力与人工续跑。
 
 停止门：没有当前已批准 GrowthPlan/Decision、exact Evidence 与身份/租户/安装权威时，不发布武器包或实际内容任务；未知结果只读对账，不重发；Provider/对外发布保持关闭。旧 12 Run 不重播，不读商城源，230 L0 挂起，dev-org 零 canary，m1 单写不 push。
+
+## 第 1/5 步现场复核（开码前）
+
+`GrowthPlanRevision` 只有 objective/constraints/items/DecisionRef，`DecisionSummaryRevision` 有来源和不确定性，却均无完整的单商品 `fitFor`/`notFitFor`/禁说/真人交接结构。现有 Review `_strict_review_accept_command` 只接受固定 `taskSpec` 字段；`_review_lineage` 保存的 TaskBrief spec 是 objective/channels/audience/timeWindow/constraints 与四 Artifact/Plan 引用，没有 `SalesWeaponBriefDraft`、DecisionRef 或逐主张 EvidenceRef。AIP `TaskBriefRevision.spec` 本身是通用 JSON，存取能力足够，但当前 Review 命令无法传入并独立验证完整武器包。故**不能**只靠原四 Artifact/Plan/Decision 在 Review 入口推断一个已批准武器包；原方案第 3 步“保持严格命令字段不变”与目标相冲突。第 2 步 RED 暂不写一个要求当前接口无法表达的假测试。
+
+下一步先补精确 v2 合同设计并修订本方案：定义武器包的持久 exact Ref、审批与来源读回、v1/v2 并存的严格命令版本；v1 旧回放不变，v2 缺任一权威即拒绝。审批之前没有自动 Task 创建。方案复审完成后才写 RED/最小代码，避免草稿绕过审批。
