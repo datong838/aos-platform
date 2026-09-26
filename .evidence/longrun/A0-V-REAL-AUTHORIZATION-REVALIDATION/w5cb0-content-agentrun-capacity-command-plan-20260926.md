@@ -10,6 +10,8 @@
 
 1. RED：新增 `services/aos-api/tests/extension_runtime/test_ecommerce_content_agentrun_owner.py` 与隔离 PG 门，覆盖 accepted Review/Run 唯一出队、同租户当前 full group、exact Task/Plan/Run 与 Approved GrowthPlan/Brief/四来源、撤销/旧 epoch、已有 AgentRun Receipt、未知提交和 dev-org 零 canary。
 2. 先核现有公共 AgentRun、容量及 `content.generate` 请求合同是否有可借用的同事务执行入口；不得绕过 `AipAgentRunService`、`AipModelCapacityReservationGate`、预算 Owner。必要的 `a0v_102` 持久 intent/claim/ack 在 Review/Run accepted 后独立写入，先 claim 唯一 attempt，再创建 queued AgentRun。若创建与容量/命令无法原子化，拆为两个持久阶段，绝不对 claimed 重新发。
+
+   施工修订（RED 后、编码前）：`a0v_102` 的下一阶段 pending 意图必须由 W5CAZ 的 Run ack 所在事务同步写入；ack/put 任一失败时 Plan/Run 启动整体回滚，已持久 claim 仍不重发。此前未上线的 W5CAZ Worker 默认关闭，故不回填既有 accepted 结果；若未来发现迁移前 accepted 行，冻结并走正式对账，而非扫描补发。下一阶段 claim 与 AgentRun 创建则分离事务，提交未知一律不自动重试。
 3. 新增 `services/aos-api/aos_api/ecommerce_content_agentrun_owner.py` 的 tenant-bounded 默认关闭自然消费者，及 `main.py` 同进程 ACTIVE Host/runtime-only 身份门。先让 exact 当前 AgentInstance/Skill/Logic/Route/Policy/TaskRun 形成唯一 queued AgentRun，并独立读回 Receipt；容量和 `content.generate` 命令在另一个明确的 claim 门，不得把 queued 当可生成内容。
 4. 复用 `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/content_capability_runtime.py` 的严格请求，所有 12 个 authority、价格、审批、预算上界、factSourceRefs、容量需由当前 Owner 读取并精确编译，禁止页面或工程师补引用。预算 held/PENDING 同原 Host 事务提交；Provider 提交和调用仍归原 W5CAR/AS Worker，开关不自行开启。
 5. 若上位方案所需的 AgentInstance/Skill/Route/审批/价格/容量当前权威无法证明，本波只交付不产生副作用的持久下一阶段门和证明测试，verification 明列阻断；不得捏造 Ref、硬编码角色或以 mock 绿当真实产物。
