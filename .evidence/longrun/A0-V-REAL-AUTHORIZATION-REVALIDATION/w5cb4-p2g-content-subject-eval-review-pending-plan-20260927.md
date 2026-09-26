@@ -58,3 +58,9 @@
 
 - `disposable_database` 的模板经只读核对实际是 `a0v_011`，现有 `apply_migrations` 只手动补 `a0v_012/013` 而不推进 Alembic 版本；所以前一提交 `25e162bd` 所称“完整迁移库”应改为“旧模板加两项迁移的隔离库”。Budget held 的 API/重放证明有效，但**全迁移约束未证明**。
 - 本波先在测试中只针对 `a0v_growth_graph_test_*` 精确克隆使用 Alembic 正式 upgrade head，核版本和 dispatch lock 函数；不接触 `aos_meta_head` 或真实安装。若升级失败，记录具体迁移缺口并停止“全迁移”称谓，不逐个补函数假造环境。升级后重跑预算与 runtime Receipt 测试，再决定后续受控结果路线。
+
+### P2g 第三增量：同库受控结果与结算（2026-09-27，编码前）
+
+- 继续只改 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 与必要的生产缺陷最小文件；仍用正式 Alembic head 的一次性克隆、同一原 Task/Run/Reservation/command/runtime Receipt。先读现有 `ContentExecutionWorker`、`ContentResultConsumer`、`ContentUsageRecorder` 与 ProviderInstanceRevision 权威，形成文件级测试夹具；需要的 Provider/route/price 必须经正式数据库约束和现有 Owner API，不以猴补 `_provider_authority` 过门。
+- 在测试中使用受控本地响应，不做网络 Provider 外呼；`ContentExecutionWorker` 正式提交预算并先持久 Provider 请求 Receipt，随后持久结果；单独 `ContentResultConsumer` 记两条 measured Usage Receipt、可读 Artifact 和 settled 预算。受控 prepare/context 接缝必须逐项标注，不能写成当前真实方法/商品来源已验收；无结果/未知边界不重发。
+- RED 先证明已持久结果能由原消费路径结算且同一 invocation 的 Receipt/Artifact/TaskRun 身份一致；负向注入结算失败应整个 Usage/Artifact 事务回滚并保留原结果供只读对账。若最小正式 Provider 权威 fixture 过大，列明 API/表/FK 缺口后转做不依赖它的首链 Review Owner 安全门，不把单一测试夹具无限延期。
