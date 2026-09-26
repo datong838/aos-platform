@@ -5797,7 +5797,7 @@ class ContentReviewHostService:
             or type(report["eval_contract_ref"]) is not dict
             or report["eval_contract_ref"].get("resourceType") != "EvalContractRevision"
             or type(report["gate_policy_ref"]) is not dict
-            or report["gate_policy_ref"].get("resourceType") != "MediaGatePolicyRevision"
+            or report["gate_policy_ref"] != report["eval_contract_ref"]
         ):
             raise ValueError("content review EvalReport subject lineage drifted")
         step = transaction.execute(

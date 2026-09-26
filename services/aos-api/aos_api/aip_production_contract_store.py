@@ -4248,6 +4248,8 @@ class AipProductionContractStore:
         ).fetchone()
         subject = AipProductionContractStore._load(report["subject_artifact_ref"])
         attempt = AipProductionContractStore._load(report["stage_attempt_ref"])
+        contract_ref = AipProductionContractStore._load(report["eval_contract_ref"])
+        policy_ref = AipProductionContractStore._load(report["gate_policy_ref"])
         if (
             subject != {
                 "resourceType": "Artifact", "resourceId": artifact_ref.artifact_id,
@@ -4256,8 +4258,9 @@ class AipProductionContractStore:
             or not isinstance(attempt, dict)
             or attempt.get("runId") != artifact["run_id"]
             or attempt.get("stepKey") != "content_generate"
-            or not report["eval_contract_ref"]
-            or not report["gate_policy_ref"]
+            or not isinstance(contract_ref, dict)
+            or contract_ref.get("resourceType") != "EvalContractRevision"
+            or policy_ref != contract_ref
         ):
             raise ProductionContractDependencyBlocked("CONTENT_EVAL_SUBJECT_MISMATCH")
         step = conn.execute(

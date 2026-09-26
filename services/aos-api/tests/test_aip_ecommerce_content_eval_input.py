@@ -9,6 +9,7 @@ import pytest
 from aos_api.aip_budget_reservation_store import canonical_hash
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_eval_contracts import EvalSubjectArtifactRef, EvalStageAttemptRef, EvalGatePolicyRef
+from aos_api.aip_eval_authority_store import AipEvalAuthorityConflict
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.aip_eval_runner import AipEvalRunner
 from aos_api.aip_task_models import CreateTaskRequest, CreatePlanRevisionRequest, CreateTaskRunRequest
@@ -35,6 +36,13 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
     helper=_helpers()
     with disposable_database() as connect:
         apply_migrations(connect)
+        migration_path=Path(__file__).resolve().parents[1]/'alembic/versions/a0v_105_content_eval_contract_policy_ref.py'
+        migration_spec=importlib.util.spec_from_file_location('content_eval_policy_migration',migration_path)
+        migration=importlib.util.module_from_spec(migration_spec)
+        migration_spec.loader.exec_module(migration)
+        with connect(SCOPE) as conn:
+            migration.op=SimpleNamespace(execute=conn.execute)
+            migration.upgrade()
         store=AipTaskStore(connect)
         task=store.create_task(SCOPE,'tester','content-eval-task',CreateTaskRequest(type='analysis',title='Content eval'))
         plan=store.create_plan(SCOPE,'tester',task.id,'content-eval-plan',
@@ -71,6 +79,9 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
             'subjectKind':'ecommerce_content','subjectInputMode':'ecommerce-readable-content/v1'}})
         runner=AipEvalRunner(connect_factory=connect,
             production_contract_store=SimpleNamespace(get_eval_contract=lambda *args:contract))
+        policy=EvalGatePolicyRef(resourceType='EvalContractRevision',
+            resourceId=contract.contract_id,revision=contract.revision,
+            contentHash=contract.content_hash)
         received=[]
         def target(ref,value):
             received.append(value)
@@ -78,12 +89,19 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
             assert value['subjectArtifactRef']==subject.model_dump(mode='json',by_alias=True)
             assert value['content']==content
             return helper._target(ref,value['caseInput'])
+        with pytest.raises(AipEvalAuthorityConflict,match='content gate policy'):
+            runner.run_by_contract(SCOPE,contract_id=contract.contract_id,
+                contract_revision=contract.revision,contract_content_hash=contract.content_hash,
+                idempotency_key='content-subject-eval',actor='tester',resolve_artifact=helper._resolver,
+                execute_target=target,execute_judge=helper._judge,subject_artifact_ref=subject,
+                stage_attempt_ref=attempt,gate_policy_ref=EvalGatePolicyRef(
+                    resourceId='fixture-policy',revision=1,contentHash='d'*64),
+                evidence_cutoff_at=helper.NOW)
         report=runner.run_by_contract(SCOPE,contract_id=contract.contract_id,
             contract_revision=contract.revision,contract_content_hash=contract.content_hash,
             idempotency_key='content-subject-eval',actor='tester',resolve_artifact=helper._resolver,
             execute_target=target,execute_judge=helper._judge,subject_artifact_ref=subject,
-            stage_attempt_ref=attempt,gate_policy_ref=EvalGatePolicyRef(
-                resourceId='fixture-policy',revision=1,contentHash='d'*64),
+            stage_attempt_ref=attempt,gate_policy_ref=policy,
             evidence_cutoff_at=helper.NOW)
         assert report.gate_passed and len(received)==1
         assert report.subject_artifact_ref==subject
@@ -116,3 +134,34 @@ def test_exact_content_artifact_runs_governed_eval_without_body_in_report():
             artifactId=other_identity,contentHash=digest)})
         with pytest.raises(ProductionContractDependencyBlocked,match='CONTENT_EVAL_SUBJECT'):
             contracts.create_review_issue(SCOPE,'tester','unrelated-content-issue',unrelated)
+
+
+def test_content_review_issue_rejects_report_with_media_policy_alias():
+    artifact=ExactArtifactRef(artifactId='content-1',contentHash='a'*64)
+    contract={'resourceType':'EvalContractRevision','resourceId':'contract-1',
+        'revision':1,'contentHash':'b'*64}
+    report={'subject_artifact_ref':{'resourceType':'Artifact',
+        'resourceId':artifact.artifact_id,'contentHash':artifact.content_hash},
+        'stage_attempt_ref':{'resourceType':'StepRunAttempt','runId':'run-1',
+            'stepKey':'content_generate','stepRunId':'step-1','attempt':1,
+            'inputHash':'c'*64},
+        'eval_contract_ref':contract,
+        'gate_policy_ref':{'resourceType':'MediaGatePolicyRevision',
+            'resourceId':'fixture-policy','revision':1,'contentHash':'d'*64}}
+
+    class Result:
+        def __init__(self,row): self.row=row
+        def fetchone(self): return self.row
+
+    class Conn:
+        def execute(self,query,*_):
+            if 'FROM aip_artifact' in query:
+                return Result({'artifact_type':'ecommerce_content','run_id':'run-1'})
+            if 'FROM aip_eval_report_revision' in query:
+                return Result(report)
+            raise AssertionError('policy drift must fail before StepRun lookup')
+
+    with pytest.raises(ProductionContractDependencyBlocked,match='CONTENT_EVAL_SUBJECT_MISMATCH'):
+        AipProductionContractStore._require_content_eval_subject(
+            Conn(),SCOPE,artifact,ExactRevisionRef(resourceType='EvalReportRevision',
+                resourceId='report-1',revision=1,contentHash='e'*64))

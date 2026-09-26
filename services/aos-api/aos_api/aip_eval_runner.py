@@ -171,6 +171,14 @@ class AipEvalRunner:
                 raise AipEvalAuthorityConflict("text subject requires explicit text-envelope-v1 input mode")
             if subject_kind == "ecommerce_content" and subject_contract.gate_policy.get("subjectInputMode") != "ecommerce-readable-content/v1":
                 raise AipEvalAuthorityConflict("content subject requires explicit ecommerce-readable-content/v1 input mode")
+            if subject_kind == "ecommerce_content" and (
+                gate_policy_ref is None
+                or gate_policy_ref.resource_type != "EvalContractRevision"
+                or gate_policy_ref.resource_id != eval_contract_ref.resource_id
+                or gate_policy_ref.revision != eval_contract_ref.revision
+                or gate_policy_ref.content_hash != eval_contract_ref.content_hash
+            ):
+                raise AipEvalAuthorityConflict("content gate policy must bind the exact EvalContract revision")
             subject_payload = self._assert_media_subject(
                 scope, subject_artifact_ref, stage_attempt_ref, subject_kind=subject_kind
             )

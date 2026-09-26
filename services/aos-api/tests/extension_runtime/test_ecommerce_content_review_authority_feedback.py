@@ -591,8 +591,8 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
                "attempt": 1, "inputHash": "a" * 64}
     report = {"content_hash": "c" * 64, "subject_artifact_ref": subject,
               "stage_attempt_ref": attempt,
-              "eval_contract_ref": {"resourceType": "EvalContractRevision"},
-              "gate_policy_ref": {"resourceType": "MediaGatePolicyRevision"}}
+              "eval_contract_ref": {"resourceType": "EvalContractRevision", "resourceId": "contract-1", "revision": 1, "contentHash": "a" * 64},
+              "gate_policy_ref": {"resourceType": "EvalContractRevision", "resourceId": "contract-1", "revision": 1, "contentHash": "a" * 64}}
     artifact = {"run_id": "run-1", "artifact_type": "ecommerce_content",
                 "content_hash": "1" * 64}
     step = {"step_run_id": "step-1", "run_id": "run-1", "step_key": "content_generate",
@@ -615,6 +615,10 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
 
     authority = ContentReviewHostService._issue_eval_authority
     authority(HostTransaction(Tx()), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="EvalReport"):
+        authority(HostTransaction(Tx({**report, "gate_policy_ref": {
+            "resourceType": "MediaGatePolicyRevision", "resourceId": "fixture",
+            "revision": 1, "contentHash": "a" * 64}})), SCOPE, item, issue)
     with pytest.raises(ValueError, match="EvalReport"):
         authority(HostTransaction(Tx({**report, "subject_artifact_ref":
             {**subject, "resourceId": "other-content"}})), SCOPE, item, issue)
