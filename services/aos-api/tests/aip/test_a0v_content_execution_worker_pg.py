@@ -11,7 +11,7 @@ from test_aip_budget_reservation_pg import database, seed, runtime_connection, R
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation, ContentExecutionFailure
-from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, _payload
 from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
 from aos_api.ecommerce_content_execution_composition import CurrentContentRunner
 from aos_api.tenant_scope import TenantScope
@@ -160,7 +160,7 @@ def test_selector_only_exposes_exact_pending_v2_command(database):
         command,store.get(scope,rid),request,replayed=False)
     database.owner.execute('''INSERT INTO ecommerce_growth_runtime_command_receipt
         VALUES(%s,%s,'ecommerce_growth_content_generate',%s,%s,%s)''',
-        (*scope.key,command['idempotencyKey'],command['requestHash'],Jsonb(receipt)))
+        (*scope.key,command['idempotencyKey'],'sha256:'+_payload(command)[1],Jsonb(receipt)))
     with factory(scope) as conn:
         assert journal.list_held(conn,scope)==[rid]
         assert journal.list_held(conn,TenantScope('dev-org','dev-project'))==[]
@@ -183,7 +183,7 @@ def test_runner_uses_pending_selector_and_returns_only_status(database):
         ContentGenerateHostService._budget_request(command),replayed=False)
     database.owner.execute('''INSERT INTO ecommerce_growth_runtime_command_receipt
         VALUES(%s,%s,'ecommerce_growth_content_generate',%s,%s,%s)''',
-        (*scope.key,command['idempotencyKey'],command['requestHash'],Jsonb(receipt)))
+        (*scope.key,command['idempotencyKey'],'sha256:'+_payload(command)[1],Jsonb(receipt)))
     runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
     runner.worker=ContentExecutionWorker(factory,prepare=prepare,
         invoke=lambda *_:{'answer':'sensitive text'},storage_schema=database.schema)

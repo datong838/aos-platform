@@ -13,6 +13,10 @@
 3. 专项测试、邻接回归、完整 schema 隔离 PG、`alembic heads`／静态检查；浏览器仅在页面有变化时验收。复审代码和 231-5/231-9 合同一致性；记录不能通过的生产激活硬门，不把测试夹具当真实业务。
 4. verification 文件落盘后 m1 精确提交；同步 D-waves、AOS Authority 与独立 Prime 投影。若测试找到需要超出本波授权的真实外部调用，则保持 default-off 并继续非副作用实现。
 
+## 执行中缩界记录
+
+既有执行器／消费器无须重写；隔离 PG 发现原测试夹具仍把 Runtime Receipt hash 写为内层 requestHash，已按 W5CB2 的完整命令 hash 合同校正。新增一条同一随机 schema 的 Owner 命令 envelope→PENDING selector→受控 Provider 结果→Usage／Budget／Artifact 组合测试。该夹具只构造本段需要的公共表，不是完整生产 schema，也未从真实 Handoff 自然生成命令；完整 schema 的 Handoff→容量→预算→此段仍为生产激活硬门，不用 58 项测试冒充。
+
 ## 退出与下一波
 
 - 本波最多证明同库命令→唯一 Provider intent→受控结果→measured Usage／预算→可读 Artifact 的代码链。正式激活仍需 W5CB2 留下的完整 Handoff→容量→预算同库链、当前安装/审批/价格/来源与独立 Receipt；不得用代码绿替代。
