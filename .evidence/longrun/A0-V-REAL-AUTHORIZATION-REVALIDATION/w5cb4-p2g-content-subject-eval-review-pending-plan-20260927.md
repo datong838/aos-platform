@@ -25,3 +25,9 @@
 - `services/aos-api/aos_api/ecommerce_content_review_pending.py` 先只提供内部 `read_one(scope,reservation_id)`，不加 GET 路由、不创建 Issue。复用 `ContentGenerationStepSource.read` 的已结算 Result/Provider/Usage/Artifact/Task/Brief 来源读回和 `ContentGenerationStepOwner._readback` 的 TAOR/checkpoint；另核原内容操作 Receipt 与当前 dispatch/runtime binding exact 相等。后续 Host 仍需完整安装锁，不把 GET 的只读快照当写授权。
 - 同一只读事务读取唯一内容报告、EvalRun、最新生成 StepRun、原 Plan gate 和当前内容合同；要求 report canonical hash、gate_passed、同 Artifact/attempt/合同、EvalRun succeeded。无报告返回 `None`；任一多义/漂移/撤销/旧安装抛出 `ContentReviewPendingBlocked`，不能自动造报告或审批。候选身份用 `(scope,reservationId,runId,artifactId,stepRunId,reportId@revision)`；重复只读返回相同值。
 - 测试先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending.py` 用无写连接验证无报告、错租户、旧 attempt、错合同/失败报告、重复读稳定；再用隔离 PG 组合真正 settled Artifact/StepRun/EvalReport 的正向证明。若本子步做不到同库正向，verification 必须标为部分代码门，不得暴露生产 GET。
+
+## 下一子步：正式同库组合测试清单（2026-09-27，编码前）
+
+- 新 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`，仅用一次性 `disposable_database` 和正式迁移；可复用现有 `test_ecommerce_content_generation_step_owner.py` 的公共 Task/Run/四相 TAOR、`test_ecommerce_content_pre_review_eval.py` 的正式 Graph/两 Suite/Gate/Publication/冻结合同，以及 `test_aip_ecommerce_content_eval_input.py` 的主体 EvalRunner。不得将其中任一夹具单独当正向候选；必须是**同一**原 TaskRun、reservation/invocation、已结算预算与 Provider/Usage Receipt、可读 Artifact、succeeded StepRun/checkpoint 和主体报告。
+- 首个 RED 应直调新的 `ContentReviewPendingReader.read_one` 且不 monkeypatch 来源、当前 dispatch、合同、报告或 Run 校验；在同一数据库里读回稳定候选。随后分别篡改/撤销当前合同或发布、换租户、换安装代次、旧 StepRun、失败/重复报告、已有 Issue，证明零候选或明确 blocked；测试对故障做回滚/独立作用域，不污染后续用例。
+- 若真实 Provider 结果/预算结算 fixture 需要仍未定义的外部权威，不向当前实例调用 Provider；先在隔离库通过已存在 `ContentResultConsumer` 的受控持久结果/Usage Receipt 路径构造。若该路径无法在测试环境形成正式 Receipt，记录具体缺口并先补测试可复用的正式最小 fixture，不放宽读取器、不返回 mock 候选。当前实例 `a0v_092` 仍不迁移、不启 Worker。
