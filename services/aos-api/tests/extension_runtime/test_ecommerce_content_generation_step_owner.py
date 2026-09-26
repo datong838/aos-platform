@@ -7,12 +7,14 @@ import pytest
 
 from aos_api.ecommerce_content_step_owner import (
     ContentGenerationStepOwner, ContentGenerationStepProof, ContentStepConflict,
+    ContentStepUnknown,
 )
 from aos_api.tenant_scope import TenantScope
 from aos_api.aip_contracts import PlanStep
 from aos_api.aip_task_models import CreateTaskRequest, CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+from aos_api.ecommerce_content_execution_journal import ContentExecutionConflict
 from aos_api.ecommerce_content_execution_composition import CurrentContentPreparation
 from test_ecommerce_analyst_growth_plan_full_graph import disposable_database
 from test_ecommerce_analyst_method_authority import apply_migrations
@@ -83,8 +85,49 @@ def test_generation_owner_treats_missing_independent_readback_as_unknown():
         def execute(self, *_):
             return SimpleNamespace(fetchone=lambda: None)
 
-    with pytest.raises(ContentStepConflict, match="commit/readback unknown"):
+    with pytest.raises(ContentStepUnknown, match="commit/readback unknown"):
         ContentGenerationStepOwner._readback(Conn(), SCOPE, PROOF, "checkpoint-1")
+
+
+def test_generation_selector_is_bounded_and_only_picks_unmaterialized_settled_results():
+    captured = []
+
+    class Conn:
+        def execute(self, query, params):
+            captured.append((query, params))
+            return SimpleNamespace(fetchall=lambda: [{"reservation_id": "reservation-1"}])
+
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Conn()
+
+    owner = ContentGenerationStepOwner(connect_read=connect)
+    assert owner.list_pending(SCOPE, limit=3) == ["reservation-1"]
+    query, params = captured[0]
+    assert params == (*SCOPE.key, 3)
+    assert "b.state='settled'" in query
+    assert "ecommerce_content_execution_result" in query
+    assert "aip_step_run" in query
+    assert "NOT EXISTS" in query
+    with pytest.raises(ValueError):
+        owner.list_pending(SCOPE, limit=0)
+
+
+def test_generation_runner_isolates_known_blocker_but_stops_on_unknown():
+    owner = ContentGenerationStepOwner()
+    owner.list_pending = lambda *_args, **_kwargs: ["one", "two"]
+    owner.run_one = lambda _scope, value: (_ for _ in ()).throw(
+        ContentStepConflict("known")) if value == "one" else {"status": "GENERATION_STEP_SUCCEEDED"}
+    assert owner.run_once(SCOPE) == [
+        {"reservationId": "one", "status": "BLOCKED_CURRENT_AUTHORITY"},
+        {"reservationId": "two", "status": "GENERATION_STEP_SUCCEEDED"},
+    ]
+    owner.run_one = lambda *_: (_ for _ in ()).throw(ContentStepUnknown("unknown"))
+    with pytest.raises(ContentStepUnknown):
+        owner.run_once(SCOPE)
+    owner.run_one = lambda *_: (_ for _ in ()).throw(ContentExecutionConflict("bad receipt"))
+    assert all(item["status"] == "BLOCKED_CURRENT_AUTHORITY" for item in owner.run_once(SCOPE))
 
 
 def test_generation_owner_persists_one_step_and_checkpoint_in_isolated_database(monkeypatch):

@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import asyncio
 
 from aos_api.ecommerce_content_execution_composition import (
     CurrentContentContextReader, CurrentContentStatusReader, CurrentContentPreparation,
 )
-from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal, ContentExecutionConflict
 from aos_api.aip_task_store import AipTaskStore
-from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_host_ports import HostTransaction, EcommerceGrowthHostError
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.tenant_scope import TenantScope
@@ -22,6 +23,10 @@ from aos_api.tenant_scope import TenantScope
 
 class ContentStepConflict(RuntimeError):
     """A recorded Provider result cannot yet back one canonical StepRun."""
+
+
+class ContentStepUnknown(ContentStepConflict):
+    """The internal commit boundary cannot yet be independently reconciled."""
 
 
 @dataclass(frozen=True)
@@ -217,7 +222,7 @@ class ContentGenerationStepOwner:
             or any(step[key] is None for key in
                    ("think_ref", "action_ref", "verify_ref", "observe_ref"))
         ):
-            raise ContentStepConflict("content StepRun commit/readback unknown")
+            raise ContentStepUnknown("content StepRun commit/readback unknown")
         checkpoint = conn.execute(
             """SELECT checkpoint_id,state_snapshot_ref FROM public.aip_checkpoint
                 WHERE org_id=%s AND project_id=%s AND run_id=%s
@@ -247,7 +252,7 @@ class ContentGenerationStepOwner:
             or observation["payload"].get("payload", {}).get("reservationId")
                 != proof.reservation_id
         ):
-            raise ContentStepConflict("content StepRun checkpoint/Artifact readback unknown")
+            raise ContentStepUnknown("content StepRun checkpoint/Artifact readback unknown")
         return {"status": "GENERATION_STEP_SUCCEEDED", "runId": proof.run_id,
                 "stepRunId": step["step_run_id"],
                 "checkpointId": checkpoint["checkpoint_id"]}
@@ -261,3 +266,62 @@ class ContentGenerationStepOwner:
         # call Provider or claim another attempt.
         with self.connect_read(scope) as conn:
             return self._readback(conn, scope, proof, checkpoint_id)
+
+    def list_pending(self, scope: TenantScope, *, limit: int = 16) -> list[str]:
+        if type(scope) is not TenantScope or type(limit) is not int or not 1 <= limit <= 16:
+            raise ValueError("bounded scoped content step selector required")
+        with self.connect_read(scope) as conn:
+            rows = conn.execute(
+                """SELECT b.reservation_id
+                     FROM public.aip_budget_reservation b
+                     JOIN public.ecommerce_content_execution_result result
+                       ON result.org_id=b.org_id AND result.project_id=b.project_id
+                      AND result.reservation_id=b.reservation_id
+                     JOIN public.aip_artifact a
+                       ON a.org_id=b.org_id AND a.project_id=b.project_id
+                      AND a.artifact_type='ecommerce_content'
+                      AND a.source->>'invocationId'=b.invocation_id::text
+                     JOIN public.aip_task_run r
+                       ON r.org_id=a.org_id AND r.project_id=a.project_id
+                      AND r.run_id=a.run_id AND r.task_id=b.task_ref->>'resourceId'
+                    WHERE b.org_id=%s AND b.project_id=%s AND b.state='settled'
+                      AND b.operation_id='ecommerce_growth_content_generate'
+                      AND r.status='running'
+                      AND NOT EXISTS(
+                          SELECT 1 FROM public.aip_step_run step
+                           WHERE step.org_id=r.org_id AND step.project_id=r.project_id
+                             AND step.run_id=r.run_id AND step.step_key='content_generate')
+                    ORDER BY result.recorded_at,b.reservation_id LIMIT %s""",
+                (*scope.key, limit),
+            ).fetchall()
+        values = [str(row["reservation_id"]) for row in rows]
+        if len(values) != len(set(values)) or any(not value for value in values):
+            raise ContentStepConflict("content step selector identity drifted")
+        return values
+
+    def run_once(self, scope: TenantScope, *, limit: int = 16) -> list[dict[str, str]]:
+        results = []
+        for reservation_id in self.list_pending(scope, limit=limit):
+            try:
+                result = self.run_one(scope, reservation_id)
+            except ContentStepUnknown:
+                raise  # unknown commit/readback stops the entire worker
+            except (ContentStepConflict, ContentExecutionConflict, EcommerceGrowthHostError):
+                results.append({"reservationId": reservation_id,
+                                "status": "BLOCKED_CURRENT_AUTHORITY"})
+                continue
+            results.append({"reservationId": reservation_id, "status": result["status"]})
+        return results
+
+    async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:
+        if type(interval_seconds) is not int or not 1 <= interval_seconds <= 300:
+            raise ValueError("content step worker interval invalid")
+        scope = TenantScope("org-org", "dev-project")
+        while not stop.is_set():
+            if not host_ready():
+                raise RuntimeError("content step Runtime Host unavailable")
+            await asyncio.to_thread(self.run_once, scope)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+            except TimeoutError:
+                pass
