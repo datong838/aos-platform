@@ -258,6 +258,8 @@ def test_exact_invoker_composes_approved_request_and_returns_minimal_usage() -> 
     assert result["answer"] == "真实回答"
     assert result["provider"] == "provider-1"
     assert result["model"] == "model-1"
+
+
     assert result["tokens"] == 12
     assert result["promptTokens"] == 7
     assert result["completionTokens"] == 5
@@ -280,6 +282,17 @@ def test_exact_invoker_composes_approved_request_and_returns_minimal_usage() -> 
     }
     assert timeout_ms == 30_000
     assert "top-secret" not in repr(result)
+
+
+def test_text_invoker_enforces_command_output_token_cap() -> None:
+    invoker, resolution, _, secret, transport = assembly()
+    invoker(resolution, "批准的事实", "approved_internal_knowledge", max_output_tokens=17)
+    assert transport.calls[0][2]["max_tokens"] == 17
+    for invalid in (0, -1, True, 1_000_001):
+        fresh, resolution, _, fresh_secret, fresh_transport = assembly()
+        with pytest.raises(ExactProviderInvocationError, match="provider_output_limit_invalid"):
+            fresh(resolution, "批准的事实", "approved_internal_knowledge", max_output_tokens=invalid)
+        assert fresh_secret.calls == 0 and fresh_transport.calls == []
 
 
 @pytest.mark.parametrize(

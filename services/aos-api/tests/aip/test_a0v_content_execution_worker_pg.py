@@ -6,11 +6,14 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 
 import pytest
-from test_aip_budget_reservation_pg import database, seed, runtime_connection, ROOT
+from psycopg.types.json import Jsonb
+from test_aip_budget_reservation_pg import database, seed, runtime_connection, ROOT, content_generate_command
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore
 from aos_api.aip_model_runtime_contracts import ModelRouteResolution
 from aos_api.ecommerce_content_execution_worker import ContentExecutionWorker, PreparedContentInvocation, ContentExecutionFailure
 from aos_api.ecommerce_content_execution_journal import ContentExecutionJournal
+from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService
+from aos_api.ecommerce_content_execution_composition import CurrentContentRunner
 from aos_api.tenant_scope import TenantScope
 
 pytestmark = pytest.mark.skipif(os.getenv('AOS_EXTENSION_PG_TEST') != '1', reason='isolated PostgreSQL opt-in')
@@ -82,6 +85,38 @@ def test_preparation_failure_keeps_unsubmitted_reservation(database):
     assert reservation.provider_request_receipt_ref is None
 
 
+def test_preparation_precedes_reservation_lock_to_preserve_host_lock_order(database):
+    scope,factory,store,rid,base_prepare=setup(database)
+    def prepare(conn, prepared_scope, command):
+        with factory(scope) as second:
+            second.execute("SET LOCAL lock_timeout='300ms'")
+            row=second.execute('''SELECT state FROM aip_budget_reservation
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s FOR UPDATE''',
+                (*scope.key,rid)).fetchone()
+            assert row['state']=='held'
+        return base_prepare(conn,prepared_scope,command)
+    worker=ContentExecutionWorker(factory,prepare=prepare,
+        invoke=lambda *_:{'answer':'public result'},storage_schema=database.schema)
+    assert worker.run_one(scope,rid)['status']=='RESULT_RECORDED'
+
+
+def test_worker_passes_prepared_output_cap_after_provider_intent_commit(database):
+    scope,factory,store,rid,base_prepare=setup(database)
+    calls=[]
+    def prepare(conn, prepared_scope, command):
+        original=base_prepare(conn,prepared_scope,command)
+        return PreparedContentInvocation(original.resolution,original.prompt,
+            original.data_classification,max_output_tokens=23)
+    def invoke(*args,**kwargs):
+        with factory(scope) as second:
+            assert second.execute('SELECT state FROM aip_budget_reservation WHERE reservation_id=%s',(rid,)).fetchone()['state']=='submitted'
+        calls.append(kwargs)
+        return {'answer':'public result'}
+    worker=ContentExecutionWorker(factory,prepare=prepare,invoke=invoke,storage_schema=database.schema)
+    assert worker.run_one(scope,rid)['status']=='RESULT_RECORDED'
+    assert calls==[{'max_output_tokens':23}]
+
+
 def test_result_persistence_failure_is_not_a_resubmission_license(database):
     scope,factory,store,rid,prepare=setup(database)
     calls=[]
@@ -108,3 +143,76 @@ def test_real_invoker_result_shape_is_persisted_and_replayed(database):
     assert worker.run_one(scope,rid)==saved
     assert isinstance(saved['result']['usageReceipts'][0]['observedAt'],str)
     assert saved['result']['tokens']==12 and len(transport.calls)==1
+
+
+def test_selector_only_exposes_exact_pending_v2_command(database):
+    scope,factory,store,rid,_=setup(database,command_factory=content_generate_command)
+    journal=ContentExecutionJournal(storage_schema=database.schema)
+    database.owner.execute('''CREATE TABLE ecommerce_growth_runtime_command_receipt (
+        org_id text,project_id text,operation_id text,idempotency_key text,
+        request_hash text,response jsonb)''')
+    database.owner.execute('GRANT SELECT ON ecommerce_growth_runtime_command_receipt TO aos_runtime')
+    with factory(scope) as conn:
+        assert journal.list_held(conn,scope)==[]
+        command=journal.read(conn,scope,rid)['command']
+    request=ContentGenerateHostService._budget_request(command)
+    receipt=ContentGenerateHostService._pending_receipt(
+        command,store.get(scope,rid),request,replayed=False)
+    database.owner.execute('''INSERT INTO ecommerce_growth_runtime_command_receipt
+        VALUES(%s,%s,'ecommerce_growth_content_generate',%s,%s,%s)''',
+        (*scope.key,command['idempotencyKey'],command['requestHash'],Jsonb(receipt)))
+    with factory(scope) as conn:
+        assert journal.list_held(conn,scope)==[rid]
+        assert journal.list_held(conn,TenantScope('dev-org','dev-project'))==[]
+    database.owner.execute('''UPDATE ecommerce_growth_runtime_command_receipt
+        SET response=jsonb_set(response,'{budgetReservationRef,resourceId}','"wrong"'::jsonb)''')
+    with factory(scope) as conn:
+        with pytest.raises(Exception,match='pending runtime Receipt drifted'):
+            journal.list_held(conn,scope)
+
+
+def test_runner_uses_pending_selector_and_returns_only_status(database):
+    scope,factory,store,rid,prepare=setup(database,command_factory=content_generate_command)
+    journal=ContentExecutionJournal(storage_schema=database.schema)
+    database.owner.execute('''CREATE TABLE ecommerce_growth_runtime_command_receipt (
+        org_id text,project_id text,operation_id text,idempotency_key text,
+        request_hash text,response jsonb)''')
+    database.owner.execute('GRANT SELECT ON ecommerce_growth_runtime_command_receipt TO aos_runtime')
+    with factory(scope) as conn: command=journal.read(conn,scope,rid)['command']
+    receipt=ContentGenerateHostService._pending_receipt(command,store.get(scope,rid),
+        ContentGenerateHostService._budget_request(command),replayed=False)
+    database.owner.execute('''INSERT INTO ecommerce_growth_runtime_command_receipt
+        VALUES(%s,%s,'ecommerce_growth_content_generate',%s,%s,%s)''',
+        (*scope.key,command['idempotencyKey'],command['requestHash'],Jsonb(receipt)))
+    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
+    runner.worker=ContentExecutionWorker(factory,prepare=prepare,
+        invoke=lambda *_:{'answer':'sensitive text'},storage_schema=database.schema)
+    assert runner.run_pending(scope)==[{'reservationId':rid,'status':'RESULT_RECORDED'}]
+    assert runner.run_pending(scope)==[]
+
+
+def test_recorded_result_selector_recovers_without_provider_resend(database):
+    scope,factory,store,rid,prepare=setup(database,command_factory=content_generate_command)
+    journal=ContentExecutionJournal(storage_schema=database.schema)
+    with factory(scope) as conn:
+        assert journal.list_recorded(conn,scope)==[]
+    calls=[]
+    ContentExecutionWorker(factory,prepare=prepare,
+        invoke=lambda *_:calls.append(1) or {'answer':'public result'},
+        storage_schema=database.schema).run_one(scope,rid)
+    with factory(scope) as conn:
+        assert journal.list_recorded(conn,scope)==[rid]
+        assert journal.list_recorded(conn,TenantScope('dev-org','dev-project'))==[]
+    assert calls==[1]
+
+
+def test_runner_drains_recorded_results_without_invoking_provider(database):
+    scope,factory,store,rid,prepare=setup(database,command_factory=content_generate_command)
+    ContentExecutionWorker(factory,prepare=prepare,
+        invoke=lambda *_:{'answer':'public result'},storage_schema=database.schema).run_one(scope,rid)
+    runner=CurrentContentRunner(connect_factory=factory,storage_schema=database.schema)
+    calls=[]
+    runner.worker.invoke=lambda *_:pytest.fail('result drain must not send')
+    runner.consumer=SimpleNamespace(consume=lambda conn,read_scope,read_id:calls.append(read_id))
+    assert runner.run_recorded(scope)==[{'reservationId':rid,'status':'RESULT_RECORDED_UNSETTLED'}]
+    assert calls==[rid]

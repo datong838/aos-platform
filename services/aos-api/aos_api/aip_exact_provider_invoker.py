@@ -128,7 +128,13 @@ class ExactProviderInvoker:
         resolution: ModelRouteResolution,
         prompt: str,
         data_classification: str,
+        *,
+        max_output_tokens: int | None = None,
     ) -> dict[str, Any]:
+        if max_output_tokens is not None and (
+            type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 1_000_000
+        ):
+            raise ExactProviderInvocationError("provider_output_limit_invalid")
         scope = TenantScope(
             resolution.tenant.org_id,
             resolution.tenant.project_id,
@@ -142,6 +148,8 @@ class ExactProviderInvoker:
         modality = self._validate_composition(
             scope, resolution, route, policy, model, provider
         )
+        if max_output_tokens is not None and modality != "text":
+            raise ExactProviderInvocationError("provider_output_limit_modality_blocked")
         price = self._validate_price_authority(scope, resolution, model)
         self._validate_runtime_dependencies(
             scope,
@@ -168,7 +176,9 @@ class ExactProviderInvoker:
                 "Authorization": f"Bearer {secret}",
                 "Content-Type": "application/json",
             },
-            payload=self._request_payload(modality, model, prompt),
+            payload=self._request_payload(
+                modality, model, prompt, max_output_tokens=max_output_tokens,
+            ),
             timeout_ms=timeout_ms,
         )
         return self._validated_response(
@@ -385,7 +395,9 @@ class ExactProviderInvoker:
         return f"https://{host}/v1/chat/completions"
 
     @staticmethod
-    def _request_payload(modality: str, model: Any, prompt: str) -> dict[str, Any]:
+    def _request_payload(
+        modality: str, model: Any, prompt: str, *, max_output_tokens: int | None = None,
+    ) -> dict[str, Any]:
         if modality == "image":
             return {
                 "model": model.provider_model_id,
@@ -399,10 +411,13 @@ class ExactProviderInvoker:
                 "prompt": prompt,
                 "n": 1,
             }
-        return {
+        payload = {
             "model": model.provider_model_id,
             "messages": [{"role": "user", "content": prompt}],
         }
+        if max_output_tokens is not None:
+            payload["max_tokens"] = max_output_tokens
+        return payload
 
     @staticmethod
     def _require_exact(ref: Any, item: Any, id_field: str, code: str) -> None:

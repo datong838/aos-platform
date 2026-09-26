@@ -1,6 +1,7 @@
 """One committed Provider submission per durable content reservation."""
 from dataclasses import dataclass, field
 from typing import Callable
+from psycopg import sql
 
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
@@ -15,6 +16,7 @@ class PreparedContentInvocation:
     resolution: ModelRouteResolution
     prompt: str = field(repr=False)
     data_classification: str
+    max_output_tokens: int | None = None
 
 
 class ContentExecutionFailure(RuntimeError):
@@ -37,22 +39,42 @@ class ContentExecutionWorker:
 
     def run_one(self, scope, reservation_id):
         with self.connect(scope) as conn:
-            reservation = self.journal._reservation(conn, scope, reservation_id)
             evidence = self.journal.read(conn, scope, reservation_id)
             if evidence is None:
                 raise ContentExecutionConflict('content command unavailable')
             if evidence['result'] is not None:
                 return {'status': 'RESULT_RECORDED', 'result': evidence['result']}
-            if reservation['state'] in {'submitted', 'unknown'}:
+            observed = conn.execute(sql.SQL('''SELECT operation_id,state FROM {}
+                WHERE org_id=%s AND project_id=%s AND reservation_id=%s''').format(
+                    self.journal._table('aip_budget_reservation')),
+                (*scope.key,reservation_id)).fetchone()
+            if observed is None or observed['operation_id'] != 'ecommerce_growth_content_generate':
+                raise ContentExecutionConflict('content reservation unavailable')
+            if observed['state'] in {'submitted', 'unknown'}:
                 return {'status': 'RECONCILE_ONLY', 'result': None}
-            if reservation['state'] != 'held':
+            if observed['state'] != 'held':
                 raise ContentExecutionConflict('content reservation cannot be submitted')
             prepared = self.prepare(conn, scope, evidence['command'])
             if not isinstance(prepared, PreparedContentInvocation):
                 raise ContentExecutionConflict('trusted preparation required')
+            reservation = self.journal._reservation(conn, scope, reservation_id)
+            current = self.journal.read(conn, scope, reservation_id)
+            if current is None or current['command'] != evidence['command']:
+                raise ContentExecutionConflict('content command changed during preparation')
+            if current['result'] is not None:
+                return {'status': 'RESULT_RECORDED', 'result': current['result']}
+            if reservation['state'] in {'submitted', 'unknown'}:
+                return {'status': 'RECONCILE_ONLY', 'result': None}
+            if reservation['state'] != 'held':
+                raise ContentExecutionConflict('content reservation cannot be submitted')
             resolution = prepared.resolution
             if resolution.readiness is not ModelRuntimeReadiness.READY or not prepared.prompt.strip() or not prepared.data_classification.strip():
                 raise ContentExecutionConflict('prepared content is not ready')
+            if prepared.max_output_tokens is not None and (
+                type(prepared.max_output_tokens) is not int
+                or not 1 <= prepared.max_output_tokens <= 1_000_000
+            ):
+                raise ContentExecutionConflict('prepared output token cap is invalid')
             if (resolution.tenant.org_id, resolution.tenant.project_id) != scope.key:
                 raise ContentExecutionConflict('prepared content tenant drifted')
             price = resolution.selected_price_snapshot
@@ -75,7 +97,13 @@ class ContentExecutionWorker:
             conn.commit()
         # No caller-owned transaction remains open across the remote request.
         try:
-            result = self.invoke(resolution, prepared.prompt, prepared.data_classification)
+            if prepared.max_output_tokens is None:
+                result = self.invoke(resolution, prepared.prompt, prepared.data_classification)
+            else:
+                result = self.invoke(
+                    resolution, prepared.prompt, prepared.data_classification,
+                    max_output_tokens=prepared.max_output_tokens,
+                )
         except Exception:
             try:
                 with self.connect(scope) as conn:
