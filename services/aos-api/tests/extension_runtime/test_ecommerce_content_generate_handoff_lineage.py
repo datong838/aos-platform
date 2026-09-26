@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -256,6 +257,118 @@ def test_content_generate_accepts_only_plan_identical_v2_sales_weapon_brief():
             Transaction(values), SCOPE, {key: InvestigationExactRef.model_validate(ref_value)
                                          for key, ref_value in values["command"]["authorityRefs"].items()},
             values["command"]["sourceArtifactRefs"], approved_plan=plan,
+        )
+
+
+def test_v2_fact_sources_require_exact_approved_method_and_current_evidence(monkeypatch):
+    values, plan = v2_authorities()
+    method = plan.sales_weapon_method
+    expected = [
+        ref("EvidenceBundleRevision", item.resource_id, digest=item.content_hash)
+        for item in method.evidence_refs
+    ]
+    checked_at = method.source_cutoff_at + timedelta(hours=1)
+    calls = []
+
+    def current_sources(transaction, scope, decision_ref, *, markings, now, max_source_age):
+        calls.append((transaction, scope, decision_ref, markings, now, max_source_age))
+        return SimpleNamespace(evidence_refs=method.evidence_refs, insight_ref=AnalystExactRef(
+            resource_type="InsightRevision", resource_id="insight-1",
+            revision=1, content_hash=HEX_A,
+        ))
+
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_growth_plan_sources",
+        current_sources,
+    )
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_current_analyst_revision",
+        lambda *_: SimpleNamespace(cutoff_at=method.source_cutoff_at),
+    )
+    transaction = object()
+    ContentGenerateHostService._fact_source_authority(
+        transaction, SCOPE, expected, plan, checked_at=checked_at,
+    )
+    assert calls == [(transaction, SCOPE, plan.decision_ref, ["internal"], checked_at, timedelta(days=7))]
+    for drift in (
+        expected[:-1],
+        [ref("EvidenceBundleRevision", expected[0]["resourceId"], digest=HEX_B), *expected[1:]],
+        [*expected, ref("DataFulfillmentReceipt", "fulfillment-1", receipt=True)],
+    ):
+        with pytest.raises(ValueError, match="fact source"):
+            ContentGenerateHostService._fact_source_authority(
+                transaction, SCOPE, drift, plan, checked_at=checked_at,
+            )
+    with pytest.raises(ValueError, match="fact source"):
+        ContentGenerateHostService._fact_source_authority(
+            transaction, SCOPE, expected, plan,
+            checked_at=method.source_cutoff_at + timedelta(days=8),
+        )
+    assert len(calls) == 1
+
+
+def test_v2_fact_sources_reject_revoked_or_wrong_cutoff(monkeypatch):
+    _, plan = v2_authorities()
+    method = plan.sales_weapon_method
+    expected = [ref("EvidenceBundleRevision", item.resource_id, digest=item.content_hash)
+                for item in method.evidence_refs]
+    checked_at = method.source_cutoff_at + timedelta(hours=1)
+    def revoked(*_args, **_kwargs):
+        raise ValueError("evidence revoked")
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_growth_plan_sources", revoked,
+    )
+    with pytest.raises(ValueError, match="evidence revoked"):
+        ContentGenerateHostService._fact_source_authority(object(), SCOPE, expected, plan,
+                                                           checked_at=checked_at)
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_growth_plan_sources",
+        lambda *_args, **_kwargs: SimpleNamespace(evidence_refs=method.evidence_refs, insight_ref=AnalystExactRef(
+            resource_type="InsightRevision", resource_id="insight-1", revision=1, content_hash=HEX_A,
+        )),
+    )
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_current_analyst_revision",
+        lambda *_: SimpleNamespace(cutoff_at=method.source_cutoff_at - timedelta(hours=1)),
+    )
+    with pytest.raises(ValueError, match="fact source"):
+        ContentGenerateHostService._fact_source_authority(object(), SCOPE, expected, plan,
+                                                           checked_at=checked_at)
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.require_growth_plan_sources",
+        lambda *_args, **_kwargs: SimpleNamespace(evidence_refs=[], insight_ref=None),
+    )
+    with pytest.raises(ValueError, match="fact source"):
+        ContentGenerateHostService._fact_source_authority(object(), SCOPE, expected, plan,
+                                                           checked_at=checked_at)
+
+
+def test_v2_generate_revalidation_stops_before_capacity_on_unbound_facts(monkeypatch):
+    values, plan = v2_authorities()
+    rehash_v2_brief(values)
+    command = values["command"]
+    command["requestHash"] = _analysis_command_hash({
+        key: value for key, value in command.items() if key != "requestHash"
+    })
+    monkeypatch.setattr(ReviewAdvanceHostService, "_revalidate_growth_plan",
+                        staticmethod(lambda **_: plan))
+    monkeypatch.setattr(ContentGenerateHostService, "_review_receipt",
+                        staticmethod(lambda *_: {"receiptRef": ref("ReviewDecisionReceipt", "review-1")}))
+    monkeypatch.setattr(ContentGenerateHostService, "_task_brief",
+                        staticmethod(lambda *_args, **_kwargs: None))
+    monkeypatch.setattr(ContentGenerateHostService, "_agent_capability_authority",
+                        staticmethod(lambda *_: (object(), object())))
+    monkeypatch.setattr(ContentGenerateHostService, "_route_budget_approval_authority",
+                        staticmethod(lambda *_args, **_kwargs: (
+                            object(), plan.sales_weapon_method.source_cutoff_at + timedelta(hours=1)
+                        )))
+    monkeypatch.setattr(ContentGenerateHostService, "_resolution_capacity_authority",
+                        staticmethod(lambda *_args, **_kwargs: pytest.fail("capacity must not be read")))
+    with pytest.raises(ValueError, match="fact source"):
+        ContentGenerateHostService().revalidate(
+            transaction=object(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+            command=command,
         )
 
 

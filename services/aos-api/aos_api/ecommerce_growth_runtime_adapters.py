@@ -3902,6 +3902,45 @@ class ContentGenerateHostService:
     executor_identity = "ecommerce-growth-content-generate-host"
 
     @staticmethod
+    def _fact_source_authority(transaction, scope, fact_values, approved_plan, *, checked_at):
+        method = None if approved_plan is None else approved_plan.sales_weapon_method
+        if method is None:
+            return
+        expected = [
+            {
+                "resourceType": "EvidenceBundleRevision",
+                "resourceId": item.resource_id,
+                "revision": item.revision,
+                "contentHash": "sha256:" + item.content_hash,
+            }
+            for item in method.evidence_refs
+        ]
+        if (
+            type(checked_at) is not datetime
+            or checked_at.utcoffset() is None
+            or not method.source_cutoff_at <= checked_at < method.source_cutoff_at + timedelta(days=7)
+            or fact_values != expected
+        ):
+            raise ValueError("content generate fact source differs from approved method or expired")
+        decision = require_growth_plan_sources(
+            transaction, scope, approved_plan.decision_ref,
+            markings=["internal"], now=checked_at, max_source_age=timedelta(days=7),
+        )
+        method_sources = {
+            (item.resource_type, item.resource_id, item.revision, item.content_hash)
+            for item in method.evidence_refs
+        }
+        decision_sources = {
+            (item.resource_type, item.resource_id, item.revision, item.content_hash)
+            for item in decision.evidence_refs
+        }
+        if not method_sources.issubset(decision_sources):
+            raise ValueError("content generate fact source is outside the approved Decision")
+        insight = require_current_analyst_revision(transaction, scope, decision.insight_ref)
+        if insight.cutoff_at != method.source_cutoff_at:
+            raise ValueError("content generate fact source cutoff differs from approved Insight")
+
+    @staticmethod
     def _budget_request(command: Mapping[str, Any]) -> ReserveBudgetRequest:
         parsed = _strict_content_generate_command(command)
         authorities = parsed["authorities"]
@@ -5145,6 +5184,10 @@ class ContentGenerateHostService:
             scope,
             parsed["authorities"],
             upper_bound_fen=command["upperBoundFen"],
+        )
+        self._fact_source_authority(
+            transaction, scope, command["factSourceRefs"], approved_plan,
+            checked_at=checked_at,
         )
         _model, provider, policy, run = self._resolution_capacity_authority(
             transaction,
