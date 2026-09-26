@@ -194,6 +194,9 @@ def test_claimed_agentrun_uses_public_owner_and_never_commits_without_ack(
             if "agentrun_ack_a0v_102" in query:
                 events.append("ack")
                 return Cursor({"accepted": acknowledged})
+            if "capacity_put_a0v_103" in query:
+                events.append("capacity_intent")
+                return Cursor({"pending": True})
             raise AssertionError(query)
 
         def commit(self):
@@ -213,7 +216,8 @@ def test_claimed_agentrun_uses_public_owner_and_never_commits_without_ack(
                 return Cursor(None)
             return Cursor({"state": "accepted", "attempt": 1, "claim_token": token,
                            "agent_run_id": "content-agent-1", "agent_status": "queued",
-                           "receipt_status": "applied"})
+                           "receipt_status": "applied", "next_state": "pending",
+                           "next_attempt": 0})
 
     @contextmanager
     def connect_read(scope):
@@ -237,7 +241,7 @@ def test_claimed_agentrun_uses_public_owner_and_never_commits_without_ack(
     worker = ContentAgentRunOwner(connect_write=connect_write, connect_read=connect_read)
     if acknowledged and committed_readback:
         assert worker.execute_claim(SCOPE, "review-1", token)["agentRunId"] == "content-agent-1"
-        assert events == ["public_owner", "ack", "commit", "independent_readback"]
+        assert events == ["public_owner", "ack", "capacity_intent", "commit", "independent_readback"]
     elif not acknowledged:
         with pytest.raises(ContentAgentRunConflict, match="ack unavailable"):
             worker.execute_claim(SCOPE, "review-1", token)
@@ -245,4 +249,4 @@ def test_claimed_agentrun_uses_public_owner_and_never_commits_without_ack(
     else:
         with pytest.raises(ContentAgentRunConflict, match="committed readback unknown"):
             worker.execute_claim(SCOPE, "review-1", token)
-        assert events == ["public_owner", "ack", "commit", "independent_readback"]
+        assert events == ["public_owner", "ack", "capacity_intent", "commit", "independent_readback"]

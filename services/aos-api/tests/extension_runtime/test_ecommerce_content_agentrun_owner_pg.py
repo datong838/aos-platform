@@ -29,7 +29,17 @@ def agent_database(database):
     owner.execute("""CREATE TABLE aip_agent_registry_receipt(
       org_id text,project_id text,operation text,idempotency_key text,
       result_ref jsonb,status text)""")
+    owner.execute("""CREATE TABLE aip_model_capacity_reservation(
+      org_id text,project_id text,reservation_id text,agent_run_id text,
+      status text,expires_at timestamptz)""")
     filename = "a0v_102_ecommerce_content_agentrun_intent.py"
+    spec = importlib.util.spec_from_file_location(filename, ROOT / "alembic/versions" / filename)
+    migration = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(migration)
+    migration.op = SimpleNamespace(execute=owner.execute)
+    migration.upgrade()
+    filename = "a0v_103_ecommerce_content_capacity_intent.py"
     spec = importlib.util.spec_from_file_location(filename, ROOT / "alembic/versions" / filename)
     migration = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
@@ -123,3 +133,70 @@ def test_committed_old_taskrun_cannot_be_backfilled(agent_database):
     assert agent_database.owner.execute(
         "SELECT count(*) AS n FROM ecommerce_growth_content_agentrun_intent"
     ).fetchone()["n"] == 0
+
+
+def test_capacity_intent_must_follow_agentrun_ack_in_same_transaction(agent_database):
+    accepted_taskrun(agent_database, put_inline=True)
+    token = uuid4()
+    with runtime_connection(agent_database) as conn:
+        assert conn.execute("SELECT public.ecommerce_growth_content_agentrun_claim_a0v_102(%s,%s) AS ok",
+                            ("review-key-1", token)).fetchone()["ok"] is True
+        conn.commit()
+    owner = agent_database.owner
+    owner.execute("INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')", SCOPE.key)
+    owner.execute("""INSERT INTO aip_agent_registry_receipt VALUES(
+      %s,%s,'agent_run.create','review-key-1',%s,'applied')""",
+                  (*SCOPE.key, Jsonb({"resourceId": "agent-1"})))
+    with runtime_connection(agent_database) as conn:
+        assert conn.execute("SELECT public.ecommerce_growth_content_agentrun_ack_a0v_102(%s,%s,%s) AS ok",
+                            ("review-key-1", token, "agent-1")).fetchone()["ok"] is True
+        assert conn.execute("SELECT public.ecommerce_growth_content_capacity_put_a0v_103(%s) AS ok",
+                            ("review-key-1",)).fetchone()["ok"] is True
+        conn.commit()
+    with runtime_connection(agent_database) as conn:
+        with pytest.raises(psycopg.Error):
+            conn.execute("SELECT public.ecommerce_growth_content_capacity_put_a0v_103(%s)",
+                         ("review-key-1",))
+        conn.rollback()
+    with runtime_connection(agent_database, CANARY) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM ecommerce_growth_content_capacity_intent").fetchone()["n"] == 0
+
+
+def test_capacity_ack_requires_running_and_live_reservation(agent_database):
+    accepted_taskrun(agent_database, put_inline=True)
+    token = uuid4()
+    with runtime_connection(agent_database) as conn:
+        conn.execute("SELECT public.ecommerce_growth_content_agentrun_claim_a0v_102(%s,%s)",
+                     ("review-key-1", token))
+        conn.commit()
+    owner = agent_database.owner
+    owner.execute("INSERT INTO aip_agent_run VALUES(%s,%s,'agent-1','task-1','run-1','queued')", SCOPE.key)
+    owner.execute("""INSERT INTO aip_agent_registry_receipt VALUES(
+      %s,%s,'agent_run.create','review-key-1',%s,'applied')""",
+                  (*SCOPE.key, Jsonb({"resourceId": "agent-1"})))
+    with runtime_connection(agent_database) as conn:
+        conn.execute("SELECT public.ecommerce_growth_content_agentrun_ack_a0v_102(%s,%s,%s)",
+                     ("review-key-1", token, "agent-1"))
+        conn.execute("SELECT public.ecommerce_growth_content_capacity_put_a0v_103(%s)",
+                     ("review-key-1",))
+        conn.commit()
+    claim = uuid4()
+    with runtime_connection(agent_database) as conn:
+        assert conn.execute("SELECT public.ecommerce_growth_content_capacity_claim_a0v_103(%s,%s) AS ok",
+                            ("review-key-1", claim)).fetchone()["ok"] is True
+        conn.commit()
+    with runtime_connection(agent_database) as conn:
+        with pytest.raises(psycopg.Error):
+            conn.execute("SELECT public.ecommerce_growth_content_capacity_ack_a0v_103(%s,%s,%s)",
+                         ("review-key-1", claim, "cap-1"))
+        conn.rollback()
+    owner.execute("UPDATE aip_agent_run SET status='running' WHERE agent_run_id='agent-1'")
+    owner.execute("""INSERT INTO aip_model_capacity_reservation VALUES(
+      %s,%s,'cap-1','agent-1','reserved',now()+interval '5 minutes')""", SCOPE.key)
+    with runtime_connection(agent_database) as conn:
+        assert conn.execute("SELECT public.ecommerce_growth_content_capacity_ack_a0v_103(%s,%s,%s) AS ok",
+                            ("review-key-1", claim, "cap-1")).fetchone()["ok"] is True
+        conn.commit()
+    assert owner.execute("SELECT state,capacity_reservation_id FROM ecommerce_growth_content_capacity_intent").fetchone() == {
+        "state": "accepted", "capacity_reservation_id": "cap-1"
+    }

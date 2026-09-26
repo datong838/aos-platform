@@ -119,7 +119,8 @@ class ContentAgentRunOwner:
 
     @staticmethod
     def _build_request(transaction: HostTransaction, scope: TenantScope,
-                       review_key: str) -> CreateAgentRunRequest:
+                       review_key: str,
+                       *, existing_agent_run_id: str | None = None) -> CreateAgentRunRequest:
         origin, response = ContentTaskRunOwner._origin(transaction, scope, review_key)
         row = transaction.execute(
             """SELECT p.review_receipt_ref,p.task_id,p.plan_revision_id,p.run_id,
@@ -208,7 +209,10 @@ class ContentAgentRunOwner:
                 WHERE org_id=%s AND project_id=%s AND task_run_id=%s LIMIT 2""",
             (*scope.key, run.id),
         ).fetchall()
-        if existing_agents:
+        if (existing_agent_run_id is None and existing_agents) or (
+            existing_agent_run_id is not None
+            and [item["agent_run_id"] for item in existing_agents] != [existing_agent_run_id]
+        ):
             raise ContentAgentRunConflict("content TaskRun already has an AgentRun; reconcile")
         agent_id = assignment["assignee"].resource_id
         skill_rows = transaction.execute(
@@ -311,12 +315,24 @@ class ContentAgentRunOwner:
             ).fetchone()
             if ack is None or ack["accepted"] is not True:
                 raise ContentAgentRunConflict("content AgentRun ack unavailable")
+            next_intent = transaction.execute(
+                "SELECT public.ecommerce_growth_content_capacity_put_a0v_103(%s) AS pending",
+                (review_key,),
+            ).fetchone()
+            if next_intent is None or next_intent["pending"] is not True:
+                raise ContentAgentRunConflict("content capacity intent unavailable")
             conn.commit()
         with self._connect_read(scope) as conn:
             committed = conn.execute(
                 """SELECT i.state,i.attempt,i.claim_token,i.agent_run_id,
-                          a.status AS agent_status,receipt.status AS receipt_status
+                          a.status AS agent_status,receipt.status AS receipt_status,
+                          next.state AS next_state,next.attempt AS next_attempt
                      FROM public.ecommerce_growth_content_agentrun_intent i
+                     JOIN public.ecommerce_growth_content_capacity_intent next
+                       ON next.org_id=i.org_id AND next.project_id=i.project_id
+                      AND next.review_key=i.review_key
+                      AND next.task_run_id=i.task_run_id
+                      AND next.agent_run_id=i.agent_run_id
                      JOIN public.aip_agent_run a
                        ON a.org_id=i.org_id AND a.project_id=i.project_id
                       AND a.agent_run_id=i.agent_run_id AND a.task_run_id=i.task_run_id
@@ -331,7 +347,8 @@ class ContentAgentRunOwner:
         if committed is None or (
             committed["state"], committed["attempt"], committed["claim_token"],
             committed["agent_run_id"], committed["agent_status"], committed["receipt_status"],
-        ) != ("accepted", 1, token, run.agent_run_id, "queued", "applied"):
+            committed["next_state"], committed["next_attempt"],
+        ) != ("accepted", 1, token, run.agent_run_id, "queued", "applied", "pending", 0):
             raise ContentAgentRunConflict("content AgentRun committed readback unknown")
         return {"status": "CONTENT_AGENT_RUN_QUEUED", "reviewKey": review_key,
                 "agentRunId": run.agent_run_id}
