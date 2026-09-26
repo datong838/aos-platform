@@ -589,7 +589,8 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
     attempt = {"resourceType": "StepRunAttempt", "runId": "run-1",
                "stepKey": "content_generate", "stepRunId": "step-1",
                "attempt": 1, "inputHash": "a" * 64}
-    report = {"content_hash": "c" * 64, "subject_artifact_ref": subject,
+    report = {"content_hash": "c" * 64, "gate_passed": True,
+              "subject_artifact_ref": subject,
               "stage_attempt_ref": attempt,
               "eval_contract_ref": {"resourceType": "EvalContractRevision", "resourceId": "contract-1", "revision": 1, "contentHash": "a" * 64},
               "gate_policy_ref": {"resourceType": "EvalContractRevision", "resourceId": "contract-1", "revision": 1, "contentHash": "a" * 64}}
@@ -621,6 +622,10 @@ def test_content_review_rechecks_exact_issue_eval_subject_and_attempt():
 
     authority = ContentReviewHostService._issue_eval_authority
     authority(HostTransaction(Tx()), SCOPE, item, issue)
+    with pytest.raises(ValueError, match="pre-review"):
+        authority(HostTransaction(Tx({**report, "gate_passed": False})), SCOPE, item, issue)
+    returned_failed = {**item, "decision": "RETURN", "returnStage": "content_generation"}
+    authority(HostTransaction(Tx({**report, "gate_passed": False})), SCOPE, returned_failed, issue)
     with pytest.raises(ValueError, match="Plan"):
         authority(HostTransaction(Tx(original_plan={**plan,
             "steps": [{"stepKey": "content_generate", "gateRefs": []},

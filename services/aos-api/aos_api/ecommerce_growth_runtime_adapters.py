@@ -5767,7 +5767,7 @@ class ContentReviewHostService:
         from aos_api.ecommerce_content_eval_plan_gate import require_original_content_eval_gate
 
         report = transaction.execute(
-            """SELECT content_hash,subject_artifact_ref,stage_attempt_ref,
+            """SELECT content_hash,gate_passed,subject_artifact_ref,stage_attempt_ref,
                       eval_contract_ref,gate_policy_ref
                  FROM public.aip_eval_report_revision
                 WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
@@ -5802,6 +5802,8 @@ class ContentReviewHostService:
             or report["gate_policy_ref"] != report["eval_contract_ref"]
         ):
             raise ValueError("content review EvalReport subject lineage drifted")
+        if command["decision"] == "ACCEPT" and report["gate_passed"] is not True:
+            raise ValueError("content pre-review EvalReport did not pass")
         require_original_content_eval_gate(
             transaction, scope, artifact["run_id"], report["eval_contract_ref"]
         )
