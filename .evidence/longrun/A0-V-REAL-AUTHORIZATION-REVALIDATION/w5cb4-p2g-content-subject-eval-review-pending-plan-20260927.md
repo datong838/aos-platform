@@ -177,3 +177,10 @@
 - 文件级范围仅本 plan、对应 `w5cb4-p2g-current-authority-preflight-verification-20260927.md`、D-waves/上下文/记忆；如发现明确的纯代码缺口，另立编码波方案，不在此波临时改生产文件。检查 m1 与 docs 精确 HEAD、工作树已有文件归属、8080/18181/5173 监听、当前进程/环境开关（只报状态不输出秘密）、单迁移头、当前签名 Bundle/安装/权限/来源/预算/真人审批与 Runtime Host 的可查询入口。
 - 对第二段 `ImprovementPendingReceipt` 增加提交后独立读回的**测试/代码需求评估**；当前现成单元/同库证据若不足，则列为下一编码波优先项。对真实自然链只报告 `VERIFIED`/`NOT_VERIFIED`/`BLOCKED` 和具体证据，不把准备条件写成已满足。若生产 API 离线且恢复需要不明授权/安全边界，本波不启动；仍可继续独立代码安全门。
 - 验证文件落盘并 m1 精确提交，再同步 AOS/Prime。随后自动进入可独立推进的最小代码波（优先第二段独立读回或真实启用前门）；真正启用须当前签名安装、当前 Host、来源/审批/预算与未知提交安全边界全部读回。
+
+### P2g 第二十增量：第二段反馈提交后独立读回（2026-09-27，编码前）
+
+- 复习 231-6 AR2-7C 的 receipt-first/未知提交冻结、原 `ImprovementFeedbackWorker.run_one`、第三段/EffectReview 已有的 postcommit Unknown 处理以及 P2g19 只读验证。第二段当前只在同事务内读回并 commit 后返回成功；必须补独立连接读原 command/第二目标/segment/checkpoint，不能靠下一段或测试 SQL 代替。默认 worker 继续 off。
+- 文件级最小范围：`services/aos-api/aos_api/ecommerce_growth_improvement_target.py` 增独立 `connect_read_only` 依赖和 `ImprovementFeedbackUnknown`；在原事务 commit 后、返回成功前，用新连接核同一租户/command/targetId/Receipt、second ack/attempt=1/checkpoint=2、第一段仍 ack、原 ACCEPT 来源不漂移。提交或提交后读回未知/异常一律抛 `Unknown`，不自动重投，消费者不得吞成普通可跳过阻断；自然 serve 因 Unknown 停止并让 app 任务 FAILED_CLOSED。原前置拒绝继续保留 `Conflict`。
+- RED 测试扩 `services/aos-api/tests/extension_runtime/test_ecommerce_growth_improvement_target.py` 的可注入连接，验证提交后第二次独立连接、丢失/漂移/读取异常、未知提交不得成功返回且没有第二次 claim；原 `test_ecommerce_content_review_pending_pg.py` 复用同一原命令及非超级运行身份做正向独立读回与重复稳定。若现有 clone connector 参数不兼容，先只改测试显式传同一 read-only connector，不改生产默认。
+- 专项、原同库与相关累计、编译/迁移头、方案代码复审；纯后端浏览器不适用。verification 文件落盘、m1 精确提交、AOS/Prime 更新。下一波继续当前签名安装/运行入口的安全恢复或其他独立首链缺口，不触商城源、旧十二 Run、230 L0。
