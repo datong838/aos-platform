@@ -5681,7 +5681,9 @@ class ContentReviewHostService:
             "location": row["location"],
             "evidenceRefs": row["evidence_refs"],
         }
-        expected = review_issue_exact_ref(issue).model_dump(mode="json", by_alias=True)
+        expected = review_issue_exact_ref(issue).model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
         if (
             budget_canonical_hash(raw_issue_payload)
             != budget_canonical_hash(issue_payload)
@@ -5843,6 +5845,16 @@ class ContentReviewHostService:
         plan_id, separator, slot_id = authority_id.rpartition("/")
         if not separator or not plan_id or slot_id != "content.review":
             raise ValueError("content review ReviewerAuthority identity drifted")
+        decision_event = transaction.execute(
+            """SELECT actor FROM public.aip_review_issue_event
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s AND sequence=2""",
+            (*scope.key, command["reviewIssueRef"]["resourceId"]),
+        ).fetchone()
+        if (
+            decision_event is None or type(decision_event["actor"]) is not str
+            or not decision_event["actor"].strip()
+        ):
+            raise ValueError("content review human decision actor is missing")
         rows = transaction.execute(
             """SELECT head.plan_id,head.current_revision,head.version,
                       revision.profile,revision.template_ref,revision.slots,
@@ -5912,6 +5924,13 @@ class ContentReviewHostService:
             for slot in plan.slots:
                 if slot.slot_id != "content.review":
                     continue
+                assignee = slot.assignee.model_dump(mode="json", by_alias=True)
+                if (
+                    type(assignee) is not dict
+                    or assignee.get("kind") != "human_principal"
+                    or assignee.get("resourceId") != decision_event["actor"]
+                ):
+                    continue
                 plan_ref = {
                     "resourceType": "ResponsibilityPlanRevision",
                     "resourceId": plan.plan_id,
@@ -5923,7 +5942,7 @@ class ContentReviewHostService:
                     "slotId": slot.slot_id,
                     "responsibilityType": slot.responsibility_type,
                     "requiredCapabilityIds": slot.required_capability_ids,
-                    "assignee": slot.assignee.model_dump(mode="json", by_alias=True),
+                    "assignee": assignee,
                     "assigneeResolutionReceiptId": slot.assignee_resolution_receipt_id,
                 }
                 candidate = {
@@ -5935,7 +5954,7 @@ class ContentReviewHostService:
                 if _request_hash(candidate) == _request_hash(command["reviewerAuthorityRef"]):
                     matches.append(candidate)
         if len(matches) != 1:
-            raise ValueError("content review ReviewerAuthority must match one current responsibility slot")
+            raise ValueError("content review human decision actor must match one current responsibility slot")
 
     @staticmethod
     def _feedback_plan(receipt, artifact, task_title):

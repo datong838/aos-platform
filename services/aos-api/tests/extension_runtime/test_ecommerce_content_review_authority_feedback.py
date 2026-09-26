@@ -360,7 +360,12 @@ def test_reviewer_authority_is_one_current_ready_content_review_slot(monkeypatch
     item["reviewerAuthorityRef"]["contentHash"] = adapters.budget_canonical_hash(projection, prefixed=True)
 
     class Tx:
-        def execute(self, *_):
+        def __init__(self, decision_actor="reviewer-1"):
+            self.decision_actor = decision_actor
+
+        def execute(self, query, *_):
+            if "aip_review_issue_event" in query:
+                return Result(one={"actor": self.decision_actor})
             return Result(many=[{
                 "plan_id": "responsibility-1", "current_revision": 1, "version": 1,
                 "profile": "legacy", "template_ref": template_ref, "slots": [slot_payload],
@@ -376,6 +381,14 @@ def test_reviewer_authority_is_one_current_ready_content_review_slot(monkeypatch
         lambda *_args, **_kwargs: plan,
     )
     ContentReviewHostService._reviewer_authority(HostTransaction(Tx()), SCOPE, item)
+    with pytest.raises(ValueError, match="human decision actor"):
+        ContentReviewHostService._reviewer_authority(
+            HostTransaction(Tx("another-reviewer")), SCOPE, item
+        )
+    with pytest.raises(ValueError, match="human decision actor"):
+        ContentReviewHostService._reviewer_authority(
+            HostTransaction(Tx(None)), SCOPE, item
+        )
     item["reviewerAuthorityRef"]["contentHash"] = "sha256:" + "e" * 64
     with pytest.raises(ValueError, match="one current responsibility slot"):
         ContentReviewHostService._reviewer_authority(HostTransaction(Tx()), SCOPE, item)
@@ -505,7 +518,8 @@ def test_review_issue_owner_requires_exact_human_resolution_event(monkeypatch):
         "updated_at": NOW,
     }
     issue = AipProductionContractStore()._review_issue(SCOPE, row)
-    item["reviewIssueRef"] = review_issue_exact_ref(issue).model_dump(mode="json", by_alias=True)
+    item["reviewIssueRef"] = review_issue_exact_ref(issue).model_dump(
+        mode="json", by_alias=True, exclude_none=True)
 
     class Tx:
         def __init__(self, value, event=None, decision=None):
@@ -524,7 +538,8 @@ def test_review_issue_owner_requires_exact_human_resolution_event(monkeypatch):
         ContentReviewHostService._issue_authority(HostTransaction(Tx(row)), SCOPE, item)
     resolved = {**row, "status": "resolved", "version": 2}
     resolved_issue = AipProductionContractStore()._review_issue(SCOPE, resolved)
-    item["reviewIssueRef"] = review_issue_exact_ref(resolved_issue).model_dump(mode="json", by_alias=True)
+    item["reviewIssueRef"] = review_issue_exact_ref(resolved_issue).model_dump(
+        mode="json", by_alias=True, exclude_none=True)
     payload = {"expectedVersion": 1, "reason": "已核对商品事实与禁用表达", "resolutionRefs": [
         {"resourceType": "Artifact", "resourceId": item["artifactRef"]["resourceId"],
          "revision": 1, "contentHash": item["artifactRef"]["contentHash"].removeprefix("sha256:")},
@@ -556,7 +571,8 @@ def test_review_issue_owner_requires_exact_human_resolution_event(monkeypatch):
                 "return_stage": "content_generate"}
     returned_issue = AipProductionContractStore()._review_issue(SCOPE, returned)
     return_item = {**item, "decision": "RETURN", "returnStage": "content_generation",
-                   "reviewIssueRef": review_issue_exact_ref(returned_issue).model_dump(mode="json", by_alias=True)}
+                   "reviewIssueRef": review_issue_exact_ref(returned_issue).model_dump(
+                       mode="json", by_alias=True, exclude_none=True)}
     return_payload = {"expectedVersion": 1, "runId": "run-1",
                       "targetStage": "content_generate", "reason": "事实表述需修改",
                       "attemptIdempotencyKey": "return-1", "decisionHash": "d" * 64,

@@ -5,6 +5,7 @@ Each assertion below is only a staged subproof; no test Provider is a live call.
 
 from datetime import UTC, datetime, timedelta
 import importlib.util
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
@@ -28,9 +29,12 @@ from aos_api.aip_eval_runner import AipEvalRunner, JudgeExecution, ResolvedArtif
 from aos_api.aip_logic_graph_store import LogicGraphStore
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import (
-    CreateBriefRequest, CreateEvalContractRequest, CreateReviewIssueRequest, ExactArtifactRef,
-    ExactRevisionRef, RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest,
+    CreateBriefRequest, CreateEvalContractRequest, CreateResponsibilityPlanRequest,
+    CreateReviewIssueRequest, ExactArtifactRef, ExactRevisionRef,
+    RegisterReviewRuleRevisionRequest, ResolveReviewIssueRequest, ResponsibilitySlot,
 )
+from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
+from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
 from aos_api.ecommerce_business_investigation_review_command import review_issue_exact_ref
 from aos_api.aip_release_publication_models import DeriveReleaseGateRequest, PublishReleaseRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
@@ -756,7 +760,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         review_command = {"decision": "ACCEPT",
             "artifactRef": consumed["artifact"]["artifactRef"],
             "reviewIssueRef": review_issue_exact_ref(issue).model_dump(
-                mode="json", by_alias=True)}
+                mode="json", by_alias=True, exclude_none=True)}
         with connect(SCOPE) as conn:
             with pytest.raises(ValueError, match="exact lineage drifted"):
                 ContentReviewHostService._issue_authority(
@@ -772,11 +776,56 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             issue.issue_id, "content-p2g-original-accept", resolution) == resolved
         assert resolved.status.value == "resolved" and resolved.version == 2
         review_command["reviewIssueRef"] = review_issue_exact_ref(resolved).model_dump(
-            mode="json", by_alias=True)
+            mode="json", by_alias=True, exclude_none=True)
         review_command.update({name: consumed["artifact"][name] for name in (
             "taskRef", "briefRef", "growthPlanRef", "sourceArtifactRefs")})
         with connect(SCOPE) as conn:
+            conn.execute("""INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES(%s,%s,'fixture-reviewer','member') ON CONFLICT DO NOTHING""",
+                SCOPE.key)
+        assignee = {"kind": "human_principal", "resourceId": "fixture-reviewer", "version": 1}
+        resolution_receipt = AipAssigneeResolutionStore(connect).resolve(
+            SCOPE, ResolveAssigneeRequest(subjectId="content.review", assignee=assignee),
+            "fixture-reviewer", now=datetime.now(UTC))
+        slot = ResponsibilitySlot.model_validate({
+            "slotId": "content.review", "responsibilityType": "independent_review",
+            "requiredCapabilityIds": [],
+            "inputSchemaRef": {"resourceType": "Schema", "resourceId": "content-review-input",
+                "revision": "1", "authority": "postgresql"},
+            "outputSchemaRef": {"resourceType": "Schema", "resourceId": "content-review-output",
+                "revision": "1", "authority": "postgresql"},
+            "returnStage": "content_generation", "assignee": assignee,
+            "assigneeResolutionReceiptId": resolution_receipt.receipt_id,
+        })
+        # Isolated template resolver is a test seam, not a signed installed Bundle.
+        responsibility_store = AipProductionContractStore(connect_factory=connect,
+            responsibility_template_resolver=lambda _scope, _ref: True)
+        draft = responsibility_store.create_responsibility_plan(SCOPE, "fixture-reviewer",
+            "content-p2g-review-responsibility", CreateResponsibilityPlanRequest(
+                profile="TEST_HUMAN_REVIEW", templateRef={
+                    "resourceType": "ResponsibilityTemplateRevision", "resourceId": "test-template",
+                    "revision": 1, "contentHash": "a" * 64}, slots=[slot]))
+        frozen = responsibility_store.freeze_responsibility_plan(SCOPE, "fixture-reviewer",
+            draft.plan_id, draft.version, "content-p2g-freeze-review-responsibility")
+        reviewer_projection = {
+            "responsibilityPlanRef": {"resourceType": "ResponsibilityPlanRevision",
+                "resourceId": frozen.plan_id, "revision": frozen.revision,
+                "contentHash": "sha256:" + frozen.content_hash},
+            "slotId": slot.slot_id, "responsibilityType": slot.responsibility_type,
+            "requiredCapabilityIds": slot.required_capability_ids,
+            "assignee": slot.assignee.model_dump(mode="json", by_alias=True),
+            "assigneeResolutionReceiptId": slot.assignee_resolution_receipt_id,
+        }
+        review_command["reviewerAuthorityRef"] = {
+            "resourceType": "ReviewerAuthorityRevision",
+            "resourceId": f"{frozen.plan_id}/content.review",
+            "revision": frozen.revision,
+            "contentHash": canonical_hash(reviewer_projection, prefixed=True),
+        }
+        with connect(SCOPE) as conn:
             ContentReviewHostService._issue_authority(
+                HostTransaction(conn), SCOPE, review_command)
+            ContentReviewHostService._reviewer_authority(
                 HostTransaction(conn), SCOPE, review_command)
             artifact_body = ContentReviewHostService._artifact_authority(
                 HostTransaction(conn), SCOPE, review_command)
@@ -810,3 +859,57 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
                   AND operation='review_issue.resolve'
                   AND idempotency_key='content-p2g-original-accept'""",
                 SCOPE.key).fetchone()["n"] == 1
+        review_command.update({
+            "operation": "content.review",
+            "artifactContentHash": review_command["artifactRef"]["contentHash"],
+            "returnStage": None,
+            "idempotencyKey": "content-p2g-original-review-receipt",
+        })
+        review_command["requestHash"] = _analysis_command_hash(review_command)
+        service = ContentReviewHostService()
+        with connect(SCOPE) as conn:
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
+            binding = conn.execute("""SELECT installation_id,generation,execution_epoch,
+                cutover_group_id,cutover_group_revision FROM extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_generate'""",
+                SCOPE.key).fetchone()
+            insert(conn, "extension_operation_dispatch_binding",
+                operation_id="ecommerce_growth_content_review", handler_kind="extension",
+                installation_id=binding["installation_id"], generation=binding["generation"],
+                execution_epoch=binding["execution_epoch"], operation_fence=False,
+                revision=6, cutover_group_id=binding["cutover_group_id"],
+                cutover_group_revision=binding["cutover_group_revision"],
+                updated_by="fixture")
+            snapshot = EcommerceGrowthDispatchSnapshot(
+                operation_id="ecommerce_growth_content_review", dispatch_revision=6,
+                installation_id=binding["installation_id"], generation=binding["generation"],
+                execution_epoch=binding["execution_epoch"],
+                cutover_group_id=binding["cutover_group_id"],
+                cutover_group_revision=binding["cutover_group_revision"],
+                runtime_revision=1, checked_at=datetime.now(UTC))
+            dispatch_ref = SimpleNamespace(org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                operation_id=snapshot.operation_id, dispatch_revision=snapshot.dispatch_revision,
+                installation_id=snapshot.installation_id, generation=snapshot.generation,
+                execution_epoch=snapshot.execution_epoch,
+                cutover_group_id=snapshot.cutover_group_id,
+                cutover_group_revision=snapshot.cutover_group_revision)
+            service.revalidate(transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch=snapshot, command=review_command)
+            review_receipt = service.execute(transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch_ref=dispatch_ref, command=review_command,
+                checked_at=snapshot.checked_at, occurred_at=None)
+            assert service.verify_receipt(transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch=snapshot, command=review_command,
+                receipt=review_receipt) == review_receipt
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n
+                FROM ecommerce_growth_runtime_command_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation_id='ecommerce_growth_content_review'
+                  AND idempotency_key='content-p2g-original-review-receipt'""",
+                SCOPE.key).fetchone()["n"] == 1
+            assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_feedback_command
+                WHERE org_id=%s AND project_id=%s AND review_receipt_ref=%s::jsonb""",
+                (*SCOPE.key, json.dumps(review_receipt["receiptRef"]))).fetchone()["n"] == 1
