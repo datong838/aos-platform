@@ -35,12 +35,22 @@
 
 ### P2c 当前权威与待办 Owner 文件级细化（P2b 后）
 
+- 2026-09-26 只读现场：指定 `aos_meta_head` 元数据库为 `a0v_092`；`org-org/dev-project` 当前 `ecommerce_content` Artifact=0、带主体 EvalReport=0、`subjectKind=ecommerce_content` 当前 EvalContract=0。默认 API DB 缺新合同表，不是本链权威。生产 `a0v_104` 不可声称已应用或可运行；这些读数不授权造产物/报告/批准。
+- 新发现的先行断点：`ContentResultConsumer` 可同事务落 Artifact/Usage/预算结算，`CurrentContentStatusReader` 可独立读回，但生产内容 Owner 中没有 `claim_step('content_generate')` / TAOR / `complete_step`。因此 P2a 所要求的最新生成 StepRun 只能在测试夹具产生，当前自然链不具备。先完成下述 P2d，再做待办 Owner；不要实现一个永远空却标 GREEN 的页面。
+
 - 复审结果：`ecommerce_analyst_stage_review_command.py` 已有“原批准 Plan 的 exact EvalContract → 当前冻结 READY 合同 → Suite/Skill/ReleaseGate → 同 Artifact/attempt Report”的可复用校验范式；`ecommerce_analysis_startup_eval.py` 可按已发布 Skill 派生合同，但不是对当前可读内容的自动批准。W5CB3 内容 TaskRun 的 Plan 目前只有 `content_generate`、`content_review` 两步，尚未声明内容产物的 exact EvalContract；不能从任意现存合同或 fixture 推断生产可用。公共 ReviewIssue REST 路由已有 create/resolve/return，不新增审批表。
 - 先补 `services/aos-api/tests/extension_runtime/` 的隔离 PG RED：已结算 `ecommerce_content` Artifact、最新生成 attempt、当前安装与原 Task/Brief/Plan、同主体 EvalReport 构成**一个**待办候选；无报告、错合同/主体/attempt、旧安装、错租户、未结算或原 Run 不匹配均为零候选。不得为了待办而生成报告或 Issue。
 - 最小代码入口候选：`services/aos-api/aos_api/ecommerce_content_review_pending.py` 只读候选投影；必要时在 `ecommerce_content_taskrun_owner.py` 原 Plan 上持久化受控 exact EvalContract gate ref，但须先证明来自当前已发布内容 Skill 与 READY 合同。公共 `aip_eval_runner.py` 与 `aip_production_contract_store.py` 不再为页面方便而放宽。
 - 内容 Eval 的生产激活另设硬门：先有经正式 Publication/ReleaseGate 的内容 Suite/Contract、当前受控 GatePolicy 类型/Ref、同原 Plan exact 绑定，再运行 Eval；`fixture-policy`、普通无主体 Report、仅有未冻结草案一律不认。若本轮只有代码门，待办 GET 返回空/明确 blocked，不虚构可评审项。
 - 之后才接公共 ReviewIssue 创建与人类 resolve/return、ContentReview Host Receipt、TAOR 终态；最后读回反馈/总控/Wiki 候选。UI 改动必须随后真浏览器验收。本细化不启 worker、Provider、商城源读或外部 Effect。
 - P2b 只封住**新建**内容 Issue；历史已存在或经其他入口留下的 Issue 仍可能被 Host 消费。先在 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_authority_feedback.py` 加 RED，再最小修改 `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py` 的 `ContentReviewHostService._issue_authority`：按原 Issue exact report ref 回读报告与内容 Artifact/原 Run 的最新生成 attempt；无主体、错主体、旧 attempt、缺合同/政策均拒绝。已有人工事件和 ReturnDecision 校验不降低。此为 P2c 前置补洞，不能据此声称待办或生产 Eval 已完成。
+
+### P2d 先补原 Run 的正式生成 StepRun（待办 Owner 前）
+
+- 文件：`services/aos-api/aos_api/ecommerce_content_execution_composition.py` / `ecommerce_content_result_consumer.py` / `ecommerce_content_taskrun_owner.py` 现有调用链；仅确有必要新增 `ecommerce_content_step_owner.py`，不造第二 Run 状态机。测试落 `services/aos-api/tests/extension_runtime/` 与现有内容同库回归。
+- RED 先证明：同一持久 `reservation_id` 的受控结果与独立回读 `COMPLETED` 才可绑定原 TaskRun 的 `content_generate`；原 Run/Task/Plan/Artifact/预算/Provider+Usage Receipt 必须一致。`COST_PENDING`、unknown、旧安装/epoch、跨租户、非当前 attempt 均不成功；重复消费只读回同一 checkpoint，不重发 Provider。
+- 用公共 `AipTaskStore.claim_step` / 四相 TAOR 证据 / `complete_step`，对已有实质外部 Provider 调用只引用不可变 Receipt，不再调用 Provider。必须先设计持久意图/提交未知冻结与独立读回，防止“claim 成功但完成未知”被下一轮另起 attempt；严禁直接 UPDATE StepRun/Run。此段只到 `content_generate` 正式 succeeded，不替代内容 Eval、人类评审与最终 Run succeeded。
+- 之后再把已发布 Skill 的 content Eval Suite/Contract/GatePolicy exact Ref 写入原批准 Plan（需独立内容政策类型或经审查的通用政策，不能冒充媒体政策），并实现待办 Owner 的正反同库验收。生产迁移/启用仍需独立授权和完成门。
 
 ## 退出／下一波
 
