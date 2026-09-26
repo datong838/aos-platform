@@ -17,5 +17,5 @@
 
 ## 验证与退出
 
-- 专项、预算/Host/Journal 累计回归，适用时浏览器验收；核对产品/技术方案的一致性。verification 落盘后才可称 W5CB2 完成并提交 m1，再同步 D-waves/AOS/Prime，进入 W5CB3 Provider/MeasuredUsage/Artifact。
+- 2026-09-26 P2d 复审修订：区分 **W5CB2 默认关闭的 HELD/PENDING 代码门** 与 **生产激活门**。前者须专项、预算/Host/Journal 累计回归、同键/跨租户/未知负例、适用时浏览器验收及方案一致性复审；verification 落盘后可关闭 W5CB2 代码波并推进默认关闭的 W5CB3 Provider/MeasuredUsage/Artifact。完整同 schema Handoff→容量→预算夹具、当前实例审批/来源/价格/容量、安装代次及连续真实自然结果仍是生产激活硬门，不得因代码绿而跳过。此修订遵循主线优先，不以难造的全链夹具阻断下一段核心研发，也不降级最终验收标准。
 - 无可用批准额度或事实来源只阻断该实例，改做主线代码与测试；但不能造 Ref、手动运行、接受未知结果或激活生产 Worker。
