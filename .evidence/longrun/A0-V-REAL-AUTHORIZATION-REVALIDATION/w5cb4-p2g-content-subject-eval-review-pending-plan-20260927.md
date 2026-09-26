@@ -117,3 +117,9 @@
 - 上位 231-5 的“人工评审后系统自动续跑”不能靠开发者调用 `run_one`；第十增量已在一次性库证明同一原 Run 的 exact Receipt→正式终态→feedback 可选，但新 Owner 尚无自然轮询。文件级最小范围：`services/aos-api/aos_api/ecommerce_content_review_step_owner.py` 加有界 `run_once/serve`；`services/aos-api/aos_api/main.py` 增独立默认关闭的启动门；`services/aos-api/tests/extension_runtime/test_ecommerce_content_review_step_owner.py` 加 RED/单测，并复用同库 PG 用例证明 selector 只给唯一 pristine Receipt。`AOS_ECOM_CONTENT_REVIEW_STEP_WORKER_ENABLED=false` 为默认，不能沿用别的 worker 开关暗启。
 - `run_once` 只在 `list_pending` 得到唯一 current ACCEPT Receipt 后调 `run_one`；当前 Host/权威冲突可报告 `BLOCKED_CURRENT_AUTHORITY` 且不创建新 attempt。`ContentReviewStepUnknown`、意外数据库/提交错误必须抛出让整个 worker FAILED_CLOSED，不自动重试。`serve` 固定正租户 `org-org/dev-project`，每轮须 Host task 仍 ACTIVE；启动先核独立 runtime DSN、Host 存活和 flag 合法，任何失败无任务遗留。不得在本波打开当前实例开关或调用真实 reviewer/Provider。
 - RED→最小实现→专项/累计→后端浏览器不适用→方案/代码复审→verification→m1 精确提交→AOS/Prime 更新。之后下一波用同库 feedback 第一段正式 target Receipt/EffectReview 与总控/Wiki 候选读回；签名模板/当前真实安装仍单独验，不以模拟人工或受控商品文本宣布首链完成。
+
+### P2g 第十二增量：同库自然反馈第一段 target Receipt（2026-09-27，编码前）
+
+- 231-5 的 `feedback_pending` 必须由原 TaskRun 终态进入正式反馈接收端，不得仅凭选择器返回 command 就称复盘完成。文件级最小范围先只扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py`：在第十一增量同一 `a0v_105` 一次性库、同一原 Run/Review Receipt/反馈 command 上，以非超级 serializable `aos_runtime` 调用现有 `CurrentFeedbackConsumer.run_once`/`DailyReviewFeedbackWorker`，不造第二命令或直接 INSERT target。
+- RED 首验运行身份能经 `claim_current → require_current_origin → BoundDailyReviewTarget.put → acknowledge` 原子形成唯一 `DailyReviewReceipt`；独立连接读回 target 行、Receipt/hash、反馈第一段 `acked`/attempt=1/checkpoint=1，第二、三段仍 pending/attempt=0。重复同 command 不新建 target、不推进到未接线片段；错安装/旧 Run/非当前 Receipt 必须无效。若数据库权限门拦截，查确切 RLS/函数授权并最小修复，不加宽全表写权限。
+- 专项、累计、浏览器不适用、方案/代码复审、verification、m1 精确提交与 AOS/Prime 同步后，下一波优先拆清 improvement observation 与 memory candidate 的正式目标及总控/Wiki 治理门。当前实例仍不开 worker、不读商城源，不以隔离受控来源宣称经营闭环。

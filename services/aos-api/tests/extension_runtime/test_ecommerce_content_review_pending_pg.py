@@ -69,6 +69,7 @@ from aos_api.ecommerce_growth_runtime_adapters import (
 )
 from aos_api.ecommerce_growth_runtime_store import BoundEcommerceGrowthRuntimeStore
 from aos_api.ecommerce_growth_feedback_consumer import CurrentFeedbackConsumer
+from aos_api.ecommerce_growth_daily_review_target import DailyReviewFeedbackWorker
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
 
@@ -981,6 +982,7 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
         runtime_connect = lambda scope: _runtime_role_connection(connect, scope)
         runtime_owner = ContentReviewStepOwner(
             connect_read=runtime_connect, connect_write=runtime_connect)
+        assert CurrentFeedbackConsumer(connect=runtime_connect).list_pending(SCOPE) == []
         natural_batch = runtime_owner.run_once(SCOPE)
         assert natural_batch == [{"receiptId": review_proof.receipt_id,
             "status": "CONTENT_REVIEW_RUN_SUCCEEDED"}]
@@ -995,5 +997,38 @@ def test_original_settled_artifact_runs_current_content_subject_eval():
             assert conn.execute("""SELECT count(*) AS n FROM aip_step_run WHERE
                 org_id=%s AND project_id=%s AND run_id=%s AND step_key='content_review'""",
                 (*SCOPE.key, review_proof.run_id)).fetchone()["n"] == 1
-        assert CurrentFeedbackConsumer(connect=runtime_connect).list_pending(SCOPE) == [
-            review_proof.feedback_command_id]
+        feedback_worker = DailyReviewFeedbackWorker(connect=runtime_connect)
+        feedback_consumer = CurrentFeedbackConsumer(
+            connect=runtime_connect, worker=feedback_worker)
+        assert feedback_consumer.list_pending(SCOPE) == [review_proof.feedback_command_id]
+        assert feedback_consumer.run_once(SCOPE) == [{
+            "commandId": review_proof.feedback_command_id, "status": "DAILY_REVIEW_ACKED"}]
+        assert feedback_consumer.list_pending(SCOPE) == []
+        with connect(SCOPE) as conn:
+            target = conn.execute("""SELECT target_id,command_id,receipt_ref,body,
+                'sha256:'||encode(digest(convert_to(body::text,'UTF8'),'sha256'),'hex')
+                  AS computed_hash
+                FROM ecommerce_growth_daily_review_target WHERE org_id=%s AND project_id=%s""",
+                SCOPE.key).fetchall()
+            assert len(target) == 1
+            assert target[0]["command_id"] == review_proof.feedback_command_id
+            assert target[0]["receipt_ref"]["contentHash"] == target[0]["computed_hash"]
+            assert target[0]["receipt_ref"]["resourceType"] == "DailyReviewReceipt"
+            segments = conn.execute("""SELECT sequence,kind,state,attempt,target_receipt_ref
+                FROM ecommerce_growth_feedback_segment WHERE org_id=%s AND project_id=%s
+                  AND command_id=%s ORDER BY sequence""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchall()
+            assert [(row["sequence"], row["state"], row["attempt"]) for row in segments] == [
+                (1, "acked", 1), (2, "pending", 0), (3, "pending", 0)]
+            assert segments[0]["target_receipt_ref"] == target[0]["receipt_ref"]
+            assert segments[1]["target_receipt_ref"] is None
+            assert segments[2]["target_receipt_ref"] is None
+            checkpoint = conn.execute("""SELECT completed_sequence FROM
+                ecommerce_growth_feedback_checkpoint WHERE org_id=%s AND project_id=%s
+                  AND command_id=%s""", (*SCOPE.key, review_proof.feedback_command_id)).fetchone()
+            assert checkpoint["completed_sequence"] == 1
+        assert feedback_worker.run_one(SCOPE, review_proof.feedback_command_id)["status"] == "ALREADY_ACKED"
+        with connect(SCOPE) as conn:
+            assert conn.execute("""SELECT count(*) AS n FROM ecommerce_growth_daily_review_target
+                WHERE org_id=%s AND project_id=%s AND command_id=%s""",
+                (*SCOPE.key, review_proof.feedback_command_id)).fetchone()["n"] == 1
