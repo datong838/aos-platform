@@ -8,7 +8,7 @@
 
 - 只读：`services/aos-api/alembic/versions/a0v_045_snapshot_group_journal.py`、`services/aos-api/aos_api/pipeline_snapshot_group_locator.py`、`services/aos-api/tests/extension_runtime/test_a0v_w5c8g_unknown_source_group_read_only_pg.py` 与 W5c8g verification。
 - 仅修改上述 `test_a0v_w5c8g_unknown_source_group_read_only_pg.py`：在原完整 synthetic 链已构建、unknown 只读对账已成功后，尝试将相同 `run_id` 插入第二组，要求数据库唯一约束拒绝且原读不漂移；再尝试 UPDATE 原保存 `pipeline_snapshot_group_input.manifest`，要求不可变触发器拒绝且原读不漂移。每个失败事务须 rollback，不能继续带错误状态读。若真实约束未拦截，先停并另立生产修复方案，不在测试波顺手改迁移。
-- 用项目 `.venv` 和 `pytest --noconftest` 运行单一隔离 PG 专项；需要 `aos_test_*` 一次性 DB，不使用共享主库；运行前后确认真库/18181 不变、测试 DB 0。再跑短无 PG 邻接回归与静态检查。
+- 现场环境订正：该 PG 用例的 `private_database` 依赖 `services/aos-api/tests/conftest.py` 自动建立并销毁父 `aos_test_*_ti4_test`，不能用 `--noconftest`；用项目 `.venv`、标准 `pytest`、显式 `AOS_DOTENV_DISABLED=1`，确认 `AOS_TEST_USE_SHARED_DATABASE` 非 1 和默认 DSN 指向专用 `colima-aos-a0v-test-only:5433`，只运行此文件。不得把父库切到 18435 真库。运行前后确认真库/18181 不变、测试 DB 0。再跑短无 PG 邻接回归与静态检查。
 - 本目录 audit/verification、D-waves、AOS/Prime CAS 和精确 m1 提交。
 
 ## 九步与退出
