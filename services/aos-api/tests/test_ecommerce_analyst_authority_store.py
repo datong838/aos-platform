@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import pytest
 
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, GrowthPlanRevision
-from aos_api.ecommerce_analyst_authority_store import AnalystAuthorityConflict, AnalystAuthorityIdempotencyConflict, AnalystAuthorityNotFound, EcommerceAnalystAuthorityStore
+from aos_api.ecommerce_analyst_authority_store import AnalystAuthorityConflict, AnalystAuthorityIdempotencyConflict, AnalystAuthorityNotFound, EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.tenant_scope import TenantScope
 
 NOW = datetime(2026, 8, 25, tzinfo=UTC)
@@ -38,7 +38,8 @@ def exact(kind, identity): return {"resourceType": kind, "resourceId": identity,
 
 
 def plan(org="org-org") -> GrowthPlanRevision:
-    return GrowthPlanRevision.model_validate({"tenant": {"orgId": org, "projectId": "dev-project"}, "planId": "plan-1", "revision": 1, "version": 1, "lifecycle": "approved", "decisionRef": exact("DecisionSummaryRevision", "decision-1"), "objective": "grow", "constraints": [], "budget": "10", "expectedEffect": "+1%", "confidence": 0.5, "stopConditions": ["stale"], "items": [{"itemId": "a", "taskType": "analysis", "title": "A", "objective": "A"}], "approvedAt": NOW, "contentHash": HASH, "createdBy": "user:operator", "createdAt": NOW})
+    item = GrowthPlanRevision.model_validate({"tenant": {"orgId": org, "projectId": "dev-project"}, "planId": "plan-1", "revision": 1, "version": 1, "lifecycle": "approved", "decisionRef": exact("DecisionSummaryRevision", "decision-1"), "objective": "grow", "constraints": [], "budget": "10", "expectedEffect": "+1%", "confidence": 0.5, "stopConditions": ["stale"], "items": [{"itemId": "a", "taskType": "analysis", "title": "A", "objective": "A"}], "approvedAt": NOW, "contentHash": HASH, "createdBy": "user:operator", "createdAt": NOW})
+    return item.model_copy(update={"content_hash": canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"}))})
 
 
 def test_publish_plan_writes_head_revision_receipt_and_commits() -> None:
@@ -49,6 +50,15 @@ def test_publish_plan_writes_head_revision_receipt_and_commits() -> None:
     assert "INSERT INTO ecommerce_analyst_growth_plan_head" in sql
     assert "INSERT INTO ecommerce_analyst_growth_plan_revision" in sql
     assert "INSERT INTO ecommerce_analyst_authority_receipt" in sql
+
+
+def test_publish_plan_rejects_payload_hash_drift_before_sql() -> None:
+    connection = Connection()
+    with pytest.raises(AnalystAuthorityConflict, match="hash"):
+        EcommerceAnalystAuthorityStore(factory(connection)).publish_plan(
+            SCOPE, "user:operator", "drifted-plan", plan().model_copy(update={"content_hash": HASH}), expected_version=0,
+        )
+    assert connection.calls == []
 
 
 def test_publish_plan_enforces_cas_idempotency_tenant_and_actor() -> None:

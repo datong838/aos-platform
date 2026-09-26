@@ -12,6 +12,7 @@ from aos_api.ecommerce_analyst_authority_contracts import (
     InsightRevision,
     TaskGraphRevision,
 )
+from aos_api.ecommerce_analyst_authority_store import canonical_hash
 
 NOW = datetime(2026, 8, 25, tzinfo=UTC)
 HASH = "a" * 64
@@ -51,6 +52,61 @@ def test_growth_plan_requires_approved_timestamp_and_unique_items() -> None:
     invalid["approvedAt"] = None
     with pytest.raises(ValidationError, match="approvedAt"):
         GrowthPlanRevision.model_validate(invalid)
+
+
+def sales_weapon_method() -> dict[str, object]:
+    sourced = lambda text: {"text": text, "evidenceRefs": [ref("EvidenceBundleRevision", "evidence-1")]}
+    return {
+        "productSourceKey": "niushop:goods:65",
+        "productLabel": "栖月汇候选商品",
+        "audienceHypothesis": sourced("可能适合有明确需求的人群，待验证"),
+        "scenario": sourced("线下体验后的知识解释场景"),
+        "fitFor": [sourced("需要先了解产品使用条件的人群")],
+        "notFitFor": [sourced("无法确认使用条件的人群先转人工")],
+        "proposedValueClaims": [sourced("可说明已核验的产品属性")],
+        "unknownFacts": ["当前库存与真实贡献尚未核实"],
+        "prohibitedClaims": ["不得承诺功效或保证收益"],
+        "handoffCondition": "涉及个体适用性时交由真人核验",
+        "evidenceRefs": [ref("EvidenceBundleRevision", "evidence-1")],
+        "sourceCutoffAt": NOW,
+    }
+
+
+def test_sales_weapon_method_is_hashed_plan_content_without_changing_legacy_shape() -> None:
+    legacy = GrowthPlanRevision.model_validate(plan())
+    legacy_payload = legacy.model_dump(mode="json", by_alias=True, exclude={"content_hash"})
+    assert "salesWeaponMethod" not in legacy_payload
+    payload = plan()
+    payload["salesWeaponMethod"] = sales_weapon_method()
+    current = GrowthPlanRevision.model_validate(payload)
+    dumped = current.model_dump(mode="json", by_alias=True)
+    assert dumped["salesWeaponMethod"]["fitFor"][0]["evidenceRefs"][0]["resourceId"] == "evidence-1"
+    assert canonical_hash(current.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != canonical_hash(legacy_payload)
+    assert current.sales_weapon_method is not None
+
+
+@pytest.mark.parametrize("change", [
+    {"fitFor": []},
+    {"unknownFacts": []},
+    {"prohibitedClaims": []},
+    {"evidenceRefs": []},
+    {"sourceCutoffAt": datetime(2026, 8, 25)},
+    {"sourceCutoffAt": datetime(2026, 8, 26, tzinfo=UTC)},
+])
+def test_sales_weapon_method_rejects_incomplete_or_late_provenance(change: dict[str, object]) -> None:
+    payload = plan()
+    payload["salesWeaponMethod"] = {**sales_weapon_method(), **change}
+    with pytest.raises(ValidationError):
+        GrowthPlanRevision.model_validate(payload)
+
+
+def test_sales_weapon_method_rejects_statement_outside_closed_evidence() -> None:
+    payload = plan()
+    method = sales_weapon_method()
+    method["scenario"] = {"text": "外部主张", "evidenceRefs": [ref("EvidenceBundleRevision", "other")]}
+    payload["salesWeaponMethod"] = method
+    with pytest.raises(ValidationError):
+        GrowthPlanRevision.model_validate(payload)
 
 
 def test_task_graph_enforces_count_conservation_and_one_to_one_mapping() -> None:

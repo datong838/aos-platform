@@ -98,6 +98,8 @@ class EcommerceAnalystAuthorityStore:
         return self._publish(scope, actor, key, item, expected_version=expected_version, identity=item.decision_id, identity_column="decision_id", resource_type="DecisionSummaryRevision", head_table="ecommerce_analyst_decision_head", revision_table="ecommerce_analyst_decision_revision", operation="analyst.decision_publish")
 
     def publish_plan(self, scope: TenantScope, actor: str, key: str, item: GrowthPlanRevision, *, expected_version: int) -> AnalystExactRef:
+        if canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != item.content_hash:
+            raise AnalystAuthorityConflict("GrowthPlan payload hash mismatch")
         return self._publish(scope, actor, key, item, expected_version=expected_version, identity=item.plan_id, identity_column="plan_id", resource_type="GrowthPlanRevision", head_table="ecommerce_analyst_growth_plan_head", revision_table="ecommerce_analyst_growth_plan_revision", operation="analyst.growth_plan_publish")
 
     def publish_task_graph(self, scope: TenantScope, actor: str, key: str, item: TaskGraphRevision, *, expected_version: int) -> AnalystExactRef:
@@ -118,7 +120,9 @@ class EcommerceAnalystAuthorityStore:
             raise AnalystAuthorityNotFound("exact GrowthPlanRevision was not found in scope")
         item = GrowthPlanRevision.model_validate(row["payload"])
         self._require_scope(scope, item.tenant.org_id, item.tenant.project_id)
-        if item.content_hash != row["content_hash"]:
+        if (item.content_hash != row["content_hash"]
+                or item.plan_id != ref.resource_id or item.revision != ref.revision
+                or canonical_hash(item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})) != ref.content_hash):
             raise AnalystAuthorityNotFound("GrowthPlanRevision payload hash does not match authority")
         return item
 

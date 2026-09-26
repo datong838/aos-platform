@@ -210,6 +210,61 @@ class GrowthPlanItem(AipContractModel):
         return payload
 
 
+class SalesWeaponStatement(AipContractModel):
+    text: str = Field(min_length=1, max_length=2000)
+    evidence_refs: list[AnalystExactRef] = Field(min_length=1, max_length=20)
+
+    @model_validator(mode="after")
+    def _source(self) -> "SalesWeaponStatement":
+        if self.text != self.text.strip() or not self.text.isprintable():
+            raise ValueError("sales weapon statement requires printable business text")
+        _unique_refs(self.evidence_refs, "statement evidenceRefs")
+        for ref in self.evidence_refs:
+            _require_type(ref, {"EvidenceBundleRevision"}, "statement evidenceRefs")
+        return self
+
+
+class SalesWeaponMethod(AipContractModel):
+    """Structured method content within an approved exact GrowthPlan, not a separate approval."""
+
+    product_source_key: str = Field(min_length=1, max_length=240)
+    product_label: str = Field(min_length=1, max_length=500)
+    audience_hypothesis: SalesWeaponStatement
+    scenario: SalesWeaponStatement
+    fit_for: list[SalesWeaponStatement] = Field(min_length=1, max_length=20)
+    not_fit_for: list[SalesWeaponStatement] = Field(min_length=1, max_length=20)
+    proposed_value_claims: list[SalesWeaponStatement] = Field(min_length=1, max_length=20)
+    unknown_facts: list[str] = Field(min_length=1, max_length=30)
+    prohibited_claims: list[str] = Field(min_length=1, max_length=30)
+    handoff_condition: str = Field(min_length=1, max_length=2000)
+    evidence_refs: list[AnalystExactRef] = Field(min_length=1, max_length=100)
+    source_cutoff_at: datetime
+
+    @model_validator(mode="after")
+    def _closed_sources(self) -> "SalesWeaponMethod":
+        texts = [self.product_source_key, self.product_label, self.handoff_condition,
+                 *self.unknown_facts, *self.prohibited_claims]
+        if any(value != value.strip() or not value.isprintable() for value in texts):
+            raise ValueError("sales weapon method business text is invalid")
+        if len(set(self.unknown_facts)) != len(self.unknown_facts) or len(set(self.prohibited_claims)) != len(self.prohibited_claims):
+            raise ValueError("sales weapon unknown and prohibited claims must be unique")
+        if self.source_cutoff_at.utcoffset() is None:
+            raise ValueError("sales weapon source cutoff must include timezone")
+        _unique_refs(self.evidence_refs, "sales weapon evidenceRefs")
+        for ref in self.evidence_refs:
+            _require_type(ref, {"EvidenceBundleRevision"}, "sales weapon evidenceRefs")
+        statements = [self.audience_hypothesis, self.scenario, *self.fit_for,
+                      *self.not_fit_for, *self.proposed_value_claims]
+        if len({item.text for item in statements}) != len(statements):
+            raise ValueError("sales weapon business statements must be unique")
+        allowed = {(ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+                   for ref in self.evidence_refs}
+        if any(not {(ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
+                    for ref in item.evidence_refs}.issubset(allowed) for item in statements):
+            raise ValueError("sales weapon statement references evidence outside method")
+        return self
+
+
 class GrowthPlanRevision(_RevisionBase):
     plan_id: str = Field(min_length=1, max_length=200)
     lifecycle: GrowthPlanLifecycle
@@ -223,6 +278,7 @@ class GrowthPlanRevision(_RevisionBase):
     items: list[GrowthPlanItem] = Field(min_length=1, max_length=500)
     approved_at: datetime | None = None
     generation_artifact_ref: AnalystExactRef | None = None
+    sales_weapon_method: SalesWeaponMethod | None = None
 
     @model_serializer(mode="wrap")
     def _legacy_payload(self, handler):
@@ -230,6 +286,9 @@ class GrowthPlanRevision(_RevisionBase):
         if self.generation_artifact_ref is None:
             payload.pop("generationArtifactRef", None)
             payload.pop("generation_artifact_ref", None)
+        if self.sales_weapon_method is None:
+            payload.pop("salesWeaponMethod", None)
+            payload.pop("sales_weapon_method", None)
         return payload
 
     @model_validator(mode="after")
@@ -243,6 +302,9 @@ class GrowthPlanRevision(_RevisionBase):
         if self.lifecycle is GrowthPlanLifecycle.APPROVED:
             if self.approved_at is None or self.approved_at.utcoffset() is None:
                 raise ValueError("approved plans require timezone-aware approvedAt")
+            if (self.sales_weapon_method is not None
+                    and self.sales_weapon_method.source_cutoff_at > self.approved_at):
+                raise ValueError("sales weapon source cutoff is later than plan approval")
         elif self.approved_at is not None:
             raise ValueError("only approved plans may carry approvedAt")
         return self

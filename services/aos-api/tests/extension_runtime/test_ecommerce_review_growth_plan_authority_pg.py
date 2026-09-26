@@ -3,14 +3,15 @@ from datetime import UTC, datetime
 import pytest
 
 from aos_api.db import connect_serializable
-from aos_api.ecommerce_analyst_authority_contracts import GrowthPlanRevision
-from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore
+from aos_api.ecommerce_analyst_authority_contracts import GrowthPlanRevision, SalesWeaponMethod
+from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ReviewAdvanceHostService,
     TransactionBoundConnectFactory,
 )
 from aos_api.tenant_scope import TenantScope
+from test_ecommerce_analyst_authority_contracts import sales_weapon_method
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -21,7 +22,7 @@ HASH_B = "b" * 64
 
 
 def plan(*, plan_id: str, revision: int, lifecycle: str, content_hash: str) -> GrowthPlanRevision:
-    return GrowthPlanRevision.model_validate(
+    item = GrowthPlanRevision.model_validate(
         {
             "tenant": {"orgId": SCOPE.org_id, "projectId": SCOPE.project_id},
             "planId": plan_id,
@@ -62,6 +63,9 @@ def plan(*, plan_id: str, revision: int, lifecycle: str, content_hash: str) -> G
             "createdAt": NOW,
         }
     )
+    return item.model_copy(update={"content_hash": canonical_hash(
+        item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})
+    )})
 
 
 def command(item: GrowthPlanRevision, *, content_hash: str | None = None) -> dict[str, object]:
@@ -73,6 +77,26 @@ def command(item: GrowthPlanRevision, *, content_hash: str | None = None) -> dic
             "contentHash": "sha256:" + (content_hash or item.content_hash),
         }
     }
+
+
+def test_approved_sales_weapon_method_is_persisted_under_exact_plan_hash():
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        store = EcommerceAnalystAuthorityStore(TransactionBoundConnectFactory(transaction, SCOPE))
+        original = plan(plan_id="review-sales-weapon-method", revision=1,
+                        lifecycle="approved", content_hash=HASH_A)
+        item = original.model_copy(update={
+            "sales_weapon_method": SalesWeaponMethod.model_validate(sales_weapon_method()),
+        })
+        item = item.model_copy(update={"content_hash": canonical_hash(
+            item.model_dump(mode="json", by_alias=True, exclude={"content_hash"})
+        )})
+        exact = store.publish_plan(SCOPE, "user:reviewer", "review-sales-weapon-method-1",
+                                   item, expected_version=0)
+        readback = store.get_plan_exact(SCOPE, exact)
+        assert readback.sales_weapon_method == item.sales_weapon_method
+        assert readback.content_hash != original.content_hash
+        conn.rollback()
 
 
 def test_review_growth_plan_requires_current_approved_public_owner_and_rolls_back():
