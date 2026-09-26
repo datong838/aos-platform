@@ -19,6 +19,13 @@
 - 退回命令的业务 phase `content_generation` 与公共 TaskRun 步骤 `content_generate` 是两种不同标识；公共 `return_review_issue` 必须接实际 step key，Host 回馈继续保留业务 phase。明确映射，不全局改既有 Plan step key，也不降低 ReturnDecision 的当前 Run/版本/attempt 检查。
 - W5CB4 分 P1/P2：P1 先做上述人类决定/退回映射的 RED→GREEN 和邻近测试；P2 再做 Artifact→待办、TAOR StepRun/TaskRun 终态及反馈同库自然接线。P1 通过绝不称本波完成，verification 只在 P2 或清楚记录未完成后落盘。
 
+### P2 文件级入口与权威选择
+
+- 公共 `AipProductionContractStore.create_review_issue` 强制已有 `EvalReportRevision`、ReviewRule 与 Artifact；不能为“让按钮可点”伪造 EvalReport 或建第二个审批表。先在 `services/aos-api/aos_api/aip_eval_runner.py`／`aip_eval_authority_store.py`、现有内容 EvalContract/Rule 种子中查可复用的**当前内容产物 Eval**；只有正式产出的 EvalReport 才能通过既有 Store 建内容 ReviewIssue。若当前根本无合格 suite/规则，应先实现并测试这一小块，且默认不启生产。
+- `services/aos-api/aos_api/ecommerce_content_review_*`（仅确有断点时新增）负责从已结算的可读 Artifact 与原 TaskRun/Task/Brief/Plan、当前安装、EvalReport 组成有界待办投影；GET 只读、POST 决策沿既有 `AipProductionContractStore` 人类角色 API 和 Host exact Receipt，不给后台 worker 代批。
+- `services/aos-api/aos_api/ecommerce_content_taskrun_owner.py` 或最小后继 Owner 只用公共 `AipTaskStore` 的 claim／TAOR evidence／complete_step／complete_run 达成正式终态；不直接 UPDATE Run/Task。人工 ACCEPT 才允许最后 Review step 完成，RETURN 由公共 ReturnDecision 派生新 `content_generate` attempt，不重发旧 Provider。反馈原 selector 已要求 succeeded/completed，受限写门保持不动。
+- 前端仅在当前已有内容工作台缺待办显示/评审动作时改 `apps/web/src/components/workshop/ContentCampaignPage.tsx` 与相应 client/contracts/tests；页面需真实浏览器验收。每个分段先 RED，完整同库后才叫 W5CB4 通过。
+
 ## 退出／下一波
 
 本波最多证明受控 Artifact 后的“待人评审→exact 决策→Run/反馈”代码链；没有真实人类审批不得声称自然闭环。下一波按本波证据补生产激活硬门与当前实例自然观察，而非回到旧 12 Run 的逐行补数。
