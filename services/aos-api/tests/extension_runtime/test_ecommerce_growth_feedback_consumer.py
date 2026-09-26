@@ -63,6 +63,7 @@ def test_selector_has_current_origin_and_never_selects_claimed_or_unknown():
     assert "ecommerce_growth_runtime_command_receipt" in query
     assert "extension_operation_dispatch_binding" in query
     assert "extension_runtime_binding" in query
+    assert "aip_artifact" in query and "aip_task_run" in query and "aip_task" in query
     assert params == ("org-org", "dev-project", 7)
 
 

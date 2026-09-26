@@ -76,10 +76,21 @@ def database():
           dispatch_revision bigint,installation_id uuid,generation uuid,execution_epoch bigint,
           cutover_group_id uuid,cutover_group_revision bigint,runtime_revision bigint,
           request_hash text)""")
+        owner.execute("""CREATE TABLE aip_task(
+          org_id text,project_id text,task_id text,status text,
+          PRIMARY KEY(org_id,project_id,task_id))""")
+        owner.execute("""CREATE TABLE aip_task_run(
+          org_id text,project_id text,run_id text,task_id text,status text,
+          PRIMARY KEY(org_id,project_id,run_id))""")
+        owner.execute("""CREATE TABLE aip_artifact(
+          org_id text,project_id text,artifact_id text,run_id text,
+          artifact_type text,content_hash text,family_revision integer,
+          PRIMARY KEY(org_id,project_id,artifact_id))""")
         for filename in (
             "ar2_004_ecommerce_growth_feedback.py",
             "a0v_028_dispatch_read_lock.py",
             "a0v_099_ecommerce_daily_review_target.py",
+            "a0v_100_ecommerce_daily_review_terminal_gate.py",
         ):
             spec = importlib.util.spec_from_file_location(filename, ROOT / "alembic/versions" / filename)
             migration = importlib.util.module_from_spec(spec)
@@ -90,6 +101,13 @@ def database():
         owner.execute("GRANT USAGE ON SCHEMA public TO aos_runtime")
         owner.execute("GRANT SELECT,UPDATE ON extension_runtime_binding TO aos_runtime")
         owner.execute("GRANT SELECT ON ecommerce_growth_runtime_command_receipt TO aos_runtime")
+        for table in ("aip_task", "aip_task_run", "aip_artifact"):
+            owner.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
+            owner.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+            owner.execute(f"""CREATE POLICY tenant_scope_{table}_test ON {table} TO aos_runtime
+              USING(org_id=NULLIF(current_setting('aos.org_id',true),'')
+                AND project_id=NULLIF(current_setting('aos.project_id',true),''))""")
+            owner.execute(f"GRANT SELECT ON {table} TO aos_runtime")
         yield SimpleNamespace(owner=owner, options=options, host_role=host_role)
     finally:
         owner.close()
@@ -103,7 +121,7 @@ def database():
         admin.close()
 
 
-def seed(database, *, claimed=True):
+def seed(database, *, claimed=True, terminal=True):
     owner = database.owner
     installation, generation, group, lease = uuid4(), uuid4(), uuid4(), uuid4()
     review, artifact, task, brief = (
@@ -129,6 +147,12 @@ def seed(database, *, claimed=True):
                       (*SCOPE.key, operation, installation, generation, group))
     response = {"receiptRef": review, "decision": "ACCEPT", "artifactRef": artifact,
                 "taskRef": task, "briefRef": brief}
+    if terminal:
+        owner.execute("INSERT INTO aip_task VALUES(%s,%s,'task-1','completed')", SCOPE.key)
+        owner.execute("INSERT INTO aip_task_run VALUES(%s,%s,'run-1','task-1','succeeded')", SCOPE.key)
+        owner.execute("""INSERT INTO aip_artifact VALUES(
+          %s,%s,'artifact-1','run-1','ecommerce_content',%s,NULL)""",
+                      (*SCOPE.key, "a" * 64))
     owner.execute("""INSERT INTO ecommerce_growth_runtime_command_receipt VALUES(
       %s,%s,'ecommerce_growth_content_review',%s,%s,5,%s,%s,3,%s,11,6,%s)""",
                   (*SCOPE.key, psycopg.types.json.Jsonb(review), psycopg.types.json.Jsonb(response),
@@ -281,3 +305,68 @@ def test_natural_selector_excludes_unknown_or_old_origin(database, drift):
         database.owner.execute("UPDATE extension_runtime_binding SET enabled=false,operation_fence=true")
     consumer = CurrentFeedbackConsumer(connect=lambda scope: runtime_connection(database, scope))
     assert consumer.list_pending(SCOPE) == []
+
+
+def test_missing_terminal_run_never_enters_feedback_selector(database):
+    seed(database, claimed=False, terminal=False)
+    consumer = CurrentFeedbackConsumer(connect=lambda scope: runtime_connection(database, scope))
+    assert consumer.list_pending(SCOPE) == []
+
+
+def test_missing_terminal_run_never_writes_daily_review(database):
+    item = seed(database, terminal=False)
+    with runtime_connection(database) as conn:
+        target = BoundDailyReviewTarget(HostTransaction(conn), SCOPE)
+        with pytest.raises(EcommerceGrowthFeedbackConflict):
+            target.put(**target_args(item))
+        conn.rollback()
+    assert database.owner.execute("SELECT count(*) AS n FROM ecommerce_growth_daily_review_target").fetchone()["n"] == 0
+
+
+def test_old_target_function_is_not_executable_by_runtime_role(database):
+    signature = ("public.ecommerce_growth_daily_review_put_a0v_099("
+                 "text,text,uuid,bigint,jsonb,jsonb,jsonb,jsonb,jsonb)")
+    row = database.owner.execute(
+        "SELECT has_function_privilege('aos_runtime',%s,'EXECUTE') AS allowed", (signature,)
+    ).fetchone()
+    assert row["allowed"] is False
+
+
+def drift_terminal(database, kind):
+    statements = {
+        "running": "UPDATE aip_task_run SET status='running'",
+        "failed": "UPDATE aip_task_run SET status='failed'",
+        "task_open": "UPDATE aip_task SET status='executing'",
+        "artifact_type": "UPDATE aip_artifact SET artifact_type='untrusted_text'",
+        "artifact_hash": "UPDATE aip_artifact SET content_hash='" + "f" * 64 + "'",
+        "artifact_revision": "UPDATE aip_artifact SET family_revision=2",
+        "artifact_run": "UPDATE aip_artifact SET run_id='another-run'",
+        "run_task": "UPDATE aip_task_run SET task_id='another-task'",
+    }
+    database.owner.execute(statements[kind])
+
+
+@pytest.mark.parametrize("kind", [
+    "running", "failed", "task_open", "artifact_type", "artifact_hash",
+    "artifact_revision", "artifact_run", "run_task",
+])
+def test_terminal_lineage_drift_is_excluded_from_selector(database, kind):
+    seed(database, claimed=False)
+    drift_terminal(database, kind)
+    consumer = CurrentFeedbackConsumer(connect=lambda scope: runtime_connection(database, scope))
+    assert consumer.list_pending(SCOPE) == []
+
+
+@pytest.mark.parametrize("kind", [
+    "running", "task_open", "artifact_type", "artifact_hash",
+    "artifact_revision", "artifact_run", "run_task",
+])
+def test_terminal_lineage_drift_is_rejected_at_target(database, kind):
+    item = seed(database)
+    drift_terminal(database, kind)
+    with runtime_connection(database) as conn:
+        target = BoundDailyReviewTarget(HostTransaction(conn), SCOPE)
+        with pytest.raises(EcommerceGrowthFeedbackConflict):
+            target.put(**target_args(item))
+        conn.rollback()
+    assert database.owner.execute("SELECT count(*) AS n FROM ecommerce_growth_daily_review_target").fetchone()["n"] == 0

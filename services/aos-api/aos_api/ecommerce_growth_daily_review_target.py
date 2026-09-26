@@ -56,7 +56,7 @@ class BoundDailyReviewTarget:
                 for key in ("reviewReceiptRef", "artifactRef", "taskRef", "briefRef")
             ]
             row = self._transaction.execute(
-                """SELECT * FROM public.ecommerce_growth_daily_review_put_a0v_099(
+                """SELECT * FROM public.ecommerce_growth_daily_review_put_a0v_100(
                      %s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb)""",
                 (
                     command_id, claim["targetId"], lease_token, claim["checkpointVersion"],

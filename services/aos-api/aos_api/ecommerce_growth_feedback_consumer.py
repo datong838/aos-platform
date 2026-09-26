@@ -24,6 +24,18 @@ _PENDING_CURRENT_DAILY_REVIEW = """SELECT c.command_id
   JOIN public.extension_runtime_binding b
     ON b.org_id=d.org_id AND b.project_id=d.project_id
    AND b.installation_id=d.installation_id AND b.generation=d.generation
+  JOIN public.aip_artifact a
+    ON a.org_id=c.org_id AND a.project_id=c.project_id
+   AND a.artifact_id=c.artifact_ref->>'resourceId'
+   AND a.artifact_type='ecommerce_content'
+   AND c.artifact_ref->>'contentHash'='sha256:'||a.content_hash
+   AND c.artifact_ref->'revision'=to_jsonb(coalesce(a.family_revision,1))
+  JOIN public.aip_task_run r
+    ON r.org_id=a.org_id AND r.project_id=a.project_id AND r.run_id=a.run_id
+   AND r.task_id=c.task_ref->>'resourceId' AND r.status='succeeded'
+  JOIN public.aip_task t
+    ON t.org_id=r.org_id AND t.project_id=r.project_id AND t.task_id=r.task_id
+   AND t.status='completed'
  WHERE c.org_id=%s AND c.project_id=%s AND c.decision='ACCEPT'
    AND p.completed_sequence=0 AND p.version>=1
    AND s.kind='daily_review' AND s.state='pending' AND s.attempt=0
