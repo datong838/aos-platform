@@ -9,7 +9,7 @@ import pytest
 
 import aos_api.ecommerce_growth_runtime_adapters as adapters
 from aos_api.aip_production_contracts import BriefLifecycle, ContractReadiness, Coverage
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import AipProductionContractStore, canonical_hash as production_canonical_hash
 from aos_api.ecommerce_business_investigation_review_command import review_issue_exact_ref
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
@@ -476,7 +476,7 @@ def test_artifact_owner_rejects_boolean_exact_ref_alias():
         )
 
 
-def test_review_issue_owner_rejects_raw_boolean_revision_alias():
+def test_review_issue_owner_requires_exact_human_resolution_event():
     item = command()
     row = {
         "issue_id": "issue-1",
@@ -507,19 +507,74 @@ def test_review_issue_owner_rejects_raw_boolean_revision_alias():
     item["reviewIssueRef"] = review_issue_exact_ref(issue).model_dump(mode="json", by_alias=True)
 
     class Tx:
-        def __init__(self, value):
+        def __init__(self, value, event=None, decision=None):
             self.value = value
+            self.event = event
+            self.decision = decision
 
-        def execute(self, *_):
+        def execute(self, query, *_):
+            if "aip_review_issue_event" in query:
+                return Result(self.event)
+            if "aip_return_decision" in query:
+                return Result(self.decision)
             return Result(self.value)
 
-    ContentReviewHostService._issue_authority(HostTransaction(Tx(row)), SCOPE, item)
+    with pytest.raises(ValueError, match="exact lineage drifted"):
+        ContentReviewHostService._issue_authority(HostTransaction(Tx(row)), SCOPE, item)
+    resolved = {**row, "status": "resolved", "version": 2}
+    resolved_issue = AipProductionContractStore()._review_issue(SCOPE, resolved)
+    item["reviewIssueRef"] = review_issue_exact_ref(resolved_issue).model_dump(mode="json", by_alias=True)
+    payload = {"expectedVersion": 1, "reason": "已核对商品事实与禁用表达", "resolutionRefs": [
+        {"resourceType": "Artifact", "resourceId": item["artifactRef"]["resourceId"],
+         "revision": 1, "contentHash": item["artifactRef"]["contentHash"].removeprefix("sha256:")},
+    ]}
+    event = {"event_type": "resolved", "issue_version": 2, "actor": "reviewer",
+             "payload": payload, "payload_hash": production_canonical_hash(payload)}
+    ContentReviewHostService._issue_authority(HostTransaction(Tx(resolved, event)), SCOPE, item)
+    missing_event = {**event, "payload_hash": "0" * 64}
+    with pytest.raises(ValueError, match="human decision"):
+        ContentReviewHostService._issue_authority(HostTransaction(Tx(resolved, missing_event)), SCOPE, item)
+    no_artifact = {**payload, "resolutionRefs": []}
+    with pytest.raises(ValueError, match="exact Artifact resolution"):
+        ContentReviewHostService._issue_authority(
+            HostTransaction(Tx(resolved, {**event, "payload": no_artifact,
+                                          "payload_hash": production_canonical_hash(no_artifact)})),
+            SCOPE, item)
+    with pytest.raises(ValueError, match="human decision"):
+        ContentReviewHostService._issue_authority(
+            HostTransaction(Tx(resolved, {**event, "actor": "unrelated-reviewer"})),
+            SCOPE, item)
     polluted = deepcopy(row)
     polluted["rule_ref"]["revision"] = True
     with pytest.raises(ValueError, match="exact lineage drifted"):
         ContentReviewHostService._issue_authority(
-            HostTransaction(Tx(polluted)), SCOPE, item
+            HostTransaction(Tx(polluted, event)), SCOPE, item
         )
+
+    returned = {**row, "status": "returned", "version": 2,
+                "return_stage": "content_generate"}
+    returned_issue = AipProductionContractStore()._review_issue(SCOPE, returned)
+    return_item = {**item, "decision": "RETURN", "returnStage": "content_generation",
+                   "reviewIssueRef": review_issue_exact_ref(returned_issue).model_dump(mode="json", by_alias=True)}
+    return_payload = {"expectedVersion": 1, "runId": "run-1",
+                      "targetStage": "content_generate", "reason": "事实表述需修改",
+                      "attemptIdempotencyKey": "return-1", "decisionHash": "d" * 64,
+                      "stepRunId": "step-2"}
+    return_event = {"event_type": "returned", "issue_version": 2,
+                    "actor": "reviewer", "payload": return_payload,
+                    "payload_hash": production_canonical_hash(return_payload)}
+    with pytest.raises(ValueError, match="ReturnDecision"):
+        ContentReviewHostService._issue_authority(
+            HostTransaction(Tx(returned, return_event)), SCOPE, return_item)
+    return_decision = {"issue_version": 1, "run_id": "run-1",
+                       "step_key": "content_generate", "step_run_id": "step-2",
+                       "decision_hash": "d" * 64, "actor": "reviewer"}
+    ContentReviewHostService._issue_authority(
+        HostTransaction(Tx(returned, return_event, return_decision)), SCOPE, return_item)
+    wrong_decision = {**return_decision, "step_key": "content_generation"}
+    with pytest.raises(ValueError, match="ReturnDecision"):
+        ContentReviewHostService._issue_authority(
+            HostTransaction(Tx(returned, return_event, wrong_decision)), SCOPE, return_item)
 
 
 def _seed_runtime(scope, operation):

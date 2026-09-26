@@ -5688,12 +5688,78 @@ class ContentReviewHostService:
             or expected["contentHash"]
             != budget_canonical_hash(raw_issue_payload, prefixed=True)
             or _request_hash(expected) != _request_hash(command["reviewIssueRef"])
-            or issue.status is not ReviewIssueStatus.OPEN
+            or issue.status is not (
+                ReviewIssueStatus.RESOLVED if command["decision"] == "ACCEPT"
+                else ReviewIssueStatus.RETURNED
+            )
+            or issue.version < 2
             or issue.artifact_ref.artifact_id != command["artifactRef"]["resourceId"]
             or "sha256:" + issue.artifact_ref.content_hash != command["artifactRef"]["contentHash"]
-            or (command["decision"] == "RETURN" and issue.return_stage != "content_generation")
+            or (command["decision"] == "RETURN" and issue.return_stage != "content_generate")
         ):
             raise ValueError("content review ReviewIssue exact lineage drifted")
+        event = transaction.execute(
+            """SELECT event_type,issue_version,payload_hash,payload,actor
+                 FROM public.aip_review_issue_event
+                WHERE org_id=%s AND project_id=%s AND issue_id=%s AND sequence=2""",
+            (*scope.key, issue.issue_id),
+        ).fetchone()
+        payload = None if event is None else event["payload"]
+        expected_event = "resolved" if command["decision"] == "ACCEPT" else "returned"
+        if (
+            event is None or event["event_type"] != expected_event
+            or type(event["issue_version"]) is not int or event["issue_version"] != issue.version
+            or type(event["actor"]) is not str or not event["actor"].strip()
+            or event["actor"] != row["updated_by"]
+            or type(payload) is not dict
+            or event["payload_hash"] != production_contract_canonical_hash(payload)
+            or type(payload.get("expectedVersion")) is not int
+            or payload["expectedVersion"] != issue.version - 1
+            or type(payload.get("reason")) is not str or not payload["reason"].strip()
+        ):
+            raise ValueError("content review human decision event unavailable")
+        if command["decision"] == "ACCEPT":
+            exact_artifact = {
+                "resourceType": "Artifact",
+                "resourceId": command["artifactRef"]["resourceId"],
+                "revision": 1,
+                "contentHash": command["artifactRef"]["contentHash"].removeprefix("sha256:"),
+            }
+            if (
+                set(payload) != {"expectedVersion", "reason", "resolutionRefs"}
+                or type(payload["resolutionRefs"]) is not list
+                or exact_artifact not in payload["resolutionRefs"]
+            ):
+                raise ValueError("content review human ACCEPT lacks exact Artifact resolution")
+        else:
+            if (
+                set(payload) != {"expectedVersion", "runId", "targetStage", "reason",
+                                 "attemptIdempotencyKey", "decisionHash", "stepRunId"}
+                or payload["targetStage"] != "content_generate"
+                or type(payload["runId"]) is not str or not payload["runId"].strip()
+                or type(payload["attemptIdempotencyKey"]) is not str
+                or not payload["attemptIdempotencyKey"].strip()
+                or type(payload["decisionHash"]) is not str
+                or re.fullmatch(r"[0-9a-f]{64}", payload["decisionHash"]) is None
+                or type(payload["stepRunId"]) is not str or not payload["stepRunId"].strip()
+            ):
+                raise ValueError("content review human RETURN target drifted")
+            decision = transaction.execute(
+                """SELECT issue_version,run_id,step_key,step_run_id,decision_hash,actor
+                     FROM public.aip_return_decision
+                    WHERE org_id=%s AND project_id=%s AND issue_id=%s AND issue_version=%s""",
+                (*scope.key, issue.issue_id, issue.version - 1),
+            ).fetchone()
+            if (
+                decision is None
+                or decision["issue_version"] != issue.version - 1
+                or decision["run_id"] != payload["runId"]
+                or decision["step_key"] != "content_generate"
+                or decision["step_run_id"] != payload["stepRunId"]
+                or decision["decision_hash"] != payload["decisionHash"]
+                or decision["actor"] != event["actor"]
+            ):
+                raise ValueError("content review human ReturnDecision unavailable")
 
     @staticmethod
     def _reviewer_authority(transaction, scope, command):
