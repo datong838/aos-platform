@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from contextlib import contextmanager
+import asyncio
 from pathlib import Path
 import sys
 from uuid import uuid4
@@ -323,6 +324,150 @@ def test_claim_is_once_only_after_full_preflight_and_independent_readback(monkey
     owner = ContentBudgetCommandOwner(connect_write=connect_write, connect_read=connect_read)
     assert owner.claim(SCOPE, "review-1", token=token) == token
     assert prepared == ["review-1"] and write.claims == 1 and write.commits == 1
+
+
+def test_claimed_command_commits_once_then_acks_only_after_independent_readback(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
+
+    token, reservation = uuid4(), uuid4()
+    command = {"requestHash": "sha256:" + "a" * 64,
+               "idempotencyKey": "review-1"}
+    dispatch = SimpleNamespace(org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                               installation_id=uuid4(), generation=uuid4(), execution_epoch=3)
+    events = []
+    class Conn:
+        def execute(self, query, params):
+            assert "content_budget_command_ack_a0v_104" in query
+            events.append("ack")
+            assert params == ("review-1", token, reservation)
+            return _Cursor([{"accepted": True}])
+        def commit(self): events.append("ack-commit")
+    @contextmanager
+    def write(scope):
+        assert scope == SCOPE
+        yield Conn()
+    class ReadConn:
+        def execute(self, query, params):
+            assert "content_budget_command_intent" in query
+            events.append("final-read")
+            return _Cursor([dict(state="accepted", attempt=1, claim_token=token,
+                                 budget_reservation_id=reservation)])
+    @contextmanager
+    def read(scope):
+        assert scope == SCOPE
+        yield ReadConn()
+    owner = ContentBudgetCommandOwner(connect_write=write, connect_read=read)
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_build_command", classmethod(
+        lambda cls, transaction, scope, key, *, claimed_token: (dispatch, command)))
+    class Port:
+        def commit(self, *, dispatch_ref, command, occurred_at):
+            events.append("host-commit")
+            return {"state": "PENDING"}
+    monkeypatch.setattr(owner, "_capability_port", lambda: Port())
+    monkeypatch.setattr(owner, "_committed_readback", lambda *args, **kwargs:
+                        events.append("receipt-read") or reservation)
+    assert owner.execute_claim(SCOPE, "review-1", token)["status"] == "CONTENT_BUDGET_PENDING"
+    assert events == ["host-commit", "receipt-read", "ack", "ack-commit", "final-read"]
+
+
+def test_unknown_host_commit_leaves_claimed_without_ack(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
+    token = uuid4()
+    owner = ContentBudgetCommandOwner()
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_build_command", classmethod(
+        lambda cls, transaction, scope, key, *, claimed_token: (object(), {})))
+    @contextmanager
+    def write(scope):
+        yield object()
+    owner._connect_write = write
+    class Port:
+        def commit(self, **kwargs):
+            raise TimeoutError("commit outcome unknown")
+    monkeypatch.setattr(owner, "_capability_port", lambda: Port())
+    with pytest.raises(TimeoutError, match="unknown"):
+        owner.execute_claim(SCOPE, "review-1", token)
+
+
+def test_incomplete_postcommit_readback_never_acks_or_resends(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import (
+        ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+    )
+    token = uuid4()
+    events = []
+    owner = ContentBudgetCommandOwner()
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_build_command", classmethod(
+        lambda cls, transaction, scope, key, *, claimed_token: (object(), {})))
+    @contextmanager
+    def write(scope):
+        events.append("preflight")
+        yield object()
+    owner._connect_write = write
+    class Port:
+        def commit(self, **kwargs):
+            events.append("commit")
+            return {"state": "PENDING"}
+    monkeypatch.setattr(owner, "_capability_port", lambda: Port())
+    monkeypatch.setattr(owner, "_committed_readback", lambda *args, **kwargs:
+                        (_ for _ in ()).throw(ContentBudgetCommandConflict("readback unknown")))
+    with pytest.raises(ContentBudgetCommandConflict, match="readback unknown"):
+        owner.execute_claim(SCOPE, "review-1", token)
+    assert events == ["preflight", "commit"]
+
+
+def test_independent_readback_requires_exact_held_journal_runtime_triplet(monkeypatch):
+    from aos_api.ecommerce_content_budget_command_owner import (
+        ContentBudgetCommandOwner, ContentBudgetCommandConflict,
+    )
+    from aos_api.ecommerce_growth_runtime_adapters import _request_hash
+    reservation, installation, generation = uuid4(), uuid4(), uuid4()
+    command = {"requestHash": "sha256:" + "a" * 64,
+               "idempotencyKey": "review-1", "authorityRefs": {"task": {"resourceId": "task-1"}}}
+    full_hash = _request_hash(command)
+    target = {"resourceType": "ContentExecutionReceipt", "resourceId": "receipt-1",
+              "revision": 1, "contentHash": "sha256:" + "c" * 64}
+    response = {"state": "PENDING", "budgetState": "HELD",
+                "requestHash": command["requestHash"], "authorityRefs": command["authorityRefs"],
+                "receiptRef": target, "budgetReservationRef": {"resourceId": str(reservation)},
+                "providerRequestReceiptRef": None,
+                "sideEffects": {"providerInvocationCount": 0}}
+    row = dict(reservation_id=reservation, budget_request_hash="b" * 64,
+               budget_state="held", journal_budget_hash="b" * 64,
+               command_hash=full_hash.removeprefix("sha256:"), command_payload=command,
+               runtime_hash=full_hash, response=response, target_receipt_ref=target,
+               installation_id=installation, generation=generation, execution_epoch=3)
+    class Conn:
+        def execute(self, query, params):
+            assert "aip_budget_reservation" in query and "ecommerce_content_execution_command" in query
+            assert params == (*SCOPE.key, "review-1")
+            return _Cursor([row])
+    @contextmanager
+    def read(scope):
+        assert scope == SCOPE
+        yield Conn()
+    monkeypatch.setattr(
+        "aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService._budget_request",
+        staticmethod(lambda *_: SimpleNamespace(request_hash=lambda: "b" * 64)),
+    )
+    owner = ContentBudgetCommandOwner(connect_read=read)
+    dispatch = SimpleNamespace(installation_id=installation, generation=generation,
+                               execution_epoch=3)
+    assert owner._committed_readback(SCOPE, "review-1", dispatch, command, response) == reservation
+    row["runtime_hash"] = command["requestHash"]
+    with pytest.raises(ContentBudgetCommandConflict):
+        owner._committed_readback(SCOPE, "review-1", dispatch, command, response)
+
+
+def test_budget_command_worker_is_off_by_default_and_requires_runtime_host(monkeypatch):
+    from aos_api.main import _start_content_budget_command_worker
+    monkeypatch.delenv("AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED", raising=False)
+    application = SimpleNamespace(state=SimpleNamespace())
+    asyncio.run(_start_content_budget_command_worker(application, asyncio.Event()))
+    assert application.state.content_budget_command_worker_status == "DISABLED"
+    monkeypatch.setenv("AOS_ECOM_CONTENT_BUDGET_COMMAND_WORKER_ENABLED", "true")
+    application = SimpleNamespace(state=SimpleNamespace(extension_runtime_host_status="INACTIVE"))
+    with pytest.raises(RuntimeError, match="active Runtime Host"):
+        asyncio.run(_start_content_budget_command_worker(application, asyncio.Event()))
+    assert application.state.content_budget_command_worker_status == "FAILED_CLOSED"
 
 
 def test_pricing_bound_uses_exact_token_unit_and_requires_approved_cover():

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
 from datetime import datetime
 from types import SimpleNamespace
+from typing import Any
 from uuid import UUID, uuid4
 
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, usage_cost_minor
@@ -15,7 +16,7 @@ from aos_api.tenant_scope import TenantScope
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService, ReviewAdvanceHostService, TransactionBoundConnectFactory,
-    _analysis_command_hash, _strict_content_generate_command,
+    _analysis_command_hash, _request_hash, _strict_content_generate_command,
 )
 from aos_api.ecommerce_content_agentrun_owner import ContentAgentRunOwner
 from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunOwner
@@ -23,9 +24,15 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_agent_registry_contracts import AgentRunStatus
 from aos_api.aip_model_runtime_contracts import ModelRuntimeReadiness
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
-from aos_api.aip_model_runtime_store import AipModelRuntimeStore
-from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
-from aos_api.ecommerce_growth_host_ports import HostTransaction, LockedEcommerceGrowthHostPort
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
+from aos_api.aip_model_governance_policy_store import (
+    AipModelGovernancePolicyStore, ModelGovernancePolicyStoreError,
+)
+from aos_api.ecommerce_growth_host_ports import (
+    EcommerceGrowthHostError, HostTransaction, LockedEcommerceGrowthHostPort,
+)
+from aos_api.ecommerce_content_agentrun_owner import ContentAgentRunConflict
+from aos_api.ecommerce_content_taskrun_owner import ContentTaskRunConflict
 
 
 class ContentBudgetCommandConflict(RuntimeError):
@@ -268,7 +275,15 @@ class ContentBudgetCommandOwner:
         if type(token) is not UUID:
             raise ValueError("content budget claim token must be UUID")
         with self._connect_write(scope) as conn:
-            self._build_command(HostTransaction(conn), scope, review_key)
+            try:
+                self._build_command(HostTransaction(conn), scope, review_key)
+            except (
+                ContentBudgetCommandConflict, ContentAgentRunConflict,
+                ContentTaskRunConflict, BudgetReservationError,
+                ModelRuntimeStoreError, ModelGovernancePolicyStoreError,
+                EcommerceGrowthHostError, ValueError,
+            ):
+                return None
             claimed = conn.execute(
                 "SELECT public.ecommerce_growth_content_budget_command_claim_a0v_104(%s,%s) AS claimed",
                 (review_key, token),
@@ -288,6 +303,130 @@ class ContentBudgetCommandOwner:
         ):
             raise ContentBudgetCommandConflict("content budget claim readback unknown")
         return token
+
+    def _capability_port(self):
+        from aos_api.ecommerce_growth_host_composition import (
+            build_ecommerce_growth_host_ports, build_runtime_ecommerce_growth_registry,
+        )
+        return build_ecommerce_growth_host_ports(
+            build_runtime_ecommerce_growth_registry(),
+            connect_factory=self._connect_write,
+        ).capability_port
+
+    def _committed_readback(
+        self, scope: TenantScope, review_key: str, dispatch: SimpleNamespace,
+        command: dict[str, Any], receipt: dict[str, Any],
+    ) -> UUID:
+        with self._connect_read(scope) as conn:
+            rows = conn.execute(
+                """SELECT b.reservation_id,b.request_hash AS budget_request_hash,
+                          b.state AS budget_state,j.budget_request_hash AS journal_budget_hash,
+                          j.command_hash,j.command_payload,r.request_hash AS runtime_hash,
+                          r.response,r.target_receipt_ref,r.installation_id,r.generation,
+                          r.execution_epoch
+                     FROM public.aip_budget_reservation b
+                     JOIN public.ecommerce_content_execution_command j
+                       ON j.org_id=b.org_id AND j.project_id=b.project_id
+                      AND j.reservation_id=b.reservation_id
+                     JOIN public.ecommerce_growth_runtime_command_receipt r
+                       ON r.org_id=b.org_id AND r.project_id=b.project_id
+                      AND r.operation_id=b.operation_id AND r.idempotency_key=b.invocation_key
+                    WHERE b.org_id=%s AND b.project_id=%s
+                      AND b.operation_id='ecommerce_growth_content_generate'
+                      AND b.invocation_key=%s LIMIT 2""",
+                (*scope.key, review_key),
+            ).fetchall()
+        if len(rows) != 1:
+            raise ContentBudgetCommandConflict("content command commit readback unknown")
+        row = rows[0]
+        full_hash = _request_hash(command)
+        expected_budget_hash = ContentGenerateHostService._budget_request(command).request_hash()
+        persisted = row["response"]
+        if (
+            row["budget_state"] != "held"
+            or row["budget_request_hash"] != expected_budget_hash
+            or row["journal_budget_hash"] != expected_budget_hash
+            or row["command_hash"] != full_hash.removeprefix("sha256:")
+            or row["command_payload"] != command
+            or row["runtime_hash"] != full_hash
+            or row["installation_id"] != dispatch.installation_id
+            or row["generation"] != dispatch.generation
+            or row["execution_epoch"] != dispatch.execution_epoch
+            or type(persisted) is not dict or persisted != receipt
+            or persisted.get("state") != "PENDING"
+            or persisted.get("budgetState") != "HELD"
+            or persisted.get("requestHash") != command["requestHash"]
+            or persisted.get("authorityRefs") != command["authorityRefs"]
+            or persisted.get("receiptRef") != row["target_receipt_ref"]
+            or persisted.get("budgetReservationRef", {}).get("resourceId")
+                != str(row["reservation_id"])
+            or persisted.get("providerRequestReceiptRef") is not None
+            or persisted.get("sideEffects", {}).get("providerInvocationCount") != 0
+        ):
+            raise ContentBudgetCommandConflict("content HELD/PENDING/Receipt readback drifted")
+        return row["reservation_id"]
+
+    def execute_claim(
+        self, scope: TenantScope, review_key: str, token: UUID
+    ) -> dict[str, str]:
+        if type(scope) is not TenantScope or type(review_key) is not str or type(token) is not UUID:
+            raise ValueError("exact claimed content budget identity required")
+        with self._connect_write(scope) as conn:
+            dispatch, command = self._build_command(
+                HostTransaction(conn), scope, review_key, claimed_token=token
+            )
+        # After the sole durable claim, no exception authorizes a second commit.
+        # Even a timeout may have committed: leave claimed for read-only reconciliation.
+        receipt = self._capability_port().commit(
+            dispatch_ref=dispatch, command=command, occurred_at=None
+        )
+        reservation_id = self._committed_readback(
+            scope, review_key, dispatch, command, receipt
+        )
+        with self._connect_write(scope) as conn:
+            ack = conn.execute(
+                "SELECT public.ecommerce_growth_content_budget_command_ack_a0v_104(%s,%s,%s) AS accepted",
+                (review_key, token, reservation_id),
+            ).fetchone()
+            if ack is None or ack["accepted"] is not True:
+                raise ContentBudgetCommandConflict("content budget ack unavailable")
+            conn.commit()
+        with self._connect_read(scope) as conn:
+            final = conn.execute(
+                """SELECT state,attempt,claim_token,budget_reservation_id
+                     FROM public.ecommerce_growth_content_budget_command_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s""",
+                (*scope.key, review_key),
+            ).fetchone()
+        if final is None or (
+            final["state"], final["attempt"], final["claim_token"],
+            final["budget_reservation_id"],
+        ) != ("accepted", 1, token, reservation_id):
+            raise ContentBudgetCommandConflict("content budget accepted readback unknown")
+        return {"status": "CONTENT_BUDGET_PENDING", "reviewKey": review_key,
+                "budgetReservationId": str(reservation_id)}
+
+    def run_once(self, scope: TenantScope, *, limit: int = 16) -> list[dict[str, str]]:
+        results = []
+        for review_key in self.list_pending(scope, limit=limit):
+            token = self.claim(scope, review_key)
+            if token is not None:
+                results.append(self.execute_claim(scope, review_key, token))
+        return results
+
+    async def serve(self, stop, *, host_ready, interval_seconds: int = 15) -> None:
+        if type(interval_seconds) is not int or not 1 <= interval_seconds <= 300:
+            raise ValueError("content budget worker interval invalid")
+        scope = TenantScope("org-org", "dev-project")
+        while not stop.is_set():
+            if not host_ready():
+                raise RuntimeError("content budget Runtime Host unavailable")
+            await asyncio.to_thread(self.run_once, scope)
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+            except TimeoutError:
+                pass
+
 
     @staticmethod
     def _approved_action(
@@ -382,3 +521,6 @@ class ContentBudgetCommandOwner:
         if type(approved_fen) is not int or approved_fen <= 0 or approved_fen < minimum:
             raise ValueError("approved upper bound does not cover maximum priced usage")
         return approved_fen
+
+
+__all__ = ["ContentBudgetCommandOwner", "ContentBudgetCommandConflict"]
