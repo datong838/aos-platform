@@ -20,6 +20,13 @@
 
 施工先分可独立验收的最小切片：A. 候选提案合同（无批准权、无 DB/Host）；B. append-only Owner/schema 与 proposal/approval/revoke Receipt；C. 原事务选择读回及 D01 Atomic 接线；D. 当前实例迁移/产品入口（独立备份与真实权限前置）。A 的 GREEN 绝不关闭 B/C/D 或本方案总门。
 
+### B 子波数据库安全细化（A 已于 `088fe0eb` 落盘）
+
+- proposal 表以 `(org_id,project_id,selection_id)` 为主键，另有 `(org_id,project_id,task_run_id,plan_revision_id)` 与 proposal key 唯一约束；存 canonical 提案 JSONB、请求 hash、提案人、时点、内容 hash。FK 指向同租户 `aip_task_run`/`aip_plan_revision`。相同 Run/Plan 不允许第二个不同 packet，未知提交只能按原 key 查。
+- approval 表同租户 FK proposal，`selection_id` 与 approval key 均唯一；checker 必须是当前 Plan 的 `approved_by` 且不同于 maker，批准时要求 Plan 仍是 Task 当前 approved 版本、Run 仍 running、Plan hash 和原 Task `selectionRef` 未漂移。revocation 表同租户 FK approval，`selection_id` 唯一，撤销不能覆盖历史批准。每阶段独立 Receipt/幂等哈希，直接重复原 key 原 payload 回原 Receipt、不同 payload 冲突。
+- 三表 `ENABLE/FORCE RLS`、不可 UPDATE/DELETE/TRUNCATE、`aos_runtime` 只给 `SELECT`；唯一写路径是显式 `SECURITY DEFINER` 函数，其自身再核 serializable scoped 事务、原表和 actor。隔离 PG 先证实直写拒绝、无 scope/跨租户拒绝、同键漂移和并发不双批准。**不能仅靠 Python 检查而把底表 INSERT 放给共享 Runtime 角色。**
+- 代码/迁移同时验证到可执行且当前库有独立备份后，才评估 a0v_106→107 的当前实例升级；在此之前安全预览保持已运行的 106 版本，绝不以测试库迁移冒充当前实例升级。
+
 ## 本波首先要裁决的设计风险
 
 - `PlanStep.inputRefs` 没有 content hash；proposal 的 exact refs 由原各 Owner 校验，批准者需在界面看到关系/窗口/Grant 摘要而非仅看到集合。
