@@ -470,7 +470,8 @@ def _port_is_free(port: int) -> bool:
 
 
 def _pull_exact_images(
-    *, context: str, port: int, work: Path, images: dict[str, dict[str, str]]
+    *, context: str, port: int, work: Path, images: dict[str, dict[str, str]],
+    retain_artifacts: bool = False,
 ) -> dict[str, dict[str, str]]:
     if not _port_is_free(port):
         raise CandidateBuildBlocked("REGISTRY_PORT_UNAVAILABLE", str(port))
@@ -577,18 +578,23 @@ def _pull_exact_images(
                 raise CandidateBuildBlocked("CACHED_IMAGE_IDENTITY_MISMATCH", repository)
             pulled[repository] = {**identity, "localRef": ref}
     finally:
-        subprocess.run(
-            ["docker", "--context", context, "rm", "-f", name],
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
-        subprocess.run(
-            ["docker", "--context", context, "image", "rm", helper],
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
+        if retain_artifacts:
+            # Stop the exact helper, but retain its container and image for audit.
+            subprocess.run(["docker", "--context", context, "stop", name],
+                capture_output=True, text=True, timeout=15)
+        else:
+            subprocess.run(
+                ["docker", "--context", context, "rm", "-f", name],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            subprocess.run(
+                ["docker", "--context", context, "image", "rm", helper],
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
     return pulled
 
 
@@ -872,7 +878,8 @@ def _qualify_session(*, driver, image_id, contributions, journal_root: Path, pro
 
 
 def qualify(
-    *, output: Path, build_receipt: Path, context: str, driver: Any | None = None
+    *, output: Path, build_receipt: Path, context: str, driver: Any | None = None,
+    retain_artifacts: bool = False,
 ) -> dict[str, Any]:
     output = output.resolve(strict=True)
     if output == REPOSITORY_ROOT or output.is_relative_to(REPOSITORY_ROOT):
@@ -882,7 +889,8 @@ def qualify(
         raise CandidateBuildBlocked("BUILD_CONTENT_HASH_MISMATCH", str(output))
 
     sys.path.insert(0, str(API_ROOT))
-    signed_root = Path(tempfile.mkdtemp(prefix="a0v-ecommerce-candidate-qualification-"))
+    staging = Path(tempfile.mkdtemp(prefix="a0v-ecommerce-candidate-qualification-"))
+    signed_root = staging / "bundle" if retain_artifacts else staging
     try:
         from aos_api.asset_registry.composition_contracts import (
             CompositionRequest,
@@ -896,7 +904,8 @@ def qualify(
             admit_schema_requirements,
         )
 
-        shutil.rmtree(signed_root)
+        if not retain_artifacts:
+            shutil.rmtree(signed_root)
         shutil.copytree(output, signed_root)
         signed_at = datetime.now(UTC)
         loader, trust = _sign_staging_tree(signed_root, checked_at=signed_at)
@@ -1030,11 +1039,13 @@ def qualify(
             "effects": receipt["effects"],
         }
     finally:
-        shutil.rmtree(signed_root, ignore_errors=True)
+        if not retain_artifacts:
+            shutil.rmtree(signed_root, ignore_errors=True)
         sys.path.remove(str(API_ROOT))
 
 
-def build(*, context: str, port: int, output: Path) -> dict[str, Any]:
+def build(*, context: str, port: int, output: Path,
+          retain_artifacts: bool = False) -> dict[str, Any]:
     source = preflight()
     output = output.resolve()
     if output == REPOSITORY_ROOT or output.is_relative_to(REPOSITORY_ROOT):
@@ -1071,7 +1082,8 @@ def build(*, context: str, port: int, output: Path) -> dict[str, Any]:
                 archive, registry_fixture, repository
             )
         pulled = _pull_exact_images(
-            context=context, port=port, work=work, images=images
+            context=context, port=port, work=work, images=images,
+            retain_artifacts=retain_artifacts,
         )
         lock_hash = _sha256(RUNTIME_LOCK)
         for relative, bundle_id, _version, _package in RUNTIME_CASES:
@@ -1117,10 +1129,12 @@ def build(*, context: str, port: int, output: Path) -> dict[str, Any]:
             },
         }
     except Exception:
-        shutil.rmtree(output, ignore_errors=True)
+        if not retain_artifacts:
+            shutil.rmtree(output, ignore_errors=True)
         raise
     finally:
-        shutil.rmtree(work, ignore_errors=True)
+        if not retain_artifacts:
+            shutil.rmtree(work, ignore_errors=True)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -1132,6 +1146,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--registry-port", type=int, default=DEFAULT_REGISTRY_PORT)
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--retain-artifacts", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -1152,6 +1167,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 output=args.qualify_output,
                 build_receipt=args.build_receipt,
                 context=args.docker_context,
+                retain_artifacts=args.retain_artifacts,
             )
         elif args.build:
             if args.output_dir is None or args.receipt is None:
@@ -1162,6 +1178,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 context=args.docker_context,
                 port=args.registry_port,
                 output=args.output_dir,
+                retain_artifacts=args.retain_artifacts,
             )
         else:
             result = preflight()

@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid
 
 # Unit tests default to in-memory TWA (181m PG via AOS_TWA_STORE=pg / auto outside tests).
@@ -125,13 +126,16 @@ def _isolated_postgres_database():
             twa_pg.clear_mode_cache()
         except Exception:
             pass
-        with psycopg.connect(admin_dsn, autocommit=True) as conn:
-            conn.execute(
-                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
-                "WHERE datname=%s AND pid <> pg_backend_pid()",
-                (database_name,),
-            )
-            conn.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(database_name)))
+        if os.getenv("AOS_TEST_RETAIN_DATABASE") == "1":
+            print(f"Retained isolated test database: {database_name}", file=sys.stderr)
+        else:
+            with psycopg.connect(admin_dsn, autocommit=True) as conn:
+                conn.execute(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
+                    "WHERE datname=%s AND pid <> pg_backend_pid()",
+                    (database_name,),
+                )
+                conn.execute(sql.SQL("DROP DATABASE {}").format(sql.Identifier(database_name)))
 
 
 @pytest.fixture()
