@@ -257,6 +257,15 @@ class AipEcommerceAgentInstaller:
                 result[key] = item
         return result
 
+    @staticmethod
+    def _solution_version(templates) -> str:
+        sources = {template.source_ref.revision for template in templates.values()}
+        if sources == {CURRENT_SIGNED_CANDIDATE_VERSION}:
+            return CURRENT_SIGNED_CANDIDATE_VERSION
+        if sources == {AIP_DEFINITION_SOURCE_VERSION}:
+            return SOLUTION_PACK_VERSION
+        raise AipEcommerceCatalogInvalid("ecommerce template source versions differ")
+
     def catalog(self, principal: Principal) -> AgentCatalogResponse:
         templates, skills, capabilities = self._definitions(principal)
         scope = self._scope(principal)
@@ -407,6 +416,7 @@ class AipEcommerceAgentInstaller:
 
     def install(self, principal: Principal, *, idempotency_key: str) -> AgentInstallResponse:
         templates, _, _ = self._definitions(principal)
+        solution_version = self._solution_version(templates)
         scope = self._scope(principal)
         results = []
         for template_id in sorted(templates):
@@ -440,7 +450,7 @@ class AipEcommerceAgentInstaller:
         return AgentInstallResponse(
             tenant=self._tenant(principal),
             solution_pack_id=SOLUTION_PACK_ID,
-            solution_pack_version=SOLUTION_PACK_VERSION,
+            solution_pack_version=solution_version,
             status="installed" if len(results) == 6 else "partial",
             items=results,
             created_count=sum(item.disposition == "created" for item in results),

@@ -61,3 +61,18 @@ def test_partial_current_source_blocks_even_if_legacy_is_complete():
         _installer(current=(current[0][:1], (), ()), legacy=_rows())._definitions(
             SimpleNamespace(org_id="org-org", project_id="dev-project"),
         )
+
+
+def test_install_receipt_version_matches_selected_template_source():
+    def templates(revision):
+        return {key: SimpleNamespace(source_ref=SimpleNamespace(revision=revision))
+                for key in AGENT_LOGIC_COUNTS}
+
+    assert AipEcommerceAgentInstaller._solution_version(templates("1.11.0")) == "1.11.0"
+    assert AipEcommerceAgentInstaller._solution_version(templates("1.2.0")) == "1.3.0"
+    mixed = templates("1.11.0")
+    mixed["ecommerce.data_advisor"] = SimpleNamespace(source_ref=SimpleNamespace(revision="1.2.0"))
+    with pytest.raises(AipEcommerceCatalogInvalid, match="source versions differ"):
+        AipEcommerceAgentInstaller._solution_version(mixed)
+    with pytest.raises(AipEcommerceCatalogInvalid, match="source versions differ"):
+        AipEcommerceAgentInstaller._solution_version(templates("unknown"))
