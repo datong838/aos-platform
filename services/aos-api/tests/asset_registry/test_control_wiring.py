@@ -228,6 +228,7 @@ def test_registry_builder_uses_only_server_controlled_roots(
             "catalog": catalog_root,
             "server": server_root,
             "a0v-canonical": server_root,
+            "a0v-current": server_root,
         },
         "trust_roots": None,
     }

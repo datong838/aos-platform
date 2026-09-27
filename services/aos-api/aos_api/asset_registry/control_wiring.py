@@ -507,6 +507,9 @@ def _allowlist_roots(*, repository_root: Path) -> dict[str, Path]:
         # Canonical ecommerce releases created by the first-install executor
         # persist this alias in their immutable artifact references.
         roots["a0v-canonical"] = server_root
+        # Current isolated releases carry this immutable alias. Signature and
+        # trust-root verification still apply to every loaded bundle.
+        roots["a0v-current"] = server_root
     return roots
 
 
