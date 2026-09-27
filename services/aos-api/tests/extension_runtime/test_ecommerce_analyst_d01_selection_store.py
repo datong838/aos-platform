@@ -137,3 +137,79 @@ def test_checker_and_revoker_reuse_one_verified_proposal_without_commit():
     assert store.revoke(transaction, SCOPE, proposal.selection_id,
                         key='revoke-key', actor='reviewer', reason='withdrawn',
                         revoked_at=revoked_at) == revocation_receipt
+
+
+@pytest.mark.parametrize('approved,revoked', [(False, False), (True, True)])
+def test_read_current_rejects_missing_approval_or_revoked_decision(monkeypatch,
+                                                                    approved, revoked):
+    timeline = _timeline()
+    monkeypatch.setattr('aos_api.ecommerce_analyst_d01_source_selection_store.AipTaskStore.timeline',
+                        lambda _self, _scope, _run_id: timeline)
+    proposal = _proposal(timeline.plan.content_hash)
+    payload = proposal.model_dump(mode='json', by_alias=True)
+    row = {'selection_id': proposal.selection_id, 'payload': payload,
+           'content_hash': canonical_hash(payload), 'proposal_key': 'key',
+           'request_hash': canonical_hash({'key': 'key', 'proposal': payload})}
+    class Connection:
+        def execute(self, sql, _params):
+            if 'SELECT selection_id FROM public.ecommerce_d01_source_proposal' in sql:
+                return SimpleNamespace(fetchall=lambda: [{'selection_id': proposal.selection_id}])
+            if 'FROM public.ecommerce_d01_source_proposal' in sql:
+                return SimpleNamespace(fetchone=lambda: row)
+            if 'FROM public.ecommerce_d01_source_approval' in sql:
+                return SimpleNamespace(fetchone=lambda: None if not approved else {
+                    'proposal_hash': row['content_hash'], 'checker': 'reviewer',
+                    'approved_at': proposal.proposed_at,
+                    'receipt_ref': {'resourceType': 'D01SourceSelectionApproval',
+                                    'resourceId': proposal.selection_id,
+                                    'receiptId': 'd01-approval:' + proposal.selection_id,
+                                    'contentHash': 'sha256:' + 'a' * 64}})
+            return SimpleNamespace(fetchone=lambda: {'selection_id': proposal.selection_id}
+                                   if revoked else None)
+    with pytest.raises(ValueError, match='approved D01 selection unavailable'):
+        D01SourceSelectionStore().read_current(
+            HostTransaction(Connection()), SCOPE, 'run-1', 'plan-1',
+            'analyst-owner', proposal.proposed_at + timedelta(seconds=2))
+
+
+@pytest.mark.parametrize('drift', [None, 'checker', 'hash', 'plan', 'actor'])
+def test_read_current_returns_only_exact_current_approved_packet(monkeypatch, drift):
+    timeline = _timeline()
+    timeline.plan.approved_by = 'reviewer'
+    monkeypatch.setattr('aos_api.ecommerce_analyst_d01_source_selection_store.AipTaskStore.timeline',
+                        lambda _self, _scope, _run_id: timeline)
+    proposal = _proposal(timeline.plan.content_hash)
+    payload = proposal.model_dump(mode='json', by_alias=True)
+    row = {'selection_id': proposal.selection_id, 'payload': payload,
+           'content_hash': canonical_hash(payload), 'proposal_key': 'key',
+           'request_hash': canonical_hash({'key': 'key', 'proposal': payload})}
+    approval = {'proposal_hash': row['content_hash'], 'checker': 'reviewer',
+                'approved_at': proposal.proposed_at,
+                'receipt_ref': {'resourceType': 'D01SourceSelectionApproval',
+                                'resourceId': proposal.selection_id,
+                                'receiptId': 'd01-approval:' + proposal.selection_id,
+                                'contentHash': 'sha256:' + 'a' * 64}}
+    if drift == 'checker':
+        approval['checker'] = 'analyst-owner'
+    if drift == 'hash':
+        row['content_hash'] = 'b' * 64
+    if drift == 'plan':
+        timeline.plan.content_hash = 'b' * 64
+    class Connection:
+        def execute(self, sql, _params):
+            if 'SELECT selection_id FROM public.ecommerce_d01_source_proposal' in sql:
+                return SimpleNamespace(fetchall=lambda: [{'selection_id': proposal.selection_id}])
+            if 'FROM public.ecommerce_d01_source_proposal' in sql:
+                return SimpleNamespace(fetchone=lambda: row)
+            if 'FROM public.ecommerce_d01_source_approval' in sql:
+                return SimpleNamespace(fetchone=lambda: approval)
+            return SimpleNamespace(fetchone=lambda: None)
+    read = lambda: D01SourceSelectionStore().read_current(
+        HostTransaction(Connection()), SCOPE, 'run-1', 'plan-1',
+        'other-actor' if drift == 'actor' else 'analyst-owner',
+        proposal.proposed_at + timedelta(seconds=2))
+    if drift:
+        with pytest.raises(ValueError):
+            read()
+    else:
+        assert read() == (proposal.packet, approval['receipt_ref'])

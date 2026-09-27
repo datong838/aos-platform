@@ -17,7 +17,8 @@ RECEIPT = {'resourceType': 'AnalysisRuntimeReceipt', 'resourceId': 'analysis-1',
 def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
              cutoff=None, reject_origin=False, reject_sources=False,
              unknown_commit=False, task_selection='source-selection-1',
-             original_selection='source-selection-1', task_selection_revision='1'):
+             original_selection='source-selection-1', task_selection_revision='1',
+             reject_selection=False, mismatched_packet=False):
     calls = []
     class Connection:
         def commit(self):
@@ -40,6 +41,17 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
             selected.task.selection_ref.revision = task_selection_revision
         return selected
     monkeypatch.setattr(atomic_module.AipTaskStore, 'timeline', timeline)
+    def selected(_self, transaction, scope, task_run_id, plan_id, actor, occurred_at):
+        calls.append('selection')
+        if reject_selection:
+            raise ValueError('approved D01 selection unavailable')
+        assert scope == SCOPE and task_run_id == 'run-1' and plan_id == 'plan-1'
+        assert actor == 'analyst-owner' and occurred_at == NOW
+        packet = _packet()
+        if mismatched_packet:
+            packet = packet.model_copy(update={'max_bytes': packet.max_bytes - 1})
+        return packet, {'resourceType': 'D01SourceSelectionApproval'}
+    monkeypatch.setattr(atomic_module.D01SourceSelectionStore, 'read_current', selected)
     origin = object.__new__(AnalysisContinuationOrigin)
     origin.context = SimpleNamespace(analysis=SimpleNamespace(
         scope=SCOPE, source=SimpleNamespace(actor='analyst-owner')))
@@ -91,7 +103,18 @@ def test_one_original_chain_commits_one_owner_receipt(monkeypatch):
                                actor='analyst-owner', occurred_at=NOW)
     assert result[0].agent_run_id == _request().agent_run_id
     assert [item for item in calls if isinstance(item, str)] == [
-        'connect', 'origin', 'sources', 'owner', 'commit']
+        'connect', 'origin', 'selection', 'sources', 'owner', 'commit']
+
+
+@pytest.mark.parametrize('drift', [
+    {'reject_selection': True}, {'mismatched_packet': True},
+])
+def test_missing_or_mismatched_approved_selection_never_reaches_owner(monkeypatch, drift):
+    coordinator, calls = _harness(monkeypatch, **drift)
+    with pytest.raises(ValueError, match='approved D01 selection'):
+        coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
+                          receipt_ref=RECEIPT, actor='analyst-owner', occurred_at=NOW)
+    assert 'owner' not in calls and 'commit' not in calls
 
 
 def test_different_actor_cannot_borrow_original_chain(monkeypatch):

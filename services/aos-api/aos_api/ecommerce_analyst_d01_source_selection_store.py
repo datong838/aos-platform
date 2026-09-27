@@ -178,3 +178,82 @@ class D01SourceSelectionStore:
                 or receipt.get('receiptId') != 'd01-revocation:' + selection_id):
             raise ValueError('D01 revocation independent readback differs')
         return receipt
+
+    def read_current(self, transaction: HostTransaction, scope: TenantScope,
+                     task_run_id: str, plan_id: str, actor: str,
+                     occurred_at: datetime) -> tuple[object, dict]:
+        """Read one approved packet on the Owner transaction; never grant by recency."""
+        if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
+                or any(type(value) is not str or not value or value != value.strip()
+                       for value in (task_run_id, plan_id, actor))
+                or type(occurred_at) is not datetime
+                or occurred_at.utcoffset() is None):
+            raise ValueError('exact scoped D01 selection read required')
+        matches = transaction.execute(
+            """SELECT selection_id FROM public.ecommerce_d01_source_proposal
+               WHERE org_id=%s AND project_id=%s AND task_run_id=%s
+                 AND plan_revision_id=%s""",
+            (*scope.key, task_run_id, plan_id),
+        ).fetchall()
+        if len(matches) != 1:
+            raise ValueError('approved D01 selection unavailable')
+        proposal, row = self._proposal_row(transaction, scope, matches[0]['selection_id'])
+        approval = transaction.execute(
+            """SELECT proposal_hash,checker,approved_at,receipt_ref
+               FROM public.ecommerce_d01_source_approval
+               WHERE org_id=%s AND project_id=%s AND selection_id=%s""",
+            (*scope.key, proposal.selection_id),
+        ).fetchone()
+        revoked = transaction.execute(
+            """SELECT selection_id FROM public.ecommerce_d01_source_revocation
+               WHERE org_id=%s AND project_id=%s AND selection_id=%s""",
+            (*scope.key, proposal.selection_id),
+        ).fetchone()
+        if approval is None or revoked is not None:
+            raise ValueError('approved D01 selection unavailable')
+        timeline = AipTaskStore(
+            TransactionBoundConnectFactory(transaction, scope)
+        ).timeline(scope, task_run_id)
+        run, task, plan = timeline.run, timeline.task, timeline.plan
+        approved_refs = plan.steps[0].input_refs if plan.steps else []
+        identities = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
+                      for ref in approved_refs}
+        receipt = approval['receipt_ref']
+        if (proposal.tenant.org_id != scope.org_id
+                or proposal.tenant.project_id != scope.project_id
+                or proposal.task_run_ref.resource_id != task_run_id
+                or proposal.task_run_ref.revision != str(run.version)
+                or proposal.plan_ref.resource_id != plan_id
+                or proposal.plan_ref.revision != str(plan.revision)
+                or proposal.plan_content_hash != plan.content_hash
+                or run.id != task_run_id or run.plan_revision_id != plan_id
+                or run.task_id != task.id or plan.id != plan_id
+                or plan.task_id != task.id
+                or getattr(run.status, 'value', run.status) != 'running'
+                or getattr(task.status, 'value', task.status) != 'executing'
+                or getattr(plan.approval_status, 'value', plan.approval_status) != 'approved'
+                or not plan.steps or plan.steps[0].step_key != 'portrait'
+                or not approved_refs or len(identities) != len(approved_refs)
+                or identities != _packet_ref_keys(proposal.packet)
+                or task.selection_ref is None
+                or task.selection_ref.resource_type != 'SourceSelectionRevision'
+                or task.selection_ref.resource_id != proposal.source_selection_ref.resource_id
+                or task.selection_ref.revision != str(proposal.source_selection_ref.revision)
+                or task.selection_ref.authority != 'postgresql'
+                or approval['proposal_hash'] != row['content_hash']
+                or approval['checker'] == proposal.proposed_by
+                or approval['checker'] != getattr(plan, 'approved_by', None)
+                or not isinstance(approval['approved_at'], datetime)
+                or approval['approved_at'] < proposal.proposed_at
+                or approval['approved_at'] > occurred_at
+                or proposal.proposed_at > occurred_at
+                or type(receipt) is not dict
+                or receipt.get('resourceType') != 'D01SourceSelectionApproval'
+                or receipt.get('resourceId') != proposal.selection_id
+                or receipt.get('receiptId') != 'd01-approval:' + proposal.selection_id
+                or type(receipt.get('contentHash')) is not str
+                or not receipt['contentHash'].startswith('sha256:')
+                or len(receipt['contentHash']) != 71
+                or actor != proposal.proposed_by):
+            raise ValueError('current approved D01 selection drifted')
+        return proposal.packet, receipt

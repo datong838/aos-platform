@@ -16,6 +16,7 @@ from aos_api.ecommerce_analyst_d01_issuer import (
     D01SourcePacket, NaturalD01Issuer, d01_agent_run_id,
     require_current_d01_sources_in_transaction,
 )
+from aos_api.ecommerce_analyst_d01_source_selection_store import D01SourceSelectionStore
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     TransactionBoundConnectFactory, _analysis_exact_ref,
@@ -86,6 +87,12 @@ class NaturalD01AtomicCoordinator:
                 )
                 if tasks.timeline(scope, task_run_id).task.selection_ref != expected_selection:
                     raise ValueError('Task source selection differs from original analysis')
+                approved_packet, _approval_receipt = D01SourceSelectionStore().read_current(
+                    transaction, scope, task_run_id,
+                    request.run.plan_ref.resource_id, actor, occurred_at)
+                if (approved_packet.model_dump(mode='json', by_alias=True)
+                        != packet.model_dump(mode='json', by_alias=True)):
+                    raise ValueError('approved D01 selection differs from requested packet')
                 borrowed = _BorrowedOwner(self.owner, transaction)
                 issuer = NaturalD01Issuer(
                     tasks, borrowed,
