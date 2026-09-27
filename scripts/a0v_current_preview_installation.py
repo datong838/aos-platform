@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
+EXPECTED_SCHEMA_HEAD = "a0v_107"
 VERSIONS = {
     "domain.ecommerce.core": "1.4.0",
     "platform.ecommerce.niushop": "1.23.0",
@@ -58,7 +59,7 @@ def preflight(*, signed_receipt: Path):
             ORDER BY b.bundle_id""").fetchall()
         installations = conn.execute("SELECT count(*) AS n FROM bundle_installation").fetchone()["n"]
         canary = conn.execute("SELECT count(*) AS n FROM twa_org WHERE id='dev-org'").fetchone()["n"]
-    if [row["version_num"] for row in revisions] != ["a0v_106"] or installations or canary:
+    if [row["version_num"] for row in revisions] != [EXPECTED_SCHEMA_HEAD] or installations or canary:
         raise InstallBlocked("DATABASE_BASELINE_DRIFT")
     versions = {row["bundle_id"]: row["version"] for row in rows}
     contents = {row["bundle_id"]: row["content_hash"] for row in rows}

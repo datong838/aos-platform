@@ -17,6 +17,7 @@ def installer():
 
 
 def test_existing_state_is_not_overwritten(installer, tmp_path, monkeypatch):
+    assert installer.EXPECTED_SCHEMA_HEAD == "a0v_107"
     state = tmp_path / "state"
     state.mkdir()
     (state / "keep").write_text("retained", encoding="utf-8")

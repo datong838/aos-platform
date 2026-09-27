@@ -17,6 +17,7 @@ def bootstrap():
 
 
 def test_new_migration_rejects_existing_state_without_writing(bootstrap, tmp_path, monkeypatch):
+    assert bootstrap.HEAD == "a0v_107"
     state = tmp_path / "state"
     state.mkdir()
     marker = state / "keep"

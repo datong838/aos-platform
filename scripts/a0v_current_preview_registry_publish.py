@@ -19,6 +19,7 @@ from psycopg.rows import dict_row
 ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
+EXPECTED_SCHEMA_HEAD = "a0v_107"
 REGISTRY_CREATE_ROLES = frozenset({"asset-publisher", "asset-registry-admin", "developer"})
 REGISTRY_PUBLISH_ROLES = frozenset({"asset-publisher", "asset-registry-admin"})
 PUBLISHER_SCOPES = frozenset({"aos"})
@@ -83,7 +84,7 @@ def preflight(*, signed_receipt: Path):
         version = conn.execute("SELECT version_num FROM alembic_version").fetchall()
         registry_count = conn.execute("SELECT count(*) AS n FROM asset_bundle_version").fetchone()["n"]
         install_count = conn.execute("SELECT count(*) AS n FROM bundle_installation").fetchone()["n"]
-    if [row["version_num"] for row in version] != ["a0v_106"] or registry_count or install_count:
+    if [row["version_num"] for row in version] != [EXPECTED_SCHEMA_HEAD] or registry_count or install_count:
         raise PublishBlocked("DATABASE_BASELINE_DRIFT")
     return builder, loader, trust, factory, content
 

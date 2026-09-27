@@ -9,7 +9,7 @@
 1. 只读确认 m1 HEAD、当前唯一容器/命名卷、DB identity、a0v_106、四包/installation/binding 与 8080/8434/18181/worker 状态；检查迁移脚本 `services/aos-api/alembic/versions/a0v_107_ecommerce_d01_source_selection.py` 仅新增结构、无旧表 UPDATE/DELETE，并复核隔离 PG 专项。
 2. 在新命名路径生成**当前库一致备份**与 SHA-256 清单，不复用旧 `/backup` 声明。独立只读列目录、校验和、恢复到隔离新库/容器并对关键只读计数和版本；不删除任何卷或历史备份。若备份或恢复不可信，停止当前库迁移，转入 BG-00 其他代码工作。
 3. 冻结 8080 API 写入口，确认 Runtime Host/worker/Cron/18181 均关闭；仅在已验证备份后对**精确当前库**执行 Alembic `a0v_106→a0v_107`。禁止 `downgrade`、手工改业务行、重试未知提交边界；异常先查 `alembic_version`/新表/日志，只读对账。
-4. 更新 `scripts/a0v_current_preview_http.py` 的**精确版本门** a0v_107，其他安装/签名/四包/binding 禁入条件不变；补 `scripts` 对应专项测试。若迁移不成功，不能改启动门以掩盖漂移。
+4. 更新 `scripts/a0v_current_preview_http.py` 的**精确版本门** a0v_107，其他安装/签名/四包/binding 禁入条件不变；补 `services/aos-api/tests/extension_runtime/test_a0v_current_preview_http.py` 对应专项测试。鲜活重装路径也有 `scripts/a0v_current_preview_bootstrap.py`、`scripts/a0v_current_preview_registry_publish.py`、`scripts/a0v_current_preview_installation.py` 三处硬编码 a0v_106，需同步改为 a0v_107 并跑其专项，不能让“当前可启动、下次不可重装”。若迁移不成功，不能改启动门以掩盖漂移。
 5. 专项测试、累计回归、编译/差异检查；用最新 m1 代码、同一当前卷重启 PG/8080/8434，浏览器验收工作台禁入及 D01 只读新表，18181/Host/worker 仍 0。写 verification、m1 单写提交、AOS 上下文与 Prime 状态核对，然后自动进入 E03 正式配置来源/绑定。
 
 ## 停止条件和边界

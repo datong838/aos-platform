@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
 INSTALLATION = "ccdcb0f0-1040-4bc6-aa0c-d045f5689813"
+EXPECTED_SCHEMA_HEAD = "a0v_107"
 FLAGS = {
     "AOS_DOTENV_DISABLED": "1", "AOS_DB_MIGRATION_MODE": "disabled",
     "AOS_QYH_CRON_ENABLED": "false", "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
@@ -79,7 +80,7 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
         versions = conn.execute("""SELECT b.bundle_id,v.version,v.status,v.content_hash
             FROM asset_bundle_version v JOIN asset_bundle b ON b.bundle_pk=v.bundle_pk""").fetchall()
     expected = {bundle_id: ver for _, bundle_id, ver, _ in builder.ALL_CASES}
-    if ([row["version_num"] for row in version] != ["a0v_106"]
+    if ([row["version_num"] for row in version] != [EXPECTED_SCHEMA_HEAD]
             or [(str(row["installation_id"]), row["state"]) for row in installed]
             != [(INSTALLATION, "approved")]
             or bindings != 0 or len(versions) != 4
@@ -87,7 +88,7 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
             or {row["bundle_id"]: row["content_hash"] for row in versions} != receipt.get("contentHashes")
             or any(row["status"] != "published" for row in versions)):
         raise PreviewBlocked("PREVIEW_DATABASE_DRIFT")
-    return parameters, {"database": TARGET, "version": "a0v_106",
+    return parameters, {"database": TARGET, "version": EXPECTED_SCHEMA_HEAD,
                         "installationId": INSTALLATION, "installationState": "approved",
                         "runtimeBindings": 0, "publishedVersions": 4,
                         "signedRoot": str(signed_root), "trustRoots": str(trust_path)}

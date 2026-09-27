@@ -17,6 +17,7 @@ def publisher():
 
 
 def test_missing_signed_tree_rejected_before_database_access(publisher, tmp_path, monkeypatch):
+    assert publisher.EXPECTED_SCHEMA_HEAD == "a0v_107"
     receipt = tmp_path / "signed.json"
     receipt.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(publisher, "_connect_factory", lambda: pytest.fail("database accessed"))
