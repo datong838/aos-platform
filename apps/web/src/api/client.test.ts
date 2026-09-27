@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as offlineQueue from "../lib/offlineQueue";
-import { apiGetAuthoritative, apiPostImmediate, formatNetworkError } from "./client";
+import { apiGetAuthoritative, apiPostImmediate, apiPostUnqueued, formatNetworkError } from "./client";
 import { setConnectivity } from "../lib/offlineStore";
 
 describe("api client network errors", () => {
@@ -28,5 +28,24 @@ describe("api client network errors", () => {
         .rejects.toMatchObject({ body: { code: "OFFLINE_WRITE_BLOCKED" } });
       expect(enqueue).not.toHaveBeenCalled();
     } finally { enqueue.mockRestore(); }
+  });
+
+  it("never queues a budget authority command and preserves exact headers", async () => {
+    const enqueue = vi.spyOn(offlineQueue, "enqueueOfflineWrite");
+    const headers = { "Idempotency-Key": "budget-one-intent", "If-Match": "0" };
+    try {
+      setConnectivity("offline", "test");
+      await expect(apiPostUnqueued("/v1/aip/budgets", { lifecycle: "draft" }, headers))
+        .rejects.toMatchObject({ body: { code: "OFFLINE_READ_ONLY" } });
+      expect(enqueue).not.toHaveBeenCalled();
+      setConnectivity("online", "test");
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ lifecycle: "draft" }) });
+      vi.stubGlobal("fetch", fetchMock);
+      await expect(apiPostUnqueued("/v1/aip/budgets", { lifecycle: "draft" }, headers))
+        .resolves.toEqual({ lifecycle: "draft" });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "POST", headers: expect.objectContaining(headers) });
+      expect(enqueue).not.toHaveBeenCalled();
+    } finally { vi.unstubAllGlobals(); enqueue.mockRestore(); }
   });
 });

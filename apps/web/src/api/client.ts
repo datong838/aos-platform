@@ -88,9 +88,9 @@ async function request<T>(
   const m = method.toUpperCase();
   if (m !== "GET" && m !== "HEAD") {
     if (policy.queueOfflineWrite === false && isOffline()) {
-      throw Object.assign(new Error(`当前离线，无法执行只读请求：${path}`), {
+      throw Object.assign(new Error(`当前离线，禁止提交不排队的权威命令：${path}`), {
         status: 0,
-        body: { code: "OFFLINE_READ_ONLY", message: `当前离线，无法执行只读请求：${path}`, path, method: m } as ApiErrorBody,
+        body: { code: "OFFLINE_READ_ONLY", message: `当前离线，禁止提交不排队的权威命令：${path}`, path, method: m } as ApiErrorBody,
       });
     }
     if (policy.queueOfflineWrite !== false) {
@@ -170,6 +170,11 @@ export async function apiPostImmediate<T>(path: string, body: unknown): Promise<
     throw Object.assign(new Error("当前离线，请联网后再恢复运行"), { status: 0, body: { code: "OFFLINE_WRITE_BLOCKED" } });
   }
   return request<T>("POST", path, { body: JSON.stringify(body) }, { queueOfflineWrite: false });
+}
+
+/** Exact authority writes carry caller-owned idempotency/version headers and never enter an offline queue. */
+export async function apiPostUnqueued<T>(path: string, body: unknown, headers: HeadersInit): Promise<T> {
+  return request<T>("POST", path, { headers, body: JSON.stringify(body) }, { queueOfflineWrite: false });
 }
 
 /** POST 形式的纯查询：离线时失败关闭，禁止进入写队列或恢复后重放。 */
