@@ -133,7 +133,11 @@ def run(*, signed_receipt: Path, execute: bool = False, intent_id: str | None = 
                 "contentHash": proof.content_hash, "intentExists": intent_path.exists(), "writes": 0}
     if state is not DefinitionWriteState.EMPTY:
         raise PublicationBlocked("DEFINITION_ROWS_NOT_EMPTY_FREEZE")
-    if not intent_id or str(UUID(intent_id)) != intent_id:
+    try:
+        canonical_intent = str(UUID(intent_id)) if intent_id else None
+    except (ValueError, AttributeError):
+        canonical_intent = None
+    if not intent_id or canonical_intent != intent_id:
         raise PublicationBlocked("EXACT_INTENT_UUID_REQUIRED")
     _write_intent(intent_path, {
         "intentId": intent_id, "database": report["database"], "sourceRef": proof.source_ref,
