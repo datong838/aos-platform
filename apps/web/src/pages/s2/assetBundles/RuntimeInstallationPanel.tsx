@@ -32,7 +32,7 @@ const FAILURE_LABELS: Readonly<Record<string, string>> = {
 const CANDIDATES = [
   { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts" },
   { key: "runtime_policies", label: "运行策略", href: null },
-  { key: "data_policies", label: "数据分类策略", href: null },
+  { key: "data_policies", label: "数据分类策略", href: "/aip/model-runtime" },
   { key: "egress_policies", label: "出站策略", href: null },
   { key: "network_policies", label: "网络策略", href: null },
   { key: "quota_policies", label: "模型配额", href: "/aip/capacity" },

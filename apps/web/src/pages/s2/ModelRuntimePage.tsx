@@ -5,6 +5,7 @@ import { PageChrome } from "../../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
 import { formatBlockers, statusDisplayName } from "../../lib/aipChineseLabels";
+import { RuntimeDataClassificationPanel } from "./RuntimeDataClassificationPanel";
 
 const grid = { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 14 } as const;
 const names: Record<string, string> = {
@@ -78,6 +79,7 @@ export function ModelRuntimePage() {
 
   return <PageChrome title="模型运行就绪" lede="汇总供应商、模型、路由、策略、评测、价格与容量的精确权威快照；控制面就绪不等于外部供应商已可调用">
     <AipOperationalProjectionStrip />
+    <RuntimeDataClassificationPanel />
     {error ? <div role="alert" className="notice bad">模型运行权威读取失败：{error}</div> : null}
     {loading ? <div role="status" className="card">正在读取当前组织的精确模型运行权威…</div> : null}
     {!loading && data ? <>
