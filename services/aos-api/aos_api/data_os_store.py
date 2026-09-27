@@ -411,6 +411,24 @@ def read_pipeline_source_selection_readiness(scope: TenantScope, pipeline_id: st
                 "WHERE org_id=%s AND project_id=%s AND pipeline_id=%s",
                 (*scope.key, pipeline_id),
             ).fetchone()
+        installations = conn.execute(
+            "SELECT i.installation_id,i.active_revision,r.state FROM bundle_installation i "
+            "LEFT JOIN bundle_installation_revision r ON r.org_id=i.org_id "
+            "AND r.project_id=i.project_id AND r.installation_pk=i.installation_pk "
+            "AND r.revision=i.active_revision WHERE i.org_id=%s AND i.project_id=%s "
+            "ORDER BY i.installation_id LIMIT 2",
+            scope.key,
+        ).fetchall()
+        binding_rows = []
+        if len(installations) == 1 and installations[0]["active_revision"] is not None \
+                and installations[0]["state"] == "active":
+            binding_rows = conn.execute(
+                "SELECT generation,config_ref,execution_epoch FROM extension_runtime_binding "
+                "WHERE org_id=%s AND project_id=%s AND installation_id=%s "
+                "AND installation_revision=%s AND desired_state<>'uninstalled' "
+                "ORDER BY revision DESC LIMIT 2",
+                (*scope.key, installations[0]["installation_id"], installations[0]["active_revision"]),
+            ).fetchall()
     blockers: list[str] = []
     if pipeline is None or receipt is None:
         blockers.append("PIPELINE_NOT_FORMALLY_REGISTERED")
@@ -427,10 +445,34 @@ def read_pipeline_source_selection_readiness(scope: TenantScope, pipeline_id: st
     else:
         blockers.append("EXACT_RUNTIME_REVALIDATION_REQUIRED")
         next_action = "REVALIDATE_RUNTIME"
+    installation_id = str(installations[0]["installation_id"]) if len(installations) == 1 else None
+    installation_active = (len(installations) == 1
+                           and installations[0]["active_revision"] is not None
+                           and installations[0]["state"] == "active")
+    if not installations:
+        blockers.append("INSTALLATION_MISSING")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "REVIEW_INSTALLATION"
+    elif len(installations) != 1:
+        blockers.append("INSTALLATION_AMBIGUOUS")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "REVIEW_INSTALLATION"
+    elif not installation_active:
+        blockers.append("INSTALLATION_NOT_ACTIVE")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "REVIEW_INSTALLATION"
+    elif not binding_rows:
+        blockers.append("RUNTIME_BINDING_MISSING")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "CONFIGURE_RUNTIME"
+    elif len(binding_rows) != 1:
+        blockers.append("RUNTIME_BINDING_AMBIGUOUS")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "CONFIGURE_RUNTIME"
+    elif binding_rows[0]["config_ref"] is None or type(binding_rows[0]["execution_epoch"]) is not int \
+            or binding_rows[0]["execution_epoch"] < 1:
+        blockers.append("RUNTIME_CONFIGURATION_MISSING")
+        if next_action == "REVALIDATE_RUNTIME": next_action = "CONFIGURE_RUNTIME"
     return {"pipelineId": pipeline_id, "formallyRegistered": receipt is not None and pipeline is not None,
             "sourceId": receipt["source_id"] if receipt is not None and pipeline is not None else None,
             "sourceConfigurationRevision": str(source["configuration_revision"]) if source is not None else None,
             "graphRevision": int(graph["revision"]) if graph is not None else None,
+            "installationId": installation_id, "installationActive": installation_active,
             "ready": False, "blockers": blockers, "nextAction": next_action}
 
 

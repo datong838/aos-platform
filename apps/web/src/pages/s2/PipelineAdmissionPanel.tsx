@@ -10,6 +10,8 @@ type Readiness = {
   sourceId: string | null;
   sourceConfigurationRevision: string | null;
   graphRevision: number | null;
+  installationId: string | null;
+  installationActive: boolean;
   ready: false;
   blockers: string[];
   nextAction: string;
@@ -21,6 +23,12 @@ const copy: Record<string, string> = {
   SOURCE_CONFIGURATION_CHANGED: "来源配置不存在或已变化，需重新核对",
   GRAPH_NOT_SAVED: "还没有保存正式管道图",
   EXACT_RUNTIME_REVALIDATION_REQUIRED: "还需核对安装、运行身份、映射、结构和遮蔽策略的精确引用",
+  INSTALLATION_MISSING: "当前租户尚无可核对的安装",
+  INSTALLATION_AMBIGUOUS: "存在多个安装，不能自动猜选，请核对安装实例",
+  INSTALLATION_NOT_ACTIVE: "安装尚未激活；已批准不等于可运行",
+  RUNTIME_BINDING_MISSING: "当前安装缺少明确的运行绑定",
+  RUNTIME_BINDING_AMBIGUOUS: "运行绑定不唯一，必须先对账",
+  RUNTIME_CONFIGURATION_MISSING: "运行绑定缺少当前配置",
 };
 
 function scopeIdentity() {
@@ -58,6 +66,8 @@ function Details({ pipelineId }: { pipelineId: string }) {
       {data.nextAction === "REGISTER_PIPELINE" && <Link to="/data/pipelines">返回管道登记</Link>}
       {data.nextAction === "REGISTER_SOURCE" && <Link to="/data">核对数据源</Link>}
       {data.nextAction === "SAVE_GRAPH" && <p>请先保存当前画布，再刷新条件。</p>}
+      {data.nextAction === "REVIEW_INSTALLATION" && <p>请先在安装管理中核对当前实例及激活状态；此处不会自动启用。</p>}
+      {data.nextAction === "CONFIGURE_RUNTIME" && <p>请先完成运行配置与绑定；此处不会代替配置或启用。</p>}
       {data.nextAction === "REVALIDATE_RUNTIME" && <p>待运行配置和精确引用经正式 Owner 复核；此页不会代替审批。</p>}
     </>}
   </section>;

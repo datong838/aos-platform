@@ -48,4 +48,22 @@ describe("source selection product readiness", () => {
     expect(host.textContent).toContain("当前条件未核清，不能提交审批");
     expect(host.querySelectorAll("a")).toHaveLength(0);
   });
+
+  it("distinguishes approved installation from active runtime without approval action", async () => {
+    vi.mocked(useJsonGet).mockReturnValue({
+      data: { pipelineId: "P01", formallyRegistered: false, sourceId: null,
+        sourceConfigurationRevision: null, graphRevision: null,
+        installationId: "ccdcb0f0-1040-4bc6-aa0c-d045f5689813",
+        installationActive: false, ready: false,
+        blockers: ["PIPELINE_NOT_FORMALLY_REGISTERED", "INSTALLATION_NOT_ACTIVE"],
+        nextAction: "REGISTER_PIPELINE" },
+      err: null, loading: false, reload: vi.fn(), setData: vi.fn(), setErr: vi.fn(),
+    });
+    await render();
+    expect(host.textContent).toContain("已批准不等于可运行");
+    expect(host.textContent).toContain("尚未完成正式登记");
+    expect(host.querySelector('a[href="/data/pipelines"]')).not.toBeNull();
+    expect(Array.from(host.querySelectorAll("button")).map(button => button.textContent))
+      .toEqual(["刷新当前条件"]);
+  });
 });
