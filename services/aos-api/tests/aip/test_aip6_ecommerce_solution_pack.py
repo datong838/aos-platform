@@ -11,6 +11,7 @@ import yaml
 
 from aos_api.aip_agent_registry_store import AipAgentRegistryStore
 from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_ecommerce_agent_installer import AipEcommerceAgentInstaller
 from aos_api.aip_solution_pack_publisher import (
     AIP_DEFINITION_SOURCE_VERSION,
     AGENT_LOGIC_COUNTS,
@@ -25,6 +26,7 @@ from aos_api.aip_solution_pack_publisher import (
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_solution_pack_signed_preflight import CurrentDefinitionSourceProof
 from aos_api.db import connect
+from aos_api.auth import Principal
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 BUNDLE = REPO_ROOT / "bundles/solutions/ecommerce-growth"
@@ -134,6 +136,16 @@ def test_current_publication_round_trips_all_owner_rows_in_isolated_pg(tmp_path)
         item = AipCapabilityRegistry().get(ref.asset_id, ref.revision)
         assert item.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION
         assert item.content_hash == ref.content_hash
+    with connect() as conn:
+        conn.execute("INSERT INTO twa_org(id,name) VALUES ('org-org','栖月汇测试组织') ON CONFLICT (id) DO NOTHING")
+        conn.execute("""INSERT INTO twa_workspace(org_id,project_id,name)
+            VALUES ('org-org','dev-project','当前来源隔离测试') ON CONFLICT (org_id,project_id) DO NOTHING""")
+        conn.commit()
+    principal = Principal(subject="pytest-current-installer", org_id="org-org", project_id="dev-project")
+    installed = AipEcommerceAgentInstaller().install(principal, idempotency_key="pytest-current-install")
+    assert installed.solution_pack_version == CURRENT_SIGNED_CANDIDATE_VERSION
+    assert (installed.created_count, installed.existing_count) == (6, 0)
+    assert {item.instance.status.value for item in installed.items} == {"provisioning"}
 
 
 def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets():
