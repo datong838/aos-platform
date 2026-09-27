@@ -1,7 +1,8 @@
-import { executableConfig, verifySaved, verifyDiscovery, type Discovery } from "./s2/sourceSetup";
+import { executableConfig, verifySaved } from "./s2/sourceSetup";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { apiGet, apiPost } from "../api/client";
+import { apiGet, apiGetAuthoritative, apiPost, apiPostUnqueued } from "../api/client";
+import { getTenant } from "../api/tenant";
 import { PageChrome } from "../components/PageChrome";
 import {
   BpBanner,
@@ -75,6 +76,24 @@ type PipelineRow = PipelineMeta & { status?: string };
 type MainTab = "sources" | "syncs" | "agents" | "exports";
 type SourceView = "list" | "new";
 type RuntimeMode = "direct" | "agent" | "worker";
+type PendingSourceCreation = { id: string; runtimeMode: RuntimeMode; expectedConfigurationRevision: string | null };
+
+function pendingSourceKey(): string {
+  const tenant = getTenant();
+  return `aos:source-create:pending:${tenant.orgId}:${tenant.projectId}`;
+}
+
+function readPendingSource(): PendingSourceCreation | null {
+  let raw: string | null;
+  try { raw = localStorage.getItem(pendingSourceKey()); }
+  catch { return { id: "本地待对账状态不可读", runtimeMode: "direct", expectedConfigurationRevision: null }; }
+  if (!raw) return null;
+  try {
+    const item = JSON.parse(raw) as PendingSourceCreation;
+    if (item && typeof item.id === "string" && item.id && ["direct", "agent", "worker"].includes(item.runtimeMode)) return item;
+  } catch { /* corrupted marker still freezes writes */ }
+  return { id: "不可解析的待对账登记", runtimeMode: "direct", expectedConfigurationRevision: null };
+}
 
 export function sourceCreatePayload(id: string, type: string, runtimeMode: RuntimeMode) {
   return { id, type, runtimeMode };
@@ -238,7 +257,12 @@ export function DataPage() {
   const [savedConnection, setSavedConnection] = useState<{id:string; configurationRevision:string} | null>(null);
   const [sourceBusy, setSourceBusy] = useState(false);
   const sourceInFlight = useRef(false);
-  const [sourceDiscovery, setSourceDiscovery] = useState<Discovery | null>(null);
+  const [pendingSource, setPendingSource] = useState<PendingSourceCreation | null>(readPendingSource);
+  useEffect(() => {
+    const onTenantUpdate = () => setPendingSource(readPendingSource());
+    window.addEventListener("aos-tenant-updated", onTenantUpdate);
+    return () => window.removeEventListener("aos-tenant-updated", onTenantUpdate);
+  }, []);
   const [sshPort, setSshPort] = useState("22");
   const [sshHost, setSshHost] = useState("");
   const [sshUser, setSshUser] = useState("");
@@ -300,52 +324,57 @@ export function DataPage() {
   }, [connectorPlugins, createRequested, requestedConnector]);
 
   useEffect(() => {
-    setSourceDiscovery(null);
     setMsg("");
   }, [connectorType, runtimeMode, newSourceId, sshHost, sshPort, sshUser, sshPassword,
       connHost, connPort, connDatabase, connUsername, connPassword]);
 
   async function createSource() {
-    if (sourceInFlight.current) return;
+    if (sourceInFlight.current || pendingSource) return;
     if (connectorType === "jdbc-mysql-ssh" && runtimeMode !== "direct") {
       setErr("当前连接测试仅支持直接连接，请选择直接连接；代理测试尚未就绪");
       return;
     }
     sourceInFlight.current = true;
     const id = newSourceId.trim() || automaticSourceId;
+    const markerKey = pendingSourceKey();
     setSourceBusy(true);
-    setSourceDiscovery(null);
     setErr(null);
+    let submitted = false;
     try {
+      const current = await apiGetAuthoritative<{ items: SourceRow[] }>("/v1/sources");
+      const existing = current.items.find((item) => item.id === id) as (SourceRow & { configurationRevision?: string }) | undefined;
+      const expected = savedConnection?.id === id ? savedConnection.configurationRevision : null;
+      if ((expected && existing?.configurationRevision !== expected) || (!expected && existing)) {
+        throw new Error("数据源已存在或配置版本变化，禁止覆盖；请重新读取当前数据源");
+      }
       const connection = connectorType === "jdbc-mysql-ssh" ? executableConfig(connectorType, {
         sshHost, sshUser, sshPassword, sshPort, dbHost: connHost,
         dbPort: connPort || "3306", database: connDatabase, username: connUsername, password: connPassword,
       }) : null;
-      const created = await apiPost<SourceRow & { id: string; configurationRevision: string }>("/v1/sources", {
+      const marker: PendingSourceCreation = { id, runtimeMode, expectedConfigurationRevision: expected };
+      if (pendingSourceKey() !== markerKey) throw new Error("租户已切换，停止登记");
+      localStorage.setItem(markerKey, JSON.stringify(marker));
+      setPendingSource(marker);
+      submitted = true;
+      const created = await apiPostUnqueued<SourceRow & { id: string; configurationRevision: string }>("/v1/sources", {
         ...sourceCreatePayload(id, connectorType, runtimeMode),
         ...(connection ? { config: connection } : {}),
-        ...(savedConnection?.id === id ? { expectedConfigurationRevision: savedConnection.configurationRevision } : {}),
-      });
-      if (connection) setSavedConnection(verifySaved(created, id));
+        ...(expected ? { expectedConfigurationRevision: expected } : {}),
+      }, {});
+      const saved = verifySaved(created, id);
       if (created.id !== id || created.runtimeMode !== runtimeMode) {
         throw new Error("创建响应与请求的数据源或运行时不一致");
       }
-      const verified = await apiGet<{ items: SourceRow[] }>("/v1/sources");
+      const verified = await apiGetAuthoritative<{ items: SourceRow[] }>("/v1/sources");
       if (!verifyCreatedSource(verified.items || [], id, runtimeMode)) {
         throw new Error("服务端重读未找到运行时一致的数据源，已停止跳转");
       }
-      if (connection) {
-        const saved = verifySaved(created, id);
-        const current = verified.items.find(item => item.id === id) as (SourceRow & {configurationRevision?:string}) | undefined;
-        if (current?.configurationRevision !== saved.configurationRevision) throw new Error("配置版本回读不一致");
-        const discovery = verifyDiscovery(await apiPost<Discovery>(`/v1/sources/${encodeURIComponent(id)}/test`, {
-          expectedConfigurationRevision: saved.configurationRevision,
-        }), saved);
-        setSourceDiscovery(discovery);
-        setMsg(`配置已保存并通过连接测试，发现 ${discovery.tables.length} 张表，尚未执行同步`);
-        return;
-      }
-      setMsg(`已创建并验证数据源 ${id}`);
+      const observed = verified.items.find(item => item.id === id) as (SourceRow & { configurationRevision?: string }) | undefined;
+      if (observed?.configurationRevision !== saved.configurationRevision) throw new Error("配置版本回读不一致");
+      localStorage.removeItem(markerKey);
+      if (pendingSourceKey() === markerKey) setPendingSource(null);
+      setSavedConnection(saved);
+      setMsg(`数据源 ${id} 已登记并精确回读；未测试连接，未执行同步。`);
       setNewSourceId("");
       setWizardStep(1);
       await refresh();
@@ -353,9 +382,19 @@ export function DataPage() {
       setTab("sources");
       navigate(`/data/sources/${encodeURIComponent(id)}`);
     } catch {
-      setErr("保存或测试未确认成功，请检查配置并重新读取数据源状态");
+      setErr(submitted ? "登记结果未核清，已冻结后续创建；只能只读对账，不能重发或自动测试连接。" : "登记预检失败，尚未提交；请先核对当前数据源状态。");
     }
     finally { sourceInFlight.current = false; setSourceBusy(false); }
+  }
+
+  async function reconcilePendingSource() {
+    if (!pendingSource) return;
+    try {
+      const response = await apiGetAuthoritative<{ items: SourceRow[] }>("/v1/sources");
+      const match = response.items.find((item) => item.id === pendingSource.id);
+      setMsg(match ? `发现同 ID 数据源 ${pendingSource.id}；当前接口无登记 Receipt，仍无法独立证明原请求结果，保持冻结。`
+        : `尚无 ${pendingSource.id} 的权威登记；原请求结果仍未知，保持冻结。`);
+    } catch { setErr("权威只读对账失败，保持冻结。"); }
   }
 
   async function installConnector(pluginId: string) {
@@ -453,6 +492,7 @@ export function DataPage() {
         </p>
       )}
       {err && <p className="error">{err}</p>}
+      {pendingSource && <section role="alert" className="card"><p>数据源登记结果未核清：{pendingSource.id}。当前产品入口已冻结，不会自动重发或连接源库。</p><button type="button" onClick={() => void reconcilePendingSource()}>只读对账登记状态</button></section>}
 
       {tab === "sources" && sourceView === "list" && (
         <>
@@ -529,7 +569,7 @@ export function DataPage() {
       )}
 
       {tab === "sources" && sourceView === "new" && (
-        <fieldset disabled={sourceBusy} className="bp-object-panel" style={{ marginTop: "0.75rem", minWidth: 0 }}>
+        <fieldset disabled={sourceBusy || !!pendingSource} className="bp-object-panel" style={{ marginTop: "0.75rem", minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
             <div>
               <div className="bp-object-title">新建数据源</div>
@@ -867,12 +907,6 @@ export function DataPage() {
             </>
           )}
 
-          {sourceDiscovery && <div className="card">
-            <h3>连接测试通过</h3>
-            <p>发现 {sourceDiscovery.tables.length} 张表，尚未执行数据同步。</p>
-            {sourceDiscovery.truncated && <p>仅显示前 500 张表。</p>}
-            {sourceDiscovery.tables.map(table => <div key={table.name}>{table.name}</div>)}
-          </div>}
           {wizardStep === 4 && (
             <>
               <div className="bp-ws-section-title">凭证</div>
@@ -925,7 +959,7 @@ export function DataPage() {
                   上一步
                 </button>
                 <button type="button" className="btn-primary" disabled={sourceBusy} onClick={() => void createSource()}>
-                  {sourceBusy ? "正在保存并测试…" : "创建数据源"}
+                  {sourceBusy ? "正在保存并回读…" : "创建数据源"}
                 </button>
               </BpToolbar>
             </>

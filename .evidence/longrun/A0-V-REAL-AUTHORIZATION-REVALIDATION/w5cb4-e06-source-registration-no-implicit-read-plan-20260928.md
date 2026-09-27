@@ -6,7 +6,7 @@
 
 ## 文件级清单与前哈希
 
-- `apps/web/src/pages/DataPage.tsx`：`0b9b6ea13da29c6974c2291b04d7443b5c0490c2`。改为 `apiPostUnqueued`，提交前权威只读回读同 ID/期望修订，提交前存 tenant-scoped 待对账标记（仅 ID、运行模式、期望修订，**不存连接密钥**）；任何网络/写入未知、回读不一致均冻结。页面重开恢复 pending；仅通过 `/v1/sources` 元数据对账解除，不重发。删除自动 `POST /test`，不读取源表目录；保存成功仅展示“已登记、未测试、未同步”。
+- `apps/web/src/pages/DataPage.tsx`：`0b9b6ea13da29c6974c2291b04d7443b5c0490c2`。改为 `apiPostUnqueued`，提交前权威只读回读同 ID/期望修订，提交前存 tenant-scoped 待对账标记（仅 ID、运行模式、期望修订，**不存连接密钥**）；任何网络/写入未知、回读不一致均冻结。页面重开及租户切换时恢复对应 tenant 的 pending；写入期间固定 marker key，不可读 marker 失败关闭。只有**同次 POST 明确响应的配置修订**再由 `/v1/sources` 权威读回一致，才自动解除。未知响应时只读 GET 可诊断，单靠同 ID 不能独立证明是原请求，故仍冻结、不重发。删除自动 `POST /test`，不读取源表目录；保存成功仅展示“已登记、未测试、未同步”。
 - `apps/web/src/pages/DataPage.source.interaction.test.tsx`：`c51151f684a535dd7b736448e811f4362a3dc299`。更新正/负例：离线队列禁入、保存后无 probe、读回漂移冻结、跨刷新 pending 与只读对账、marker 不含密码。相关 `Wave3bW4Truth.test.ts` 和 `sourceSetup` 邻接运行但无意改动。
 - 不修改 `wave_ext.py`、`meta_source` 与迁移；服务端既有写入口并无新幂等 Receipt，因此 UI 不能提供“重试创建”按钮。未来若需要重试，先在 Owner 层新增正式 Receipt/未受理证明，不通过清 localStorage 规避。
 
