@@ -143,14 +143,17 @@ def _value(item):
 
 class NaturalD01Issuer:
     def __init__(self, tasks, owner, *, require_current_origin,
+                 require_current_selection,
                  require_current_sources=require_current_d01_sources):
         if (not isinstance(tasks, AipTaskStore) and not callable(getattr(tasks, 'timeline', None))
                 or not callable(getattr(owner, 'create', None))
                 or not callable(require_current_origin)
+                or not callable(require_current_selection)
                 or not callable(require_current_sources)):
-            raise TypeError('exact D01 task, Owner, origin and source readers required')
+            raise TypeError('exact D01 task, Owner, origin, selection and source readers required')
         self._tasks, self._owner = tasks, owner
         self._origin = require_current_origin
+        self._selection = require_current_selection
         self._sources = require_current_sources
 
     def issue(self, scope: TenantScope, task_run_id: str, request: CreateAgentRunRequest,
@@ -202,14 +205,10 @@ class NaturalD01Issuer:
         inputs = refs.input_refs
         identities = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
                       for ref in inputs}
-        approved_inputs = plan.steps[0].input_refs
-        approved_identities = {
-            (ref.resource_type, ref.resource_id, ref.revision, ref.authority)
-            for ref in approved_inputs
-        }
-        if (not approved_inputs or len(approved_identities) != len(approved_inputs)
-                or approved_identities != identities):
-            raise ValueError('approved portrait source inventory differs from D01 inputs')
+        schema = plan.steps[0].input_schema_ref
+        if (schema is None or plan.steps[0].input_refs != [schema]
+                or schema.revision is None or not schema.authority):
+            raise ValueError('approved portrait input Schema differs from formal compiler')
         if (len(identities) != len(inputs) or not _SOURCE_KINDS.issubset(
                 {ref.resource_type for ref in inputs})
                 or identities != _packet_ref_keys(packet)
@@ -217,8 +216,12 @@ class NaturalD01Issuer:
             raise ValueError('complete unique D01 exact source inventory required')
         if self._origin(scope, task_run_id) is not True:
             raise ValueError('current natural origin unavailable')
+        if self._selection(scope, task_run_id, request, packet, actor, occurred_at) is not True:
+            raise ValueError('current approved D01 selection unavailable')
         if self._sources(scope, request, packet, actor, occurred_at) is not True:
             raise ValueError('current governed D01 source packet unavailable')
+        if self._selection(scope, task_run_id, request, packet, actor, occurred_at) is not True:
+            raise ValueError('current approved D01 selection changed during preflight')
         if self._origin(scope, task_run_id) is not True:
             raise ValueError('natural origin changed during D01 preflight')
         key = 'natural-d01:' + expected_id

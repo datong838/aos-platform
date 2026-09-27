@@ -7,7 +7,6 @@ from psycopg.types.json import Jsonb
 
 from aos_api.aip_task_store import AipTaskStore
 from aos_api.ecommerce_analyst_authority_store import canonical_hash
-from aos_api.ecommerce_analyst_d01_issuer import _packet_ref_keys
 from aos_api.ecommerce_analyst_d01_source_selection import D01SourceSelectionProposal
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
@@ -49,9 +48,7 @@ class D01SourceSelectionStore:
             TransactionBoundConnectFactory(transaction, scope)
         ).timeline(scope, proposal.task_run_ref.resource_id)
         run, task, plan = timeline.run, timeline.task, timeline.plan
-        approved = plan.steps[0].input_refs if plan.steps else []
-        approved_keys = {(ref.resource_type, ref.resource_id, ref.revision,
-                          ref.authority) for ref in approved}
+        schema = plan.steps[0].input_schema_ref if plan.steps else None
         if (run.id != proposal.task_run_ref.resource_id
                 or str(run.version) != proposal.task_run_ref.revision
                 or run.plan_revision_id != proposal.plan_ref.resource_id
@@ -63,8 +60,8 @@ class D01SourceSelectionStore:
                 or plan.content_hash != proposal.plan_content_hash
                 or getattr(plan.approval_status, 'value', plan.approval_status) != 'approved'
                 or not plan.steps or plan.steps[0].step_key != 'portrait'
-                or not approved or len(approved_keys) != len(approved)
-                or approved_keys != _packet_ref_keys(proposal.packet)
+                or schema is None or plan.steps[0].input_refs != [schema]
+                or schema.revision is None or not schema.authority
                 or task.selection_ref is None
                 or task.selection_ref.resource_type != 'SourceSelectionRevision'
                 or task.selection_ref.resource_id != proposal.source_selection_ref.resource_id
@@ -215,9 +212,7 @@ class D01SourceSelectionStore:
             TransactionBoundConnectFactory(transaction, scope)
         ).timeline(scope, task_run_id)
         run, task, plan = timeline.run, timeline.task, timeline.plan
-        approved_refs = plan.steps[0].input_refs if plan.steps else []
-        identities = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
-                      for ref in approved_refs}
+        schema = plan.steps[0].input_schema_ref if plan.steps else None
         receipt = approval['receipt_ref']
         if (proposal.tenant.org_id != scope.org_id
                 or proposal.tenant.project_id != scope.project_id
@@ -233,8 +228,8 @@ class D01SourceSelectionStore:
                 or getattr(task.status, 'value', task.status) != 'executing'
                 or getattr(plan.approval_status, 'value', plan.approval_status) != 'approved'
                 or not plan.steps or plan.steps[0].step_key != 'portrait'
-                or not approved_refs or len(identities) != len(approved_refs)
-                or identities != _packet_ref_keys(proposal.packet)
+                or schema is None or plan.steps[0].input_refs != [schema]
+                or schema.revision is None or not schema.authority
                 or task.selection_ref is None
                 or task.selection_ref.resource_type != 'SourceSelectionRevision'
                 or task.selection_ref.resource_id != proposal.source_selection_ref.resource_id

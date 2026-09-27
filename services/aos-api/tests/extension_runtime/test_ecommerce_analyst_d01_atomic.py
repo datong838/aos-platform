@@ -18,7 +18,8 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
              cutoff=None, reject_origin=False, reject_sources=False,
              unknown_commit=False, task_selection='source-selection-1',
              original_selection='source-selection-1', task_selection_revision='1',
-             reject_selection=False, mismatched_packet=False):
+             reject_selection=False, mismatched_packet=False,
+             selection_changes_after_first=False):
     calls = []
     class Connection:
         def commit(self):
@@ -45,6 +46,8 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
         calls.append('selection')
         if reject_selection:
             raise ValueError('approved D01 selection unavailable')
+        if selection_changes_after_first and calls.count('selection') > 1:
+            raise ValueError('approved D01 selection changed')
         assert scope == SCOPE and task_run_id == 'run-1' and plan_id == 'plan-1'
         assert actor == 'analyst-owner' and occurred_at == NOW
         packet = _packet()
@@ -103,7 +106,7 @@ def test_one_original_chain_commits_one_owner_receipt(monkeypatch):
                                actor='analyst-owner', occurred_at=NOW)
     assert result[0].agent_run_id == _request().agent_run_id
     assert [item for item in calls if isinstance(item, str)] == [
-        'connect', 'origin', 'selection', 'sources', 'owner', 'commit']
+        'connect', 'origin', 'selection', 'sources', 'selection', 'owner', 'commit']
 
 
 @pytest.mark.parametrize('drift', [
@@ -114,6 +117,15 @@ def test_missing_or_mismatched_approved_selection_never_reaches_owner(monkeypatc
     with pytest.raises(ValueError, match='approved D01 selection'):
         coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
                           receipt_ref=RECEIPT, actor='analyst-owner', occurred_at=NOW)
+    assert 'owner' not in calls and 'commit' not in calls
+
+
+def test_selection_changed_after_source_read_never_reaches_owner(monkeypatch):
+    coordinator, calls = _harness(monkeypatch, selection_changes_after_first=True)
+    with pytest.raises(ValueError, match='approved D01 selection changed'):
+        coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
+                          receipt_ref=RECEIPT, actor='analyst-owner', occurred_at=NOW)
+    assert calls.count('selection') == 2
     assert 'owner' not in calls and 'commit' not in calls
 
 

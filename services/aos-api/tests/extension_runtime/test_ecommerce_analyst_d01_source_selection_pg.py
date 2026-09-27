@@ -214,9 +214,10 @@ def test_real_two_stage_decision_is_read_in_same_transaction_and_revocation_clos
     task_id, plan_id, run_id = ('c-task-' + suffix, 'c-plan-' + suffix,
                                 'c-run-' + suffix)
     maker, checker = 'c-maker-' + suffix, 'c-checker-' + suffix
-    refs = [ref.model_dump(mode='json', by_alias=True)
-            for ref in _request().run.input_refs]
-    steps = [{'stepKey':'portrait','title':'业务画像','inputRefs':refs}]
+    schema = {'resourceType':'Schema','resourceId':'portrait-input',
+              'revision':'1','authority':'postgresql'}
+    steps = [{'stepKey':'portrait','title':'业务画像',
+              'inputRefs':[schema],'inputSchemaRef':schema}]
     source_ref = {'resourceType':'SourceSelectionRevision',
                   'resourceId':'c-source-' + suffix,'revision':1,
                   'contentHash':'sha256:' + 'a' * 64}

@@ -90,15 +90,17 @@ def _timeline(*, run_status='running', task_status='executing', approval='approv
                            revision='1', authority='aip-assignee-directory')
     steps = [SimpleNamespace(step_key=key, applicability='applicable',
                              assignee_refs=[assignee],
-                             input_refs=list(_request().run.input_refs) if key == 'portrait' else [],
+                             input_schema_ref=_resource('Schema', key + '-input'),
                              model_dump=lambda **_kwargs: {'stepKey': key}) for key in
              ('portrait', 'diagnosis', 'solution-design')]
     # Preserve each step's key when serializing the approved plan.
     for step in steps:
+        step.input_refs = [step.input_schema_ref]
         step.model_dump = lambda _step=step, **_kwargs: {
             'stepKey': _step.step_key,
             'inputRefs': [ref.model_dump(mode='json', by_alias=True)
                           for ref in _step.input_refs],
+            'inputSchemaRef': _step.input_schema_ref.model_dump(mode='json', by_alias=True),
         }
     content_hash = _canonical_hash({'steps': [step.model_dump() for step in steps],
                                     'dependencies': [], 'risk': {}})
@@ -126,10 +128,14 @@ def _issuer(timeline=None):
     def origin(scope, run_id):
         calls.append(('origin', scope, run_id))
         return True
+    def selection(scope, run_id, request, packet, actor, now):
+        calls.append(('selection', scope, run_id))
+        return True
     def sources(scope, request, packet, actor, now):
         calls.append(('sources', scope, request, packet, actor, now))
         return True
     return NaturalD01Issuer(tasks, owner, require_current_origin=origin,
+                            require_current_selection=selection,
                             require_current_sources=sources), calls
 
 
@@ -164,12 +170,11 @@ def test_missing_source_inventory_never_calls_owner():
 
 @pytest.mark.parametrize('plan_inputs', [
     [],
-    [_resource('MethodRevision', 'other-method'),
-     *[ref for ref in _request().run.input_refs if ref.resource_type != 'MethodRevision']],
-    [*_request().run.input_refs, _resource('QueryResultRevision', 'extra-query')],
-    [*_request().run.input_refs, _request().run.input_refs[0]],
+    [_resource('Schema', 'other-schema')],
+    [_resource('Schema', 'portrait-input'), _resource('Schema', 'extra-schema')],
+    [_resource('Schema', 'portrait-input'), _resource('Schema', 'portrait-input')],
 ])
-def test_approved_plan_portrait_inputs_must_equal_d01_packet(plan_inputs):
+def test_approved_plan_portrait_schema_must_match_compiler(plan_inputs):
     timeline = _timeline()
     timeline.plan.steps[0].input_refs = plan_inputs
     timeline.plan.content_hash = _canonical_hash({
@@ -177,10 +182,34 @@ def test_approved_plan_portrait_inputs_must_equal_d01_packet(plan_inputs):
         'dependencies': [], 'risk': {},
     })
     issuer, calls = _issuer(timeline)
-    with pytest.raises(ValueError, match='approved portrait source inventory'):
+    with pytest.raises(ValueError, match='approved portrait input Schema'):
         issuer.issue(SCOPE, 'run-1', _request(), _packet(),
                      actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
+
+
+def test_formal_compiler_schema_plan_can_use_later_independently_approved_packet():
+    timeline = _timeline()
+    schema = _resource('SchemaRevision', 'portrait-input-schema')
+    timeline.plan.steps[0].input_schema_ref = schema
+    timeline.plan.steps[0].input_refs = [schema]
+    timeline.plan.content_hash = _canonical_hash({
+        'steps': [step.model_dump() for step in timeline.plan.steps],
+        'dependencies': [], 'risk': {},
+    })
+    issuer, calls = _issuer(timeline)
+    result = issuer.issue(SCOPE, 'run-1', _request(), _packet(),
+                          actor='analyst-owner', occurred_at=NOW)
+    assert result[0].agent_run_id == _request().agent_run_id
+    assert any(len(item) == 3 and item[0] == SCOPE for item in calls)
+
+
+def test_issuer_without_current_selection_checker_is_not_constructible():
+    with pytest.raises(TypeError, match='selection'):
+        NaturalD01Issuer(SimpleNamespace(timeline=lambda *_: _timeline()),
+                         SimpleNamespace(create=lambda *_args, **_kwargs: None),
+                         require_current_origin=lambda *_: True,
+                         require_current_sources=lambda *_: True)
 
 
 def test_drifted_approved_plan_hash_never_calls_owner():
@@ -212,11 +241,13 @@ def test_wrong_scope_or_untrusted_origin_never_calls_owner():
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
 
-@pytest.mark.parametrize('missing', ['origin', 'sources'])
+@pytest.mark.parametrize('missing', ['origin', 'selection', 'sources'])
 def test_missing_current_authority_never_calls_owner(missing):
     issuer, calls = _issuer()
     if missing == 'origin':
         issuer._origin = lambda *_args: False
+    elif missing == 'selection':
+        issuer._selection = lambda *_args: False
     else:
         issuer._sources = lambda *_args: False
     with pytest.raises(ValueError):

@@ -87,12 +87,19 @@ class NaturalD01AtomicCoordinator:
                 )
                 if tasks.timeline(scope, task_run_id).task.selection_ref != expected_selection:
                     raise ValueError('Task source selection differs from original analysis')
-                approved_packet, _approval_receipt = D01SourceSelectionStore().read_current(
-                    transaction, scope, task_run_id,
-                    request.run.plan_ref.resource_id, actor, occurred_at)
-                if (approved_packet.model_dump(mode='json', by_alias=True)
-                        != packet.model_dump(mode='json', by_alias=True)):
-                    raise ValueError('approved D01 selection differs from requested packet')
+                def approved_selection(checked_scope, checked_run, checked_request,
+                                       checked_packet, checked_actor, checked_at):
+                    if (checked_scope != scope or checked_run != task_run_id
+                            or checked_request != request or checked_actor != actor
+                            or checked_at != occurred_at):
+                        raise ValueError('approved D01 selection context differs')
+                    approved_packet, _approval_receipt = D01SourceSelectionStore().read_current(
+                        transaction, scope, task_run_id,
+                        request.run.plan_ref.resource_id, actor, occurred_at)
+                    if (approved_packet.model_dump(mode='json', by_alias=True)
+                            != checked_packet.model_dump(mode='json', by_alias=True)):
+                        raise ValueError('approved D01 selection differs from requested packet')
+                    return True
                 borrowed = _BorrowedOwner(self.owner, transaction)
                 issuer = NaturalD01Issuer(
                     tasks, borrowed,
@@ -100,6 +107,7 @@ class NaturalD01AtomicCoordinator:
                     # which rechecks the original chain before and after this entire write.
                     require_current_origin=lambda checked_scope, checked_run:
                         checked_scope == scope and checked_run == task_run_id,
+                    require_current_selection=approved_selection,
                     require_current_sources=lambda checked_scope, checked_request, checked_packet,
                             checked_actor, checked_at: require_current_d01_sources_in_transaction(
                         transaction, checked_scope, checked_request, checked_packet,
