@@ -14,6 +14,7 @@ from aos_api.aip_solution_pack_publisher import (
     AGENT_LOGIC_COUNTS,
     CAPABILITY_IDS,
     COMPATIBILITY_CLASSIFICATIONS,
+    CURRENT_SIGNED_CANDIDATE_VERSION,
     SOLUTION_PACK_ID,
     SOLUTION_PACK_VERSION,
     AipSolutionPackInvalid,
@@ -28,6 +29,38 @@ BUNDLE = REPO_ROOT / "bundles/solutions/ecommerce-growth"
 
 def load(relative_path: str):
     return json.loads((BUNDLE / relative_path).read_text(encoding="utf-8"))
+
+
+def _current_candidate(tmp_path: Path) -> Path:
+    candidate = tmp_path / "current-candidate"
+    shutil.copytree(BUNDLE, candidate)
+    manifest_path = candidate / "bundle.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["metadata"]["version"] = CURRENT_SIGNED_CANDIDATE_VERSION
+    manifest_path.write_text(yaml.safe_dump(manifest, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    template_path = candidate / "content/workshops/ecommerce-analyst-query-templates.json"
+    templates = json.loads(template_path.read_text(encoding="utf-8"))
+    templates["bundleRef"] = f"bundle://aos/{SOLUTION_PACK_ID}@{CURRENT_SIGNED_CANDIDATE_VERSION}"
+    template_path.write_text(json.dumps(templates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return candidate
+
+
+def test_current_candidate_inspection_is_read_only_and_checks_6_37_10(tmp_path):
+    result = AipSolutionPackPublisher.inspect_current_candidate(_current_candidate(tmp_path))
+    assert (result.bundle_id, result.bundle_version) == (SOLUTION_PACK_ID, CURRENT_SIGNED_CANDIDATE_VERSION)
+    assert (result.agent_count, result.skill_count, result.capability_count) == (6, 37, 10)
+
+
+def test_current_candidate_rejects_old_version_and_template_drift(tmp_path):
+    with pytest.raises(AipSolutionPackInvalid, match="current solution pack identity or version"):
+        AipSolutionPackPublisher.inspect_current_candidate(BUNDLE)
+    candidate = _current_candidate(tmp_path)
+    path = candidate / "content/workshops/ecommerce-analyst-query-templates.json"
+    templates = json.loads(path.read_text(encoding="utf-8"))
+    templates["bundleRef"] = f"bundle://aos/{SOLUTION_PACK_ID}@{SOLUTION_PACK_VERSION}"
+    path.write_text(json.dumps(templates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with pytest.raises(AipSolutionPackInvalid, match="bundle reference drifted"):
+        AipSolutionPackPublisher.inspect_current_candidate(candidate)
 
 
 def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets():

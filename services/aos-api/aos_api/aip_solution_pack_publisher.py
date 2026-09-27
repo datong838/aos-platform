@@ -66,6 +66,7 @@ COMPATIBILITY_MAP_PATH = Path(
 SOLUTION_PACK_ID = "solution.ecommerce.growth"
 SOLUTION_PACK_VERSION = "1.3.0"
 AIP_DEFINITION_SOURCE_VERSION = "1.2.0"
+CURRENT_SIGNED_CANDIDATE_VERSION = "1.11.0"
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +79,17 @@ class SolutionPackPublication:
     agent_refs: tuple[VersionedAssetRef, ...]
     skill_refs: tuple[VersionedAssetRef, ...]
     capability_refs: tuple[VersionedAssetRef, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SolutionPackCandidateInspection:
+    """Read-only content check; not a signature, Registry or publication receipt."""
+
+    bundle_id: str
+    bundle_version: str
+    agent_count: int
+    skill_count: int
+    capability_count: int
 
 
 class AipSolutionPackInvalid(ValueError):
@@ -95,6 +107,44 @@ class AipSolutionPackPublisher:
         self._agents = agent_store or AipAgentRegistryStore()
         self._skills = skill_store or AipSkillRegistry()
         self._capabilities = capability_store or AipCapabilityRegistry()
+
+    @classmethod
+    def inspect_current_candidate(cls, bundle_dir: Path) -> SolutionPackCandidateInspection:
+        """Validate current definition content without creating any authority row."""
+        root = bundle_dir.resolve(strict=True)
+        manifest = cls._yaml(root / "bundle.yaml")
+        metadata = manifest.get("metadata")
+        if not isinstance(metadata, dict) or metadata.get("id") != SOLUTION_PACK_ID \
+                or metadata.get("version") != CURRENT_SIGNED_CANDIDATE_VERSION:
+            raise AipSolutionPackInvalid("unsupported current solution pack identity or version")
+        agents = cls._list(cls._json(root / "content/agents/ecommerce-six-coworkers.json"), "agents")
+        logics = cls._list(cls._json(root / "content/logic/ecommerce-37-logic-catalog.json"), "logics")
+        capabilities = cls._list(cls._json(root / "content/agents/ecommerce-capability-catalog.json"), "capabilities")
+        cls._validate(agents, logics, capabilities, manifest)
+        compatibility = root / COMPATIBILITY_MAP_PATH
+        if compatibility.is_file():
+            cls._validate_compatibility_map(cls._json(compatibility), logics)
+        cls._validate_analyst_templates(
+            cls._json(root / "content/workshops/ecommerce-analyst-query-templates.json"),
+            agents, expected_bundle_version=CURRENT_SIGNED_CANDIDATE_VERSION,
+        )
+        schema_document = cls._json(root / "content/schemas/aip6-contribution-schemas.json")
+        schema_names = schema_document.get("schemas")
+        if not isinstance(schema_names, list) or len(schema_names) != len(set(schema_names)) \
+                or any(not isinstance(value, str) or not value.strip() for value in schema_names):
+            raise AipSolutionPackInvalid("schema names must be unique non-empty strings")
+        if not isinstance(schema_document.get("contract"), dict):
+            raise AipSolutionPackInvalid("schema contract must be an object")
+        referenced = {name for item in capabilities for name in (item["inputSchema"], item["outputSchema"])} | {"EffectReviewRef"}
+        if not referenced <= set(schema_names):
+            raise AipSolutionPackInvalid("capability references an unknown schema")
+        policies = cls._list(cls._json(root / "content/policies/aip6-runtime-policies.json"), "artifacts")
+        if {item.get("assetType") for item in policies} != {
+            "MemoryPolicy", "HandoffPolicy", "EffectReviewSchema", "LicensePolicy", "ReadinessPolicy", "ResponsibilityPolicy",
+        } or len(policies) != 6:
+            raise AipSolutionPackInvalid("runtime policy artifact types are incomplete")
+        return SolutionPackCandidateInspection(SOLUTION_PACK_ID, CURRENT_SIGNED_CANDIDATE_VERSION,
+            len(agents), len(logics), len(capabilities))
 
     def publish(self, bundle_dir: Path, *, actor: str) -> SolutionPackPublication:
         if not actor.strip():
@@ -345,14 +395,14 @@ class AipSolutionPackPublisher:
 
     @staticmethod
     def _validate_analyst_templates(
-        document: dict[str, Any], agents: list[dict[str, Any]]
+        document: dict[str, Any], agents: list[dict[str, Any]], *, expected_bundle_version: str = SOLUTION_PACK_VERSION,
     ) -> None:
         if set(document) != {"schemaVersion", "bundleRef", "templates"}:
             raise AipSolutionPackInvalid("analyst template document fields drifted")
         if document.get("schemaVersion") != 1:
             raise AipSolutionPackInvalid("analyst template schema is unsupported")
         if document.get("bundleRef") != (
-            f"bundle://aos/{SOLUTION_PACK_ID}@{SOLUTION_PACK_VERSION}"
+            f"bundle://aos/{SOLUTION_PACK_ID}@{expected_bundle_version}"
         ):
             raise AipSolutionPackInvalid("analyst template bundle reference drifted")
         templates = document.get("templates")
