@@ -51,7 +51,8 @@ class AnalysisContextPreparation:
             if (run_ref.resource_type,run_ref.resource_id,run_ref.revision,run_ref.content_hash)!= (
                     'BusinessInvestigationRun',run.authority.run_id,run.authority.version,run.authority.content_hash):
                 raise ValueError('startup Context Run exact reference differs')
-            prepared = prepare_analysis_task(tx,scope=scope,actor=actor,case=case,run=run,domain_profile=domain_profile)
+            prepared = prepare_analysis_task(tx,scope=scope,actor=actor,case=case,run=run,
+                domain_profile=domain_profile,selection_ref=selection_ref)
             evidence = self.evidence.record(conn,claimed=claimed,run_ref=run_ref,domain_profile=domain_profile,blueprint=blueprint)
             brief_ref = ExactRevisionRef.model_validate(prepared['taskBriefRef'])
             evidence_ref = ExactRevisionRef(resourceType='Evidence',resourceId=evidence.resource_id,

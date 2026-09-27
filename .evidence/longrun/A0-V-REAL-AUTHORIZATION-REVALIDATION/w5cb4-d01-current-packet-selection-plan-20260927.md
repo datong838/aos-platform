@@ -7,6 +7,7 @@
 ## 文件级施工顺序（以最小原 Owner 复用为前提）
 
 1. 先沿 `ecommerce_analysis_task_preparation.py`、`aip_business_investigation_compile_saga.py`、`ecommerce_analyst_portrait_inputs.py`、`ecommerce_analyst_analysis_sources.py` 和正式 Evidence/Disclosure Owner 查是否已有**同 TaskRun、同截止面、已批准、可撤销**的选择 Receipt。若有，复用它；若没有，先冻结新增仅引用的 `D01SourceSelection` 权威合同及同租户不可变存储、CAS/幂等 Receipt 和撤权读回方案，不复制来源材料或新建第二事实真源。
+   - 已查明的最早丢链：`AnalysisContextPreparation` 在原事务已读 `sourceSelectionRef` 并经 SourceSelection Owner 复核，但 `prepare_analysis_task` 创建 Task 未写已有 `selection_ref` 字段。本波先以 `services/aos-api/tests/extension_runtime/test_analysis_task_preparation_pg.py` 的 RED 证明新 Task 必须保留原 exact 选择身份、错类型/缺失在写前拒绝；最小修改 `ecommerce_analysis_context_preparation.py` 与 `ecommerce_analysis_task_preparation.py`。该引用仅是原数据选择谱系，不包含 Method/Metric/Query/DisclosureGrant，绝不冒充完整 D01 packet 或执行许可。
 2. RED 先覆盖缺失、多义、跨租户、错原 TaskRun/Plan、错截止面、过期/撤销、Grant 缺失、重复 key 不同 payload、未知提交；正式正例只能由原批准来源 Owner 创建选择引用，不接受调用者任意 packet 或“最新”排序。
 3. 最小实现文件预计 `services/aos-api/aos_api/ecommerce_analyst_d01_source_selection.py`、现有 `ecommerce_analyst_d01_atomic.py`，必要时一项窄迁移与原 Owner 接口；测试放 `services/aos-api/tests/extension_runtime/` 并有隔离 PG 原事务/回滚/同键证明。实际文件与 schema 须在第 1 步核清后修订本计划，不能隐性扩范围。
 4. 仅在精确来源选择和当前预算/模型/安装/能力/健康均有权威、隔离 PG 全链通过后才考虑 Host 注册；本波默认 Host/Provider/18181 关闭，真实库无业务写。专项/累计、适用浏览器、方案/代码复审、verification、m1 精确提交、AOS/Prime 上下文更新。

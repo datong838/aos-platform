@@ -11,13 +11,16 @@ from aos_api.ecommerce_business_investigation_run import BusinessInvestigationRu
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileRevision
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+from aos_api.pipeline_runtime_control_contracts import PipelineExactRef
 from aos_api.tenant_scope import TenantScope
 
 
-def prepare_analysis_task(transaction, *, scope, actor, case, run, domain_profile):
+def prepare_analysis_task(transaction, *, scope, actor, case, run, domain_profile, selection_ref):
     if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
             or type(case) is not BusinessInvestigationCaseRevision or type(run) is not BusinessInvestigationRunView
             or type(domain_profile) is not EcommerceInvestigationProfileRevision
+            or type(selection_ref) is not PipelineExactRef
+            or selection_ref.resource_type != 'SourceSelectionRevision'
             or type(actor) is not str or not actor or actor != actor.strip()):
         raise ValueError('exact Host analysis preparation inputs required')
     case = BusinessInvestigationCaseRevision.model_validate(case.model_dump(mode='json',by_alias=True))
@@ -50,9 +53,12 @@ def prepare_analysis_task(transaction, *, scope, actor, case, run, domain_profil
         raise ValueError('analysis Run differs from current stored authority')
     tasks = AipTaskStore(factory)
     task_request = CreateTaskRequest(type='ecommerce.business-investigation',title=domain.display_name,
-        description='根据原始数据与来源完成经营画像、问题诊断和方案设计。',goal=spec_json)
+        description='根据原始数据与来源完成经营画像、问题诊断和方案设计。',goal=spec_json,
+        selectionRef=ResourceRef(resourceType='SourceSelectionRevision',
+            resourceId=selection_ref.resource_id,revision=str(selection_ref.revision),authority='postgresql'))
     task = tasks.create_task(scope,actor,key,task_request)
     if (task.goal!=spec_json or task.type!=task_request.type or task.title!=task_request.title
+            or task.selection_ref!=task_request.selection_ref
             or task.status.value!='pending' or task.current_plan_revision_id is not None):
         raise ValueError('analysis task intent or lifecycle drifted')
     contracts = AipProductionContractStore(factory)
