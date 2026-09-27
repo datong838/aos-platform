@@ -57,6 +57,9 @@ const AipAssistPage = lazy(() =>
 const AipAnalystPage = lazy(() =>
   import("./pages/s2/AipAnalystPage").then((m) => ({ default: m.AipAnalystPage })),
 );
+const AnalystMethodPage = lazy(() =>
+  import("./pages/s2/AnalystMethodPage").then((m) => ({ default: m.AnalystMethodPage })),
+);
 const DocumentIntelligencePage = lazy(() =>
   import("./pages/s2/DocumentIntelligencePage").then((m) => ({ default: m.DocumentIntelligencePage })),
 );
@@ -238,6 +241,14 @@ export function App() {
             element={
               <Suspense fallback={<PageFallback />}>
                 <AipAnalystPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="aip/analyst/methods"
+            element={
+              <Suspense fallback={<PageFallback />}>
+                <AnalystMethodPage />
               </Suspense>
             }
           />

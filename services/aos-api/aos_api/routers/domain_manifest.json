@@ -3300,6 +3300,12 @@
       "module": "aos_api.routers.runtime_ui_resources",
       "attribute": "router",
       "order": 549
+    },
+    {
+      "domain": "workshop",
+      "module": "aos_api.routers.ecommerce_analyst_methods",
+      "attribute": "router",
+      "order": 550
     }
   ]
 }

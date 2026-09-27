@@ -94,6 +94,31 @@ class EcommerceAnalystAuthorityStore:
             raise AnalystAuthorityNotFound("MethodRevision payload does not match authority")
         return item
 
+    def get_method_current(self, scope: TenantScope, method_id: str) -> MethodRevision:
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT r.content_hash,h.current_revision FROM ecommerce_analyst_method_head h "
+                "JOIN ecommerce_analyst_method_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id "
+                "AND r.method_id=h.method_id AND r.revision=h.current_revision "
+                "WHERE h.org_id=%s AND h.project_id=%s AND h.method_id=%s",
+                (*scope.key, method_id),
+            ).fetchone()
+        if row is None:
+            raise AnalystAuthorityNotFound("current MethodRevision was not found in scope")
+        return self.get_method_exact(scope, AnalystExactRef(
+            resource_type="MethodRevision", resource_id=method_id,
+            revision=row["current_revision"], content_hash=row["content_hash"],
+        ))
+
+    def find_method_publication_receipt(self, scope: TenantScope, key: str) -> AnalystExactRef | None:
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                "SELECT result_ref FROM ecommerce_analyst_authority_receipt WHERE org_id=%s AND project_id=%s "
+                "AND operation='analyst.method_publish' AND idempotency_key=%s",
+                (*scope.key, key),
+            ).fetchone()
+        return None if row is None else AnalystExactRef.model_validate(row["result_ref"])
+
     def publish_decision(self, scope: TenantScope, actor: str, key: str, item: DecisionSummaryRevision, *, expected_version: int) -> AnalystExactRef:
         return self._publish(scope, actor, key, item, expected_version=expected_version, identity=item.decision_id, identity_column="decision_id", resource_type="DecisionSummaryRevision", head_table="ecommerce_analyst_decision_head", revision_table="ecommerce_analyst_decision_revision", operation="analyst.decision_publish")
 

@@ -536,6 +536,7 @@ export function AipAnalystPage({
 
   return (
     <PageChrome title="AIP 分析师" lede="受治理的语义、知识和指标查询；结果绑定单一修订，不生成演示数据">
+      <p><Link to="/aip/analyst/methods">配置经营参谋描述性观察方法（正式版本）</Link></p>
       <div data-testid="analyst-ops-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 10, marginBottom: 12 }}>
         {[
           { label: "查询类型", value: kind === "semantic" ? "语义" : kind === "knowledge" ? "知识" : "指标" },

@@ -37,7 +37,7 @@ DOMAIN_COUNTS = {
     "admin": 8,
     "system": 4,
     "agent": 3,
-    "workshop": 116,
+    "workshop": 117,
     "ontology": 72,
     "aip": 94,
     "data": 202,
@@ -250,8 +250,8 @@ class RouterManifestStaticTests(unittest.TestCase):
         cls.routers = cls.generator.load_manifest(MANIFEST_PATH)
 
     def test_manifest_count_order_domains_and_unique_keys(self) -> None:
-        self.assertEqual(550, len(self.routers))
-        self.assertEqual(list(range(550)), [entry["order"] for entry in self.routers])
+        self.assertEqual(551, len(self.routers))
+        self.assertEqual(list(range(551)), [entry["order"] for entry in self.routers])
         self.assertEqual(
             DOMAIN_COUNTS,
             {
@@ -260,7 +260,7 @@ class RouterManifestStaticTests(unittest.TestCase):
             },
         )
         keys = {(entry["module"], entry["attribute"]) for entry in self.routers}
-        self.assertEqual(550, len(keys))
+        self.assertEqual(551, len(keys))
         self.assertIn(
             ("aos_api.routers.extension_dispatch", "router"), keys
         )
@@ -430,13 +430,13 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        self.assertEqual(4511, result["count"])
+        self.assertEqual(4518, result["count"])
         self.assertEqual(
-            "3ce493dbdcb5cc3069d515983399b336187d1eda400f8e9a0a5c6bec773c0c0d",
+            "72e68dfeeae3bddda4822a4cfd28f8e58a5e6b4844ec5049b9324bd7c25a30fa",
             result["sha256"],
         )
         # W5c9x/y hide four now-undocumented shape aliases, not runtime routes.
-        self.assertEqual(2706, result["openapi_paths"])
+        self.assertEqual(2713, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],
