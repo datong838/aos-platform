@@ -27,7 +27,9 @@ def test_content_successor_is_new_unbuilt_source_and_history_unchanged():
     assert source.tree_hash(BASE) == source.BASE_HASH
     assert TARGET.is_dir()
     assert not (TARGET / 'bundle.signature.json').exists()
-    assert not (TARGET / 'evidence/bundle-evals.json').exists()
+    evaluation = json.loads((TARGET / 'evidence/bundle-evals.json').read_text())
+    assert evaluation['status'] == 'passed' and evaluation['failed'] == 0
+    assert evaluation['runtimeReadiness'] == 'blocked'
     assert not (TARGET / 'artifacts/runtime-image-index.json').exists()
     assert json.loads((TARGET / 'evidence/content-source-provenance.json').read_text())['status'] == 'UNBUILT_UNSIGNED'
     assert '  version: 1.11.0\n' in (TARGET / 'bundle.yaml').read_text()

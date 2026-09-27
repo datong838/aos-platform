@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "failed": 0,
+  "scope": "growth 1.11 source manifest/registration and content capability, budget, review pending contract tests",
+  "testCommand": "AOS_TEST_RETAIN_DATABASE=1 uv run pytest -q tests/extension_runtime/test_ecommerce_growth_1_11_candidate.py tests/extension_runtime/test_ecommerce_content_capability_budget_runtime.py tests/extension_runtime/test_ecommerce_content_review_pending.py --disable-warnings --tb=short",
+  "testResult": "39 passed, 7 warnings in 4.73s",
+  "runtimeReadiness": "blocked",
+  "runtimeBlockers": [
+    "current signed release not published or installed",
+    "current runtime authority and human approval not established",
+    "natural provider and business outcome not verified"
+  ],
+  "note": "This is source/contract test evidence only. It does not claim signed release, active installation, usable pages, natural business execution, or production readiness."
+}
