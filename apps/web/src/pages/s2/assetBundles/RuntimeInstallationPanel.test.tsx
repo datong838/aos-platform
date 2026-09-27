@@ -59,7 +59,7 @@ describe("RuntimeInstallationPanel", () => {
     expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(8);
     expect(host.textContent).toContain("缺少当前候选");
     expect(host.textContent).toContain("不代表可以启用");
-    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] a')).toHaveLength(3);
+    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] a')).toHaveLength(4);
     await act(async () => root.render(<MemoryRouter><RuntimeInstallationPanel {...props} candidates={{ ...candidates, data: { ...data, installationEtag: 4 } }} /></MemoryRouter>));
     expect(host.textContent).toContain("未核验或读回已过期");
     expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(0);
