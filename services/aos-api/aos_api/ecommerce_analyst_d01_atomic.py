@@ -49,6 +49,9 @@ class NaturalD01AtomicCoordinator:
                 or type(occurred_at) is not datetime or occurred_at.utcoffset() is None
                 or self.origin.context.analysis.scope != scope):
             raise ValueError('exact natural D01 issue context required')
+        source_actor = getattr(getattr(self.origin.context.analysis, 'source', None), 'actor', None)
+        if type(source_actor) is not str or not source_actor.strip() or source_actor != actor:
+            raise PermissionError('original analysis actor differs from D01 issuer')
         exact_receipt = _analysis_exact_ref(
             receipt_ref, 'AnalysisRuntimeReceipt', receipt_required=True)
         exact_ref = exact_receipt.model_dump(mode='json', by_alias=True, exclude_none=True)

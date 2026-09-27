@@ -27,12 +27,14 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
     @contextmanager
     def connect(scope):
         assert scope == SCOPE
+        calls.append('connect')
         yield conn
     monkeypatch.setattr(atomic_module, 'connect_serializable', connect)
     monkeypatch.setattr(atomic_module.AipTaskStore, 'timeline',
                         lambda _self, scope, task_run_id: _timeline())
     origin = object.__new__(AnalysisContinuationOrigin)
-    origin.context = SimpleNamespace(analysis=SimpleNamespace(scope=SCOPE))
+    origin.context = SimpleNamespace(analysis=SimpleNamespace(
+        scope=SCOPE, source=SimpleNamespace(actor='analyst-owner')))
     def current(connection, *, receipt_ref, execute):
         assert connection is conn
         calls.append('origin')
@@ -78,7 +80,26 @@ def test_one_original_chain_commits_one_owner_receipt(monkeypatch):
                                actor='analyst-owner', occurred_at=NOW)
     assert result[0].agent_run_id == _request().agent_run_id
     assert [item for item in calls if isinstance(item, str)] == [
-        'origin', 'sources', 'owner', 'commit']
+        'connect', 'origin', 'sources', 'owner', 'commit']
+
+
+def test_different_actor_cannot_borrow_original_chain(monkeypatch):
+    coordinator, calls = _harness(monkeypatch)
+    with pytest.raises(PermissionError, match='original analysis actor'):
+        coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
+                          receipt_ref=RECEIPT,
+                          actor='another-member', occurred_at=NOW)
+    assert calls == []
+
+
+def test_missing_original_actor_fails_closed(monkeypatch):
+    coordinator, calls = _harness(monkeypatch)
+    del coordinator.origin.context.analysis.source.actor
+    with pytest.raises(PermissionError, match='original analysis actor'):
+        coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
+                          receipt_ref=RECEIPT,
+                          actor='analyst-owner', occurred_at=NOW)
+    assert calls == []
 
 
 @pytest.mark.parametrize('drift', [
