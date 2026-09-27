@@ -10,7 +10,11 @@
 2. 最小改动：`ecommerce_analyst_d01_issuer.py` 强制当前选择回调、Plan 首步 Schema 一致、选择→现时来源→再次选择→原链复核后才调用原 Owner；`ecommerce_analyst_d01_source_selection_store.py` 的 propose/read_current 同步使用正式 Schema 门，保留已批 Plan/Run/hash/checker/撤销；`ecommerce_analyst_d01_atomic.py` 从同一个 serializable 事务向 Issuer 注入 `read_current` 选择读门，不增加 Host 注册、Provider 或新写接口。
 3. 专项：Issuer、Atomic、Store、隔离 PG 四文件 `57 passed`；增加“来源读取后选择漂移仍零 Owner 写”负向后，相邻 D01/原链/Task/Portrait/AIP Owner 九文件累计 `108 passed, 7 warnings`。首轮累计命令误引不存在的 `test_ecommerce_analyst_portrait_inputs_pg.py`，退出 4、未执行，不计绿；按 `rg --files` 改用真实 `tests/test_ecommerce_analyst_portrait_inputs.py` 后全量重跑成功。`git diff --check` 通过。
 4. 隔离 PG 的真实两阶段选择测试已改为正式 Plan Schema 样式，并实测 proposal→独立 approval→同事务 read_current→revocation 拒绝。它**没有**合并当前 Method/Query/Bundle/Grant 与 AIP AgentRun Owner 写入，不能拼成 C2b 通过。
-5. 本轮安全预览读回：8080 OpenAPI HTTP 200、8434 `/workshop` HTTP 200、18181 无监听；浏览器实际页面显示“当前有效安装 0 个／模块未安装”。此页面仍是先前安全预览进程，不能用来证明本波改动已热加载；提交后须按每日规则使用最新代码重启并再次验收。当前库 a0v_106，本波 a0v_107 仅隔离 PG；Host/自然 worker 继续关闭。
+5. 本轮安全预览读回：8080 OpenAPI HTTP 200、8434 `/workshop` HTTP 200、18181 无监听；浏览器实际页面显示“当前有效安装 0 个／模块未安装”。先前浏览器检查仍是旧进程，不能证明改动热加载；下述提交后重启已单独完成。当前库 a0v_106，本波 a0v_107 仅隔离 PG；Host/自然 worker 继续关闭。
+
+## 提交后每日最新栈再验收
+
+提交 `cad0b905` 后，先运行最新源码安全启动器只读前置，返回 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、数据库 `aos_current_preview_20260927`/`a0v_106`、唯一 installation approved、四包 published、Runtime binding 0。精确 TERM 原 API PID 8783、精确重启 `colima-aos-extension/aos-a0v-recovery-pg` 容器（命名卷仍是 `aos-a0v-recovery-pg-data`）、精确 TERM 原 Vite PID 8459 由既有守护重起。PG `pg_isready` 成功；最新源码 API 新 PID 14052、Vite 新 PID 13984，8080/8434 HTTP 200，18181 仍无监听。安全启动器打印 migration disabled、Runtime Host 0、workers 0。浏览器 reload 后再次读到“当前有效安装 0 个／模块未安装／暂无可见工作台入口”，符合禁入；没有把 a0v_107 当前库能力伪称可用。未删卷、库或备份，未读商城源。
 
 ## 风险、待办与下一步
 
