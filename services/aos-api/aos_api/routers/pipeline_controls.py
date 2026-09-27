@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, Security
+from fastapi import APIRouter, Depends, Query, Request, Security
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from starlette.concurrency import run_in_threadpool
@@ -20,6 +20,9 @@ from aos_api.tenant_scope import TenantScope
 router = APIRouter(prefix='/v1/pipelines', tags=['pipeline-control'],
                    dependencies=[Security(HTTPBearer(auto_error=False))])
 PrincipalDependency = Annotated[Principal, Depends(require_principal)]
+_UUID_PATTERN = r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+InstallationUuidQuery = Annotated[str, Query(alias='installationId', pattern=_UUID_PATTERN)]
+GenerationUuidQuery = Annotated[str, Query(pattern=_UUID_PATTERN)]
 
 
 class SelectionApprovalRequest(BaseModel):
@@ -117,6 +120,40 @@ async def _request_body(request, model):
 async def approve_selection(pipeline_id: str, request: Request, principal: PrincipalDependency):
     body = await _request_body(request, SelectionApprovalRequest)
     return await run_in_threadpool(_approve, request, principal, pipeline_id, body, True)
+
+
+@router.get('/{pipeline_id}/source-selection-approvals/receipt', response_model=PipelineExactRef,
+    openapi_extra={'parameters':[{'name':'Idempotency-Key','in':'header','required':True,
+        'schema':{'type':'string','minLength':1,'maxLength':160}}]})
+async def read_selection_receipt(
+    pipeline_id: str, request: Request, principal: PrincipalDependency,
+    installation_id: InstallationUuidQuery,
+    generation: GenerationUuidQuery,
+):
+    from aos_api.pipeline_source_claim_owner import _text
+    try:
+        key = require_idempotency_key(request)
+        _text(pipeline_id, 200)
+        plane = getattr(request.app.state, 'extension_runtime_control_plane', None)
+        factory = getattr(plane, 'pipeline_control_factory', None)
+        if factory is None:
+            raise ApiError(code='PIPELINE_CONTROL_UNAVAILABLE', message='管道控制服务当前不可用。', status_code=503)
+        service = factory.build(TenantScope(principal.org_id, principal.project_id))
+        return await run_in_threadpool(service.read_selection_receipt,
+            installation_id=installation_id, generation=generation, pipeline_id=pipeline_id,
+            actor=principal.subject, idempotency_key=key)
+    except ApiError:
+        raise
+    except AssetRegistryError as exc:
+        raise ApiError(code=exc.code.value, message='回执查询键无效，请核对原命令。', status_code=exc.http_status) from exc
+    except PermissionError as exc:
+        raise ApiError(code='PIPELINE_CONTROL_ACCESS_DENIED', message='当前身份无权读取此回执。', status_code=403) from exc
+    except LookupError as exc:
+        raise ApiError(code='PIPELINE_SELECTION_RECEIPT_NOT_FOUND', message='未找到原命令回执；未知结果仍须冻结，不得重发。', status_code=404) from exc
+    except ValueError as exc:
+        raise ApiError(code='PIPELINE_CONTROL_INVALID', message='回执查询范围无效。', status_code=422) from exc
+    except Exception as exc:
+        raise ApiError(code='PIPELINE_SELECTION_RECEIPT_UNCONFIRMED', message='暂未确认原命令结果；请保留原键并冻结。', status_code=503) from exc
 
 
 @router.post('/{pipeline_id}/runtime-control-approvals', response_model=PipelineExactRef)

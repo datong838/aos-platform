@@ -430,14 +430,14 @@ class RouterManifestRuntimeTests(unittest.TestCase):
         # revisions/readiness, Workshop operations and document extraction.
         # Keep both the exact inventory and duplicate set pinned so later drift
         # cannot be hidden by updating only a count.
-        # E07 adds one exact, read-only source-registration Receipt route.
-        self.assertEqual(4519, result["count"])
+        # E07/E08 add exact, read-only source-registration and selection Receipt routes.
+        self.assertEqual(4520, result["count"])
         self.assertEqual(
-            "d5ea6a6666a92e29e952276238a4f9b04f522360c4e3db0b86cd9c13e1e68e4d",
+            "5b0f3f026858087116a02212002cdcaa83d11201ebf55e3e87153206eaf04751",
             result["sha256"],
         )
         # W5c9x/y hide four now-undocumented shape aliases, not runtime routes.
-        self.assertEqual(2714, result["openapi_paths"])
+        self.assertEqual(2715, result["openapi_paths"])
         self.assertEqual(EXPECTED_DUPLICATES, result["duplicates"])
         self.assertEqual(
             [],

@@ -140,6 +140,8 @@ def test_pipeline_owner_three_writes_fence_before_owner_call(tmp_path,monkeypatc
     monkeypatch.setattr(module,'require_runtime_role',lambda *args,**kwargs:None)
     monkeypatch.setattr(PipelineSourceSelectionOwner,'append',
                         lambda self,conn,**kwargs:events.append(('selection',conn)))
+    monkeypatch.setattr(PipelineSourceSelectionOwner,'read_receipt',
+                        lambda self,conn,**kwargs:(events.append(('read-receipt',conn)) or 'original-ref'))
     monkeypatch.setattr(PipelineRuntimeControlOwner,'append',
                         lambda self,conn,**kwargs:events.append(('control',conn)))
     monkeypatch.setattr(PipelineScheduleControlOwner,'bind',
@@ -148,11 +150,13 @@ def test_pipeline_owner_three_writes_fence_before_owner_call(tmp_path,monkeypatc
     body=payload();body['orgId'],body['projectId']='org-org','dev-project'
     selection=dict(body);selection.pop('sourceSelectionRef')
     service.approve_selection(draft=selection,actor='actor',idempotency_key='selection')
+    assert service.read_selection_receipt(installation_id='installation',generation='generation',
+        pipeline_id='pipeline',actor='actor',idempotency_key='selection')=='original-ref'
     service.approve_control(draft=body,actor='actor',idempotency_key='control')
     service.bind_schedule(pipeline_id='pipeline',schedule_id='schedule',control_ref={},
                           actor='actor',idempotency_key='bind')
-    assert [event[0] for event in events]==['fence','selection','fence','control','fence','bind']
-    for index in (0,2,4):
+    assert [event[0] for event in events]==['fence','selection','fence','read-receipt','fence','control','fence','bind']
+    for index in (0,2,4,6):
         assert events[index][1] is lease
         assert events[index][2] is events[index+1][1]
         assert events[index][3]=={'org_id':'org-org','project_id':'dev-project'}

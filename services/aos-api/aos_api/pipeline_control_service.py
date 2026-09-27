@@ -46,6 +46,13 @@ class PipelineControlServices:
     def approve_selection(self,*,draft,actor,idempotency_key,previous_ref=None):
         return self._approve(draft=draft,actor=actor,idempotency_key=idempotency_key,previous_ref=previous_ref,selection=True)
 
+    def read_selection_receipt(self,*,installation_id,generation,pipeline_id,actor,idempotency_key):
+        scope=dict(org_id=self.scope.org_id,project_id=self.scope.project_id)
+        with consumer_connection(runtime_worker_connection,scope,**self._fence_kwargs()) as conn:
+            require_runtime_role(conn,**scope,protected_tables=('public.pipeline_source_selection_revision',))
+            return self.selections.read_receipt(conn,scope=self.scope,installation_id=installation_id,
+                generation=generation,pipeline_id=pipeline_id,actor=actor,idempotency_key=idempotency_key)
+
     def approve_control(self,*,draft,actor,idempotency_key,previous_ref=None):
         return self._approve(draft=draft,actor=actor,idempotency_key=idempotency_key,previous_ref=previous_ref,selection=False)
 

@@ -23,7 +23,12 @@ def harness():
         if isinstance(kw["draft"], PipelineRuntimeControlDraft):
             return ref.model_copy(update={"resource_type":"PipelineRuntimeControlRevision", "resource_id":"pipeline-control-55555555-5555-4555-8555-555555555555"})
         return ref
-    service=SimpleNamespace(approve_selection=approve,approve_control=approve)
+    def read_selection_receipt(**kw):
+        calls.append(kw)
+        if getattr(service,'error',None):raise service.error
+        return ref
+    service=SimpleNamespace(approve_selection=approve,approve_control=approve,
+        read_selection_receipt=read_selection_receipt)
     scopes=[]
     def build(scope):scopes.append(scope);return service
     app=FastAPI();register_exception_handlers(app);app.include_router(router)
@@ -119,6 +124,43 @@ def test_real_app_registers_both_approval_routes_once():
     paths=app.openapi()['paths']
     for suffix in ('source-selection-approvals','runtime-control-approvals'):
         assert 'post' in paths[f'/v1/pipelines/{{pipeline_id}}/{suffix}']
+    assert 'get' in paths['/v1/pipelines/{pipeline_id}/source-selection-approvals/receipt']
+
+
+def receipt(harness, *, installation='44444444-4444-4444-8444-444444444444',
+            generation='33333333-3333-4333-8333-333333333333', key='first'):
+    return harness[0].get('/v1/pipelines/P01-shop-qyh/source-selection-approvals/receipt',
+        params={'installationId':installation,'generation':generation},
+        headers={'Idempotency-Key':key} if key is not None else {})
+
+
+def test_read_selection_receipt_uses_signed_scope_and_original_key(harness):
+    response=receipt(harness)
+    assert response.status_code==200,response.text
+    assert response.json()['resourceType']=='SourceSelectionRevision'
+    assert harness[2]==[dict(installation_id='44444444-4444-4444-8444-444444444444',
+        generation='33333333-3333-4333-8333-333333333333',pipeline_id='P01-shop-qyh',
+        actor='signed-user',idempotency_key='first')]
+    assert harness[3][0].key==('test-org','test-project')
+
+
+@pytest.mark.parametrize('installation,generation,key,status',[
+    ('bad','33333333-3333-4333-8333-333333333333','first',400),
+    ('44444444-4444-4444-8444-444444444444','bad','first',400),
+    ('44444444-4444-4444-8444-444444444444','33333333-3333-4333-8333-333333333333',None,400),
+])
+def test_invalid_receipt_query_never_reaches_service(harness,installation,generation,key,status):
+    assert receipt(harness,installation=installation,generation=generation,key=key).status_code==status
+    assert not harness[2]
+
+
+@pytest.mark.parametrize('error,status',[(LookupError('private-sentinel'),404),
+    (PermissionError('private-sentinel'),403),(OSError('private-sentinel'),503)])
+def test_receipt_read_failure_stays_frozen_and_safe(harness,error,status):
+    harness[4].error=error
+    response=receipt(harness)
+    assert response.status_code==status and 'private-sentinel' not in response.text
+    assert len(harness[2])==1
 
 
 def binding_body():

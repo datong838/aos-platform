@@ -82,6 +82,33 @@ class PipelineSourceSelectionOwner:
         self._authorization = build_current_configuration_authorization(
             permission=CurrentConfigurationPermission(installation_store=installation_store))
 
+    def read_receipt(self, conn, *, scope, installation_id, generation, pipeline_id,
+                     actor, idempotency_key):
+        """Read the original approval ref, not a current execution permit."""
+        if type(scope) is not TenantScope:
+            raise TypeError('exact pipeline tenant required')
+        _require_transaction(conn)
+        identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,current_setting('aos.project_id',true) AS project_id").fetchone()
+        if _values(identity, ('role','org_id','project_id')) != ('aos_runtime',*scope.key):
+            raise PermissionError('current runtime identity and tenant required')
+        if type(installation_id) is not str or str(UUID(installation_id)) != installation_id:
+            raise ValueError('canonical installation required')
+        if type(generation) is not str or str(UUID(generation)) != generation:
+            raise ValueError('canonical generation required')
+        if type(pipeline_id) is not str or not 1 <= len(pipeline_id) <= 200 or pipeline_id != pipeline_id.strip():
+            raise ValueError('canonical pipeline required')
+        if type(actor) is not str or not 1 <= len(actor) <= 240 or actor != actor.strip() or not actor.isprintable():
+            raise ValueError('canonical actor required')
+        key = validate_idempotency_key(idempotency_key)
+        with conn.cursor(row_factory=dict_row) as cursor:
+            row = cursor.execute('''SELECT * FROM pipeline_source_selection_revision
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s AND generation=%s
+                  AND pipeline_id=%s AND actor=%s AND idempotency_key=%s''',
+                (*scope.key,UUID(installation_id),UUID(generation),pipeline_id,actor,key)).fetchone()
+        if row is None:
+            raise LookupError('source selection receipt unavailable')
+        return decode_selection_row(row).ref
+
     def append(self, conn, *, draft, actor, idempotency_key, previous_ref=None):
         draft = PipelineSourceSelectionDraft.model_validate(draft)
         idempotency_key = validate_idempotency_key(idempotency_key)

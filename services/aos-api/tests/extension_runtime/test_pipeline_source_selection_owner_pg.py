@@ -78,6 +78,30 @@ def test_replay_does_not_skip_current_denial(owner_case):
     assert conn.execute('SELECT count(*) FROM pipeline_source_selection_revision').fetchone() == (1,)
 
 
+def test_receipt_readback_is_exact_and_does_not_reapprove(owner_case):
+    from aos_api.tenant_scope import TenantScope
+    conn, owner, draft, calls = owner_case
+    ref = approve(conn, owner, draft, key='receipt-first')
+    scope = TenantScope(draft.org_id, draft.project_id)
+    query = dict(scope=scope, installation_id=draft.installation_ref.installation_id,
+        generation=draft.generation, pipeline_id=draft.pipeline_id,
+        actor='test-actor', idempotency_key='receipt-first')
+    before = conn.execute('SELECT count(*) FROM pipeline_source_selection_revision').fetchone()[0]
+    with conn.transaction():
+        assert owner.read_receipt(conn, **query) == ref
+    assert conn.execute('SELECT count(*) FROM pipeline_source_selection_revision').fetchone()[0] == before
+    assert calls == ['test-actor']
+    for field, wrong in [('installation_id','55555555-5555-4555-8555-555555555555'),
+        ('generation','66666666-6666-4666-8666-666666666666'),
+        ('pipeline_id','another-pipeline'),('actor','another-actor'),
+        ('idempotency_key','another-key')]:
+        with pytest.raises(LookupError), conn.transaction():
+            owner.read_receipt(conn, **{**query, field:wrong})
+    conn.execute("SELECT set_config('aos.org_id','dev-org',false)")
+    with pytest.raises(PermissionError), conn.transaction():
+        owner.read_receipt(conn, **query)
+
+
 @pytest.mark.parametrize('mode', ['tenant','role'])
 def test_wrong_connection_identity_never_reaches_current_reader(owner_case, mode):
     conn, owner, draft, calls = owner_case
