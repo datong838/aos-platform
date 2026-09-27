@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -21,6 +22,7 @@ from aos_api.aip_solution_pack_publisher import (
     AipSolutionPackPublisher,
 )
 from aos_api.aip_skill_registry import AipSkillRegistry
+from aos_api.aip_solution_pack_signed_preflight import CurrentDefinitionSourceProof
 from aos_api.db import connect
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -61,6 +63,46 @@ def test_current_candidate_rejects_old_version_and_template_drift(tmp_path):
     path.write_text(json.dumps(templates, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     with pytest.raises(AipSolutionPackInvalid, match="bundle reference drifted"):
         AipSolutionPackPublisher.inspect_current_candidate(candidate)
+
+
+def test_current_publication_uses_exact_new_source_without_touching_old_path(tmp_path):
+    requests = []
+
+    class FakeAgents:
+        def publish_template(self, request, *, actor):
+            requests.append(("agent", request))
+            return request
+
+    class FakeSkills:
+        def publish_skill(self, request, *, actor):
+            requests.append(("skill", request))
+            return request
+
+    class FakeCapabilities:
+        def publish(self, request, *, actor):
+            requests.append(("capability", request))
+            return request
+
+    publisher = AipSolutionPackPublisher(
+        agent_store=FakeAgents(), skill_store=FakeSkills(), capability_store=FakeCapabilities(),
+    )
+    candidate = _current_candidate(tmp_path)
+    proof = CurrentDefinitionSourceProof(
+        source_ref=f"bundle://a0v-current/{SOLUTION_PACK_ID}/{CURRENT_SIGNED_CANDIDATE_VERSION}",
+        content_hash="sha256:" + "a" * 64, signature_fingerprint="sha256:" + "b" * 64,
+        registry_snapshot_hash="sha256:" + "c" * 64,
+        agent_count=6, skill_count=37, capability_count=10,
+    )
+    result = publisher.publish_current_verified(candidate, actor="pytest-current", source_proof=proof)
+    assert (result.agent_count, result.skill_count, result.capability_count) == (6, 37, 10)
+    assert [kind for kind, _ in requests].count("capability") == 10
+    assert [kind for kind, _ in requests].count("agent") == 6
+    assert [kind for kind, _ in requests].count("skill") == 37
+    assert all(request.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION for _, request in requests)
+    requests.clear()
+    with pytest.raises(AipSolutionPackInvalid, match="current signed source proof"):
+        publisher.publish_current_verified(candidate, actor="pytest-current", source_proof=SimpleNamespace())
+    assert requests == []
 
 
 def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets():

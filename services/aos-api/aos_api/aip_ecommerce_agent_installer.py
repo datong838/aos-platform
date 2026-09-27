@@ -33,6 +33,7 @@ from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.aip_solution_pack_publisher import (
     AIP_DEFINITION_SOURCE_VERSION,
+    CURRENT_SIGNED_CANDIDATE_VERSION,
     AGENT_LOGIC_COUNTS,
     CAPABILITY_IDS,
     LOGIC_IDS,
@@ -184,21 +185,15 @@ class AipEcommerceAgentInstaller:
         return TenantContext(org_id=principal.org_id, project_id=principal.project_id)
 
     def _definitions(self, principal: Principal):
-        templates = self._agents.list_templates(
-            source_resource_id=SOLUTION_PACK_ID,
-            source_revision=AIP_DEFINITION_SOURCE_VERSION,
-            lifecycle=TemplateLifecycle.PUBLISHED,
+        current_templates, current_skills, current_capabilities = self._source_definitions(
+            CURRENT_SIGNED_CANDIDATE_VERSION,
         )
-        skills = self._skills.list_skills(
-            source_resource_id=SOLUTION_PACK_ID,
-            source_revision=AIP_DEFINITION_SOURCE_VERSION,
-            limit=200,
-        )
-        capabilities = self._capabilities.list_capabilities(
-            source_resource_id=SOLUTION_PACK_ID,
-            source_revision=AIP_DEFINITION_SOURCE_VERSION,
-            lifecycle=TemplateLifecycle.PUBLISHED,
-        )
+        if current_templates or current_skills or current_capabilities:
+            if (len(current_templates), len(current_skills), len(current_capabilities)) != (6, 37, 10):
+                raise AipEcommerceCatalogInvalid("current ecommerce definition source is incomplete")
+            templates, skills, capabilities = current_templates, current_skills, current_capabilities
+        else:
+            templates, skills, capabilities = self._source_definitions(AIP_DEFINITION_SOURCE_VERSION)
         expected_skill_ids = {f"ecommerce.skill.{logic_id}" for logic_id in LOGIC_IDS}
         latest_templates = self._latest(
             [item for item in templates if item.template_id in AGENT_LOGIC_COUNTS],
@@ -234,6 +229,24 @@ class AipEcommerceAgentInstaller:
         if tuple(sorted(latest_capabilities)) != tuple(sorted(CAPABILITY_IDS)):
             raise AipEcommerceCatalogInvalid("ecommerce capability definitions differ from 10-capability authority")
         return latest_templates, latest_skills, latest_capabilities
+
+    def _source_definitions(self, source_revision: str):
+        templates = self._agents.list_templates(
+            source_resource_id=SOLUTION_PACK_ID,
+            source_revision=source_revision,
+            lifecycle=TemplateLifecycle.PUBLISHED,
+        )
+        skills = self._skills.list_skills(
+            source_resource_id=SOLUTION_PACK_ID,
+            source_revision=source_revision,
+            limit=200,
+        )
+        capabilities = self._capabilities.list_capabilities(
+            source_resource_id=SOLUTION_PACK_ID,
+            source_revision=source_revision,
+            lifecycle=TemplateLifecycle.PUBLISHED,
+        )
+        return templates, skills, capabilities
 
     @staticmethod
     def _latest(items, identity: str):

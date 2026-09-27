@@ -147,6 +147,36 @@ class AipSolutionPackPublisher:
             len(agents), len(logics), len(capabilities))
 
     def publish(self, bundle_dir: Path, *, actor: str) -> SolutionPackPublication:
+        return self._publish(
+            bundle_dir, actor=actor, expected_version=SOLUTION_PACK_VERSION,
+            source_revision=AIP_DEFINITION_SOURCE_VERSION,
+        )
+
+    def publish_current_verified(
+        self, bundle_dir: Path, *, actor: str, source_proof: object,
+    ) -> SolutionPackPublication:
+        """Publish current definitions only after the caller's exact signed-source proof."""
+        from aos_api.aip_solution_pack_signed_preflight import CurrentDefinitionSourceProof
+
+        expected_ref = f"bundle://a0v-current/{SOLUTION_PACK_ID}/{CURRENT_SIGNED_CANDIDATE_VERSION}"
+        if not isinstance(source_proof, CurrentDefinitionSourceProof) \
+                or source_proof.source_ref != expected_ref \
+                or not getattr(source_proof, "content_hash", None) \
+                or not getattr(source_proof, "signature_fingerprint", None) \
+                or not getattr(source_proof, "registry_snapshot_hash", None) \
+                or tuple(getattr(source_proof, name, None) for name in
+                    ("agent_count", "skill_count", "capability_count")) != (6, 37, 10):
+            raise AipSolutionPackInvalid("current signed source proof is required")
+        self.inspect_current_candidate(bundle_dir)
+        return self._publish(
+            bundle_dir, actor=actor, expected_version=CURRENT_SIGNED_CANDIDATE_VERSION,
+            source_revision=CURRENT_SIGNED_CANDIDATE_VERSION,
+        )
+
+    def _publish(
+        self, bundle_dir: Path, *, actor: str, expected_version: str,
+        source_revision: str,
+    ) -> SolutionPackPublication:
         if not actor.strip():
             raise ValueError("actor is required")
         root = bundle_dir.resolve(strict=True)
@@ -156,7 +186,7 @@ class AipSolutionPackPublisher:
             raise AipSolutionPackInvalid("bundle metadata is required")
         bundle_id = metadata.get("id")
         bundle_version = metadata.get("version")
-        if bundle_id != SOLUTION_PACK_ID or bundle_version != SOLUTION_PACK_VERSION:
+        if bundle_id != SOLUTION_PACK_ID or bundle_version != expected_version:
             raise AipSolutionPackInvalid("unsupported solution pack identity or version")
 
         agent_document = self._json(root / "content/agents/ecommerce-six-coworkers.json")
@@ -179,7 +209,9 @@ class AipSolutionPackPublisher:
         self._validate(agents, logics, capabilities, manifest)
         if compatibility_document is not None:
             self._validate_compatibility_map(compatibility_document, logics)
-        self._validate_analyst_templates(analyst_templates, agents)
+        self._validate_analyst_templates(
+            analyst_templates, agents, expected_bundle_version=expected_version,
+        )
         schema_names = schema_document.get("schemas")
         if (
             not isinstance(schema_names, list)
@@ -198,7 +230,7 @@ class AipSolutionPackPublisher:
         source = ResourceRef(
             resource_type="SolutionPack",
             resource_id=bundle_id,
-            revision=AIP_DEFINITION_SOURCE_VERSION,
+            revision=source_revision,
             authority="asset-registry",
         )
         schema_hash = self._file_hash(schema_path)
