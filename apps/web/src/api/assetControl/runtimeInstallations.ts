@@ -2,6 +2,7 @@ import type {
   JsonValue,
   RuntimeAction,
   RuntimeConfigurationCatalog,
+  RuntimeConfigurationCandidates,
   RuntimeBinding,
   RuntimeInstallation,
   RuntimeOperation,
@@ -119,4 +120,18 @@ export function parseRuntimeConfigurationCatalog(value: unknown): RuntimeConfigu
   }
   if (item.generation === null && (item.items.length || item.hasMore)) throw new Error("Unbound configuration choices");
   return item as unknown as RuntimeConfigurationCatalog;
+}
+
+const CANDIDATE_FIELDS = ["responsibility_plans", "runtime_policies", "data_policies", "egress_policies", "network_policies", "quota_policies", "budget_policies", "budgets"] as const;
+
+export function parseRuntimeConfigurationCandidates(value: unknown): RuntimeConfigurationCandidates {
+  const item = object(value, "Runtime configuration candidates");
+  keys(item, ["installationId", "installationRevision", "installationEtag", "counts", "missing", "allPresent", "authorityKind"], "Runtime configuration candidates");
+  uuid(item.installationId, "installationId"); integer(item.installationRevision, "installationRevision"); integer(item.installationEtag, "installationEtag");
+  const counts = object(item.counts, "counts"); keys(counts, CANDIDATE_FIELDS, "counts");
+  CANDIDATE_FIELDS.forEach(name => { if (!Number.isSafeInteger(counts[name]) || Number(counts[name]) < 0) throw new Error(`Invalid ${name} count`); });
+  if (!Array.isArray(item.missing) || item.missing.some(name => !CANDIDATE_FIELDS.includes(name)) || new Set(item.missing).size !== item.missing.length) throw new Error("Invalid missing candidates");
+  const expectedMissing = CANDIDATE_FIELDS.filter(name => counts[name] === 0);
+  if (JSON.stringify(item.missing) !== JSON.stringify(expectedMissing) || item.allPresent !== (expectedMissing.length === 0) || item.authorityKind !== "tenant_candidates_not_installation_binding") throw new Error("Candidate authority summary drifted");
+  return item as unknown as RuntimeConfigurationCandidates;
 }

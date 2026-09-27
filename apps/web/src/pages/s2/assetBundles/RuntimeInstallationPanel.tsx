@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import type {
   JsonValue,
   RuntimeAction,
   RuntimeInstallation,
+  RuntimeConfigurationCandidates,
   RuntimeOperationAccepted,
 } from "../../../api/assetControl/types";
 import type { AssetControlError } from "../../../api/assetControl/errors";
@@ -27,6 +29,17 @@ const FAILURE_LABELS: Readonly<Record<string, string>> = {
   RESOURCE_CLEANUP_UNCERTAIN: "运行资源清理结果尚未确认，恢复完成前不能继续操作。",
 };
 
+const CANDIDATES = [
+  { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts" },
+  { key: "runtime_policies", label: "运行策略", href: null },
+  { key: "data_policies", label: "数据分类策略", href: null },
+  { key: "egress_policies", label: "出站策略", href: null },
+  { key: "network_policies", label: "网络策略", href: null },
+  { key: "quota_policies", label: "模型配额", href: "/aip/capacity" },
+  { key: "budget_policies", label: "预算策略", href: null },
+  { key: "budgets", label: "预算修订", href: null },
+] as const;
+
 function failureMessage(code: string): string {
   return FAILURE_LABELS[code] ?? "运行操作未完成，请查看审计事件并按服务端允许动作处理。";
 }
@@ -42,6 +55,7 @@ function eventLabel(type: string): string {
 export interface RuntimeInstallationPanelProps {
   state: AssetReadState<RuntimeInstallation>;
   configurations?: ConfigurationReadState;
+  candidates?: AssetReadState<RuntimeConfigurationCandidates> & { isCurrent: () => boolean };
   offline: boolean;
   pending: RuntimeAction | null;
   error: AssetControlError | null;
@@ -54,11 +68,16 @@ export interface RuntimeInstallationPanelProps {
 
 const panelStyle = { border: "1px solid var(--aos-border)", borderRadius: 3, padding: 12 } as const;
 
-export function RuntimeInstallationPanel({ state, configurations, offline, pending, error, receipt, hasRetrySameCommand, canRetrySameCommand, onRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
+export function RuntimeInstallationPanel({ state, configurations, candidates, offline, pending, error, receipt, hasRetrySameCommand, canRetrySameCommand, onRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
   const runtime = state.data;
   const [selected, setSelected] = useState<RuntimeAction | null>(null);
   const [configurationChoice, setConfigurationChoice] = useState("");
   const catalog = configurations?.data;
+  const candidateData = candidates?.data;
+  const candidatesCurrent = Boolean(runtime && candidateData && candidates?.status === "ready" && candidates.isCurrent()
+    && !candidates.stale && !candidates.refreshing && candidateData.installationId === runtime.installationId
+    && candidateData.installationRevision === runtime.installationRevision
+    && candidateData.installationEtag === runtime.installationEtag);
   const configurationReady = Boolean(runtime?.binding && catalog && configurations?.isCurrent()
     && !configurations.stale && !configurations.refreshing && configurations.status === "ready"
     && catalog.installationId === runtime.installationId && catalog.installationRevision === runtime.installationRevision
@@ -125,6 +144,16 @@ export function RuntimeInstallationPanel({ state, configurations, offline, pendi
             <div><dt>执行纪元 / binding revision</dt><dd>{runtime.binding ? `${runtime.binding.executionEpoch} / ${runtime.binding.revision}` : "—"}</dd></div>
           </dl>
           {runtime.reasons.map((reason) => <p role="status" key={reason}>{reason}</p>)}
+          <section aria-label="当前配置权威候选" style={{ margin: "10px 0" }}>
+            <h4>当前配置权威候选</h4>
+            <p>以下是当前租户的正式候选数，不代表已绑定本安装，也不代表可以启用。运行准入仍由服务端逐项复验。</p>
+            {!candidatesCurrent && <p role="status">配置权威未核验或读回已过期；不会把未知当作缺失或就绪。</p>}
+            {candidatesCurrent && <ul>{CANDIDATES.map(item => {
+              const count = candidateData!.counts[item.key];
+              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.href}>进入正式配置入口</Link> : "产品配置入口待建"}</li>;
+            })}</ul>}
+            <button type="button" className="btn" disabled={offline || pending !== null || !candidates} onClick={candidates?.reload}>刷新权威候选</button>
+          </section>
           <section aria-label="已登记配置">
             <h4>已登记配置</h4>
             {configurationReady ? <ul>{catalog?.items.map((item, index) => <li key={JSON.stringify(item.ref)}>配置 {index + 1} · 版本 {item.ref.revision}{item.isCurrent ? " · 当前绑定" : ""}</li>)}</ul>

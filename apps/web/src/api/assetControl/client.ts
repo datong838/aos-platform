@@ -15,6 +15,7 @@ import { parseInstallationDetail, parseInstallationList } from "./installations"
 import {
   parseRuntimeInstallation,
   parseRuntimeConfigurationCatalog,
+  parseRuntimeConfigurationCandidates,
   parseRuntimeOperation,
   parseRuntimeOperationAccepted,
   serializeRuntimeOperationRequest,
@@ -51,6 +52,7 @@ import type {
   RollbackInstallationRequest,
   RuntimeInstallation,
   RuntimeConfigurationCatalog,
+  RuntimeConfigurationCandidates,
   RuntimeOperation,
   RuntimeOperationAccepted,
   RuntimeOperationRequest,
@@ -638,6 +640,12 @@ export class AssetControlClient {
     const operation = ASSET_CONTROL_OPERATIONS.getRuntimeInstallation;
     const path = fillPath(operation, { installation_id: canonicalUuid(installationId, "installation_id") });
     return this.get<unknown>(operation.operationId, path).then(parseRuntimeInstallation);
+  }
+
+  getRuntimeConfigurationCandidates(installationId: string): Promise<RuntimeConfigurationCandidates> {
+    const id = canonicalUuid(installationId, "installation_id");
+    return this.get<unknown>("get_bundle_runtime_configuration_candidates",
+      `/v1/bundle-runtime-installations/${id}/configuration-candidates`).then(parseRuntimeConfigurationCandidates);
   }
 
   getRuntimeOperation(operationId: string): Promise<RuntimeOperation> {

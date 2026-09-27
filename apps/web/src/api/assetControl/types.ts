@@ -408,3 +408,13 @@ export interface RuntimeConfigurationCatalog {
   generation: string | null; bindingRevision: number | null;
   items: { ref: RuntimeConfigurationRef; isCurrent: boolean }[]; hasMore: boolean;
 }
+
+export interface RuntimeConfigurationCandidates {
+  installationId: string;
+  installationRevision: number;
+  installationEtag: number;
+  counts: Record<"responsibility_plans" | "runtime_policies" | "data_policies" | "egress_policies" | "network_policies" | "quota_policies" | "budget_policies" | "budgets", number>;
+  missing: string[];
+  allPresent: boolean;
+  authorityKind: "tenant_candidates_not_installation_binding";
+}

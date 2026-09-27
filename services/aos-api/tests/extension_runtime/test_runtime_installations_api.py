@@ -19,6 +19,10 @@ from aos_api.extension_runtime.runtime_view import (
     RuntimeViewReader,
     _derive_control_state,
 )
+from aos_api.extension_runtime.runtime_configuration_candidates import (
+    FIELDS as CONFIGURATION_CANDIDATE_FIELDS,
+    RuntimeConfigurationCandidates,
+)
 from aos_api.routers import bundle_runtime_installations
 
 
@@ -195,6 +199,69 @@ def test_runtime_view_absence_fails_closed_without_exception_detail() -> None:
     assert response.status_code == 503
     assert response.json()["code"] == "RUNTIME_VIEW_UNAVAILABLE"
     assert "运行状态读取服务" in response.json()["message"]
+
+
+def test_configuration_candidates_require_visible_installation_and_never_claim_binding() -> None:
+    class Reader:
+        def read(self, scope):
+            assert scope.key == ("org-org", "dev-project")
+            counts = {name: 0 for name in CONFIGURATION_CANDIDATE_FIELDS}
+            return RuntimeConfigurationCandidates(counts, CONFIGURATION_CANDIDATE_FIELDS, False)
+
+    app = _app(_control_plane())
+    app.dependency_overrides[bundle_runtime_installations.get_runtime_configuration_candidate_reader] = Reader
+    response = TestClient(app).get(
+        f"/v1/bundle-runtime-installations/{INSTALLATION_ID}/configuration-candidates",
+        headers={"Authorization": "Bearer ignored"},
+    )
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.json() == {
+        "installationId": INSTALLATION_ID, "installationRevision": 3, "installationEtag": 3,
+        "counts": {name: 0 for name in CONFIGURATION_CANDIDATE_FIELDS},
+        "missing": list(CONFIGURATION_CANDIDATE_FIELDS), "allPresent": False,
+        "authorityKind": "tenant_candidates_not_installation_binding",
+    }
+
+
+def test_configuration_candidate_query_failure_is_unknown_not_zero() -> None:
+    class FailedReader:
+        def read(self, _scope):
+            raise PermissionError("private database detail")
+
+    app = _app(_control_plane())
+    app.dependency_overrides[bundle_runtime_installations.get_runtime_configuration_candidate_reader] = FailedReader
+    response = TestClient(app).get(
+        f"/v1/bundle-runtime-installations/{INSTALLATION_ID}/configuration-candidates",
+        headers={"Authorization": "Bearer ignored"},
+    )
+    assert response.status_code == 503
+    assert response.json()["code"] == "RUNTIME_CONFIGURATION_CANDIDATES_UNAVAILABLE"
+    assert "private database detail" not in response.text
+
+
+def test_configuration_candidates_do_not_read_counts_for_invisible_installation() -> None:
+    class InvisibleViewReader:
+        def get_installation(self, **_kwargs):
+            raise LookupError("not visible in current tenant")
+
+    class CandidateReader:
+        called = False
+
+        def read(self, _scope):
+            self.called = True
+            raise AssertionError("candidate query must not start")
+
+    reader = CandidateReader()
+    app = _app()
+    app.state.extension_runtime_view_reader = InvisibleViewReader()
+    app.dependency_overrides[bundle_runtime_installations.get_runtime_configuration_candidate_reader] = lambda: reader
+    response = TestClient(app).get(
+        f"/v1/bundle-runtime-installations/{INSTALLATION_ID}/configuration-candidates",
+        headers={"Authorization": "Bearer ignored"},
+    )
+    assert response.status_code == 404
+    assert reader.called is False
 
 
 def test_command_control_plane_absence_still_fails_closed() -> None:

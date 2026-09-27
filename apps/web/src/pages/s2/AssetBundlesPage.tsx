@@ -35,6 +35,7 @@ import {
   useInstallations,
   useRuntimeInstallation,
   useRuntimeConfigurations,
+  useRuntimeConfigurationCandidates,
   useRegistryBundle,
   useRegistryBundles,
   useRegistryVersion,
@@ -217,6 +218,7 @@ export function AssetBundlesPage() {
   const installationDetailState = useInstallation(installationId);
   const runtimeInstallationState = useRuntimeInstallation(installationId);
   const runtimeConfigurationsState = useRuntimeConfigurations(runtimeInstallationState.data);
+  const runtimeCandidatesState = useRuntimeConfigurationCandidates(runtimeInstallationState.data);
   const commands = useResolveCreateCommands({
     onCreateSuccess: (installation) => {
       setInstallationId(installation.installationId);
@@ -515,6 +517,7 @@ export function AssetBundlesPage() {
           <RuntimeInstallationPanel
             state={runtimeInstallationState}
             configurations={runtimeConfigurationsState}
+            candidates={runtimeCandidatesState}
             offline={actionRuntime.offline}
             pending={runtimePending}
             error={runtimeError}

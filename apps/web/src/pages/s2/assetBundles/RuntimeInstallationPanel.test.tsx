@@ -1,8 +1,9 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { RuntimeInstallation } from "../../../api/assetControl/types";
+import type { RuntimeInstallation, RuntimeConfigurationCandidates } from "../../../api/assetControl/types";
 import { RuntimeInstallationPanel } from "./RuntimeInstallationPanel";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -47,6 +48,21 @@ describe("RuntimeInstallationPanel", () => {
     const confirm = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "确认停用运行实例")!;
     await act(async () => confirm.click());
     expect(execute).toHaveBeenCalledWith("disable", { generation: runtime.binding?.generation, bindingRevision: 2 });
+  });
+
+  it("shows eight current tenant candidate blockers without claiming runtime readiness", async () => {
+    const counts = { responsibility_plans: 0, runtime_policies: 0, data_policies: 0, egress_policies: 0, network_policies: 0, quota_policies: 0, budget_policies: 0, budgets: 0 };
+    const data: RuntimeConfigurationCandidates = { installationId: runtime.installationId, installationRevision: 5, installationEtag: 5, counts, missing: Object.keys(counts), allPresent: false, authorityKind: "tenant_candidates_not_installation_binding" };
+    const candidates = { data, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn(), isCurrent: () => true };
+    const props = { state: { data: runtime, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn() }, candidates, offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: false, canRetrySameCommand: false, onRetrySameCommand: vi.fn(), onExecute: vi.fn() };
+    await act(async () => root.render(<MemoryRouter><RuntimeInstallationPanel {...props} /></MemoryRouter>));
+    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(8);
+    expect(host.textContent).toContain("缺少当前候选");
+    expect(host.textContent).toContain("不代表可以启用");
+    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] a')).toHaveLength(2);
+    await act(async () => root.render(<MemoryRouter><RuntimeInstallationPanel {...props} candidates={{ ...candidates, data: { ...data, installationEtag: 4 } }} /></MemoryRouter>));
+    expect(host.textContent).toContain("未核验或读回已过期");
+    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(0);
   });
 
   it("disables every mutation while offline", async () => {

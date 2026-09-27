@@ -13,6 +13,7 @@ import type {
   InstallationResponse,
   RuntimeInstallation,
   RuntimeConfigurationCatalog,
+  RuntimeConfigurationCandidates,
 } from "../../../api/assetControl/types";
 import type {
   AssetReadState,
@@ -256,6 +257,9 @@ function useScopedConfigurationRead<T>(runtime: RuntimeInstallation | null, read
 
 export function useRuntimeConfigurations(runtime: RuntimeInstallation | null): ConfigurationReadState {
   return useScopedConfigurationRead(runtime, id => assetControlClient.getRuntimeConfigurations(id), value => value.items.length === 0);
+}
+export function useRuntimeConfigurationCandidates(runtime: RuntimeInstallation | null): ScopedConfigurationRead<RuntimeConfigurationCandidates> {
+  return useScopedConfigurationRead(runtime, id => assetControlClient.getRuntimeConfigurationCandidates(id), () => false);
 }
 export function useConfigurationSources(runtime: RuntimeInstallation | null): ScopedConfigurationRead<ConfigurationSourceCatalog> {
   return useScopedConfigurationRead(runtime, id => assetControlClient.getConfigurationSources(id), value => value.roles.length === 0 || value.policies.length === 0);

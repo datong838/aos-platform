@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   parseRuntimeInstallation,
   parseRuntimeConfigurationCatalog,
+  parseRuntimeConfigurationCandidates,
   parseRuntimeOperation,
   serializeRuntimeOperationRequest,
 } from "./runtimeInstallations";
@@ -120,6 +121,18 @@ describe("runtime installation canonical contract", () => {
     expect(() => serializeRuntimeOperationRequest({ kind: "enable" })).toThrow("requires an exact target");
     expect(() => serializeRuntimeOperationRequest({ kind: "runtime-verify", target: {} })).toThrow("does not accept a target");
   });
+});
+
+it("parses exact candidate counts and rejects a false ready claim", () => {
+  const counts = { responsibility_plans: 0, runtime_policies: 0, data_policies: 0, egress_policies: 0, network_policies: 0, quota_policies: 0, budget_policies: 0, budgets: 0 };
+  const summary = {
+    installationId: INSTALLATION_ID, installationRevision: 3, installationEtag: 3,
+    counts, missing: Object.keys(counts), allPresent: false,
+    authorityKind: "tenant_candidates_not_installation_binding",
+  };
+  expect(parseRuntimeConfigurationCandidates(summary).counts.budgets).toBe(0);
+  expect(() => parseRuntimeConfigurationCandidates({ ...summary, allPresent: true })).toThrow("drifted");
+  expect(() => parseRuntimeConfigurationCandidates({ ...summary, counts: { ...counts, budgets: -1 } })).toThrow("Invalid budgets count");
 });
 
 it("configuration catalog keeps exact refs and rejects malformed choices", () => {

@@ -22,6 +22,10 @@ from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError, ErrorBody
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict, RuntimeRevisionConflict
 from aos_api.extension_runtime.runtime_view import RuntimeInstallationView, RuntimeOperationView
+from aos_api.extension_runtime.runtime_configuration_candidates import (
+    FIELDS as CONFIGURATION_CANDIDATE_FIELDS,
+    RuntimeConfigurationCandidateReader,
+)
 from aos_api.extension_runtime.configuration_catalog import ConfigurationCatalog
 from aos_api.extension_runtime.configuration_source_catalog import ConfigurationSourceCatalog
 from aos_api.routers.asset_control_headers import require_idempotency_key, require_if_match
@@ -65,6 +69,18 @@ class RuntimeOperationAccepted(BaseModel):
     revision: int = Field(ge=1)
 
 
+class RuntimeConfigurationCandidateView(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+
+    installationId: str
+    installationRevision: int = Field(ge=1)
+    installationEtag: int = Field(ge=1)
+    counts: dict[str, int]
+    missing: tuple[str, ...]
+    allPresent: bool
+    authorityKind: Literal["tenant_candidates_not_installation_binding"] = "tenant_candidates_not_installation_binding"
+
+
 _ERRORS = {
     400: {"model": ErrorBody}, 401: {"model": ErrorBody}, 403: {"model": ErrorBody},
     404: {"model": ErrorBody}, 409: {"model": ErrorBody}, 412: {"model": ErrorBody},
@@ -105,6 +121,10 @@ def get_runtime_view_reader(request: Request) -> Any:
             status_code=503,
         )
     return reader
+
+
+def get_runtime_configuration_candidate_reader() -> RuntimeConfigurationCandidateReader:
+    return RuntimeConfigurationCandidateReader()
 
 
 ControlPlaneDependency = Annotated[Any, Depends(get_runtime_control_plane)]
@@ -198,6 +218,42 @@ def get_bundle_runtime_installation(
         markings=principal.markings,
         **({'requested_route': requested_route} if requested_route is not None else {}),
     ))
+
+
+@router.get(
+    "/{installation_id}/configuration-candidates",
+    response_model=RuntimeConfigurationCandidateView,
+    operation_id="get_bundle_runtime_configuration_candidates",
+    responses=_ERRORS,
+)
+def get_bundle_runtime_configuration_candidates(
+    installation_id: CanonicalUuidPath,
+    response: Response,
+    principal: PrincipalDependency,
+    view_reader: RuntimeViewReaderDependency,
+    candidate_reader: Annotated[RuntimeConfigurationCandidateReader, Depends(get_runtime_configuration_candidate_reader)],
+) -> RuntimeConfigurationCandidateView:
+    response.headers["Cache-Control"] = "no-store"
+    installation = _invoke(lambda: view_reader.get_installation(
+        installation_id=installation_id, org_id=principal.org_id,
+        project_id=principal.project_id, roles=principal.roles,
+        markings=principal.markings,
+    ))
+    try:
+        candidates = candidate_reader.read(TenantScope(principal.org_id, principal.project_id))
+    except Exception as exc:
+        raise ApiError(code="RUNTIME_CONFIGURATION_CANDIDATES_UNAVAILABLE",
+                       message="当前配置权威尚未核验，请稍后刷新。", status_code=503) from exc
+    if tuple(candidates.counts) != CONFIGURATION_CANDIDATE_FIELDS:
+        raise ApiError(code="RUNTIME_CONFIGURATION_CANDIDATES_UNAVAILABLE",
+                       message="当前配置权威尚未核验，请稍后刷新。", status_code=503)
+    return RuntimeConfigurationCandidateView(
+        installationId=installation.installationId,
+        installationRevision=installation.installationRevision,
+        installationEtag=installation.installationEtag,
+        counts=candidates.counts, missing=candidates.missing,
+        allPresent=candidates.all_present,
+    )
 
 
 @router.get(
