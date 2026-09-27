@@ -11,10 +11,10 @@
 ## 文件级清单与前哈希
 
 - `services/aos-api/aos_api/data_os_store.py` (`b0f3175366d1a2bf61282555bfce848ec75bfeaedb530dd1c318acfed2d68167`)：复用 E10 只读 scoped snapshot，增加候选所需的正式登记、来源配置 exact ref、图 payload/hash/revision 的受限内部读取；不返回源 props/secretRef，不改写路径。若当前 app 角色无权限，明确阻断，不升权兜底。
-- 新增 `services/aos-api/aos_api/pipeline_source_selection_candidate_reader.py`：组合当前安装/binding/config、原签名包导出资产与 E11 纯编译器；候选 0/多解/旧代/漂移/身份缺失统一 fail closed，公开投影仅 blocker/nextAction 和非敏感定位，不直接输出可 POST draft。可信事务/制品读取边界必须写清；如果无法在同一当前边界证明，缩小为诊断读取，不声称可审批。
-- `services/aos-api/aos_api/routers/pipeline_controls.py` (`552c342c38113b0b49ba505e9f30239c4d039df3ce794d8766f847da1bc4ead8`)：新增 principal/tenant-scoped、`no-store` 候选诊断 GET；不新增审批 POST 或执行入口。
+- 当前权威缺独立 runtime 身份，故**不新增**原拟 `pipeline_source_selection_candidate_reader.py`，不调用 E11 编译器。复用现有 E10 readiness 在同一 repeatable-read、tenant-scoped 事务中补安装与绑定阻断；不输出可 POST draft。身份和签名制品齐备时再单独设计可信编译接线。
+- `services/aos-api/aos_api/routers/pipeline_controls.py` (`552c342c38113b0b49ba505e9f30239c4d039df3ce794d8766f847da1bc4ead8`)：复用现有 principal/tenant-scoped、`no-store` readiness GET，不新增路由或审批 POST。
 - `apps/web/src/pages/s2/PipelineAdmissionPanel.tsx` (`b2fc95254a8269f94285ade397cd524efd4b12a0796d72cf761e614a5c21c1a0`)：在 E10 面板显示安装/身份/签名缺项及原键恢复解释；不做自动重发。
-- 新增后端候选读取/HTTP 负例测试、更新前端准入测试及路由 manifest；若需新增迁移/角色/额外表，停止先修订本计划，不悄悄扩权。现有 `RuntimeViewReader` (`de7c69823d5f7e70ae751ebb187efb913d5f7ef096d05fe5fc4c26f1986571f8`) 优先复用，不修改其有效控制语义。
+- 更新 `services/aos-api/tests/test_pipeline_admission_readiness.py` (`0260c0969829aa53c39a6316e821fb5612c193b9352e4da5a4b24fdd47d8b419`) 与现有前端准入测试，覆盖安装 0/多/approved 未 active/active 无绑定/旧绑定、租户隔离；路由不变，manifest 不变。若需新增迁移/角色/额外表，停止先修订本计划，不悄悄扩权。现有 `RuntimeViewReader` (`de7c69823d5f7e70ae751ebb187efb913d5f7ef096d05fe5fc4c26f1986571f8`) 不修改有效控制语义。
 
 ## 9 步和退出条件
 
