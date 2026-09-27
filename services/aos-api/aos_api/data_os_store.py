@@ -1,10 +1,11 @@
 """Data OS metadata store — Source/Pipeline/Dataset/Sync/Schedule (185w)."""
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
 
-from aos_api.db import connect
+from aos_api.db import connect, connect_read_only
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
 from aos_api.tenant_scope import TenantScope
@@ -153,11 +154,31 @@ def persist_source(
     scope: TenantScope, item: dict[str, Any], *,
     merge_existing: bool = False, replace_fields: tuple[str, ...] = (),
     expected_configuration_revision: str | None = None,
+    registration_key: str | None = None,
 ) -> dict[str, Any]:
     scope = _require_scope(scope)
     ensure_data_os_schema()
+    if registration_key is not None and (not registration_key or len(registration_key) > 160):
+        raise ApiError(code="SOURCE_REGISTRATION_KEY_INVALID", message="登记幂等键无效", status_code=400)
+    request_hash = hashlib.sha256(json.dumps(
+        {"item": item, "expectedConfigurationRevision": expected_configuration_revision},
+        sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str,
+    ).encode("utf-8")).hexdigest() if registration_key is not None else None
     props = {k: v for k, v in item.items() if k not in {"id", "type", "status", "pluginId", "orgId", "projectId", "configurationRevision"}}
     with connect(scope) as conn:
+        if registration_key is not None:
+            conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                         (json.dumps(["source-registration-key", *scope.key, registration_key]),))
+            existing_receipt = conn.execute(
+                "SELECT request_hash,response_metadata FROM source_registration_receipt "
+                "WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
+                (*scope.key, registration_key),
+            ).fetchone()
+            if existing_receipt is not None:
+                if existing_receipt["request_hash"] != request_hash:
+                    raise ApiError(code="SOURCE_REGISTRATION_KEY_CONFLICT",
+                                   message="登记幂等键已用于不同请求", status_code=409)
+                return dict(existing_receipt["response_metadata"])
         conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
                      (json.dumps(["source-registration", *scope.key, item["id"]]),))
         if replace_fields or expected_configuration_revision is not None:
@@ -195,11 +216,40 @@ def persist_source(
             ),
         ).fetchone()
         _assert_scoped_upsert(row, resource="source", resource_id=str(item["id"]))
+        result = {**dict(row["props"]), "id": row["id"], "type": row["type"],
+                  "status": row["status"], "pluginId": row["plugin_id"],
+                  "orgId": row["org_id"], "projectId": row["project_id"],
+                  "configurationRevision": str(row["configuration_revision"])}
+        if registration_key is not None:
+            public_fields = {"id", "type", "status", "pluginId", "orgId", "projectId",
+                             "configurationRevision", "runtimeMode", "name", "displayName",
+                             "description", "siteId", "connector_type"}
+            metadata = {key: value for key, value in result.items() if key in public_fields}
+            conn.execute(
+                "INSERT INTO source_registration_receipt "
+                "(org_id,project_id,idempotency_key,request_hash,source_id,configuration_revision,response_metadata) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb)",
+                (*scope.key, registration_key, request_hash, item["id"],
+                 row["configuration_revision"], json.dumps(metadata, ensure_ascii=False, default=str)),
+            )
         conn.commit()
-        return {**dict(row["props"]), "id": row["id"], "type": row["type"],
-                "status": row["status"], "pluginId": row["plugin_id"],
-                "orgId": row["org_id"], "projectId": row["project_id"],
-                "configurationRevision": str(row["configuration_revision"])}
+        return result
+
+
+def load_source_registration_receipt(scope: TenantScope, source_id: str, key: str) -> dict[str, Any] | None:
+    """Read the original public response by exact key; never load source secrets."""
+    scope = _require_scope(scope)
+    with connect_read_only(scope) as conn:
+        row = conn.execute(
+            "SELECT source_id,configuration_revision,response_metadata FROM source_registration_receipt "
+            "WHERE org_id=%s AND project_id=%s AND idempotency_key=%s AND source_id=%s",
+            (*scope.key, key, source_id),
+        ).fetchone()
+    if row is None:
+        return None
+    return {"sourceId": row["source_id"],
+            "configurationRevision": str(row["configuration_revision"]),
+            "responseMetadata": dict(row["response_metadata"])}
 
 
 def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:

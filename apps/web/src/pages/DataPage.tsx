@@ -76,7 +76,12 @@ type PipelineRow = PipelineMeta & { status?: string };
 type MainTab = "sources" | "syncs" | "agents" | "exports";
 type SourceView = "list" | "new";
 type RuntimeMode = "direct" | "agent" | "worker";
-type PendingSourceCreation = { id: string; runtimeMode: RuntimeMode; expectedConfigurationRevision: string | null };
+type PendingSourceCreation = { id: string; runtimeMode: RuntimeMode; expectedConfigurationRevision: string | null; key: string };
+type SourceRegistrationReceipt = { sourceId: string; configurationRevision: string; responseMetadata: SourceRow & { configurationRevision?: string } };
+
+function receiptPath(id: string, key: string): string {
+  return `/v1/sources/${encodeURIComponent(id)}/registration-receipt?key=${encodeURIComponent(key)}`;
+}
 
 function pendingSourceKey(): string {
   const tenant = getTenant();
@@ -86,13 +91,15 @@ function pendingSourceKey(): string {
 function readPendingSource(): PendingSourceCreation | null {
   let raw: string | null;
   try { raw = localStorage.getItem(pendingSourceKey()); }
-  catch { return { id: "本地待对账状态不可读", runtimeMode: "direct", expectedConfigurationRevision: null }; }
+  catch { return { id: "本地待对账状态不可读", runtimeMode: "direct", expectedConfigurationRevision: null, key: "" }; }
   if (!raw) return null;
   try {
     const item = JSON.parse(raw) as PendingSourceCreation;
-    if (item && typeof item.id === "string" && item.id && ["direct", "agent", "worker"].includes(item.runtimeMode)) return item;
+    if (item && typeof item.id === "string" && item.id && ["direct", "agent", "worker"].includes(item.runtimeMode)) {
+      return { ...item, key: typeof item.key === "string" ? item.key : "" };
+    }
   } catch { /* corrupted marker still freezes writes */ }
-  return { id: "不可解析的待对账登记", runtimeMode: "direct", expectedConfigurationRevision: null };
+  return { id: "不可解析的待对账登记", runtimeMode: "direct", expectedConfigurationRevision: null, key: "" };
 }
 
 export function sourceCreatePayload(id: string, type: string, runtimeMode: RuntimeMode) {
@@ -351,7 +358,7 @@ export function DataPage() {
         sshHost, sshUser, sshPassword, sshPort, dbHost: connHost,
         dbPort: connPort || "3306", database: connDatabase, username: connUsername, password: connPassword,
       }) : null;
-      const marker: PendingSourceCreation = { id, runtimeMode, expectedConfigurationRevision: expected };
+      const marker: PendingSourceCreation = { id, runtimeMode, expectedConfigurationRevision: expected, key: crypto.randomUUID() };
       if (pendingSourceKey() !== markerKey) throw new Error("租户已切换，停止登记");
       localStorage.setItem(markerKey, JSON.stringify(marker));
       setPendingSource(marker);
@@ -360,7 +367,7 @@ export function DataPage() {
         ...sourceCreatePayload(id, connectorType, runtimeMode),
         ...(connection ? { config: connection } : {}),
         ...(expected ? { expectedConfigurationRevision: expected } : {}),
-      }, {});
+      }, { "Idempotency-Key": marker.key });
       const saved = verifySaved(created, id);
       if (created.id !== id || created.runtimeMode !== runtimeMode) {
         throw new Error("创建响应与请求的数据源或运行时不一致");
@@ -371,6 +378,12 @@ export function DataPage() {
       }
       const observed = verified.items.find(item => item.id === id) as (SourceRow & { configurationRevision?: string }) | undefined;
       if (observed?.configurationRevision !== saved.configurationRevision) throw new Error("配置版本回读不一致");
+      const receipt = await apiGetAuthoritative<SourceRegistrationReceipt>(receiptPath(id, marker.key));
+      if (receipt.sourceId !== id || receipt.configurationRevision !== saved.configurationRevision
+          || receipt.responseMetadata?.id !== id || receipt.responseMetadata?.runtimeMode !== runtimeMode
+          || receipt.responseMetadata?.configurationRevision !== saved.configurationRevision) {
+        throw new Error("登记回执与本次响应不一致");
+      }
       localStorage.removeItem(markerKey);
       if (pendingSourceKey() === markerKey) setPendingSource(null);
       setSavedConnection(saved);
@@ -389,12 +402,29 @@ export function DataPage() {
 
   async function reconcilePendingSource() {
     if (!pendingSource) return;
+    const markerKey = pendingSourceKey();
     try {
+      if (!pendingSource.key) {
+        setMsg("旧版待对账登记没有原请求幂等键，无法独立核清，保持冻结。");
+        return;
+      }
+      const receipt = await apiGetAuthoritative<SourceRegistrationReceipt>(receiptPath(pendingSource.id, pendingSource.key));
       const response = await apiGetAuthoritative<{ items: SourceRow[] }>("/v1/sources");
       const match = response.items.find((item) => item.id === pendingSource.id);
-      setMsg(match ? `发现同 ID 数据源 ${pendingSource.id}；当前接口无登记 Receipt，仍无法独立证明原请求结果，保持冻结。`
-        : `尚无 ${pendingSource.id} 的权威登记；原请求结果仍未知，保持冻结。`);
-    } catch { setErr("权威只读对账失败，保持冻结。"); }
+      if (receipt.sourceId !== pendingSource.id
+          || receipt.responseMetadata?.id !== pendingSource.id
+          || receipt.responseMetadata?.runtimeMode !== pendingSource.runtimeMode
+          || receipt.responseMetadata?.configurationRevision !== receipt.configurationRevision
+          || (match as (SourceRow & { configurationRevision?: string }) | undefined)?.configurationRevision !== receipt.configurationRevision) {
+        setErr("登记回执与当前权威数据源不一致，保持冻结。");
+        return;
+      }
+      if (pendingSourceKey() !== markerKey) throw new Error("租户已切换");
+      localStorage.removeItem(markerKey); setPendingSource(null);
+      setSavedConnection({ id: pendingSource.id, configurationRevision: receipt.configurationRevision });
+      setMsg(`已按原幂等键核清数据源 ${pendingSource.id}；未测试连接，未执行同步。`);
+      await refresh();
+    } catch { setErr("原请求回执尚未权威核清，保持冻结；不会重发。"); }
   }
 
   async function installConnector(pluginId: string) {

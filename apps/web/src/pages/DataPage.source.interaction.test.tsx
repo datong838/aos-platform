@@ -24,10 +24,14 @@ it.each(['success','readback-drift'])('saved source interaction: %s',async(mode)
   return {items:[]};
  });
  api.apiGetAuthoritative.mockImplementation(async(path:string)=>{
+  if(path.includes('/registration-receipt?key=')){
+   events.push('receipt');return {sourceId:saved.id,configurationRevision:revision,responseMetadata:saved};
+  }
   expect(path).toBe('/v1/sources');events.push(saved?'readback':'preflight');
   return {items:saved?[mode==='readback-drift'?{...saved,configurationRevision:'drift'}:saved]:[]};
  });
- api.apiPostUnqueued.mockImplementation((path:string,body:any)=>{
+ api.apiPostUnqueued.mockImplementation((path:string,body:any,headers:any)=>{
+  expect(headers['Idempotency-Key']).toMatch(/^[0-9a-f-]{36}$/);
   if(path==='/v1/sources'){events.push('save');expect(body.config.sshPort).toBe(2222);expect(body.config.dbPort).toBe(3306);expect(body.config).not.toHaveProperty('apiKey');saved={id:body.id,runtimeMode:'direct',configurationRevision:revision};return Promise.resolve(saved);}
   throw Error('unexpected write');
  });
@@ -48,22 +52,36 @@ it.each(['success','readback-drift'])('saved source interaction: %s',async(mode)
   await click('只读对账登记状态');expect(api.apiPostUnqueued).toHaveBeenCalledTimes(1);
   return;
  }
- expect(events).toEqual(['preflight','save','readback','readback']);
+ expect(events).toEqual(['preflight','save','readback','receipt','readback']);
  expect(api.apiPost).not.toHaveBeenCalledWith(expect.stringContaining('/test'),expect.anything());
  expect(localStorage.getItem('aos:source-create:pending:org-org:dev-project')).toBeNull();
  expect(host.textContent).toContain('未测试连接，未执行同步');
 });
 
-it('keeps an unresolved source creation frozen after reopening the page', async () => {
+it('reconciles an original-key receipt after reopening without resending', async () => {
  const key='aos:source-create:pending:org-org:dev-project';
- localStorage.setItem(key, JSON.stringify({id:'unknown-source',runtimeMode:'direct',expectedConfigurationRevision:null}));
+ localStorage.setItem(key, JSON.stringify({id:'unknown-source',runtimeMode:'direct',expectedConfigurationRevision:null,key:'original-key'}));
  api.apiGet.mockImplementation(async(path:string) => path==='/v1/connector-plugins' ? {items:[]} : {items:[]});
- api.apiGetAuthoritative.mockResolvedValue({items:[{id:'unknown-source',runtimeMode:'direct',configurationRevision:'12345678-1234-1234-1234-123456789012'}]});
+ api.apiGetAuthoritative.mockImplementation(async(path:string) => path.includes('/registration-receipt?key=')
+  ? {sourceId:'unknown-source',configurationRevision:'12345678-1234-1234-1234-123456789012',responseMetadata:{id:'unknown-source',runtimeMode:'direct',configurationRevision:'12345678-1234-1234-1234-123456789012'}}
+  : {items:[{id:'unknown-source',runtimeMode:'direct',configurationRevision:'12345678-1234-1234-1234-123456789012'}]});
  await act(async()=>root.render(createElement(MemoryRouter,{initialEntries:['/data?create=1']},createElement(DataPage))));
  expect(host.querySelector('fieldset')?.disabled).toBe(true);
  await click('只读对账登记状态');
- expect(host.textContent).toContain('无法独立证明原请求结果');
+ expect(host.textContent).toContain('已按原幂等键核清');
+ expect(localStorage.getItem(key)).toBeNull();
+ expect(api.apiPostUnqueued).not.toHaveBeenCalled();
+});
+
+it('keeps unknown registration frozen when its original receipt is absent', async () => {
+ const key='aos:source-create:pending:org-org:dev-project';
+ localStorage.setItem(key,JSON.stringify({id:'unknown-source',runtimeMode:'direct',expectedConfigurationRevision:null,key:'original-key'}));
+ api.apiGet.mockResolvedValue({items:[]});
+ api.apiGetAuthoritative.mockRejectedValue(new Error('404'));
+ await act(async()=>root.render(createElement(MemoryRouter,{initialEntries:['/data?create=1']},createElement(DataPage))));
+ await click('只读对账登记状态');
  expect(localStorage.getItem(key)).not.toBeNull();
+ expect(host.querySelector('fieldset')?.disabled).toBe(true);
  expect(api.apiPostUnqueued).not.toHaveBeenCalled();
 });
 

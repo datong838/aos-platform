@@ -1242,11 +1242,23 @@ def _public_source(item: dict[str, Any]) -> dict[str, Any]:
 
 
 @router.post("/v1/sources")
-def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal)):
+def create_source(body: ConnectorIn, principal: Principal = Depends(require_principal),
+                  request: Request = None):
     from aos_api.connector_registry import assert_type_installed
+    from aos_api.routers.asset_control_headers import require_idempotency_key
     from aos_api.source_connection_config import (
         SOURCE_CONNECTION_FIELDS, normalize_source_connection_config,
     )
+
+    key_headers = ([value for name, value in request.scope.get("headers", [])
+                    if name.lower() == b"idempotency-key"] if request is not None else [])
+    registration_key = None
+    if key_headers:
+        try:
+            registration_key = require_idempotency_key(request)
+        except Exception:
+            raise ApiError(code="SOURCE_REGISTRATION_KEY_INVALID",
+                           message="登记幂等键无效", status_code=400) from None
 
     try:
         plugin_id = assert_type_installed(body.type)
@@ -1292,6 +1304,7 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
             scope, item, merge_existing=True,
             replace_fields=tuple(sorted(SOURCE_CONNECTION_FIELDS)) if body.config is not None else (),
             expected_configuration_revision=str(body.expectedConfigurationRevision) if body.expectedConfigurationRevision else None,
+            registration_key=registration_key,
         )
     except ApiError:
         raise
@@ -1302,8 +1315,34 @@ def create_source(body: ConnectorIn, principal: Principal = Depends(require_prin
             message="数据源登记未确认，请重新读取登记状态后再继续",
             status_code=503,
         ) from None
-    _connectors[body.id] = item
+    # A repeated key returns the original public Receipt, not connection secrets.
+    # Preserve any already-hydrated private fields in the in-process cache.
+    _connectors[body.id] = {**previous, **item}
     return _public_source(item)
+
+
+@router.get("/v1/sources/{source_id}/registration-receipt")
+def get_source_registration_receipt(source_id: str, key: str,
+                                    principal: Principal = Depends(require_principal)):
+    from aos_api.asset_registry.control_policy import validate_idempotency_key
+    from aos_api.data_os_store import load_source_registration_receipt
+
+    try:
+        validated_key = validate_idempotency_key(key)
+    except Exception:
+        raise ApiError(code="SOURCE_REGISTRATION_KEY_INVALID",
+                       message="登记幂等键无效", status_code=400) from None
+    try:
+        receipt = load_source_registration_receipt(_mutation_scope(principal), source_id, validated_key)
+    except ApiError:
+        raise
+    except Exception:
+        raise ApiError(code="SOURCE_PERSISTENCE_UNAVAILABLE",
+                       message="暂时无法读取登记回执", status_code=503) from None
+    if receipt is None:
+        raise ApiError(code="SOURCE_REGISTRATION_RECEIPT_NOT_FOUND",
+                       message="未找到此请求的正式登记回执", status_code=404)
+    return receipt
 
 
 class SourceProbeIn(BaseModel):

@@ -21,7 +21,7 @@ API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
 CONTEXT = "colima-aos-extension"
 CONTAINER = "aos-a0v-recovery-pg"
-HEAD = "a0v_107"
+HEAD = "a0v_108"
 
 
 class BootstrapBlocked(RuntimeError):
