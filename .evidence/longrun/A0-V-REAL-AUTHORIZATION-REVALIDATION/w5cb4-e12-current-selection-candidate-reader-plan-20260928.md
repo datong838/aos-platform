@@ -6,6 +6,8 @@
 
 本波先打通**只读当前候选解释**与恢复边界，不提前开放 POST 审批。调用 E11 编译器必须在同一租户当前安装/图/源/配置的可信快照和独立签名制品读取成立时；否则返回显式 blocker。不得从网页请求自报“当前”或“已签名”，不得把 Web 超管 DSN 复用为 runtime worker，不能以 E10 readiness、编译成功或旧导出目录作为授权。实际正式 Selection 的 POST、原键持久化/对账与运行身份启用分开经失败测试后开门。
 
+现场审计补证：当前唯一安装 `ccdcb0f0-1040-4bc6-aa0c-d045f5689813` 的 revision 3 为 `approved`、`active_revision=NULL`；当前源/管道/绑定均 0。`CurrentRuntimeReleaseArtifacts` 从独立 runtime 连接读取签名制品，而本实例还没有该独立连接。故本波**只能实现同一应用只读事务的诊断生产者**，不能调用 E11 编译器生成可交付草案；日后具备独立运行身份和 active 安装时再按本文上门复审补接。把这些事实明确呈现为 `INSTALLATION_NOT_ACTIVE`、`RUNTIME_BINDING_MISSING` 等阻断是推进产品闭环，不是假装审批已就绪。
+
 ## 文件级清单与前哈希
 
 - `services/aos-api/aos_api/data_os_store.py` (`b0f3175366d1a2bf61282555bfce848ec75bfeaedb530dd1c318acfed2d68167`)：复用 E10 只读 scoped snapshot，增加候选所需的正式登记、来源配置 exact ref、图 payload/hash/revision 的受限内部读取；不返回源 props/secretRef，不改写路径。若当前 app 角色无权限，明确阻断，不升权兜底。
