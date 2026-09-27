@@ -153,6 +153,14 @@ const STATUS_POLICIES: Record<AssetControlErrorStatus, FailurePolicy> = {
 };
 
 const CODE_POLICIES: Readonly<Record<string, FailurePolicy>> = {
+  RUNTIME_OPERATION_REQUIRED: {
+    ...STATUS_POLICIES[409],
+    kind: "invalid_request",
+    message: "当前安装包含运行包；通用 Apply/Verify 不适用。请查看下方“运行实例”并使用正式准备/验证动作；本次未改变安装状态。",
+    recovery: "failure_closed",
+    isConflict: false,
+    requiresRefresh: false,
+  },
   RUNTIME_VIEW_UNAVAILABLE: {
     ...STATUS_POLICIES[503],
     message: "运行状态读取服务暂时不可用，未执行任何运行操作；请稍后重新读取。",

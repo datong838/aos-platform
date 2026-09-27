@@ -20,6 +20,7 @@ from aos_api.asset_registry.errors import (
     AssetRegistryError,
     RegistryIntegrityCorruptError,
     RegistrySnapshotStaleError,
+    RuntimeOperationRequiredError,
     TrustRootUnavailableError,
 )
 from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
@@ -78,7 +79,7 @@ class InstallationRevalidator:
             try:
                 record = _record_from_row(row)
                 if record.manifest.spec.runtime is not None:
-                    raise RegistrySnapshotStaleError(
+                    raise RuntimeOperationRequiredError(
                         "runtime bundles require the isolated installation lifecycle"
                     )
                 if record.content_hash != selected.content_hash:
@@ -92,6 +93,8 @@ class InstallationRevalidator:
             except TrustRootUnavailableError:
                 raise
             except RegistryIntegrityCorruptError:
+                raise
+            except RuntimeOperationRequiredError:
                 raise
             except AssetRegistryError as exc:
                 raise RegistrySnapshotStaleError(

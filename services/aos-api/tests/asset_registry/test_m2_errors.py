@@ -19,6 +19,7 @@ from aos_api.asset_registry.errors import (
     PreconditionRequiredError,
     RegistrySnapshotStaleError,
     ResolutionLimitExceededError,
+    RuntimeOperationRequiredError,
 )
 
 
@@ -28,6 +29,11 @@ from aos_api.asset_registry.errors import (
         (
             RegistrySnapshotStaleError,
             AssetRegistryErrorCode.REGISTRY_SNAPSHOT_STALE,
+            409,
+        ),
+        (
+            RuntimeOperationRequiredError,
+            AssetRegistryErrorCode.RUNTIME_OPERATION_REQUIRED,
             409,
         ),
         (

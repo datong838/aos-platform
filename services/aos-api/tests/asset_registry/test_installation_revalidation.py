@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from aos_api.asset_registry.errors import RegistrySnapshotStaleError
+from aos_api.asset_registry.errors import RegistrySnapshotStaleError, RuntimeOperationRequiredError
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
 
 
@@ -56,7 +56,29 @@ def test_runtime_release_cannot_pass_legacy_installation_revalidation():
     with (
         patch("aos_api.asset_registry.installation_revalidation.StoredCompositionLock.model_validate", return_value=lock),
         patch("aos_api.asset_registry.installation_revalidation._record_from_row", return_value=record),
-        pytest.raises(RegistrySnapshotStaleError),
+        pytest.raises(RuntimeOperationRequiredError, match="isolated installation lifecycle"),
     ):
         InstallationRevalidator(release_policy=policy).revalidate_in_transaction(conn, lock=lock)
     policy.evaluate.assert_not_called()
+
+
+def test_pure_content_release_keeps_legacy_revalidation_path():
+    selected = MagicMock(publisher="aos", id="content", version="1.0.0", content_hash="sha256:" + "a" * 64)
+    lock = MagicMock()
+    lock.payload.resolved = [selected]
+    policy = MagicMock()
+    policy.snapshot.return_value = policy
+    checked_at = datetime(2026, 9, 5, tzinfo=UTC)
+    conn = MagicMock()
+    conn.execute.side_effect = [MagicMock(), MagicMock(fetchone=lambda: {"checked_at": checked_at}),
+                                MagicMock(fetchall=lambda: [{"publisher": "aos", "bundle_id": "content", "version": "1.0.0"}])]
+    record = MagicMock()
+    record.manifest.spec.runtime = None
+    record.content_hash = selected.content_hash
+    with (
+        patch("aos_api.asset_registry.installation_revalidation.StoredCompositionLock.model_validate", return_value=lock),
+        patch("aos_api.asset_registry.installation_revalidation._record_from_row", return_value=record),
+    ):
+        result = InstallationRevalidator(release_policy=policy).revalidate_in_transaction(conn, lock=lock)
+    assert result.checked_at == checked_at
+    policy.evaluate.assert_called_once()

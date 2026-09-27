@@ -77,6 +77,14 @@ describe("InstallationActionPanel", () => {
     expect(host.querySelector("textarea[name*=evidence]")).toBeNull();
   });
 
+  it("提示运行包应使用隔离运行动作而非通用 Apply/Verify", async () => {
+    const approved = structuredClone(INSTALLATION_DRAFT_FIXTURE);
+    approved.state = "approved";
+    approved.current.state = "approved";
+    await render({ installation: approved });
+    expect(host.textContent).toContain("运行包请使用下方“运行实例”的准备/验证入口");
+  });
+
   it("终态不显示动作", async () => {
     const rejected = structuredClone(INSTALLATION_DRAFT_FIXTURE);
     rejected.state = "rejected";

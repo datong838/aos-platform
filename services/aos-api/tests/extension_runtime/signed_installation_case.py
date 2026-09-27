@@ -15,7 +15,7 @@ from aos_api.asset_registry.composition_contracts import (
 )
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.contracts import LoadedBundle
-from aos_api.asset_registry.errors import RegistrySnapshotStaleError, AssetRegistryError
+from aos_api.asset_registry.errors import RuntimeOperationRequiredError, AssetRegistryError
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
@@ -294,10 +294,10 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 return applied
 
         def assert_legacy_rejects(applied):
-            with pytest.raises(RegistrySnapshotStaleError) as rejected:
+            with pytest.raises(RuntimeOperationRequiredError) as rejected:
                 legacy.verify(**action,request=EmptyInstallationActionRequest(),
                     idempotency_key='legacy-must-reject',if_match=f'"{applied.etag_version}"')
-            assert 'runtime bundles require the isolated installation lifecycle' in str(rejected.value.__cause__)
+            assert 'runtime bundles require the isolated installation lifecycle' in str(rejected.value)
 
         async def run():
             if owned:

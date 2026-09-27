@@ -69,6 +69,7 @@ export function InstallationActionPanel({
       <header>
         <h3 style={{ margin: 0 }}>安装动作</h3>
         <p>浏览器只控制入口和确认；状态、权限、maker-checker 与 evidence 均由服务端最终裁决。</p>
+        {(installation.state === "approved" || installation.state === "applied") && <p role="status">通用 Apply/Verify 仅适用于纯内容包；运行包请使用下方“运行实例”的准备/验证入口。若包类型未核实，先查看运行状态，服务端仍会阻止错误路径。</p>}
       </header>
 
       <dl aria-label="服务端安装指针">

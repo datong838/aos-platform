@@ -22,6 +22,7 @@ class AssetRegistryErrorCode(StrEnum):
     VERIFICATION_FAILED = "VERIFICATION_FAILED"
     ROLLBACK_BLOCKED = "ROLLBACK_BLOCKED"
     REGISTRY_SNAPSHOT_STALE = "REGISTRY_SNAPSHOT_STALE"
+    RUNTIME_OPERATION_REQUIRED = "RUNTIME_OPERATION_REQUIRED"
     CURRENT_INSTALLATION_STALE = "CURRENT_INSTALLATION_STALE"
     RESOLUTION_LIMIT_EXCEEDED = "RESOLUTION_LIMIT_EXCEEDED"
     INSTALLATION_STATE_CONFLICT = "INSTALLATION_STATE_CONFLICT"
@@ -53,6 +54,7 @@ ERROR_HTTP_STATUS: dict[AssetRegistryErrorCode, int] = {
     AssetRegistryErrorCode.VERIFICATION_FAILED: 422,
     AssetRegistryErrorCode.ROLLBACK_BLOCKED: 409,
     AssetRegistryErrorCode.REGISTRY_SNAPSHOT_STALE: 409,
+    AssetRegistryErrorCode.RUNTIME_OPERATION_REQUIRED: 409,
     AssetRegistryErrorCode.CURRENT_INSTALLATION_STALE: 409,
     AssetRegistryErrorCode.RESOLUTION_LIMIT_EXCEEDED: 422,
     AssetRegistryErrorCode.INSTALLATION_STATE_CONFLICT: 409,
@@ -195,6 +197,15 @@ class RegistrySnapshotStaleError(AssetRegistryError):
     def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
         super().__init__(
             AssetRegistryErrorCode.REGISTRY_SNAPSHOT_STALE,
+            message,
+            details=details,
+        )
+
+
+class RuntimeOperationRequiredError(AssetRegistryError):
+    def __init__(self, message: str, *, details: dict[str, Any] | None = None) -> None:
+        super().__init__(
+            AssetRegistryErrorCode.RUNTIME_OPERATION_REQUIRED,
             message,
             details=details,
         )

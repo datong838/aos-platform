@@ -57,6 +57,19 @@ describe("M3-1 asset-control error normalization", () => {
     }
   });
 
+  it("routes runtime-package legacy rejection to the isolated lifecycle without a retry hint", () => {
+    const normalized = normalizeAssetControlError(apiError(409, "RUNTIME_OPERATION_REQUIRED"));
+    expect(normalized).toMatchObject({
+      code: "RUNTIME_OPERATION_REQUIRED",
+      kind: "invalid_request",
+      recovery: "failure_closed",
+      isConflict: false,
+      requiresRefresh: false,
+      outcomeUnknown: false,
+    });
+    expect(normalized.message).toContain("运行实例");
+  });
+
   it("uses one non-disclosing 404 result and drops server details", () => {
     const hidden = normalizeAssetControlError(
       apiError(404, "MARKING_ACCESS_DENIED", { resourceId: "secret-bundle" }),
