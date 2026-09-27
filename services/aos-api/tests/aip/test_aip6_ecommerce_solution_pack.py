@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 from types import SimpleNamespace
@@ -103,6 +104,36 @@ def test_current_publication_uses_exact_new_source_without_touching_old_path(tmp
     with pytest.raises(AipSolutionPackInvalid, match="current signed source proof"):
         publisher.publish_current_verified(candidate, actor="pytest-current", source_proof=SimpleNamespace())
     assert requests == []
+
+
+@pytest.mark.skipif(
+    os.getenv("AOS_RUN_CURRENT_DEFINITION_PG_ISOLATED") != "1",
+    reason="append-only publication requires a dedicated disposable PG test session",
+)
+def test_current_publication_round_trips_all_owner_rows_in_isolated_pg(tmp_path):
+    candidate = _current_candidate(tmp_path)
+    proof = CurrentDefinitionSourceProof(
+        source_ref=f"bundle://a0v-current/{SOLUTION_PACK_ID}/{CURRENT_SIGNED_CANDIDATE_VERSION}",
+        content_hash="sha256:" + "a" * 64, signature_fingerprint="sha256:" + "b" * 64,
+        registry_snapshot_hash="sha256:" + "c" * 64,
+        agent_count=6, skill_count=37, capability_count=10,
+    )
+    result = AipSolutionPackPublisher().publish_current_verified(
+        candidate, actor="pytest-current-pg", source_proof=proof,
+    )
+    assert (result.agent_count, result.skill_count, result.capability_count) == (6, 37, 10)
+    for ref in result.agent_refs:
+        item = AipAgentRegistryStore().get_template(ref.asset_id, ref.revision)
+        assert item.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION
+        assert item.content_hash == ref.content_hash
+    for ref in result.skill_refs:
+        item = AipSkillRegistry().get_skill(ref.asset_id, ref.revision)
+        assert item.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION
+        assert item.content_hash == ref.content_hash
+    for ref in result.capability_refs:
+        item = AipCapabilityRegistry().get(ref.asset_id, ref.revision)
+        assert item.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION
+        assert item.content_hash == ref.content_hash
 
 
 def test_ecommerce_solution_pack_contains_exact_w0a_catalog_and_keeps_d3_assets():
