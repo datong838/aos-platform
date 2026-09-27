@@ -153,6 +153,72 @@ def migrate(*, state: Path, resume_after_assetintegration: bool = False) -> dict
     return result
 
 
+def ensure_tenant_authority(*, state: Path) -> dict[str, object]:
+    state = state.resolve(strict=True)
+    if state == ROOT or state.is_relative_to(ROOT):
+        raise BootstrapBlocked("STATE_MUST_BE_OUTSIDE_REPOSITORY")
+    if not (state / "migration-result.json").is_file():
+        raise BootstrapBlocked("MIGRATION_RESULT_REQUIRED")
+    intent = state / "tenant-authority-intent.json"
+    result_path = state / "tenant-authority-result.json"
+    if intent.exists() or result_path.exists():
+        raise BootstrapBlocked("TENANT_AUTHORITY_ALREADY_ATTEMPTED_RECONCILE_READ_ONLY")
+    parameters = _connection_parameters()
+    with connect(**parameters, row_factory=dict_row) as conn:
+        version = conn.execute("SELECT version_num FROM alembic_version").fetchall()
+        counts = conn.execute("""SELECT
+            (SELECT count(*) FROM meta_org WHERE id='org-org') AS meta_org,
+            (SELECT count(*) FROM meta_workspace WHERE org_id='org-org' AND project_id='dev-project') AS meta_workspace,
+            (SELECT count(*) FROM twa_org WHERE id='org-org') AS twa_org,
+            (SELECT count(*) FROM twa_workspace WHERE org_id='org-org' AND project_id='dev-project') AS twa_workspace,
+            (SELECT count(*) FROM bundle_composition) AS compositions,
+            (SELECT count(*) FROM bundle_installation) AS installations""").fetchone()
+    if ([row["version_num"] for row in version] != [HEAD]
+            or tuple(counts[key] for key in ("meta_org", "meta_workspace", "twa_org", "twa_workspace", "compositions", "installations"))
+            != (0, 0, 1, 1, 0, 0)):
+        raise BootstrapBlocked("TENANT_AUTHORITY_BOUNDARY_DRIFT")
+    with intent.open("x", encoding="utf-8") as stream:
+        json.dump({"database": TARGET, "orgId": "org-org", "projectId": "dev-project",
+                   "createdAt": datetime.now(UTC).isoformat()}, stream, sort_keys=True)
+        stream.write("\n")
+    previous_url = os.environ.get("AOS_DATABASE_URL")
+    previous_twa = os.environ.get("AOS_TWA_STORE")
+    url = URL.create("postgresql", username=str(parameters["user"]),
+                     password=str(parameters["password"]), host=str(parameters["host"]),
+                     port=int(parameters["port"]), database=TARGET)
+    os.environ["AOS_DATABASE_URL"] = url.render_as_string(hide_password=False)
+    os.environ["AOS_TWA_STORE"] = "pg"
+    from aos_api import twa_pg
+    try:
+        from aos_api.orgs import ensure_org
+        from aos_api.workspaces_catalog import ensure_workspace
+        twa_pg.clear_mode_cache()
+        ensure_org("org-org", name="栖月汇隔离预览")
+        ensure_workspace("org-org", "dev-project", name="当前源码隔离预览")
+    finally:
+        if previous_url is None:
+            os.environ.pop("AOS_DATABASE_URL", None)
+        else:
+            os.environ["AOS_DATABASE_URL"] = previous_url
+        if previous_twa is None:
+            os.environ.pop("AOS_TWA_STORE", None)
+        else:
+            os.environ["AOS_TWA_STORE"] = previous_twa
+        twa_pg.clear_mode_cache()
+    with connect(**parameters, row_factory=dict_row) as conn:
+        after = conn.execute("""SELECT
+            (SELECT count(*) FROM meta_org WHERE id='org-org') AS meta_org,
+            (SELECT count(*) FROM meta_workspace WHERE org_id='org-org' AND project_id='dev-project') AS meta_workspace,
+            (SELECT count(*) FROM twa_org WHERE id='org-org') AS twa_org,
+            (SELECT count(*) FROM twa_workspace WHERE org_id='org-org' AND project_id='dev-project') AS twa_workspace""").fetchone()
+    if tuple(after.values()) != (1, 1, 1, 1):
+        raise BootstrapBlocked("TENANT_AUTHORITY_NOT_PERSISTED")
+    result = {"outcome": "CURRENT_PREVIEW_TENANT_AUTHORITY_READY", "database": TARGET,
+              "orgId": "org-org", "projectId": "dev-project", "counts": dict(after)}
+    result_path.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    return result
+
+
 def main() -> int:
     import sys
     sys.path.insert(0, str(API_ROOT))
@@ -160,13 +226,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--migrate", action="store_true")
     parser.add_argument("--resume-after-assetintegration", action="store_true")
+    parser.add_argument("--ensure-tenant-authority", action="store_true")
     parser.add_argument("--state-dir", type=Path)
     args = parser.parse_args()
-    if (args.migrate or args.resume_after_assetintegration) and args.state_dir is None:
+    if (args.migrate or args.resume_after_assetintegration or args.ensure_tenant_authority) and args.state_dir is None:
         raise BootstrapBlocked("STATE_DIR_REQUIRED")
-    result = (migrate(state=args.state_dir,
-                      resume_after_assetintegration=args.resume_after_assetintegration)
-              if args.migrate or args.resume_after_assetintegration else inspect_target())
+    if args.ensure_tenant_authority:
+        result = ensure_tenant_authority(state=args.state_dir)
+    elif args.migrate or args.resume_after_assetintegration:
+        result = migrate(state=args.state_dir,
+                         resume_after_assetintegration=args.resume_after_assetintegration)
+    else:
+        result = inspect_target()
     print(json.dumps(result, sort_keys=True))
     return 0
 

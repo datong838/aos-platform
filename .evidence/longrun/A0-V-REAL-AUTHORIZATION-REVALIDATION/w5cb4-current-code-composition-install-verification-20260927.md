@@ -1,0 +1,8 @@
+# W5CB4 当前源码 Composition/Installation 批准核验（2026-09-27）
+
+- 依据 `w5cb4-current-code-composition-install-plan-20260927.md`，新库 `aos_current_preview_20260927@a0v_106` 的四个 PUBLISHED 当前包经 RegistrySnapshot/ReleasePolicy 只读预检，snapshot `sha256:dfc18926a512c9b1c7610d2e61b1312f73b7911e72cb407be0d5d0d3cc2988f3`。原库与 8080 未切换。
+- 首次正式 Composition 入口被数据库外键拒绝；独立读回 Composition/Lock/Installation/Command/Decision 均为 0，失败 state/intent 保留。新库引导漏建的是正式 `meta_org/meta_workspace`，此前只有 `twa_*`。通过 `orgs.ensure_org` 与 `workspaces_catalog.ensure_workspace` Owner 补正后，新库四张对应目录表各有正向 1 行；没有负向 `dev-org`。没有删除或覆盖原状态。
+- 用新的 `installation-state-v2` 和同一 exact 输入/幂等前缀，经正式 CompositionService/InstallationService：唯一四节点（core 1.4、Niushop 1.23、growth 1.11、operations-base 1.2）、三依赖、八 UI 模块；maker 创建/提交、不同 checker 精确批准。安装 ID `ccdcb0f0-1040-4bc6-aa0c-d045f5689813`，当前 revision/etag=3，状态 `approved`。独立 SQL 回读 Composition=1、Lock=1、Installation=1、Decision=1、Runtime binding=0。结果在 `/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/installation-state-v2/installation-result.json`，SHA256 `d3fd3780dc154e49c48d48087dd2383d6ae689131aedc835853ee3ad2a20d030`。
+- `inspect_runtime_configuration_authority` 在新库只读返回 8 个缺项：responsibility_plans、runtime_policies、data_policies、egress_policies、network_policies、quota_policies、budget_policies、budgets 全为 0。因此 Runtime/Host、Provider、自然源与八页业务验收仍禁入；`approved` 不冒充 `active`。8080 仍是旧隔离克隆 HTTP 预览。
+- 复用首装函数仅添加可选 trust/overlay/display/maker/checker 参数，旧默认不变。专项+旧首装邻接 `15 passed, 7 warnings`，脚本编译及 diff 检查通过；安装与信任根 exact，未读商城源、未重发旧 Run、未启自然 worker。
+- 下一波：优先设计和实现新库的正式 Runtime 配置权威来源/最小可验证安装准备，不为测试绿伪造八类策略；可独立并行推进 P2g30b 当前 RETURN Action 生产者。只有配置、预算、职责和权限经正式 Owner 自洽，才走三 runtime apply/verify/configure/enable、再切 8080 做浏览器验收。

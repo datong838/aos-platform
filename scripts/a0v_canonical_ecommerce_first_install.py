@@ -873,7 +873,12 @@ def create_approved_first_installation(
     adapter_version: str = "1.1.0", growth_version: str = "1.4.0",
     operations_version: str = "1.2.0",
     idempotency_prefix: str = INSTALL_IDEMPOTENCY_PREFIX,
-    current_installation_ref: Any | None = None
+    current_installation_ref: Any | None = None,
+    trust_path: Path | None = None,
+    overlay_revision: str = "a0v-canonical-ecommerce-v1",
+    display_name: str | None = None,
+    maker_actor: str = INSTALL_MAKER,
+    checker_actor: str = INSTALL_CHECKER,
 ) -> dict[str, Any]:
     sys.path.insert(0, str(API_ROOT))
     try:
@@ -903,7 +908,8 @@ def create_approved_first_installation(
         predecessor = (None if current_installation_ref is None else
             CurrentInstallationRef.model_validate(current_installation_ref))
         trust = FileTrustRootProvider(
-            state_dir.resolve() / "signing/trust-roots.json"
+            trust_path.resolve() if trust_path is not None
+            else state_dir.resolve() / "signing/trust-roots.json"
         ).snapshot()
         policy = ReleasePolicy(trust_roots=trust)
         installation_store = PostgresInstallationStore(connect_factory=connect_factory)
@@ -948,7 +954,7 @@ def create_approved_first_installation(
             request=request,
             org_id=ORG_ID,
             project_id=PROJECT_ID,
-            actor=INSTALL_MAKER,
+            actor=maker_actor,
             roles=INSTALL_MAKER_ROLES,
             markings=INSTALL_MARKINGS,
             idempotency_key=f"{idempotency_prefix}-composition",
@@ -993,13 +999,13 @@ def create_approved_first_installation(
                 {
                     "compositionId": lock.composition_id,
                     "lockRevision": lock.revision,
-                    "overlayRevision": "a0v-canonical-ecommerce-v1",
-                    "displayName": "A0-V Canonical 电商八工作台首装" if predecessor is None else "栖月汇电商商品接入版本替换",
+                    "overlayRevision": overlay_revision,
+                    "displayName": display_name or ("A0-V Canonical 电商八工作台首装" if predecessor is None else "栖月汇电商商品接入版本替换"),
                 }
             ),
             org_id=ORG_ID,
             project_id=PROJECT_ID,
-            actor=INSTALL_MAKER,
+            actor=maker_actor,
             roles=INSTALL_MAKER_ROLES,
             markings=INSTALL_MARKINGS,
             idempotency_key=f"{idempotency_prefix}-create",
@@ -1018,7 +1024,7 @@ def create_approved_first_installation(
                 request=EmptyInstallationActionRequest(),
                 org_id=ORG_ID,
                 project_id=PROJECT_ID,
-                actor=INSTALL_MAKER,
+                actor=maker_actor,
                 roles=INSTALL_MAKER_ROLES,
                 markings=INSTALL_MARKINGS,
                 idempotency_key=f"{idempotency_prefix}-submit",
@@ -1041,7 +1047,7 @@ def create_approved_first_installation(
                 ),
                 org_id=ORG_ID,
                 project_id=PROJECT_ID,
-                actor=INSTALL_CHECKER,
+                actor=checker_actor,
                 roles=INSTALL_CHECKER_ROLES,
                 markings=INSTALL_MARKINGS,
                 idempotency_key=f"{idempotency_prefix}-approve",
@@ -1078,8 +1084,8 @@ def create_approved_first_installation(
             "installationRevision": current.current_revision,
             "installationEtag": current.etag_version,
             "transitions": transitions,
-            "maker": INSTALL_MAKER,
-            "checker": INSTALL_CHECKER,
+            "maker": maker_actor,
+            "checker": checker_actor,
         }
     finally:
         sys.path.remove(str(API_ROOT))
