@@ -7,7 +7,7 @@
 ## 验证
 
 - `DataPage.source.interaction.test.tsx`、`Wave3bW4Truth.test.ts`、`sourceSetup.test.ts`：21 passed。覆盖成功、不排队写调用、无隐式 probe、漂移冻结、marker 不含密码、跨刷新与租户切换保留 pending。`tsc --noEmit -p tsconfig.json` 通过，Vite production build 通过，`git diff --check` 通过。
-- 今日最新代码 + 当前命名卷 `aos-a0v-recovery-pg-data` 的完整重启已在 E04 验证时执行；E06 检查时容器 `/aos-a0v-recovery-pg` 为 running 且挂载仍为该卷，当前 API 8080 OpenAPI=200、前端 8434 `/data`=200。E06 前端修改由运行中的 Vite 服务呈现，尚无 E06 改动后的第二次数据库容器重启；下一次每日全栈重启仍必须使用最新代码与此当前卷，不得把前端热更新冒充再次完整重启。
+- E06 提交 `d404f907` 后于今日 02:44（北京时间）按最新 HEAD 完整重启：精确停止旧 8080/8434 进程，重启原 `/aos-a0v-recovery-pg` 容器（未删除或重建）；Vite 8434 从既有监督器恢复，API 8080 以当前代码重新启动。容器仍挂载 `aos-a0v-recovery-pg-data:/var/lib/postgresql/data`，两端 HTTP=200；API 启动日志明确 `aos_current_preview_20260927`、migration disabled、Runtime Host=0、workers=0，且 cron/snapshot/Logic worker 未启动。此处是 E06 代码后的真实全栈重启，不以热更新冒充。
 - 内置浏览器实际 `/data` 显示数据源总数 0、近 24 小时同步 0；打开“新建数据源”并走到运行时选择，未填写凭证、未创建、未调用 `/test`、未同步。页面显示的 12 数据集不是已验证的商品对象。
 
 ## 一致性与剩余门
