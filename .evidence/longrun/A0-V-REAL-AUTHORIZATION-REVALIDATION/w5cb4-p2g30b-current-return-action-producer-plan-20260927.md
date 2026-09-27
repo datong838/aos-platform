@@ -8,6 +8,22 @@
 
 ## 文件级清单与串行步骤
 
+## 2026-09-27 用户新增数据保留约束
+
+- 用户明确要求不删除任何东西。自此不执行 `DROP DATABASE`、删除测试库／卷／容器／文件，亦不运行会在 teardown 中自动删除对象的原版 `disposable_database()` 测试。
+- 本波已经观察到预期 RED `REPAIR_ACTION_CURRENT_AUTHORITY_UNWIRED`；该次隔离测试在新增约束到达前完成，其临时库依原夹具自动删除。之后的数据库验收须先提供**保留隔离库**的显式测试模式、可见库名和零自动清理读回，再运行；否则仅做不删数据的单元／静态检查并保持本波未完成。
+- 为此允许最小扩展 `services/aos-api/tests/test_ecommerce_analyst_growth_plan_full_graph.py` 的夹具，以及本波同库测试的调用方式；不得改变其他测试的默认行为、当前实例或用户数据。所有新临时测试库持续保留，清理须重新取得用户明确授权。
+
+## 2026-09-27 后到授权修订
+
+- 用户随后明确：项目测试夹具自动创建并清理**隔离测试库**不影响开发，可以继续。此授权仅适用于测试夹具自身的临时库；业务库、历史卷、备份和用户数据仍不得删除。
+- 因此本波可运行既有 `disposable_database()` 隔离集成测试以复现 RED；不得将该授权扩大为清理当前预览库或任何业务数据。
+
+## 2026-09-27 当前来源追溯补充（编码前）
+
+- 原内容 `ContentResultConsumer` 以预算 reservation 的 `invocation_id` 派生 Artifact ID；正式 `aip_artifact.source` 保存 `invocationId` 与 `providerResultHash`，执行 Journal 的 command/result 又按 `reservation_id` 持久化。正向 producer 应由原 Artifact exact 反查**唯一**预算 reservation/Journal，校验 invocation、result hash、原命令 request hash 和原产物内容，不能只相信新提案 payload 的 Capability/金额。
+- 原命令的 `authorityRefs` 有 AgentInstance/ResponsibilityPlan/Capability 等完整截面，可复用 `ContentGenerateHostService._agent_capability_authority`；原命令上界只作来源/上限约束，新 proposal 的金额仍须当前审批和后续新预算 held。若这条反向关系多义或缺失，即 `REPAIR_ACTION_CURRENT_AUTHORITY_UNWIRED` 保持禁入，不新增第二条影子批准路径。
+
 1. RED 扩 `services/aos-api/tests/extension_runtime/test_ecommerce_content_repair_action_binding.py`：完整六项、R2、原 running Task/Run、唯一 RETURN target、冻结 Brief、当前 dispatch、正式 Capability 和预算上界应得稳定非空 hash；跨租户/旧 decision/非 queued attempt/多义 target/旧 Brief/安装 epoch 漂移/Capability 漂移/负金额均拒绝，且失败零 Action 行。先验证失败输出。
 2. RED 扩原 `services/aos-api/tests/extension_runtime/test_ecommerce_content_review_pending_pg.py` 同一 RETURN 分支：经公共 `AipActionStore.create_proposal` 与不同 checker 的 `decide` 产生唯一正式批准事件；独立连接读回 proposal/draft/event 的 exact hash。已有旧批准不得充当新批准；重放不产生第二提案。无直接 INSERT 返工批准。
 3. 最小实现只修改 `services/aos-api/aos_api/ecommerce_content_repair_action_binding.py` 和 `services/aos-api/aos_api/aip_action_store.py`：在同一事务先唯一寻址 target，再复用上述校验；以当前 ActionType revision、六项 exact payload、scope、task/run、当前授权截面算稳定 hash。请求与重放在 maker 阶段重核；checker 在决定/重放前重核同一 hash、proposal/draft、maker/checker、到期与权限。通用 Preview、首生内容、外部动作和通用预算 Store 不改。
