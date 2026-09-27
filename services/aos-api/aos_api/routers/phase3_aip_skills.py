@@ -17,6 +17,9 @@ from aos_api.aip_agent_registry_store import (
 )
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_publication_service import AipSkillPublicationService
+from aos_api.aip_skill_publication_options import (
+    SkillPublicationOptions, SkillPublicationOptionsReader,
+)
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -26,6 +29,11 @@ from pydantic import BaseModel, Field
 router = APIRouter(prefix="/v1/aip", tags=["aip-skills"])
 _SKILLS = AipSkillRegistry()
 _PUBLICATION = AipSkillPublicationService()
+_OPTIONS = SkillPublicationOptionsReader()
+
+
+def get_skill_publication_options_reader() -> SkillPublicationOptionsReader:
+    return _OPTIONS
 
 
 class SkillListResponse(BaseModel):
@@ -95,6 +103,23 @@ def list_skills(
         items=items,
         count=len(items),
     )
+
+
+@router.get('/skills/{skill_id}/revisions/{revision}/publication-options',
+            response_model=SkillPublicationOptions)
+def publication_options(
+    skill_id: str,
+    revision: int,
+    principal: Principal = Depends(require_principal),
+    service: SkillPublicationOptionsReader = Depends(get_skill_publication_options_reader),
+) -> SkillPublicationOptions:
+    try:
+        return SkillPublicationOptions.model_validate(
+            service.read(_scope(principal), skill_id, revision))
+    except LookupError as exc:
+        raise ApiError(code='AIP_NOT_FOUND', message=str(exc), status_code=404) from exc
+    except ValueError as exc:
+        raise ApiError(code='AIP_INVALID_ARGUMENT', message=str(exc), status_code=422) from exc
 
 
 @router.post("/skills/publish-evaluated", response_model=PublishEvaluatedSkillResponse)
