@@ -13,6 +13,8 @@
 3. 若独立 runtime/directory/web 凭据、Host 分配、OCI 与受信制品全都能在**当前卷**核验，再另立可执行子计划和备份，以原产品入口提交唯一 `runtime-apply`，只读跟踪至正式终态；随后才可考虑 `runtime-verify`。若任一不成立，本波只修产品入口/准入诊断，不发任何 runtime 操作，也不启用 Host。绝不用旧 `aos_meta_head` 脚本、当前 `aos_app` 特权账号或临时身份绕过。
 4. 专项：后端旧入口拒绝/纯内容保持、前端禁入/指引与旧操作防重、Host 身份门测试；累计相邻回归、TypeScript/构建；浏览器 `/apollo/assets` 安装及运行实例双面验收。代码/方案/数据/越权复审，verification 落盘并提交。按当天最新 m1+当前命名卷完整重启 DB/API/Web，读回身份/版本/端口/页面/功能，再继续 E15。
 
+现场收窄（只读审计后）：当前 `a0v_current_preview_http.py` 明确 `AOS_EXTENSION_RUNTIME_HOST_ENABLED=0`，当前卷 `extension_runtime_host_assignment=0`；不能提交 `runtime-apply` 后留下无 Owner 的未决命令。本波首先交付服务端精确 `RUNTIME_OPERATION_REQUIRED`（HTTP 409、只对运行包的旧 Apply/Verify，保留纯内容原路径）及产品页清晰指引；它是原方案 231-3 已指定的错误语义，不是增加执行许可。文件收窄为 `asset_registry/errors.py`、`installation_revalidation.py`、其专项测试，及 `InstallationActionPanel.tsx` 的提示和测试。若无法由当前安装详情可靠判定包类型，则页面只给通用路径适用范围说明、不通过客户端猜测禁按钮；后续再补正式读模型判别。运行 Host/凭据实操另开后继波，不在本波伪装完成。
+
 ## 九步和停止条件
 
 1. 上位方案及 E13 复习；2. 文件级/当前 Host 只读清单；3. 最小产品分流实现（若发现可复用权威）；4. 专项；5. 累计；6. 浏览器；7. 一致性与安全复审；8. verification 落盘；9. 精确提交并进入 E15 当前源/管道/首链配置。任一授权、身份、制品、资源、提交边界不明：停写当前命令，只读对账；不重发、不手工 run_definition、不读商城源、不碰旧 12 Run。保留全部数据卷/备份，230 L0 挂起，不 push。
