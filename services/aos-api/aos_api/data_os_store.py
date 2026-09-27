@@ -303,6 +303,86 @@ def persist_pipeline(scope: TenantScope, item: dict[str, Any]) -> None:
         conn.commit()
 
 
+def register_pipeline(scope: TenantScope, *, pipeline_id: str, source_id: str,
+                      source_configuration_revision: str, dataset_rid: str,
+                      name: str, idempotency_key: str) -> dict[str, Any]:
+    """Register a first pipeline, its dataset and the original outcome atomically."""
+    scope = _require_scope(scope)
+    ensure_data_os_schema()
+    if not idempotency_key or len(idempotency_key) > 160:
+        raise ApiError(code="PIPELINE_REGISTRATION_KEY_INVALID", message="管道登记幂等键无效", status_code=400)
+    request_hash = hashlib.sha256(json.dumps({
+        "pipelineId": pipeline_id, "sourceId": source_id,
+        "sourceConfigurationRevision": source_configuration_revision,
+        "datasetRid": dataset_rid, "name": name,
+    }, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
+    with connect(scope) as conn:
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                     (json.dumps(["pipeline-registration-key", *scope.key, idempotency_key]),))
+        receipt = conn.execute(
+            "SELECT request_hash,response_metadata FROM pipeline_registration_receipt "
+            "WHERE org_id=%s AND project_id=%s AND idempotency_key=%s",
+            (*scope.key, idempotency_key),
+        ).fetchone()
+        if receipt is not None:
+            if receipt["request_hash"] != request_hash:
+                raise ApiError(code="PIPELINE_REGISTRATION_KEY_CONFLICT",
+                    message="幂等键已用于不同管道请求", status_code=409)
+            return dict(receipt["response_metadata"])
+        for identity in sorted((f"pipeline:{pipeline_id}", f"dataset:{dataset_rid}")):
+            conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                         (json.dumps(["pipeline-registration", *scope.key, identity]),))
+        source = conn.execute(
+            "SELECT configuration_revision FROM meta_source "
+            "WHERE org_id=%s AND project_id=%s AND id=%s FOR SHARE",
+            (*scope.key, source_id),
+        ).fetchone()
+        if source is None or str(source["configuration_revision"]) != source_configuration_revision:
+            raise ApiError(code="PIPELINE_SOURCE_CONFIGURATION_CHANGED",
+                message="来源不存在或配置修订已变化，请重新读取", status_code=409)
+        if conn.execute("SELECT 1 FROM meta_pipeline WHERE org_id=%s AND project_id=%s AND id=%s",
+                        (*scope.key, pipeline_id)).fetchone() is not None:
+            raise ApiError(code="PIPELINE_ID_CONFLICT", message="管道 ID 已存在", status_code=409)
+        if conn.execute("SELECT 1 FROM meta_dataset WHERE org_id=%s AND project_id=%s AND rid=%s",
+                        (*scope.key, dataset_rid)).fetchone() is not None:
+            raise ApiError(code="PIPELINE_DATASET_CONFLICT", message="输出数据集 ID 已存在", status_code=409)
+        conn.execute("""INSERT INTO meta_pipeline
+            (id,source_id,target,dataset_rid,name,object_type_hint,last_build,props,org_id,project_id,updated_at)
+            VALUES (%s,%s,'dataset',%s,%s,NULL,'{}'::jsonb,'{}'::jsonb,%s,%s,NOW())""",
+            (pipeline_id,source_id,dataset_rid,name,*scope.key))
+        conn.execute("""INSERT INTO meta_dataset
+            (rid,name,display_name,pipeline_id,source_id,status,object_type_hint,
+             created_at,updated_at,props,org_id,project_id)
+            VALUES (%s,%s,%s,%s,%s,'PENDING',NULL,extract(epoch from clock_timestamp()),
+                    extract(epoch from clock_timestamp()),'{}'::jsonb,%s,%s)""",
+            (dataset_rid,name,name,pipeline_id,source_id,*scope.key))
+        metadata = {"id": pipeline_id, "sourceId": source_id, "target": "dataset",
+                    "datasetRid": dataset_rid, "name": name,
+                    "sourceConfigurationRevision": source_configuration_revision,
+                    "orgId": scope.org_id, "projectId": scope.project_id}
+        conn.execute("""INSERT INTO pipeline_registration_receipt
+            (org_id,project_id,idempotency_key,request_hash,pipeline_id,source_id,
+             source_configuration_revision,dataset_rid,response_metadata)
+            VALUES (%s,%s,%s,%s,%s,%s,%s::uuid,%s,%s::jsonb)""",
+            (*scope.key,idempotency_key,request_hash,pipeline_id,source_id,
+             source_configuration_revision,dataset_rid,json.dumps(metadata,ensure_ascii=False)))
+        conn.commit()
+        return metadata
+
+
+def load_pipeline_registration_receipt(scope: TenantScope, pipeline_id: str,
+                                       key: str) -> dict[str, Any] | None:
+    """Read the original public result without accessing any source data."""
+    scope = _require_scope(scope)
+    with connect_read_only(scope) as conn:
+        row = conn.execute(
+            "SELECT response_metadata FROM pipeline_registration_receipt "
+            "WHERE org_id=%s AND project_id=%s AND pipeline_id=%s AND idempotency_key=%s",
+            (*scope.key,pipeline_id,key),
+        ).fetchone()
+    return dict(row["response_metadata"]) if row is not None else None
+
+
 def persist_phase5_pipeline_graph(
     scope: TenantScope, payload: dict[str, Any]
 ) -> dict[str, Any]:

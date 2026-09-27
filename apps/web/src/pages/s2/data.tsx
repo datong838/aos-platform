@@ -11,6 +11,7 @@ import {
   BpToolbar,
 } from "./blueprintUi";
 import { JsonBlock, PipelineWorkflowStepper, S2Chrome, useJsonGet } from "./shared";
+import { PipelineRegistrationPanel } from "./PipelineRegistrationPanel";
 import {
   TABLE_LABELS,
   buildStatusBadge,
@@ -364,6 +365,8 @@ export function PipelinesPage() {
           <option value="unknown">未知</option>
         </select>
       </BpToolbar>
+
+      <PipelineRegistrationPanel onRegistered={reload} />
 
       {/* Phase 7: 统计概览 */}
       <div style={{ display: "flex", gap: 12, padding: "8px 0", marginBottom: 8 }}>

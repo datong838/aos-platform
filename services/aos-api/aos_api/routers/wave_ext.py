@@ -21,7 +21,7 @@ from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from aos_api.auth import Principal, require_principal
 from aos_api.db import connect, get_dsn
@@ -256,6 +256,14 @@ class PipelineIn(BaseModel):
     nodes: list[dict[str, Any]] = Field(default_factory=list)
     edges: list[dict[str, Any]] = Field(default_factory=list)
     config: dict[str, Any] = Field(default_factory=dict)
+
+
+class PipelineRegistrationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    pipelineId: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9._-]{0,119}$")
+    sourceId: str = Field(min_length=1, max_length=200)
+    sourceConfigurationRevision: uuid.UUID
+    name: str = Field(min_length=1, max_length=240)
 
 
 class SyncIn(BaseModel):
@@ -1342,6 +1350,67 @@ def get_source_registration_receipt(source_id: str, key: str,
     if receipt is None:
         raise ApiError(code="SOURCE_REGISTRATION_RECEIPT_NOT_FOUND",
                        message="未找到此请求的正式登记回执", status_code=404)
+    return receipt
+
+
+@router.post("/v1/pipeline-registrations")
+def create_pipeline_registration(body: PipelineRegistrationIn, request: Request,
+                                 principal: Principal = Depends(require_principal)):
+    from aos_api.data_os_store import register_pipeline
+    from aos_api.routers.asset_control_headers import require_idempotency_key
+
+    if not body.name.strip() or body.name != body.name.strip() or body.sourceId != body.sourceId.strip():
+        raise ApiError(code="PIPELINE_REGISTRATION_INVALID",
+            message="管道名称或来源 ID 无效", status_code=400)
+
+    try:
+        key = require_idempotency_key(request)
+    except Exception:
+        raise ApiError(code="PIPELINE_REGISTRATION_KEY_INVALID",
+                       message="管道登记幂等键无效", status_code=400) from None
+    scope = _mutation_scope(principal)
+    try:
+        result = register_pipeline(scope, pipeline_id=body.pipelineId,
+            source_id=body.sourceId,
+            source_configuration_revision=str(body.sourceConfigurationRevision),
+            dataset_rid=f"ri.dataset.{body.pipelineId}",name=body.name.strip(),
+            idempotency_key=key)
+    except ApiError:
+        raise
+    except Exception:
+        raise ApiError(code="PIPELINE_REGISTRATION_UNCONFIRMED",
+            message="管道登记结果未知；只用原键读取回执，不得重发", status_code=503) from None
+    # Persisted metadata is the authority; refresh the legacy list projection only
+    # after commit. A lost response is reconciled by the immutable receipt.
+    try:
+        _hydrate_data_os_scope(scope, force=True)
+    except Exception:
+        raise ApiError(code="PIPELINE_REGISTRATION_UNCONFIRMED",
+            message="管道已提交但列表尚未核清；只用原键读取回执", status_code=503) from None
+    return result
+
+
+@router.get("/v1/pipeline-registrations/{pipeline_id}/receipt")
+def get_pipeline_registration_receipt(pipeline_id: str, key: str,
+                                      principal: Principal = Depends(require_principal)):
+    from aos_api.asset_registry.control_policy import validate_idempotency_key
+    from aos_api.data_os_store import load_pipeline_registration_receipt
+
+    try:
+        checked_key = validate_idempotency_key(key)
+    except Exception:
+        raise ApiError(code="PIPELINE_REGISTRATION_KEY_INVALID",
+                       message="管道登记幂等键无效", status_code=400) from None
+    try:
+        receipt = load_pipeline_registration_receipt(_mutation_scope(principal),pipeline_id,checked_key)
+    except ApiError:
+        raise
+    except Exception:
+        raise ApiError(code="PIPELINE_REGISTRATION_UNCONFIRMED",
+            message="暂未确认原管道登记结果；保留原键并冻结", status_code=503) from None
+    if receipt is None:
+        raise ApiError(code="PIPELINE_REGISTRATION_RECEIPT_NOT_FOUND",
+            message="未找到原命令回执；未知结果仍须冻结", status_code=404)
     return receipt
 
 
