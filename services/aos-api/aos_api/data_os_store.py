@@ -383,6 +383,57 @@ def load_pipeline_registration_receipt(scope: TenantScope, pipeline_id: str,
     return dict(row["response_metadata"]) if row is not None else None
 
 
+def read_pipeline_source_selection_readiness(scope: TenantScope, pipeline_id: str) -> dict[str, Any]:
+    """Read current metadata blockers; never manufacture an approval draft."""
+    scope = _require_scope(scope)
+    if not pipeline_id or len(pipeline_id) > 200 or pipeline_id != pipeline_id.strip():
+        raise ApiError(code="PIPELINE_READINESS_ID_INVALID", message="管道 ID 无效", status_code=400)
+    with connect_read_only(scope) as conn:
+        pipeline = conn.execute(
+            "SELECT id,source_id FROM meta_pipeline WHERE org_id=%s AND project_id=%s AND id=%s",
+            (*scope.key, pipeline_id),
+        ).fetchone()
+        receipt = conn.execute(
+            "SELECT source_id,source_configuration_revision FROM pipeline_registration_receipt "
+            "WHERE org_id=%s AND project_id=%s AND pipeline_id=%s",
+            (*scope.key, pipeline_id),
+        ).fetchone()
+        source = None
+        graph = None
+        if pipeline is not None and receipt is not None:
+            source = conn.execute(
+                "SELECT configuration_revision FROM meta_source "
+                "WHERE org_id=%s AND project_id=%s AND id=%s",
+                (*scope.key, receipt["source_id"]),
+            ).fetchone()
+            graph = conn.execute(
+                "SELECT revision FROM phase5_pipeline_graph "
+                "WHERE org_id=%s AND project_id=%s AND pipeline_id=%s",
+                (*scope.key, pipeline_id),
+            ).fetchone()
+    blockers: list[str] = []
+    if pipeline is None or receipt is None:
+        blockers.append("PIPELINE_NOT_FORMALLY_REGISTERED")
+        next_action = "REGISTER_PIPELINE"
+    elif pipeline["source_id"] != receipt["source_id"]:
+        blockers.append("PIPELINE_SOURCE_DRIFT")
+        next_action = "RECONCILE_PIPELINE"
+    elif source is None or str(source["configuration_revision"]) != str(receipt["source_configuration_revision"]):
+        blockers.append("SOURCE_CONFIGURATION_CHANGED")
+        next_action = "REGISTER_SOURCE"
+    elif graph is None:
+        blockers.append("GRAPH_NOT_SAVED")
+        next_action = "SAVE_GRAPH"
+    else:
+        blockers.append("EXACT_RUNTIME_REVALIDATION_REQUIRED")
+        next_action = "REVALIDATE_RUNTIME"
+    return {"pipelineId": pipeline_id, "formallyRegistered": receipt is not None and pipeline is not None,
+            "sourceId": receipt["source_id"] if receipt is not None and pipeline is not None else None,
+            "sourceConfigurationRevision": str(source["configuration_revision"]) if source is not None else None,
+            "graphRevision": int(graph["revision"]) if graph is not None else None,
+            "ready": False, "blockers": blockers, "nextAction": next_action}
+
+
 def persist_phase5_pipeline_graph(
     scope: TenantScope, payload: dict[str, Any]
 ) -> dict[str, Any]:

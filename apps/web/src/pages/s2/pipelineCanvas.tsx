@@ -19,6 +19,7 @@ import {
 import { apiGet, apiPost, apiPut } from "../../api/client";
 import { BpBanner, BpToolbar } from "./blueprintUi";
 import { S2Chrome, useJsonGet } from "./shared";
+import { PipelineAdmissionPanel } from "./PipelineAdmissionPanel";
 import {
   buildStatusBadge,
   getPipelineDisplayName,
@@ -1135,6 +1136,7 @@ export function PipelineCanvasPage() {
 
   return (
     <S2Chrome title={title} lede="管道构建 · 画布">
+      <PipelineAdmissionPanel pipelineId={pipelineId} />
       <BpToolbar>
         <Link to="/data/pipelines" className="btn-nav">
           ← 管道列表

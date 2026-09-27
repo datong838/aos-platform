@@ -2,7 +2,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, Security
+from fastapi import APIRouter, Depends, Query, Request, Response, Security
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from starlette.concurrency import run_in_threadpool
@@ -154,6 +154,21 @@ async def read_selection_receipt(
         raise ApiError(code='PIPELINE_CONTROL_INVALID', message='回执查询范围无效。', status_code=422) from exc
     except Exception as exc:
         raise ApiError(code='PIPELINE_SELECTION_RECEIPT_UNCONFIRMED', message='暂未确认原命令结果；请保留原键并冻结。', status_code=503) from exc
+
+
+@router.get('/{pipeline_id}/source-selection-readiness')
+def read_selection_readiness(pipeline_id: str, response: Response, principal: PrincipalDependency):
+    """Current metadata blockers only; no approval or execution authority."""
+    from aos_api.data_os_store import read_pipeline_source_selection_readiness
+    try:
+        response.headers['Cache-Control'] = 'no-store'
+        return read_pipeline_source_selection_readiness(
+            TenantScope(principal.org_id, principal.project_id), pipeline_id)
+    except ApiError:
+        raise
+    except Exception:
+        raise ApiError(code='PIPELINE_READINESS_UNCONFIRMED',
+                       message='当前管道准入条件未核清，请稍后刷新。', status_code=503) from None
 
 
 @router.post('/{pipeline_id}/runtime-control-approvals', response_model=PipelineExactRef)
