@@ -120,6 +120,8 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        from aos_api.ecommerce_content_repair_action_binding import require_repair_action_request
+        require_repair_action_request(body, action_snapshot, risk)
         if 'ecommerce_analysis_bootstrap' in {body.action_type_id, action_snapshot.get('id')}:
             from aos_api.aip_action_policy import classify_action_risk
             if self._bootstrap_guard is None:
@@ -145,6 +147,8 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        from aos_api.ecommerce_content_repair_action_binding import require_repair_action_proposal
+        require_repair_action_proposal(row)
         if 'ecommerce_analysis_bootstrap' in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
             if self._bootstrap_guard is None:
                 raise AipActionTransitionBlocked('ANALYSIS_BOOTSTRAP_CURRENT_GUARD_REQUIRED')
