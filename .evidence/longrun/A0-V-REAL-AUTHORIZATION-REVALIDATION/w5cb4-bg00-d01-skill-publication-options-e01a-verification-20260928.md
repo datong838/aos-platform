@@ -7,7 +7,7 @@
 ## 验证与现时边界
 
 - RED：新增路由测试首次因共享 `client` fixture 指向已不存在的历史 2026-09-13 allowlist 目录在 setup ERROR，未执行测试；改用路由函数直接注入、保留 OpenAPI 路径断言后得到预期 `AttributeError: publication_options`。随后最小实现；服务负例覆盖空候选/缺 Skill、同租户、只读 SELECT、撤销后无候选，正例覆盖 exact gate/event/Logic/active route。
-- 专项 `test_aip_skill_publication_options.py` 与发布/绑定邻接：`15 passed, 8 warnings`；D01/原链/Task/AgentRun 扩展累计 13 文件：`124 passed, 8 warnings`；新模块与路由 `compileall`、`git diff --check` 通过。未有真实当前库 GET 回读，不将单元结果报作当前发布成功。
+- 专项 `test_aip_skill_publication_options.py` 与发布/绑定邻接：`15 passed, 8 warnings`；D01/原链/Task/AgentRun 扩展累计 13 文件：`124 passed, 8 warnings`；新模块与路由 `compileall`、`git diff --check` 通过。提交 `364843c3` 后以最新代码重启安全 8080，当前库 `aos_current_preview_20260927` 实际 GET 读回 HTTP 200：D01 三组候选皆空，三个 blocker 分别为 `RELEASE_PUBLICATION_UNAVAILABLE`、`LOGIC_PUBLICATION_UNAVAILABLE`、`MODEL_ROUTE_UNAVAILABLE`。这只证明禁入读路径，不是发布成功。
 - 浏览器只读打开 `/aip/skill-publish`：当前工作区 37 个仅已评测技能、0 个已发布，页面仍出现“发布事件 ID”等自由输入框。这是 E01b 的确切产品缺口；E01a 不改前端、不发 POST。
 
 ## 下一步和风险

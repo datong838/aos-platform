@@ -5,14 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../api/client", () => ({
   apiGet: vi.fn(),
-  apiPost: vi.fn(),
+  apiGetAuthoritative: vi.fn(),
+  apiPostUnqueued: vi.fn(),
 }));
 vi.mock("../../api/aipAgentControl", () => ({ aipAgentControl: { runtimeReadiness: vi.fn().mockResolvedValue({ catalog: { items: [] } }) } }));
 vi.mock("../../api/tenant", () => ({
   getTenant: () => ({ orgId: "org-org", projectId: "dev-project" }),
 }));
 
-import { apiGet } from "../../api/client";
+import { apiGet, apiGetAuthoritative, apiPostUnqueued } from "../../api/client";
 import { SkillPublishPage } from "./SkillPublishPage";
 
 const tenant = { orgId: "org-org", projectId: "dev-project" };
@@ -22,6 +23,7 @@ describe("SkillPublishPage W-F4 batch stats", () => {
   let root: Root;
 
   beforeEach(() => {
+    localStorage.clear();
     host = document.createElement("div");
     document.body.appendChild(host);
     root = createRoot(host);
@@ -62,6 +64,11 @@ describe("SkillPublishPage W-F4 batch stats", () => {
         ],
       };
     });
+    vi.mocked(apiGetAuthoritative).mockResolvedValue({
+      tenant, skillId: "ecommerce.skill.A01", revision: 1,
+      releaseCandidates: [], logicCandidates: [], routeCandidates: [],
+      blockers: ["RELEASE_PUBLICATION_UNAVAILABLE", "LOGIC_PUBLICATION_UNAVAILABLE", "MODEL_ROUTE_UNAVAILABLE"],
+    });
   });
 
   afterEach(() => {
@@ -84,5 +91,51 @@ describe("SkillPublishPage W-F4 batch stats", () => {
     expect(strip?.textContent).toContain("1");
     expect(strip?.textContent).toContain("需核验业务逻辑权威");
     expect(strip?.textContent).toContain("精确版本");
+  });
+
+  it("shows current blockers and never offers a raw-reference publishing form", async () => {
+    await act(async () => root.render(<MemoryRouter><SkillPublishPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(vi.mocked(apiGetAuthoritative)).toHaveBeenCalledWith(
+      "/v1/aip/skills/ecommerce.skill.A01/revisions/1/publication-options",
+    );
+    expect(host.textContent).toContain("当前无可发布候选");
+    expect(host.querySelectorAll("input")).toHaveLength(0);
+    expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("发布此修订")) as HTMLButtonElement).disabled).toBe(true);
+    expect(apiPostUnqueued).not.toHaveBeenCalled();
+  });
+
+  it("requires explicit exact choices, then sends an unqueued command once", async () => {
+    const hash = "a".repeat(64);
+    vi.mocked(apiGetAuthoritative).mockResolvedValue({
+      tenant, skillId: "ecommerce.skill.A01", revision: 1, blockers: [],
+      releaseCandidates: [{ publicationId: "pub-1", releaseGateDecisionId: "gate-1" }],
+      logicCandidates: [{ assetType: "LogicRevision", assetId: "ecommerce.logic.A01", revision: 2, contentHash: hash }],
+      routeCandidates: [{
+        routeRef: { assetType: "ModelRouteRevision", assetId: "route-1", revision: 1, contentHash: hash },
+        policyRef: { assetType: "RuntimePolicyRevision", assetId: "policy-1", revision: 1, contentHash: hash },
+      }],
+    });
+    vi.mocked(apiPostUnqueued).mockRejectedValue(new Error("connection lost after send"));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    await act(async () => root.render(<MemoryRouter><SkillPublishPage /></MemoryRouter>));
+    await act(async () => undefined);
+    const publish = () => Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("发布此修订")) as HTMLButtonElement;
+    expect(publish().disabled).toBe(true);
+    const choices = host.querySelectorAll("section select");
+    expect(choices).toHaveLength(3);
+    for (const choice of choices) {
+      await act(async () => { (choice as HTMLSelectElement).value = "0"; choice.dispatchEvent(new Event("change", { bubbles: true })); });
+    }
+    expect(publish().disabled).toBe(false);
+    await act(async () => publish().click());
+    expect(apiPostUnqueued).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(apiPostUnqueued).mock.calls[0][1]).toMatchObject({
+      publicationId: "pub-1", releaseGateDecisionId: "gate-1",
+      logicRevisionRef: { assetId: "ecommerce.logic.A01", revision: 2 },
+    });
+    expect(publish().disabled).toBe(true);
+    expect(host.textContent).toContain("禁止重发");
+    vi.mocked(window.confirm).mockRestore();
   });
 });

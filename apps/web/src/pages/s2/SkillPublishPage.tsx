@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiGet, apiPost } from "../../api/client";
+import { apiGet, apiGetAuthoritative, apiPostUnqueued } from "../../api/client";
 import { aipAgentControl, type AgentRuntimeReadinessResponse } from "../../api/aipAgentControl";
 import { getTenant } from "../../api/tenant";
 import { PageChrome } from "../../components/PageChrome";
@@ -21,13 +21,23 @@ type SkillListResponse = {
   count: number;
 };
 
-type ExactPublicationForm = {
-  publicationId: string; releaseGateDecisionId: string;
-  routeId: string; routeRevision: string; routeHash: string;
-  policyId: string; policyRevision: string; policyHash: string;
-  logicRevision: string; logicHash: string;
+type AssetRef = { assetType: string; assetId: string; revision: number; contentHash: string };
+type PublicationOptions = {
+  tenant: { orgId: string; projectId: string }; skillId: string; revision: number;
+  releaseCandidates: { publicationId: string; releaseGateDecisionId: string }[];
+  logicCandidates: AssetRef[];
+  routeCandidates: { routeRef: AssetRef; policyRef: AssetRef }[];
+  blockers: string[];
 };
-const EMPTY_PUBLICATION: ExactPublicationForm = { publicationId: "", releaseGateDecisionId: "", routeId: "", routeRevision: "", routeHash: "", policyId: "", policyRevision: "", policyHash: "", logicRevision: "", logicHash: "" };
+
+function pendingKey(tenant: { orgId: string; projectId: string }, skill: SkillItem): string {
+  return `aos:skill-publish:unresolved:${tenant.orgId}:${tenant.projectId}:${skill.skillId}:${skill.revision}`;
+}
+
+function exactRef(ref: AssetRef | undefined, kind: string): ref is AssetRef {
+  return !!ref && ref.assetType === kind && !!ref.assetId && Number.isInteger(ref.revision)
+    && ref.revision > 0 && /^[0-9a-f]{64}$/.test(ref.contentHash);
+}
 
 function lifecycleLabel(lifecycle: string): string {
   return (
@@ -51,7 +61,12 @@ export function SkillPublishPage() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [runtime, setRuntime] = useState<AgentRuntimeReadinessResponse | null>(null);
-  const [publication, setPublication] = useState<ExactPublicationForm>(EMPTY_PUBLICATION);
+  const [options, setOptions] = useState<PublicationOptions | null>(null);
+  const [optionsError, setOptionsError] = useState("");
+  const [releaseChoice, setReleaseChoice] = useState("");
+  const [logicChoice, setLogicChoice] = useState("");
+  const [routeChoice, setRouteChoice] = useState("");
+  const [unresolved, setUnresolved] = useState(false);
   const [receiptId, setReceiptId] = useState("");
 
   const load = useCallback(async () => {
@@ -92,6 +107,40 @@ export function SkillPublishPage() {
     return data.items.find((item) => `${item.skillId}@${item.revision}` === selectedId) || null;
   }, [data, selectedId]);
 
+  useEffect(() => {
+    setOptions(null);
+    setOptionsError("");
+    setReleaseChoice("");
+    setLogicChoice("");
+    setRouteChoice("");
+    if (!selected || selected.lifecycle !== "evaluated") return;
+    const skill = selected;
+    const tenant = getTenant();
+    setUnresolved(!!localStorage.getItem(pendingKey(tenant, skill)));
+    let current = true;
+    void apiGetAuthoritative<PublicationOptions>(`/v1/aip/skills/${encodeURIComponent(skill.skillId)}/revisions/${skill.revision}/publication-options`)
+      .then((body) => {
+        if (!current) return;
+        if (body.tenant.orgId !== tenant.orgId || body.tenant.projectId !== tenant.projectId
+          || body.skillId !== skill.skillId || body.revision !== skill.revision) {
+          throw new Error("发布候选与当前租户或技能不一致");
+        }
+        setOptions(body);
+      })
+      .catch((value) => { if (current) setOptionsError(String((value as Error).message || value)); });
+    return () => { current = false; };
+  }, [selected]);
+
+  const release = options?.releaseCandidates[Number(releaseChoice)];
+  const logic = options?.logicCandidates[Number(logicChoice)];
+  const route = options?.routeCandidates[Number(routeChoice)];
+  const ready = !!options && options.skillId === selected?.skillId && options.revision === selected?.revision
+    && options.blockers.length === 0 && releaseChoice !== "" && logicChoice !== ""
+    && routeChoice !== "" && !!release?.publicationId && !!release.releaseGateDecisionId
+    && exactRef(logic, "LogicRevision") && logic.assetId === selected?.canonicalLogicId
+    && exactRef(route?.routeRef, "ModelRouteRevision")
+    && exactRef(route?.policyRef, "RuntimePolicyRevision");
+
   const batchStats = useMemo(() => {
     const published = new Set(
       allItems.filter((item) => item.lifecycle === "published").map((item) => item.skillId),
@@ -105,31 +154,34 @@ export function SkillPublishPage() {
   }, [allItems]);
 
   async function tryPublish() {
-    if (!selected || selected.lifecycle !== "evaluated") return;
+    if (!selected || selected.lifecycle !== "evaluated" || !ready || !release || !logic || !route || unresolved) return;
     setBusy(true);
     setNote("");
     setReceiptId("");
     try {
-      const revision = (value: string, label: string) => { const parsed = Number(value); if (!Number.isInteger(parsed) || parsed < 1) throw new Error(`${label}必须为正整数`); return parsed; };
-      const hash = (value: string, label: string) => { const cleaned = value.trim(); if (!/^[0-9a-f]{64}$/.test(cleaned)) throw new Error(`${label}必须为 64 位 SHA-256`); return cleaned; };
-      if (!publication.publicationId.trim() || !publication.releaseGateDecisionId.trim() || !publication.routeId.trim() || !publication.policyId.trim()) throw new Error("发布事件、评测放行、模型路由和运行策略均需精确引用");
+      if (!window.confirm(`确认发布 ${selected.skillId}@${selected.revision}？\n发布事件 ${release.publicationId}\nLogic ${logic.assetId}@${logic.revision}\n模型路由 ${route.routeRef.assetId}@${route.routeRef.revision}`)) return;
+      const tenant = getTenant();
+      const key = pendingKey(tenant, selected);
+      if (localStorage.getItem(key)) throw new Error("上次发布结果未核清，请先按回执对账，不能重发");
       const idempotencyKey = `skill-publish-${selected.skillId}-${selected.revision}-${crypto.randomUUID()}`;
-      const response = await apiPost<{ tenant: { orgId: string; projectId: string }; skill: SkillItem; receiptId: string; operation: string }>("/v1/aip/skills/publish-evaluated", {
+      localStorage.setItem(key, idempotencyKey);
+      setUnresolved(true);
+      const response = await apiPostUnqueued<{ tenant: { orgId: string; projectId: string }; skill: SkillItem; receiptId: string; operation: string }>("/v1/aip/skills/publish-evaluated", {
         sourceSkill: { assetType: "SkillTemplate", assetId: selected.skillId, revision: selected.revision, contentHash: selected.contentHash },
-        publicationId: publication.publicationId.trim(), releaseGateDecisionId: publication.releaseGateDecisionId.trim(),
-        modelRouteRef: { assetType: "ModelRouteRevision", assetId: publication.routeId.trim(), revision: revision(publication.routeRevision, "路由修订"), contentHash: hash(publication.routeHash, "路由摘要") },
-        runtimePolicyRef: { assetType: "RuntimePolicyRevision", assetId: publication.policyId.trim(), revision: revision(publication.policyRevision, "策略修订"), contentHash: hash(publication.policyHash, "策略摘要") },
-        logicRevisionRef: { assetType: "LogicRevision", assetId: selected.canonicalLogicId, revision: revision(publication.logicRevision, "逻辑修订"), contentHash: hash(publication.logicHash, "逻辑摘要") },
+        publicationId: release.publicationId, releaseGateDecisionId: release.releaseGateDecisionId,
+        modelRouteRef: route.routeRef, runtimePolicyRef: route.policyRef,
+        logicRevisionRef: logic,
         idempotencyKey,
       }, { "Idempotency-Key": idempotencyKey });
-      const tenant = getTenant();
       if (response.tenant.orgId !== tenant.orgId || response.tenant.projectId !== tenant.projectId || response.skill.skillId !== selected.skillId || !response.receiptId) throw new Error("发布回读与当前租户或精确技能不一致");
+      localStorage.removeItem(key);
+      setUnresolved(false);
       setReceiptId(response.receiptId);
       setNote(`已发布修订 ${response.skill.revision}，并回读发布回执。`);
       setBindStep(1);
       await load();
     } catch (value) {
-      setNote(`发布未执行：${String((value as Error).message || value)}`);
+      setNote(`发布结果未确认，禁止重发；请按权威回执对账：${String((value as Error).message || value)}`);
     } finally {
       setBusy(false);
     }
@@ -207,14 +259,20 @@ export function SkillPublishPage() {
                 <p style={{ color: "var(--aos-text-secondary)" }}>
                   生命周期：{lifecycleLabel(selected.lifecycle)} · 修订 {selected.revision}
                 </p>
-                {selected.lifecycle === "evaluated" ? <details open style={{ marginTop: 14 }}><summary><strong>精确发布证据</strong></summary><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, marginTop: 10 }}>{([
-                  ["publicationId", "发布事件 ID"], ["releaseGateDecisionId", "评测放行决定 ID"], ["routeId", "模型路由 ID"], ["routeRevision", "模型路由修订"], ["routeHash", "模型路由 SHA-256"], ["policyId", "运行策略 ID"], ["policyRevision", "运行策略修订"], ["policyHash", "运行策略 SHA-256"], ["logicRevision", "业务逻辑修订"], ["logicHash", "业务逻辑 SHA-256"],
-                ] as const).map(([key, label]) => <label key={key} style={{ display: "grid", gap: 5 }}>{label}<input className="input" value={publication[key]} onChange={(event) => setPublication((current) => ({ ...current, [key]: event.target.value }))} /></label>)}</div></details> : null}
+                {selected.lifecycle === "evaluated" ? <details open style={{ marginTop: 14 }}><summary><strong>当前精确发布候选</strong></summary>
+                  {optionsError ? <div role="alert">候选读取失败，禁止发布：{optionsError}</div> : !options ? <p>正在读取当前候选…</p> : options.blockers.length ? <p role="status">当前无可发布候选：{options.blockers.join("、")}。请先在评测门控、业务逻辑和模型配置中补齐正式权威。</p> : null}
+                  {options && options.blockers.length === 0 ? <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                    <label>发布事件与放行决定 <select value={releaseChoice} onChange={(event) => setReleaseChoice(event.target.value)}><option value="">请选择</option>{options.releaseCandidates.map((item, index) => <option value={index} key={`${item.publicationId}:${item.releaseGateDecisionId}`}>{item.publicationId} · {item.releaseGateDecisionId}</option>)}</select></label>
+                    <label>业务逻辑精确版本 <select value={logicChoice} onChange={(event) => setLogicChoice(event.target.value)}><option value="">请选择</option>{options.logicCandidates.map((item, index) => <option value={index} key={`${item.assetId}:${item.revision}`}>{item.assetId}@{item.revision} · {item.contentHash.slice(0, 12)}</option>)}</select></label>
+                    <label>模型路由与运行策略 <select value={routeChoice} onChange={(event) => setRouteChoice(event.target.value)}><option value="">请选择</option>{options.routeCandidates.map((item, index) => <option value={index} key={`${item.routeRef.assetId}:${item.routeRef.revision}`}>{item.routeRef.assetId}@{item.routeRef.revision} · {item.policyRef.assetId}@{item.policyRef.revision}</option>)}</select></label>
+                  </div> : null}
+                  {unresolved ? <p role="alert">已有一次发布结果未核清，禁止重发；请先按权威回执对账。</p> : null}
+                </details> : null}
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
                   <button
                     className="btn primary"
                     type="button"
-                    disabled={busy || selected.lifecycle !== "evaluated"}
+                    disabled={busy || selected.lifecycle !== "evaluated" || !ready || unresolved}
                     title={selected.lifecycle !== "evaluated" ? "仅已通过评测的技能可以发布" : "准备发布（须齐备精确权威引用）"}
                     onClick={() => void tryPublish()}
                   >

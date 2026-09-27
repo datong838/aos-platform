@@ -13,6 +13,7 @@
 1. 复习 `aip_skill_publication_service.py`、`aip_release_publication_service.py`、`aip_model_runtime_store.py` 和现有路由/权限；明确候选必须保留 exact ID/revision/hash、tenant、生命周期、checker/撤销状态。不得用 `ORDER BY latest LIMIT 1` 自动猜授权。
 2. 后端 `services/aos-api/aos_api/aip_skill_publication_options.py` 新增 read-only 枚举；`services/aos-api/aos_api/routers/phase3_aip_skills.py` 增单技能候选 GET。缺依赖以分层 blocker 返回；跨租户、缺 scope、重复/冲突、过期/撤销 fail closed。专项 `services/aos-api/tests/aip/test_aip_skill_publication_options.py` 先 RED，再最小实现，必要时隔离 PG。
 3. 前端 `apps/web/src/pages/s2/SkillPublishPage.tsx` 由十字段自由输入改为精确候选选取与复核，选中后仍要显式点击发布；加载错误、0 候选、切换技能与未知 POST 结果不重发。`apps/web/src/pages/s2/SkillPublishPage.test.tsx` 先 RED，复用现有 SDK/Parser，不直接拼未经校验的 JSON。
+   复审发现旧页使用可离线排队的通用 `apiPost` 发布权威命令；本波改用 `apiPostUnqueued`，只读候选用 `apiGetAuthoritative` 禁止离线缓存。请求发出前持久化本租户/技能的单次意图标识；结果未知时保留禁入，不能刷新页面后生成新 key 重发。成功并核对 Receipt 后才解除，明确拒绝可让用户重新选择。
 4. 专项、后端累计、Web typecheck/build、浏览器用当前 0 候选验收禁入；方案/代码安全复审、verification、m1 提交、上下文/Prime 状态核对，进入 E02 最小正式来源/绑定或 C2b 联合正向。
 
 ## 停止与风险
