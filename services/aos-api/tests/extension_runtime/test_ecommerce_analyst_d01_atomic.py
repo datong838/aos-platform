@@ -16,7 +16,8 @@ RECEIPT = {'resourceType': 'AnalysisRuntimeReceipt', 'resourceId': 'analysis-1',
 
 def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
              cutoff=None, reject_origin=False, reject_sources=False,
-             unknown_commit=False):
+             unknown_commit=False, task_selection='source-selection-1',
+             original_selection='source-selection-1', task_selection_revision='1'):
     calls = []
     class Connection:
         def commit(self):
@@ -30,8 +31,15 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
         calls.append('connect')
         yield conn
     monkeypatch.setattr(atomic_module, 'connect_serializable', connect)
-    monkeypatch.setattr(atomic_module.AipTaskStore, 'timeline',
-                        lambda _self, scope, task_run_id: _timeline())
+    def timeline(_self, scope, task_run_id):
+        selected = _timeline()
+        if task_selection is None:
+            selected.task.selection_ref = None
+        else:
+            selected.task.selection_ref.resource_id = task_selection
+            selected.task.selection_ref.revision = task_selection_revision
+        return selected
+    monkeypatch.setattr(atomic_module.AipTaskStore, 'timeline', timeline)
     origin = object.__new__(AnalysisContinuationOrigin)
     origin.context = SimpleNamespace(analysis=SimpleNamespace(
         scope=SCOPE, source=SimpleNamespace(actor='analyst-owner')))
@@ -40,7 +48,10 @@ def _harness(monkeypatch, *, original_run='run-1', original_plan='plan-1',
         calls.append('origin')
         if reject_origin:
             raise PermissionError('original lineage revoked')
-        return execute({'analysisReceipt': {
+        return execute({'context': {'source': {'policy': {
+            'sourceSelectionRef': {'resourceType': 'SourceSelectionRevision',
+                'resourceId': original_selection, 'revision': 1,
+                'contentHash': 'sha256:' + HASH}}}}, 'analysisReceipt': {
             'receiptRef': receipt_ref,
             'taskRunRef': {'resourceType': 'TaskRun', 'resourceId': original_run},
             'planRef': {'resourceType': 'PlanRevision', 'resourceId': original_plan},
@@ -100,6 +111,19 @@ def test_missing_original_actor_fails_closed(monkeypatch):
                           receipt_ref=RECEIPT,
                           actor='analyst-owner', occurred_at=NOW)
     assert calls == []
+
+
+@pytest.mark.parametrize('selection,revision', [
+    ('another-selection', '1'), (None, '1'), ('source-selection-1', '2'),
+])
+def test_task_source_selection_must_match_original_chain(monkeypatch, selection, revision):
+    coordinator, calls = _harness(monkeypatch, task_selection=selection,
+                                  task_selection_revision=revision)
+    with pytest.raises(ValueError, match='source selection'):
+        coordinator.issue(SCOPE, 'run-1', _request(), _packet(),
+                          receipt_ref=RECEIPT,
+                          actor='analyst-owner', occurred_at=NOW)
+    assert 'owner' not in calls and 'commit' not in calls
 
 
 @pytest.mark.parametrize('drift', [

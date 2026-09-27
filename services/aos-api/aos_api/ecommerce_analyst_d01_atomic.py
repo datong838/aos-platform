@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_agent_registry_contracts import CreateAgentRunRequest
 from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_task_store import AipTaskStore
@@ -69,6 +70,22 @@ class NaturalD01AtomicCoordinator:
                         or datetime.fromisoformat(root['cutoffAt']) != packet.cutoff_at):
                     raise ValueError('D01 request differs from original analysis Receipt')
                 tasks = AipTaskStore(TransactionBoundConnectFactory(transaction, scope))
+                source = origin.get('context', {}).get('source', {})
+                policy = source.get('policy', {}) if type(source) is dict else {}
+                selected = policy.get('sourceSelectionRef') if type(policy) is dict else None
+                try:
+                    original_selection = _analysis_exact_ref(
+                        selected, 'SourceSelectionRevision')
+                except ValueError as exc:
+                    raise ValueError('original source selection is unavailable') from exc
+                expected_selection = ResourceRef(
+                    resourceType='SourceSelectionRevision',
+                    resourceId=original_selection.resource_id,
+                    revision=str(original_selection.revision),
+                    authority='postgresql',
+                )
+                if tasks.timeline(scope, task_run_id).task.selection_ref != expected_selection:
+                    raise ValueError('Task source selection differs from original analysis')
                 borrowed = _BorrowedOwner(self.owner, transaction)
                 issuer = NaturalD01Issuer(
                     tasks, borrowed,

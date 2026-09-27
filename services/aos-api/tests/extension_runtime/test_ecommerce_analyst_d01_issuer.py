@@ -100,7 +100,8 @@ def _timeline(*, run_status='running', task_status='executing', approval='approv
     return SimpleNamespace(
         run=SimpleNamespace(id='run-1', task_id='task-1', plan_revision_id='plan-1',
                             version=2, status=run_status),
-        task=SimpleNamespace(id='task-1', version=3, status=task_status),
+        task=SimpleNamespace(id='task-1', version=3, status=task_status,
+            selection_ref=_resource('SourceSelectionRevision','source-selection-1')),
         plan=SimpleNamespace(id='plan-1', task_id='task-1', revision=1,
                              approval_status=approval, steps=steps,
                              dependencies=[], risk={}, content_hash=content_hash),
