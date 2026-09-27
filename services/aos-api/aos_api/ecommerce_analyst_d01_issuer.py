@@ -202,6 +202,14 @@ class NaturalD01Issuer:
         inputs = refs.input_refs
         identities = {(ref.resource_type, ref.resource_id, ref.revision, ref.authority)
                       for ref in inputs}
+        approved_inputs = plan.steps[0].input_refs
+        approved_identities = {
+            (ref.resource_type, ref.resource_id, ref.revision, ref.authority)
+            for ref in approved_inputs
+        }
+        if (not approved_inputs or len(approved_identities) != len(approved_inputs)
+                or approved_identities != identities):
+            raise ValueError('approved portrait source inventory differs from D01 inputs')
         if (len(identities) != len(inputs) or not _SOURCE_KINDS.issubset(
                 {ref.resource_type for ref in inputs})
                 or identities != _packet_ref_keys(packet)

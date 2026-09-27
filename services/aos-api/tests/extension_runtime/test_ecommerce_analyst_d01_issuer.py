@@ -90,11 +90,16 @@ def _timeline(*, run_status='running', task_status='executing', approval='approv
                            revision='1', authority='aip-assignee-directory')
     steps = [SimpleNamespace(step_key=key, applicability='applicable',
                              assignee_refs=[assignee],
+                             input_refs=list(_request().run.input_refs) if key == 'portrait' else [],
                              model_dump=lambda **_kwargs: {'stepKey': key}) for key in
              ('portrait', 'diagnosis', 'solution-design')]
     # Preserve each step's key when serializing the approved plan.
     for step in steps:
-        step.model_dump = lambda _step=step, **_kwargs: {'stepKey': _step.step_key}
+        step.model_dump = lambda _step=step, **_kwargs: {
+            'stepKey': _step.step_key,
+            'inputRefs': [ref.model_dump(mode='json', by_alias=True)
+                          for ref in _step.input_refs],
+        }
     content_hash = _canonical_hash({'steps': [step.model_dump() for step in steps],
                                     'dependencies': [], 'risk': {}})
     return SimpleNamespace(
@@ -153,6 +158,27 @@ def test_missing_source_inventory_never_calls_owner():
     issuer, calls = _issuer()
     with pytest.raises(ValueError):
         issuer.issue(SCOPE, 'run-1', _request(input_refs=[_resource('MethodRevision', 'method-1')]), _packet(),
+                     actor='analyst-owner', occurred_at=NOW)
+    assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
+
+
+@pytest.mark.parametrize('plan_inputs', [
+    [],
+    [_resource('MethodRevision', 'other-method'),
+     *[ref for ref in _request().run.input_refs if ref.resource_type != 'MethodRevision']],
+    [*_request().run.input_refs, _resource('QueryResultRevision', 'extra-query')],
+    [*_request().run.input_refs, _request().run.input_refs[0]],
+])
+def test_approved_plan_portrait_inputs_must_equal_d01_packet(plan_inputs):
+    timeline = _timeline()
+    timeline.plan.steps[0].input_refs = plan_inputs
+    timeline.plan.content_hash = _canonical_hash({
+        'steps': [step.model_dump() for step in timeline.plan.steps],
+        'dependencies': [], 'risk': {},
+    })
+    issuer, calls = _issuer(timeline)
+    with pytest.raises(ValueError, match='approved portrait source inventory'):
+        issuer.issue(SCOPE, 'run-1', _request(), _packet(),
                      actor='analyst-owner', occurred_at=NOW)
     assert not any(len(item) == 3 and item[0] == SCOPE for item in calls)
 
