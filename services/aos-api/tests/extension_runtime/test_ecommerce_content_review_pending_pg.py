@@ -112,7 +112,7 @@ def _upgrade_test_clone_to_head(connect):
     finally:
         engine.dispose()
     with connect(SCOPE) as conn:
-        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_106"
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_111"
         assert conn.execute("SELECT to_regprocedure(%s) AS procedure",
             ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
 
@@ -249,13 +249,24 @@ def _seed_original_run_and_budget(connect, *, eval_gate=None):
     }
     proposal_hash = canonical_hash(stable)
     with connect(SCOPE) as conn:
+        assert conn.info.dbname.startswith("a0v_growth_graph_test_")
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_111"
+        assert conn.execute("""SELECT count(*) AS n FROM pg_trigger
+            WHERE tgrelid='public.aip_budget_revision'::regclass
+              AND tgname='aip_budget_active_insert_guard'""").fetchone()["n"] == 1
         insert(conn, "aip_budget_head", budget_id="content-p2g-budget", current_revision=1)
+        # Historical active reader seed in this disposable clone only. The
+        # transactional DDL rolls back if insertion or re-enabling fails.
+        conn.execute("ALTER TABLE public.aip_budget_revision DISABLE TRIGGER aip_budget_active_insert_guard")
         insert(conn, "aip_budget_revision", budget_id="content-p2g-budget", revision=1,
             content_hash=budget_hash, lifecycle="active", environment="development",
             currency="CNY", daily_limit_minor=500, monthly_limit_minor=900,
             alert_threshold_pct=80, hard_stop=True, unknown_usage_behavior="block",
             effective_from=now - timedelta(days=1), effective_until=now + timedelta(days=7),
             owner="fixture", over_budget_approver="reviewer", payload={}, created_by="fixture")
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.execute("ALTER TABLE public.aip_budget_revision ENABLE TRIGGER aip_budget_active_insert_guard")
+    with connect(SCOPE) as conn:
         insert(conn, "aip_model_price_snapshot_head", model_price_snapshot_id="content-p2g-price",
             current_revision=1)
         insert(conn, "aip_model_price_snapshot_revision", model_price_snapshot_id="content-p2g-price",
