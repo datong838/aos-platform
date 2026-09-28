@@ -447,6 +447,48 @@ def test_runtime_apply_is_receipt_first_and_sets_location() -> None:
     assert call["kind"] == "runtime-apply"
     assert call["org_id"] == "org-org"
     assert "target" not in call
+    assert call["preparation_admission"]() is False
+
+
+def test_runtime_view_does_not_advertise_preparation_without_a_running_host() -> None:
+    control = _control_plane()
+    response = TestClient(_app(control)).get(
+        f"/v1/bundle-runtime-installations/{INSTALLATION_ID}",
+        headers={"Authorization": "Bearer ignored"},
+    )
+    assert response.status_code == 200
+    assert response.json()["preparationExecutable"] is False
+
+
+def test_runtime_view_admits_only_current_exact_tenant_host_assignment() -> None:
+    from aos_api.extension_runtime.live_installation_scheduler import LiveInstallationScheduler
+    from aos_api.extension_runtime.runtime_host import RuntimeHost, RuntimeTenantAssignment
+    from aos_api.tenant_scope import TenantScope
+
+    control = _control_plane()
+    app = _app(control)
+    tenant = TenantScope("org-org", "dev-project")
+    scheduler = object.__new__(LiveInstallationScheduler)
+    scheduler.directory = SimpleNamespace(scope=tenant)
+    assignments = [RuntimeTenantAssignment(tenant, lifecycle=scheduler)]
+    app.state.extension_runtime_host_selection = SimpleNamespace(host=RuntimeHost(assignments=lambda: tuple(assignments)))
+    app.state.extension_runtime_host_task = SimpleNamespace(done=lambda: False)
+    app.state.extension_runtime_host_status = "ACTIVE"
+    client = TestClient(app)
+    path = f"/v1/bundle-runtime-installations/{INSTALLATION_ID}"
+    headers = {"Authorization": "Bearer ignored"}
+    assert client.get(path, headers=headers).json()["preparationExecutable"] is True
+    control.view_reader.get_installation = lambda **_kwargs: _view(
+        installationState="applied", allowedActions=("runtime-verify",)
+    )
+    assert client.get(path, headers=headers).json()["preparationExecutable"] is False
+    control.view_reader.get_installation = lambda **_kwargs: _view()
+    other = TenantScope("dev-org", "dev-project")
+    other_scheduler = object.__new__(LiveInstallationScheduler)
+    other_scheduler.directory = SimpleNamespace(scope=other)
+    assignments[:] = [RuntimeTenantAssignment(other, lifecycle=other_scheduler)]
+    # A wrong-scope descriptor never grants the visible org, even when the Host task lives.
+    assert client.get(path, headers=headers).json()["preparationExecutable"] is False
 
 
 def test_configure_and_disable_dispatch_exact_targets() -> None:

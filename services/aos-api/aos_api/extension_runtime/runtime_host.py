@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import threading
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -101,6 +102,7 @@ class RuntimeHost:
         if type(recovery_page_size) is not int or not 1 <= recovery_page_size <= 100:
             raise ValueError("recovery page size must be 1..100")
         self._assignments = assignments
+        self._assignment_read_lock = threading.Lock()
         self._recovery_page_size = recovery_page_size
         self._recovery_cursors: dict[tuple[str, str], UUID | None] = {}
         self._lifecycles: dict[int, tuple[RuntimeTenantAssignment, LiveInstallationScheduler]] = {}
@@ -109,21 +111,36 @@ class RuntimeHost:
         self._closing = False
 
     def _current_assignments(self) -> tuple[RuntimeTenantAssignment, ...]:
-        current = self._assignments()
-        if inspect.isawaitable(current):
-            close = getattr(current, "close", None)
-            if callable(close):
-                close()
-            raise TypeError("runtime assignment source must be synchronous")
-        if type(current) is not tuple or len(current) > 1000:
-            raise TypeError("runtime assignments must be a bounded tuple")
-        if any(type(item) is not RuntimeTenantAssignment for item in current):
-            raise TypeError("invalid runtime assignment")
-        ordered = tuple(sorted(current, key=lambda item: item.scope.key))
-        keys = tuple(item.scope.key for item in ordered)
-        if len(keys) != len(set(keys)):
-            raise ValueError("duplicate runtime tenant assignment")
-        return ordered
+        with self._assignment_read_lock:
+            current = self._assignments()
+            if inspect.isawaitable(current):
+                close = getattr(current, "close", None)
+                if callable(close):
+                    close()
+                raise TypeError("runtime assignment source must be synchronous")
+            if type(current) is not tuple or len(current) > 1000:
+                raise TypeError("runtime assignments must be a bounded tuple")
+            if any(type(item) is not RuntimeTenantAssignment for item in current):
+                raise TypeError("invalid runtime assignment")
+            ordered = tuple(sorted(current, key=lambda item: item.scope.key))
+            keys = tuple(item.scope.key for item in ordered)
+            if len(keys) != len(set(keys)):
+                raise ValueError("duplicate runtime tenant assignment")
+            return ordered
+
+    def has_current_preparation_assignment(
+        self, scope: TenantScope, *, kind: str, installation_id: UUID,
+    ) -> bool:
+        """Current directory observation only; operation acceptance rechecks it."""
+        if (type(scope) is not TenantScope or type(installation_id) is not UUID
+                or kind not in {"runtime-apply", "runtime-verify"} or self._closing):
+            return False
+        return any(
+            assignment.scope == scope and assignment.lifecycle is not None
+            and (kind == "runtime-apply" or
+                 assignment.lifecycle.find_owner(installation_id) is not None)
+            for assignment in self._current_assignments()
+        )
 
     async def _recover(self, assignment: RuntimeTenantAssignment) -> RecoveryPage | None:
         if assignment.recovery is None:

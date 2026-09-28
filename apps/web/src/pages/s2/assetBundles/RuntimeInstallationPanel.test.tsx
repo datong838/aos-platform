@@ -70,21 +70,33 @@ describe("RuntimeInstallationPanel", () => {
     expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).filter((button) => button.textContent?.includes("运行")).every((button) => button.disabled)).toBe(true);
   });
 
+  it("does not offer preparation when the current Host has no assignment", async () => {
+    const apply = { ...runtime, installationState: "approved" as const, effectiveState: "not_prepared", binding: null, allowedActions: ["runtime-apply" as const], preparationExecutable: false };
+    const execute = vi.fn();
+    await act(async () => root.render(<RuntimeInstallationPanel state={{ data: apply, status: "ready", error: null, refreshing: false, stale: false, reload: vi.fn() }} offline={false} pending={null} error={null} receipt={null} hasRetrySameCommand={false} canRetrySameCommand={false} onRetrySameCommand={vi.fn()} onExecute={execute} />));
+    const prepare = Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find(button => button.textContent === "准备运行资源")!;
+    expect(prepare.disabled).toBe(true);
+    expect(host.textContent).toContain("Host");
+    expect(execute).not.toHaveBeenCalled();
+  });
+
   it("在断网、过期、刷新或服务端撤回动作时关闭已打开的确认框", async () => {
     const baseState = { data: runtime, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn() };
-    const props = { state: baseState, offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: true, canRetrySameCommand: true, onRetrySameCommand: vi.fn(), onExecute: vi.fn() };
+    const props = { state: baseState, offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: false, canRetrySameCommand: true, onRetrySameCommand: vi.fn(), onExecute: vi.fn() };
     await act(async () => root.render(<RuntimeInstallationPanel {...props} />));
     await act(async () => Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "停用运行实例")!.click());
     expect(host.querySelector('[role="dialog"]')).not.toBeNull();
     await act(async () => root.render(<RuntimeInstallationPanel {...props} offline />));
     expect(host.querySelector('[role="dialog"]')).toBeNull();
     const retry = () => Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent?.includes("原幂等命令"));
-    expect(retry()?.disabled).toBe(true);
+    expect(retry()).toBeUndefined();
+    await act(async () => root.render(<RuntimeInstallationPanel {...props} hasRetrySameCommand />));
+    expect(host.textContent).toContain("结果未知：已冻结重发");
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find(button => button.textContent === "停用运行实例")?.disabled).toBe(true);
 
     await act(async () => root.render(<RuntimeInstallationPanel {...props} />));
-    expect(retry()?.disabled).toBe(false);
-    await act(async () => retry()?.click());
-    expect(props.onRetrySameCommand).toHaveBeenCalledTimes(1);
+    expect(retry()).toBeUndefined();
+    expect(props.onRetrySameCommand).not.toHaveBeenCalled();
 
     await act(async () => Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "停用运行实例")!.click());
     await act(async () => root.render(<RuntimeInstallationPanel {...props} state={{ ...baseState, stale: true }} />));
@@ -100,13 +112,13 @@ describe("RuntimeInstallationPanel", () => {
     await act(async () => root.render(<RuntimeInstallationPanel {...props} state={{ ...baseState, data: { ...runtime, allowedActions: ["configure"] } }} />));
     expect(host.querySelector('[role="dialog"]')).toBeNull();
     await act(async () => root.render(<RuntimeInstallationPanel {...props} canRetrySameCommand={false} state={{ ...baseState, data: { ...runtime, allowedActions: ["configure"] } }} />));
-    expect(retry()?.disabled).toBe(true);
+    expect(retry()).toBeUndefined();
   });
 
   it("在 binding 身份变化时关闭确认框且不把目标改绑到新代次", async () => {
     const execute = vi.fn();
     const baseState = { data: runtime, status: "ready" as const, error: null, refreshing: false, stale: false, reload: vi.fn() };
-    const props = { state: baseState, offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: true, canRetrySameCommand: true, onRetrySameCommand: vi.fn(), onExecute: execute };
+    const props = { state: baseState, offline: false, pending: null, error: null, receipt: null, hasRetrySameCommand: false, canRetrySameCommand: true, onRetrySameCommand: vi.fn(), onExecute: execute };
     await act(async () => root.render(<RuntimeInstallationPanel {...props} />));
     await act(async () => Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "停用运行实例")!.click());
     expect(host.querySelector('[role="dialog"]')).not.toBeNull();
@@ -117,7 +129,7 @@ describe("RuntimeInstallationPanel", () => {
     };
     await act(async () => root.render(<RuntimeInstallationPanel {...props} canRetrySameCommand={false} state={{ ...baseState, data: nextRuntime }} />));
     expect(host.querySelector('[role="dialog"]')).toBeNull();
-    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent?.includes("原幂等命令"))?.disabled).toBe(true);
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find((button) => button.textContent?.includes("原幂等命令"))).toBeUndefined();
     expect(execute).not.toHaveBeenCalled();
   });
 

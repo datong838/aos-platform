@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from uuid import UUID
 
 from typing import Annotated, Any, Literal
 
@@ -123,6 +124,30 @@ def get_runtime_view_reader(request: Request) -> Any:
     return reader
 
 
+def current_preparation_executable(
+    request: Request, *, org_id: str, project_id: str,
+    installation_id: str, kind: str,
+) -> bool:
+    """Read the current process Host and exact directory scope; unknown is closed."""
+    state = request.app.state
+    task = getattr(state, "extension_runtime_host_task", None)
+    selection = getattr(state, "extension_runtime_host_selection", None)
+    try:
+        if (getattr(state, "extension_runtime_host_status", None) != "ACTIVE"
+                or task is None or task.done() or selection is None):
+            return False
+        from aos_api.extension_runtime.runtime_host import RuntimeHost
+        host = getattr(selection, "host", None)
+        if type(host) is not RuntimeHost:
+            return False
+        return host.has_current_preparation_assignment(
+            TenantScope(org_id=org_id, project_id=project_id),
+            kind=kind, installation_id=UUID(installation_id),
+        ) is True
+    except Exception:
+        return False
+
+
 def get_runtime_configuration_candidate_reader() -> RuntimeConfigurationCandidateReader:
     return RuntimeConfigurationCandidateReader()
 
@@ -210,7 +235,7 @@ def get_bundle_runtime_installation(
         if (len(request.query_params.getlist('route')) != 1 or len(requested_route) > 512
                 or not _canonical_route(requested_route)):
             raise ApiError(code='RUNTIME_UI_ROUTE_INVALID', message='请提供唯一、有效的工作台路径。', status_code=422)
-    return _invoke(lambda: view_reader.get_installation(
+    view = _invoke(lambda: view_reader.get_installation(
         installation_id=installation_id,
         org_id=principal.org_id,
         project_id=principal.project_id,
@@ -218,6 +243,11 @@ def get_bundle_runtime_installation(
         markings=principal.markings,
         **({'requested_route': requested_route} if requested_route is not None else {}),
     ))
+    return view.model_copy(update={"preparationExecutable": current_preparation_executable(
+        request, org_id=principal.org_id, project_id=principal.project_id,
+        installation_id=installation_id,
+        kind="runtime-apply" if view.installationState == "approved" else "runtime-verify",
+    )})
 
 
 @router.get(
@@ -308,7 +338,11 @@ def create_bundle_runtime_operation(
         if_match=if_match,
     )
     if body.kind in {"runtime-apply", "runtime-verify"}:
-        receipt = _invoke(lambda: control_plane.lifecycle_service.request_preparation(kind=body.kind, **common))
+        receipt = _invoke(lambda: control_plane.lifecycle_service.request_preparation(
+            kind=body.kind, preparation_admission=lambda: current_preparation_executable(
+                request, org_id=principal.org_id, project_id=principal.project_id,
+                installation_id=installation_id, kind=body.kind,
+            ), **common))
     elif body.kind in {"configure", "enable"}:
         receipt = _invoke(lambda: control_plane.configuration_service.request(kind=body.kind, target=body.target, **common))
     else:

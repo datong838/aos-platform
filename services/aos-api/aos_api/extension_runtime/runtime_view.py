@@ -84,6 +84,7 @@ class RuntimeInstallationView(BaseModel):
     installationEtag: int = Field(ge=1)
     installationState: str
     legacyContentEligible: bool | None = None
+    preparationExecutable: bool | None = None
     effectiveState: str
     binding: RuntimeBindingView | None
     currentOperation: RuntimeOperationView | None

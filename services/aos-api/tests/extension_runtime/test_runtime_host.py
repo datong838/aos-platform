@@ -158,6 +158,22 @@ def test_consumer_order_is_fixed_independent_of_input_order():
     assert [call[0] for call in calls] == ["configuration", "disable"]
 
 
+def test_preparation_admission_requires_current_exact_lifecycle_assignment():
+    tenant = scope("org-org", "dev-project")
+    other = scope("dev-org", "dev-project")
+    installation = UUID(int=777)
+    current = [RuntimeTenantAssignment(tenant, lifecycle=lifecycle([], tenant, installation=installation))]
+    host = RuntimeHost(assignments=lambda: tuple(current))
+    assert host.has_current_preparation_assignment(tenant, kind="runtime-apply", installation_id=installation) is True
+    assert host.has_current_preparation_assignment(tenant, kind="runtime-verify", installation_id=installation) is True
+    assert host.has_current_preparation_assignment(tenant, kind="runtime-verify", installation_id=UUID(int=778)) is False
+    assert host.has_current_preparation_assignment(other, kind="runtime-apply", installation_id=installation) is False
+    current[:] = [RuntimeTenantAssignment(tenant, consumers=(configuration([]),))]
+    assert host.has_current_preparation_assignment(tenant, kind="runtime-apply", installation_id=installation) is False
+    current.clear()
+    assert host.has_current_preparation_assignment(tenant, kind="runtime-apply", installation_id=installation) is False
+
+
 def test_lifecycle_runs_after_recovery_before_configure_and_claimed_disable_revoke():
     calls = []
     tenant = scope("org", "project")

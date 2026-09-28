@@ -17,7 +17,8 @@ def setup_service():
     validator.revalidate_in_transaction.return_value.runtime_members=("runtime-test",)
     service=RuntimeLifecycleService(installation_store=store,installation_reader=reader,revalidator=validator)
     args=dict(installation_id=str(uuid4()),kind="runtime-apply",org_id="org-org",project_id="dev-project",
-        actor="installer",roles=["asset-installer"],markings=[],idempotency_key="test",if_match='"3"')
+        actor="installer",roles=["asset-installer"],markings=[],idempotency_key="test",if_match='"3"',
+        preparation_admission=lambda: True)
     return service,args,store,reader,validator,conn
 
 
@@ -50,6 +51,24 @@ def test_unauthorized_request_does_not_read_or_write():
     with pytest.raises(DutySeparationRequiredError):
         service.request_preparation(**{**args,"roles":["developer"]})
     reader.get.assert_not_called();store.execute_idempotent.assert_not_called()
+
+
+def test_new_preparation_refuses_missing_host_without_operation_or_receipt():
+    service,args,store,_,_,_=setup_service()
+    with patch("aos_api.extension_runtime.lifecycle_service._load_current_lock"),patch(
+        "aos_api.extension_runtime.lifecycle_service._require_lock_markings"),patch(
+        "aos_api.extension_runtime.lifecycle_service.RuntimeOperationStore") as operations:
+        with pytest.raises(RuntimeConflict, match="host"):
+            service.request_preparation(**{**args, "preparation_admission": lambda: False})
+    operations.return_value.accept.assert_not_called()
+
+
+def test_existing_preparation_receipt_replay_does_not_require_new_host_admission():
+    service,args,store,_,_,_=setup_service()
+    original = object()
+    store.execute_idempotent.side_effect = None
+    store.execute_idempotent.return_value = original
+    assert service.request_preparation(**{**args, "preparation_admission": lambda: False}) is original
 
 
 @pytest.mark.parametrize("action",["submit","apply"])

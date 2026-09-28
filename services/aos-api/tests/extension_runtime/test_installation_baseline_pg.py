@@ -160,7 +160,8 @@ def test_existing_installation_schema_accepts_subordinate_operation(commit_case,
             service=RuntimeLifecycleService(installation_store=store,installation_reader=reader,revalidator=validator)
             args=dict(installation_id=second.installation_id,kind="runtime-apply",org_id="org-a",project_id="project-a",
                 actor="test-actor",roles=["asset-installer"],markings=lock.payload.permission_diff.target.markings,
-                idempotency_key="runtime-receipt",if_match=f'"{approved.etag_version}"')
+                idempotency_key="runtime-receipt",if_match=f'"{approved.etag_version}"',
+                preparation_admission=lambda: True)
             accepted=service.request_preparation(**args)
             replay=service.request_preparation(**args)
             assert accepted.status_code==202 and replay.replayed and replay.response_json==accepted.response_json

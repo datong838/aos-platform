@@ -11,7 +11,8 @@ from aos_api.asset_registry.errors import AssetRegistryError
 def run_verification_case(connect,store,validator,service,action,scope,applied,preparation,generation,case):
     from aos_api.extension_runtime.verification_commit import commit_verified
     requested = service.request_preparation(**{**action,'kind':'runtime-verify',
-        'idempotency_key':'verify-test','if_match':f'"{applied.etag_version}"'})
+        'idempotency_key':'verify-test','if_match':f'"{applied.etag_version}"',
+        'preparation_admission':lambda: True})
     operation = requested.response_json['operationId']
     now = datetime.now(timezone.utc)
     if case=='locked_unrelated':

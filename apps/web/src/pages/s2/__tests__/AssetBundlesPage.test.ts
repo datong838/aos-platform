@@ -629,8 +629,11 @@ describe("M3-4/M3-5 AssetBundlesPage integration", () => {
     expect(canExecuteRuntimeAction({ ...base, stale: true })).toBe(false);
     expect(canExecuteRuntimeAction({ ...base, refreshing: true })).toBe(false);
     expect(canExecuteRuntimeAction({ ...base, pending: "configure" })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, unknownOutcome: true })).toBe(false);
     expect(canExecuteRuntimeAction({ ...base, runtime: { ...runtime, allowedActions: [] } })).toBe(false);
     expect(canExecuteRuntimeAction({ ...base, installationId: "33333333-3333-4333-8333-333333333333" })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, kind: "runtime-apply", runtime: { ...runtime, allowedActions: ["runtime-apply"], preparationExecutable: false }, preparationExecutable: false })).toBe(false);
+    expect(canExecuteRuntimeAction({ ...base, kind: "runtime-apply", runtime: { ...runtime, allowedActions: ["runtime-apply"], preparationExecutable: true }, preparationExecutable: true })).toBe(true);
     expect(runtimeBindingIdentity(runtime)).toBe("no-binding");
     expect(runtimeBindingIdentity({ ...runtime, binding: {
       generation: "44444444-4444-4444-8444-444444444444",

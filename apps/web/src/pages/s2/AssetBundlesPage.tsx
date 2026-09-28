@@ -103,6 +103,8 @@ interface RuntimeActionPreflight {
   readonly stale: boolean;
   readonly refreshing: boolean;
   readonly pending: RuntimeAction | null;
+  readonly preparationExecutable?: boolean;
+  readonly unknownOutcome?: boolean;
 }
 
 export function canExecuteRuntimeAction({
@@ -113,16 +115,21 @@ export function canExecuteRuntimeAction({
   stale,
   refreshing,
   pending,
+  preparationExecutable,
+  unknownOutcome,
 }: RuntimeActionPreflight): boolean {
   return Boolean(
     installationId &&
     runtime &&
     runtime.installationId === installationId &&
     runtime.allowedActions.includes(kind) &&
+    ((kind !== "runtime-apply" && kind !== "runtime-verify") ||
+      (preparationExecutable === true && runtime.preparationExecutable === true)) &&
     !offline &&
     !stale &&
     !refreshing &&
-    pending === null,
+    pending === null &&
+    unknownOutcome !== true,
   );
 }
 
@@ -241,6 +248,13 @@ export function AssetBundlesPage() {
     runtimeInstallationState.data.installationEtag === actionInstallation.etagVersion
       ? runtimeInstallationState.data.legacyContentEligible ?? null
       : null;
+  const runtimePreparationExecutable = Boolean(actionInstallation &&
+    runtimeInstallationState.status === "ready" &&
+    !runtimeInstallationState.stale && !runtimeInstallationState.refreshing &&
+    runtimeInstallationState.data?.installationId === actionInstallation.installationId &&
+    runtimeInstallationState.data.installationRevision === actionInstallation.currentRevision &&
+    runtimeInstallationState.data.installationEtag === actionInstallation.etagVersion &&
+    runtimeInstallationState.data.preparationExecutable === true);
   const actionCommands = useInstallationActionCommands({
     installation: actionInstallation,
     principal: {
@@ -311,6 +325,8 @@ export function AssetBundlesPage() {
       stale: runtimeInstallationState.stale,
       refreshing: runtimeInstallationState.refreshing,
       pending: runtimePending,
+      preparationExecutable: runtimePreparationExecutable,
+      unknownOutcome: runtimeRetry !== null,
     }) || runtimeInFlight.current) return;
     if (
       attempt.installationId !== installationId ||
@@ -352,6 +368,8 @@ export function AssetBundlesPage() {
       stale: runtimeInstallationState.stale,
       refreshing: runtimeInstallationState.refreshing,
       pending: runtimePending,
+      preparationExecutable: runtimePreparationExecutable,
+      unknownOutcome: runtimeRetry !== null,
     })) return;
     const command = createIdempotentCommand();
     void executeRuntimeAttempt({
@@ -396,21 +414,6 @@ export function AssetBundlesPage() {
     versionDetailState.status === "ready" &&
     versionDetailState.data?.status === "published" &&
     versionDetailState.data.signature,
-  );
-  const runtimeRetryAllowed = Boolean(
-    runtimeRetry &&
-    canExecuteRuntimeAction({
-      installationId,
-      runtime: runtimeInstallationState.data,
-      kind: runtimeRetry.body.kind,
-      offline: actionRuntime.offline,
-      stale: runtimeInstallationState.stale,
-      refreshing: runtimeInstallationState.refreshing,
-      pending: runtimePending,
-    }) &&
-    runtimeRetry.installationId === installationId &&
-    runtimeRetry.etagVersion === runtimeInstallationState.data?.installationEtag &&
-    runtimeRetry.bindingIdentity === runtimeBindingIdentity(runtimeInstallationState.data),
   );
   const resolveDisabledReason = replacementBusy
     ? "正在重新准备替换计划，请等待当前核验完成"
@@ -533,9 +536,10 @@ export function AssetBundlesPage() {
             pending={runtimePending}
             error={runtimeError}
             receipt={runtimeReceipt}
+            preparationExecutable={runtimePreparationExecutable}
             hasRetrySameCommand={runtimeRetry !== null}
-            canRetrySameCommand={runtimeRetryAllowed}
-            onRetrySameCommand={() => { if (runtimeRetry) void executeRuntimeAttempt(runtimeRetry); }}
+            canRetrySameCommand={false}
+            onRetrySameCommand={() => {}}
             onExecute={executeRuntimeAction}
           />
           {actionCommands.state.error && (

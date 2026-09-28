@@ -322,6 +322,7 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
                 idempotency_key="d6d2-approve" + suffix, if_match=f'"{submitted.etag_version}"')
             approved = store.get_installation(**scope_dict, installation_id=draft.installation_id)
             accepted = lifecycle.request_preparation(**action, kind="runtime-apply",
+                preparation_admission=lambda: True,
                 idempotency_key="d6d2-runtime-apply" + suffix,
                 if_match=f'"{approved.etag_version}"')
             worker = PreparationWorker(connect=runtime_connect, driver=OciDriver(context=context),
@@ -336,6 +337,7 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
                 expected_revision=accepted.response_json["revision"])
             applied = await job.prepared()
             requested = lifecycle.request_preparation(**action, kind="runtime-verify",
+                preparation_admission=lambda: True,
                 idempotency_key="d6d2-runtime-verify" + suffix, if_match=f'"{applied.etag_version}"')
             verified = await job.verify(operation_id=requested.response_json["operationId"],
                 expected_revision=requested.response_json["revision"])

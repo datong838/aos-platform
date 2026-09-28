@@ -113,6 +113,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
             idempotency_key='signed-approve',if_match=f'"{submitted.etag_version}"')
         approved=store.get_installation(**scope,installation_id=draft.installation_id)
         accepted=service.request_preparation(**action,kind='runtime-apply',idempotency_key='signed-prepare',
+            preparation_admission=lambda: True,
             if_match=f'"{approved.etag_version}"')
         operation=accepted.response_json['operationId']
         generation=uuid.uuid4()

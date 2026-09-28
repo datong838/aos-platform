@@ -44,7 +44,8 @@ class RuntimeLifecycleService:
                 if_match=etag), handler=handler)
 
     def request_preparation(self, *, installation_id, kind, org_id, project_id, actor,
-                            roles, markings, idempotency_key, if_match):
+                            roles, markings, idempotency_key, if_match,
+                            preparation_admission):
         operations={"runtime-apply":(APPLY_INSTALLATION_OPERATION,"approved"),
                     "runtime-verify":(VERIFY_INSTALLATION_OPERATION,"applied")}
         if kind not in operations:
@@ -74,6 +75,12 @@ class RuntimeLifecycleService:
             checked=self._revalidator.revalidate_in_transaction(conn,lock=lock)
             if not checked.runtime_members:
                 raise RuntimeConflict("pure content uses the existing installation workflow")
+            try:
+                admitted = preparation_admission() is True
+            except Exception:
+                admitted = False
+            if not admitted:
+                raise RuntimeConflict("current runtime host preparation assignment unavailable")
             result=RuntimeOperationStore().accept(conn,org_id=org_id,project_id=project_id,
                 installation_id=installation_id,kind=kind,idempotency_key=key,requested_by=actor,
                 expected_installation_etag=revision,deadline=checked.checked_at+timedelta(minutes=5))

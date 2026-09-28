@@ -60,6 +60,7 @@ export interface RuntimeInstallationPanelProps {
   pending: RuntimeAction | null;
   error: AssetControlError | null;
   receipt: RuntimeOperationAccepted | null;
+  preparationExecutable?: boolean;
   hasRetrySameCommand: boolean;
   canRetrySameCommand: boolean;
   onRetrySameCommand: () => void;
@@ -68,7 +69,7 @@ export interface RuntimeInstallationPanelProps {
 
 const panelStyle = { border: "1px solid var(--aos-border)", borderRadius: 3, padding: 12 } as const;
 
-export function RuntimeInstallationPanel({ state, configurations, candidates, offline, pending, error, receipt, hasRetrySameCommand, canRetrySameCommand, onRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
+export function RuntimeInstallationPanel({ state, configurations, candidates, offline, pending, error, receipt, preparationExecutable = false, hasRetrySameCommand, onExecute }: RuntimeInstallationPanelProps) {
   const runtime = state.data;
   const [selected, setSelected] = useState<RuntimeAction | null>(null);
   const [configurationChoice, setConfigurationChoice] = useState("");
@@ -95,15 +96,17 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
     };
   }, [runtime]);
 
-  const interactionBlocked = offline || pending !== null || state.stale || state.refreshing;
+  const interactionBlocked = offline || pending !== null || state.stale || state.refreshing || hasRetrySameCommand;
+  const preparationBlocked = (action: RuntimeAction) =>
+    (action === "runtime-apply" || action === "runtime-verify") && !preparationExecutable;
   const allowedActionKey = runtime?.allowedActions.join("\u0000") ?? "";
   const bindingIdentityKey = runtime?.binding
     ? `${runtime.binding.generation}\u0000${runtime.binding.revision}\u0000${runtime.binding.executionEpoch}`
     : "";
   useEffect(() => setSelected(null), [runtime?.installationId, runtime?.installationRevision, bindingIdentityKey]);
   useEffect(() => {
-    if (selected && (interactionBlocked || !runtime?.allowedActions.includes(selected))) setSelected(null);
-  }, [allowedActionKey, interactionBlocked, runtime?.allowedActions, selected]);
+    if (selected && (interactionBlocked || preparationBlocked(selected) || !runtime?.allowedActions.includes(selected))) setSelected(null);
+  }, [allowedActionKey, interactionBlocked, preparationExecutable, runtime?.allowedActions, selected]);
 
   function target(kind: RuntimeAction): Record<string, JsonValue> | undefined {
     if (kind === "runtime-apply" || kind === "runtime-verify") return undefined;
@@ -144,6 +147,7 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
             <div><dt>执行纪元 / binding revision</dt><dd>{runtime.binding ? `${runtime.binding.executionEpoch} / ${runtime.binding.revision}` : "—"}</dd></div>
           </dl>
           {runtime.reasons.map((reason) => <p role="status" key={reason}>{reason}</p>)}
+          {!preparationExecutable && runtime.allowedActions.some(action => action === "runtime-apply" || action === "runtime-verify") && <p role="alert">当前 Host 或租户 Owner 尚未核验为可执行；运行准备/验证已禁入，请先完成正式运行准入。</p>}
           <section aria-label="当前配置权威候选" style={{ margin: "10px 0" }}>
             <h4>当前配置权威候选</h4>
             <p>以下是当前租户的正式候选数，不代表已绑定本安装，也不代表可以启用。运行准入仍由服务端逐项复验。</p>
@@ -180,7 +184,7 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {runtime.allowedActions.map((action) => (
-              <button key={action} type="button" className={action === "disable" ? "btn" : "btn btn-primary"} disabled={interactionBlocked} onClick={() => setSelected(action)}>{LABELS[action]}</button>
+              <button key={action} type="button" className={action === "disable" ? "btn" : "btn btn-primary"} disabled={interactionBlocked || preparationBlocked(action)} onClick={() => setSelected(action)}>{LABELS[action]}</button>
             ))}
           </div>
           {runtime.allowedActions.length === 0 && !runtime.currentOperation && <p role="status">当前状态没有可执行的运行动作。</p>}
@@ -204,13 +208,13 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
               {(selected === "runtime-apply" || selected === "runtime-verify") && <p>该操作只提交运行准备回执，不会由浏览器直接执行外部副作用。</p>}
               <div style={{ display: "flex", gap: 8 }}>
                 <button className="btn" type="button" disabled={pending !== null} onClick={() => setSelected(null)}>取消</button>
-                <button className="btn btn-primary" type="button" disabled={interactionBlocked || !runtime.allowedActions.includes(selected) || !configureValid || !targetValid} onClick={() => { if (selected === "configure" && (!selectedConfiguration || !configurations?.isCurrent())) return; onExecute(selected, selectedTarget); setSelected(null); }}>确认{LABELS[selected]}</button>
+                <button className="btn btn-primary" type="button" disabled={interactionBlocked || preparationBlocked(selected) || !runtime.allowedActions.includes(selected) || !configureValid || !targetValid} onClick={() => { if (preparationBlocked(selected) || (selected === "configure" && (!selectedConfiguration || !configurations?.isCurrent()))) return; onExecute(selected, selectedTarget); setSelected(null); }}>确认{LABELS[selected]}</button>
               </div>
             </section>
           )}
           {receipt && <p role="status">运行操作已受理 · {receipt.phase} / {receipt.status} · 回执 {receipt.operationId}</p>}
           {error && <p role="alert">运行操作失败：{error.message}</p>}
-          {hasRetrySameCommand && <button type="button" className="btn" disabled={interactionBlocked || !canRetrySameCommand} onClick={onRetrySameCommand}>先刷新并使用原幂等命令恢复</button>}
+          {hasRetrySameCommand && <p role="alert">运行命令结果未知：已冻结重发，请只读核对服务端操作与回执；不要更换幂等键或再次提交。</p>}
           {hostSpec && (
             <ExtensionHost
               spec={hostSpec}
