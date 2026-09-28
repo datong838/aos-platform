@@ -51,9 +51,9 @@ def test_old_database_credential_rejected_before_identity_connection(gate, monke
     monkeypatch.setattr(gate, "signed_preflight", lambda **_: (
         {"dbname": "aos_current_preview_20260927"},
         {"database": "aos_current_preview_20260927"}))
-    monkeypatch.setattr(gate, "_runtime_file_dsns", lambda *_: {
+    monkeypatch.setattr(gate, "_runtime_file_dsns", lambda *_a, **_k: ({
         plane: f"host=localhost dbname=aos_meta_head user={plane}"
-        for plane in ("directory", "runtime", "web")})
+        for plane in ("directory", "runtime", "web")}, [1, 2, 3, 4, 5]))
     monkeypatch.setattr(gate.psycopg, "connect", lambda *_a, **_k: pytest.fail("database connected"))
     with pytest.raises(gate.HostPreflightBlocked, match="CREDENTIAL_DATABASE_DRIFT"):
         gate.preflight(signed_receipt=Path("/signed"), credential_file=Path("/protected/old.json"))
@@ -119,9 +119,9 @@ def test_green_report_carries_exact_physical_authority_and_signed_paths(gate, mo
     signed = {"database": "aos_current_preview_20260927", "installationId": "current-install",
               "signedRoot": "/signed/current", "trustRoots": "/signed/trust-roots.json"}
     monkeypatch.setattr(gate, "signed_preflight", lambda **_: ({"dbname": signed["database"]}, signed))
-    monkeypatch.setattr(gate, "_runtime_file_dsns", lambda *_: {
+    monkeypatch.setattr(gate, "_runtime_file_dsns", lambda *_a, **_k: ({
         plane: f"dbname={signed['database']} user={plane}"
-        for plane in ("directory", "runtime", "web")})
+        for plane in ("directory", "runtime", "web")}, [1, 2, 3, 4, 5]))
 
     class Conn:
         read_only = False
@@ -147,4 +147,17 @@ def test_green_report_carries_exact_physical_authority_and_signed_paths(gate, mo
     assert report["databaseAuthority"] == ["172.0.0.2", 5432, signed["database"]]
     assert report["signedRoot"] == signed["signedRoot"]
     assert report["trustRoots"] == signed["trustRoots"]
+    assert report["credentialFileGeneration"] == [1, 2, 3, 4, 5]
     assert report["authorization"] == "PREFLIGHT_ONLY_NO_RUNTIME_START"
+    generations = iter(([1, 2, 3, 4, 5], [1, 2, 3, 4, 6]))
+    monkeypatch.setattr(gate, "_runtime_file_dsns", lambda *_a, **_k: ({
+        plane: f"dbname={signed['database']} user={plane}"
+        for plane in ("directory", "runtime", "web")}, next(generations)))
+    roles = {"directory": identity("directory", 1, directory=True),
+             "runtime": identity("runtime", 2, runtime=True),
+             "web": identity("web", 3)}
+    monkeypatch.setattr(gate, "probe_runtime_database_identity",
+                        lambda conn, **kw: roles.pop(next(iter(roles))))
+    with pytest.raises(gate.HostPreflightBlocked, match="CREDENTIAL_FILE_CHANGED"):
+        gate.preflight(signed_receipt=Path("/signed/receipt.json"),
+                       credential_file=Path("/protected/identities.json"))

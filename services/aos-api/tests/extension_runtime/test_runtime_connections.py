@@ -160,3 +160,33 @@ def test_worker_dsn_selection_never_returns_web_fallback(monkeypatch,tmp_path):
     assert module.runtime_worker_dsn()=='runtime'
     path.chmod(0o644)
     with pytest.raises(RuntimeError):module.runtime_worker_dsn()
+
+
+@pytest.mark.parametrize('change', ['replace', 'rewrite', 'reference'])
+def test_pinned_credential_generation_blocks_drift_before_connection(monkeypatch, tmp_path, change):
+    import json
+    from aos_api.extension_runtime import runtime_connections as module
+    path = credential_file(tmp_path)
+    monkeypatch.setattr(module, '_PINNED_RUNTIME_FILE', None, raising=False)
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', str(path))
+    monkeypatch.setattr(module.psycopg, 'connect',
+                        lambda *_a, **_k: pytest.fail('drifted identity connected'))
+    _dsns, generation = module._runtime_file_dsns(path, with_generation=True)
+    module.pin_runtime_file_generation(path, generation)
+    changed = {name: {'dsn': name + '-changed', 'password': 'private-fixture', 'role': name}
+               for name in ('web', 'runtime', 'directory')}
+    if change == 'replace':
+        other = tmp_path / 'replacement.json'
+        other.write_text(json.dumps(changed), encoding='utf-8')
+        other.chmod(0o600)
+        other.replace(path)
+    elif change == 'rewrite':
+        path.write_text(json.dumps(changed), encoding='utf-8')
+    else:
+        other = tmp_path / 'other.json'
+        other.write_text(json.dumps(changed), encoding='utf-8')
+        other.chmod(0o600)
+        monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', str(other))
+    with pytest.raises(RuntimeError, match='runtime credential reference is invalid'):
+        with module.runtime_worker_connection():
+            pass

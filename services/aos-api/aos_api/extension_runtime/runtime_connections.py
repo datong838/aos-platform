@@ -4,6 +4,7 @@ import os
 import json
 import stat
 from pathlib import Path
+from threading import Lock
 
 import psycopg
 from psycopg import IsolationLevel
@@ -13,12 +14,24 @@ from psycopg.pq import TransactionStatus
 from aos_api.db import get_dsn
 
 
-def _runtime_file_dsns(reference):
+_PINNED_RUNTIME_FILE = None
+_PIN_LOCK = Lock()
+
+
+def _file_generation(metadata):
+    return [metadata.st_dev, metadata.st_ino, metadata.st_size,
+            metadata.st_mtime_ns, metadata.st_ctime_ns]
+
+
+def _runtime_file_dsns(reference, *, with_generation=False):
     """Read existing host identities in memory; never export secrets to env."""
     try:
         path = Path(reference)
         if not path.is_absolute():
             raise ValueError('absolute credential reference required')
+        pinned = _PINNED_RUNTIME_FILE
+        if pinned is not None and str(path) != pinned[0]:
+            raise ValueError('runtime credential path changed')
         descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
         with os.fdopen(descriptor, 'r', encoding='utf-8') as handle:
             metadata = os.fstat(handle.fileno())
@@ -26,6 +39,11 @@ def _runtime_file_dsns(reference):
                     or metadata.st_uid != os.getuid() or not 0 < metadata.st_size <= 65536):
                 raise ValueError('protected credential file required')
             value = json.loads(handle.read(65537))
+            after = os.fstat(handle.fileno())
+            generation = _file_generation(metadata)
+            if _file_generation(after) != generation or (pinned is not None
+                                                          and tuple(generation) != pinned[1]):
+                raise ValueError('runtime credential file changed')
         if type(value) is not dict or set(value) != {'web','runtime','directory'}:
             raise ValueError('host identity file shape differs')
         for item in value.values():
@@ -34,7 +52,28 @@ def _runtime_file_dsns(reference):
                 raise ValueError('host identity entry differs')
         if any(len({item[key] for item in value.values()}) != 3 for key in ('role', 'dsn')):
             raise ValueError('three distinct identities required')
-        return {plane: item['dsn'] for plane, item in value.items()}
+        dsns = {plane: item['dsn'] for plane, item in value.items()}
+        return (dsns, generation) if with_generation else dsns
+    except Exception:
+        raise RuntimeError('runtime credential reference is invalid') from None
+
+
+def pin_runtime_file_generation(reference, generation):
+    """Freeze the already cross-checked protected file for this process lifetime."""
+    global _PINNED_RUNTIME_FILE
+    try:
+        if (type(generation) is not list or len(generation) != 5
+                or any(type(item) is not int for item in generation)):
+            raise ValueError('invalid credential generation')
+        path = Path(reference)
+        _, observed = _runtime_file_dsns(path, with_generation=True)
+        if observed != generation:
+            raise ValueError('credential generation differs from preflight')
+        with _PIN_LOCK:
+            pinned = (str(path), tuple(generation))
+            if _PINNED_RUNTIME_FILE is not None and _PINNED_RUNTIME_FILE != pinned:
+                raise ValueError('runtime credential was already pinned')
+            _PINNED_RUNTIME_FILE = pinned
     except Exception:
         raise RuntimeError('runtime credential reference is invalid') from None
 

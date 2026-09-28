@@ -100,7 +100,8 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None) -> dict[str
     except Exception:
         raise HostPreflightBlocked("SIGNED_INSTALLATION_INVALID") from None
     try:
-        dsns = _runtime_file_dsns(credential_file)
+        dsns, credential_generation = _runtime_file_dsns(
+            credential_file, with_generation=True)
     except Exception:
         raise HostPreflightBlocked("CREDENTIAL_FILE_INVALID") from None
     require_current_dsn_targets(dsns, signed["database"])
@@ -134,10 +135,19 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None) -> dict[str
         raise
     except Exception:
         raise HostPreflightBlocked("DATABASE_PREFLIGHT_FAILED") from None
+    try:
+        _, current_generation = _runtime_file_dsns(credential_file, with_generation=True)
+        if current_generation != credential_generation:
+            raise HostPreflightBlocked("CREDENTIAL_FILE_CHANGED")
+    except HostPreflightBlocked:
+        raise
+    except Exception:
+        raise HostPreflightBlocked("CREDENTIAL_FILE_CHANGED") from None
     return {"outcome": "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN",
             "database": signed["database"], "installationId": signed["installationId"],
             "databaseAuthority": list(authority),
             "signedRoot": signed["signedRoot"], "trustRoots": signed["trustRoots"],
+            "credentialFileGeneration": credential_generation,
             "scope": ["org-org", "dev-project"], **host,
             "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START"}
 

@@ -149,7 +149,11 @@ def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: st
                 """SELECT coalesce(inet_server_addr()::text,'local') AS server_addr,
                           inet_server_port() AS server_port,current_database() AS database_name"""
             ).fetchone()
-        return [row["server_addr"], row["server_port"] or 0, row["database_name"]] == authority
+        if [row["server_addr"], row["server_port"] or 0, row["database_name"]] != authority:
+            return False
+        from aos_api.extension_runtime.runtime_connections import pin_runtime_file_generation
+        pin_runtime_file_generation(credential_reference, report.get("credentialFileGeneration"))
+        return True
     except Exception:
         return False
 

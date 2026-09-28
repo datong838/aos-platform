@@ -437,10 +437,16 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
     report = {"outcome": "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN",
               "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START",
               "scope": ["org-org", "dev-project"], "databaseAuthority": authority,
-              "signedRoot": str(signed_root), "trustRoots": str(trust)}
+              "signedRoot": str(signed_root), "trustRoots": str(trust),
+              "credentialFileGeneration": [1, 2, 3, 4, 5]}
     monkeypatch.setattr(wiring.subprocess, "run", lambda *_a, **_k: SimpleNamespace(
         returncode=0, stdout="log line\n" + json.dumps(report)))
     monkeypatch.setattr("aos_api.db.get_dsn", lambda: "api-dsn")
+    pins = []
+    monkeypatch.setattr(
+        "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",
+        lambda path, generation: pins.append((path, generation)),
+    )
 
     class Conn:
         read_only = False
@@ -459,6 +465,12 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
     inputs = {"signed_receipt": str(tmp_path / "receipt.json"),
               "credential_reference": str(tmp_path / "identities.json")}
     assert wiring._current_a0v_host_preflight(**inputs) is True
+    assert pins == [(inputs["credential_reference"], [1, 2, 3, 4, 5])]
+    monkeypatch.setattr(
+        "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",
+        lambda *_: (_ for _ in ()).throw(RuntimeError("credential file changed")),
+    )
+    assert wiring._current_a0v_host_preflight(**inputs) is False
     connection.database_name = "old_same_name_drift"
     assert wiring._current_a0v_host_preflight(**inputs) is False
     connection.database_name = "aos_current_preview_20260927"
