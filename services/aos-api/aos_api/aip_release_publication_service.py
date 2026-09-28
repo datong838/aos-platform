@@ -213,6 +213,7 @@ class AipReleasePublicationService:
         *,
         actor: str,
         request: PublishReleaseRequest,
+        expected_target_type: AssetType | None = None,
     ) -> PublicationEvent:
         actor = self._actor(actor)
         publication_id = self._stable_id("publication", scope, request.idempotency_key)
@@ -222,6 +223,8 @@ class AipReleasePublicationService:
                 existing = self._event_row(conn, scope, event_id)
                 if existing is not None:
                     event = self._event_from_row(scope, existing)
+                    if expected_target_type is not None and event.target.asset_type is not expected_target_type:
+                        raise AipReleaseAssetUnsupported("publication target type does not match route")
                     if (
                         event.publication_id != publication_id
                         or event.release_gate_decision_id
@@ -243,6 +246,8 @@ class AipReleasePublicationService:
                         "release gate decision not found"
                     )
                 gate = self._gate_from_row(scope, gate_row)
+                if expected_target_type is not None and gate.target.asset_type is not expected_target_type:
+                    raise AipReleaseAssetUnsupported("release gate target type does not match route")
                 if gate.status is not ReleaseGateStatus.PASSED:
                     raise AipReleaseGateRejected("release gate is not passed")
                 if not gate.decided_at <= datetime.now(UTC) < gate.expires_at:

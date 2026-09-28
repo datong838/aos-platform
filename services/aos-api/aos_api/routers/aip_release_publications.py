@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, status
 
-from aos_api.aip_eval_contracts import PublicationEvent, ReleaseGateDecision
+from aos_api.aip_eval_contracts import AssetType, PublicationEvent, ReleaseGateDecision
 from aos_api.aip_release_publication_models import (
     DeriveReleaseGateRequest,
     PublishReleaseRequest,
@@ -100,6 +100,29 @@ def publish_logic_revision(
             TenantScope(principal.org_id, principal.project_id),
             actor=principal.subject,
             request=body,
+        )
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.post(
+    "/publications/skills",
+    response_model=PublicationEvent,
+    status_code=status.HTTP_201_CREATED,
+)
+def publish_skill_revision(
+    body: PublishReleaseRequest,
+    principal: Principal = Depends(require_principal),
+    service: AipReleasePublicationService = Depends(
+        get_aip_release_publication_service
+    ),
+) -> PublicationEvent:
+    try:
+        return service.publish(
+            TenantScope(principal.org_id, principal.project_id),
+            actor=principal.subject,
+            request=body,
+            expected_target_type=AssetType.SKILL_TEMPLATE,
         )
     except Exception as exc:
         raise _map_error(exc) from exc

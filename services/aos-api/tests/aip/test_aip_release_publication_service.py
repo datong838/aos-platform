@@ -38,6 +38,7 @@ from aos_api.aip_release_publication_models import (
 )
 from aos_api.aip_release_publication_service import (
     AipPublicationAlreadyRevoked,
+    AipReleaseAssetUnsupported,
     AipReleaseGateRejected,
     AipReleasePublicationConflict,
     AipReleasePublicationNotFound,
@@ -236,6 +237,24 @@ def test_gate_publish_and_revoke_are_derived_and_append_only(release_runtime) ->
             (published.publication_id,),
         ).fetchall()
     assert [row["event_type"] for row in facts] == ["published", "revoked"]
+
+
+def test_skill_publication_kind_rejects_logic_gate_and_cross_kind_replay(release_runtime) -> None:
+    scope, _other, report, service = release_runtime
+    gate = service.derive_gate(scope, actor="publisher", request=_gate_request(report))
+    request = PublishReleaseRequest(release_gate_decision_id=gate.decision_id,
+                                    reason_hash=H1, idempotency_key="skill-kind-key")
+    with pytest.raises(AipReleaseAssetUnsupported):
+        service.publish(scope, actor="publisher", request=request,
+                        expected_target_type=AssetType.SKILL_TEMPLATE)
+    with connect(scope) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM aip_publication_event WHERE publication_id=%s",
+                            (service._stable_id("publication", scope, request.idempotency_key),)).fetchone()["n"] == 0
+    published = service.publish(scope, actor="publisher", request=request)
+    assert published.target.asset_type is AssetType.LOGIC_GRAPH
+    with pytest.raises(AipReleaseAssetUnsupported):
+        service.publish(scope, actor="publisher", request=request,
+                        expected_target_type=AssetType.SKILL_TEMPLATE)
 
 
 def test_release_is_tenant_scoped_and_idempotency_conflicts(release_runtime) -> None:

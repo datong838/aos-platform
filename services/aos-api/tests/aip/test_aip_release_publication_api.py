@@ -160,6 +160,17 @@ def test_request_cannot_submit_manual_gate_status(release_api) -> None:
     assert response.status_code == 400
 
 
+def test_skill_publication_route_forwards_exact_target_kind(release_api) -> None:
+    client, service, headers = release_api
+    response = client.post("/v1/aip/publications/skills", headers=headers,
+        json={"releaseGateDecisionId": "gate-api", "reasonHash": H1,
+              "idempotencyKey": "skill-publication-key"})
+    assert response.status_code == 201
+    assert service.calls[-1][0] == "publish"
+    assert service.calls[-1][1][0].key == ("dev-org", "dev-project")
+    assert service.calls[-1][2]["expected_target_type"] is AssetType.SKILL_TEMPLATE
+
+
 @pytest.mark.parametrize(
     ("error", "status_code", "code"),
     [

@@ -430,6 +430,7 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
     publication = release.publish(
         scope,
         actor="pytest-bind3",
+        expected_target_type=AssetType.SKILL_TEMPLATE,
         request=PublishReleaseRequest(
             release_gate_decision_id=gate.decision_id,
             reason_hash="5" * 64,
