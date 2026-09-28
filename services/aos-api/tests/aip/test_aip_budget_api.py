@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from aos_api.aip_budget_contracts import BudgetRevisionCreate
 from aos_api.aip_budget_store import BudgetNotFound
+from aos_api.auth import Principal, require_principal
 from aos_api.routers import aip_budgets
 
 
@@ -113,3 +114,57 @@ def test_budget_api_rejects_authority_injection_and_missing_write_headers(client
     response = client.post("/v1/aip/budgets", headers=headers(), json=body())
     assert response.status_code == 400
     assert response.json()["code"] == "VALIDATION"
+
+
+def test_budget_activation_preview_route_requires_formal_identity_and_keeps_active_block(client) -> None:
+    request = {"target": {**body(), "revision": 2}, "checkerSubject": "checker-subject"}
+    denied = client.post(
+        "/v1/aip/budgets/activation-previews",
+        headers=headers(**{"Idempotency-Key": "preview-dev", "If-Match": "1"}),
+        json=request,
+    )
+    assert denied.status_code == 403, denied.text
+    assert denied.json()["code"] == "BUDGET_ACTIVATION_FORMAL_IDENTITY_REQUIRED"
+
+    class CaptureActivation:
+        call = None
+
+        def create_preview(self, principal, target, checker_subject, key, *, expected_head_version):
+            self.call = (principal.subject, target.budget_id, checker_subject, key,
+                         expected_head_version)
+            return {
+                "previewId": "preview-test", "previewHash": "a" * 64,
+                "budgetId": target.budget_id, "targetRevision": target.revision,
+                "targetHash": "b" * 64, "expectedHeadVersion": expected_head_version,
+                "makerSubject": principal.subject, "checkerSubject": checker_subject,
+                "externalUsageProven": False,
+                "target": target.model_dump(mode="json", by_alias=True),
+                "internalLedgerCheckedAt": NOW.isoformat(),
+                "expiresAt": (NOW + timedelta(hours=1)).isoformat(),
+            }
+
+    capture = CaptureActivation()
+    client.app.dependency_overrides[aip_budgets.get_activation_store] = lambda: capture
+    client.app.dependency_overrides[require_principal] = lambda: Principal(
+        subject="formal-maker", org_id="org-org", project_id="dev-project", token_kind="oidc"
+    )
+    try:
+        response = client.post(
+            "/v1/aip/budgets/activation-previews",
+            headers=headers(**{"Idempotency-Key": "preview-oidc", "If-Match": "1"}),
+            json=request,
+        )
+        assert response.status_code == 201, response.text
+        assert capture.call == ("formal-maker", "budget-qyh-content-dev",
+                                "checker-subject", "preview-oidc", 1)
+    finally:
+        client.app.dependency_overrides.pop(aip_budgets.get_activation_store, None)
+        client.app.dependency_overrides.pop(require_principal, None)
+
+    active = client.post(
+        "/v1/aip/budgets",
+        headers=headers(**{"Idempotency-Key": "still-blocked", "If-Match": "0"}),
+        json=body(),
+    )
+    assert active.status_code == 422
+    assert active.json()["code"] == "AIP_BUDGET_ACTIVE_APPROVAL_REQUIRED"

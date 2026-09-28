@@ -4,6 +4,17 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query, status
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
+from aos_api.aip_budget_activation_contracts import (
+    BudgetActivationDecisionView,
+    BudgetActivationPreviewView,
+    BudgetActivationRevocationView,
+    CreateBudgetActivationPreviewRequest,
+    DecideBudgetActivationRequest,
+    RevokeBudgetActivationDecisionRequest,
+)
+from aos_api.aip_budget_activation_store import (
+    AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied,
+)
 from aos_api.aip_budget_store import (
     AipBudgetAuthorityStore,
     BudgetConflict,
@@ -18,10 +29,15 @@ from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/budgets", tags=["aip-budgets"])
 _STORE = AipBudgetAuthorityStore()
+_ACTIVATION_STORE = AipBudgetActivationStore()
 
 
 def get_store() -> AipBudgetAuthorityStore:
     return _STORE
+
+
+def get_activation_store() -> AipBudgetActivationStore:
+    return _ACTIVATION_STORE
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -56,6 +72,81 @@ def _map(exc: BudgetStoreError) -> ApiError:
     if isinstance(exc, (BudgetConflict, BudgetIdempotencyConflict)):
         return ApiError(code=exc.code, message=str(exc), status_code=409)
     return ApiError(code=exc.code, message="budget authority persistence failed", status_code=503)
+
+
+def _map_activation(exc: ValueError) -> ApiError:
+    if isinstance(exc, BudgetActivationConflict):
+        return ApiError(code=str(exc), message="budget activation authority conflict", status_code=409)
+    code = str(exc)
+    status_code = 403 if "IDENTITY" in code or "MEMBERSHIP" in code else 422
+    return ApiError(code=code, message="budget activation authority unavailable", status_code=status_code)
+
+
+@router.post(
+    "/activation-previews", response_model=BudgetActivationPreviewView,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_budget_activation_preview(
+    body: CreateBudgetActivationPreviewRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        return store.create_preview(principal, body.target, body.checker_subject,
+                                    _key(idempotency_key), expected_head_version=_version(if_match))
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+
+
+@router.get("/activation-previews/{preview_id}", response_model=BudgetActivationPreviewView)
+def get_budget_activation_preview(
+    preview_id: str,
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        return store.get_preview(principal, preview_id)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+
+
+@router.post(
+    "/activation-previews/{preview_id}/decisions",
+    response_model=BudgetActivationDecisionView,
+    status_code=status.HTTP_201_CREATED,
+)
+def decide_budget_activation_preview(
+    preview_id: str,
+    body: DecideBudgetActivationRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        return store.decide(principal, preview_id, _key(idempotency_key),
+                            decision=body.decision)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+
+
+@router.post(
+    "/activation-decisions/{decision_id}/revoke",
+    response_model=BudgetActivationRevocationView,
+    status_code=status.HTTP_201_CREATED,
+)
+def revoke_budget_activation_decision(
+    decision_id: str,
+    body: RevokeBudgetActivationDecisionRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        return store.revoke(principal, decision_id, _key(idempotency_key), reason=body.reason)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
 
 
 @router.post("", response_model=BudgetRevision, status_code=status.HTTP_201_CREATED)
