@@ -108,6 +108,9 @@ describe("SkillPublishPage W-F4 batch stats", () => {
     expect(host.querySelector('p[role="status"]')?.textContent).not.toContain("RELEASE_PUBLICATION_UNAVAILABLE");
     expect(Array.from(host.querySelectorAll('a[href="/aip/agent-registry"]')).some(link => link.textContent === "查看组织绑定状态")).toBe(true);
     expect(host.textContent).toContain("正式绑定创建入口待接线");
+    expect(host.querySelector('a[href="/aip/evals"]')?.textContent).toContain("Logic 兼容评测");
+    expect(host.textContent).toContain("技能放行须由正式 EvalSuite、EvalReport、ReleaseGate 与发布事件组成");
+    expect(host.textContent).not.toContain("去评测确认门绿");
     expect(host.querySelectorAll("input")).toHaveLength(0);
     expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("发布此修订")) as HTMLButtonElement).disabled).toBe(true);
     expect(apiPostUnqueued).not.toHaveBeenCalled();

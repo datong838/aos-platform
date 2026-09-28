@@ -205,7 +205,7 @@ export function SkillPublishPage() {
             <option value="all">全部</option>
           </select>
         </label>
-        <Link to="/aip/evals">评测门控</Link>
+        <Link to="/aip/evals">Logic 兼容评测</Link>
         <Link to="/aip/agent-registry">智能体目录</Link>
         <Link to="/aip/maturity">成熟度</Link>
         {data ? <span className="notice" style={{ padding: "6px 10px" }}>共 {data.count} 条</span> : null}
@@ -288,8 +288,10 @@ export function SkillPublishPage() {
                   >
                     {selected.lifecycle === "published" ? "已发布" : busy ? "处理中…" : "发布此修订"}
                   </button>
-                  <Link className="btn" to="/aip/evals">去评测确认门绿</Link>
                 </div>
+                {selected.lifecycle === "evaluated" && options?.blockers.includes("RELEASE_PUBLICATION_UNAVAILABLE") ? (
+                  <p className="notice">技能放行须由正式 EvalSuite、EvalReport、ReleaseGate 与发布事件组成；当前 Logic 兼容评测页不能生成技能放行证据。</p>
+                ) : null}
                 {note && <div className="notice" style={{ marginTop: 12, padding: 10 }} role="status">{note}</div>}
                 {receiptId ? <details><summary>发布回执（审计用）</summary><code>{receiptId}</code></details> : null}
 

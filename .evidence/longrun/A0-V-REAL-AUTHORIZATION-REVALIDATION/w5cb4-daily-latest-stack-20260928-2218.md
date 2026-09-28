@@ -1,0 +1,8 @@
+# 2026-09-28 22:18 最新 m1 全栈重启复验
+
+- 重启前 `git branch --show-current=m1`、`git rev-parse --short HEAD=ac4af52c`；未动原有独立工作树差异，未 push。
+- `scripts/a0v_current_preview_http.py --signed-receipt ...` 只读预检退出 0，返回 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`：当前库 `aos_current_preview_20260927@a0v_111`，唯一安装 `ccdcb0f0-1040-4bc6-aa0c-d045f5689813` approved、四包 published、runtime binding 0、当前签名根通过。容器 `aos-a0v-recovery-pg` 的 `/var/lib/postgresql/data` 精确挂载命名卷 `aos-a0v-recovery-pg-data`。
+- 重启前以 `pg_dump -Fc` 对当前库生成独立归档 `/Users/ddt/work/projects/ai_agent/.aos-daily-backup-20260928-latest-4EQ82N/aos_current_preview_20260927_a0v111.dump`，权限 0600、3,917,396 bytes，SHA-256 `22c4e263ae11ab578fc73be3ff61272bf731bb1c74d355c348c4c510bc1b42fd`；`pg_restore --list` 可读 5551 行。此归档未做全库恢复演练；此前 a0v_110 归档曾做同集群恢复克隆验证。
+- `launchctl bootout` 停 Web、`kill -TERM 63762` 停旧 API，8080/8434 均退出；`docker --context colima-aos-extension restart aos-a0v-recovery-pg` 后原卷名不变、`pg_isready` 接受连接。当前签名预检再次 GREEN、库仍 a0v_111；以最新源码启动 API（PID 82018）、`launchctl bootstrap` 启动 Web（PID 81953）。首次后台 `nohup` API 进程未保留且无日志，未据此宣称成功；改用持久终端会话启动后读到 `startup_extension_runtime_host_inactive code=DISABLED` 及自然 worker disabled。
+- 复验 `curl`：8080 `/v1/health`、`/v1/ready`、`/openapi.json` 全为 200；8434 `/workbenches`、`/ecommerce`、`/aip/skill-publish`、`/apollo/assets` 全为 200；18181 无监听。只读 SQL `SELECT current_database(), version_num FROM alembic_version` 返回 `aos_current_preview_20260927|a0v_111`。
+- 此次没有 browser-pilot 工具，故无页面截图与八工作台真实交互验收；页面 200 和健康检查不是首条经营闭环证据。当前 canonical Skill EvalSuite/Report/Gate/Event、发布 Skill、绑定、Host Owner 与首链仍缺，继续 BG-00d。未读商城源、未重发旧 Run、未手工运行定义、未删除库卷备份。
