@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
-from aos_api.aip_budget_contracts import BudgetRevision, BudgetRevisionCreate
+from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.aip_budget_store import (
     AipBudgetAuthorityStore,
     BudgetConflict,
@@ -66,6 +66,12 @@ def publish_budget(
     principal: Principal = Depends(require_principal),
     store: AipBudgetAuthorityStore = Depends(get_store),
 ):
+    if body.lifecycle is BudgetLifecycle.ACTIVE:
+        raise ApiError(
+            code="AIP_BUDGET_ACTIVE_APPROVAL_REQUIRED",
+            message="Active budget publication requires a current exact approval authority",
+            status_code=422,
+        )
     try:
         return store.publish(
             _scope(principal),

@@ -57,7 +57,7 @@ def test_budget_api_uses_principal_scope_cas_and_exact_read(client) -> None:
         response = client.post(
             "/v1/aip/budgets",
             headers=headers(**{"Idempotency-Key": "budget-v1", "If-Match": "0"}),
-            json=body(),
+            json={**body(), "lifecycle": "draft"},
         )
         assert response.status_code == 201, response.text
         assert store.call[:4] == (("org-org", "dev-project"), "user:dev", "budget-v1", 0)
@@ -69,6 +69,32 @@ def test_budget_api_uses_principal_scope_cas_and_exact_read(client) -> None:
         )
         assert missing.status_code == 404
         assert store.call == (("dev-org", "dev-project"), "missing", 2)
+    finally:
+        client.app.dependency_overrides.pop(aip_budgets.get_store, None)
+
+
+def test_budget_api_fails_closed_before_store_for_active_without_formal_approval(client) -> None:
+    store = CaptureStore()
+    client.app.dependency_overrides[aip_budgets.get_store] = lambda: store
+    try:
+        response = client.post(
+            "/v1/aip/budgets",
+            headers=headers(**{"Idempotency-Key": "budget-active-v1", "If-Match": "0"}),
+            json=body(),
+        )
+        assert response.status_code == 422, response.text
+        assert response.json()["code"] == "AIP_BUDGET_ACTIVE_APPROVAL_REQUIRED"
+        assert store.call is None
+
+        draft = {**body(), "lifecycle": "draft"}
+        response = client.post(
+            "/v1/aip/budgets",
+            headers=headers(**{"Idempotency-Key": "budget-draft-v1", "If-Match": "0"}),
+            json=draft,
+        )
+        assert response.status_code == 201, response.text
+        assert store.call[:4] == (("org-org", "dev-project"), "user:dev", "budget-draft-v1", 0)
+        assert response.json()["lifecycle"] == "draft"
     finally:
         client.app.dependency_overrides.pop(aip_budgets.get_store, None)
 
