@@ -9,6 +9,7 @@ import json
 import os
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 from psycopg import connect
@@ -55,6 +56,36 @@ def _load(path: Path, name: str):
     return module
 
 
+def _verify_signed_bundles(*, builder, signed_root: Path, trust_path: Path,
+                           content_hashes: object) -> None:
+    previous_dotenv = os.environ.get("AOS_DOTENV_DISABLED")
+    os.environ["AOS_DOTENV_DISABLED"] = "1"
+    sys.path.insert(0, str(API_ROOT))
+    try:
+        from aos_api.asset_registry.manifest_loader import ManifestLoader
+        from aos_api.asset_registry.release_policy import ReleasePolicy
+        from aos_api.asset_registry.signature import FileTrustRootProvider
+
+        trust = FileTrustRootProvider(trust_path).snapshot()
+        loader = ManifestLoader({"a0v-current": signed_root}, trust_roots=trust)
+        policy = ReleasePolicy(trust_roots=trust)
+        observed = {}
+        for relative, bundle_id, _, _ in builder.ALL_CASES:
+            loaded = loader.load(f"bundle://a0v-current/{relative}")
+            policy.evaluate(builder._release_record(loaded), checked_at=datetime.now(UTC))
+            observed[bundle_id] = loaded.content_hash
+        if len(observed) != 4 or observed != content_hashes:
+            raise ValueError("signed content does not match receipt")
+    except Exception:
+        raise PreviewBlocked("SIGNED_BUNDLE_CRYPTO_INVALID") from None
+    finally:
+        sys.path.remove(str(API_ROOT))
+        if previous_dotenv is None:
+            os.environ.pop("AOS_DOTENV_DISABLED", None)
+        else:
+            os.environ["AOS_DOTENV_DISABLED"] = previous_dotenv
+
+
 def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, object]]:
     signed_receipt = signed_receipt.resolve(strict=True)
     signed_state = signed_receipt.parent / "signing-state"
@@ -67,6 +98,8 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
     builder = _load(ROOT / "scripts/build_ecommerce_current_candidates.py", "preview_profile").load_builder()
     if receipt.get("signedTreeHash") != builder._tree_hash(signed_root):
         raise PreviewBlocked("SIGNED_TREE_HASH_DRIFT")
+    _verify_signed_bundles(builder=builder, signed_root=signed_root, trust_path=trust_path,
+                           content_hashes=receipt.get("contentHashes"))
     bootstrap = _load(ROOT / "scripts/a0v_current_preview_bootstrap.py", "preview_bootstrap")
     parameters = bootstrap._connection_parameters()
     with connect(**parameters, row_factory=dict_row) as conn:
