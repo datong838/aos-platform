@@ -18,7 +18,6 @@ from typing import Any, Sequence
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "services/aos-api"
 RECOVERY = ROOT.parent / ".aos-recovery-20260912"
-DEFAULT_CREDENTIALS = RECOVERY / "state/ecommerce-runtime-host/runtime-host-identities.json"
 DEFAULT_STATUS = RECOVERY / "logs/ecommerce-runtime-host-status.json"
 HOST_LOCK_PATHS = (
     RECOVERY / "state/ecommerce-runtime-host/singleton.lock",
@@ -299,7 +298,7 @@ async def _serve(args: argparse.Namespace) -> None:
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--credential-file", type=Path, default=DEFAULT_CREDENTIALS)
+    parser.add_argument("--credential-file", type=Path)
     parser.add_argument("--bundle-root", type=Path, required=True)
     parser.add_argument("--trust-roots-file", type=Path, required=True)
     parser.add_argument("--status-file", type=Path, default=DEFAULT_STATUS)
@@ -324,6 +323,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 2
         if not 1 <= args.interval_seconds <= 300:
             _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "INTERVAL_INVALID"})
+            return 2
+        if args.credential_file is None:
+            _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "CREDENTIAL_FILE_REQUIRED"})
             return 2
         try:
             asyncio.run(_serve(args))

@@ -81,6 +81,18 @@ def test_invalid_interval_fails_before_loading_credentials(tmp_path: Path, monke
     }
 
 
+def test_host_requires_explicit_credential_file_before_serve(tmp_path: Path, monkeypatch) -> None:
+    status = tmp_path / "status.json"
+    monkeypatch.setattr(HOST, "_serve", lambda _: pytest.fail("Host reached without explicit credentials"))
+    assert HOST.main([
+        "--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust.json"),
+        "--status-file", str(status),
+    ]) == 2
+    assert json.loads(status.read_text()) == {
+        "outcome": "SAFE_BLOCKED", "reasonCode": "CREDENTIAL_FILE_REQUIRED"
+    }
+
+
 def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> None:
     credential_path, _credentials = _credential_file(tmp_path / "identities.json")
     bundle = tmp_path / "bundles"
@@ -196,7 +208,8 @@ def test_runtime_failure_records_private_safe_exception_chain(tmp_path, monkeypa
     monkeypatch.setattr(HOST, "_serve", fail)
     status = tmp_path / "status.json"
     assert HOST.main(["--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust"),
-                      "--status-file", str(status)]) == 2
+                      "--status-file", str(status),
+                      "--credential-file", str(tmp_path / "identities.json")]) == 2
     result = json.loads(status.read_text())
     assert [item["errorType"] for item in result["errorChain"]] == ["RuntimeError", "TimeoutError"]
     assert result["errorChain"][1]["relation"] == "cause"
@@ -245,6 +258,7 @@ def test_all_locks_held_during_serve_and_released_after(tmp_path,monkeypatch):
                 with pytest.raises(BlockingIOError):fcntl.flock(competing,fcntl.LOCK_EX|fcntl.LOCK_NB)
     monkeypatch.setattr(HOST,'_serve',serve)
     assert HOST.main(['--bundle-root',str(tmp_path),'--trust-roots-file',str(tmp_path/'missing'),
-                      '--status-file',str(status)])==0
+                      '--status-file',str(status),
+                      '--credential-file',str(tmp_path/'identities.json')])==0
     for path in paths:
         with path.open('a+') as free:fcntl.flock(free,fcntl.LOCK_EX|fcntl.LOCK_NB)
