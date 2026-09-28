@@ -16,4 +16,10 @@
 ## 未完成
 
 - 正式 Approval Owner/精确批准事件、金额/窗口/maker-checker 绑定与 active 正向产品流程尚未接线；八类当前有效候选仍为 0，不能启 Host 或称业务首链通过。
-- 该 API 运行进程若未在提交后重启，线上本地 8080 仍可能是旧代码；须使用当前权威卷与受保护签名 Receipt 重新预检/启动并只读验证。浏览器 `browser-pilot` 无可调用能力，新鲜截图待补。
+- 浏览器 `browser-pilot` 无可调用能力，新鲜截图待补。
+
+## 提交后本地 API 重载
+
+- `services/aos-api/.venv/bin/python scripts/a0v_current_preview_http.py --signed-receipt /Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json`：退出 0，`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，库 `aos_current_preview_20260927@a0v_109`、安装 approved、4 published、runtime binding 0、签名树 hash 校验通过。
+- 停止旧 8080 PID 7270 后按同一脚本 `--serve` 重新启动，输出 `migrationMode=disabled/runtimeHost=0/workersEnabled=0`；新 PID 14964 监听 127.0.0.1:8080。`curl` 读回 `/v1/health` 200，8434 `/apollo/assets` 200；18181 `lsof` 退出 1（无监听）。首次后台 `nohup` 未形成监听，已改为前台受管会话；没有重发业务动作。
+- 没有对当前库发预算 POST；禁入 422 由本次 API TestClient 负例验证。HTTP 健康和签名预检不能替代浏览器与自然首链。
