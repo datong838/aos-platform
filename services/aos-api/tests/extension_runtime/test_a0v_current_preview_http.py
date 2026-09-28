@@ -25,7 +25,7 @@ def test_missing_signed_root_rejected_before_database_access(preview, tmp_path, 
 
 
 def test_all_execution_flags_are_explicitly_disabled(preview):
-    assert preview.EXPECTED_SCHEMA_HEAD == "a0v_107"
+    assert preview.EXPECTED_SCHEMA_HEAD == "a0v_109"
     assert preview.FLAGS["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] == "0"
     assert preview.FLAGS["AOS_QYH_CRON_ENABLED"] == "false"
     assert preview.FLAGS["AOS_DB_MIGRATION_MODE"] == "disabled"

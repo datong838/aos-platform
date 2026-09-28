@@ -70,6 +70,7 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
     bootstrap = _load(ROOT / "scripts/a0v_current_preview_bootstrap.py", "preview_bootstrap")
     parameters = bootstrap._connection_parameters()
     with connect(**parameters, row_factory=dict_row) as conn:
+        conn.read_only = True
         if conn.info.dbname != TARGET:
             raise PreviewBlocked("DATABASE_TARGET_DRIFT")
         version = conn.execute("SELECT version_num FROM alembic_version").fetchall()
