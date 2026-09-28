@@ -26,21 +26,40 @@ def isolated_environment(monkeypatch,tmp_path):
 
 def _credential_file(path: Path) -> tuple[Path, dict[str, dict[str, str]]]:
     value = {
-        plane: {"role": role, "password": f"secret-{plane}", "dsn": f"dsn-{plane}"}
-        for plane, role in HOST.EXPECTED_ROLES.items()
+        plane: {"role": f"aos_current_{plane}", "password": f"secret-{plane}",
+                "dsn": f"dbname=current user=aos_current_{plane} password=secret-{plane}"}
+        for plane in ("web", "runtime", "directory")
     }
     path.write_text(json.dumps(value))
     path.chmod(0o600)
     return path, value
 
 
-def test_credentials_require_private_exact_roles(tmp_path: Path) -> None:
+def test_credentials_require_private_current_distinct_roles(tmp_path: Path) -> None:
     path, expected = _credential_file(tmp_path / "identities.json")
     assert HOST._load_credentials(path) == expected
     path.chmod(0o644)
     with pytest.raises(HOST.HostBlocked) as captured:
         HOST._load_credentials(path)
     assert captured.value.code == "CREDENTIAL_FILE_INVALID"
+
+
+@pytest.mark.parametrize("defect", ["role", "password", "duplicate_role", "duplicate_dsn"])
+def test_local_credentials_reject_declared_identity_drift(tmp_path: Path, defect: str) -> None:
+    path, value = _credential_file(tmp_path / "identities.json")
+    if defect == "role":
+        value["runtime"]["role"] = "another_role"
+    elif defect == "password":
+        value["runtime"]["password"] = "another_password"
+    elif defect == "duplicate_role":
+        value["runtime"]["role"] = value["web"]["role"]
+    else:
+        value["runtime"]["dsn"] = value["web"]["dsn"]
+    path.write_text(json.dumps(value))
+    with pytest.raises(HOST.HostBlocked) as captured:
+        HOST._load_credentials(path)
+    assert captured.value.code == "CREDENTIAL_FILE_INVALID"
+    assert "secret-" not in str(captured.value)
 
 
 def test_environment_uses_reference_without_secret_dsns(tmp_path: Path, monkeypatch) -> None:

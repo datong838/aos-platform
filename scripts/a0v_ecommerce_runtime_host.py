@@ -16,6 +16,8 @@ import sys
 import traceback
 from typing import Any, Sequence
 
+from psycopg.conninfo import conninfo_to_dict
+
 ROOT = Path(__file__).resolve().parents[1]
 API = ROOT / "services/aos-api"
 RECOVERY = ROOT.parent / ".aos-recovery-20260912"
@@ -25,11 +27,7 @@ HOST_LOCK_PATHS = (
     DEFAULT_STATUS.with_suffix(".lock"),
     ROOT.parent / ".aos-recovery-20260913/logs/runtime-host-aa3010c4.lock",
 )
-EXPECTED_ROLES = {
-    "web": "aos_a0v_web_20260912",
-    "runtime": "aos_a0v_runtime_20260912",
-    "directory": "aos_a0v_directory_20260912",
-}
+PLANES = ("web", "runtime", "directory")
 
 
 class HostBlocked(RuntimeError):
@@ -73,17 +71,26 @@ def _load_credentials(path: Path) -> dict[str, dict[str, str]]:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise HostBlocked("CREDENTIAL_FILE_INVALID") from exc
-    if type(value) is not dict or set(value) != set(EXPECTED_ROLES):
+    if type(value) is not dict or set(value) != set(PLANES):
         raise HostBlocked("CREDENTIAL_FILE_INVALID")
-    for plane, role in EXPECTED_ROLES.items():
+    for plane in PLANES:
         item = value.get(plane)
         if (
             type(item) is not dict
             or set(item) != {"dsn", "password", "role"}
-            or item.get("role") != role
-            or any(type(item.get(key)) is not str or not item[key] for key in item)
+            or any(type(item.get(key)) is not str or not item[key] or "\x00" in item[key]
+                   for key in ("dsn", "password", "role"))
         ):
             raise HostBlocked("CREDENTIAL_FILE_INVALID")
+        try:
+            login = conninfo_to_dict(item["dsn"])
+        except Exception:
+            raise HostBlocked("CREDENTIAL_FILE_INVALID") from None
+        if login.get("user") != item["role"] or login.get("password") != item["password"]:
+            raise HostBlocked("CREDENTIAL_FILE_INVALID")
+    if (len({value[plane]["role"] for plane in PLANES}) != 3
+            or len({value[plane]["dsn"] for plane in PLANES}) != 3):
+        raise HostBlocked("CREDENTIAL_FILE_INVALID")
     return value
 
 
