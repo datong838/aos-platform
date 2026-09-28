@@ -14,4 +14,4 @@
 
 ## 文件边界、退出与风险
 
-aa1 仅改预算 Store 与对应测试，可能涉及需明确改为 Draft fixture 的邻接测试；代码改动前先 RED。aa2/aa3 需另列数据库迁移、合同、Store、路由与隔离 PG 测试，不能把三个切片一口气绕开真实用量门。任何代码迁移高于当前 `a0v_110` 时，当前 API/卷继续按独立安全波切换。每个切片须 verification、D-waves、上下文/Prime 和 m1 精确提交，随后立即进入下一切片；不 push、不读商城源、不启 Host/worker、不碰旧 12 Run/230 L0。
+aa1 修改 `services/aos-api/aos_api/aip_budget_store.py`、`tests/aip/test_aip_budget_store.py`；两个旧治理正向测试确实依赖 active 预算原行，增加仅 `aos_test_*_ti4_test` 可销毁库可用的 `tests/aip/_budget_test_fixture.py` 并在 `test_aip_model_governance_policy_store.py`、`test_aip7_model_runtime_store.py` 中具名调用，不把它冒充正式激活验收。代码改动前先 RED。aa2/aa3 需另列数据库迁移、合同、Store、路由与隔离 PG 测试，不能把三个切片一口气绕开真实用量门。任何代码迁移高于当前 `a0v_110` 时，当前 API/卷继续按独立安全波切换。每个切片须 verification、D-waves、上下文/Prime 和 m1 精确提交，随后立即进入下一切片；不 push、不读商城源、不启 Host/worker、不碰旧 12 Run/230 L0。

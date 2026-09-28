@@ -36,7 +36,6 @@ from aos_api.aip_runtime_guard_policy_contracts import (
 )
 from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 from aos_api.aip_budget_contracts import BudgetRevisionCreate
-from aos_api.aip_budget_store import AipBudgetAuthorityStore
 from aos_api.aip_model_governance_policy_contracts import (
     BudgetPolicyRevisionCreate,
     QuotaPolicyRevisionCreate,
@@ -46,6 +45,7 @@ from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
 from aos_api.aip_network_policy_store import AipNetworkPolicyStore
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
+from tests.aip._budget_test_fixture import seed_isolated_active_budget
 
 SCOPE = TenantScope(org_id="org-org", project_id="dev-project")
 CANARY = TenantScope(org_id="dev-org", project_id="dev-project")
@@ -158,8 +158,8 @@ def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
 
 def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAssetRef]:
     instant = datetime.now(UTC)
-    budget = AipBudgetAuthorityStore().publish(
-        SCOPE, SUFFIX, "model-budget-revision-1",
+    budget = seed_isolated_active_budget(
+        SCOPE, SUFFIX,
         BudgetRevisionCreate(
             budgetId=f"{SUFFIX}:budget-revision", revision=1, environment="development",
             currency="CNY", dailyLimitMinor=500, monthlyLimitMinor=5000,

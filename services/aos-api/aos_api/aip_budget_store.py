@@ -9,7 +9,7 @@ from contextlib import AbstractContextManager
 from datetime import UTC, datetime
 from typing import Any
 
-from aos_api.aip_budget_contracts import BudgetRevision, BudgetRevisionCreate
+from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
 
@@ -31,6 +31,10 @@ class BudgetConflict(BudgetStoreError):
 
 class BudgetIdempotencyConflict(BudgetStoreError):
     code = "AIP_BUDGET_IDEMPOTENCY_CONFLICT"
+
+
+class BudgetActivationApprovalRequired(BudgetStoreError):
+    code = "AIP_BUDGET_ACTIVE_APPROVAL_REQUIRED"
 
 
 def canonical_hash(value: Any) -> str:
@@ -76,6 +80,10 @@ class AipBudgetAuthorityStore:
         *,
         expected_version: int = 0,
     ) -> BudgetRevision:
+        if item.lifecycle == BudgetLifecycle.ACTIVE:
+            raise BudgetActivationApprovalRequired(
+                "active budget requires exact approved decision consumption"
+            )
         request_hash = canonical_hash(
             {
                 "expectedVersion": expected_version,

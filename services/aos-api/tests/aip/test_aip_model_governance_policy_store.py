@@ -5,7 +5,6 @@ import pytest
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_budget_contracts import BudgetRevisionCreate
-from aos_api.aip_budget_store import AipBudgetAuthorityStore
 from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevisionCreate, QuotaPolicyRevisionCreate
 from aos_api.aip_model_governance_policy_store import (
     AipModelGovernancePolicyStore, ModelGovernancePolicyDependencyBlocked,
@@ -13,6 +12,7 @@ from aos_api.aip_model_governance_policy_store import (
     ModelGovernancePolicyIdempotencyConflict, ModelGovernancePolicyNotFound,
 )
 from aos_api.tenant_scope import TenantScope
+from tests.aip._budget_test_fixture import seed_isolated_active_budget
 
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY = TenantScope("dev-org", "dev-project")
@@ -30,7 +30,7 @@ def quota(revision=1, daily=100, *, name="primary", lifecycle="active", start=No
 
 
 def publish_budget_revision():
-    return AipBudgetAuthorityStore().publish(SCOPE, "test", f"budget-revision:{SUFFIX}", BudgetRevisionCreate(
+    return seed_isolated_active_budget(SCOPE, "test", BudgetRevisionCreate(
         budgetId=f"test:budget:{SUFFIX}", revision=1, environment="development", currency="CNY",
         dailyLimitMinor=500, monthlyLimitMinor=5000, alertThresholdPct=80, hardStop=True,
         unknownUsageBehavior="block", effectiveFrom=NOW - timedelta(days=1), effectiveUntil=NOW + timedelta(days=60),
