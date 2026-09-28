@@ -6,6 +6,7 @@ from contextlib import ExitStack
 import argparse
 import asyncio
 import fcntl
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -84,6 +85,32 @@ def _load_credentials(path: Path) -> dict[str, dict[str, str]]:
         ):
             raise HostBlocked("CREDENTIAL_FILE_INVALID")
     return value
+
+
+def _current_preflight(signed_receipt: Path, credential_file: Path) -> None:
+    """Cross-bind explicit identities to the current signed installation before Host setup."""
+    try:
+        path = ROOT / "scripts/a0v_current_runtime_host_preflight.py"
+        spec = importlib.util.spec_from_file_location("current_runtime_host_preflight", path)
+        if spec is None or spec.loader is None:
+            raise HostBlocked("CURRENT_PREFLIGHT_UNAVAILABLE")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.preflight(signed_receipt=signed_receipt, credential_file=credential_file)
+    except HostBlocked:
+        raise
+    except Exception as exc:
+        arguments = getattr(exc, "args", ())
+        code = arguments[0] if arguments else None
+        allowed = {
+            "SIGNED_INSTALLATION_INVALID", "CREDENTIAL_FILE_INVALID",
+            "CREDENTIAL_DATABASE_DRIFT", "SIGNED_DATABASE_DRIFT",
+            "RUNTIME_IDENTITY_INVALID", "HOST_ASSIGNMENT_MISSING",
+            "HOST_IDENTITY_MISMATCH", "CONFIGURATION_CANDIDATES_MISSING",
+            "DATABASE_PREFLIGHT_FAILED",
+        }
+        raise HostBlocked(code if type(code) is str and code in allowed
+                          else "CURRENT_PREFLIGHT_FAILED") from None
 
 
 def _configure_environment(
@@ -299,6 +326,7 @@ async def _serve(args: argparse.Namespace) -> None:
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--credential-file", type=Path)
+    parser.add_argument("--signed-receipt", type=Path)
     parser.add_argument("--bundle-root", type=Path, required=True)
     parser.add_argument("--trust-roots-file", type=Path, required=True)
     parser.add_argument("--status-file", type=Path, default=DEFAULT_STATUS)
@@ -327,9 +355,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.credential_file is None:
             _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "CREDENTIAL_FILE_REQUIRED"})
             return 2
+        if args.signed_receipt is None:
+            _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "SIGNED_RECEIPT_REQUIRED"})
+            return 2
         try:
-            asyncio.run(_serve(args))
-            return 0
+            _current_preflight(args.signed_receipt, args.credential_file)
+            # E17-l checks candidates and Host assignment; formal installation
+            # lifecycle Owner and bound approval/Receipt still require a separate gate.
+            raise HostBlocked("FORMAL_OWNER_AUTHORITY_UNPROVEN")
         except HostBlocked as exc:
             result = {"outcome": "SAFE_BLOCKED", "reasonCode": exc.code}
         except Exception as exc:

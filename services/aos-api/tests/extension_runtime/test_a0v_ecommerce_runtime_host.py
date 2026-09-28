@@ -93,6 +93,52 @@ def test_host_requires_explicit_credential_file_before_serve(tmp_path: Path, mon
     }
 
 
+def test_host_requires_current_signed_receipt_before_serve(tmp_path: Path, monkeypatch) -> None:
+    credential, _ = _credential_file(tmp_path / "identities.json")
+    status = tmp_path / "status.json"
+    monkeypatch.setattr(HOST, "_serve", lambda _: pytest.fail("Host reached without signed receipt"))
+    assert HOST.main([
+        "--credential-file", str(credential), "--bundle-root", str(tmp_path),
+        "--trust-roots-file", str(tmp_path / "trust.json"), "--status-file", str(status),
+    ]) == 2
+    assert json.loads(status.read_text()) == {
+        "outcome": "SAFE_BLOCKED", "reasonCode": "SIGNED_RECEIPT_REQUIRED"
+    }
+
+
+def test_current_preflight_failure_stops_before_serve(tmp_path: Path, monkeypatch) -> None:
+    credential, _ = _credential_file(tmp_path / "identities.json")
+    status = tmp_path / "status.json"
+    monkeypatch.setattr(HOST, "_current_preflight", lambda *_: (_ for _ in ()).throw(
+        HOST.HostBlocked("CREDENTIAL_DATABASE_DRIFT")))
+    monkeypatch.setattr(HOST, "_serve", lambda _: pytest.fail("Host reached after failed preflight"))
+    assert HOST.main([
+        "--credential-file", str(credential), "--signed-receipt", str(tmp_path / "signed.json"),
+        "--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust.json"),
+        "--status-file", str(status),
+    ]) == 2
+    assert json.loads(status.read_text()) == {
+        "outcome": "SAFE_BLOCKED", "reasonCode": "CREDENTIAL_DATABASE_DRIFT"
+    }
+
+
+def test_current_preflight_green_is_not_formal_owner_authority(tmp_path: Path, monkeypatch) -> None:
+    credential, _ = _credential_file(tmp_path / "identities.json")
+    status = tmp_path / "status.json"
+    seen = []
+    monkeypatch.setattr(HOST, "_current_preflight", lambda *_: seen.append("checked"))
+    monkeypatch.setattr(HOST, "_serve", lambda _: pytest.fail("Host reached without formal Owner"))
+    assert HOST.main([
+        "--credential-file", str(credential), "--signed-receipt", str(tmp_path / "signed.json"),
+        "--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust.json"),
+        "--status-file", str(status),
+    ]) == 2
+    assert seen == ["checked"]
+    assert json.loads(status.read_text()) == {
+        "outcome": "SAFE_BLOCKED", "reasonCode": "FORMAL_OWNER_AUTHORITY_UNPROVEN"
+    }
+
+
 def test_serve_records_active_then_clean_stop(tmp_path: Path, monkeypatch) -> None:
     credential_path, _credentials = _credential_file(tmp_path / "identities.json")
     bundle = tmp_path / "bundles"
@@ -198,24 +244,17 @@ def test_serve_rejects_symlink_before_build(tmp_path, monkeypatch):
         )))
 
 
-def test_runtime_failure_records_private_safe_exception_chain(tmp_path, monkeypatch):
-    async def fail(_args):
+def test_runtime_failure_chain_omits_private_exception_values():
+    try:
         try:
             raise TimeoutError("password=do-not-record-original")
         except TimeoutError as original:
             raise RuntimeError("token=do-not-record-cleanup") from original
-
-    monkeypatch.setattr(HOST, "_serve", fail)
-    status = tmp_path / "status.json"
-    assert HOST.main(["--bundle-root", str(tmp_path), "--trust-roots-file", str(tmp_path / "trust"),
-                      "--status-file", str(status),
-                      "--credential-file", str(tmp_path / "identities.json")]) == 2
-    result = json.loads(status.read_text())
-    assert [item["errorType"] for item in result["errorChain"]] == ["RuntimeError", "TimeoutError"]
-    assert result["errorChain"][1]["relation"] == "cause"
-    assert result["errorChain"][1]["frames"][-1]["function"] == "fail"
-    assert "do-not-record" not in status.read_text()
-    assert result["errorType"] == "RuntimeError"
+    except RuntimeError as error:
+        result = HOST._safe_error_chain(error)
+    assert [item["errorType"] for item in result] == ["RuntimeError", "TimeoutError"]
+    assert result[1]["relation"] == "cause"
+    assert "do-not-record" not in json.dumps(result)
 
 
 def test_error_chain_context_cycle_and_bound():
@@ -248,17 +287,19 @@ def test_competing_host_cannot_overwrite_status_or_reach_serve(tmp_path,monkeypa
     assert json.loads(capsys.readouterr().out)['reasonCode']=='HOST_ALREADY_RUNNING'
 
 
-def test_all_locks_held_during_serve_and_released_after(tmp_path,monkeypatch):
+def test_all_locks_held_during_preflight_and_released_after(tmp_path,monkeypatch):
     import fcntl
     status=tmp_path/'custom-status.json'
     paths=(*HOST.HOST_LOCK_PATHS,status.with_suffix('.lock'))
-    async def serve(_):
+    def preflight(_signed, _credential):
         for path in paths:
             with path.open('a+') as competing:
                 with pytest.raises(BlockingIOError):fcntl.flock(competing,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    monkeypatch.setattr(HOST,'_serve',serve)
+    monkeypatch.setattr(HOST,'_current_preflight',preflight)
     assert HOST.main(['--bundle-root',str(tmp_path),'--trust-roots-file',str(tmp_path/'missing'),
                       '--status-file',str(status),
-                      '--credential-file',str(tmp_path/'identities.json')])==0
+                      '--credential-file',str(tmp_path/'identities.json'),
+                      '--signed-receipt',str(tmp_path/'signed.json')])==2
+    assert json.loads(status.read_text())['reasonCode']=='FORMAL_OWNER_AUTHORITY_UNPROVEN'
     for path in paths:
         with path.open('a+') as free:fcntl.flock(free,fcntl.LOCK_EX|fcntl.LOCK_NB)
