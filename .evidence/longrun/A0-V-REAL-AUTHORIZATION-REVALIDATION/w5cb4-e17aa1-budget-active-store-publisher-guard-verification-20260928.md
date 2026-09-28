@@ -16,3 +16,4 @@
 - 生产代码中 `aip_budget_revision` 的 INSERT 和 Head UPDATE 只在 `AipBudgetAuthorityStore.publish` 找到；直接调用通用 Store active 现拒绝且不写 Head/Receipt。公开 HTTP active 422 未改变；历史 `bootstrap_r1_runtime_authority.py` 有旧库身份硬门，当前 `a0v_current_runtime_configuration_authority.py` 也限定隔离库。此波没有运行这些写脚本。
 - 此门只覆盖应用 Store；数据库运行角色仍有旧表写权限，正式原子消费和 DB 级单次约束、外部费用上界仍未实现。当前租户无独立 checker，不可启 Host/worker、不可称预算激活或自然首链完成。
 - 本波无迁移、无当前库写、无商城源读取、无 `dev-org` 写、无旧 Run 回放或手工 Run。浏览器页面逻辑未改，browser-pilot 不可用，无新增截图。
+- 提交后重载当前 API：签名预检退出 0，`aos_current_preview_20260927@a0v_110`、安装 approved、4 published、binding0；8080 health/ready 与 8434 页面 HTTP200、18181 无监听。只读库查询 Budget Head/Revision/activation decision 均 0。此为安全禁入和服务状态回读，不是 active 预算或首链验收。
