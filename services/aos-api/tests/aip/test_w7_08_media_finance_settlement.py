@@ -36,6 +36,7 @@ from aos_api.aip_media_provider_job_store import AipMediaProviderJobStore
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
+from _budget_test_fixture import insert_isolated_active_budget_revision
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -110,7 +111,9 @@ def _seed_finance_authorities(capacity_ref: ExactRevisionRef, budget_ref: ExactR
             (*SCOPE.key, budget_ref.resource_id),
         )
         payload = {"budgetId": budget_ref.resource_id, "revision": 1, "currency": "CNY", "lifecycle": "active"}
-        conn.execute(
+        conn.commit()
+    insert_isolated_active_budget_revision(
+        SCOPE,
             """INSERT INTO aip_budget_revision(
                org_id,project_id,budget_id,revision,content_hash,lifecycle,environment,currency,
                daily_limit_minor,monthly_limit_minor,alert_threshold_pct,hard_stop,
@@ -118,8 +121,7 @@ def _seed_finance_authorities(capacity_ref: ExactRevisionRef, budget_ref: ExactR
                payload,created_by,created_at)
                VALUES(%s,%s,%s,%s,%s,'active','development','CNY',5000,50000,80,TRUE,'block',%s,%s,'owner','approver',%s::jsonb,'test:w7-08',%s)""",
             (*SCOPE.key, budget_ref.resource_id, budget_ref.revision, budget_ref.content_hash, now - timedelta(hours=1), now + timedelta(days=1), json.dumps(payload), now),
-        )
-        conn.commit()
+    )
 
 
 def test_contracts_do_not_invent_unknown_cost_or_zero_charge() -> None:
