@@ -10,6 +10,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import stat
 import sys
@@ -94,7 +95,18 @@ def _load_credentials(path: Path) -> dict[str, dict[str, str]]:
     return value
 
 
-def _current_preflight(signed_receipt: Path, credential_file: Path) -> None:
+def _require_current_host_id(report: object) -> str:
+    if (type(report) is not dict
+            or report.get("outcome") != "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN"
+            or report.get("authorization") != "PREFLIGHT_ONLY_NO_RUNTIME_START"
+            or report.get("scope") != ["org-org", "dev-project"]
+            or type(report.get("hostId")) is not str
+            or re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}", report["hostId"]) is None):
+        raise HostBlocked("CURRENT_HOST_ID_INVALID")
+    return report["hostId"]
+
+
+def _current_preflight(signed_receipt: Path, credential_file: Path) -> str:
     """Cross-bind explicit identities to the current signed installation before Host setup."""
     try:
         path = ROOT / "scripts/a0v_current_runtime_host_preflight.py"
@@ -103,7 +115,8 @@ def _current_preflight(signed_receipt: Path, credential_file: Path) -> None:
             raise HostBlocked("CURRENT_PREFLIGHT_UNAVAILABLE")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        module.preflight(signed_receipt=signed_receipt, credential_file=credential_file)
+        report = module.preflight(signed_receipt=signed_receipt, credential_file=credential_file)
+        return _require_current_host_id(report)
     except HostBlocked:
         raise
     except Exception as exc:
@@ -115,6 +128,7 @@ def _current_preflight(signed_receipt: Path, credential_file: Path) -> None:
             "RUNTIME_IDENTITY_INVALID", "HOST_ASSIGNMENT_MISSING",
             "HOST_IDENTITY_MISMATCH", "CONFIGURATION_CANDIDATES_MISSING",
             "DATABASE_PREFLIGHT_FAILED",
+            "CREDENTIAL_FILE_CHANGED", "CURRENT_HOST_ID_INVALID",
         }
         raise HostBlocked(code if type(code) is str and code in allowed
                           else "CURRENT_PREFLIGHT_FAILED") from None
@@ -215,7 +229,10 @@ def _opt_in_host_lease(args):
                           scope=TenantScope("org-org", "dev-project"))
 
 
-async def _serve(args: argparse.Namespace) -> None:
+async def _serve(args: argparse.Namespace, *, current_host_id: str) -> None:
+    if (type(current_host_id) is not str
+            or re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}", current_host_id) is None):
+        raise HostBlocked("CURRENT_HOST_ID_INVALID")
     _configure_environment(
         args.credential_file,
         bundle_root=args.bundle_root.resolve(),
@@ -233,7 +250,7 @@ async def _serve(args: argparse.Namespace) -> None:
     public = {
         "outcome": "RUNTIME_HOST_ACTIVE",
         "pid": os.getpid(),
-        "hostId": "a0v-local-ecommerce-host-20260912",
+        "hostId": current_host_id,
         "tenantCount": 1,
         "positiveTenant": "org-org/dev-project",
         "canaryTenantCount": 0,
@@ -366,7 +383,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             _write(args.status_file.resolve(), {"outcome": "SAFE_BLOCKED", "reasonCode": "SIGNED_RECEIPT_REQUIRED"})
             return 2
         try:
-            _current_preflight(args.signed_receipt, args.credential_file)
+            current_host_id = _current_preflight(args.signed_receipt, args.credential_file)
+            if not current_host_id:
+                raise HostBlocked("CURRENT_HOST_ID_INVALID")
             # E17-l checks candidates and Host assignment; formal installation
             # lifecycle Owner and bound approval/Receipt still require a separate gate.
             raise HostBlocked("FORMAL_OWNER_AUTHORITY_UNPROVEN")
