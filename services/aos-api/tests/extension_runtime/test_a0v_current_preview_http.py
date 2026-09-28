@@ -56,7 +56,7 @@ def test_matching_tree_hash_with_invalid_signatures_blocks_before_database(previ
 
 
 def test_all_execution_flags_are_explicitly_disabled(preview):
-    assert preview.EXPECTED_SCHEMA_HEAD == "a0v_109"
+    assert preview.EXPECTED_SCHEMA_HEAD == "a0v_110"
     assert preview.FLAGS["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] == "0"
     assert preview.FLAGS["AOS_QYH_CRON_ENABLED"] == "false"
     assert preview.FLAGS["AOS_DB_MIGRATION_MODE"] == "disabled"
