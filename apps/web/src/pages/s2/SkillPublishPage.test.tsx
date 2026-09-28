@@ -100,7 +100,26 @@ describe("SkillPublishPage W-F4 batch stats", () => {
       "/v1/aip/skills/ecommerce.skill.A01/revisions/1/publication-options",
     );
     expect(host.textContent).toContain("当前无可发布候选");
+    expect(host.textContent).toContain("缺少正式技能发布放行决定与发布事件");
+    expect(host.textContent).toContain("缺少当前业务逻辑发布版本");
+    expect(host.textContent).toContain("缺少可用的当前模型路由与运行策略");
+    expect(host.querySelector('a[href="/aip/logic"]')?.textContent).toContain("业务逻辑");
+    expect(host.querySelector('a[href="/aip/model-router"]')?.textContent).toContain("模型路由");
+    expect(host.querySelector('p[role="status"]')?.textContent).not.toContain("RELEASE_PUBLICATION_UNAVAILABLE");
+    expect(Array.from(host.querySelectorAll('a[href="/aip/agent-registry"]')).some(link => link.textContent === "查看组织绑定状态")).toBe(true);
+    expect(host.textContent).toContain("正式绑定创建入口待接线");
     expect(host.querySelectorAll("input")).toHaveLength(0);
+    expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("发布此修订")) as HTMLButtonElement).disabled).toBe(true);
+    expect(apiPostUnqueued).not.toHaveBeenCalled();
+  });
+
+  it("keeps unknown publication blockers visible for audit without enabling publish", async () => {
+    vi.mocked(apiGetAuthoritative).mockResolvedValue({ tenant, skillId: "ecommerce.skill.A01", revision: 1,
+      releaseCandidates: [], logicCandidates: [], routeCandidates: [], blockers: ["UNKNOWN_CURRENT_OWNER"] });
+    await act(async () => root.render(<MemoryRouter><SkillPublishPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("当前权威阻断待核对");
+    expect(host.querySelector("details")?.textContent).toContain("UNKNOWN_CURRENT_OWNER");
     expect((Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("发布此修订")) as HTMLButtonElement).disabled).toBe(true);
     expect(apiPostUnqueued).not.toHaveBeenCalled();
   });

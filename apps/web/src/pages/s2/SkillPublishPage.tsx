@@ -51,6 +51,12 @@ function lifecycleLabel(lifecycle: string): string {
   )[lifecycle] || lifecycle;
 }
 
+const publicationBlockerLabels: Record<string, string> = {
+  RELEASE_PUBLICATION_UNAVAILABLE: "缺少正式技能发布放行决定与发布事件",
+  LOGIC_PUBLICATION_UNAVAILABLE: "缺少当前业务逻辑发布版本",
+  MODEL_ROUTE_UNAVAILABLE: "缺少可用的当前模型路由与运行策略",
+};
+
 export function SkillPublishPage() {
   const [data, setData] = useState<SkillListResponse | null>(null);
   const [allItems, setAllItems] = useState<SkillItem[]>([]);
@@ -260,7 +266,11 @@ export function SkillPublishPage() {
                   生命周期：{lifecycleLabel(selected.lifecycle)} · 修订 {selected.revision}
                 </p>
                 {selected.lifecycle === "evaluated" ? <details open style={{ marginTop: 14 }}><summary><strong>当前精确发布候选</strong></summary>
-                  {optionsError ? <div role="alert">候选读取失败，禁止发布：{optionsError}</div> : !options ? <p>正在读取当前候选…</p> : options.blockers.length ? <p role="status">当前无可发布候选：{options.blockers.join("、")}。请先在评测门控、业务逻辑和模型配置中补齐正式权威。</p> : null}
+                  {optionsError ? <div role="alert">候选读取失败，禁止发布：{optionsError}</div> : !options ? <p>正在读取当前候选…</p> : options.blockers.length ? <div>
+                    <p role="status">当前无可发布候选；须由各权威负责人补齐以下精确来源，再刷新核验。</p>
+                    <ul>{options.blockers.map((code) => <li key={code}>{publicationBlockerLabels[code] ?? "当前权威阻断待核对"}{code === "LOGIC_PUBLICATION_UNAVAILABLE" ? <> · <Link to="/aip/logic">查看业务逻辑</Link></> : code === "MODEL_ROUTE_UNAVAILABLE" ? <> · <Link to="/aip/model-router">查看模型路由</Link></> : null}</li>)}</ul>
+                    <details><summary>阻断代码（审计用）</summary><code>{options.blockers.join("、")}</code></details>
+                  </div> : null}
                   {options && options.blockers.length === 0 ? <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
                     <label>发布事件与放行决定 <select value={releaseChoice} onChange={(event) => setReleaseChoice(event.target.value)}><option value="">请选择</option>{options.releaseCandidates.map((item, index) => <option value={index} key={`${item.publicationId}:${item.releaseGateDecisionId}`}>{item.publicationId} · {item.releaseGateDecisionId}</option>)}</select></label>
                     <label>业务逻辑精确版本 <select value={logicChoice} onChange={(event) => setLogicChoice(event.target.value)}><option value="">请选择</option>{options.logicCandidates.map((item, index) => <option value={index} key={`${item.assetId}:${item.revision}`}>{item.assetId}@{item.revision} · {item.contentHash.slice(0, 12)}</option>)}</select></label>
@@ -292,9 +302,10 @@ export function SkillPublishPage() {
                   </ol>
                   <div className="notice"><strong>当前消费方</strong><p>{runtime?.catalog.items.filter((item) => item.skills.some((skill) => skill.skillId === selected.skillId && skill.revision === selected.revision)).map((item) => item.template.displayName).join("、") || "当前组织没有消费此精确修订的数字同事"}</p></div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <Link className="btn" to={`/aip/agent-registry?skillId=${encodeURIComponent(selected.skillId)}&revision=${selected.revision}&intent=bind`}>打开权威绑定流程</Link>
+                    <Link className="btn" to="/aip/agent-registry">查看组织绑定状态</Link>
                     <Link className="btn" to={`/aip/logic?logicId=${encodeURIComponent(selected.canonicalLogicId)}`}>查看业务逻辑</Link>
                   </div>
+                  <p>正式绑定创建入口待接线；当前目录页只展示已有绑定与就绪状态。</p>
                 </div>
               </>
             )}
