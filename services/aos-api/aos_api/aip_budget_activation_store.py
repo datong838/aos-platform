@@ -135,6 +135,91 @@ def _revocation_view(row) -> dict:
 
 
 class AipBudgetActivationStore:
+    def precheck_consumption(
+        self, principal: Principal, decision_id: str, *, target_hash: str,
+    ) -> None:
+        """Recheck an approval in one transaction; never authorize activation.
+
+        The external bill authority and atomic consumer do not exist yet.
+        Keeping this read gate separate prevents an approved Decision from
+        being mistaken for a usable active BudgetRevision.
+        """
+        scope, maker = _identity(principal)
+        if (type(decision_id) is not str or not decision_id
+                or decision_id != decision_id.strip()
+                or type(target_hash) is not str or len(target_hash) != 64
+                or any(ch not in "0123456789abcdef" for ch in target_hash)):
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_CONSUMPTION_REF_INVALID")
+        with connect_serializable(scope) as conn:
+            conn.execute(
+                "SELECT pg_advisory_xact_lock(hashtextextended(%s,0))",
+                (f"budget-activation-decision:{scope.org_id}:{scope.project_id}:{decision_id}",),
+            )
+            rows = conn.execute(
+                """SELECT d.decision,d.preview_hash AS decision_preview_hash,
+                          d.target_hash AS decision_target_hash,
+                          d.checker_subject AS decision_checker,d.expires_at AS decision_expires,
+                          p.*
+                   FROM aip_budget_activation_decision d
+                   JOIN aip_budget_activation_preview p
+                     ON p.org_id=d.org_id AND p.project_id=d.project_id
+                    AND p.preview_id=d.preview_id
+                   WHERE d.org_id=%s AND d.project_id=%s AND d.decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchall()
+            if len(rows) != 1:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_MISSING")
+            row = rows[0]
+            if maker != row["maker_subject"] or maker == row["checker_subject"]:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_CONSUMER_NOT_MAKER")
+            _member(conn, scope, maker, label="MAKER")
+            _member(conn, scope, row["checker_subject"], label="CHECKER")
+            if (row["decision"] != "approved"
+                    or row["decision_checker"] != row["checker_subject"]):
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_NOT_APPROVED")
+            if (_preview_hash(scope, row) != row["preview_hash"]
+                    or row["decision_preview_hash"] != row["preview_hash"]
+                    or canonical_hash(row["target_payload"]) != row["target_hash"]
+                    or row["decision_target_hash"] != row["target_hash"]
+                    or target_hash != row["target_hash"]):
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_TARGET_DRIFT")
+            now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+            if row["expires_at"] <= now or row["decision_expires"] <= now:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_EXPIRED")
+            if conn.execute(
+                """SELECT 1 FROM aip_budget_activation_revocation
+                   WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                (*scope.key, decision_id),
+            ).fetchone() is not None:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_REVOKED")
+            try:
+                ledger = read_initial_budget_ledger(
+                    conn, scope, row["budget_id"],
+                    expected_head_version=row["expected_head_version"],
+                )
+            except BudgetActivationLedgerBlocked as exc:
+                raise BudgetActivationDenied(exc.code) from exc
+            draft = conn.execute(
+                """SELECT payload FROM aip_budget_revision
+                   WHERE org_id=%s AND project_id=%s AND budget_id=%s AND revision=%s""",
+                (*scope.key, row["budget_id"], ledger.current_revision),
+            ).fetchone()
+            if draft is None or row["draft_revision"] != ledger.current_revision:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_HEAD_DRIFT")
+            expected = dict(draft["payload"])
+            for field in ("tenant", "contentHash", "createdBy", "createdAt"):
+                expected.pop(field, None)
+            expected["revision"] = row["target_revision"]
+            expected["lifecycle"] = "active"
+            if (row["target_revision"] != ledger.current_revision + 1
+                    or canonical_hash(expected) != row["target_hash"]):
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_TARGET_DRIFT")
+            if row["external_usage_proven"] is not True:
+                raise BudgetActivationDenied("BUDGET_ACTIVATION_EXTERNAL_USAGE_PROOF_REQUIRED")
+            # A future external bill producer must supply an exact, current
+            # immutable reference and the DB writer must consume it atomically.
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_EXTERNAL_USAGE_AUTHORITY_UNWIRED")
+
     def create_preview(
         self, principal: Principal, target: BudgetRevisionCreate,
         checker_subject: str, idempotency_key: str, *, expected_head_version: int,
