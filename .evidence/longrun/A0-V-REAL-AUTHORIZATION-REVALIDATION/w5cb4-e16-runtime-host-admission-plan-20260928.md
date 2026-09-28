@@ -12,4 +12,6 @@
 4. 专项测试覆盖 Host active/inactive/failure、assignment 有/无/漂移、跨租户/错安装、读失败、已有未知回执/幂等重放；累计相邻 Registry/runtime 与前端套件、TypeScript/构建。浏览器只读验收当前运行面板如实禁入；不点击任何会生成 operation 的按钮。
 5. 方案/代码一致性与安全复审、verification 落盘、m1 精确提交、AOS/Prime 上下文更新；立即进入 E17 的当前身份/Host/OCI 正式启动及首链准备。当天代码变更后，以最新 m1 与同一权威命名卷完整重启 DB/API/Web，读回版本、页面、健康、Host/operation/binding/Receipt，再继续 Loop。绝不删除数据卷、不 push、不重发旧 12 Run、230 L0 仍挂起。
 
+09:00 现场收窄：重启证据 `bf4dee67` 确认 Host/assignment0，但 API 运行面板仍露出“准备运行资源”。实现接缝定为 `extension_runtime/runtime_host.py` 的当前同 scope preparation assignment 只读判定、`routers/bundle_runtime_installations.py` 的当前进程 Host task + assignment 投影及每次 POST 注入、`extension_runtime/lifecycle_service.py` 的**新命令 handler 内**准入复核（在幂等 Receipt 读回之后、operation accept 之前，保留同 key 对账）。前端 `RuntimeInstallation` 严格 DTO 加 `preparationExecutable`，仅为当前可执行性提示，受服务端最终检查约束；对 `runtime-apply/verify`，页面按钮与 controller 都在该字段非 true 时禁入。已有未知结果的按钮不得重新 POST；只保留只读对账提示。服务端 Host 状态在读与提交之间可变化，必须再由 handler 读当前，不能把 GET 当永久许可。
+
 九步：1 上位复习；2 文件级方案；3 RED/最小实现；4 专项；5 累计；6 浏览器；7 一致性复审；8 verification；9 提交/记忆/下一波。停止门：未知结果、身份/assignment/签名不明、测试失败或提交边界不明时冻结动作，仍可推进只读诊断和独立编码；不得将 HTTP200 或按钮可点当业务完成。
