@@ -5,6 +5,7 @@ import { PageChrome } from "../../components/PageChrome";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
 import { ColleagueBusinessLoopCard } from "../../components/aip/ColleagueBusinessLoopCard";
+import { SkillBindingCreatePanel } from "./SkillBindingCreatePanel";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -260,6 +261,7 @@ export function CanonicalAgentRegistryPage() {
                   {skill.lifecycle === "published" ? "已发布" : "未发布"}
                   {" · "}
                   {binding ? `绑定${bindingStatusDisplayName(binding.status)}` : "未绑定"}
+                  {!binding && item.instance ? <SkillBindingCreatePanel item={item} skill={skill} snapshot={data} onCreated={load} /> : null}
                 </li>;
               })}</ul>
             </details>

@@ -53,6 +53,8 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).toContain("热点竞品与获客机会研究");
     expect(host.textContent).toContain("评测");
     expect(host.textContent).toContain("未发布 · 未绑定");
+    expect(host.textContent).toContain("正式发布后才能配置绑定");
+    expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent === "核验绑定候选")).toBe(false);
     expect(host.textContent).not.toContain("R2 口径");
     expect(host.textContent).not.toContain("evaluated→published");
     expect(host.textContent).not.toContain("Pilot");
