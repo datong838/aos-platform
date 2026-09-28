@@ -76,7 +76,7 @@ from aos_api.aip_r1_bootstrap_probe import (
 )
 from aos_api.aip_release_publication_models import DeriveReleaseGateRequest
 from aos_api.aip_release_publication_service import AipReleasePublicationService
-from aos_api.db import connect as db_connect
+from aos_api.db import connect as db_connect, connect_read_only as db_connect_read_only
 from aos_api.tenant_scope import TenantScope
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -94,6 +94,13 @@ PLACEHOLDER_GATE = VersionedAssetRef(
     revision=1,
     contentHash="0" * 64,
 )
+
+
+def _require_legacy_r1_database() -> None:
+    with db_connect_read_only(SCOPE) as conn:
+        row = conn.execute("SELECT current_database() AS database").fetchone()
+    if row is None or row["database"] != "aos_meta_head":
+        raise ValueError("R1_BOOTSTRAP_DATABASE_BLOCKED")
 
 
 def exact_ref(kind: str, item: Any) -> VersionedAssetRef:
@@ -146,6 +153,7 @@ def build_plan() -> dict[str, Any]:
 
 
 def apply_prerequisites() -> dict[str, Any]:
+    _require_legacy_r1_database()
     created_at = WINDOW_START.astimezone(UTC)
     runtime_store = AipModelRuntimeStore()
     governance_store = AipModelGovernancePolicyStore()
@@ -696,6 +704,7 @@ def _latest_fresh_health(
 
 
 def apply_runtime(goldset_path: Path) -> dict[str, Any]:
+    _require_legacy_r1_database()
     cases = _load_goldset(goldset_path)
     store = AipModelRuntimeStore()
     try:

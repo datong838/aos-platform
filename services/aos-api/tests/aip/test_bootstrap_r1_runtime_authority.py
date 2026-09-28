@@ -3,7 +3,11 @@ from __future__ import annotations
 import importlib.util
 import json
 import logging
+from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 
 SCRIPT = (
@@ -88,3 +92,31 @@ def test_cli_suppresses_third_party_http_debug(monkeypatch, capsys):
     assert MODULE.logging.getLogger("httpcore").level == logging.WARNING
     assert MODULE.logging.getLogger("httpx").level == logging.WARNING
     assert "forbiddenSideEffects" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("database_name", ["aos_current_preview_20260927", "unknown_clone"])
+def test_r1_write_functions_reject_current_database_before_any_effect(monkeypatch, database_name):
+    @contextmanager
+    def current_database(scope):
+        assert scope == MODULE.SCOPE
+        yield SimpleNamespace(execute=lambda _: SimpleNamespace(
+            fetchone=lambda: {"database": database_name}))
+
+    monkeypatch.setattr(MODULE, "db_connect_read_only", current_database, raising=False)
+    monkeypatch.setattr(MODULE, "AipModelRuntimeStore", lambda: pytest.fail("store reached before guard"))
+    monkeypatch.setattr(MODULE, "_load_goldset", lambda _: pytest.fail("goldset reached before guard"))
+
+    with pytest.raises(ValueError, match="R1_BOOTSTRAP_DATABASE_BLOCKED"):
+        MODULE.apply_prerequisites()
+    with pytest.raises(ValueError, match="R1_BOOTSTRAP_DATABASE_BLOCKED"):
+        MODULE.apply_runtime(Path("never-read.json"))
+
+
+def test_r1_database_guard_accepts_only_legacy_database(monkeypatch):
+    @contextmanager
+    def legacy_database(scope):
+        assert scope == MODULE.SCOPE
+        yield SimpleNamespace(execute=lambda _: SimpleNamespace(fetchone=lambda: {"database": "aos_meta_head"}))
+
+    monkeypatch.setattr(MODULE, "db_connect_read_only", legacy_database, raising=False)
+    MODULE._require_legacy_r1_database()
