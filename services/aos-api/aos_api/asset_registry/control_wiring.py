@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 import json
+import subprocess
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -110,6 +112,48 @@ class _LazyRuntimeViewReader:
         return self._resolve().get_operation(**kwargs)
 
 
+def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: str) -> bool:
+    """Bind this API process to the current signed A0-V database before Host selection."""
+    if not Path(signed_receipt).is_absolute() or not Path(credential_reference).is_absolute():
+        return False
+    try:
+        result = subprocess.run(
+            [sys.executable, str(_REPOSITORY_ROOT / "scripts/a0v_current_runtime_host_preflight.py"),
+             "--signed-receipt", signed_receipt, "--credential-file", credential_reference],
+            capture_output=True, text=True, timeout=60, check=False,
+            env={**os.environ, "AOS_DOTENV_DISABLED": "1"},
+        )
+        if result.returncode != 0:
+            return False
+        report = json.loads(result.stdout.splitlines()[-1])
+        if (report.get("outcome") != "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN"
+                or report.get("authorization") != "PREFLIGHT_ONLY_NO_RUNTIME_START"
+                or report.get("scope") != ["org-org", "dev-project"]):
+            return False
+        authority = report.get("databaseAuthority")
+        if (type(authority) is not list or len(authority) != 3
+                or type(authority[0]) is not str or type(authority[1]) is not int
+                or type(authority[2]) is not str):
+            return False
+        if (Path(os.environ["AOS_BUNDLE_ROOT"]).resolve(strict=True)
+                != Path(report["signedRoot"]).resolve(strict=True)
+                or Path(os.environ["AOS_BUNDLE_TRUST_ROOTS_FILE"]).resolve(strict=True)
+                != Path(report["trustRoots"]).resolve(strict=True)):
+            return False
+        import psycopg
+        from psycopg.rows import dict_row
+        from aos_api.db import get_dsn
+        with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+            conn.read_only = True
+            row = conn.execute(
+                """SELECT coalesce(inet_server_addr()::text,'local') AS server_addr,
+                          inet_server_port() AS server_port,current_database() AS database_name"""
+            ).fetchone()
+        return [row["server_addr"], row["server_port"] or 0, row["database_name"]] == authority
+    except Exception:
+        return False
+
+
 def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlane):
     """Build but do not start the explicitly enabled persistent runtime host."""
     from aos_api.asset_registry.control_policy import (
@@ -142,6 +186,16 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
     credential_reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
     oci_context = os.getenv("AOS_EXTENSION_OCI_CONTEXT", "").strip()
     runtime_platform = os.getenv("AOS_EXTENSION_RUNTIME_PLATFORM", "").strip()
+    if enabled:
+        signed_receipt = os.getenv("AOS_CURRENT_SIGNED_RECEIPT", "").strip()
+        if not credential_reference or not signed_receipt:
+            from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
+            return RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED")
+        if not _current_a0v_host_preflight(
+            signed_receipt=signed_receipt, credential_reference=credential_reference,
+        ):
+            from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
+            return RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_FAILED")
     dependencies = None
     if (
         enabled

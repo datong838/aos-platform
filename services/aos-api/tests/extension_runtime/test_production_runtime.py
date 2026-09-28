@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -365,6 +366,8 @@ def test_exact_four_source_type_rejects_fake_permission_and_readers():
 
 
 def test_environment_wiring_stays_zero_access_until_all_values_exist(monkeypatch):
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: pytest.fail("disabled Host accessed current preflight"), raising=False)
     for name in (
         "AOS_EXTENSION_RUNTIME_HOST_ENABLED",
         "AOS_EXTENSION_RUNTIME_DATABASE_URL",
@@ -379,8 +382,115 @@ def test_environment_wiring_stays_zero_access_until_all_values_exist(monkeypatch
     assert selected == RuntimeHostSelection(None, "INACTIVE", "DISABLED")
 
 
+def test_enabled_host_requires_current_signed_receipt_and_protected_file_before_selector(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "/protected/current-identities.json")
+    monkeypatch.delenv("AOS_CURRENT_SIGNED_RECEIPT", raising=False)
+    monkeypatch.setattr(
+        "aos_api.extension_runtime.production_runtime.select_production_runtime_host",
+        lambda **_: pytest.fail("selector reached without current signed receipt"),
+    )
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None)
+    )
+    assert selected == RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED")
+
+
+def test_enabled_host_failed_current_preflight_stops_before_selector(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "/protected/old-identities.json")
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/current/signing-receipt.json")
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: False, raising=False)
+    monkeypatch.setattr(
+        "aos_api.extension_runtime.production_runtime.select_production_runtime_host",
+        lambda **_: pytest.fail("selector reached after failed current preflight"),
+    )
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None)
+    )
+    assert selected == RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_FAILED")
+
+
+def test_enabled_host_does_not_accept_legacy_dsn_pair_without_protected_file(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/current/signing-receipt.json")
+    monkeypatch.delenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", raising=False)
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "old-runtime")
+    monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "old-directory")
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: pytest.fail("legacy DSNs reached current preflight"))
+    assert build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None)
+    ) == RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED")
+
+
+def test_current_host_preflight_requires_api_physical_authority_and_signed_paths(monkeypatch, tmp_path):
+    from aos_api.asset_registry import control_wiring as wiring
+    signed_root = tmp_path / "signed-bundles"
+    signed_root.mkdir()
+    trust = tmp_path / "trust-roots.json"
+    trust.write_text("{}")
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(signed_root))
+    monkeypatch.setenv("AOS_BUNDLE_TRUST_ROOTS_FILE", str(trust))
+    authority = ["172.0.0.2", 5432, "aos_current_preview_20260927"]
+    report = {"outcome": "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN",
+              "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START",
+              "scope": ["org-org", "dev-project"], "databaseAuthority": authority,
+              "signedRoot": str(signed_root), "trustRoots": str(trust)}
+    monkeypatch.setattr(wiring.subprocess, "run", lambda *_a, **_k: SimpleNamespace(
+        returncode=0, stdout="log line\n" + json.dumps(report)))
+    monkeypatch.setattr("aos_api.db.get_dsn", lambda: "api-dsn")
+
+    class Conn:
+        read_only = False
+        database_name = "aos_current_preview_20260927"
+        def __enter__(self): return self
+        def __exit__(self, *_): return None
+        def execute(self, _query):
+            assert self.read_only is True
+            return self
+        def fetchone(self):
+            return {"server_addr": "172.0.0.2", "server_port": 5432,
+                    "database_name": self.database_name}
+
+    connection = Conn()
+    monkeypatch.setattr("psycopg.connect", lambda *_a, **_k: connection)
+    inputs = {"signed_receipt": str(tmp_path / "receipt.json"),
+              "credential_reference": str(tmp_path / "identities.json")}
+    assert wiring._current_a0v_host_preflight(**inputs) is True
+    connection.database_name = "old_same_name_drift"
+    assert wiring._current_a0v_host_preflight(**inputs) is False
+    connection.database_name = "aos_current_preview_20260927"
+    other = tmp_path / "old-bundles"
+    other.mkdir()
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(other))
+    assert wiring._current_a0v_host_preflight(**inputs) is False
+
+
+@pytest.mark.parametrize("returncode,output", [
+    (2, '{"outcome":"SAFE_BLOCKED","reasonCode":"CREDENTIAL_DATABASE_DRIFT"}'),
+    (0, "not-json"),
+])
+def test_current_host_preflight_subprocess_failure_never_opens_api_db(
+    monkeypatch, tmp_path, returncode, output,
+):
+    from aos_api.asset_registry import control_wiring as wiring
+    monkeypatch.setattr(wiring.subprocess, "run", lambda *_a, **_k: SimpleNamespace(
+        returncode=returncode, stdout=output))
+    monkeypatch.setattr("psycopg.connect", lambda *_a, **_k: pytest.fail("API DB opened"))
+    assert wiring._current_a0v_host_preflight(
+        signed_receipt=str(tmp_path / "receipt.json"),
+        credential_reference=str(tmp_path / "identities.json"),
+    ) is False
+
+
 def test_environment_wiring_requires_platform_before_allowlist_access(monkeypatch):
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/fixture/signed-receipt.json")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "/fixture/identities.json")
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: True)
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
     monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
     monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
@@ -399,6 +509,10 @@ def test_environment_wiring_requires_platform_before_allowlist_access(monkeypatc
 
 def test_environment_wiring_rejects_unsupported_platform(monkeypatch):
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/fixture/signed-receipt.json")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "/fixture/identities.json")
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: True)
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
     monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
     monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
@@ -424,18 +538,14 @@ def test_environment_wiring_rejects_unsupported_platform(monkeypatch):
     )
 
 
-@pytest.mark.parametrize('use_reference', [False, True])
 @pytest.mark.parametrize('stage_flag', ['0', '1', 'invalid'])
-def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch, use_reference, stage_flag):
+def test_environment_wiring_constructs_exact_dependencies_without_starting(monkeypatch, stage_flag):
     monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CONFIGURATION_STAGE_ENABLED', stage_flag)
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
-    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_DATABASE_URL", "runtime-dsn")
-    monkeypatch.setenv("AOS_EXTENSION_DIRECTORY_DATABASE_URL", "directory-dsn")
-    monkeypatch.delenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', raising=False)
-    if use_reference:
-        monkeypatch.delenv('AOS_EXTENSION_RUNTIME_DATABASE_URL')
-        monkeypatch.delenv('AOS_EXTENSION_DIRECTORY_DATABASE_URL')
-        monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', '/fixture/path/validated-by-identity-selector')
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/fixture/signed-receipt.json")
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE', '/fixture/path/validated-by-identity-selector')
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: True)
     monkeypatch.setenv("AOS_EXTENSION_OCI_CONTEXT", "colima-aos-extension")
     monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PLATFORM", "linux/arm64")
     captured = {}

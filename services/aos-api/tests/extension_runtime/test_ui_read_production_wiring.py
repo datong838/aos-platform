@@ -52,9 +52,10 @@ def test_environment_wiring_is_explicit_and_closed_on_invalid_configuration(monk
     from aos_api.asset_registry.control_wiring import RuntimeControlPlane,build_production_runtime_host_selection
     from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
     monkeypatch.setenv('AOS_EXTENSION_RUNTIME_HOST_ENABLED','1')
-    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_DATABASE_URL','fixture-runtime')
-    monkeypatch.setenv('AOS_EXTENSION_DIRECTORY_DATABASE_URL','fixture-directory')
-    monkeypatch.delenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE',raising=False)
+    monkeypatch.setenv('AOS_CURRENT_SIGNED_RECEIPT','/fixture/signed-receipt.json')
+    monkeypatch.setenv('AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE','/fixture/identities.json')
+    monkeypatch.setattr('aos_api.asset_registry.control_wiring._current_a0v_host_preflight',
+                        lambda **_: True)
     monkeypatch.setenv('AOS_EXTENSION_OCI_CONTEXT','colima-aos-extension')
     monkeypatch.setenv('AOS_EXTENSION_RUNTIME_PLATFORM','linux/arm64')
     monkeypatch.setenv('AOS_EXTENSION_RUNTIME_UI_READ_ENABLED','0' if mode=='disabled' else '1')

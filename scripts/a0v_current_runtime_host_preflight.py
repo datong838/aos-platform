@@ -136,6 +136,8 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None) -> dict[str
         raise HostPreflightBlocked("DATABASE_PREFLIGHT_FAILED") from None
     return {"outcome": "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN",
             "database": signed["database"], "installationId": signed["installationId"],
+            "databaseAuthority": list(authority),
+            "signedRoot": signed["signedRoot"], "trustRoots": signed["trustRoots"],
             "scope": ["org-org", "dev-project"], **host,
             "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START"}
 
