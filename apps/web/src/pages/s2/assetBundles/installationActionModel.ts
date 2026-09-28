@@ -41,6 +41,7 @@ export type InstallationActionReconciliation =
 export interface InstallationActionPrincipal {
   readonly subject: string | null;
   readonly roles: readonly string[] | null;
+  readonly legacyContentEligible?: boolean | null;
 }
 
 export interface InstallationActionSource {
@@ -85,6 +86,7 @@ export type InstallationActionBlockReason =
   | "principal_unknown"
   | "role_denied"
   | "maker_checker"
+  | "legacy_route_unverified"
   | "invalid_state";
 
 export interface InstallationActionEligibility {
@@ -153,6 +155,9 @@ export function installationActionEligibility(
   }
   if (installation.state !== INSTALLATION_ACTION_TRANSITIONS[action].from) {
     return blocked("invalid_state");
+  }
+  if ((action === "apply" || action === "verify") && principal.legacyContentEligible !== true) {
+    return blocked("legacy_route_unverified");
   }
   if (
     (action === "approve" || action === "reject") &&

@@ -232,11 +232,21 @@ export function AssetBundlesPage() {
     !installationDetailState.refreshing
       ? installationDetailState.data
       : null;
+  const legacyContentEligible = actionInstallation &&
+    runtimeInstallationState.status === "ready" &&
+    !runtimeInstallationState.stale &&
+    !runtimeInstallationState.refreshing &&
+    runtimeInstallationState.data?.installationId === actionInstallation.installationId &&
+    runtimeInstallationState.data.installationRevision === actionInstallation.currentRevision &&
+    runtimeInstallationState.data.installationEtag === actionInstallation.etagVersion
+      ? runtimeInstallationState.data.legacyContentEligible ?? null
+      : null;
   const actionCommands = useInstallationActionCommands({
     installation: actionInstallation,
     principal: {
       subject: actionRuntime.subject ?? null,
       roles: actionRuntime.roles ?? null,
+      legacyContentEligible,
     },
     onSuccess: () => {
       setSelectedAction(null);
@@ -501,6 +511,7 @@ export function AssetBundlesPage() {
             offline={actionRuntime.offline}
             subject={actionRuntime.subject}
             roles={actionRuntime.roles}
+            legacyContentEligible={legacyContentEligible}
             selectedAction={selectedAction}
             pendingAction={pendingAction}
             onSelectedActionChange={setSelectedAction}

@@ -35,6 +35,7 @@ function context(overrides: Partial<InstallationActionContext> = {}): Installati
     refreshing: false,
     offline: false,
     pendingAction: null,
+    legacyContentEligible: true,
     ...overrides,
   };
 }
@@ -61,7 +62,7 @@ describe("installation action policy", () => {
           const uiAllowed = ui.find((item) => item.action === action)?.enabled ?? false;
           const controllerAllowed = installationActionEligibility(
             installation,
-            { subject: "operator@example.test", roles },
+            { subject: "operator@example.test", roles, legacyContentEligible: true },
             action,
           ).allowed;
           expect(uiAllowed, `${state}/${roles.join(",")}/${action}`).toBe(
@@ -117,6 +118,16 @@ describe("installation action policy", () => {
     }));
     expect(makerDecision.every((item) => !item.enabled)).toBe(true);
     expect(makerDecision.every((item) => item.disabledReason?.includes("不能批准或拒绝"))).toBe(true);
+  });
+
+  it("未知或运行包不开放通用 Apply/Verify", () => {
+    for (const legacyContentEligible of [null, false, undefined]) {
+      const apply = installationActionAvailability(context({ state: "approved", legacyContentEligible }))[0];
+      const verify = installationActionAvailability(context({ state: "applied", legacyContentEligible }))[0];
+      expect(apply?.enabled).toBe(false);
+      expect(verify?.enabled).toBe(false);
+      expect(apply?.disabledReason).toContain("纯内容包");
+    }
   });
 
   it.each([

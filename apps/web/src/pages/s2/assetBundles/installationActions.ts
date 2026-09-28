@@ -23,6 +23,7 @@ export interface InstallationActionContext {
   refreshing: boolean;
   offline: boolean;
   pendingAction: InstallationAction | null;
+  legacyContentEligible?: boolean | null;
 }
 
 export interface InstallationActionAvailability {
@@ -92,6 +93,9 @@ function disabledReason(
   if (context.stale) return "当前安装详情是旧数据，请先刷新";
   if (context.refreshing) return "安装详情正在刷新";
   if (context.offline) return "离线状态禁止安装写操作";
+  if ((action === "apply" || action === "verify") && context.legacyContentEligible !== true) {
+    return "当前安装不是已核验的纯内容包；请查看下方运行实例或先刷新权威状态";
+  }
 
   const subject = normalizedIdentity(context.subject);
   if (!subject) return "当前登录身份尚未加载";

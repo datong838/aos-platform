@@ -34,6 +34,7 @@ describe("M3-4 installation action controller", () => {
   let displayed: InstallationResponse;
   let subject: string;
   let roles: string[];
+  let legacyContentEligible: boolean | null;
   let dependencies: InstallationActionDependencies;
   let keySequence: number;
   const getInstallation = vi.fn();
@@ -52,7 +53,7 @@ describe("M3-4 installation action controller", () => {
   function Probe() {
     latest = useInstallationActionCommands({
       installation: displayed,
-      principal: { subject, roles },
+      principal: { subject, roles, legacyContentEligible },
       dependencies,
       onSuccess,
       onReconciled,
@@ -68,6 +69,7 @@ describe("M3-4 installation action controller", () => {
     displayed = record("submitted");
     subject = "reviewer";
     roles = ["asset-install-approver"];
+    legacyContentEligible = true;
     keySequence = 0;
     for (const mock of [
       getInstallation,
@@ -126,6 +128,21 @@ describe("M3-4 installation action controller", () => {
     roles = ["admin"];
     await act(async () => root.render(<Probe />));
     expect(latest.availability.reject.reason).toBe("maker_checker");
+  });
+
+  it("does not read or POST legacy Apply when the current route is runtime or unknown", async () => {
+    displayed = record("approved");
+    roles = ["asset-installer"];
+    legacyContentEligible = false;
+    await render();
+    expect(latest.availability.apply.reason).toBe("legacy_route_unverified");
+    await act(async () => expect(await latest.execute("apply")).toBe(false));
+    expect(getInstallation).not.toHaveBeenCalled();
+    expect(applyInstallation).not.toHaveBeenCalled();
+    legacyContentEligible = null;
+    await act(async () => root.render(<Probe />));
+    await act(async () => expect(await latest.execute("apply")).toBe(false));
+    expect(applyInstallation).not.toHaveBeenCalled();
   });
 
   it.each([

@@ -374,6 +374,7 @@ export interface RuntimeInstallation {
   installationRevision: number;
   installationEtag: number;
   installationState: InstallationState;
+  legacyContentEligible?: boolean | null;
   effectiveState: string;
   binding: RuntimeBinding | null;
   currentOperation: RuntimeOperation | null;

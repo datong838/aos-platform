@@ -24,6 +24,7 @@ describe("InstallationActionPanel", () => {
     offline: false,
     subject: "operator@example.test",
     roles: ["asset-installer"],
+    legacyContentEligible: true,
     selectedAction: null,
     pendingAction: null,
     onSelectedActionChange: vi.fn(),
@@ -81,8 +82,10 @@ describe("InstallationActionPanel", () => {
     const approved = structuredClone(INSTALLATION_DRAFT_FIXTURE);
     approved.state = "approved";
     approved.current.state = "approved";
-    await render({ installation: approved });
+    await render({ installation: approved, legacyContentEligible: false });
     expect(host.textContent).toContain("运行包请使用下方“运行实例”的准备/验证入口");
+    expect(host.textContent).toContain("服务端判定不可用");
+    expect(Array.from(host.querySelectorAll<HTMLButtonElement>("button")).find(item => item.textContent === "执行 Apply")?.disabled).toBe(true);
   });
 
   it("终态不显示动作", async () => {

@@ -36,6 +36,7 @@ describe("runtime installation canonical contract", () => {
       installationRevision: 5,
       installationEtag: 5,
       installationState: "active",
+      legacyContentEligible: false,
       effectiveState: "disabled",
       binding: {
         generation: GENERATION,
@@ -65,6 +66,7 @@ describe("runtime installation canonical contract", () => {
     expect(result.binding?.generation).toBe(GENERATION);
     expect(result.currentOperation?.events[0]?.type).toBe("accepted");
     expect(result.allowedActions).toEqual(["configure", "enable"]);
+    expect(result.legacyContentEligible).toBe(false);
     expect(result.ui?.readOperationClaims).toEqual(["test.read"]);
   });
 
@@ -75,6 +77,7 @@ describe("runtime installation canonical contract", () => {
       installationRevision: 5,
       installationEtag: 5,
       installationState: "active",
+      legacyContentEligible: null,
       effectiveState: "disabled",
       binding: null,
       currentOperation: null,
@@ -82,6 +85,11 @@ describe("runtime installation canonical contract", () => {
       allowedActions: ["delete"],
       reasons: [],
     })).toThrow("allowedAction is invalid");
+    expect(() => parseRuntimeInstallation({
+      installationId: INSTALLATION_ID, installationRevision: 5, installationEtag: 5,
+      installationState: "approved", legacyContentEligible: "true", effectiveState: "not_prepared",
+      binding: null, currentOperation: null, ui: null, allowedActions: [], reasons: [],
+    })).toThrow("legacyContentEligible");
   });
 
   it("rejects duplicate UI claims and non-canonical resource hashes", () => {
@@ -90,6 +98,7 @@ describe("runtime installation canonical contract", () => {
       installationRevision: 5,
       installationEtag: 5,
       installationState: "active",
+      legacyContentEligible: null,
       effectiveState: "ready",
       binding: null,
       currentOperation: null,

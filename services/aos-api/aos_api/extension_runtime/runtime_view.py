@@ -11,11 +11,13 @@ import psycopg
 from pydantic import BaseModel, ConfigDict, Field
 
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+from aos_api.asset_registry.legacy_runtime_boundary import legacy_content_predicate
 from aos_api.db import connect_read_only
 
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 UiSessionResolver = Callable[..., "RuntimeUiSessionView | None"]
+LegacyContentRouteReader = Callable[..., "bool | None"]
 RuntimeAction = Literal["runtime-apply", "runtime-verify", "configure", "enable", "disable"]
 
 
@@ -81,6 +83,7 @@ class RuntimeInstallationView(BaseModel):
     installationRevision: int = Field(ge=1)
     installationEtag: int = Field(ge=1)
     installationState: str
+    legacyContentEligible: bool | None = None
     effectiveState: str
     binding: RuntimeBindingView | None
     currentOperation: RuntimeOperationView | None
@@ -99,6 +102,32 @@ def _iso(value: Any) -> str:
     return value.isoformat()
 
 
+def read_current_legacy_content_route(
+    conn: Any, *, org_id: str, project_id: str, installation_id: str,
+    revision: int, etag: int,
+) -> bool | None:
+    """Observe an exact current lock; unknown never grants the legacy route."""
+    rows = conn.execute(f"""
+        SELECT {legacy_content_predicate('l')} AS legacy_eligible
+          FROM bundle_installation i
+          JOIN bundle_installation_revision r
+            ON r.org_id=i.org_id AND r.project_id=i.project_id
+           AND r.installation_pk=i.installation_pk
+           AND r.revision=i.current_revision
+          JOIN bundle_composition_lock l
+            ON l.org_id=r.org_id AND l.project_id=r.project_id
+           AND l.composition_pk=r.composition_pk
+           AND l.revision=r.lock_revision AND l.lock_hash=r.lock_hash
+         WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s
+           AND i.current_revision=%s AND i.etag_version=%s
+         LIMIT 2
+    """, (org_id, project_id, UUID(installation_id), revision, etag)).fetchall()
+    if len(rows) != 1:
+        return None
+    value = rows[0]['legacy_eligible']
+    return value if type(value) is bool else None
+
+
 class RuntimeViewReader:
     """Projects existing Installation/runtime truth without creating a second authority."""
 
@@ -108,10 +137,12 @@ class RuntimeViewReader:
         installation_reader: Any,
         connect_factory: ConnectFactory = connect_read_only,
         ui_session_resolver: UiSessionResolver | None = None,
+        legacy_content_route_reader: LegacyContentRouteReader | None = None,
     ) -> None:
         self._installation_reader = installation_reader
         self._connect_factory = connect_factory
         self._ui_session_resolver = ui_session_resolver
+        self._legacy_content_route_reader = legacy_content_route_reader
 
     def get_installation(
         self,
@@ -137,9 +168,19 @@ class RuntimeViewReader:
         )
         runtime_storage_available = True
         resources_live = False
+        legacy_content_eligible = None
         try:
             with self._connect_factory() as conn:
                 apply_asset_transaction_scope(conn, org_id=org_id, project_id=project_id)
+                if self._legacy_content_route_reader is not None:
+                    legacy_content_eligible = self._legacy_content_route_reader(
+                        conn, org_id=org_id, project_id=project_id,
+                        installation_id=installation_id,
+                        revision=int(installation.current_revision),
+                        etag=int(installation.etag_version),
+                    )
+                    if legacy_content_eligible is not None and type(legacy_content_eligible) is not bool:
+                        raise TypeError('legacy content route reader must return bool or unknown')
                 binding_row = conn.execute(
                     """
                     SELECT generation, installation_revision, profile_ref, config_ref,
@@ -223,6 +264,7 @@ class RuntimeViewReader:
             installationRevision=installation_revision,
             installationEtag=installation_etag,
             installationState=installation_state,
+            legacyContentEligible=legacy_content_eligible,
             effectiveState=effective_state,
             binding=binding,
             currentOperation=operation,

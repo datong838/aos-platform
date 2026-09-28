@@ -88,11 +88,12 @@ class _LazyRuntimeViewReader:
 
     def _resolve(self) -> Any:
         if self._reader is None:
-            from aos_api.extension_runtime.runtime_view import RuntimeViewReader
+            from aos_api.extension_runtime.runtime_view import RuntimeViewReader, read_current_legacy_content_route
 
             self._reader = RuntimeViewReader(
                 installation_reader=_build_read_only_installation_service(),
                 ui_session_resolver=_build_runtime_ui_session_resolver(),
+                legacy_content_route_reader=read_current_legacy_content_route,
             )
         return self._reader
 
@@ -380,7 +381,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
     from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
     from aos_api.extension_runtime.disable_service import RuntimeDisableService
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
-    from aos_api.extension_runtime.runtime_view import RuntimeViewReader
+    from aos_api.extension_runtime.runtime_view import RuntimeViewReader, read_current_legacy_content_route
     from aos_api.asset_registry.control_policy import DISABLE_RUNTIME_OPERATION
     from aos_api.extension_runtime.release_revalidation import (
         RuntimeReleaseRevalidator,
@@ -449,6 +450,7 @@ def build_runtime_control_plane(*, disable_dependent: Any = None, registration_c
     view_reader = RuntimeViewReader(
         installation_reader=_build_read_only_installation_service(),
         ui_session_resolver=_build_runtime_ui_session_resolver(),
+        legacy_content_route_reader=read_current_legacy_content_route,
     )
     return RuntimeControlPlane(
         workshop_catalog=build_runtime_workshop_catalog_reader(view_reader=view_reader),

@@ -30,7 +30,7 @@ describe("M3-4 installation action model", () => {
         expect(
           installationActionEligibility(
             installation,
-            { subject: "reviewer", roles: [role] },
+            { subject: "reviewer", roles: [role], legacyContentEligible: true },
             action,
           ).allowed,
           `${state}/${action}`,
@@ -74,6 +74,17 @@ describe("M3-4 installation action model", () => {
         "approve",
       ).reason,
     ).toBe("role_denied");
+  });
+
+  it("blocks legacy apply and verify unless the current content route is proven", () => {
+    for (const state of ["approved", "applied"] as const) {
+      const action = state === "approved" ? "apply" : "verify";
+      for (const legacyContentEligible of [false, null, undefined]) {
+        expect(installationActionEligibility(record(state), {
+          subject: "installer", roles: ["asset-installer"], legacyContentEligible,
+        }, action).reason).toBe("legacy_route_unverified");
+      }
+    }
   });
 
   it("normalizes reasons and rejects empty, oversized, or control-character input", () => {

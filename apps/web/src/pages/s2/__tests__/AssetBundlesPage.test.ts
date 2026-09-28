@@ -18,7 +18,7 @@ import {
 import { INSTALLATION_DETAIL_FIXTURE, INSTALLATION_DRAFT_FIXTURE, INSTALLATION_LIST_FIXTURE } from "../../../api/assetControl/installationFixtures";
 import { REGISTRY_BUNDLE_DETAIL_FIXTURE, REGISTRY_BUNDLE_LIST_FIXTURE, REGISTRY_VERSION_DETAIL_FIXTURE } from "../../../api/assetControl/registryFixtures";
 import { setConnectivity } from "../../../lib/offlineStore";
-import type { RuntimeInstallation } from "../../../api/assetControl/types";
+import type { InstallationResponse, RuntimeInstallation } from "../../../api/assetControl/types";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -73,14 +73,23 @@ vi.mock("../assetBundles/readHooks", async (importOriginal) => ({
     stale: false,
     reload,
   }),
-  useRuntimeInstallation: () => ({
-    data: null,
-    status: "idle",
+  useRuntimeInstallation: (installationId: string | null) => ({
+    data: installationId ? (() => {
+      const current = (hooks.installationData ?? INSTALLATION_DETAIL_FIXTURE) as InstallationResponse;
+      return { installationId: current.installationId,
+        installationRevision: current.currentRevision, installationEtag: current.etagVersion,
+        installationState: current.state, legacyContentEligible: true,
+        effectiveState: "not_available", binding: null, currentOperation: null, ui: null,
+        allowedActions: [], reasons: [] } as RuntimeInstallation;
+    })() : null,
+    status: installationId ? "ready" : "idle",
     error: null,
     refreshing: false,
     stale: false,
     reload,
   }),
+  useRuntimeConfigurations: () => ({ data: null, status: "idle", stale: false, refreshing: false, isCurrent: () => false, reload }),
+  useRuntimeConfigurationCandidates: () => ({ data: null, status: "idle", stale: false, refreshing: false, isCurrent: () => false, reload }),
 }));
 
 describe("M3-4/M3-5 AssetBundlesPage integration", () => {

@@ -81,8 +81,9 @@ export function parseUiSession(value: unknown): RuntimeUiSession | null {
 
 export function parseRuntimeInstallation(value: unknown): RuntimeInstallation {
   const item = object(value, "Runtime installation");
-  keys(item, ["installationId", "installationRevision", "installationEtag", "installationState", "effectiveState", "binding", "currentOperation", "ui", "allowedActions", "reasons"], "Runtime installation");
+  keys(item, ["installationId", "installationRevision", "installationEtag", "installationState", "legacyContentEligible", "effectiveState", "binding", "currentOperation", "ui", "allowedActions", "reasons"], "Runtime installation");
   uuid(item.installationId, "Runtime installation.installationId"); integer(item.installationRevision, "Runtime installation.installationRevision"); integer(item.installationEtag, "Runtime installation.installationEtag"); text(item.installationState, "Runtime installation.installationState"); text(item.effectiveState, "Runtime installation.effectiveState");
+  if (item.legacyContentEligible !== null && typeof item.legacyContentEligible !== "boolean") throw new Error("Runtime installation.legacyContentEligible must be boolean or unknown");
   if (!Array.isArray(item.allowedActions) || !Array.isArray(item.reasons)) throw new Error("Runtime installation action/reason lists are invalid");
   item.allowedActions.forEach((value) => action(value, "Runtime installation.allowedAction")); item.reasons.forEach((value) => text(value, "Runtime installation.reason"));
   return { ...(item as unknown as RuntimeInstallation), binding: parseBinding(item.binding), currentOperation: item.currentOperation === null ? null : parseRuntimeOperation(item.currentOperation), ui: parseUiSession(item.ui), allowedActions: item.allowedActions as RuntimeAction[], reasons: item.reasons as string[] };

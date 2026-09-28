@@ -17,6 +17,7 @@ from aos_api.extension_runtime.runtime_view import (
     RuntimeOperationView,
     RuntimeUiSessionView,
     RuntimeViewReader,
+    read_current_legacy_content_route,
     _derive_control_state,
 )
 from aos_api.extension_runtime.runtime_configuration_candidates import (
@@ -306,6 +307,47 @@ def test_runtime_view_can_carry_only_the_strict_server_ui_session() -> None:
     payload = _view(ui=ui).model_dump(mode="json")
     assert payload["ui"]["resourceHash"] == "sha256:" + "a" * 64
     assert payload["ui"]["readOperationClaims"] == ["test.read"]
+
+
+def test_legacy_content_route_requires_one_exact_current_row():
+    class Rows:
+        def __init__(self, rows): self.rows = rows
+        def fetchall(self): return self.rows
+
+    class Connection:
+        def __init__(self, rows): self.rows, self.calls = rows, []
+        def execute(self, query, params):
+            self.calls.append((query, params))
+            return Rows(self.rows)
+
+    for rows, expected in [([{"legacy_eligible": True}], True),
+                           ([{"legacy_eligible": False}], False),
+                           ([], None), ([{"legacy_eligible": True}] * 2, None),
+                           ([{"legacy_eligible": None}], None)]:
+        conn = Connection(rows)
+        actual = read_current_legacy_content_route(conn, org_id="org-org", project_id="dev-project",
+            installation_id=INSTALLATION_ID, revision=3, etag=3)
+        assert actual is expected
+        query, params = conn.calls[0]
+        assert "i.current_revision=%s AND i.etag_version=%s" in query
+        assert "boundary_version.content_hash IS DISTINCT FROM" in query
+        assert params[:2] == ("org-org", "dev-project")
+        assert params[-2:] == (3, 3)
+
+
+def test_runtime_view_classification_uses_existing_scoped_connection():
+    connection = _ReadyRuntimeConnection()
+    calls = []
+    def classify(conn, **kwargs):
+        calls.append((conn, kwargs))
+        return False
+    reader = RuntimeViewReader(installation_reader=_InstallationReader(),
+        connect_factory=lambda: connection, legacy_content_route_reader=classify)
+    view = reader.get_installation(installation_id=INSTALLATION_ID, org_id="org-org",
+        project_id="dev-project", roles=["admin"], markings=["public"])
+    assert view.legacyContentEligible is False
+    assert calls == [(connection, {"org_id": "org-org", "project_id": "dev-project",
+        "installation_id": INSTALLATION_ID, "revision": 3, "etag": 3})]
 
 
 def test_ready_runtime_resolves_ui_from_the_exact_tenant_generation_and_epoch() -> None:
