@@ -30,14 +30,14 @@ const FAILURE_LABELS: Readonly<Record<string, string>> = {
 };
 
 const CANDIDATES = [
-  { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts" },
-  { key: "runtime_policies", label: "运行策略", href: null },
-  { key: "data_policies", label: "数据分类策略", href: "/aip/model-runtime" },
-  { key: "egress_policies", label: "出站策略", href: "/aip/model-runtime" },
-  { key: "network_policies", label: "网络策略", href: null },
-  { key: "quota_policies", label: "模型配额", href: "/aip/capacity" },
-  { key: "budget_policies", label: "预算策略", href: null },
-  { key: "budgets", label: "预算修订", href: null },
+  { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts", action: "查看职责计划" },
+  { key: "runtime_policies", label: "运行策略", href: null, action: null },
+  { key: "data_policies", label: "数据分类策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
+  { key: "egress_policies", label: "出站策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
+  { key: "network_policies", label: "网络策略", href: null, action: null },
+  { key: "quota_policies", label: "模型配额", href: "/aip/capacity", action: "查看/修订已有配额" },
+  { key: "budget_policies", label: "预算策略", href: null, action: null },
+  { key: "budgets", label: "预算修订", href: "/aip/capacity", action: "创建预算草稿（不生效）" },
 ] as const;
 
 function failureMessage(code: string): string {
@@ -154,7 +154,7 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
             {!candidatesCurrent && <p role="status">配置权威未核验或读回已过期；不会把未知当作缺失或就绪。</p>}
             {candidatesCurrent && <ul>{CANDIDATES.map(item => {
               const count = candidateData!.counts[item.key];
-              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.href}>进入正式配置入口</Link> : "产品配置入口待建"}</li>;
+              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.href}>{item.action}</Link> : "产品配置入口待建"}</li>;
             })}</ul>}
             <button type="button" className="btn" disabled={offline || pending !== null || !candidates} onClick={candidates?.reload}>刷新权威候选</button>
           </section>

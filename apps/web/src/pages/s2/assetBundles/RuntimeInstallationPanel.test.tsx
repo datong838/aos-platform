@@ -59,7 +59,13 @@ describe("RuntimeInstallationPanel", () => {
     expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(8);
     expect(host.textContent).toContain("缺少当前候选");
     expect(host.textContent).toContain("不代表可以启用");
-    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] a')).toHaveLength(4);
+    const rows = Array.from(host.querySelectorAll<HTMLLIElement>('[aria-label="当前配置权威候选"] li'));
+    const budgetRow = rows.find(row => row.textContent?.startsWith("预算修订"));
+    expect(budgetRow?.querySelector("a")?.getAttribute("href")).toBe("/aip/capacity");
+    expect(budgetRow?.textContent).toContain("创建预算草稿（不生效）");
+    expect(rows.find(row => row.textContent?.startsWith("数据分类策略"))?.textContent).toContain("创建草稿（不生效）");
+    expect(rows.find(row => row.textContent?.startsWith("出站策略"))?.textContent).toContain("创建草稿（不生效）");
+    expect(host.querySelectorAll('[aria-label="当前配置权威候选"] a')).toHaveLength(5);
     await act(async () => root.render(<MemoryRouter><RuntimeInstallationPanel {...props} candidates={{ ...candidates, data: { ...data, installationEtag: 4 } }} /></MemoryRouter>));
     expect(host.textContent).toContain("未核验或读回已过期");
     expect(host.querySelectorAll('[aria-label="当前配置权威候选"] li')).toHaveLength(0);
