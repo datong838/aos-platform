@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 
 import psycopg
 import pytest
@@ -13,7 +14,7 @@ from aos_api.aip_eval_runner import compute_eval_report_hash
 from aos_api.aip_eval_writer_authority_preflight import preflight_skill_eval_writer_authority
 from test_aip_eval_execution_authority import INPUT_HASH, NOW, _signed_pair
 from test_aip_eval_persisted_authority_reader import _seed
-from test_aip_eval_report_proof_reader import _report
+from test_aip_eval_writer_atomic import _current_report, _seed_source, _source_objects
 from test_aip_eval_writer_transaction import _grant_isolated
 
 
@@ -39,7 +40,7 @@ def _proof(target, judge):
 
 def _read(conn, report, target, judge):
     return preflight_skill_eval_writer_authority(
-        conn, report=report, evaluated_at=NOW,
+        conn, report=report, evaluated_at=datetime.now(UTC),
         expected_input_hashes={"case-1": INPUT_HASH},
         presented={"case-1": _proof(target, judge)},
     )
@@ -51,13 +52,15 @@ def _read(conn, report, target, judge):
     "run_not_succeeded", "wrong_summary",
 ])
 def test_writer_preflight_uses_current_authority_before_insert(connection, scenario):
-    root, target, judge = _signed_pair()
-    report = _report()
+    suite, report = _source_objects()
+    root, target, judge = _signed_pair(datetime.now(UTC), suite_ref=report.suite_ref)
     if scenario == "wrong_summary":
         changed = report.model_copy(update={"passed": 0, "failed": 1, "pass_rate": 0.0})
         report = changed.model_copy(update={"content_hash": compute_eval_report_hash(changed)})
     if scenario != "no_authority":
-        _seed(connection, root, target, judge, stage="identities")
+        _seed_source(connection, suite)
+        _seed(connection, root, target, judge, stage="identities",
+              suite_ref=report.suite_ref)
         connection.execute("""UPDATE aip_eval_run SET status='succeeded',
             target_ref=%s,dataset_ref=%s,judge_ref=%s
             WHERE run_id='run-1'""", (
@@ -65,6 +68,7 @@ def test_writer_preflight_uses_current_authority_before_insert(connection, scena
             Jsonb(report.dataset.model_dump(mode="json", by_alias=True)),
             Jsonb(report.judge.model_dump(mode="json", by_alias=True)),
         ))
+        report = _current_report(report)
     _grant_isolated(connection)
     if scenario == "revoked":
         connection.execute("""INSERT INTO aip_eval_authority_revocation
@@ -101,7 +105,7 @@ def test_writer_preflight_uses_current_authority_before_insert(connection, scena
     else:
         with pytest.raises(EvalExecutionRejected):
             preflight_skill_eval_writer_authority(
-                connection, report=report, evaluated_at=NOW,
+                connection, report=report, evaluated_at=datetime.now(UTC),
                 expected_input_hashes={"case-1": "f"*64} if scenario == "wrong_input"
                     else {} if scenario == "missing_case" else {"case-1": INPUT_HASH},
                 presented={"case-1": _proof(target, judge)},

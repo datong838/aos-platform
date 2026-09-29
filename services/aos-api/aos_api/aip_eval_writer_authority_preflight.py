@@ -8,12 +8,17 @@ from typing import Mapping
 import psycopg
 from psycopg.rows import dict_row
 
-from aos_api.aip_eval_contracts import AssetType, EvalReportRevision
+from pydantic import ValidationError
+
+from aos_api.aip_eval_contracts import (
+    AssetType, EvalDatasetManifest, EvalReportRevision,
+)
 from aos_api.aip_eval_execution_authority import (
     EvalExecutionRejected, EvalIssuerRoot, VerifiedEvalExecutionPair,
     certificate_hash, verify_execution_pair,
 )
 from aos_api.aip_eval_persisted_authority_reader import _key
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_report_proof_reader import (
     PresentedEvalCaseProof, VerifiedSkillEvalReportProof,
 )
@@ -37,6 +42,7 @@ def preflight_skill_eval_writer_authority(
     _require(
         report.target.asset_type is AssetType.SKILL_TEMPLATE
         and evaluated_at.utcoffset() is not None
+        and report.created_at.utcoffset() is not None
         and report.created_at <= evaluated_at
         and compute_eval_report_hash(report) == report.content_hash,
         "Skill Eval Report is not an exact artifact",
@@ -53,7 +59,7 @@ def preflight_skill_eval_writer_authority(
         report.passed == passed
         and report.failed == len(case_ids) - passed
         and report.total == len(case_ids)
-        and abs(report.pass_rate - passed / len(case_ids)) < 1e-12,
+        and report.pass_rate == round(passed / len(case_ids), 6),
         "Skill Eval Report summary drifted from cases",
     )
     scope = (report.tenant.org_id, report.tenant.project_id)
@@ -83,6 +89,63 @@ def preflight_skill_eval_writer_authority(
                 and run["judge_ref"] == report.judge.model_dump(mode="json", by_alias=True),
                 "Skill Eval Run and Report drifted",
             )
+            dataset = cur.execute("""SELECT * FROM aip_eval_dataset_revision
+                WHERE org_id=%s AND project_id=%s AND dataset_id=%s AND revision=%s""",
+                (*scope, report.dataset.dataset_id, report.dataset.revision)).fetchone()
+            _require(dataset is not None, "persisted Eval Dataset is unavailable")
+            _require(
+                dataset["content_hash"] == report.dataset.content_hash
+                and dataset["source_hash"] == report.dataset.source_hash
+                and dataset["redaction_policy_ref"] == report.dataset.redaction_policy.model_dump(
+                    mode="json", by_alias=True),
+                "persisted Eval Dataset drifted",
+            )
+            try:
+                manifest = EvalDatasetManifest.model_validate(dataset["manifest"])
+            except ValidationError as exc:
+                raise EvalExecutionRejected("persisted Eval Dataset manifest is invalid") from exc
+            _require(
+                manifest.source_hash == report.dataset.source_hash
+                and manifest.case_count >= len(case_ids)
+                and manifest.captured_at.utcoffset() is not None
+                and manifest.captured_at <= dataset["created_at"]
+                and dataset["created_at"] <= evaluated_at,
+                "persisted Eval Dataset source drifted",
+            )
+            _require(
+                report.suite_ref.revision.isdecimal()
+                and str(int(report.suite_ref.revision)) == report.suite_ref.revision,
+                "Eval Suite revision must be canonical integer",
+            )
+            suite_row = cur.execute("""SELECT * FROM aip_eval_suite_revision
+                WHERE org_id=%s AND project_id=%s AND suite_id=%s AND revision=%s""",
+                (*scope, report.suite_ref.asset_id, int(report.suite_ref.revision))).fetchone()
+            _require(suite_row is not None, "persisted Eval Suite is unavailable")
+            try:
+                suite = AipEvalPackRegistry._suite_from_row(suite_row)
+            except ValidationError as exc:
+                raise EvalExecutionRejected("persisted Eval Suite is invalid") from exc
+            _require(
+                suite.content_hash == report.suite_ref.content_hash
+                and compute_eval_suite_hash(suite) == suite.content_hash
+                and suite.target == report.target
+                and suite.dataset == report.dataset
+                and suite.judge == report.judge
+                and dataset["created_at"] <= suite_row["created_at"]
+                and suite_row["created_at"] <= run["created_at"]
+                and run["created_at"] <= report.created_at <= evaluated_at
+                and {case.case_id for case in suite.cases} == set(case_ids)
+                and report.gate_passed == (passed / len(case_ids) >= suite.gate_threshold),
+                "persisted Eval Suite or gate threshold drifted",
+            )
+            for case in suite.cases:
+                result = next(item for item in report.results if item.case_id == case.case_id)
+                _require(
+                    case.input_artifact.content_hash == expected_input_hashes[case.case_id]
+                    and (case.expected_artifact.content_hash if case.expected_artifact else None)
+                        == result.expected_hash,
+                    "persisted Eval case input or expected artifact drifted",
+                )
             for item in presented.values():
                 for cert, receipt in (
                     (item.target_certificate, item.target_receipt),

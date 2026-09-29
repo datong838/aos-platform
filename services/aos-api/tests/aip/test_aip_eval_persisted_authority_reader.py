@@ -34,7 +34,7 @@ def connection():
 
 
 def _seed(conn, root, target, judge, *, stage="complete", bad_claim=False,
-          future_receipt=False):
+          future_receipt=False, suite_ref=SUITE):
     if stage == "empty":
         return
     root_key = root.public_key
@@ -66,7 +66,7 @@ def _seed(conn, root, target, judge, *, stage="complete", bad_claim=False,
         (org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
          target_ref,dataset_ref,judge_ref,status,idempotency_key,created_by)
         VALUES (%s,%s,'run-1',%s,1,%s,%s,%s,%s,'queued',%s,%s)""",
-        (TENANT.org_id,TENANT.project_id,SUITE.asset_id,SUITE.content_hash,
+        (TENANT.org_id,TENANT.project_id,suite_ref.asset_id,suite_ref.content_hash,
          Jsonb(TARGET.model_dump(mode="json",by_alias=True)),
          Jsonb({"testOnly":True}),Jsonb(JUDGE.model_dump(mode="json",by_alias=True)),
          "bg00ab-test-key","bg00ab-test-owner"))

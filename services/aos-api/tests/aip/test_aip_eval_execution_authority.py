@@ -56,7 +56,7 @@ def _judge_output_hash(actual_hash, expected_hash, passed, detail_code):
     return hashlib.sha256(b"AOS-EVAL-JUDGE-RESULT-v1\n" + encoded).hexdigest()
 
 
-def _signed_pair(at: datetime = NOW):
+def _signed_pair(at: datetime = NOW, *, suite_ref: AssetRevisionRef = SUITE):
     issuer = Ed25519PrivateKey.generate()
     target_key = Ed25519PrivateKey.generate()
     judge_key = Ed25519PrivateKey.generate()
@@ -88,7 +88,7 @@ def _signed_pair(at: datetime = NOW):
     def receipt(purpose, cert, executor_ref, private, output_hash, **judge_fields):
         item = EvalExecutionReceipt(
             receipt_id=receipt_identity(TENANT, "run-1", "case-1", purpose),
-            tenant=TENANT, purpose=purpose, run_id="run-1", suite_ref=SUITE,
+            tenant=TENANT, purpose=purpose, run_id="run-1", suite_ref=suite_ref,
             case_id="case-1", identity_id=cert.identity_id,
             certificate_hash=certificate_hash(cert), executor_ref=executor_ref,
             input_hash=INPUT_HASH, output_hash=output_hash,

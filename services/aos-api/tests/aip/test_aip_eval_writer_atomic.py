@@ -12,10 +12,17 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from psycopg.types.json import Jsonb
 
+from aos_api.aip_contracts import ArtifactRef
+from aos_api.aip_eval_contracts import (
+    AssetRevisionRef, AssetType, DatasetPiiState, DatasetSourceKind,
+    EvalCaseDefinition, EvalCaseKind, EvalDatasetManifest, EvalSuiteRevision,
+)
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected
+from aos_api.aip_eval_pack_registry import compute_eval_suite_hash
 from aos_api.aip_eval_report_proof_reader import PresentedEvalCaseProof
+from aos_api.aip_eval_runner import compute_eval_report_hash
 from aos_api.aip_eval_writer_atomic import persist_signed_skill_eval_report
-from test_aip_eval_execution_authority import INPUT_HASH, NOW, _signed_pair
+from test_aip_eval_execution_authority import EXPECTED_HASH, INPUT_HASH, NOW, _signed_pair
 from test_aip_eval_persisted_authority_reader import _seed
 from test_aip_eval_report_proof_reader import _report, _seed_report
 from test_aip_eval_writer_transaction import ROLE, TABLES, _grant_isolated
@@ -25,8 +32,64 @@ LOGIN = "aos_bg00ak_eval_writer_login"
 ENV = "AOS_AIP_EVAL_WRITER_CREDENTIAL_FILE"
 
 
+def _source_objects(*, case_id="case-1"):
+    base = _report()
+    suite = EvalSuiteRevision(
+        suite_id="suite-1", revision=1, content_hash="0"*64,
+        target=base.target, dataset=base.dataset, judge=base.judge,
+        cases=[EvalCaseDefinition(
+            case_id=case_id, kind=EvalCaseKind.POSITIVE,
+            input_artifact=ArtifactRef(artifact_id="bg00ao-input",artifact_type="eval_input",
+                revision="1",content_hash=INPUT_HASH),
+            expected_artifact=ArtifactRef(artifact_id="bg00ao-expected",
+                artifact_type="eval_expected",revision="1",content_hash=EXPECTED_HASH),
+            timeout_ms=1000)], gate_threshold=1.0)
+    suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
+    suite_ref = AssetRevisionRef(asset_type=AssetType.EVAL_SUITE,
+        asset_id=suite.suite_id, revision=str(suite.revision),
+        content_hash=suite.content_hash)
+    return suite, _report(suite_ref=suite_ref)
+
+
+def _seed_source(conn, suite, *, include_dataset=True, include_suite=True,
+                 suite_hash_override=None, dataset_hash_override=None):
+    manifest = EvalDatasetManifest(
+        source_kind=DatasetSourceKind.SELECTION_SNAPSHOT,
+        source_id="bg00ao-test-selection",source_revision="1",
+        source_hash=suite.dataset.source_hash,fields_allowlist=["test_field"],
+        redaction_receipt=ArtifactRef(artifact_id="bg00ao-redaction",
+            artifact_type="redaction_receipt",revision="1",content_hash="a"*64),
+        pii_state=DatasetPiiState.REDACTED,case_count=1,captured_at=NOW)
+    if include_dataset:
+        conn.execute("""INSERT INTO aip_eval_dataset_revision
+       (org_id,project_id,dataset_id,revision,content_hash,source_hash,
+        redaction_policy_ref,manifest,actor)
+       VALUES ('org-org','dev-project',%s,%s,%s,%s,%s,%s,'bg00ao-test')""",
+       (suite.dataset.dataset_id,suite.dataset.revision,
+        dataset_hash_override or suite.dataset.content_hash,
+        suite.dataset.source_hash,
+        Jsonb(suite.dataset.redaction_policy.model_dump(mode="json",by_alias=True)),
+        Jsonb(manifest.model_dump(mode="json",by_alias=True))))
+    if include_suite:
+        conn.execute("""INSERT INTO aip_eval_suite_revision
+       (org_id,project_id,suite_id,revision,content_hash,target_ref,dataset_ref,
+        judge_ref,cases,gate_threshold,actor)
+       VALUES ('org-org','dev-project',%s,%s,%s,%s,%s,%s,%s,%s,'bg00ao-test')""",
+       (suite.suite_id,suite.revision,suite_hash_override or suite.content_hash,
+        Jsonb(suite.target.model_dump(mode="json",by_alias=True)),
+        Jsonb(suite.dataset.model_dump(mode="json",by_alias=True)),
+        Jsonb(suite.judge.model_dump(mode="json",by_alias=True)),
+        Jsonb([case.model_dump(mode="json",by_alias=True) for case in suite.cases]),
+        suite.gate_threshold))
+
+
+def _current_report(report):
+    changed = report.model_copy(update={"created_at": datetime.now(UTC)})
+    return changed.model_copy(update={"content_hash": compute_eval_report_hash(changed)})
+
+
 @pytest.fixture()
-def isolated_writer(tmp_path, monkeypatch):
+def isolated_writer(tmp_path, monkeypatch, request):
     admin_dsn = os.getenv("AOS_BG00AK_TEST_ADMIN_URL")
     if not admin_dsn:
         pytest.skip("isolated BG-00ak PostgreSQL URL required")
@@ -44,10 +107,17 @@ def isolated_writer(tmp_path, monkeypatch):
             sql.Identifier(LOGIN), sql.Literal(password)))
         admin.execute(sql.SQL("GRANT {} TO {}").format(
             sql.Identifier(ROLE), sql.Identifier(LOGIN)))
-    root, target, judge = _signed_pair(datetime.now(UTC))
-    report = _report()
+    variant = getattr(request, "param", "present")
+    suite, report = _source_objects(case_id="case-2" if variant == "wrong_case" else "case-1")
+    root, target, judge = _signed_pair(datetime.now(UTC), suite_ref=report.suite_ref)
     with psycopg.connect(admin_dsn) as admin:
-        _seed(admin, root, target, judge, stage="identities")
+        if variant != "missing":
+            _seed_source(admin, suite,
+                include_dataset=variant != "missing_dataset",
+                include_suite=variant != "missing_suite",
+                suite_hash_override="f"*64 if variant == "wrong_suite_hash" else None,
+                dataset_hash_override="f"*64 if variant == "wrong_dataset_hash" else None)
+        _seed(admin, root, target, judge, stage="identities", suite_ref=report.suite_ref)
         admin.execute("""UPDATE aip_eval_run SET status='succeeded',
             target_ref=%s,dataset_ref=%s,judge_ref=%s WHERE run_id='run-1'""", (
             Jsonb(report.target.model_dump(mode="json", by_alias=True)),
@@ -56,6 +126,7 @@ def isolated_writer(tmp_path, monkeypatch):
         ))
         _grant_isolated(admin)
         admin.commit()
+    report = _current_report(report)
     writer_dsn = make_conninfo(admin_dsn, user=LOGIN, password=password)
     identity = tmp_path / "eval-writer.json"
     identity.write_text(json.dumps({
@@ -71,7 +142,8 @@ def isolated_writer(tmp_path, monkeypatch):
         with psycopg.connect(admin_dsn) as admin:
             append_only = ("aip_eval_case_execution_proof", "aip_eval_report_revision",
                            "aip_eval_execution_receipt", "aip_eval_authority_revocation",
-                           "aip_eval_executor_identity", "aip_eval_issuer_root")
+                           "aip_eval_executor_identity", "aip_eval_issuer_root",
+                           "aip_eval_suite_revision", "aip_eval_dataset_revision")
             # Test-only cleanup uses a single DDL+DML transaction. The normal
             # append-only trigger remains enabled if any cleanup statement fails.
             for table in append_only:

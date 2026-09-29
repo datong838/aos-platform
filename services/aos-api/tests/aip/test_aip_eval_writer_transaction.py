@@ -16,7 +16,8 @@ from test_aip_eval_report_proof_reader import _report
 ROLE="aos_aip_eval_writer"
 TABLES=("aip_eval_issuer_root","aip_eval_executor_identity",
         "aip_eval_authority_revocation","aip_eval_execution_receipt",
-        "aip_eval_run","aip_eval_report_revision","aip_eval_case_execution_proof")
+        "aip_eval_run","aip_eval_report_revision","aip_eval_case_execution_proof",
+        "aip_eval_dataset_revision","aip_eval_suite_revision")
 
 
 @pytest.fixture()

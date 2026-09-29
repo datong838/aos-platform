@@ -39,7 +39,7 @@ def connection():
         conn.rollback()
 
 
-def _report():
+def _report(*, suite_ref=SUITE):
     policy=AssetRevisionRef(asset_type=AssetType.POLICY,asset_id="test-redaction",
                             revision="1",content_hash="7"*64)
     dataset=DatasetRevisionRef(dataset_id="test-dataset",revision=1,
@@ -49,7 +49,7 @@ def _report():
                                   actual_hash=ACTUAL_HASH,expected_hash=EXPECTED_HASH,
                                   detail_code="exact_match",duration_ms=0)
     report=EvalReportRevision(tenant=TENANT,report_id="bg00af-report",revision=1,
-        content_hash="0"*64,run_id="run-1",suite_ref=SUITE,target=TARGET,
+        content_hash="0"*64,run_id="run-1",suite_ref=suite_ref,target=TARGET,
         dataset=dataset,judge=JUDGE,results=[result],passed=1,failed=0,total=1,
         pass_rate=1.0,gate_passed=True,created_at=NOW)
     return report.model_copy(update={"content_hash":compute_eval_report_hash(report)})
