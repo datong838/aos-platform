@@ -12,6 +12,7 @@ from aos_api.aip_action_models import (
     WithdrawActionProposalRequest,
 )
 from aos_api.aip_action_policy import ACTION_APPROVAL_ROLES, classify_action_risk
+from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_action_store import AipActionStore
 from aos_api.auth import Principal
 from aos_api.db import connect
@@ -32,6 +33,7 @@ class AipActionService:
         idempotency_key: str,
         body: CreateActionProposalRequest,
     ) -> ActionDraftBundle:
+        self._require_generic_producer(body.action_type_id)
         scope = TenantScope(principal.org_id, principal.project_id)
         ensure_action_schema(scope)
         snapshot = self._store.action_type_snapshot(scope, body.action_type_id)
@@ -106,6 +108,7 @@ class AipActionService:
         principal: Principal,
         body: CreateActionDraftRequest | ReviseActionDraftRequest,
     ):
+        self._require_generic_producer(body.action_type_id)
         scope = TenantScope(principal.org_id, principal.project_id)
         ensure_action_schema(scope)
         snapshot = self._store.action_type_snapshot(scope, body.action_type_id)
@@ -130,6 +133,15 @@ class AipActionService:
             body.action_type_id, snapshot, body.payload, body.risk_hint
         )
         return scope, snapshot, risk
+
+    @staticmethod
+    def _require_generic_producer(action_type_id: str) -> None:
+        if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
+            raise ApiError(
+                code="AIP_POLICY_ACTION_PRODUCER_REQUIRED",
+                message="system policy action requires a dedicated producer",
+                status_code=403,
+            )
 
     def decide(
         self,
