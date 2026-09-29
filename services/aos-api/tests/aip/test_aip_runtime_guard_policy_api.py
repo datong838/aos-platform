@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from aos_api.aip_runtime_guard_policy_store import GuardPolicyNotFound
+from aos_api.aip_runtime_guard_policy_store import EgressPolicyApprovalRequired, GuardPolicyNotFound
 from aos_api.routers import aip_runtime_guard_policies
 from aos_api.aip_network_policy_store import NetworkPolicyApprovalRequired, NetworkPolicyNotFound, materialize_policy as materialize_network
 
@@ -93,6 +93,24 @@ def test_guard_policy_api_rejects_tenant_injection_and_missing_cas_headers(clien
     assert injected.status_code == 400
     missing = client.post("/v1/aip/runtime-guard-policies/egress", headers=headers(), json=egress_body())
     assert missing.status_code == 400
+
+
+def test_egress_api_reports_missing_formal_approval(client) -> None:
+    class ApprovalBlockedStore:
+        def publish_egress(self, *args, **kwargs):
+            raise EgressPolicyApprovalRequired("exact approval authority is required")
+
+    client.app.dependency_overrides[aip_runtime_guard_policies.get_store] = ApprovalBlockedStore
+    try:
+        response = client.post(
+            "/v1/aip/runtime-guard-policies/egress",
+            headers=headers(**{"Idempotency-Key": "egress-approval-v1", "If-Match": "0"}),
+            json=egress_body(),
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_EGRESS_ACTIVE_APPROVAL_REQUIRED"
+    finally:
+        client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_store, None)
 
 
 def test_network_policy_api_uses_principal_scope_and_exact_read(client) -> None:

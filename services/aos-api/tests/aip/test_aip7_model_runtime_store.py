@@ -47,6 +47,7 @@ from aos_api.aip_network_policy_store import materialize_policy as materialize_n
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 from tests.aip._budget_test_fixture import seed_isolated_active_budget
+from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
 
 SCOPE = TenantScope(org_id="org-org", project_id="dev-project")
 CANARY = TenantScope(org_id="dev-org", project_id="dev-project")
@@ -105,10 +106,8 @@ def cleanup() -> None:
 def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
     instant = datetime.now(UTC)
     store = AipRuntimeGuardPolicyStore()
-    egress = store.publish_egress(
-        SCOPE,
-        SUFFIX,
-        "guard-egress-1",
+    egress = seed_historical_runtime_guard(
+        SCOPE, SUFFIX,
         EgressPolicyRevisionCreate(
             policyId=f"{SUFFIX}:egress",
             revision=1,

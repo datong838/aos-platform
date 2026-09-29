@@ -15,9 +15,9 @@ from aos_api.aip_network_policy_store import (
     materialize_policy,
 )
 from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevisionCreate
-from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 from aos_api.tenant_scope import TenantScope
 from aos_api.db import connect
+from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -28,10 +28,8 @@ SUFFIX = uuid.uuid4().hex
 
 def publish_egress(*, until=None):
     identity = uuid.uuid4().hex
-    return AipRuntimeGuardPolicyStore().publish_egress(
-        SCOPE,
-        "test",
-        f"egress:{identity}",
+    return seed_historical_runtime_guard(
+        SCOPE, "test-history",
         EgressPolicyRevisionCreate(
             policyId=f"test:egress:{identity}", revision=1, environment="development",
             allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"],
