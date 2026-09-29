@@ -11,6 +11,7 @@ from aos_api.aip_runtime_guard_policy_contracts import (
 from aos_api.aip_runtime_guard_policy_store import (
     AipRuntimeGuardPolicyStore,
     EgressPolicyApprovalRequired,
+    DataPolicyApprovalRequired,
     GuardPolicyIdempotencyConflict,
     GuardPolicyNotFound,
 )
@@ -35,14 +36,14 @@ def egress(revision: int = 1, *, name: str = "primary", host: str = "apihub.agne
     )
 
 
-def data_policy(revision: int = 1, *, name: str = "primary") -> DataClassificationPolicyRevisionCreate:
+def data_policy(revision: int = 1, *, name: str = "primary", lifecycle: str = "active") -> DataClassificationPolicyRevisionCreate:
     return DataClassificationPolicyRevisionCreate(
         policyId=f"test:data:{name}:{SUFFIX}", revision=revision, environment="development",
         allowedClassifications=["public_catalog"],
         prohibitedClassifications=["direct_pii", "raw_order_detail", "customer_conversation", "credential", "commercial_sensitive", "cross_tenant", "unknown"],
         denyUnknown=True, allowDirectPii=False, allowCommercialSensitive=False,
         allowCrossTenant=False, effectiveFrom=NOW, effectiveUntil=NOW + timedelta(days=30),
-        owner="test", approvalRef="approval:test", lifecycle="active",
+        owner="test", approvalRef="approval:test", lifecycle=lifecycle,
     )
 
 
@@ -52,7 +53,7 @@ def test_guard_policy_store_cas_replay_exact_read_and_tenant_isolation() -> None
     assert store.publish_egress(SCOPE, "test", "egress-v1", egress(lifecycle="draft"), expected_version=0) == first
     with pytest.raises(GuardPolicyIdempotencyConflict):
         store.publish_egress(SCOPE, "test", "egress-v1", egress(revision=2, lifecycle="draft"), expected_version=1)
-    data = store.publish_data_classification(SCOPE, "test", "data-v1", data_policy(), expected_version=0)
+    data = store.publish_data_classification(SCOPE, "test", "data-v1", data_policy(lifecycle="draft"), expected_version=0)
     assert store.get_egress(SCOPE, first.policy_id, 1).content_hash == first.content_hash
     assert store.get_data_classification(SCOPE, data.policy_id).revision == 1
     with pytest.raises(GuardPolicyNotFound):
@@ -62,7 +63,7 @@ def test_guard_policy_store_cas_replay_exact_read_and_tenant_isolation() -> None
 def test_guard_policy_store_requires_exact_active_effective_refs() -> None:
     store = AipRuntimeGuardPolicyStore()
     e = seed_historical_runtime_guard(SCOPE, "test-history", egress(name="exact"))
-    d = store.publish_data_classification(SCOPE, "test", "data-exact", data_policy(name="exact"), expected_version=0)
+    d = seed_historical_runtime_guard(SCOPE, "test-history", data_policy(name="exact"))
     store.require_exact_active(SCOPE, VersionedAssetRef(assetType="EgressPolicyRevision", assetId=e.policy_id, revision=1, contentHash=e.content_hash), now=NOW)
     store.require_exact_active(SCOPE, VersionedAssetRef(assetType="DataClassificationPolicyRevision", assetId=d.policy_id, revision=1, contentHash=d.content_hash), now=NOW)
 
@@ -74,3 +75,12 @@ def test_new_active_egress_rejects_string_only_approval() -> None:
         store.publish_egress(SCOPE, "test", f"egress-unapproved:{SUFFIX}", request)
     with pytest.raises(GuardPolicyNotFound):
         store.get_egress(SCOPE, request.policy_id)
+
+
+def test_new_active_data_policy_rejects_string_only_approval() -> None:
+    store = AipRuntimeGuardPolicyStore()
+    request = data_policy(name="unapproved")
+    with pytest.raises(DataPolicyApprovalRequired, match="exact approval"):
+        store.publish_data_classification(SCOPE, "test", f"data-unapproved:{SUFFIX}", request)
+    with pytest.raises(GuardPolicyNotFound):
+        store.get_data_classification(SCOPE, request.policy_id)

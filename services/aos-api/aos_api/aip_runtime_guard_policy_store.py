@@ -53,6 +53,10 @@ class EgressPolicyApprovalRequired(GuardPolicyStoreError):
     code = "AIP_EGRESS_ACTIVE_APPROVAL_REQUIRED"
 
 
+class DataPolicyApprovalRequired(GuardPolicyStoreError):
+    code = "AIP_DATA_ACTIVE_APPROVAL_REQUIRED"
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -168,6 +172,8 @@ class AipRuntimeGuardPolicyStore:
                 return self._get(kind, scope, replay["resourceId"], int(replay["revision"]), conn=conn)
             if kind == "egress" and item.lifecycle is GuardPolicyLifecycle.ACTIVE:
                 raise EgressPolicyApprovalRequired("exact approval authority is required for active egress policy")
+            if kind == "data_classification" and item.lifecycle is GuardPolicyLifecycle.ACTIVE:
+                raise DataPolicyApprovalRequired("exact approval authority is required for active data policy")
             head = conn.execute(
                 "SELECT current_revision,version FROM aip_runtime_guard_policy_head "
                 "WHERE org_id=%s AND project_id=%s AND policy_kind=%s AND policy_id=%s FOR UPDATE",

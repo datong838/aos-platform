@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from aos_api.aip_runtime_guard_policy_store import EgressPolicyApprovalRequired, GuardPolicyNotFound
+from aos_api.aip_runtime_guard_policy_store import DataPolicyApprovalRequired, EgressPolicyApprovalRequired, GuardPolicyNotFound
 from aos_api.routers import aip_runtime_guard_policies
 from aos_api.aip_network_policy_store import NetworkPolicyApprovalRequired, NetworkPolicyNotFound, materialize_policy as materialize_network
 
@@ -109,6 +109,34 @@ def test_egress_api_reports_missing_formal_approval(client) -> None:
         )
         assert response.status_code == 422
         assert response.json()["code"] == "AIP_EGRESS_ACTIVE_APPROVAL_REQUIRED"
+    finally:
+        client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_store, None)
+
+
+def test_data_policy_api_reports_missing_formal_approval(client) -> None:
+    class ApprovalBlockedStore:
+        def publish_data_classification(self, *args, **kwargs):
+            raise DataPolicyApprovalRequired("exact approval authority is required")
+
+    client.app.dependency_overrides[aip_runtime_guard_policies.get_store] = ApprovalBlockedStore
+    try:
+        from aos_api.aip_runtime_guard_policy_contracts import DataClassificationPolicyRevisionCreate
+
+        body = DataClassificationPolicyRevisionCreate(
+            policyId="data-approval-test", revision=1, environment="development",
+            allowedClassifications=["public_catalog"],
+            prohibitedClassifications=["direct_pii", "raw_order_detail", "customer_conversation", "credential", "commercial_sensitive", "cross_tenant", "unknown"],
+            denyUnknown=True, allowDirectPii=False, allowCommercialSensitive=False,
+            allowCrossTenant=False, effectiveFrom=NOW, effectiveUntil=NOW + timedelta(days=30),
+            owner="test", approvalRef="approval:test", lifecycle="active",
+        ).model_dump(mode="json", by_alias=True)
+        response = client.post(
+            "/v1/aip/runtime-guard-policies/data-classifications",
+            headers=headers(**{"Idempotency-Key": "data-approval-v1", "If-Match": "0"}),
+            json=body,
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_DATA_ACTIVE_APPROVAL_REQUIRED"
     finally:
         client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_store, None)
 

@@ -14,6 +14,7 @@ from aos_api.aip_runtime_guard_policy_store import (
     GuardPolicyConflict,
     GuardPolicyDependencyBlocked,
     EgressPolicyApprovalRequired,
+    DataPolicyApprovalRequired,
     GuardPolicyIdempotencyConflict,
     GuardPolicyNotFound,
     GuardPolicyStoreError,
@@ -76,6 +77,8 @@ def _map(exc: GuardPolicyStoreError) -> ApiError:
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     if isinstance(exc, EgressPolicyApprovalRequired):
         return ApiError(code=exc.code, message="当前出站策略缺少可核验的正式审批，不能发布为生效状态。", status_code=422)
+    if isinstance(exc, DataPolicyApprovalRequired):
+        return ApiError(code=exc.code, message="当前数据分类策略缺少可核验的正式审批，不能发布为生效状态。", status_code=422)
     return ApiError(code=exc.code, message="runtime guard policy persistence failed", status_code=503)
 
 

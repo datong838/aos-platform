@@ -35,7 +35,6 @@ from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevisionCreate,
     EgressPolicyRevisionCreate,
 )
-from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
 from aos_api.aip_budget_contracts import BudgetRevisionCreate
 from aos_api.aip_model_governance_policy_contracts import (
     BudgetPolicyRevisionCreate,
@@ -105,7 +104,6 @@ def cleanup() -> None:
 
 def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
     instant = datetime.now(UTC)
-    store = AipRuntimeGuardPolicyStore()
     egress = seed_historical_runtime_guard(
         SCOPE, SUFFIX,
         EgressPolicyRevisionCreate(
@@ -126,10 +124,8 @@ def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
             region="cn-approved-development",
         ),
     )
-    data = store.publish_data_classification(
-        SCOPE,
-        SUFFIX,
-        "guard-data-1",
+    data = seed_historical_runtime_guard(
+        SCOPE, SUFFIX,
         DataClassificationPolicyRevisionCreate(
             policyId=f"{SUFFIX}:classification",
             revision=1,
