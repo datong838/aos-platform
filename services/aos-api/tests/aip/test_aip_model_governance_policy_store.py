@@ -11,6 +11,7 @@ from aos_api.aip_model_governance_policy_store import (
     ModelGovernancePolicyConflict,
     ModelGovernancePolicyIdempotencyConflict, ModelGovernancePolicyNotFound,
     QuotaPolicyApprovalRequired,
+    BudgetPolicyApprovalRequired,
 )
 from aos_api.tenant_scope import TenantScope
 from tests.aip._budget_test_fixture import seed_isolated_active_budget
@@ -31,18 +32,18 @@ def quota(revision=1, daily=100, *, name="primary", lifecycle="active", start=No
         allowPublicProviderFallback=False, allowAutoScale=False)
 
 
-def publish_budget_revision():
+def publish_budget_revision(*, name="primary"):
     return seed_isolated_active_budget(SCOPE, "test", BudgetRevisionCreate(
-        budgetId=f"test:budget:{SUFFIX}", revision=1, environment="development", currency="CNY",
+        budgetId=f"test:budget:{name}:{SUFFIX}", revision=1, environment="development", currency="CNY",
         dailyLimitMinor=500, monthlyLimitMinor=5000, alertThresholdPct=80, hardStop=True,
         unknownUsageBehavior="block", effectiveFrom=NOW - timedelta(days=1), effectiveUntil=NOW + timedelta(days=60),
         owner="test", overBudgetApprover="test", lifecycle="active"))
 
 
-def budget_policy(budget, *, until=None):
-    return BudgetPolicyRevisionCreate(policyId=f"test:budget-policy:{SUFFIX}", revision=1, environment="development",
+def budget_policy(budget, *, until=None, lifecycle="active", name="primary"):
+    return BudgetPolicyRevisionCreate(policyId=f"test:budget-policy:{name}:{SUFFIX}", revision=1, environment="development",
         effectiveFrom=NOW - timedelta(hours=1), effectiveUntil=until or NOW + timedelta(days=30), owner="test",
-        approvalRef="approval:test", lifecycle="active", budgetRevisionRef={"assetType": "BudgetRevision",
+        approvalRef="approval:test", lifecycle=lifecycle, budgetRevisionRef={"assetType": "BudgetRevision",
         "assetId": budget.budget_id, "revision": budget.revision, "contentHash": budget.content_hash}, currency="CNY",
         hardStop=True, unknownUsageBehavior="block", unknownPriceBehavior="block", allowZeroPrice=False)
 
@@ -124,11 +125,21 @@ def test_new_active_quota_rejects_string_only_approval() -> None:
 def test_budget_policy_requires_exact_active_budget_and_bounded_window() -> None:
     store = AipModelGovernancePolicyStore()
     budget = publish_budget_revision()
-    item = store.publish_budget(SCOPE, "test", f"budget-policy:{SUFFIX}", budget_policy(budget))
+    item = seed_historical_model_policy(SCOPE, "test-history", budget_policy(budget))
     store.require_exact_active(SCOPE, ref("BudgetPolicyRevision", item), now=NOW)
-    drifted = budget_policy(budget).model_copy(update={"budget_revision_ref": VersionedAssetRef(
+    drifted = budget_policy(budget, lifecycle="draft").model_copy(update={"budget_revision_ref": VersionedAssetRef(
         assetType="BudgetRevision", assetId=budget.budget_id, revision=1, contentHash="f" * 64)})
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="drifted"):
         store.publish_budget(SCOPE, "test", f"budget-drift:{SUFFIX}", drifted)
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="window exceeds"):
-        store.publish_budget(SCOPE, "test", f"budget-window:{SUFFIX}", budget_policy(budget, until=NOW + timedelta(days=90)))
+        store.publish_budget(SCOPE, "test", f"budget-window:{SUFFIX}", budget_policy(budget, until=NOW + timedelta(days=90), lifecycle="draft"))
+
+
+def test_new_active_budget_policy_rejects_string_only_approval() -> None:
+    budget = publish_budget_revision(name="unapproved")
+    store = AipModelGovernancePolicyStore()
+    request = budget_policy(budget, name="unapproved")
+    with pytest.raises(BudgetPolicyApprovalRequired, match="exact approval"):
+        store.publish_budget(SCOPE, "test", f"budget-unapproved:{SUFFIX}", request)
+    with pytest.raises(ModelGovernancePolicyNotFound):
+        store.get_budget(SCOPE, request.policy_id)

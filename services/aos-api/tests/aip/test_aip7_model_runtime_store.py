@@ -40,7 +40,6 @@ from aos_api.aip_model_governance_policy_contracts import (
     BudgetPolicyRevisionCreate,
     QuotaPolicyRevisionCreate,
 )
-from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
 from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
 from aos_api.aip_network_policy_store import materialize_policy as materialize_network_policy
 from aos_api.db import get_dsn
@@ -165,7 +164,6 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
             owner=SUFFIX, overBudgetApprover=SUFFIX, lifecycle="active",
         ),
     )
-    store = AipModelGovernancePolicyStore()
     quota = seed_historical_model_policy(
         SCOPE, SUFFIX,
         QuotaPolicyRevisionCreate(
@@ -177,8 +175,8 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
             overflowBehavior="queue", allowPublicProviderFallback=False, allowAutoScale=False,
         ),
     )
-    budget_policy = store.publish_budget(
-        SCOPE, SUFFIX, "model-budget-policy-1",
+    budget_policy = seed_historical_model_policy(
+        SCOPE, SUFFIX,
         BudgetPolicyRevisionCreate(
             policyId=f"{SUFFIX}:budget-policy", revision=1, environment="development",
             effectiveFrom=instant - timedelta(hours=1), effectiveUntil=instant + timedelta(days=30),

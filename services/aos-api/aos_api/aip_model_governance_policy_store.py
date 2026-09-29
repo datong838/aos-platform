@@ -52,6 +52,10 @@ class QuotaPolicyApprovalRequired(ModelGovernancePolicyStoreError):
     code = "AIP_QUOTA_ACTIVE_APPROVAL_REQUIRED"
 
 
+class BudgetPolicyApprovalRequired(ModelGovernancePolicyStoreError):
+    code = "AIP_BUDGET_POLICY_ACTIVE_APPROVAL_REQUIRED"
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -181,6 +185,8 @@ class AipModelGovernancePolicyStore:
                 return self._get(kind, scope, replay["resourceId"], int(replay["revision"]), conn=conn)
             if kind == "quota" and item.lifecycle is ModelGovernancePolicyLifecycle.ACTIVE:
                 raise QuotaPolicyApprovalRequired("exact approval authority is required for active quota policy")
+            if kind == "budget" and item.lifecycle is ModelGovernancePolicyLifecycle.ACTIVE:
+                raise BudgetPolicyApprovalRequired("exact approval authority is required for active budget policy")
             if kind == "budget":
                 self._require_budget_revision(scope, item)
             head = conn.execute(

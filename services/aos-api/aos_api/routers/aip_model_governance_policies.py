@@ -10,6 +10,7 @@ from aos_api.aip_model_governance_policy_store import (
     ModelGovernancePolicyDependencyBlocked, ModelGovernancePolicyIdempotencyConflict,
     ModelGovernancePolicyNotFound, ModelGovernancePolicyStoreError,
     QuotaPolicyApprovalRequired,
+    BudgetPolicyApprovalRequired,
 )
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
@@ -51,6 +52,8 @@ def _map(exc: ModelGovernancePolicyStoreError) -> ApiError:
         return ApiError(code=exc.code, message=str(exc), status_code=422)
     if isinstance(exc, QuotaPolicyApprovalRequired):
         return ApiError(code=exc.code, message="当前模型配额策略缺少可核验的正式审批，不能发布为生效状态。", status_code=422)
+    if isinstance(exc, BudgetPolicyApprovalRequired):
+        return ApiError(code=exc.code, message="当前模型预算策略缺少可核验的正式审批，不能发布为生效状态。", status_code=422)
     return ApiError(code=exc.code, message="model governance policy persistence failed", status_code=503)
 
 

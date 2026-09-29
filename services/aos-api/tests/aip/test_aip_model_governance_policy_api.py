@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from aos_api.aip_model_governance_policy_store import ModelGovernancePolicyNotFound, QuotaPolicyApprovalRequired, materialize_policy
+from aos_api.aip_model_governance_policy_store import BudgetPolicyApprovalRequired, ModelGovernancePolicyNotFound, QuotaPolicyApprovalRequired, materialize_policy
 from aos_api.routers import aip_model_governance_policies
 
 NOW = datetime(2026, 8, 17, tzinfo=UTC)
@@ -63,5 +63,33 @@ def test_quota_api_reports_missing_formal_approval(client) -> None:
         )
         assert response.status_code == 422
         assert response.json()["code"] == "AIP_QUOTA_ACTIVE_APPROVAL_REQUIRED"
+    finally:
+        client.app.dependency_overrides.pop(aip_model_governance_policies.get_store, None)
+
+
+def test_budget_policy_api_reports_missing_formal_approval(client) -> None:
+    class ApprovalBlockedStore:
+        def publish_budget(self, *args, **kwargs):
+            raise BudgetPolicyApprovalRequired("exact approval authority is required")
+
+    client.app.dependency_overrides[aip_model_governance_policies.get_store] = ApprovalBlockedStore
+    try:
+        request = {key: value for key, value in body().items() if key not in {
+            "maxConcurrency", "maxInputTokens", "maxOutputTokens", "hourlyRequestLimit",
+            "dailyRequestLimit", "reservationLeaseSeconds", "overflowBehavior",
+            "allowPublicProviderFallback", "allowAutoScale",
+        }}
+        request.update({
+            "budgetRevisionRef": {"assetType": "BudgetRevision", "assetId": "budget-test", "revision": 1, "contentHash": "a" * 64},
+            "currency": "CNY", "hardStop": True, "unknownUsageBehavior": "block",
+            "unknownPriceBehavior": "block", "allowZeroPrice": False,
+        })
+        response = client.post(
+            "/v1/aip/model-governance-policies/budgets",
+            headers=headers(**{"Idempotency-Key": "budget-policy-approval-v1", "If-Match": "0"}),
+            json=request,
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_BUDGET_POLICY_ACTIVE_APPROVAL_REQUIRED"
     finally:
         client.app.dependency_overrides.pop(aip_model_governance_policies.get_store, None)
