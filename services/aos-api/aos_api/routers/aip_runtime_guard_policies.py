@@ -27,12 +27,15 @@ from aos_api.aip_network_policy_activation_preview import preview_network_activa
 from aos_api.aip_network_policy_action_producer import (
     NetworkActivationProposalRequest,
     NetworkPolicyProducerBlocked,
+    decide_network_activation,
     propose_network_activation,
 )
 from aos_api.aip_network_policy_activation_target import NetworkPolicyActivationTargetBlocked
-from aos_api.aip_action_models import ActionDraftBundle
+from aos_api.aip_action_models import ActionDraftBundle, DecideActionProposalRequest
 from aos_api.aip_action_store import (
+    AipActionConflict,
     AipActionIdempotencyConflict,
+    AipActionNotFound,
     AipActionStoreError,
     AipActionTransitionBlocked,
 )
@@ -215,10 +218,34 @@ def propose_network(
         raise ApiError(code=code, message="当前正式网络策略动作来源或身份不满足要求", status_code=403 if code.startswith("OIDC_") else 422) from exc
     except (NetworkPolicyActivationTargetBlocked, AipActionTransitionBlocked) as exc:
         raise ApiError(code="AIP_NETWORK_PROPOSAL_BLOCKED", message=str(exc), status_code=422) from exc
-    except AipActionIdempotencyConflict as exc:
+    except (AipActionIdempotencyConflict, AipActionConflict) as exc:
         raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except AipActionNotFound as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=404) from exc
     except AipActionStoreError as exc:
         raise ApiError(code=exc.code, message="network action proposal persistence failed", status_code=503) from exc
+
+
+@router.post("/networks/activation-proposals/{proposal_id}/decision", response_model=ActionDraftBundle)
+def decide_network(
+    proposal_id: str,
+    body: DecideActionProposalRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+):
+    try:
+        return decide_network_activation(principal, proposal_id, _key(idempotency_key), body)
+    except NetworkPolicyProducerBlocked as exc:
+        code = str(exc)
+        raise ApiError(code=code, message="当前正式网络策略审批身份或绑定不满足要求", status_code=403 if code.startswith("OIDC_") else 422) from exc
+    except (AipActionIdempotencyConflict, AipActionConflict) as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except AipActionNotFound as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=404) from exc
+    except AipActionTransitionBlocked as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=422) from exc
+    except AipActionStoreError as exc:
+        raise ApiError(code=exc.code, message="network action decision persistence failed", status_code=503) from exc
 
 
 @router.get("/networks/{policy_id}", response_model=NetworkPolicyRevision)

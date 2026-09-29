@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from aos_api.aip_action_models import CreateActionProposalRequest
+from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
 from aos_api.aip_action_policy import classify_action_risk
 from aos_api.aip_action_store import AipActionStore, AipActionTransitionBlocked
 from aos_api.aip_action_execution import AipActionExecutionService
@@ -81,3 +81,49 @@ def test_live_route_rejects_dev_identity_before_policy_database(client):
     )
     assert response.status_code == 403, response.text
     assert response.json()["code"] == "OIDC_POLICY_MAKER_REQUIRED"
+
+
+def test_dedicated_checker_rejects_dev_identity_before_database():
+    from aos_api.aip_network_policy_action_producer import decide_network_activation
+    principal = Principal(subject="checker", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="dev")
+    body = DecideActionProposalRequest.model_validate({
+        "expectedProposalVersion": 1, "expectedProposalHash": "a" * 64,
+        "decision": "approved", "reason": "test-only",
+    })
+    with pytest.raises(NetworkPolicyProducerBlocked, match="OIDC"):
+        decide_network_activation(principal, "proposal-1", "key-1", body,
+                                  connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))
+
+
+def test_generic_checker_remains_unwired_for_network_proposal():
+    store = AipActionStore(connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))
+    row = {"action_type_id": "aip_activate_network_policy", "action_type_snapshot": _snapshot(), "payload": {}}
+    with pytest.raises(AipActionTransitionBlocked, match="CHECKER_UNWIRED"):
+        store._internal_proposal_guard(None, TenantScope("org-org", "dev-project"),
+                                       "checker", row, checker=True)
+
+
+def test_live_decision_route_rejects_dev_identity_before_database(client):
+    response = client.post(
+        "/v1/aip/runtime-guard-policies/networks/activation-proposals/proposal-1/decision",
+        headers={"Authorization": "Bearer dev", "X-Org-Id": "org-org",
+                 "X-Project-Id": "dev-project", "Idempotency-Key": "test-checker"},
+        json={"expectedProposalVersion": 1, "expectedProposalHash": "a" * 64,
+              "decision": "approved", "reason": "test-only"},
+    )
+    assert response.status_code == 403, response.text
+    assert response.json()["code"] == "OIDC_POLICY_CHECKER_REQUIRED"
+
+
+def test_checker_requires_timezone_aware_approval_expiry_before_database():
+    from aos_api.aip_network_policy_action_producer import decide_network_activation
+    principal = Principal(subject="checker", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    body = DecideActionProposalRequest.model_validate({
+        "expectedProposalVersion": 1, "expectedProposalHash": "a" * 64,
+        "decision": "approved", "approvalExpiresAt": "2026-10-01T00:00:00",
+    })
+    with pytest.raises(NetworkPolicyProducerBlocked, match="EXPIRY_INVALID"):
+        decide_network_activation(principal, "proposal-1", "key-1", body,
+            connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))

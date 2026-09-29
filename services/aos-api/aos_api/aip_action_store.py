@@ -84,7 +84,7 @@ def canonical_hash(value: Any) -> str:
 
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
-                 network_activation_guard=None) -> None:
+                 network_activation_guard=None, network_approval_guard=None) -> None:
         if bootstrap_guard is not None:
             from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard
             if type(bootstrap_guard) is not _BootstrapActionGuard:
@@ -95,6 +95,11 @@ class AipActionStore:
             if type(network_activation_guard) is not NetworkPolicyActivationGuard:
                 raise TypeError('exact network activation guard required')
         self._network_activation_guard = network_activation_guard
+        if network_approval_guard is not None:
+            from aos_api.aip_network_policy_action_producer import NetworkPolicyApprovalGuard
+            if type(network_approval_guard) is not NetworkPolicyApprovalGuard:
+                raise TypeError('exact network approval guard required')
+        self._network_approval_guard = network_approval_guard
         self._connect_factory = connect_factory or db_connect
 
     @staticmethod
@@ -168,6 +173,9 @@ class AipActionStore:
                     and self._network_activation_guard is not None):
                 self._network_activation_guard.check_replay(conn, scope, actor_id, row)
                 return None
+            if (checker and row['action_type_id'] == 'aip_activate_network_policy'
+                    and self._network_approval_guard is not None):
+                return self._network_approval_guard.check(conn, scope, actor_id, row)
             raise AipActionTransitionBlocked('POLICY_ACTION_CHECKER_UNWIRED')
         from aos_api.ecommerce_content_repair_action_binding import require_repair_action_proposal
         require_repair_action_proposal(row)

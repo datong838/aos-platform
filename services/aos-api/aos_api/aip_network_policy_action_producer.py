@@ -7,10 +7,10 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from aos_api.aip_action_models import ActionDraftBundle, CreateActionProposalRequest
+from aos_api.aip_action_models import ActionDraftBundle, CreateActionProposalRequest, DecideActionProposalRequest
 from aos_api.aip_action_policy import classify_action_risk
 from aos_api.aip_action_store import AipActionStore, AipActionTransitionBlocked, canonical_hash
-from aos_api.aip_contracts import ActionRiskLevel, AipContractModel
+from aos_api.aip_contracts import ActionRiskLevel, AipContractModel, ApprovalDecision
 from aos_api.aip_network_policy_activation_target import (
     NetworkPolicyActivationTargetBlocked,
     build_network_policy_activation_target,
@@ -136,12 +136,68 @@ class NetworkPolicyActivationGuard:
             raise NetworkPolicyProducerBlocked("NETWORK_PRODUCER_PROPOSAL_DRIFTED")
         return target.binding_hash
 
-    def check_replay(self, conn: Any, scope: TenantScope, actor: str, row: Any) -> None:
-        if (row['created_by'] != actor or row['status'] != 'drafted'
+    def check_replay(self, conn: Any, scope: TenantScope, actor: str, row: Any,
+                     *, allowed_statuses: tuple[str, ...] = ('drafted',)) -> None:
+        if (row['created_by'] != actor or row['status'] not in allowed_statuses
                 or row['task_id'] is not None or row['run_id'] is not None
                 or row['impact_preview_id'] is not None or row['object_ref'] is not None
                 or row['diff'] != {} or row['evidence_refs'] != []):
             raise NetworkPolicyProducerBlocked('NETWORK_PRODUCER_REPLAY_DRIFTED')
+
+
+class NetworkPolicyApprovalGuard:
+    """Validate a distinct current checker and the immutable proposal in the decide transaction."""
+
+    def __init__(self, *, scope: TenantScope, checker: str, decision: ApprovalDecision) -> None:
+        self.scope = scope
+        self.checker = checker
+        self.decision = decision
+
+    def check(self, conn: Any, scope: TenantScope, actor: str, row: Any) -> tuple[str, ...]:
+        if (scope != self.scope or actor != self.checker or row['action_type_id'] != ACTION_ID
+                or row['action_type_snapshot'].get('id') != ACTION_ID):
+            raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_PROPOSAL_IDENTITY_DRIFTED')
+        if actor == row['created_by']:
+            raise NetworkPolicyProducerBlocked('NETWORK_MAKER_CHECKER_SEPARATION_REQUIRED')
+        members = conn.execute(
+            "SELECT role FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE",
+            (*scope.key, actor),
+        ).fetchall()
+        if len(members) != 1 or members[0]['role'].lower() not in {'owner', 'admin'}:
+            raise NetworkPolicyProducerBlocked('NETWORK_CURRENT_CHECKER_REQUIRED')
+        if row['status'] == 'approved' and self.decision is ApprovalDecision.APPROVED:
+            prior = conn.execute(
+                "SELECT 1 FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s "
+                "AND proposal_id=%s AND actor_id=%s AND decision='approved'",
+                (*scope.key, row['proposal_id'], actor),
+            ).fetchone()
+            if prior is None:
+                raise NetworkPolicyProducerBlocked('NETWORK_ALREADY_APPROVED')
+        try:
+            candidate = NetworkPolicyRevisionCreate.model_validate(row['payload']['candidate'])
+            expected_version = row['payload']['expectedHeadVersion']
+            if type(expected_version) is not int or expected_version < 0:
+                raise ValueError('invalid head version')
+            guard = NetworkPolicyActivationGuard(
+                scope=scope, actor=row['created_by'], candidate=candidate,
+                expected_version=expected_version, expires_at=row['expires_at'],
+            )
+            guard.check_replay(conn, scope, row['created_by'], row,
+                               allowed_statuses=('drafted', 'approved', 'rejected'))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_BINDING_DRIFTED') from exc
+        draft = conn.execute(
+            "SELECT snapshot FROM aip_action_draft WHERE org_id=%s AND project_id=%s AND proposal_id=%s",
+            (*scope.key, row['proposal_id']),
+        ).fetchone()
+        stable = draft['snapshot'] if draft else None
+        if (not isinstance(stable, dict) or canonical_hash(stable) != row['proposal_hash']
+                or stable.get('actionBindingHash') != row['action_binding_hash']
+                or stable.get('actionType') != row['action_type_snapshot']
+                or stable.get('payload') != row['payload']
+                or stable.get('policy') != row['policy_snapshot']):
+            raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_DRAFT_DRIFTED')
+        return (members[0]['role'],)
         body = CreateActionProposalRequest(
             actionTypeId=ACTION_ID, purpose=row['purpose'], payload=row['payload'],
             expiresAt=row['expires_at'],
@@ -201,3 +257,22 @@ def propose_network_activation(
         return AipActionStore(factory, network_activation_guard=guard).create_proposal(
             scope, principal.subject, idempotency_key, body, snapshot, risk,
         )
+
+
+def decide_network_activation(
+    principal: Principal, proposal_id: str, idempotency_key: str,
+    body: DecideActionProposalRequest, *, connect_factory=None,
+) -> ActionDraftBundle:
+    if type(principal) is not Principal or principal.token_kind != 'oidc':
+        raise NetworkPolicyProducerBlocked('OIDC_POLICY_CHECKER_REQUIRED')
+    if (type(proposal_id) is not str or not proposal_id or proposal_id != proposal_id.strip()
+            or type(idempotency_key) is not str or not 1 <= len(idempotency_key.strip()) <= 120
+            or idempotency_key != idempotency_key.strip()
+            or type(body) is not DecideActionProposalRequest):
+        raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_INPUT_INVALID')
+    if body.approval_expires_at is not None and body.approval_expires_at.tzinfo is None:
+        raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_EXPIRY_INVALID')
+    scope = TenantScope(principal.org_id, principal.project_id)
+    guard = NetworkPolicyApprovalGuard(scope=scope, checker=principal.subject, decision=body.decision)
+    return AipActionStore(connect_factory or db_connect, network_approval_guard=guard).decide(
+        scope, principal.subject, proposal_id, idempotency_key, body)

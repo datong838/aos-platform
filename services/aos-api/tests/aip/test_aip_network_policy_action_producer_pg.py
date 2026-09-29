@@ -8,9 +8,11 @@ import psycopg
 from psycopg.rows import dict_row
 import pytest
 
-from aos_api.aip_action_store import AipActionIdempotencyConflict, AipActionStore, AipActionTransitionBlocked
+from aos_api.aip_action_store import AipActionConflict, AipActionIdempotencyConflict, AipActionStore, AipActionTransitionBlocked
+from aos_api.aip_action_models import DecideActionProposalRequest
 from aos_api.aip_network_policy_action_producer import (
     NetworkPolicyProducerBlocked, _ACTION, _OBJECT, propose_network_activation,
+    decide_network_activation,
 )
 from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
 from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevisionCreate
@@ -47,6 +49,12 @@ def test_only_clone_produces_exact_drafted_proposal_and_no_policy_write():
             "ON CONFLICT (org_id,project_id,subject) DO NOTHING",
             (*SCOPE.key, "bg00br-test-maker", "owner"),
         )
+        for subject in ("bg00bs-test-checker", "bg00bs-test-revoker"):
+            owner.execute(
+                "INSERT INTO meta_membership(org_id,project_id,subject,role) VALUES(%s,%s,%s,%s) "
+                "ON CONFLICT (org_id,project_id,subject) DO NOTHING",
+                (*SCOPE.key, subject, "admin"),
+            )
     now = datetime.now(UTC)
     suffix = uuid.uuid4().hex[:8]
     egress = seed_historical_runtime_guard(SCOPE, "bg00br-test", EgressPolicyRevisionCreate(
@@ -107,3 +115,46 @@ def test_only_clone_produces_exact_drafted_proposal_and_no_policy_write():
         AipActionStore()._internal_proposal_guard(None, SCOPE, "bg00br-test-checker",
             {"action_type_id": _ACTION["id"], "action_type_snapshot": {"id": _ACTION["id"]},
              "payload": {}}, checker=True)
+    checker = Principal(subject="bg00bs-test-checker", org_id=SCOPE.org_id,
+                        project_id=SCOPE.project_id, roles=["admin"], token_kind="oidc")
+    approve = DecideActionProposalRequest.model_validate({
+        "expectedProposalVersion": first.proposal.version,
+        "expectedProposalHash": first.proposal.proposal_hash,
+        "decision": "approved", "reason": "isolated path proof",
+        "approvalExpiresAt": (datetime.now(UTC) + timedelta(minutes=5)).isoformat(),
+    })
+    with pytest.raises(NetworkPolicyProducerBlocked, match="MAKER_CHECKER_SEPARATION"):
+        decide_network_activation(principal, first.proposal.id, f"maker-check-{suffix}", approve)
+    with pytest.raises(NetworkPolicyProducerBlocked, match="CURRENT_CHECKER_REQUIRED"):
+        decide_network_activation(Principal(subject="unknown-checker", org_id=SCOPE.org_id,
+            project_id=SCOPE.project_id, roles=["admin"], token_kind="oidc"),
+            first.proposal.id, f"unknown-check-{suffix}", approve)
+    with pytest.raises(AipActionConflict):
+        decide_network_activation(checker, first.proposal.id, f"stale-check-{suffix}",
+            approve.model_copy(update={"expected_proposal_version": first.proposal.version + 1}))
+    approved = decide_network_activation(checker, first.proposal.id, f"approve-{suffix}", approve)
+    assert approved.proposal.status.value == "approved"
+    assert len(approved.approvals) == 1
+    assert approved.approvals[0].action_binding_hash == first.proposal.action_binding_hash
+    assert decide_network_activation(checker, first.proposal.id,
+        f"approve-{suffix}", approve).proposal.id == first.proposal.id
+    with pytest.raises(AipActionIdempotencyConflict):
+        decide_network_activation(checker, first.proposal.id, f"approve-{suffix}",
+            approve.model_copy(update={"reason": "changed"}))
+    revoker = Principal(subject="bg00bs-test-revoker", org_id=SCOPE.org_id,
+                        project_id=SCOPE.project_id, roles=["admin"], token_kind="oidc")
+    second_approve = approve.model_copy(update={"expected_proposal_version": approved.proposal.version})
+    with pytest.raises(NetworkPolicyProducerBlocked, match="ALREADY_APPROVED"):
+        decide_network_activation(revoker, first.proposal.id, f"second-approve-{suffix}", second_approve)
+    reject = DecideActionProposalRequest.model_validate({
+        "expectedProposalVersion": approved.proposal.version,
+        "expectedProposalHash": approved.proposal.proposal_hash,
+        "decision": "rejected", "reason": "isolated revocation proof",
+    })
+    rejected = decide_network_activation(revoker, first.proposal.id, f"revoke-{suffix}", reject)
+    assert rejected.proposal.status.value == "rejected"
+    assert decide_network_activation(revoker, first.proposal.id,
+        f"revoke-{suffix}", reject).proposal.id == first.proposal.id
+    with connect(SCOPE) as conn:
+        for table in ("aip_network_policy_head", "aip_network_policy_revision", "aip_network_policy_receipt"):
+            assert conn.execute("SELECT count(*) AS n FROM " + table).fetchone()["n"] == 0
