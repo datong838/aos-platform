@@ -237,6 +237,76 @@ class JudgeRevisionRef(AipContractModel):
     model_route: AssetRevisionRef | None = None
 
 
+class EvalExecutorCertificate(AipContractModel):
+    """Signed identity claim; current issuer and revocation are checked separately."""
+
+    schema_version: Literal["aos.eval-executor-certificate/v1"] = "aos.eval-executor-certificate/v1"
+    identity_id: str = Field(min_length=1, max_length=200)
+    tenant: TenantContext
+    purpose: Literal["target", "judge"]
+    executor_ref: AssetRevisionRef | JudgeRevisionRef
+    issuer_id: str = Field(min_length=1, max_length=200)
+    issuer_key_id: str = Field(min_length=1, max_length=200)
+    public_key_base64: str = Field(min_length=1, max_length=128)
+    valid_from: datetime
+    valid_until: datetime
+    signature_base64: str = Field(min_length=1, max_length=256)
+
+    @model_validator(mode="after")
+    def _purpose_and_time(self) -> EvalExecutorCertificate:
+        if (self.purpose == "target") != isinstance(self.executor_ref, AssetRevisionRef):
+            raise ValueError("executor certificate purpose/ref mismatch")
+        if self.purpose == "target" and self.executor_ref.asset_type is not AssetType.SKILL_TEMPLATE:
+            raise ValueError("target certificate requires exact SkillTemplate")
+        if (
+            self.valid_from.utcoffset() is None
+            or self.valid_until.utcoffset() is None
+            or self.valid_from >= self.valid_until
+        ):
+            raise ValueError("executor certificate validity is invalid")
+        return self
+
+
+class EvalExecutionReceipt(AipContractModel):
+    """Signed per-case claim; persistence and replay authority are separate."""
+
+    schema_version: Literal["aos.eval-execution-receipt/v1"] = "aos.eval-execution-receipt/v1"
+    receipt_id: str = Field(pattern=SHA256_PATTERN)
+    tenant: TenantContext
+    purpose: Literal["target", "judge"]
+    run_id: str = Field(min_length=1, max_length=200)
+    suite_ref: AssetRevisionRef
+    case_id: str = Field(min_length=1, max_length=200)
+    identity_id: str = Field(min_length=1, max_length=200)
+    certificate_hash: str = Field(pattern=SHA256_PATTERN)
+    executor_ref: AssetRevisionRef | JudgeRevisionRef
+    input_hash: str = Field(pattern=SHA256_PATTERN)
+    output_hash: str = Field(pattern=SHA256_PATTERN)
+    actual_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    expected_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    passed: bool | None = None
+    detail_code: str | None = Field(default=None, min_length=1, max_length=120)
+    occurred_at: datetime
+    signature_base64: str = Field(min_length=1, max_length=256)
+
+    @model_validator(mode="after")
+    def _purpose_and_shape(self) -> EvalExecutionReceipt:
+        if self.suite_ref.asset_type is not AssetType.EVAL_SUITE:
+            raise ValueError("execution receipt requires exact EvalSuite")
+        if (self.purpose == "target") != isinstance(self.executor_ref, AssetRevisionRef):
+            raise ValueError("execution receipt purpose/ref mismatch")
+        judge_fields = (self.actual_hash, self.expected_hash, self.passed, self.detail_code)
+        if self.purpose == "target" and any(item is not None for item in judge_fields):
+            raise ValueError("target receipt cannot assert Judge result")
+        if self.purpose == "judge" and any(
+            item is None for item in (self.actual_hash, self.passed, self.detail_code)
+        ):
+            raise ValueError("judge receipt requires exact result fields")
+        if self.occurred_at.utcoffset() is None:
+            raise ValueError("execution receipt time must be timezone-aware")
+        return self
+
+
 class EvalCaseDefinition(AipContractModel):
     case_id: str = Field(min_length=1, max_length=200)
     kind: EvalCaseKind
@@ -683,6 +753,8 @@ __all__ = [
     "DatasetSourceKind",
     "EvalCaseDefinition",
     "EvalCaseKind",
+    "EvalExecutionReceipt",
+    "EvalExecutorCertificate",
     "EvalCaseResultEvidence",
     "EvalDatasetManifest",
     "EvalReportRevision",
