@@ -14,6 +14,7 @@
 - 新纯合同专项 `11 passed`。包含隔离临时 Ed25519 签名正向机制、同租户 exact 对、无 expected Case、租户/target/digest/receipt ID 偏移、缺根/撤销/错签/过期/跨 purpose 等负向。临时密钥只证明算法，不是正式 G2 签发证据。
 - AIP-4 合同、Runner、E2、Skill 发布、Binding、安装目录相邻 7 文件 `58 passed, 1 xfailed`，退出 0。严格 xfail 仍为缺正式执行权威的旧 lambda 正向链。`compileall -q` 与 `git diff --check` 退出 0。
 - 当前业务库 `BEGIN READ ONLY` 读回 `a0v_111`、栖月汇 Eval Run/Report `0/0`，退出 0。API/Host/worker/Provider 未因测试启动，18181 继续禁入。
+- `m1@ffdc6d8a` 后原签名 Receipt 预检退出 0，`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、approved 安装/四 published bundle/Runtime Binding 0、库 `a0v_111`。旧 API session `33351` Ctrl-C 退出 0，新 session `3540` 以最新代码运行；8080 健康/就绪与 8434 Skill 页面均 HTTP 200，18181 无监听。HTTP 可达不计浏览器业务验收。
 
 ## 边界
 
