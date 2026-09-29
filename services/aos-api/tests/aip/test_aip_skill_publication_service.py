@@ -22,8 +22,10 @@ from aos_api.aip_eval_contracts import (
     DatasetRevisionRef,
     DatasetSourceKind,
     EvalCaseDefinition,
+    EvalCaseResultEvidence,
     EvalCaseKind,
     EvalDatasetManifest,
+    EvalReportRevision,
     EvalSuiteRevision,
     JudgeRevisionRef,
     PublicationEvent,
@@ -34,9 +36,7 @@ from aos_api.aip_eval_contracts import (
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_runner import (
     AipEvalRunner,
-    JudgeExecution,
-    ResolvedArtifact,
-    TargetExecution,
+    compute_eval_report_hash,
 )
 from aos_api.aip_release_publication_models import (
     DeriveReleaseGateRequest,
@@ -324,6 +324,52 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def _seed_historical_skill_report(scope, suite, suffix, expected_value):
+    """Test-only historical row: no current formal executor is claimed."""
+    created_at = datetime.now(UTC)
+    run_id = f"historical-run-{suffix}"
+    suite_ref = AssetRevisionRef(
+        asset_type=AssetType.EVAL_SUITE,
+        asset_id=suite.suite_id,
+        revision=str(suite.revision),
+        content_hash=suite.content_hash,
+    )
+    report = EvalReportRevision(
+        tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+        report_id=f"historical-report-{suffix}", revision=1,
+        content_hash="0" * 64, run_id=run_id,
+        suite_ref=suite_ref, target=suite.target,
+        dataset=suite.dataset, judge=suite.judge,
+        results=[EvalCaseResultEvidence(
+            case_id="positive-1", passed=True,
+            actual_hash=_canonical_hash(expected_value),
+            expected_hash=_canonical_hash(expected_value),
+            detail_code="historical_test_only", duration_ms=0,
+        )],
+        passed=1, failed=0, total=1, pass_rate=1.0,
+        gate_passed=True, created_at=created_at,
+    )
+    report = report.model_copy(update={"content_hash": compute_eval_report_hash(report)})
+    def json_ref(value):
+        return json.dumps(value.model_dump(mode="json", by_alias=True))
+    with connect(scope) as conn:
+        conn.execute(
+            """INSERT INTO aip_eval_run
+               (org_id,project_id,run_id,suite_id,suite_revision,suite_hash,
+                target_ref,dataset_ref,judge_ref,status,idempotency_key,version,
+                created_by,created_at,started_at,finished_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,
+                       'succeeded',%s,3,'historical-test',%s,%s,%s)""",
+            (*scope.key, run_id, suite.suite_id, suite.revision,
+             suite.content_hash, json_ref(suite.target), json_ref(suite.dataset),
+             json_ref(suite.judge), f"historical-{suffix}", created_at,
+             created_at, created_at),
+        )
+        conn.commit()
+    AipEvalRunner()._append_report(scope, report)
+    return report
+
+
 def _seed_historical_skill_release(scope, report, suffix):
     release = AipReleasePublicationService()
     decided_at = datetime.now(UTC)
@@ -467,26 +513,7 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
     suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
     registry.register_suite_revision(scope, suite, actor="pytest-bind3")
 
-    def resolve_artifact(reference):
-        value = input_value if reference == input_ref else expected_value
-        return ResolvedArtifact(reference=reference, value=value)
-
-    report = AipEvalRunner().run(
-        scope,
-        suite_id=suite.suite_id,
-        suite_revision=1,
-        idempotency_key=f"run-{suffix}",
-        actor="pytest-bind3",
-        resolve_artifact=resolve_artifact,
-        execute_target=lambda reference, _value: TargetExecution(
-            target=reference, value=expected_value
-        ),
-        execute_judge=lambda reference, actual, expected: JudgeExecution(
-            judge=reference,
-            passed=actual == expected,
-            detail_code="exact_match",
-        ),
-    )
+    report = _seed_historical_skill_report(scope, suite, suffix, expected_value)
     if stop_before_gate:
         return SimpleNamespace(scope=scope, source=source, report=report,
                                suffix=suffix, skill_id=skill_id)

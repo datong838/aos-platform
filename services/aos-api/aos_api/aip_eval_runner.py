@@ -205,6 +205,10 @@ class AipEvalRunner:
                 raise AipEvalAuthorityConflict(
                     "eval contract suite exact reference does not match resolved suite"
                 )
+        if suite.target.asset_type is AssetType.SKILL_TEMPLATE:
+            raise AipEvalAuthorityConflict(
+                "formal Skill Eval executor authority unavailable"
+            )
         self._assert_target_not_withdrawn(scope, suite.target)
         tenant = TenantContext(org_id=scope.org_id, project_id=scope.project_id)
         now = datetime.now(UTC)

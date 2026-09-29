@@ -335,6 +335,38 @@ def test_formal_skill_contract_rejects_unattested_callbacks_before_run(runtime) 
             assert count["n"] == 0
 
 
+def test_direct_skill_run_rejects_unattested_callbacks_before_persistence(runtime) -> None:
+    runner, scoped = runtime
+    skill_suite = _suite().model_copy(update={
+        "suite_id": "direct-skill-suite",
+        "target": _asset(AssetType.SKILL_TEMPLATE, "skill-1", H2),
+    })
+    skill_suite = skill_suite.model_copy(update={
+        "content_hash": compute_eval_suite_hash(skill_suite),
+    })
+    AipEvalPackRegistry(connect_factory=scoped).register_suite_revision(
+        SCOPE, skill_suite, actor="user:dev"
+    )
+    calls = []
+
+    def target(ref, value):
+        calls.append("target")
+        return _target(ref, value)
+
+    with pytest.raises(AipEvalAuthorityConflict, match="formal Skill Eval executor authority unavailable"):
+        runner.run(
+            SCOPE, suite_id=skill_suite.suite_id, suite_revision=1,
+            idempotency_key="direct-skill-unattested", actor="user:dev",
+            resolve_artifact=_resolver, execute_target=target, execute_judge=_judge,
+        )
+    assert calls == []
+    with scoped() as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_eval_run WHERE idempotency_key='direct-skill-unattested'"
+        ).fetchone()["n"] == 0
+        assert conn.execute("SELECT count(*) AS n FROM aip_eval_report_revision").fetchone()["n"] == 0
+
+
 def test_contract_suite_hash_drift_rejects_before_run(runtime) -> None:
     runner, scoped = runtime
     contract = _contract().model_copy(update={
