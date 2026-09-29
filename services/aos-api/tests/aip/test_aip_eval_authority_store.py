@@ -108,7 +108,9 @@ def authority_store():
             conn.execute("""CREATE TABLE aip_artifact (
                 org_id TEXT NOT NULL, project_id TEXT NOT NULL,
                 artifact_id TEXT NOT NULL, artifact_type TEXT NOT NULL,
-                content_hash TEXT, PRIMARY KEY(org_id,project_id,artifact_id))""")
+                content_hash TEXT, content_ref TEXT,
+                source JSONB NOT NULL DEFAULT '{}'::jsonb,
+                PRIMARY KEY(org_id,project_id,artifact_id))""")
             conn.execute(
                 "INSERT INTO twa_workspace VALUES ('org-a','project-a'),('org-b','project-b')"
             )
@@ -262,6 +264,31 @@ def test_direct_dataset_store_cannot_register_missing_artifact_source(authority_
     with scoped_connect(SCOPE_A) as conn:
         count = conn.execute("SELECT count(*) AS n FROM aip_eval_dataset_revision").fetchone()["n"]
     assert count == 0
+
+
+def test_direct_dataset_store_cannot_register_unlinked_artifact_receipt(authority_store) -> None:
+    store, scoped_connect = authority_store
+    manifest = EvalDatasetManifest(
+        source_kind=DatasetSourceKind.ARTIFACT_SNAPSHOT,
+        source_id="d01-eval-snapshot", source_revision="1", source_hash=H2,
+        fields_allowlist=["metric"],
+        redaction_receipt=ArtifactRef(
+            artifact_id="d01-redaction-receipt", artifact_type="redaction_receipt",
+            revision="1", content_hash=H3),
+        pii_state=DatasetPiiState.NONE, case_count=1, captured_at=NOW,
+    ).model_dump(mode="json", by_alias=True)
+    with scoped_connect(SCOPE_A) as conn:
+        conn.execute("""INSERT INTO aip_artifact
+            (org_id,project_id,artifact_id,artifact_type,content_hash,content_ref)
+            VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,%s),
+                   (%s,%s,%s,'redaction_receipt',%s,%s)""",
+            (*SCOPE_A.key, "d01-eval-snapshot", H2, "object://isolated/source",
+             *SCOPE_A.key, "d01-redaction-receipt", H3, "object://isolated/receipt"))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityConflict, match="source ref"):
+        store.create_dataset_revision(SCOPE_A, _dataset(), manifest=manifest, actor="alice")
+    with scoped_connect(SCOPE_A) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM aip_eval_dataset_revision").fetchone()["n"] == 0
 
 
 def test_eval_run_idempotency_transition_and_restart(authority_store) -> None:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import uuid
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -75,7 +76,9 @@ def registry():
             conn.execute("""CREATE TABLE aip_artifact (
                 org_id TEXT NOT NULL, project_id TEXT NOT NULL,
                 artifact_id TEXT NOT NULL, artifact_type TEXT NOT NULL,
-                content_hash TEXT, PRIMARY KEY(org_id,project_id,artifact_id))""")
+                content_hash TEXT, content_ref TEXT,
+                source JSONB NOT NULL DEFAULT '{}'::jsonb,
+                PRIMARY KEY(org_id,project_id,artifact_id))""")
             conn.execute(
                 "INSERT INTO twa_workspace VALUES ('org-a','project-a'),('org-b','project-b')"
             )
@@ -242,7 +245,8 @@ def test_artifact_snapshot_source_metadata_preflight_is_scoped_and_exact(
         registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
     assert registry._authority.list_dataset_revisions(SCOPE_A) == []
     with registry._connect(SCOPE_A) as conn:
-        conn.execute("""INSERT INTO aip_artifact VALUES
+        conn.execute("""INSERT INTO aip_artifact
+            (org_id,project_id,artifact_id,artifact_type,content_hash) VALUES
             (%s,%s,%s,'eval_dataset_snapshot',%s)""",
             (*SCOPE_A.key, snapshot_id, manifest.source_hash))
         conn.commit()
@@ -251,9 +255,39 @@ def test_artifact_snapshot_source_metadata_preflight_is_scoped_and_exact(
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
     with registry._connect(SCOPE_A) as conn:
-        conn.execute("""INSERT INTO aip_artifact VALUES
+        conn.execute("""INSERT INTO aip_artifact
+            (org_id,project_id,artifact_id,artifact_type,content_hash) VALUES
             (%s,%s,%s,'redaction_receipt',%s)""",
             (*SCOPE_A.key, receipt.artifact_id, receipt.content_hash))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityConflict, match="content ref"):
+        registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == []
+    source_ref = {"artifactId": snapshot_id, "artifactType": "eval_dataset_snapshot",
+                  "revision": "1", "contentHash": manifest.source_hash}
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""UPDATE aip_artifact SET content_ref=%s
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            ("object://isolated/eval-source", *SCOPE_A.key, snapshot_id))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityConflict, match="content ref"):
+        registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == []
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""UPDATE aip_artifact SET content_ref=%s,source=%s::jsonb
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            ("object://isolated/redaction-receipt",
+             json.dumps({"sourceArtifactRef": {**source_ref, "contentHash": H4}}),
+             *SCOPE_A.key, receipt.artifact_id))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityConflict, match="source ref"):
+        registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == []
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""UPDATE aip_artifact SET source=%s::jsonb
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (json.dumps({"sourceArtifactRef": source_ref}),
+             *SCOPE_A.key, receipt.artifact_id))
         conn.commit()
     registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
     assert registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev") == _dataset()

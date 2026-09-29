@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
-from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
     AssetType,
@@ -174,12 +174,12 @@ class AipEvalAuthorityStore:
         if receipt.artifact_type != "redaction_receipt":
             raise AipEvalAuthorityConflict("exact redaction receipt type is required")
         source = conn.execute(
-            """SELECT artifact_type,content_hash FROM aip_artifact
+            """SELECT artifact_type,content_hash,content_ref FROM aip_artifact
                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
             (*scope.key, manifest.source_id),
         ).fetchone()
         redaction = conn.execute(
-            """SELECT artifact_type,content_hash FROM aip_artifact
+            """SELECT artifact_type,content_hash,content_ref,source FROM aip_artifact
                WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
             (*scope.key, receipt.artifact_id),
         ).fetchone()
@@ -192,6 +192,23 @@ class AipEvalAuthorityStore:
             or redaction["content_hash"] != receipt.content_hash
         ):
             raise AipEvalAuthorityConflict("artifact source metadata drifted")
+        if not all(
+            isinstance(row["content_ref"], str) and row["content_ref"].strip()
+            for row in (source, redaction)
+        ):
+            raise AipEvalAuthorityConflict("artifact content ref missing")
+        expected_source_ref = ArtifactRef(
+            artifact_id=manifest.source_id,
+            artifact_type="eval_dataset_snapshot",
+            revision=manifest.source_revision,
+            content_hash=manifest.source_hash,
+        ).model_dump(mode="json", by_alias=True)
+        redaction_source = redaction["source"]
+        if (
+            not isinstance(redaction_source, dict)
+            or redaction_source.get("sourceArtifactRef") != expected_source_ref
+        ):
+            raise AipEvalAuthorityConflict("redaction receipt source ref drifted")
 
     def get_dataset_revision(
         self, scope: TenantScope, dataset_id: str, revision: int

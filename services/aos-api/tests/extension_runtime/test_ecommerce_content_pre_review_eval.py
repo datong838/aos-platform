@@ -1,5 +1,6 @@
 """A content artifact can enter human review without claiming factual approval."""
 
+import json
 from copy import deepcopy
 from datetime import UTC, datetime
 import pytest
@@ -226,12 +227,19 @@ def test_content_pre_review_governance_uses_formal_isolated_pg_release_path():
         for pack in (governance, subject):
             conn.execute(
                 """INSERT INTO aip_artifact
-                   (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
-                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'test'),
-                          (%s,%s,%s,'redaction_receipt',%s,'test')""",
+                   (org_id,project_id,artifact_id,artifact_type,content_hash,
+                    content_ref,source,created_by)
+                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,%s,'{}'::jsonb,'test'),
+                          (%s,%s,%s,'redaction_receipt',%s,%s,%s::jsonb,'test')""",
                 (*scope.key, pack.manifest.source_id, pack.manifest.source_hash,
+                 f"test-only://{pack.manifest.source_id}",
                  *scope.key, pack.manifest.redaction_receipt.artifact_id,
-                 pack.manifest.redaction_receipt.content_hash),
+                 pack.manifest.redaction_receipt.content_hash,
+                 f"test-only://{pack.manifest.redaction_receipt.artifact_id}",
+                 json.dumps({"sourceArtifactRef": {
+                     "artifactId": pack.manifest.source_id,
+                     "artifactType": "eval_dataset_snapshot", "revision": "1",
+                     "contentHash": pack.manifest.source_hash}})),
             )
         conn.commit()
     for pack in (governance, subject):

@@ -151,12 +151,19 @@ def _register_current_content_eval_gate(connect):
         for pack in (governance, subject):
             conn.execute(
                 """INSERT INTO aip_artifact
-                   (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
-                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'fixture'),
-                          (%s,%s,%s,'redaction_receipt',%s,'fixture')""",
+                   (org_id,project_id,artifact_id,artifact_type,content_hash,
+                    content_ref,source,created_by)
+                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,%s,'{}'::jsonb,'fixture'),
+                          (%s,%s,%s,'redaction_receipt',%s,%s,%s::jsonb,'fixture')""",
                 (*SCOPE.key, pack.manifest.source_id, pack.manifest.source_hash,
+                 f"test-only://{pack.manifest.source_id}",
                  *SCOPE.key, pack.manifest.redaction_receipt.artifact_id,
-                 pack.manifest.redaction_receipt.content_hash),
+                 pack.manifest.redaction_receipt.content_hash,
+                 f"test-only://{pack.manifest.redaction_receipt.artifact_id}",
+                 json.dumps({"sourceArtifactRef": {
+                     "artifactId": pack.manifest.source_id,
+                     "artifactType": "eval_dataset_snapshot", "revision": "1",
+                     "contentHash": pack.manifest.source_hash}})),
             )
         conn.commit()
     for pack in (governance, subject):

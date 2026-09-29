@@ -355,11 +355,18 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
     with connect(scope) as conn:
         conn.execute(
             """INSERT INTO aip_artifact
-               (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
-               VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'pytest-bind3'),
-                      (%s,%s,%s,'redaction_receipt',%s,'pytest-bind3')""",
+               (org_id,project_id,artifact_id,artifact_type,content_hash,
+                content_ref,source,created_by)
+               VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,%s,'{}'::jsonb,'pytest-bind3'),
+                      (%s,%s,%s,'redaction_receipt',%s,%s,%s::jsonb,'pytest-bind3')""",
             (*scope.key, f"skill-eval-{suffix}", "2" * 64,
-             *scope.key, f"redaction-{suffix}", "4" * 64),
+             f"test-only://skill-eval-{suffix}",
+             *scope.key, f"redaction-{suffix}", "4" * 64,
+             f"test-only://redaction-{suffix}",
+             json.dumps({"sourceArtifactRef": {
+                 "artifactId": f"skill-eval-{suffix}",
+                 "artifactType": "eval_dataset_snapshot", "revision": "1",
+                 "contentHash": "2" * 64}})),
         )
         conn.commit()
     registry.register_dataset_revision(
