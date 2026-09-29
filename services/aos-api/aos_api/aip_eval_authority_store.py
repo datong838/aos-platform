@@ -150,6 +150,24 @@ class AipEvalAuthorityStore:
             raise AipEvalAuthorityNotFound("dataset revision not found")
         return self._dataset_from_row(row)
 
+    def list_dataset_revisions(self, scope: TenantScope) -> list[DatasetRevisionRef]:
+        self._require_scope(scope)
+        try:
+            with self._connect(scope) as conn:
+                rows = conn.execute(
+                    """SELECT dataset_id,revision,content_hash,source_hash,
+                              redaction_policy_ref
+                       FROM aip_eval_dataset_revision
+                       WHERE org_id=%s AND project_id=%s
+                       ORDER BY dataset_id,revision""",
+                    scope.key,
+                ).fetchall()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "dataset revision list failed"
+            ) from exc
+        return [self._dataset_from_row(row) for row in rows]
+
     def create_eval_run(
         self,
         scope: TenantScope,

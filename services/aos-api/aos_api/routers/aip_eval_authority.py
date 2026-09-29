@@ -14,8 +14,10 @@ from aos_api.aip_eval_authority_store import (
 from aos_api.aip_eval_contracts import (
     DatasetRevisionRef,
     EvalRunAuthorityRecord,
+    EvalSuiteRevision,
     LineageEvent,
 )
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -25,10 +27,15 @@ router = APIRouter(
     tags=["aip-eval-authority"],
 )
 _STORE = AipEvalAuthorityStore()
+_REGISTRY = AipEvalPackRegistry()
 
 
 def get_aip_eval_authority_store() -> AipEvalAuthorityStore:
     return _STORE
+
+
+def get_aip_eval_pack_registry() -> AipEvalPackRegistry:
+    return _REGISTRY
 
 
 def _scope(principal: Principal) -> TenantScope:
@@ -49,6 +56,28 @@ def _map_error(exc: Exception) -> ApiError:
         message="eval authority read failed",
         status_code=500,
     )
+
+
+@router.get("/datasets", response_model=list[DatasetRevisionRef])
+def list_dataset_revisions(
+    principal: Principal = Depends(require_principal),
+    store: AipEvalAuthorityStore = Depends(get_aip_eval_authority_store),
+) -> list[DatasetRevisionRef]:
+    try:
+        return store.list_dataset_revisions(_scope(principal))
+    except Exception as exc:
+        raise _map_error(exc) from exc
+
+
+@router.get("/suites", response_model=list[EvalSuiteRevision])
+def list_suite_revisions(
+    principal: Principal = Depends(require_principal),
+    registry: AipEvalPackRegistry = Depends(get_aip_eval_pack_registry),
+) -> list[EvalSuiteRevision]:
+    try:
+        return registry.list_suite_revisions(_scope(principal))
+    except Exception as exc:
+        raise _map_error(exc) from exc
 
 
 @router.get(

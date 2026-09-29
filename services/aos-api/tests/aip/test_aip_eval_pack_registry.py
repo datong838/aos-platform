@@ -211,5 +211,7 @@ def test_cross_tenant_registry_is_empty(registry: AipEvalPackRegistry) -> None:
     suite = _suite()
     registry.register_suite_revision(SCOPE_A, suite, actor="user:dev")
     assert registry.list_suite_revisions(SCOPE_B) == []
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == [_dataset()]
+    assert registry._authority.list_dataset_revisions(SCOPE_B) == []
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.get_suite_revision(SCOPE_B, suite.suite_id, suite.revision)

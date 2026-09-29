@@ -23,6 +23,7 @@ from aos_api.aip_eval_contracts import (
 )
 from aos_api.routers.aip_eval_authority import (
     get_aip_eval_authority_store,
+    get_aip_eval_pack_registry,
     router,
 )
 from aos_api.tenant_scope import TenantScope
@@ -102,6 +103,10 @@ def eval_authority_api(client):
             self._record(scope)
             return dataset
 
+        def list_dataset_revisions(self, scope):
+            self._record(scope)
+            return [dataset]
+
         def get_eval_run(self, scope, _run_id):
             self._record(scope)
             return run
@@ -111,7 +116,13 @@ def eval_authority_api(client):
             return [lineage]
 
     store = FakeStore()
+    class FakeRegistry:
+        def list_suite_revisions(self, scope):
+            store._record(scope)
+            return []
+
     client.app.dependency_overrides[get_aip_eval_authority_store] = lambda: store
+    client.app.dependency_overrides[get_aip_eval_pack_registry] = lambda: FakeRegistry()
     headers = {
         "Authorization": "Bearer dev",
         "X-Org-Id": "dev-org",
@@ -119,6 +130,30 @@ def eval_authority_api(client):
     }
     yield client, store, headers
     client.app.dependency_overrides.pop(get_aip_eval_authority_store, None)
+    client.app.dependency_overrides.pop(get_aip_eval_pack_registry, None)
+
+
+def test_catalog_routes_are_read_only_and_tenant_scoped(eval_authority_api) -> None:
+    client, store, headers = eval_authority_api
+    datasets = client.get("/v1/aip/eval-authority/datasets", headers=headers)
+    suites = client.get("/v1/aip/eval-authority/suites", headers=headers)
+    assert datasets.status_code == suites.status_code == 200
+    assert datasets.json()[0]["datasetId"] == "dataset-1"
+    assert suites.json() == []
+    assert store.scopes == [TenantScope("dev-org", "dev-project")] * 2
+
+
+def test_catalog_routes_fail_closed_for_storage_error_and_unauthenticated_request(
+    eval_authority_api,
+) -> None:
+    client, store, headers = eval_authority_api
+    store.error = AipEvalAuthorityPersistenceError("db")
+    for path in ("/datasets", "/suites"):
+        url = f"/v1/aip/eval-authority{path}"
+        response = client.get(url, headers=headers)
+        assert response.status_code == 503
+        assert response.json()["code"] == "AIP_EVAL_AUTHORITY_PERSISTENCE_ERROR"
+        assert client.get(url).status_code in {401, 403}
 
 
 def test_read_routes_use_authenticated_tenant_scope(eval_authority_api) -> None:
