@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
 INSTALLATION = "ccdcb0f0-1040-4bc6-aa0c-d045f5689813"
-EXPECTED_SCHEMA_HEAD = "a0v_116"
+EXPECTED_SCHEMA_HEAD = "a0v_117"
 FLAGS = {
     "AOS_DOTENV_DISABLED": "1", "AOS_DB_MIGRATION_MODE": "disabled",
     "AOS_QYH_CRON_ENABLED": "false", "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
