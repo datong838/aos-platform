@@ -23,6 +23,7 @@ from aos_api.aip_network_policy_contracts import (
     NetworkPolicyRevision,
     NetworkPolicyRevisionCreate,
 )
+from aos_api.aip_network_policy_activation_preview import preview_network_activation
 from aos_api.aip_network_policy_store import (
     AipNetworkPolicyStore,
     NetworkPolicyConflict,
@@ -171,6 +172,18 @@ def publish_network(
         )
     except NetworkPolicyStoreError as exc:
         raise _map_network(exc) from exc
+
+
+@router.post("/networks/activation-preview")
+def preview_network(
+    body: NetworkPolicyRevisionCreate,
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    store: AipNetworkPolicyStore = Depends(get_network_store),
+):
+    return preview_network_activation(
+        _scope(principal), body, expected_version=_version(if_match), store=store,
+    )
 
 
 @router.get("/networks/{policy_id}", response_model=NetworkPolicyRevision)
