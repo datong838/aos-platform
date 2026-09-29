@@ -8,6 +8,7 @@
 - GREEN：`run_by_contract` 在调用 `run()` 前，同租户读 Contract 的 exact Suite，核 Suite ref hash 与 Suite canonical hash；Skill target 因尚无独立 Judge/Target executor authority 而抛 `AipEvalAuthorityConflict("formal Skill Eval executor authority unavailable")`。新增测试断言 resolver/target/judge 回调调用数 0，隔离 EvalRun/Report/Gate 数 0。另有 Suite hash 漂移前置拒绝测试。
 - 专项+相邻累计命令：`services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip_eval_runner.py services/aos-api/tests/aip/test_aip_eval_pack_registry.py services/aos-api/tests/aip/test_aip_release_publication_service.py services/aos-api/tests/aip/test_aip_skill_publication_service.py`，退出 0、`29 passed`。`python -m compileall -q` 针对两文件退出 0，`git diff --check` 退出 0。
 - 当前库容器内 `BEGIN READ ONLY` 回查 `aos_current_preview_20260927@a0v_111`，栖月汇 EvalRun/Report 仍 `0/0`，退出 0。未触碰 `dev-org` 正向数据、商城源、Host/worker/Provider、旧 12 Run 或 230 L0。
+- 提交 `m1@b0d245cc` 后，原 API session `74149` 收到 Ctrl-C 并退出 0，8080 监听消失；新 session `89019` 以相同正式签名 Receipt 和新代码 `--serve` 启动。8080 `/v1/health`、`/v1/ready` 与 8434 `/aip/skill-publish` 均 200；18181 保持无监听。未重启 PG/迁移/Web，此为今日 09:04 完整重启后的代码重载。
 
 ## 方案一致性与残余风险
 
