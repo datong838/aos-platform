@@ -14,6 +14,7 @@
 - Registry、发布 E2、Skill 发布、Binding、激活、安装目录相邻 7 文件：`42 passed, 1 xfailed`，退出 0。严格 xfail 是无正式 Judge/Target signer/执行 Receipt 的旧 lambda 正向链，不算正向验收。
 - 安装定义/当前来源选择 2 文件：`15 passed, 1 skipped`，退出 0。`compileall -q` 和 `git diff --check` 退出 0。
 - 容器 `aos-a0v-recovery-pg` 当前运行于 `colima-aos-extension`；`docker ... psql -U aos_app -d aos_current_preview_20260927 -Atc 'BEGIN READ ONLY; ... COMMIT;'` 退出 0，读回 `a0v_111`、栖月汇 Gate 0/Event 0、全库 published Skill 0。原先试用 `-U postgres` 返回 role does not exist，未产生写入；随后按容器 `POSTGRES_USER=aos_app` 复核成功。
+- 代码 `m1@075171ff` 后，以原签名 Receipt 运行 `scripts/a0v_current_preview_http.py --signed-receipt .../signing-receipt.json` 退出 0，输出 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、安装 approved、四 published bundle、Runtime Binding 0、数据库 `a0v_111`。旧 API session `87854` Ctrl-C 正常退出；新 session `86682` 以最新代码启动。8080 `/v1/health`、`/v1/ready` 与 8434 `/aip/skill-publish` 均 HTTP 200；18181 无监听。此读回不替代浏览器业务/首链验收。
 
 ## 边界与后续
 
