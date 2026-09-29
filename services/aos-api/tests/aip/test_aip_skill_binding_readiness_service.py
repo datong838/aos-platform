@@ -13,6 +13,9 @@ from aos_api.aip_agent_registry_contracts import (
 )
 from aos_api.aip_agent_registry_store import AipAgentRegistryTransitionBlocked
 from aos_api.aip_contracts import ResourceRef, TenantContext
+from aos_api.aip_contracts import ArtifactRef
+from aos_api.aip_eval_contracts import AssetRevisionRef, AssetType, ReleaseGateDecision
+from aos_api.aip_release_publication_service import _canonical_hash
 from aos_api.aip_skill_binding_readiness_service import (
     AipSkillBindingReadinessService,
 )
@@ -53,7 +56,7 @@ def dependencies() -> OperationalBindingDependencies:
         runtime_policy_ref=ref(
             "RuntimePolicyRevision", "policy-1", HASHES["policy"]
         ),
-        eval_gate_ref=ref("EvalGateDecision", "gate-1", HASHES["gate"]),
+        eval_gate_ref=ref("EvalGateDecision", "gate-1", legacy_gate_row()["decision_hash"]),
         budget_policy_ref=ref(
             "BudgetPolicyRevision", "budget-1", HASHES["budget"]
         ),
@@ -105,6 +108,8 @@ class _Connection:
             return _Result(one=self.state["publication"])
         if "FROM aip_release_gate_decision" in statement:
             return _Result(one=self.state["gate"])
+        if "FROM aip_eval_report_revision" in statement:
+            return _Result(one=None)
         if "FROM aip_agent_instance" in statement:
             return _Result(one=self.state["instance"])
         if "FROM aip_capability_binding" in statement:
@@ -142,13 +147,14 @@ def authority_state():
         },
         "publication": {
             "event_type": "published",
+            "release_gate_decision_id": "gate-1",
             "target_ref": {
                 "assetId": parent.asset_id,
                 "revision": str(parent.revision),
                 "contentHash": parent.content_hash,
             },
         },
-        "gate": {"status": "passed", "decision_hash": HASHES["gate"]},
+        "gate": legacy_gate_row(),
         "instance": {"status": "active"},
         "capabilities": [
             {
@@ -195,15 +201,75 @@ def service(state, *, route_ready=True):
     )
 
 
-def test_exact_skill_chain_produces_available_deterministic_snapshot():
+def legacy_gate_row():
+    target = AssetRevisionRef(
+        asset_type=AssetType.SKILL_TEMPLATE,
+        asset_id="content.plan",
+        revision="1",
+        content_hash=HASHES["skill"],
+    )
+    suite = AssetRevisionRef(
+        asset_type=AssetType.EVAL_SUITE,
+        asset_id="suite-1",
+        revision="1",
+        content_hash=HASHES["capability"],
+    )
+    report = ArtifactRef(
+        artifact_id="report-1",
+        artifact_type="EvalReportRevision",
+        revision="1",
+        content_hash=HASHES["snapshot"],
+    )
+    gate = ReleaseGateDecision(
+        tenant=TenantContext(org_id=PRIMARY.org_id, project_id=PRIMARY.project_id),
+        decision_id="gate-1",
+        target=target,
+        suite_ref=suite,
+        eval_run_id="run-1",
+        eval_report=report,
+        status="passed",
+        decision_hash=_canonical_hash(
+            {"target": target, "suiteRef": suite, "evalRunId": "run-1",
+             "evalReport": report, "status": "passed", "expiresAt": NOW + timedelta(days=30)}
+        ),
+        decided_by="historical-test",
+        decided_at=NOW,
+        expires_at=NOW + timedelta(days=30),
+    )
+    return {
+        "decision_id": gate.decision_id,
+        "target_ref": gate.target.model_dump(mode="json", by_alias=True),
+        "suite_ref": gate.suite_ref.model_dump(mode="json", by_alias=True),
+        "eval_run_id": gate.eval_run_id,
+        "eval_report_ref": gate.eval_report.model_dump(mode="json", by_alias=True),
+        "status": gate.status.value,
+        "decision_hash": gate.decision_hash,
+        "invalidated_by": None,
+        "decided_by": gate.decided_by,
+        "decided_at": gate.decided_at,
+        "expires_at": gate.expires_at,
+    }
+
+
+def test_legacy_gate_without_report_does_not_make_skill_binding_available():
     state = authority_state()
     first = service(state).evaluate(PRIMARY, binding(), evaluated_at=NOW)
     second = service(state).evaluate(PRIMARY, binding(), evaluated_at=NOW)
 
-    assert first.readiness is CapabilityReadiness.AVAILABLE
-    assert first.reasons == []
+    assert first.readiness is CapabilityReadiness.BLOCKED
+    assert first.reasons == ["SKILL_EVAL_GATE_BLOCKED"]
     assert first.dependency_snapshot_hash == second.dependency_snapshot_hash
     assert first.expires_at == NOW + timedelta(minutes=15)
+
+
+def test_publication_event_from_other_gate_is_not_valid_authority():
+    state = authority_state()
+    state["publication"]["release_gate_decision_id"] = "other-gate"
+    reasons = []
+    AipSkillBindingReadinessService._verify_publication(
+        _Connection(state), PRIMARY, state["skill"], reasons
+    )
+    assert reasons == ["SKILL_PUBLICATION_REVOKED"]
 
 
 def test_any_publication_instance_capability_or_route_drift_fails_closed():
@@ -223,6 +289,7 @@ def test_any_publication_instance_capability_or_route_drift_fails_closed():
         "CAPABILITY_HEALTH_STALE",
         "INSTANCE_NOT_ACTIVE",
         "MODEL_ROUTE_BLOCKED",
+        "SKILL_EVAL_GATE_BLOCKED",
         "SKILL_PUBLICATION_REVOKED",
     ]
 

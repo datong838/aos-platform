@@ -7,7 +7,11 @@ from aos_api.aip_agent_registry_contracts import (
     TemplateLifecycle,
     VersionedAssetRef,
 )
-from aos_api.aip_ecommerce_agent_installer import compute_catalog_item_runtime
+from aos_api.aip_ecommerce_agent_installer import (
+    _verified_skill_bindings,
+    compute_catalog_item_runtime,
+)
+from aos_api.tenant_scope import TenantScope
 
 NOW = datetime(2026, 8, 18, 13, 30, tzinfo=UTC)
 HASH = "a" * 64
@@ -68,6 +72,48 @@ def test_active_pilot_with_fresh_bindings_is_runnable() -> None:
     )
     assert readiness == "runnable"
     assert blockers == []
+
+
+def test_catalog_discards_cached_available_skill_without_current_authority() -> None:
+    cached = skill_binding()
+
+    class Skills:
+        def inspect_binding_readiness(self, scope, binding, *, evaluated_at):
+            assert scope == TenantScope("org-org", "dev-project")
+            assert binding is cached
+            assert evaluated_at == NOW
+            return SimpleNamespace(readiness=CapabilityReadiness.BLOCKED)
+
+    verified = _verified_skill_bindings(
+        Skills(), TenantScope("org-org", "dev-project"), [cached], NOW
+    )
+    readiness, blockers = compute_catalog_item_runtime(
+        instance=instance(), role_skills=[skill()], skill_bindings=verified,
+        capability_bindings=[cap_binding()], now=NOW,
+    )
+    assert verified == []
+    assert readiness == "blocked"
+    assert "skill_binding_unavailable" in blockers
+
+
+def test_catalog_keeps_only_exact_current_skill_snapshot() -> None:
+    cached = skill_binding()
+    cached.dependency_snapshot_hash = HASH
+
+    class Skills:
+        def __init__(self, snapshot):
+            self.snapshot = snapshot
+
+        def inspect_binding_readiness(self, _scope, _binding, *, evaluated_at):
+            assert evaluated_at == NOW
+            return SimpleNamespace(
+                readiness=CapabilityReadiness.AVAILABLE,
+                dependency_snapshot_hash=self.snapshot,
+            )
+
+    scope = TenantScope("org-org", "dev-project")
+    assert _verified_skill_bindings(Skills("b" * 64), scope, [cached], NOW) == []
+    assert _verified_skill_bindings(Skills(HASH), scope, [cached], NOW) == [cached]
 
 
 def test_provisioning_colleague_stays_blocked() -> None:

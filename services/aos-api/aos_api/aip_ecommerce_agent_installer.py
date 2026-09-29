@@ -62,6 +62,30 @@ def _fresh_available(status: object, readiness: object, expires_at: object, now:
     )
 
 
+def _verified_skill_bindings(skills, scope: TenantScope, bindings: list[object], now: datetime) -> list[object]:
+    """Do not present cached Skill readiness as current catalog authority."""
+    verified = []
+    for binding in bindings:
+        if not _fresh_available(
+            getattr(binding, "status", None), getattr(binding, "readiness", None),
+            getattr(binding, "readiness_expires_at", None), now,
+        ):
+            verified.append(binding)
+            continue
+        try:
+            current = skills.inspect_binding_readiness(scope, binding, evaluated_at=now)
+        except Exception:
+            continue
+        snapshot = getattr(binding, "dependency_snapshot_hash", None)
+        if (
+            _value(current.readiness) == "available"
+            and snapshot is not None
+            and snapshot == getattr(current, "dependency_snapshot_hash", None)
+        ):
+            verified.append(binding)
+    return verified
+
+
 def compute_catalog_item_runtime(
     *,
     instance: object | None,
@@ -271,7 +295,9 @@ class AipEcommerceAgentInstaller:
         scope = self._scope(principal)
         now = self._clock()
         instances = {item.template.asset_id: item for item in self._agents.list_instances(scope)}
-        skill_bindings = self._skills.list_bindings(scope, limit=200)
+        skill_bindings = _verified_skill_bindings(
+            self._skills, scope, self._skills.list_bindings(scope, limit=200), now
+        )
         capability_bindings = self._capability_bindings.list_bindings(scope, limit=200)
         skills_by_logic = {item.canonical_logic_id.removeprefix("ecommerce.logic."): item for item in skills.values()}
         items = []

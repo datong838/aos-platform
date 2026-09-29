@@ -14,10 +14,15 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryTransitionBlocked,
 )
 from aos_api.aip_eval_authority_store import AipEvalAuthorityStore
+from aos_api.aip_eval_contracts import AssetType
 from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeStoreError
 from aos_api.aip_skill_publication_service import (
     PostgresSkillPublicationRouteAuthority,
     SkillPublicationRouteAuthority,
+)
+from aos_api.aip_release_publication_service import (
+    AipReleasePublicationError,
+    AipReleasePublicationService,
 )
 from aos_api.db import connect as db_connect
 from aos_api.tenant_scope import TenantScope
@@ -89,7 +94,9 @@ class AipSkillBindingReadinessService:
                 ):
                     reasons.append("MODEL_ROUTE_BLOCKED")
                 self._verify_publication(conn, scope, skill, reasons)
-                self._verify_gate(conn, scope, dependencies.eval_gate_ref, reasons)
+                self._verify_gate(
+                    conn, scope, dependencies.eval_gate_ref, skill, evaluated_at, reasons
+                )
 
             instance = conn.execute(
                 """SELECT status FROM aip_agent_instance
@@ -213,12 +220,12 @@ class AipSkillBindingReadinessService:
         ).fetchall()
 
     @staticmethod
-    def _verify_gate(conn, scope, gate_ref, reasons: list[str]) -> None:
+    def _verify_gate(conn, scope, gate_ref, skill, evaluated_at: datetime, reasons: list[str]) -> None:
         if gate_ref is None:
             reasons.append("SKILL_EVAL_GATE_BLOCKED")
             return
         row = conn.execute(
-            """SELECT status,decision_hash FROM aip_release_gate_decision
+            """SELECT * FROM aip_release_gate_decision
                WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
             (*scope.key, gate_ref.asset_id),
         ).fetchone()
@@ -228,12 +235,29 @@ class AipSkillBindingReadinessService:
             or row["decision_hash"] != gate_ref.content_hash
         ):
             reasons.append("SKILL_EVAL_GATE_BLOCKED")
+            return
+        try:
+            gate = AipReleasePublicationService._gate_from_row(scope, row)
+            parent = skill["parent_ref"] or {}
+            if (
+                gate.target.asset_type is not AssetType.SKILL_TEMPLATE
+                or gate.target.asset_id != parent.get("assetId")
+                or gate.target.revision != str(parent.get("revision"))
+                or gate.target.content_hash != parent.get("contentHash")
+                or not gate.decided_at <= evaluated_at < gate.expires_at
+                or gate.invalidated_by is not None
+            ):
+                reasons.append("SKILL_EVAL_GATE_BLOCKED")
+                return
+            AipReleasePublicationService._verify_gate_evidence(conn, scope, gate)
+        except (AipReleasePublicationError, ValueError, KeyError):
+            reasons.append("SKILL_EVAL_GATE_BLOCKED")
 
     @staticmethod
     def _verify_publication(conn, scope, skill, reasons: list[str]) -> None:
         publication = skill["publication_ref"] or {}
         row = conn.execute(
-            """SELECT event_type,target_ref FROM aip_publication_event
+            """SELECT event_type,target_ref,release_gate_decision_id FROM aip_publication_event
                WHERE org_id=%s AND project_id=%s AND publication_id=%s
                ORDER BY occurred_at DESC,event_id DESC LIMIT 1""",
             (*scope.key, publication.get("revision")),
@@ -242,6 +266,8 @@ class AipSkillBindingReadinessService:
         if (
             row is None
             or row["event_type"] != "published"
+            or row["release_gate_decision_id"]
+            != (skill["release_gate_ref"] or {}).get("assetId")
             or row["target_ref"].get("assetId") != parent.get("assetId")
             or row["target_ref"].get("revision") != str(parent.get("revision"))
             or row["target_ref"].get("contentHash") != parent.get("contentHash")

@@ -74,6 +74,14 @@ class AipSkillRegistry(AipAgentRegistryStore):
             scope, candidate, evaluated_at=evaluated_at
         )
 
+    def inspect_binding_readiness(
+        self, scope: TenantScope, binding: SkillBinding, *, evaluated_at: datetime
+    ) -> OperationalBindingReadiness:
+        """Read current authority without persisting a new readiness snapshot."""
+        return self._readiness_service.evaluate(
+            scope, binding, evaluated_at=evaluated_at
+        )
+
     def publish_skill(self, request: PublishSkillTemplateRequest, *, actor: str) -> SkillTemplateRevision:
         if not actor.strip():
             raise ValueError("actor is required")
