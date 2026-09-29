@@ -6,6 +6,7 @@ import { AipOperationalProjectionStrip } from "../../components/aip/AipOperation
 import { AipReadinessActionCard } from "../../components/aip/AipReadinessActionCard";
 import { ColleagueBusinessLoopCard } from "../../components/aip/ColleagueBusinessLoopCard";
 import { SkillBindingCreatePanel } from "./SkillBindingCreatePanel";
+import { SkillBindingLifecyclePanel } from "./SkillBindingLifecyclePanel";
 import {
   agentReadinessLadderSummary,
   bindingStatusDisplayName,
@@ -189,6 +190,7 @@ export function CanonicalAgentRegistryPage() {
           const activeSkillIds = new Set(item.skills.filter((skill) => bindings.some((binding) => (
             binding.skill.assetId === skill.skillId
             && binding.skill.revision === skill.revision
+            && binding.skill.contentHash === skill.contentHash
             && binding.status === "active"
           ))).map((skill) => skill.skillId));
           const requiredCapabilityIds = [...new Set(item.requiredCapabilityIds)];
@@ -225,6 +227,7 @@ export function CanonicalAgentRegistryPage() {
           const precheckOpen = precheckedTemplateId === item.template.templateId;
           const matchedSkillBindings = item.skills.flatMap((skill) => bindings.filter((binding) => (
             binding.skill.assetId === skill.skillId && binding.skill.revision === skill.revision
+            && binding.skill.contentHash === skill.contentHash
           )));
           const readinessExpiries = [
             ...matchedSkillBindings.map((binding) => binding.readinessExpiresAt),
@@ -254,14 +257,18 @@ export function CanonicalAgentRegistryPage() {
             </div>
             <details style={{marginTop:12}}><summary>查看 {item.skills.length} 个技能状态</summary>
               <ul>{item.skills.map(skill => {
-                const binding = bindings.find(value => value.skill.assetId === skill.skillId && value.skill.revision === skill.revision);
+                const exactBindings = bindings.filter(value => value.skill.assetId === skill.skillId
+                  && value.skill.revision === skill.revision && value.skill.contentHash === skill.contentHash);
+                const binding = exactBindings.length === 1 ? exactBindings[0] : null;
                 return <li key={skill.skillId}>
                   <strong>{logicDisplayName(skill.canonicalLogicId)}</strong>
                   {" · "}
                   {skill.lifecycle === "published" ? "已发布" : "未发布"}
                   {" · "}
                   {binding ? `绑定${bindingStatusDisplayName(binding.status)}` : "未绑定"}
-                  {!binding && item.instance ? <SkillBindingCreatePanel item={item} skill={skill} snapshot={data} onCreated={load} /> : null}
+                  {exactBindings.length > 1 ? <span role="alert">同一技能存在多个精确绑定，禁止继续操作，请先只读对账。</span> : null}
+                  {!binding && exactBindings.length === 0 && item.instance ? <SkillBindingCreatePanel item={item} skill={skill} snapshot={data} onCreated={load} /> : null}
+                  {binding && item.instance ? <SkillBindingLifecyclePanel item={item} skill={skill} binding={binding} onUpdated={load} /> : null}
                 </li>;
               })}</ul>
             </details>

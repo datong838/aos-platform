@@ -15,7 +15,7 @@ const runtime = {
   catalog: { tenant, stats: { definitionCount: 6, installedCount: 1, runnableCount: 0, skillDefinitionCount: 37, capabilityDefinitionCount: 10 }, items: [{
     template: { templateId: "ecommerce.content_officer", revision: 1, displayName: "内容官", roleKey: "content_officer", lifecycle: "published", sourceRef: { resourceType: "SolutionPack", resourceId: "solution.ecommerce.growth", revision: "1.3.0", authority: "bundle" }, sourceLicense: "internal", manifest: { logicIds: ["C01"], responsibility: "内容生产", runtimeReadiness: "blocked", blockers: [] }, contentHash: hash },
     instance: { tenant, instanceId: "ecommerce.content_officer.default", instanceRef: { assetType: "AgentInstance", assetId: "ecommerce.content_officer.default", revision: 1, contentHash: hash }, template: { assetType: "AgentTemplate", assetId: "ecommerce.content_officer", revision: 1, contentHash: hash }, status: "provisioning", overlay: { displayName: "内容官", allowedCapabilityIds: [] }, version: 1, updatedAt: "2026-08-15T00:00:00Z" },
-    skills: [{ skillId: "content.plan", revision: 2, canonicalLogicId: "C01", lifecycle: "evaluated", requiredCapabilities: ["copy.generate"], riskLevel: "medium" }], requiredCapabilityIds: ["copy.generate"], runtimeReadiness: "blocked", blockers: ["skill_revision_not_published:C01"],
+    skills: [{ skillId: "content.plan", revision: 2, contentHash: hash, canonicalLogicId: "C01", lifecycle: "evaluated", requiredCapabilities: ["copy.generate"], riskLevel: "medium" }], requiredCapabilityIds: ["copy.generate"], runtimeReadiness: "blocked", blockers: ["skill_revision_not_published:C01"],
   }] }, capabilityBindings: [], skillBindings: [], bindingStats: { capabilityBindingCount: 0, skillBindingCount: 0, activeCapabilityBindingCount: 0, activeSkillBindingCount: 0 }, evaluatedAt: "2026-08-15T06:00:00Z",
 };
 
@@ -154,6 +154,47 @@ describe("CanonicalAgentRegistryPage", () => {
     expect(host.textContent).not.toContain("专业能力 3/2");
     expect(host.textContent).toContain("能力绑定记录");
     expect(host.textContent).toContain("活跃 / 全部");
+    await act(async () => root.unmount());
+  });
+
+  it("已发布且已建待配置绑定时展示原 Owner 评估入口", async () => {
+    sdk.runtimeReadiness.mockResolvedValue({
+      ...runtime,
+      catalog: { ...runtime.catalog, items: [{
+        ...runtime.catalog.items[0],
+        instance: { ...runtime.catalog.items[0].instance!, status: "active" },
+        skills: [{ ...runtime.catalog.items[0].skills[0], contentHash: hash, lifecycle: "published" }],
+      }] },
+      skillBindings: [{ tenant, bindingId: "binding-c01", instanceId: "ecommerce.content_officer.default",
+        skill: { assetType: "SkillTemplate", assetId: "content.plan", revision: 2, contentHash: hash },
+        capabilityBindingIds: [], budgetPolicyRef: { assetType: "BudgetPolicyRevision", assetId: "budget", revision: 1, contentHash: hash },
+        status: "provisioning", version: 1, readiness: "unknown", dependencySnapshotHash: null, readinessExpiresAt: null }],
+    });
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent === "核验评估候选")).toBe(true);
+    expect(host.textContent).not.toContain("确认激活绑定");
+    await act(async () => root.unmount());
+  });
+
+  it("同一技能多个精确绑定时不任选一个执行", async () => {
+    sdk.runtimeReadiness.mockResolvedValue({
+      ...runtime,
+      catalog: { ...runtime.catalog, items: [{ ...runtime.catalog.items[0],
+        skills: [{ ...runtime.catalog.items[0].skills[0], contentHash: hash, lifecycle: "published" }],
+      }] },
+      skillBindings: ["binding-a", "binding-b"].map((bindingId) => ({ tenant, bindingId,
+        instanceId: "ecommerce.content_officer.default",
+        skill: { assetType: "SkillTemplate", assetId: "content.plan", revision: 2, contentHash: hash },
+        status: "provisioning", version: 1 })),
+    });
+    const root = createRoot(host);
+    await act(async () => root.render(<MemoryRouter><CanonicalAgentRegistryPage /></MemoryRouter>));
+    await act(async () => undefined);
+    expect(host.textContent).toContain("多个精确绑定，禁止继续操作");
+    expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent?.includes("核验评估候选"))).toBe(false);
+    expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent?.includes("核验绑定候选"))).toBe(false);
     await act(async () => root.unmount());
   });
 });
