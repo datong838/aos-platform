@@ -1,5 +1,7 @@
 # W5CB4 BG-00z｜当前库 a0v_112 安全切换文件级方案
 
+**最终退出版本以文末 14:53 权限漂移修订门为准：`a0v_113`。前文 `a0v_112` 是已执行并发现权限漂移的中间检查点，不是本波最终 GREEN。**
+
 ## 进入事实与边界
 
 `m1@4904cced` 的唯一 Alembic 新头为 `a0v_112`，仅新增四张默认空 Eval authority 表；BG-00y 新克隆专项 `5 passed`、相邻 `27 passed`。当前权威卷 `colima-aos-extension/aos-a0v-recovery-pg-data`、库 `aos_current_preview_20260927` 仍 `a0v_111`；原 API 8080 PID 39708、Web 8434 PID 8355 在运行，18181 无监听。`scripts/a0v_current_preview_http.py` 的精确版本门和相邻测试仍为 `a0v_111`，须最小更新。旧版只读签名预检 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`：栖月汇 approved 安装 1、published bundle 4、Runtime Binding 0，退出 0。产品主计划 231/231-4 要求共享 schema 受控串行迁移、单一事实权威、FORCE RLS、可恢复与零执行窗口。
