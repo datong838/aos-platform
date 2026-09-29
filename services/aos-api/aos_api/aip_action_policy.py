@@ -8,6 +8,7 @@ from aos_api.aip_contracts import ActionRiskLevel
 from aos_api.aip_provider_health_action import (
     PROVIDER_HEALTH_PROBE_ACTION_TYPE_ID,
 )
+from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 
 ACTION_APPROVAL_ROLES = frozenset({'admin', 'approver', 'aip_approver'})
 
@@ -38,7 +39,10 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback",
+    if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
+        floor = POLICY_ACTIVATION_ACTION_RISK[action_type_id]
+        reasons.append("formal_policy_activation")
+    elif action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback",
                           "ecommerce_dispatch_configuration_refresh"}:
         floor = ActionRiskLevel.R2
         reasons.append("internal_runtime_configuration_refresh" if action_type_id.endswith('_refresh')
