@@ -24,6 +24,7 @@ from aos_api.aip_action_models import (
     actor,
 )
 from aos_api.aip_action_policy import RiskDecision
+from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_contracts import (
     ActionProposalStatus,
     ActionRiskLevel,
@@ -82,12 +83,18 @@ def canonical_hash(value: Any) -> str:
 
 
 class AipActionStore:
-    def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None) -> None:
+    def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
+                 network_activation_guard=None) -> None:
         if bootstrap_guard is not None:
             from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard
             if type(bootstrap_guard) is not _BootstrapActionGuard:
                 raise TypeError('exact bootstrap action guard required')
         self._bootstrap_guard = bootstrap_guard
+        if network_activation_guard is not None:
+            from aos_api.aip_network_policy_action_producer import NetworkPolicyActivationGuard
+            if type(network_activation_guard) is not NetworkPolicyActivationGuard:
+                raise TypeError('exact network activation guard required')
+        self._network_activation_guard = network_activation_guard
         self._connect_factory = connect_factory or db_connect
 
     @staticmethod
@@ -120,6 +127,14 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
+                or action_snapshot.get('id') in POLICY_ACTIVATION_ACTION_RISK):
+            if (body.action_type_id != 'aip_activate_network_policy'
+                    or action_snapshot.get('id') != body.action_type_id
+                    or self._network_activation_guard is None):
+                raise AipActionTransitionBlocked('POLICY_ACTION_PRODUCER_REQUIRED')
+            return self._network_activation_guard.check_request(
+                conn, scope, actor_id, body, action_snapshot, risk)
         from aos_api.ecommerce_content_repair_action_binding import require_repair_action_request
         require_repair_action_request(body, action_snapshot, risk)
         if 'ecommerce_analysis_bootstrap' in {body.action_type_id, action_snapshot.get('id')}:
@@ -147,6 +162,13 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        if (row['action_type_id'] in POLICY_ACTIVATION_ACTION_RISK
+                or row['action_type_snapshot'].get('id') in POLICY_ACTIVATION_ACTION_RISK):
+            if (not checker and row['action_type_id'] == 'aip_activate_network_policy'
+                    and self._network_activation_guard is not None):
+                self._network_activation_guard.check_replay(conn, scope, actor_id, row)
+                return None
+            raise AipActionTransitionBlocked('POLICY_ACTION_CHECKER_UNWIRED')
         from aos_api.ecommerce_content_repair_action_binding import require_repair_action_proposal
         require_repair_action_proposal(row)
         if 'ecommerce_analysis_bootstrap' in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
@@ -542,6 +564,9 @@ class AipActionStore:
         action_snapshot: dict[str, Any],
         risk: RiskDecision,
     ) -> ActionDraftBundle:
+        if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
+                and self._network_activation_guard is None):
+            raise AipActionTransitionBlocked('POLICY_ACTION_PRODUCER_REQUIRED')
         expires_at = body.effective_expiry()
         if expires_at <= datetime.now(timezone.utc):
             raise AipActionTransitionBlocked("proposal expiry must be in the future")

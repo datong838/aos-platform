@@ -24,6 +24,18 @@ from aos_api.aip_network_policy_contracts import (
     NetworkPolicyRevisionCreate,
 )
 from aos_api.aip_network_policy_activation_preview import preview_network_activation
+from aos_api.aip_network_policy_action_producer import (
+    NetworkActivationProposalRequest,
+    NetworkPolicyProducerBlocked,
+    propose_network_activation,
+)
+from aos_api.aip_network_policy_activation_target import NetworkPolicyActivationTargetBlocked
+from aos_api.aip_action_models import ActionDraftBundle
+from aos_api.aip_action_store import (
+    AipActionIdempotencyConflict,
+    AipActionStoreError,
+    AipActionTransitionBlocked,
+)
 from aos_api.aip_network_policy_store import (
     AipNetworkPolicyStore,
     NetworkPolicyConflict,
@@ -184,6 +196,29 @@ def preview_network(
     return preview_network_activation(
         _scope(principal), body, expected_version=_version(if_match), store=store,
     )
+
+
+@router.post("/networks/activation-proposals", response_model=ActionDraftBundle, status_code=status.HTTP_201_CREATED)
+def propose_network(
+    body: NetworkActivationProposalRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+):
+    try:
+        return propose_network_activation(
+            principal, body.candidate, expected_version=_version(if_match),
+            idempotency_key=_key(idempotency_key), expires_at=body.expires_at,
+        )
+    except NetworkPolicyProducerBlocked as exc:
+        code = str(exc)
+        raise ApiError(code=code, message="当前正式网络策略动作来源或身份不满足要求", status_code=403 if code.startswith("OIDC_") else 422) from exc
+    except (NetworkPolicyActivationTargetBlocked, AipActionTransitionBlocked) as exc:
+        raise ApiError(code="AIP_NETWORK_PROPOSAL_BLOCKED", message=str(exc), status_code=422) from exc
+    except AipActionIdempotencyConflict as exc:
+        raise ApiError(code=exc.code, message=str(exc), status_code=409) from exc
+    except AipActionStoreError as exc:
+        raise ApiError(code=exc.code, message="network action proposal persistence failed", status_code=503) from exc
 
 
 @router.get("/networks/{policy_id}", response_model=NetworkPolicyRevision)

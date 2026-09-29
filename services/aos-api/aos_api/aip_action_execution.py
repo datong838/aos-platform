@@ -30,6 +30,7 @@ from aos_api.aip_action_models import (
 )
 from aos_api.aip_action_canary_models import EvaluateKillPolicyRequest
 from aos_api.aip_action_canary_service import AipActionCanaryService
+from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_action_store import (
     AipActionConflict,
     AipActionIdempotencyConflict,
@@ -70,6 +71,9 @@ class AipActionExecutionService:
     def _reject_bootstrap_action(proposal) -> None:
         if proposal is None:
             raise AipActionNotFound("proposal not found in scope")
+        if (proposal["action_type_id"] in POLICY_ACTIVATION_ACTION_RISK
+                or (proposal["action_type_snapshot"] or {}).get("id") in POLICY_ACTIVATION_ACTION_RISK):
+            raise AipActionTransitionBlocked("POLICY_ACTION_EXECUTOR_UNWIRED")
         if (proposal["action_type_id"] == "ecommerce_analysis_bootstrap"
                 or (proposal["action_type_snapshot"] or {}).get("id") == "ecommerce_analysis_bootstrap"):
             raise AipActionTransitionBlocked("ANALYSIS_BOOTSTRAP_NOT_EXTERNAL_ACTION")
