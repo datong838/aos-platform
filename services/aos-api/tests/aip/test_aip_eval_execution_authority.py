@@ -56,14 +56,14 @@ def _judge_output_hash(actual_hash, expected_hash, passed, detail_code):
     return hashlib.sha256(b"AOS-EVAL-JUDGE-RESULT-v1\n" + encoded).hexdigest()
 
 
-def _signed_pair():
+def _signed_pair(at: datetime = NOW):
     issuer = Ed25519PrivateKey.generate()
     target_key = Ed25519PrivateKey.generate()
     judge_key = Ed25519PrivateKey.generate()
     root = EvalIssuerRoot(
         issuer_id="g2-eval-issuer", key_id="issuer-key-1",
         public_key=_public_key(issuer), purpose="eval-execution",
-        not_before=NOW - timedelta(days=1), not_after=NOW + timedelta(days=1),
+        not_before=at - timedelta(days=1), not_after=at + timedelta(days=1),
     )
 
     def certificate(purpose, identity_id, executor_ref, private):
@@ -72,8 +72,8 @@ def _signed_pair():
             executor_ref=executor_ref, issuer_id=root.issuer_id,
             issuer_key_id=root.key_id,
             public_key_base64=base64.b64encode(_public_key(private)).decode(),
-            valid_from=NOW - timedelta(hours=1),
-            valid_until=NOW + timedelta(hours=1),
+            valid_from=at - timedelta(hours=1),
+            valid_until=at + timedelta(hours=1),
             signature_base64="pending",
         )
         return item.model_copy(update={
@@ -92,7 +92,7 @@ def _signed_pair():
             case_id="case-1", identity_id=cert.identity_id,
             certificate_hash=certificate_hash(cert), executor_ref=executor_ref,
             input_hash=INPUT_HASH, output_hash=output_hash,
-            occurred_at=NOW, signature_base64="pending", **judge_fields,
+            occurred_at=at, signature_base64="pending", **judge_fields,
         )
         return item.model_copy(update={
             "signature_base64": base64.b64encode(

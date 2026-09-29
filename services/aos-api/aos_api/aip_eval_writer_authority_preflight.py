@@ -48,6 +48,14 @@ def preflight_skill_eval_writer_authority(
         and set(case_ids) == set(expected_input_hashes) == set(presented),
         "Skill Eval case set is incomplete",
     )
+    passed = sum(case.passed for case in report.results)
+    _require(
+        report.passed == passed
+        and report.failed == len(case_ids) - passed
+        and report.total == len(case_ids)
+        and abs(report.pass_rate - passed / len(case_ids)) < 1e-12,
+        "Skill Eval Report summary drifted from cases",
+    )
     scope = (report.tenant.org_id, report.tenant.project_id)
     roots: dict[tuple[str, str], EvalIssuerRoot] = {}
     try:

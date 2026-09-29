@@ -9,6 +9,7 @@ from psycopg.types.json import Jsonb
 
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected
 from aos_api.aip_eval_report_proof_reader import PresentedEvalCaseProof
+from aos_api.aip_eval_runner import compute_eval_report_hash
 from aos_api.aip_eval_writer_authority_preflight import preflight_skill_eval_writer_authority
 from test_aip_eval_execution_authority import INPUT_HASH, NOW, _signed_pair
 from test_aip_eval_persisted_authority_reader import _seed
@@ -47,11 +48,14 @@ def _read(conn, report, target, judge):
 @pytest.mark.parametrize("scenario", [
     "valid", "no_authority", "revoked", "root_revoked", "bad_signature",
     "wrong_role", "wrong_tenant", "wrong_input", "missing_case", "wrong_isolation",
-    "run_not_succeeded",
+    "run_not_succeeded", "wrong_summary",
 ])
 def test_writer_preflight_uses_current_authority_before_insert(connection, scenario):
     root, target, judge = _signed_pair()
     report = _report()
+    if scenario == "wrong_summary":
+        changed = report.model_copy(update={"passed": 0, "failed": 1, "pass_rate": 0.0})
+        report = changed.model_copy(update={"content_hash": compute_eval_report_hash(changed)})
     if scenario != "no_authority":
         _seed(connection, root, target, judge, stage="identities")
         connection.execute("""UPDATE aip_eval_run SET status='succeeded',
