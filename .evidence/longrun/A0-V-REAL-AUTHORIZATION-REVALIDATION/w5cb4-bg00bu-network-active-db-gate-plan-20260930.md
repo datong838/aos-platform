@@ -9,6 +9,7 @@
 1. `services/aos-api/tests/aip/test_aip_network_policy_active_db_gate_pg.py`：先在 test-only a0v115 克隆证明 runtime 直接 active INSERT 成功（RED），随后 a0v116 证明 active 同 SQLSTATE `23514` 拒绝、零 head/revision/receipt 持久行；draft INSERT 旧路径仍可在同一事务中成功并 rollback；跨租户仍由 RLS 限制；迁移重跑头一致。无真实库测试写。
 2. `services/aos-api/alembic/versions/a0v_116_network_active_insert_gate.py`：从115线性加 `BEFORE INSERT` trigger，仅当 `NEW.lifecycle='active'` 抛 `NETWORK_ACTIVATION_CONSUMPTION_REQUIRED`，其余不变；函数固定 `search_path=pg_catalog`，PUBLIC 执行权撤销，downgrade 拒绝静默移除。消费者未来只能经另波修订数据库门并添加原子消费证明。
 3. `scripts/a0v_current_preview_http.py` 和对应小测试：最新代码期望 schema head 116。只改精确常量，不修改启动、worker、Host 或自动迁移逻辑。
+4. 相邻回归若有“历史 active 行”测试夹具被新门挡住，只在 pytest 临时数据库且确认触发器存在后，在单事务内暂时 disable/insert/enable；异常必须整体 rollback 恢复触发器。真实库和普通测试路径不得关闭此门。
 
 ## 当前实例迁移硬门
 

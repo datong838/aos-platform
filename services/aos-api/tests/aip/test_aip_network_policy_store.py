@@ -2,6 +2,8 @@ from datetime import UTC, datetime, timedelta
 import json
 import uuid
 
+import psycopg
+from psycopg.rows import dict_row
 import pytest
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
@@ -16,7 +18,7 @@ from aos_api.aip_network_policy_store import (
 )
 from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevisionCreate
 from aos_api.tenant_scope import TenantScope
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
 
 
@@ -65,7 +67,20 @@ def seed_historical_active(egress, *, name, start=None, until=None):
     item = materialize_policy(SCOPE, "test-history", policy(
         egress, name=name, lifecycle="active", start=start, until=until,
     ))
-    with connect(SCOPE) as conn:
+    with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+        database = conn.execute("SELECT current_database() AS name").fetchone()["name"]
+        if not (database.startswith("aos_test_") and database.endswith("_ti4_test")):
+            raise RuntimeError("historical active fixture is disposable-test-database only")
+        if conn.execute(
+            "SELECT count(*) AS n FROM pg_trigger WHERE tgrelid='public.aip_network_policy_revision'::regclass "
+            "AND tgname='aip_network_active_insert_guard' AND tgenabled='O'"
+        ).fetchone()["n"] != 1:
+            raise RuntimeError("network active database gate must be enabled before fixture")
+        # DDL and seed share one disposable transaction; failure restores the trigger.
+        conn.execute("ALTER TABLE public.aip_network_policy_revision DISABLE TRIGGER aip_network_active_insert_guard")
+        conn.execute("SET ROLE aos_runtime")
+        conn.execute("SELECT set_config('aos.org_id',%s,true)", (SCOPE.org_id,))
+        conn.execute("SELECT set_config('aos.project_id',%s,true)", (SCOPE.project_id,))
         conn.execute(
             "INSERT INTO aip_network_policy_head(org_id,project_id,policy_id,current_revision,version) VALUES(%s,%s,%s,%s,1)",
             (*SCOPE.key, item.policy_id, item.revision),
@@ -77,6 +92,9 @@ def seed_historical_active(egress, *, name, start=None, until=None):
              item.effective_from, item.effective_until, json.dumps(item.model_dump(mode="json", by_alias=True)),
              item.created_by, item.created_at),
         )
+        conn.execute("RESET ROLE")
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        conn.execute("ALTER TABLE public.aip_network_policy_revision ENABLE TRIGGER aip_network_active_insert_guard")
         conn.commit()
     return item
 
