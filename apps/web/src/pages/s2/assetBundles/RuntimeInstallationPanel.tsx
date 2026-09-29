@@ -34,9 +34,9 @@ const CANDIDATES = [
   { key: "runtime_policies", label: "运行策略", href: "/aip/model-runtime", action: "查看当前运行策略" },
   { key: "data_policies", label: "数据分类策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
   { key: "egress_policies", label: "出站策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
-  { key: "network_policies", label: "网络策略", href: null, action: null },
+  { key: "network_policies", label: "网络策略", href: "/aip/model-runtime", action: "先准备出站策略草稿（不生效）；网络策略仍需当前批准" },
   { key: "quota_policies", label: "模型配额", href: "/aip/capacity", action: "查看/修订已有配额" },
-  { key: "budget_policies", label: "预算策略", href: null, action: null },
+  { key: "budget_policies", label: "预算策略", href: "/aip/capacity", action: "先准备预算修订草稿（不生效）；预算策略仍需正式预算" },
   { key: "budgets", label: "预算修订", href: "/aip/capacity", action: "创建预算草稿（不生效）" },
 ] as const;
 
