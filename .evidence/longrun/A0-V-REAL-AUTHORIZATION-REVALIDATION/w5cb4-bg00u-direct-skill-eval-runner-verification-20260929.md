@@ -13,6 +13,7 @@
 - Runner/Authority/E2/Skill 发布/Binding/目录/激活相邻 7 文件：`55 passed, 1 xfailed`，退出 0。
 - 业务调查与文本/内容 Logic Eval 相邻 4 文件：`29 passed`，退出 0。编译与 `git diff --check` 退出 0。
 - 当前业务库 `BEGIN READ ONLY; ... COMMIT;` 再次读回 `a0v_111`、栖月汇 Suite/Run/Report `0/0/0`，退出 0。`aos-a0v-test-only` 仅有 PG；仓库固定 MinIO `minio/minio:RELEASE.2025-04-22T22-12-26Z` 拉取返回 Docker Hub manifest HEAD EOF（退出 1），没有 S3 PUT/GET，也未启动测试存储。
+- `m1@da0d4893` 后原签名 Receipt 预检退出 0、`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`（approved、四 published bundle、Runtime Binding 0、库 `a0v_111`）。旧 API session `86682` Ctrl-C 退出 0；新 session `33351` 以最新代码运行。8080 健康/就绪、8434 Skill 页面各 HTTP 200，18181 无监听。页面 HTTP 结果不是浏览器业务或首链验收。
 
 ## 边界
 
