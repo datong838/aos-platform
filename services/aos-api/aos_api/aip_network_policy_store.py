@@ -43,6 +43,10 @@ class NetworkPolicyDependencyBlocked(NetworkPolicyStoreError):
     code = "AIP_DEPENDENCY_BLOCKED"
 
 
+class NetworkPolicyApprovalRequired(NetworkPolicyStoreError):
+    code = "AIP_NETWORK_ACTIVE_APPROVAL_REQUIRED"
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -82,6 +86,8 @@ class AipNetworkPolicyStore:
             replay = self._replay(conn, scope, operation, key, request_hash)
             if replay:
                 return self.get(scope, replay["resourceId"], int(replay["revision"]), conn=conn)
+            if item.lifecycle.value == "active":
+                raise NetworkPolicyApprovalRequired("exact approval authority is required for active network policy")
             self._require_egress(scope, item)
             head = conn.execute(
                 "SELECT current_revision,version FROM aip_network_policy_head "

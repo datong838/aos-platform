@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import json
 import uuid
 
 import psycopg
@@ -42,7 +43,7 @@ from aos_api.aip_model_governance_policy_contracts import (
 )
 from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
 from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
-from aos_api.aip_network_policy_store import AipNetworkPolicyStore
+from aos_api.aip_network_policy_store import materialize_policy as materialize_network_policy
 from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 from tests.aip._budget_test_fixture import seed_isolated_active_budget
@@ -199,8 +200,8 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
 
 def publish_network_policy(egress_ref: VersionedAssetRef) -> VersionedAssetRef:
     instant = datetime.now(UTC)
-    network = AipNetworkPolicyStore().publish(
-        SCOPE, SUFFIX, "network-policy-1",
+    network = materialize_network_policy(
+        SCOPE, SUFFIX,
         NetworkPolicyRevisionCreate(
             policyId=f"{SUFFIX}:network", revision=1,
             allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"],
@@ -210,6 +211,21 @@ def publish_network_policy(egress_ref: VersionedAssetRef) -> VersionedAssetRef:
             approvalRef="approval:test:aip7-store", lifecycle="active",
         ),
     )
+    # Model dependency test consumes a pre-existing row in its disposable PG.
+    # New active publication is separately rejected without exact approval.
+    with psycopg.connect(get_dsn()) as conn:
+        conn.execute(
+            "INSERT INTO aip_network_policy_head(org_id,project_id,policy_id,current_revision,version) VALUES(%s,%s,%s,%s,1)",
+            (*SCOPE.key, network.policy_id, network.revision),
+        )
+        conn.execute(
+            """INSERT INTO aip_network_policy_revision(org_id,project_id,policy_id,revision,content_hash,lifecycle,
+               effective_from,effective_until,payload,created_by,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
+            (*SCOPE.key, network.policy_id, network.revision, network.content_hash, network.lifecycle.value,
+             network.effective_from, network.effective_until, json.dumps(network.model_dump(mode="json", by_alias=True)),
+             network.created_by, network.created_at),
+        )
+        conn.commit()
     return ref("NetworkPolicyRevision", network.policy_id, network.content_hash)
 
 

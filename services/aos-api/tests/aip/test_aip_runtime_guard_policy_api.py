@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 from aos_api.aip_runtime_guard_policy_store import GuardPolicyNotFound
 from aos_api.routers import aip_runtime_guard_policies
-from aos_api.aip_network_policy_store import NetworkPolicyNotFound, materialize_policy as materialize_network
+from aos_api.aip_network_policy_store import NetworkPolicyApprovalRequired, NetworkPolicyNotFound, materialize_policy as materialize_network
 
 
 NOW = datetime(2026, 8, 17, tzinfo=UTC)
@@ -112,5 +112,23 @@ def test_network_policy_api_uses_principal_scope_and_exact_read(client) -> None:
         )
         assert missing.status_code == 404
         assert store.call == (("dev-org", "dev-project"), "missing", 2)
+    finally:
+        client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_network_store, None)
+
+
+def test_network_policy_api_reports_missing_formal_approval(client) -> None:
+    class ApprovalBlockedStore:
+        def publish(self, *args, **kwargs):
+            raise NetworkPolicyApprovalRequired("exact approval authority is required")
+
+    client.app.dependency_overrides[aip_runtime_guard_policies.get_network_store] = ApprovalBlockedStore
+    try:
+        response = client.post(
+            "/v1/aip/runtime-guard-policies/networks",
+            headers=headers(**{"Idempotency-Key": "network-approval-v1", "If-Match": "0"}),
+            json=network_body(),
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_NETWORK_ACTIVE_APPROVAL_REQUIRED"
     finally:
         client.app.dependency_overrides.pop(aip_runtime_guard_policies.get_network_store, None)
