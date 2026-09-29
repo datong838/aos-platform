@@ -1,7 +1,7 @@
 import hashlib
 import json
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -26,6 +26,8 @@ from aos_api.aip_eval_contracts import (
     EvalDatasetManifest,
     EvalSuiteRevision,
     JudgeRevisionRef,
+    ReleaseGateDecision,
+    ReleaseGateStatus,
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_runner import (
@@ -40,7 +42,9 @@ from aos_api.aip_release_publication_models import (
 )
 from aos_api.aip_release_publication_service import (
     AipReleasePublicationIntegrityError,
+    AipReleaseGateRejected,
     AipReleasePublicationService,
+    _canonical_hash as release_hash,
 )
 from aos_api.aip_skill_publication_service import AipSkillPublicationService
 from aos_api.aip_skill_publication_service import (
@@ -318,7 +322,7 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None, logic_revision_ref=None):
+def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None, logic_revision_ref=None, stop_before_gate=False):
     suffix = uuid.uuid4().hex[:12]
     scope = scope or TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
     with connect() as conn:
@@ -433,6 +437,9 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
             detail_code="exact_match",
         ),
     )
+    if stop_before_gate:
+        return SimpleNamespace(scope=scope, source=source, report=report,
+                               suffix=suffix, skill_id=skill_id)
     release = AipReleasePublicationService()
     gate = release.derive_gate(
         scope,
@@ -479,6 +486,81 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
         service=service, request=request, gate=gate, report=report, suffix=suffix, skill_id=skill_id)
 
 
+def test_unattested_skill_report_cannot_derive_release_gate() -> None:
+    runtime = published_skill_runtime(stop_before_gate=True)
+    release = AipReleasePublicationService()
+    with pytest.raises(AipReleaseGateRejected, match="formal Skill Eval executor authority unavailable"):
+        release.derive_gate(
+            runtime.scope, actor="pytest-bind3",
+            request=DeriveReleaseGateRequest(
+                report_id=runtime.report.report_id,
+                report_revision=runtime.report.revision,
+                report_hash=runtime.report.content_hash,
+                idempotency_key=f"unattested-gate-{runtime.suffix}",
+            ),
+        )
+    with connect(runtime.scope) as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_release_gate_decision WHERE org_id=%s AND project_id=%s",
+            runtime.scope.key,
+        ).fetchone()["n"] == 0
+
+
+def test_existing_unattested_skill_gate_cannot_create_publication_event() -> None:
+    runtime = published_skill_runtime(stop_before_gate=True)
+    release = AipReleasePublicationService()
+    decided_at = datetime.now(UTC)
+    expires_at = decided_at + timedelta(days=30)
+    report_ref = ArtifactRef(
+        artifact_id=runtime.report.report_id,
+        artifact_type=AssetType.EVAL_REPORT.value,
+        revision=str(runtime.report.revision),
+        content_hash=runtime.report.content_hash,
+    )
+    gate = ReleaseGateDecision(
+        tenant=TenantContext(org_id=runtime.scope.org_id, project_id=runtime.scope.project_id),
+        decision_id=f"historical-gate-{runtime.suffix}",
+        target=runtime.report.target,
+        suite_ref=runtime.report.suite_ref,
+        eval_run_id=runtime.report.run_id,
+        eval_report=report_ref,
+        status=ReleaseGateStatus.PASSED,
+        decision_hash=release_hash({
+            "target": runtime.report.target,
+            "suiteRef": runtime.report.suite_ref,
+            "evalRunId": runtime.report.run_id,
+            "evalReport": report_ref,
+            "status": ReleaseGateStatus.PASSED.value,
+            "expiresAt": expires_at,
+        }),
+        decided_by="historical-test",
+        decided_at=decided_at,
+        expires_at=expires_at,
+    )
+    with connect(runtime.scope) as conn:
+        release._insert_gate(conn, runtime.scope, gate)
+        conn.commit()
+    with pytest.raises(AipReleaseGateRejected, match="formal Skill Eval executor authority unavailable"):
+        release.publish(
+            runtime.scope, actor="pytest-bind3",
+            expected_target_type=AssetType.SKILL_TEMPLATE,
+            request=PublishReleaseRequest(
+                release_gate_decision_id=gate.decision_id,
+                reason_hash="5" * 64,
+                idempotency_key=f"historical-skill-publish-{runtime.suffix}",
+            ),
+        )
+    with connect(runtime.scope) as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_publication_event WHERE org_id=%s AND project_id=%s",
+            runtime.scope.key,
+        ).fetchone()["n"] == 0
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="formal Skill Eval signer and execution Receipt are unavailable; lambda Eval cannot publish",
+)
 def test_real_eval_publication_creates_new_immutable_skill_revision_and_receipt() -> None:
     runtime = published_skill_runtime()
     scope, source, published, receipt = runtime.scope, runtime.source, runtime.published, runtime.receipt

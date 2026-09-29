@@ -159,6 +159,10 @@ class AipReleasePublicationService:
                     raise AipReleasePublicationIntegrityError(
                         "eval suite/report exact references drifted"
                     )
+                if report.target.asset_type is AssetType.SKILL_TEMPLATE:
+                    raise AipReleaseGateRejected(
+                        "formal Skill Eval executor authority unavailable"
+                    )
 
                 status = (
                     ReleaseGateStatus.PASSED
@@ -388,6 +392,10 @@ class AipReleasePublicationService:
         ):
             raise AipReleasePublicationIntegrityError(
                 "release gate eval report exact references drifted"
+            )
+        if report.target.asset_type is AssetType.SKILL_TEMPLATE:
+            raise AipReleaseGateRejected(
+                "formal Skill Eval executor authority unavailable"
             )
 
     @staticmethod
