@@ -222,6 +222,18 @@ def test_content_pre_review_governance_uses_formal_isolated_pg_release_path():
     )
     governance, subject = build_content_pre_review_eval_packs(target)
     registry = AipEvalPackRegistry()
+    with connect(scope) as conn:
+        for pack in (governance, subject):
+            conn.execute(
+                """INSERT INTO aip_artifact
+                   (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
+                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'test'),
+                          (%s,%s,%s,'redaction_receipt',%s,'test')""",
+                (*scope.key, pack.manifest.source_id, pack.manifest.source_hash,
+                 *scope.key, pack.manifest.redaction_receipt.artifact_id,
+                 pack.manifest.redaction_receipt.content_hash),
+            )
+        conn.commit()
     for pack in (governance, subject):
         registry.register_dataset_revision(scope, pack.dataset, pack.manifest, actor="test")
         registry.register_suite_revision(scope, pack.suite, actor="test")

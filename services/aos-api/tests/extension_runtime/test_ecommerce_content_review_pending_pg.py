@@ -23,7 +23,10 @@ from aos_api.aip_effect_review import CreateEffectReviewRequest, EffectMaturityS
 from aos_api.aip_effect_review_store import AipEffectReviewStore
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef, ReserveBudgetRequest
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, canonical_hash
-from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
+from aos_api.aip_contracts import ActionRiskLevel, ApprovalDecision, ExactContractRef, PlanStep, ResourceRef
+from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
+from aos_api.aip_action_policy import classify_action_risk
+from aos_api.aip_action_store import AipActionStore
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef, AssetType, EvalGatePolicyRef, EvalStageAttemptRef,
     EvalSubjectArtifactRef,
@@ -144,6 +147,18 @@ def _register_current_content_eval_gate(connect):
         revision=str(graph.revision), content_hash=graph.graph_hash)
     governance, subject = build_content_pre_review_eval_packs(target)
     registry = AipEvalPackRegistry(connect_factory=connect)
+    with connect(SCOPE) as conn:
+        for pack in (governance, subject):
+            conn.execute(
+                """INSERT INTO aip_artifact
+                   (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
+                   VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'fixture'),
+                          (%s,%s,%s,'redaction_receipt',%s,'fixture')""",
+                (*SCOPE.key, pack.manifest.source_id, pack.manifest.source_hash,
+                 *SCOPE.key, pack.manifest.redaction_receipt.artifact_id,
+                 pack.manifest.redaction_receipt.content_hash),
+            )
+        conn.commit()
     for pack in (governance, subject):
         registry.register_dataset_revision(SCOPE, pack.dataset, pack.manifest, actor="fixture")
         registry.register_suite_revision(SCOPE, pack.suite, actor="fixture")
@@ -1120,6 +1135,47 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 assert conn.execute("""SELECT count(*) AS n FROM aip_plan_revision
                     WHERE org_id=%s AND project_id=%s AND task_id=%s""",
                     (*SCOPE.key, proof["task_id"])).fetchone()["n"] == before_plans
+            with connect(SCOPE) as conn:
+                conn.execute("""INSERT INTO meta_action_type
+                    (id,name,object_type,parameters,required_markings,submission_criteria)
+                    VALUES (%s,%s,%s,'[]','[]','[]')""",
+                    ("ecommerce_growth_content_generate", "内部内容返工生成", "Task"))
+            action_store = AipActionStore(connect_factory=connect)
+            action_snapshot = action_store.action_type_snapshot(
+                SCOPE, "ecommerce_growth_content_generate")
+            repair_payload = {
+                "returnDecisionRef": decision_ref, "briefRef": frozen_ref,
+                "priorArtifactRef": artifact_source,
+                "installationBindingRef": {
+                    "installationId": str(binding["installation_id"]),
+                    "generation": str(binding["generation"]),
+                    "executionEpoch": binding["execution_epoch"],
+                    "cutoverGroupId": str(binding["cutover_group_id"]),
+                    "cutoverGroupRevision": binding["cutover_group_revision"],
+                    "dispatchRevision": 5,
+                },
+                "capabilityRef": command["authorityRefs"]["capability"],
+                "budgetUpperBoundMinor": command["upperBoundFen"],
+            }
+            proposal_request = CreateActionProposalRequest(
+                actionTypeId="ecommerce_growth_content_generate",
+                taskId=proof["task_id"], runId=proof["run_id"],
+                purpose="人工退回后的新版内容生成", riskHint=ActionRiskLevel.R2,
+                payload=repair_payload)
+            risk = classify_action_risk(proposal_request.action_type_id,
+                action_snapshot, repair_payload, proposal_request.risk_hint)
+            proposed = action_store.create_proposal(SCOPE, "fixture-maker",
+                "content-p2g-repair-action-proposal", proposal_request,
+                action_snapshot, risk)
+            assert proposed.proposal.action_binding_hash is not None
+            decided = action_store.decide(SCOPE, "fixture-checker",
+                proposed.proposal.id, "content-p2g-repair-action-approve",
+                DecideActionProposalRequest(
+                    expectedProposalVersion=proposed.proposal.version,
+                    expectedProposalHash=proposed.proposal.proposal_hash,
+                    decision=ApprovalDecision.APPROVED,
+                    reason="隔离测试 checker 核对返工方案"), actor_roles=("admin",))
+            assert decided.proposal.status.value == "approved"
             repair_command = deepcopy(command)
             repair_command["authorityRefs"]["brief"] = frozen_ref
             repair_command["returnDecisionRef"] = decision_ref

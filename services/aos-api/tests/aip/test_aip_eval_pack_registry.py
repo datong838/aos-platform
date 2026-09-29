@@ -238,6 +238,9 @@ def test_artifact_snapshot_source_metadata_preflight_is_scoped_and_exact(
         }))
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    with pytest.raises(AipEvalAuthorityNotFound):
+        registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == []
     with registry._connect(SCOPE_A) as conn:
         conn.execute("""INSERT INTO aip_artifact VALUES
             (%s,%s,%s,'eval_dataset_snapshot',%s)""",
@@ -245,12 +248,16 @@ def test_artifact_snapshot_source_metadata_preflight_is_scoped_and_exact(
         conn.commit()
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    with pytest.raises(AipEvalAuthorityNotFound):
+        registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev")
     with registry._connect(SCOPE_A) as conn:
         conn.execute("""INSERT INTO aip_artifact VALUES
             (%s,%s,%s,'redaction_receipt',%s)""",
             (*SCOPE_A.key, receipt.artifact_id, receipt.content_hash))
         conn.commit()
     registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    assert registry.register_dataset_revision(SCOPE_A, _dataset(), manifest, actor="user:dev") == _dataset()
+    assert registry._authority.list_dataset_revisions(SCOPE_A) == [_dataset()]
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.inspect_artifact_snapshot_source(SCOPE_B, manifest)
     for bad in (

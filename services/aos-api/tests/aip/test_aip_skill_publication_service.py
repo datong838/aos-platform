@@ -352,6 +352,16 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
         ),
     )
     registry = AipEvalPackRegistry()
+    with connect(scope) as conn:
+        conn.execute(
+            """INSERT INTO aip_artifact
+               (org_id,project_id,artifact_id,artifact_type,content_hash,created_by)
+               VALUES (%s,%s,%s,'eval_dataset_snapshot',%s,'pytest-bind3'),
+                      (%s,%s,%s,'redaction_receipt',%s,'pytest-bind3')""",
+            (*scope.key, f"skill-eval-{suffix}", "2" * 64,
+             *scope.key, f"redaction-{suffix}", "4" * 64),
+        )
+        conn.commit()
     registry.register_dataset_revision(
         scope,
         dataset,
@@ -363,7 +373,7 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
             fields_allowlist=["prompt"],
             redaction_receipt=ArtifactRef(
                 artifact_id=f"redaction-{suffix}",
-                artifact_type="receipt",
+                artifact_type="redaction_receipt",
                 revision="1",
                 content_hash="4" * 64,
             ),
