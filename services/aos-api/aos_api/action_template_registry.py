@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from aos_api import plugin_disk
+from aos_api.aip_policy_activation_action import require_generic_action_type_mutable
 from aos_api.db import connect
 from aos_api.logging_facade import get_logger
 
@@ -51,6 +52,7 @@ def _template_from_manifest(man: dict[str, Any]) -> dict[str, Any]:
 
 def upsert_action_type(tpl: dict[str, Any], *, force: bool = False) -> None:
     """将插件模板写入 DB。默认不覆盖已有自定义 name/parameters（仅补空 criteria）。"""
+    require_generic_action_type_mutable(tpl["id"])
     with connect() as conn:
         if force:
             conn.execute(

@@ -8,6 +8,10 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from aos_api.auth import Principal, require_principal
+from aos_api.aip_policy_activation_action import (
+    PolicyActivationActionTypeReserved,
+    require_generic_action_type_mutable,
+)
 from aos_api.db import connect
 from aos_api.errors import ApiError
 from aos_api.logging_facade import get_logger
@@ -72,6 +76,10 @@ def create_action_type(
     body: ActionTypeIn,
     principal: Principal = Depends(require_principal),
 ) -> dict[str, Any]:
+    try:
+        require_generic_action_type_mutable(body.id)
+    except PolicyActivationActionTypeReserved as exc:
+        raise ApiError(code="AIP_POLICY_ACTION_TYPE_RESERVED", message=str(exc), status_code=403) from exc
     scope = TenantScope(principal.org_id, principal.project_id)
     ensure_action_schema(scope)
     with connect() as conn:
@@ -130,6 +138,10 @@ def update_action_type(
     scope = TenantScope(principal.org_id, principal.project_id)
     if body.id != action_id:
         raise ApiError(code="VALIDATION", message="id mismatch", status_code=400)
+    try:
+        require_generic_action_type_mutable(action_id)
+    except PolicyActivationActionTypeReserved as exc:
+        raise ApiError(code="AIP_POLICY_ACTION_TYPE_RESERVED", message=str(exc), status_code=403) from exc
     ensure_action_schema(scope)
     with connect() as conn:
         exists = conn.execute(
