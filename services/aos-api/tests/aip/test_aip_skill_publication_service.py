@@ -26,6 +26,8 @@ from aos_api.aip_eval_contracts import (
     EvalDatasetManifest,
     EvalSuiteRevision,
     JudgeRevisionRef,
+    PublicationEvent,
+    PublicationEventType,
     ReleaseGateDecision,
     ReleaseGateStatus,
 )
@@ -322,7 +324,55 @@ def _canonical_hash(value) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None, logic_revision_ref=None, stop_before_gate=False):
+def _seed_historical_skill_release(scope, report, suffix):
+    release = AipReleasePublicationService()
+    decided_at = datetime.now(UTC)
+    expires_at = decided_at + timedelta(days=30)
+    report_ref = ArtifactRef(
+        artifact_id=report.report_id,
+        artifact_type=AssetType.EVAL_REPORT.value,
+        revision=str(report.revision),
+        content_hash=report.content_hash,
+    )
+    gate = ReleaseGateDecision(
+        tenant=TenantContext(org_id=scope.org_id, project_id=scope.project_id),
+        decision_id=f"historical-gate-{suffix}",
+        target=report.target,
+        suite_ref=report.suite_ref,
+        eval_run_id=report.run_id,
+        eval_report=report_ref,
+        status=ReleaseGateStatus.PASSED,
+        decision_hash=release_hash({
+            "target": report.target,
+            "suiteRef": report.suite_ref,
+            "evalRunId": report.run_id,
+            "evalReport": report_ref,
+            "status": ReleaseGateStatus.PASSED.value,
+            "expiresAt": expires_at,
+        }),
+        decided_by="historical-test",
+        decided_at=decided_at,
+        expires_at=expires_at,
+    )
+    event = PublicationEvent(
+        tenant=gate.tenant,
+        event_id=f"historical-event-{suffix}",
+        publication_id=f"historical-publication-{suffix}",
+        target=report.target,
+        event_type=PublicationEventType.PUBLISHED,
+        release_gate_decision_id=gate.decision_id,
+        reason_hash="5" * 64,
+        actor="historical-test",
+        occurred_at=decided_at,
+    )
+    with connect(scope) as conn:
+        release._insert_gate(conn, scope, gate)
+        release._insert_event(conn, scope, event)
+        conn.commit()
+    return gate, event
+
+
+def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=None, logic_revision_ref=None, stop_before_gate=False, historical_event=False, stop_before_skill_publication=False):
     suffix = uuid.uuid4().hex[:12]
     scope = scope or TenantScope(f"bind3-org-{suffix}", f"bind3-project-{suffix}")
     with connect() as conn:
@@ -440,27 +490,30 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
     if stop_before_gate:
         return SimpleNamespace(scope=scope, source=source, report=report,
                                suffix=suffix, skill_id=skill_id)
-    release = AipReleasePublicationService()
-    gate = release.derive_gate(
-        scope,
-        actor="pytest-bind3",
-        request=DeriveReleaseGateRequest(
-            report_id=report.report_id,
-            report_revision=report.revision,
-            report_hash=report.content_hash,
-            idempotency_key=f"gate-{suffix}",
-        ),
-    )
-    publication = release.publish(
-        scope,
-        actor="pytest-bind3",
-        expected_target_type=AssetType.SKILL_TEMPLATE,
-        request=PublishReleaseRequest(
-            release_gate_decision_id=gate.decision_id,
-            reason_hash="5" * 64,
-            idempotency_key=f"publication-{suffix}",
-        ),
-    )
+    if historical_event:
+        gate, publication = _seed_historical_skill_release(scope, report, suffix)
+    else:
+        release = AipReleasePublicationService()
+        gate = release.derive_gate(
+            scope,
+            actor="pytest-bind3",
+            request=DeriveReleaseGateRequest(
+                report_id=report.report_id,
+                report_revision=report.revision,
+                report_hash=report.content_hash,
+                idempotency_key=f"gate-{suffix}",
+            ),
+        )
+        publication = release.publish(
+            scope,
+            actor="pytest-bind3",
+            expected_target_type=AssetType.SKILL_TEMPLATE,
+            request=PublishReleaseRequest(
+                release_gate_decision_id=gate.decision_id,
+                reason_hash="5" * 64,
+                idempotency_key=f"publication-{suffix}",
+            ),
+        )
     request = PublishEvaluatedSkillRevisionRequest(
         source_skill=ref("SkillTemplate", source.skill_id).model_copy(
             update={"content_hash": source.content_hash}
@@ -476,6 +529,10 @@ def published_skill_runtime(*, skill_id=None, canonical_logic_id=None, scope=Non
         route_authority=_ReadyRouteAuthority(scope),
         logic_authority=_PublishedLogicAuthority(scope),
     )
+    if stop_before_skill_publication:
+        return SimpleNamespace(scope=scope, source=source, service=service,
+                               request=request, gate=gate, publication=publication,
+                               report=report, suffix=suffix, skill_id=skill_id)
     published, receipt = service.publish_evaluated_revision(
         scope,
         request,
@@ -555,6 +612,32 @@ def test_existing_unattested_skill_gate_cannot_create_publication_event() -> Non
             "SELECT count(*) AS n FROM aip_publication_event WHERE org_id=%s AND project_id=%s",
             runtime.scope.key,
         ).fetchone()["n"] == 0
+
+
+def test_historical_unattested_skill_event_cannot_mint_new_skill_revision() -> None:
+    runtime = published_skill_runtime(
+        historical_event=True, stop_before_skill_publication=True
+    )
+    with pytest.raises(
+        AipAgentRegistryTransitionBlocked,
+        match="formal Skill Eval executor authority unavailable",
+    ):
+        runtime.service.publish_evaluated_revision(
+            runtime.scope, runtime.request, actor="pytest-bind3",
+            occurred_at=datetime.now(UTC),
+        )
+    with connect(runtime.scope) as conn:
+        rows = conn.execute(
+            "SELECT revision,lifecycle FROM aip_skill_template_revision WHERE skill_id=%s ORDER BY revision",
+            (runtime.skill_id,),
+        ).fetchall()
+        receipt_count = conn.execute(
+            """SELECT count(*) AS n FROM aip_agent_registry_receipt
+               WHERE org_id=%s AND project_id=%s AND operation='skill_template.publish_evaluated'""",
+            runtime.scope.key,
+        ).fetchone()["n"]
+    assert [(row["revision"], row["lifecycle"]) for row in rows] == [(1, "evaluated")]
+    assert receipt_count == 0
 
 
 @pytest.mark.xfail(

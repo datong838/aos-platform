@@ -30,6 +30,11 @@ from aos_api.aip_model_runtime_store import (
     ModelRuntimeStoreError,
     evaluation_candidate_ref,
 )
+from aos_api.aip_release_publication_service import (
+    AipReleaseGateRejected,
+    AipReleasePublicationError,
+    AipReleasePublicationService,
+)
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.tenant_scope import TenantScope
 
@@ -204,7 +209,7 @@ class AipSkillPublicationService(AipSkillRegistry):
                     )
 
                 gate_row = conn.execute(
-                    """SELECT status,decision_hash,target_ref
+                    """SELECT *
                        FROM aip_release_gate_decision
                        WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
                     (*scope.key, request.release_gate_decision_id),
@@ -249,6 +254,18 @@ class AipSkillPublicationService(AipSkillRegistry):
                     raise AipAgentRegistryTransitionBlocked(
                         "skill publication event is revoked, drifted, or targets another revision"
                     )
+                try:
+                    AipReleasePublicationService._verify_gate_evidence(
+                        conn,
+                        scope,
+                        AipReleasePublicationService._gate_from_row(scope, gate_row),
+                    )
+                except AipReleaseGateRejected as exc:
+                    raise AipAgentRegistryTransitionBlocked(str(exc)) from exc
+                except AipReleasePublicationError as exc:
+                    raise AipAgentRegistryTransitionBlocked(
+                        "skill release gate evidence is invalid"
+                    ) from exc
 
                 self._logic_authority.require_published(
                     conn,
