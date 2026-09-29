@@ -281,6 +281,86 @@ def test_runner_binds_exact_eval_contract_to_run_and_report(runtime) -> None:
     assert replay_count["n"] == 1
 
 
+def test_formal_skill_contract_rejects_unattested_callbacks_before_run(runtime) -> None:
+    runner, scoped = runtime
+    skill_suite = _suite().model_copy(update={
+        "suite_id": "formal-skill-suite",
+        "target": _asset(AssetType.SKILL_TEMPLATE, "skill-1", H2),
+    })
+    skill_suite = skill_suite.model_copy(update={
+        "content_hash": compute_eval_suite_hash(skill_suite),
+    })
+    AipEvalPackRegistry(connect_factory=scoped).register_suite_revision(
+        SCOPE, skill_suite, actor="user:dev"
+    )
+    contract = _contract().model_copy(update={
+        "suite_ref": ExactRevisionRef(
+            resource_type="EvalSuiteRevision",
+            resource_id=skill_suite.suite_id,
+            revision=skill_suite.revision,
+            content_hash=skill_suite.content_hash,
+        ),
+    })
+
+    class Contracts:
+        def get_eval_contract(self, *_args):
+            return contract
+
+    runner._contracts = Contracts()
+    calls: list[str] = []
+
+    def resolve(ref):
+        calls.append("resolve")
+        return _resolver(ref)
+
+    def target(ref, value):
+        calls.append("target")
+        return _target(ref, value)
+
+    def judge(ref, actual, expected):
+        calls.append("judge")
+        return _judge(ref, actual, expected)
+
+    with pytest.raises(AipEvalAuthorityConflict, match="formal Skill Eval executor authority unavailable"):
+        runner.run_by_contract(
+            SCOPE, contract_id=contract.contract_id, contract_revision=2,
+            contract_content_hash=contract.content_hash,
+            idempotency_key="formal-skill-unattested", actor="user:dev",
+            resolve_artifact=resolve, execute_target=target, execute_judge=judge,
+        )
+    assert calls == []
+    with scoped() as conn:
+        for table in ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision"):
+            count = conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()
+            assert count["n"] == 0
+
+
+def test_contract_suite_hash_drift_rejects_before_run(runtime) -> None:
+    runner, scoped = runtime
+    contract = _contract().model_copy(update={
+        "suite_ref": _contract().suite_ref.model_copy(update={"content_hash": H4}),
+    })
+
+    class Contracts:
+        def get_eval_contract(self, *_args):
+            return contract
+
+    runner._contracts = Contracts()
+    with pytest.raises(AipEvalAuthorityConflict, match="suite exact content hash drifted"):
+        runner.run_by_contract(
+            SCOPE, contract_id=contract.contract_id, contract_revision=2,
+            contract_content_hash=contract.content_hash,
+            idempotency_key="contract-suite-drift", actor="user:dev",
+            resolve_artifact=lambda _ref: pytest.fail("artifact must not resolve"),
+            execute_target=lambda _ref, _value: pytest.fail("target must not execute"),
+            execute_judge=lambda _ref, _actual, _expected: pytest.fail("judge must not execute"),
+        )
+    with scoped() as conn:
+        assert conn.execute(
+            "SELECT count(*) AS n FROM aip_eval_run WHERE idempotency_key='contract-suite-drift'"
+        ).fetchone()["n"] == 0
+
+
 def test_runner_rejects_eval_contract_hash_drift_before_creating_run(runtime) -> None:
     runner, scoped = runtime
     contract = _contract()

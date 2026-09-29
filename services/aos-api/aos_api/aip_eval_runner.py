@@ -33,7 +33,7 @@ from aos_api.aip_eval_contracts import (
     EvalSubjectArtifactRef,
     JudgeRevisionRef,
 )
-from aos_api.aip_eval_pack_registry import AipEvalPackRegistry
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore,
     ProductionContractError,
@@ -116,6 +116,18 @@ class AipEvalRunner:
             content_hash=contract_content_hash,
         )
         contract = self._resolve_contract(scope, ref)
+        suite = self._registry.get_suite_revision(
+            scope, contract.suite_ref.resource_id, contract.suite_ref.revision
+        )
+        if (
+            suite.content_hash != contract.suite_ref.content_hash
+            or compute_eval_suite_hash(suite) != suite.content_hash
+        ):
+            raise AipEvalAuthorityConflict("eval contract suite exact content hash drifted")
+        if suite.target.asset_type is AssetType.SKILL_TEMPLATE:
+            raise AipEvalAuthorityConflict(
+                "formal Skill Eval executor authority unavailable"
+            )
         return self.run(
             scope,
             suite_id=contract.suite_ref.resource_id,
