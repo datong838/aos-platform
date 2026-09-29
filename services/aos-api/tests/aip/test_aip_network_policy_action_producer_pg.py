@@ -155,6 +155,34 @@ def test_only_clone_produces_exact_drafted_proposal_and_no_policy_write():
     assert rejected.proposal.status.value == "rejected"
     assert decide_network_activation(revoker, first.proposal.id,
         f"revoke-{suffix}", reject).proposal.id == first.proposal.id
+    drifted = candidate.model_copy(update={"policy_id": f"bg00by-drift-{suffix}"})
+    drifted_proposal = propose_network_activation(
+        principal, drifted, expected_version=0,
+        idempotency_key=f"drift-propose-{suffix}", expires_at=expiry,
+    )
+    with psycopg.connect(get_dsn()) as owner:
+        owner.execute(
+            "INSERT INTO aip_network_policy_head(org_id,project_id,policy_id,current_revision,version) "
+            "VALUES(%s,%s,%s,1,1)", (*SCOPE.key, drifted.policy_id),
+        )
+    try:
+        drifted_decision = DecideActionProposalRequest.model_validate({
+            "expectedProposalVersion": drifted_proposal.proposal.version,
+            "expectedProposalHash": drifted_proposal.proposal.proposal_hash,
+            "decision": "approved", "reason": "head changed after proposal",
+        })
+        with pytest.raises(NetworkPolicyProducerBlocked, match="CHECKER_BINDING_DRIFTED"):
+            decide_network_activation(checker, drifted_proposal.proposal.id,
+                f"drift-decide-{suffix}", drifted_decision)
+        with connect(SCOPE) as conn:
+            assert conn.execute(
+                "SELECT count(*) AS n FROM aip_action_approval_event WHERE org_id=%s AND project_id=%s "
+                "AND proposal_id=%s", (*SCOPE.key, drifted_proposal.proposal.id),
+            ).fetchone()["n"] == 0
+    finally:
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute("DELETE FROM aip_network_policy_head WHERE org_id=%s AND project_id=%s "
+                          "AND policy_id=%s", (*SCOPE.key, drifted.policy_id))
     with connect(SCOPE) as conn:
         for table in ("aip_network_policy_head", "aip_network_policy_revision", "aip_network_policy_receipt"):
             assert conn.execute("SELECT count(*) AS n FROM " + table).fetchone()["n"] == 0

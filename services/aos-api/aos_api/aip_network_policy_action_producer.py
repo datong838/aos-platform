@@ -143,6 +143,18 @@ class NetworkPolicyActivationGuard:
                 or row['impact_preview_id'] is not None or row['object_ref'] is not None
                 or row['diff'] != {} or row['evidence_refs'] != []):
             raise NetworkPolicyProducerBlocked('NETWORK_PRODUCER_REPLAY_DRIFTED')
+        body = CreateActionProposalRequest(
+            actionTypeId=ACTION_ID, purpose=row['purpose'], payload=row['payload'],
+            expiresAt=row['expires_at'],
+        )
+        risk = classify_action_risk(ACTION_ID, row['action_type_snapshot'], row['payload'], None)
+        policy = {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy}
+        if (row['risk_level'] != risk.level.value or row['policy_snapshot'] != policy
+                or row['approval_policy_hash'] != canonical_hash(policy)
+                or row['action_binding_hash'] != self.check_request(
+                    conn, scope, actor, body, row['action_type_snapshot'], risk,
+                )):
+            raise NetworkPolicyProducerBlocked('NETWORK_PRODUCER_REPLAY_DRIFTED')
 
 
 class NetworkPolicyApprovalGuard:
@@ -198,18 +210,6 @@ class NetworkPolicyApprovalGuard:
                 or stable.get('policy') != row['policy_snapshot']):
             raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_DRAFT_DRIFTED')
         return (members[0]['role'],)
-        body = CreateActionProposalRequest(
-            actionTypeId=ACTION_ID, purpose=row['purpose'], payload=row['payload'],
-            expiresAt=row['expires_at'],
-        )
-        risk = classify_action_risk(ACTION_ID, row['action_type_snapshot'], row['payload'], None)
-        policy = {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy}
-        if (row['risk_level'] != risk.level.value or row['policy_snapshot'] != policy
-                or row['approval_policy_hash'] != canonical_hash(policy)
-                or row['action_binding_hash'] != self.check_request(
-                    conn, scope, actor, body, row['action_type_snapshot'], risk,
-                )):
-            raise NetworkPolicyProducerBlocked('NETWORK_PRODUCER_REPLAY_DRIFTED')
 
 
 def propose_network_activation(

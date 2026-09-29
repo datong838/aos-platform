@@ -4,9 +4,10 @@ import pytest
 
 from aos_api.aip_action_models import CreateActionProposalRequest, DecideActionProposalRequest
 from aos_api.aip_action_policy import classify_action_risk
-from aos_api.aip_action_store import AipActionStore, AipActionTransitionBlocked
+from aos_api.aip_action_store import AipActionStore, AipActionTransitionBlocked, canonical_hash
 from aos_api.aip_action_execution import AipActionExecutionService
 from aos_api.aip_network_policy_action_producer import (
+    NetworkPolicyActivationGuard,
     NetworkPolicyProducerBlocked,
     propose_network_activation,
 )
@@ -127,3 +128,31 @@ def test_checker_requires_timezone_aware_approval_expiry_before_database():
     with pytest.raises(NetworkPolicyProducerBlocked, match="EXPIRY_INVALID"):
         decide_network_activation(principal, "proposal-1", "key-1", body,
             connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))
+
+
+def test_checker_replay_rechecks_current_target_and_dependencies(monkeypatch):
+    scope = TenantScope("org-org", "dev-project")
+    candidate = _candidate()
+    expires_at = datetime.now(UTC) + timedelta(minutes=10)
+    guard = NetworkPolicyActivationGuard(
+        scope=scope, actor="owner-1", candidate=candidate,
+        expected_version=0, expires_at=expires_at,
+    )
+    snapshot = _snapshot()
+    payload = {"candidate": candidate.model_dump(mode="json", by_alias=True),
+               "expectedHeadVersion": 0}
+    risk = classify_action_risk("aip_activate_network_policy", snapshot, payload, None)
+    policy = {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy}
+    row = {
+        "created_by": "owner-1", "status": "drafted", "task_id": None, "run_id": None,
+        "impact_preview_id": None, "object_ref": None, "diff": {}, "evidence_refs": [],
+        "purpose": "activate", "payload": payload, "expires_at": expires_at,
+        "action_type_snapshot": snapshot, "risk_level": risk.level.value,
+        "policy_snapshot": policy, "approval_policy_hash": canonical_hash(policy),
+        "action_binding_hash": "a" * 64,
+    }
+    def drifted(*_args):
+        raise NetworkPolicyProducerBlocked("LIVE_DEPENDENCY_DRIFTED")
+    monkeypatch.setattr(guard, "check_request", drifted)
+    with pytest.raises(NetworkPolicyProducerBlocked, match="LIVE_DEPENDENCY_DRIFTED"):
+        guard.check_replay(object(), scope, "owner-1", row)
