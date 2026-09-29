@@ -52,10 +52,13 @@ def _source_objects(*, case_id="case-1"):
 
 
 def _seed_source(conn, suite, *, include_dataset=True, include_suite=True,
-                 suite_hash_override=None, dataset_hash_override=None):
+                 suite_hash_override=None, dataset_hash_override=None,
+                 artifact_snapshot=False):
     manifest = EvalDatasetManifest(
-        source_kind=DatasetSourceKind.SELECTION_SNAPSHOT,
-        source_id="bg00ao-test-selection",source_revision="1",
+        source_kind=(DatasetSourceKind.ARTIFACT_SNAPSHOT if artifact_snapshot
+                     else DatasetSourceKind.SELECTION_SNAPSHOT),
+        source_id=("bg00aq-test-artifact" if artifact_snapshot
+                   else "bg00ao-test-selection"),source_revision="1",
         source_hash=suite.dataset.source_hash,fields_allowlist=["test_field"],
         redaction_receipt=ArtifactRef(artifact_id="bg00ao-redaction",
             artifact_type="redaction_receipt",revision="1",content_hash="a"*64),
@@ -108,6 +111,7 @@ def isolated_writer(tmp_path, monkeypatch, request):
         admin.execute(sql.SQL("GRANT {} TO {}").format(
             sql.Identifier(ROLE), sql.Identifier(LOGIN)))
     variant = getattr(request, "param", "present")
+    artifact_snapshot = variant.startswith("artifact_")
     suite, report = _source_objects(case_id="case-2" if variant == "wrong_case" else "case-1")
     root, target, judge = _signed_pair(datetime.now(UTC), suite_ref=report.suite_ref)
     with psycopg.connect(admin_dsn) as admin:
@@ -116,7 +120,35 @@ def isolated_writer(tmp_path, monkeypatch, request):
                 include_dataset=variant != "missing_dataset",
                 include_suite=variant != "missing_suite",
                 suite_hash_override="f"*64 if variant == "wrong_suite_hash" else None,
-                dataset_hash_override="f"*64 if variant == "wrong_dataset_hash" else None)
+                dataset_hash_override="f"*64 if variant == "wrong_dataset_hash" else None,
+                artifact_snapshot=artifact_snapshot)
+        if artifact_snapshot:
+            policy = "bg00aq_test_writer_aip_artifact"
+            admin.execute("""CREATE POLICY bg00aq_test_writer_aip_artifact ON aip_artifact
+                TO aos_aip_eval_writer USING (
+                org_id=NULLIF(current_setting('aos.org_id',true),'') AND
+                project_id=NULLIF(current_setting('aos.project_id',true),''))""")
+            admin.execute("GRANT SELECT ON aip_artifact TO aos_aip_eval_writer")
+            if variant != "artifact_missing":
+                source_hash = "f"*64 if variant == "artifact_bad_hash" else suite.dataset.source_hash
+                admin.execute("""INSERT INTO aip_artifact
+                    (org_id,project_id,artifact_id,artifact_type,content_hash,
+                     content_ref,created_by) VALUES
+                    ('org-org','dev-project','bg00aq-test-artifact',
+                     'eval_dataset_snapshot',%s,'object://test-only/source','bg00aq-test')""",
+                     (source_hash,))
+                source_ref = ArtifactRef(artifact_id="bg00aq-test-artifact",
+                    artifact_type="eval_dataset_snapshot", revision="1",
+                    content_hash=suite.dataset.source_hash).model_dump(mode="json",by_alias=True)
+                if variant == "artifact_bad_link":
+                    source_ref["artifactId"] = "wrong-source"
+                admin.execute("""INSERT INTO aip_artifact
+                    (org_id,project_id,artifact_id,artifact_type,content_hash,
+                     content_ref,source,created_by) VALUES
+                    ('org-org','dev-project','bg00ao-redaction',
+                     'redaction_receipt',%s,%s,%s,'bg00aq-test')""",
+                    ("a"*64, "" if variant == "artifact_empty_ref" else
+                     "object://test-only/redaction", Jsonb({"sourceArtifactRef": source_ref})))
         _seed(admin, root, target, judge, stage="identities", suite_ref=report.suite_ref)
         admin.execute("""UPDATE aip_eval_run SET status='succeeded',
             target_ref=%s,dataset_ref=%s,judge_ref=%s WHERE run_id='run-1'""", (
@@ -149,9 +181,17 @@ def isolated_writer(tmp_path, monkeypatch, request):
             for table in append_only:
                 admin.execute(sql.SQL("ALTER TABLE {} DISABLE TRIGGER USER").format(
                     sql.Identifier(table)))
+            if artifact_snapshot:
+                admin.execute("ALTER TABLE aip_artifact DISABLE TRIGGER USER")
             for table in (*append_only, "aip_eval_run"):
                 admin.execute("DELETE FROM " + table +
                               " WHERE org_id='org-org' AND project_id='dev-project'")
+            if artifact_snapshot:
+                admin.execute("DELETE FROM aip_artifact WHERE org_id='org-org' "
+                              "AND project_id='dev-project' AND created_by='bg00aq-test'")
+                admin.execute("ALTER TABLE aip_artifact ENABLE TRIGGER USER")
+                admin.execute("DROP POLICY bg00aq_test_writer_aip_artifact ON aip_artifact")
+                admin.execute("REVOKE SELECT ON aip_artifact FROM " + ROLE)
             for table in append_only:
                 admin.execute(sql.SQL("ALTER TABLE {} ENABLE TRIGGER USER").format(
                     sql.Identifier(table)))

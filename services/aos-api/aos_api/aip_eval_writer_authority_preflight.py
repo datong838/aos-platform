@@ -11,7 +11,10 @@ from psycopg.rows import dict_row
 from pydantic import ValidationError
 
 from aos_api.aip_eval_contracts import (
-    AssetType, EvalDatasetManifest, EvalReportRevision,
+    AssetType, DatasetSourceKind, EvalDatasetManifest, EvalReportRevision,
+)
+from aos_api.aip_eval_authority_store import (
+    AipEvalAuthorityError, AipEvalAuthorityStore,
 )
 from aos_api.aip_eval_execution_authority import (
     EvalExecutionRejected, EvalIssuerRoot, VerifiedEvalExecutionPair,
@@ -23,6 +26,7 @@ from aos_api.aip_eval_report_proof_reader import (
     PresentedEvalCaseProof, VerifiedSkillEvalReportProof,
 )
 from aos_api.aip_eval_runner import compute_eval_report_hash
+from aos_api.tenant_scope import TenantScope
 
 
 def _require(ok: bool, reason: str) -> None:
@@ -112,6 +116,15 @@ def preflight_skill_eval_writer_authority(
                 and dataset["created_at"] <= evaluated_at,
                 "persisted Eval Dataset source drifted",
             )
+            if manifest.source_kind is DatasetSourceKind.ARTIFACT_SNAPSHOT:
+                try:
+                    AipEvalAuthorityStore._assert_artifact_snapshot_source(
+                        cur, TenantScope(*scope), manifest,
+                    )
+                except AipEvalAuthorityError as exc:
+                    raise EvalExecutionRejected(
+                        "current Eval Artifact snapshot or redaction metadata drifted"
+                    ) from exc
             _require(
                 report.suite_ref.revision.isdecimal()
                 and str(int(report.suite_ref.revision)) == report.suite_ref.revision,
