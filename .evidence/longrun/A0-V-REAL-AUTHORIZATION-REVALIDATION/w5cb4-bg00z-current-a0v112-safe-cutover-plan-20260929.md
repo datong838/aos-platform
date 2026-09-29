@@ -18,3 +18,11 @@
 ## 失败处理与退出
 
 迁移前失败：保持当前库 `a0v_111` 与新备份，不用高头代码启动；先定位并修复。迁移失败：Alembic 事务回滚并读回版本/原表摘要后才可用旧版本门重启。迁移成功而服务失败：保持零执行，先以新克隆和日志定位最小修复；若需要回退，只能从已验证新备份恢复到**另一个**隔离目标并裁定连接切换，不破坏当前卷，不静默 downgrade。成功退出要有新备份 SHA/TOC、独立新克隆恢复+迁移、当前迁移与 latest PG/API/Web 全部回读、专项/邻接测试和禁入状态证据。此波只切 schema 与服务版本，不创建正式 G2 issuer/Owner，不启首链。
+
+## 14:53 发现的权限漂移与修订门
+
+首次 a0v_112 当前迁移及服务重启后，当前四表 `relacl` 为 `aos_runtime=arwd`，而 `--no-acl` 克隆是 `aos_runtime=r`。当前库已有 `ALTER DEFAULT PRIVILEGES FOR ROLE aos_app IN SCHEMA public` 对未来表授 `arwd`，测试克隆因恢复选项未带 ACL 而无此状态；`a0v_112` 只从 PUBLIC 撤权，没有从 `aos_runtime` 撤权。因此首轮切换**不算 GREEN**。API/Web 再次停下，三端口关闭。旧新表仍空，Host/worker/Provider 一直关闭。
+
+修订为最小安全补丁，不修改已执行的 `a0v_112`：新增 `services/aos-api/alembic/versions/a0v_113_eval_execution_acl_fix.py`，逐张 `REVOKE ALL ON ... FROM aos_runtime; GRANT SELECT ... TO aos_runtime`。本波不全局改默认 ACL（可能影响其他现存迁移和功能），将其记作独立技术债。新增 `services/aos-api/tests/aip/test_aip_eval_authority_acl.py` 或精确扩充现有 BG-00y schema 测试，RED 必须在保留当前默认 ACL 的新克隆上重现 `INSERT=true`，修复后 `SELECT=true`、INSERT/UPDATE/DELETE/TRUNCATE=false；四表空和旧摘要保持。`scripts/a0v_current_preview_http.py`/相邻断言版本门再从 `a0v_112` 升 `a0v_113`。
+
+新备份以当前停机 `a0v_112` 库生成并 SHA/TOC 校验；在**全新** test-only 库恢复时保留 ACL 与 default ACL，先验迁移前 `aos_runtime=arwd`，再只在克隆升 `a0v_113`。若因环境角色差异不能完整恢复 ACL，停在克隆诊断，不对当前库执行补丁。克隆通过后，当前库零连接窗口升 `a0v_113`，重新只读核对四表权限、迁移版本、安装/制品摘要、签名预检；最新 m1 API/Web 再启动。不能把此前 `--no-acl` 克隆当作权限演练完成证据。
