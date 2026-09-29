@@ -72,6 +72,10 @@ def registry():
                    org_id TEXT NOT NULL,project_id TEXT NOT NULL,
                    PRIMARY KEY (org_id,project_id))"""
             )
+            conn.execute("""CREATE TABLE aip_artifact (
+                org_id TEXT NOT NULL, project_id TEXT NOT NULL,
+                artifact_id TEXT NOT NULL, artifact_type TEXT NOT NULL,
+                content_hash TEXT, PRIMARY KEY(org_id,project_id,artifact_id))""")
             conn.execute(
                 "INSERT INTO twa_workspace VALUES ('org-a','project-a'),('org-b','project-b')"
             )
@@ -215,3 +219,52 @@ def test_cross_tenant_registry_is_empty(registry: AipEvalPackRegistry) -> None:
     assert registry._authority.list_dataset_revisions(SCOPE_B) == []
     with pytest.raises(AipEvalAuthorityNotFound):
         registry.get_suite_revision(SCOPE_B, suite.suite_id, suite.revision)
+
+
+def test_artifact_snapshot_source_metadata_preflight_is_scoped_and_exact(
+    registry: AipEvalPackRegistry,
+) -> None:
+    manifest = _manifest("d01-eval-dataset-snapshot").model_copy(update={
+        "source_kind": DatasetSourceKind.ARTIFACT_SNAPSHOT,
+        "source_revision": "1",
+    })
+    snapshot_id = manifest.source_id
+    receipt = manifest.redaction_receipt
+    with pytest.raises(ValueError, match="source kind"):
+        registry.inspect_artifact_snapshot_source(SCOPE_A, _manifest())
+    with pytest.raises(AipEvalAuthorityConflict):
+        registry.inspect_artifact_snapshot_source(SCOPE_A, manifest.model_copy(update={
+            "redaction_receipt": receipt.model_copy(update={"artifact_type": "unrelated"}),
+        }))
+    with pytest.raises(AipEvalAuthorityNotFound):
+        registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""INSERT INTO aip_artifact VALUES
+            (%s,%s,%s,'eval_dataset_snapshot',%s)""",
+            (*SCOPE_A.key, snapshot_id, manifest.source_hash))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityNotFound):
+        registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""INSERT INTO aip_artifact VALUES
+            (%s,%s,%s,'redaction_receipt',%s)""",
+            (*SCOPE_A.key, receipt.artifact_id, receipt.content_hash))
+        conn.commit()
+    registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)
+    with pytest.raises(AipEvalAuthorityNotFound):
+        registry.inspect_artifact_snapshot_source(SCOPE_B, manifest)
+    for bad in (
+        manifest.model_copy(update={"source_hash": H4}),
+        manifest.model_copy(update={"source_revision": "2"}),
+        manifest.model_copy(update={"redaction_receipt": receipt.model_copy(update={"content_hash": H3})}),
+        manifest.model_copy(update={"redaction_receipt": receipt.model_copy(update={"revision": "2"})}),
+    ):
+        with pytest.raises(AipEvalAuthorityConflict):
+            registry.inspect_artifact_snapshot_source(SCOPE_A, bad)
+    with registry._connect(SCOPE_A) as conn:
+        conn.execute("""UPDATE aip_artifact SET artifact_type='unrelated'
+            WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+            (*SCOPE_A.key, receipt.artifact_id))
+        conn.commit()
+    with pytest.raises(AipEvalAuthorityConflict):
+        registry.inspect_artifact_snapshot_source(SCOPE_A, manifest)

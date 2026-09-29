@@ -15,6 +15,7 @@ from aos_api.aip_eval_authority_store import (
 )
 from aos_api.aip_eval_contracts import (
     DatasetRevisionRef,
+    DatasetSourceKind,
     EvalDatasetManifest,
     EvalSuiteRevision,
 )
@@ -51,6 +52,41 @@ class AipEvalPackRegistry:
             manifest=manifest.model_dump(mode="json", by_alias=True),
             actor=actor,
         )
+
+    def inspect_artifact_snapshot_source(
+        self, scope: TenantScope, manifest: EvalDatasetManifest
+    ) -> None:
+        """Check exact tenant-scoped Artifact metadata; does not certify redaction or cases."""
+        if manifest.source_kind is not DatasetSourceKind.ARTIFACT_SNAPSHOT:
+            raise ValueError("artifact snapshot source kind is required")
+        receipt = manifest.redaction_receipt
+        if manifest.source_revision != "1" or receipt.revision != "1":
+            raise AipEvalAuthorityConflict("artifact metadata supports only revision 1")
+        if receipt.artifact_type != "redaction_receipt":
+            raise AipEvalAuthorityConflict("exact redaction receipt type is required")
+        try:
+            with self._connect(scope) as conn:
+                source = conn.execute(
+                    """SELECT artifact_type,content_hash FROM aip_artifact
+                       WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+                    (*scope.key, manifest.source_id),
+                ).fetchone()
+                redaction = conn.execute(
+                    """SELECT artifact_type,content_hash FROM aip_artifact
+                       WHERE org_id=%s AND project_id=%s AND artifact_id=%s""",
+                    (*scope.key, receipt.artifact_id),
+                ).fetchone()
+        except Exception as exc:
+            raise AipEvalAuthorityPersistenceError(
+                "artifact source metadata read failed"
+            ) from exc
+        if source is None or redaction is None:
+            raise AipEvalAuthorityNotFound("artifact source or redaction receipt missing")
+        if (source["artifact_type"] != "eval_dataset_snapshot"
+                or source["content_hash"] != manifest.source_hash
+                or redaction["artifact_type"] != "redaction_receipt"
+                or redaction["content_hash"] != receipt.content_hash):
+            raise AipEvalAuthorityConflict("artifact source metadata drifted")
 
     def register_suite_revision(
         self, scope: TenantScope, suite: EvalSuiteRevision, *, actor: str
