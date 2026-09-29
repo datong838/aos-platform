@@ -47,6 +47,7 @@ from aos_api.db import get_dsn
 from aos_api.tenant_scope import TenantScope
 from tests.aip._budget_test_fixture import seed_isolated_active_budget
 from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
+from tests.aip._model_governance_history_fixture import seed_historical_model_policy
 
 SCOPE = TenantScope(org_id="org-org", project_id="dev-project")
 CANARY = TenantScope(org_id="dev-org", project_id="dev-project")
@@ -165,8 +166,8 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
         ),
     )
     store = AipModelGovernancePolicyStore()
-    quota = store.publish_quota(
-        SCOPE, SUFFIX, "model-quota-policy-1",
+    quota = seed_historical_model_policy(
+        SCOPE, SUFFIX,
         QuotaPolicyRevisionCreate(
             policyId=f"{SUFFIX}:quota-policy", revision=1, environment="development",
             effectiveFrom=instant - timedelta(hours=1), effectiveUntil=instant + timedelta(days=30),

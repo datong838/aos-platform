@@ -10,9 +10,11 @@ from aos_api.aip_model_governance_policy_store import (
     AipModelGovernancePolicyStore, ModelGovernancePolicyDependencyBlocked,
     ModelGovernancePolicyConflict,
     ModelGovernancePolicyIdempotencyConflict, ModelGovernancePolicyNotFound,
+    QuotaPolicyApprovalRequired,
 )
 from aos_api.tenant_scope import TenantScope
 from tests.aip._budget_test_fixture import seed_isolated_active_budget
+from tests.aip._model_governance_history_fixture import seed_historical_model_policy
 
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY = TenantScope("dev-org", "dev-project")
@@ -51,19 +53,20 @@ def ref(kind, item):
 
 def test_store_cas_replay_exact_read_and_tenant_isolation() -> None:
     store = AipModelGovernancePolicyStore()
-    first = store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(), expected_version=0)
-    assert store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(), expected_version=0) == first
+    first = store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(lifecycle="draft"), expected_version=0)
+    assert store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(lifecycle="draft"), expected_version=0) == first
     with pytest.raises(ModelGovernancePolicyIdempotencyConflict):
-        store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(daily=101), expected_version=0)
+        store.publish_quota(SCOPE, "test", f"quota-v1:{SUFFIX}", quota(daily=101, lifecycle="draft"), expected_version=0)
     with pytest.raises(ModelGovernancePolicyNotFound):
         store.get_quota(CANARY, first.policy_id)
-    store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", first), now=NOW)
+    with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="not active"):
+        store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", first), now=NOW)
 
 
 def test_quota_head_exposes_versioned_rpm_tpm_without_rewriting_old_revision() -> None:
     store = AipModelGovernancePolicyStore()
     first = store.publish_quota(
-        SCOPE, "test", f"quota-head-v1:{SUFFIX}", quota(name="head"), expected_version=0
+        SCOPE, "test", f"quota-head-v1:{SUFFIX}", quota(name="head", lifecycle="draft"), expected_version=0
     )
     assert first.rpm_limit is None and first.tpm_limit is None
     current, version = store.get_quota_head(SCOPE, first.policy_id)
@@ -73,7 +76,7 @@ def test_quota_head_exposes_versioned_rpm_tpm_without_rewriting_old_revision() -
         SCOPE,
         "test",
         f"quota-head-v2:{SUFFIX}",
-        quota(name="head", revision=2, rpm=40, tpm=40_000),
+        quota(name="head", revision=2, rpm=40, tpm=40_000, lifecycle="draft"),
         expected_version=1,
     )
     head, version = store.get_quota_head(SCOPE, first.policy_id)
@@ -85,7 +88,7 @@ def test_quota_head_exposes_versioned_rpm_tpm_without_rewriting_old_revision() -
             SCOPE,
             "test",
             f"quota-head-v3-stale:{SUFFIX}",
-            quota(name="head", revision=3, rpm=45, tpm=45_000),
+            quota(name="head", revision=3, rpm=45, tpm=45_000, lifecycle="draft"),
             expected_version=1,
         )
 
@@ -95,17 +98,27 @@ def test_exact_policy_gate_blocks_missing_drift_inactive_and_expired() -> None:
     missing = VersionedAssetRef(assetType="QuotaPolicyRevision", assetId=f"missing:{SUFFIX}", revision=1, contentHash="a" * 64)
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="unavailable"):
         store.require_exact_active(SCOPE, missing, now=NOW)
-    active = store.publish_quota(SCOPE, "test", f"quota-active:{SUFFIX}", quota(name="active"))
+    active = seed_historical_model_policy(SCOPE, "test-history", quota(name="active"))
+    assert store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", active), now=NOW) == active
     drifted = ref("QuotaPolicyRevision", active).model_copy(update={"content_hash": "f" * 64})
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="drifted"):
         store.require_exact_active(SCOPE, drifted, now=NOW)
     inactive = store.publish_quota(SCOPE, "test", f"quota-inactive:{SUFFIX}", quota(name="inactive", lifecycle="blocked"))
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="not active"):
         store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", inactive), now=NOW)
-    expired = store.publish_quota(SCOPE, "test", f"quota-expired:{SUFFIX}", quota(
+    expired = seed_historical_model_policy(SCOPE, "test-history", quota(
         name="expired", start=NOW - timedelta(days=3), until=NOW - timedelta(days=1)))
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="outside effective window"):
         store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", expired), now=NOW)
+
+
+def test_new_active_quota_rejects_string_only_approval() -> None:
+    store = AipModelGovernancePolicyStore()
+    request = quota(name="unapproved")
+    with pytest.raises(QuotaPolicyApprovalRequired, match="exact approval"):
+        store.publish_quota(SCOPE, "test", f"quota-unapproved:{SUFFIX}", request)
+    with pytest.raises(ModelGovernancePolicyNotFound):
+        store.get_quota(SCOPE, request.policy_id)
 
 
 def test_budget_policy_requires_exact_active_budget_and_bounded_window() -> None:

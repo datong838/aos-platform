@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from aos_api.aip_model_governance_policy_store import ModelGovernancePolicyNotFound, materialize_policy
+from aos_api.aip_model_governance_policy_store import ModelGovernancePolicyNotFound, QuotaPolicyApprovalRequired, materialize_policy
 from aos_api.routers import aip_model_governance_policies
 
 NOW = datetime(2026, 8, 17, tzinfo=UTC)
@@ -47,3 +47,21 @@ def test_api_rejects_tenant_injection_and_missing_cas_headers(client) -> None:
     assert client.post("/v1/aip/model-governance-policies/quotas",
         headers=headers(**{"Idempotency-Key": "x", "If-Match": "0"}), json=injected).status_code == 400
     assert client.post("/v1/aip/model-governance-policies/quotas", headers=headers(), json=body()).status_code == 400
+
+
+def test_quota_api_reports_missing_formal_approval(client) -> None:
+    class ApprovalBlockedStore:
+        def publish_quota(self, *args, **kwargs):
+            raise QuotaPolicyApprovalRequired("exact approval authority is required")
+
+    client.app.dependency_overrides[aip_model_governance_policies.get_store] = ApprovalBlockedStore
+    try:
+        response = client.post(
+            "/v1/aip/model-governance-policies/quotas",
+            headers=headers(**{"Idempotency-Key": "quota-approval-v1", "If-Match": "0"}),
+            json=body(),
+        )
+        assert response.status_code == 422
+        assert response.json()["code"] == "AIP_QUOTA_ACTIVE_APPROVAL_REQUIRED"
+    finally:
+        client.app.dependency_overrides.pop(aip_model_governance_policies.get_store, None)
