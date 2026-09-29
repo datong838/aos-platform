@@ -20,6 +20,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import psycopg
+from psycopg.conninfo import conninfo_to_dict
+
+from a0v_ecommerce_runtime_host import _load_credentials
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT.parent / ".aos-recovery-20260920/state/q-advisor-baseline"
@@ -28,14 +31,22 @@ STATE = BASE / "replacement-dq/w6-bg03-candidates"
 ORG = "org-org"
 PROJECT = "dev-project"
 
-# Runtime identity (same as 8080 service; NOINHERIT user -> SET ROLE aos_runtime
-# + RLS tenant GUCs required, see W6 session notes 2026-09-23).
-DSN = (
-    "host=127.0.0.1 port=18435 dbname=aos_meta_head "
-    "user=aos_a0v_runtime_20260912 "
-    "password=O4E8KenLRUeG2v8hu-O4ms5-71fumMpFMvLvH1ilRpwWJSDz"
-)
+# Historical read-only scanner. Credentials remain in the existing private file.
+CREDENTIAL_FILE = BASE / "bm-runtime-credentials/runtime-host-identities.json"
 
+
+def _runtime_dsn(path: Path = CREDENTIAL_FILE) -> str:
+    try:
+        dsn = _load_credentials(path)["runtime"]["dsn"]
+        target = conninfo_to_dict(dsn)
+    except Exception:
+        raise RuntimeError("W6_BG03_RUNTIME_IDENTITY_INVALID") from None
+    if (target.get("user") != "aos_a0v_runtime_20260912"
+            or target.get("host") != "127.0.0.1"
+            or target.get("port") != "18435"
+            or target.get("dbname") != "aos_meta_head"):
+        raise RuntimeError("W6_BG03_RUNTIME_IDENTITY_DRIFT")
+    return dsn
 
 def _num(props: dict, key: str):
     raw = props.get(key)
@@ -54,7 +65,7 @@ def fetch_products(section: str | None) -> list[dict]:
         SELECT object_id, props FROM obj_instance
         WHERE object_type=%s AND org_id=%s AND project_id=%s {where}
     """
-    with psycopg.connect(DSN) as conn:
+    with psycopg.connect(_runtime_dsn()) as conn:
         conn.execute("SET ROLE aos_runtime")
         conn.execute("SELECT set_config('aos.org_id', %s, false)", (ORG,))
         conn.execute("SELECT set_config('aos.project_id', %s, false)", (PROJECT,))
