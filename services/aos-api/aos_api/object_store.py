@@ -107,7 +107,12 @@ def _aws4_request(
     region: str,
     content_type: str = "application/octet-stream",
     timeout: float = 30,
+    max_response_bytes: int | None = None,
 ) -> tuple[int, bytes, dict[str, str]]:
+    if max_response_bytes is not None and (
+        type(max_response_bytes) is not int or max_response_bytes < 1
+    ):
+        raise ValueError("max_response_bytes must be a positive integer")
     now = datetime.now(timezone.utc)
     amz_date = now.strftime("%Y%m%dT%H%M%SZ")
     datestamp = now.strftime("%Y%m%d")
@@ -175,10 +180,16 @@ def _aws4_request(
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             resp_headers = {k.lower(): v for k, v in resp.headers.items()}
-            return resp.status, resp.read(), resp_headers
+            response_body = (
+                resp.read(max_response_bytes + 1)
+                if max_response_bytes is not None else resp.read()
+            )
+            if max_response_bytes is not None and len(response_body) > max_response_bytes:
+                raise RuntimeError("s3_object_too_large")
+            return resp.status, response_body, resp_headers
     except urllib.error.HTTPError as exc:
-        body_err = exc.read() if hasattr(exc, "read") else b""
-        raise RuntimeError(f"s3_http_{exc.code}: {body_err[:200]!r}") from exc
+        body_err = exc.read(200) if hasattr(exc, "read") else b""
+        raise RuntimeError(f"s3_http_{exc.code}: {body_err!r}") from exc
 
 
 def object_key_for(
@@ -245,7 +256,11 @@ def put_bytes(
     raise RuntimeError(str(last_err) if last_err else "s3_put_failed")
 
 
-def get_bytes(*, key: str, cfg: S3Config | None = None) -> bytes:
+def get_bytes(
+    *, key: str, cfg: S3Config | None = None, max_bytes: int | None = None
+) -> bytes:
+    if max_bytes is not None and (type(max_bytes) is not int or max_bytes < 1):
+        raise ValueError("max_bytes must be a positive integer")
     cfg = cfg or get_config()
     if not cfg.enabled:
         raise RuntimeError("object_store_not_configured")
@@ -264,6 +279,7 @@ def get_bytes(*, key: str, cfg: S3Config | None = None) -> bytes:
                 access_key=cfg.access_key,
                 secret_key=cfg.secret_key,
                 region=cfg.region,
+                max_response_bytes=max_bytes,
             )
             if status != 200:
                 raise RuntimeError(f"s3_get_status_{status}")
