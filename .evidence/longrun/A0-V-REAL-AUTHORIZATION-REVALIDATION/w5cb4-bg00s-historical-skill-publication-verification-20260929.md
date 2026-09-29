@@ -12,6 +12,7 @@
 - 服务仍在同一个 scoped transaction 精确核 Gate/Event；读取完整 Gate 行后复用 E2 的 Gate/Report 复验。当前 E2 对无独立 Judge/Target signer/执行 Receipt 的 Skill 失败封闭，转换为 Skill publication 的 `AipAgentRegistryTransitionBlocked`，发生在 Logic/Route 调用、新 Skill revision 和 RegistryReceipt 插入前。同 key 已有 Receipt 回放原路径未改，历史 Gate/Event/Skill 没有删除。
 - RED 转 GREEN 的两项负向测试 `2 passed`、退出 0；Runner/Registry/E2/Skill 发布/Skill Binding 相邻累计 `34 passed, 1 xfailed`、退出 0。严格 xfail 仍是缺正式执行权威的旧 lambda 正向链，不能称为验收通过。两文件 `compileall -q` 与 `git diff --check` 均退出 0。
 - 当前权威库再次 `BEGIN READ ONLY` 核 `a0v_111`、published Skill/Gate/Event `0/0/0`；未读商城源、未启 Host/worker/Provider、未重放旧 12 Run、未动 230 L0。
+- `m1@ac768f24` 后原签名 Receipt 的新代码预检退出 0、`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，approved 安装、四个 published bundle、Runtime Binding 0。API session `25277` Ctrl-C 退出 0；新 session `87854` 以同一 Receipt/最新代码启动，8080 健康/就绪、8434 Skill 页面各 200，18181 无监听。数据库和 Web 未重启；今日完整重启仍见 09:04 独立证据。
 
 ## 限制
 
