@@ -9,6 +9,7 @@
 - 新增隔离测试精确种下一个既有 PASSED Gate，再调用 `publish`，断言拒绝且 PublicationEvent=0；这只是旧 Gate 兼容风险的负向测试，不能证明 Gate 合法。旧名为 `test_real_eval_publication...` 的 lambda 正向测试保留为 `strict=True` 的 `xfail`，清楚记录正式 signer/Receipt 尚缺；意外通过会使测试失败。真实正向验收尚未达成。
 - 专项：新两负向及旧正向占位 `2 passed, 1 xfailed`，退出 0。Runner/Registry/E2/Skill 相邻累计命令 `services/aos-api/.venv/bin/python -m pytest -q services/aos-api/tests/aip/test_aip_eval_runner.py services/aos-api/tests/aip/test_aip_eval_pack_registry.py services/aos-api/tests/aip/test_aip_release_publication_service.py services/aos-api/tests/aip/test_aip_skill_publication_service.py`，`30 passed, 1 xfailed`、退出 0。两文件 `compileall -q` 与 `git diff --check` 退出 0。
 - 当前权威库 `BEGIN READ ONLY`：`aos_current_preview_20260927@a0v_111`，栖月汇 EvalRun/Report/Gate/PublicationEvent `0/0/0/0`，退出 0。隔离测试写入仅在 test-only PostgreSQL；未读商城源、未启动 Host/worker/Provider、未重放旧 12 Run、未动 230 L0。
+- 提交 `m1@53910d92` 后，原签名 Receipt 的当前代码预检退出 0、`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`（approved 安装、四个 published bundle、Runtime Binding 0）。旧 API session `89019` Ctrl-C 后退出 0，8080 无监听；新 session `25277` 用最新代码和同一 Receipt 启动，8080 健康/就绪和 8434 Skill 页面各 200，18181 无监听。数据库/Web 未重启；今日 09:04 完整重启证据仍独立存在。
 
 ## 复审结论和下一步
 
