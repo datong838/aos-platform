@@ -151,9 +151,17 @@ class SignedBIPlanReceiptReader:
             result_ref = row["result_ref"]
             if isinstance(result_ref, str):
                 result_ref = json.loads(result_ref)
-            exact_ref = ExactRevisionRef.model_validate(result_ref)
+            if not isinstance(result_ref, dict):
+                raise ProductionContractError("BI preparation receipt result invalid")
+            exact_ref = ExactRevisionRef.model_validate({
+                name: result_ref.get(name) for name in
+                ("resourceType", "resourceId", "revision", "contentHash")
+            })
             if exact_ref.resource_type != "ResponsibilityPlanRevision":
                 raise ProductionContractError("BI preparation receipt result type invalid")
+            binding = result_ref.get("installationBinding")
+            if binding is not None:
+                _require_bi_installation_binding(binding, principal.subject)
             return SignedBIPlanReceiptReadback(
                 receipt_id=row["receipt_id"], request_hash=row["request_hash"],
                 result_ref=exact_ref, created_at=row["created_at"],
@@ -163,6 +171,25 @@ class SignedBIPlanReceiptReader:
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _require_bi_installation_binding(value: Any, actor: str) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {
+        "installationId", "installationETag", "templateRef", "actor",
+    }:
+        raise ProductionContractConflict("exact BI installation binding required")
+    try:
+        canonical_id = str(uuid.UUID(value["installationId"]))
+        template_ref = ExactRevisionRef.model_validate(value["templateRef"])
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ProductionContractConflict("exact BI installation binding required") from exc
+    if (canonical_id != value["installationId"]
+            or type(value["installationETag"]) is not int
+            or value["installationETag"] < 1
+            or value["actor"] != actor
+            or template_ref.resource_type != "ResponsibilityTemplateRevision"):
+        raise ProductionContractConflict("exact BI installation binding required")
+    return value
 
 
 def compute_action_binding_hash(
@@ -340,6 +367,10 @@ class AipProductionContractStore:
         request_context: dict[str, Any] | None = None,
     ) -> ResponsibilityPlanRevision:
         """Append a Plan and Receipt in a caller-held authority transaction."""
+        if operation == "bi_responsibility_plan.prepare":
+            binding = _require_bi_installation_binding(request_context, actor)
+            if ExactRevisionRef.model_validate(binding["templateRef"]) != body.template_ref:
+                raise ProductionContractConflict("BI template binding drift")
         payload = body.model_dump(mode="json", by_alias=True)
         request_hash = canonical_hash(
             payload if request_context is None else {"body": payload, "context": request_context})
@@ -353,9 +384,11 @@ class AipProductionContractStore:
         conn.execute("INSERT INTO aip_responsibility_plan_head(org_id,project_id,plan_id,current_revision,version) VALUES(%s,%s,%s,1,1)", (*scope.key, plan_id))
         row = self._insert_responsibility(
             conn, scope, plan_id, 1, actor, body, content_hash, BriefLifecycle.DRAFT)
-        self._receipt(conn, scope, operation, key, request_hash,
-            {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,
-             "revision":1,"contentHash":content_hash}, actor)
+        result_ref = {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,
+                      "revision":1,"contentHash":content_hash}
+        if operation == "bi_responsibility_plan.prepare":
+            result_ref["installationBinding"] = binding
+        self._receipt(conn, scope, operation, key, request_hash, result_ref, actor)
         return self._responsibility_plan(scope, row, 1, conn)
 
     def revise_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,

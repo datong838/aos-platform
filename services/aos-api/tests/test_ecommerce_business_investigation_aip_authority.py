@@ -349,9 +349,39 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
     assert result.result_ref.resource_id == "plan-1"
     assert result.installation_binding_verified is False
     assert len(calls) == 2
+    receipt["result_ref"]["installationBinding"] = {
+        "installationId": "42785d78-5914-4a54-a078-e5d2c7f48481",
+        "installationETag": 3,
+        "templateRef": {"resourceType": "ResponsibilityTemplateRevision",
+                        "resourceId": "template-1", "revision": 1,
+                        "contentHash": "c" * 64},
+        "actor": "person:current",
+    }
+    assert reader.read(SCOPE, principal=principal,
+                       idempotency_key="bi-receipt-1").installation_binding_verified is False
     missing[0] = True
     with pytest.raises(ProductionContractNotFound):
         reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+
+
+def test_bi_receipt_binding_rejects_partial_or_cross_actor_evidence() -> None:
+    from aos_api.aip_production_contract_store import (
+        ProductionContractConflict, _require_bi_installation_binding,
+    )
+    ref = {"resourceType": "ResponsibilityTemplateRevision", "resourceId": "template-1",
+           "revision": 1, "contentHash": "c" * 64}
+    binding = {"installationId": "42785d78-5914-4a54-a078-e5d2c7f48481",
+               "installationETag": 3, "templateRef": ref, "actor": "person:current"}
+    assert _require_bi_installation_binding(binding, "person:current") == binding
+    for invalid in (
+        {**binding, "actor": "person:other"},
+        {**binding, "installationETag": 0},
+        {**binding, "installationId": "test-only"},
+        {**binding, "templateRef": {**ref, "contentHash": "bad"}},
+        {key: value for key, value in binding.items() if key != "templateRef"},
+    ):
+        with pytest.raises(ProductionContractConflict):
+            _require_bi_installation_binding(invalid, "person:current")
 
 
 def test_signed_bi_receipt_route_preserves_authenticated_actor_and_unknown() -> None:
@@ -471,6 +501,7 @@ def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None
     from aos_api.db import connect
 
     key = f"bi-du-rollback-{uuid4().hex}"
+    installation_id = str(uuid4())
     template_id = f"bi-du-test-{uuid4().hex[:16]}"
     store = AipProductionContractStore(
         responsibility_template_resolver=lambda scope, ref: scope == SCOPE)
@@ -490,23 +521,30 @@ def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None
                     VALUES(%s,%s,%s,%s,1,'active','{}',%s,'test:bi-du')""",
                     (*SCOPE.key, instance_id, template_id, version))
             request = build_responsibility_plan_request(VERSIONS)
+            context = {"installationId": installation_id, "installationETag": 3,
+                       "templateRef": request.template_ref.model_dump(mode="json", by_alias=True),
+                       "actor": "test:bi-du"}
             plan = store.create_responsibility_plan_in_transaction(
                 conn, SCOPE, "test:bi-du", key, request,
                 operation="bi_responsibility_plan.prepare",
-                request_context={"installationId": "test-only", "actor": "test:bi-du"},
+                request_context=context,
             )
             assert plan.lifecycle is BriefLifecycle.DRAFT
+            stored = conn.execute("""SELECT result_ref FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s""",
+                (*SCOPE.key, "bi_responsibility_plan.prepare", key)).fetchone()["result_ref"]
+            assert stored["installationBinding"] == context
             replay = store.create_responsibility_plan_in_transaction(
                 conn, SCOPE, "test:bi-du", key, request,
                 operation="bi_responsibility_plan.prepare",
-                request_context={"installationId": "test-only", "actor": "test:bi-du"},
+                request_context=context,
             )
             assert replay.plan_id == plan.plan_id
             with pytest.raises(ProductionContractIdempotencyConflict):
                 store.create_responsibility_plan_in_transaction(
                     conn, SCOPE, "test:bi-du", key, request,
                     operation="bi_responsibility_plan.prepare",
-                    request_context={"installationId": "another-test-only", "actor": "test:bi-du"},
+                    request_context={**context, "installationId": str(uuid4())},
                 )
             raise StopAfterPlan()
     with connect(SCOPE) as conn:
