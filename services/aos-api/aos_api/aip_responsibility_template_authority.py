@@ -477,6 +477,14 @@ class ApprovedBIPreparationResolver:
         return selection is not None and selection.template_ref == ref
 
     def _approved_rows(self, scope: TenantScope) -> list[Any]:
+        return self._installation_rows(scope, active=False)
+
+    def _installation_rows(self, scope: TenantScope, *, active: bool) -> list[Any]:
+        state_predicate = (
+            "installation.active_revision=installation.current_revision AND current.state='active'"
+            if active else
+            "installation.active_revision IS NULL AND current.state='approved'"
+        )
         with self._connect_factory(scope) as conn:
             return list(conn.execute(
                 """SELECT installation.installation_id, installation.current_revision,
@@ -500,8 +508,7 @@ class ApprovedBIPreparationResolver:
                         ON version.version_pk=artifact.version_pk
                       JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
                      WHERE installation.org_id=%s AND installation.project_id=%s
-                       AND installation.active_revision IS NULL
-                       AND current.state='approved'
+                       AND """ + state_predicate + """
                        AND bundle.publisher='aos'
                        AND bundle.bundle_id='solution.ecommerce.growth'
                        AND version.version='1.12.0' AND version.status='published'""",
@@ -523,6 +530,31 @@ class ApprovedBIPreparationResolver:
                     candidate.content_hash, candidate.signature_fingerprint,
                     candidate.release_evidence_revision)]
         return len(matches) == 1
+
+
+class ActiveBIBusinessResolver(ApprovedBIPreparationResolver):
+    """BI-specific signed active source; approved preparation never grants work."""
+
+    def _approved_rows(self, scope: TenantScope) -> list[Any]:
+        return self._installation_rows(scope, active=True)
+
+    def load(
+        self, scope: TenantScope, ref: ExactRevisionRef, *, installation_id: str,
+    ) -> BIResponsibilityTemplate | None:
+        selection = self.select(scope)
+        if (selection is None or selection.template_ref != ref
+                or selection.installation_id != str(installation_id)):
+            return None
+        return selection.template
+
+
+_ACTIVE_BI_RESOLVER = ActiveBIBusinessResolver()
+
+
+def load_active_bi_template(
+    scope: TenantScope, ref: ExactRevisionRef, installation_id: str,
+) -> BIResponsibilityTemplate | None:
+    return _ACTIVE_BI_RESOLVER.load(scope, ref, installation_id=installation_id)
 
 
 _INSTALLED_RESOLVER = InstalledProductionProfileResolver()

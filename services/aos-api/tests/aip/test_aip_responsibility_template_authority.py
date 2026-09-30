@@ -67,6 +67,29 @@ def test_approved_bi_preparation_requires_one_exact_signed_lock_member() -> None
         {"resolved": [{**member, "releaseEvidenceRevision": "sha256:" + "0" * 64}]}, candidate)
 
 
+def test_active_bi_business_reader_is_separate_from_approved_preparation() -> None:
+    from aos_api.aip_responsibility_template_authority import ActiveBIBusinessResolver
+    assert ActiveBIBusinessResolver(release_root=None, trust_roots=None).load(
+        TenantScope("org-org", "dev-project"),
+        published_template_ref("ecommerce.business-investigation.readonly"),
+        installation_id="not-installed",
+    ) is None
+
+
+def test_active_bi_business_reader_queries_only_current_active_pointer() -> None:
+    from aos_api.aip_responsibility_template_authority import ActiveBIBusinessResolver
+    connection = _Connection([])
+    @contextmanager
+    def connect(scope):
+        assert scope == TenantScope("org-org", "dev-project")
+        yield connection
+    reader = ActiveBIBusinessResolver(connect_factory=connect)
+    assert reader._approved_rows(TenantScope("org-org", "dev-project")) == []
+    assert "installation.active_revision=installation.current_revision" in connection.query
+    assert "current.state='active'" in connection.query
+    assert connection.params == (BI_PATH, "org-org", "dev-project")
+
+
 def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisionRef:
     return ExactRevisionRef(
         resource_type="ResponsibilityTemplateRevision",
@@ -132,6 +155,7 @@ class _Connection:
         assert "bundle_installation" in query
         assert "asset_bundle_artifact" in query
         self.params = params
+        self.query = query
         return _Result(self.rows)
 
 

@@ -3,7 +3,7 @@ from copy import deepcopy
 from aos_api.asset_registry.canonical_json import canonical_sha256
 from aos_api.aip_production_contract_store import AipProductionContractStore
 from aos_api.aip_production_contracts import ExactRevisionRef
-from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
+from aos_api.aip_responsibility_template_authority import load_active_bi_template
 from aos_api.ecommerce_business_investigation_profile_catalog import EcommerceInvestigationProfileRevision
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
@@ -47,9 +47,11 @@ class AnalysisCompilationRoleReader:
                     raise ValueError('analysis responsibility must be uniquely configured')
                 plan=selected[0]
                 template = ExactRevisionRef.model_validate(plan['templateRef'])
+                signed_template = load_active_bi_template(
+                    scope, template, str(draft.installation_ref.installation_id))
                 if (template.resource_type != 'ResponsibilityTemplateRevision'
-                        or template.resource_id != domain.responsibility_template_code
-                        or not resolve_responsibility_template(scope, template)):
+                        or signed_template is None
+                        or signed_template.template_id != domain.responsibility_template_code):
                     raise ValueError('domain responsibility template differs or is unavailable')
                 # L1 analysis intent IDs are resolved by the Logic/Skill compiler;
                 # responsibility slots cover concrete operational capabilities.
