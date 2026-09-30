@@ -295,6 +295,7 @@ def _verify_jwks(token: str) -> dict[str, Any]:
                 algorithms=["RS256", "ES256"],
                 audience=audience(),
                 issuer=issuers(),
+                options={"require": ["exp", "sub", "iss", "aud"]} if external_only() else None,
             )
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
