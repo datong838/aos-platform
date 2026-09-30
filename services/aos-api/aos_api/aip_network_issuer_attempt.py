@@ -91,6 +91,15 @@ def reserve_decision_attempt(
     receipt = AttemptReceipt(command.org_id, command.project_id, command.proposal_id,
                              command.idempotency_key, command.request_hash,
                              principal.subject)
+    return _reserve_attempt_receipt(private_directory, receipt)
+
+
+def _reserve_attempt_receipt(
+    private_directory: str | Path,
+    receipt: AttemptReceipt,
+    *, namespace: str | None = None,
+) -> AttemptReceipt:
+    """Shared persistence primitive; callers own authenticated request validation."""
     expected: dict[str, str | int] = {
         "schemaVersion": 1, "state": "ATTEMPTED",
         "orgId": receipt.org_id, "projectId": receipt.project_id,
@@ -99,7 +108,11 @@ def reserve_decision_attempt(
         "requestHash": receipt.request_hash,
         "principalSubject": receipt.principal_subject,
     }
-    key = json.dumps([receipt.org_id, receipt.project_id, receipt.idempotency_key],
+    key_parts = [receipt.org_id, receipt.project_id, receipt.idempotency_key]
+    if namespace is not None:
+        expected['namespace'] = namespace
+        key_parts.insert(0, namespace)
+    key = json.dumps(key_parts,
                      separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     filename = hashlib.sha256(key).hexdigest() + ".json"
     payload = json.dumps(expected, sort_keys=True, separators=(",", ":"),
