@@ -9,8 +9,9 @@ from aos_api.aip_network_consumer_attempt import reserve_consumer_attempt
 from aos_api.aip_network_consumer_client import ConsumerEndpoint, request_consumer
 from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences, NetworkConsumerCommand
 from aos_api.aip_network_issuer_attempt import (
-    _private_directory_fd, AttemptAlreadyRecorded, AttemptUnknown, AttemptConflict,
+    _private_directory_fd, AttemptConflict,
 )
+from aos_api.aip_private_dispatch import dispatch_once_or_inquire, DispatchReservationBlocked
 
 
 class ConsumerApplicationBlocked(ValueError):
@@ -54,18 +55,11 @@ def execute_consumer(config, references, principal, authorization, *, inquiry):
             raise ValueError()
     except Exception:
         raise ConsumerApplicationBlocked('CONSUMER_APPLICATION_IDENTITY_BLOCKED', 403) from None
-    request = command.inquiry() if inquiry else command
-    if not inquiry:
-        try:
-            reserve_consumer_attempt(config.attempt_directory, command, verified)
-        except (AttemptAlreadyRecorded, AttemptUnknown):
-            request = command.inquiry()
-        except AttemptConflict:
-            raise ConsumerApplicationBlocked('CONSUMER_APPLICATION_REQUEST_CONFLICT', 409) from None
-        except Exception:
-            raise ConsumerApplicationBlocked('CONSUMER_APPLICATION_ATTEMPT_BLOCKED', 503) from None
     try:
-        return request_consumer(config.endpoint, request)
-    except Exception:
-        # Reservation stays durable even when the client could not confirm a send.
-        return {'status': 'unresolved'}
+        return dispatch_once_or_inquire(command, inquiry=inquiry,
+            reserve=lambda: reserve_consumer_attempt(config.attempt_directory, command, verified),
+            send=lambda request: request_consumer(config.endpoint, request))
+    except AttemptConflict:
+        raise ConsumerApplicationBlocked('CONSUMER_APPLICATION_REQUEST_CONFLICT', 409) from None
+    except DispatchReservationBlocked:
+        raise ConsumerApplicationBlocked('CONSUMER_APPLICATION_ATTEMPT_BLOCKED', 503) from None

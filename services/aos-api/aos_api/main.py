@@ -1268,13 +1268,17 @@ async def lifespan(_app: FastAPI):
     _app.state.runtime_background_tasks = []
     _app.state.runtime_stop_events = ()
     _app.state.network_consumer_config = None
+    _app.state.network_issuer_config = None
     try:
         from aos_api.aip_network_consumer_startup import configured_api_consumer
+        from aos_api.aip_network_issuer_startup import configured_api_issuer
         _app.state.network_consumer_config = configured_api_consumer()
+        _app.state.network_issuer_config = configured_api_issuer()
         async with _lifespan_body(_app):
             yield
     finally:
         _app.state.network_consumer_config = None
+        _app.state.network_issuer_config = None
         await _shutdown_application_runtime(_app)
 
 

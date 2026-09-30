@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 
 from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences
 from aos_api.aip_network_consumer_application import execute_consumer, ConsumerApplicationBlocked
+from aos_api.aip_network_issuer_application import execute_issuer, IssuerApplicationBlocked
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -71,6 +72,40 @@ def get_network_store() -> AipNetworkPolicyStore:
 
 def get_consumer_application_config(request: Request):
     return getattr(request.app.state, 'network_consumer_config', None)
+
+
+def get_issuer_application_config(request: Request):
+    return getattr(request.app.state, 'network_issuer_config', None)
+
+
+def _issuer_response(proposal_id, body, key, principal, authorization, config, response, *, inquiry):
+    try:
+        result = execute_issuer(config, proposal_id, key, body, principal, authorization, inquiry=inquiry)
+    except IssuerApplicationBlocked as exc:
+        raise ApiError(code=exc.code, message='网络策略审批尚未获准或需要对账',
+                       status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409, 'blocked': 403}[result['status']]
+    return result
+
+
+@router.post('/networks/activation-proposals/{proposal_id}/decision-attempts')
+def attempt_network_decision(proposal_id: str, body: DecideActionProposalRequest, response: Response,
+                             idempotency_key: str = Header(alias='Idempotency-Key'),
+                             authorization: str | None = Header(default=None),
+                             principal: Principal = Depends(require_principal),
+                             config=Depends(get_issuer_application_config)):
+    return _issuer_response(proposal_id, body, idempotency_key, principal, authorization,
+                            config, response, inquiry=False)
+
+
+@router.post('/networks/activation-proposals/{proposal_id}/decision-attempts/inquiry')
+def inquire_network_decision(proposal_id: str, body: DecideActionProposalRequest, response: Response,
+                             idempotency_key: str = Header(alias='Idempotency-Key'),
+                             authorization: str | None = Header(default=None),
+                             principal: Principal = Depends(require_principal),
+                             config=Depends(get_issuer_application_config)):
+    return _issuer_response(proposal_id, body, idempotency_key, principal, authorization,
+                            config, response, inquiry=True)
 
 
 def _consume_response(body, principal, authorization, config, response, *, inquiry):
