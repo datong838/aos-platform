@@ -10,7 +10,7 @@
 | 原 Host 只读预检 | `services/aos-api/.venv/bin/python scripts/a0v_current_runtime_host_preflight.py --signed-receipt .../signing-receipt.json` | 2，`SAFE_BLOCKED/CREDENTIAL_FILE_REQUIRED`；没有启动 Host。 |
 | 当前启动键名/路径存在性 | 仅解析 `.env` 的键名和路径存在性，不打印值 | 0；`AOS_BUNDLE_ROOT` 有效；`AOS_BUNDLE_TRUST_ROOTS_FILE` 路径不存在；`AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE`、OIDC issuer/audience/JWKS 键缺。 |
 | 旧 Host 启动器目标 | `rg -n '^DATABASE =' scripts/a0v_ecommerce_runtime_host_bootstrap.py` | 0；固定 `aos_meta_head`，与当前 `aos_current_preview_20260927` 不同，不可拿旧启动器补当前 Host。 |
-| 生产写入路径静态核查 | `rg -n 'INSERT INTO aip_runtime_policy_head|INSERT INTO aip_runtime_policy_revision' services/aos-api scripts` | 0；匹配项仅在 test fixture/测试，受检生产代码没有显式 RuntimePolicy writer；不能把测试直接插入作为正式配置来源。 |
+| 生产写入路径静态核查（BG00ED 复核修正） | `rg -n 'def publish_policy|publish_policy\(' services/aos-api/aos_api/aip_model_runtime_store.py services/aos-api/aos_api/routers/aip_model_runtime.py` | 0；`AipModelRuntimeStore.publish_policy` 与正式 API 路由均存在。此前仅搜显式 `INSERT`，漏掉 `_publish` 通用写入，故“生产 writer 未定位”的判断撤回。已有代码路径不等于当前实例具备发布权限或完整依赖。 |
 
 ## 八类候选的当前 Owner 路径
 
@@ -19,7 +19,7 @@
 | 候选 | 已有受检来源路径 | 当前数 |
 | --- | --- | ---: |
 | `responsibility_plans` | `AipProductionContractStore` 的 Plan 创建/冻结；BI 原命令仍要求正式签名模板/六实例/actor | 0 |
-| `runtime_policies` | 受检生产代码只有读取器 `configuration_source_catalog`/`aip_runtime_configuration_sources`；测试 fixture 有插入，生产 writer 未定位 | 0 |
+| `runtime_policies` | 生产 Owner 为 `AipModelRuntimeStore.publish_policy`，路由为 `aip_model_runtime.publish_policy`；读取器 `configuration_source_catalog`/`aip_runtime_configuration_sources` | 0 |
 | `data_policies`, `egress_policies` | `aip_runtime_guard_policy_store.py`；需当前 active、有效期和精确用途 | 0 / 0 |
 | `network_policies` | `aip_network_policy_store.py`；受网络审批/独立 checker 与签发门约束 | 0 |
 | `quota_policies`, `budget_policies` | `aip_model_governance_policy_store.py`；需当前 active 与有效期 | 0 / 0 |
@@ -27,6 +27,6 @@
 
 ## 结论与下波
 
-BG00EC 的只读核验 GREEN，当前实例正式授权依然失败关闭。缺当前签名 growth1.12 与信任根、独立 checker、三身份文件、Host identity/assignment、八候选；当前一名成员不能替代独立 checker。没有证据允许当前真库写入、开启 Host/worker/Provider 或自然首链。下一波 BG00ED 先复习 231 RuntimePolicy 产品/技术合同与既有 writer/consumer，再出精确生产 Owner 和文件级方案；只在隔离克隆做合法来源准备与拒绝测试，不手工往当前库插行。当前数据库迁移/身份切换仍须独立备份、完整克隆演练及零执行窗口。
+BG00EC 的只读核验 GREEN，当前实例正式授权依然失败关闭。缺当前签名 growth1.12 与信任根、独立 checker、三身份文件、Host identity/assignment、八候选；当前一名成员不能替代独立 checker。没有证据允许当前真库写入、开启 Host/worker/Provider 或自然首链。下一波 BG00ED 复核既有生产 Owner 与依赖、权限/幂等/版本合同，再出文件级方案；只在隔离克隆做合法来源准备与拒绝测试，不手工往当前库插行。当前数据库迁移/身份切换仍须独立备份、完整克隆演练及零执行窗口。
 
 本波无代码写入，不需 mock 测试代替正式证明；browser-pilot 不适用。真库只读、不读商城源、不写 dev-org、不回放旧 12 Run、不手工 run_definition、不 push，230 L0 挂起。
