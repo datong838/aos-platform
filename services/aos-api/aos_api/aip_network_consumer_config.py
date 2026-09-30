@@ -17,7 +17,7 @@ class ConsumerConfigBlocked(ValueError):
     pass
 
 
-def load_consumer_config(path: str | Path) -> ConsumerProcessConfig:
+def _read_private_config(path: str | Path):
     directory_fd = file_fd = None
     try:
         path = Path(path)
@@ -38,6 +38,19 @@ def load_consumer_config(path: str | Path) -> ConsumerProcessConfig:
             raise ValueError('config changed during read')
         data = json.loads(raw.decode('utf-8'), object_pairs_hook=_unique_pairs,
                           parse_constant=_invalid_constant)
+        return data
+    except Exception:
+        raise ConsumerConfigBlocked('CONSUMER_PRIVATE_CONFIG_INVALID') from None
+    finally:
+        if file_fd is not None:
+            os.close(file_fd)
+        if directory_fd is not None:
+            os.close(directory_fd)
+
+
+def load_consumer_config(path: str | Path) -> ConsumerProcessConfig:
+    try:
+        data = _read_private_config(path)
         if (type(data) is not dict or set(data) != {'schemaVersion', 'socketPath', 'apiUid',
                 'consumerUid', 'ipcGid', 'database', 'attemptDirectory', 'maxConnections', 'acceptTimeout'}
                 or type(data['schemaVersion']) is not int or data['schemaVersion'] != 1
@@ -52,11 +65,6 @@ def load_consumer_config(path: str | Path) -> ConsumerProcessConfig:
             accept_timeout=data['acceptTimeout'])
     except Exception:
         raise ConsumerConfigBlocked('CONSUMER_PRIVATE_CONFIG_INVALID') from None
-    finally:
-        if file_fd is not None:
-            os.close(file_fd)
-        if directory_fd is not None:
-            os.close(directory_fd)
 
 
 def preflight_consumer(config: ConsumerProcessConfig, scope: TenantScope) -> dict[str, bool]:
