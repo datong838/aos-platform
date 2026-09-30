@@ -6,6 +6,8 @@ import os
 from fastapi import APIRouter, Depends, Header, Query, Response, status
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
+from aos_api.aip_budget_cost_basis import BudgetCostBasisProposal
+from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
 from aos_api.aip_budget_activation_contracts import (
     BudgetActivationDecisionView, BudgetActivationCandidateView, BudgetDecisionReviewView,
     BudgetActivationPreviewView,
@@ -37,6 +39,7 @@ from aos_api.tenant_scope import TenantScope
 router = APIRouter(prefix="/v1/aip/budgets", tags=["aip-budgets"])
 _STORE = AipBudgetAuthorityStore()
 _ACTIVATION_STORE = AipBudgetActivationStore()
+_COST_PROPOSALS = BudgetCostProposalStore()
 
 
 def get_store() -> AipBudgetAuthorityStore:
@@ -89,6 +92,41 @@ def _map_activation(exc: ValueError) -> ApiError:
     code = str(exc)
     status_code = 403 if "IDENTITY" in code or "MEMBERSHIP" in code else 422
     return ApiError(code=code, message="budget activation authority unavailable", status_code=status_code)
+
+
+def _cost_call(method, *args):
+    try:
+        return method(*args)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    except Exception:
+        raise ApiError(code='BUDGET_COST_PERSISTENCE_UNAVAILABLE',
+                       message='费用提议暂无法确认，请保留原请求并查询', status_code=503) from None
+
+
+@router.post('/cost-proposals', status_code=201)
+def create_cost_proposal(body: BudgetCostBasisProposal, response: Response,
+                         idempotency_key: str = Header(alias='Idempotency-Key'),
+                         principal: Principal = Depends(require_principal)) -> dict:
+    response.headers['Cache-Control'] = 'no-store'
+    return _cost_call(_COST_PROPOSALS.create, principal, body, idempotency_key)
+
+
+@router.post('/cost-proposals/inquiry')
+def inquire_cost_proposal(body: BudgetCostBasisProposal, response: Response,
+                          idempotency_key: str = Header(alias='Idempotency-Key'),
+                          principal: Principal = Depends(require_principal)) -> dict:
+    response.headers['Cache-Control'] = 'no-store'
+    result = _cost_call(_COST_PROPOSALS.inquire, principal, body, idempotency_key)
+    response.status_code = {'observed': 200, 'unresolved': 202, 'conflict': 409}[result['status']]
+    return result
+
+
+@router.get('/cost-proposals/{proposal_id}')
+def get_cost_proposal(proposal_id: str, response: Response,
+                      principal: Principal = Depends(require_principal)) -> dict:
+    response.headers['Cache-Control'] = 'no-store'
+    return _cost_call(_COST_PROPOSALS.get, principal, proposal_id)
 
 
 @router.post(

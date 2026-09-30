@@ -168,3 +168,14 @@ class BudgetCostBasisProposal(AipContractModel):
     @property
     def proposal_hash(self) -> str:
         return canonical_hash({'domain': 'aos.budget-cost-proposal/v1', 'proposal': self.canonical_payload()})
+
+    @classmethod
+    def from_canonical_payload(cls, payload: dict) -> 'BudgetCostBasisProposal':
+        """Rebuild and compare every derived field of a persisted envelope."""
+        if type(payload) is not dict:
+            raise ValueError('canonical proposal object required')
+        candidate = cls.model_validate({k: v for k, v in payload.items()
+                                        if k not in {'accounts', 'currency', 'period'}})
+        if canonical_hash(payload) != canonical_hash(candidate.canonical_payload()):
+            raise ValueError('canonical proposal content drifted')
+        return candidate

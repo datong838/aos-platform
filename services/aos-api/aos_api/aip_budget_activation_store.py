@@ -161,6 +161,27 @@ def _revocation_view(row) -> dict:
     }
 
 
+def read_initial_budget_target(conn, scope, target, expected_head_version):
+    """Read the exact next target under the existing head/empty-ledger guard."""
+    try:
+        ledger = read_initial_budget_ledger(conn, scope, target.budget_id,
+            expected_head_version=expected_head_version)
+    except BudgetActivationLedgerBlocked as exc:
+        raise BudgetActivationDenied(exc.code) from exc
+    if target.revision != ledger.current_revision + 1:
+        raise BudgetActivationDenied("BUDGET_ACTIVATION_TARGET_REVISION_DRIFT")
+    row = conn.execute("""SELECT payload FROM aip_budget_revision
+        WHERE org_id=%s AND project_id=%s AND budget_id=%s AND revision=%s""",
+        (*scope.key, target.budget_id, ledger.current_revision)).fetchone()
+    if row is None:
+        raise BudgetActivationDenied("BUDGET_ACTIVATION_DRAFT_MISSING")
+    payload = dict(row['payload'])
+    for field in ('tenant', 'contentHash', 'createdBy', 'createdAt'):
+        payload.pop(field, None)
+    payload.update(revision=target.revision, lifecycle='active')
+    return ledger, payload
+
+
 class AipBudgetActivationStore:
     def precheck_consumption(
         self, principal: Principal, decision_id: str, *, target_hash: str,
@@ -275,27 +296,8 @@ class AipBudgetActivationStore:
                 if row is None:
                     raise BudgetActivationConflict("BUDGET_ACTIVATION_RECEIPT_DRIFT")
                 return _preview_view(row)
-            try:
-                ledger = read_initial_budget_ledger(
-                    conn, scope, target.budget_id,
-                    expected_head_version=expected_head_version,
-                )
-            except BudgetActivationLedgerBlocked as exc:
-                raise BudgetActivationDenied(exc.code) from exc
-            if target.revision != ledger.current_revision + 1:
-                raise BudgetActivationDenied("BUDGET_ACTIVATION_TARGET_REVISION_DRIFT")
-            draft_row = conn.execute(
-                """SELECT payload FROM aip_budget_revision
-                   WHERE org_id=%s AND project_id=%s AND budget_id=%s AND revision=%s""",
-                (*scope.key, target.budget_id, ledger.current_revision),
-            ).fetchone()
-            if draft_row is None:
-                raise BudgetActivationDenied("BUDGET_ACTIVATION_DRAFT_MISSING")
-            draft_payload = dict(draft_row["payload"])
-            for field in ("tenant", "contentHash", "createdBy", "createdAt"):
-                draft_payload.pop(field, None)
-            draft_payload["revision"] = target.revision
-            draft_payload["lifecycle"] = "active"
+            ledger, draft_payload = read_initial_budget_target(
+                conn, scope, target, expected_head_version)
             if canonical_hash(draft_payload) != target_hash:
                 raise BudgetActivationDenied("BUDGET_ACTIVATION_TARGET_DRIFT")
             now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
