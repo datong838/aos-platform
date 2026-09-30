@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { NetworkProposalCreationPanel, restoreNetworkReference } from "../../components/aip/NetworkProposalCreationPanel";
 
 import { apiPostUnqueued } from "../../api/client";
 import { getAuthRevision, getTenant } from "../../api/tenant";
@@ -95,10 +96,17 @@ export function exactBlockedNetworkPreview(value: unknown, candidate: Candidate)
 }
 
 export function RuntimeNetworkPolicyPreviewPanel() {
-  const [input, setInput] = useState<NetworkActivationPreviewInput>(EMPTY);
+  const [input, setInput] = useState<NetworkActivationPreviewInput>(() => ({ ...EMPTY,
+    ...restoreNetworkReference(typeof window === "undefined" ? "" : window.location.search) }));
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<BlockedPreview | null>(null);
   const [message, setMessage] = useState("只读预览当前阻断项；不会提交策略、申请批准或启用模型出站。");
+  useEffect(() => {
+    const changed = () => { setInput(EMPTY); setPreview(null); setMessage("身份已变化，请重新填写当前工作区候选。"); };
+    window.addEventListener("aos-auth-updated", changed);
+    window.addEventListener("aos-tenant-updated", changed);
+    return () => { window.removeEventListener("aos-auth-updated", changed); window.removeEventListener("aos-tenant-updated", changed); };
+  }, []);
   const identity = () => { const tenant = getTenant(); return JSON.stringify([tenant.orgId, tenant.projectId, tenant.subject, getAuthRevision()]); };
   const setField = (field: keyof NetworkActivationPreviewInput, value: string) => {
     setInput(previous => ({ ...previous, [field]: value }));
@@ -127,8 +135,8 @@ export function RuntimeNetworkPolicyPreviewPanel() {
   }
 
   return <section className="card" aria-label="网络策略只读激活预览" style={{ padding: 18, marginTop: 16 }}>
-    <h2>网络策略激活预览</h2>
-    <p>只核候选与当前阻断项。要求精确生效出站策略；文本审批引用不构成批准。此处不能发布或激活。</p>
+    <h2>网络策略候选与审批</h2>
+    <p>核对精确候选与当前阻断项，再提交审批提案。要求精确生效出站策略；文本审批引用不构成批准。此处不能直接发布或激活。</p>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10 }}>
       <label>网络策略 ID<input value={input.policyId} onChange={e => setField("policyId", e.target.value)} /></label>
       <label>候选修订<input value={input.revision} onChange={e => setField("revision", e.target.value)} /></label>
@@ -149,5 +157,6 @@ export function RuntimeNetworkPolicyPreviewPanel() {
       {preview.bindingHash && <details><summary>精确目标摘要（审计用）</summary><code>{preview.targetContentHash}</code><br /><code>{preview.bindingHash}</code></details>}
       <ul>{preview.blockers.map(code => <li key={code}>{BLOCKER_LABELS[code] ?? code}</li>)}</ul>
     </div>}
+    <NetworkProposalCreationPanel input={input} buildCandidate={() => buildNetworkActivationPreview(input)} />
   </section>;
 }
