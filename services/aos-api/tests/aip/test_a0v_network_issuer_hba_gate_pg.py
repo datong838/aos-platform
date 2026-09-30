@@ -30,11 +30,12 @@ def test_exact_scram_first_match_covers_socket_and_both_loopbacks() -> None:
 
 
 def test_isolated_clone_rejects_local_trust_before_issuer_login() -> None:
-    if os.environ.get("AOS_BG00CL_TEST_CONTAINER") != "aos-bg00ck-isolated-pg":
-        pytest.skip("explicit BG00ck isolated container required")
+    container = os.environ.get("AOS_BG00CL_TEST_CONTAINER")
+    if container not in {"aos-bg00ce-isolated-pg", "aos-bg00ck-isolated-pg"}:
+        pytest.skip("explicit isolated container required")
     result = subprocess.run(
         ["docker", "--context", "colima-aos-a0v-test-only", "exec",
-         "aos-bg00ck-isolated-pg", "psql", "-X", "-v", "ON_ERROR_STOP=1",
+         container, "psql", "-X", "-v", "ON_ERROR_STOP=1",
          "-U", "postgres", "-d", "aos_current_preview_20260927", "-Atc",
          "SELECT coalesce(json_agg(row_to_json(h) ORDER BY line_number),'[]'::json) "
          "FROM (SELECT line_number,type,database,user_name,address,netmask,"
