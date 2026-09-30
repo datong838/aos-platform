@@ -115,6 +115,13 @@ def precheck_network_activation(
         if isinstance(exc, NetworkApprovalConsumptionBlocked):
             raise
         raise NetworkApprovalConsumptionBlocked("NETWORK_CONSUMPTION_CURRENT_BINDING_DRIFTED") from exc
+    # Approval, membership and dependency locks may outlive the entry check.
+    # PostgreSQL transaction time is fixed, so sample the live database clock.
+    checked_at = conn.execute("SELECT clock_timestamp() AS checked_at").fetchone()["checked_at"]
+    if row["expires_at"] <= checked_at:
+        raise NetworkApprovalConsumptionBlocked("NETWORK_CONSUMPTION_PROPOSAL_EXPIRED")
+    if approval["expires_at"] <= checked_at:
+        raise NetworkApprovalConsumptionBlocked("NETWORK_CONSUMPTION_APPROVAL_EXPIRED")
     return NetworkApprovalPrecheck(
         proposal_id=proposal_id, approval_event_id=approval_event_id,
         proposal_hash=row["proposal_hash"], binding_hash=row["action_binding_hash"],
