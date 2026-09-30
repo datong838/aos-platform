@@ -41,7 +41,8 @@ def read_candidates(conn: Any, scope: TenantScope) -> RuntimeConfigurationCandid
           (SELECT count(*) FROM aip_runtime_policy_head h
              JOIN aip_runtime_policy_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id
                 AND r.runtime_policy_id=h.runtime_policy_id AND r.revision=h.current_revision
-            WHERE h.org_id=%s AND h.project_id=%s AND r.lifecycle='active') AS runtime_policies,
+            WHERE h.org_id=%s AND h.project_id=%s AND r.lifecycle='active'
+                AND r.payload->'killSwitchEnabled'='false'::jsonb) AS runtime_policies,
           (SELECT count(*) FROM aip_runtime_guard_policy_head h
              JOIN aip_runtime_guard_policy_revision r ON r.org_id=h.org_id AND r.project_id=h.project_id
                 AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id AND r.revision=h.current_revision
