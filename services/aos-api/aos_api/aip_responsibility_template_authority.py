@@ -114,6 +114,8 @@ class InstalledProductionProfileResolver:
             return False
         if not ref.resource_id.startswith("bundle://"):
             return False
+        if ref.resource_type == "ResponsibilityTemplateRevision":
+            return self.load_media_responsibility_template(scope, ref) is not None
         return any(self._row_matches(row, ref) for row in self._fetch_rows(scope, ref))
 
     def _fetch_rows(self, scope: TenantScope, ref: ExactRevisionRef) -> list[Any]:

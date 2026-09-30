@@ -22,6 +22,8 @@ ARTIFACT_HASH = "a" * 64
 BUNDLE_HASH = "sha256:" + "b" * 64
 SIGNATURE_FINGERPRINT = "sha256:" + "c" * 64
 EVIDENCE_REVISION = "sha256:" + "d" * 64
+MEDIA_PATH = "content/media-production-templates/standard.responsibility.json"
+MEDIA_REF = "bundle://aos/solution.ecommerce.growth@1.4.0/" + MEDIA_PATH
 
 
 def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisionRef:
@@ -112,10 +114,11 @@ def _resolver(rows: list[dict[str, Any]], *, release_root: Path | None = None):
     )
 
 
-def test_exact_active_installed_published_artifact_resolves() -> None:
+def test_exact_active_installed_published_profile_artifact_resolves() -> None:
     resolver, connection = _resolver([_row()])
 
-    assert resolver.resolve(TenantScope("org-org", "dev-project"), _ref()) is True
+    assert resolver.resolve(TenantScope("org-org", "dev-project"),
+                            _profile_ref(ARTIFACT_HASH)) is True
     assert connection.params == (
         ARTIFACT_REF,
         "org-org",
@@ -123,6 +126,47 @@ def test_exact_active_installed_published_artifact_resolves() -> None:
         7,
         ARTIFACT_REF,
     )
+
+
+def test_signed_production_profile_cannot_claim_responsibility_template() -> None:
+    resolver, _ = _resolver([_row()])
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), _ref()) is False
+
+
+def test_exact_signed_media_responsibility_template_resolves(tmp_path: Path) -> None:
+    source = (Path(__file__).resolve().parents[4]
+              / "bundles/candidates/ecommerce/solution.ecommerce.growth/1.11.0"
+              / MEDIA_PATH)
+    raw = source.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact = tmp_path / "solution.ecommerce.growth" / "1.4.0" / MEDIA_PATH
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(raw)
+    resolver, _ = _resolver([
+        _row(artifact_ref=MEDIA_REF, relative_path=MEDIA_PATH,
+             artifact_digest="sha256:" + digest)
+    ], release_root=tmp_path)
+    ref = ExactRevisionRef(resource_type="ResponsibilityTemplateRevision",
+                           resource_id=MEDIA_REF, revision=7, content_hash=digest)
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is True
+    assert resolver.resolve(TenantScope("org-org", "dev-project"),
+                            ref.model_copy(update={"content_hash": "0" * 64})) is False
+
+
+def test_profile_bytes_cannot_be_labeled_media_responsibility(tmp_path: Path) -> None:
+    raw = json.dumps(_production_profile_payload(), sort_keys=True,
+                     separators=(",", ":")).encode("utf-8")
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact = tmp_path / "solution.ecommerce.growth" / "1.4.0" / MEDIA_PATH
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(raw)
+    resolver, _ = _resolver([
+        _row(artifact_ref=MEDIA_REF, relative_path=MEDIA_PATH,
+             artifact_digest="sha256:" + digest)
+    ], release_root=tmp_path)
+    ref = ExactRevisionRef(resource_type="ResponsibilityTemplateRevision",
+                           resource_id=MEDIA_REF, revision=7, content_hash=digest)
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is False
 
 
 def test_wrong_hash_and_old_installation_revision_fail_closed() -> None:
