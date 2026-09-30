@@ -42,6 +42,27 @@ class NetworkActivationProposalRequest(AipContractModel):
     expires_at: datetime
 
 
+def build_network_proposal_request(scope: TenantScope, candidate: NetworkPolicyRevisionCreate,
+                                   expected_version: int, expires_at: datetime) -> CreateActionProposalRequest:
+    """Canonical input shared by creation and historical read-only reconciliation."""
+    target = build_network_policy_activation_target(
+        scope=scope, candidate=candidate,
+        expected_head_revision=candidate.revision - 1,
+        expected_head_version=expected_version,
+    )
+    return CreateActionProposalRequest(
+        actionTypeId=ACTION_ID, purpose="申请激活精确网络策略修订，等待独立审批",
+        payload={
+            "candidate": candidate.model_dump(mode="json", by_alias=True),
+            "expectedHeadRevision": target.expected_head_revision,
+            "expectedHeadVersion": target.expected_head_version,
+            "targetContentHash": target.target_content_hash,
+            "bindingHash": target.binding_hash,
+        },
+        expiresAt=expires_at,
+    )
+
+
 class NetworkPolicyActivationGuard:
     """Recheck exact metadata, actor and target inside the Action write transaction."""
 
@@ -236,23 +257,8 @@ def propose_network_activation(
     )
     with (connect_factory or db_connect)(scope) as conn:
         snapshot = guard.read_metadata(conn)
-        target = build_network_policy_activation_target(
-            scope=scope, candidate=candidate,
-            expected_head_revision=candidate.revision - 1,
-            expected_head_version=expected_version,
-        )
-        payload = {
-            "candidate": candidate.model_dump(mode="json", by_alias=True),
-            "expectedHeadRevision": target.expected_head_revision,
-            "expectedHeadVersion": target.expected_head_version,
-            "targetContentHash": target.target_content_hash,
-            "bindingHash": target.binding_hash,
-        }
-        body = CreateActionProposalRequest(
-            actionTypeId=ACTION_ID, purpose="申请激活精确网络策略修订，等待独立审批",
-            payload=payload, expiresAt=expires_at,
-        )
-        risk = classify_action_risk(ACTION_ID, snapshot, payload, None)
+        body = build_network_proposal_request(scope, candidate, expected_version, expires_at)
+        risk = classify_action_risk(ACTION_ID, snapshot, body.payload, None)
         factory = TransactionBoundConnectFactory(HostTransaction(conn), scope)
         return AipActionStore(factory, network_activation_guard=guard).create_proposal(
             scope, principal.subject, idempotency_key, body, snapshot, risk,

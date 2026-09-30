@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences
 from aos_api.aip_network_consumer_application import execute_consumer, ConsumerApplicationBlocked
 from aos_api.aip_network_issuer_application import execute_issuer, IssuerApplicationBlocked
+from aos_api.aip_network_proposal_reconcile import inquire_network_proposal, ProposalInquiryBlocked
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -292,6 +293,24 @@ def propose_network(
         raise ApiError(code=exc.code, message=str(exc), status_code=404) from exc
     except AipActionStoreError as exc:
         raise ApiError(code=exc.code, message="network action proposal persistence failed", status_code=503) from exc
+
+
+@router.post("/networks/activation-proposals/inquiry")
+def inquire_network_creation(
+    body: NetworkActivationProposalRequest,
+    response: Response,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+):
+    try:
+        result = inquire_network_proposal(principal, body, expected_version=_version(if_match),
+                                          idempotency_key=idempotency_key)
+    except ProposalInquiryBlocked as exc:
+        raise ApiError(code=exc.code, message="网络策略提案尚无法精确对账，请保留原请求",
+                       status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409}[result['status']]
+    return result
 
 
 @router.post("/networks/activation-proposals/{proposal_id}/decision", response_model=ActionDraftBundle)

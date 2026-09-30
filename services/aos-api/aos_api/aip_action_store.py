@@ -82,6 +82,17 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def proposal_request_hash(body: CreateActionProposalRequest, action_revision_hash: str,
+                          risk_level: str, policy: dict[str, Any]) -> str:
+    """Shared historical creation identity; this does not authorize a new action."""
+    return canonical_hash({
+        "request": body.model_dump(mode="json", by_alias=True),
+        "actionTypeRevisionHash": action_revision_hash,
+        "classifiedRiskLevel": risk_level,
+        "policy": policy,
+    })
+
+
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None) -> None:
@@ -578,12 +589,10 @@ class AipActionStore:
         expires_at = body.effective_expiry()
         if expires_at <= datetime.now(timezone.utc):
             raise AipActionTransitionBlocked("proposal expiry must be in the future")
-        request_hash = canonical_hash({
-            "request": body.model_dump(mode="json", by_alias=True),
-            "actionTypeRevisionHash": action_snapshot["revisionHash"],
-            "classifiedRiskLevel": risk.level.value,
-            "policy": {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy},
-        })
+        request_hash = proposal_request_hash(
+            body, action_snapshot["revisionHash"], risk.level.value,
+            {"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy},
+        )
         proposal_id = f"proposal-{uuid.uuid4().hex[:20]}"
         draft_id = f"action-draft-{uuid.uuid4().hex[:20]}"
         event_id = f"action-event-{uuid.uuid4().hex[:20]}"
