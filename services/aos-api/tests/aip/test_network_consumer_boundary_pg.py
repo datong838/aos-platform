@@ -68,6 +68,8 @@ def test_consumer_roles_are_nonprivileged_and_have_only_bounded_write_access():
                 ("aip_runtime_guard_policy_head", "policy_id"), ("meta_object_type", "id"),
                 ("meta_action_type", "id"), ("aip_network_policy_head", "current_revision"),
                 ("aip_network_policy_head", "version"), ("aip_network_policy_head", "updated_at"),
+                *(("aip_network_approval_delivery", column) for column in
+                  ("status", "claim_token", "claim_until", "attempt", "next_attempt", "receipt_id")),
             } if row["rolname"] == OWNER else set()
             actual_updates = {
                 (c["table_name"], c["column_name"]) for c in columns
