@@ -21,6 +21,7 @@ import {
   type ProfileRecommendationRevision,
   type ProjectedCostRange,
   type ResponsibilityPlanListResponse,
+  type SignedBIPlanAdmission,
   type ReviewIssueListResponse,
   type StageTemplateListResponse,
   type StageCompilationResult,
@@ -113,6 +114,8 @@ export function ProductionContractsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
+  const [biAdmission, setBiAdmission] = useState<{ installationId: string; data: SignedBIPlanAdmission | null; status: "loading" | "ready" | "error" } | null>(null);
+  const [biAdmissionReload, setBiAdmissionReload] = useState(0);
   const [templateId, setTemplateId] = useState("");
   const [planId, setPlanId] = useState("");
   const [taskId, setTaskId] = useState("");
@@ -228,6 +231,26 @@ export function ProductionContractsPage() {
   const sourceLogicId = sourceParams.get("logicId")?.trim() ?? "";
   const sourceAgentId = sourceParams.get("agentId")?.trim() ?? "";
   const sourceInstallationId = sourceParams.get("installationId")?.trim() ?? "";
+  const sourceInstallationRevision = sourceParams.get("installationRevision") ?? "";
+  const sourceInstallationEtag = sourceParams.get("installationEtag") ?? "";
+  const validSourceInstallation = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sourceInstallationId);
+  const sourceVersionCurrent = (value: string) => /^[1-9][0-9]*$/.test(value) && Number.isSafeInteger(Number(value));
+  useEffect(() => {
+    if (!validSourceInstallation) { setBiAdmission(null); return; }
+    let active = true;
+    setBiAdmission({ installationId: sourceInstallationId, data: null, status: "loading" });
+    void aipProductionContracts.readSignedBIPlanAdmission(sourceInstallationId).then(data => {
+      if (active) setBiAdmission({ installationId: sourceInstallationId, data, status: "ready" });
+    }).catch(() => {
+      if (active) setBiAdmission({ installationId: sourceInstallationId, data: null, status: "error" });
+    });
+    return () => { active = false; };
+  }, [sourceInstallationId, validSourceInstallation, biAdmissionReload]);
+  const currentBIAdmission = biAdmission?.installationId === sourceInstallationId ? biAdmission : null;
+  const biSourceMatches = Boolean(currentBIAdmission?.data?.installationId === sourceInstallationId
+    && sourceVersionCurrent(sourceInstallationRevision) && sourceVersionCurrent(sourceInstallationEtag)
+    && currentBIAdmission.data.installationRevision === Number(sourceInstallationRevision)
+    && currentBIAdmission.data.installationEtag === Number(sourceInstallationEtag));
 
   return <PageChrome title="上线执行审批" lede="统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；审批资料冻结只表示内容不可变，不代表已经启动运行。">
     {error && <div role="alert" className="notice bad">上线执行审批读取或操作失败：{error}</div>}
@@ -257,7 +280,7 @@ export function ProductionContractsPage() {
         ))}
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <button className="btn" onClick={() => void load()}>刷新权威状态</button>
+        <button className="btn" onClick={() => { void load(); setBiAdmissionReload(value => value + 1); }}>刷新权威状态</button>
         <a className="btn primary" href="/aip/assist">选择业务任务并准备上线资料</a>
         <a className="btn" href="/aip/evals">维护评测标准</a>
         <a className="btn" href="/aip/drafts">处理执行提案</a>
@@ -272,6 +295,18 @@ export function ProductionContractsPage() {
           {sourceAgentId ? <a href={`/aip/agents?agentId=${encodeURIComponent(sourceAgentId)}`}>返回数字同事</a> : null}
           {sourceInstallationId ? <><span>来源安装 {sourceInstallationId}（仅导航上下文，仍需服务端核验）</span><a href="/apollo/assets">返回安装列表</a></> : null}
         </div>
+      </section> : null}
+      {sourceInstallationId ? <section className="notice" aria-label="签名 BI 配置准入读回" data-testid="bi-admission-readback" style={{marginBottom:16}}>
+        <strong>签名 BI 职责配置准入</strong>
+        {!validSourceInstallation ? <p>安装标识无效；请返回安装页重新选择。</p>
+          : currentBIAdmission?.status === "ready" && currentBIAdmission.data?.installationId !== sourceInstallationId ? <p>读回安装与来源不一致；请返回安装页刷新。当前禁止提交。</p>
+          : currentBIAdmission?.status === "ready" && currentBIAdmission.data ? <>
+            {!biSourceMatches ? <p>安装状态已变化或来源版本未带齐；请返回安装页刷新 revision/ETag。当前禁止提交。</p>
+              : <p>当前安装修订 {currentBIAdmission.data.installationRevision}、ETag {currentBIAdmission.data.installationEtag} 已只读对齐；提交仍须服务端重新核验。</p>}
+            {currentBIAdmission.data.blockers.length ? <ul>{currentBIAdmission.data.blockers.map(code => <li key={code}>{({APPROVED_INACTIVE_INSTALLATION_REQUIRED:"安装须保持已批准且未激活；请回安装页核对当前状态。",SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE:"缺少本安装的当前签名职责模板；请核对正式制品与批准来源。",SIX_ACTIVE_AGENT_INSTANCES_MISSING:"六个数字同事尚未全部 active；请核对当前实例与能力来源。"} as Record<string,string>)[code] ?? `当前准入未齐备（${code}）；请核对服务端记录。`}</li>)}</ul>
+              : <p>只读候选未报告缺口；正式写入口仍待独立授权与受控提交接线，不能据此运行。</p>}
+          </> : currentBIAdmission?.status === "error" ? <p>无法核验当前准入；可能是身份、权限或读取失败。请先恢复正式授权后刷新。</p>
+          : <p>正在读取当前准入；读取完成前禁止提交。</p>}
       </section> : null}
       <section className="card" aria-label="上线业务场景总览" style={{padding:18,marginBottom:16}} data-testid="production-business-overview">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",gap:16,flexWrap:"wrap"}}>

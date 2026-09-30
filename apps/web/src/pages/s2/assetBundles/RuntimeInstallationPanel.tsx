@@ -155,7 +155,7 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
             {!candidatesCurrent && <p role="status">配置权威未核验或读回已过期；不会把未知当作缺失或就绪。</p>}
             {candidatesCurrent && <ul>{CANDIDATES.map(item => {
               const count = candidateData!.counts[item.key];
-              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.key === "responsibility_plans" ? `${item.href}?installationId=${encodeURIComponent(runtime.installationId)}` : item.href}>{item.action}</Link> : "产品配置入口待建"}</li>;
+              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.key === "responsibility_plans" ? `${item.href}?installationId=${encodeURIComponent(runtime.installationId)}&installationRevision=${runtime.installationRevision}&installationEtag=${runtime.installationEtag}` : item.href}>{item.action}</Link> : "产品配置入口待建"}</li>;
             })}</ul>}
             <button type="button" className="btn" disabled={offline || pending !== null || !candidates} onClick={candidates?.reload}>刷新权威候选</button>
           </section>

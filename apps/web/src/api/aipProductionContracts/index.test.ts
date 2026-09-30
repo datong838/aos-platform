@@ -10,6 +10,14 @@ const exact=(resourceType:string,resourceId:string)=>({resourceType,resourceId,r
 
 describe("W2-C production contract SDK",()=>{
   beforeEach(()=>{transport.apiGet.mockReset();transport.apiPost.mockReset();});
+  it("reads the exact signed BI admission candidate without posting",async()=>{
+    const installationId="22222222-2222-4222-8222-222222222222";
+    transport.apiGet.mockResolvedValue({installationId,installationRevision:3,installationEtag:4,templateRef:null,activeInstanceVersions:{},blockers:["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],candidateReady:false,writeRevalidationRequired:true});
+    const result=await aipProductionContracts.readSignedBIPlanAdmission(installationId);
+    expect(result.candidateReady).toBe(false);
+    expect(transport.apiGet).toHaveBeenCalledWith(`/v1/aip/production-contracts/responsibility-plans/bi-preparation/admission?installationId=${installationId}`);
+    expect(transport.apiPost).not.toHaveBeenCalled();
+  });
   it("读取 Stage、Artifact Family、Artifact Relation 与 Review authority",async()=>{
     transport.apiGet
       .mockResolvedValueOnce({tenant,items:[],count:0})

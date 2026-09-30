@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseStageCompilation, parseStageTemplateList } from "./parser";
+import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseSignedBIPlanAdmission, parseStageCompilation, parseStageTemplateList } from "./parser";
 const hash="a".repeat(64), tenant={orgId:"org-org",projectId:"dev-project"};
+describe("BG00dx signed BI admission parser",()=>{
+  const blocked={installationId:"22222222-2222-4222-8222-222222222222",installationRevision:3,installationEtag:4,templateRef:null,activeInstanceVersions:{},blockers:["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],candidateReady:false,writeRevalidationRequired:true};
+  it("accepts only a read-only blocked snapshot",()=>{expect(parseSignedBIPlanAdmission(blocked).blockers).toEqual(blocked.blockers);expect(()=>parseSignedBIPlanAdmission({...blocked,candidateReady:true})).toThrow();expect(()=>parseSignedBIPlanAdmission({...blocked,writeRevalidationRequired:false})).toThrow();});
+  it("rejects invalid installation identity and instance versions",()=>{expect(()=>parseSignedBIPlanAdmission({...blocked,installationId:"other"})).toThrow();expect(()=>parseSignedBIPlanAdmission({...blocked,activeInstanceVersions:{agent:0}})).toThrow();});
+});
 describe("W2-A production contract parser",()=>{
   it("parses exact authority lists",()=>{
     expect(parseBriefList({tenant,count:1,items:[{tenant,briefId:"brief-1",taskId:"task-1",revision:2,version:2,briefType:"ecommerce.analysis",schemaRef:{resourceType:"Schema",resourceId:"analysis",revision:"1",authority:"aip"},spec:{goal:"facts"},contentHash:hash,lifecycle:"frozen",createdBy:"user:dev",createdAt:"2026-08-13T00:00:00Z"}]}).count).toBe(1);

@@ -61,7 +61,7 @@ describe("RuntimeInstallationPanel", () => {
     expect(host.textContent).toContain("不代表可以启用");
     expect(host.textContent).toContain("签名 BI 职责准备需核验当前安装、正式 OIDC 身份、六个 active 数字同事及当前权限");
     const rows = Array.from(host.querySelectorAll<HTMLLIElement>('[aria-label="当前配置权威候选"] li'));
-    expect(rows.find(row => row.textContent?.startsWith("职责计划"))?.querySelector("a")?.getAttribute("href")).toBe(`/aip/production-contracts?installationId=${runtime.installationId}`);
+    expect(rows.find(row => row.textContent?.startsWith("职责计划"))?.querySelector("a")?.getAttribute("href")).toBe(`/aip/production-contracts?installationId=${runtime.installationId}&installationRevision=5&installationEtag=5`);
     const budgetRow = rows.find(row => row.textContent?.startsWith("预算修订"));
     expect(budgetRow?.querySelector("a")?.getAttribute("href")).toBe("/aip/capacity");
     expect(budgetRow?.textContent).toContain("创建预算草稿（不生效）");

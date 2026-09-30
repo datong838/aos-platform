@@ -1,5 +1,6 @@
 import type { ActionProposalExactRef, ArtifactFamily, ArtifactFamilyCandidateGroup, ArtifactFamilyCandidateStatus, ArtifactFamilyListResponse, ArtifactFamilyMember, ArtifactFamilyRole, ArtifactFamilySelectionDecision, ArtifactRelation, ArtifactRelationListResponse, ArtifactRelationType, AssigneeKind, ContractBlocker, ContractCoverage, ContractLifecycle, ContractMigrationDecision, ContractMigrationDecisionListResponse, ContractReadiness, EvalContractListResponse, EvalContractRevision, EvalStageAttemptRef, EvidenceBundleListResponse, EvidenceBundleRevision, ExactArtifactRef, ExactRevisionRef, ImpactAssessment, ImpactDimension, ImpactPreviewListResponse, ImpactPreviewRevision, ImpactQuality, MediaGateDefinition, MediaGateKind, MediaGateProfileListResponse, MediaGateProfileRevision, MediaGateResult, MediaGateSetDecision, MediaGateSetListResponse, MergeDecision, MutableAuthorityRef, ProductionContextListResponse, ProductionContextRevision, ProductionStartDecision, ProductionStartDecisionListResponse, ProductionStartStatus, ProfileConfirmationListResponse, ProfileConfirmationReceipt, ProfileRecommendationListResponse, ProfileRecommendationRevision, ProjectedCostRange, ProjectedDurationRange, ResourceRef, ResponsibilityPlanListResponse, ResponsibilityPlanRevision, ResponsibilityProfile, ResponsibilitySlot, ReturnDecision, ReviewIssue, ReviewIssueListResponse, ReviewIssueStatus, ReviewSeverity, StageCompilationResult, StageDefinition, StageTemplateListResponse, StageTemplateRevision, TaskBriefListResponse, TaskBriefRevision, Tenant } from "./contracts";
 import type { EvalContractDiff } from "./contracts";
+import type { SignedBIPlanAdmission } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function string(value: unknown, label: string): string { if (typeof value !== "string" || !value) throw new Error(`${label} 必须是非空字符串`); return value; }
@@ -11,6 +12,32 @@ function resource(value: unknown, label: string): ResourceRef { const raw=object
 function exact(value: unknown, label: string): ExactRevisionRef { const raw=object(value,label); const revision=number(raw.revision,`${label}.revision`); if (revision<1) throw new Error(`${label}.revision 必须大于 0`); return {resourceType:string(raw.resourceType,`${label}.resourceType`),resourceId:string(raw.resourceId,`${label}.resourceId`),revision,contentHash:sha(raw.contentHash,`${label}.contentHash`)}; }
 function records(value: unknown, label: string): Record<string, unknown>[] { return array(value,label).map((item,index)=>object(item,`${label}[${index}]`)); }
 function nullableExact(value: unknown, label: string): ExactRevisionRef|null { return value===null ? null : exact(value,label); }
+export function parseSignedBIPlanAdmission(value: unknown): SignedBIPlanAdmission {
+  const raw = object(value, "SignedBIPlanAdmission");
+  const installationId = string(raw.installationId, "installationId");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(installationId)) throw new Error("installationId 非 UUID");
+  const installationRevision = number(raw.installationRevision, "installationRevision");
+  const installationEtag = number(raw.installationEtag, "installationEtag");
+  if (installationRevision < 1 || installationEtag < 1) throw new Error("安装修订与 ETag 必须大于 0");
+  const templateRef = nullableExact(raw.templateRef, "templateRef");
+  if (templateRef && templateRef.resourceType !== "ResponsibilityTemplateRevision") throw new Error("签名职责模板类型错误");
+  const versions = object(raw.activeInstanceVersions, "activeInstanceVersions");
+  const activeInstanceVersions: Record<string, number> = {};
+  for (const [key, item] of Object.entries(versions)) {
+    const version = number(item, `activeInstanceVersions.${key}`);
+    if (!key || version < 1) throw new Error("数字同事版本无效");
+    activeInstanceVersions[key] = version;
+  }
+  const blockerCodes = strings(raw.blockers, "blockers");
+  if (typeof raw.candidateReady !== "boolean" || raw.candidateReady !== (blockerCodes.length === 0)
+      || raw.writeRevalidationRequired !== true
+      || (raw.candidateReady && (!templateRef || Object.keys(activeInstanceVersions).length !== 6))) {
+    throw new Error("签名 BI 准入候选状态不一致");
+  }
+  return { installationId, installationRevision, installationEtag, templateRef,
+    activeInstanceVersions, blockers: blockerCodes, candidateReady: raw.candidateReady,
+    writeRevalidationRequired: true };
+}
 function enumValue<T extends string>(value: unknown,label:string,values:readonly T[]):T { const result=string(value,label) as T; if(!values.includes(result)) throw new Error(`${label} 非法`); return result; }
 function strings(value:unknown,label:string):string[] { return array(value,label).map((item,index)=>string(item,`${label}[${index}]`)); }
 function blockers(value:unknown):ContractBlocker[] { return array(value,"blockers").map((item,index)=>{const raw=object(item,`blockers[${index}]`);return{code:string(raw.code,`blockers[${index}].code`),message:string(raw.message,`blockers[${index}].message`),resourceRef:nullableExact(raw.resourceRef,`blockers[${index}].resourceRef`)}}); }

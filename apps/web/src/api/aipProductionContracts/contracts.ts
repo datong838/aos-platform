@@ -1,6 +1,16 @@
 export type Tenant = { orgId: string; projectId: string };
 export type ResourceRef = { resourceType: string; resourceId: string; revision: string | null; authority: string };
 export type ExactRevisionRef = { resourceType: string; resourceId: string; revision: number; contentHash: string };
+export type SignedBIPlanAdmission = {
+  installationId: string;
+  installationRevision: number;
+  installationEtag: number;
+  templateRef: ExactRevisionRef | null;
+  activeInstanceVersions: Record<string, number>;
+  blockers: string[];
+  candidateReady: boolean;
+  writeRevalidationRequired: true;
+};
 export type ResponsibilityProfile = "LITE" | "STANDARD" | "FULL";
 export type ProjectedCostRange = {
   profile: ResponsibilityProfile;

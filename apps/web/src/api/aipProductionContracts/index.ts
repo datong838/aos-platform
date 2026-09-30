@@ -2,6 +2,7 @@ import { apiGet, apiPost } from "../client";
 import type { CompileStageTemplateInput, ConfirmMediaProfileInput, CreateArtifactRelationInput, CreateEvalContractInput, CreateImpactPreviewInput, CreateResponsibilityPlanInput, CreateReviewIssueInput, CreateStageTemplateInput, CreateTaskBriefInput, ProductionStartInput, ResolveReviewIssueInput, ReturnReviewIssueInput, ReviseEvalContractInput, ReviseImpactPreviewInput, ReviseResponsibilityPlanInput, ReviseStageTemplateInput } from "./contracts";
 import { parseArtifactFamily, parseArtifactFamilyList, parseArtifactRelation, parseArtifactRelationList, parseBriefList, parseBundleList, parseContractMigrationDecisionList, parseEvalContract, parseEvalContractList, parseImpactPreview, parseImpactPreviewList, parseMediaGateProfileList, parseMediaGateSetList, parseProductionContextList, parseProductionStartDecision, parseProductionStartDecisionList, parseProfileConfirmation, parseProfileConfirmationList, parseProfileRecommendationList, parseResponsibilityPlan, parseResponsibilityPlanList, parseReturnDecision, parseReviewIssue, parseReviewIssueList, parseStageCompilation, parseStageTemplate, parseStageTemplateList, parseTaskBrief } from "./parser";
 import { parseEvalContractDiff } from "./parser";
+import { parseSignedBIPlanAdmission } from "./parser";
 
 const ROOT="/v1/aip/production-contracts";
 function keyHeaders(key:string){if(!key.trim())throw new Error("Idempotency-Key 不能为空");return{"Idempotency-Key":key};}
@@ -26,6 +27,7 @@ export const aipProductionContracts={
   async reviseEvalContract(contractId:string,input:ReviseEvalContractInput,key:string){return parseEvalContract(await apiPost<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}/revisions`,input,keyHeaders(key)));},
   async freezeEvalContract(contractId:string,expectedVersion:number,key:string){return parseEvalContract(await apiPost<unknown>(`${ROOT}/eval-contracts/${encodeURIComponent(contractId)}/freeze`,{expectedVersion},keyHeaders(key)));},
   async listResponsibilityPlans(){return parseResponsibilityPlanList(await apiGet<unknown>(`${ROOT}/responsibility-plans`));},
+  async readSignedBIPlanAdmission(installationId:string){return parseSignedBIPlanAdmission(await apiGet<unknown>(`${ROOT}/responsibility-plans/bi-preparation/admission?installationId=${encodeURIComponent(installationId)}`));},
   async listProfileRecommendations(){return parseProfileRecommendationList(await apiGet<unknown>(`${ROOT}/responsibility-profile/recommendations`));},
   async listProfileConfirmations(){return parseProfileConfirmationList(await apiGet<unknown>(`${ROOT}/responsibility-profile/confirmations`));},
   async confirmMediaProfile(input:ConfirmMediaProfileInput,key:string,recommendationEtag:string){if(!recommendationEtag.trim())throw new Error("If-Match 不能为空");return parseProfileConfirmation(await apiPost<unknown>(`${ROOT}/responsibility-profile/media-confirmations`,input,{...keyHeaders(key),"If-Match":recommendationEtag}));},
