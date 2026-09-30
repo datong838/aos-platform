@@ -105,14 +105,18 @@ class RuntimeHostSelection:
     host: RuntimeHost | None
     status: str
     error_code: str | None = None
+    preparation_only: bool = False
 
     def __post_init__(self) -> None:
+        if type(self.preparation_only) is not bool:
+            raise TypeError("exact Host admission mode required")
         if self.status not in ("ACTIVE", "INACTIVE"):
             raise ValueError("invalid runtime host selection status")
         if self.status == "ACTIVE":
             if type(self.host) is not RuntimeHost or self.error_code is not None:
                 raise ValueError("active runtime host selection is incomplete")
-        elif self.host is not None or type(self.error_code) is not str or not self.error_code:
+        elif (self.host is not None or type(self.error_code) is not str
+              or not self.error_code or self.preparation_only):
             raise ValueError("inactive runtime host selection requires a fixed error code")
 
 
@@ -135,12 +139,15 @@ def _directory_identity(identity: RuntimeDatabaseIdentity) -> None:
 def select_production_runtime_host(
     *,
     enabled: bool,
+    preparation_only: bool = False,
     directory_connect,
     runtime_connect,
     web_connect,
     dependencies: RuntimeWorkerDependencies | None,
 ) -> RuntimeHostSelection:
     """Return ACTIVE only after every pure and database identity gate passes."""
+    if type(preparation_only) is not bool:
+        return _inactive("INVALID_ADMISSION_MODE")
     if enabled is not True:
         return _inactive("DISABLED")
     if type(dependencies) is not RuntimeWorkerDependencies:
@@ -170,30 +177,32 @@ def select_production_runtime_host(
         recovery = ExpiredResourceRecovery(
             connect=runtime_connect, driver=dependencies.cleanup_driver
         )
-        configure = ConfigurationConsumer(
-            connect=runtime_connect,
-            authorize=dependencies.configuration_authorize,
-            check_drained=dependencies.drain_reader,
-        )
-        disable = RuntimeDisableConsumer(
-            connect=runtime_connect,
-            installation_store=dependencies.installation_store,
-            check_current_permission=dependencies.disable_permission,
-            check_drained=dependencies.drain_reader,
-            dependent=dependencies.disable_dependent,
-        )
-        consumers=(configure,disable)
-        if dependencies.configuration_stage_enabled:
-            consumers += (ConfigurationStageConsumer(connect=runtime_connect, authorize=dependencies.configuration_authorize),)
-        if dependencies.ui_read_catalog is not None:
-            consumers+=(RuntimeUiReadConsumer(scope=scope,connect=runtime_connect,catalog=dependencies.ui_read_catalog,
-                installation_store=dependencies.installation_store,live_directory=dependencies.preparation.live_directory,
-                markings=dependencies.ui_read_markings),)
+        consumers=()
+        if not preparation_only:
+            configure = ConfigurationConsumer(
+                connect=runtime_connect,
+                authorize=dependencies.configuration_authorize,
+                check_drained=dependencies.drain_reader,
+            )
+            disable = RuntimeDisableConsumer(
+                connect=runtime_connect,
+                installation_store=dependencies.installation_store,
+                check_current_permission=dependencies.disable_permission,
+                check_drained=dependencies.drain_reader,
+                dependent=dependencies.disable_dependent,
+            )
+            consumers=(configure,disable)
+            if dependencies.configuration_stage_enabled:
+                consumers += (ConfigurationStageConsumer(connect=runtime_connect, authorize=dependencies.configuration_authorize),)
+            if dependencies.ui_read_catalog is not None:
+                consumers+=(RuntimeUiReadConsumer(scope=scope,connect=runtime_connect,catalog=dependencies.ui_read_catalog,
+                    installation_store=dependencies.installation_store,live_directory=dependencies.preparation.live_directory,
+                    markings=dependencies.ui_read_markings),)
         return RuntimeTenantAssignment(
             scope=scope,
             recovery=recovery,
             attempt_recovery=ExpiredSignedReadAttemptRecovery(connect=runtime_connect),
-            lifecycle=dependencies.preparation.build_scheduler(scope),
+            lifecycle=dependencies.preparation.build_scheduler(scope, preparation_only=preparation_only),
             consumers=consumers,
         )
 
@@ -214,11 +223,11 @@ def select_production_runtime_host(
             runtime_identity = probe_runtime_database_identity(
                 conn, protected_relations=_PROTECTED_RELATIONS
             )
-            if dependencies.configuration_stage_enabled:
+            if dependencies.configuration_stage_enabled and not preparation_only:
                 try:
                     if not configuration_stage_ready(conn):return _inactive('CONFIGURATION_STAGE_PREFLIGHT_FAILED')
                 except Exception:return _inactive('CONFIGURATION_STAGE_PREFLIGHT_FAILED')
-            if dependencies.ui_read_catalog is not None:
+            if dependencies.ui_read_catalog is not None and not preparation_only:
                 try:
                     if not runtime_ui_read_ready(conn):return _inactive('UI_READ_PREFLIGHT_FAILED')
                 except Exception:return _inactive('UI_READ_PREFLIGHT_FAILED')
@@ -237,4 +246,5 @@ def select_production_runtime_host(
         directory.materialize(descriptors)
     except Exception:
         return _inactive("ASSIGNMENT_FACTORY_FAILED")
-    return RuntimeHostSelection(host=RuntimeHost(assignments=directory), status="ACTIVE")
+    return RuntimeHostSelection(host=RuntimeHost(assignments=directory), status="ACTIVE",
+                                preparation_only=preparation_only)

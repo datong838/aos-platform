@@ -115,6 +115,19 @@ def test_missing_configuration_candidates_fail_closed(gate, monkeypatch):
         gate.require_current_host_and_candidates(conn, identity("directory", 1, directory=True))
 
 
+def test_explicit_preparation_only_keeps_identity_gate_and_reports_missing_candidates(gate, monkeypatch):
+    from aos_api.extension_runtime.runtime_configuration_candidates import RuntimeConfigurationCandidates
+    monkeypatch.setattr(gate, "read_candidates", lambda *_: RuntimeConfigurationCandidates(
+        {"budgets": 0}, ("budgets",), False))
+    conn = ReadConn({"state": "assigned", "host_id": "host-1", "database_role": "directory",
+                     "database_role_oid": 1, "enabled": True})
+    result = gate.require_current_host_and_candidates(
+        conn, identity("directory", 1, directory=True), preparation_only=True)
+    assert result == {"hostId": "host-1", "candidateCounts": {"budgets": 0},
+                      "admissionMode": "PREPARATION_ONLY"}
+    assert conn.calls[0][1] == ("org-org", "dev-project")
+
+
 def test_green_report_carries_exact_physical_authority_and_signed_paths(gate, monkeypatch):
     signed = {"database": "aos_current_preview_20260927", "installationId": "current-install",
               "signedRoot": "/signed/current", "trustRoots": "/signed/trust-roots.json"}
@@ -141,7 +154,8 @@ def test_green_report_carries_exact_physical_authority_and_signed_paths(gate, mo
     monkeypatch.setattr(gate, "probe_runtime_database_identity",
                         lambda conn, **kw: roles.pop(next(iter(roles))))
     monkeypatch.setattr(gate, "require_current_host_and_candidates",
-                        lambda *_: {"hostId": "host-1", "candidateCounts": {"budgets": 1}})
+                        lambda *_, **__: {"hostId": "host-1", "candidateCounts": {"budgets": 1},
+                                          "admissionMode": "FULL"})
     report = gate.preflight(signed_receipt=Path("/signed/receipt.json"),
                             credential_file=Path("/protected/identities.json"))
     assert report["databaseAuthority"] == ["172.0.0.2", 5432, signed["database"]]

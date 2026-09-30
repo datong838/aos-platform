@@ -112,14 +112,18 @@ class _LazyRuntimeViewReader:
         return self._resolve().get_operation(**kwargs)
 
 
-def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: str) -> bool:
+def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: str,
+                                preparation_only: bool = False) -> bool:
     """Bind this API process to the current signed A0-V database before Host selection."""
     if not Path(signed_receipt).is_absolute() or not Path(credential_reference).is_absolute():
         return False
     try:
+        command = [sys.executable, str(_REPOSITORY_ROOT / "scripts/a0v_current_runtime_host_preflight.py"),
+                   "--signed-receipt", signed_receipt, "--credential-file", credential_reference]
+        if preparation_only:
+            command.append("--preparation-only")
         result = subprocess.run(
-            [sys.executable, str(_REPOSITORY_ROOT / "scripts/a0v_current_runtime_host_preflight.py"),
-             "--signed-receipt", signed_receipt, "--credential-file", credential_reference],
+            command,
             capture_output=True, text=True, timeout=60, check=False,
             env={**os.environ, "AOS_DOTENV_DISABLED": "1"},
         )
@@ -128,7 +132,9 @@ def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: st
         report = json.loads(result.stdout.splitlines()[-1])
         if (report.get("outcome") != "CURRENT_SIGNED_HOST_READONLY_PREFLIGHT_GREEN"
                 or report.get("authorization") != "PREFLIGHT_ONLY_NO_RUNTIME_START"
-                or report.get("scope") != ["org-org", "dev-project"]):
+                or report.get("scope") != ["org-org", "dev-project"]
+                or report.get("admissionMode", "FULL")
+                    != ("PREPARATION_ONLY" if preparation_only else "FULL")):
             return False
         authority = report.get("databaseAuthority")
         if (type(authority) is not list or len(authority) != 3
@@ -190,6 +196,11 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
     credential_reference = os.getenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "").strip()
     oci_context = os.getenv("AOS_EXTENSION_OCI_CONTEXT", "").strip()
     runtime_platform = os.getenv("AOS_EXTENSION_RUNTIME_PLATFORM", "").strip()
+    admission_flag = os.getenv("AOS_EXTENSION_RUNTIME_PREPARATION_ONLY", "0").strip()
+    if enabled and admission_flag not in {"0", "1"}:
+        from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
+        return RuntimeHostSelection(None, "INACTIVE", "INVALID_ADMISSION_MODE")
+    preparation_only = enabled and admission_flag == "1"
     if enabled:
         signed_receipt = os.getenv("AOS_CURRENT_SIGNED_RECEIPT", "").strip()
         if not credential_reference or not signed_receipt:
@@ -197,6 +208,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
             return RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_REQUIRED")
         if not _current_a0v_host_preflight(
             signed_receipt=signed_receipt, credential_reference=credential_reference,
+            preparation_only=preparation_only,
         ):
             from aos_api.extension_runtime.production_runtime import RuntimeHostSelection
             return RuntimeHostSelection(None, "INACTIVE", "CURRENT_SIGNED_HOST_PREFLIGHT_FAILED")
@@ -238,7 +250,7 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
             )
             ui_catalog=None
             ui_markings=()
-            if os.getenv('AOS_EXTENSION_RUNTIME_UI_READ_ENABLED','').strip()=='1':
+            if not preparation_only and os.getenv('AOS_EXTENSION_RUNTIME_UI_READ_ENABLED','').strip()=='1':
                 from aos_api.asset_registry.workshop_catalog_source import PostgresWorkshopCatalogSource
                 from aos_api.ecommerce_runtime_workshop_catalog import RuntimeWorkshopCatalog
                 if not callable(getattr(control_plane.view_reader,'get_installation',None)):
@@ -263,12 +275,13 @@ def build_production_runtime_host_selection(*, control_plane: RuntimeControlPlan
                 preparation=preparation,
                 ui_read_catalog=ui_catalog,
                 ui_read_markings=ui_markings,
-                configuration_stage_enabled=stage_flag == '1',
+                configuration_stage_enabled=stage_flag == '1' and not preparation_only,
             )
         except (TypeError, ValueError):
             dependencies = None
     return select_production_runtime_host(
         enabled=enabled,
+        preparation_only=preparation_only,
         directory_connect=runtime_directory_connection,
         runtime_connect=runtime_worker_connection,
         web_connect=runtime_web_identity_connection,

@@ -53,6 +53,19 @@ def test_directory_preserves_explicit_rehydration_mode():
         PendingPreparationDescriptor(SCOPE,installation,'rehydrate'),)
 
 
+def test_preparation_only_directory_excludes_rehydration():
+    directory = object.__new__(PostgresPendingPreparationDirectory)
+    directory.scope = SCOPE
+    directory.include_rehydrate = False
+    directory._read_installations = lambda: (
+        {"installation_id": UUID(int=1), "mode": "rehydrate"},
+        {"installation_id": UUID(int=2), "mode": "pending"},
+    )
+    assert directory.read_descriptors() == (
+        PendingPreparationDescriptor(SCOPE, UUID(int=2), "pending"),
+    )
+
+
 @pytest.mark.parametrize(
     "rows,error",
     [
@@ -92,6 +105,19 @@ def test_factory_builds_exact_unstarted_owner_and_rejects_cross_scope():
     assert resumed.preparation.rehydrate is True
     with pytest.raises(ValueError, match="scope mismatch"):
         factory(PendingPreparationDescriptor(TenantScope("other", "project"), uuid4()))
+
+
+def test_preparation_only_factory_disables_enable_and_rehydrate():
+    factory = LiveInstallationOwnerFactory(
+        connect=lambda: None,
+        scope=SCOPE,
+        worker=object.__new__(PreparationWorker),
+        live_directory=LivePreparedJobDirectory(),
+        enable_allowed=False,
+    )
+    assert factory(PendingPreparationDescriptor(SCOPE, uuid4())).enable_allowed is False
+    with pytest.raises(ValueError, match="rehydrate"):
+        factory(PendingPreparationDescriptor(SCOPE, uuid4(), "rehydrate"))
 
 
 @pytest.mark.parametrize("worker,directory", [(object(), LivePreparedJobDirectory()), (object.__new__(PreparationWorker), object())])

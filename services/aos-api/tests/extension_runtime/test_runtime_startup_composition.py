@@ -221,6 +221,43 @@ def test_active_runtime_host_is_unique_and_stops_gracefully(
     asyncio.run(probe())
 
 
+def test_preparation_only_host_starts_without_any_natural_worker(monkeypatch):
+    _quiet_startup(monkeypatch)
+    import aos_api.asset_registry.control_wiring as wiring
+    monkeypatch.setattr(wiring, "build_runtime_control_plane", lambda **_: object())
+
+    class Host:
+        async def serve(self, stop_event):
+            await stop_event.wait()
+
+    monkeypatch.setattr(wiring, "build_production_runtime_host_selection",
+                        lambda **_: SimpleNamespace(host=Host(), status="ACTIVE", error_code=None,
+                                                    preparation_only=True))
+    async def forbidden(*_args, **_kwargs):
+        pytest.fail("natural worker started in preparation-only mode")
+    for name in ("_start_content_execution_worker", "_start_content_generation_step_worker",
+                 "_start_content_review_step_worker", "_start_content_taskrun_worker",
+                 "_start_content_agentrun_worker", "_start_content_capacity_worker",
+                 "_start_content_budget_command_worker", "_start_ecommerce_feedback_worker",
+                 "_start_feedback_downstream_workers", "_start_snapshot_group_worker"):
+        monkeypatch.setattr(main, name, forbidden)
+    monkeypatch.setattr(main, "_qyh_cron_worker_enabled", lambda: True)
+    monkeypatch.setattr(main, "_aip_logic_automation_worker_enabled", lambda: True)
+    monkeypatch.setattr(main, "_select_provider_health_maintenance",
+                        lambda: pytest.fail("Provider maintenance selected"))
+    monkeypatch.setattr("aos_api.ecommerce_product_event_worker.build_product_event_worker",
+                        lambda *_: pytest.fail("product event worker constructed"))
+    monkeypatch.setattr("aos_api.ecommerce_analysis_data_requirement_worker.build_analysis_data_requirement_worker",
+                        lambda *_: pytest.fail("analysis worker constructed"))
+
+    async def probe():
+        async with main.lifespan(main.app):
+            assert [task.get_name() for task in main.app.state.runtime_background_tasks] == [
+                "extension-runtime-host"]
+            assert main.app.state.extension_runtime_host_status == "ACTIVE"
+    asyncio.run(probe())
+
+
 def test_lifespan_runs_and_stops_concrete_empty_live_scheduler(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

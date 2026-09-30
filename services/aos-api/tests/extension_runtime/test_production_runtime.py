@@ -266,6 +266,25 @@ def test_complete_selector_builds_only_concrete_workers_and_reuses_assignment(mo
     assert calls == ["directory", "runtime", "web", "directory", "directory"]
 
 
+def test_preparation_only_selector_has_lifecycle_and_no_business_consumers(monkeypatch):
+    _patch_identities(monkeypatch)
+    rows = ({"org_id": "org-org", "project_id": "dev-project", "assignment_revision": 7},)
+    runtime_connect = _connector("runtime", [])
+    selected = select_production_runtime_host(
+        enabled=True, preparation_only=True,
+        directory_connect=_connector("directory", [], rows),
+        runtime_connect=runtime_connect,
+        web_connect=_connector("web", []),
+        dependencies=_dependencies(runtime_connect),
+    )
+    assert selected.status == "ACTIVE" and selected.preparation_only is True
+    assignment = selected.host._current_assignments()[0]
+    assert type(assignment.lifecycle) is LiveInstallationScheduler
+    assert assignment.consumers == ()
+    assert assignment.lifecycle.directory.include_rehydrate is False
+    assert assignment.lifecycle.factory.enable_allowed is False
+
+
 def test_three_plane_mismatch_returns_fixed_inactive_result(monkeypatch):
     _patch_identities(
         monkeypatch,
@@ -471,6 +490,14 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
         lambda *_: (_ for _ in ()).throw(RuntimeError("credential file changed")),
     )
     assert wiring._current_a0v_host_preflight(**inputs) is False
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(signed_root))
+    monkeypatch.setattr(
+        "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",
+        lambda path, generation: pins.append((path, generation)),
+    )
+    report["admissionMode"] = "PREPARATION_ONLY"
+    assert wiring._current_a0v_host_preflight(**inputs, preparation_only=True) is True
+    assert wiring._current_a0v_host_preflight(**inputs) is False
     connection.database_name = "old_same_name_drift"
     assert wiring._current_a0v_host_preflight(**inputs) is False
     connection.database_name = "aos_current_preview_20260927"
@@ -478,6 +505,36 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
     other.mkdir()
     monkeypatch.setenv("AOS_BUNDLE_ROOT", str(other))
     assert wiring._current_a0v_host_preflight(**inputs) is False
+
+
+def test_preparation_only_bad_flag_stops_before_current_preflight(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PREPARATION_ONLY", "maybe")
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **_: pytest.fail("bad admission flag reached preflight"))
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None))
+    assert selected == RuntimeHostSelection(None, "INACTIVE", "INVALID_ADMISSION_MODE")
+
+
+def test_preparation_only_wiring_requires_current_preflight_and_propagates_mode(monkeypatch):
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_HOST_ENABLED", "1")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_PREPARATION_ONLY", "1")
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", "/current/receipt.json")
+    monkeypatch.setenv("AOS_EXTENSION_RUNTIME_CREDENTIAL_FILE", "/protected/identities.json")
+    seen = []
+    monkeypatch.setattr("aos_api.asset_registry.control_wiring._current_a0v_host_preflight",
+                        lambda **kwargs: seen.append(kwargs) or True)
+    monkeypatch.setattr("aos_api.extension_runtime.production_runtime.select_production_runtime_host",
+                        lambda **kwargs: seen.append(kwargs) or RuntimeHostSelection(
+                            None, "INACTIVE", "TEST_CAPTURE"))
+    selected = build_production_runtime_host_selection(
+        control_plane=RuntimeControlPlane(None, None, None, None, None, None))
+    assert selected.error_code == "TEST_CAPTURE"
+    assert seen[0] == {"signed_receipt": "/current/receipt.json",
+                       "credential_reference": "/protected/identities.json",
+                       "preparation_only": True}
+    assert seen[1]["preparation_only"] is True
 
 
 @pytest.mark.parametrize("returncode,output", [

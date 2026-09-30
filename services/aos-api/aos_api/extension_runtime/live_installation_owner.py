@@ -21,10 +21,11 @@ class LiveInstallationTick:
 class LiveInstallationLifecycleOwner:
     """Retains the sole PreparedJob while delivering its ordered controls."""
 
-    def __init__(self, *, preparation: PreparationConsumer) -> None:
-        if type(preparation) is not PreparationConsumer:
+    def __init__(self, *, preparation: PreparationConsumer, enable_allowed: bool = True) -> None:
+        if type(preparation) is not PreparationConsumer or type(enable_allowed) is not bool:
             raise TypeError("exact preparation consumer required")
         self.preparation = preparation
+        self.enable_allowed = enable_allowed
         self._current_tick: asyncio.Task[LiveInstallationTick] | None = None
         self._close_task: asyncio.Task[None] | None = None
         self._closing = False
@@ -53,6 +54,8 @@ class LiveInstallationLifecycleOwner:
         if self.preparation.job is not job:
             raise RuntimeConflict("live preparation owner changed during lifecycle tick")
         if verification is not None and verification.operation_status != "succeeded":
+            return LiveInstallationTick(preparation, verification, None)
+        if not self.enable_allowed:
             return LiveInstallationTick(preparation, verification, None)
 
         enabler = self._owned("enable", job)

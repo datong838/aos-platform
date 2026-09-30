@@ -70,7 +70,11 @@ def require_current_identities(*, directory, runtime, web, authority) -> None:
         raise HostPreflightBlocked("RUNTIME_IDENTITY_INVALID") from None
 
 
-def require_current_host_and_candidates(conn, directory) -> dict[str, object]:
+def require_current_host_and_candidates(
+    conn, directory, *, preparation_only: bool = False,
+) -> dict[str, object]:
+    if type(preparation_only) is not bool:
+        raise HostPreflightBlocked("ADMISSION_MODE_INVALID")
     row = conn.execute(
         """SELECT a.state,a.host_id,i.database_role::text AS database_role,
                   i.database_role_oid,i.enabled
@@ -85,12 +89,16 @@ def require_current_host_and_candidates(conn, directory) -> dict[str, object]:
             or row["database_role_oid"] != directory.role_oid):
         raise HostPreflightBlocked("HOST_IDENTITY_MISMATCH")
     candidates = read_candidates(conn, TenantScope(org_id="org-org", project_id="dev-project"))
-    if not candidates.all_present:
+    if not candidates.all_present and not preparation_only:
         raise HostPreflightBlocked("CONFIGURATION_CANDIDATES_MISSING")
-    return {"hostId": row["host_id"], "candidateCounts": candidates.counts}
+    return {"hostId": row["host_id"], "candidateCounts": candidates.counts,
+            "admissionMode": "PREPARATION_ONLY" if preparation_only else "FULL"}
 
 
-def preflight(*, signed_receipt: Path, credential_file: Path | None) -> dict[str, object]:
+def preflight(*, signed_receipt: Path, credential_file: Path | None,
+              preparation_only: bool = False) -> dict[str, object]:
+    if type(preparation_only) is not bool:
+        raise HostPreflightBlocked("ADMISSION_MODE_INVALID")
     if credential_file is None:
         raise HostPreflightBlocked("CREDENTIAL_FILE_REQUIRED")
     if not credential_file.is_absolute():
@@ -130,7 +138,8 @@ def preflight(*, signed_receipt: Path, credential_file: Path | None) -> dict[str
                             web_conn, protected_relations=_PROTECTED_RELATIONS)
                 require_current_identities(directory=directory, runtime=runtime,
                                            web=web, authority=authority)
-                host = require_current_host_and_candidates(current, directory)
+                host = require_current_host_and_candidates(
+                    current, directory, preparation_only=preparation_only)
     except HostPreflightBlocked:
         raise
     except Exception:
@@ -156,10 +165,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--signed-receipt", type=Path, required=True)
     parser.add_argument("--credential-file", type=Path)
+    parser.add_argument("--preparation-only", action="store_true")
     args = parser.parse_args()
     try:
         result = preflight(signed_receipt=args.signed_receipt,
-                           credential_file=args.credential_file)
+                           credential_file=args.credential_file,
+                           preparation_only=args.preparation_only)
         print(json.dumps(result, sort_keys=True))
         return 0
     except HostPreflightBlocked as exc:

@@ -30,11 +30,12 @@ class PostgresPendingPreparationDirectory:
 
     LIMIT = 100
 
-    def __init__(self, *, connect, scope: TenantScope) -> None:
-        if not callable(connect) or type(scope) is not TenantScope:
+    def __init__(self, *, connect, scope: TenantScope, include_rehydrate: bool = True) -> None:
+        if not callable(connect) or type(scope) is not TenantScope or type(include_rehydrate) is not bool:
             raise ValueError("trusted pending preparation directory inputs required")
         self.connect = connect
         self.scope = scope
+        self.include_rehydrate = include_rehydrate
 
     def _read_installations(self) -> tuple[object, ...]:
         tenant = {"org_id": self.scope.org_id, "project_id": self.scope.project_id}
@@ -109,6 +110,7 @@ class PostgresPendingPreparationDirectory:
         return tuple(
             PendingPreparationDescriptor(self.scope, installation, mode)
             for installation, mode in zip(installations, modes)
+            if mode != "rehydrate" or getattr(self, "include_rehydrate", True)
         )
 
 
@@ -122,18 +124,21 @@ class LiveInstallationOwnerFactory:
         scope: TenantScope,
         worker: PreparationWorker,
         live_directory: LivePreparedJobDirectory,
+        enable_allowed: bool = True,
     ) -> None:
         if (
             not callable(connect)
             or type(scope) is not TenantScope
             or type(worker) is not PreparationWorker
             or type(live_directory) is not LivePreparedJobDirectory
+            or type(enable_allowed) is not bool
         ):
             raise TypeError("exact live installation owner dependencies required")
         self.connect = connect
         self.scope = scope
         self.worker = worker
         self.live_directory = live_directory
+        self.enable_allowed = enable_allowed
 
     def __call__(
         self, descriptor: PendingPreparationDescriptor
@@ -143,6 +148,8 @@ class LiveInstallationOwnerFactory:
             or descriptor.scope != self.scope
         ):
             raise ValueError("pending preparation descriptor scope mismatch")
+        if descriptor.mode == "rehydrate" and not self.enable_allowed:
+            raise ValueError("rehydrate forbidden in preparation-only mode")
         consumer = PreparationConsumer(
             connect=self.connect,
             worker=self.worker,
@@ -152,4 +159,4 @@ class LiveInstallationOwnerFactory:
             live_directory=self.live_directory,
             rehydrate=descriptor.mode == "rehydrate",
         )
-        return LiveInstallationLifecycleOwner(preparation=consumer)
+        return LiveInstallationLifecycleOwner(preparation=consumer, enable_allowed=self.enable_allowed)

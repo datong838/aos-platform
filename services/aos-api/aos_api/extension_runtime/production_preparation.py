@@ -89,8 +89,8 @@ class ProductionPreparationDependencies:
         if self.platform not in ("linux/arm64", "linux/amd64"):
             raise ValueError("explicit supported runtime platform required")
 
-    def build_scheduler(self, scope: TenantScope) -> LiveInstallationScheduler:
-        if type(scope) is not TenantScope:
+    def build_scheduler(self, scope: TenantScope, *, preparation_only: bool = False) -> LiveInstallationScheduler:
+        if type(scope) is not TenantScope or type(preparation_only) is not bool:
             raise TypeError("exact tenant scope required")
         artifacts = CurrentRuntimeReleaseArtifacts(
             connect=self.connect,
@@ -121,11 +121,13 @@ class ProductionPreparationDependencies:
         directory = PostgresPendingPreparationDirectory(
             connect=self.connect,
             scope=scope,
+            include_rehydrate=not preparation_only,
         )
         factory = LiveInstallationOwnerFactory(
             connect=self.connect,
             scope=scope,
             worker=worker,
             live_directory=self.live_directory,
+            enable_allowed=not preparation_only,
         )
         return LiveInstallationScheduler(directory=directory, factory=factory)

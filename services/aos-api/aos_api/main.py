@@ -1015,6 +1015,10 @@ async def _lifespan_body(_app: FastAPI):
     _app.state.extension_runtime_host_selection = runtime_host_selection
     _app.state.extension_runtime_host_status = runtime_host_selection.status
     _app.state.extension_runtime_host_error_code = runtime_host_selection.error_code
+    preparation_only = (
+        os.getenv("AOS_EXTENSION_RUNTIME_PREPARATION_ONLY", "").strip() == "1"
+        or getattr(runtime_host_selection, "preparation_only", False) is True
+    )
     if runtime_host_selection.status == "ACTIVE":
         host = runtime_host_selection.host
         if host is None:
@@ -1049,18 +1053,19 @@ async def _lifespan_body(_app: FastAPI):
                 _app.state.extension_runtime_host_error_code = "HOST_TASK_FAILED"
                 raise RuntimeError("extension runtime host failed during startup") from error
         log.info("startup_extension_runtime_host_started")
-        from aos_api.ecommerce_product_event_worker import build_product_event_worker
-        product_event_worker=build_product_event_worker(_app.state.extension_runtime_control_plane)
-        if product_event_worker is not None:
-            event_task=asyncio.create_task(product_event_worker.serve(extension_runtime_stop,
-                host_ready=lambda:not extension_runtime_task.done()),name="product-event-consumption")
-            _app.state.runtime_background_tasks.append(event_task)
-        from aos_api.ecommerce_analysis_data_requirement_worker import build_analysis_data_requirement_worker
-        analysis_data_worker=build_analysis_data_requirement_worker(_app.state.extension_runtime_control_plane)
-        if analysis_data_worker is not None:
-            analysis_data_task=asyncio.create_task(analysis_data_worker.serve(extension_runtime_stop,
-                host_ready=lambda:not extension_runtime_task.done()),name="analysis-data-requirement")
-            _app.state.runtime_background_tasks.append(analysis_data_task)
+        if not preparation_only:
+            from aos_api.ecommerce_product_event_worker import build_product_event_worker
+            product_event_worker=build_product_event_worker(_app.state.extension_runtime_control_plane)
+            if product_event_worker is not None:
+                event_task=asyncio.create_task(product_event_worker.serve(extension_runtime_stop,
+                    host_ready=lambda:not extension_runtime_task.done()),name="product-event-consumption")
+                _app.state.runtime_background_tasks.append(event_task)
+            from aos_api.ecommerce_analysis_data_requirement_worker import build_analysis_data_requirement_worker
+            analysis_data_worker=build_analysis_data_requirement_worker(_app.state.extension_runtime_control_plane)
+            if analysis_data_worker is not None:
+                analysis_data_task=asyncio.create_task(analysis_data_worker.serve(extension_runtime_stop,
+                    host_ready=lambda:not extension_runtime_task.done()),name="analysis-data-requirement")
+                _app.state.runtime_background_tasks.append(analysis_data_task)
 
     else:
         log.info(
@@ -1068,15 +1073,16 @@ async def _lifespan_body(_app: FastAPI):
             runtime_host_selection.error_code,
         )
 
-    await _start_content_execution_worker(_app, extension_runtime_stop)
-    await _start_content_generation_step_worker(_app, extension_runtime_stop)
-    await _start_content_review_step_worker(_app, extension_runtime_stop)
-    await _start_content_taskrun_worker(_app, extension_runtime_stop)
-    await _start_content_agentrun_worker(_app, extension_runtime_stop)
-    await _start_content_capacity_worker(_app, extension_runtime_stop)
-    await _start_content_budget_command_worker(_app, extension_runtime_stop)
-    await _start_ecommerce_feedback_worker(_app, extension_runtime_stop)
-    await _start_feedback_downstream_workers(_app, extension_runtime_stop)
+    if not preparation_only:
+        await _start_content_execution_worker(_app, extension_runtime_stop)
+        await _start_content_generation_step_worker(_app, extension_runtime_stop)
+        await _start_content_review_step_worker(_app, extension_runtime_stop)
+        await _start_content_taskrun_worker(_app, extension_runtime_stop)
+        await _start_content_agentrun_worker(_app, extension_runtime_stop)
+        await _start_content_capacity_worker(_app, extension_runtime_stop)
+        await _start_content_budget_command_worker(_app, extension_runtime_stop)
+        await _start_ecommerce_feedback_worker(_app, extension_runtime_stop)
+        await _start_feedback_downstream_workers(_app, extension_runtime_stop)
 
     async def _qyh_cron_loop() -> None:
         """每 15 秒检查一次；Cron 命中按分钟数据库幂等领取。"""
@@ -1094,9 +1100,10 @@ async def _lifespan_body(_app: FastAPI):
             except TimeoutError:
                 continue
 
-    await _start_snapshot_group_worker(_app)
+    if not preparation_only:
+        await _start_snapshot_group_worker(_app)
 
-    if _qyh_cron_worker_enabled():
+    if not preparation_only and _qyh_cron_worker_enabled():
         cron_task = asyncio.create_task(_qyh_cron_loop(), name="qyh-real-cron")
         _app.state.runtime_background_tasks.append(cron_task)
         log.info("startup_qyh_real_cron_worker_started interval_seconds=15")
@@ -1119,7 +1126,7 @@ async def _lifespan_body(_app: FastAPI):
             except TimeoutError:
                 continue
 
-    if _aip_logic_automation_worker_enabled():
+    if not preparation_only and _aip_logic_automation_worker_enabled():
         logic_automation_task = asyncio.create_task(
             _logic_automation_loop(), name="aip-logic-automation"
         )
@@ -1130,7 +1137,10 @@ async def _lifespan_body(_app: FastAPI):
 
     from aos_api.aip_provider_health_maintenance import maintenance_interval_seconds
 
-    provider_health_selection = _select_provider_health_maintenance()
+    provider_health_selection = (
+        _ProviderHealthLoopSelection(maintainer=None, status="INACTIVE")
+        if preparation_only else _select_provider_health_maintenance()
+    )
 
     async def _provider_health_loop() -> None:
         maintainer = provider_health_selection.maintainer

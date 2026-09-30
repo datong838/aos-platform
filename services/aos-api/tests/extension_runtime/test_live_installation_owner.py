@@ -100,6 +100,19 @@ def test_fixed_order_reuses_exact_job_scope_and_connection(monkeypatch):
     assert result.verification is verified and result.enablement == "enabled"
 
 
+def test_preparation_only_never_constructs_enable_consumer(monkeypatch):
+    global expected_connect
+    calls = []
+    consumer = preparation(calls, job=expected_job)
+    expected_connect = consumer.connect
+    verified = SimpleNamespace(operation_status="succeeded")
+    install_owned(monkeypatch, calls, {"runtime-verify": verified})
+    owner = LiveInstallationLifecycleOwner(preparation=consumer, enable_allowed=False)
+    result = asyncio.run(owner.run_once())
+    assert calls == ["runtime-apply", "runtime-verify"]
+    assert result.verification is verified and result.enablement is None
+
+
 def test_failed_verification_result_does_not_enter_enable(monkeypatch):
     global expected_connect
     calls = []
