@@ -19,3 +19,7 @@
 ## 结论与下波
 
 证明 **本地隔离 1.12.0 四包构建、资格检查和开发签名链**，不代表当前正式批准/身份/安装/业务运行。`bundle-evals.json` 的 runtimeReadiness 仍 blocked。BG00dk 复习正式 trust root、签名升级与 Registry/安装不可变迁移合同，先对当前库和签名 receipt 只读盘点，设计备份+克隆全链+零执行窗口；三身份、Owner、八配置仍要独立授权来源。不得把本地签名树替换到当前实例。
+
+## 提交后来源重验（最终采用 r3）
+
+r2 receipt 的 `gitHead` 是新 build/sign 脚本提交前的 `1cfcbadc`，因此保留为过程证据。将实现精确提交为 `aos-platform/m1@c07fd7c9` 后，另建全新 r3 目录重复三步：build、qualification、sign 均 exit 0，三份 receipt 的 outcome 依次为 `BUILD_GREEN`、`QUALIFICATION_GREEN`、`SIGNED_TREE_GREEN`，build/qualification 的 `gitHead` 均为 `c07fd7c97e378afd57dc66ca1e93ac82c1031e29`，output tree 同为 `sha256:91f6b050461d17c89d95e9642f51fb72713766938d6d443df789e05ab4166466`，四类效果继续全 0。最终签名树 hash 为 `sha256:48a89116323d0327243690a6894a3647ba298e7874311dbe63d5a4716b6fdada`；receipt 分别在 `/Users/ddt/work/projects/ai_agent/.aos-growth-112-{build,qualification,signing}-receipt-r3-20260930.json`。独立新进程对 r3 四包逐一回读 `SIGNED_POLICY_OK`，exit 0。签名 hash 与 r2 不同是新独立签名密钥/时间所致，不能把任一开发签名认作当前正式信任根。
