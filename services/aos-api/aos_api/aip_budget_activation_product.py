@@ -17,6 +17,7 @@ from aos_api.aip_network_issuer_attempt import _private_directory_fd, _read_mark
 from aos_api.aip_network_issuer_auth import _require_external_oidc_config
 from aos_api.auth import Principal, parse_bearer, resolve_principal
 from aos_api.db import connect_read_only
+from aos_api.aip_private_request_file import create_private_request_file
 
 
 class BudgetProductBlocked(ValueError):
@@ -163,27 +164,11 @@ def submit_request(directory, ref, body, principal, authorization):
         try:
             prior = _read(directory_fd, key, verified, ref)
             if prior is None:
-                try:
-                    fd = os.open(key+".json", os.O_WRONLY | os.O_CREAT | os.O_EXCL
-                                 | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600, dir_fd=directory_fd)
-                except FileExistsError:
+                reserved = create_private_request_file(directory_fd, key+".json", raw)
+                if not reserved:
                     prior = _read(directory_fd, key, verified, ref)
                     if prior is None:
                         raise ValueError("reservation disappeared")
-                else:
-                    try:
-                        os.fchmod(fd, 0o600)
-                        written = 0
-                        while written < len(raw):
-                            count = os.write(fd, raw[written:])
-                            if count <= 0:
-                                raise OSError("partial persistence")
-                            written += count
-                        os.fsync(fd)
-                        os.fsync(directory_fd)
-                        reserved = True
-                    finally:
-                        os.close(fd)
             if prior is not None and _envelope(verified, ref, prior) != envelope:
                 raise BudgetProductBlocked("BUDGET_PRODUCT_REQUEST_CONFLICT", 409)
         finally:

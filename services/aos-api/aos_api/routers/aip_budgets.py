@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Header, Query, Response, status
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.aip_budget_cost_basis import BudgetCostBasisProposal
 from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
+from aos_api.aip_budget_cost_product import BudgetCostReviewRequest, configured_budget_cost_product, budget_cost_request
 from aos_api.aip_budget_activation_contracts import (
     BudgetActivationDecisionView, BudgetActivationCandidateView, BudgetDecisionReviewView,
     BudgetActivationPreviewView,
@@ -127,6 +128,34 @@ def get_cost_proposal(proposal_id: str, response: Response,
                       principal: Principal = Depends(require_principal)) -> dict:
     response.headers['Cache-Control'] = 'no-store'
     return _cost_call(_COST_PROPOSALS.get, principal, proposal_id)
+
+
+def _cost_review(response, proposal_id, operation, body, principal, authorization):
+    try:
+        result = budget_cost_request(configured_budget_cost_product(), proposal_id, operation, body,
+                                     principal, authorization)
+    except BudgetProductBlocked as exc:
+        raise ApiError(code=str(exc), message='费用审核原请求暂无法确认，请保留原引用并查询',
+                       status_code=exc.status_code) from None
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from None
+    response.headers['Cache-Control'] = 'no-store'
+    response.status_code = {'observed':200,'not_attempted':200,'unresolved':202,'conflict':409,'blocked':503}[result['status']]
+    return result
+
+
+@router.post('/cost-proposals/{proposal_id}/review-requests/{operation}')
+def submit_cost_review(proposal_id: str, operation: str, body: BudgetCostReviewRequest, response: Response,
+                       authorization: str = Header(alias='Authorization'),
+                       principal: Principal = Depends(require_principal)) -> dict:
+    return _cost_review(response, proposal_id, operation, body, principal, authorization)
+
+
+@router.get('/cost-proposals/{proposal_id}/review-requests/{operation}')
+def inquire_cost_review(proposal_id: str, operation: str, response: Response,
+                        authorization: str = Header(alias='Authorization'),
+                        principal: Principal = Depends(require_principal)) -> dict:
+    return _cost_review(response, proposal_id, operation, None, principal, authorization)
 
 
 @router.post(
