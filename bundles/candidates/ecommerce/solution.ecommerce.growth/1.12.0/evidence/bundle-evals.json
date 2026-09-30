@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "failed": 0,
+  "scope": "growth 1.12 BI responsibility template candidate, immutable 1.11 compatibility, independent build-sign profiles and installed resolver contract tests",
+  "testCommand": "AOS_DOTENV_DISABLED=1 PYTHONPATH=services/aos-api services/aos-api/.venv/bin/python -m pytest -q --disable-warnings services/aos-api/tests/extension_runtime/test_ecommerce_growth_1_12_candidate.py services/aos-api/tests/extension_runtime/test_ecommerce_growth_1_11_candidate.py services/aos-api/tests/extension_runtime/test_build_ecommerce_growth_1_12_candidates.py services/aos-api/tests/extension_runtime/test_sign_ecommerce_growth_1_12_candidates.py services/aos-api/tests/aip/test_aip_responsibility_template_authority.py",
+  "testResult": "38 passed, 7 warnings in 5.44s",
+  "runtimeReadiness": "blocked",
+  "runtimeBlockers": [
+    "new release qualification and signing not yet verified",
+    "current formal authorization and installation migration not established",
+    "natural provider and business outcome not verified"
+  ],
+  "note": "This is source and contract test evidence only. It does not claim signed release, active installation, usable pages, natural business execution, or production readiness."
+}

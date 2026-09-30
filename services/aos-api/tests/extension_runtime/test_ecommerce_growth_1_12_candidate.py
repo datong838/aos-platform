@@ -41,7 +41,9 @@ def test_new_candidate_has_exact_bi_template_without_old_approval_artifacts():
     assert len(payload["slots"]) == 6
     assert all("assignee" not in slot for slot in payload["slots"])
     assert not (TARGET / "bundle.signature.json").exists()
-    assert not (TARGET / "evidence/bundle-evals.json").exists()
+    evaluation = json.loads((TARGET / "evidence/bundle-evals.json").read_text())
+    assert evaluation["status"] == "passed" and evaluation["failed"] == 0
+    assert evaluation["runtimeReadiness"] == "blocked"
     assert not (TARGET / "artifacts/runtime-image-index.json").exists()
     assert not (TARGET / "artifacts/python-dependencies.lock").exists()
     provenance = json.loads((TARGET / "evidence/content-source-provenance.json").read_text())
