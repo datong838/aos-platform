@@ -10,7 +10,9 @@ import pytest
 
 from aos_api.aip_action_models import DecideActionProposalRequest, WithdrawActionProposalRequest
 from aos_api.aip_action_store import AipActionStore
-from aos_api.aip_network_policy_action_producer import propose_network_activation, decide_network_activation
+from aos_api.aip_network_policy_action_producer import (
+    propose_network_activation, decide_network_activation as _decide_network_activation,
+)
 from aos_api.aip_network_policy_approval_consumer import (
     NetworkApprovalConsumptionBlocked, precheck_network_activation,
 )
@@ -24,6 +26,11 @@ from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_gua
 
 CLONE = "aos_bg00bx_cutover_testonly_20260930"
 SCOPE = TenantScope("org-org", "dev-project")
+
+
+def decide_network_activation(*args, **kwargs):
+    # Historical a0v_117 synthetic clone proof only; not a formal issuer service.
+    return _decide_network_activation(*args, connect_factory=connect, **kwargs)
 
 
 def test_only_exact_approval_consumption_precheck(monkeypatch):

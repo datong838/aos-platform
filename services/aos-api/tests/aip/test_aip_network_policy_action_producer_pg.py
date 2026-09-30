@@ -12,7 +12,7 @@ from aos_api.aip_action_store import AipActionConflict, AipActionIdempotencyConf
 from aos_api.aip_action_models import DecideActionProposalRequest
 from aos_api.aip_network_policy_action_producer import (
     NetworkPolicyProducerBlocked, _ACTION, _OBJECT, propose_network_activation,
-    decide_network_activation,
+    decide_network_activation as _decide_network_activation,
 )
 from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
 from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevisionCreate
@@ -24,6 +24,11 @@ from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_gua
 
 CLONE = "aos_bg00br_producer_testonly_20260929"
 SCOPE = TenantScope("org-org", "dev-project")
+
+
+def decide_network_activation(*args, **kwargs):
+    # Historical a0v_117 synthetic clone proof only; not a formal issuer service.
+    return _decide_network_activation(*args, connect_factory=connect, **kwargs)
 
 
 def test_only_clone_produces_exact_drafted_proposal_and_no_policy_write():

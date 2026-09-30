@@ -97,6 +97,20 @@ def test_dedicated_checker_rejects_dev_identity_before_database():
                                   connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))
 
 
+def test_oidc_checker_without_independent_issuer_cannot_use_api_database(monkeypatch):
+    import aos_api.aip_network_policy_action_producer as producer
+    principal = Principal(subject="checker", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    body = DecideActionProposalRequest.model_validate({
+        "expectedProposalVersion": 1, "expectedProposalHash": "a" * 64,
+        "decision": "approved", "reason": "isolated no-effect gate",
+    })
+    monkeypatch.setattr(producer, "db_connect", lambda *_: (_ for _ in ()).throw(
+        AssertionError("ordinary API DB connection forbidden")))
+    with pytest.raises(NetworkPolicyProducerBlocked, match="NETWORK_ISSUER_SERVICE_REQUIRED"):
+        producer.decide_network_activation(principal, "proposal-1", "key-1", body)
+
+
 def test_generic_checker_remains_unwired_for_network_proposal():
     store = AipActionStore(connect_factory=lambda *_: (_ for _ in ()).throw(AssertionError("DB read forbidden")))
     row = {"action_type_id": "aip_activate_network_policy", "action_type_snapshot": _snapshot(), "payload": {}}

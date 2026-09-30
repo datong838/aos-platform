@@ -272,7 +272,9 @@ def decide_network_activation(
         raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_INPUT_INVALID')
     if body.approval_expires_at is not None and body.approval_expires_at.tzinfo is None:
         raise NetworkPolicyProducerBlocked('NETWORK_CHECKER_EXPIRY_INVALID')
+    if connect_factory is None:
+        raise NetworkPolicyProducerBlocked('NETWORK_ISSUER_SERVICE_REQUIRED')
     scope = TenantScope(principal.org_id, principal.project_id)
     guard = NetworkPolicyApprovalGuard(scope=scope, checker=principal.subject, decision=body.decision)
-    return AipActionStore(connect_factory or db_connect, network_approval_guard=guard).decide(
+    return AipActionStore(connect_factory, network_approval_guard=guard).decide(
         scope, principal.subject, proposal_id, idempotency_key, body)
