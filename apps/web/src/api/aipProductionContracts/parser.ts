@@ -1,6 +1,18 @@
 import type { ActionProposalExactRef, ArtifactFamily, ArtifactFamilyCandidateGroup, ArtifactFamilyCandidateStatus, ArtifactFamilyListResponse, ArtifactFamilyMember, ArtifactFamilyRole, ArtifactFamilySelectionDecision, ArtifactRelation, ArtifactRelationListResponse, ArtifactRelationType, AssigneeKind, ContractBlocker, ContractCoverage, ContractLifecycle, ContractMigrationDecision, ContractMigrationDecisionListResponse, ContractReadiness, EvalContractListResponse, EvalContractRevision, EvalStageAttemptRef, EvidenceBundleListResponse, EvidenceBundleRevision, ExactArtifactRef, ExactRevisionRef, ImpactAssessment, ImpactDimension, ImpactPreviewListResponse, ImpactPreviewRevision, ImpactQuality, MediaGateDefinition, MediaGateKind, MediaGateProfileListResponse, MediaGateProfileRevision, MediaGateResult, MediaGateSetDecision, MediaGateSetListResponse, MergeDecision, MutableAuthorityRef, ProductionContextListResponse, ProductionContextRevision, ProductionStartDecision, ProductionStartDecisionListResponse, ProductionStartStatus, ProfileConfirmationListResponse, ProfileConfirmationReceipt, ProfileRecommendationListResponse, ProfileRecommendationRevision, ProjectedCostRange, ProjectedDurationRange, ResourceRef, ResponsibilityPlanListResponse, ResponsibilityPlanRevision, ResponsibilityProfile, ResponsibilitySlot, ReturnDecision, ReviewIssue, ReviewIssueListResponse, ReviewIssueStatus, ReviewSeverity, StageCompilationResult, StageDefinition, StageTemplateListResponse, StageTemplateRevision, TaskBriefListResponse, TaskBriefRevision, Tenant } from "./contracts";
 import type { EvalContractDiff } from "./contracts";
-import type { SignedBIPlanAdmission } from "./contracts";
+import type { SignedBIPlanAdmission, SignedBIPlanReceiptReadback } from "./contracts";
+
+export function parseSignedBIPlanReceiptReadback(value: unknown): SignedBIPlanReceiptReadback {
+  const raw=object(value,"SignedBIPlanReceiptReadback");
+  const resultRef=exact(raw.resultRef,"resultRef");
+  if(resultRef.resourceType!=="ResponsibilityPlanRevision" || raw.installationBindingVerified!==false)
+    throw new Error("BI Receipt 未证明合法 Plan 与原安装绑定");
+  const createdAt=string(raw.createdAt,"createdAt");
+  if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt) || Number.isNaN(Date.parse(createdAt)))
+    throw new Error("BI Receipt 时间无效");
+  return {receiptId:string(raw.receiptId,"receiptId"),requestHash:sha(raw.requestHash,"requestHash"),
+    resultRef,createdAt,installationBindingVerified:false};
+}
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function string(value: unknown, label: string): string { if (typeof value !== "string" || !value) throw new Error(`${label} 必须是非空字符串`); return value; }

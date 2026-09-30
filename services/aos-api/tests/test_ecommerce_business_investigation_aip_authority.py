@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -258,6 +259,117 @@ def test_signed_bi_admission_route_uses_authenticated_scope_without_mutation() -
         installation_id=installation_id, principal=principal, reader=Reader())
     assert snapshot.candidate_ready is False
     assert seen == [(SCOPE, {"installation_id": installation_id, "principal": principal})]
+
+
+def test_signed_bi_receipt_readback_rejects_dev_identity_before_database_access() -> None:
+    from aos_api.auth import Principal
+    from aos_api.aip_production_contract_store import SignedBIPlanReceiptReader
+
+    reader = SignedBIPlanReceiptReader(connect_factory=lambda _scope: pytest.fail("dev token opened DB"))
+    principal = Principal(subject="user:dev", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="dev")
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+    wrong_tenant = Principal(subject="person:current", org_id="dev-org", project_id="dev-project",
+                             roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        reader.read(SCOPE, principal=wrong_tenant, idempotency_key="bi-receipt-1")
+
+
+def test_signed_bi_receipt_readback_rejects_nonmember_before_receipt_query(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import aip_production_contract_store as module
+
+    class Connection:
+        def execute(self, sql, params):
+            assert "FROM meta_membership" in sql
+            return SimpleNamespace(fetchall=lambda: [])
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    reader = module.SignedBIPlanReceiptReader(connect_factory=connect)
+    principal = Principal(subject="person:former", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="current persisted membership required"):
+        reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+
+
+def test_signed_bi_receipt_readback_rejects_low_current_role(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import aip_production_contract_store as module
+
+    class Connection:
+        def execute(self, sql, params):
+            assert "FROM meta_membership" in sql
+            return SimpleNamespace(fetchall=lambda: [{"role": "viewer"}])
+    @contextmanager
+    def connect(_scope):
+        yield Connection()
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module, "openfga_api_url", lambda: None)
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="current configuration role required"):
+        module.SignedBIPlanReceiptReader(connect_factory=connect).read(
+            SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+
+
+def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api.aip_production_contract_store import ProductionContractNotFound
+    from aos_api import aip_production_contract_store as module
+
+    calls = []
+    receipt = {"receipt_id": "w2r-current", "request_hash": "a" * 64,
+               "result_ref": {"resourceType": "ResponsibilityPlanRevision", "resourceId": "plan-1",
+                              "revision": 1, "contentHash": "b" * 64},
+               "created_at": datetime(2026, 9, 30, tzinfo=UTC)}
+    class Connection:
+        def execute(self, sql, params):
+            assert sql.lstrip().startswith("SELECT") and "FOR UPDATE" not in sql
+            calls.append((sql, params))
+            if "FROM meta_membership" in sql:
+                return SimpleNamespace(fetchall=lambda: [{"role": "owner"}])
+            assert "FROM aip_production_contract_receipt" in sql
+            assert params == (*SCOPE.key, "bi_responsibility_plan.prepare", "bi-receipt-1", "person:current")
+            return SimpleNamespace(fetchone=lambda: receipt if not missing[0] else None)
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    missing = [False]
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module, "openfga_api_url", lambda: None)
+    reader = module.SignedBIPlanReceiptReader(connect_factory=connect)
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    result = reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+    assert result.result_ref.resource_id == "plan-1"
+    assert result.installation_binding_verified is False
+    assert len(calls) == 2
+    missing[0] = True
+    with pytest.raises(ProductionContractNotFound):
+        reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+
+
+def test_signed_bi_receipt_route_preserves_authenticated_actor_and_unknown() -> None:
+    from aos_api.auth import Principal
+    from aos_api.aip_production_contract_store import ProductionContractNotFound
+    from aos_api.routers.aip_production_contracts import read_signed_bi_plan_receipt
+    from aos_api.errors import ApiError
+
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    class Reader:
+        def read(self, scope, *, principal: Principal, idempotency_key: str):
+            assert scope == SCOPE and principal.subject == "person:current"
+            assert idempotency_key == "bi-receipt-1"
+            raise ProductionContractNotFound("BI preparation receipt not found")
+    with pytest.raises(ApiError) as error:
+        read_signed_bi_plan_receipt("bi-receipt-1", principal=principal, reader=Reader())
+    assert error.value.status_code == 404
 
 
 def test_signed_bi_plan_preparation_orders_current_checks_before_one_receipt(monkeypatch) -> None:

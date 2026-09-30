@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseSignedBIPlanAdmission, parseStageCompilation, parseStageTemplateList } from "./parser";
+import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseSignedBIPlanAdmission, parseSignedBIPlanReceiptReadback, parseStageCompilation, parseStageTemplateList } from "./parser";
+
+describe("BG00DY signed BI receipt",()=>{
+  const receipt={receiptId:"w2r-1",requestHash:"a".repeat(64),resultRef:{resourceType:"ResponsibilityPlanRevision",resourceId:"plan-1",revision:1,contentHash:"b".repeat(64)},createdAt:"2026-09-30T00:00:00Z",installationBindingVerified:false};
+  it("只接受精确 Plan 证据且保持安装绑定未证明",()=>{
+    expect(parseSignedBIPlanReceiptReadback(receipt).installationBindingVerified).toBe(false);
+    expect(()=>parseSignedBIPlanReceiptReadback({...receipt,installationBindingVerified:true})).toThrow();
+    expect(()=>parseSignedBIPlanReceiptReadback({...receipt,resultRef:{...receipt.resultRef,resourceType:"TaskRun"}})).toThrow();
+  });
+});
 const hash="a".repeat(64), tenant={orgId:"org-org",projectId:"dev-project"};
 describe("BG00dx signed BI admission parser",()=>{
   const blocked={installationId:"22222222-2222-4222-8222-222222222222",installationRevision:3,installationEtag:4,templateRef:null,activeInstanceVersions:{},blockers:["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],candidateReady:false,writeRevalidationRequired:true};

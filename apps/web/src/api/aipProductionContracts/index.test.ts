@@ -10,6 +10,14 @@ const exact=(resourceType:string,resourceId:string)=>({resourceType,resourceId,r
 
 describe("W2-C production contract SDK",()=>{
   beforeEach(()=>{transport.apiGet.mockReset();transport.apiPost.mockReset();});
+  it("只读对账原始 BI 幂等键且不重发",async()=>{
+    transport.apiGet.mockResolvedValue({receiptId:"w2r-1",requestHash:hash,resultRef:exact("ResponsibilityPlanRevision","plan-1"),createdAt:"2026-09-30T00:00:00Z",installationBindingVerified:false});
+    const result=await aipProductionContracts.readSignedBIPlanReceipt("bi receipt/1");
+    expect(result.installationBindingVerified).toBe(false);
+    expect(transport.apiGet).toHaveBeenCalledWith("/v1/aip/production-contracts/responsibility-plans/bi-preparation/receipts/bi%20receipt%2F1");
+    expect(transport.apiPost).not.toHaveBeenCalled();
+    await expect(aipProductionContracts.readSignedBIPlanReceipt(" bad ")).rejects.toThrow();
+  });
   it("reads the exact signed BI admission candidate without posting",async()=>{
     const installationId="22222222-2222-4222-8222-222222222222";
     transport.apiGet.mockResolvedValue({installationId,installationRevision:3,installationEtag:4,templateRef:null,activeInstanceVersions:{},blockers:["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],candidateReady:false,writeRevalidationRequired:true});

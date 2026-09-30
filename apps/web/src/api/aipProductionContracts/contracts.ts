@@ -11,6 +11,13 @@ export type SignedBIPlanAdmission = {
   candidateReady: boolean;
   writeRevalidationRequired: true;
 };
+export type SignedBIPlanReceiptReadback = {
+  receiptId: string;
+  requestHash: string;
+  resultRef: ExactRevisionRef;
+  createdAt: string;
+  installationBindingVerified: false;
+};
 export type ResponsibilityProfile = "LITE" | "STANDARD" | "FULL";
 export type ProjectedCostRange = {
   profile: ResponsibilityProfile;

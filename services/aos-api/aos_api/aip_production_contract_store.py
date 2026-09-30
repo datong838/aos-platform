@@ -9,7 +9,7 @@ from contextlib import AbstractContextManager
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef, TenantContext
+from aos_api.aip_contracts import AipContractModel, ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     ArtifactFamilyCandidateGroup, ArtifactFamilyCandidateStatus,
     ArtifactFamilyListResponse, ArtifactFamilyMember, ArtifactFamilyRole,
@@ -56,7 +56,12 @@ from aos_api.aip_task_store import (
     AipTaskTransitionBlocked,
     AipTaskVersionConflict,
 )
-from aos_api.db import connect as db_connect
+from aos_api.db import connect as db_connect, connect_read_only
+from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, require_control_role
+from aos_api.asset_registry.errors import AssetRegistryError
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+from aos_api.auth import Principal
+from aos_api.openfga import openfga_api_url
 from aos_api.aip_responsibility_template_authority import (
     InstalledProductionProfileResolver,
 )
@@ -87,6 +92,72 @@ class ProductionContractIdempotencyConflict(ProductionContractError):
 
 class ProductionContractDependencyBlocked(ProductionContractError):
     code = "AIP_DEPENDENCY_BLOCKED"
+
+
+class SignedBIPlanReceiptReadback(AipContractModel):
+    """Actor-scoped receipt evidence; the original installation is not proved here."""
+
+    receipt_id: str
+    request_hash: str
+    result_ref: ExactRevisionRef
+    created_at: datetime
+    installation_binding_verified: bool = False
+
+
+class SignedBIPlanReceiptReader:
+    """Read an existing BI preparation receipt without retrying its command."""
+
+    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only) -> None:
+        self._connect = connect_factory
+
+    def read(
+        self, scope: TenantScope, *, principal: Principal, idempotency_key: str,
+    ) -> SignedBIPlanReceiptReadback:
+        if (type(scope) is not TenantScope or type(principal) is not Principal
+                or principal.token_kind != "oidc"
+                or (principal.org_id, principal.project_id) != scope.key
+                or not principal.subject or principal.subject != principal.subject.strip()):
+            raise PermissionError("formal authenticated actor required")
+        if (type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 120
+                or idempotency_key != idempotency_key.strip()):
+            raise ValueError("exact BI preparation idempotency key required")
+        if openfga_api_url():
+            raise PermissionError("current configuration permission adapter unavailable")
+        with self._connect(scope) as conn:
+            apply_asset_transaction_scope(
+                conn, org_id=scope.org_id, project_id=scope.project_id)
+            members = conn.execute(
+                """SELECT role FROM meta_membership
+                   WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                (*scope.key, principal.subject),
+            ).fetchall()
+            if len(members) != 1:
+                raise PermissionError("current persisted membership required")
+            try:
+                require_control_role(
+                    roles=[members[0]["role"]], operation=APPLY_INSTALLATION_OPERATION)
+            except AssetRegistryError as exc:
+                raise PermissionError("current configuration role required") from exc
+            row = conn.execute(
+                """SELECT receipt_id,request_hash,result_ref,created_at
+                   FROM aip_production_contract_receipt
+                   WHERE org_id=%s AND project_id=%s AND operation=%s
+                     AND idempotency_key=%s AND created_by=%s""",
+                (*scope.key, "bi_responsibility_plan.prepare", idempotency_key,
+                 principal.subject),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("BI preparation receipt not found")
+            result_ref = row["result_ref"]
+            if isinstance(result_ref, str):
+                result_ref = json.loads(result_ref)
+            exact_ref = ExactRevisionRef.model_validate(result_ref)
+            if exact_ref.resource_type != "ResponsibilityPlanRevision":
+                raise ProductionContractError("BI preparation receipt result type invalid")
+            return SignedBIPlanReceiptReadback(
+                receipt_id=row["receipt_id"], request_hash=row["request_hash"],
+                result_ref=exact_ref, created_at=row["created_at"],
+            )
 
 
 def canonical_hash(value: Any) -> str:

@@ -11,6 +11,7 @@ from aos_api.aip_production_contract_store import (
     AipProductionContractStore, ProductionContractConflict,
     ProductionContractDependencyBlocked, ProductionContractError,
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
+    SignedBIPlanReceiptReader, SignedBIPlanReceiptReadback,
 )
 from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.asset_registry.control_policy import parse_strong_if_match
@@ -85,6 +86,7 @@ _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PROFILE_STORE = AipResponsibilityProfileStore()
 _SIGNED_BI_PREPARATION = SignedBIPlanPreparationService()
 _SIGNED_BI_ADMISSION = SignedBIPlanAdmissionReader()
+_SIGNED_BI_RECEIPTS = SignedBIPlanReceiptReader()
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
 )
@@ -118,6 +120,10 @@ def get_signed_bi_preparation_service() -> SignedBIPlanPreparationService:
 
 def get_signed_bi_admission_reader() -> SignedBIPlanAdmissionReader:
     return _SIGNED_BI_ADMISSION
+
+
+def get_signed_bi_receipt_reader() -> SignedBIPlanReceiptReader:
+    return _SIGNED_BI_RECEIPTS
 
 
 def get_start_service() -> AipProductionStartService:
@@ -418,6 +424,28 @@ def read_signed_bi_plan_admission(
         raise ApiError(code=exc.code.value, message=str(exc), status_code=exc.http_status) from exc
     except ValueError as exc:
         raise ApiError(code="BI_ADMISSION_INVALID_TARGET", message=str(exc), status_code=400) from exc
+
+
+@router.get(
+    "/responsibility-plans/bi-preparation/receipts/{idempotency_key}",
+    response_model=SignedBIPlanReceiptReadback,
+)
+def read_signed_bi_plan_receipt(
+    idempotency_key: str,
+    principal: Principal = Depends(require_principal),
+    reader: SignedBIPlanReceiptReader = Depends(get_signed_bi_receipt_reader),
+):
+    try:
+        return reader.read(
+            _scope(principal), principal=principal,
+            idempotency_key=idempotency_key,
+        )
+    except PermissionError as exc:
+        raise ApiError(code="BI_RECEIPT_ACTOR_DENIED", message=str(exc), status_code=403) from exc
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="BI_RECEIPT_INVALID_KEY", message=str(exc), status_code=400) from exc
 
 
 @router.post("/responsibility-profile/merge-policies", response_model=MergePolicyRevision, status_code=201)
