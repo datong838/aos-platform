@@ -38,6 +38,35 @@ def test_local_bi_template_hash_is_not_production_authority() -> None:
     ) is False
 
 
+def test_approved_bi_preparation_has_separate_fail_closed_reader() -> None:
+    from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
+    assert ApprovedBIPreparationResolver(release_root=None, trust_roots=None).select(
+        TenantScope("org-org", "dev-project")
+    ) is None
+
+
+def test_approved_bi_preparation_requires_one_exact_signed_lock_member() -> None:
+    from types import SimpleNamespace
+    from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
+    candidate = SimpleNamespace(
+        publisher="aos", id="solution.ecommerce.growth", version="1.12.0",
+        content_hash="sha256:" + "a" * 64,
+        signature_fingerprint="sha256:" + "b" * 64,
+        release_evidence_revision="sha256:" + "c" * 64,
+    )
+    member = {"publisher": candidate.publisher, "id": candidate.id,
+              "version": candidate.version, "contentHash": candidate.content_hash,
+              "signatureFingerprint": candidate.signature_fingerprint,
+              "releaseEvidenceRevision": candidate.release_evidence_revision}
+    assert ApprovedBIPreparationResolver._lock_matches({"resolved": [member]}, candidate)
+    assert not ApprovedBIPreparationResolver._lock_matches(
+        {"resolved": [member, member]}, candidate)
+    assert not ApprovedBIPreparationResolver._lock_matches(
+        {"resolved": [{**member, "signatureFingerprint": "sha256:" + "0" * 64}]}, candidate)
+    assert not ApprovedBIPreparationResolver._lock_matches(
+        {"resolved": [{**member, "releaseEvidenceRevision": "sha256:" + "0" * 64}]}, candidate)
+
+
 def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisionRef:
     return ExactRevisionRef(
         resource_type="ResponsibilityTemplateRevision",

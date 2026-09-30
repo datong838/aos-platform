@@ -21,3 +21,11 @@
 先独立落地 fail-closed 切片：删除生产解析器的 BI 本地静态特判，使静态 ref 不能被 Plan Store 接受；任何未获得签名配置来源的 materializer 必须在创建 Stage/Plan 前拒绝，避免半成品写入。随后再引入 approved-install 签名模板准备态读取和精确 ref 选择，并在克隆正向验证。前一切片 GREEN 仅证明禁入，不代表 BG00dp 或首链完成；保持本任务 ACTIVE 直到正向来源链有测试与克隆证据。
 
 相邻回归发现 `ecommerce_analysis_compilation_roles.py` 的业务消费端还要求 `template.resource_id == domain.responsibility_template_code`，其中后者是历史静态 ID；未来签名 artifact 的 `bundle://...` 精确 ref 不满足该条件。BG00dp 正向切片需将此文件纳入方案/测试，明确业务代码与已安装 artifact 之间的受签名映射，不得简单删除比较。旧角色读取测试可只隔离其签名来源依赖；最终验收必须在 test-only 克隆使用真实签名 artifact 和 lock，不能以单测替身证明业务闭环。
+
+## 2026-09-30 正向来源算法细化（编码前）
+
+新增独立的只读 `ApprovedBI...` 选择器，不改现有 `InstalledProductionProfileResolver.resolve` 的 active 语义。选择器在租户事务中只取 `current_revision` 为 approved、`active_revision IS NULL` 且 lock 包含 growth 1.12 的唯一安装；若零行或多行一律拒绝。独立 `RegistrySnapshotReader + ReleasePolicy` 用当前信任根确认 published 1.12 的内容哈希、签名指纹及证据版本；`ManifestLoader` 对配置签名根重新验签并重算 artifact 列表。要求数据库 artifact ref/digest、签名镜像 artifact ref/digest、不可变文件字节 SHA256、lock member 的 hash/fingerprint/evidence 全部精确相等，再解析严格 `BIResponsibilityTemplate` schema/templateId。返回 `installationId + ExactRevisionRef`，不返回运行许可，不写 Plan 或安装状态。
+
+RED 在 `services/aos-api/tests/aip/test_aip_responsibility_template_authority.py` 覆盖缺根、错租户、零/多安装、非 approved、旧版、lock 漂移、签名 candidate 缺失、别名与 artifact 不一致、篡改字节、错误 schema；随后用 BG00dm 克隆真实签名根与 registry/lock 作正向及负向只读验证。Plan/业务消费接线须另有专门 RED，不能把准备态选择器注入 active 业务读取。
+
+克隆复核发现 1.12 runtime manifest 使 `legacy_content_predicate` 返回 false，这是旧内容运行禁入，不适用于新签名安装的配置准备；准备态必须独立核签名而不借该谓词。另一次负向探针证明单靠 `ManifestLoader({row.alias: configured_root})` 会把任意数据库 alias 映射到可信根，因此要求单独配置的 `AOS_BUNDLE_SOURCE_ALIAS` 与持久 artifact ref 的 alias 精确一致；未配置时拒绝。签名树 evidence revision 与 Registry 当前 evidence revision 可因发布事件不同，分别由 ReleasePolicy 校验，再以当前 Registry revision 绑定 composition lock；签名 fingerprint 和内容 hash 必须一致。
