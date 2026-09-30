@@ -6,6 +6,8 @@
 
 现有 `POST /v1/aip/production-contracts/responsibility-plans` 从 `require_principal` 取得 `principal.subject`，但默认 `AipProductionContractStore` 使用 active 内容解析器，approved 签名模板无法从此入口创建 Plan。`BusinessInvestigationAuthorityMaterializer.ensure/finalize_responsibility_plan` 和 `BusinessInvestigationBindingReadinessCoordinator.refresh` 有 `aos-main-development` actor 默认值；脚本另传固定开发 actor。这些仅是历史开发路径，不能作为 E17 正式账号/权限/Receipt 证明。物料化器目前按 Stage 创建/冻结、Plan 创建/冻结跨多个事务，单纯在写前加一次成员查询会有安装和权限漂移窗口。
 
+BG00ds 实施切面先只创建 Plan draft：服务端持有安装 `FOR UPDATE`、当前权限、六实例版本的同一事务内写 Plan 与 Receipt。Stage 创建/冻结与 Plan 冻结是后续独立命令，不在首请求中跨事务拼接；这不会把 draft 计作八候选中的 frozen Plan。接口只收安装 ID、强 ETag 和幂等键；actor 从认证 Principal 来，明确拒绝 dev token。重放仍先重新核验当前权限和安装，再返回原 Receipt；本切面不得自动写 active/binding 或调度任务。
+
 ## 要达到的产品行为
 
 用户通过已认证产品会话为精确 `org-org/dev-project` 的唯一 approved 签名安装准备 BI Plan。服务端在实际写事务中核验当前持久成员资格与所需角色/marking、安装 state/ETag、composition lock/签名/alias/模板字节、六个当前 AgentInstance 及能力绑定；请求只承载 exact 目标与 Idempotency-Key，不承载 actor、模板内容或高权限布尔值。每次写的 Receipt 记录 `principal.subject`、安装/模板 exact ref 和请求哈希；重放只读回同一结果，漂移/撤权在写前失败。配置准备不能变成 active/enable，也不能触发 worker、Provider 或业务 Run。

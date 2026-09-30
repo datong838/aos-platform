@@ -256,21 +256,36 @@ class AipProductionContractStore:
 
     def create_responsibility_plan(self, scope: TenantScope, actor: str, key: str,
                                    body: CreateResponsibilityPlanRequest) -> ResponsibilityPlanRevision:
-        payload = body.model_dump(mode="json", by_alias=True)
-        request_hash = canonical_hash(payload)
         with self._connect_factory(scope) as conn:
-            replay = self._replay(conn, scope, "responsibility_plan.create", key, request_hash)
-            if replay:
-                return self.get_responsibility_plan(scope, replay["resourceId"], int(replay["revision"]), conn=conn)
-            self._require_responsibility_dependencies(conn, scope, body)
-            plan_id = f"responsibility-plan-{uuid.uuid4().hex[:20]}"
-            content_hash = canonical_hash(payload)
-            conn.execute("INSERT INTO aip_responsibility_plan_head(org_id,project_id,plan_id,current_revision,version) VALUES(%s,%s,%s,1,1)", (*scope.key, plan_id))
-            row = self._insert_responsibility(conn, scope, plan_id, 1, actor, body, content_hash, BriefLifecycle.DRAFT)
-            self._receipt(conn, scope, "responsibility_plan.create", key, request_hash,
-                {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,"revision":1,"contentHash":content_hash}, actor)
+            result = self.create_responsibility_plan_in_transaction(
+                conn, scope, actor, key, body)
             conn.commit()
-            return self._responsibility_plan(scope, row, 1, conn)
+            return result
+
+    def create_responsibility_plan_in_transaction(
+        self, conn: Any, scope: TenantScope, actor: str, key: str,
+        body: CreateResponsibilityPlanRequest, *,
+        operation: str = "responsibility_plan.create",
+        request_context: dict[str, Any] | None = None,
+    ) -> ResponsibilityPlanRevision:
+        """Append a Plan and Receipt in a caller-held authority transaction."""
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(
+            payload if request_context is None else {"body": payload, "context": request_context})
+        replay = self._replay(conn, scope, operation, key, request_hash)
+        if replay:
+            return self.get_responsibility_plan(
+                scope, replay["resourceId"], int(replay["revision"]), conn=conn)
+        self._require_responsibility_dependencies(conn, scope, body)
+        plan_id = f"responsibility-plan-{uuid.uuid4().hex[:20]}"
+        content_hash = canonical_hash(payload)
+        conn.execute("INSERT INTO aip_responsibility_plan_head(org_id,project_id,plan_id,current_revision,version) VALUES(%s,%s,%s,1,1)", (*scope.key, plan_id))
+        row = self._insert_responsibility(
+            conn, scope, plan_id, 1, actor, body, content_hash, BriefLifecycle.DRAFT)
+        self._receipt(conn, scope, operation, key, request_hash,
+            {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,
+             "revision":1,"contentHash":content_hash}, actor)
+        return self._responsibility_plan(scope, row, 1, conn)
 
     def revise_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    key: str, body: ReviseResponsibilityPlanRequest) -> ResponsibilityPlanRevision:

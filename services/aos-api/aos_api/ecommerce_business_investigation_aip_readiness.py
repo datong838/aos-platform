@@ -78,7 +78,7 @@ class BusinessInvestigationBindingReadinessCoordinator:
         self,
         scope: TenantScope,
         *,
-        actor: str = "aos-main-development",
+        actor: str,
         idempotency_prefix: str = "bi-w10-02-investigation-readiness",
     ) -> InvestigationBindingRefreshResult:
         now = self._clock()

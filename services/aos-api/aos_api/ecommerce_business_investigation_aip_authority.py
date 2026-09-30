@@ -5,9 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from aos_api.aip_contracts import ResourceRef
 from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
+from aos_api.auth import Principal
 from aos_api.aip_production_contracts import (
     AssigneeKind,
     AssigneeRef,
@@ -33,6 +38,7 @@ from aos_api.aip_stage_template_authority import (
     resolve_stage_template_source,
 )
 from aos_api.db import connect as db_connect
+from aos_api.extension_runtime.current_permission import CurrentControlPermission
 from aos_api.tenant_scope import TenantScope
 
 
@@ -225,7 +231,7 @@ class BusinessInvestigationAuthorityMaterializer:
         self,
         scope: TenantScope,
         *,
-        actor: str = "aos-main-development",
+        actor: str,
     ) -> InvestigationAuthorityMaterialization:
         versions = self._active_instance_versions(scope)
         selection = self._preparation_resolver.select(scope)
@@ -282,7 +288,7 @@ class BusinessInvestigationAuthorityMaterializer:
         scope: TenantScope,
         plan_id: str,
         *,
-        actor: str = "aos-main-development",
+        actor: str,
     ) -> ResponsibilityPlanRevision:
         """Freeze the current plan only when canonical dependencies are READY."""
         plan = self._store.get_responsibility_plan(scope, plan_id)
@@ -309,3 +315,78 @@ class BusinessInvestigationAuthorityMaterializer:
                 (*scope.key, instance_ids),
             ).fetchall()
         return {str(row["instance_id"]): int(row["version"]) for row in rows}
+
+
+class SignedBIPlanPreparationService:
+    """Prepare one draft Plan under the approved installation's current authority."""
+
+    def __init__(
+        self,
+        *,
+        connect_factory: Callable[[TenantScope], Any] = db_connect,
+        preparation_resolver: ApprovedBIPreparationResolver | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._resolver = preparation_resolver or ApprovedBIPreparationResolver()
+        self._installation_store = PostgresInstallationStore()
+        self._permission = CurrentControlPermission(operation=CONFIGURE_RUNTIME_OPERATION)
+        self._plan_store = AipProductionContractStore(
+            connect_factory=connect_factory,
+            responsibility_template_resolver=self._resolver.resolve,
+        )
+
+    def prepare(
+        self, scope: TenantScope, *, installation_id: str,
+        expected_etag_version: int, principal: Principal,
+        idempotency_key: str,
+    ) -> ResponsibilityPlanRevision:
+        if (type(scope) is not TenantScope or type(principal) is not Principal
+                or principal.token_kind != "oidc"
+                or (principal.org_id, principal.project_id) != scope.key
+                or not principal.subject or principal.subject != principal.subject.strip()):
+            raise PermissionError("formal authenticated actor required")
+        installation_id = str(UUID(installation_id))
+        if (type(expected_etag_version) is not int or expected_etag_version < 1
+                or type(idempotency_key) is not str
+                or not 1 <= len(idempotency_key) <= 120
+                or idempotency_key != idempotency_key.strip()):
+            raise ValueError("exact BI preparation target and idempotency key required")
+        with self._connect(scope) as conn:
+            apply_asset_transaction_scope(
+                conn, org_id=scope.org_id, project_id=scope.project_id)
+            locked = self._installation_store.lock_for_transition_in_transaction(
+                conn, org_id=scope.org_id, project_id=scope.project_id,
+                installation_id=installation_id,
+                expected_etag_version=expected_etag_version,
+            )
+            self._permission(conn=conn, locked=locked, actor=principal.subject)
+            if locked.record.state != "approved" or locked.record.active_revision is not None:
+                raise ValueError("signed BI preparation requires approved inactive installation")
+            selection = self._resolver.select(scope)
+            if selection is None or selection.installation_id != installation_id:
+                raise ValueError("exact signed approved BI installation unavailable")
+            instance_ids = [item[2] for item in _ROLE_BLUEPRINTS]
+            rows = conn.execute(
+                """SELECT instance_id,version FROM aip_agent_instance
+                    WHERE org_id=%s AND project_id=%s AND status='active'
+                      AND instance_id=ANY(%s) ORDER BY instance_id FOR SHARE""",
+                (*scope.key, instance_ids),
+            ).fetchall()
+            versions = {str(row["instance_id"]): int(row["version"]) for row in rows}
+            if (len(rows) != len(instance_ids) or len(versions) != len(instance_ids)
+                    or any(version < 1 for version in versions.values())):
+                raise ValueError("six current digital coworker instances required")
+            request = build_responsibility_plan_request(
+                versions, template_ref=selection.template_ref)
+            result = self._plan_store.create_responsibility_plan_in_transaction(
+                conn, scope, principal.subject, idempotency_key, request,
+                operation="bi_responsibility_plan.prepare",
+                request_context={
+                    "installationId": installation_id,
+                    "installationETag": expected_etag_version,
+                    "templateRef": selection.template_ref.model_dump(mode="json", by_alias=True),
+                    "actor": principal.subject,
+                },
+            )
+            conn.commit()
+            return result

@@ -206,7 +206,7 @@ def test_refreshes_capabilities_before_exact_skills_and_finalizes_plan() -> None
         materializer=Materializer(current_plan),
         clock=lambda: NOW,
     )
-    result = coordinator.refresh(SCOPE)
+    result = coordinator.refresh(SCOPE, actor="unit-test-actor")
     assert [item[0] for item in events] == [
         "capability",
         "capability",
@@ -238,7 +238,7 @@ def test_fresh_dependencies_are_skipped_without_extending_ttl() -> None:
         skills=SkillRegistry(exact_skill_bindings(fresh=True), events),
         materializer=Materializer(current_plan),
         clock=lambda: NOW,
-    ).refresh(SCOPE)
+    ).refresh(SCOPE, actor="unit-test-actor")
     assert events == []
     assert {item.disposition for item in result.items} == {"fresh-skip"}
 
@@ -259,7 +259,7 @@ def test_blocked_canonical_result_is_preserved_and_plan_stays_draft() -> None:
         skills=SkillRegistry(exact_skill_bindings(), events),
         materializer=Materializer(current_plan, frozen=False),
         clock=lambda: NOW,
-    ).refresh(SCOPE)
+    ).refresh(SCOPE, actor="unit-test-actor")
     assert any(item.reasons == ["MODEL_ROUTE_BLOCKED"] for item in result.items)
     assert result.responsibility_plan_lifecycle == "draft"
     assert result.responsibility_plan_blockers == [
@@ -286,7 +286,7 @@ def test_missing_exact_selected_skill_binding_fails_closed() -> None:
         clock=lambda: NOW,
     )
     with pytest.raises(ValueError, match="exact active SkillBinding unavailable"):
-        coordinator.refresh(SCOPE)
+        coordinator.refresh(SCOPE, actor="unit-test-actor")
     assert events == []
 
 
@@ -309,7 +309,7 @@ def test_explicitly_rebound_skills_refresh_and_unassigned_duplicates_are_ignored
         ], events),
         skills=SkillRegistry(skills, events),
         materializer=Materializer(current_plan), clock=lambda: NOW,
-    ).refresh(SCOPE)
+    ).refresh(SCOPE, actor="unit-test-actor")
     assert result.responsibility_plan_lifecycle == 'frozen'
     assert len(result.items) == 5
     assert all(event[1] != 'unassigned-duplicate' for event in events)
@@ -339,7 +339,7 @@ def test_selection_changed_during_capability_refresh_does_not_refresh_another_sk
         ], events),
         skills=ChangingRegistry(skills, events), materializer=Materializer(current_plan), clock=lambda: NOW)
     with pytest.raises(ValueError, match='AIP_SKILL_BINDING_AMBIGUOUS'):
-        coordinator.refresh(SCOPE)
+        coordinator.refresh(SCOPE, actor="unit-test-actor")
     assert all(event[0] == 'capability' for event in events)
 
 
@@ -362,7 +362,7 @@ def test_only_capabilities_required_by_each_assignee_are_refreshed() -> None:
         skills=SkillRegistry(skills, events),
         materializer=Materializer(current_plan),
         clock=lambda: NOW,
-    ).refresh(SCOPE)
+    ).refresh(SCOPE, actor="unit-test-actor")
     evaluated_capabilities = [
         item[1] for item in events if item[0] == "capability"
     ]
@@ -403,6 +403,6 @@ def test_shared_binding_is_refreshed_once_for_multiple_required_slots() -> None:
         skills=SkillRegistry(skills, events),
         materializer=Materializer(current_plan),
         clock=lambda: NOW,
-    ).refresh(SCOPE)
+    ).refresh(SCOPE, actor="unit-test-actor")
     assert [event[1] for event in events].count("cap-material") == 1
     assert [event[1] for event in events].count("cap-strategy") == 1

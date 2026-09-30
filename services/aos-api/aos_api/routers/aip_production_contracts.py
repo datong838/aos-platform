@@ -13,6 +13,8 @@ from aos_api.aip_production_contract_store import (
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
 )
 from aos_api.aip_production_start_service import AipProductionStartService
+from aos_api.asset_registry.control_policy import parse_strong_if_match
+from aos_api.asset_registry.errors import AssetRegistryError
 from aos_api.aip_responsibility_template_authority import resolve_responsibility_template
 from aos_api.aip_responsibility_profile import (
     ConfirmResponsibilityProfileRequest,
@@ -66,7 +68,9 @@ from aos_api.aip_production_contracts import (
     SelectArtifactFamilyCandidateRequest,
 )
 from aos_api.auth import Principal, require_principal
+from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
 from aos_api.errors import ApiError
+from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip/production-contracts", tags=["aip-production-contracts"])
@@ -76,6 +80,7 @@ _STORE = AipProductionContractStore(
 )
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PROFILE_STORE = AipResponsibilityProfileStore()
+_SIGNED_BI_PREPARATION = SignedBIPlanPreparationService()
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
 )
@@ -95,8 +100,16 @@ class FreezeBriefRequest(AipContractModel):
 FreezeContractRequest = FreezeBriefRequest
 
 
+class SignedBIPlanPreparationRequest(AipContractModel):
+    installation_id: str = Field(alias="installationId", min_length=36, max_length=36)
+
+
 def get_store() -> AipProductionContractStore:
     return _STORE
+
+
+def get_signed_bi_preparation_service() -> SignedBIPlanPreparationService:
+    return _SIGNED_BI_PREPARATION
 
 
 def get_start_service() -> AipProductionStartService:
@@ -354,6 +367,33 @@ def freeze_eval_contract(contract_id: str, body: FreezeContractRequest, idempote
 def create_responsibility_plan(body: CreateResponsibilityPlanRequest, idempotency_key: str = Header(alias="Idempotency-Key"), principal: Principal = Depends(require_principal), store: AipProductionContractStore = Depends(get_store)):
     try: return store.create_responsibility_plan(_scope(principal), principal.subject, _key(idempotency_key), body)
     except ProductionContractError as exc: raise _map(exc) from exc
+
+
+@router.post("/responsibility-plans/bi-preparation", response_model=ResponsibilityPlanRevision, status_code=201)
+def prepare_signed_bi_responsibility_plan(
+    body: SignedBIPlanPreparationRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    service: SignedBIPlanPreparationService = Depends(get_signed_bi_preparation_service),
+):
+    try:
+        _, expected_revision = parse_strong_if_match(if_match)
+        return service.prepare(
+            _scope(principal), installation_id=body.installation_id,
+            expected_etag_version=expected_revision, principal=principal,
+            idempotency_key=_key(idempotency_key),
+        )
+    except AssetRegistryError as exc:
+        raise ApiError(code=exc.code.value, message=str(exc), status_code=exc.http_status) from exc
+    except PermissionError as exc:
+        raise ApiError(code="BI_PREPARATION_ACTOR_DENIED", message=str(exc), status_code=403) from exc
+    except RuntimeConflict as exc:
+        raise ApiError(code="BI_PREPARATION_PERMISSION_DENIED", message=str(exc), status_code=403) from exc
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="BI_PREPARATION_UNAVAILABLE", message=str(exc), status_code=409) from exc
 
 
 @router.post("/responsibility-profile/merge-policies", response_model=MergePolicyRevision, status_code=201)

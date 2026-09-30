@@ -40,6 +40,119 @@ VERSIONS = {
 }
 
 
+def test_signed_bi_plan_preparation_rejects_dev_identity_before_database_access() -> None:
+    from aos_api.auth import Principal
+    from aos_api.ecommerce_business_investigation_aip_authority import (
+        SignedBIPlanPreparationService,
+    )
+
+    def unexpected_connect(_scope):
+        pytest.fail("dev identity must not open a configuration write transaction")
+
+    service = SignedBIPlanPreparationService(connect_factory=unexpected_connect)
+    principal = Principal(
+        subject="user:dev", org_id="org-org", project_id="dev-project",
+        roles=["admin"], token_kind="dev",
+    )
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        service.prepare(
+            SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+            expected_etag_version=3, principal=principal,
+            idempotency_key="bi-plan-prep-exact-1",
+        )
+
+
+def test_signed_bi_plan_preparation_orders_current_checks_before_one_receipt(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+
+    events = []
+    installation_id = "42785d78-5914-4a54-a078-e5d2c7f48481"
+    template_ref = ExactRevisionRef(
+        resource_type="ResponsibilityTemplateRevision",
+        resource_id=("bundle://a0v-growth-112/solution.ecommerce.growth/1.12.0/"
+                     "content/responsibility-templates/business-investigation.readonly.json"),
+        revision=3, content_hash="a" * 64,
+    )
+    class Connection:
+        def execute(self, sql, params):
+            assert "FROM aip_agent_instance" in sql and "FOR SHARE" in sql
+            events.append("instances")
+            return SimpleNamespace(fetchall=lambda: [
+                {"instance_id": instance_id, "version": version}
+                for instance_id, version in VERSIONS.items()
+            ])
+        def commit(self): events.append("commit")
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        events.append("connect")
+        yield Connection()
+    class Resolver:
+        def select(self, scope):
+            events.append("signed-select")
+            return SimpleNamespace(installation_id=installation_id, template_ref=template_ref)
+        def resolve(self, scope, ref): return scope == SCOPE and ref == template_ref
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kw: events.append("scope"))
+    def lock(self, conn, **kwargs):
+        events.append("installation-lock")
+        assert kwargs["expected_etag_version"] == 3
+        return SimpleNamespace(record=SimpleNamespace(state="approved", active_revision=None))
+    monkeypatch.setattr(module.PostgresInstallationStore, "lock_for_transition_in_transaction", lock)
+    monkeypatch.setattr(module.CurrentControlPermission, "__call__",
+                        lambda self, **kwargs: events.append("current-permission"))
+    service = module.SignedBIPlanPreparationService(
+        connect_factory=connect, preparation_resolver=Resolver())
+    def create(conn, scope, actor, key, body, *, operation, request_context):
+        events.append("receipt")
+        assert actor == "person:current" and operation == "bi_responsibility_plan.prepare"
+        assert request_context["installationId"] == installation_id
+        assert request_context["actor"] == actor
+        assert body.template_ref == template_ref
+        return "draft-plan"
+    monkeypatch.setattr(service._plan_store, "create_responsibility_plan_in_transaction", create)
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    assert service.prepare(SCOPE, installation_id=installation_id, expected_etag_version=3,
+                           principal=principal, idempotency_key="bi-plan-prep-exact-1") == "draft-plan"
+    assert events == ["connect", "scope", "installation-lock", "current-permission",
+                      "signed-select", "instances", "receipt", "commit"]
+
+
+def test_signed_bi_plan_route_uses_principal_and_strong_installation_etag() -> None:
+    from aos_api.auth import Principal
+    from aos_api.errors import ApiError
+    from pydantic import ValidationError
+    from aos_api.routers.aip_production_contracts import (
+        SignedBIPlanPreparationRequest, prepare_signed_bi_responsibility_plan,
+    )
+    seen = []
+    class Service:
+        def prepare(self, scope, **kwargs):
+            seen.append((scope, kwargs))
+            return "draft-plan"
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    body = SignedBIPlanPreparationRequest(
+        installationId="42785d78-5914-4a54-a078-e5d2c7f48481")
+    with pytest.raises(ValidationError):
+        SignedBIPlanPreparationRequest.model_validate({
+            "installationId": body.installation_id, "actor": "arbitrary",
+        })
+    assert prepare_signed_bi_responsibility_plan(
+        body, idempotency_key="bi-plan-1", if_match='"3"', principal=principal,
+        service=Service()) == "draft-plan"
+    assert seen == [(SCOPE, dict(
+        installation_id=body.installation_id, expected_etag_version=3,
+        principal=principal, idempotency_key="bi-plan-1"))]
+    with pytest.raises(ApiError) as error:
+        prepare_signed_bi_responsibility_plan(
+            body, idempotency_key="bi-plan-2", if_match="3", principal=principal,
+            service=Service())
+    assert error.value.status_code == 400
+    assert len(seen) == 1
+
+
 def test_skill_selection_is_exact_and_d03_is_explicit_r4() -> None:
     refs = selected_skill_refs()
     assert list(refs) == ["ecommerce.skill.D01", "ecommerce.skill.D02", "ecommerce.skill.D03"]
@@ -100,7 +213,7 @@ def test_materializer_requires_preparation_selection_before_stage_write() -> Non
     runner = BusinessInvestigationAuthorityMaterializer(
         store=store, connect_factory=connect, preparation_resolver=Unavailable())
     with pytest.raises(ValueError, match="signed installed BI responsibility template unavailable"):
-        runner.ensure(SCOPE)
+        runner.ensure(SCOPE, actor="unit-test-actor")
     assert store.calls == []
 
 
@@ -128,7 +241,7 @@ def test_materializer_rejects_external_active_only_store_before_stage_write() ->
     runner = BusinessInvestigationAuthorityMaterializer(
         store=store, connect_factory=connect, preparation_resolver=Preparation())
     with pytest.raises(ValueError, match="Plan store rejects signed BI preparation template"):
-        runner.ensure(SCOPE)
+        runner.ensure(SCOPE, actor="unit-test-actor")
 
 
 def test_missing_active_coworker_version_fails_closed() -> None:
@@ -250,13 +363,13 @@ def test_materializer_rejects_unsigned_local_template_before_metadata_writes() -
         yield Connection()
     runner = BusinessInvestigationAuthorityMaterializer(store=store, connect_factory=connect)
     with pytest.raises(ValueError, match="signed installed BI responsibility template unavailable"):
-        runner.ensure(SCOPE)
+        runner.ensure(SCOPE, actor="unit-test-actor")
     assert store.calls == []
 
 
 def test_materializer_freezes_stage_but_keeps_blocked_plan_draft(monkeypatch) -> None:
     store = Store()
-    actual = materializer(store, monkeypatch).ensure(SCOPE)
+    actual = materializer(store, monkeypatch).ensure(SCOPE, actor="unit-test-actor")
     assert actual.stage_template.lifecycle is BriefLifecycle.FROZEN
     assert actual.responsibility_plan.lifecycle is BriefLifecycle.DRAFT
     assert [call[0] for call in store.calls] == [
@@ -270,7 +383,7 @@ def test_materializer_freezes_stage_but_keeps_blocked_plan_draft(monkeypatch) ->
 
 def test_materializer_freezes_plan_only_after_canonical_readiness(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
-    actual = materializer(store, monkeypatch).ensure(SCOPE)
+    actual = materializer(store, monkeypatch).ensure(SCOPE, actor="unit-test-actor")
     assert actual.responsibility_plan.lifecycle is BriefLifecycle.FROZEN
     assert [call[0] for call in store.calls][-1] == "freeze-plan"
 
@@ -278,9 +391,9 @@ def test_materializer_freezes_plan_only_after_canonical_readiness(monkeypatch) -
 def test_materializer_reentry_uses_current_heads_and_does_not_refreeze(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
     runner = materializer(store, monkeypatch)
-    first = runner.ensure(SCOPE)
+    first = runner.ensure(SCOPE, actor="unit-test-actor")
     first_call_count = len(store.calls)
-    second = runner.ensure(SCOPE)
+    second = runner.ensure(SCOPE, actor="unit-test-actor")
     reentry_calls = store.calls[first_call_count:]
     assert second.stage_template is first.stage_template
     assert second.responsibility_plan is first.responsibility_plan
@@ -295,14 +408,14 @@ def test_materializer_reentry_uses_current_heads_and_does_not_refreeze(monkeypat
 def test_finalize_responsibility_plan_freezes_only_ready_draft(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
     runner = materializer(store, monkeypatch)
-    created = runner.ensure(SCOPE)
+    created = runner.ensure(SCOPE, actor="unit-test-actor")
     store.plan = SimpleNamespace(
         lifecycle=BriefLifecycle.DRAFT,
         readiness=ContractReadiness.READY,
         plan_id=created.responsibility_plan.plan_id,
         version=3,
     )
-    actual = runner.finalize_responsibility_plan(SCOPE, store.plan.plan_id)
+    actual = runner.finalize_responsibility_plan(SCOPE, store.plan.plan_id, actor="unit-test-actor")
     assert actual.lifecycle is BriefLifecycle.FROZEN
     assert store.calls[-1][0] == "freeze-plan"
 
@@ -310,8 +423,8 @@ def test_finalize_responsibility_plan_freezes_only_ready_draft(monkeypatch) -> N
 def test_finalize_responsibility_plan_keeps_blocked_draft(monkeypatch) -> None:
     store = Store(ContractReadiness.BLOCKED)
     runner = materializer(store, monkeypatch)
-    runner.ensure(SCOPE)
+    runner.ensure(SCOPE, actor="unit-test-actor")
     before = store.plan
-    actual = runner.finalize_responsibility_plan(SCOPE, before.plan_id)
+    actual = runner.finalize_responsibility_plan(SCOPE, before.plan_id, actor="unit-test-actor")
     assert actual is before
     assert store.calls[-1][0] == "get-plan"
