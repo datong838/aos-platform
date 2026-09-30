@@ -3,15 +3,14 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
-import socket
-import stat
 import struct
 
 from aos_api.aip_network_consumer_contracts import NetworkConsumerCommand, NetworkConsumerInquiry
 from aos_api.aip_network_issuer_ipc import (
     MAX_ISSUER_FRAME_BYTES, _unique_pairs, _invalid_constant,
-    _peer_identity, _require_unix_stream, read_issuer_frame,
+    read_issuer_frame,
 )
+from aos_api.aip_private_service_transport import open_private_service, require_private_peer
 
 
 class ConsumerClientBlocked(ValueError):
@@ -39,10 +38,9 @@ class ConsumerEndpoint:
 
 def _require_server(conn, endpoint):
     try:
-        _require_unix_stream(conn)
         endpoint.__post_init__()
-        if _peer_identity(conn) != (endpoint.consumer_uid, endpoint.ipc_gid):
-            raise ValueError()
+        require_private_peer(conn, api_uid=endpoint.api_uid,
+                             service_uid=endpoint.consumer_uid, ipc_gid=endpoint.ipc_gid)
     except Exception:
         raise ConsumerClientBlocked('CONSUMER_SERVER_IDENTITY_REQUIRED') from None
 
@@ -110,16 +108,8 @@ def request_consumer(endpoint: ConsumerEndpoint, request):
     dispatched = False
     try:
         endpoint.__post_init__()
-        parent, target = endpoint.socket_path.parent.lstat(), endpoint.socket_path.lstat()
-        if (not stat.S_ISDIR(parent.st_mode) or not stat.S_ISSOCK(target.st_mode)
-                or stat.S_IMODE(parent.st_mode) != 0o750 or stat.S_IMODE(target.st_mode) != 0o660
-                or any((s.st_uid, s.st_gid) != (endpoint.consumer_uid, endpoint.ipc_gid)
-                       for s in (parent, target))):
-            raise ValueError()
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as conn:
-            conn.settimeout(5)
-            conn.connect(str(endpoint.socket_path))
-            _require_server(conn, endpoint)
+        with open_private_service(endpoint.socket_path, api_uid=endpoint.api_uid,
+                                  service_uid=endpoint.consumer_uid, ipc_gid=endpoint.ipc_gid) as conn:
             dispatched = True
             return _exchange(conn, request)
     except Exception:
