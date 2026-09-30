@@ -85,6 +85,181 @@ def test_signed_bi_plan_preparation_rejects_cross_tenant_oidc_before_database_ac
         )
 
 
+def test_signed_bi_admission_rejects_non_oidc_before_database_access() -> None:
+    from aos_api.auth import Principal
+    from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanAdmissionReader
+
+    def unexpected_connect(_scope):
+        pytest.fail("invalid principal must not open a read transaction")
+
+    reader = SignedBIPlanAdmissionReader(connect_factory=unexpected_connect)
+    principal = Principal(subject="user:dev", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="dev")
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        reader.read(SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+                    principal=principal)
+
+
+def test_signed_bi_admission_rejects_cross_tenant_oidc_before_database_access() -> None:
+    from aos_api.auth import Principal
+    from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanAdmissionReader
+
+    def unexpected_connect(_scope):
+        pytest.fail("cross-tenant identity must not open a read transaction")
+
+    reader = SignedBIPlanAdmissionReader(connect_factory=unexpected_connect)
+    principal = Principal(subject="person:other", org_id="dev-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        reader.read(SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+                    principal=principal)
+
+
+def test_signed_bi_admission_rejects_unsupported_remote_permission_before_database(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+
+    monkeypatch.setattr(module, "openfga_api_url", lambda: "https://auth.example.invalid")
+    reader = module.SignedBIPlanAdmissionReader(
+        connect_factory=lambda _scope: pytest.fail("remote adapter cannot produce BI candidate"))
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="permission adapter unavailable"):
+        reader.read(SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+                    principal=principal)
+
+
+def test_signed_bi_admission_checks_persisted_role_before_installation_or_signature(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+
+    events = []
+    class Connection:
+        def execute(self, sql, params):
+            events.append("membership")
+            assert "FROM meta_membership" in sql
+            return SimpleNamespace(fetchall=lambda: [])
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.PostgresInstallationStore, "get_installation",
+                        lambda *args, **kwargs: pytest.fail("installation disclosed before membership"))
+    reader = module.SignedBIPlanAdmissionReader(connect_factory=connect)
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="current persisted membership required"):
+        reader.read(SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+                    principal=principal)
+    assert events == ["membership"]
+
+
+def test_signed_bi_admission_rejects_unprivileged_member_before_installation(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+
+    class Connection:
+        def execute(self, sql, params):
+            assert "FROM meta_membership" in sql
+            return SimpleNamespace(fetchall=lambda: [{"role": "viewer"}])
+    @contextmanager
+    def connect(_scope):
+        yield Connection()
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.PostgresInstallationStore, "get_installation",
+                        lambda *args, **kwargs: pytest.fail("installation disclosed before role"))
+    reader = module.SignedBIPlanAdmissionReader(connect_factory=connect)
+    principal = Principal(subject="person:viewer", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    with pytest.raises(PermissionError, match="current configuration role required"):
+        reader.read(SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+                    principal=principal)
+
+
+def test_signed_bi_admission_reports_missing_signed_source_and_six_instances_without_write(monkeypatch) -> None:
+    from aos_api.auth import Principal
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+
+    installation_id = "42785d78-5914-4a54-a078-e5d2c7f48481"
+    record = SimpleNamespace(installation_id=installation_id, current_revision=3,
+                             etag_version=4, state="approved", active_revision=None,
+                             current=SimpleNamespace(composition_id="composition-1", lock_revision=1,
+                                                     lock_hash="a" * 64, permission_diff_hash="b" * 64,
+                                                     migration_plan_hash="c" * 64, contribution_diff_hash="d" * 64))
+    class Connection:
+        def execute(self, sql, params):
+            if "FROM meta_membership" in sql:
+                return SimpleNamespace(fetchall=lambda: [{"role": "owner"}])
+            if "FROM authz_tuple" in sql:
+                return SimpleNamespace(fetchall=lambda: [])
+            if "FROM aip_agent_instance" in sql:
+                return SimpleNamespace(fetchall=lambda: [])
+            pytest.fail(f"unexpected SQL: {sql}")
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    class Resolver:
+        def select(self, scope): return None
+    monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
+    monkeypatch.setattr(module.PostgresInstallationStore, "get_installation",
+                        lambda *args, **kwargs: record)
+    monkeypatch.setattr(module, "load_stored_lock", lambda *args, **kwargs: (
+        None, SimpleNamespace(lock_hash="a" * 64, permission_diff_hash="b" * 64,
+                              migration_plan_hash="c" * 64, contribution_diff_hash="d" * 64,
+                              payload=SimpleNamespace(permission_diff=SimpleNamespace(
+                                  target=SimpleNamespace(markings=[]))))))
+    reader = module.SignedBIPlanAdmissionReader(
+        connect_factory=connect, preparation_resolver=Resolver())
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    snapshot = reader.read(SCOPE, installation_id=installation_id, principal=principal)
+    assert snapshot.installation_etag == 4
+    assert snapshot.template_ref is None
+    assert snapshot.active_instance_versions == {}
+    assert snapshot.blockers == ["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE", "SIX_ACTIVE_AGENT_INSTANCES_MISSING"]
+    assert snapshot.candidate_ready is False
+    assert snapshot.write_revalidation_required is True
+    record.state = "active"
+    record.active_revision = 3
+    active_snapshot = reader.read(SCOPE, installation_id=installation_id, principal=principal)
+    assert active_snapshot.blockers[0] == "APPROVED_INACTIVE_INSTALLATION_REQUIRED"
+    record.state = "approved"
+    record.active_revision = None
+    from aos_api.asset_registry.errors import AssetNotFoundError
+    monkeypatch.setattr(module, "load_stored_lock", lambda *args, **kwargs: (
+        None, SimpleNamespace(lock_hash="a" * 64, permission_diff_hash="b" * 64,
+                              migration_plan_hash="c" * 64, contribution_diff_hash="d" * 64,
+                              payload=SimpleNamespace(permission_diff=SimpleNamespace(
+                                  target=SimpleNamespace(markings=["restricted"]))))))
+    with pytest.raises(AssetNotFoundError):
+        reader.read(SCOPE, installation_id=installation_id, principal=principal)
+
+
+def test_signed_bi_admission_route_uses_authenticated_scope_without_mutation() -> None:
+    from aos_api.auth import Principal
+    from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanAdmissionSnapshot
+    from aos_api.routers.aip_production_contracts import read_signed_bi_plan_admission
+
+    seen = []
+    class Reader:
+        def read(self, scope, **kwargs):
+            seen.append((scope, kwargs))
+            return SignedBIPlanAdmissionSnapshot(
+                installation_id=kwargs["installation_id"], installation_revision=3,
+                installation_etag=4, template_ref=None, active_instance_versions={},
+                blockers=["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],
+                candidate_ready=False)
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    installation_id = "42785d78-5914-4a54-a078-e5d2c7f48481"
+    snapshot = read_signed_bi_plan_admission(
+        installation_id=installation_id, principal=principal, reader=Reader())
+    assert snapshot.candidate_ready is False
+    assert seen == [(SCOPE, {"installation_id": installation_id, "principal": principal})]
+
+
 def test_signed_bi_plan_preparation_orders_current_checks_before_one_receipt(monkeypatch) -> None:
     from aos_api.auth import Principal
     from aos_api import ecommerce_business_investigation_aip_authority as module

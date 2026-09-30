@@ -68,7 +68,10 @@ from aos_api.aip_production_contracts import (
     SelectArtifactFamilyCandidateRequest,
 )
 from aos_api.auth import Principal, require_principal
-from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
+from aos_api.ecommerce_business_investigation_aip_authority import (
+    SignedBIPlanAdmissionReader, SignedBIPlanAdmissionSnapshot,
+    SignedBIPlanPreparationService,
+)
 from aos_api.errors import ApiError
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.tenant_scope import TenantScope
@@ -81,6 +84,7 @@ _STORE = AipProductionContractStore(
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PROFILE_STORE = AipResponsibilityProfileStore()
 _SIGNED_BI_PREPARATION = SignedBIPlanPreparationService()
+_SIGNED_BI_ADMISSION = SignedBIPlanAdmissionReader()
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
 )
@@ -110,6 +114,10 @@ def get_store() -> AipProductionContractStore:
 
 def get_signed_bi_preparation_service() -> SignedBIPlanPreparationService:
     return _SIGNED_BI_PREPARATION
+
+
+def get_signed_bi_admission_reader() -> SignedBIPlanAdmissionReader:
+    return _SIGNED_BI_ADMISSION
 
 
 def get_start_service() -> AipProductionStartService:
@@ -394,6 +402,22 @@ def prepare_signed_bi_responsibility_plan(
         raise _map(exc) from exc
     except ValueError as exc:
         raise ApiError(code="BI_PREPARATION_UNAVAILABLE", message=str(exc), status_code=409) from exc
+
+
+@router.get("/responsibility-plans/bi-preparation/admission", response_model=SignedBIPlanAdmissionSnapshot)
+def read_signed_bi_plan_admission(
+    installation_id: str = Query(alias="installationId", min_length=36, max_length=36),
+    principal: Principal = Depends(require_principal),
+    reader: SignedBIPlanAdmissionReader = Depends(get_signed_bi_admission_reader),
+):
+    try:
+        return reader.read(_scope(principal), installation_id=installation_id, principal=principal)
+    except PermissionError as exc:
+        raise ApiError(code="BI_ADMISSION_ACTOR_DENIED", message=str(exc), status_code=403) from exc
+    except AssetRegistryError as exc:
+        raise ApiError(code=exc.code.value, message=str(exc), status_code=exc.http_status) from exc
+    except ValueError as exc:
+        raise ApiError(code="BI_ADMISSION_INVALID_TARGET", message=str(exc), status_code=400) from exc
 
 
 @router.post("/responsibility-profile/merge-policies", response_model=MergePolicyRevision, status_code=201)

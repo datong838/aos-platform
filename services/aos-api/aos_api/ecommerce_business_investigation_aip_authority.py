@@ -7,9 +7,14 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
-from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_contracts import AipContractModel, ResourceRef
 from aos_api.aip_production_contract_store import AipProductionContractStore
-from aos_api.asset_registry.control_policy import CONFIGURE_RUNTIME_OPERATION
+from aos_api.asset_registry.composition_store import load_stored_lock
+from aos_api.asset_registry.control_policy import (
+    APPLY_INSTALLATION_OPERATION, CONFIGURE_RUNTIME_OPERATION,
+    require_control_role, require_target_markings,
+)
+from aos_api.asset_registry.errors import AssetRegistryError, LockIntegrityCorruptError
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.tenant_transaction import apply_asset_transaction_scope
 from aos_api.auth import Principal
@@ -37,8 +42,9 @@ from aos_api.aip_stage_template_authority import (
     published_investigation_profile_source_ref,
     resolve_stage_template_source,
 )
-from aos_api.db import connect as db_connect
+from aos_api.db import connect as db_connect, connect_read_only
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.openfga import marking_key, openfga_api_url, user_key
 from aos_api.tenant_scope import TenantScope
 
 
@@ -390,3 +396,117 @@ class SignedBIPlanPreparationService:
             )
             conn.commit()
             return result
+
+
+class SignedBIPlanAdmissionSnapshot(AipContractModel):
+    """Informational snapshot; the write transaction always revalidates."""
+
+    installation_id: str
+    installation_revision: int
+    installation_etag: int
+    template_ref: ExactRevisionRef | None
+    active_instance_versions: dict[str, int]
+    blockers: list[str]
+    candidate_ready: bool
+    write_revalidation_required: bool = True
+
+
+class SignedBIPlanAdmissionReader:
+    """Read exact BI preparation gaps without granting configuration authority."""
+
+    def __init__(
+        self, *,
+        connect_factory: Callable[[TenantScope], Any] = connect_read_only,
+        preparation_resolver: ApprovedBIPreparationResolver | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._resolver = preparation_resolver or ApprovedBIPreparationResolver()
+
+    def read(
+        self, scope: TenantScope, *, installation_id: str,
+        principal: Principal,
+    ) -> SignedBIPlanAdmissionSnapshot:
+        if (type(scope) is not TenantScope or type(principal) is not Principal
+                or principal.token_kind != "oidc"
+                or (principal.org_id, principal.project_id) != scope.key
+                or not principal.subject or principal.subject != principal.subject.strip()):
+            raise PermissionError("formal authenticated actor required")
+        installation_id = str(UUID(installation_id))
+        if openfga_api_url():
+            raise PermissionError("current configuration permission adapter unavailable")
+        with self._connect(scope) as conn:
+            apply_asset_transaction_scope(
+                conn, org_id=scope.org_id, project_id=scope.project_id)
+            members = conn.execute(
+                """SELECT role FROM meta_membership
+                   WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                (*scope.key, principal.subject),
+            ).fetchall()
+            if len(members) != 1:
+                raise PermissionError("current persisted membership required")
+            try:
+                require_control_role(
+                    roles=[members[0]["role"]], operation=APPLY_INSTALLATION_OPERATION)
+            except AssetRegistryError as exc:
+                raise PermissionError("current configuration role required") from exc
+            # Installation and registry readers use separate read-only snapshots.
+            # This is guidance only; prepare() locks and rechecks everything.
+            record = PostgresInstallationStore(
+                connect_factory=lambda: self._connect(scope)).get_installation(
+                    org_id=scope.org_id, project_id=scope.project_id,
+                    installation_id=installation_id,
+                )
+            _, lock = load_stored_lock(
+                conn, org_id=scope.org_id, project_id=scope.project_id,
+                composition_id=record.current.composition_id,
+                revision=record.current.lock_revision,
+            )
+            if (
+                record.current.lock_hash,
+                record.current.permission_diff_hash,
+                record.current.migration_plan_hash,
+                record.current.contribution_diff_hash,
+            ) != (
+                lock.lock_hash, lock.permission_diff_hash,
+                lock.migration_plan_hash, lock.contribution_diff_hash,
+            ):
+                raise LockIntegrityCorruptError()
+            markings = lock.payload.permission_diff.target.markings
+            granted = []
+            for label in sorted(set(markings)):
+                rows = conn.execute(
+                    """SELECT object_key FROM authz_tuple
+                       WHERE org_id=%s AND project_id=%s AND user_key=%s
+                         AND relation='bearer' AND object_key=%s""",
+                    (*scope.key, user_key(principal.subject), marking_key(label)),
+                ).fetchall()
+                if len(rows) == 1:
+                    granted.append(label)
+            require_target_markings(
+                principal_markings=granted, target_markings=markings, conceal=True)
+            blockers = []
+            if record.state != "approved" or record.active_revision is not None:
+                blockers.append("APPROVED_INACTIVE_INSTALLATION_REQUIRED")
+            selection = self._resolver.select(scope) if not blockers else None
+            if selection is None or selection.installation_id != installation_id:
+                blockers.append("SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE")
+                selection = None
+            instance_ids = [item[2] for item in _ROLE_BLUEPRINTS]
+            rows = conn.execute(
+                """SELECT instance_id,version FROM aip_agent_instance
+                   WHERE org_id=%s AND project_id=%s AND status='active'
+                     AND instance_id=ANY(%s) ORDER BY instance_id""",
+                (*scope.key, instance_ids),
+            ).fetchall()
+            versions = {str(row["instance_id"]): int(row["version"]) for row in rows}
+            if (len(rows) != len(instance_ids) or len(versions) != len(instance_ids)
+                    or any(version < 1 for version in versions.values())):
+                blockers.append("SIX_ACTIVE_AGENT_INSTANCES_MISSING")
+            return SignedBIPlanAdmissionSnapshot(
+                installation_id=installation_id,
+                installation_revision=record.current_revision,
+                installation_etag=record.etag_version,
+                template_ref=selection.template_ref if selection else None,
+                active_instance_versions=versions,
+                blockers=blockers, candidate_ready=not blockers,
+            )
