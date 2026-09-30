@@ -20,3 +20,9 @@
 | `services/aos-api/.venv/bin/python scripts/a0v_current_runtime_host_preflight.py --signed-receipt /Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json --preparation-only` | 2；`SAFE_BLOCKED/CREDENTIAL_FILE_REQUIRED`。无 Host 启动、无数据库写。 |
 
 结论只限本次受检正式入口：当前无法合法启动 Host 走完整 active 状态机，test-only 的签名 clone 也缺三身份和 assignment。该实例正向验收继续 pending；不伪造授权、不用测试替身计作验收。接着做不依赖 Host 的代码与契约检查，用户长期 Goal 不改状态。
+
+## 同波相邻回归与代码复审
+
+- `services/aos-api/.venv/bin/python -m pytest -q` 执行 BI 模板/角色/准备/就绪四文件：退出 0，`65 passed`；七个相邻的角色绑定、阶段和 extension-runtime 编排测试文件：退出 0，`82 passed`。合计本次 147 passed，均是代码回归，不证明当前正式 active 或首链。
+- `git show --format= --check 86ee8978` 退出 0。业务读取仍在 `PipelineSourceSelectionOwner.run_current_snapshot` 之内，回调前后重读当前签名模板与 Plan；错安装、错 templateId、签名 ref 变化由专项反证。正式验证仍缺当前 active1.12 安装、真实身份和 Host。
+- 后续独立风险：`BusinessInvestigationAuthorityMaterializer.ensure/finalize_responsibility_plan` 及 `BusinessInvestigationBindingReadinessCoordinator.refresh` 仍有开发 actor 默认值。BG00dq 未调用这些写路径；正式配置入口不得用该默认值充当当前账号，应在下一文件级方案中核对真实 actor 来源、权限与 Receipt，再决定最小修复。
