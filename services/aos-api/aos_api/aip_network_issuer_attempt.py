@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import stat
 from dataclasses import dataclass
 from pathlib import Path
@@ -52,9 +53,9 @@ def _private_directory_fd(directory: Path) -> int:
         raise AttemptBlocked("ISSUER_ATTEMPT_PRIVATE_DIRECTORY_REQUIRED") from exc
 
 
-def _read_prior(directory_fd: int, filename: str, expected: dict[str, str | int]) -> None:
+def _read_marker(directory_fd: int, filename: str, *, allow_missing: bool = False) -> dict | None:
     try:
-        fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC,
+        fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK,
                      dir_fd=directory_fd)
         try:
             info = os.fstat(fd)
@@ -67,13 +68,51 @@ def _read_prior(directory_fd: int, filename: str, expected: dict[str, str | int]
         if not raw or len(raw) > 4096:
             raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
         prior = json.loads(raw)
+    except FileNotFoundError as exc:
+        if allow_missing:
+            return None
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED") from exc
     except (OSError, ValueError, TypeError) as exc:
         raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED") from exc
+    if not isinstance(prior, dict):
+        raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
+    return prior
+
+
+def _read_prior(directory_fd: int, filename: str, expected: dict[str, str | int]) -> None:
+    prior = _read_marker(directory_fd, filename)
     if not isinstance(prior, dict) or set(prior) != set(expected):
         raise AttemptUnknown("ISSUER_ATTEMPT_RECEIPT_UNTRUSTED")
     if prior != expected:
         raise AttemptConflict("ISSUER_ATTEMPT_EXACT_REQUEST_CONFLICT")
     raise AttemptAlreadyRecorded("ISSUER_ATTEMPT_ALREADY_RECORDED")
+
+
+def _attempt_filename(parts: list[str]) -> str:
+    key = json.dumps(parts, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(key).hexdigest() + ".json"
+
+
+def read_decision_attempt(private_directory: Path, *, org_id: str, project_id: str,
+                          proposal_id: str, idempotency_key: str, principal_subject: str) -> str | None:
+    """Read one authenticated caller's original hash; no directory listing or reservation."""
+    directory_fd = _private_directory_fd(private_directory)
+    try:
+        prior = _read_marker(directory_fd, _attempt_filename([org_id, project_id, idempotency_key]),
+                             allow_missing=True)
+    finally:
+        os.close(directory_fd)
+    if prior is None:
+        return None
+    expected = {'schemaVersion': 1, 'state': 'ATTEMPTED', 'orgId': org_id,
+                'projectId': project_id, 'proposalId': proposal_id, 'idempotencyKey': idempotency_key,
+                'principalSubject': principal_subject}
+    if (set(prior) != set(expected) | {'requestHash'} or type(prior.get('schemaVersion')) is not int
+            or any(prior.get(k) != v for k, v in expected.items())
+            or not isinstance(prior.get('requestHash'), str)
+            or re.fullmatch('[0-9a-f]{64}', prior['requestHash']) is None):
+        raise AttemptUnknown('ISSUER_ATTEMPT_RECEIPT_UNTRUSTED')
+    return prior['requestHash']
 
 
 def reserve_decision_attempt(
@@ -112,9 +151,7 @@ def _reserve_attempt_receipt(
     if namespace is not None:
         expected['namespace'] = namespace
         key_parts.insert(0, namespace)
-    key = json.dumps(key_parts,
-                     separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    filename = hashlib.sha256(key).hexdigest() + ".json"
+    filename = _attempt_filename(key_parts)
     payload = json.dumps(expected, sort_keys=True, separators=(",", ":"),
                          ensure_ascii=False).encode("utf-8")
     directory_fd = _private_directory_fd(Path(private_directory))

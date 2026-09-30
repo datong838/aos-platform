@@ -30,6 +30,8 @@ export const AIP_OPERATIONS = {
   getActionProposalTimeline: { method: "GET", path: "/v1/aip/action-proposals/{proposal_id}/timeline", mutation: false },
   getActionExecution: { method: "GET", path: "/v1/aip/action-proposals/{proposal_id}/execution", mutation: false },
   decideActionProposal: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/decision", mutation: true },
+  submitNetworkDecisionIntent: { method: "POST", path: "/v1/aip/runtime-guard-policies/networks/activation-proposals/{proposal_id}/decision-intent", mutation: true },
+  getNetworkDecisionIntent: { method: "GET", path: "/v1/aip/runtime-guard-policies/networks/activation-proposals/{proposal_id}/decision-intent?version={version}", mutation: false },
   withdrawActionProposal: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/withdraw", mutation: true },
   acquireActionLease: { method: "POST", path: "/v1/aip/action-proposals/{proposal_id}/lease", mutation: true },
   executeActionLease: { method: "POST", path: "/v1/aip/action-leases/{lease_id}/execute", mutation: true },

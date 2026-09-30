@@ -7,6 +7,7 @@ from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences
 from aos_api.aip_network_consumer_application import execute_consumer, ConsumerApplicationBlocked
 from aos_api.aip_network_issuer_application import execute_issuer, IssuerApplicationBlocked
 from aos_api.aip_network_proposal_reconcile import inquire_network_proposal, ProposalInquiryBlocked
+from aos_api.aip_network_issuer_product import decide_product, inquire_product_decision
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -86,6 +87,35 @@ def _issuer_response(proposal_id, body, key, principal, authorization, config, r
         raise ApiError(code=exc.code, message='网络策略审批尚未获准或需要对账',
                        status_code=exc.status_code) from None
     response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409, 'blocked': 403}[result['status']]
+    return result
+
+
+@router.post('/networks/activation-proposals/{proposal_id}/decision-intent')
+def submit_network_product_decision(proposal_id: str, body: DecideActionProposalRequest,
+                                    response: Response, authorization: str | None = Header(default=None),
+                                    principal: Principal = Depends(require_principal),
+                                    config=Depends(get_issuer_application_config)):
+    try:
+        result = decide_product(config, proposal_id, body, principal, authorization)
+    except IssuerApplicationBlocked as exc:
+        raise ApiError(code=exc.code, message='网络审批请求未确认，请查询原请求',
+                       status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409, 'blocked': 403}[result['status']]
+    return result
+
+
+@router.get('/networks/activation-proposals/{proposal_id}/decision-intent')
+def get_network_product_decision(proposal_id: str, response: Response,
+                                 version: int = Query(ge=1),
+                                 authorization: str | None = Header(default=None),
+                                 principal: Principal = Depends(require_principal),
+                                 config=Depends(get_issuer_application_config)):
+    try:
+        result = inquire_product_decision(config, proposal_id, version, principal, authorization)
+    except IssuerApplicationBlocked as exc:
+        raise ApiError(code=exc.code, message='网络审批请求尚无法对账', status_code=exc.status_code) from None
+    response.status_code = {'not_attempted': 200, 'unresolved': 202, 'observed': 200,
+                            'conflict': 409, 'blocked': 403}[result['status']]
     return result
 
 

@@ -29,6 +29,21 @@ describe("CanonicalDraftInboxPage", () => {
   beforeEach(() => { host = document.createElement("div"); document.body.appendChild(host); root = createRoot(host); });
   afterEach(() => { act(() => root.unmount()); host.remove(); });
 
+  it("网络配置复用收件箱但不暴露通用执行、撤回或复制入口", async () => {
+    const item = bundle("approved");
+    item.proposal.actionType = { actionTypeId: "aip_activate_network_policy", revisionHash: hash, objectType: "NetworkPolicyRevision" };
+    item.proposal.payload = { candidate: { policyId: "network-1", allowedHosts: ["api.agnes-ai.cn"] } };
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ status: "not_attempted" }), { status: 200 }));
+    try {
+      const sdk = { list: vi.fn().mockResolvedValue({ items: [item], count: 1 }), timeline: vi.fn().mockResolvedValue(timeline(item)), execution: vi.fn().mockResolvedValue(execution(item)) } as unknown as AipActionsSdk;
+      await act(async () => root.render(<MemoryRouter><CanonicalDraftInboxPage sdk={sdk} /></MemoryRouter>));
+      expect(host.textContent).toContain("网络策略审批");
+      expect(host.textContent).toContain("批准不代表已生效");
+      for (const text of ["获取单次执行租约", "执行一次", "撤回精确版本", "基于当前提案修改"])
+        expect([...host.querySelectorAll('button')].some(b => b.textContent?.includes(text))).toBe(false);
+    } finally { fetch.mockRestore(); }
+  });
+
   it("明确区分 approved 与 applied，并从 TaskRun 查询参数筛选", async () => {
     const item = bundle("approved");
     const sdk = { list: vi.fn().mockResolvedValue({ items: [item], count: 1 }), timeline: vi.fn().mockResolvedValue(timeline(item)), execution: vi.fn().mockResolvedValue(execution(item)) } as unknown as AipActionsSdk;

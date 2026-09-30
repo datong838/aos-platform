@@ -10,6 +10,7 @@ import {
   type AipActionsSdk,
 } from "../api/aipActions";
 import { ActionBoundaryPanel } from "../components/aip/ActionBoundaryPanel";
+import { NetworkPolicyDecisionPanel } from "../components/aip/NetworkPolicyDecisionPanel";
 import { PageChrome } from "../components/PageChrome";
 import { actionDisplayName, businessDisplayName, objectTypeDisplayName, riskDisplayName, statusDisplayName } from "../lib/aipChineseLabels";
 
@@ -228,6 +229,20 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
   }, [load, proposalParam]);
 
   useEffect(() => {
+    const changed = () => {
+      generation.current += 1;
+      setItems([]); setTimeline(null); setExecution(null); setSelectedId(null);
+      void load(proposalParam || undefined);
+    };
+    window.addEventListener("aos-auth-updated", changed);
+    window.addEventListener("aos-tenant-updated", changed);
+    return () => {
+      window.removeEventListener("aos-auth-updated", changed);
+      window.removeEventListener("aos-tenant-updated", changed);
+    };
+  }, [load, proposalParam]);
+
+  useEffect(() => {
     if (!proposalParam) return;
     setSearch((prev) => (prev.trim() ? prev : proposalParam));
   }, [proposalParam]);
@@ -267,6 +282,7 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
   const unknownReceipt = execution?.receipts.find((receipt) => receipt.receiptKind === "initial" && receipt.status === "unknown");
   const compensableReceipt = execution ? [...execution.receipts].reverse().find((receipt) => ["applied", "reconciled"].includes(receipt.status)) : undefined;
   const selectedStatus = selected ? effectiveProposalStatus(selected.proposal) : null;
+  const isNetworkPolicy = selected?.proposal.actionType.actionTypeId === "aip_activate_network_policy";
   const writable = state === "ready" && detailState === "ready" && !busy && selectedStatus !== "expired";
   const changeRows = selected ? businessChangeRows(selected.proposal.diff || selected.draft.diff) : [];
   const policySnapshot = selected?.proposal.policySnapshot || {};
@@ -493,25 +509,27 @@ export function CanonicalDraftInboxPage({ sdk = aipActionsSdk }: CanonicalDraftI
                   )}
 
                   <footer className="flex flex-wrap gap-2 border-t border-gray-100 bg-gray-50 p-3">
-                    {selectedStatus === "expired" && <p className="mr-auto text-sm text-red-700">提案已过有效期，写操作关闭；请基于最新业务事实创建新草稿。</p>}
+                    {isNetworkPolicy && <NetworkPolicyDecisionPanel key={`${selected.proposal.id}:${selected.proposal.version}`} proposal={selected.proposal} disabled={!writable}
+                      onObserved={() => { void load(selected.proposal.id); }} />}
+                    {!isNetworkPolicy && selectedStatus === "expired" && <p className="mr-auto text-sm text-red-700">提案已过有效期，写操作关闭；请基于最新业务事实创建新草稿。</p>}
                     {selectedStatus === "withdrawn" && <p className="mr-auto text-sm text-gray-700">提案已撤回，历史版本和审计事件保留；如需继续，请基于最新业务事实创建新草稿。</p>}
-                    {selectedStatus === "drafted" && <>
+                    {!isNetworkPolicy && selectedStatus === "drafted" && <>
                       <label className="min-w-[260px] flex-1 text-sm">审批意见
                         <input aria-label="审批意见" value={approvalReason} onChange={(event) => setApprovalReason(event.target.value)} className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1.5" placeholder="填写基于业务影响和证据的审批意见" />
                       </label>
                       <button type="button" disabled={!writable || !approvalReason.trim()} className="self-end rounded bg-green-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("批准", () => sdk.decide(selected, "approved", approvalReason))}>批准精确版本</button>
                       <button type="button" disabled={!writable || !approvalReason.trim()} className="self-end rounded bg-red-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("拒绝", () => sdk.decide(selected, "rejected", approvalReason))}>拒绝</button>
                     </>}
-                    {selectedStatus === "approved" && <button type="button" disabled={!writable} className="rounded bg-purple-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("获取执行租约", () => sdk.acquireLease(selected))}>获取单次执行租约</button>}
-                    {selectedStatus === "leased" && execution?.lease && <button type="button" disabled={!writable} className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("执行受控动作", () => sdk.execute(execution))}>执行一次</button>}
-                    {selectedStatus === "unknown" && unknownReceipt && <button type="button" disabled={!writable || !unknownReceipt.providerRequestId} title={!unknownReceipt.providerRequestId ? "缺少 provider request id，不能自动对账" : undefined} className="rounded bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("只读对账", () => sdk.reconcile(unknownReceipt.id, "草稿审批台人工发起只读对账"))}>只读对账</button>}
-                    {(selectedStatus === "drafted" || selectedStatus === "approved") && <>
+                    {!isNetworkPolicy && selectedStatus === "approved" && <button type="button" disabled={!writable} className="rounded bg-purple-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("获取执行租约", () => sdk.acquireLease(selected))}>获取单次执行租约</button>}
+                    {!isNetworkPolicy && selectedStatus === "leased" && execution?.lease && <button type="button" disabled={!writable} className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("执行受控动作", () => sdk.execute(execution))}>执行一次</button>}
+                    {!isNetworkPolicy && selectedStatus === "unknown" && unknownReceipt && <button type="button" disabled={!writable || !unknownReceipt.providerRequestId} title={!unknownReceipt.providerRequestId ? "缺少 provider request id，不能自动对账" : undefined} className="rounded bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50" onClick={() => void mutate("只读对账", () => sdk.reconcile(unknownReceipt.id, "草稿审批台人工发起只读对账"))}>只读对账</button>}
+                    {!isNetworkPolicy && (selectedStatus === "drafted" || selectedStatus === "approved") && <>
                       <label className="min-w-[240px] flex-1 text-sm">撤回原因
                         <input aria-label="撤回原因" value={withdrawReason} onChange={(event) => setWithdrawReason(event.target.value)} className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1.5" placeholder="仅发起人可撤回，原因将进入审计事件" />
                       </label>
                       <button type="button" disabled={!writable || !withdrawReason.trim()} className="self-end rounded border border-red-300 bg-white px-3 py-2 text-sm text-red-700 disabled:opacity-50" onClick={() => void mutate("撤回提案", () => sdk.withdraw(selected, withdrawReason))}>撤回精确版本</button>
                     </>}
-                    <button type="button" className="rounded border border-blue-300 bg-white px-3 py-2 text-sm text-blue-700" disabled={busy} onClick={openReplacement}>基于当前提案修改</button>
+                    {!isNetworkPolicy && <button type="button" className="rounded border border-blue-300 bg-white px-3 py-2 text-sm text-blue-700" disabled={busy} onClick={openReplacement}>基于当前提案修改</button>}
                     <button type="button" className="rounded border border-gray-300 bg-white px-3 py-2 text-sm" disabled={busy} onClick={() => void loadDetail(selected.proposal.id)}>重读详情</button>
                   </footer>
                   {replacementOpen && (
