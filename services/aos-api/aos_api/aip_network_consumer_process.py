@@ -2,11 +2,9 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 import math
-import os
 from pathlib import Path
-import socket
-import stat
 
+from aos_api.aip_private_listener import owned_private_listener
 from aos_api.aip_network_consumer_connection import ConsumerDatabaseConfig
 from aos_api.aip_network_consumer_ipc import (
     ConsumerProtocolBlocked, open_private_consumer_listener, serve_one_consumer_connection,
@@ -43,48 +41,18 @@ class ConsumerProcessConfig:
         object.__setattr__(self, 'attempt_directory', attempt)
 
 
-def _identity(info):
-    return info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode
-
-
 @contextmanager
 def consumer_listener(config: ConsumerProcessConfig):
     if type(config) is not ConsumerProcessConfig:
         raise ConsumerProtocolBlocked('CONSUMER_PROCESS_CONFIG_REQUIRED')
     config.__post_init__()
-    try:
-        directory_fd = os.open(config.socket_path.parent,
-                               os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
-    except OSError:
-        raise ConsumerProtocolBlocked('CONSUMER_SOCKET_DIRECTORY_REQUIRED') from None
-    listener = None
-    created = None
-    directory = os.fstat(directory_fd)
-    try:
-        if (directory.st_uid != config.consumer_uid or directory.st_gid != config.ipc_gid
-                or stat.S_IMODE(directory.st_mode) != 0o750):
-            raise ConsumerProtocolBlocked('CONSUMER_SOCKET_DIRECTORY_REQUIRED')
-        listener = open_private_consumer_listener(config.socket_path,
-            api_uid=config.api_uid, consumer_uid=config.consumer_uid, ipc_gid=config.ipc_gid,
-            config=config.database, attempt_directory=config.attempt_directory)
-        created = os.stat(config.socket_path.name, dir_fd=directory_fd, follow_symlinks=False)
+    with owned_private_listener(config.socket_path, service_uid=config.consumer_uid,
+            ipc_gid=config.ipc_gid, blocked=ConsumerProtocolBlocked,
+            error_code='CONSUMER_SOCKET_DIRECTORY_REQUIRED',
+            open_listener=lambda: open_private_consumer_listener(config.socket_path,
+                api_uid=config.api_uid, consumer_uid=config.consumer_uid, ipc_gid=config.ipc_gid,
+                config=config.database, attempt_directory=config.attempt_directory)) as listener:
         yield listener
-    finally:
-        if listener is not None:
-            listener.close()
-        try:
-            if created is not None:
-                current = os.stat(config.socket_path.name, dir_fd=directory_fd, follow_symlinks=False)
-                if (stat.S_ISSOCK(current.st_mode) and current.st_uid == config.consumer_uid
-                        and _identity(current) == _identity(created)
-                        and _identity(os.fstat(directory_fd)) == _identity(directory)
-                        and _identity(config.socket_path.parent.lstat()) == _identity(directory)):
-                    os.unlink(config.socket_path.name, dir_fd=directory_fd)
-        except OSError:
-            # Unknown or replaced paths are retained for explicit reconciliation.
-            pass
-        finally:
-            os.close(directory_fd)
 
 
 def run_consumer_process(config: ConsumerProcessConfig) -> dict[str, int]:

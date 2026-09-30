@@ -18,6 +18,7 @@ from aos_api.aip_network_issuer_contracts import (
     NetworkIssuerDecisionCommand, NetworkIssuerDecisionInquiry,
 )
 from aos_api.aip_network_issuer_service import dispatch_issuer_request, issue_decision_once
+from aos_api.tenant_scope import TenantScope
 
 
 MAX_ISSUER_FRAME_BYTES = 65_536
@@ -189,6 +190,7 @@ def serve_one_issuer_connection(
     expected_database: str,
     read_connect_factory: Callable[[], AbstractContextManager[Any]],
     decision_connect_factory: Callable[..., AbstractContextManager[Any]],
+    expected_scope: TenantScope | None = None,
 ) -> bool:
     """Handle one private request; caller supplies trusted OS and DB configuration."""
     try:
@@ -202,6 +204,9 @@ def serve_one_issuer_connection(
     }
     try:
         method, request = decode_issuer_request(read_issuer_frame(conn))
+        if expected_scope is not None and (type(expected_scope) is not TenantScope
+                or (request.org_id, request.project_id) != expected_scope.key):
+            raise IssuerProtocolBlocked('ISSUER_PROCESS_SCOPE_REQUIRED')
         if method == "inquiry":
             result = dispatch_issuer_request(
                 request, read_connect_factory=read_connect_factory,
