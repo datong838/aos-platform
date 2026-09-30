@@ -9,3 +9,14 @@
 | Owner 边界复核 | `pipeline_source_selection_owner.py:160-255` | 已核到 `run_current_snapshot` 在当前事务对安装 `FOR UPDATE`，检查 active baseline、binding/config 与当前签名 release；本波模板检查仍重读来源，未取代 Owner/broker 准入。 |
 
 仍无合法 active1.12 安装，因此没有 active 正向验收。要做正向需另建可恢复 test-only 全生命周期演练，不能直接 UPDATE 指针或将 approved 当 active；当前真库只读，Host/worker/Provider 关闭，首链 pending。BG00dq 任务继续 ACTIVE。
+
+## 同波只读复核：合法 active 正向入口
+
+2026-09-30 17:20 CST，读取 `bundle_runtime_installations.py:127-147,340-347`、`lifecycle_service.py:46-105`、`runtime_host.py:131-146`、`control_wiring.py:115-230` 和 `scripts/a0v_current_runtime_host_preflight.py:66-166`：`runtime-apply/verify` 的接受条件包含进程内 ACTIVE Host、当前精确租户 assignment，以及签名安装/三类独立数据库身份/Host assignment 预检。`runtime-verify` 还要求该安装已有 lifecycle Owner。不能用 `InstallationService.apply/verify` 或直接改 `active_revision` 绕过这些条件。
+
+| 只读命令 | 退出码与结果 |
+| --- | --- |
+| `services/aos-api/.venv/bin/python scripts/a0v_growth_112_formal_source_audit.py --current-signed-receipt /Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json --successor-signed-receipt /Users/ddt/work/projects/ai_agent/.aos-growth-112-signing-receipt-r3-20260930.json` | 0；两库 a0v_118，Host identity/assignment/operation/binding/config 与八候选全 0；当前无 growth1.12、克隆有已签名 growth1.12；`formalReady=false`、`effects=0`。 |
+| `services/aos-api/.venv/bin/python scripts/a0v_current_runtime_host_preflight.py --signed-receipt /Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json --preparation-only` | 2；`SAFE_BLOCKED/CREDENTIAL_FILE_REQUIRED`。无 Host 启动、无数据库写。 |
+
+结论只限本次受检正式入口：当前无法合法启动 Host 走完整 active 状态机，test-only 的签名 clone 也缺三身份和 assignment。该实例正向验收继续 pending；不伪造授权、不用测试替身计作验收。接着做不依赖 Host 的代码与契约检查，用户长期 Goal 不改状态。
