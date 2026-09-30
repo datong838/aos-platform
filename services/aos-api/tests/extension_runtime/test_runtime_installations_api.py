@@ -520,6 +520,31 @@ def test_configure_and_disable_dispatch_exact_targets() -> None:
     assert control.disable_service.calls[0]["target"]["generation"] == GENERATION
 
 
+def test_preparation_only_host_rejects_nonpreparation_controls_before_receipt() -> None:
+    control = _control_plane()
+    app = _app(control)
+    app.state.extension_runtime_host_selection = SimpleNamespace(preparation_only=True, status="ACTIVE")
+    app.state.extension_runtime_host_status = "ACTIVE"
+    client = TestClient(app)
+    target = {
+        "generation": GENERATION,
+        "bindingRevision": 4,
+        "configRef": {"configurationId": CONFIGURATION_ID, "revision": 1,
+                      "hash": "sha256:" + "a" * 64},
+    }
+    for kind in ("configure", "enable", "disable"):
+        response = client.post(
+            f"/v1/bundle-runtime-installations/{INSTALLATION_ID}/operations",
+            headers={"Authorization": "Bearer ignored", "Idempotency-Key": f"{kind}-prep",
+                     "If-Match": '"3"'},
+            json={"kind": kind, "target": target},
+        )
+        assert response.status_code == 503
+        assert response.json()["code"] == "RUNTIME_PREPARATION_ONLY"
+    assert control.configuration_service.calls == []
+    assert control.disable_service.calls == []
+
+
 def test_target_and_header_contracts_reject_ambiguous_requests() -> None:
     client = TestClient(_app(_control_plane()))
     missing_target = client.post(

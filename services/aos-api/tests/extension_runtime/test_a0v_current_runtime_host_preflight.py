@@ -76,9 +76,10 @@ def test_mixed_same_role_or_privileged_identity_rejected(gate, bad):
 class ReadConn:
     read_only = True
 
-    def __init__(self, assignment=None, candidates=None):
+    def __init__(self, assignment=None, candidates=None, enabled_bindings=0):
         self.assignment = assignment
         self.candidates = candidates
+        self.enabled_bindings = enabled_bindings
         self.calls = []
 
     def execute(self, query, params):
@@ -86,6 +87,8 @@ class ReadConn:
         return self
 
     def fetchone(self):
+        if "extension_runtime_binding" in self.calls[-1][0]:
+            return {"enabled_bindings": self.enabled_bindings}
         return self.assignment
 
 
@@ -126,6 +129,17 @@ def test_explicit_preparation_only_keeps_identity_gate_and_reports_missing_candi
     assert result == {"hostId": "host-1", "candidateCounts": {"budgets": 0},
                       "admissionMode": "PREPARATION_ONLY"}
     assert conn.calls[0][1] == ("org-org", "dev-project")
+
+
+def test_preparation_only_rejects_existing_enabled_binding(gate, monkeypatch):
+    from aos_api.extension_runtime.runtime_configuration_candidates import RuntimeConfigurationCandidates
+    monkeypatch.setattr(gate, "read_candidates", lambda *_: RuntimeConfigurationCandidates(
+        {"budgets": 0}, ("budgets",), False))
+    conn = ReadConn({"state": "assigned", "host_id": "host-1", "database_role": "directory",
+                     "database_role_oid": 1, "enabled": True}, enabled_bindings=1)
+    with pytest.raises(gate.HostPreflightBlocked, match="ACTIVE_BINDING_REQUIRES_FULL_HOST"):
+        gate.require_current_host_and_candidates(
+            conn, identity("directory", 1, directory=True), preparation_only=True)
 
 
 def test_green_report_carries_exact_physical_authority_and_signed_paths(gate, monkeypatch):

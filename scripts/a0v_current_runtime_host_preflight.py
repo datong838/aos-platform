@@ -88,6 +88,15 @@ def require_current_host_and_candidates(
     if (row["enabled"] is not True or row["database_role"] != directory.session_user
             or row["database_role_oid"] != directory.role_oid):
         raise HostPreflightBlocked("HOST_IDENTITY_MISMATCH")
+    if preparation_only:
+        existing = conn.execute(
+            """SELECT count(*) AS enabled_bindings FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND enabled""",
+            ("org-org", "dev-project"),
+        ).fetchone()
+        if (existing is None or type(existing["enabled_bindings"]) is not int
+                or existing["enabled_bindings"] != 0):
+            raise HostPreflightBlocked("ACTIVE_BINDING_REQUIRES_FULL_HOST")
     candidates = read_candidates(conn, TenantScope(org_id="org-org", project_id="dev-project"))
     if not candidates.all_present and not preparation_only:
         raise HostPreflightBlocked("CONFIGURATION_CANDIDATES_MISSING")

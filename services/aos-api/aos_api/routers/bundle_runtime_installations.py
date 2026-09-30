@@ -343,10 +343,19 @@ def create_bundle_runtime_operation(
                 request, org_id=principal.org_id, project_id=principal.project_id,
                 installation_id=installation_id, kind=body.kind,
             ), **common))
-    elif body.kind in {"configure", "enable"}:
-        receipt = _invoke(lambda: control_plane.configuration_service.request(kind=body.kind, target=body.target, **common))
     else:
-        receipt = _invoke(lambda: control_plane.disable_service.request(target=body.target, **common))
+        selection = getattr(request.app.state, "extension_runtime_host_selection", None)
+        if (getattr(request.app.state, "extension_runtime_host_status", None) == "ACTIVE"
+                and getattr(selection, "preparation_only", None) is True):
+            raise ApiError(
+                code="RUNTIME_PREPARATION_ONLY",
+                message="运行资源当前仅处理安装准备与验证，请完成配置准入后重试。",
+                status_code=503,
+            )
+        if body.kind in {"configure", "enable"}:
+            receipt = _invoke(lambda: control_plane.configuration_service.request(kind=body.kind, target=body.target, **common))
+        else:
+            receipt = _invoke(lambda: control_plane.disable_service.request(target=body.target, **common))
     if receipt.response_etag is not None:
         response.headers["ETag"] = receipt.response_etag
     result = RuntimeOperationAccepted.model_validate(receipt.response_json)
