@@ -453,6 +453,76 @@ class AipBudgetActivationStore:
         except Exception:
             raise BudgetActivationInquiryUnavailable("BUDGET_ACTIVATION_INQUIRY_UNAVAILABLE") from None
 
+    def get_candidate(self, principal: Principal, budget_id: str) -> dict:
+        scope, actor = _identity(principal)
+        if type(budget_id) is not str or not budget_id or budget_id != budget_id.strip():
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_BUDGET_ID_INVALID")
+        try:
+            with connect_read_only(scope) as conn:
+                _require_inquiry_connection(conn, scope)
+                _member(conn, scope, actor, label="MAKER", lock=False)
+                row = conn.execute(
+                    """SELECT h.current_revision,h.version,r.payload,r.content_hash,r.lifecycle
+                       FROM aip_budget_head h JOIN aip_budget_revision r
+                         ON r.org_id=h.org_id AND r.project_id=h.project_id
+                        AND r.budget_id=h.budget_id AND r.revision=h.current_revision
+                       WHERE h.org_id=%s AND h.project_id=%s AND h.budget_id=%s""",
+                    (*scope.key, budget_id)).fetchone()
+                if row is None or row["lifecycle"] != "draft":
+                    raise BudgetActivationDenied("BUDGET_ACTIVATION_CURRENT_DRAFT_REQUIRED")
+                payload = dict(row["payload"])
+                tenant = payload.pop("tenant", None)
+                content_hash = payload.pop("contentHash", None)
+                payload.pop("createdBy", None)
+                payload.pop("createdAt", None)
+                draft = BudgetRevisionCreate.model_validate(payload)
+                if (tenant != {"orgId": scope.org_id, "projectId": scope.project_id}
+                        or draft.budget_id != budget_id or draft.revision != row["current_revision"]
+                        or draft.lifecycle is not BudgetLifecycle.DRAFT
+                        or canonical_hash(payload) != row["content_hash"] or content_hash != row["content_hash"]):
+                    raise BudgetActivationDenied("BUDGET_ACTIVATION_DRAFT_DRIFT")
+                target = draft.model_copy(update={"revision": draft.revision+1, "lifecycle": BudgetLifecycle.ACTIVE})
+                return {"headVersion": row["version"], "draftRevision": draft.revision,
+                        "target": target.model_dump(mode="json", by_alias=True), "activationEligible": False}
+        except BudgetActivationDenied:
+            raise
+        except Exception:
+            raise BudgetActivationInquiryUnavailable("BUDGET_ACTIVATION_CANDIDATE_UNAVAILABLE") from None
+
+    def get_decision_review(self, principal: Principal, decision_id: str) -> dict:
+        scope, actor = _identity(principal)
+        if type(decision_id) is not str or not decision_id or decision_id != decision_id.strip():
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_INVALID")
+        try:
+            with connect_read_only(scope) as conn:
+                _require_inquiry_connection(conn, scope)
+                _member(conn, scope, actor, label="REVIEWER", lock=False)
+                decision = conn.execute("""SELECT * FROM aip_budget_activation_decision
+                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                    (*scope.key, decision_id)).fetchone()
+                if decision is None:
+                    raise BudgetActivationDenied("BUDGET_ACTIVATION_REVIEWER_INVALID")
+                preview = conn.execute("""SELECT * FROM aip_budget_activation_preview
+                    WHERE org_id=%s AND project_id=%s AND preview_id=%s""",
+                    (*scope.key, decision["preview_id"])).fetchone()
+                if preview is None or actor not in {preview["maker_subject"], preview["checker_subject"]}:
+                    raise BudgetActivationDenied("BUDGET_ACTIVATION_REVIEWER_INVALID")
+                if (_preview_hash(scope, preview) != preview["preview_hash"]
+                        or canonical_hash(preview["target_payload"]) != preview["target_hash"]
+                        or decision["preview_hash"] != preview["preview_hash"]
+                        or decision["target_hash"] != preview["target_hash"]
+                        or decision["checker_subject"] != preview["checker_subject"]
+                        or preview["maker_subject"] == preview["checker_subject"]):
+                    raise BudgetActivationDenied("BUDGET_ACTIVATION_PREVIEW_DRIFT")
+                revoked = conn.execute("""SELECT 1 FROM aip_budget_activation_revocation
+                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                    (*scope.key, decision_id)).fetchone() is not None
+                return {"decision": _decision_view(decision), "preview": _preview_view(preview), "revoked": revoked}
+        except BudgetActivationDenied:
+            raise
+        except Exception:
+            raise BudgetActivationInquiryUnavailable("BUDGET_ACTIVATION_REVIEW_UNAVAILABLE") from None
+
     def get_preview(self, principal: Principal, preview_id: str) -> dict:
         scope, actor = _identity(principal)
         if type(preview_id) is not str or not preview_id or preview_id != preview_id.strip():

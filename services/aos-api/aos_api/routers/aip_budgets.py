@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Header, Query, Response, status
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.aip_budget_activation_contracts import (
-    BudgetActivationDecisionView,
+    BudgetActivationDecisionView, BudgetActivationCandidateView, BudgetDecisionReviewView,
     BudgetActivationPreviewView,
     BudgetActivationRevocationView,
     CreateBudgetActivationPreviewRequest,
@@ -203,12 +203,14 @@ def inquire_budget_revoke_intent(
 
 @router.get("/activation-previews/{preview_id}", response_model=BudgetActivationPreviewView)
 def get_budget_activation_preview(
-    preview_id: str,
+    preview_id: str, response: Response,
     principal: Principal = Depends(require_principal),
     store: AipBudgetActivationStore = Depends(get_activation_store),
 ):
     try:
-        return store.get_preview(principal, preview_id)
+        result = store.get_preview(principal, preview_id)
+        response.headers["Cache-Control"] = "no-store"
+        return result
     except (BudgetActivationDenied, BudgetActivationConflict) as exc:
         raise _map_activation(exc) from exc
 
@@ -284,6 +286,32 @@ def inquire_budget_activation_revocation(
     except (BudgetActivationDenied, BudgetActivationConflict) as exc:
         raise _map_activation(exc) from exc
     response.status_code = {"unresolved": 202, "observed": 200, "conflict": 409}[result["status"]]
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.get("/activation-candidates/{budget_id}", response_model=BudgetActivationCandidateView)
+def get_budget_activation_candidate(
+    budget_id: str, response: Response, principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        result = store.get_candidate(principal, budget_id)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.get("/activation-decisions/{decision_id}", response_model=BudgetDecisionReviewView)
+def get_budget_decision_review(
+    decision_id: str, response: Response, principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        result = store.get_decision_review(principal, decision_id)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
     response.headers["Cache-Control"] = "no-store"
     return result
 

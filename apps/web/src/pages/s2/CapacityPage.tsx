@@ -4,6 +4,7 @@ import { apiPost } from "../../api/client";
 import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoolSummary, type RuntimeQuotaAuthoritySummary, type RuntimeUsageAttributionDimension } from "../../api/aipModelRuntime";
 import { PageChrome } from "../../components/PageChrome";
 import { BudgetRevisionSetupPanel } from "./BudgetRevisionSetupPanel";
+import { BudgetActivationReviewPanel } from "./BudgetActivationReviewPanel";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -430,6 +431,7 @@ export function CapacityPage() {
     <PageChrome title="容量管理" lede="查看用量、项目与用户限速及预留容量；数据来自容量权威接口，读取失败时不回落到本地演示数据">
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <BudgetRevisionSetupPanel />
+        <BudgetActivationReviewPanel />
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
             <span className="w2-a6a7-demo-badge">加载失败</span>

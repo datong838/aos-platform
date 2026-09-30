@@ -96,3 +96,16 @@ class BudgetRevocationInquiryObserved(AipContractModel):
 
 class BudgetProductInquiryPending(AipContractModel):
     status: Literal["not_attempted", "unresolved", "conflict"]
+
+
+class BudgetActivationCandidateView(AipContractModel):
+    head_version: int = Field(ge=1)
+    draft_revision: int = Field(ge=1)
+    target: BudgetRevisionCreate
+    activation_eligible: Literal[False] = False
+
+
+class BudgetDecisionReviewView(AipContractModel):
+    decision: BudgetActivationDecisionView
+    preview: BudgetActivationPreviewView
+    revoked: bool
