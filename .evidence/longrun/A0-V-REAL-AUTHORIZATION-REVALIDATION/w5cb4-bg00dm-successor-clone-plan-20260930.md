@@ -14,3 +14,7 @@
 ## 退出判据
 
 BG00dm 的 GREEN 仅代表隔离克隆不可变 successor 机制，需真实 PG 正负证据、签名来源和 Receipt/旧对象对账；正式当前安装、八配置与自然首链仍 pending。任一正向缺合法克隆条件则保留 RED 和拒绝证据，转做独立代码项，不制造当前批准身份。
+
+## 施工前合同复核
+
+`CompositionService.resolve(currentInstallationRef=...)` 会经 `InstallationStore.load_active_baseline_in_transaction` 读取**活动**前驱；当前旧安装为 approved@3 且 active_revision=NULL，不能伪造活动基线。克隆正向只新建独立的 1.12 composition 与安装候选，旧 approved 安装原样保留；真正的替换/切换仍需正式批准与独立窗口。克隆 Registry 快照要同时验证旧 1.11 和新 1.12 签名，两份开发/当前 public trust root 只可在 test-only 内组合使用，不能写入当前信任根或把测试人物认作正式 checker。
