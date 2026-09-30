@@ -471,6 +471,11 @@ class ApprovedBIPreparationResolver:
         except Exception:
             return None
 
+    def resolve(self, scope: TenantScope, ref: ExactRevisionRef) -> bool:
+        """AIP Plan creation only; business readers must use the active resolver."""
+        selection = self.select(scope)
+        return selection is not None and selection.template_ref == ref
+
     def _approved_rows(self, scope: TenantScope) -> list[Any]:
         with self._connect_factory(scope) as conn:
             return list(conn.execute(

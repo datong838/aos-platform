@@ -14,6 +14,14 @@ test-only `colima-aos-a0v-test-only/aos-bg00dl-isolated-pg`，卷 `aos-bg00dl-is
 | 新增及相邻单测 | `uv run --project services/aos-api pytest -q services/aos-api/tests/aip/test_aip_responsibility_template_authority.py services/aos-api/tests/test_ecommerce_business_investigation_aip_authority.py services/aos-api/tests/test_ecommerce_analysis_compilation_roles.py services/aos-api/tests/test_ecommerce_business_investigation_aip_readiness.py --disable-warnings` | 0；58 passed。 |
 | 静态检查 | `python3 -m py_compile services/aos-api/aos_api/aip_responsibility_template_authority.py`；`git diff --check` | 均 0。 |
 
+## Plan 准备态接线续验
+
+先补 `test_plan_can_carry_exact_signed_preparation_template_ref` 与 `test_materializer_requires_preparation_selection_before_stage_write`，RED 退出1（2 failed：builder 不接受 `template_ref`、materializer 不接受 `preparation_resolver`）。最小接线后，materializer 先只读选择并复核 exact signed ref，默认 Plan Store 使用专用准备态 resolver；外部注入的 active-only AIP Store 若拒绝该 ref，也在 Stage 写入前退出。历史 builder 不传 ref 时仍构造静态 ref 供旧纯结构测试，但生产解析器已拒绝，不能落盘冒充来源。
+
+克隆只读续验：`ApprovedBIPreparationResolver.resolve(scope, selected.template_ref)=True`；本地静态 ref 的准备态解析=False；同一 approved 安装的业务 active 解析=False；`build_responsibility_plan_request(..., template_ref=selected.template_ref)` 原样携带 exact ref。该命令退出0；没有创建 Plan。专项加相邻单测再次运行退出0，`61 passed`。
+
+仍缺六个当前合法数字同事及业务 active 消费端签名 payload 绑定，故不声称 Plan 正式创建或首链完成。当前真库没有新安装/Plan 写入。
+
 ## 结论和未完成
 
 独立只读准备态来源能从 test-only 的唯一 approved growth1.12 安装，组合当前 Registry ReleasePolicy、签名镜像、精确 lock 与 artifact 字节导出 exact ref。它不改变现有 active 生产解析器；没有凭此授权当前真库或 Host。

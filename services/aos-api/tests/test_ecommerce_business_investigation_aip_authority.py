@@ -78,6 +78,59 @@ def test_six_responsibilities_bind_six_current_coworkers_by_capability() -> None
     assert resolve_responsibility_template(SCOPE, body.template_ref) is False
 
 
+def test_plan_can_carry_exact_signed_preparation_template_ref() -> None:
+    exact = ExactRevisionRef(
+        resource_type="ResponsibilityTemplateRevision",
+        resource_id=("bundle://a0v-growth-112/solution.ecommerce.growth/1.12.0/"
+                     "content/responsibility-templates/business-investigation.readonly.json"),
+        revision=3, content_hash="a" * 64,
+    )
+    assert build_responsibility_plan_request(VERSIONS, template_ref=exact).template_ref == exact
+
+
+def test_materializer_requires_preparation_selection_before_stage_write() -> None:
+    store = Store()
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    class Unavailable:
+        def select(self, scope):
+            return None
+    runner = BusinessInvestigationAuthorityMaterializer(
+        store=store, connect_factory=connect, preparation_resolver=Unavailable())
+    with pytest.raises(ValueError, match="signed installed BI responsibility template unavailable"):
+        runner.ensure(SCOPE)
+    assert store.calls == []
+
+
+def test_materializer_rejects_external_active_only_store_before_stage_write() -> None:
+    from aos_api.aip_production_contract_store import AipProductionContractStore
+    exact = ExactRevisionRef(
+        resource_type="ResponsibilityTemplateRevision",
+        resource_id=("bundle://a0v-growth-112/solution.ecommerce.growth/1.12.0/"
+                     "content/responsibility-templates/business-investigation.readonly.json"),
+        revision=3, content_hash="a" * 64,
+    )
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    class Preparation:
+        def select(self, scope):
+            return SimpleNamespace(template_ref=exact)
+        def resolve(self, scope, ref):
+            return scope == SCOPE and ref == exact
+    store = AipProductionContractStore(
+        connect_factory=connect,
+        responsibility_template_resolver=lambda scope, ref: False,
+    )
+    runner = BusinessInvestigationAuthorityMaterializer(
+        store=store, connect_factory=connect, preparation_resolver=Preparation())
+    with pytest.raises(ValueError, match="Plan store rejects signed BI preparation template"):
+        runner.ensure(SCOPE)
+
+
 def test_missing_active_coworker_version_fails_closed() -> None:
     versions = dict(VERSIONS)
     versions.pop("ecommerce.shopping_advisor.default")
@@ -166,8 +219,17 @@ class Store:
 
 
 def materializer(store, monkeypatch):
-    from aos_api import ecommerce_business_investigation_aip_authority as module
-    monkeypatch.setattr(module, "resolve_responsibility_template", lambda scope, ref: True)
+    signed_ref = ExactRevisionRef(
+        resource_type="ResponsibilityTemplateRevision",
+        resource_id=("bundle://a0v-growth-112/solution.ecommerce.growth/1.12.0/"
+                     "content/responsibility-templates/business-investigation.readonly.json"),
+        revision=3, content_hash="a" * 64,
+    )
+    class Preparation:
+        def select(self, scope):
+            return SimpleNamespace(template_ref=signed_ref) if scope == SCOPE else None
+        def resolve(self, scope, ref):
+            return scope == SCOPE and ref == signed_ref
     @contextmanager
     def connect(scope):
         assert scope == SCOPE
@@ -176,6 +238,7 @@ def materializer(store, monkeypatch):
     return BusinessInvestigationAuthorityMaterializer(
         store=store,
         connect_factory=connect,
+        preparation_resolver=Preparation(),
     )
 
 

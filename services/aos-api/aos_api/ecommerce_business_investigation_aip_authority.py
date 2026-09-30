@@ -24,8 +24,8 @@ from aos_api.aip_production_contracts import (
     StageTemplateRevision,
 )
 from aos_api.aip_responsibility_template_authority import (
+    ApprovedBIPreparationResolver,
     published_template_ref,
-    resolve_responsibility_template,
 )
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
 from aos_api.aip_stage_template_authority import (
@@ -162,6 +162,8 @@ def build_stage_template_request() -> CreateStageTemplateRequest:
 
 def build_responsibility_plan_request(
     instance_versions: Mapping[str, int],
+    *,
+    template_ref: ExactRevisionRef | None = None,
 ) -> CreateResponsibilityPlanRequest:
     missing = sorted(
         instance_id
@@ -189,7 +191,8 @@ def build_responsibility_plan_request(
     ]
     return CreateResponsibilityPlanRequest(
         profile="ecommerce.business-investigation.readonly",
-        templateRef=published_template_ref("ecommerce.business-investigation.readonly"),
+        templateRef=(template_ref or published_template_ref(
+            "ecommerce.business-investigation.readonly")),
         slots=slots,
     )
 
@@ -208,11 +211,13 @@ class BusinessInvestigationAuthorityMaterializer:
         *,
         store: AipProductionContractStore | None = None,
         connect_factory: Callable[[TenantScope], Any] = db_connect,
+        preparation_resolver: ApprovedBIPreparationResolver | None = None,
     ) -> None:
         self._connect = connect_factory
+        self._preparation_resolver = preparation_resolver or ApprovedBIPreparationResolver()
         self._store = store or AipProductionContractStore(
             connect_factory=connect_factory,
-            responsibility_template_resolver=resolve_responsibility_template,
+            responsibility_template_resolver=self._preparation_resolver.resolve,
             stage_template_source_resolver=resolve_stage_template_source,
         )
 
@@ -223,9 +228,17 @@ class BusinessInvestigationAuthorityMaterializer:
         actor: str = "aos-main-development",
     ) -> InvestigationAuthorityMaterialization:
         versions = self._active_instance_versions(scope)
-        plan_request = build_responsibility_plan_request(versions)
-        if not resolve_responsibility_template(scope, plan_request.template_ref):
+        selection = self._preparation_resolver.select(scope)
+        if selection is None:
             raise ValueError("signed installed BI responsibility template unavailable")
+        plan_request = build_responsibility_plan_request(
+            versions, template_ref=selection.template_ref)
+        if not self._preparation_resolver.resolve(scope, plan_request.template_ref):
+            raise ValueError("signed installed BI responsibility template unavailable")
+        if isinstance(self._store, AipProductionContractStore):
+            store_resolver = self._store._responsibility_template_resolver
+            if store_resolver is None or not store_resolver(scope, plan_request.template_ref):
+                raise ValueError("Plan store rejects signed BI preparation template")
         stage = self._store.create_stage_template(
             scope,
             actor,
