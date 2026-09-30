@@ -7,8 +7,14 @@ import uuid
 import pytest
 
 
-_CONTAINER = "aos-bg00ce-isolated-pg"
+_CONTAINER = os.environ.get("AOS_BG00CJ_TEST_CONTAINER", "")
+_ALLOWED_CONTAINERS = {"aos-bg00ce-isolated-pg", "aos-bg00ck-isolated-pg"}
 _DB = "aos_current_preview_20260927"
+
+
+def _require_isolated_container() -> None:
+    if _CONTAINER not in _ALLOWED_CONTAINERS:
+        pytest.skip("explicit BG00cj/BG00ck isolated container required")
 
 
 def _probe(sql: str, *, user: str = "postgres") -> subprocess.CompletedProcess[str]:
@@ -37,8 +43,7 @@ def _seed(proposal: str) -> str:
 
 @pytest.mark.parametrize("mutation", ["event_insert", "proposal_hash_update"])
 def test_runtime_cannot_forge_network_approval(mutation: str) -> None:
-    if os.environ.get("AOS_BG00CJ_TEST_CONTAINER") != _CONTAINER:
-        pytest.skip("explicit BG00cj isolated container required")
+    _require_isolated_container()
     proposal = f"bg00cj-{uuid.uuid4().hex}"
     event = f"bg00cj-event-{uuid.uuid4().hex}"
     seed = _seed(proposal) + """SET LOCAL ROLE aos_runtime;
@@ -67,8 +72,7 @@ def test_runtime_cannot_forge_network_approval(mutation: str) -> None:
 
 
 def test_issuer_can_issue_event_but_not_maker_proposal() -> None:
-    if os.environ.get("AOS_BG00CJ_TEST_CONTAINER") != _CONTAINER:
-        pytest.skip("explicit BG00cj isolated container required")
+    _require_isolated_container()
     proposal = f"bg00cj-{uuid.uuid4().hex}"
     seed = _seed(proposal)
     positive = _probe(seed + f"""
@@ -106,8 +110,7 @@ def test_issuer_can_issue_event_but_not_maker_proposal() -> None:
 
 @pytest.mark.parametrize("mutation", ["UPDATE", "DELETE"])
 def test_network_approval_event_is_append_only(mutation: str) -> None:
-    if os.environ.get("AOS_BG00CJ_TEST_CONTAINER") != _CONTAINER:
-        pytest.skip("explicit BG00cj isolated container required")
+    _require_isolated_container()
     proposal = f"bg00cj-{uuid.uuid4().hex}"
     event = f"{proposal}-event"
     attack = (f"UPDATE aip_action_approval_event SET reason='forged' WHERE "
@@ -137,8 +140,7 @@ def test_network_approval_event_is_append_only(mutation: str) -> None:
 
 
 def test_generic_action_table_path_remains_available() -> None:
-    if os.environ.get("AOS_BG00CJ_TEST_CONTAINER") != _CONTAINER:
-        pytest.skip("explicit BG00cj isolated container required")
+    _require_isolated_container()
     proposal = f"bg00cj-generic-{uuid.uuid4().hex}"
     result = _probe(f"""BEGIN;
       INSERT INTO aip_action_proposal
