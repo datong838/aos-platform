@@ -37,7 +37,7 @@ def _receipt(conn, operation):
     )
 
 
-def test_consumer_roles_are_nonprivileged_sealed_and_have_no_table_write_access():
+def test_consumer_roles_are_nonprivileged_and_have_only_bounded_write_access():
     with isolated_owner() as conn:
         rows = conn.execute(
             "SELECT rolname,rolcanlogin,rolinherit,rolsuper,rolcreatedb,rolcreaterole,"
@@ -54,8 +54,27 @@ def test_consumer_roles_are_nonprivileged_sealed_and_have_no_table_write_access(
                                 (row["rolname"],)).fetchone()["n"] == 0
             for table in ("aip_action_approval_event", "aip_network_policy_head",
                           "aip_network_policy_revision", "aip_network_policy_receipt"):
-                assert not conn.execute("SELECT has_table_privilege(%s,%s,'INSERT,UPDATE,DELETE') AS allowed",
-                                        (row["rolname"], table)).fetchone()["allowed"]
+                for privilege in ("INSERT", "UPDATE", "DELETE"):
+                    expected = (row["rolname"] == OWNER and privilege == "INSERT"
+                                and table != "aip_action_approval_event")
+                    assert conn.execute("SELECT has_table_privilege(%s,%s,%s) AS allowed",
+                                        (row["rolname"], table, privilege)).fetchone()["allowed"] is expected
+            columns = conn.execute(
+                "SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' "
+                "ORDER BY table_name,column_name").fetchall()
+            allowed_updates = {
+                ("aip_action_proposal", "proposal_id"), ("aip_action_draft", "proposal_id"),
+                ("aip_action_approval_event", "approval_event_id"), ("meta_membership", "subject"),
+                ("aip_runtime_guard_policy_head", "policy_id"), ("meta_object_type", "id"),
+                ("meta_action_type", "id"), ("aip_network_policy_head", "current_revision"),
+                ("aip_network_policy_head", "version"), ("aip_network_policy_head", "updated_at"),
+            } if row["rolname"] == OWNER else set()
+            actual_updates = {
+                (c["table_name"], c["column_name"]) for c in columns
+                if conn.execute("SELECT has_column_privilege(%s,%s,%s,'UPDATE') AS allowed",
+                                (row["rolname"], 'public.'+c["table_name"], c["column_name"])).fetchone()["allowed"]
+            }
+            assert actual_updates == allowed_updates
 
 
 @pytest.mark.parametrize("target", [OWNER, ISSUER, "aos_runtime"])
