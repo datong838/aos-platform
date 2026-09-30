@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 
@@ -59,6 +60,28 @@ def test_signed_bi_plan_preparation_rejects_dev_identity_before_database_access(
             SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
             expected_etag_version=3, principal=principal,
             idempotency_key="bi-plan-prep-exact-1",
+        )
+
+
+def test_signed_bi_plan_preparation_rejects_cross_tenant_oidc_before_database_access() -> None:
+    from aos_api.auth import Principal
+    from aos_api.ecommerce_business_investigation_aip_authority import (
+        SignedBIPlanPreparationService,
+    )
+
+    def unexpected_connect(_scope):
+        pytest.fail("cross tenant principal must not open a configuration transaction")
+
+    service = SignedBIPlanPreparationService(connect_factory=unexpected_connect)
+    principal = Principal(
+        subject="test:wrong-tenant", org_id="dev-org", project_id="dev-project",
+        roles=["admin"], token_kind="oidc",
+    )
+    with pytest.raises(PermissionError, match="formal authenticated actor required"):
+        service.prepare(
+            SCOPE, installation_id="42785d78-5914-4a54-a078-e5d2c7f48481",
+            expected_etag_version=3, principal=principal,
+            idempotency_key="bi-plan-prep-cross-tenant",
         )
 
 
@@ -151,6 +174,61 @@ def test_signed_bi_plan_route_uses_principal_and_strong_installation_etag() -> N
             service=Service())
     assert error.value.status_code == 400
     assert len(seen) == 1
+
+
+def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None:
+    """Database rollback proof only; injected template authority is not acceptance."""
+    from aos_api.aip_production_contract_store import (
+        AipProductionContractStore, ProductionContractIdempotencyConflict,
+    )
+    from aos_api.db import connect
+
+    key = f"bi-du-rollback-{uuid4().hex}"
+    template_id = f"bi-du-test-{uuid4().hex[:16]}"
+    store = AipProductionContractStore(
+        responsibility_template_resolver=lambda scope, ref: scope == SCOPE)
+    class StopAfterPlan(RuntimeError): pass
+    with pytest.raises(StopAfterPlan):
+        with connect(SCOPE) as conn:
+            conn.execute("""INSERT INTO aip_agent_template_revision
+                (template_id,revision,display_name,role_key,lifecycle,source_ref,
+                 source_license,manifest,content_hash,created_by)
+                VALUES(%s,1,'BI test only','content_officer','published',
+                       '{}','internal','{}',%s,'test:bi-du')""",
+                (template_id, "b" * 64))
+            for instance_id, version in VERSIONS.items():
+                conn.execute("""INSERT INTO aip_agent_instance
+                    (org_id,project_id,instance_id,template_id,template_revision,status,
+                     overlay,version,created_by)
+                    VALUES(%s,%s,%s,%s,1,'active','{}',%s,'test:bi-du')""",
+                    (*SCOPE.key, instance_id, template_id, version))
+            request = build_responsibility_plan_request(VERSIONS)
+            plan = store.create_responsibility_plan_in_transaction(
+                conn, SCOPE, "test:bi-du", key, request,
+                operation="bi_responsibility_plan.prepare",
+                request_context={"installationId": "test-only", "actor": "test:bi-du"},
+            )
+            assert plan.lifecycle is BriefLifecycle.DRAFT
+            replay = store.create_responsibility_plan_in_transaction(
+                conn, SCOPE, "test:bi-du", key, request,
+                operation="bi_responsibility_plan.prepare",
+                request_context={"installationId": "test-only", "actor": "test:bi-du"},
+            )
+            assert replay.plan_id == plan.plan_id
+            with pytest.raises(ProductionContractIdempotencyConflict):
+                store.create_responsibility_plan_in_transaction(
+                    conn, SCOPE, "test:bi-du", key, request,
+                    operation="bi_responsibility_plan.prepare",
+                    request_context={"installationId": "another-test-only", "actor": "test:bi-du"},
+                )
+            raise StopAfterPlan()
+    with connect(SCOPE) as conn:
+        assert conn.execute("""SELECT count(*) AS n FROM aip_production_contract_receipt
+            WHERE org_id=%s AND project_id=%s AND operation='bi_responsibility_plan.prepare'
+              AND idempotency_key=%s""", (*SCOPE.key, key)).fetchone()["n"] == 0
+        assert conn.execute("""SELECT count(*) AS n FROM aip_responsibility_plan_revision
+            WHERE org_id=%s AND project_id=%s AND created_by='test:bi-du'""",
+            SCOPE.key).fetchone()["n"] == 0
 
 
 def test_skill_selection_is_exact_and_d03_is_explicit_r4() -> None:
