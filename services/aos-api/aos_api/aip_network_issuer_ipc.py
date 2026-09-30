@@ -118,7 +118,7 @@ def open_private_issuer_listener(
         secret_file = secret.lstat()
         if (not stat.S_ISDIR(socket_dir.st_mode)
                 or socket_dir.st_uid != issuer_uid or socket_dir.st_gid != ipc_gid
-                or stat.S_IMODE(socket_dir.st_mode) != 0o770
+                or stat.S_IMODE(socket_dir.st_mode) != 0o750
                 or not stat.S_ISDIR(secret_dir.st_mode)
                 or secret_dir.st_uid != issuer_uid
                 or stat.S_IMODE(secret_dir.st_mode) != 0o700
