@@ -1,7 +1,7 @@
 """Canonical tenant-scoped BudgetRevision API."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Query, Response, status
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
 from aos_api.aip_budget_activation_contracts import (
@@ -11,9 +11,10 @@ from aos_api.aip_budget_activation_contracts import (
     CreateBudgetActivationPreviewRequest,
     DecideBudgetActivationRequest,
     RevokeBudgetActivationDecisionRequest,
+    BudgetPreviewInquiryPending, BudgetPreviewInquiryObserved,
 )
 from aos_api.aip_budget_activation_store import (
-    AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied,
+    AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied, BudgetActivationInquiryUnavailable,
 )
 from aos_api.aip_budget_store import (
     AipBudgetAuthorityStore,
@@ -75,6 +76,8 @@ def _map(exc: BudgetStoreError) -> ApiError:
 
 
 def _map_activation(exc: ValueError) -> ApiError:
+    if isinstance(exc, BudgetActivationInquiryUnavailable):
+        return ApiError(code=str(exc), message="预算预览暂无法精确对账，请保留原请求", status_code=503)
     if isinstance(exc, BudgetActivationConflict):
         return ApiError(code=str(exc), message="budget activation authority conflict", status_code=409)
     code = str(exc)
@@ -98,6 +101,25 @@ def create_budget_activation_preview(
                                     _key(idempotency_key), expected_head_version=_version(if_match))
     except (BudgetActivationDenied, BudgetActivationConflict) as exc:
         raise _map_activation(exc) from exc
+
+
+@router.post('/activation-previews/inquiry', response_model=BudgetPreviewInquiryPending | BudgetPreviewInquiryObserved)
+def inquire_budget_activation_preview(
+    body: CreateBudgetActivationPreviewRequest,
+    response: Response,
+    idempotency_key: str = Header(alias='Idempotency-Key'),
+    if_match: str = Header(alias='If-Match'),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        result = store.inquire_preview(principal, body.target, body.checker_subject,
+                                      _key(idempotency_key), expected_head_version=_version(if_match))
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409}[result['status']]
+    response.headers['Cache-Control'] = 'no-store'
+    return result
 
 
 @router.get("/activation-previews/{preview_id}", response_model=BudgetActivationPreviewView)

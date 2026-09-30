@@ -28,6 +28,15 @@ class BudgetActivationConflict(ValueError):
     pass
 
 
+class BudgetActivationInquiryUnavailable(BudgetActivationDenied):
+    pass
+
+
+def _preview_request_hash(target_payload, checker, head_version, maker):
+    return canonical_hash({"target": target_payload, "checker": checker,
+                           "headVersion": head_version, "maker": maker})
+
+
 def _identity(principal: Principal) -> tuple[TenantScope, str]:
     if (type(principal) is not Principal or principal.token_kind != "oidc"
             or type(principal.subject) is not str or not principal.subject
@@ -234,8 +243,7 @@ class AipBudgetActivationStore:
             raise BudgetActivationDenied("BUDGET_ACTIVATION_CHECKER_OR_TARGET_INVALID")
         target_payload = target.model_dump(mode="json", by_alias=True)
         target_hash = canonical_hash(target_payload)
-        request_hash = canonical_hash({"target": target_payload, "checker": checker_subject,
-                                       "headVersion": expected_head_version, "maker": maker})
+        request_hash = _preview_request_hash(target_payload, checker_subject, expected_head_version, maker)
         with connect_serializable(scope) as conn:
             _member(conn, scope, maker, label="MAKER")
             _member(conn, scope, checker_subject, label="CHECKER")
@@ -304,6 +312,53 @@ class AipBudgetActivationStore:
                      {"previewId": preview_id, "previewHash": view["previewHash"]}, maker)
             conn.commit()
             return view
+
+    def inquire_preview(self, principal: Principal, target: BudgetRevisionCreate,
+                        checker_subject: str, idempotency_key: str, *, expected_head_version: int) -> dict:
+        """Observe the original maker's committed preview; absence never permits resend."""
+        scope, maker = _identity(principal)
+        key = _key(idempotency_key)
+        if (type(target) is not BudgetRevisionCreate or target.lifecycle is not BudgetLifecycle.ACTIVE
+                or type(checker_subject) is not str or not checker_subject or not checker_subject.isprintable()
+                or checker_subject != checker_subject.strip() or checker_subject == maker
+                or type(expected_head_version) is not int or expected_head_version < 1):
+            raise BudgetActivationDenied('BUDGET_ACTIVATION_INQUIRY_INPUT_INVALID')
+        request_hash = _preview_request_hash(target.model_dump(mode='json', by_alias=True),
+                                             checker_subject, expected_head_version, maker)
+        try:
+            with connect_read_only(scope) as conn:
+                identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
+                    "current_setting('aos.project_id',true) AS project_id,current_setting('transaction_read_only') AS ro,"
+                    "current_setting('transaction_isolation') AS isolation").fetchone()
+                if (conn.read_only is not True or identity is None or
+                    (identity['role'], identity['org_id'], identity['project_id'], identity['ro'], identity['isolation'])
+                        != ('aos_runtime', *scope.key, 'on', 'repeatable read')):
+                    raise BudgetActivationInquiryUnavailable('BUDGET_ACTIVATION_INQUIRY_READ_IDENTITY_REQUIRED')
+                _member(conn, scope, maker, label='MAKER', lock=False)
+                receipt = conn.execute("""SELECT request_hash,result_ref FROM aip_budget_activation_receipt
+                    WHERE org_id=%s AND project_id=%s AND operation='preview'
+                      AND idempotency_key=%s AND actor_subject=%s""", (*scope.key, key, maker)).fetchone()
+                if receipt is None:
+                    return {'status': 'unresolved'}
+                ref = receipt['result_ref']
+                if (receipt['request_hash'] != request_hash or type(ref) is not dict
+                        or set(ref) != {'previewId', 'previewHash'}):
+                    return {'status': 'conflict'}
+                row = conn.execute("""SELECT * FROM aip_budget_activation_preview
+                    WHERE org_id=%s AND project_id=%s AND preview_id=%s""", (*scope.key, ref['previewId'])).fetchone()
+                if (row is None or row['maker_subject'] != maker or row['checker_subject'] != checker_subject
+                        or row['expected_head_version'] != expected_head_version
+                        or row['preview_hash'] != ref['previewHash'] or _preview_hash(scope, row) != row['preview_hash']
+                        or canonical_hash(row['target_payload']) != row['target_hash']
+                        or _preview_request_hash(row['target_payload'], row['checker_subject'],
+                                                 row['expected_head_version'], row['maker_subject']) != request_hash):
+                    return {'status': 'conflict'}
+                return {'status': 'observed', 'previewId': row['preview_id'],
+                        'previewHash': row['preview_hash'], 'activationEligible': False}
+        except BudgetActivationDenied:
+            raise
+        except Exception:
+            raise BudgetActivationInquiryUnavailable('BUDGET_ACTIVATION_INQUIRY_UNAVAILABLE') from None
 
     def get_preview(self, principal: Principal, preview_id: str) -> dict:
         scope, actor = _identity(principal)

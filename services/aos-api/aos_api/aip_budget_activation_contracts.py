@@ -37,6 +37,17 @@ class BudgetActivationPreviewView(AipContractModel):
     expires_at: datetime
 
 
+class BudgetPreviewInquiryPending(AipContractModel):
+    status: Literal['unresolved', 'conflict']
+
+
+class BudgetPreviewInquiryObserved(AipContractModel):
+    status: Literal['observed']
+    preview_id: str = Field(min_length=1, max_length=160)
+    preview_hash: str = Field(pattern=r'^[0-9a-f]{64}$')
+    activation_eligible: Literal[False] = False
+
+
 class DecideBudgetActivationRequest(AipContractModel):
     decision: Literal["approved", "rejected"]
 
