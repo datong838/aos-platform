@@ -15,3 +15,9 @@
 3. 用 BG00dm test-only 克隆验证 signed template 的拒绝/可用边界；当前库保持只读，正式 key/checker/三身份仍需独立 authority。Plan 的 assignee、档位治理、审批与八候选其余七类各走原严格门；不自动创建 Plan。方案/代码复审、专项/累计、verification、上下文后再进入下一波。
 
 本波是只读合同发现，BG00dp 才改生产代码。禁止用 test-only 双根或角色字符串冒充当前正式身份，不启 Host/worker/Provider、不读商城源、不重放旧12 Run、不手工 run_definition、不碰230 L0、不 push。
+
+## BG00dp 施工顺序补充
+
+先独立落地 fail-closed 切片：删除生产解析器的 BI 本地静态特判，使静态 ref 不能被 Plan Store 接受；任何未获得签名配置来源的 materializer 必须在创建 Stage/Plan 前拒绝，避免半成品写入。随后再引入 approved-install 签名模板准备态读取和精确 ref 选择，并在克隆正向验证。前一切片 GREEN 仅证明禁入，不代表 BG00dp 或首链完成；保持本任务 ACTIVE 直到正向来源链有测试与克隆证据。
+
+相邻回归发现 `ecommerce_analysis_compilation_roles.py` 的业务消费端还要求 `template.resource_id == domain.responsibility_template_code`，其中后者是历史静态 ID；未来签名 artifact 的 `bundle://...` 精确 ref 不满足该条件。BG00dp 正向切片需将此文件纳入方案/测试，明确业务代码与已安装 artifact 之间的受签名映射，不得简单删除比较。旧角色读取测试可只隔离其签名来源依赖；最终验收必须在 test-only 克隆使用真实签名 artifact 和 lock，不能以单测替身证明业务闭环。

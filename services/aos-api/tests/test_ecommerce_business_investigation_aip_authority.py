@@ -75,7 +75,7 @@ def test_six_responsibilities_bind_six_current_coworkers_by_capability() -> None
                 (slot_id, role, capabilities, stage)
                 for slot_id, role, _instance_id, capabilities, stage in BI_ROLE_BLUEPRINTS
             ]
-    assert resolve_responsibility_template(SCOPE, body.template_ref) is True
+    assert resolve_responsibility_template(SCOPE, body.template_ref) is False
 
 
 def test_missing_active_coworker_version_fails_closed() -> None:
@@ -165,7 +165,9 @@ class Store:
         return self.plan
 
 
-def materializer(store):
+def materializer(store, monkeypatch):
+    from aos_api import ecommerce_business_investigation_aip_authority as module
+    monkeypatch.setattr(module, "resolve_responsibility_template", lambda scope, ref: True)
     @contextmanager
     def connect(scope):
         assert scope == SCOPE
@@ -177,9 +179,21 @@ def materializer(store):
     )
 
 
-def test_materializer_freezes_stage_but_keeps_blocked_plan_draft() -> None:
+def test_materializer_rejects_unsigned_local_template_before_metadata_writes() -> None:
     store = Store()
-    actual = materializer(store).ensure(SCOPE)
+    @contextmanager
+    def connect(scope):
+        assert scope == SCOPE
+        yield Connection()
+    runner = BusinessInvestigationAuthorityMaterializer(store=store, connect_factory=connect)
+    with pytest.raises(ValueError, match="signed installed BI responsibility template unavailable"):
+        runner.ensure(SCOPE)
+    assert store.calls == []
+
+
+def test_materializer_freezes_stage_but_keeps_blocked_plan_draft(monkeypatch) -> None:
+    store = Store()
+    actual = materializer(store, monkeypatch).ensure(SCOPE)
     assert actual.stage_template.lifecycle is BriefLifecycle.FROZEN
     assert actual.responsibility_plan.lifecycle is BriefLifecycle.DRAFT
     assert [call[0] for call in store.calls] == [
@@ -191,16 +205,16 @@ def test_materializer_freezes_stage_but_keeps_blocked_plan_draft() -> None:
     ]
 
 
-def test_materializer_freezes_plan_only_after_canonical_readiness() -> None:
+def test_materializer_freezes_plan_only_after_canonical_readiness(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
-    actual = materializer(store).ensure(SCOPE)
+    actual = materializer(store, monkeypatch).ensure(SCOPE)
     assert actual.responsibility_plan.lifecycle is BriefLifecycle.FROZEN
     assert [call[0] for call in store.calls][-1] == "freeze-plan"
 
 
-def test_materializer_reentry_uses_current_heads_and_does_not_refreeze() -> None:
+def test_materializer_reentry_uses_current_heads_and_does_not_refreeze(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
-    runner = materializer(store)
+    runner = materializer(store, monkeypatch)
     first = runner.ensure(SCOPE)
     first_call_count = len(store.calls)
     second = runner.ensure(SCOPE)
@@ -215,9 +229,9 @@ def test_materializer_reentry_uses_current_heads_and_does_not_refreeze() -> None
     ]
 
 
-def test_finalize_responsibility_plan_freezes_only_ready_draft() -> None:
+def test_finalize_responsibility_plan_freezes_only_ready_draft(monkeypatch) -> None:
     store = Store(ContractReadiness.READY)
-    runner = materializer(store)
+    runner = materializer(store, monkeypatch)
     created = runner.ensure(SCOPE)
     store.plan = SimpleNamespace(
         lifecycle=BriefLifecycle.DRAFT,
@@ -230,9 +244,9 @@ def test_finalize_responsibility_plan_freezes_only_ready_draft() -> None:
     assert store.calls[-1][0] == "freeze-plan"
 
 
-def test_finalize_responsibility_plan_keeps_blocked_draft() -> None:
+def test_finalize_responsibility_plan_keeps_blocked_draft(monkeypatch) -> None:
     store = Store(ContractReadiness.BLOCKED)
-    runner = materializer(store)
+    runner = materializer(store, monkeypatch)
     runner.ensure(SCOPE)
     before = store.plan
     actual = runner.finalize_responsibility_plan(SCOPE, before.plan_id)

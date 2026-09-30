@@ -359,9 +359,6 @@ _INSTALLED_RESOLVER = InstalledProductionProfileResolver()
 
 def resolve_responsibility_template(scope: TenantScope, ref: ExactRevisionRef) -> bool:
     """Production adapter retained for AipProductionContractStore injection."""
-    definition = _TEMPLATE_DEFINITIONS.get(ref.resource_id)
-    if definition is not None and ref.resource_id == "ecommerce.business-investigation.readonly":
-        return ref == published_template_ref(ref.resource_id)
     return _INSTALLED_RESOLVER.resolve(scope, ref)
 
 

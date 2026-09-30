@@ -20,6 +20,10 @@ def test_role_reader_is_current_and_callback_bound(monkeypatch,fault):
     document=SimpleNamespace(roleRefs=(ref,),model_dump=lambda **kw:{'role':'exact'})
     monkeypatch.setattr(module,'read_configuration',lambda *args,**kw:document)
     request=build_responsibility_plan_request({item[2]:1 for item in _ROLE_BLUEPRINTS})
+    # Isolate the current-role reader contract; signed source admission is
+    # covered by responsibility-template authority tests.
+    monkeypatch.setattr(module,'resolve_responsibility_template',
+        lambda checked_scope, template: checked_scope==scope and template==request.template_ref)
     plan=dict(planId='plan',revision=1,contentHash='a'*64,profile=request.profile,lifecycle='frozen',
               readiness='ready',coverage='complete',slots=[slot.model_dump(mode='json',by_alias=True) for slot in request.slots],templateRef=request.template_ref.model_dump(mode='json',by_alias=True))
     class Store:

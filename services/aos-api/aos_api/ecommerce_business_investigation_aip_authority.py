@@ -223,6 +223,9 @@ class BusinessInvestigationAuthorityMaterializer:
         actor: str = "aos-main-development",
     ) -> InvestigationAuthorityMaterialization:
         versions = self._active_instance_versions(scope)
+        plan_request = build_responsibility_plan_request(versions)
+        if not resolve_responsibility_template(scope, plan_request.template_ref):
+            raise ValueError("signed installed BI responsibility template unavailable")
         stage = self._store.create_stage_template(
             scope,
             actor,
@@ -245,7 +248,7 @@ class BusinessInvestigationAuthorityMaterializer:
             scope,
             actor,
             "bi-w10-02-investigation-responsibility-v1-create",
-            build_responsibility_plan_request(versions),
+            plan_request,
         )
         plan = self._store.get_responsibility_plan(scope, plan.plan_id)
         if (

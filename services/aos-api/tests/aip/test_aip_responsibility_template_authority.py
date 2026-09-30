@@ -10,7 +10,10 @@ from typing import Any
 import pytest
 
 from aos_api.aip_production_contracts import ExactRevisionRef
-from aos_api.aip_responsibility_template_authority import InstalledProductionProfileResolver
+from aos_api.aip_responsibility_template_authority import (
+    InstalledProductionProfileResolver, published_template_ref,
+    resolve_responsibility_template,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -26,6 +29,13 @@ MEDIA_PATH = "content/media-production-templates/standard.responsibility.json"
 MEDIA_REF = "bundle://aos/solution.ecommerce.growth@1.4.0/" + MEDIA_PATH
 BI_PATH = "content/responsibility-templates/business-investigation.readonly.json"
 BI_REF = "bundle://aos/solution.ecommerce.growth@1.4.0/" + BI_PATH
+
+
+def test_local_bi_template_hash_is_not_production_authority() -> None:
+    assert resolve_responsibility_template(
+        TenantScope("org-org", "dev-project"),
+        published_template_ref("ecommerce.business-investigation.readonly"),
+    ) is False
 
 
 def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisionRef:
