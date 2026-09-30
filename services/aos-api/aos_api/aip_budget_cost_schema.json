@@ -1,0 +1,874 @@
+{
+  "tables": {
+    "aip_budget_cost_proposal": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "proposal_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "budget_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "maker_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "checker_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "proposal_hash",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "payload",
+          "type": "jsonb",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "required": true,
+          "default": "'proposed'::text",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "source_verification",
+          "type": "text",
+          "required": true,
+          "default": "'pending'::text",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "activation_eligible",
+          "type": "boolean",
+          "required": true,
+          "default": "false",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_proposal_activation_eligible_check",
+          "type": "c",
+          "definition": "CHECK ((activation_eligible = false))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_check",
+          "type": "c",
+          "definition": "CHECK (((maker_subject <> checker_subject) AND (expires_at > created_at)))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_org_id_project_id_budget_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (org_id, project_id, budget_id) REFERENCES aip_budget_head(org_id, project_id, budget_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_payload_check",
+          "type": "c",
+          "definition": "CHECK ((jsonb_typeof(payload) = 'object'::text))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, proposal_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_proposal_hash_check",
+          "type": "c",
+          "definition": "CHECK ((proposal_hash ~ '^[0-9a-f]{64}$'::text))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_source_verification_check",
+          "type": "c",
+          "definition": "CHECK ((source_verification = 'pending'::text))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_status_check",
+          "type": "c",
+          "definition": "CHECK ((status = 'proposed'::text))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_proposal_pkey ON public.aip_budget_cost_proposal USING btree (org_id, project_id, proposal_id)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "aip_budget_cost_proposal_tenant",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "aip_budget_cost_proposal_immutable_row",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_proposal_immutable_row BEFORE DELETE OR UPDATE ON public.aip_budget_cost_proposal FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_proposal_immutable_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_proposal_immutable_truncate BEFORE TRUNCATE ON public.aip_budget_cost_proposal FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
+    },
+    "aip_budget_cost_proposal_receipt": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "actor_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "request_hash",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "proposal_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "clock_timestamp()",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_proposal_rece_org_id_project_id_proposal_i_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (org_id, project_id, proposal_id) REFERENCES aip_budget_cost_proposal(org_id, project_id, proposal_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_receipt_idempotency_key_check",
+          "type": "c",
+          "definition": "CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_receipt_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, actor_subject, idempotency_key)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_proposal_receipt_request_hash_check",
+          "type": "c",
+          "definition": "CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_proposal_receipt_pkey ON public.aip_budget_cost_proposal_receipt USING btree (org_id, project_id, actor_subject, idempotency_key)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "aip_budget_cost_proposal_receipt_tenant",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "aip_budget_cost_proposal_receipt_immutable_row",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_proposal_receipt_immutable_row BEFORE DELETE OR UPDATE ON public.aip_budget_cost_proposal_receipt FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_proposal_receipt_immutable_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_proposal_receipt_immutable_truncate BEFORE TRUNCATE ON public.aip_budget_cost_proposal_receipt FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
+    },
+    "aip_budget_cost_decision": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "decision_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "proposal_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "proposal_hash",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "actor_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "decision",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "source_ref",
+          "type": "jsonb",
+          "required": false,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "clock_timestamp()",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_decision_check",
+          "type": "c",
+          "definition": "CHECK (((decision <> 'approved'::text) OR ((source_ref IS NOT NULL) AND (jsonb_typeof(source_ref) = 'object'::text))))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_decision_decision_check",
+          "type": "c",
+          "definition": "CHECK ((decision = ANY (ARRAY['approved'::text, 'rejected'::text])))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_decision_org_id_project_id_proposal_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (org_id, project_id, proposal_id) REFERENCES aip_budget_cost_proposal(org_id, project_id, proposal_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_decision_org_id_project_id_proposal_id_key",
+          "type": "u",
+          "definition": "UNIQUE (org_id, project_id, proposal_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_decision_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, decision_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_decision_proposal_hash_check",
+          "type": "c",
+          "definition": "CHECK ((proposal_hash ~ '^[0-9a-f]{64}$'::text))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_decision_org_id_project_id_proposal_id_key ON public.aip_budget_cost_decision USING btree (org_id, project_id, proposal_id)",
+          "valid": true,
+          "ready": true
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_decision_pkey ON public.aip_budget_cost_decision USING btree (org_id, project_id, decision_id)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "aip_budget_cost_decision_tenant",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "aip_budget_cost_decision_immutable_row",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_decision_immutable_row BEFORE DELETE OR UPDATE ON public.aip_budget_cost_decision FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_decision_immutable_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_decision_immutable_truncate BEFORE TRUNCATE ON public.aip_budget_cost_decision FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_decision_issuer",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_decision_issuer BEFORE INSERT ON public.aip_budget_cost_decision FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_issuer_guard_a0v_125()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
+    },
+    "aip_budget_cost_revocation": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "revocation_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "decision_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "actor_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "clock_timestamp()",
+          "identity": "",
+          "generated": "",
+          "acl": []
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_revocation_org_id_project_id_decision_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (org_id, project_id, decision_id) REFERENCES aip_budget_cost_decision(org_id, project_id, decision_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_revocation_org_id_project_id_decision_id_key",
+          "type": "u",
+          "definition": "UNIQUE (org_id, project_id, decision_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_revocation_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, revocation_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_revocation_reason_check",
+          "type": "c",
+          "definition": "CHECK (((length(reason) >= 1) AND (length(reason) <= 500)))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_revocation_org_id_project_id_decision_id_key ON public.aip_budget_cost_revocation USING btree (org_id, project_id, decision_id)",
+          "valid": true,
+          "ready": true
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_revocation_pkey ON public.aip_budget_cost_revocation USING btree (org_id, project_id, revocation_id)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "aip_budget_cost_revocation_tenant",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "aip_budget_cost_revocation_immutable_row",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_revocation_immutable_row BEFORE DELETE OR UPDATE ON public.aip_budget_cost_revocation FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_revocation_immutable_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_revocation_immutable_truncate BEFORE TRUNCATE ON public.aip_budget_cost_revocation FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_revocation_issuer",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_revocation_issuer BEFORE INSERT ON public.aip_budget_cost_revocation FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_issuer_guard_a0v_125()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
+    },
+    "aip_budget_cost_issuer_receipt": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "actor_subject",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "operation",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "request_hash",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "result",
+          "type": "jsonb",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_issuer_receipt_idempotency_key_check",
+          "type": "c",
+          "definition": "CHECK (((length(idempotency_key) >= 1) AND (length(idempotency_key) <= 160)))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_operation_check",
+          "type": "c",
+          "definition": "CHECK ((operation = ANY (ARRAY['decide'::text, 'revoke'::text])))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, actor_subject, operation, idempotency_key)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_request_hash_check",
+          "type": "c",
+          "definition": "CHECK ((request_hash ~ '^[0-9a-f]{64}$'::text))",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_result_check",
+          "type": "c",
+          "definition": "CHECK ((jsonb_typeof(result) = 'object'::text))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_issuer_receipt_pkey ON public.aip_budget_cost_issuer_receipt USING btree (org_id, project_id, actor_subject, operation, idempotency_key)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "aip_budget_cost_issuer_receipt_tenant",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "aip_budget_cost_issuer_receipt_immutable_row",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_issuer_receipt_immutable_row BEFORE DELETE OR UPDATE ON public.aip_budget_cost_issuer_receipt FOR EACH ROW EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_immutable_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_issuer_receipt_immutable_truncate BEFORE TRUNCATE ON public.aip_budget_cost_issuer_receipt FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        },
+        {
+          "name": "aip_budget_cost_issuer_receipt_issuer",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER aip_budget_cost_issuer_receipt_issuer BEFORE INSERT ON public.aip_budget_cost_issuer_receipt FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_issuer_guard_a0v_125()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "aos_runtime",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
+    }
+  },
+  "functions": {
+    "public.aip_budget_cost_issuer_guard_a0v_125()": {
+      "definition": "CREATE OR REPLACE FUNCTION public.aip_budget_cost_issuer_guard_a0v_125()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$ BEGIN\n      IF session_user<>'aos_budget_cost_issuer' OR current_user<>'aos_runtime'\n         OR current_setting('aos.org_id',true) IS DISTINCT FROM NEW.org_id\n         OR current_setting('aos.project_id',true) IS DISTINCT FROM NEW.project_id\n         OR EXISTS(SELECT 1 FROM pg_roles WHERE rolname=session_user AND\n           (NOT rolcanlogin OR rolinherit OR rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls))\n         OR EXISTS(SELECT 1 FROM pg_auth_members WHERE roleid=session_user::regrole\n           OR (member=session_user::regrole AND (roleid<>'aos_runtime'::regrole OR admin_option))) THEN\n        RAISE EXCEPTION 'BUDGET_COST_ISSUER_REQUIRED' USING ERRCODE='42501';\n      END IF;\n      IF TG_TABLE_NAME='aip_budget_cost_decision' THEN\n        IF NEW.expires_at<=clock_timestamp() OR NOT EXISTS(\n          SELECT 1 FROM public.aip_budget_cost_proposal p WHERE p.org_id=NEW.org_id\n            AND p.project_id=NEW.project_id AND p.proposal_id=NEW.proposal_id\n            AND p.proposal_hash=NEW.proposal_hash AND p.checker_subject=NEW.actor_subject\n            AND p.expires_at=NEW.expires_at) THEN\n          RAISE EXCEPTION 'BUDGET_COST_EXACT_CURRENT_PROPOSAL_REQUIRED' USING ERRCODE='42501';\n        END IF;\n      END IF;\n      RETURN NEW; END $function$\n",
+      "acl": [
+        [
+          "<owner>",
+          "EXECUTE",
+          false
+        ]
+      ]
+    },
+    "public.extension_reject_history_mutation()": {
+      "definition": "CREATE OR REPLACE FUNCTION public.extension_reject_history_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\n      BEGIN RAISE EXCEPTION 'extension history is immutable'; END\n    $function$\n",
+      "acl": [
+        [
+          "<owner>",
+          "EXECUTE",
+          false
+        ],
+        [
+          "PUBLIC",
+          "EXECUTE",
+          false
+        ]
+      ]
+    }
+  }
+}
