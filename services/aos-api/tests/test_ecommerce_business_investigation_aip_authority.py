@@ -348,6 +348,8 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
     result = reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
     assert result.result_ref.resource_id == "plan-1"
     assert result.installation_binding_verified is False
+    assert result.installation_binding is None
+    assert result.current_admission_verified is False
     assert len(calls) == 2
     receipt["result_ref"]["installationBinding"] = {
         "installationId": "42785d78-5914-4a54-a078-e5d2c7f48481",
@@ -357,8 +359,15 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
                         "contentHash": "c" * 64},
         "actor": "person:current",
     }
-    assert reader.read(SCOPE, principal=principal,
-                       idempotency_key="bi-receipt-1").installation_binding_verified is False
+    bound = reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+    assert bound.installation_binding_verified is True
+    assert bound.installation_binding.installation_id == "42785d78-5914-4a54-a078-e5d2c7f48481"
+    assert bound.installation_binding.installation_etag == 3
+    assert bound.current_admission_verified is False
+    assert bound.model_dump(mode="json", by_alias=True)["installationBinding"]["installationEtag"] == 3
+    receipt["result_ref"]["installationBinding"]["actor"] = "person:other"
+    with pytest.raises(module.ProductionContractError, match="binding invalid"):
+        reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
     missing[0] = True
     with pytest.raises(ProductionContractNotFound):
         reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")

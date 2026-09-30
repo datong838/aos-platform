@@ -7,7 +7,9 @@ import uuid
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import model_validator
 
 from aos_api.aip_contracts import AipContractModel, ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
@@ -94,14 +96,31 @@ class ProductionContractDependencyBlocked(ProductionContractError):
     code = "AIP_DEPENDENCY_BLOCKED"
 
 
+class SignedBIOriginalInstallationBinding(AipContractModel):
+    """Original command context stored atomically with a BI Plan receipt."""
+
+    installation_id: str
+    installation_etag: int
+    template_ref: ExactRevisionRef
+    actor: str
+
+
 class SignedBIPlanReceiptReadback(AipContractModel):
-    """Actor-scoped receipt evidence; the original installation is not proved here."""
+    """Actor-scoped original receipt; current admission remains unverified."""
 
     receipt_id: str
     request_hash: str
     result_ref: ExactRevisionRef
     created_at: datetime
+    installation_binding: SignedBIOriginalInstallationBinding | None = None
     installation_binding_verified: bool = False
+    current_admission_verified: Literal[False] = False
+
+    @model_validator(mode="after")
+    def consistent_binding(self) -> "SignedBIPlanReceiptReadback":
+        if self.installation_binding_verified != (self.installation_binding is not None):
+            raise ValueError("BI receipt installation binding state inconsistent")
+        return self
 
 
 class SignedBIPlanReceiptReader:
@@ -160,11 +179,23 @@ class SignedBIPlanReceiptReader:
             if exact_ref.resource_type != "ResponsibilityPlanRevision":
                 raise ProductionContractError("BI preparation receipt result type invalid")
             binding = result_ref.get("installationBinding")
+            validated_binding = None
             if binding is not None:
-                _require_bi_installation_binding(binding, principal.subject)
+                try:
+                    _require_bi_installation_binding(binding, principal.subject)
+                except ProductionContractConflict as exc:
+                    raise ProductionContractError("BI preparation receipt binding invalid") from exc
+                validated_binding = SignedBIOriginalInstallationBinding(
+                    installation_id=binding["installationId"],
+                    installation_etag=binding["installationETag"],
+                    template_ref=ExactRevisionRef.model_validate(binding["templateRef"]),
+                    actor=binding["actor"],
+                )
             return SignedBIPlanReceiptReadback(
                 receipt_id=row["receipt_id"], request_hash=row["request_hash"],
                 result_ref=exact_ref, created_at=row["created_at"],
+                installation_binding=validated_binding,
+                installation_binding_verified=validated_binding is not None,
             )
 
 

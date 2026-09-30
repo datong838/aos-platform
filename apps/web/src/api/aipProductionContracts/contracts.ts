@@ -16,7 +16,9 @@ export type SignedBIPlanReceiptReadback = {
   requestHash: string;
   resultRef: ExactRevisionRef;
   createdAt: string;
-  installationBindingVerified: false;
+  installationBinding: { installationId: string; installationEtag: number; templateRef: ExactRevisionRef; actor: string } | null;
+  installationBindingVerified: boolean;
+  currentAdmissionVerified: false;
 };
 export type ResponsibilityProfile = "LITE" | "STANDARD" | "FULL";
 export type ProjectedCostRange = {

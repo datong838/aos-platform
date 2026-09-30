@@ -5,13 +5,28 @@ import type { SignedBIPlanAdmission, SignedBIPlanReceiptReadback } from "./contr
 export function parseSignedBIPlanReceiptReadback(value: unknown): SignedBIPlanReceiptReadback {
   const raw=object(value,"SignedBIPlanReceiptReadback");
   const resultRef=exact(raw.resultRef,"resultRef");
-  if(resultRef.resourceType!=="ResponsibilityPlanRevision" || raw.installationBindingVerified!==false)
-    throw new Error("BI Receipt 未证明合法 Plan 与原安装绑定");
+  if(resultRef.resourceType!=="ResponsibilityPlanRevision" || raw.currentAdmissionVerified!==false)
+    throw new Error("BI Receipt 不能证明当前准入");
+  const verified=raw.installationBindingVerified;
+  if(typeof verified!=="boolean" || verified!==(raw.installationBinding!==null))
+    throw new Error("BI Receipt 原安装绑定状态不一致");
+  let installationBinding: SignedBIPlanReceiptReadback["installationBinding"]=null;
+  if(verified){
+    const binding=object(raw.installationBinding,"installationBinding");
+    const installationId=string(binding.installationId,"installationBinding.installationId");
+    const installationEtag=number(binding.installationEtag,"installationBinding.installationEtag");
+    const templateRef=exact(binding.templateRef,"installationBinding.templateRef");
+    const actor=string(binding.actor,"installationBinding.actor");
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(installationId)
+      || installationEtag<1 || templateRef.resourceType!=="ResponsibilityTemplateRevision"
+      || actor.trim()!==actor) throw new Error("BI Receipt 原安装绑定无效");
+    installationBinding={installationId,installationEtag,templateRef,actor};
+  }
   const createdAt=string(raw.createdAt,"createdAt");
   if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt) || Number.isNaN(Date.parse(createdAt)))
     throw new Error("BI Receipt 时间无效");
   return {receiptId:string(raw.receiptId,"receiptId"),requestHash:sha(raw.requestHash,"requestHash"),
-    resultRef,createdAt,installationBindingVerified:false};
+    resultRef,createdAt,installationBinding,installationBindingVerified:verified,currentAdmissionVerified:false};
 }
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
