@@ -7,12 +7,9 @@ from aos_api.aip_contracts import AipContractModel
 from aos_api.aip_action_store import canonical_hash
 
 
-class _ConsumerRequest(AipContractModel):
+class NetworkConsumerReferences(AipContractModel):
     model_config = ConfigDict(strict=True, frozen=True)
     schema_version: Literal[1]
-    bearer_token: SecretStr
-    org_id: str = Field(min_length=1, max_length=120)
-    project_id: str = Field(min_length=1, max_length=120)
     proposal_id: str = Field(min_length=1, max_length=160)
     proposal_hash: str = Field(pattern=r'^[0-9a-f]{64}$')
     approval_event_id: str = Field(min_length=1, max_length=160)
@@ -26,6 +23,19 @@ class _ConsumerRequest(AipContractModel):
             raise ValueError('exact schema version required')
         return value
 
+    @field_validator('proposal_id', 'approval_event_id')
+    @classmethod
+    def _identifier(cls, value):
+        if not value.isprintable() or any(ch.isspace() for ch in value):
+            raise ValueError('exact printable identifier required')
+        return value
+
+
+class _ConsumerRequest(NetworkConsumerReferences):
+    bearer_token: SecretStr
+    org_id: str = Field(min_length=1, max_length=120)
+    project_id: str = Field(min_length=1, max_length=120)
+
     @field_validator('bearer_token')
     @classmethod
     def _jwt_shape(cls, value: SecretStr):
@@ -34,12 +44,10 @@ class _ConsumerRequest(AipContractModel):
             raise ValueError('external OIDC bearer JWT required')
         return value
 
-    @field_validator('org_id', 'project_id', 'proposal_id', 'approval_event_id')
+    @field_validator('org_id', 'project_id')
     @classmethod
-    def _identifier(cls, value):
-        if not value.isprintable() or any(ch.isspace() for ch in value):
-            raise ValueError('exact printable identifier required')
-        return value
+    def _scope_identifier(cls, value):
+        return cls._identifier(value)
 
     @property
     def idempotency_key(self):

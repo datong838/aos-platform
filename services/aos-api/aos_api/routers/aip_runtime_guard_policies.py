@@ -1,7 +1,10 @@
 """Canonical tenant-scoped runtime egress and data-classification policies."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
+
+from aos_api.aip_network_consumer_contracts import NetworkConsumerReferences
+from aos_api.aip_network_consumer_application import execute_consumer, ConsumerApplicationBlocked
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -64,6 +67,36 @@ def get_store() -> AipRuntimeGuardPolicyStore:
 
 def get_network_store() -> AipNetworkPolicyStore:
     return _NETWORK_STORE
+
+
+def get_consumer_application_config(request: Request):
+    return getattr(request.app.state, 'network_consumer_config', None)
+
+
+def _consume_response(body, principal, authorization, config, response, *, inquiry):
+    try:
+        result = execute_consumer(config, body, principal, authorization, inquiry=inquiry)
+    except ConsumerApplicationBlocked as exc:
+        raise ApiError(code=exc.code, message='网络策略消费尚未获准或需要对账',
+                       status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409, 'blocked': 403}[result['status']]
+    return result
+
+
+@router.post('/networks/activation-consumptions')
+def consume_network(body: NetworkConsumerReferences, response: Response,
+                    authorization: str | None = Header(default=None),
+                    principal: Principal = Depends(require_principal),
+                    config=Depends(get_consumer_application_config)):
+    return _consume_response(body, principal, authorization, config, response, inquiry=False)
+
+
+@router.post('/networks/activation-consumptions/inquiry')
+def inquire_network_consumption(body: NetworkConsumerReferences, response: Response,
+                               authorization: str | None = Header(default=None),
+                               principal: Principal = Depends(require_principal),
+                               config=Depends(get_consumer_application_config)):
+    return _consume_response(body, principal, authorization, config, response, inquiry=True)
 
 
 def _scope(principal: Principal) -> TenantScope:
