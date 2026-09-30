@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>经营参谋</title>
+<style>
+:root{font-family:system-ui,-apple-system,"PingFang SC",sans-serif;color:#182b3c;background:#f4f7fa}*{box-sizing:border-box}body{margin:0;padding:28px}main{max-width:1160px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:24px}h1{font-size:28px;margin:6px 0}h2{font-size:18px;margin:0 0 10px}.eyebrow{font-size:13px;color:#32678f;letter-spacing:.08em}p{line-height:1.65;margin:8px 0;color:#526474}button{background:#176eae;color:white;border:0;border-radius:8px;padding:11px 18px;font:inherit;cursor:pointer;white-space:nowrap}button:disabled{background:#a7b8c5;cursor:default}button:focus-visible,summary:focus-visible{outline:3px solid #73bdec;outline-offset:3px}.status,.summary,article{background:white;border:1px solid #dce5ec;border-radius:12px;padding:20px;margin-bottom:16px}.summary{display:flex;gap:26px;flex-wrap:wrap}.metric strong{font-size:24px;color:#176eae;display:block}.metric span{font-size:13px;color:#526474}.meta{font-size:13px}.badge{display:inline-block;padding:3px 9px;background:#eaf3fa;border-radius:5px;margin-right:8px;font-size:13px;color:#285c80}.run{padding:12px 0;border-top:1px solid #edf1f4}details{margin-top:12px}summary{cursor:pointer;color:#176eae;font-size:14px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#f4f7fa;padding:12px;border-radius:6px}#empty{padding:36px;text-align:center}.foot{font-size:13px}@media(max-width:650px){body{padding:16px}header{align-items:flex-start;flex-direction:column}h1{font-size:24px}.summary{gap:20px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">经营工作台</div><h1>经营参谋</h1><p>查看有来源的经营事项与推进状态。</p></div><button id="read" disabled>准备读取</button></header>
+<section class="status" role="status" aria-live="polite" id="status">正在连接当前工作台…</section>
+<section id="results" aria-label="当前经营事项"></section>
+<p class="foot">本页呈现已记录的经营事实。业务计划、评审与执行结果以对应流程中的记录为准。</p>
+</main>
+<script>
+(() => {
+  'use strict';
+  const button = document.getElementById('read');
+  const status = document.getElementById('status');
+  const results = document.getElementById('results');
+  let port = null, pending = null, sequence = 0, closed = false, handshakeTimer = null, readTimer = null;
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const text = value => { if (typeof value !== 'string' || !value) throw Error('invalid text'); return value; };
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  function close(message) {
+    if (closed) return;
+    closed = true; pending = null;
+    clearTimeout(handshakeTimer); clearTimeout(readTimer);
+    window.removeEventListener('message', connected);
+    if (port) { port.onmessage = null; port.close(); }
+    button.disabled = true; button.textContent = '读取已停止';
+    status.textContent = message; results.replaceChildren();
+  }
+  function element(tag, value, className) {
+    const node = document.createElement(tag);
+    if (value !== undefined) node.textContent = value;
+    if (className) node.className = className;
+    return node;
+  }
+  function source(parent, label, value) {
+    if (!isObject(value) || typeof value.resourceId !== 'string' || !Number.isSafeInteger(value.revision)
+        || value.revision < 1 || typeof value.contentHash !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(value.contentHash)) throw Error('invalid source');
+    const details = element('details');
+    details.append(element('summary', label), element('pre', JSON.stringify(value, null, 2)));
+    parent.append(details);
+  }
+  const states = {DRAFT:'草案',ACTIVE:'进行中',PAUSED:'已暂停',CLOSED:'已关闭',ARCHIVED:'已归档',
+    PREPARING:'准备中',WAITING_DATA:'等待数据',RUNNING:'运行中',UNKNOWN:'结果待核对',RECONCILING:'恢复核对中',CANCELLED:'已取消'};
+  const analysisTypes = {initial_store_analysis:'门店经营初诊',weekly_business_review:'周度经营复盘',
+    experience_growth:'体验增长',creator_sales:'创作者销售',product_structure:'商品结构分析'};
+  function label(value) { return Object.hasOwn(states, value) ? states[value] : text(value); }
+  function render(envelope) {
+    if (!isObject(envelope) || envelope.schemaVersion !== 'aos.runtime-ui-read-status/v1') throw Error('invalid result');
+    if (envelope.state !== 'succeeded') {
+      if (!['denied','failed','expired'].includes(envelope.state) || envelope.result !== null) throw Error('invalid state');
+      results.replaceChildren(); status.textContent = '本次读取未完成。请核对工作台状态后重新读取。';
+      button.textContent = '重新读取'; return;
+    }
+    const view = envelope.result;
+    if (!isObject(view) || view.schemaVersion !== 'aos.analyst-workspace-view/v1' || view.executionAllowed !== false
+        || !isObject(view.tenant) || !isObject(envelope.tenant) || view.tenant.orgId !== envelope.tenant.orgId
+        || view.tenant.projectId !== envelope.tenant.projectId || !Array.isArray(view.cases)
+        || view.cases.length > 50 || view.caseCount !== view.cases.length || !Number.isSafeInteger(view.runCount)
+        || view.runCount < 0 || view.runCount > 500 || typeof view.truncated !== 'boolean'
+        || typeof view.cutoffAt !== 'string' || !Number.isFinite(Date.parse(view.cutoffAt))) throw Error('invalid view');
+    const fragment = document.createDocumentFragment();
+    const summary = element('section', undefined, 'summary');
+    for (const [value, title] of [[view.caseCount,'经营事项'], [view.runCount,'关联运行']]) {
+      const metric = element('div', undefined, 'metric');
+      metric.append(element('strong', String(value)), element('span', title)); summary.append(metric);
+    }
+    summary.append(element('p', '读取截至 ' + new Date(view.cutoffAt).toLocaleString('zh-CN'), 'meta'));
+    fragment.append(summary);
+    if (view.truncated) fragment.append(element('p', '当前显示有限范围的近期记录，未展示的记录不代表不存在。'));
+    let runCount = 0;
+    for (const item of view.cases) {
+      if (!isObject(item) || !Array.isArray(item.runs) || item.runs.length > 10) throw Error('invalid case');
+      const article = element('article');
+      article.append(element('h2', text(item.title)), element('span', label(item.lifecycle), 'badge'),
+        element('span', Object.hasOwn(analysisTypes, item.analysisType) ? analysisTypes[item.analysisType] : text(item.analysisType), 'badge'));
+      source(article, '查看经营事项来源', item.caseRef);
+      if (!item.runs.length) article.append(element('p', '该事项尚无关联运行。'));
+      for (const run of item.runs) {
+        const row = element('div', undefined, 'run');
+        row.append(element('p', '推进阶段：' + label(run.lifecycle) + ' · ' + label(run.control)));
+        source(row, '查看运行与状态来源', run.runRef);
+        source(row, '查看状态版本依据', run.stateRef);
+        source(row, '查看运行引用的事项版本', run.caseRef);
+        article.append(row); runCount++;
+      }
+      fragment.append(article);
+    }
+    if (runCount !== view.runCount) throw Error('invalid count');
+    if (!view.cases.length) {
+      const empty = element('article'); empty.id = 'empty';
+      empty.append(element('h2', '当前没有可展示的经营事项'), element('p', '后续由真实数据触发的事项会在这里呈现。'));
+      fragment.append(empty);
+    }
+    results.replaceChildren(fragment);
+    status.textContent = '已读取当前经营事实，可展开来源核对。'; button.textContent = '重新读取';
+  }
+  function read() {
+    if (closed || !port || pending) return;
+    pending = 'analyst-read-' + (++sequence); button.disabled = true;
+    status.textContent = '正在读取当前经营事项，请稍候…'; results.replaceChildren();
+    readTimer = setTimeout(() => close('读取通道未返回确认，已停止本页读取。请在平台核对原请求。'), 90000);
+    try { port.postMessage({version:1,type:'read',sequence,requestId:pending,...identity,
+      operationId:'analyst_workspace_view_v1',input:{caseLimit:20,runLimit:5}}); }
+    catch { close('读取通道不可用，请重新打开工作台。'); }
+  }
+  function response(event) {
+    if (closed || !pending) return;
+    const value = event.data;
+    if (!isObject(value) || value.version !== 1 || value.type !== 'response' || value.requestId !== pending || typeof value.ok !== 'boolean') {
+      close('读取响应无法核对，已停止本页读取。'); return;
+    }
+    pending = null; clearTimeout(readTimer);
+    if (!value.ok) {
+      status.textContent = '尚未取得结果，可继续查看本次读取。'; button.textContent = '继续查看本次读取'; button.disabled = false; return;
+    }
+    try { render(value.result); button.disabled = false; }
+    catch { close('读取结果无法核对，请重新读取安装目录。'); }
+  }
+  function connected(event) {
+    if (closed || port || event.source !== window.parent) return;
+    const value = event.data;
+    if (!isObject(value) || value.version !== 1 || value.type !== 'aos:connected' || value.nonce !== nonce
+        || value.installationId !== identity.installationId || value.generation !== identity.generation
+        || value.executionEpoch !== identity.executionEpoch || event.ports.length !== 1) {
+      close('工作台连接身份不一致，请重新打开。'); return;
+    }
+    clearTimeout(handshakeTimer); window.removeEventListener('message', connected);
+    port = event.ports[0]; port.onmessage = response; port.start(); read();
+  }
+  let identity, nonce;
+  try {
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const keys = ['aosNonce','installationId','generation','executionEpoch','initialRoute'];
+    if ([...fragment].length !== 5 || keys.some(key => fragment.getAll(key).length !== 1)
+        || fragment.get('initialRoute') !== '/workshop/analyst') throw Error('invalid bootstrap');
+    nonce = fragment.get('aosNonce');
+    identity = {installationId:fragment.get('installationId'),generation:fragment.get('generation'),executionEpoch:Number(fragment.get('executionEpoch'))};
+    if (!/^[a-f0-9]{48}$/.test(nonce) || !uuid.test(identity.installationId) || !uuid.test(identity.generation)
+        || !Number.isSafeInteger(identity.executionEpoch) || identity.executionEpoch < 1) throw Error('invalid identity');
+    button.addEventListener('click', read);
+    window.addEventListener('pagehide', () => close('已离开当前工作台。'), {once:true});
+    window.addEventListener('message', connected);
+    handshakeTimer = setTimeout(() => close('工作台连接超时，请重新打开。'), 10000);
+    window.parent.postMessage({version:1,type:'aos:hello',nonce,...identity}, '*');
+  } catch { close('工作台启动信息不完整，请从已安装目录重新打开。'); }
+})();
+</script></body></html>

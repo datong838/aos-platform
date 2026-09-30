@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "aip.live-sandbox.v1",
+  "id": "ecommerce.content.digital-human-live-sandbox",
+  "mode": "internal_sandbox",
+  "durationSeconds": 300,
+  "status": "blocked_until_exact_runtime_observations_ready",
+  "agentStages": [
+    {
+      "order": 1,
+      "role": "danmu_understanding",
+      "input": "SanitizedDanmuEnvelope",
+      "output": "DanmuUnderstandingArtifact"
+    },
+    {
+      "order": 2,
+      "role": "knowledge_retrieval",
+      "input": "DanmuUnderstandingArtifact",
+      "output": "LiveKnowledgeMatchArtifact"
+    },
+    {
+      "order": 3,
+      "role": "script_drafting",
+      "input": "LiveKnowledgeMatchArtifact",
+      "output": "LiveScriptDraftArtifact"
+    },
+    {
+      "order": 4,
+      "role": "safety_filtering",
+      "input": "LiveScriptDraftArtifact",
+      "output": "LiveSafetyDecisionArtifact"
+    },
+    {
+      "order": 5,
+      "role": "director_control",
+      "input": "LiveSafetyDecisionArtifact",
+      "output": "LiveDirectorDecisionArtifact"
+    }
+  ],
+  "hardGates": [
+    "medical_claim",
+    "financial_claim",
+    "legal_claim",
+    "minor_safety",
+    "personal_information",
+    "abuse_conflict",
+    "price_conflict",
+    "inventory_conflict",
+    "platform_rule_unknown",
+    "model_unavailable",
+    "knowledge_unavailable"
+  ],
+  "killLadder": [
+    "mute",
+    "pause",
+    "kill_session",
+    "isolate_provider"
+  ],
+  "requiredObservations": [
+    "ProviderInstanceRevision",
+    "ModelRouteRevision",
+    "RuntimePolicyRevision",
+    "ProviderHealthObservation:3_of_3_start_time",
+    "CapacitySnapshot",
+    "PriceSnapshot",
+    "BudgetBalanceSnapshot",
+    "DigitalHumanProfileLicense",
+    "VoiceLicense",
+    "LiveKnowledgeSnapshotFreshness",
+    "HumanHeartbeat",
+    "KillSwitch"
+  ],
+  "forbidden": [
+    "platform_push",
+    "real_barrage_capture",
+    "automatic_broadcast",
+    "provider_call_from_planner",
+    "secret_payload",
+    "raw_danmu_in_evidence",
+    "automatic_retry_of_unknown"
+  ]
+}

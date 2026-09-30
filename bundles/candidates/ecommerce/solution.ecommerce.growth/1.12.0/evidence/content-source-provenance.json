@@ -1,0 +1,1 @@
+{"baseTreeHash":"47b1b5ff4093ba76606b8a54867dde312d94ee3565eff959087225b4157e6b4c","baseVersion":"1.11.0","biTemplateSha256":"sha256:76036401433342f95328c43ecbcb618deb3c6adba335532b6bfc11af896d0f3b","buildEvidenceRequired":["runtime-image-index","dependency-lock","sbom-validation","bundle-evals","signature"],"status":"UNBUILT_UNSIGNED"}
