@@ -1,6 +1,8 @@
 """Reverify external identity before entering the independent consumer boundary."""
 from aos_api.auth import Principal, resolve_principal
-from aos_api.aip_network_consumer_contracts import NetworkConsumerCommand, NetworkConsumerInquiry
+from aos_api.aip_network_consumer_contracts import (
+    NetworkConsumerCommand, NetworkConsumerInquiry, NetworkDeliveryClaim, NetworkDeliveryFinish,
+)
 from aos_api.aip_network_issuer_auth import _require_external_oidc_config
 
 
@@ -9,9 +11,9 @@ class ConsumerAuthBlocked(ValueError):
 
 
 def authenticate_consumer_request(
-    request: NetworkConsumerCommand | NetworkConsumerInquiry,
+    request: NetworkConsumerCommand | NetworkConsumerInquiry | NetworkDeliveryClaim | NetworkDeliveryFinish,
 ) -> Principal:
-    if type(request) not in {NetworkConsumerCommand, NetworkConsumerInquiry}:
+    if type(request) not in {NetworkConsumerCommand, NetworkConsumerInquiry, NetworkDeliveryClaim, NetworkDeliveryFinish}:
         raise ConsumerAuthBlocked('CONSUMER_REQUEST_CONTRACT_REQUIRED')
     try:
         _require_external_oidc_config()

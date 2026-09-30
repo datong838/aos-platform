@@ -91,3 +91,15 @@ def test_writeable_discovery_connection_is_rejected(configuration, https_signer,
         process_network_approval_event(configuration, row['proposal_id'], approval['approval_event_id'],
             actor, 'Bearer '+sign(actor.subject), connect_factory=connect)
     assert e.value.status_code == 503 and not list(configuration.attempt_directory.iterdir())
+
+
+def test_durable_inquiry_never_sends_command_without_local_marker(configuration, https_signer, monkeypatch):
+    sign, _ = https_signer
+    row, approval, actor = event()
+    calls = []
+    monkeypatch.setattr(consumer, 'request_consumer', lambda endpoint, request: calls.append(request) or {'status': 'unresolved'})
+    assert not list(configuration.attempt_directory.iterdir())
+    process_network_approval_event(configuration, row['proposal_id'], approval['approval_event_id'],
+        actor, 'Bearer '+sign(actor.subject), inquiry=True)
+    assert [type(r) for r in calls] == [NetworkConsumerInquiry]
+    assert not list(configuration.attempt_directory.iterdir())

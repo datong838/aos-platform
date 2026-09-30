@@ -10,7 +10,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 def process_network_approval_event(config, proposal_id, approval_event_id, principal, authorization,
-                                   *, connect_factory=None):
+                                   *, connect_factory=None, inquiry=False):
     """Resolve authoritative references then use the existing once-or-inquiry boundary.
 
     A future authorized subscriber supplies an exact event and current original-maker
@@ -24,7 +24,7 @@ def process_network_approval_event(config, proposal_id, approval_event_id, princ
     except Exception:
         raise ConsumerApplicationBlocked('NETWORK_EVENT_CONSUMER_CONFIG_BLOCKED', 503) from None
     try:
-        if (type(principal) is not Principal or principal.token_kind != 'oidc'
+        if (type(inquiry) is not bool or type(principal) is not Principal or principal.token_kind != 'oidc'
                 or any(type(v) is not str or not 1 <= len(v) <= 160
                        or not v.isprintable() or any(c.isspace() for c in v)
                        for v in (proposal_id, approval_event_id))):
@@ -85,4 +85,4 @@ def process_network_approval_event(config, proposal_id, approval_event_id, princ
         raise ConsumerApplicationBlocked('NETWORK_EVENT_AUTHORITY_READ_UNAVAILABLE', 503) from None
     # Connection is closed before IPC; the consumer rechecks current authority under
     # its own locks. Repeated events become Inquiry through the existing marker.
-    return execute_consumer(config, refs, verified, authorization, inquiry=False)
+    return execute_consumer(config, refs, verified, authorization, inquiry=inquiry)

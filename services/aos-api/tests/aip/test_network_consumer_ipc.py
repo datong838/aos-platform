@@ -110,3 +110,18 @@ def test_response_loss_never_dispatches_command_twice(monkeypatch, tmp_path):
     finally:
         left.close()
         right.close()
+
+
+@pytest.mark.parametrize('method', ['claim_delivery', 'finish_delivery'])
+def test_delivery_wire_identity_and_no_caller_authority(method):
+    from aos_api.aip_network_consumer_contracts import NetworkDeliveryClaim, NetworkDeliveryFinish
+    payload = {'schemaVersion': 1, 'orgId': 'org-org', 'projectId': 'dev-project',
+               'bearerToken': 'header.payload.signature'}
+    if method == 'finish_delivery':
+        payload.update(approvalEventId='approval-1', claimToken='11111111-1111-4111-8111-111111111111')
+    decoded, request = decode_consumer_request(json.dumps({'schemaVersion': 1, 'method': method, 'payload': payload}).encode())
+    assert decoded == method and type(request) is (NetworkDeliveryClaim if method=='claim_delivery' else NetworkDeliveryFinish)
+    assert 'header.payload.signature' not in repr(request)
+    for key, value in [('actorId', 'maker'), ('dsn', 'private'), ('schemaVersion', True), ('success', True)]:
+        with pytest.raises(ConsumerProtocolBlocked):
+            decode_consumer_request(json.dumps({'schemaVersion': 1, 'method': method, 'payload': {**payload, key: value}}).encode())

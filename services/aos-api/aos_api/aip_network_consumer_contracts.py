@@ -1,6 +1,8 @@
 """Strict no-effect commands for the independent network consumer service."""
 from __future__ import annotations
 import re
+from datetime import datetime
+from uuid import UUID
 from typing import Literal
 from pydantic import ConfigDict, Field, SecretStr, field_validator
 from aos_api.aip_contracts import AipContractModel
@@ -66,3 +68,75 @@ class NetworkConsumerCommand(_ConsumerRequest):
 class NetworkConsumerInquiry(_ConsumerRequest):
     def matches(self, command: NetworkConsumerCommand) -> bool:
         return type(command) is NetworkConsumerCommand and self.request_hash == command.request_hash
+
+
+class NetworkDeliveryClaim(AipContractModel):
+    """Current identity only. The service derives the original-maker subject."""
+    model_config = ConfigDict(strict=True, frozen=True)
+    schema_version: Literal[1]
+    org_id: str = Field(min_length=1, max_length=120)
+    project_id: str = Field(min_length=1, max_length=120)
+    bearer_token: SecretStr
+
+    @field_validator('schema_version', mode='before')
+    @classmethod
+    def _version(cls, value):
+        return NetworkConsumerReferences._version(value)
+
+    @field_validator('org_id', 'project_id')
+    @classmethod
+    def _scope(cls, value):
+        return NetworkConsumerReferences._identifier(value)
+
+    @field_validator('bearer_token')
+    @classmethod
+    def _jwt(cls, value):
+        return _ConsumerRequest._jwt_shape(value)
+
+
+def _delivery_token(value):
+    if str(UUID(value)) != value:
+        raise ValueError('canonical claim token required')
+    return value
+
+
+class NetworkDeliveryFinish(NetworkDeliveryClaim):
+    approval_event_id: str = Field(min_length=1, max_length=160)
+    claim_token: str
+
+    @field_validator('approval_event_id')
+    @classmethod
+    def _event(cls, value):
+        return NetworkConsumerReferences._identifier(value)
+
+    @field_validator('claim_token')
+    @classmethod
+    def _token(cls, value):
+        return _delivery_token(value)
+
+
+class NetworkDeliveryLease(AipContractModel):
+    model_config = ConfigDict(strict=True, frozen=True)
+    mode: Literal['dispatch', 'inquiry']
+    proposal_id: str = Field(min_length=1, max_length=160)
+    approval_event_id: str = Field(min_length=1, max_length=160)
+    claim_token: str
+    claim_until: str
+    attempt: int = Field(ge=1)
+
+    @field_validator('proposal_id', 'approval_event_id')
+    @classmethod
+    def _id(cls, value):
+        return NetworkConsumerReferences._identifier(value)
+
+    @field_validator('claim_token')
+    @classmethod
+    def _token(cls, value):
+        return _delivery_token(value)
+
+    @field_validator('claim_until')
+    @classmethod
+    def _time(cls, value):
+        if datetime.fromisoformat(value).utcoffset() is None:
+            raise ValueError('timezone required')
+        return value

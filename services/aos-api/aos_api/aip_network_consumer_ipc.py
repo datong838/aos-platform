@@ -5,9 +5,11 @@ from pathlib import Path
 import socket
 import struct
 
-from aos_api.aip_network_consumer_contracts import NetworkConsumerCommand, NetworkConsumerInquiry
+from aos_api.aip_network_consumer_contracts import (
+    NetworkConsumerCommand, NetworkConsumerInquiry, NetworkDeliveryClaim, NetworkDeliveryFinish,
+)
 from aos_api.aip_network_consumer_connection import ConsumerDatabaseConfig
-from aos_api.aip_network_consumer_service import consume_network_once, inquire_network
+from aos_api.aip_network_consumer_service import consume_network_once, inquire_network, process_network_delivery
 from aos_api.aip_network_issuer_auth import _require_external_oidc_config
 from aos_api.aip_network_issuer_attempt import _private_directory_fd
 from aos_api.aip_network_issuer_ipc import (
@@ -35,6 +37,10 @@ def decode_consumer_request(raw: bytes):
             request = NetworkConsumerInquiry.model_validate(message['payload'])
         elif method == 'consume_once':
             request = NetworkConsumerCommand.model_validate(message['payload'])
+        elif method == 'claim_delivery':
+            request = NetworkDeliveryClaim.model_validate(message['payload'])
+        elif method == 'finish_delivery':
+            request = NetworkDeliveryFinish.model_validate(message['payload'])
         else:
             raise ConsumerProtocolBlocked('CONSUMER_WIRE_INVALID')
         return method, request
@@ -71,8 +77,11 @@ def serve_one_consumer_connection(conn: socket.socket, *, api_uid: int, consumer
     response = {'schemaVersion': 1, 'status': 'blocked', 'code': 'CONSUMER_REQUEST_BLOCKED'}
     try:
         method, request = decode_consumer_request(read_issuer_frame(conn))
-        result = (inquire_network(request, config) if method == 'inquiry'
-                  else consume_network_once(request, config, attempt_directory))
+        if method in ('claim_delivery', 'finish_delivery'):
+            result = process_network_delivery(request, config)
+        else:
+            result = (inquire_network(request, config) if method == 'inquiry'
+                      else consume_network_once(request, config, attempt_directory))
         response = {'schemaVersion': 1, **result}
         processed = True
     except Exception:

@@ -5,7 +5,9 @@ import os
 from pathlib import Path
 import struct
 
-from aos_api.aip_network_consumer_contracts import NetworkConsumerCommand, NetworkConsumerInquiry
+from aos_api.aip_network_consumer_contracts import (
+    NetworkConsumerCommand, NetworkConsumerInquiry, NetworkDeliveryClaim, NetworkDeliveryFinish, NetworkDeliveryLease,
+)
 from aos_api.aip_network_issuer_ipc import (
     MAX_ISSUER_FRAME_BYTES, _unique_pairs, _invalid_constant,
     read_issuer_frame,
@@ -53,6 +55,25 @@ def _decode_response(raw, request):
                 or value['schemaVersion'] != 1):
             raise ValueError()
         status = value.get('status')
+        if type(request) in (NetworkDeliveryClaim, NetworkDeliveryFinish) and status not in ('unresolved', 'blocked'):
+            if type(request) is NetworkDeliveryClaim and status == 'claimed':
+                if set(value) != {'schemaVersion', 'status', 'delivery'}:
+                    raise ValueError()
+                NetworkDeliveryLease.model_validate(value['delivery'])
+            elif type(request) is NetworkDeliveryClaim and status == 'idle':
+                if set(value) != {'schemaVersion', 'status'}:
+                    raise ValueError()
+            elif type(request) is NetworkDeliveryFinish and status == 'unknown':
+                if set(value) != {'schemaVersion', 'status'}:
+                    raise ValueError()
+            elif type(request) is NetworkDeliveryFinish and status == 'delivered':
+                rid = value.get('receiptId')
+                if (set(value) != {'schemaVersion', 'status', 'receiptId'} or type(rid) is not str
+                        or not 1 <= len(rid) <= 160 or not rid.isprintable() or any(c.isspace() for c in rid)):
+                    raise ValueError()
+            else:
+                raise ValueError()
+            return {key: val for key, val in value.items() if key != 'schemaVersion'}
         if status in ('unresolved', 'conflict'):
             if set(value) != {'schemaVersion', 'status'}:
                 raise ValueError()
@@ -84,11 +105,13 @@ def _decode_response(raw, request):
 def _exchange(conn, request):
     """Internal transport only. Caller must validate the connected server first."""
     try:
-        if type(request) not in (NetworkConsumerCommand, NetworkConsumerInquiry):
+        methods = {NetworkConsumerCommand: 'consume_once', NetworkConsumerInquiry: 'inquiry',
+                   NetworkDeliveryClaim: 'claim_delivery', NetworkDeliveryFinish: 'finish_delivery'}
+        if type(request) not in methods:
             raise ValueError()
         payload = request.model_dump(mode='json', by_alias=True, exclude={'bearer_token'})
         payload['bearerToken'] = request.bearer_token.get_secret_value()
-        method = 'consume_once' if type(request) is NetworkConsumerCommand else 'inquiry'
+        method = methods[type(request)]
         body = json.dumps({'schemaVersion': 1, 'method': method, 'payload': payload},
                           separators=(',', ':')).encode('utf-8')
         if not 0 < len(body) <= MAX_ISSUER_FRAME_BYTES:
@@ -103,7 +126,7 @@ def _exchange(conn, request):
 
 def request_consumer(endpoint: ConsumerEndpoint, request):
     if (type(endpoint) is not ConsumerEndpoint
-            or type(request) not in (NetworkConsumerCommand, NetworkConsumerInquiry)):
+            or type(request) not in (NetworkConsumerCommand, NetworkConsumerInquiry, NetworkDeliveryClaim, NetworkDeliveryFinish)):
         raise ConsumerClientBlocked('CONSUMER_CLIENT_EXACT_INPUT_REQUIRED')
     dispatched = False
     try:

@@ -27,6 +27,41 @@ def observed():
         'contentHash': 'b'*64, 'receiptId': 'receipt-1'}}
 
 
+@pytest.mark.parametrize('finish', [False, True])
+def test_delivery_real_frame_is_sent_once(finish):
+    from aos_api.aip_network_consumer_contracts import NetworkDeliveryClaim, NetworkDeliveryFinish
+    fields = dict(schema_version=1, org_id='org-org', project_id='dev-project', bearer_token='header.payload.signature')
+    request = (NetworkDeliveryFinish(**fields, approval_event_id='approval-1',
+        claim_token='11111111-1111-4111-8111-111111111111') if finish else NetworkDeliveryClaim(**fields))
+    left, right = socket.socketpair(); received = []
+    def server():
+        with right:
+            received.append(json.loads(read_issuer_frame(right)))
+            body = json.dumps({'schemaVersion': 1, 'status': 'unknown' if finish else 'idle'}).encode()
+            right.sendall(struct.pack('>I', len(body))+body)
+            right.settimeout(1)
+            assert right.recv(1) == b''
+    worker = threading.Thread(target=server); worker.start()
+    try:
+        with left:
+            assert _exchange(left, request) == {'status': 'unknown' if finish else 'idle'}
+    finally:
+        worker.join(2)
+    assert not worker.is_alive() and len(received) == 1
+    assert received[0]['method'] == ('finish_delivery' if finish else 'claim_delivery')
+
+
+@pytest.mark.parametrize('change', [{'mode': 'retry'}, {'attempt': True}, {'claimUntil': '2026-10-01'},
+                                  {'claimToken': 'bad'}, {'proposalId': 'wrong id'}])
+def test_invalid_delivery_response_cannot_become_dispatch(change):
+    from aos_api.aip_network_consumer_contracts import NetworkDeliveryClaim
+    request = NetworkDeliveryClaim(schema_version=1, org_id='org-org', project_id='dev-project', bearer_token='header.payload.signature')
+    delivery = {'mode': 'dispatch', 'proposalId': 'p', 'approvalEventId': 'a', 'attempt': 1,
+        'claimUntil': '2026-10-01T05:00:00+08:00', 'claimToken': '11111111-1111-4111-8111-111111111111', **change}
+    with pytest.raises(ConsumerClientBlocked):
+        _decode_response(json.dumps({'schemaVersion': 1, 'status': 'claimed', 'delivery': delivery}).encode(), request)
+
+
 @pytest.mark.parametrize('inquiry', [False, True])
 def test_one_actual_frame_and_exact_response(command, inquiry):
     left, right = socket.socketpair()
