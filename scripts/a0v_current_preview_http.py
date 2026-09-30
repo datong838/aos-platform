@@ -7,6 +7,8 @@ import argparse
 import importlib.util
 import json
 import os
+import re
+import stat
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -122,7 +124,8 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
             or {row["bundle_id"]: row["content_hash"] for row in versions} != receipt.get("contentHashes")
             or any(row["status"] != "published" for row in versions)):
         raise PreviewBlocked("PREVIEW_DATABASE_DRIFT")
-    return parameters, {"database": TARGET, "version": EXPECTED_SCHEMA_HEAD,
+    return parameters, {"database": TARGET, "databaseHost": parameters["host"],
+                        "databasePort": parameters["port"], "version": EXPECTED_SCHEMA_HEAD,
                         "installationId": INSTALLATION, "installationState": "approved",
                         "runtimeBindings": 0, "publishedVersions": 4,
                         "signedRoot": str(signed_root), "trustRoots": str(trust_path)}
@@ -134,11 +137,102 @@ def _port_free(port: int) -> bool:
     return result.returncode == 1 and not result.stderr
 
 
+def _private_file(path: Path) -> Path:
+    if path.is_symlink() or not path.is_file():
+        raise PreviewBlocked("API_IDENTITY_FILE_INVALID")
+    info = path.stat()
+    if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600:
+        raise PreviewBlocked("API_IDENTITY_MODE_INVALID")
+    return path.resolve(strict=True)
+
+
+def _limited_identity(path: Path, report: dict[str, object]) -> dict[str, object]:
+    try:
+        data = json.loads(_private_file(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        raise PreviewBlocked("API_IDENTITY_FILE_INVALID") from None
+    if not isinstance(data, dict) or set(data) != {"host", "port", "dbname", "user", "pgpassFile"}:
+        raise PreviewBlocked("API_IDENTITY_FILE_INVALID")
+    if (data["host"] != "127.0.0.1" or data["host"] != report.get("databaseHost")
+            or type(data["port"]) is not int or data["port"] != report.get("databasePort")
+            or data["dbname"] != TARGET):
+        raise PreviewBlocked("API_IDENTITY_TARGET_DRIFT")
+    if (not isinstance(data["user"], str)
+            or not re.fullmatch(r"[a-z][a-z0-9_]{2,62}", data["user"])
+            or data["user"] in {"aos_app", "aos_runtime"}):
+        raise PreviewBlocked("API_IDENTITY_ROLE_INVALID")
+    if not isinstance(data["pgpassFile"], str):
+        raise PreviewBlocked("API_IDENTITY_FILE_INVALID")
+    data["pgpassFile"] = str(_private_file(Path(data["pgpassFile"])))
+    return data
+
+
+def _verify_limited_login(identity: dict[str, object]) -> None:
+    with connect(host=identity["host"], port=identity["port"],
+                 dbname=identity["dbname"], user=identity["user"],
+                 passfile=identity["pgpassFile"], row_factory=dict_row) as conn:
+        conn.read_only = True
+        row = conn.execute("""SELECT session_user AS login, current_user AS role,
+            r.rolsuper, r.rolbypassrls, r.rolinherit,
+            pg_has_role(session_user, 'aos_runtime', 'MEMBER') AS runtime_member,
+            pg_has_role(session_user, 'aos_app', 'MEMBER') AS owner_member,
+            has_table_privilege(session_user, 'public.aip_action_proposal', 'SELECT') AS direct_select
+            FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
+        if (row is None or row["login"] != identity["user"] or row["role"] != identity["user"]
+                or row["rolsuper"] or row["rolbypassrls"] or row["rolinherit"]
+                or not row["runtime_member"] or row["owner_member"] or row["direct_select"]):
+            raise PreviewBlocked("API_IDENTITY_PRIVILEGE_DRIFT")
+        conn.execute("SET LOCAL ROLE aos_runtime")
+        conn.execute("SELECT version_num FROM alembic_version").fetchone()
+
+
+def serve_limited(*, signed_receipt: Path, identity_file: Path) -> None:
+    if not _port_free(8080) or not _port_free(18181):
+        raise PreviewBlocked("HTTP_OR_SECOND_RUNTIME_PORT_OCCUPIED")
+    child_env = {k: v for k, v in os.environ.items()
+                 if k not in {"AOS_DATABASE_URL", "PGPASSWORD", "PGPASSFILE"}}
+    child = subprocess.run([sys.executable, str(Path(__file__).resolve()),
+                            "--signed-receipt", str(signed_receipt)],
+                           env=child_env, capture_output=True, text=True,
+                           timeout=90, check=False)
+    try:
+        report = json.loads(child.stdout.strip().splitlines()[-1])
+    except (ValueError, TypeError):
+        raise PreviewBlocked("SIGNED_PREFLIGHT_CHILD_FAILED") from None
+    if child.returncode != 0 or report.get("outcome") != "CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN":
+        raise PreviewBlocked("SIGNED_PREFLIGHT_CHILD_FAILED")
+    identity = _limited_identity(identity_file, report)
+    _verify_limited_login(identity)
+    service_env = {k: v for k, v in child_env.items() if k not in {"AOS_DATABASE_URL", "PGPASSWORD"}}
+    service_env.update(FLAGS)
+    service_env["PGPASSFILE"] = str(identity["pgpassFile"])
+    service_env["AOS_DATABASE_URL"] = make_conninfo(host=identity["host"],
+        port=identity["port"], dbname=identity["dbname"], user=identity["user"])
+    service_env["AOS_BUNDLE_ROOT"] = str(report["signedRoot"])
+    service_env["AOS_BUNDLE_TRUST_ROOTS_FILE"] = str(report["trustRoots"])
+    print(json.dumps({"outcome": "CURRENT_PREVIEW_HTTP_LIMITED_STARTING",
+                      "database": TARGET, "port": 8080, "runtimeHost": 0,
+                      "workersEnabled": 0, "migrationMode": "disabled"}, sort_keys=True), flush=True)
+    os.execve(sys.executable, [sys.executable, "-m", "uvicorn", "aos_api.main:app",
+                            "--host", "127.0.0.1", "--port", "8080", "--workers", "1",
+                            "--no-access-log", "--log-level", "warning"],
+              {**service_env, "PYTHONPATH": str(API_ROOT) + os.pathsep + service_env.get("PYTHONPATH", "")})
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--signed-receipt", type=Path, required=True)
     parser.add_argument("--serve", action="store_true")
+    parser.add_argument("--serve-limited", action="store_true")
+    parser.add_argument("--api-identity-file", type=Path)
     args = parser.parse_args()
+    if args.serve_limited:
+        if args.serve or args.api_identity_file is None:
+            raise PreviewBlocked("API_IDENTITY_FILE_REQUIRED")
+        serve_limited(signed_receipt=args.signed_receipt, identity_file=args.api_identity_file)
+        return 0
+    if args.api_identity_file is not None:
+        raise PreviewBlocked("API_IDENTITY_FILE_UNEXPECTED")
     parameters, report = preflight(signed_receipt=args.signed_receipt)
     if not args.serve:
         print(json.dumps({"outcome": "CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN", **report}, sort_keys=True))
