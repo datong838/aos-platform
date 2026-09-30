@@ -326,20 +326,28 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
                "result_ref": {"resourceType": "ResponsibilityPlanRevision", "resourceId": "plan-1",
                               "revision": 1, "contentHash": "b" * 64},
                "created_at": datetime(2026, 9, 30, tzinfo=UTC)}
+    plan = {"content_hash": "b" * 64, "created_by": "person:current",
+            "template_ref": {"resourceType": "ResponsibilityTemplateRevision",
+                             "resourceId": "template-1", "revision": 1,
+                             "contentHash": "c" * 64}}
     class Connection:
         def execute(self, sql, params):
             assert sql.lstrip().startswith("SELECT") and "FOR UPDATE" not in sql
             calls.append((sql, params))
             if "FROM meta_membership" in sql:
                 return SimpleNamespace(fetchall=lambda: [{"role": "owner"}])
-            assert "FROM aip_production_contract_receipt" in sql
-            assert params == (*SCOPE.key, "bi_responsibility_plan.prepare", "bi-receipt-1", "person:current")
-            return SimpleNamespace(fetchone=lambda: receipt if not missing[0] else None)
+            if "FROM aip_production_contract_receipt" in sql:
+                assert params == (*SCOPE.key, "bi_responsibility_plan.prepare", "bi-receipt-1", "person:current")
+                return SimpleNamespace(fetchone=lambda: receipt if not missing[0] else None)
+            assert "FROM aip_responsibility_plan_revision" in sql
+            assert params == (*SCOPE.key, "plan-1", 1)
+            return SimpleNamespace(fetchone=lambda: plan if not plan_missing[0] else None)
     @contextmanager
     def connect(scope):
         assert scope == SCOPE
         yield Connection()
     missing = [False]
+    plan_missing = [False]
     monkeypatch.setattr(module, "apply_asset_transaction_scope", lambda *args, **kwargs: None)
     monkeypatch.setattr(module, "openfga_api_url", lambda: None)
     reader = module.SignedBIPlanReceiptReader(connect_factory=connect)
@@ -350,7 +358,8 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
     assert result.installation_binding_verified is False
     assert result.installation_binding is None
     assert result.current_admission_verified is False
-    assert len(calls) == 2
+    assert result.plan_revision_verified is True
+    assert len(calls) == 3
     receipt["result_ref"]["installationBinding"] = {
         "installationId": "42785d78-5914-4a54-a078-e5d2c7f48481",
         "installationETag": 3,
@@ -364,10 +373,23 @@ def test_signed_bi_receipt_readback_is_actor_scoped_and_never_resends(monkeypatc
     assert bound.installation_binding.installation_id == "42785d78-5914-4a54-a078-e5d2c7f48481"
     assert bound.installation_binding.installation_etag == 3
     assert bound.current_admission_verified is False
+    assert bound.plan_revision_verified is True
     assert bound.model_dump(mode="json", by_alias=True)["installationBinding"]["installationEtag"] == 3
     receipt["result_ref"]["installationBinding"]["actor"] = "person:other"
     with pytest.raises(module.ProductionContractError, match="binding invalid"):
         reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+    receipt["result_ref"]["installationBinding"]["actor"] = "person:current"
+    plan_missing[0] = True
+    with pytest.raises(module.ProductionContractError, match="Plan revision"):
+        reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+    plan_missing[0] = False
+    for field, invalid in (("content_hash", "d" * 64), ("created_by", "person:other"),
+                           ("template_ref", {**plan["template_ref"], "revision": 2})):
+        original = plan[field]
+        plan[field] = invalid
+        with pytest.raises(module.ProductionContractError, match="Plan revision"):
+            reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")
+        plan[field] = original
     missing[0] = True
     with pytest.raises(ProductionContractNotFound):
         reader.read(SCOPE, principal=principal, idempotency_key="bi-receipt-1")

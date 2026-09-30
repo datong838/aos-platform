@@ -5,7 +5,7 @@ import type { SignedBIPlanAdmission, SignedBIPlanReceiptReadback } from "./contr
 export function parseSignedBIPlanReceiptReadback(value: unknown): SignedBIPlanReceiptReadback {
   const raw=object(value,"SignedBIPlanReceiptReadback");
   const resultRef=exact(raw.resultRef,"resultRef");
-  if(resultRef.resourceType!=="ResponsibilityPlanRevision" || raw.currentAdmissionVerified!==false)
+  if(resultRef.resourceType!=="ResponsibilityPlanRevision" || raw.planRevisionVerified!==true || raw.currentAdmissionVerified!==false)
     throw new Error("BI Receipt 不能证明当前准入");
   const verified=raw.installationBindingVerified;
   if(typeof verified!=="boolean" || verified!==(raw.installationBinding!==null))
@@ -26,7 +26,7 @@ export function parseSignedBIPlanReceiptReadback(value: unknown): SignedBIPlanRe
   if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt) || Number.isNaN(Date.parse(createdAt)))
     throw new Error("BI Receipt 时间无效");
   return {receiptId:string(raw.receiptId,"receiptId"),requestHash:sha(raw.requestHash,"requestHash"),
-    resultRef,createdAt,installationBinding,installationBindingVerified:verified,currentAdmissionVerified:false};
+    resultRef,createdAt,installationBinding,installationBindingVerified:verified,planRevisionVerified:true,currentAdmissionVerified:false};
 }
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }

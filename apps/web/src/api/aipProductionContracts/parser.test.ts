@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { parseArtifactFamilyList, parseArtifactRelationList, parseBriefList, parseBundleList, parseEvalContractDiff, parseEvalContractList, parseImpactPreviewList, parseProductionContextList, parseProductionStartDecisionList, parseResponsibilityPlanList, parseReviewIssueList, parseSignedBIPlanAdmission, parseSignedBIPlanReceiptReadback, parseStageCompilation, parseStageTemplateList } from "./parser";
 
 describe("BG00DY signed BI receipt",()=>{
-  const receipt={receiptId:"w2r-1",requestHash:"a".repeat(64),resultRef:{resourceType:"ResponsibilityPlanRevision",resourceId:"plan-1",revision:1,contentHash:"b".repeat(64)},createdAt:"2026-09-30T00:00:00Z",installationBinding:null,installationBindingVerified:false,currentAdmissionVerified:false};
+  const receipt={receiptId:"w2r-1",requestHash:"a".repeat(64),resultRef:{resourceType:"ResponsibilityPlanRevision",resourceId:"plan-1",revision:1,contentHash:"b".repeat(64)},createdAt:"2026-09-30T00:00:00Z",installationBinding:null,installationBindingVerified:false,planRevisionVerified:true,currentAdmissionVerified:false};
   it("只接受精确 Plan 证据且保持安装绑定未证明",()=>{
     expect(parseSignedBIPlanReceiptReadback(receipt).installationBindingVerified).toBe(false);
+    expect(()=>parseSignedBIPlanReceiptReadback({...receipt,planRevisionVerified:false})).toThrow();
     expect(()=>parseSignedBIPlanReceiptReadback({...receipt,installationBindingVerified:true})).toThrow();
     expect(()=>parseSignedBIPlanReceiptReadback({...receipt,resultRef:{...receipt.resultRef,resourceType:"TaskRun"}})).toThrow();
   });

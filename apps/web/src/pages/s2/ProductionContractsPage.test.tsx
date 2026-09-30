@@ -9,7 +9,7 @@ const sdk = vi.hoisted(() => ({
   listMediaGateProfiles:vi.fn(),listMediaGateSets:vi.fn(),listContractMigrationDecisions:vi.fn(),
   listProductionContexts:vi.fn(),listImpactPreviews:vi.fn(),listProductionStartDecisions:vi.fn(),
   listProfileRecommendations:vi.fn(),listProfileConfirmations:vi.fn(),confirmMediaProfile:vi.fn(),
-  readSignedBIPlanAdmission:vi.fn(),
+  readSignedBIPlanAdmission:vi.fn(),readSignedBIPlanReceipt:vi.fn(),
   freezeBrief: vi.fn(), freezeEvalContract: vi.fn(), diffEvalContract:vi.fn(), freezeResponsibilityPlan: vi.fn(),
   freezeStageTemplate: vi.fn(),freezeImpactPreview:vi.fn(),startProduction:vi.fn(), compileStageTemplate: vi.fn(), resolveReviewIssue: vi.fn(), returnReviewIssue: vi.fn(),
 }));
@@ -36,6 +36,47 @@ describe("ProductionContractsPage W2-B authority state",()=>{
   it("只读展示签名 BI 服务端阻断并拒绝源版本漂移",async()=>{window.history.replaceState({},"","/aip/production-contracts?installationId=22222222-2222-4222-8222-222222222222&installationRevision=5&installationEtag=4");sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);expect(sdk.readSignedBIPlanAdmission).toHaveBeenCalledWith("22222222-2222-4222-8222-222222222222");expect(host.querySelector('[data-testid="bi-admission-readback"]')?.textContent).toContain("安装状态已变化");expect(host.textContent).toContain("签名职责模板");expect(host.querySelector('[data-testid="bi-admission-readback"] button')).toBeNull();});
   it("拒绝跨安装读回且不展示对方准入细节",async()=>{window.history.replaceState({},"","/aip/production-contracts?installationId=22222222-2222-4222-8222-222222222222&installationRevision=5&installationEtag=5");sdk.readSignedBIPlanAdmission.mockResolvedValue({installationId:"33333333-3333-4333-8333-333333333333",installationRevision:5,installationEtag:5,templateRef:null,activeInstanceVersions:{},blockers:["SIGNED_APPROVED_BI_TEMPLATE_UNAVAILABLE"],candidateReady:false,writeRevalidationRequired:true});sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);const admission=host.querySelector('[data-testid="bi-admission-readback"]');expect(admission?.textContent).toContain("读回安装与来源不一致");expect(admission?.textContent).not.toContain("签名职责模板");});
   it("身份不足或查询参数非法时保持 BI 准入未知",async()=>{window.history.replaceState({},"","/aip/production-contracts?installationId=invalid");sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);expect(sdk.readSignedBIPlanAdmission).not.toHaveBeenCalled();expect(host.querySelector('[data-testid="bi-admission-readback"]')?.textContent).toContain("安装标识无效");window.history.replaceState({},"","/aip/production-contracts?installationId=22222222-2222-4222-8222-222222222222");sdk.readSignedBIPlanAdmission.mockRejectedValue(new Error("403"));await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);expect(host.querySelector('[data-testid="bi-admission-readback"]')?.textContent).toContain("无法核验当前准入");});
+  it("只有用户输入原始键并点击时才只读对账，且不把原绑定当当前准入",async()=>{
+    window.history.replaceState({},"","/aip/production-contracts?installationId=22222222-2222-4222-8222-222222222222");
+    sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});
+    sdk.readSignedBIPlanReceipt.mockResolvedValue({receiptId:"receipt-1",requestHash:hash,resultRef:exact("ResponsibilityPlanRevision","plan-1"),createdAt:"2026-09-30T00:00:00Z",installationBinding:{installationId:"22222222-2222-4222-8222-222222222222",installationEtag:5,templateRef:exact("ResponsibilityTemplateRevision","template-1"),actor:"person:current"},installationBindingVerified:true,planRevisionVerified:true,currentAdmissionVerified:false});
+    await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);
+    expect(sdk.readSignedBIPlanReceipt).not.toHaveBeenCalled();
+    const section=host.querySelector('[data-testid="bi-receipt-recovery"]') as HTMLElement;
+    const input=section.querySelector('input[aria-label="原始 BI 配置幂等键"]') as HTMLInputElement;
+    const button=section.querySelector('button') as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")?.set;
+    await act(async()=>{setter?.call(input,"bi-receipt-1");input.dispatchEvent(new Event("input",{bubbles:true}));});
+    await act(async()=>{button.click();});
+    expect(sdk.readSignedBIPlanReceipt).toHaveBeenCalledOnce();
+    expect(sdk.readSignedBIPlanReceipt).toHaveBeenCalledWith("bi-receipt-1");
+    expect(section.textContent).toContain("原命令 Plan 修订已核对");
+    expect(section.textContent).toContain("当前准入未证明");
+    expect(host.textContent).toContain("签名 BI 配置准备尚未开放页面提交");
+  });
+  it("原安装不匹配或查询未知时保持禁入，换键清除旧结果",async()=>{
+    window.history.replaceState({},"","/aip/production-contracts?installationId=22222222-2222-4222-8222-222222222222");
+    sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});
+    sdk.readSignedBIPlanReceipt.mockResolvedValueOnce({receiptId:"receipt-other",requestHash:hash,resultRef:exact("ResponsibilityPlanRevision","other-plan"),createdAt:"2026-09-30T00:00:00Z",installationBinding:{installationId:"33333333-3333-4333-8333-333333333333",installationEtag:5,templateRef:exact("ResponsibilityTemplateRevision","template-1"),actor:"person:current"},installationBindingVerified:true,planRevisionVerified:true,currentAdmissionVerified:false}).mockRejectedValueOnce(new Error("404"));
+    await act(async()=>root.render(<ProductionContractsPage/>));await act(async()=>undefined);
+    const section=host.querySelector('[data-testid="bi-receipt-recovery"]') as HTMLElement;
+    const input=section.querySelector('input') as HTMLInputElement;
+    const button=section.querySelector('button') as HTMLButtonElement;
+    const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value")?.set;
+    await act(async()=>{setter?.call(input," bad ");input.dispatchEvent(new Event("input",{bubbles:true}));});
+    expect(button.disabled).toBe(true);
+    expect(sdk.readSignedBIPlanReceipt).not.toHaveBeenCalled();
+    await act(async()=>{setter?.call(input,"original-1");input.dispatchEvent(new Event("input",{bubbles:true}));});
+    await act(async()=>{button.click();});
+    expect(section.textContent).toContain("原安装与来源不一致");
+    expect(section.textContent).not.toContain("other-plan");
+    await act(async()=>{setter?.call(input,"original-2");input.dispatchEvent(new Event("input",{bubbles:true}));});
+    expect(section.textContent).not.toContain("原安装与来源不一致");
+    await act(async()=>{button.click();});
+    expect(section.textContent).toContain("原结果仍未知");
+    expect(sdk.readSignedBIPlanReceipt).toHaveBeenCalledTimes(2);
+  });
   it("默认按真实业务任务汇总版本、依赖、消费方和退出状态，不再展示失效创建按钮",async()=>{
     sdk.listEvalContracts.mockResolvedValue({tenant,items:[],count:0});
     sdk.listBriefs.mockResolvedValue({tenant,count:1,items:[{tenant,briefId:"brief-1",taskId:"task-1",revision:3,version:4,briefType:"skill_publish",schemaRef:{resourceType:"Schema",resourceId:"brief",revision:"1",authority:"aip"},spec:{title:"发布商品卖点提炼技能"},contentHash:hash,lifecycle:"frozen",createdBy:"user:dev",createdAt:"2026-08-30T01:00:00Z"}]});

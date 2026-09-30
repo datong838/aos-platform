@@ -18,6 +18,7 @@ export type SignedBIPlanReceiptReadback = {
   createdAt: string;
   installationBinding: { installationId: string; installationEtag: number; templateRef: ExactRevisionRef; actor: string } | null;
   installationBindingVerified: boolean;
+  planRevisionVerified: true;
   currentAdmissionVerified: false;
 };
 export type ResponsibilityProfile = "LITE" | "STANDARD" | "FULL";

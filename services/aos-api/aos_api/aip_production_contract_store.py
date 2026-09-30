@@ -114,6 +114,7 @@ class SignedBIPlanReceiptReadback(AipContractModel):
     created_at: datetime
     installation_binding: SignedBIOriginalInstallationBinding | None = None
     installation_binding_verified: bool = False
+    plan_revision_verified: Literal[True]
     current_admission_verified: Literal[False] = False
 
     @model_validator(mode="after")
@@ -191,11 +192,31 @@ class SignedBIPlanReceiptReader:
                     template_ref=ExactRevisionRef.model_validate(binding["templateRef"]),
                     actor=binding["actor"],
                 )
+            plan = conn.execute(
+                """SELECT content_hash,created_by,template_ref
+                   FROM aip_responsibility_plan_revision
+                   WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+                (*scope.key, exact_ref.resource_id, exact_ref.revision),
+            ).fetchone()
+            if (plan is None or plan["content_hash"] != exact_ref.content_hash
+                    or plan["created_by"] != principal.subject):
+                raise ProductionContractError("BI preparation Plan revision missing or drifted")
+            if validated_binding is not None:
+                try:
+                    plan_template = plan["template_ref"]
+                    if isinstance(plan_template, str):
+                        plan_template = json.loads(plan_template)
+                    persisted_ref = ExactRevisionRef.model_validate(plan_template)
+                except (TypeError, ValueError) as exc:
+                    raise ProductionContractError("BI preparation Plan revision template invalid") from exc
+                if persisted_ref != validated_binding.template_ref:
+                    raise ProductionContractError("BI preparation Plan revision template drifted")
             return SignedBIPlanReceiptReadback(
                 receipt_id=row["receipt_id"], request_hash=row["request_hash"],
                 result_ref=exact_ref, created_at=row["created_at"],
                 installation_binding=validated_binding,
                 installation_binding_verified=validated_binding is not None,
+                plan_revision_verified=True,
             )
 
 

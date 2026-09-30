@@ -22,6 +22,7 @@ import {
   type ProjectedCostRange,
   type ResponsibilityPlanListResponse,
   type SignedBIPlanAdmission,
+  type SignedBIPlanReceiptReadback,
   type ReviewIssueListResponse,
   type StageTemplateListResponse,
   type StageCompilationResult,
@@ -116,6 +117,9 @@ export function ProductionContractsPage() {
   const [busy, setBusy] = useState("");
   const [biAdmission, setBiAdmission] = useState<{ installationId: string; data: SignedBIPlanAdmission | null; status: "loading" | "ready" | "error" } | null>(null);
   const [biAdmissionReload, setBiAdmissionReload] = useState(0);
+  const [biReceiptKey, setBiReceiptKey] = useState("");
+  const [biReceipt, setBiReceipt] = useState<{ installationId: string; key: string; data: SignedBIPlanReceiptReadback | null; status: "loading" | "ready" | "error" } | null>(null);
+  const biReceiptRequestSeq = useRef(0);
   const [templateId, setTemplateId] = useState("");
   const [planId, setPlanId] = useState("");
   const [taskId, setTaskId] = useState("");
@@ -234,6 +238,26 @@ export function ProductionContractsPage() {
   const sourceInstallationRevision = sourceParams.get("installationRevision") ?? "";
   const sourceInstallationEtag = sourceParams.get("installationEtag") ?? "";
   const validSourceInstallation = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sourceInstallationId);
+  useEffect(() => {
+    biReceiptRequestSeq.current += 1;
+    setBiReceiptKey("");
+    setBiReceipt(null);
+  }, [sourceInstallationId]);
+  const readOriginalBIReceipt = () => {
+    if (!validSourceInstallation || !biReceiptKey || biReceiptKey.length > 120
+        || biReceiptKey.trim() !== biReceiptKey || biReceipt?.status === "loading") return;
+    const key = biReceiptKey;
+    const installationId = sourceInstallationId;
+    const requestSeq = ++biReceiptRequestSeq.current;
+    setBiReceipt({ installationId, key, data: null, status: "loading" });
+    void aipProductionContracts.readSignedBIPlanReceipt(key).then(data => {
+      if (requestSeq === biReceiptRequestSeq.current)
+        setBiReceipt({ installationId, key, data, status: "ready" });
+    }).catch(() => {
+      if (requestSeq === biReceiptRequestSeq.current)
+        setBiReceipt({ installationId, key, data: null, status: "error" });
+    });
+  };
   const sourceVersionCurrent = (value: string) => /^[1-9][0-9]*$/.test(value) && Number.isSafeInteger(Number(value));
   useEffect(() => {
     if (!validSourceInstallation) { setBiAdmission(null); return; }
@@ -307,6 +331,22 @@ export function ProductionContractsPage() {
               : <p>只读候选未报告缺口；正式写入口仍待独立授权与受控提交接线，不能据此运行。</p>}
           </> : currentBIAdmission?.status === "error" ? <p>无法核验当前准入；可能是身份、权限或读取失败。请先恢复正式授权后刷新。</p>
           : <p>正在读取当前准入；读取完成前禁止提交。</p>}
+      </section> : null}
+      {validSourceInstallation ? <section className="notice" aria-label="签名 BI 原命令只读对账" data-testid="bi-receipt-recovery" style={{marginBottom:16}}>
+        <strong>原命令结果只读对账</strong>
+        <p>仅在你已持有原始 BI 配置幂等键且结果未知时使用；不会创建或重发命令。</p>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+          <input type="password" aria-label="原始 BI 配置幂等键" autoComplete="off" value={biReceiptKey}
+            onChange={event => { biReceiptRequestSeq.current += 1; setBiReceiptKey(event.target.value); setBiReceipt(null); }} />
+          <button className="btn" type="button" onClick={readOriginalBIReceipt}
+            disabled={!biReceiptKey || biReceiptKey.length > 120 || biReceiptKey.trim() !== biReceiptKey || biReceipt?.status === "loading"}>只读对账</button>
+        </div>
+        {biReceipt?.installationId === sourceInstallationId && biReceipt.key === biReceiptKey ? (
+          biReceipt.status === "loading" ? <p>正在核对原命令结果；期间不会重发。</p>
+          : biReceipt.status === "error" ? <p>原结果仍未知或当前身份无权读取；保留原始键并先排查，禁止重发。</p>
+          : biReceipt.data?.installationBinding?.installationId !== sourceInstallationId ? <p>回执没有可核对的原安装绑定，或原安装与来源不一致；不能据此认定当前安装已配置。</p>
+          : <p>原命令 Plan 修订已核对：{biReceipt.data.resultRef.resourceId} / {biReceipt.data.resultRef.revision}；原安装 ETag {biReceipt.data.installationBinding.installationEtag}。当前准入未证明，仍须服务端重新核验。</p>
+        ) : null}
       </section> : null}
       <section className="card" aria-label="上线业务场景总览" style={{padding:18,marginBottom:16}} data-testid="production-business-overview">
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"start",gap:16,flexWrap:"wrap"}}>
