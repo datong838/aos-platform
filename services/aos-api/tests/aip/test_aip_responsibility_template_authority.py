@@ -155,6 +155,54 @@ def test_exact_signed_media_responsibility_template_resolves(tmp_path: Path) -> 
                             ref.model_copy(update={"content_hash": "0" * 64})) is False
 
 
+def test_current_signed_mode_requires_preflight_pinned_root(monkeypatch, tmp_path: Path) -> None:
+    from aos_api import aip_responsibility_template_authority as authority
+    source = (Path(__file__).resolve().parents[4]
+              / "bundles/candidates/ecommerce/solution.ecommerce.growth/1.11.0"
+              / MEDIA_PATH)
+    raw = source.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact = tmp_path / "signed" / "solution.ecommerce.growth" / "1.4.0" / MEDIA_PATH
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(raw)
+    resolver, _ = _resolver([
+        _row(artifact_ref=MEDIA_REF, relative_path=MEDIA_PATH,
+             artifact_digest="sha256:" + digest)
+    ])
+    ref = ExactRevisionRef(resource_type="ResponsibilityTemplateRevision",
+                           resource_id=MEDIA_REF, revision=7, content_hash=digest)
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(tmp_path / "signed"))
+    monkeypatch.setattr(authority, "_PINNED_SIGNED_RELEASE_ROOT", None)
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is False
+    monkeypatch.setenv("AOS_CURRENT_SIGNED_RECEIPT", str(tmp_path / "receipt.json"))
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is False
+    authority.pin_verified_signed_release_root(tmp_path / "signed")
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is True
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(tmp_path / "other"))
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is False
+    monkeypatch.setenv("AOS_BUNDLE_ROOT", str(tmp_path / "signed"))
+    assert resolver.resolve(TenantScope("dev-org", "dev-project"), ref) is False
+    assert resolver.resolve(TenantScope("org-org", "dev-project"),
+                            ref.model_copy(update={"content_hash": "0" * 64})) is False
+
+
+def test_current_signed_root_pin_fails_closed_on_conflict_and_replacement(monkeypatch, tmp_path: Path) -> None:
+    from aos_api import aip_responsibility_template_authority as authority
+    signed_root = tmp_path / "signed"
+    signed_root.mkdir()
+    other_root = tmp_path / "other"
+    other_root.mkdir()
+    monkeypatch.setattr(authority, "_PINNED_SIGNED_RELEASE_ROOT", None)
+    authority.pin_verified_signed_release_root(signed_root)
+    with pytest.raises(ValueError):
+        authority.pin_verified_signed_release_root(other_root)
+    signed_root.rename(tmp_path / "old")
+    signed_root.mkdir()
+    with pytest.raises(ValueError):
+        authority.pin_verified_signed_release_root(signed_root)
+    assert authority._current_pinned_signed_release_root() is None
+
+
 def test_profile_bytes_cannot_be_labeled_media_responsibility(tmp_path: Path) -> None:
     raw = json.dumps(_production_profile_payload(), sort_keys=True,
                      separators=(",", ":")).encode("utf-8")

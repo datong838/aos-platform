@@ -159,6 +159,8 @@ def _current_a0v_host_preflight(*, signed_receipt: str, credential_reference: st
             return False
         from aos_api.extension_runtime.runtime_connections import pin_runtime_file_generation
         pin_runtime_file_generation(credential_reference, report.get("credentialFileGeneration"))
+        from aos_api.aip_responsibility_template_authority import pin_verified_signed_release_root
+        pin_verified_signed_release_root(Path(report["signedRoot"]))
         return True
     except Exception:
         return False

@@ -462,9 +462,14 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
         returncode=0, stdout="log line\n" + json.dumps(report)))
     monkeypatch.setattr("aos_api.db.get_dsn", lambda: "api-dsn")
     pins = []
+    root_pins = []
     monkeypatch.setattr(
         "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",
         lambda path, generation: pins.append((path, generation)),
+    )
+    monkeypatch.setattr(
+        "aos_api.aip_responsibility_template_authority.pin_verified_signed_release_root",
+        lambda root: root_pins.append(root),
     )
 
     class Conn:
@@ -485,11 +490,13 @@ def test_current_host_preflight_requires_api_physical_authority_and_signed_paths
               "credential_reference": str(tmp_path / "identities.json")}
     assert wiring._current_a0v_host_preflight(**inputs) is True
     assert pins == [(inputs["credential_reference"], [1, 2, 3, 4, 5])]
+    assert root_pins == [signed_root]
     monkeypatch.setattr(
         "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",
         lambda *_: (_ for _ in ()).throw(RuntimeError("credential file changed")),
     )
     assert wiring._current_a0v_host_preflight(**inputs) is False
+    assert root_pins == [signed_root]
     monkeypatch.setenv("AOS_BUNDLE_ROOT", str(signed_root))
     monkeypatch.setattr(
         "aos_api.extension_runtime.runtime_connections.pin_runtime_file_generation",

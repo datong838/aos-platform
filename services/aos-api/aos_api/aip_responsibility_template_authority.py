@@ -10,7 +10,9 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 import hashlib
 import json
+import os
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 from aos_api.aip_media_production_templates import (
@@ -34,6 +36,38 @@ _PROFILE_RESOURCE_TYPES = {
     "EvidenceSelectionProfileRevision",
     "EvalProfileRevision",
 }
+_SIGNED_ROOT_PIN_LOCK = Lock()
+_PINNED_SIGNED_RELEASE_ROOT: tuple[Path, int, int] | None = None
+
+
+def pin_verified_signed_release_root(root: Path) -> None:
+    """Pin only a root returned by the current signed Host preflight."""
+    global _PINNED_SIGNED_RELEASE_ROOT
+    if root.is_symlink():
+        raise ValueError("signed root cannot be a symlink")
+    resolved = root.resolve(strict=True)
+    if not resolved.is_dir():
+        raise ValueError("signed root must be a directory")
+    stat = resolved.stat()
+    candidate = (resolved, stat.st_dev, stat.st_ino)
+    with _SIGNED_ROOT_PIN_LOCK:
+        if _PINNED_SIGNED_RELEASE_ROOT is not None and _PINNED_SIGNED_RELEASE_ROOT != candidate:
+            raise ValueError("signed root changed in process")
+        _PINNED_SIGNED_RELEASE_ROOT = candidate
+
+
+def _current_pinned_signed_release_root() -> Path | None:
+    pinned = _PINNED_SIGNED_RELEASE_ROOT
+    if pinned is None:
+        return None
+    root, device, inode = pinned
+    try:
+        stat = root.stat()
+        if root.resolve(strict=True) == root and root.is_dir() and (stat.st_dev, stat.st_ino) == (device, inode):
+            return root
+    except OSError:
+        pass
+    return None
 
 # Stable L0 template definitions published with solution.ecommerce.growth.
 # contentHash = sha256 of canonical JSON (sorted keys, no whitespace).
@@ -108,6 +142,7 @@ class InstalledProductionProfileResolver:
         release_root: Path | None = None,
     ) -> None:
         self._connect_factory = connect_factory or db_connect
+        self._explicit_release_root = release_root is not None
         self._release_root = release_root or (
             Path(__file__).resolve().parents[3] / "bundles/releases/ecommerce"
         )
@@ -244,9 +279,22 @@ class InstalledProductionProfileResolver:
         relative = Path(str(row["relative_path"]))
         if relative.is_absolute() or ".." in relative.parts:
             return None
+        base_root = self._release_root
+        if not self._explicit_release_root:
+            pinned_root = _current_pinned_signed_release_root()
+            configured_root = os.getenv("AOS_BUNDLE_ROOT")
+            if (os.getenv("AOS_CURRENT_SIGNED_RECEIPT") or configured_root) and pinned_root is None:
+                return None
+            if configured_root and pinned_root is not None:
+                if Path(configured_root).resolve(strict=True) != pinned_root:
+                    return None
+            if pinned_root is not None:
+                base_root = pinned_root
         release_root = (
-            self._release_root / str(row["bundle_id"]) / str(row["version"])
+            base_root / str(row["bundle_id"]) / str(row["version"])
         ).resolve()
+        if base_root.resolve() not in release_root.parents:
+            return None
         artifact_path = (release_root / relative).resolve()
         if release_root not in artifact_path.parents or not artifact_path.is_file():
             return None
