@@ -8,6 +8,7 @@ import os
 import socket
 import stat
 import struct
+import time
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
@@ -151,13 +152,19 @@ def open_private_issuer_listener(
 def read_issuer_frame(conn: socket.socket) -> bytes:
     _require_unix_stream(conn)
     previous_timeout = conn.gettimeout()
-    conn.settimeout(5)
+    deadline = time.monotonic() + 5
     try:
         def exact(size: int) -> bytes:
             parts = []
             remaining = size
             while remaining:
+                time_left = deadline - time.monotonic()
+                if time_left <= 0:
+                    raise IssuerProtocolBlocked("ISSUER_WIRE_DEADLINE_EXCEEDED")
+                conn.settimeout(time_left)
                 chunk = conn.recv(remaining)
+                if time.monotonic() >= deadline:
+                    raise IssuerProtocolBlocked("ISSUER_WIRE_DEADLINE_EXCEEDED")
                 if not chunk:
                     raise IssuerProtocolBlocked("ISSUER_WIRE_TRUNCATED")
                 parts.append(chunk)
