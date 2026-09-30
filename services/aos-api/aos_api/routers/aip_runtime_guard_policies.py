@@ -8,6 +8,7 @@ from aos_api.aip_network_consumer_application import execute_consumer, ConsumerA
 from aos_api.aip_network_issuer_application import execute_issuer, IssuerApplicationBlocked
 from aos_api.aip_network_proposal_reconcile import inquire_network_proposal, ProposalInquiryBlocked
 from aos_api.aip_network_issuer_product import decide_product, inquire_product_decision
+from aos_api.aip_network_proposal_product import submit_product_proposal, inquire_product_proposal
 
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision,
@@ -298,6 +299,31 @@ def preview_network(
     return preview_network_activation(
         _scope(principal), body, expected_version=_version(if_match), store=store,
     )
+
+
+@router.post('/networks/proposal-intent')
+def submit_network_proposal_intent(body: NetworkActivationProposalRequest, response: Response,
+        if_match: str = Header(alias='If-Match'), authorization: str | None = Header(default=None),
+        principal: Principal = Depends(require_principal), config=Depends(get_issuer_application_config)):
+    try:
+        result = submit_product_proposal(config, body, _version(if_match), principal, authorization)
+    except (IssuerApplicationBlocked, ProposalInquiryBlocked) as exc:
+        raise ApiError(code=exc.code, message='原创建请求尚无法确认，请查询原请求', status_code=exc.status_code) from None
+    response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409}[result['status']]
+    return result
+
+
+@router.get('/networks/proposal-intent')
+def get_network_proposal_intent(response: Response, policy_id: str = Query(alias='policyId'),
+        revision: int = Query(ge=1), head_version: int = Query(alias='headVersion', ge=0),
+        authorization: str | None = Header(default=None), principal: Principal = Depends(require_principal),
+        config=Depends(get_issuer_application_config)):
+    try:
+        result = inquire_product_proposal(config, policy_id, revision, head_version, principal, authorization)
+    except (IssuerApplicationBlocked, ProposalInquiryBlocked) as exc:
+        raise ApiError(code=exc.code, message='原创建请求尚无法只读对账', status_code=exc.status_code) from None
+    response.status_code = {'not_attempted': 200, 'unresolved': 202, 'observed': 200, 'conflict': 409}[result['status']]
+    return result
 
 
 @router.post("/networks/activation-proposals", response_model=ActionDraftBundle, status_code=status.HTTP_201_CREATED)
