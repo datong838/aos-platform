@@ -1,6 +1,8 @@
 """Canonical tenant-scoped BudgetRevision API."""
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Depends, Header, Query, Response, status
 
 from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, BudgetRevisionCreate
@@ -12,10 +14,13 @@ from aos_api.aip_budget_activation_contracts import (
     DecideBudgetActivationRequest,
     RevokeBudgetActivationDecisionRequest,
     BudgetPreviewInquiryPending, BudgetPreviewInquiryObserved,
-    BudgetDecisionInquiryObserved, BudgetRevocationInquiryObserved,
+    BudgetDecisionInquiryObserved, BudgetRevocationInquiryObserved, BudgetProductInquiryPending,
 )
 from aos_api.aip_budget_activation_store import (
     AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied, BudgetActivationInquiryUnavailable,
+)
+from aos_api.aip_budget_activation_product import (
+    BudgetProductBlocked, BudgetRequestRef, inquire_request, submit_request,
 )
 from aos_api.aip_budget_store import (
     AipBudgetAuthorityStore,
@@ -121,6 +126,79 @@ def inquire_budget_activation_preview(
     response.status_code = {'unresolved': 202, 'observed': 200, 'conflict': 409}[result['status']]
     response.headers['Cache-Control'] = 'no-store'
     return result
+
+
+def _budget_product(response, principal, authorization, ref, body=None):
+    try:
+        directory = os.environ.get("AOS_BUDGET_REQUEST_DIRECTORY")
+        result = (inquire_request(directory, ref, principal, authorization) if body is None else
+                  submit_request(directory, ref, body, principal, authorization))
+    except BudgetProductBlocked as exc:
+        raise ApiError(code=str(exc), message="预算原请求暂无法确认，请保留原引用并只读核对",
+                       status_code=exc.status_code) from None
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    response.status_code = {"not_attempted": 200, "observed": 200, "unresolved": 202, "conflict": 409}[result["status"]]
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+def _budget_ref(operation, resource_id, revision=None, version=None):
+    try:
+        return BudgetRequestRef(operation, resource_id, revision, version)
+    except BudgetProductBlocked as exc:
+        raise ApiError(code=str(exc), message="预算原请求引用无效", status_code=exc.status_code) from None
+
+
+@router.post("/activation-previews/intent", response_model=BudgetProductInquiryPending | BudgetPreviewInquiryObserved)
+def submit_budget_preview_intent(
+    body: CreateBudgetActivationPreviewRequest, response: Response,
+    if_match: str = Header(alias="If-Match"), authorization: str = Header(alias="Authorization"),
+    principal: Principal = Depends(require_principal),
+):
+    ref = _budget_ref("preview", body.target.budget_id, body.target.revision, _version(if_match))
+    return _budget_product(response, principal, authorization, ref, body)
+
+
+@router.get("/activation-previews/intent", response_model=BudgetProductInquiryPending | BudgetPreviewInquiryObserved)
+def inquire_budget_preview_intent(
+    response: Response, budget_id: str = Query(alias="budgetId"), revision: int = Query(ge=2),
+    head_version: int = Query(alias="headVersion", ge=1),
+    authorization: str = Header(alias="Authorization"), principal: Principal = Depends(require_principal),
+):
+    return _budget_product(response, principal, authorization, _budget_ref("preview", budget_id, revision, head_version))
+
+
+@router.post("/activation-previews/{preview_id}/decision-intent", response_model=BudgetProductInquiryPending | BudgetDecisionInquiryObserved)
+def submit_budget_decision_intent(
+    preview_id: str, body: DecideBudgetActivationRequest, response: Response,
+    authorization: str = Header(alias="Authorization"), principal: Principal = Depends(require_principal),
+):
+    return _budget_product(response, principal, authorization, _budget_ref("decision", preview_id), body)
+
+
+@router.get("/activation-previews/{preview_id}/decision-intent", response_model=BudgetProductInquiryPending | BudgetDecisionInquiryObserved)
+def inquire_budget_decision_intent(
+    preview_id: str, response: Response,
+    authorization: str = Header(alias="Authorization"), principal: Principal = Depends(require_principal),
+):
+    return _budget_product(response, principal, authorization, _budget_ref("decision", preview_id))
+
+
+@router.post("/activation-decisions/{decision_id}/revocation-intent", response_model=BudgetProductInquiryPending | BudgetRevocationInquiryObserved)
+def submit_budget_revoke_intent(
+    decision_id: str, body: RevokeBudgetActivationDecisionRequest, response: Response,
+    authorization: str = Header(alias="Authorization"), principal: Principal = Depends(require_principal),
+):
+    return _budget_product(response, principal, authorization, _budget_ref("revoke", decision_id), body)
+
+
+@router.get("/activation-decisions/{decision_id}/revocation-intent", response_model=BudgetProductInquiryPending | BudgetRevocationInquiryObserved)
+def inquire_budget_revoke_intent(
+    decision_id: str, response: Response,
+    authorization: str = Header(alias="Authorization"), principal: Principal = Depends(require_principal),
+):
+    return _budget_product(response, principal, authorization, _budget_ref("revoke", decision_id))
 
 
 @router.get("/activation-previews/{preview_id}", response_model=BudgetActivationPreviewView)

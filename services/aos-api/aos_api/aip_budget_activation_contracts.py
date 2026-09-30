@@ -92,3 +92,7 @@ class BudgetRevocationInquiryObserved(AipContractModel):
     status: Literal["observed"]
     revocation_id: str = Field(min_length=1, max_length=160)
     activation_eligible: Literal[False] = False
+
+
+class BudgetProductInquiryPending(AipContractModel):
+    status: Literal["not_attempted", "unresolved", "conflict"]
