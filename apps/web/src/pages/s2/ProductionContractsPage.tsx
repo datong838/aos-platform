@@ -227,6 +227,7 @@ export function ProductionContractsPage() {
   const sourceTaskId = sourceParams.get("taskId")?.trim() ?? "";
   const sourceLogicId = sourceParams.get("logicId")?.trim() ?? "";
   const sourceAgentId = sourceParams.get("agentId")?.trim() ?? "";
+  const sourceInstallationId = sourceParams.get("installationId")?.trim() ?? "";
 
   return <PageChrome title="上线执行审批" lede="统一查看任务目标、证据、评测、职责、阶段、产物关系和评审；审批资料冻结只表示内容不可变，不代表已经启动运行。">
     {error && <div role="alert" className="notice bad">上线执行审批读取或操作失败：{error}</div>}
@@ -262,13 +263,14 @@ export function ProductionContractsPage() {
         <a className="btn" href="/aip/drafts">处理执行提案</a>
         <span className="notice" style={{ padding: "6px 10px" }}>所有操作都基于当前组织真实记录；本页不创建演示合同</span>
       </div>
-      {(sourceTaskId || sourceLogicId || sourceAgentId) ? <section className="notice" aria-label="上线审批来源上下文" data-testid="production-source-context" style={{marginBottom:16}}>
+      {(sourceTaskId || sourceLogicId || sourceAgentId || sourceInstallationId) ? <section className="notice" aria-label="上线审批来源上下文" data-testid="production-source-context" style={{marginBottom:16}}>
         <strong>已保留来源上下文</strong>
         <span style={{marginLeft:10}}>从上游业务对象进入时，本页只消费其精确引用，不重新猜测对象。</span>
         <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:8}}>
           {sourceTaskId ? <a href={`/aip/assist?taskId=${encodeURIComponent(sourceTaskId)}`}>返回业务任务</a> : null}
           {sourceLogicId ? <a href={`/aip/logic/${encodeURIComponent(sourceLogicId)}`}>返回业务逻辑</a> : null}
           {sourceAgentId ? <a href={`/aip/agents?agentId=${encodeURIComponent(sourceAgentId)}`}>返回数字同事</a> : null}
+          {sourceInstallationId ? <><span>来源安装 {sourceInstallationId}（仅导航上下文，仍需服务端核验）</span><a href="/apollo/assets">返回安装列表</a></> : null}
         </div>
       </section> : null}
       <section className="card" aria-label="上线业务场景总览" style={{padding:18,marginBottom:16}} data-testid="production-business-overview">
@@ -334,6 +336,7 @@ export function ProductionContractsPage() {
           {evalDiff?<section aria-label="评测契约权威差异" className="notice" style={{marginTop:12}}><strong>{evalDiff.summary}</strong><p>比较修订 {evalDiff.fromRevision} → {evalDiff.toRevision}；差异由服务端生成，本页不重算。</p>{evalDiff.changes.length?<ul>{evalDiff.changes.map(change=><li key={change.field}><strong>{change.label}</strong>：{diffValue(change.before)} → {diffValue(change.after)}<br/><small>{change.impact}</small></li>)}</ul>:<p>服务端确认无语义差异。</p>}</section>:null}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Responsibility Plan")}</h2>
+          <p className="notice">签名 BI 配置准备尚未开放页面提交。需由服务端在当前安装、正式身份与权限、签名模板及六个 active 数字同事均核验通过后创建草稿和回执；本页的职责计划列表不能证明该安装已配置或可运行。</p>
           {state.plans.count === 0 ? <div className="notice bad">当前组织尚无职责计划。创建前需核验当前职责模板、所选档位的治理引用与已激活数字同事的精确来源；未齐备时保持禁入，不用本地清单伪造职责覆盖。</div> : state.plans.items.map(item => { const canFreeze = item.lifecycle === "draft" && item.readiness === "ready" && item.coverage === "complete" && item.blockers.length === 0; const governed=Boolean(item.profileRecommendationRef&&item.profileConfirmationId&&item.mergePolicyRef); return <article key={item.planId} style={itemStyle}><div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><strong>{businessDisplayName(item.profile)}</strong><span>{label[item.readiness] ?? statusDisplayName(item.readiness)}</span></div><p>{item.slots.length} 个职责位置 · 覆盖 {label[item.coverage] ?? statusDisplayName(item.coverage)}</p>{item.uncoveredSlots.length ? <p>未覆盖：{item.uncoveredSlots.map(capabilityDisplayName).join("、")}</p> : null}<div className={`notice${governed?"":" bad"}`} data-testid={`profile-governance-${item.planId}`}><strong>{governed?"职责档位已由建议、确认与合并策略共同固定":"历史职责计划：未固定档位建议与合并策略"}</strong><p>{governed?`已记录 ${item.mergeDecisionReceiptIds?.length??0} 条合并预检回执；本页只读展示，不自动改档或合并。`:"兼容读取不代表可用于新生产组合；修订为 LITE、STANDARD 或 FULL 时必须补齐治理引用。"}</p></div><details><summary>技术标识（审计用）</summary>模板 <code>{item.templateRef.resourceId}@{item.templateRef.revision}</code> · 版本 {item.version}<br/>计划 <code>{item.planId}</code>{governed?<><br/>档位建议 <code>{item.profileRecommendationRef?.resourceId}@{item.profileRecommendationRef?.revision}</code><br/>人工确认 <code>{item.profileConfirmationId}</code><br/>合并策略 <code>{item.mergePolicyRef?.resourceId}@{item.mergePolicyRef?.revision}</code></>:null}</details><Blockers items={item.blockers} />{item.lifecycle === "draft" ? <button className="btn" disabled={!canFreeze || busy === `plan:${item.planId}`} title={canFreeze ? "冻结完整且就绪的职责计划" : "职责覆盖不完整、存在阻断或状态未就绪"} onClick={() => void freezePlan(item.planId, item.version)} style={{ marginTop: 10 }}>{busy === `plan:${item.planId}` ? "冻结中…" : "冻结职责计划"}</button> : null}</article>; })}
         </div>
         <div className="card" style={{ padding: 18 }}><h2 style={{ marginTop: 0 }}>{contractSectionDisplayName("Stage Template")}</h2>

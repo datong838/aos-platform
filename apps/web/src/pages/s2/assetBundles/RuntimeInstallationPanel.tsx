@@ -30,7 +30,7 @@ const FAILURE_LABELS: Readonly<Record<string, string>> = {
 };
 
 const CANDIDATES = [
-  { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts", action: "查看职责计划" },
+  { key: "responsibility_plans", label: "职责计划", href: "/aip/production-contracts", action: "查看职责计划与准入条件" },
   { key: "runtime_policies", label: "运行策略", href: "/aip/model-runtime", action: "查看当前运行策略" },
   { key: "data_policies", label: "数据分类策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
   { key: "egress_policies", label: "出站策略", href: "/aip/model-runtime", action: "创建草稿（不生效）" },
@@ -151,10 +151,11 @@ export function RuntimeInstallationPanel({ state, configurations, candidates, of
           <section aria-label="当前配置权威候选" style={{ margin: "10px 0" }}>
             <h4>当前配置权威候选</h4>
             <p>以下是当前租户的正式候选数，不代表已绑定本安装，也不代表可以启用。运行准入仍由服务端逐项复验。</p>
+            <p>签名 BI 职责准备需核验当前安装、正式 OIDC 身份、六个 active 数字同事及当前权限；候选数量不能证明这些条件已齐备。</p>
             {!candidatesCurrent && <p role="status">配置权威未核验或读回已过期；不会把未知当作缺失或就绪。</p>}
             {candidatesCurrent && <ul>{CANDIDATES.map(item => {
               const count = candidateData!.counts[item.key];
-              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.href}>{item.action}</Link> : "产品配置入口待建"}</li>;
+              return <li key={item.key}>{item.label}：{count === 0 ? "缺少当前候选" : `${count} 个当前候选，尚需安装绑定核验`} · {item.href ? <Link to={item.key === "responsibility_plans" ? `${item.href}?installationId=${encodeURIComponent(runtime.installationId)}` : item.href}>{item.action}</Link> : "产品配置入口待建"}</li>;
             })}</ul>}
             <button type="button" className="btn" disabled={offline || pending !== null || !candidates} onClick={candidates?.reload}>刷新权威候选</button>
           </section>
