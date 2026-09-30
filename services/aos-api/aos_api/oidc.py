@@ -32,7 +32,11 @@ def _env(name: str, default: str = "") -> str:
 
 
 def allow_dev() -> bool:
-    return _env("AOS_AUTH_ALLOW_DEV", "1").lower() not in {"0", "false", "no", "off"}
+    return not external_only() and _env("AOS_AUTH_ALLOW_DEV", "1").lower() not in {"0", "false", "no", "off"}
+
+
+def external_only() -> bool:
+    return _env("AOS_AUTH_EXTERNAL_ONLY").lower() in {"1", "true", "yes", "on"}
 
 
 def issuer() -> str:
@@ -125,7 +129,7 @@ def local_jwks() -> dict[str, Any]:
 
 
 def public_config() -> dict[str, Any]:
-    grants = ["dev"]
+    grants = ["dev"] if allow_dev() else []
     if token_url():
         grants.append("password")
     urls = jwks_urls()
@@ -134,8 +138,8 @@ def public_config() -> dict[str, Any]:
         "issuers": issuers(),
         "audience": audience(),
         "clientIdRef": client_id_ref(),
-        "jwksConfigured": bool(urls) or True,
-        "jwksUrlHint": (urls[0] if urls else None) or "/v1/auth/jwks",
+        "jwksConfigured": bool(urls) if external_only() else True,
+        "jwksUrlHint": (urls[0] if urls else None) or (None if external_only() else "/v1/auth/jwks"),
         "jwksUrls": urls,
         "haMode": len(urls) > 1,
         "tokenUrlConfigured": bool(token_url()),
@@ -308,6 +312,10 @@ def verify_access_token(token: str) -> dict[str, Any]:
         raise ValueError("PyJWT not installed")
     header = jwt.get_unverified_header(token)
     alg = str(header.get("alg") or "HS256").upper()
+    if external_only():
+        if alg not in {"RS256", "ES256"} or not jwks_urls():
+            raise ValueError("external OIDC JWT required")
+        return _verify_jwks(token)
     if alg in {"RS256", "ES256"}:
         if jwks_urls():
             try:

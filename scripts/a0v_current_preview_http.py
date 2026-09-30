@@ -11,6 +11,7 @@ import re
 import stat
 import subprocess
 import sys
+import urllib.parse
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -186,7 +187,22 @@ def _verify_limited_login(identity: dict[str, object]) -> None:
         conn.execute("SELECT version_num FROM alembic_version").fetchone()
 
 
+def _require_external_oidc() -> None:
+    urls = os.environ.get("AOS_OIDC_JWKS_URLS") or os.environ.get("AOS_OIDC_JWKS_URL") or ""
+    issuers = os.environ.get("AOS_OIDC_ISSUERS") or os.environ.get("AOS_OIDC_ISSUER") or ""
+    audience = os.environ.get("AOS_OIDC_AUDIENCE") or ""
+    if not urls.strip() or not issuers.strip() or not audience.strip():
+        raise PreviewBlocked("EXTERNAL_OIDC_CONFIG_REQUIRED")
+    for value in [*urls.split(","), *issuers.split(",")]:
+        parsed = urllib.parse.urlsplit(value.strip())
+        if (parsed.scheme != "https" or not parsed.hostname
+                or parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+                or parsed.username or parsed.password):
+            raise PreviewBlocked("EXTERNAL_OIDC_CONFIG_INVALID")
+
+
 def serve_limited(*, signed_receipt: Path, identity_file: Path) -> None:
+    _require_external_oidc()
     if not _port_free(8080) or not _port_free(18181):
         raise PreviewBlocked("HTTP_OR_SECOND_RUNTIME_PORT_OCCUPIED")
     child_env = {k: v for k, v in os.environ.items()
@@ -205,6 +221,8 @@ def serve_limited(*, signed_receipt: Path, identity_file: Path) -> None:
     _verify_limited_login(identity)
     service_env = {k: v for k, v in child_env.items() if k not in {"AOS_DATABASE_URL", "PGPASSWORD"}}
     service_env.update(FLAGS)
+    service_env.update({"AOS_AUTH_ALLOW_DEV": "0", "AOS_AUTH_EXTERNAL_ONLY": "1",
+                        "AOS_REST_CONNECTOR_MOCK": "0"})
     service_env["PGPASSFILE"] = str(identity["pgpassFile"])
     service_env["AOS_DATABASE_URL"] = make_conninfo(host=identity["host"],
         port=identity["port"], dbname=identity["dbname"], user=identity["user"])

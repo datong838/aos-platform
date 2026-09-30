@@ -80,6 +80,9 @@ def test_limited_identity_rejects_weak_mode_and_wrong_target(preview, tmp_path):
 
 
 def test_limited_service_preflight_runs_in_child_without_owner_loader(preview, tmp_path, monkeypatch):
+    monkeypatch.setenv("AOS_OIDC_JWKS_URL", "https://id.example.test/jwks")
+    monkeypatch.setenv("AOS_OIDC_ISSUER", "https://id.example.test/realms/qyh")
+    monkeypatch.setenv("AOS_OIDC_AUDIENCE", "aos-api")
     identity = tmp_path / "api.json"
     identity.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(preview, "preflight", lambda **_: pytest.fail("owner preflight in service"))
@@ -101,3 +104,26 @@ def test_limited_service_preflight_runs_in_child_without_owner_loader(preview, t
     assert "password=" not in calls[-1][2]["AOS_DATABASE_URL"]
     assert calls[-1][2]["PGPASSFILE"] == "/private/api.pgpass"
     assert calls[-1][2]["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] == "0"
+    assert calls[-1][2]["AOS_AUTH_ALLOW_DEV"] == "0"
+    assert calls[-1][2]["AOS_AUTH_EXTERNAL_ONLY"] == "1"
+    assert calls[-1][2]["AOS_REST_CONNECTOR_MOCK"] == "0"
+
+
+def test_limited_service_requires_external_identity_before_preflight(preview, tmp_path, monkeypatch):
+    monkeypatch.delenv("AOS_OIDC_JWKS_URL", raising=False)
+    monkeypatch.delenv("AOS_OIDC_JWKS_URLS", raising=False)
+    monkeypatch.delenv("AOS_OIDC_ISSUER", raising=False)
+    monkeypatch.delenv("AOS_OIDC_ISSUERS", raising=False)
+    monkeypatch.delenv("AOS_OIDC_AUDIENCE", raising=False)
+    monkeypatch.setattr(preview, "_port_free", lambda *_: True)
+    monkeypatch.setattr(preview.subprocess, "run", lambda *_a, **_k: pytest.fail("preflight ran"))
+    with pytest.raises(preview.PreviewBlocked, match="EXTERNAL_OIDC_CONFIG_REQUIRED"):
+        preview.serve_limited(signed_receipt=tmp_path / "receipt", identity_file=tmp_path / "identity")
+
+
+def test_limited_service_rejects_loopback_idp(preview, monkeypatch):
+    monkeypatch.setenv("AOS_OIDC_JWKS_URL", "http://127.0.0.1:8080/jwks")
+    monkeypatch.setenv("AOS_OIDC_ISSUER", "https://id.example.test/realms/qyh")
+    monkeypatch.setenv("AOS_OIDC_AUDIENCE", "aos-api")
+    with pytest.raises(preview.PreviewBlocked, match="EXTERNAL_OIDC_CONFIG_INVALID"):
+        preview._require_external_oidc()
