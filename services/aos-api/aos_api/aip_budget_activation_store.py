@@ -37,6 +37,24 @@ def _preview_request_hash(target_payload, checker, head_version, maker):
                            "headVersion": head_version, "maker": maker})
 
 
+def _decision_request_hash(preview_id, decision, checker):
+    return canonical_hash({"previewId": preview_id, "decision": decision, "checker": checker})
+
+
+def _revocation_request_hash(decision_id, reason, actor):
+    return canonical_hash({"decisionId": decision_id, "reason": reason, "actor": actor})
+
+
+def _require_inquiry_connection(conn, scope):
+    identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
+        "current_setting('aos.project_id',true) AS project_id,current_setting('transaction_read_only') AS ro,"
+        "current_setting('transaction_isolation') AS isolation").fetchone()
+    if (conn.read_only is not True or identity is None or
+        (identity['role'], identity['org_id'], identity['project_id'], identity['ro'], identity['isolation'])
+            != ('aos_runtime', *scope.key, 'on', 'repeatable read')):
+        raise BudgetActivationInquiryUnavailable('BUDGET_ACTIVATION_INQUIRY_READ_IDENTITY_REQUIRED')
+
+
 def _identity(principal: Principal) -> tuple[TenantScope, str]:
     if (type(principal) is not Principal or principal.token_kind != "oidc"
             or type(principal.subject) is not str or not principal.subject
@@ -327,13 +345,7 @@ class AipBudgetActivationStore:
                                              checker_subject, expected_head_version, maker)
         try:
             with connect_read_only(scope) as conn:
-                identity = conn.execute("SELECT current_user AS role,current_setting('aos.org_id',true) AS org_id,"
-                    "current_setting('aos.project_id',true) AS project_id,current_setting('transaction_read_only') AS ro,"
-                    "current_setting('transaction_isolation') AS isolation").fetchone()
-                if (conn.read_only is not True or identity is None or
-                    (identity['role'], identity['org_id'], identity['project_id'], identity['ro'], identity['isolation'])
-                        != ('aos_runtime', *scope.key, 'on', 'repeatable read')):
-                    raise BudgetActivationInquiryUnavailable('BUDGET_ACTIVATION_INQUIRY_READ_IDENTITY_REQUIRED')
+                _require_inquiry_connection(conn, scope)
                 _member(conn, scope, maker, label='MAKER', lock=False)
                 receipt = conn.execute("""SELECT request_hash,result_ref FROM aip_budget_activation_receipt
                     WHERE org_id=%s AND project_id=%s AND operation='preview'
@@ -360,6 +372,87 @@ class AipBudgetActivationStore:
         except Exception:
             raise BudgetActivationInquiryUnavailable('BUDGET_ACTIVATION_INQUIRY_UNAVAILABLE') from None
 
+    def inquire_decision(self, principal: Principal, preview_id: str, idempotency_key: str,
+                         *, decision: str) -> dict:
+        scope, actor = _identity(principal)
+        key = _key(idempotency_key)
+        if (type(preview_id) is not str or not preview_id or preview_id != preview_id.strip()
+                or type(decision) is not str or decision not in {"approved", "rejected"}):
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_INVALID")
+        return self._inquire_review(scope, actor, "decision", key,
+            _decision_request_hash(preview_id, decision, actor), preview_id, decision)
+
+    def inquire_revocation(self, principal: Principal, decision_id: str, idempotency_key: str,
+                           *, reason: str) -> dict:
+        scope, actor = _identity(principal)
+        key = _key(idempotency_key)
+        if (type(decision_id) is not str or not decision_id or decision_id != decision_id.strip()
+                or type(reason) is not str or not reason.strip() or reason != reason.strip()
+                or len(reason) > 500):
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_REVOCATION_INVALID")
+        return self._inquire_review(scope, actor, "revoke", key,
+            _revocation_request_hash(decision_id, reason, actor), decision_id, reason)
+
+    def _inquire_review(self, scope, actor, operation, key, request_hash, source, value):
+        """Read immutable history only; expired or revoked approvals grant no authority."""
+        if operation not in {"decision", "revoke"}:
+            raise BudgetActivationDenied("BUDGET_ACTIVATION_INQUIRY_INPUT_INVALID")
+        result_key = "decisionId" if operation == "decision" else "revocationId"
+        try:
+            with connect_read_only(scope) as conn:
+                _require_inquiry_connection(conn, scope)
+                _member(conn, scope, actor, label="REVIEWER", lock=False)
+                receipt = conn.execute(
+                    """SELECT request_hash,result_ref FROM aip_budget_activation_receipt
+                       WHERE org_id=%s AND project_id=%s AND operation=%s
+                         AND idempotency_key=%s AND actor_subject=%s""",
+                    (*scope.key, operation, key, actor)).fetchone()
+                if receipt is None:
+                    return {"status": "unresolved"}
+                ref = receipt["result_ref"]
+                if (receipt["request_hash"] != request_hash or type(ref) is not dict
+                        or set(ref) != {result_key} or type(ref[result_key]) is not str):
+                    return {"status": "conflict"}
+                decision_id = ref[result_key]
+                if operation == "revoke":
+                    revocation = conn.execute(
+                        """SELECT * FROM aip_budget_activation_revocation
+                           WHERE org_id=%s AND project_id=%s AND revocation_id=%s""",
+                        (*scope.key, ref[result_key])).fetchone()
+                    if (revocation is None or revocation["actor_subject"] != actor
+                            or revocation["decision_id"] != source or revocation["reason"] != value):
+                        return {"status": "conflict"}
+                    decision_id = revocation["decision_id"]
+                decision = conn.execute(
+                    """SELECT * FROM aip_budget_activation_decision
+                       WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
+                    (*scope.key, decision_id)).fetchone()
+                if decision is None:
+                    return {"status": "conflict"}
+                if operation == "decision":
+                    if (decision["preview_id"] != source or decision["decision"] != value
+                            or decision["checker_subject"] != actor):
+                        return {"status": "conflict"}
+                elif decision["decision"] != "approved":
+                    return {"status": "conflict"}
+                preview = conn.execute(
+                    """SELECT * FROM aip_budget_activation_preview
+                       WHERE org_id=%s AND project_id=%s AND preview_id=%s""",
+                    (*scope.key, decision["preview_id"])).fetchone()
+                if (preview is None or _preview_hash(scope, preview) != preview["preview_hash"]
+                        or canonical_hash(preview["target_payload"]) != preview["target_hash"]
+                        or decision["preview_hash"] != preview["preview_hash"]
+                        or decision["target_hash"] != preview["target_hash"]
+                        or decision["checker_subject"] != preview["checker_subject"]
+                        or preview["checker_subject"] == preview["maker_subject"]
+                        or actor not in {preview["maker_subject"], preview["checker_subject"]}):
+                    return {"status": "conflict"}
+                return {"status": "observed", result_key: ref[result_key], "activationEligible": False}
+        except BudgetActivationDenied:
+            raise
+        except Exception:
+            raise BudgetActivationInquiryUnavailable("BUDGET_ACTIVATION_INQUIRY_UNAVAILABLE") from None
+
     def get_preview(self, principal: Principal, preview_id: str) -> dict:
         scope, actor = _identity(principal)
         if type(preview_id) is not str or not preview_id or preview_id != preview_id.strip():
@@ -385,8 +478,7 @@ class AipBudgetActivationStore:
         if (type(preview_id) is not str or not preview_id or preview_id != preview_id.strip()
                 or decision not in {"approved", "rejected"}):
             raise BudgetActivationDenied("BUDGET_ACTIVATION_DECISION_INVALID")
-        request_hash = canonical_hash({"previewId": preview_id, "decision": decision,
-                                       "checker": checker})
+        request_hash = _decision_request_hash(preview_id, decision, checker)
         with connect_serializable(scope) as conn:
             _member(conn, scope, checker, label="CHECKER")
             replay = _replay(conn, scope, "decision", key, request_hash)
@@ -459,8 +551,7 @@ class AipBudgetActivationStore:
                 or type(reason) is not str or not reason.strip() or reason != reason.strip()
                 or len(reason) > 500):
             raise BudgetActivationDenied("BUDGET_ACTIVATION_REVOCATION_INVALID")
-        request_hash = canonical_hash({"decisionId": decision_id, "reason": reason,
-                                       "actor": actor})
+        request_hash = _revocation_request_hash(decision_id, reason, actor)
         with connect_serializable(scope) as conn:
             _member(conn, scope, actor, label="REVOKER")
             replay = _replay(conn, scope, "revoke", key, request_hash)

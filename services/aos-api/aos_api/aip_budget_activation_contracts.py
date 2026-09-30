@@ -80,3 +80,15 @@ class BudgetActivationRevocationView(AipContractModel):
     actor_subject: str
     reason: str
     created_at: datetime
+
+
+class BudgetDecisionInquiryObserved(AipContractModel):
+    status: Literal["observed"]
+    decision_id: str = Field(min_length=1, max_length=160)
+    activation_eligible: Literal[False] = False
+
+
+class BudgetRevocationInquiryObserved(AipContractModel):
+    status: Literal["observed"]
+    revocation_id: str = Field(min_length=1, max_length=160)
+    activation_eligible: Literal[False] = False

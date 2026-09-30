@@ -12,6 +12,7 @@ from aos_api.aip_budget_activation_contracts import (
     DecideBudgetActivationRequest,
     RevokeBudgetActivationDecisionRequest,
     BudgetPreviewInquiryPending, BudgetPreviewInquiryObserved,
+    BudgetDecisionInquiryObserved, BudgetRevocationInquiryObserved,
 )
 from aos_api.aip_budget_activation_store import (
     AipBudgetActivationStore, BudgetActivationConflict, BudgetActivationDenied, BudgetActivationInquiryUnavailable,
@@ -77,7 +78,7 @@ def _map(exc: BudgetStoreError) -> ApiError:
 
 def _map_activation(exc: ValueError) -> ApiError:
     if isinstance(exc, BudgetActivationInquiryUnavailable):
-        return ApiError(code=str(exc), message="预算预览暂无法精确对账，请保留原请求", status_code=503)
+        return ApiError(code=str(exc), message="预算审批暂无法精确对账，请保留原请求", status_code=503)
     if isinstance(exc, BudgetActivationConflict):
         return ApiError(code=str(exc), message="budget activation authority conflict", status_code=409)
     code = str(exc)
@@ -169,6 +170,44 @@ def revoke_budget_activation_decision(
         return store.revoke(principal, decision_id, _key(idempotency_key), reason=body.reason)
     except (BudgetActivationDenied, BudgetActivationConflict) as exc:
         raise _map_activation(exc) from exc
+
+
+@router.post("/activation-previews/{preview_id}/decisions/inquiry",
+             response_model=BudgetPreviewInquiryPending | BudgetDecisionInquiryObserved)
+def inquire_budget_activation_decision(
+    preview_id: str,
+    body: DecideBudgetActivationRequest,
+    response: Response,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        result = store.inquire_decision(principal, preview_id, _key(idempotency_key), decision=body.decision)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    response.status_code = {"unresolved": 202, "observed": 200, "conflict": 409}[result["status"]]
+    response.headers["Cache-Control"] = "no-store"
+    return result
+
+
+@router.post("/activation-decisions/{decision_id}/revoke/inquiry",
+             response_model=BudgetPreviewInquiryPending | BudgetRevocationInquiryObserved)
+def inquire_budget_activation_revocation(
+    decision_id: str,
+    body: RevokeBudgetActivationDecisionRequest,
+    response: Response,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    principal: Principal = Depends(require_principal),
+    store: AipBudgetActivationStore = Depends(get_activation_store),
+):
+    try:
+        result = store.inquire_revocation(principal, decision_id, _key(idempotency_key), reason=body.reason)
+    except (BudgetActivationDenied, BudgetActivationConflict) as exc:
+        raise _map_activation(exc) from exc
+    response.status_code = {"unresolved": 202, "observed": 200, "conflict": 409}[result["status"]]
+    response.headers["Cache-Control"] = "no-store"
+    return result
 
 
 @router.post("", response_model=BudgetRevision, status_code=status.HTTP_201_CREATED)
