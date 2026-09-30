@@ -92,6 +92,8 @@ def preflight_consumer(config: ConsumerProcessConfig, scope: TenantScope) -> dic
                 ('public.aip_reconcile_network_receipt_a0v_121(text,text,text,text)', 's'),
                 ('public.aip_consume_network_as_actor_a0v_122(text,text,text,text,text,text,text,text)', 'v'),
                 ('public.aip_reconcile_network_as_actor_a0v_122(text,text,text,text,text,text,text,text)', 's'),
+                ('public.aip_claim_network_delivery_a0v_123(text,text,text,uuid)', 'v'),
+                ('public.aip_finish_network_delivery_a0v_123(text,text,text,text,uuid)', 'v'),
             ):
                 _function_gate(conn, signature, volatility)
         return {'ready': True, 'businessAuthorized': False}

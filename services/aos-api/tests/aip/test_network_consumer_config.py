@@ -102,3 +102,31 @@ def test_preflight_rejects_untyped_scope_before_connection(config):
     with pytest.raises(ConsumerConfigBlocked, match='CONSUMER_READ_ONLY_PREFLIGHT_BLOCKED'):
         preflight_consumer(config, {'org_id': 'org-org', 'project_id': 'dev-project'})
     assert not config.socket_path.exists()
+
+
+@pytest.mark.parametrize('kind,arguments', [('claim', 'text,text,text,uuid'), ('finish', 'text,text,text,text,uuid')])
+@pytest.mark.parametrize('drift', ['missing', 'invoker', 'public'])
+def test_delivery_function_drift_blocks_readiness_without_effect(config, private_passfile, kind, arguments, drift):
+    name = f'aip_{kind}_network_delivery_a0v_123'
+    signature = f'public.{name}({arguments})'
+    if drift == 'missing':
+        apply = f'ALTER FUNCTION {signature} RENAME TO bg00fk_hidden_{kind}'
+        restore = f'ALTER FUNCTION public.bg00fk_hidden_{kind}({arguments}) RENAME TO {name}'
+    elif drift == 'invoker':
+        apply = f'ALTER FUNCTION {signature} SECURITY INVOKER'
+        restore = f'ALTER FUNCTION {signature} SECURITY DEFINER'
+    else:
+        apply = f'GRANT EXECUTE ON FUNCTION {signature} TO PUBLIC'
+        restore = f'REVOKE EXECUTE ON FUNCTION {signature} FROM PUBLIC'
+    before = count_receipts()
+    with isolated_owner() as conn:
+        conn.execute(apply)
+    try:
+        with live_test_config(private_passfile) as database:
+            with pytest.raises(ConsumerConfigBlocked, match='CONSUMER_READ_ONLY_PREFLIGHT_BLOCKED'):
+                preflight_consumer(replace(config, database=database), SCOPE)
+        assert not config.socket_path.exists()
+        assert count_receipts() == before
+    finally:
+        with isolated_owner() as conn:
+            conn.execute(restore)
