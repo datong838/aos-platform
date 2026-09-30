@@ -27,6 +27,7 @@ from aos_api.aip_responsibility_template_authority import (
     published_template_ref,
     resolve_responsibility_template,
 )
+from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
 from aos_api.aip_stage_template_authority import (
     published_investigation_profile_source_ref,
     resolve_stage_template_source,
@@ -56,14 +57,7 @@ INVESTIGATION_SKILL_SELECTION: tuple[ExactRevisionRef, ...] = (
     ),
 )
 
-_ROLE_BLUEPRINTS = (
-    ("investigation-owner", "investigation_owner", "ecommerce.data_advisor.default", ("strategy.plan",), "portrait"),
-    ("data-steward", "data_steward", "ecommerce.customer_service.default", ("material.collect",), "portrait"),
-    ("content-research", "content_research", "ecommerce.content_officer.default", ("content.review",), "diagnosis"),
-    ("customer-research", "customer_research", "ecommerce.private_domain_manager.default", ("material.collect",), "diagnosis"),
-    ("channel-research", "channel_research", "ecommerce.campaign_planner.default", ("strategy.plan",), "solution-design"),
-    ("business-reviewer", "business_review", "ecommerce.shopping_advisor.default", ("strategy.plan",), "solution-design"),
-)
+_ROLE_BLUEPRINTS = BI_ROLE_BLUEPRINTS
 
 
 def selected_skill_refs() -> dict[str, ExactRevisionRef]:

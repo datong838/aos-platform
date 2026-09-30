@@ -63,11 +63,18 @@ def test_stage_blueprint_is_ordered_receipt_first_and_read_only() -> None:
 
 
 def test_six_responsibilities_bind_six_current_coworkers_by_capability() -> None:
+    from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
     body = build_responsibility_plan_request(VERSIONS)
     assert len(body.slots) == 6
     assert len({slot.slot_id for slot in body.slots}) == 6
     assert len({slot.assignee.resource_id for slot in body.slots}) == 6
     assert all(slot.required_capability_ids for slot in body.slots)
+    assert [(slot.slot_id, slot.responsibility_type,
+             tuple(slot.required_capability_ids), slot.return_stage)
+            for slot in body.slots] == [
+                (slot_id, role, capabilities, stage)
+                for slot_id, role, _instance_id, capabilities, stage in BI_ROLE_BLUEPRINTS
+            ]
     assert resolve_responsibility_template(SCOPE, body.template_ref) is True
 
 

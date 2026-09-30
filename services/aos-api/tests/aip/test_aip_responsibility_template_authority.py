@@ -24,6 +24,8 @@ SIGNATURE_FINGERPRINT = "sha256:" + "c" * 64
 EVIDENCE_REVISION = "sha256:" + "d" * 64
 MEDIA_PATH = "content/media-production-templates/standard.responsibility.json"
 MEDIA_REF = "bundle://aos/solution.ecommerce.growth@1.4.0/" + MEDIA_PATH
+BI_PATH = "content/responsibility-templates/business-investigation.readonly.json"
+BI_REF = "bundle://aos/solution.ecommerce.growth@1.4.0/" + BI_PATH
 
 
 def _ref(*, revision: int = 7, content_hash: str = ARTIFACT_HASH) -> ExactRevisionRef:
@@ -103,7 +105,7 @@ def _resolver(rows: list[dict[str, Any]], *, release_root: Path | None = None):
             ("org-org", "dev-project"),
             ("dev-org", "dev-project"),
         }
-        yield connection
+        yield connection if scope.key == ("org-org", "dev-project") else _Connection([])
 
     return (
         InstalledProductionProfileResolver(
@@ -167,6 +169,61 @@ def test_profile_bytes_cannot_be_labeled_media_responsibility(tmp_path: Path) ->
     ref = ExactRevisionRef(resource_type="ResponsibilityTemplateRevision",
                            resource_id=MEDIA_REF, revision=7, content_hash=digest)
     assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is False
+
+
+def _bi_payload() -> dict[str, object]:
+    from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
+    return {
+        "schema": "aos.ecommerce-business-investigation-responsibility-template/v1",
+        "templateId": "ecommerce.business-investigation.readonly",
+        "revision": 1,
+        "profile": "ecommerce.business-investigation.readonly",
+        "safetyMode": "read-only",
+        "slots": [
+            {"slotId": slot_id, "responsibilityType": role,
+             "requiredCapabilityIds": list(capabilities), "returnStage": stage}
+            for slot_id, role, _instance_id, capabilities, stage in BI_ROLE_BLUEPRINTS
+        ],
+    }
+
+
+def test_exact_signed_bi_template_resolves_only_canonical_schema(tmp_path: Path) -> None:
+    from aos_api.aip_business_investigation_responsibility_template import BIResponsibilityTemplate
+    payload = _bi_payload()
+    BIResponsibilityTemplate.model_validate(payload)
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    digest = hashlib.sha256(raw).hexdigest()
+    artifact = tmp_path / "solution.ecommerce.growth" / "1.4.0" / BI_PATH
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(raw)
+    resolver, _ = _resolver([
+        _row(artifact_ref=BI_REF, relative_path=BI_PATH,
+             artifact_digest="sha256:" + digest)
+    ], release_root=tmp_path)
+    ref = ExactRevisionRef(resource_type="ResponsibilityTemplateRevision",
+                           resource_id=BI_REF, revision=7, content_hash=digest)
+    assert resolver.resolve(TenantScope("org-org", "dev-project"), ref) is True
+    assert resolver.resolve(TenantScope("dev-org", "dev-project"), ref) is False
+    assert resolver.resolve(TenantScope("org-org", "dev-project"),
+                            ref.model_copy(update={"revision": 6})) is False
+
+
+@pytest.mark.parametrize("drift", ["missing", "duplicate", "capability", "schema", "assignee"])
+def test_bi_template_rejects_slot_or_schema_drift(drift: str) -> None:
+    from aos_api.aip_business_investigation_responsibility_template import BIResponsibilityTemplate
+    payload = _bi_payload()
+    if drift == "missing":
+        payload["slots"].pop()
+    elif drift == "duplicate":
+        payload["slots"][1]["slotId"] = payload["slots"][0]["slotId"]
+    elif drift == "capability":
+        payload["slots"][0]["requiredCapabilityIds"] = ["unapproved.capability"]
+    elif drift == "assignee":
+        payload["slots"][0]["assignee"] = "unapproved-principal"
+    else:
+        payload["schema"] = "aos.ecommerce-production-profile/v1"
+    with pytest.raises(ValueError):
+        BIResponsibilityTemplate.model_validate(payload)
 
 
 def test_wrong_hash_and_old_installation_revision_fail_closed() -> None:

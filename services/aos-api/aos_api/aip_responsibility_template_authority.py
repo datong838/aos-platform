@@ -17,6 +17,9 @@ from aos_api.aip_media_production_templates import (
     MediaResponsibilityTemplate,
     MediaStageTemplate,
 )
+from aos_api.aip_business_investigation_responsibility_template import (
+    BIResponsibilityTemplate, BI_TEMPLATE_SCHEMA,
+)
 from aos_api.aip_production_contracts import ExactRevisionRef
 from aos_api.aip_production_profile_contracts import ProductionProfile
 from aos_api.db import connect as db_connect
@@ -115,7 +118,23 @@ class InstalledProductionProfileResolver:
         if not ref.resource_id.startswith("bundle://"):
             return False
         if ref.resource_type == "ResponsibilityTemplateRevision":
-            return self.load_media_responsibility_template(scope, ref) is not None
+            try:
+                raw = self._load_verified_bytes(scope, ref)
+                if raw is None:
+                    return False
+                payload = json.loads(raw)
+                if type(payload) is not dict:
+                    return False
+                schema = payload.get("schema")
+                if schema == "aos.ecommerce-media-responsibility-template/v1":
+                    MediaResponsibilityTemplate.model_validate(payload)
+                    return True
+                if schema == BI_TEMPLATE_SCHEMA:
+                    BIResponsibilityTemplate.model_validate(payload)
+                    return True
+            except Exception:
+                return False
+            return False
         return any(self._row_matches(row, ref) for row in self._fetch_rows(scope, ref))
 
     def _fetch_rows(self, scope: TenantScope, ref: ExactRevisionRef) -> list[Any]:
