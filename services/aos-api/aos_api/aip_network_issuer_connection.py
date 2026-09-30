@@ -19,6 +19,8 @@ from aos_api.tenant_scope import TenantScope, apply_transaction_scope
 ISSUER_LOGIN = "aos_network_approval_issuer"
 _DATABASE_NAME = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
 _FORBIDDEN_PG_ENV = ("PGPASSWORD", "PGPASSFILE", "PGSERVICE", "PGSERVICEFILE", "PGOPTIONS")
+_TIMEOUT_OPTIONS = ('-c statement_timeout=10000 -c lock_timeout=5000 '
+                    '-c idle_in_transaction_session_timeout=10000')
 
 
 class IssuerDatabaseBlocked(RuntimeError):
@@ -31,6 +33,9 @@ def _require_identity(conn, config: "IssuerDatabaseConfig", scope: TenantScope,
       session_user AS login,current_user AS role,
       current_setting('aos.org_id',true) AS org_id,
       current_setting('aos.project_id',true) AS project_id,
+      (SELECT setting::int FROM pg_settings WHERE name='statement_timeout') AS statement_timeout_ms,
+      (SELECT setting::int FROM pg_settings WHERE name='lock_timeout') AS lock_timeout_ms,
+      (SELECT setting::int FROM pg_settings WHERE name='idle_in_transaction_session_timeout') AS idle_timeout_ms,
       r.rolcanlogin,r.rolsuper,r.rolbypassrls,r.rolinherit,
       pg_has_role(session_user,'aos_app','MEMBER') AS owner_member
       FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
@@ -40,7 +45,9 @@ def _require_identity(conn, config: "IssuerDatabaseConfig", scope: TenantScope,
             or (identity["org_id"], identity["project_id"]) != scope.key
             or not identity["rolcanlogin"] or identity["rolsuper"]
             or identity["rolbypassrls"] or identity["rolinherit"]
-            or identity["owner_member"] or conn.read_only is not read_only):
+            or identity["owner_member"] or conn.read_only is not read_only
+            or (identity['statement_timeout_ms'], identity['lock_timeout_ms'], identity['idle_timeout_ms'])
+                != (10000, 5000, 10000)):
         raise IssuerDatabaseBlocked("ISSUER_DATABASE_IDENTITY_REQUIRED")
 
 
@@ -107,7 +114,7 @@ def _connect_issuer(config: IssuerDatabaseConfig, scope: TenantScope,
     try:
         conn = connect(host=config.host, port=config.port, dbname=config.database,
                        user=ISSUER_LOGIN, passfile=str(config.passfile),
-                       connect_timeout=5, row_factory=dict_row)
+                       connect_timeout=5, options=_TIMEOUT_OPTIONS, row_factory=dict_row)
     except Exception:
         raise IssuerDatabaseBlocked("ISSUER_DATABASE_CONNECTION_FAILED") from None
     with conn:
