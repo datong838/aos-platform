@@ -127,3 +127,43 @@ class BudgetCostProposalStore:
             raise
         except Exception:
             raise BudgetActivationInquiryUnavailable('BUDGET_COST_INQUIRY_UNAVAILABLE') from None
+
+    def review(self, principal, proposal_id: str) -> dict:
+        """One read-only snapshot; history is never a current execution grant."""
+        scope, actor = _identity(principal)
+        _key(proposal_id)
+        try:
+            with connect_read_only(scope) as conn:
+                _require_inquiry_connection(conn, scope)
+                _member(conn, scope, actor, label='REVIEWER', lock=False)
+                row = _row(conn, scope, proposal_id)
+                if row is None or actor not in {row['maker_subject'], row['checker_subject']}:
+                    raise BudgetActivationDenied('BUDGET_COST_PROPOSAL_UNAVAILABLE')
+                proposal = _view(row, scope)
+                decision = conn.execute('SELECT * FROM aip_budget_cost_decision WHERE org_id=%s AND project_id=%s AND proposal_id=%s',
+                                        (*scope.key, proposal_id)).fetchone()
+                d, r = None, None
+                if decision is not None:
+                    source = proposal['proposal']['basis'].get('provider')
+                    if (decision['proposal_hash'] != row['proposal_hash'] or decision['actor_subject'] != row['checker_subject']
+                            or decision['expires_at'] != row['expires_at'] or decision['decision'] not in {'approved', 'rejected'}
+                            or not row['created_at'] <= decision['created_at'] < row['expires_at']
+                            or (decision['decision'] == 'approved' and (source is None or decision['source_ref'] != source))
+                            or (decision['decision'] == 'rejected' and decision['source_ref'] is not None)):
+                        raise BudgetActivationConflict('BUDGET_COST_REVIEW_DRIFT')
+                    d = dict(decisionId=decision['decision_id'], proposalId=proposal_id, proposalHash=row['proposal_hash'],
+                             checkerSubject=decision['actor_subject'], decision=decision['decision'],
+                             expiresAt=_instant(decision['expires_at']), activationEligible=False)
+                    revocation = conn.execute('SELECT * FROM aip_budget_cost_revocation WHERE org_id=%s AND project_id=%s AND decision_id=%s',
+                                              (*scope.key, decision['decision_id'])).fetchone()
+                    if revocation is not None:
+                        if (decision['decision'] != 'approved' or revocation['actor_subject'] not in {row['maker_subject'], row['checker_subject']}
+                                or revocation['created_at'] < decision['created_at']):
+                            raise BudgetActivationConflict('BUDGET_COST_REVIEW_DRIFT')
+                        r = dict(revocationId=revocation['revocation_id'], decisionId=decision['decision_id'],
+                                 actorSubject=revocation['actor_subject'], reason=revocation['reason'], createdAt=_instant(revocation['created_at']))
+                return dict(proposal=proposal, decision=d, revocation=r)
+        except (BudgetActivationDenied, BudgetActivationConflict):
+            raise
+        except Exception:
+            raise BudgetActivationInquiryUnavailable('BUDGET_COST_REVIEW_UNAVAILABLE') from None

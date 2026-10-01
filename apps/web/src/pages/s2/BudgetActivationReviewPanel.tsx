@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { getAuthRevision, getTenant } from '../../api/tenant';
+import { getTenant } from '../../api/tenant';
+import { budgetIdentity as identity, useBudgetRequestGuard } from './useBudgetRequestGuard';
 import { inquireBudget, readBudgetSource, restoreBudgetReference, saveBudgetReference, submitBudget,
  type BudgetMode, type BudgetRef, type BudgetResult, type BudgetSource } from '../../api/aipBudgetActivation';
 
-function identity(){const t=getTenant();return JSON.stringify([t.orgId,t.projectId,t.subject,getAuthRevision()]);}
-function slot(ref:BudgetRef){const t=getTenant();return JSON.stringify([t.orgId,t.projectId,t.subject,ref]);}
 const action:Record<BudgetMode,string>={preview:'生成预算预览',decision:'提交复核决定',revoke:'撤销此批准'};
 
 export function BudgetActivationReviewPanel(){
@@ -13,34 +12,29 @@ export function BudgetActivationReviewPanel(){
  const [id,setId]=useState(initial.current?.ref.id??'');
  const [checker,setChecker]=useState(''),[decision,setDecision]=useState(''),[reason,setReason]=useState('');
  const [source,setSource]=useState<BudgetSource|null>(null),[ref,setRef]=useState<BudgetRef|null>(initial.current?.ref??null);
- const [result,setResult]=useState<BudgetResult|null>(null),[busy,setBusy]=useState(false);
+ const [result,setResult]=useState<BudgetResult|null>(null);
  const [message,setMessage]=useState('先读取审批对象并核对原请求，再确认本次操作。预算生效仍受独立运行门控制。');
- const epoch=useRef(0),busyRef=useRef(false),attempted=useRef(new Set<string>());
  const sourceIdentity=useRef('');
- function invalidate(){epoch.current++;busyRef.current=false;setBusy(false);setSource(null);setResult(null);setRef(null);sourceIdentity.current='';}
- useEffect(()=>{
-  const changed=()=>{invalidate();setId('');setChecker('');setDecision('');setReason('');setMessage('身份或工作区已变化，请重新读取审批对象。');};
-  window.addEventListener('aos-auth-updated',changed);window.addEventListener('aos-tenant-updated',changed);
-  return()=>{epoch.current++;busyRef.current=false;window.removeEventListener('aos-auth-updated',changed);window.removeEventListener('aos-tenant-updated',changed);};
- },[]);
+ const guard=useBudgetRequestGuard(()=>{clear();setId('');setChecker('');setDecision('');setReason('');setMessage('身份或工作区已变化，请重新读取审批对象。');});
+ const {busy,busyRef}=guard;
+ function clear(){setSource(null);setResult(null);setRef(null);sourceIdentity.current='';}
+ function invalidate(){guard.invalidate();clear();}
  async function run(task:(current:()=>boolean)=>Promise<{ref:BudgetRef;result:BudgetResult;source?:BudgetSource}>){
-  if(busyRef.current)return;
-  busyRef.current=true;setBusy(true);const generation=epoch.current,actor=identity();
-  const current=()=>generation===epoch.current&&actor===identity();
+  const current=guard.begin();if(!current)return;const actor=identity();
   try{
    const value=await task(current);if(!current())return;
-   if(value.result.status==='not_attempted'&&attempted.current.has(slot(value.ref)))throw new Error('曾尝试提交但原记录未确认，请核对服务端持久记录，禁止重发');
+   guard.checkResult(value.ref,value.result.status);
    setRef(value.ref);setResult(value.result);
    if(value.source){setSource(value.source);sourceIdentity.current=actor;}
    setMessage(value.result.status==='observed'?'已确认原操作的历史记录；这不表示预算已经生效。':
     value.result.status==='not_attempted'?'此产品请求尚未登记，请核对下方内容并明确选择。':
     value.result.status==='conflict'?'原请求与记录不一致，已冻结提交，请核对原审批对象。':'原操作结果尚未确认，只能继续查询，不能重复提交。');
   }catch(error){if(current()){setResult(null);setMessage(`尚未确认：${(error as Error).message}。请只读查询，勿重复提交。`);}}
-  finally{if(current()){busyRef.current=false;setBusy(false);}}
+  finally{guard.finish(current);}
  }
  useEffect(()=>{
   const restored=initial.current;if(!restored)return;
-  if(restored.attempted)attempted.current.add(slot(restored.ref));
+  if(restored.attempted)guard.markAttempted(restored.ref);
   void run(async()=>({ref:restored.ref,result:await inquireBudget(restored.ref)}));
  },[]);
  async function load(){
@@ -48,13 +42,13 @@ export function BudgetActivationReviewPanel(){
   await run(async current=>{const value=await readBudgetSource(mode,id.trim());
    if(!current())throw new Error('身份已变化');
    // A restored request keeps its original revision; reading a newer head never changes it silently.
-   if(ref&&ref.mode==='preview'&&ref.id===value.ref.id&&attempted.current.has(slot(ref))&&JSON.stringify(ref)!==JSON.stringify(value.ref))throw new Error('当前版本已变化，请先核对 URL 中原请求，不能自动换版本提交');
-   saveBudgetReference(value.ref,attempted.current.has(slot(value.ref)));
+   if(ref&&ref.mode==='preview'&&ref.id===value.ref.id&&guard.attempted(ref)&&JSON.stringify(ref)!==JSON.stringify(value.ref))throw new Error('当前版本已变化，请先核对 URL 中原请求，不能自动换版本提交');
+   saveBudgetReference(value.ref,guard.attempted(value.ref));
    return {source:value,ref:value.ref,result:await inquireBudget(value.ref)};
   });
  }
  function eligible(){
-  if(!source||sourceIdentity.current!==identity()||result?.status!=='not_attempted'||attempted.current.has(slot(source.ref)))return false;
+  if(!source||sourceIdentity.current!==identity()||result?.status!=='not_attempted'||guard.attempted(source.ref))return false;
   const p=source.preview,t=getTenant();
   if(mode==='preview')return checker.trim()===checker&&checker.length>0&&checker.length<=200&&checker!==t.subject
     &&Date.parse(source.target.effectiveFrom)<=Date.now()&&Date.parse(source.target.effectiveUntil)>Date.now();
@@ -64,7 +58,7 @@ export function BudgetActivationReviewPanel(){
  }
  async function submit(){
   if(busyRef.current||!eligible()||!source)return;
-  const original=source;attempted.current.add(slot(original.ref));setResult({status:'unresolved'});
+  const original=source;guard.markAttempted(original.ref);setResult({status:'unresolved'});
   await run(async()=>{saveBudgetReference(original.ref,true);
    return {ref:original.ref,result:await submitBudget(original,{checker,decision,reason})};
   });

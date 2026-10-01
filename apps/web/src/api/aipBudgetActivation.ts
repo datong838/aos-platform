@@ -26,7 +26,7 @@ const text = (x: unknown): x is string => typeof x==='string' && x.length>0 && x
 const positive = (x: unknown): x is number => Number.isSafeInteger(x) && Number(x)>0;
 const hash = (x: unknown) => typeof x==='string' && /^[0-9a-f]{64}$/.test(x);
 const instant = (x: unknown): x is string => typeof x==='string' && /(Z|[+-]\d\d:\d\d)$/.test(x) && Number.isFinite(Date.parse(x));
-function target(value: unknown): BudgetTarget {
+export function parseBudgetTarget(value: unknown): BudgetTarget {
  const r=object(value); exact(r,['budgetId','revision','environment','currency','dailyLimitMinor','monthlyLimitMinor','alertThresholdPct','hardStop','unknownUsageBehavior','effectiveFrom','effectiveUntil','owner','overBudgetApprover','lifecycle']);
  if (!text(r.budgetId)||!positive(r.revision)||r.environment!=='development'||r.currency!=='CNY'
    ||!positive(r.dailyLimitMinor)||!positive(r.monthlyLimitMinor)||r.monthlyLimitMinor<r.dailyLimitMinor
@@ -37,7 +37,7 @@ function target(value: unknown): BudgetTarget {
 }
 function preview(value: unknown): BudgetPreview {
  const r=object(value);exact(r,['previewId','previewHash','budgetId','targetRevision','targetHash','expectedHeadVersion','makerSubject','checkerSubject','externalUsageProven','activationEligible','target','internalLedgerCheckedAt','expiresAt']);
- const t=target(r.target);
+ const t=parseBudgetTarget(r.target);
  if (!text(r.previewId)||!hash(r.previewHash)||!hash(r.targetHash)||r.budgetId!==t.budgetId||r.targetRevision!==t.revision
    ||!positive(r.expectedHeadVersion)||!text(r.makerSubject)||!text(r.checkerSubject)||r.makerSubject===r.checkerSubject
    ||r.externalUsageProven!==false||r.activationEligible!==false||!instant(r.internalLedgerCheckedAt)||!instant(r.expiresAt)) throw new Error('预算预览来源不一致');
@@ -60,7 +60,7 @@ export async function readBudgetSource(mode: BudgetMode,id: string): Promise<Bud
  const encoded=encodeURIComponent(id);
  if(mode==='preview') {
   const r=object(await apiGetAuthoritative(BASE+'/activation-candidates/'+encoded));
-  exact(r,['headVersion','draftRevision','target','activationEligible']);const t=target(r.target);
+  exact(r,['headVersion','draftRevision','target','activationEligible']);const t=parseBudgetTarget(r.target);
   if(r.activationEligible!==false||!positive(r.headVersion)||!positive(r.draftRevision)||t.revision!==r.draftRevision+1||t.budgetId!==id)throw new Error('当前草稿来源不一致');
   return {ref:{mode,id,revision:t.revision,head:r.headVersion},target:t};
  }

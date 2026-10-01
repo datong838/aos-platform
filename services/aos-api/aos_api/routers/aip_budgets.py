@@ -130,6 +130,13 @@ def get_cost_proposal(proposal_id: str, response: Response,
     return _cost_call(_COST_PROPOSALS.get, principal, proposal_id)
 
 
+@router.get('/cost-proposals/{proposal_id}/review')
+def read_cost_review(proposal_id: str, response: Response,
+                     principal: Principal = Depends(require_principal)) -> dict:
+    response.headers['Cache-Control'] = 'no-store'
+    return _cost_call(_COST_PROPOSALS.review, principal, proposal_id)
+
+
 def _cost_review(response, proposal_id, operation, body, principal, authorization):
     try:
         result = budget_cost_request(configured_budget_cost_product(), proposal_id, operation, body,

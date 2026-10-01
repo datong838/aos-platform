@@ -5,6 +5,7 @@ import { aipModelRuntime, type ModelRuntimeCostOverview, type RuntimeCapacityPoo
 import { PageChrome } from "../../components/PageChrome";
 import { BudgetRevisionSetupPanel } from "./BudgetRevisionSetupPanel";
 import { BudgetActivationReviewPanel } from "./BudgetActivationReviewPanel";
+import { BudgetCostReviewPanel } from "./BudgetCostReviewPanel";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -432,6 +433,7 @@ export function CapacityPage() {
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         <BudgetRevisionSetupPanel />
         <BudgetActivationReviewPanel />
+        <BudgetCostReviewPanel />
         {sourceMode === "error" && (
           <div className="w2-a6a7-demo-banner" role="alert">
             <span className="w2-a6a7-demo-badge">加载失败</span>
