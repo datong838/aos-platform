@@ -107,10 +107,8 @@ def test_exact_policy_gate_blocks_missing_drift_inactive_and_expired() -> None:
     inactive = store.publish_quota(SCOPE, "test", f"quota-inactive:{SUFFIX}", quota(name="inactive", lifecycle="blocked"))
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="not active"):
         store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", inactive), now=NOW)
-    expired = seed_historical_model_policy(SCOPE, "test-history", quota(
-        name="expired", start=NOW - timedelta(days=3), until=NOW - timedelta(days=1)))
     with pytest.raises(ModelGovernancePolicyDependencyBlocked, match="outside effective window"):
-        store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", expired), now=NOW)
+        store.require_exact_active(SCOPE, ref("QuotaPolicyRevision", active), now=active.effective_until)
 
 
 def test_new_active_quota_rejects_string_only_approval() -> None:

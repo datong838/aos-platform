@@ -8,6 +8,9 @@ from aos_api.db import connect
 
 
 def seed_historical_model_policy(scope, actor, item):
+    if type(item) is QuotaPolicyRevisionCreate:
+        from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
+        return seed_historical_runtime_guard(scope,actor,item)
     policy = materialize_policy(scope, actor, item)
     kind = "quota" if isinstance(item, QuotaPolicyRevisionCreate) else "budget"
     with connect(scope) as conn:

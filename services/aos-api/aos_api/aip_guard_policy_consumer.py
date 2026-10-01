@@ -39,6 +39,8 @@ class GuardConsumeCommand(AipContractModel):
 
 
 class GuardPolicyConsumer:
+    _signature = SIGNATURE
+    _function = "public.aip_guard_activation_a0v_129"
     def __init__(self,connect_factory,attempt_directory,*,expected_database):
         if not callable(connect_factory) or type(expected_database) is not str or not expected_database:
             raise GuardConsumerBlocked('GUARD_CONSUMER_PRIVATE_CONFIGURATION_REQUIRED')
@@ -56,7 +58,7 @@ class GuardPolicyConsumer:
              OR member IN('aos_guard_policy_consumer_call'::regrole,'aos_guard_policy_consumer_owner'::regrole)) AS extra_roles,
           (SELECT prosecdef AND proowner='aos_guard_policy_consumer_owner'::regrole
              AND proconfig=ARRAY['search_path=pg_catalog'] FROM pg_proc WHERE oid=%s::regprocedure) AS correct_function,
-          has_function_privilege(session_user,%s,'EXECUTE') AS can_call""",(SIGNATURE,SIGNATURE)).fetchone()
+          has_function_privilege(session_user,%s,'EXECUTE') AS can_call""",(self._signature,self._signature)).fetchone()
         if (not row or row['login']!='aos_guard_policy_consumer_call' or row['role']!=row['login']
             or row['db']!=self._database or (row['org'],row['project'])!=scope.key
             or row['unsafe'] or row['extra_roles'] or row['correct_function'] is not True or row['can_call'] is not True
@@ -66,7 +68,7 @@ class GuardPolicyConsumer:
     def _call(self,c,principal,scope,write):
         with self._connect(scope,not write) as conn:
             self._identity(conn,scope,not write)
-            row=conn.execute('SELECT public.aip_guard_activation_a0v_129(%s,%s,%s,%s,%s,%s,%s,%s,%s) AS result',
+            row=conn.execute(f'SELECT {self._function}(%s,%s,%s,%s,%s,%s,%s,%s,%s) AS result',
                 (*scope.key,c.proposal_id,c.approval_event_id,principal.subject,c.proposal_hash,
                  c.target_content_hash,c.binding_hash,write)).fetchone()
             return row['result']

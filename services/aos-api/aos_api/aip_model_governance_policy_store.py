@@ -116,6 +116,23 @@ class AipModelGovernancePolicyStore:
             raise ModelGovernancePolicyDependencyBlocked("model governance policy is not active")
         if not (item.effective_from <= instant < item.effective_until):
             raise ModelGovernancePolicyDependencyBlocked("model governance policy is outside effective window")
+        if isinstance(item, QuotaPolicyRevision):
+            with self._connect_factory(scope) as conn:
+                read_only = conn.execute("SHOW transaction_read_only").fetchone()["transaction_read_only"]
+                # A read-only call is an observation. Bound execution transactions
+                # keep the head lock until their outer admission commit.
+                lock = "" if read_only == "on" else " FOR SHARE OF h"
+                current = conn.execute(
+                    "SELECT r.revision,r.content_hash,r.lifecycle FROM aip_model_governance_policy_head h "
+                    "JOIN aip_model_governance_policy_revision r ON r.org_id=h.org_id "
+                    "AND r.project_id=h.project_id AND r.policy_kind=h.policy_kind "
+                    "AND r.policy_id=h.policy_id AND r.revision=h.current_revision "
+                    "WHERE h.org_id=%s AND h.project_id=%s AND h.policy_kind='quota' AND h.policy_id=%s" + lock,
+                    (*scope.key,item.policy_id),
+                ).fetchone()
+                if (not current or (current["revision"],current["content_hash"],current["lifecycle"])
+                        != (item.revision,item.content_hash,"active")):
+                    raise ModelGovernancePolicyDependencyBlocked("quota policy is not current active authority")
         if isinstance(item, BudgetPolicyRevision):
             if item.development_cost_authorization is not None:
                 current, _version = self.get_budget_head(scope, item.policy_id)

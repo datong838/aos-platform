@@ -218,7 +218,7 @@ def client():
             _c.commit()
         with _connect() as _c:
             _c.execute("DELETE FROM obj_instance WHERE props->>'source' IS NOT NULL")
-            _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem','EgressPolicyRevision','DataClassificationPolicyRevision','NetworkPolicyRevision')")
+            _c.execute("DELETE FROM meta_object_type WHERE id NOT IN ('WorkOrder','Site','Order','OrderItem','EgressPolicyRevision','DataClassificationPolicyRevision','NetworkPolicyRevision','QuotaPolicyRevision')")
             _c.commit()
         with _connect(TenantScope("dev-org", "dev-project")) as _c:
             _c.execute("DELETE FROM meta_aip_kv WHERE key='apollo_ops_assets'")

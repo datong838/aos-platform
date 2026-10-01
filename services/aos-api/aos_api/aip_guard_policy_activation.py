@@ -1,4 +1,4 @@
-"""Exact draft sources for formal Egress/Data activation.
+"""Exact draft sources for formal Egress/Data/Quota activation.
 
 Source validation alone grants no approval and performs no activation or commit.
 """
@@ -12,6 +12,7 @@ from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevision, DataClassificationPolicyRevisionCreate,
     EgressPolicyRevision, EgressPolicyRevisionCreate, GuardPolicyLifecycle,
 )
+from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevision, QuotaPolicyRevisionCreate
 from aos_api.aip_runtime_guard_policy_store import canonical_hash
 from aos_api.tenant_scope import TenantScope
 
@@ -21,6 +22,7 @@ class GuardActivationBlocked(ValueError):
 
 
 _SPECS = {
+    QuotaPolicyRevisionCreate: ("quota", QuotaPolicyRevision, "QuotaPolicyRevision", "aip_activate_quota_policy"),
     EgressPolicyRevisionCreate: ("egress", EgressPolicyRevision, "EgressPolicyRevision", "aip_activate_egress_policy"),
     DataClassificationPolicyRevisionCreate: (
         "data_classification", DataClassificationPolicyRevision,
@@ -59,8 +61,8 @@ def build_guard_activation_target(*, scope, draft, candidate, expected_version):
     active_content = active.model_dump(mode="json", by_alias=True)
     if (source.tenant.org_id, source.tenant.project_id) != scope.key:
         raise GuardActivationBlocked("GUARD_SOURCE_TENANT_DRIFTED")
-    if (source.lifecycle is not GuardPolicyLifecycle.DRAFT
-            or active.lifecycle is not GuardPolicyLifecycle.ACTIVE
+    if (source.lifecycle.value != "draft"
+            or active.lifecycle.value != "active"
             or active.revision != source.revision + 1
             or source.content_hash != canonical_hash(source_content)
             or active_content != {**source_content, "revision": source.revision + 1, "lifecycle": "active"}):
@@ -89,15 +91,18 @@ def read_guard_activation_source(conn, scope, candidate, *, expected_version):
         "current_setting('aos.project_id',true) AS project_id").fetchone()
     if not identity or (identity["role"], identity["org_id"], identity["project_id"]) != ("aos_runtime", *scope.key):
         raise GuardActivationBlocked("GUARD_SOURCE_TENANT_ROLE_REQUIRED")
+    # Closed code-owned table selection; no request-controlled SQL identifier.
+    prefix = "aip_model_governance_policy" if spec[0] == "quota" else "aip_runtime_guard_policy"
+    operation_prefix = "model_governance_policy" if spec[0] == "quota" else "runtime_guard_policy"
     head = conn.execute(
-        "SELECT current_revision,version FROM aip_runtime_guard_policy_head "
+        f"SELECT current_revision,version FROM {prefix}_head "
         "WHERE org_id=%s AND project_id=%s AND policy_kind=%s AND policy_id=%s FOR UPDATE",
         (*scope.key, spec[0], candidate.policy_id)).fetchone()
     if (not head or head["version"] != expected_version or head["current_revision"] != candidate.revision - 1):
         raise GuardActivationBlocked("GUARD_SOURCE_HEAD_DRIFTED")
     row = conn.execute(
         "SELECT content_hash,lifecycle,effective_from,effective_until,payload,created_by,created_at "
-        "FROM aip_runtime_guard_policy_revision WHERE org_id=%s AND project_id=%s "
+        f"FROM {prefix}_revision WHERE org_id=%s AND project_id=%s "
         "AND policy_kind=%s AND policy_id=%s AND revision=%s",
         (*scope.key, spec[0], candidate.policy_id, head["current_revision"])).fetchone()
     if row is None:
@@ -117,9 +122,9 @@ def read_guard_activation_source(conn, scope, candidate, *, expected_version):
     source_ref = {"resourceType": spec[2], "resourceId": draft.policy_id,
                   "revision": draft.revision, "contentHash": draft.content_hash}
     receipts = conn.execute(
-        "SELECT request_hash,created_by FROM aip_runtime_guard_policy_receipt "
+        f"SELECT request_hash,created_by FROM {prefix}_receipt "
         "WHERE org_id=%s AND project_id=%s AND operation=%s AND result_ref=%s",
-        (*scope.key, f"runtime_guard_policy.{spec[0]}.publish", Jsonb(source_ref))).fetchall()
+        (*scope.key, f"{operation_prefix}.{spec[0]}.publish", Jsonb(source_ref))).fetchall()
     content = {k: v for k, v in draft.model_dump(mode="json", by_alias=True).items()
                if k not in _REVISION_FIELDS}
     if (len(receipts) != 1 or receipts[0]["created_by"] != draft.created_by
@@ -138,7 +143,7 @@ class GuardPolicyActivationGuard:
 
     def read_metadata(self, conn):
         spec = _SPECS[type(self.candidate)]
-        name = "出口策略" if spec[0] == "egress" else "数据分类策略"
+        name = {"egress": "出口策略", "data_classification": "数据分类策略", "quota": "配额策略"}[spec[0]]
         obj = conn.execute(
             "SELECT id,name,description,published,properties,required_markings FROM meta_object_type "
             "WHERE id=%s FOR SHARE", (spec[2],)).fetchone()

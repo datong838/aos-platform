@@ -167,7 +167,7 @@ class AipActionStore:
                 conn, scope, actor_id, body, action_snapshot, risk)
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 or action_snapshot.get('id') in POLICY_ACTIVATION_ACTION_RISK):
-            if (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+            if (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy', 'aip_activate_quota_policy'}
                     and action_snapshot.get('id') == body.action_type_id
                     and self._guard_activation_guard is not None):
                 return self._guard_activation_guard.check_request(
@@ -212,10 +212,10 @@ class AipActionStore:
             return self._first_content_guard.check_proposal(conn, scope, actor_id, row, checker=checker)
         if (row['action_type_id'] in POLICY_ACTIVATION_ACTION_RISK
                 or row['action_type_snapshot'].get('id') in POLICY_ACTIVATION_ACTION_RISK):
-            if (checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+            if (checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy', 'aip_activate_quota_policy'}
                     and self._guard_approval_guard is not None):
                 return self._guard_approval_guard.check(conn, scope, actor_id, row)
-            if (not checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+            if (not checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy', 'aip_activate_quota_policy'}
                     and self._guard_activation_guard is not None):
                 self._guard_activation_guard.check_replay(conn, scope, actor_id, row)
                 return None
@@ -624,7 +624,7 @@ class AipActionStore:
     ) -> ActionDraftBundle:
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 and self._network_activation_guard is None
-                and not (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+                and not (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy', 'aip_activate_quota_policy'}
                          and self._guard_activation_guard is not None)):
             raise AipActionTransitionBlocked('POLICY_ACTION_PRODUCER_REQUIRED')
         expires_at = body.effective_expiry()

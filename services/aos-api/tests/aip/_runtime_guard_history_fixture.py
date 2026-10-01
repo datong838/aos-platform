@@ -227,9 +227,18 @@ def formal_guard_sources(request):
         from aos_api.aip_runtime_guard_policy_store import AipRuntimeGuardPolicyStore
         from aos_api.aip_guard_policy_issuer import GuardMakerCommand, GuardDecisionCommand, propose_guard_signed
         from aos_api.aip_guard_policy_consumer import GuardConsumeCommand
+        from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevisionCreate
+        from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
+        from aos_api.aip_quota_policy_consumer import QuotaPolicyConsumer
         sign, issuer, consumer = prepare()
+        is_quota = type(item) is QuotaPolicyRevisionCreate
+        if is_quota:
+            factory, database = request.getfixturevalue('guard_consumer_factory')
+            folder = request.getfixturevalue('tmp_path') / ('quota-attempts-'+uuid4().hex)
+            folder.mkdir(mode=0o700)
+            consumer = QuotaPolicyConsumer(factory,folder,expected_database=database)
         now = datetime.now(timezone.utc)
-        if (scope != SCOPE or item.revision != 1 or item.lifecycle is not GuardPolicyLifecycle.ACTIVE
+        if (scope != SCOPE or item.revision != 1 or item.lifecycle.value != "active"
                 or not item.effective_from <= now < item.effective_until):
             raise ValueError("initial, current, scoped active candidate required; inputs are not repaired")
         checker = 'formal-guard-checker-'+uuid4().hex
@@ -241,8 +250,8 @@ def formal_guard_sources(request):
         raw = item.model_dump(mode='json',by_alias=True)
         draft = type(item).model_validate({**raw,'lifecycle':'draft'})
         candidate = type(item).model_validate({**raw,'revision':2})
-        store = AipRuntimeGuardPolicyStore()
-        publish = store.publish_egress if type(item) is EgressPolicyRevisionCreate else store.publish_data_classification
+        store = AipModelGovernancePolicyStore() if is_quota else AipRuntimeGuardPolicyStore()
+        publish = store.publish_quota if is_quota else (store.publish_egress if type(item) is EgressPolicyRevisionCreate else store.publish_data_classification)
         publish(scope, actor, 'formal-draft-'+uuid4().hex, draft)
         expiry = min(now+timedelta(minutes=5),item.effective_until)
         bundle = propose_guard_signed(GuardMakerCommand(orgId=scope.org_id,projectId=scope.project_id,
@@ -258,9 +267,9 @@ def formal_guard_sources(request):
             proposalHash=bundle.proposal.proposal_hash,targetContentHash=bundle.proposal.payload['targetContentHash'],
             bindingHash=bundle.proposal.action_binding_hash))
         assert result['status']=='observed'
-        read = store.get_egress if type(item) is EgressPolicyRevisionCreate else store.get_data_classification
+        read = store.get_quota if is_quota else (store.get_egress if type(item) is EgressPolicyRevisionCreate else store.get_data_classification)
         saved = read(scope,item.policy_id,2)
-        assert saved.content_hash==result['result']['contentHash'] and saved.lifecycle is GuardPolicyLifecycle.ACTIVE
+        assert saved.content_hash==result['result']['contentHash'] and saved.lifecycle.value == "active"
         return saved
 
     def produce_network(scope, actor, item):

@@ -187,7 +187,7 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
         ),
     )
     return (
-        ref("QuotaPolicyRevision", quota.policy_id, quota.content_hash),
+        ref("QuotaPolicyRevision", quota.policy_id, quota.content_hash, quota.revision),
         ref("BudgetPolicyRevision", budget_policy.policy_id, budget_policy.content_hash),
     )
 

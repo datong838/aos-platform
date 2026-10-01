@@ -20,6 +20,7 @@ from aos_api.aip_network_issuer_auth import _require_external_oidc_config
 from aos_api.aip_runtime_guard_policy_contracts import (
     EgressPolicyRevisionCreate, DataClassificationPolicyRevisionCreate,
 )
+from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevisionCreate
 from aos_api.aip_runtime_guard_policy_store import canonical_hash
 from aos_api.auth import Principal, resolve_principal
 from aos_api.tenant_scope import TenantScope
@@ -51,7 +52,7 @@ class _SignedGuardRequest(AipContractModel):
 
 
 class GuardMakerCommand(_SignedGuardRequest):
-    candidate: EgressPolicyRevisionCreate | DataClassificationPolicyRevisionCreate
+    candidate: EgressPolicyRevisionCreate | DataClassificationPolicyRevisionCreate | QuotaPolicyRevisionCreate
     expected_version: int = Field(ge=1, strict=True)
     expires_at: datetime
 
@@ -153,7 +154,7 @@ class GuardPolicyIssuer:
                 (*scope.key, c.idempotency_key)).fetchone()
             if row is None:
                 return {"status": "unresolved", "activationAuthorized": False}
-            if (row["action_type_id"] not in {"aip_activate_egress_policy", "aip_activate_data_policy"}
+            if (row["action_type_id"] not in {"aip_activate_egress_policy", "aip_activate_data_policy", "aip_activate_quota_policy"}
                     or row["proposal_id"] != c.proposal_id or row["actor_id"] != principal.subject
                     or row["maker"] == principal.subject or row["request_hash"] != c.request_hash
                     or row["proposal_hash"] != c.decision.expected_proposal_hash
