@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "aos.stage-eval-design-probe/v1",
+  "codeHead": "bd1d068e7ab8661201101e505253521a24bc1391",
+  "fixtureSignedPairVerified": true,
+  "receiptContextFieldsAbsent": [
+    "eval_contract_ref",
+    "evidence_cutoff_at",
+    "gate_policy_ref",
+    "query_artifact_ref",
+    "stage_attempt_ref",
+    "subject_artifact_ref"
+  ],
+  "directStageReaderHasSignedReaderCall": false,
+  "releaseSkillGateStillExplicitlyClosed": true,
+  "businessAcceptance": false,
+  "databaseAccess": false,
+  "sources": {
+    "aip_eval_contracts.py": {
+      "sha256": "45c34351831fce167460227cec2e55a67a1b5691805ca8941aaca2968b32ba29",
+      "functions": {
+        "_non_blank": 187,
+        "_metadata_only": 216,
+        "_purpose_and_time": 256,
+        "_purpose_and_shape": 293,
+        "_unique_cases": 330,
+        "_suite_reference": 408,
+        "_consistent_counts": 468,
+        "_default_expiry": 508,
+        "_invalidation_reason": 518,
+        "_observation_not_early": 563,
+        "_quantity_and_currency": 615,
+        "_exact_subject": 654,
+        "_binding_and_result": 684,
+        "_unique_quality": 737
+      }
+    },
+    "aip_eval_execution_authority.py": {
+      "sha256": "f93352caaf51ccd4eb86a3be4ef54c431473ef0b2d6a4e3e299bc41d3b7d22dc",
+      "functions": {
+        "_canonical_bytes": 51,
+        "canonical_certificate_bytes": 61,
+        "canonical_receipt_bytes": 65,
+        "certificate_hash": 69,
+        "receipt_identity": 73,
+        "_judge_result_hash": 81,
+        "_valid_interval": 92,
+        "_verify_one": 101,
+        "verify_execution_pair": 169
+      }
+    },
+    "aip_eval_writer_authority_preflight.py": {
+      "sha256": "68082db40902647e6a14408da2604fc7a3970ffbe8b6d1e4d0a99b264c3030de",
+      "functions": {
+        "_require": 33,
+        "preflight_skill_eval_writer_authority": 38
+      }
+    },
+    "aip_eval_runner.py": {
+      "sha256": "e5b92b9ef211dc0446e11a17af6795888408df55676b3082f5096b11ec9b642c",
+      "functions": {
+        "_hash": 71,
+        "compute_eval_report_hash": 76,
+        "__init__": 82,
+        "run_by_contract": 95,
+        "run": 147,
+        "get_report": 320,
+        "_append_report": 334,
+        "_assert_target_not_withdrawn": 391,
+        "_assert_media_subject": 416,
+        "_resolve_contract": 502,
+        "_resolve_exact": 525,
+        "_text_subject_input": 536,
+        "_content_subject_input": 551,
+        "_event": 559,
+        "_connect": 574,
+        "_json": 583,
+        "_report_from_row": 591
+      }
+    },
+    "aip_release_publication_service.py": {
+      "sha256": "d9d77419f9b8bd5cbc151d0d820d539ee717a5137382b980e4561e60e4c36ad4",
+      "functions": {
+        "_canonical_hash": 71,
+        "_jsonable": 81,
+        "__init__": 94,
+        "derive_gate": 97,
+        "publish": 214,
+        "revoke": 280,
+        "_verify_gate_evidence": 346,
+        "_verify_run": 402,
+        "_verify_publishable_target": 422,
+        "_require_gate_replay": 474,
+        "_insert_gate": 491,
+        "_insert_event": 517,
+        "_gate_row": 537,
+        "_event_row": 545,
+        "_gate_from_row": 553,
+        "_event_from_row": 570,
+        "_report_from_row": 584,
+        "_suite_from_row": 605,
+        "_connect": 619,
+        "_stable_id": 628,
+        "_int_revision": 633,
+        "_actor": 645,
+        "_tenant": 652,
+        "_json": 656
+      }
+    },
+    "ecommerce_analyst_stage_eval_report.py": {
+      "sha256": "42738a811ca13568d79b60a73a20af7304bf4f758a43c71930a3b1e49d57d731",
+      "functions": {
+        "read_stage_eval_report": 15
+      }
+    },
+    "ecommerce_analyst_stage_review_command.py": {
+      "sha256": "82d7507e3595dc0ac876583b553a5f5bb8a5e00c37eb76acb5fc9a1a1e76f6ee",
+      "functions": {
+        "require_stage_review_command_identity": 30,
+        "_compiled_responsibility": 42,
+        "_subject": 64,
+        "_sources_and_eval": 81,
+        "read_stage_review_eval_source_authority": 198,
+        "__init__": 203,
+        "decide": 208
+      }
+    }
+  }
+}
