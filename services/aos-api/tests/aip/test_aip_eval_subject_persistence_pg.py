@@ -10,7 +10,7 @@ def test_subject_receipts_have_dedicated_schema_and_no_runtime_write():
     name=conninfo_to_dict(dsn)['dbname']
     assert name.startswith('aos_test_') and name.endswith('_ti4_test')
     with psycopg.connect(dsn) as conn:
-        assert conn.execute('SELECT version_num FROM alembic_version').fetchone()==('a0v_131',)
+        assert conn.execute('SELECT version_num FROM alembic_version').fetchone()==('a0v_132',)
         for table in ('aip_eval_issuer_root','aip_eval_executor_identity','aip_eval_subject_receipt'):
             acl=conn.execute('''SELECT has_table_privilege('aos_runtime',%s,'SELECT'),
                 has_table_privilege('aos_runtime',%s,'INSERT'),
