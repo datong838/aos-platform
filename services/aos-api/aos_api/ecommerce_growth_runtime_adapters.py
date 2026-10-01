@@ -2741,6 +2741,38 @@ class ReviewAdvanceHostService:
         return source
 
     @staticmethod
+    def _revalidate_accepted_stage_runtime_sources(*, transaction, scope, command,
+                                                   stage_source) -> None:
+        from aos_api.ecommerce_analyst_stage_review_authority import (
+            read_stage_review_responsibility_authority,
+        )
+        from aos_api.ecommerce_analyst_stage_review_command import (
+            read_stage_review_eval_source_authority,
+        )
+        from aos_api.ecommerce_analyst_stage_review_runtime import (
+            read_stage_review_runtime_authority,
+        )
+
+        decision = stage_source.decision
+        runtime = read_stage_review_runtime_authority(
+            transaction, scope, task_run_id=decision.task_run_id,
+            plan_ref=decision.plan_ref, stage=decision.stage,
+            stage_attempt_ref=decision.stage_attempt_ref,
+            subject_ref=decision.subject_ref,
+        )
+        responsibility = read_stage_review_responsibility_authority(
+            transaction, scope,
+            responsibility_plan_ref=decision.responsibility_plan_ref,
+            stage=decision.stage, actor=decision.created_by,
+        )
+        if responsibility["reviewer"] != decision.reviewer:
+            raise ValueError("accepted stage reviewer authority drifted")
+        read_stage_review_eval_source_authority(
+            transaction, scope, decision, runtime["plan"], command["markings"],
+            approved_stage_source=stage_source,
+        )
+
+    @staticmethod
     def _revalidate_issue_eval(*, transaction, scope, command) -> ReviewIssue:
         supplied_issue = InvestigationExactRef.model_validate(command["reviewIssueRef"])
         supplied_eval = InvestigationExactRef.model_validate(command["evalReportRef"])
@@ -3342,6 +3374,10 @@ class ReviewAdvanceHostService:
                 transaction=transaction, scope=scope, command=command,
                 artifact_task_run_id=stage_source.decision.task_run_id,
                 accepted_stage_task_run_id=stage_source.decision.task_run_id,
+            )
+            self._revalidate_accepted_stage_runtime_sources(
+                transaction=transaction, scope=scope, command=command,
+                stage_source=stage_source,
             )
             raise ValueError("accepted stage Handoff Task/Brief is not wired")
         plan = self._revalidate_growth_plan(

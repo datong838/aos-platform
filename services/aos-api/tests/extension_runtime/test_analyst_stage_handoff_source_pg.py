@@ -1,4 +1,5 @@
 """Source join on disposable PG; fixture decisions are not human authority proof."""
+from dataclasses import replace
 from datetime import timedelta
 from types import SimpleNamespace
 import os
@@ -11,6 +12,7 @@ from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityS
 from aos_api.ecommerce_analyst_growth_plan_approval import ApproveGrowthPlanRequest, EcommerceAnalystGrowthPlanApprovalService
 from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionStore, stage_decision_id
 from aos_api.ecommerce_analyst_stage_handoff_source import read_approved_stage_handoff_source
+from aos_api.ecommerce_analyst_stage_review_command import read_stage_review_eval_source_authority
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 from aos_api.tenant_scope import TenantScope
@@ -65,6 +67,43 @@ def test_exact_historical_draft_and_approved_successor(source):
     assert result.approved.prior_ref==item.subject_ref
     assert not owner.is_current_plan(SCOPE,item.subject_ref)
     assert result.approved.generation_artifact_ref==item.artifact_ref
+
+
+def test_approved_successor_anchors_historical_draft_for_handoff_eval(source):
+    _owner, _draft, item, args = source
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        transaction = HostTransaction(conn)
+        approved_source = read_approved_stage_handoff_source(transaction, SCOPE, **args)
+        with pytest.raises(ValueError, match='current growth draft unavailable'):
+            read_stage_review_eval_source_authority(transaction, SCOPE, item, {}, ['internal'])
+        with pytest.raises(ValueError, match='current analyst exact source unavailable'):
+            read_stage_review_eval_source_authority(
+                transaction, SCOPE, item, {}, ['internal'],
+                approved_stage_source=approved_source,
+            )
+        drifted_source = replace(
+            approved_source,
+            draft=approved_source.draft.model_copy(update={'content_hash': '0' * 64}),
+        )
+        with pytest.raises(ValueError, match='approved Handoff stage draft source drifted'):
+            read_stage_review_eval_source_authority(
+                transaction, SCOPE, item, {}, ['internal'],
+                approved_stage_source=drifted_source,
+            )
+
+
+def test_handoff_stage_runtime_sources_reject_missing_original_task_run(source):
+    _owner, _draft, item, args = source
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        transaction = HostTransaction(conn)
+        approved_source = read_approved_stage_handoff_source(transaction, SCOPE, **args)
+        with pytest.raises(ValueError, match='stage review run unavailable'):
+            ReviewAdvanceHostService._revalidate_accepted_stage_runtime_sources(
+                transaction=transaction, scope=SCOPE,
+                command={'markings': ['internal']}, stage_source=approved_source,
+            )
 
 
 def host_command(item, args):

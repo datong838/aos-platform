@@ -78,9 +78,24 @@ def _subject(tx,scope,ref):
     return result
 
 
-def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
+def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case,
+                      approved_stage_source=None):
     factory=TransactionBoundConnectFactory(tx,scope)
-    subject=_subject(tx,scope,item.subject_ref)
+    if approved_stage_source is None:
+        subject=_subject(tx,scope,item.subject_ref)
+    else:
+        from aos_api.ecommerce_analyst_stage_handoff_source import ApprovedStageHandoffSource
+        if (type(approved_stage_source) is not ApprovedStageHandoffSource
+            or item.stage!='solution-design'
+            or approved_stage_source.decision!=item
+            or approved_stage_source.approved.prior_ref!=item.subject_ref
+            or approved_stage_source.draft.plan_id!=item.subject_ref.resource_id
+            or approved_stage_source.draft.revision!=item.subject_ref.revision
+            or approved_stage_source.draft.content_hash!=item.subject_ref.content_hash
+            or (approved_stage_source.draft.tenant.org_id,
+                approved_stage_source.draft.tenant.project_id)!=scope.key):
+            raise ValueError('approved Handoff stage draft source drifted')
+        subject=approved_stage_source.draft
     if subject.generation_artifact_ref!=item.artifact_ref or item.artifact_ref.revision!=1:
         raise ValueError('stage subject does not bind original generation artifact')
     insight=subject
@@ -195,8 +210,10 @@ def _sources_and_eval(tx,scope,item,plan,markings,derive_structure_case):
         structureExpected={'caseInputHash':case.input_artifact.content_hash})
 
 
-def read_stage_review_eval_source_authority(tx,scope,item,plan,markings):
-    return _sources_and_eval(tx,scope,item,plan,markings,None)
+def read_stage_review_eval_source_authority(tx,scope,item,plan,markings,
+                                            *,approved_stage_source=None):
+    return _sources_and_eval(tx,scope,item,plan,markings,None,
+                             approved_stage_source=approved_stage_source)
 
 
 class AnalystStageReviewCommandService:
