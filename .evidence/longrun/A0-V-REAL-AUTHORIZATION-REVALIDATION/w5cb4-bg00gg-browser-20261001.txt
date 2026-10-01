@@ -1,0 +1,17 @@
+URL http://127.0.0.1:8434/aip/capacity
+Tenant org-org/dev-project
+BrowserPilot dedicated 8097, no credentials, no proposal input, no POST
+{
+  "matches": 1,
+  "selector": "[aria-label=\"费用风险审核与恢复\"]",
+  "values": [
+    "费用风险审核与恢复\n\n开发风险额度是待审核的费用承担范围，不是实际账单或 Provider 计费上限。批准仅记录审核意见；发起人可另行启用已批准预算。启用预算不会启动模型或业务，执行时仍须核验当前授权与额度。\n\n操作\n独立复核费用提议\n撤销费用批准\n启用已批准预算\n生成费用配置\n费用提议 ID\n读取费用提议\n查询费用原请求\n\n须先确认此提议对应的预算已启用；缺少、冲突或未知回执时不能生成费用配置。\n\n费用配置确认\n请明确选择\n确认生成此批准对应的费用配置\n生成费用配置\n\n先读取费用提议与原请求，再由适用账号明确复核。"
+  ]
+}
+{
+  "matches": 1,
+  "selector": "[aria-label=\"费用风险审核与恢复\"] button.btn-primary:disabled",
+  "values": [
+    "生成费用配置"
+  ]
+}

@@ -93,7 +93,7 @@ it('restored consumption only queries and never posts',async()=>{
 });
 it('consumption receipt must match the proposal, decision and budget',()=>{
  const ref={id:'p',operation:'consume' as const};
- expect(parseCostResult(consumption,ref,false,approvedView as never)).toEqual({status:'observed',id:consumption.receipt.receiptId});
+ expect(parseCostResult(consumption,ref,false,approvedView as never)).toMatchObject({status:'observed',id:consumption.receipt.receiptId});
  for(const [field,value] of [['proposalId','other'],['decisionId','other'],['resourceId','other'],['revision',3],['contentHash','invalid'],['receiptId','invalid']]){
   expect(()=>parseCostResult({...consumption,receipt:{...consumption.receipt,[field]:value}},ref,false,approvedView as never)).toThrow();
  }
@@ -105,4 +105,69 @@ it.each(['checker','revoked','expired'])('blocks consumption for %s',async kind=
  kind==='revoked'?{...approvedView,revocation:{revocationId:'r',decisionId:'d',actorSubject:'maker',reason:'withdraw',createdAt:new Date().toISOString()}}:approvedView;
  reads(snapshot);const post=vi.spyOn(transport,'apiPostUnqueued');await render();await select('费用审核操作','consume');await load();await select('预算启用确认','consume');
  expect(button('启用已批准预算').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
+});
+
+
+const configuration={status:'observed',activationEligible:false,receipt:{proposalId:'p',proposalHash:saved.proposalHash,decisionId:'d',receiptId:'cost-configuration-'+'e'.repeat(64),
+ budgetRef:{assetType:'BudgetRevision',assetId:'b',revision:2,contentHash:'c'.repeat(64)},
+ priceRef:{assetType:'ModelPriceSnapshotRevision',assetId:'cost-price-'+'e'.repeat(64),revision:1,contentHash:'f'.repeat(64)},
+ policyRef:{assetType:'BudgetPolicyRevision',assetId:'cost-policy-'+'e'.repeat(64),revision:1,contentHash:'1'.repeat(64)}}};
+function configurationReads(consumed:unknown=consumption){vi.spyOn(transport,'apiGetAuthoritative').mockImplementation(async path=>path.endsWith('/review')?approvedView:path.endsWith('/consumption-request')?consumed:{status:'not_attempted'});}
+it('configures only after observed consumption and explicit maker confirmation',async()=>{
+ setTenant({subject:'maker'});configurationReads();const post=vi.spyOn(transport,'apiPostUnqueued').mockResolvedValue(configuration);
+ await render();await select('费用审核操作','configure');await load();
+ expect(button('生成费用配置').disabled).toBe(true);await select('费用配置确认','configure');
+ expect(button('生成费用配置').disabled).toBe(false);await act(async()=>button('生成费用配置').click());
+ expect(post).toHaveBeenCalledWith('/v1/aip/budgets/cost-proposals/p/configuration-request',{proposalHash:saved.proposalHash,decisionId:'d'},{});
+ expect(host.textContent).toContain('费用配置的历史回执');expect(host.textContent).toContain(configuration.receipt.priceRef.assetId);
+ expect(button('生成费用配置').disabled).toBe(true);
+});
+it.each(['not_attempted','unresolved','conflict'])('missing consumed authority %s blocks configuration',async status=>{
+ setTenant({subject:'maker'});configurationReads({status});const post=vi.spyOn(transport,'apiPostUnqueued');
+ await render();await select('费用审核操作','configure');await load();await select('费用配置确认','configure');
+ expect(button('生成费用配置').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
+});
+it('restored configuration queries without submission',async()=>{
+ window.history.replaceState({},'', '/aip/capacity?budgetCostRef=p&budgetCostOperation=configure&budgetCostAttempted=1');
+ reads();const post=vi.spyOn(transport,'apiPostUnqueued');await render();
+ expect(transport.apiGetAuthoritative).toHaveBeenCalledWith('/v1/aip/budgets/cost-proposals/p/configuration-request');
+ expect(post).not.toHaveBeenCalled();expect(button('生成费用配置').disabled).toBe(true);
+});
+it('unknown configuration never resends even when queried as not attempted',async()=>{
+ setTenant({subject:'maker'});configurationReads();const post=vi.spyOn(transport,'apiPostUnqueued').mockRejectedValue(new Error('lost'));
+ await render();await select('费用审核操作','configure');await load();await select('费用配置确认','configure');
+ await act(async()=>{button('生成费用配置').click();button('生成费用配置').click();});
+ await act(async()=>button('查询费用原请求').click());expect(button('生成费用配置').disabled).toBe(true);expect(post).toHaveBeenCalledTimes(1);
+ expect(window.location.search).toContain('budgetCostOperation=configure');expect(window.location.search).toContain('budgetCostAttempted=1');
+ expect(window.location.search).not.toContain(saved.proposalHash);
+});
+it('configuration receipt rejects drift against consumed budget and exact proposal',()=>{
+ const ref={id:'p',operation:'configure' as const},source=parseCostReview(approvedView,'p'),consumed=parseCostResult(consumption,{id:'p',operation:'consume'},true,source);
+ expect(parseCostResult(configuration,ref,true,source,undefined,consumed)).toMatchObject({status:'observed',priceRef:configuration.receipt.priceRef});
+ for(const [key,field,value] of [['priceRef','assetId','other'],['policyRef','revision',2],['budgetRef','contentHash','f'.repeat(64)],['budgetRef','assetId','other'],['priceRef','revision',true]]){
+  const copy=structuredClone(configuration);(copy.receipt as unknown as Record<string,Record<string,unknown>>)[String(key)][String(field)]=value;
+  expect(()=>parseCostResult(copy,ref,true,source,undefined,consumed)).toThrow();
+ }
+ expect(()=>parseCostResult({...configuration,receipt:{...configuration.receipt,decisionId:'other'}},ref,true,source)).toThrow();
+ expect(()=>parseCostResult(consumption,ref,true,source)).toThrow();
+});
+it('identity change invalidates an already loaded consumed receipt',async()=>{
+ setTenant({subject:'maker'});configurationReads();const post=vi.spyOn(transport,'apiPostUnqueued');
+ await render();await select('费用审核操作','configure');await load();await select('费用配置确认','configure');
+ expect(button('生成费用配置').disabled).toBe(false);await act(async()=>setAccessToken('new-test-identity'));
+ expect(button('生成费用配置').disabled).toBe(true);expect(host.textContent).not.toContain('已观察到对应预算启用回执');expect(post).not.toHaveBeenCalled();
+});
+it('mismatched consumed budget cannot open configuration',async()=>{
+ setTenant({subject:'maker'});configurationReads({...consumption,receipt:{...consumption.receipt,resourceId:'other'}});
+ const post=vi.spyOn(transport,'apiPostUnqueued');await render();await select('费用审核操作','configure');await load();await select('费用配置确认','configure');
+ expect(button('生成费用配置').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
+});
+it.each(['checker','revoked','expired'])('configuration cannot use %s approval',async kind=>{
+ setTenant({subject:kind==='checker'?'checker':'maker'});
+ const expired=new Date(Date.now()-1000).toISOString();
+ const snapshot=kind==='expired'?{...approvedView,proposal:{...saved,createdAt:new Date(Date.now()-1801000).toISOString(),expiresAt:expired},decision:{...approvedView.decision,expiresAt:expired}}:
+ kind==='revoked'?{...approvedView,revocation:{revocationId:'r',decisionId:'d',actorSubject:'maker',reason:'withdraw',createdAt:new Date().toISOString()}}:approvedView;
+ vi.spyOn(transport,'apiGetAuthoritative').mockImplementation(async path=>path.endsWith('/review')?snapshot:path.endsWith('/consumption-request')?consumption:{status:'not_attempted'});
+ const post=vi.spyOn(transport,'apiPostUnqueued');await render();await select('费用审核操作','configure');await load();await select('费用配置确认','configure');
+ expect(button('生成费用配置').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
 });
