@@ -2223,6 +2223,10 @@ _REVIEW_ACCEPT_FIELDS = frozenset(
         "requestHash",
     }
 )
+_REVIEW_STAGE_ACCEPT_FIELDS = (_REVIEW_ACCEPT_FIELDS - {"reviewIssueRef", "artifactBindings"}) | {
+    "sourceKind", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
+    "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",
+}
 _REVIEW_ARTIFACT_FAMILIES = ("portrait", "diagnosis", "growth_plan", "evidence_summary")
 _REVIEW_TASK_SPEC_FIELDS = frozenset(
     {
@@ -2260,6 +2264,8 @@ _REVIEW_SIDE_EFFECTS = {
 def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef]:
     if type(command) is not dict:
         raise ValueError("review command must be a strict mapping")
+    if command.get("sourceKind") == "accepted-stage-v1":
+        return _strict_accepted_stage_accept_command(command)
     if command.get("operation") != "review_handoff.advance" or command.get("decision") != "ACCEPT":
         raise ValueError("review runtime mode is not wired")
     if set(command) != _REVIEW_ACCEPT_FIELDS:
@@ -2378,6 +2384,93 @@ def _strict_review_accept_command(command: Mapping[str, Any]) -> tuple[str, Inve
     if analysis_ref.resource_type != "AnalysisRuntimeReceipt":
         raise ValueError("review analysis receipt type drifted")
     return key, occurrence_ref, case_ref
+
+
+def _strict_accepted_stage_accept_command(command: dict[str, Any]) -> tuple[str, InvestigationExactRef, InvestigationExactRef]:
+    """Parse a distinct source shape only; its Owner read is not wired yet."""
+    if (set(command) != _REVIEW_STAGE_ACCEPT_FIELDS
+            or command["operation"] != "review_handoff.advance"
+            or command["decision"] != "ACCEPT"
+            or command["sourceKind"] != "accepted-stage-v1"):
+        raise ValueError("accepted stage Handoff envelope drifted")
+    key = command["idempotencyKey"]
+    request_hash = command["requestHash"]
+    if (type(key) is not str or key != key.strip() or not 1 <= len(key) <= 200
+            or type(request_hash) is not str
+            or not re.fullmatch(r"sha256:[0-9a-f]{64}", request_hash)
+            or _analysis_command_hash({k: v for k, v in command.items() if k != "requestHash"}) != request_hash):
+        raise ValueError("accepted stage Handoff request identity drifted")
+    if (command["returnStage"] is not None
+            or command["targetModuleId"] != "ecommerce.content-campaign"
+            or command["sourceSlotId"] != "analyst.solution"
+            or command["targetSlotId"] != "content.plan"
+            or command["markings"] != ["internal"]):
+        raise ValueError("accepted stage Handoff destination drifted")
+    cutoff = datetime.fromisoformat(command["cutoffAt"]) if type(command["cutoffAt"]) is str else None
+    expires = datetime.fromisoformat(command["expiresAt"]) if type(command["expiresAt"]) is str else None
+    if (cutoff is None or expires is None or cutoff.utcoffset() is None
+            or expires.utcoffset() is None or not cutoff < expires <= cutoff + timedelta(days=7)):
+        raise ValueError("accepted stage Handoff lifetime drifted")
+    try:
+        occurrence = InvestigationExactRef.model_validate(command["occurrenceRef"])
+        case = InvestigationExactRef.model_validate(command["caseRef"])
+        run = InvestigationExactRef.model_validate(command["runRef"])
+        analysis = InvestigationExactRef.model_validate(command["analysisReceiptRef"])
+        current_plan = InvestigationExactRef.model_validate(command["currentPlanRef"])
+        approved = InvestigationExactRef.model_validate(command["growthPlanRef"])
+        eval_report = InvestigationExactRef.model_validate(command["evalReportRef"])
+        stage_decision = AnalystExactRef.model_validate(command["stageDecisionRef"])
+        stage_plan = AnalystExactRef.model_validate(command["stagePlanRef"])
+        stage_artifact = AnalystExactRef.model_validate(command["stageArtifactRef"])
+        responsibility = AnalystExactRef.model_validate(command["responsibilityPlanRef"])
+        from aos_api.aip_eval_contracts import EvalStageAttemptRef
+        attempt = EvalStageAttemptRef.model_validate(command["stageAttemptRef"])
+    except (TypeError, ValueError) as exc:
+        raise ValueError("accepted stage Handoff exact source refs are invalid") from exc
+    if any(ref.resource_type != kind for ref, kind in (
+            (occurrence, "AutomationOccurrence"), (case, "BusinessInvestigationCaseRevision"),
+            (run, "BusinessInvestigationRun"), (analysis, "AnalysisRuntimeReceipt"),
+            (current_plan, "PlanRevision"), (approved, "GrowthPlanRevision"),
+            (eval_report, "EvalReportRevision"), (stage_decision, "AnalystStageDecisionRevision"),
+            (stage_plan, "PlanRevision"), (stage_artifact, "Artifact"),
+            (responsibility, "ResponsibilityPlanRevision"))):
+        raise ValueError("accepted stage Handoff source type drifted")
+    if (type(command["stageTaskRunId"]) is not str or not command["stageTaskRunId"]
+            or attempt.run_id != command["stageTaskRunId"]
+            or attempt.step_key not in {"solution-design", "solution_design"}
+            or current_plan.resource_id != stage_plan.resource_id
+            or current_plan.revision != stage_plan.revision
+            or current_plan.content_hash != "sha256:" + stage_plan.content_hash):
+        raise ValueError("accepted stage Handoff runtime source drifted")
+    task = command["taskSpec"]
+    if type(task) is not dict or set(task) != _REVIEW_TASK_SPEC_FIELDS:
+        raise ValueError("accepted stage Handoff Task shape drifted")
+    refs = task["artifactRefs"]
+    if (task["taskType"] != "ecommerce.workshop.business_task"
+            or task["briefType"] != "content_campaign"
+            or task["growthPlanRef"] != command["growthPlanRef"]
+            or type(refs) is not list or len(refs) != 1
+            or refs[0] != {**command["stageArtifactRef"],
+                           "contentHash": "sha256:" + stage_artifact.content_hash}):
+        raise ValueError("accepted stage Handoff Task lineage drifted")
+    for name, limit in (("title", 120), ("objective", 500), ("audience", 300), ("timeWindow", 200)):
+        value = task[name]
+        if type(value) is not str or value != value.strip() or not 1 <= len(value) <= limit:
+            raise ValueError("accepted stage Handoff business text drifted")
+    for name, minimum, maximum in (("channels", 1, 12), ("constraints", 0, 30)):
+        values = task[name]
+        if (type(values) is not list or not minimum <= len(values) <= maximum
+                or any(type(value) is not str or value != value.strip()
+                       or not 1 <= len(value) <= 200 for value in values)
+                or len(values) != len(set(values))):
+            raise ValueError("accepted stage Handoff business list drifted")
+    for value in (task["title"], task["objective"], task["audience"], task["timeWindow"],
+                  *task["channels"], *task["constraints"]):
+        normalized = "".join(ch for ch in unicodedata.normalize("NFKC", value)
+                             if unicodedata.category(ch) != "Cf")
+        if normalized != value or not _REVIEW_CJK.search(value) or _REVIEW_TECHNICAL_POLLUTION.search(value):
+            raise ValueError("accepted stage Handoff requires Chinese business text")
+    return key, occurrence, case
 
 
 class _HostReviewReceiptStore:
@@ -3157,6 +3250,8 @@ class ReviewAdvanceHostService:
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         key, occurrence_ref, case_ref = _strict_review_accept_command(command)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            raise ValueError("accepted stage Handoff Owner is not wired")
         if dispatch.operation_id != "ecommerce_growth_review_advance":
             raise ValueError("review dispatch operation drifted")
         occurrence_reader, cases, _receipts = self._components(transaction, scope)
@@ -3210,6 +3305,8 @@ class ReviewAdvanceHostService:
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            raise ValueError("accepted stage Handoff Owner is not wired")
         _reader, _cases, receipts = self._components(transaction, scope)
         existing = receipts.read(key)
         if existing is not None:
@@ -3261,6 +3358,8 @@ class ReviewAdvanceHostService:
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            return {}
         _reader, _cases, receipts = self._components(transaction, scope)
         expected = receipts.read(key)
         if expected is None or type(receipt) is not dict:

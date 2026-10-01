@@ -21,3 +21,7 @@
 因此 GW-b 的最小**完整**改动单元必须沿着 Handoff→Task/Brief→内容生成→内容评审建立单一的 accepted-stage 来源种类与 exact 引用验证；旧 Issue 合同保持原样。不能只在宿主接受 `stageDecisionRef`，让下游因四引用或 Issue 缺失而失败。拟新增的分支需绑定当前原 TaskRun、Plan、StageAttempt、EvalReport、Artifact、accepted Decision、获批 GrowthPlan、原人工 reviewer 与截止时间；Task/Brief 需独立 schema 版本和回执 hash，所有后续消费者以同一来源种类重验，不凭调用方提交的四个假 Artifact 填空。第一项 RED 应跨 producer→宿主→Task/Brief→生成入口验证 exact lineage；若原内容评审仍强制 Issue，同波至少保持失败封闭并登记下一项，不得称首链正向。
 
 这属于 231-5 `handoff_pending` 到 `content_running/content_review` 的既定工作范围，但修改触及新的公共 TaskBrief schema。编码前先补 231 上位合同和旧/新 schema 兼容矩阵；现阶段没有可安全宣称的单文件 Host 修复。
+
+## GW-b-1 有界语法切片（05:50）
+
+231-5 §9 已补旧/新来源矩阵。先在宿主加独立 `accepted-stage-v1` envelope 解析与 requestHash/exact refs/单 Artifact 形状校验，并在 `revalidate`、`execute`、Receipt verify 三处继续失败封闭。旧 `review_handoff.advance` Issue 命令保持原校验。此切片只证明新来源不能混入旧 Issue 回执或产生 Task/Brief；没有 bundle producer、原 Owner 验证及下游 schema，**不是** Handoff/业务 GREEN。后续只有在 producer 与 Host Owner 可同波联测时才允许发出这一命令；随后接 Task/Brief v3 与生成/评审共同来源复核。此分段先隔离可复核的协议歧视字段，绝不开放业务运行。

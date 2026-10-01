@@ -89,6 +89,78 @@ def accept_command(**changes):
     return body
 
 
+def accepted_stage_command(**changes):
+    """Proposed distinct source envelope; this fixture grants no stage authority."""
+    value = accept_command()
+    value.pop("reviewIssueRef")
+    value.pop("artifactBindings")
+    artifact = ref("Artifact", "original-stage-text")
+    def analyst_ref(kind, identity):
+        return {"resourceType": kind, "resourceId": identity,
+                "revision": 1, "contentHash": "a" * 64}
+    value.update({
+        "sourceKind": "accepted-stage-v1",
+        "stageDecisionRef": analyst_ref("AnalystStageDecisionRevision", "stage-decision-1"),
+        "stageTaskRunId": "task-run-1",
+        "stagePlanRef": analyst_ref("PlanRevision", "plan-1"),
+        "stageAttemptRef": {
+            "resourceType": "StepRunAttempt", "runId": "task-run-1",
+            "stepKey": "solution-design", "stepRunId": "stage-step-1",
+            "attempt": 1, "inputHash": "a" * 64,
+        },
+        "stageArtifactRef": analyst_ref("Artifact", "original-stage-text"),
+        "responsibilityPlanRef": analyst_ref("ResponsibilityPlanRevision", "responsibility-1"),
+    })
+    value["taskSpec"]["artifactRefs"] = [artifact]
+    value.update(changes)
+    value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    return value
+
+
+def test_accepted_stage_source_has_a_distinct_strict_envelope():
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_review_accept_command
+
+    value = accepted_stage_command()
+    key, occurrence, case = _strict_review_accept_command(value)
+    assert key == "review-1"
+    assert occurrence.resource_id == str(OCCURRENCE_ID)
+    assert case.resource_id == "case-1"
+
+
+@pytest.mark.parametrize("mutation", ["missing_decision", "wrong_artifact", "hash_drift", "old_issue"])
+def test_accepted_stage_envelope_rejects_cross_source_drift(mutation):
+    from aos_api.ecommerce_growth_runtime_adapters import _strict_review_accept_command
+
+    value = accepted_stage_command()
+    if mutation == "missing_decision":
+        value.pop("stageDecisionRef")
+    elif mutation == "wrong_artifact":
+        value["stageArtifactRef"] = {**value["stageArtifactRef"], "resourceId": "another"}
+    elif mutation == "hash_drift":
+        value["requestHash"] = "sha256:" + "b" * 64
+    else:
+        value["reviewIssueRef"] = ref("ReviewIssueRevision", "old-issue")
+    if mutation != "hash_drift":
+        value["requestHash"] = command_hash({k: v for k, v in value.items() if k != "requestHash"})
+    with pytest.raises(ValueError):
+        _strict_review_accept_command(value)
+
+
+def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
+    command = accepted_stage_command()
+    host = ReviewAdvanceHostService()
+    transaction = HostTransaction(SimpleNamespace())
+    with pytest.raises(ValueError, match="Owner is not wired"):
+        host.revalidate(transaction=transaction, scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance"),
+                        command=command)
+    with pytest.raises(ValueError, match="Owner is not wired"):
+        host.execute(transaction=transaction, scope=SCOPE, dispatch_ref=None,
+                     command=command, checked_at=NOW, occurred_at=NOW)
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=command, receipt={}) == {}
+
+
 def wired_host(monkeypatch, *, occurrence_hash=HASH):
     from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 
