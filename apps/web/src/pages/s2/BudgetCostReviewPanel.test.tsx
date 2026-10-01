@@ -73,3 +73,36 @@ it('maker cannot decide and an existing decision cannot be signed again',async()
  vi.mocked(transport.apiGetAuthoritative).mockImplementation(async path=>path.endsWith('/review')?{...view,decision:{decisionId:'d',proposalId:'p',proposalHash:saved.proposalHash,checkerSubject:'checker',decision:'rejected',expiresAt:saved.expiresAt,activationEligible:false}}:{status:'not_attempted'});
  await load();await select('费用复核意见','approved');expect(button('提交费用复核').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
 });
+
+const approvedView={...view,decision:{decisionId:'d',proposalId:'p',proposalHash:saved.proposalHash,checkerSubject:'checker',decision:'approved',expiresAt:saved.expiresAt,activationEligible:false}};
+const consumption={status:'observed',activationEligible:false,receipt:{resourceType:'BudgetRevision',resourceId:'b',revision:2,contentHash:'c'.repeat(64),proposalId:'p',proposalHash:saved.proposalHash,decisionId:'d',receiptId:'budget-cost-consume-'+'d'.repeat(64)}};
+it('maker explicitly enables approved budget once and unknown stays inquiry-only',async()=>{
+ setTenant({subject:'maker'});reads(approvedView);const post=vi.spyOn(transport,'apiPostUnqueued').mockRejectedValue(new Error('lost response'));
+ await render();await select('费用审核操作','consume');await load();expect(button('启用已批准预算').disabled).toBe(true);
+ await select('预算启用确认','consume');expect(button('启用已批准预算').disabled).toBe(false);
+ await act(async()=>{button('启用已批准预算').click();button('启用已批准预算').click();});
+ expect(post).toHaveBeenCalledTimes(1);expect(post).toHaveBeenCalledWith('/v1/aip/budgets/cost-proposals/p/consumption-request',{proposalHash:saved.proposalHash,decisionId:'d'},{});
+ await act(async()=>button('查询费用原请求').click());expect(button('启用已批准预算').disabled).toBe(true);
+ expect(window.location.search).not.toContain(saved.proposalHash);
+});
+it('restored consumption only queries and never posts',async()=>{
+ window.history.replaceState({},'', '/aip/capacity?budgetCostRef=p&budgetCostOperation=consume&budgetCostAttempted=1');
+ reads();const post=vi.spyOn(transport,'apiPostUnqueued');await render();
+ expect(transport.apiGetAuthoritative).toHaveBeenCalledWith('/v1/aip/budgets/cost-proposals/p/consumption-request');
+ expect(post).not.toHaveBeenCalled();expect(button('启用已批准预算').disabled).toBe(true);
+});
+it('consumption receipt must match the proposal, decision and budget',()=>{
+ const ref={id:'p',operation:'consume' as const};
+ expect(parseCostResult(consumption,ref,false,approvedView as never)).toEqual({status:'observed',id:consumption.receipt.receiptId});
+ for(const [field,value] of [['proposalId','other'],['decisionId','other'],['resourceId','other'],['revision',3],['contentHash','invalid'],['receiptId','invalid']]){
+  expect(()=>parseCostResult({...consumption,receipt:{...consumption.receipt,[field]:value}},ref,false,approvedView as never)).toThrow();
+ }
+});
+it.each(['checker','revoked','expired'])('blocks consumption for %s',async kind=>{
+ setTenant({subject:kind==='checker'?'checker':'maker'});
+ const expired=new Date(Date.now()-1000).toISOString();
+ const snapshot=kind==='expired'?{...approvedView,proposal:{...saved,createdAt:new Date(Date.now()-1801000).toISOString(),expiresAt:expired},decision:{...approvedView.decision,expiresAt:expired}}:
+ kind==='revoked'?{...approvedView,revocation:{revocationId:'r',decisionId:'d',actorSubject:'maker',reason:'withdraw',createdAt:new Date().toISOString()}}:approvedView;
+ reads(snapshot);const post=vi.spyOn(transport,'apiPostUnqueued');await render();await select('费用审核操作','consume');await load();await select('预算启用确认','consume');
+ expect(button('启用已批准预算').disabled).toBe(true);expect(post).not.toHaveBeenCalled();
+});

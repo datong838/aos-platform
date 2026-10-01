@@ -2,7 +2,7 @@ import { apiGetAuthoritative, apiPostUnqueued } from './client';
 import { getTenant } from './tenant';
 import { parseBudgetTarget, type BudgetTarget } from './aipBudgetActivation';
 
-export type CostRef={id:string;operation:'decide'|'revoke'};
+export type CostRef={id:string;operation:'decide'|'revoke'|'consume'};
 type ProviderRef={assetType:'ProviderInstanceRevision';assetId:string;revision:number;contentHash:string};
 type Proposal={schemaVersion:1;tenant:{orgId:string;projectId:string};target:BudgetTarget;draftRevision:number;expectedHeadVersion:number;
  makerSubject:string;checkerSubject:string;basis:{kind:'development_risk_proposal';provider:ProviderRef;providerModelId:string;perRequestRiskMinor:number;totalRiskMinor:number;maxRequests:number};
@@ -49,6 +49,14 @@ export function parseCostReview(value:unknown,id:string):CostReview{
 export function parseCostResult(value:unknown,ref:CostRef,query:boolean,source?:CostReview,choice?:string):CostResult{
  const status=(value as {status?:unknown}|null)?.status;
  if(status!=='observed'){row(value,['status']);requireValue(status==='unresolved'||status==='conflict'||(query&&status==='not_attempted'));return {status} as CostResult;}
+ if(ref.operation==='consume'){
+  const v=row(value,['status','receipt','activationEligible']),r=row(v.receipt,['resourceType','resourceId','revision','contentHash','proposalId','proposalHash','decisionId','receiptId']);
+  requireValue(v.activationEligible===false&&r.resourceType==='BudgetRevision'&&text(r.resourceId,160)&&pos(r.revision)&&hash(r.contentHash)
+   &&r.proposalId===ref.id&&hash(r.proposalHash)&&text(r.decisionId,160)&&typeof r.receiptId==='string'&&/^budget-cost-consume-[0-9a-f]{64}$/.test(r.receiptId));
+  if(source)requireValue(r.proposalHash===source.proposal.proposalHash&&r.decisionId===source.decision?.decisionId
+   &&r.resourceId===source.proposal.proposal.target.budgetId&&r.revision===source.proposal.proposal.target.revision);
+  return {status:'observed',id:r.receiptId as string};
+ }
  const v=row(value,['status','result','activationEligible']);requireValue(v.activationEligible===false);
  if(ref.operation==='decide'){
   const r=row(v.result,['decisionId','decision','proposalHash','activationEligible']);
@@ -58,18 +66,19 @@ export function parseCostResult(value:unknown,ref:CostRef,query:boolean,source?:
  const r=row(v.result,['revocationId','decisionId','activationEligible']);
  requireValue(text(r.revocationId)&&text(r.decisionId)&&r.activationEligible===false&&(!source||r.decisionId===source.decision?.decisionId));return {status:'observed',id:r.revocationId as string};
 }
-function path(ref:CostRef){requireValue(text(ref.id,160)&&['decide','revoke'].includes(ref.operation));return base+encodeURIComponent(ref.id)+'/review-requests/'+ref.operation;}
+function path(ref:CostRef){requireValue(text(ref.id,160)&&['decide','revoke','consume'].includes(ref.operation));return base+encodeURIComponent(ref.id)+(ref.operation==='consume'?'/consumption-request':'/review-requests/'+ref.operation);}
 export async function readCostReview(id:string){requireValue(text(id,160));return parseCostReview(await apiGetAuthoritative(base+encodeURIComponent(id)+'/review'),id);}
-export async function inquireCost(ref:CostRef){return parseCostResult(await apiGetAuthoritative(path(ref)),ref,true);}
+export async function inquireCost(ref:CostRef,source?:CostReview){return parseCostResult(await apiGetAuthoritative(path(ref)),ref,true,source);}
 export async function submitCost(ref:CostRef,source:CostReview,choice:string,reason:string){
  requireValue(ref.id===source.proposal.proposalId);
- const body=ref.operation==='decide'?{proposalHash:source.proposal.proposalHash,decision:choice}:{proposalHash:source.proposal.proposalHash,reason};
+ if(ref.operation==='consume')requireValue(source.decision?.decision==='approved');
+ const body=ref.operation==='consume'?{proposalHash:source.proposal.proposalHash,decisionId:source.decision!.decisionId}:ref.operation==='decide'?{proposalHash:source.proposal.proposalHash,decision:choice}:{proposalHash:source.proposal.proposalHash,reason};
  return parseCostResult(await apiPostUnqueued(path(ref),body,{}),ref,false,source,ref.operation==='decide'?choice:undefined);
 }
 const keys=['budgetCostRef','budgetCostOperation','budgetCostAttempted'];
 export function restoreCostReference(search:string):{ref:CostRef;attempted:boolean}|null{
  const p=new URLSearchParams(search),id=p.get(keys[0]),operation=p.get(keys[1]);
- if(keys.some(k=>p.getAll(k).length>1)||!text(id,160)||!['decide','revoke'].includes(operation??'')||!['0','1',null].includes(p.get(keys[2])))return null;
+ if(keys.some(k=>p.getAll(k).length>1)||!text(id,160)||!['decide','revoke','consume'].includes(operation??'')||!['0','1',null].includes(p.get(keys[2])))return null;
  return {ref:{id,operation:operation as CostRef['operation']},attempted:p.get(keys[2])==='1'};
 }
 export function saveCostReference(ref:CostRef,attempted:boolean){const u=new URL(window.location.href);keys.forEach(k=>u.searchParams.delete(k));u.searchParams.set(keys[0],ref.id);u.searchParams.set(keys[1],ref.operation);if(attempted)u.searchParams.set(keys[2],'1');window.history.replaceState(window.history.state,'',u);}
