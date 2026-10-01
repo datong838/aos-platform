@@ -17,7 +17,7 @@ def _json(value):
     return Jsonb(value.model_dump(mode='json', by_alias=True))
 
 
-def _seed(conn, envelope, root, signed, *, omit=None, fault=None):
+def _seed(conn, envelope, root, signed, *, omit=None, fault=None, with_report=False):
     conn.execute("INSERT INTO twa_org (id,name) VALUES ('org-org','subject-test') ON CONFLICT DO NOTHING")
     conn.execute("""INSERT INTO twa_workspace (org_id,project_id,name)
         VALUES ('org-org','dev-project','subject-test') ON CONFLICT DO NOTHING""")
@@ -79,11 +79,44 @@ def _seed(conn, envelope, root, signed, *, omit=None, fault=None):
              receipt.source_receipt_hash,receipt.structure_passed,receipt.detail_code,
              receipt.occurred_at,receipt.signature_base64,
              NOW+timedelta(minutes=2) if fault=='future_receipt' and receipt.purpose=='judge' else NOW))
+    if not with_report or omit == 'judge' or fault == 'missing_report':
+        return
+    judge = signed[1][1]
+    conn.execute("""INSERT INTO aip_eval_report_revision
+        (org_id,project_id,report_id,revision,content_hash,run_id,suite_ref,
+         target_ref,dataset_ref,judge_ref,results,passed,failed,total,pass_rate,
+         gate_passed,created_at,eval_contract_ref,subject_artifact_ref,
+         stage_attempt_ref,gate_policy_ref,evidence_cutoff_at)
+        VALUES ('org-org','dev-project','subject-report',1,%s,%s,%s,%s,%s,%s,
+                %s,1,0,1,1.0,true,%s,%s,%s,%s,%s,%s)""",
+        ('e'*64,envelope.eval_run_id,_json(envelope.suite_ref),
+         Jsonb({'assetType':'skill_template','assetId':'other','revision':'1',
+                'contentHash':'0'*64}) if fault=='report_context_drift'
+             else _json(envelope.generation_skill_ref),Jsonb({'testOnly':True}),
+         _json(envelope.judge_ref),Jsonb([{'caseId':envelope.case_id,
+             'passed':fault != 'result_drift',
+             'detailCode':'wrong' if fault=='result_drift' else judge.detail_code}]),
+         NOW-timedelta(minutes=1) if fault=='report_time_drift' else NOW,
+         _json(envelope.contract_ref),_json(envelope.subject_artifact_ref),
+         _json(envelope.stage_attempt_ref),_json(envelope.policy_ref),envelope.cutoff))
+    if fault == 'missing_sidecar':
+        return
+    source = signed[0][1]
+    conn.execute("""INSERT INTO aip_eval_subject_case_proof
+        (org_id,project_id,eval_run_id,case_id,envelope_hash,report_id,
+         report_revision,source_receipt_id,source_claim_hash,judge_receipt_id,
+         judge_claim_hash,verified_at,created_at)
+        VALUES ('org-org','dev-project',%s,%s,%s,'subject-report',1,%s,%s,%s,%s,%s,%s)""",
+        (envelope.eval_run_id,envelope.case_id,source.envelope_hash,
+         source.receipt_id,claim_hash(source),judge.receipt_id,
+         'f'*64 if fault=='receipt_drift' else claim_hash(judge),NOW,NOW))
 
 
-def _read(conn, envelope, signed, *, tenant=None):
+def _read(conn, envelope, signed, *, tenant=None, report_id='subject-report', report_hash='e'*64):
     return read_persisted_subject_pair(
         conn, expected_envelope=envelope, expected_tenant=tenant or envelope.tenant,
+        expected_report_id=report_id, expected_report_revision=1,
+        expected_report_hash=report_hash,
         now=NOW+timedelta(minutes=1),source_certificate=signed[0][0],
         source_receipt=signed[0][1],judge_certificate=signed[1][0],judge_receipt=signed[1][1],
     )
@@ -91,7 +124,9 @@ def _read(conn, envelope, signed, *, tenant=None):
 
 @pytest.mark.parametrize('fault',['valid','missing_run','missing_root','missing_identity',
     'missing_judge','wrong_role','cross_tenant','wrong_isolation','revoked','root_revoked',
-    'run_drift','context_drift','receipt_drift','future_receipt','root_purpose'])
+    'run_drift','context_drift','receipt_drift','future_receipt','root_purpose',
+    'missing_report','missing_sidecar','result_drift','report_context_drift',
+    'report_time_drift','wrong_report','wrong_hash'])
 def test_exact_persisted_subject_authority(fault):
     dsn=os.environ['AOS_DATABASE_URL']
     with psycopg.connect(dsn) as conn:
@@ -100,7 +135,7 @@ def test_exact_persisted_subject_authority(fault):
         conn.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ')
         _seed(conn,envelope,root,signed,omit={
             'missing_run':'run','missing_root':'root','missing_identity':'identity',
-            'missing_judge':'judge'}.get(fault),fault=fault)
+            'missing_judge':'judge'}.get(fault),fault=fault,with_report=True)
         if fault=='revoked':
             conn.execute("""INSERT INTO aip_eval_authority_revocation
                 (org_id,project_id,event_id,identity_id,revoked_at,owner_ref,approval_ref,reason_hash)
@@ -127,5 +162,8 @@ def test_exact_persisted_subject_authority(fault):
             result=_read(conn,envelope,signed)
             assert result.structure_passed is True
         else:
-            with pytest.raises(ValueError): _read(conn,envelope,signed)
+            with pytest.raises(ValueError):
+                _read(conn,envelope,signed,
+                    report_id='other-report' if fault=='wrong_report' else 'subject-report',
+                    report_hash='0'*64 if fault=='wrong_hash' else 'e'*64)
         conn.rollback()

@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import hashlib
 from datetime import datetime
+import re
 
 import psycopg
 from psycopg.rows import dict_row
@@ -45,6 +46,9 @@ def read_persisted_subject_pair(
     *,
     expected_envelope: SubjectReviewEnvelope,
     expected_tenant: TenantContext,
+    expected_report_id: str,
+    expected_report_revision: int,
+    expected_report_hash: str,
     now: datetime,
     source_certificate: SubjectCertificate,
     source_receipt: SubjectReceipt,
@@ -59,6 +63,12 @@ def read_persisted_subject_pair(
     envelope = SubjectReviewEnvelope.model_validate(expected_envelope.model_dump(mode='python'))
     _require(now.utcoffset() is not None and envelope.tenant == expected_tenant,
              'subject tenant or cutoff is invalid')
+    _require(type(expected_report_id) is str and 0 < len(expected_report_id) <= 200
+             and expected_report_id.strip() == expected_report_id
+             and type(expected_report_revision) is int and expected_report_revision >= 1
+             and type(expected_report_hash) is str
+             and re.fullmatch(r'[0-9a-f]{64}', expected_report_hash) is not None,
+             'exact subject EvalReport reference required')
     scope = (expected_tenant.org_id, expected_tenant.project_id)
     digest = subject_envelope_hash(envelope)
     roots = {}
@@ -141,6 +151,54 @@ def read_persisted_subject_pair(
                          and persisted['created_at'] <= now
                          and persisted['signature_base64'] == receipt.signature_base64,
                          'persisted subject receipt drifted')
+            linked = cur.execute("""SELECT proof.*, report.content_hash AS report_hash,
+                report.run_id AS report_run_id, report.suite_ref AS report_suite_ref,
+                report.target_ref AS report_target_ref, report.dataset_ref AS report_dataset_ref,
+                report.judge_ref AS report_judge_ref, report.eval_contract_ref AS report_contract_ref,
+                report.subject_artifact_ref AS report_subject_ref,
+                report.stage_attempt_ref AS report_attempt_ref,
+                report.gate_policy_ref AS report_policy_ref,
+                report.evidence_cutoff_at AS report_cutoff,
+                report.results AS report_results, report.gate_passed AS report_gate_passed,
+                report.created_at AS report_created_at
+                FROM aip_eval_subject_case_proof proof
+                JOIN aip_eval_report_revision report
+                  ON report.org_id=proof.org_id AND report.project_id=proof.project_id
+                 AND report.run_id=proof.eval_run_id AND report.report_id=proof.report_id
+                 AND report.revision=proof.report_revision
+                WHERE proof.org_id=%s AND proof.project_id=%s
+                  AND proof.eval_run_id=%s AND proof.case_id=%s
+                  AND proof.envelope_hash=%s""",
+                (*scope, envelope.eval_run_id, envelope.case_id, digest)).fetchone()
+            _require(linked is not None
+                     and (linked['report_id'], linked['report_revision'], linked['report_hash'])
+                         == (expected_report_id, expected_report_revision, expected_report_hash)
+                     and linked['report_run_id'] == envelope.eval_run_id
+                     and linked['report_suite_ref'] == _json(envelope.suite_ref)
+                     and linked['report_target_ref'] == _json(envelope.generation_skill_ref)
+                     and linked['report_dataset_ref'] == run['dataset_ref']
+                     and linked['report_judge_ref'] == _json(envelope.judge_ref)
+                     and linked['report_contract_ref'] == _json(envelope.contract_ref)
+                     and linked['report_subject_ref'] == _json(envelope.subject_artifact_ref)
+                     and linked['report_attempt_ref'] == _json(envelope.stage_attempt_ref)
+                     and linked['report_policy_ref'] == _json(envelope.policy_ref)
+                     and linked['report_cutoff'] == envelope.cutoff
+                     and linked['source_receipt_id'] == source_receipt.receipt_id
+                     and linked['source_claim_hash'] == claim_hash(source_receipt)
+                     and linked['judge_receipt_id'] == judge_receipt.receipt_id
+                     and linked['judge_claim_hash'] == claim_hash(judge_receipt)
+                     and judge_receipt.occurred_at <= linked['verified_at'] <= linked['created_at'] <= now
+                     and judge_receipt.occurred_at <= linked['report_created_at'] <= now,
+                     'subject proof does not bind the exact EvalReport')
+            results = linked['report_results']
+            _require(type(results) is list and len(results) == 1
+                     and type(results[0]) is dict
+                     and results[0].get('caseId') == envelope.case_id
+                     and type(results[0].get('passed')) is bool
+                     and results[0]['passed'] is judge_receipt.structure_passed
+                     and results[0].get('detailCode') == judge_receipt.detail_code
+                     and type(linked['report_gate_passed']) is bool,
+                     'signed subject case result differs from EvalReport')
             revoked = cur.execute("""SELECT identity_id,issuer_id,issuer_key_id
                 FROM aip_eval_authority_revocation
                 WHERE org_id=%s AND project_id=%s AND revoked_at<=%s""",
