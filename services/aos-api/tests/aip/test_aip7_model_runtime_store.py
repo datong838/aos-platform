@@ -24,6 +24,7 @@ from aos_api.aip_model_runtime_contracts import (
 )
 from aos_api.aip_model_runtime_store import (
     AipModelRuntimeStore,
+    ModelRuntimeConflict,
     ModelRuntimeDependencyBlocked,
     ModelRuntimeIdempotencyConflict,
     ModelRuntimeNotFound,
@@ -371,6 +372,46 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
             budgetPolicyRef=budget_policy_ref.model_dump(mode="json", by_alias=True),
         )
         store.publish_model(SCOPE, SUFFIX, "model-1", model)
+
+        candidate = next(
+            item for item in store.list_eval_candidates(SCOPE)
+            if item.source_ref.asset_id == model.registered_model_id
+        )
+        with (psycopg.connect(get_dsn(), row_factory=psycopg.rows.dict_row) as holder,
+              psycopg.connect(get_dsn(), row_factory=psycopg.rows.dict_row) as contender):
+            locked = store.require_current_model_eval_candidate_for_update(
+                holder, SCOPE, candidate.source_ref, candidate.target_ref,
+                expected_head_version=candidate.expected_head_version,
+            )
+            assert locked == candidate
+            contender.execute("SET LOCAL lock_timeout = '250ms'")
+            with pytest.raises(psycopg.errors.LockNotAvailable):
+                contender.execute(
+                    """SELECT version FROM aip_registered_model_head
+                       WHERE org_id=%s AND project_id=%s AND registered_model_id=%s
+                       FOR UPDATE""",
+                    (*SCOPE.key, model.registered_model_id),
+                ).fetchone()
+            contender.rollback()
+            holder.rollback()
+            assert contender.execute(
+                """SELECT version FROM aip_registered_model_head
+                   WHERE org_id=%s AND project_id=%s AND registered_model_id=%s
+                   FOR UPDATE""",
+                (*SCOPE.key, model.registered_model_id),
+            ).fetchone()["version"] == candidate.expected_head_version
+            contender.rollback()
+            holder.execute(
+                """UPDATE aip_registered_model_head SET version=version+1
+                   WHERE org_id=%s AND project_id=%s AND registered_model_id=%s""",
+                (*SCOPE.key, model.registered_model_id),
+            )
+            with pytest.raises(ModelRuntimeConflict, match="head or source drifted"):
+                store.require_current_model_eval_candidate_for_update(
+                    holder, SCOPE, candidate.source_ref, candidate.target_ref,
+                    expected_head_version=candidate.expected_head_version,
+                )
+            holder.rollback()
 
         policy = hashed(RuntimePolicyRevision, dict(
             tenant=TENANT, policyId=f"{SUFFIX}:policy", revision=1,
