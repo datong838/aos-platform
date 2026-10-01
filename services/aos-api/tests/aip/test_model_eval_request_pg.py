@@ -144,7 +144,9 @@ def test_model_eval_request_rejects_missing_current_model_without_writing():
         assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == previous
 
 
-def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
+def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
+                                      formal_sources=None, upper_bound_minor: int = 200,
+                                      provider_model_id: str = "m"):
     suffix = uuid.uuid4().hex[:10]
     expiry = datetime.now(UTC) + timedelta(minutes=30)
     since = datetime.now(UTC) - timedelta(hours=1)
@@ -163,13 +165,18 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
         owner.execute("""INSERT INTO meta_membership(org_id,project_id,subject,role)
             VALUES('org-org','dev-project','test-checker','admin') ON CONFLICT DO NOTHING""")
     scope = TenantScope("org-org", "dev-project")
-    budget = seed_isolated_active_budget(scope, "test-maker", BudgetRevisionCreate(
-        budgetId=f"budget-{suffix}", revision=1, environment="development",
-        currency="CNY", dailyLimitMinor=500, monthlyLimitMinor=5000,
-        alertThresholdPct=80, hardStop=True, unknownUsageBehavior="block",
-        effectiveFrom=since, effectiveUntil=until, owner="test-maker",
-        overBudgetApprover="test-maker", lifecycle="active",
-    ))
+    if formal_sources is None:
+        budget = seed_isolated_active_budget(scope, "test-maker", BudgetRevisionCreate(
+            budgetId=f"budget-{suffix}", revision=1, environment="development",
+            currency="CNY", dailyLimitMinor=500, monthlyLimitMinor=5000,
+            alertThresholdPct=80, hardStop=True, unknownUsageBehavior="block",
+            effectiveFrom=since, effectiveUntil=until, owner="test-maker",
+            overBudgetApprover="test-maker", lifecycle="active",
+        ))
+    else:
+        budget, budget_policy, provider, price = formal_sources
+        expiry = min(expiry, budget_policy.effective_until, price.effective_until)
+        assert expiry > datetime.now(UTC) + timedelta(minutes=1)
     quota = seed_historical_model_policy(scope, "test-maker", QuotaPolicyRevisionCreate(
         policyId=f"quota-{suffix}", revision=1, environment="development",
         effectiveFrom=since, effectiveUntil=until, owner="test-maker",
@@ -178,22 +185,24 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
         dailyRequestLimit=200, reservationLeaseSeconds=60,
         overflowBehavior="queue", allowPublicProviderFallback=False, allowAutoScale=False,
     ))
-    budget_policy = seed_historical_model_policy(scope, "test-maker", BudgetPolicyRevisionCreate(
-        policyId=f"budget-policy-{suffix}", revision=1, environment="development",
-        effectiveFrom=since, effectiveUntil=until, owner="test-maker",
-        approvalRef=f"approval-{suffix}", lifecycle="active",
-        budgetRevisionRef=VersionedAssetRef(
-            assetType="BudgetRevision", assetId=budget.budget_id,
-            revision=budget.revision, contentHash=budget.content_hash),
-        currency="CNY", hardStop=True, unknownUsageBehavior="block",
-        unknownPriceBehavior="block", allowZeroPrice=False,
-    ))
-    provider = rehashed(CurrentCandidateStore().provider,
-                        providerInstanceId=f"provider-{suffix}")
-    price = rehashed(CurrentCandidateStore().price,
-                     priceSnapshotId=f"price-{suffix}", effectiveFrom=since)
+    if formal_sources is None:
+        budget_policy = seed_historical_model_policy(scope, "test-maker", BudgetPolicyRevisionCreate(
+            policyId=f"budget-policy-{suffix}", revision=1, environment="development",
+            effectiveFrom=since, effectiveUntil=until, owner="test-maker",
+            approvalRef=f"approval-{suffix}", lifecycle="active",
+            budgetRevisionRef=VersionedAssetRef(
+                assetType="BudgetRevision", assetId=budget.budget_id,
+                revision=budget.revision, contentHash=budget.content_hash),
+            currency="CNY", hardStop=True, unknownUsageBehavior="block",
+            unknownPriceBehavior="block", allowZeroPrice=False,
+        ))
+        provider = rehashed(CurrentCandidateStore().provider,
+                            providerInstanceId=f"provider-{suffix}")
+        price = rehashed(CurrentCandidateStore().price,
+                         priceSnapshotId=f"price-{suffix}", effectiveFrom=since)
     model = rehashed(CurrentCandidateStore().model,
         registeredModelId=f"model-{suffix}",
+        providerModelId=provider_model_id,
         provider={"assetType": "ProviderInstanceRevision",
                   "assetId": provider.provider_instance_id, "revision": provider.revision,
                   "contentHash": provider.content_hash},
@@ -220,12 +229,12 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
             VALUES('org-org','dev-project',%s,1,%s,'validated',%s::jsonb,'test-maker')""",
             (source.asset_id, source.content_hash,
              json.dumps(model.model_dump(mode="json", by_alias=True))))
-        for prefix, column, ref, payload in (
+        for prefix, column, ref, payload in (() if formal_sources is not None else (
             ("aip_provider_instance", "provider_instance_id", model.provider,
              provider.model_dump(mode="json", by_alias=True)),
             ("aip_model_price_snapshot", "model_price_snapshot_id", model.price_snapshot_ref,
              price.model_dump(mode="json", by_alias=True)),
-        ):
+        )):
             owner.execute(f"""INSERT INTO {prefix}_head
                 (org_id,project_id,{column},current_revision,version)
                 VALUES('org-org','dev-project',%s,1,1)""", (ref.asset_id,))
@@ -257,7 +266,7 @@ def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
         suiteRef=_ref("EvalSuiteRevision", suite_id, 1, "a"),
         providerRef=model.provider, priceRef=model.price_snapshot_ref,
         quotaPolicyRef=model.quota_policy_ref, budgetPolicyRef=model.budget_policy_ref,
-        expiresAt=expiry,
+        expiresAt=expiry, upperBoundMinor=upper_bound_minor,
     ))
     store = AipModelEvalRequestStore()
     first = store.create(scope, "test-maker", f"eval-{suffix}", request)

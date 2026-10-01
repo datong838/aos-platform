@@ -16,6 +16,9 @@ from aos_api.aip_budget_reservation_store import (
 from aos_api.aip_model_eval_action import ModelEvalActionGuard
 from aos_api.aip_model_eval_authorization import ModelEvalRequestCreate
 from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevision
+from aos_api.aip_model_runtime_contracts import (
+    ModelPriceSnapshotRevision, RegisteredModelRevision,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -125,6 +128,37 @@ class AipModelEvalBudgetReservationStore:
             raise ModelEvalBudgetBlocked("current BudgetRevision head required")
         budget = self._ordinary._budget_authority(conn, scope, budget_ref, now)
         self._ordinary._price_authority(conn, scope, price_ref, now)
+        source_row = conn.execute("""SELECT content_hash,payload
+            FROM aip_registered_model_revision
+            WHERE org_id=%s AND project_id=%s AND registered_model_id=%s
+              AND revision=%s""",
+            (*scope.key, request.source_ref.asset_id,
+             request.source_ref.revision)).fetchone()
+        price_row = conn.execute("""SELECT content_hash,payload
+            FROM aip_model_price_snapshot_revision
+            WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s
+              AND revision=%s""",
+            (*scope.key, request.price_ref.asset_id,
+             request.price_ref.revision)).fetchone()
+        try:
+            source = RegisteredModelRevision.model_validate(source_row["payload"])
+            price = ModelPriceSnapshotRevision.model_validate(price_row["payload"])
+        except (TypeError, ValueError, KeyError) as exc:
+            raise ModelEvalBudgetBlocked("current Model and price payload required") from exc
+        if (source_row["content_hash"] != request.source_ref.content_hash
+            or price_row["content_hash"] != request.price_ref.content_hash
+            or source.content_hash != request.source_ref.content_hash
+            or price.content_hash != request.price_ref.content_hash):
+            raise ModelEvalBudgetBlocked("current Model or price hash drifted")
+        authorization = price.development_cost_authorization
+        if authorization != policy.development_cost_authorization:
+            raise ModelEvalBudgetBlocked("development cost policy and price drifted")
+        if authorization is not None and (
+            authorization.provider != request.provider_ref
+            or authorization.provider_model_id != source.provider_model_id
+            or authorization.tenant != request.tenant
+        ):
+            raise ModelEvalBudgetBlocked("development cost provider model drifted")
         existing = conn.execute("""SELECT * FROM aip_model_eval_budget_reservation
             WHERE org_id=%s AND project_id=%s AND request_id=%s""",
             (*scope.key, request_id)).fetchone()

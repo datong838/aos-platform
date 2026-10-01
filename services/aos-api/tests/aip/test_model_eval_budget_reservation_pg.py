@@ -14,6 +14,10 @@ from aos_api.db import get_dsn, connect_serializable
 from aos_api.db import connect
 from aos_api.tenant_scope import TenantScope
 from tests.aip.test_model_eval_request_pg import seeded_approved_model_eval_request
+from tests.aip.test_budget_cost_consumer_pg import caller, consume
+from tests.aip.test_budget_cost_issuer_pg import issuer_factory, command
+from tests.aip.test_network_consumer_connection_pg import private_passfile
+from tests.aip.test_network_consumer_signed_https_pg import https_signer
 
 
 def test_model_eval_hold_schema_is_tenant_scoped_and_append_only():
@@ -221,3 +225,99 @@ def test_model_eval_hold_requires_serializable_runtime_tenant():
     with connect_serializable(scope) as conn:
         assert conn.execute("""SELECT count(*) AS n FROM aip_model_eval_budget_reservation
             WHERE request_id=%s""", (first["request_id"],)).fetchone()["n"] == 0
+
+
+@pytest.mark.parametrize("provider_model_id,expected_allowed", [
+    ("candidate-model", True), ("different-model", False),
+])
+def test_formal_signed_development_risk_counts_original_eval_hold(
+    caller, issuer_factory, https_signer, provider_model_id, expected_allowed,
+):
+    from uuid import uuid4
+    from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+    from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
+    from aos_api.aip_budget_cost_runtime import require_cost_risk, BudgetCostRuntimeBlocked
+    from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    from aos_api.aip_budget_store import AipBudgetAuthorityStore
+    from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevision
+    from aos_api.aip_model_runtime_contracts import (
+        ProviderInstanceRevision, ModelPriceSnapshotRevision,
+    )
+    from aos_api.aip_model_eval_budget_reservation import (
+        AipModelEvalBudgetReservationStore, ModelEvalBudgetBlocked,
+    )
+    from tests.aip.test_budget_cost_proposal_pg import case
+    from tests.aip._runtime_guard_history_fixture import produce_formal_provider
+    from tests.aip.test_budget_cost_configuration_pg import derive
+
+    scope = TenantScope("org-org", "dev-project")
+    maker, checker, _, basis, key = case()
+    provider = produce_formal_provider(scope, maker.subject,
+                                       "eval-risk-provider-" + uuid4().hex)
+    basis.basis.provider = basis.basis.provider.model_copy(update={
+        "asset_id": provider.provider_instance_id,
+        "content_hash": provider.content_hash,
+    })
+    basis.basis.max_requests = 1
+    basis.basis.total_risk_minor = basis.basis.per_request_risk_minor
+    saved = BudgetCostProposalStore().create(maker, basis, key)
+    decision = BudgetCostIssuer(issuer_factory).execute(
+        command(https_signer[0], checker, saved))
+    with caller() as conn:
+        consume(conn, saved, decision)
+        configured = derive(conn, saved, decision)
+    refs = configured["receipt"]
+    budget = AipBudgetAuthorityStore().get(scope, refs["budgetRef"]["assetId"])
+    with psycopg.connect(get_dsn()) as owner:
+        policy_row = owner.execute("""SELECT payload FROM aip_model_governance_policy_revision
+            WHERE org_id=%s AND project_id=%s AND policy_kind='budget'
+              AND policy_id=%s AND revision=%s""",
+            (*scope.key, refs["policyRef"]["assetId"], refs["policyRef"]["revision"])
+        ).fetchone()
+        price_row = owner.execute("""SELECT payload FROM aip_model_price_snapshot_revision
+            WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s
+              AND revision=%s""",
+            (*scope.key, refs["priceRef"]["assetId"], refs["priceRef"]["revision"])
+        ).fetchone()
+    policy = BudgetPolicyRevision.model_validate(policy_row[0])
+    price = ModelPriceSnapshotRevision.model_validate(price_row[0])
+    scope, first, request, proposal, _, _, _, _ = seeded_approved_model_eval_request(
+        stop_after_approval=True,
+        formal_sources=(budget, policy, provider, price),
+        upper_bound_minor=basis.basis.per_request_risk_minor,
+        provider_model_id=provider_model_id,
+    )
+    event_id = _approval_event(scope, proposal.proposal.id)
+    if not expected_allowed:
+        with pytest.raises(ModelEvalBudgetBlocked, match="development cost.*model"):
+            with connect_serializable(scope) as conn:
+                AipModelEvalBudgetReservationStore().hold(
+                    conn, scope, first["request_id"], event_id)
+        with connect_serializable(scope) as conn:
+            assert conn.execute("""SELECT count(*) AS n
+                FROM aip_model_eval_budget_reservation WHERE request_id=%s""",
+                (first["request_id"],)).fetchone()["n"] == 0
+        return
+    with connect_serializable(scope) as conn:
+        AipModelEvalBudgetReservationStore().hold(
+            conn, scope, first["request_id"], event_id)
+    assert request.upper_bound_minor == basis.basis.per_request_risk_minor
+    budget_ref = BudgetExactRef(
+        resourceType="BudgetRevision", resourceId=budget.budget_id,
+        revision=budget.revision, contentHash="sha256:" + budget.content_hash,
+    )
+    price_ref = BudgetExactRef(
+        resourceType="ModelPriceSnapshotRevision", resourceId=price.price_snapshot_id,
+        revision=price.revision, contentHash="sha256:" + price.content_hash,
+    )
+    with pytest.raises(BudgetCostRuntimeBlocked, match="RISK_AUTHORITY_REQUIRED"):
+        with connect_serializable(scope) as conn:
+            require_cost_risk(conn, scope, budget_ref, price_ref,
+                              basis.basis.per_request_risk_minor, provider_ref=
+                              BudgetExactRef(resourceType="ProviderInstanceRevision",
+                                  resourceId=provider.provider_instance_id,
+                                  revision=provider.revision,
+                                  contentHash="sha256:" + provider.content_hash))
+    with connect_serializable(scope) as conn:
+        require_cost_risk(conn, scope, budget_ref, price_ref,
+                          basis.basis.per_request_risk_minor, new_hold=False)
