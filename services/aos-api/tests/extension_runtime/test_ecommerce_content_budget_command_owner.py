@@ -176,7 +176,8 @@ def test_missing_budget_intent_blocks_before_any_authority_or_claim():
         )
 
 
-def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
+@pytest.mark.parametrize("risk_price", [False, True])
+def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price):
     from aos_api.ecommerce_content_budget_command_owner import (
         ContentBudgetCommandOwner, ContentBudgetCommandConflict,
     )
@@ -223,7 +224,11 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
             raise AssertionError(query)
     conn = Conn()
     route = SimpleNamespace(asset_id="route-1", revision=1, content_hash="2" * 64)
-    price_ref = SimpleNamespace(asset_id="price-1", revision=1, content_hash="3" * 64)
+    price_ref = SimpleNamespace(asset_type="ModelPriceSnapshotRevision", asset_id="price-1", revision=1, content_hash="3" * 64)
+    provider_ref = SimpleNamespace(asset_type="ProviderInstanceRevision", asset_id="provider-1", revision=1, content_hash="b" * 64)
+    model_ref = SimpleNamespace(asset_id="model-1", revision=1, content_hash="c" * 64)
+    model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
+                            price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
     run_request = SimpleNamespace(model_route=route)
     request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request)
     monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
@@ -250,15 +255,19 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
                 quota_policy_ref=SimpleNamespace(asset_id="quota-1", revision=1),
                 budget_policy_ref=SimpleNamespace(asset_id="budget-policy-1", revision=1))
         def get_price_snapshot(self, *_):
-            return SimpleNamespace(development_cost_authorization=None,
+            return SimpleNamespace(development_cost_authorization=object() if risk_price else None,
                                    input_token_price=0.5, output_token_price=1.0,
                                    token_unit=1000)
+        def get_model(self, scope, identifier, revision):
+            assert risk_price and scope == SCOPE and (identifier, revision) == ("model-1", 1)
+            return model
     monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeStore", ModelStore)
     class Resolver:
         def __init__(self, *_): pass
         def resolve(self, *_ , **__):
             return SimpleNamespace(readiness=ModelRuntimeReadiness.READY,
                                    route=route, selected_price_snapshot=price_ref,
+                                   selected_provider=provider_ref, selected_model=model_ref,
                                    policy=SimpleNamespace(asset_id="policy-1", revision=1))
     monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelRuntimeResolver", Resolver)
     class Governance:
@@ -267,7 +276,7 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
             if policy_ref.asset_id == "quota-1":
                 return SimpleNamespace(max_input_tokens=4000, max_output_tokens=2000)
             return SimpleNamespace(budget_revision_ref=SimpleNamespace(
-                asset_id="budget-1", revision=1, content_hash="7" * 64))
+                asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
     monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
     monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(
         lambda *_ , **__: (BudgetExactRef(resource_type="ActionApprovalEvent",
@@ -280,6 +289,18 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
     validated = []
     monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ContentGenerateHostService.revalidate",
                         lambda self, **kwargs: validated.append(kwargs["command"]))
+    if risk_price:
+        # Wiring-only double. The real shared authority is exercised by the PG suite.
+        def approve_bound(cls, price, amount, **options):
+            assert type(options["transaction"]) is HostTransaction and options["scope"] == SCOPE
+            assert options["policy_ref"].resource_id == "budget-1"
+            assert options["pricing_ref"].content_hash == "sha256:" + "3" * 64
+            assert options["provider_ref"].resource_id == "provider-1"
+            assert options["provider_model_id"] == "provider-model-1"
+            assert options["max_input_tokens"] == 4000 and options["max_output_tokens"] == 2000
+            assert price.development_cost_authorization is not None
+            return amount
+        monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
     dispatch, command = ContentBudgetCommandOwner._build_command(
         HostTransaction(conn), SCOPE, "review-1"
     )
@@ -288,6 +309,12 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch):
     assert command["authorityRefs"]["capacity_reservation"]["resourceId"] == "capacity-1"
     assert command["upperBoundFen"] == 500 and validated == [command]
     assert not any("_claim_a0v_104" in query for query in conn.calls)
+
+    if risk_price:
+        model.content_hash = "d" * 64
+        with pytest.raises(ContentBudgetCommandConflict, match="model/provider/price drifted"):
+            ContentBudgetCommandOwner._build_command(HostTransaction(Conn()), SCOPE, "review-1")
+        model.content_hash = model_ref.content_hash
 
     intent["execution_epoch"] = 4
     with pytest.raises(ContentBudgetCommandConflict, match="installation lineage"):

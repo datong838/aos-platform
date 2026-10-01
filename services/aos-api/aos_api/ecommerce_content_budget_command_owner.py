@@ -201,9 +201,28 @@ class ContentBudgetCommandOwner:
         approval_ref, approved_fen = cls._approved_action(
             transaction, scope, task_ref, checked_at=checked_at
         )
+        cost_context = {}
+        if price.development_cost_authorization is not None:
+            if resolution.selected_model is None or resolution.selected_provider is None:
+                raise ContentBudgetCommandConflict("content cost model/provider unavailable")
+            model = model_store.get_model(
+                scope, resolution.selected_model.asset_id, resolution.selected_model.revision
+            )
+            if (model.content_hash != resolution.selected_model.content_hash
+                    or model.provider != resolution.selected_provider
+                    or model.price_snapshot_ref != price_ref):
+                raise ContentBudgetCommandConflict("content cost model/provider/price drifted")
+            def budget_exact(ref):
+                return BudgetExactRef(resource_type=ref.asset_type, resource_id=ref.asset_id,
+                    revision=ref.revision, content_hash="sha256:" + ref.content_hash)
+            cost_context = dict(transaction=transaction, scope=scope,
+                policy_ref=budget_exact(budget_policy.budget_revision_ref),
+                pricing_ref=budget_exact(price_ref),
+                provider_ref=budget_exact(resolution.selected_provider),
+                provider_model_id=model.provider_model_id)
         cls._approved_bound(
             price, approved_fen, max_input_tokens=quota.max_input_tokens,
-            max_output_tokens=quota.max_output_tokens,
+            max_output_tokens=quota.max_output_tokens, **cost_context,
         )
         approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
             transaction=transaction, scope=scope,
@@ -513,8 +532,31 @@ class ContentBudgetCommandOwner:
 
     @classmethod
     def _approved_bound(
-        cls, price: Any, approved_fen: int, *, max_input_tokens: int, max_output_tokens: int
+        cls, price: Any, approved_fen: int, *, max_input_tokens: int, max_output_tokens: int,
+        transaction: HostTransaction | None = None, scope: TenantScope | None = None,
+        policy_ref: BudgetExactRef | None = None, pricing_ref: BudgetExactRef | None = None,
+        provider_ref: BudgetExactRef | None = None, provider_model_id: str | None = None,
     ) -> int:
+        if price.development_cost_authorization is not None:
+            if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
+                    or type(approved_fen) is not int or not 1 <= approved_fen <= 100_000_000
+                    or type(max_input_tokens) is not int or max_input_tokens <= 0
+                    or type(max_output_tokens) is not int or max_output_tokens <= 0
+                    or type(provider_model_id) is not str or not provider_model_id
+                    or provider_model_id != provider_model_id.strip()):
+                raise ValueError("current scoped cost context and positive bounds required")
+            for ref, kind in ((policy_ref, "BudgetRevision"),
+                              (pricing_ref, "ModelPriceSnapshotRevision"),
+                              (provider_ref, "ProviderInstanceRevision")):
+                if type(ref) is not BudgetExactRef or ref.resource_type != kind:
+                    raise ValueError("exact content cost references required")
+            from aos_api.aip_budget_cost_runtime import require_cost_risk
+            verified = require_cost_risk(transaction, scope, policy_ref, pricing_ref,
+                                         approved_fen, provider_ref=provider_ref)
+            if (verified is None or verified != price
+                    or verified.development_cost_authorization.provider_model_id != provider_model_id):
+                raise ValueError("content cost price or resolved provider model drifted")
+            return approved_fen
         minimum = cls._minimum_bound_fen(
             price, max_input_tokens=max_input_tokens, max_output_tokens=max_output_tokens
         )

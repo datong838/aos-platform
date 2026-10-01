@@ -15,8 +15,11 @@ class BudgetCostRuntimeBlocked(ValueError):
     pass
 
 
-def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *, provider_ref=None, new_hold=True):
-    """Use only in the scoped reservation transaction, before effect admission."""
+def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *, provider_ref=None, new_hold=True) -> ModelPriceSnapshotRevision | None:
+    """Return the verified cost price, or None for the legacy non-cost path.
+
+    Use only in the scoped admission transaction. This does not create a hold.
+    """
     try:
         receipts=conn.execute("SELECT * FROM public.aip_budget_receipt WHERE org_id=%s AND project_id=%s "
             "AND operation='budget_revision.activate_cost' AND result_ref->>'resourceId'=%s",
@@ -95,6 +98,7 @@ def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *
         extra=1 if new_hold else 0
         if totals['n']+extra>p.basis.max_requests or totals['risk']+upper_bound_minor*extra>p.basis.total_risk_minor:
             raise ValueError('risk allowance exhausted')
+        return price
     except Exception as exc:
         # Includes serialization failures: caller must reconcile, never transparently resend.
         raise BudgetCostRuntimeBlocked('BUDGET_COST_CURRENT_RISK_AUTHORITY_REQUIRED') from exc
