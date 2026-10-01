@@ -13,3 +13,11 @@
 ## 安全门与回退
 
 已核：producer `ReviewHandoffRequest` 强制 Issue OPEN 与四种 `ArtifactRevision`；`AnalystStageDecisionRevision` 的 subject artifact 是 `Artifact`，不是同一组四种 AIP artifact。直接把 Issue 改 nullable 会失去跨域 lineage 与原 Response hash 合同。先明确 StageDecision→Handoff 的 artifact 映射/读者和 v2 command 身份，再 RED；不得把 Stage Artifact 冒充 AIP ArtifactRevision。若这个改动需要新公共业务语义或新增权限，先更新上位方案审查后编码。失败时只留下 RED 和来源缺口，不填假 Issue、假 EvalReport、假 TaskRun 或人工 Run。
+
+## 2026-10-02 05:45 下游合同复核补充
+
+原 `ContentTaskSpec` 在 `ecommerce_content_campaign_workflow_contracts.py` 要求四个互异 `ArtifactRevision`；宿主 `_strict_review_accept_command` 再次锁定同一数组。`_review_lineage` 把四引用写入 Task.goal 和 Brief.spec，内容生成 `_task_brief_authority` 逐项与 Review 来源比对，内容评审 `_task_brief_authority` 也比对 `sourceArtifactRefs`，且评审还有原 ReviewIssue 的独立权威检查。获批 `GrowthPlanRevision` / accepted `AnalystStageDecisionRevision` 只含一条 `generationArtifactRef: Artifact`，并不存在可证明的四个 Investigation ArtifactRevision 映射。
+
+因此 GW-b 的最小**完整**改动单元必须沿着 Handoff→Task/Brief→内容生成→内容评审建立单一的 accepted-stage 来源种类与 exact 引用验证；旧 Issue 合同保持原样。不能只在宿主接受 `stageDecisionRef`，让下游因四引用或 Issue 缺失而失败。拟新增的分支需绑定当前原 TaskRun、Plan、StageAttempt、EvalReport、Artifact、accepted Decision、获批 GrowthPlan、原人工 reviewer 与截止时间；Task/Brief 需独立 schema 版本和回执 hash，所有后续消费者以同一来源种类重验，不凭调用方提交的四个假 Artifact 填空。第一项 RED 应跨 producer→宿主→Task/Brief→生成入口验证 exact lineage；若原内容评审仍强制 Issue，同波至少保持失败封闭并登记下一项，不得称首链正向。
+
+这属于 231-5 `handoff_pending` 到 `content_running/content_review` 的既定工作范围，但修改触及新的公共 TaskBrief schema。编码前先补 231 上位合同和旧/新 schema 兼容矩阵；现阶段没有可安全宣称的单文件 Host 修复。
