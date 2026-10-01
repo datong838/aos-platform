@@ -1,0 +1,15 @@
+# GW-b｜已接受方案阶段决策进入内容 Handoff 的正式来源
+
+基线 2026-10-02 05:33 CST，AOS-001096 / m1 `840841e7`。复习 231-5 §5–6、231-9 §2/§5 与 D-waves BG00GW-b。`read_approved_stage_handoff_source` 已验证当前 `AnalystStageDecisionRevision(accept)`、原 draft、获批 successor、StageAttempt/EvalReport/Artifact 和时限；但 `ReviewAdvanceHostService` 的 ACCEPT 仍强制 OPEN `ReviewIssueRevision`。现有 `test_analyst_stage_handoff_source_pg.py` 决策由 fixture 发布，不能充当真实人工批准。
+
+## 预期合同与文件级施工
+
+1. `bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_review_command.py`：原 `ReviewHandoffRequest` 将 Issue 与四个 AIP Artifact 固定为必需；先审查其上游输入与应用调用点，再决定新增独立接受阶段命令，还是显式扩展有歧视字段的 v2 合同。不能让旧 producer 输出宿主不认识的新命令。
+2. `services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py`：保持历史 Issue 驱动 Review 合同；新增严格的“已接受方案阶段”来源分支，必须带当前 `stageDecisionRef`、获批 `growthPlanRef`、原 TaskRun/Plan/StageAttempt/EvalReport/Artifact 精确引用，并通过原 `read_approved_stage_handoff_source`。不得在无 Issue 时直接放行；只有正式阶段 accept 可替代 Issue。Handoff/Task/Brief 的 hash 与 receipt 绑定分支种类和来源引用，避免跨路径重放。
+3. `services/aos-api/aos_api/ecommerce_analyst_stage_handoff_source.py`：仅补必要的同事务只读来源验证接口，不复制 StageDecision/Plan authority，不写新批准。若现有接口足够则不改。
+4. `services/aos-api/tests/extension_runtime/test_ecommerce_review_advance_host.py` 与 bundle producer 对应测试先写 RED，覆盖无 Issue 且无 Decision 失败、有效 Decision 形状进入独立来源分支、旧 Issue 命令兼容、篡改 requestHash/DecisionRef 拒绝。PG 联合正向必须复用原 `AnalystStageDecisionStore`、原批准 GrowthPlan 与原 Review command producer；不能 monkeypatch 来源读取或手插 ReviewIssue。
+5. 专项及原 Review/TaskRun/Brief 相邻回归、静态、方案复审、verification、m1 精确提交与 AOS/Prime/D-waves 同步。真实权威库只读，Host/worker/Provider 不启用。浏览器在该后端来源合同波不适用；到当前实例可运行后另行验收。
+
+## 安全门与回退
+
+已核：producer `ReviewHandoffRequest` 强制 Issue OPEN 与四种 `ArtifactRevision`；`AnalystStageDecisionRevision` 的 subject artifact 是 `Artifact`，不是同一组四种 AIP artifact。直接把 Issue 改 nullable 会失去跨域 lineage 与原 Response hash 合同。先明确 StageDecision→Handoff 的 artifact 映射/读者和 v2 command 身份，再 RED；不得把 Stage Artifact 冒充 AIP ArtifactRevision。若这个改动需要新公共业务语义或新增权限，先更新上位方案审查后编码。失败时只留下 RED 和来源缺口，不填假 Issue、假 EvalReport、假 TaskRun 或人工 Run。
