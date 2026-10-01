@@ -15,6 +15,8 @@ import urllib.parse
 from datetime import UTC, datetime
 from pathlib import Path
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from psycopg import connect
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
@@ -24,7 +26,6 @@ ROOT = Path(__file__).resolve().parents[1]
 API_ROOT = ROOT / "services/aos-api"
 TARGET = "aos_current_preview_20260927"
 INSTALLATION = "ccdcb0f0-1040-4bc6-aa0c-d045f5689813"
-EXPECTED_SCHEMA_HEAD = "a0v_118"
 FLAGS = {
     "AOS_DOTENV_DISABLED": "1", "AOS_DB_MIGRATION_MODE": "disabled",
     "AOS_QYH_CRON_ENABLED": "false", "AOS_AIP_LOGIC_AUTOMATION_ENABLED": "false",
@@ -48,6 +49,26 @@ FLAGS = {
 
 class PreviewBlocked(RuntimeError):
     pass
+
+
+def _code_schema_head() -> str:
+    """Read the checked-out migration graph without connecting or migrating."""
+    try:
+        config = Config()
+        config.set_main_option("script_location", str(API_ROOT / "alembic"))
+        heads = ScriptDirectory.from_config(config).get_heads()
+    except Exception:
+        raise PreviewBlocked("PREVIEW_CODE_SCHEMA_UNAVAILABLE") from None
+    if len(heads) != 1 or not isinstance(heads[0], str) or not heads[0]:
+        raise PreviewBlocked("PREVIEW_CODE_SCHEMA_UNAVAILABLE")
+    return heads[0]
+
+
+def _require_current_schema(rows: list[dict[str, object]]) -> str:
+    head = _code_schema_head()
+    if [row.get("version_num") for row in rows] != [head]:
+        raise PreviewBlocked("PREVIEW_CODE_SCHEMA_DRIFT")
+    return head
 
 
 def _load(path: Path, name: str):
@@ -110,6 +131,7 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
         if conn.info.dbname != TARGET:
             raise PreviewBlocked("DATABASE_TARGET_DRIFT")
         version = conn.execute("SELECT version_num FROM alembic_version").fetchall()
+        schema_head = _require_current_schema(version)
         installed = conn.execute("""SELECT i.installation_id,r.state
             FROM bundle_installation i JOIN bundle_installation_revision r
               ON r.installation_pk=i.installation_pk AND r.revision=i.current_revision""").fetchall()
@@ -117,8 +139,7 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
         versions = conn.execute("""SELECT b.bundle_id,v.version,v.status,v.content_hash
             FROM asset_bundle_version v JOIN asset_bundle b ON b.bundle_pk=v.bundle_pk""").fetchall()
     expected = {bundle_id: ver for _, bundle_id, ver, _ in builder.ALL_CASES}
-    if ([row["version_num"] for row in version] != [EXPECTED_SCHEMA_HEAD]
-            or [(str(row["installation_id"]), row["state"]) for row in installed]
+    if ([(str(row["installation_id"]), row["state"]) for row in installed]
             != [(INSTALLATION, "approved")]
             or bindings != 0 or len(versions) != 4
             or {row["bundle_id"]: row["version"] for row in versions} != expected
@@ -126,7 +147,8 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
             or any(row["status"] != "published" for row in versions)):
         raise PreviewBlocked("PREVIEW_DATABASE_DRIFT")
     return parameters, {"database": TARGET, "databaseHost": parameters["host"],
-                        "databasePort": parameters["port"], "version": EXPECTED_SCHEMA_HEAD,
+                        "databasePort": parameters["port"], "version": schema_head,
+                        "codeVersion": schema_head,
                         "installationId": INSTALLATION, "installationState": "approved",
                         "runtimeBindings": 0, "publishedVersions": 4,
                         "signedRoot": str(signed_root), "trustRoots": str(trust_path)}

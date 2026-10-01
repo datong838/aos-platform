@@ -57,11 +57,31 @@ def test_matching_tree_hash_with_invalid_signatures_blocks_before_database(previ
 
 
 def test_all_execution_flags_are_explicitly_disabled(preview):
-    assert preview.EXPECTED_SCHEMA_HEAD == "a0v_118"
     assert preview.FLAGS["AOS_EXTENSION_RUNTIME_HOST_ENABLED"] == "0"
     assert preview.FLAGS["AOS_QYH_CRON_ENABLED"] == "false"
     assert preview.FLAGS["AOS_DB_MIGRATION_MODE"] == "disabled"
     assert all(value == "false" for key, value in preview.FLAGS.items() if "WORKER_ENABLED" in key)
+
+
+@pytest.mark.parametrize("rows", [[], [{"version_num": "a0v_118"}],
+    [{"version_num": "a0v_130"}, {"version_num": "a0v_118"}]])
+def test_schema_must_match_current_code_head(preview, monkeypatch, rows):
+    monkeypatch.setattr(preview, "_code_schema_head", lambda: "a0v_130", raising=False)
+    with pytest.raises(preview.PreviewBlocked, match="PREVIEW_CODE_SCHEMA_DRIFT"):
+        preview._require_current_schema(rows)
+
+
+def test_current_schema_returns_verified_head(preview, monkeypatch):
+    monkeypatch.setattr(preview, "_code_schema_head", lambda: "a0v_130", raising=False)
+    assert preview._require_current_schema([{"version_num": "a0v_130"}]) == "a0v_130"
+
+
+@pytest.mark.parametrize("heads", [[], ["a0v_130", "other_branch"]])
+def test_ambiguous_code_head_never_authorizes_start(preview, monkeypatch, heads):
+    from alembic.script import ScriptDirectory
+    monkeypatch.setattr(ScriptDirectory, "get_heads", lambda self: heads)
+    with pytest.raises(preview.PreviewBlocked, match="PREVIEW_CODE_SCHEMA_UNAVAILABLE"):
+        preview._code_schema_head()
 
 
 def test_limited_identity_rejects_weak_mode_and_wrong_target(preview, tmp_path):
