@@ -19,6 +19,9 @@ _REPAIR_KEYS = frozenset({
     "returnDecisionRef", "briefRef", "priorArtifactRef",
     "installationBindingRef", "capabilityRef", "budgetUpperBoundMinor",
 })
+# Every content cost approval carries this amount, including first generation.
+# Keep the exact repair contract intact; the shared amount is not a repair marker.
+_REPAIR_MARKERS = _REPAIR_KEYS - {"budgetUpperBoundMinor"}
 
 
 def require_repair_action_request(body: Any, action_snapshot: dict[str, Any],
@@ -27,7 +30,7 @@ def require_repair_action_request(body: Any, action_snapshot: dict[str, Any],
     if body.action_type_id != ACTION_TYPE and action_snapshot.get("id") != ACTION_TYPE:
         return
     payload = body.payload
-    if type(payload) is not dict or not (_REPAIR_KEYS & payload.keys()):
+    if type(payload) is not dict or not (_REPAIR_MARKERS & payload.keys()):
         return
     current = classify_action_risk(body.action_type_id, action_snapshot,
                                    payload, body.risk_hint)
@@ -52,5 +55,5 @@ def require_repair_action_proposal(row: Any) -> None:
     payload = row["payload"]
     if type(payload) is not dict:
         raise AipActionTransitionBlocked("REPAIR_ACTION_CURRENT_AUTHORITY_UNWIRED")
-    if _REPAIR_KEYS & payload.keys():
+    if _REPAIR_MARKERS & payload.keys():
         raise AipActionTransitionBlocked("REPAIR_ACTION_CURRENT_AUTHORITY_UNWIRED")
