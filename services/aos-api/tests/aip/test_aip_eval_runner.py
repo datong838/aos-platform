@@ -335,6 +335,70 @@ def test_formal_skill_contract_rejects_unattested_callbacks_before_run(runtime) 
             assert count["n"] == 0
 
 
+@pytest.mark.parametrize("target_type", [AssetType.REGISTERED_MODEL, AssetType.MODEL_ROUTE])
+@pytest.mark.parametrize("by_contract", [False, True])
+def test_model_eval_requires_formal_owner_before_any_callback(runtime, target_type, by_contract) -> None:
+    runner, scoped = runtime
+    model_suite = _suite().model_copy(update={
+        "suite_id": f"formal-{target_type.value}-suite",
+        "target": _asset(target_type, "model-target-1", H2),
+    })
+    model_suite = model_suite.model_copy(update={
+        "content_hash": compute_eval_suite_hash(model_suite),
+    })
+    AipEvalPackRegistry(connect_factory=scoped).register_suite_revision(
+        SCOPE, model_suite, actor="user:dev"
+    )
+    calls: list[str] = []
+
+    def resolve(ref):
+        calls.append("resolve")
+        return _resolver(ref)
+
+    def target(ref, value):
+        calls.append("target")
+        return _target(ref, value)
+
+    def judge(ref, actual, expected):
+        calls.append("judge")
+        return _judge(ref, actual, expected)
+
+    if by_contract:
+        contract = _contract().model_copy(update={
+            "suite_ref": ExactRevisionRef(
+                resource_type="EvalSuiteRevision",
+                resource_id=model_suite.suite_id,
+                revision=model_suite.revision,
+                content_hash=model_suite.content_hash,
+            ),
+        })
+
+        class Contracts:
+            def get_eval_contract(self, *_args):
+                return contract
+
+        runner._contracts = Contracts()
+        invoke = lambda: runner.run_by_contract(
+            SCOPE, contract_id=contract.contract_id, contract_revision=2,
+            contract_content_hash=contract.content_hash,
+            idempotency_key="formal-model-unattested", actor="user:dev",
+            resolve_artifact=resolve, execute_target=target, execute_judge=judge,
+        )
+    else:
+        invoke = lambda: runner.run(
+            SCOPE, suite_id=model_suite.suite_id, suite_revision=model_suite.revision,
+            idempotency_key="formal-model-unattested", actor="user:dev",
+            resolve_artifact=resolve, execute_target=target, execute_judge=judge,
+        )
+
+    with pytest.raises(AipEvalAuthorityConflict, match="formal Model Eval executor authority unavailable"):
+        invoke()
+    assert calls == []
+    with scoped() as conn:
+        for table in ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision"):
+            assert conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"] == 0
+
+
 def test_direct_skill_run_rejects_unattested_callbacks_before_persistence(runtime) -> None:
     runner, scoped = runtime
     skill_suite = _suite().model_copy(update={
