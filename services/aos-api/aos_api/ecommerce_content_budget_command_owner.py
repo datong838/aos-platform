@@ -87,10 +87,15 @@ class ContentBudgetCommandOwner:
         return command
 
     @classmethod
-    def _build_command(
+    def _prepare_sources(
         cls, transaction: HostTransaction, scope: TenantScope, review_key: str,
         *, claimed_token: UUID | None = None,
-    ) -> tuple[SimpleNamespace, dict[str, Any]]:
+    ) -> SimpleNamespace:
+        """Revalidate sources in the caller's transaction without consuming approval.
+
+        This ephemeral result is not an execution grant and must not be cached
+        across transactions. The command path still checks approval and budget.
+        """
         if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
                 or type(review_key) is not str or not 1 <= len(review_key.strip()) <= 200
                 or review_key != review_key.strip()):
@@ -198,9 +203,6 @@ class ContentBudgetCommandOwner:
                 or quota.max_input_tokens + quota.max_output_tokens > capacity["token_units"]):
             raise ContentBudgetCommandConflict("content capacity cannot cover approved token limits")
         task_ref = BudgetExactRef.model_validate(response["taskRef"])
-        approval_ref, approved_fen = cls._approved_action(
-            transaction, scope, task_ref, checked_at=checked_at
-        )
         cost_context = {}
         if price.development_cost_authorization is not None:
             if resolution.selected_model is None or resolution.selected_provider is None:
@@ -220,10 +222,6 @@ class ContentBudgetCommandOwner:
                 pricing_ref=budget_exact(price_ref),
                 provider_ref=budget_exact(resolution.selected_provider),
                 provider_model_id=model.provider_model_id)
-        cls._approved_bound(
-            price, approved_fen, max_input_tokens=quota.max_input_tokens,
-            max_output_tokens=quota.max_output_tokens, **cost_context,
-        )
         approved_plan = ReviewAdvanceHostService._revalidate_growth_plan(
             transaction=transaction, scope=scope,
             command={"growthPlanRef": response["growthPlanRef"]},
@@ -260,28 +258,50 @@ class ContentBudgetCommandOwner:
                 "ModelPriceSnapshotRevision", price_ref.asset_id,
                 price_ref.revision, price_ref.content_hash,
             ),
-            "approval": approval_ref.model_dump(mode="json", by_alias=True),
             "capacity_reservation": exact(
                 "CapacityReservation", str(intent["capacity_reservation_id"]),
                 1, capacity["request_hash"],
             ),
         }
-        command = cls._command_envelope(
-            authority_refs=authorities,
+        return SimpleNamespace(
+            dispatch=dispatch, snapshot=snapshot, task_ref=task_ref,
+            price=price, quota=quota, cost_context=cost_context, authorities=authorities,
             source_artifact_refs=[item["artifactRef"] for item in response["artifactBindings"]],
             fact_source_refs=[exact(
                 "EvidenceBundleRevision", item.resource_id, item.revision,
                 item.content_hash,
             ) for item in method.evidence_refs],
+        )
+
+    @classmethod
+    def _build_command(
+        cls, transaction: HostTransaction, scope: TenantScope, review_key: str,
+        *, claimed_token: UUID | None = None,
+    ) -> tuple[SimpleNamespace, dict[str, Any]]:
+        sources = cls._prepare_sources(
+            transaction, scope, review_key, claimed_token=claimed_token
+        )
+        approval_ref, approved_fen = cls._approved_action(
+            transaction, scope, sources.task_ref, checked_at=sources.snapshot.checked_at
+        )
+        cls._approved_bound(
+            sources.price, approved_fen, max_input_tokens=sources.quota.max_input_tokens,
+            max_output_tokens=sources.quota.max_output_tokens, **sources.cost_context,
+        )
+        command = cls._command_envelope(
+            authority_refs={**sources.authorities,
+                "approval": approval_ref.model_dump(mode="json", by_alias=True)},
+            source_artifact_refs=sources.source_artifact_refs,
+            fact_source_refs=sources.fact_source_refs,
             approved_fen=approved_fen,
-            max_input_tokens=quota.max_input_tokens,
-            max_output_tokens=quota.max_output_tokens,
+            max_input_tokens=sources.quota.max_input_tokens,
+            max_output_tokens=sources.quota.max_output_tokens,
             review_key=review_key,
         )
         ContentGenerateHostService().revalidate(
-            transaction=transaction, scope=scope, dispatch=snapshot, command=command
+            transaction=transaction, scope=scope, dispatch=sources.snapshot, command=command
         )
-        return dispatch, command
+        return sources.dispatch, command
 
     def claim(
         self, scope: TenantScope, review_key: str, *, token: UUID | None = None

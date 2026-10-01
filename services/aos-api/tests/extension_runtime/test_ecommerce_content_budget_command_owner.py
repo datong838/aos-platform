@@ -278,10 +278,13 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
             return SimpleNamespace(budget_revision_ref=SimpleNamespace(
                 asset_type="BudgetRevision", asset_id="budget-1", revision=1, content_hash="7" * 64))
     monkeypatch.setattr("aos_api.ecommerce_content_budget_command_owner.AipModelGovernancePolicyStore", Governance)
-    monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(
-        lambda *_ , **__: (BudgetExactRef(resource_type="ActionApprovalEvent",
-                                         resource_id="approval-1", revision=1,
-                                         content_hash="sha256:" + "8" * 64), 500)))
+    approval_reads = []
+    def approved_action(*args, **kwargs):
+        approval_reads.append((args, kwargs))
+        return (BudgetExactRef(resource_type="ActionApprovalEvent",
+                               resource_id="approval-1", revision=1,
+                               content_hash="sha256:" + "8" * 64), 500)
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_action", staticmethod(approved_action))
     monkeypatch.setattr("aos_api.ecommerce_growth_runtime_adapters.ReviewAdvanceHostService._revalidate_growth_plan",
                         staticmethod(lambda **__: SimpleNamespace(sales_weapon_method=SimpleNamespace(
                             evidence_refs=[SimpleNamespace(resource_id="facts-1", revision=1,
@@ -301,6 +304,12 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
             assert price.development_cost_authorization is not None
             return amount
         monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
+    sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1")
+    assert approval_reads == [] and validated == []
+    assert "approval" not in sources.authorities
+    assert sources.task_ref.resource_id == "task-1"
+    assert sources.authorities["capacity_reservation"]["resourceId"] == "capacity-1"
+    assert not any("_claim_a0v_104" in query for query in conn.calls)
     dispatch, command = ContentBudgetCommandOwner._build_command(
         HostTransaction(conn), SCOPE, "review-1"
     )
@@ -308,6 +317,10 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
     assert command["authorityRefs"]["budget"]["resourceId"] == "budget-1"
     assert command["authorityRefs"]["capacity_reservation"]["resourceId"] == "capacity-1"
     assert command["upperBoundFen"] == 500 and validated == [command]
+    assert len(approval_reads) == 1
+    assert {k: v for k, v in command["authorityRefs"].items() if k != "approval"} == sources.authorities
+    assert command["sourceArtifactRefs"] == sources.source_artifact_refs
+    assert command["factSourceRefs"] == sources.fact_source_refs
     assert not any("_claim_a0v_104" in query for query in conn.calls)
 
     if risk_price:
