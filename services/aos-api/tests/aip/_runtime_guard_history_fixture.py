@@ -177,6 +177,14 @@ def guard_consumer_factory(private_passfile):
 
 _formal_source = ContextVar("isolated_formal_guard_source", default=None)
 _formal_network_source = ContextVar("isolated_formal_network_source", default=None)
+_formal_provider_source = ContextVar("isolated_formal_provider_source", default=None)
+
+
+def produce_formal_provider(scope, actor, provider_id):
+    produce = _formal_provider_source.get()
+    if produce is None:
+        raise RuntimeError("formal source fixture required")
+    return produce(scope, actor, provider_id)
 
 
 def seed_historical_runtime_guard(scope, actor, item):
@@ -330,9 +338,64 @@ def formal_guard_sources(request):
             assert observed['status']=='observed'
         return AipNetworkPolicyStore().get(scope,item.policy_id,item.revision)
 
+    def produce_provider(scope, actor, provider_id):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from aos_api.errors import register_exception_handlers
+        from aos_api.routers.aip_model_runtime import router
+        from aos_api.aip_provider_plugin_authority import ProviderPluginAuthority
+        from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
+        from aos_api.aip_model_runtime_store import canonical_hash
+        from aos_api.aip_runtime_guard_policy_contracts import (
+            EgressPolicyRevisionCreate, DataClassificationPolicyRevisionCreate,
+        )
+        sign, _, _ = prepare()
+        now = datetime.now(timezone.utc)
+        common = dict(revision=1, environment='development',
+            effectiveFrom=now-timedelta(minutes=1), effectiveUntil=now+timedelta(hours=1),
+            owner=actor, approvalRef='isolated-signed-source', lifecycle='active')
+        egress = produce(scope, actor, EgressPolicyRevisionCreate(
+            **common, policyId=provider_id+'-egress', allowedSchemes=['https'],
+            allowedHosts=['api.agnes-ai.cn'], allowedPorts=[443],
+            allowPublicFallback=False, unknownDestinationBehavior='block',
+            regionState='confirmed', region='isolated-test'))
+        data = produce(scope, actor, DataClassificationPolicyRevisionCreate(
+            **common, policyId=provider_id+'-data', allowedClassifications=['public_catalog'],
+            prohibitedClassifications=['direct_pii','raw_order_detail','customer_conversation',
+                'credential','commercial_sensitive','cross_tenant','unknown'],
+            denyUnknown=True, allowDirectPii=False, allowCommercialSensitive=False,
+            allowCrossTenant=False))
+        plugin = ProviderPluginAuthority().get(scope, 'agnes-text')
+        def ref(kind, identity, item):
+            return dict(assetType=kind, assetId=identity, revision=item.revision, contentHash=item.content_hash)
+        provider = ProviderInstanceRevision(
+            tenant=dict(orgId=scope.org_id,projectId=scope.project_id),
+            providerInstanceId=provider_id, revision=1, contentHash='0'*64,
+            pluginRef=ref('ProviderPluginRevision',plugin.provider_plugin_id,plugin),
+            endpointProfile=dict(baseUrl='https://api.agnes-ai.cn',region='isolated-test',timeoutMs=1000),
+            secretRef='vault://isolated/no-secret',secretVersion='1',
+            egressPolicyRef=ref('EgressPolicyRevision',egress.policy_id,egress),
+            dataClassificationPolicyRef=ref('DataClassificationPolicyRevision',data.policy_id,data),
+            lifecycle='active',createdBy=actor,createdAt=now)
+        body = provider.model_dump(mode='json',by_alias=True)
+        body['contentHash'] = canonical_hash({k:v for k,v in body.items()
+            if k not in {'tenant','revision','contentHash','createdBy','createdAt'}})
+        app = FastAPI()
+        register_exception_handlers(app)
+        app.include_router(router)
+        with TestClient(app) as client:
+            response = client.post('/v1/aip/model-runtime/providers',json=body,headers={
+                'Authorization':'Bearer '+sign(actor),'X-Org-Id':scope.org_id,
+                'X-Project-Id':scope.project_id,'If-Match':'0',
+                'Idempotency-Key':'formal-provider-'+uuid4().hex})
+        assert response.status_code == 201, response.text
+        return ProviderInstanceRevision.model_validate(response.json())
+
     token = _formal_source.set(produce)
     network_token = _formal_network_source.set(produce_network)
+    provider_token = _formal_provider_source.set(produce_provider)
     try: yield produce
     finally:
+        _formal_provider_source.reset(provider_token)
         _formal_network_source.reset(network_token)
         _formal_source.reset(token)

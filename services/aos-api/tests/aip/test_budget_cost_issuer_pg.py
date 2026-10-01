@@ -1,7 +1,6 @@
 """Isolated PG login + signed TLS JWT; no production authority or Provider call."""
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
-import json
 import secrets
 from uuid import uuid4
 
@@ -12,8 +11,6 @@ import pytest
 
 from aos_api.aip_budget_cost_issuer import BudgetCostIssuer, BudgetCostIssuerCommand, BudgetCostIssuerBlocked
 from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
-from aos_api.aip_budget_store import canonical_hash
-from aos_api.aip_model_runtime_contracts import ProviderInstanceRevision
 from aos_api.tenant_scope import apply_transaction_scope
 from aos_api.db import connect
 from tests.aip.test_budget_cost_proposal_pg import case
@@ -49,7 +46,9 @@ def issuer_factory(private_passfile):
 
 
 def prepared(window=None):
+    from tests.aip._runtime_guard_history_fixture import produce_formal_provider
     maker,checker,other,p,key=case();provider_id='issuer-provider-'+uuid4().hex
+    provider=produce_formal_provider(SCOPE,maker.subject,provider_id)
     if window is not None:
         from aos_api.aip_budget_store import AipBudgetAuthorityStore
         from aos_api.aip_budget_contracts import BudgetLifecycle
@@ -58,17 +57,6 @@ def prepared(window=None):
         AipBudgetAuthorityStore().publish(SCOPE,maker.subject,'short-'+key,draft,expected_version=1)
         p.target=draft.model_copy(update={'lifecycle':BudgetLifecycle.ACTIVE,'revision':3})
         p.draft_revision=2;p.expected_head_version=2
-    def ref(kind):return dict(assetType=kind,assetId='isolated-'+kind,revision=1,contentHash='b'*64)
-    provider=ProviderInstanceRevision(tenant=p.tenant,providerInstanceId=provider_id,revision=1,contentHash='0'*64,
-        pluginRef=ref('ProviderPluginRevision'),endpointProfile=dict(baseUrl='https://provider.invalid',region='test',timeoutMs=1000),
-        secretRef='vault://isolated/no-secret',secretVersion='1',egressPolicyRef=ref('EgressPolicyRevision'),
-        dataClassificationPolicyRef=ref('DataClassificationPolicyRevision'),lifecycle='active',createdBy='isolated-fixture',createdAt=datetime.now(UTC))
-    body=provider.model_dump(mode='json',by_alias=True)
-    provider.content_hash=canonical_hash({k:v for k,v in body.items() if k not in {'tenant','revision','contentHash','createdBy','createdAt'}})
-    body=provider.model_dump(mode='json',by_alias=True)
-    with isolated_owner() as conn:
-        conn.execute('INSERT INTO aip_provider_instance_head(org_id,project_id,provider_instance_id,current_revision,version) VALUES(%s,%s,%s,1,1)',(*SCOPE.key,provider_id))
-        conn.execute("INSERT INTO aip_provider_instance_revision(org_id,project_id,provider_instance_id,revision,content_hash,lifecycle,payload,created_by,created_at) VALUES(%s,%s,%s,1,%s,'active',%s::jsonb,'isolated-fixture',clock_timestamp())",(*SCOPE.key,provider_id,provider.content_hash,json.dumps(body)));conn.commit()
     p.basis.provider=p.basis.provider.model_copy(update={'asset_id':provider_id,'content_hash':provider.content_hash})
     saved=BudgetCostProposalStore().create(maker,p,key)
     return maker,checker,other,p,saved
