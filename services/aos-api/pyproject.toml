@@ -31,7 +31,7 @@ where = ["."]
 include = ["aos_api*"]
 
 [tool.setuptools.package-data]
-aos_api = ["*.json", "*.yaml"]
+aos_api = ["*.json", "*.yaml", "*.sql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

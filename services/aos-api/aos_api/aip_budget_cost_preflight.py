@@ -10,9 +10,12 @@ from aos_api.aip_budget_cost_issuer import BudgetCostIssuerBlocked
 
 
 _TABLES = ('aip_budget_cost_proposal', 'aip_budget_cost_proposal_receipt',
-           'aip_budget_cost_decision', 'aip_budget_cost_revocation', 'aip_budget_cost_issuer_receipt')
+           'aip_budget_cost_decision', 'aip_budget_cost_revocation', 'aip_budget_cost_issuer_receipt',
+           'aip_budget_cost_runtime_fence')
 _FUNCTIONS = ('public.aip_budget_cost_issuer_guard_a0v_125()',
-              'public.extension_reject_history_mutation()')
+              'public.extension_reject_history_mutation()',
+              'public.aip_budget_cost_fence_guard_a0v_126()',
+              'public.aip_budget_cost_revoke_fence_a0v_126()')
 
 
 def budget_schema_snapshot(conn):

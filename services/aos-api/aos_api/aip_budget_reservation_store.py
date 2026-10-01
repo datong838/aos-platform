@@ -142,6 +142,8 @@ class AipBudgetReservationStore:
                 if exposure + request.upper_bound_minor > bucket.limit_minor:
                     raise BudgetReservationBlocked(f"{bucket.kind} budget limit exceeded")
 
+            # Recheck cost authority after any bucket-lock wait, immediately before the new hold.
+            self._cost_risk_authority(conn, scope, request.policy_ref, request.pricing_ref, request.upper_bound_minor)
             invocation_id = uuid.uuid4()
             reservation_id = uuid.uuid4()
             initial_invocation, initial_reservation = self.initial_hold_refs(
@@ -311,6 +313,9 @@ class AipBudgetReservationStore:
             if row["state"] != "held":
                 raise BudgetReservationConflict("only HELD reservation may be submitted")
             self._provider_authority(conn, scope, provider_ref)
+            self._cost_risk_authority(conn, scope, BudgetExactRef.model_validate(self._load(row['policy_ref'])),
+                BudgetExactRef.model_validate(self._load(row['pricing_ref'])), row['upper_bound_minor'],
+                provider_ref=provider_ref, new_hold=False)
             now = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
             request_receipt_id = uuid.uuid4()
             receipt_payload = {
@@ -1046,6 +1051,16 @@ class AipBudgetReservationStore:
             + (" FOR UPDATE" if lock else ""),
             (*scope.key, bucket.kind, bucket.account_id, bucket.period_start, bucket.currency),
         ).fetchone()
+
+    def _cost_risk_authority(self, conn, scope, policy_ref, pricing_ref, upper_bound_minor, **options):
+        # Custom schemas are independent legacy fixtures; production authority is public.
+        if self._authority_schema != 'public' or self._storage_schema != 'public':
+            return
+        from aos_api.aip_budget_cost_runtime import require_cost_risk, BudgetCostRuntimeBlocked
+        try:
+            require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, **options)
+        except BudgetCostRuntimeBlocked as exc:
+            raise BudgetReservationBlocked(str(exc)) from exc
 
     def _budget_authority(
         self, conn: Any, scope: TenantScope, ref: BudgetExactRef, checked_at: datetime

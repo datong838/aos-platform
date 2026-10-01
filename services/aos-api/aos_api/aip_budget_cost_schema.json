@@ -190,6 +190,16 @@
           ],
           "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
           "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        },
+        {
+          "name": "budget_consumer_a0v126",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_budget_consumer_owner"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
         }
       ],
       "triggers": [
@@ -205,6 +215,11 @@
         }
       ],
       "acl": [
+        {
+          "grantee": "aos_budget_consumer_owner",
+          "privilege": "SELECT",
+          "grantable": false
+        },
         {
           "grantee": "aos_runtime",
           "privilege": "INSERT",
@@ -512,6 +527,16 @@
           ],
           "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
           "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        },
+        {
+          "name": "budget_consumer_a0v126",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_budget_consumer_owner"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
         }
       ],
       "triggers": [
@@ -532,6 +557,11 @@
         }
       ],
       "acl": [
+        {
+          "grantee": "aos_budget_consumer_owner",
+          "privilege": "SELECT",
+          "grantable": false
+        },
         {
           "grantee": "aos_runtime",
           "privilege": "INSERT",
@@ -661,6 +691,16 @@
           ],
           "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
           "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        },
+        {
+          "name": "budget_consumer_a0v126",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_budget_consumer_owner"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
         }
       ],
       "triggers": [
@@ -678,9 +718,19 @@
           "name": "aip_budget_cost_revocation_issuer",
           "enabled": "O",
           "definition": "CREATE TRIGGER aip_budget_cost_revocation_issuer BEFORE INSERT ON public.aip_budget_cost_revocation FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_issuer_guard_a0v_125()"
+        },
+        {
+          "name": "budget_cost_revoke_fence",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER budget_cost_revoke_fence AFTER INSERT ON public.aip_budget_cost_revocation FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_revoke_fence_a0v_126()"
         }
       ],
       "acl": [
+        {
+          "grantee": "aos_budget_consumer_owner",
+          "privilege": "SELECT",
+          "grantable": false
+        },
         {
           "grantee": "aos_runtime",
           "privilege": "INSERT",
@@ -842,6 +892,197 @@
           "grantable": false
         }
       ]
+    },
+    "aip_budget_cost_runtime_fence": {
+      "relkind": "r",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true,
+      "columns": [
+        {
+          "name": "org_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "project_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "budget_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "revision",
+          "type": "bigint",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "decision_id",
+          "type": "text",
+          "required": true,
+          "default": null,
+          "identity": "",
+          "generated": "",
+          "acl": []
+        },
+        {
+          "name": "version",
+          "type": "bigint",
+          "required": true,
+          "default": "1",
+          "identity": "",
+          "generated": "",
+          "acl": [
+            [
+              "aos_runtime",
+              "UPDATE",
+              false
+            ]
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "aip_budget_cost_runtime_fence_org_id_project_id_decision_i_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (org_id, project_id, decision_id) REFERENCES aip_budget_cost_decision(org_id, project_id, decision_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_runtime_fence_org_id_project_id_decision_id_key",
+          "type": "u",
+          "definition": "UNIQUE (org_id, project_id, decision_id)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_runtime_fence_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (org_id, project_id, budget_id, revision)",
+          "validated": true
+        },
+        {
+          "name": "aip_budget_cost_runtime_fence_version_check",
+          "type": "c",
+          "definition": "CHECK ((version >= 1))",
+          "validated": true
+        }
+      ],
+      "indexes": [
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_runtime_fence_org_id_project_id_decision_id_key ON public.aip_budget_cost_runtime_fence USING btree (org_id, project_id, decision_id)",
+          "valid": true,
+          "ready": true
+        },
+        {
+          "definition": "CREATE UNIQUE INDEX aip_budget_cost_runtime_fence_pkey ON public.aip_budget_cost_runtime_fence USING btree (org_id, project_id, budget_id, revision)",
+          "valid": true,
+          "ready": true
+        }
+      ],
+      "policies": [
+        {
+          "name": "budget_consumer_a0v126",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_budget_consumer_owner"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        },
+        {
+          "name": "budget_cost_runtime_scope",
+          "permissive": true,
+          "command": "*",
+          "roles": [
+            "aos_runtime"
+          ],
+          "using": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))",
+          "check": "((org_id = NULLIF(current_setting('aos.org_id'::text, true), ''::text)) AND (project_id = NULLIF(current_setting('aos.project_id'::text, true), ''::text)))"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "budget_cost_fence_guard",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER budget_cost_fence_guard BEFORE INSERT OR DELETE OR UPDATE ON public.aip_budget_cost_runtime_fence FOR EACH ROW EXECUTE FUNCTION aip_budget_cost_fence_guard_a0v_126()"
+        },
+        {
+          "name": "budget_cost_fence_truncate",
+          "enabled": "O",
+          "definition": "CREATE TRIGGER budget_cost_fence_truncate BEFORE TRUNCATE ON public.aip_budget_cost_runtime_fence FOR EACH STATEMENT EXECUTE FUNCTION extension_reject_history_mutation()"
+        }
+      ],
+      "acl": [
+        {
+          "grantee": "<owner>",
+          "privilege": "DELETE",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "REFERENCES",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "SELECT",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "TRIGGER",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "TRUNCATE",
+          "grantable": false
+        },
+        {
+          "grantee": "<owner>",
+          "privilege": "UPDATE",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_budget_consumer_owner",
+          "privilege": "INSERT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_budget_consumer_owner",
+          "privilege": "SELECT",
+          "grantable": false
+        },
+        {
+          "grantee": "aos_runtime",
+          "privilege": "SELECT",
+          "grantable": false
+        }
+      ]
     }
   },
   "functions": {
@@ -865,6 +1106,26 @@
         ],
         [
           "PUBLIC",
+          "EXECUTE",
+          false
+        ]
+      ]
+    },
+    "public.aip_budget_cost_fence_guard_a0v_126()": {
+      "definition": "CREATE OR REPLACE FUNCTION public.aip_budget_cost_fence_guard_a0v_126()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$ BEGIN\n      IF TG_OP='INSERT' THEN\n        IF session_user<>'aos_budget_consumer_call' OR current_user<>'aos_budget_consumer_owner' OR NEW.version<>1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_CONSUMER_REQUIRED' USING ERRCODE='42501'; END IF;\n      ELSIF TG_OP='UPDATE' THEN\n        IF (NEW.org_id,NEW.project_id,NEW.budget_id,NEW.revision,NEW.decision_id) IS DISTINCT FROM\n           (OLD.org_id,OLD.project_id,OLD.budget_id,OLD.revision,OLD.decision_id) OR NEW.version<>OLD.version+1 THEN\n          RAISE EXCEPTION 'BUDGET_COST_FENCE_DRIFT' USING ERRCODE='23514'; END IF;\n      ELSE RAISE EXCEPTION 'BUDGET_COST_FENCE_HISTORY_REQUIRED'; END IF;\n      RETURN NEW; END $function$\n",
+      "acl": [
+        [
+          "<owner>",
+          "EXECUTE",
+          false
+        ]
+      ]
+    },
+    "public.aip_budget_cost_revoke_fence_a0v_126()": {
+      "definition": "CREATE OR REPLACE FUNCTION public.aip_budget_cost_revoke_fence_a0v_126()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$ BEGIN\n      UPDATE public.aip_budget_cost_runtime_fence SET version=version+1\n        WHERE org_id=NEW.org_id AND project_id=NEW.project_id AND decision_id=NEW.decision_id;\n      RETURN NEW; END $function$\n",
+      "acl": [
+        [
+          "<owner>",
           "EXECUTE",
           false
         ]
