@@ -135,14 +135,16 @@ def test_model_eval_request_rejects_missing_current_model_without_writing():
         expiresAt=datetime.now(UTC) + timedelta(hours=1),
     ))
     store = AipModelEvalRequestStore()
+    with connect(TenantScope("org-org", "dev-project")) as conn:
+        previous = conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"]
     with pytest.raises(ModelEvalRequestBlocked):
         store.create(TenantScope("org-org", "dev-project"),
                      "test-maker", "missing-model-test", request)
     with connect(TenantScope("org-org", "dev-project")) as conn:
-        assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == 0
+        assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == previous
 
 
-def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg():
+def seeded_approved_model_eval_request(*, stop_after_approval: bool = False):
     suffix = uuid.uuid4().hex[:10]
     expiry = datetime.now(UTC) + timedelta(minutes=30)
     since = datetime.now(UTC) - timedelta(hours=1)
@@ -186,9 +188,12 @@ def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg()
         currency="CNY", hardStop=True, unknownUsageBehavior="block",
         unknownPriceBehavior="block", allowZeroPrice=False,
     ))
-    provider = rehashed(CurrentCandidateStore().provider)
-    price = rehashed(CurrentCandidateStore().price, effectiveFrom=since)
+    provider = rehashed(CurrentCandidateStore().provider,
+                        providerInstanceId=f"provider-{suffix}")
+    price = rehashed(CurrentCandidateStore().price,
+                     priceSnapshotId=f"price-{suffix}", effectiveFrom=since)
     model = rehashed(CurrentCandidateStore().model,
+        registeredModelId=f"model-{suffix}",
         provider={"assetType": "ProviderInstanceRevision",
                   "assetId": provider.provider_instance_id, "revision": provider.revision,
                   "contentHash": provider.content_hash},
@@ -288,6 +293,8 @@ def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg()
     assert approved.proposal.status.value == "approved"
     assert approved.proposal.policy_snapshot["executionAllowed"] is False
     assert len(approved.approvals) == 1
+    if stop_after_approval:
+        return scope, first, request, proposal, approved, budget, budget_policy, price
     with pytest.raises(ModelEvalActionBlocked, match="MAKER_OR_EXPIRY_DRIFTED"):
         propose_model_eval_request(checker, first["request_id"],
                                    f"wrong-maker-{suffix}", expiry)
@@ -315,7 +322,8 @@ def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg()
             WHERE request_id=%s""", (first["request_id"],)).fetchone()
         assert row["request_hash"] == first["request_hash"]
         assert row["request_json"]["purpose"] == "quality-eval"
-        assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request").fetchone()["n"] == 1
+        assert conn.execute("SELECT count(*) AS n FROM aip_model_eval_request WHERE request_id=%s",
+                            (first["request_id"],)).fetchone()["n"] == 1
         assert conn.execute("SELECT count(*) AS n FROM aip_action_execution_lease").fetchone()["n"] == 0
         for table in ("aip_eval_run", "aip_eval_report_revision", "aip_release_gate_decision"):
             assert conn.execute(f"SELECT count(*) AS n FROM {table}").fetchone()["n"] == 0
@@ -330,3 +338,7 @@ def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg()
             (model.registered_model_id,))
     with pytest.raises(ModelEvalRequestBlocked, match="current Model Eval candidate"):
         store.create(scope, "test-maker", f"drift-{suffix}", request)
+
+
+def test_model_eval_request_is_exact_immutable_and_idempotent_on_disposable_pg():
+    seeded_approved_model_eval_request()

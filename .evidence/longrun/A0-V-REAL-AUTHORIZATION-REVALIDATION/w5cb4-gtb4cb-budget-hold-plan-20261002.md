@@ -14,7 +14,9 @@
 
 施工拆为连续两段，不能以第一段代替本节出口。**b1 账本基础**先为第 2/4 项建立表、租户与 append-only 约束，并让正式费用风险门合并普通/Eval 计数；RED 是 disposable PG 上缺两表，专项与原申请/费用门相邻回归。**b2 真正预留**再执行第 1/3 项、并发及风险上限正向/拒绝测试，只有 b2 GREEN 才能称 GT-b4c-b 完成。拆分是因为当前无可执行 Provider 物理额度，b1 单独部署也不会产生首评预留或发送许可；本波不改变目标完成定义。
 
-1. `services/aos-api/tests/aip/test_model_eval_budget_reservation_pg.py`：disposable PG 复用真实持久申请及原 maker/checker 审批 fixture；先 RED：当前无 Eval hold store/table；验证无批准、maker 自批、过期/撤回、预算政策或 Model head 漂移均零桶增量；相同申请幂等；不同申请 Eval/普通共享日/月余额并发只准一方；三桶失败全回滚；跨租户零行；未知状态不释放。
+b2 继续按证据拆为 **b2a 原申请/批准与 Eval 共桶事务**、**b2b 普通 Task 与 Eval 的同账本并发及正式开发风险额度正反证明**。b2a 的 helper 只从既有 PG 测试提取原造数，必须保持原断言；writer 在调用者的 SERIALIZABLE 事务中运行，不自行 commit。b2a 仍未满足 b2 出口；b2b 须以真普通 Task/审批及正式费用消费 fixture 证明，不用手写桶数冒充普通业务路径。
+
+1. `services/aos-api/tests/aip/test_model_eval_budget_reservation_pg.py`：disposable PG 复用真实持久申请及原 maker/checker 审批 fixture；为避免复制约 150 行造数，`test_model_eval_request_pg.py` 的既有测试仅提取一个返回原审批前状态的测试 helper，原全部断言由 wrapper 保留。先 RED：当前无 Eval hold store/table；验证无批准、maker 自批、过期/撤回、预算政策或 Model head 漂移均零桶增量；相同申请幂等；不同申请 Eval/普通共享日/月余额并发只准一方；三桶失败全回滚；跨租户零行；未知状态不释放。
 2. `services/aos-api/alembic/versions/a0v_134_model_eval_budget_reservation.py`：仅追加独立表、索引、RLS/最小 GRANT 与防改触发器。正式迁移只在独立恢复波处理。
 3. `services/aos-api/aos_api/aip_model_eval_budget_reservation.py`：受调用者事务约束的持久读取、原 Action 和预算权威复验、同桶占额；复用原三桶锁函数，不复制普通 Task 接口。
 4. `services/aos-api/aos_api/aip_budget_cost_runtime.py`：正式费用风险门在 fence 锁后合并普通及 Eval exposure，新增表不存在时 fail closed；专项证实超限及并发。历史非正式成本预算沿原路径；正式记录不能漏算。

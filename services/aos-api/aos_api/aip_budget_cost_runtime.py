@@ -15,6 +15,24 @@ class BudgetCostRuntimeBlocked(ValueError):
     pass
 
 
+def shared_risk_totals(conn, scope, budget_id: str) -> tuple[int, int]:
+    """Count ordinary and Model Eval exposure under one BudgetRevision."""
+    row=conn.execute("""SELECT sum(n) AS n,sum(risk) AS risk FROM (
+        SELECT count(*) AS n,coalesce(sum(upper_bound_minor),0) AS risk
+          FROM public.aip_budget_reservation
+         WHERE org_id=%s AND project_id=%s
+           AND policy_ref->>'resourceType'='BudgetRevision'
+           AND policy_ref->>'resourceId'=%s
+        UNION ALL
+        SELECT count(*) AS n,coalesce(sum(upper_bound_minor),0) AS risk
+          FROM public.aip_model_eval_budget_reservation
+         WHERE org_id=%s AND project_id=%s
+           AND budget_revision_ref->>'resourceType'='BudgetRevision'
+           AND budget_revision_ref->>'resourceId'=%s
+    ) shared_exposure""",(*scope.key,budget_id,*scope.key,budget_id)).fetchone()
+    return int(row['n']), int(row['risk'])
+
+
 def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *, provider_ref=None, new_hold=True) -> ModelPriceSnapshotRevision | None:
     """Return the verified cost price, or None for the legacy non-cost path.
 
@@ -95,21 +113,9 @@ def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *
         # Both callers spend the same activated BudgetRevision.  Keep this
         # query after the writable fence lock so concurrent ordinary and Eval
         # holds cannot each observe the other's old total.
-        totals=conn.execute("""SELECT sum(n) AS n,sum(risk) AS risk FROM (
-            SELECT count(*) AS n,coalesce(sum(upper_bound_minor),0) AS risk
-              FROM public.aip_budget_reservation
-             WHERE org_id=%s AND project_id=%s
-               AND policy_ref->>'resourceType'='BudgetRevision'
-               AND policy_ref->>'resourceId'=%s
-            UNION ALL
-            SELECT count(*) AS n,coalesce(sum(upper_bound_minor),0) AS risk
-              FROM public.aip_model_eval_budget_reservation
-             WHERE org_id=%s AND project_id=%s
-               AND budget_revision_ref->>'resourceType'='BudgetRevision'
-               AND budget_revision_ref->>'resourceId'=%s
-        ) shared_exposure""",(*scope.key,p.target.budget_id,*scope.key,p.target.budget_id)).fetchone()
+        used_count, used_risk = shared_risk_totals(conn,scope,p.target.budget_id)
         extra=1 if new_hold else 0
-        if totals['n']+extra>p.basis.max_requests or totals['risk']+upper_bound_minor*extra>p.basis.total_risk_minor:
+        if used_count+extra>p.basis.max_requests or used_risk+upper_bound_minor*extra>p.basis.total_risk_minor:
             raise ValueError('risk allowance exhausted')
         return price
     except Exception as exc:
