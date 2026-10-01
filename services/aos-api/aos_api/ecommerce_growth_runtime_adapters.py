@@ -2881,7 +2881,15 @@ class ReviewAdvanceHostService:
     def _revalidate_analysis_runtime(
         *, transaction, scope, command, artifact_task_run_id: str,
         expected_cutoff: str | None = None,
+        accepted_stage_task_run_id: str | None = None,
     ) -> None:
+        if accepted_stage_task_run_id is not None and (
+            type(accepted_stage_task_run_id) is not str
+            or command.get("sourceKind") != "accepted-stage-v1"
+            or command.get("stageTaskRunId") != accepted_stage_task_run_id
+            or artifact_task_run_id != accepted_stage_task_run_id
+        ):
+            raise ValueError("accepted stage Analysis/TaskRun lineage drifted")
         supplied = command["analysisReceiptRef"]
         receipt_rows = transaction.execute(
             """SELECT request_hash,response,target_receipt_ref
@@ -3048,7 +3056,10 @@ class ReviewAdvanceHostService:
         if (
             historical_task_run_ref.resource_id != binding.task_run_ref.resource_id
             or historical_task_run_ref.revision > binding.task_run_ref.version
-            or binding.task_run_status is not TaskRunStatus.SUCCEEDED
+            or binding.task_run_status not in (
+                {TaskRunStatus.RUNNING, TaskRunStatus.PAUSED, TaskRunStatus.SUCCEEDED}
+                if accepted_stage_task_run_id is not None else {TaskRunStatus.SUCCEEDED}
+            )
             or artifact_task_run_id != binding.task_run_ref.resource_id
         ):
             raise ValueError("review Analysis/Plan/TaskRun/Artifact lineage drifted")
@@ -3301,8 +3312,13 @@ class ReviewAdvanceHostService:
         if dispatch.operation_id != "ecommerce_growth_review_advance":
             raise ValueError("review dispatch operation drifted")
         if command.get("sourceKind") == "accepted-stage-v1":
-            self._revalidate_accepted_stage_source(
+            stage_source = self._revalidate_accepted_stage_source(
                 transaction=transaction, scope=scope, command=command)
+            self._revalidate_analysis_runtime(
+                transaction=transaction, scope=scope, command=command,
+                artifact_task_run_id=stage_source.decision.task_run_id,
+                accepted_stage_task_run_id=stage_source.decision.task_run_id,
+            )
             raise ValueError("accepted stage Handoff Task/Brief is not wired")
         occurrence_reader, cases, _receipts = self._components(transaction, scope)
         try:

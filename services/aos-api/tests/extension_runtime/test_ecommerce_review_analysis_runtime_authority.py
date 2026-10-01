@@ -262,6 +262,29 @@ def test_review_analysis_runtime_accepts_exact_authorities():
     )
 
 
+@pytest.mark.parametrize("status", ["running", "paused"])
+def test_accepted_stage_links_running_original_task_run_without_relaxing_issue_review(status):
+    values = authorities()
+    values["runtime"]["status"] = status
+    values["runtime"]["finished_at"] = None
+    with pytest.raises(ValueError, match="lineage"):
+        ReviewAdvanceHostService._revalidate_analysis_runtime(
+            transaction=Transaction(values), scope=SCOPE, command=values["command"],
+            artifact_task_run_id="task-run-1",
+        )
+    stage_command = {**values["command"], "sourceKind": "accepted-stage-v1",
+                     "stageTaskRunId": "task-run-1"}
+    ReviewAdvanceHostService._revalidate_analysis_runtime(
+        transaction=Transaction(values), scope=SCOPE, command=stage_command,
+        artifact_task_run_id="task-run-1", accepted_stage_task_run_id="task-run-1",
+    )
+    with pytest.raises(ValueError, match="lineage"):
+        ReviewAdvanceHostService._revalidate_analysis_runtime(
+            transaction=Transaction(values), scope=SCOPE, command=stage_command,
+            artifact_task_run_id="task-run-1", accepted_stage_task_run_id="another-run",
+        )
+
+
 def test_review_analysis_runtime_locks_current_mutable_authorities():
     values = authorities()
     transaction = Transaction(values)
