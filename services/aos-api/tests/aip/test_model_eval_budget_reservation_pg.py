@@ -2,7 +2,9 @@
 
 import psycopg
 import pytest
+import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 from threading import Barrier
 
 from aos_api.aip_action_models import DecideActionProposalRequest
@@ -203,6 +205,56 @@ def test_two_approved_evals_cannot_concurrently_overspend_daily_bucket():
         assert conn.execute("""SELECT count(*) AS n FROM aip_model_eval_budget_reservation
             WHERE request_id IN (%s,%s)""",
             (first["request_id"], second["request_id"])).fetchone()["n"] == 1
+
+
+def test_natural_eval_expiry_blocks_new_hold_and_keeps_prior_hold():
+    from aos_api.aip_model_eval_budget_reservation import (
+        AipModelEvalBudgetReservationStore, ModelEvalBudgetBlocked,
+    )
+
+    scope, held_request, held_application, held_proposal, _, budget, _, _ = (
+        seeded_approved_model_eval_request(
+            stop_after_approval=True, expiry_after=timedelta(seconds=20),
+        )
+    )
+    _, unheld_request, unheld_application, unheld_proposal, _, _, _, _ = (
+        seeded_approved_model_eval_request(
+            stop_after_approval=True, expiry_after=timedelta(seconds=20),
+        )
+    )
+    store = AipModelEvalBudgetReservationStore()
+    held_event = _approval_event(scope, held_proposal.proposal.id)
+    unheld_event = _approval_event(scope, unheld_proposal.proposal.id)
+    with connect_serializable(scope) as conn:
+        held = store.hold(conn, scope, held_request["request_id"], held_event)
+    wait_until = max(held_application.expires_at,
+                     unheld_application.expires_at)
+    time.sleep(max(0, (wait_until - datetime.now(UTC)).total_seconds() + 0.25))
+    for request_id, event_id in (
+        (held_request["request_id"], held_event),
+        (unheld_request["request_id"], unheld_event),
+    ):
+        with pytest.raises(ModelEvalBudgetBlocked, match="current immutable"):
+            with connect_serializable(scope) as conn:
+                store.hold(conn, scope, request_id, event_id)
+    with connect_serializable(scope) as conn:
+        rows = conn.execute("""SELECT request_id,reservation_id,state
+            FROM aip_model_eval_budget_reservation
+            WHERE request_id IN (%s,%s)""", (
+                held_request["request_id"], unheld_request["request_id"],
+            )).fetchall()
+        assert rows == [{"request_id": held_request["request_id"],
+                         "reservation_id": held["reservation_id"],
+                         "state": "held"}]
+        buckets = conn.execute("""SELECT bucket_kind,held_minor FROM aip_budget_bucket
+            WHERE org_id=%s AND project_id=%s
+              AND account_id IN (%s,%s,%s) ORDER BY bucket_kind""", (
+                *scope.key, f"model-eval/{held_request['request_id']}",
+                f"{budget.budget_id}:daily", f"{budget.budget_id}:pilot",
+            )).fetchall()
+        assert len(buckets) == 3
+        assert all(int(row["held_minor"]) == held_application.upper_bound_minor
+                   for row in buckets)
 
 
 def test_model_eval_hold_requires_serializable_runtime_tenant():

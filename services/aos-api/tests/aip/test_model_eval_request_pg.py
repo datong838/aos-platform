@@ -146,9 +146,10 @@ def test_model_eval_request_rejects_missing_current_model_without_writing():
 
 def seeded_approved_model_eval_request(*, stop_after_approval: bool = False,
                                       formal_sources=None, upper_bound_minor: int = 200,
-                                      provider_model_id: str = "m"):
+                                      provider_model_id: str = "m",
+                                      expiry_after: timedelta = timedelta(minutes=30)):
     suffix = uuid.uuid4().hex[:10]
-    expiry = datetime.now(UTC) + timedelta(minutes=30)
+    expiry = datetime.now(UTC) + expiry_after
     since = datetime.now(UTC) - timedelta(hours=1)
     until = datetime.now(UTC) + timedelta(days=2)
     suite_id, contract_id = f"suite-{suffix}", f"contract-{suffix}"
