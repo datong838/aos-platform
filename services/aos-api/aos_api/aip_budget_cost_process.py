@@ -3,10 +3,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 import hashlib
 import json
-import math
 import os
 from pathlib import Path
-import struct
 
 from aos_api.aip_budget_cost_connection import BudgetCostDatabaseConfig, BudgetCostConnectionFactory
 from aos_api.aip_budget_cost_issuer import (
@@ -20,11 +18,13 @@ from aos_api.aip_network_issuer_attempt import (
 )
 from aos_api.aip_network_issuer_auth import _require_external_oidc_config
 from aos_api.aip_network_issuer_ipc import (
-    MAX_ISSUER_FRAME_BYTES, _unique_pairs, _invalid_constant, read_issuer_frame,
-    require_issuer_peer, open_private_issuer_listener,
+    open_private_issuer_listener,
 )
 from aos_api.aip_private_listener import owned_private_listener
 from aos_api.tenant_scope import TenantScope
+from aos_api.aip_private_process import (
+    validate_private_process, decode_private_request, serve_private_connection, run_private_process,
+)
 
 
 @dataclass(frozen=True)
@@ -40,26 +40,9 @@ class BudgetCostProcessConfig:
     accept_timeout: float = 5.0
 
     def __post_init__(self):
-        try:
-            if (type(self.database) is not BudgetCostDatabaseConfig or type(self.scope) is not TenantScope
-                    or any(type(v) is not int or v <= 0 for v in (self.api_uid, self.issuer_uid, self.ipc_gid))
-                    or self.api_uid == self.issuer_uid or self.issuer_uid != os.geteuid()
-                    or self.ipc_gid != os.getegid()
-                    or type(self.max_connections) is not int or not 1 <= self.max_connections <= 64
-                    or type(self.accept_timeout) not in (int, float)
-                    or not math.isfinite(self.accept_timeout) or not 0 < self.accept_timeout <= 30):
-                raise ValueError()
-            for name in ('socket_path', 'attempt_directory'):
-                value = Path(getattr(self, name))
-                if not value.is_absolute():
-                    raise ValueError()
-                if name == 'socket_path' and (len(os.fsencode(value)) > 103 or '\0' in str(value)):
-                    raise ValueError('macOS Unix socket path exceeds kernel limit')
-                object.__setattr__(self, name, value)
-            self.database.__post_init__()
-            self.scope.__post_init__()
-        except Exception:
-            raise BudgetCostIssuerBlocked('BUDGET_COST_PROCESS_CONFIG_REQUIRED') from None
+        validate_private_process(self, database_type=BudgetCostDatabaseConfig,
+            service_uid=self.issuer_uid, blocked=BudgetCostIssuerBlocked,
+            error_code='BUDGET_COST_PROCESS_CONFIG_REQUIRED')
 
 
 def admitted_factory(config):
@@ -73,19 +56,8 @@ def admitted_factory(config):
 
 
 def decode_budget_request(raw):
-    try:
-        if type(raw) is not bytes or not 0 < len(raw) <= MAX_ISSUER_FRAME_BYTES:
-            raise ValueError()
-        frame = json.loads(raw.decode('utf-8'), object_pairs_hook=_unique_pairs,
-                           parse_constant=_invalid_constant)
-        if (type(frame) is not dict or set(frame) != {'schemaVersion', 'method', 'payload'}
-                or type(frame['schemaVersion']) is not int or frame['schemaVersion'] != 1
-                or frame['method'] not in ('execute_once', 'inquiry') or type(frame['payload']) is not dict):
-            raise ValueError()
-        command = BudgetCostIssuerCommand.model_validate(frame['payload'])
-        return frame['method'], command
-    except Exception:
-        raise BudgetCostIssuerBlocked('BUDGET_COST_WIRE_INVALID') from None
+    return decode_private_request(raw, request_type=BudgetCostIssuerCommand,
+        blocked=BudgetCostIssuerBlocked, error_code='BUDGET_COST_WIRE_INVALID')
 
 
 def dispatch_budget_request(config, method, command):
@@ -131,27 +103,10 @@ def dispatch_budget_request(config, method, command):
 
 
 def serve_budget_connection(conn, config):
-    response = {'schemaVersion': 1, 'status': 'blocked', 'code': 'BUDGET_COST_REQUEST_BLOCKED'}
-    processed = False
-    try:
-        require_issuer_peer(conn, api_uid=config.api_uid, issuer_uid=config.issuer_uid)
-        method, command = decode_budget_request(read_issuer_frame(conn))
-        if (command.org_id, command.project_id) != config.scope.key:
-            raise BudgetCostIssuerBlocked('BUDGET_COST_PROCESS_SCOPE_REQUIRED')
-        response = {'schemaVersion': 1, **dispatch_budget_request(config, method, command)}
-        processed = True
-    except Exception:
-        # Never return bearer tokens, raw SQL, tenant data or exception text.
-        pass
-    try:
-        body = json.dumps(response, separators=(',', ':')).encode()
-        conn.settimeout(5)
-        conn.sendall(struct.pack('>I', len(body)) + body)
-    except OSError:
-        processed = False
-    finally:
-        conn.close()
-    return processed
+    return serve_private_connection(conn, api_uid=config.api_uid, service_uid=config.issuer_uid,
+        scope=config.scope, decode=decode_budget_request,
+        dispatch=lambda method, command: dispatch_budget_request(config, method, command),
+        error_code='BUDGET_COST_REQUEST_BLOCKED')
 
 
 @contextmanager
@@ -174,17 +129,4 @@ def budget_listener(config):
 
 
 def run_budget_process(config):
-    accepted = processed = 0
-    with budget_listener(config) as listener:
-        listener.settimeout(config.accept_timeout)
-        for _ in range(config.max_connections):
-            try:
-                conn, _ = listener.accept()
-            except TimeoutError:
-                break
-            accepted += 1
-            try:
-                processed += int(serve_budget_connection(conn, config))
-            finally:
-                conn.close()
-    return {'accepted': accepted, 'processed': processed}
+    return run_private_process(config, listener_factory=budget_listener, serve=serve_budget_connection)
