@@ -69,7 +69,7 @@ def prepared(monkeypatch):
     # These two source substitutes are explicit. Identity, metadata, marking,
     # risk, amount, binding, Store SQL, maker/checker and replay run unchanged.
     envelope = {"isolatedSource": key}
-    monkeypatch.setattr(ContentBudgetCommandOwner, "_prepare_sources", classmethod(lambda *a, **kw: sources))
+    monkeypatch.setattr(ContentBudgetCommandOwner, "_prepare_approval_sources", classmethod(lambda *a, **kw: sources))
     monkeypatch.setattr(binding, "source_envelope", lambda *a: dict(envelope))
     principal = lambda actor: Principal(actor, *SCOPE.key, token_kind="oidc")
     with connect(SCOPE) as conn:
@@ -130,7 +130,8 @@ def test_real_draft_approval_binding_and_replay(prepared):
         with pytest.raises(BudgetReservationBlocked, match="first content current source"):
             AipBudgetReservationStore()._approval_authority(conn, SCOPE, approval_ref,
                 datetime.now(timezone.utc), task_ref=p.sources.task_ref,
-                operation_id=binding.ACTION, upper_bound_minor=500)
+                operation_id=binding.ACTION, upper_bound_minor=500,
+                policy_ref=p.sources.task_ref, pricing_ref=p.sources.task_ref, invocation_key=p.key)
         p.envelope["isolatedSource"] = "changed"
         with pytest.raises(AipActionTransitionBlocked, match="BINDING_DRIFTED"):
             binding.revalidate_first_content_approval(HostTransaction(conn), SCOPE, event, p.sources, p.key)
@@ -198,7 +199,7 @@ def test_generic_budget_checks_exact_source_pair_and_natural_key(prepared, monke
     # not grant a real source or call reserve/produce a held reservation.
     admitted = SimpleNamespace(authorities={"budget": budget.model_dump(mode="json", by_alias=True),
                                             "pricing": price.model_dump(mode="json", by_alias=True)})
-    monkeypatch.setattr(binding, "require_first_content_budget_source", lambda *a: admitted)
+    monkeypatch.setattr(binding, "require_first_content_budget_source", lambda *a, **kw: admitted)
     with connect(SCOPE) as conn:
         event = conn.execute("""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
             actor_id,reason,expires_at,created_at,action_binding_hash FROM aip_action_approval_event
@@ -215,3 +216,54 @@ def test_generic_budget_checks_exact_source_pair_and_natural_key(prepared, monke
         else: args["invocation_key"] = "other"
         with pytest.raises(BudgetReservationBlocked, match="current source authority"):
             store._approval_authority(conn, SCOPE, ref, datetime.now(timezone.utc), **args)
+
+
+@pytest.mark.parametrize("outcome", ["success", "failure", "expired"])
+def test_capacity_gate_commits_only_with_outer_approval_transaction(prepared, monkeypatch, outcome):
+    """Real PG capacity rollback/commit; AgentRun transition/source are explicit doubles."""
+    from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
+    from aos_api.ecommerce_content_capacity_owner import ContentCapacityOwner
+    from aos_api.aip_agent_registry_contracts import AgentRunStatus
+    from tests.aip import test_aip7_capacity_reservation_db as pool_fixture
+    p = prepared
+    proposal = _propose(p, **({"expires_at": datetime.now(timezone.utc) + timedelta(seconds=3)}
+                             if outcome == "expired" else {}))
+    approved = p.checker_store.decide(SCOPE, p.checker, proposal.proposal.id, p.key,
+        DecideActionProposalRequest(expectedProposalVersion=proposal.proposal.version,
+            expectedProposalHash=proposal.proposal.proposal_hash, decision="approved"))
+    original_ref = pool_fixture.ref
+    monkeypatch.setattr(pool_fixture, "ref", lambda kind, name: original_ref(kind, p.key + name))
+    monkeypatch.setattr(pool_fixture, "POOL", "gn-pool-" + p.key)
+    pool_fixture.setup_pool()
+    current = SimpleNamespace(agent_run_id="gn-agent-" + p.key, version=1)
+    observed = []
+    owner = ContentCapacityOwner(connect_write=connect)
+    def admit(transaction, scope, review_key, *, token):
+        observed.append(transaction.execute("SELECT txid_current() AS n").fetchone()["n"])
+        return current, SimpleNamespace(resource_id=approved.approvals[0].id)
+    monkeypatch.setattr(owner, "_admit", admit)
+    class TransitionDouble:
+        def __init__(self, bound, **kwargs): self.bound = bound
+        def transition(self, scope, agent_run_id, **kwargs):
+            with self.bound(scope) as conn:
+                observed.append(conn.execute("SELECT txid_current() AS n").fetchone()["n"])
+            AipModelCapacityReservationGate(self.bound).reserve(scope, pool_fixture.resolved(), agent_run_id)
+            with connect(scope) as other:
+                assert other.execute("SELECT count(*) AS n FROM aip_model_capacity_reservation WHERE agent_run_id=%s",
+                                     (agent_run_id,)).fetchone()["n"] == 0
+            if outcome == "failure": raise RuntimeError("isolated failure after capacity reserve")
+            if outcome == "expired":
+                with self.bound(scope) as conn:
+                    conn.execute("SELECT pg_sleep(GREATEST(0,EXTRACT(EPOCH FROM %s::timestamptz-clock_timestamp())) + 0.05)",
+                                 (proposal.proposal.expires_at,))
+            return SimpleNamespace(status=AgentRunStatus.RUNNING)
+    monkeypatch.setattr("aos_api.ecommerce_content_capacity_owner.AipAgentRunService", TransitionDouble)
+    if outcome != "success":
+        with pytest.raises(RuntimeError, match="isolated failure" if outcome == "failure" else "approval expired"):
+            owner._transition(SCOPE, current, p.key, uuid4())
+    else:
+        assert owner._transition(SCOPE, current, p.key, uuid4()).status is AgentRunStatus.RUNNING
+    assert len(observed) == 2 and observed[0] == observed[1]
+    with connect(SCOPE) as conn:
+        assert conn.execute("SELECT count(*) AS n FROM aip_model_capacity_reservation WHERE agent_run_id=%s",
+                            (current.agent_run_id,)).fetchone()["n"] == (1 if outcome == "success" else 0)

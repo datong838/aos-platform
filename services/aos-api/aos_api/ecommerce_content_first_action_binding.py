@@ -123,18 +123,18 @@ def source_envelope(transaction, scope, review_key, sources):
     runtime = asdict(sources.snapshot)
     runtime.pop("checked_at")
     ref = lambda value: value.model_dump(mode="json", by_alias=True)
-    value = dict(schemaVersion=1, tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
+    value = dict(schemaVersion=2, tenant=dict(orgId=scope.org_id, projectId=scope.project_id),
         reviewKey=review_key, reviewReceipt=context.response["receiptRef"],
         agentRunId=context.agent_run_id, agentRequest=ref(context.request), runtime=runtime,
         planRef=dict(resourceType="PlanRevision", resourceId=plan_ref.resource_id,
                      revision=int(plan_ref.revision), contentHash="sha256:" + plan["content_hash"].removeprefix("sha256:")),
-        authorityRefs=sources.authorities, sourceArtifactRefs=sources.source_artifact_refs,
+        authorityRefs={key: value for key, value in sources.authorities.items()
+                       if key != "capacity_reservation"}, sourceArtifactRefs=sources.source_artifact_refs,
         factSourceRefs=sources.fact_source_refs, modelRef=ref(resolution.selected_model),
         providerRef=ref(resolution.selected_provider), providerModelId=model.provider_model_id,
         runtimePolicyRef=ref(resolution.policy), quotaPolicyRef=ref(context.runtime_policy.quota_policy_ref),
         budgetPolicyRef=ref(context.runtime_policy.budget_policy_ref),
         maxInputTokens=sources.quota.max_input_tokens, maxOutputTokens=sources.quota.max_output_tokens,
-        capacityExpiresAt=context.capacity["expires_at"],
         quotaExpiresAt=sources.quota.effective_until,
         budgetPolicyExpiresAt=context.budget_policy.effective_until)
     return json.loads(json.dumps(value, default=str))
@@ -147,7 +147,7 @@ def _request(transaction, scope, review_key, amount, expires_at, sources):
     context = sources.action_context
     if (type(expires_at) is not datetime or expires_at.utcoffset() is None
             or not now < expires_at <= min(now + timedelta(minutes=15),
-                context.capacity["expires_at"], sources.quota.effective_until,
+                sources.quota.effective_until,
                 context.budget_policy.effective_until)):
         _deny("CURRENT_EXPIRY_REQUIRED")
     return CreateActionProposalRequest(actionTypeId=ACTION,
@@ -159,7 +159,7 @@ def _request(transaction, scope, review_key, amount, expires_at, sources):
 
 
 def _binding(scope, request, snapshot, risk):
-    return canonical_hash(dict(domain="aos-first-content-action/v1", tenant=scope.key,
+    return canonical_hash(dict(domain="aos-first-content-action/v2", tenant=scope.key,
         request=request.model_dump(mode="json", by_alias=True), actionType=snapshot,
         policy={"floor": risk.floor.value, "reasons": list(risk.reasons), **risk.approval_policy}))
 
@@ -187,7 +187,7 @@ class FirstContentActionGuard:
         if set(payload) != KEYS:
             _deny("EXACT_PAYLOAD_REQUIRED")
         transaction = HostTransaction(conn)
-        sources = ContentBudgetCommandOwner._prepare_sources(transaction, scope, payload["firstContentReviewKey"])
+        sources = ContentBudgetCommandOwner._prepare_approval_sources(transaction, scope, payload["firstContentReviewKey"])
         expected = _request(transaction, scope, payload["firstContentReviewKey"],
                             payload["budgetUpperBoundMinor"], body.expires_at, sources)
         expected_risk = classify_action_risk(ACTION, snapshot, expected.payload, None)
@@ -211,7 +211,7 @@ class FirstContentActionGuard:
             _deny("INDEPENDENT_CHECKER_REQUIRED")
         roles = _actor(conn, scope, actor, _metadata(conn), checker=checker)
         from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
-        sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), scope,
+        sources = ContentBudgetCommandOwner._prepare_approval_sources(HostTransaction(conn), scope,
                                                              row["payload"]["firstContentReviewKey"])
         _verify_row(conn, scope, row, sources)
         return roles
@@ -271,18 +271,21 @@ def revalidate_first_content_approval(transaction, scope, event, sources, review
     _actor(transaction, scope, event["actor_id"], _metadata(transaction), checker=True)
 
 
-def require_first_content_budget_source(conn, scope, event, payload):
+def require_first_content_budget_source(conn, scope, event, payload, *, require_capacity=True):
     from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner
     if type(payload) is not dict or set(payload) != KEYS:
         _deny("EXACT_PAYLOAD_REQUIRED")
     key = payload["firstContentReviewKey"]
     transaction = HostTransaction(conn)
-    intent = transaction.execute("""SELECT state,claim_token FROM ecommerce_growth_content_budget_command_intent
-        WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""", (*scope.key, key)).fetchone()
-    if intent is None or intent["state"] not in {"pending", "claimed"}:
-        _deny("CURRENT_INTENT_REQUIRED")
-    token = intent["claim_token"] if intent["state"] == "claimed" else None
-    sources = ContentBudgetCommandOwner._prepare_sources(transaction, scope, key, claimed_token=token)
+    if require_capacity:
+        intent = transaction.execute("""SELECT state,claim_token FROM ecommerce_growth_content_budget_command_intent
+            WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""", (*scope.key, key)).fetchone()
+        if intent is None or intent["state"] not in {"pending", "claimed"}:
+            _deny("CURRENT_INTENT_REQUIRED")
+        token = intent["claim_token"] if intent["state"] == "claimed" else None
+        sources = ContentBudgetCommandOwner._prepare_sources(transaction, scope, key, claimed_token=token)
+    else:
+        sources = ContentBudgetCommandOwner._prepare_approval_sources(transaction, scope, key)
     revalidate_first_content_approval(transaction, scope, event, sources, key)
     return sources
 
@@ -294,7 +297,7 @@ def preview_first_content(scope, authorization, review_key, amount, expires_at):
         snapshot = _metadata(conn)
         _actor(conn, scope, principal.subject, snapshot, checker=False)
         transaction = HostTransaction(conn)
-        sources = ContentBudgetCommandOwner._prepare_sources(transaction, scope, review_key)
+        sources = ContentBudgetCommandOwner._prepare_approval_sources(transaction, scope, review_key)
         request = _request(transaction, scope, review_key, amount, expires_at, sources)
         # No risk-fence update/claim/hold; transaction contains only reads/locks.
         conn.rollback()

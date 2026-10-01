@@ -1312,7 +1312,9 @@ class AipBudgetReservationStore:
             if self._authority_schema != "public":
                 raise BudgetReservationBlocked("first content requires current public source authority")
             try:
-                sources = require_first_content_budget_source(conn, scope, row, payload)
+                sources = require_first_content_budget_source(conn, scope, row, payload,
+                    require_capacity=any(value is not None for value in
+                        (policy_ref, pricing_ref, invocation_key)))
                 if policy_ref is not None or pricing_ref is not None or invocation_key is not None:
                     if (policy_ref is None or pricing_ref is None
                             or invocation_key != payload["firstContentReviewKey"]

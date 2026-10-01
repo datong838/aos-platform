@@ -44,10 +44,11 @@ def test_capacity_owner_unknown_transition_spends_claim_without_resend(monkeypat
         yield Conn()
 
     owner = ContentCapacityOwner(connect_read=connect, connect_write=connect)
-    monkeypatch.setattr(owner, "_preflight", lambda *_: SimpleNamespace(
+    monkeypatch.setattr(owner, "_preflight", lambda *_, **kw: SimpleNamespace(
         agent_run_id="agent-1", version=1))
     monkeypatch.setattr(owner, "_transition", lambda *_: (
         calls.append("transition"), (_ for _ in ()).throw(RuntimeError("unknown commit"))))
+    monkeypatch.setattr(owner, "_admit", lambda *a, **kw: None)
     assert owner.claim(SCOPE, "review-1", token=token) == token
     with pytest.raises(RuntimeError, match="unknown commit"):
         owner.execute_claim(SCOPE, "review-1", token)
@@ -103,7 +104,7 @@ def test_capacity_owner_accepts_only_read_back_running_reservation(monkeypatch):
         yield Conn()
 
     owner = ContentCapacityOwner(connect_read=connect, connect_write=connect)
-    monkeypatch.setattr(owner, "_preflight", lambda *_: current)
+    monkeypatch.setattr(owner, "_preflight", lambda *_, **kw: current)
     monkeypatch.setattr(owner, "_transition", lambda *_: (
         events.append("transition"), SimpleNamespace(status=AgentRunStatus.RUNNING))[1])
     monkeypatch.setattr(ContentAgentRunOwner, "_build_request", staticmethod(
@@ -141,6 +142,24 @@ def test_existing_or_unknown_capacity_never_consumes_another_attempt(monkeypatch
         yield
 
     owner = ContentCapacityOwner(connect_write=forbidden_connect)
-    monkeypatch.setattr(owner, "_preflight", lambda *_: (
+    monkeypatch.setattr(owner, "_preflight", lambda *_, **kw: (
         _ for _ in ()).throw(ContentCapacityConflict("already reserved; reconcile")))
+    assert owner.claim(SCOPE, "review-1") is None
+
+
+@pytest.mark.parametrize("failure_stage", ["preflight", "claim_transaction"])
+def test_missing_approval_does_not_spend_capacity_attempt(monkeypatch, failure_stage):
+    from aos_api.ecommerce_content_capacity_owner import ContentCapacityOwner, ContentCapacityConflict
+    class Conn:
+        def execute(self, *args): pytest.fail("claim SQL reached without approval")
+        def commit(self): pytest.fail("commit reached without approval")
+    @contextmanager
+    def connect(_scope): yield Conn()
+    owner = ContentCapacityOwner(connect_write=connect)
+    def deny(*args, **kwargs): raise ContentCapacityConflict("no current approval")
+    if failure_stage == "preflight":
+        monkeypatch.setattr(owner, "_preflight", deny)
+    else:
+        monkeypatch.setattr(owner, "_preflight", lambda *a: None)
+        monkeypatch.setattr(owner, "_admit", deny)
     assert owner.claim(SCOPE, "review-1") is None

@@ -89,7 +89,7 @@ class ContentBudgetCommandOwner:
     @classmethod
     def _prepare_sources(
         cls, transaction: HostTransaction, scope: TenantScope, review_key: str,
-        *, claimed_token: UUID | None = None,
+        *, claimed_token: UUID | None = None, before_capacity: bool = False,
     ) -> SimpleNamespace:
         """Revalidate sources in the caller's transaction without consuming approval.
 
@@ -98,30 +98,52 @@ class ContentBudgetCommandOwner:
         """
         if (type(transaction) is not HostTransaction or type(scope) is not TenantScope
                 or type(review_key) is not str or not 1 <= len(review_key.strip()) <= 200
-                or review_key != review_key.strip()):
+                or review_key != review_key.strip() or type(before_capacity) is not bool):
             raise ValueError("scoped exact content budget preflight required")
-        intent = transaction.execute(
-            """SELECT state,attempt,claim_token,task_run_id,agent_run_id,capacity_reservation_id,
-                      command_key,installation_id,generation,execution_epoch
-                 FROM public.ecommerce_growth_content_budget_command_intent
-                WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
-            (*scope.key, review_key),
-        ).fetchone()
+        if before_capacity:
+            intent = transaction.execute(
+                """SELECT state,attempt,claim_token,task_run_id,agent_run_id
+                    FROM public.ecommerce_growth_content_capacity_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
+                (*scope.key, review_key),
+            ).fetchone()
+        else:
+            intent = transaction.execute(
+                """SELECT state,attempt,claim_token,task_run_id,agent_run_id,capacity_reservation_id,
+                          command_key,installation_id,generation,execution_epoch
+                     FROM public.ecommerce_growth_content_budget_command_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
+                (*scope.key, review_key),
+            ).fetchone()
         expected_claim = (
             ("pending", 0, None) if claimed_token is None
             else ("claimed", 1, claimed_token)
         )
         if (intent is None or (intent["state"], intent["attempt"], intent["claim_token"])
-                != expected_claim or intent["command_key"] != review_key):
+                != expected_claim or not before_capacity and intent["command_key"] != review_key):
             raise ContentBudgetCommandConflict("pending content budget origin unavailable")
+        current_function = ("ecommerce_growth_content_capacity_current_a0v_103" if before_capacity
+                            else "ecommerce_growth_content_budget_command_current_a0v_104")
         current = transaction.execute(
-            "SELECT public.ecommerce_growth_content_budget_command_current_a0v_104(%s,%s,%s) AS current",
+            f"SELECT public.{current_function}(%s,%s,%s) AS current",
             (*scope.key, review_key),
         ).fetchone()
         if current is None or current["current"] is not True:
             raise ContentBudgetCommandConflict("content budget origin no longer current")
         origin, response = ContentTaskRunOwner._origin(transaction, scope, review_key)
-        if ((origin["installation_id"], origin["generation"], origin["execution_epoch"])
+        if before_capacity:
+            # These fields come from the verified Review origin, not invented
+            # budget intent fields. Approval cannot create that later intent.
+            intent = {**intent, **{key: origin[key] for key in
+                ("installation_id", "generation", "execution_epoch")}}
+            existing = transaction.execute(
+                """SELECT reservation_id FROM public.aip_model_capacity_reservation
+                    WHERE org_id=%s AND project_id=%s AND agent_run_id=%s LIMIT 1""",
+                (*scope.key, intent["agent_run_id"]),
+            ).fetchone()
+            if existing is not None:
+                raise ContentBudgetCommandConflict("content capacity already attempted; reconcile")
+        elif ((origin["installation_id"], origin["generation"], origin["execution_epoch"])
                 != (intent["installation_id"], intent["generation"], intent["execution_epoch"])):
             raise ContentBudgetCommandConflict("content budget installation lineage drifted")
         dispatch_row = transaction.execute(
@@ -161,8 +183,11 @@ class ContentBudgetCommandOwner:
             raise ContentBudgetCommandConflict("content TaskRun lineage drifted")
         bound = TransactionBoundConnectFactory(transaction, scope)
         agent = AipAgentRunService(bound).get(scope, intent["agent_run_id"])
-        if (agent.status is not AgentRunStatus.RUNNING
+        if (agent.status is not (AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING)
+                or before_capacity and agent.version != 1
                 or agent.task_run_id != intent["task_run_id"]
+                or request.agent_run_id != intent["agent_run_id"]
+                or agent.skill_binding_id != request.skill_binding_id
                 or agent.request != request.run):
             raise ContentBudgetCommandConflict("running content AgentRun drifted")
         assignment = ContentTaskRunOwner._assignment(transaction, scope)
@@ -192,16 +217,47 @@ class ContentBudgetCommandOwner:
         price = model_store.get_price_snapshot(
             scope, price_ref.asset_id, price_ref.revision
         )
-        capacity = transaction.execute(
-            """SELECT request_hash,token_units,status,expires_at FROM public.aip_model_capacity_reservation
-                WHERE org_id=%s AND project_id=%s AND reservation_id=%s
-                  AND agent_run_id=%s FOR SHARE""",
-            (*scope.key, intent["capacity_reservation_id"], intent["agent_run_id"]),
-        ).fetchone()
-        if (capacity is None or capacity["status"] != "reserved"
-                or capacity["expires_at"] <= checked_at
-                or quota.max_input_tokens + quota.max_output_tokens > capacity["token_units"]):
-            raise ContentBudgetCommandConflict("content capacity cannot cover approved token limits")
+        capacity = None
+        from aos_api.aip_model_capacity_reservation import AipModelCapacityReservationGate
+        if before_capacity:
+            pools = transaction.execute(
+                """SELECT p.token_unit_per_reservation FROM public.aip_model_capacity_pool_head h
+                    JOIN public.aip_model_capacity_pool_revision p
+                      ON p.org_id=h.org_id AND p.project_id=h.project_id
+                     AND p.pool_id=h.pool_id AND p.revision=h.current_revision
+                    WHERE h.org_id=%s AND h.project_id=%s AND p.lifecycle='active'
+                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s
+                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s
+                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s
+                    LIMIT 2 FOR SHARE OF p,h""",
+                (*scope.key, *AipModelCapacityReservationGate._exact_resolution(resolution)),
+            ).fetchall()
+            if (len(pools) != 1 or pools[0]["token_unit_per_reservation"]
+                    < quota.max_input_tokens + quota.max_output_tokens):
+                raise ContentBudgetCommandConflict("content capacity configuration cannot cover token limits")
+        else:
+            capacity = transaction.execute(
+                """SELECT c.request_hash,c.token_units,c.status,c.expires_at
+                    FROM public.aip_model_capacity_reservation c
+                    JOIN public.aip_model_capacity_pool_revision p
+                      ON p.org_id=c.org_id AND p.project_id=c.project_id
+                     AND p.pool_id=c.pool_id AND p.revision=c.pool_revision
+                    JOIN public.aip_model_capacity_pool_head h
+                      ON h.org_id=p.org_id AND h.project_id=p.project_id
+                     AND h.pool_id=p.pool_id AND h.current_revision=p.revision
+                    WHERE c.org_id=%s AND c.project_id=%s AND c.reservation_id=%s
+                      AND c.agent_run_id=%s AND p.lifecycle='active'
+                      AND p.route_id=%s AND p.route_revision=%s AND p.route_hash=%s
+                      AND p.model_id=%s AND p.model_revision=%s AND p.model_hash=%s
+                      AND p.provider_id=%s AND p.provider_revision=%s AND p.provider_hash=%s
+                    FOR SHARE OF c,p,h""",
+                (*scope.key, intent["capacity_reservation_id"], intent["agent_run_id"],
+                 *AipModelCapacityReservationGate._exact_resolution(resolution)),
+            ).fetchone()
+            if (capacity is None or capacity["status"] != "reserved"
+                    or capacity["expires_at"] <= checked_at
+                    or quota.max_input_tokens + quota.max_output_tokens > capacity["token_units"]):
+                raise ContentBudgetCommandConflict("content capacity cannot cover approved token limits")
         task_ref = BudgetExactRef.model_validate(response["taskRef"])
         cost_context = {}
         if price.development_cost_authorization is not None:
@@ -258,11 +314,12 @@ class ContentBudgetCommandOwner:
                 "ModelPriceSnapshotRevision", price_ref.asset_id,
                 price_ref.revision, price_ref.content_hash,
             ),
-            "capacity_reservation": exact(
+        }
+        if not before_capacity:
+            authorities["capacity_reservation"] = exact(
                 "CapacityReservation", str(intent["capacity_reservation_id"]),
                 1, capacity["request_hash"],
-            ),
-        }
+            )
         return SimpleNamespace(
             dispatch=dispatch, snapshot=snapshot, task_ref=task_ref,
             price=price, quota=quota, cost_context=cost_context, authorities=authorities,
@@ -275,6 +332,29 @@ class ContentBudgetCommandOwner:
                 item.content_hash,
             ) for item in method.evidence_refs],
         )
+
+    @classmethod
+    def _prepare_approval_sources(cls, transaction, scope, review_key):
+        """Read a natural stage; never manufacture an intent or consume an attempt."""
+        row = transaction.execute(
+            """SELECT state,attempt,claim_token FROM public.ecommerce_growth_content_budget_command_intent
+                WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
+            (*scope.key, review_key),
+        ).fetchone()
+        before_capacity = row is None
+        if before_capacity:
+            row = transaction.execute(
+                """SELECT state,attempt,claim_token FROM public.ecommerce_growth_content_capacity_intent
+                    WHERE org_id=%s AND project_id=%s AND review_key=%s FOR SHARE""",
+                (*scope.key, review_key),
+            ).fetchone()
+        if (row is None or not (
+                (row["state"], row["attempt"], row["claim_token"]) == ("pending", 0, None)
+                or row["state"] == "claimed" and row["attempt"] == 1
+                   and type(row["claim_token"]) is UUID)):
+            raise ContentBudgetCommandConflict("current content approval intent unavailable")
+        return cls._prepare_sources(transaction, scope, review_key,
+            before_capacity=before_capacity, claimed_token=row["claim_token"])
 
     @classmethod
     def _build_command(
@@ -473,7 +553,7 @@ class ContentBudgetCommandOwner:
     @staticmethod
     def _approved_action(
         transaction: Any, scope: TenantScope, task_ref: BudgetExactRef,
-        *, checked_at: datetime,
+        *, checked_at: datetime, review_key: str | None = None,
     ) -> tuple[BudgetExactRef, int]:
         if (type(scope) is not TenantScope or type(task_ref) is not BudgetExactRef
                 or task_ref.resource_type != "Task" or type(checked_at) is not datetime
@@ -509,6 +589,11 @@ class ContentBudgetCommandOwner:
         stable = AipBudgetReservationStore._load(draft["snapshot"]) if draft else None
         payload = stable.get("payload") if type(stable) is dict else None
         amount = payload.get("budgetUpperBoundMinor") if type(payload) is dict else None
+        if review_key is not None:
+            from aos_api.ecommerce_content_first_action_binding import KEYS
+            if (type(payload) is not dict or set(payload) != KEYS
+                    or payload["firstContentReviewKey"] != review_key):
+                raise ContentBudgetCommandConflict("exact first content approval required before capacity")
         if (draft is None or draft["proposal_hash"] != event["proposal_hash"]
                 or type(amount) is not int or not 1 <= amount <= 100_000_000):
             raise ContentBudgetCommandConflict("original approved upper bound unavailable")

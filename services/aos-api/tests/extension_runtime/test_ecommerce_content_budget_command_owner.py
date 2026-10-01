@@ -177,7 +177,8 @@ def test_missing_budget_intent_blocks_before_any_authority_or_claim():
 
 
 @pytest.mark.parametrize("risk_price", [False, True])
-def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price):
+@pytest.mark.parametrize("before_capacity", [False, True])
+def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, risk_price, before_capacity):
     from aos_api.ecommerce_content_budget_command_owner import (
         ContentBudgetCommandOwner, ContentBudgetCommandConflict,
     )
@@ -212,13 +213,18 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
             self.calls = []
         def execute(self, query, params):
             self.calls.append(query)
-            if "FROM public.ecommerce_growth_content_budget_command_intent" in query:
+            if "FROM public.ecommerce_growth_content_budget_command_intent" in query or "FROM public.ecommerce_growth_content_capacity_intent" in query:
                 return _Cursor([intent])
-            if "content_budget_command_current_a0v_104" in query:
+            if "content_budget_command_current_a0v_104" in query or "content_capacity_current_a0v_103" in query:
                 return _Cursor([{"current": True}])
             if "FROM public.extension_operation_dispatch_binding" in query:
                 return _Cursor([dispatch_row])
+            if "FROM public.aip_model_capacity_pool_head" in query:
+                return _Cursor([dict(token_unit_per_reservation=6000)])
             if "FROM public.aip_model_capacity_reservation" in query:
+                if before_capacity: return _Cursor([])
+                assert "JOIN public.aip_model_capacity_pool_revision" in query
+                assert "p.model_id=%s" in query and "p.provider_id=%s" in query
                 return _Cursor([dict(request_hash="6" * 64, token_units=6000,
                                      status="reserved", expires_at=NOW + timedelta(hours=1))])
             raise AssertionError(query)
@@ -230,7 +236,8 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
     model = SimpleNamespace(content_hash=model_ref.content_hash, provider=provider_ref,
                             price_snapshot_ref=price_ref, provider_model_id="provider-model-1")
     run_request = SimpleNamespace(model_route=route)
-    request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request)
+    request = SimpleNamespace(task_run_ref=SimpleNamespace(resource_id="run-1"), run=run_request,
+                              agent_run_id="agent-run-1", skill_binding_id="skill-binding-1")
     monkeypatch.setattr("aos_api.ecommerce_content_taskrun_owner.ContentTaskRunOwner._origin",
                         staticmethod(lambda *_: (origin, response)))
     monkeypatch.setattr("aos_api.ecommerce_content_agentrun_owner.ContentAgentRunOwner._build_request",
@@ -247,7 +254,8 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
                         staticmethod(lambda *_: SimpleNamespace(checked_at=NOW)))
     monkeypatch.setattr("aos_api.aip_agent_run_service.AipAgentRunService.get",
                         lambda *_, **__: SimpleNamespace(
-                            status=AgentRunStatus.RUNNING, task_run_id="run-1", request=run_request))
+                            status=AgentRunStatus.QUEUED if before_capacity else AgentRunStatus.RUNNING,
+                            version=1, skill_binding_id="skill-binding-1", task_run_id="run-1", request=run_request))
     class ModelStore:
         def __init__(self, *_): pass
         def get_policy(self, *_):
@@ -304,7 +312,16 @@ def test_preflight_builds_exact_command_without_claim_or_provider(monkeypatch, r
             assert price.development_cost_authorization is not None
             return amount
         monkeypatch.setattr(ContentBudgetCommandOwner, "_approved_bound", classmethod(approve_bound))
-    sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1")
+    sources = ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1",
+                                                         before_capacity=before_capacity)
+    if before_capacity:
+        assert sources.action_context.capacity is None
+        assert "capacity_reservation" not in sources.authorities
+        assert approval_reads == [] and validated == []
+        intent["state"], intent["attempt"], intent["claim_token"] = "unknown", 1, uuid4()
+        with pytest.raises(ContentBudgetCommandConflict, match="origin unavailable"):
+            ContentBudgetCommandOwner._prepare_sources(HostTransaction(conn), SCOPE, "review-1", before_capacity=True)
+        return
     assert approval_reads == [] and validated == []
     assert "approval" not in sources.authorities
     assert sources.task_ref.resource_id == "task-1"

@@ -11,6 +11,9 @@ from aos_api.aip_agent_run_service import AipAgentRunService
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_runtime_store import AipModelRuntimeStore
 from aos_api.ecommerce_content_agentrun_owner import ContentAgentRunConflict, ContentAgentRunOwner
+from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
+from aos_api.ecommerce_content_budget_command_owner import ContentBudgetCommandOwner, ContentBudgetCommandConflict
+from aos_api.aip_action_store import AipActionTransitionBlocked
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_connection import connect_read_only, connect_serializable
 from aos_api.tenant_scope import TenantScope
@@ -42,46 +45,22 @@ class ContentCapacityOwner:
             raise ContentCapacityConflict("content capacity selector identity drifted")
         return keys
 
-    def _preflight(self, scope: TenantScope, review_key: str):
-        # _build_request locks the current cutover/Plan group FOR SHARE.
-        # PostgreSQL rejects those locks in a READ ONLY transaction.
+    @staticmethod
+    def _admit(transaction, scope, review_key, *, token=None):
+        try:
+            sources = ContentBudgetCommandOwner._prepare_sources(
+                transaction, scope, review_key, before_capacity=True, claimed_token=token)
+            approval, _amount = ContentBudgetCommandOwner._approved_action(transaction, scope, sources.task_ref,
+                checked_at=sources.snapshot.checked_at, review_key=review_key)
+        except (ContentBudgetCommandConflict, AipActionTransitionBlocked) as exc:
+            raise ContentCapacityConflict("current first content approval required before capacity") from exc
+        current = AipAgentRunService(TransactionBoundConnectFactory(transaction, scope)).get(
+            scope, sources.action_context.agent_run_id)
+        return current, approval
+
+    def _preflight(self, scope: TenantScope, review_key: str, *, token=None):
         with self._connect_write(scope) as conn:
-            row = conn.execute(
-                """SELECT c.state,c.attempt,c.task_run_id,c.agent_run_id,
-                          i.state AS prior_state,i.agent_run_id AS prior_agent_run_id
-                     FROM public.ecommerce_growth_content_capacity_intent c
-                     JOIN public.ecommerce_growth_content_agentrun_intent i
-                       ON i.org_id=c.org_id AND i.project_id=c.project_id
-                      AND i.review_key=c.review_key
-                    WHERE c.org_id=%s AND c.project_id=%s AND c.review_key=%s""",
-                (*scope.key, review_key),
-            ).fetchone()
-            if (row is None or row["state"] not in {"pending", "claimed"}
-                    or row["prior_state"] != "accepted"
-                    or row["agent_run_id"] != row["prior_agent_run_id"]):
-                raise ContentCapacityConflict("content capacity lineage unavailable")
-            request = ContentAgentRunOwner._build_request(
-                HostTransaction(conn), scope, review_key,
-                existing_agent_run_id=row["agent_run_id"],
-            )
-            if (request.agent_run_id != row["agent_run_id"]
-                    or request.task_run_ref.resource_id != row["task_run_id"]):
-                raise ContentCapacityConflict("content capacity AgentRun identity drifted")
-            existing = conn.execute(
-                """SELECT reservation_id FROM public.aip_model_capacity_reservation
-                    WHERE org_id=%s AND project_id=%s AND agent_run_id=%s LIMIT 2""",
-                (*scope.key, row["agent_run_id"]),
-            ).fetchall()
-            if existing:
-                raise ContentCapacityConflict("content capacity already reserved; reconcile")
-        service = AipAgentRunService(self._connect_read)
-        current = service.get(scope, request.agent_run_id)
-        if (current.status is not AgentRunStatus.QUEUED or current.version != 1
-                or current.task_run_id != request.task_run_ref.resource_id
-                or current.skill_binding_id != request.skill_binding_id
-                or current.request != request.run):
-            raise ContentCapacityConflict("queued AgentRun snapshot drifted")
-        return current
+            return self._admit(HostTransaction(conn), scope, review_key, token=token)[0]
 
     def claim(self, scope: TenantScope, review_key: str, *, token: UUID | None = None) -> UUID | None:
         if type(scope) is not TenantScope or type(review_key) is not str or not review_key.strip():
@@ -95,6 +74,11 @@ class ContentCapacityOwner:
         except (ContentCapacityConflict, ContentAgentRunConflict, ValueError):
             return None
         with self._connect_write(scope) as conn:
+            # Recheck under the same transaction that spends the sole attempt.
+            try:
+                self._admit(HostTransaction(conn), scope, review_key)
+            except (ContentCapacityConflict, ContentAgentRunConflict, ValueError):
+                return None
             row = conn.execute(
                 "SELECT public.ecommerce_growth_content_capacity_claim_a0v_103(%s,%s) AS claimed",
                 (review_key, token),
@@ -115,19 +99,40 @@ class ContentCapacityOwner:
             raise ContentCapacityConflict("content capacity claim readback unknown")
         return token
 
-    def _transition(self, scope: TenantScope, current):
-        resolver = AipModelRuntimeResolver(AipModelRuntimeStore(self._connect_read))
-        service = AipAgentRunService(self._connect_write, model_resolver=resolver)
-        return service.transition(
-            scope, current.agent_run_id, expected_version=current.version,
-            from_status=AgentRunStatus.QUEUED, to_status=AgentRunStatus.RUNNING,
-            actor=self.actor, occurred_at=datetime.now(UTC),
-        )
+    def _transition(self, scope: TenantScope, current, review_key: str, token: UUID):
+        with self._connect_write(scope) as conn:
+            transaction = HostTransaction(conn)
+            admitted, approval = self._admit(transaction, scope, review_key, token=token)
+            if admitted != current:
+                raise ContentCapacityConflict("approved queued AgentRun changed before capacity")
+            bound = TransactionBoundConnectFactory(transaction, scope)
+            resolver = AipModelRuntimeResolver(AipModelRuntimeStore(bound))
+            service = AipAgentRunService(bound, model_resolver=resolver)
+            # Existing stores and the capacity gate share the admission locks.
+            # Their inner commits are suppressed; only this outer owner commits.
+            started = service.transition(
+                scope, current.agent_run_id, expected_version=current.version,
+                from_status=AgentRunStatus.QUEUED, to_status=AgentRunStatus.RUNNING,
+                actor=self.actor, occurred_at=datetime.now(UTC),
+            )
+            fresh = conn.execute(
+                """SELECT e.approval_event_id FROM public.aip_action_approval_event e
+                    JOIN public.aip_action_proposal p
+                      ON p.org_id=e.org_id AND p.project_id=e.project_id AND p.proposal_id=e.proposal_id
+                    WHERE e.org_id=%s AND e.project_id=%s AND e.approval_event_id=%s
+                      AND e.decision='approved' AND p.status='approved'
+                      AND e.expires_at>clock_timestamp() AND p.expires_at>clock_timestamp()""",
+                (*scope.key, approval.resource_id),
+            ).fetchone()
+            if fresh is None:
+                raise ContentCapacityConflict("content approval expired before capacity commit")
+            conn.commit()
+            return started
 
     def execute_claim(self, scope: TenantScope, review_key: str, token: UUID) -> dict[str, str]:
         if type(scope) is not TenantScope or type(review_key) is not str or type(token) is not UUID:
             raise ValueError("exact claimed content capacity identity required")
-        current = self._preflight(scope, review_key)
+        current = self._preflight(scope, review_key, token=token)
         with self._connect_read(scope) as conn:
             claim = conn.execute(
                 """SELECT state,attempt,claim_token,agent_run_id
@@ -139,9 +144,9 @@ class ContentCapacityOwner:
             claim["state"], claim["attempt"], claim["claim_token"], claim["agent_run_id"]
         ) != ("claimed", 1, token, current.agent_run_id):
             raise ContentCapacityConflict("content capacity claim drifted")
-        # The public Owner and capacity Gate have independent commits. Any exception
-        # leaves this one-attempt claim frozen for read-only reconciliation.
-        started = self._transition(scope, current)
+        # An exception, including an unknown outer commit, leaves the attempt
+        # claimed for read-only reconciliation; never run the transition twice.
+        started = self._transition(scope, current, review_key, token)
         if started.status is not AgentRunStatus.RUNNING:
             raise ContentCapacityConflict("AgentRun start result unknown")
         with self._connect_write(scope) as conn:

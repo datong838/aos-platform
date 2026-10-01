@@ -110,6 +110,14 @@ def test_source_envelope_excludes_observation_time_and_pins_runtime_and_model(mo
     transaction = HostTransaction(SimpleNamespace(execute=lambda *a:
         SimpleNamespace(fetchone=lambda: {"content_hash": "d" * 64})))
     original = binding.source_envelope(transaction, SCOPE, "review-1", sources)
+    assert original["schemaVersion"] == 2
+    assert "capacityExpiresAt" not in original
+    sources.action_context.capacity = None
+    assert binding.source_envelope(transaction, SCOPE, "review-1", sources) == original
+    sources.authorities["capacity_reservation"] = {"resourceId": "actual-execution-capacity"}
+    sources.action_context.capacity = {"expires_at": now + timedelta(seconds=30)}
+    assert binding.source_envelope(transaction, SCOPE, "review-1", sources) == original
+    assert "capacity_reservation" not in original["authorityRefs"]
     sources.snapshot = replace(sources.snapshot, checked_at=now + timedelta(seconds=1))
     assert binding.source_envelope(transaction, SCOPE, "review-1", sources) == original
     assert original["providerModelId"] == "exact-provider-model"
