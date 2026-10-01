@@ -59,6 +59,13 @@ def require_cost_risk(conn, scope, policy_ref, pricing_ref, upper_bound_minor, *
                     (*scope.key,fence['decision_id'])).fetchone()):raise ValueError('approval revoked or drifted')
         _member(conn,scope,p.maker_subject,label='MAKER');_member(conn,scope,p.checker_subject,label='CHECKER')
         _provider(conn,scope,p)
+        # Hold the current price head through new hold/submission admission.
+        # A concurrent withdrawal must serialize; an old SERIALIZABLE snapshot aborts.
+        price_head=conn.execute('SELECT current_revision FROM public.aip_model_price_snapshot_head '
+            'WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s FOR SHARE',
+            (*scope.key,pricing_ref.resource_id)).fetchone()
+        if price_head is None or price_head['current_revision']!=pricing_ref.revision:
+            raise ValueError('current development price head drift')
         price_row=conn.execute('SELECT payload,content_hash,lifecycle FROM public.aip_model_price_snapshot_revision '
             'WHERE org_id=%s AND project_id=%s AND model_price_snapshot_id=%s AND revision=%s',
             (*scope.key,pricing_ref.resource_id,pricing_ref.revision)).fetchone()
