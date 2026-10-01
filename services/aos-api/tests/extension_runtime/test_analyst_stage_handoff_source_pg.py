@@ -3,10 +3,16 @@ from dataclasses import replace
 from datetime import timedelta
 from types import SimpleNamespace
 import os
-from uuid import uuid4
+from uuid import UUID, uuid4
+import psycopg
 from psycopg.conninfo import conninfo_to_dict
 import pytest
+from aos_api.asset_registry.composition_contracts import CreateInstallationRequest
+from aos_api.asset_registry.composition_store import PostgresCompositionStore
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.automation_occurrence_store import AutomationOccurrenceStore, ScheduleBinding
 from aos_api.db import connect
+from aos_api.ecommerce_business_investigation_case import BusinessInvestigationCaseLifecycle, BusinessInvestigationCaseStore
 from aos_api.ecommerce_analyst_authority_contracts import GrowthPlanLifecycle
 from aos_api.ecommerce_analyst_authority_store import EcommerceAnalystAuthorityStore, canonical_hash
 from aos_api.ecommerce_analyst_growth_plan_approval import ApproveGrowthPlanRequest, EcommerceAnalystGrowthPlanApprovalService
@@ -14,11 +20,13 @@ from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionS
 from aos_api.ecommerce_analyst_stage_handoff_source import read_approved_stage_handoff_source
 from aos_api.ecommerce_analyst_stage_review_command import read_stage_review_eval_source_authority
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, _case_ref, _occurrence_payload, _occurrence_ref
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_approval import plan
 from test_ecommerce_analyst_stage_decision import decision, ref
+from tests.test_ecommerce_business_investigation_lifecycle import draft_case
 from test_ecommerce_review_advance_host import accepted_stage_command, command_hash
+from tests.asset_registry.test_m2_core_integration import _composition_input
 SCOPE=TenantScope('org-org','dev-project')
 
 def hashed(value):
@@ -33,6 +41,8 @@ def source(request):
     with connect(SCOPE) as conn:
         conn.execute("INSERT INTO twa_org(id,name) VALUES('org-org','isolated fixture') ON CONFLICT DO NOTHING")
         conn.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated fixture') ON CONFLICT DO NOTHING")
+        conn.execute("INSERT INTO meta_org(id,name) VALUES('org-org','isolated fixture') ON CONFLICT DO NOTHING")
+        conn.execute("INSERT INTO meta_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated fixture') ON CONFLICT DO NOTHING")
         now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
     draft=hashed(plan(plan_id=name).model_copy(update={'created_at':now-timedelta(hours=3),'generation_artifact_ref':ref('Artifact',name+'-text')}))
     owner=EcommerceAnalystAuthorityStore()
@@ -176,6 +186,85 @@ def test_host_parses_owner_source_then_rejects_missing_current_occurrence(source
                 transaction=HostTransaction(conn), scope=SCOPE,
                 dispatch=SimpleNamespace(operation_id='ecommerce_growth_review_advance'),
                 command=command)
+
+
+def test_original_case_and_occurrence_producers_reach_missing_analysis(source):
+    _owner, _draft, item, args = source
+    case_store = BusinessInvestigationCaseStore(connect)
+    case = draft_case('handoff-case-' + uuid4().hex)
+    case_store.create_draft(SCOPE, case, idempotency_key=case.case_id + ':draft')
+    with connect(SCOPE) as conn:
+        now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    now = now.replace(microsecond=0)
+    active = case_store.transition(
+        SCOPE, case.case_id, BusinessInvestigationCaseLifecycle.ACTIVE,
+        expected_version=1, idempotency_key=case.case_id + ':active',
+        actor='owner', occurred_at=now,
+    ).authority
+
+    # A valid isolated draft satisfies installation FKs; binding/dispatch below
+    # remain test control-plane setup, not a signed current installation.
+    composition_request, snapshot, payload = _composition_input()
+    lock = PostgresCompositionStore(connect).create_or_get(
+        org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+        request=composition_request, snapshot=snapshot, payload=payload,
+        created_by='isolated-test',
+    )
+    installation = PostgresInstallationStore(connect).create_draft(
+        org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+        request=CreateInstallationRequest(
+            compositionId=lock.composition_id, lockRevision=lock.revision,
+            overlayRevision='isolated-handoff', displayName='isolated Handoff producer test',
+        ),
+        requested_by='isolated-test',
+    )
+    installation_id, generation, group_id = UUID(str(installation.installation_id)), uuid4(), uuid4()
+    with psycopg.connect(os.environ['AOS_DATABASE_URL']) as setup:
+        setup.execute('''INSERT INTO extension_runtime_binding(org_id,project_id,installation_id,
+            generation,installation_revision,package_lock_ref,profile_ref,execution_epoch,
+            desired_state,observed_state,enabled,operation_fence,config_ref)
+            VALUES(%s,%s,%s,%s,1,'{}','internal-python-v1',1,'enabled','ready',true,false,'{}')''',
+            (*SCOPE.key, installation_id, generation))
+        setup.execute('''INSERT INTO extension_operation_dispatch_binding(org_id,project_id,
+            operation_id,handler_kind,installation_id,generation,execution_epoch,
+            operation_fence,revision,cutover_group_id,cutover_group_revision,updated_by)
+            VALUES(%s,%s,'ecommerce_growth_review_advance','extension',%s,%s,1,false,1,%s,1,'fixture')''',
+            (*SCOPE.key, installation_id, generation, group_id))
+    binding = ScheduleBinding(
+        policy_id='handoff-' + uuid4().hex, policy_revision=1,
+        policy_hash='sha256:' + 'a' * 64,
+        operation_id='ecommerce_growth_review_advance',
+        installation_id=installation_id, generation=generation,
+        execution_epoch=1, cadence='once', effective_from=now - timedelta(days=1),
+        approved=True, enabled=True,
+    )
+    occurrence_store = AutomationOccurrenceStore(connect)
+    occurrence_store.put_binding(SCOPE, binding)
+    occurrence = occurrence_store.record_scheduled(
+        SCOPE, binding, scheduled_at=now - timedelta(minutes=1),
+        local_slot='isolated-handoff', deadline=now + timedelta(hours=1),
+    )
+    exact = host_command(item, args)
+    command = accepted_stage_command()
+    command.update(exact)
+    command['currentPlanRef'] = {**exact['stagePlanRef'],
+                                 'contentHash': 'sha256:' + exact['stagePlanRef']['contentHash']}
+    command['taskSpec']['growthPlanRef'] = exact['growthPlanRef']
+    command['taskSpec']['artifactRefs'] = [{**exact['stageArtifactRef'],
+                                           'contentHash': 'sha256:' + exact['stageArtifactRef']['contentHash']}]
+    command['caseRef'] = _case_ref(active)
+    with connect(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        command['occurrenceRef'] = _occurrence_ref(_occurrence_payload(transaction, SCOPE, occurrence.occurrence_id))
+    command['requestHash'] = command_hash({k: v for k, v in command.items() if k != 'requestHash'})
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(ValueError, match='AnalysisRuntimeReceipt authority is not unique'):
+            ReviewAdvanceHostService().revalidate(
+                transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_review_advance'),
+                command=command,
+            )
 
 @pytest.mark.parametrize('fault',['run','plan','attempt','approved_hash','tenant'])
 def test_other_lineage_is_not_accepted(source,fault):
