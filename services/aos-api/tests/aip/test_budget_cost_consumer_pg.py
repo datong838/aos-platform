@@ -121,10 +121,15 @@ def price_for(p,decision):
     body=price.model_dump(mode='json',by_alias=True)
     price.content_hash=canonical_hash({k:v for k,v in body.items() if k not in {'tenant','revision','contentHash','createdBy','createdAt'}})
     with isolated_owner() as conn:
+        # Historical adversarial fixture only; production active development writes stay guarded.
+        conn.execute('ALTER TABLE aip_model_price_snapshot_revision DISABLE TRIGGER cost_configuration_write_guard')
         conn.execute('INSERT INTO aip_model_price_snapshot_head(org_id,project_id,model_price_snapshot_id,current_revision,version) VALUES(%s,%s,%s,1,1)',
             (*SCOPE.key,price.price_snapshot_id))
         conn.execute('INSERT INTO aip_model_price_snapshot_revision(org_id,project_id,model_price_snapshot_id,revision,content_hash,lifecycle,payload,created_by,created_at) VALUES(%s,%s,%s,1,%s,%s,%s::jsonb,%s,%s)',
-            (*SCOPE.key,price.price_snapshot_id,price.content_hash,'active',json.dumps(price.model_dump(mode='json',by_alias=True)),p.maker_subject,price.created_at));conn.commit()
+            (*SCOPE.key,price.price_snapshot_id,price.content_hash,'active',json.dumps(price.model_dump(mode='json',by_alias=True)),p.maker_subject,price.created_at))
+        conn.execute('SET CONSTRAINTS ALL IMMEDIATE')
+        conn.execute('ALTER TABLE aip_model_price_snapshot_revision ENABLE TRIGGER cost_configuration_write_guard')
+        conn.commit()
     return BudgetExactRef(resourceType='ModelPriceSnapshotRevision',resourceId=price.price_snapshot_id,revision=1,contentHash="sha256:"+price.content_hash)
 
 

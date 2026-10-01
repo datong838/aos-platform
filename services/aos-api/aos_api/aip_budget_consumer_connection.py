@@ -24,7 +24,11 @@ FUNCTION = 'public.aip_consume_budget_as_actor_a0v_127(text,text,text,text,text,
 OWNER_FUNCTIONS = (FUNCTION,
     'public.aip_reconcile_budget_as_actor_a0v_127(text,text,text,text,text,text)',
     'public.aip_budget_cost_actor_a0v_127(text,text,text,text,text)',
-    'public.aip_consume_budget_cost_a0v_126(text,text,text,text)')
+    'public.aip_consume_budget_cost_a0v_126(text,text,text,text)',
+    *('public.'+name+'(text,text,text,text,text,text)' for name in (
+        'aip_budget_consumption_fact_a0v_128', 'aip_cost_configuration_expected_a0v_128',
+        'aip_cost_configuration_fact_a0v_128', 'aip_reconcile_cost_configuration_a0v_128',
+        'aip_configure_budget_cost_a0v_128')))
 _TABLES = (
     'aip_budget_cost_proposal', 'aip_budget_cost_proposal_receipt',
     'aip_budget_cost_decision', 'aip_budget_cost_revocation', 'aip_budget_cost_issuer_receipt',
@@ -32,6 +36,9 @@ _TABLES = (
     'aip_provider_instance_head', 'aip_provider_instance_revision',
     'aip_capability_invocation', 'aip_budget_reservation', 'aip_budget_bucket',
     'aip_budget_cost_runtime_fence',
+    'aip_model_price_snapshot_head', 'aip_model_price_snapshot_revision',
+    'aip_model_governance_policy_head', 'aip_model_governance_policy_revision',
+    'aip_model_governance_policy_receipt',
 )
 _FORBIDDEN_ENV = ('PGPASSWORD', 'PGPASSFILE', 'PGSERVICE', 'PGSERVICEFILE', 'PGOPTIONS')
 
