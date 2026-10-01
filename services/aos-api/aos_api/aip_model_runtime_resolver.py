@@ -11,6 +11,7 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityStore,
     AipEvalGateDependencyBlocked,
 )
+from aos_api.aip_model_eval_authorization import ModelEvalPreflight
 from aos_api.aip_model_runtime_contracts import (
     ModelRouteResolution,
     ModelRuntimeLifecycle,
@@ -30,6 +31,99 @@ class AipModelRuntimeResolver:
         self._store = store or AipModelRuntimeStore()
         self._connect_factory = getattr(self._store, "_connect_factory", db_connect)
         self._eval_authority_store = getattr(self._store, "_eval_authority_store", None) or AipEvalAuthorityStore(self._connect_factory)
+
+    def preflight_model_evaluation(
+        self, scope: TenantScope, source_ref: VersionedAssetRef,
+        target_ref: VersionedAssetRef, *, expected_head_version: int,
+        now: datetime | None = None,
+    ) -> ModelEvalPreflight:
+        """Recheck a current Model candidate without granting execution.
+
+        These reads may span transactions. GT-b must recheck under its own
+        approval/intent transaction; this object cannot authorize transport.
+        """
+        if (type(scope) is not TenantScope
+            or type(source_ref) is not VersionedAssetRef
+            or type(target_ref) is not VersionedAssetRef
+            or type(expected_head_version) is not int
+            or expected_head_version < 1):
+            raise ValueError("exact Model evaluation candidate required")
+        checked_at = now or datetime.now(UTC)
+        if checked_at.utcoffset() is None:
+            raise ValueError("timezone-aware Model evaluation clock required")
+        matching = [item for item in self._store.list_eval_candidates(scope)
+                    if item.source_ref == source_ref
+                    and item.target_ref == target_ref
+                    and item.expected_head_version == expected_head_version]
+        if len(matching) != 1 or source_ref.asset_type != "RegisteredModelRevision":
+            raise ValueError("current exact Model evaluation candidate unavailable")
+        candidate = matching[0]
+        try:
+            model = self._store.get_model(scope, source_ref.asset_id, source_ref.revision)
+        except ModelRuntimeStoreError as exc:
+            raise ValueError("current Model evaluation source unavailable") from exc
+        if ((model.tenant.org_id, model.tenant.project_id) != scope.key
+            or model.registered_model_id != source_ref.asset_id
+            or model.revision != source_ref.revision
+            or model.content_hash != source_ref.content_hash
+            or model.lifecycle.value != candidate.source_lifecycle
+            or model.lifecycle not in {ModelRuntimeLifecycle.DRAFT, ModelRuntimeLifecycle.VALIDATED}
+            or evaluation_candidate_ref(model.model_copy(update={
+                "revision": model.revision + 1,
+                "lifecycle": ModelRuntimeLifecycle.ACTIVE,
+                "eval_gate_ref": None,
+            })) != target_ref):
+            raise ValueError("Model evaluation source or next-active target drifted")
+
+        blockers = ["eval_approval_missing", "budget_capacity_unverified",
+                    "provider_transport_unverified"]
+        provider_ref, price_ref = model.provider, model.price_snapshot_ref
+        try:
+            provider = self._store.get_provider(scope, provider_ref.asset_id, provider_ref.revision)
+        except ModelRuntimeStoreError:
+            blockers.append("provider_unavailable")
+        else:
+            if ((provider.tenant.org_id, provider.tenant.project_id) != scope.key
+                or provider.provider_instance_id != provider_ref.asset_id
+                or provider.revision != provider_ref.revision
+                or provider.content_hash != provider_ref.content_hash):
+                blockers.append("provider_drifted")
+            if provider.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
+                blockers.append("provider_not_active")
+        try:
+            price = self._store.get_price_snapshot(scope, price_ref.asset_id, price_ref.revision)
+        except ModelRuntimeStoreError:
+            blockers.append("model_price_snapshot_unavailable")
+        else:
+            if ((price.tenant.org_id, price.tenant.project_id) != scope.key
+                or price.price_snapshot_id != price_ref.asset_id
+                or price.revision != price_ref.revision
+                or price.content_hash != price_ref.content_hash):
+                blockers.append("model_price_snapshot_drifted")
+            if price.lifecycle is not ModelRuntimeLifecycle.ACTIVE:
+                blockers.append("model_price_snapshot_not_active")
+            if (price.effective_from > checked_at
+                or (price.effective_until is not None
+                    and price.effective_until <= checked_at)):
+                blockers.append("model_price_snapshot_not_effective")
+            try:
+                self._store.require_model_governance(scope, model, price, now=checked_at)
+            except ModelRuntimeStoreError:
+                blockers.append("model_governance_policy_blocked")
+        try:
+            if not self._health_is_fresh(scope, provider_ref, checked_at):
+                blockers.append("provider_health_unavailable_or_stale")
+        except Exception:
+            blockers.append("provider_health_unavailable_or_stale")
+        return ModelEvalPreflight(
+            tenant={"orgId": scope.org_id, "projectId": scope.project_id},
+            sourceRef=source_ref, targetRef=target_ref,
+            expectedHeadVersion=expected_head_version,
+            providerRef=provider_ref, priceRef=price_ref,
+            quotaPolicyRef=model.quota_policy_ref,
+            budgetPolicyRef=model.budget_policy_ref,
+            checkedAt=checked_at, blockerCodes=list(dict.fromkeys(blockers)),
+        )
 
     def resolve(self, scope: TenantScope, route_id: str, *, now: datetime | None = None) -> ModelRouteResolution:
         resolved_at = now or datetime.now(UTC)
