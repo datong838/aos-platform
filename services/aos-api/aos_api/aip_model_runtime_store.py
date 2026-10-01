@@ -353,6 +353,70 @@ class AipModelRuntimeStore:
                 expected_head_version=row['version'],source_lifecycle=item.lifecycle.value))
         return sorted(candidates,key=lambda item:(item.source_ref.asset_type,item.source_ref.asset_id))
 
+    def require_current_model_eval_candidate_for_update(
+        self, conn: Any, scope: TenantScope, source_ref: VersionedAssetRef,
+        target_ref: VersionedAssetRef, *, expected_head_version: int,
+    ) -> ModelEvalCandidate:
+        """Lock and recheck a Model candidate inside the caller's write transaction.
+
+        This is a dependency read, not an Eval approval or execution grant.
+        The caller must keep ``conn`` open through its own atomic decision.
+        """
+        if (type(scope) is not TenantScope
+            or type(source_ref) is not VersionedAssetRef
+            or type(target_ref) is not VersionedAssetRef
+            or type(expected_head_version) is not int
+            or expected_head_version < 1
+            or source_ref.asset_type != "RegisteredModelRevision"
+            or target_ref.asset_type != source_ref.asset_type
+            or target_ref.asset_id != source_ref.asset_id
+            or target_ref.revision != source_ref.revision + 1):
+            raise ModelRuntimeConflict("exact current Model Eval candidate required")
+        row = conn.execute(
+            """SELECT h.version,r.registered_model_id AS asset_id,r.revision,
+                      r.content_hash,r.lifecycle,r.payload
+               FROM aip_registered_model_head h
+               JOIN aip_registered_model_revision r
+                 ON r.org_id=h.org_id AND r.project_id=h.project_id
+                AND r.registered_model_id=h.registered_model_id
+                AND r.revision=h.current_revision
+               WHERE h.org_id=%s AND h.project_id=%s
+                 AND h.registered_model_id=%s AND r.revision=%s
+               FOR UPDATE OF h""",
+            (*scope.key, source_ref.asset_id, source_ref.revision),
+        ).fetchone()
+        if (row is None or int(row["version"]) != expected_head_version
+            or row["asset_id"] != source_ref.asset_id
+            or int(row["revision"]) != source_ref.revision
+            or row["content_hash"] != source_ref.content_hash
+            or row["lifecycle"] not in {"draft", "validated"}):
+            raise ModelRuntimeConflict("current Model Eval head or source drifted")
+        try:
+            model = RegisteredModelRevision.model_validate(self._load(row["payload"]))
+        except (TypeError, ValueError) as exc:
+            raise ModelRuntimeConflict("current Model Eval payload invalid") from exc
+        body = model.model_dump(mode="json", by_alias=True)
+        if ((model.tenant.org_id, model.tenant.project_id) != scope.key
+            or model.registered_model_id != source_ref.asset_id
+            or model.revision != source_ref.revision
+            or model.content_hash != source_ref.content_hash
+            or model.lifecycle.value != row["lifecycle"]
+            or canonical_hash({k: v for k, v in body.items()
+                               if k not in self._META_FIELDS}) != model.content_hash):
+            raise ModelRuntimeConflict("current Model Eval payload drifted")
+        candidate_target = evaluation_candidate_ref(model.model_copy(update={
+            "revision": model.revision + 1,
+            "lifecycle": ModelRuntimeLifecycle.ACTIVE,
+            "eval_gate_ref": None,
+        }))
+        if candidate_target != target_ref:
+            raise ModelRuntimeConflict("current Model Eval target drifted")
+        return ModelEvalCandidate(
+            sourceRef=source_ref, targetRef=candidate_target,
+            expectedHeadVersion=expected_head_version,
+            sourceLifecycle=model.lifecycle.value,
+        )
+
     def list_eval_gates(self, scope: TenantScope, refs: list[VersionedAssetRef]) -> list[ModelRuntimeEvalGateSummary]:
         unique = {(ref.asset_id, ref.revision, ref.content_hash): ref for ref in refs if ref.asset_type == "EvalGateDecision"}
         result: list[ModelRuntimeEvalGateSummary] = []

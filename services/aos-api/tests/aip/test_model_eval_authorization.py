@@ -13,7 +13,10 @@ from aos_api.aip_model_runtime_contracts import (
 )
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_eval_authorization import ModelEvalPreflight
-from aos_api.aip_model_runtime_store import evaluation_candidate_ref
+from aos_api.aip_model_runtime_store import (
+    AipModelRuntimeStore, ModelRuntimeConflict, canonical_hash,
+    evaluation_candidate_ref,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -160,3 +163,73 @@ def test_model_first_eval_preflight_retains_dependency_blockers(monkeypatch, dri
         expected_head_version=7, now=NOW)
     assert blocker in result.blocker_codes
     assert result.execution_allowed is False
+
+
+def _canonical_model_candidate():
+    model = CurrentCandidateStore().model
+    body = model.model_dump(mode="json", by_alias=True)
+    content = {key: value for key, value in body.items()
+               if key not in AipModelRuntimeStore._META_FIELDS}
+    model = model.model_copy(update={"content_hash": canonical_hash(content)})
+    source = ref("RegisteredModelRevision", model.registered_model_id, model.content_hash)
+    target = evaluation_candidate_ref(model.model_copy(update={
+        "revision": 2, "lifecycle": ModelRuntimeLifecycle.ACTIVE,
+        "eval_gate_ref": None,
+    }))
+    row = {"version": 7, "asset_id": model.registered_model_id,
+           "revision": model.revision, "content_hash": model.content_hash,
+           "lifecycle": model.lifecycle.value,
+           "payload": model.model_dump(mode="json", by_alias=True)}
+    return source, target, row
+
+
+class LockedCandidateConnection:
+    def __init__(self, row):
+        self.row = row
+        self.calls = []
+
+    def execute(self, query, params):
+        self.calls.append((query, params))
+        return self
+
+    def fetchone(self):
+        return self.row
+
+
+def test_model_eval_current_candidate_is_rechecked_under_caller_head_lock():
+    source, target, row = _canonical_model_candidate()
+    conn = LockedCandidateConnection(row)
+    candidate = AipModelRuntimeStore().require_current_model_eval_candidate_for_update(
+        conn, SCOPE, source, target, expected_head_version=7)
+    assert candidate.source_ref == source
+    assert candidate.target_ref == target
+    assert candidate.expected_head_version == 7
+    assert len(conn.calls) == 1
+    assert "FOR UPDATE OF h" in conn.calls[0][0]
+    assert conn.calls[0][1] == (*SCOPE.key, source.asset_id, source.revision)
+
+
+@pytest.mark.parametrize("drift", ["missing", "head", "source", "target", "tenant", "row_hash", "payload_hash", "lifecycle"])
+def test_model_eval_locked_candidate_rejects_drift(drift):
+    source, target, row = _canonical_model_candidate()
+    scope, expected = SCOPE, 7
+    if drift == "missing":
+        row = None
+    elif drift == "head":
+        expected = 8
+    elif drift == "source":
+        source = source.model_copy(update={"content_hash": "0" * 64})
+    elif drift == "target":
+        target = target.model_copy(update={"content_hash": "0" * 64})
+    elif drift == "tenant":
+        scope = TenantScope("dev-org", "dev-project")
+    elif drift == "row_hash":
+        row["content_hash"] = "0" * 64
+    elif drift == "payload_hash":
+        row["payload"]["providerModelId"] = "tampered-model"
+    else:
+        row["lifecycle"] = "suspended"
+    with pytest.raises(ModelRuntimeConflict):
+        AipModelRuntimeStore().require_current_model_eval_candidate_for_update(
+            LockedCandidateConnection(row), scope, source, target,
+            expected_head_version=expected)
