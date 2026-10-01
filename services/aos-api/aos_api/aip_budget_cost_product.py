@@ -1,6 +1,5 @@
 """Persist original budget-cost review requests before one private dispatch."""
 from dataclasses import dataclass
-import json
 import os
 from pathlib import Path
 from typing import Literal
@@ -14,7 +13,7 @@ from aos_api.aip_budget_activation_product import BudgetProductBlocked, _authent
 from aos_api.aip_budget_store import canonical_hash
 from aos_api.aip_network_consumer_config import _read_private_config
 from aos_api.aip_network_issuer_attempt import _private_directory_fd, _read_marker
-from aos_api.aip_private_request_file import create_private_request_file
+from aos_api.aip_private_product_request import recover_private_product_request
 from aos_api.auth import parse_bearer
 
 
@@ -110,51 +109,9 @@ def budget_cost_request(config, proposal_id, operation, body, principal, authori
     if type(config) is not BudgetCostProductConfig:
         raise BudgetProductBlocked('BUDGET_COST_PRODUCT_CONFIG_REQUIRED', 503)
     config.__post_init__()
-    envelope = raw = None
-    if body is not None:
-        try:
-            _command(actor,proposal_id,operation,body,authorization)
-            envelope = _envelope(actor,proposal_id,operation,body)
-            raw = json.dumps(envelope,ensure_ascii=False,separators=(',',':')).encode()
-            if len(raw)>4096:
-                raise ValueError()
-        except Exception:
-            raise BudgetProductBlocked('BUDGET_COST_PRODUCT_REQUEST_INVALID',422) from None
-    reserved = False
-    try:
-        fd = _private_directory_fd(config.request_directory)
-        try:
-            original = _read_original(fd,actor,proposal_id,operation,authorization)
-            if original is None and body is not None:
-                reserved = create_private_request_file(fd,key+'.json',raw)
-                if not reserved:
-                    original = _read_original(fd,actor,proposal_id,operation,authorization)
-                    if original is None:
-                        raise ValueError('reservation disappeared')
-            if original is not None:
-                if envelope is not None and canonical_hash(envelope)!=canonical_hash(_envelope(actor,proposal_id,operation,original)):
-                    raise BudgetProductBlocked('BUDGET_COST_PRODUCT_REQUEST_CONFLICT',409)
-                body = original
-        finally:
-            os.close(fd)
-    except BudgetProductBlocked:
-        raise
-    except Exception:
-        raise BudgetProductBlocked('BUDGET_COST_PRODUCT_SAVED_REQUEST_UNTRUSTED',503) from None
-    if body is None:
-        return {'status':'not_attempted'}
-    command = _command(actor,proposal_id,operation,body,authorization)
-    if reserved:
-        try:
-            result = request_budget(config.endpoint,'execute_once',command)
-            # FU returns an immutable Receipt inquiry, validated by the client.
-            # A bounded one-connection issuer need not remain up for a second read.
-            if result['status'] == 'observed':
-                return result
-        except Exception:
-            # The durable request stays even if connection/response is lost.
-            pass
-    try:
-        return request_budget(config.endpoint,'inquiry',command)
-    except Exception:
-        return {'status':'unresolved'}
+    return recover_private_product_request(config.request_directory, key, body,
+        make_command=lambda value: _command(actor,proposal_id,operation,value,authorization),
+        make_envelope=lambda value: _envelope(actor,proposal_id,operation,value),
+        read_original=lambda fd: _read_original(fd,actor,proposal_id,operation,authorization),
+        send=lambda method, command: request_budget(config.endpoint,method,command),
+        code_prefix='BUDGET_COST_PRODUCT')

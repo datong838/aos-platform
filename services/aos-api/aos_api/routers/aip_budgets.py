@@ -9,6 +9,9 @@ from aos_api.aip_budget_contracts import BudgetLifecycle, BudgetRevision, Budget
 from aos_api.aip_budget_cost_basis import BudgetCostBasisProposal
 from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
 from aos_api.aip_budget_cost_product import BudgetCostReviewRequest, configured_budget_cost_product, budget_cost_request
+from aos_api.aip_budget_consumer_product import (
+    BudgetConsumptionRequest, configured_budget_consumer_product, budget_consumption_request,
+)
 from aos_api.aip_budget_activation_contracts import (
     BudgetActivationDecisionView, BudgetActivationCandidateView, BudgetDecisionReviewView,
     BudgetActivationPreviewView,
@@ -163,6 +166,34 @@ def inquire_cost_review(proposal_id: str, operation: str, response: Response,
                         authorization: str = Header(alias='Authorization'),
                         principal: Principal = Depends(require_principal)) -> dict:
     return _cost_review(response, proposal_id, operation, None, principal, authorization)
+
+
+def _budget_consumption(response, proposal_id, body, principal, authorization):
+    try:
+        result = budget_consumption_request(configured_budget_consumer_product(), proposal_id,
+                                            body, principal, authorization)
+    except BudgetProductBlocked as exc:
+        raise ApiError(code=str(exc), message='预算消费原请求暂无法确认，请保留原引用并查询',
+                       status_code=exc.status_code) from None
+    except (BudgetActivationDenied, BudgetActivationConflict, BudgetActivationInquiryUnavailable) as exc:
+        raise _map_activation(exc) from None
+    response.headers['Cache-Control'] = 'no-store'
+    response.status_code = {'observed':200,'not_attempted':200,'unresolved':202,'conflict':409,'blocked':503}[result['status']]
+    return result
+
+
+@router.post('/cost-proposals/{proposal_id}/consumption-request')
+def submit_budget_consumption(proposal_id: str, body: BudgetConsumptionRequest, response: Response,
+                              authorization: str = Header(alias='Authorization'),
+                              principal: Principal = Depends(require_principal)) -> dict:
+    return _budget_consumption(response, proposal_id, body, principal, authorization)
+
+
+@router.get('/cost-proposals/{proposal_id}/consumption-request')
+def inquire_budget_consumption(proposal_id: str, response: Response,
+                               authorization: str = Header(alias='Authorization'),
+                               principal: Principal = Depends(require_principal)) -> dict:
+    return _budget_consumption(response, proposal_id, None, principal, authorization)
 
 
 @router.post(
