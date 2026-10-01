@@ -2552,6 +2552,26 @@ class ReviewAdvanceHostService:
             _HostReviewReceiptStore(transaction, scope),
         )
 
+    def _revalidate_current_occurrence_case(self, *, transaction, scope, command,
+                                            occurrence_ref, case_ref) -> None:
+        occurrence_reader, cases, _receipts = self._components(transaction, scope)
+        try:
+            occurrence_id = UUID(str(occurrence_ref.resource_id))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("review occurrence identity is invalid") from exc
+        authority = occurrence_reader(occurrence_id)
+        expected_occurrence = {
+            "resourceType": "AutomationOccurrence",
+            "resourceId": str(authority["occurrenceId"]),
+            "revision": 1,
+            "contentHash": self._occurrence_content_hash(authority),
+        }
+        if command["occurrenceRef"] != expected_occurrence:
+            raise ValueError("review occurrence lineage drifted")
+        case = cases.get(scope, case_ref.resource_id)
+        if _case_ref(case) != command["caseRef"]:
+            raise ValueError("review case lineage drifted")
+
     @staticmethod
     def _occurrence_content_hash(payload: Mapping[str, Any]) -> str:
         return budget_canonical_hash(dict(payload), prefixed=True)
@@ -3311,6 +3331,10 @@ class ReviewAdvanceHostService:
         key, occurrence_ref, case_ref = _strict_review_accept_command(command)
         if dispatch.operation_id != "ecommerce_growth_review_advance":
             raise ValueError("review dispatch operation drifted")
+        self._revalidate_current_occurrence_case(
+            transaction=transaction, scope=scope, command=command,
+            occurrence_ref=occurrence_ref, case_ref=case_ref,
+        )
         if command.get("sourceKind") == "accepted-stage-v1":
             stage_source = self._revalidate_accepted_stage_source(
                 transaction=transaction, scope=scope, command=command)
@@ -3320,23 +3344,6 @@ class ReviewAdvanceHostService:
                 accepted_stage_task_run_id=stage_source.decision.task_run_id,
             )
             raise ValueError("accepted stage Handoff Task/Brief is not wired")
-        occurrence_reader, cases, _receipts = self._components(transaction, scope)
-        try:
-            occurrence_id = UUID(str(occurrence_ref.resource_id))
-        except (TypeError, ValueError) as exc:
-            raise ValueError("review occurrence identity is invalid") from exc
-        authority = occurrence_reader(occurrence_id)
-        expected_occurrence = {
-            "resourceType": "AutomationOccurrence",
-            "resourceId": str(authority["occurrenceId"]),
-            "revision": 1,
-            "contentHash": self._occurrence_content_hash(authority),
-        }
-        if command["occurrenceRef"] != expected_occurrence:
-            raise ValueError("review occurrence lineage drifted")
-        case = cases.get(scope, case_ref.resource_id)
-        if _case_ref(case) != command["caseRef"]:
-            raise ValueError("review case lineage drifted")
         plan = self._revalidate_growth_plan(
             transaction=transaction,
             scope=scope,

@@ -119,7 +119,7 @@ def test_review_host_rejects_accepted_stage_source_drift(source, fault):
                 transaction=HostTransaction(conn), scope=scope, command=command)
 
 
-def test_host_parses_owner_source_then_rejects_missing_original_analysis(source):
+def test_host_parses_owner_source_then_rejects_missing_current_occurrence(source):
     _owner, _draft, item, args = source
     exact = host_command(item, args)
     command = accepted_stage_command()
@@ -132,7 +132,7 @@ def test_host_parses_owner_source_then_rejects_missing_original_analysis(source)
     command['requestHash'] = command_hash({k: v for k, v in command.items() if k != 'requestHash'})
     with connect(SCOPE) as conn:
         conn.execute('SET LOCAL ROLE aos_runtime')
-        with pytest.raises(ValueError, match='AnalysisRuntimeReceipt authority is not unique'):
+        with pytest.raises(ValueError, match='AutomationOccurrence authority is missing'):
             ReviewAdvanceHostService().revalidate(
                 transaction=HostTransaction(conn), scope=SCOPE,
                 dispatch=SimpleNamespace(operation_id='ecommerce_growth_review_advance'),

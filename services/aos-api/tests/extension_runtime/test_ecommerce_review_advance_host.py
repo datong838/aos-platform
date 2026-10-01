@@ -168,6 +168,24 @@ def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
                                command=command, receipt={}) == {}
 
 
+@pytest.mark.parametrize("drift", ["occurrence", "case"])
+def test_accepted_stage_checks_current_occurrence_and_case_before_stage_source(monkeypatch, drift):
+    host, _journal = wired_host(monkeypatch, occurrence_hash=(
+        "sha256:" + "b" * 64 if drift == "occurrence" else HASH
+    ))
+    command = accepted_stage_command()
+    if drift == "case":
+        command["caseRef"] = {**command["caseRef"], "contentHash": "sha256:" + "b" * 64}
+        command["requestHash"] = command_hash({k: v for k, v in command.items() if k != "requestHash"})
+    monkeypatch.setattr(host, "_revalidate_accepted_stage_source", lambda **_: (_ for _ in ()).throw(
+        AssertionError("stage source read before current occurrence/case")
+    ))
+    with pytest.raises(ValueError, match=f"{drift} lineage drifted"):
+        host.revalidate(transaction=HostTransaction(SimpleNamespace()), scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance"),
+                        command=command)
+
+
 def wired_host(monkeypatch, *, occurrence_hash=HASH):
     from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 
