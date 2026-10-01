@@ -32,8 +32,19 @@ export function parseProviderInstanceRevision(value: unknown): ProviderInstanceR
   return { tenant: tenant(raw.tenant, "tenant"), providerInstanceId: string(raw.providerInstanceId, "providerInstanceId"), revision: integer(raw.revision, "revision", 1), contentHash: sha(raw.contentHash, "contentHash"), pluginRef, endpointProfile: { baseUrl: string(endpoint.baseUrl, "endpointProfile.baseUrl"), region: string(endpoint.region, "endpointProfile.region"), timeoutMs: integer(endpoint.timeoutMs, "endpointProfile.timeoutMs", 100), metadata: Object.fromEntries(Object.entries(object(endpoint.metadata ?? {}, "endpointProfile.metadata")).map(([key, item]) => [key, string(item, `endpointProfile.metadata.${key}`)])) }, secretBackend: match[1] as "vault" | "secret" | "keychain", secretVersion: string(raw.secretVersion, "secretVersion"), egressPolicyRef: ref(raw.egressPolicyRef, "egressPolicyRef"), dataClassificationPolicyRef: ref(raw.dataClassificationPolicyRef, "dataClassificationPolicyRef"), lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]), createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt") };
 }
 
+function configurationEval(value: unknown, lifecycle: RuntimeLifecycle): ExactRuntimeRef | null {
+  if (value === null || value === undefined) {
+    if (lifecycle !== "draft" && lifecycle !== "validated") throw new Error("evalGateRef 在非草稿配置中不可缺失");
+    return null;
+  }
+  const result = ref(value, "evalGateRef");
+  if (result.assetType !== "EvalGateDecision") throw new Error("evalGateRef 类型非法");
+  return result;
+}
+
 export function parseRegisteredModelRevision(value: unknown): RegisteredModelRevision {
   const raw = object(value, "RegisteredModelRevision");
+  const lifecycle = enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]);
   const provider = ref(raw.provider, "provider");
   if (provider.assetType !== "ProviderInstanceRevision") throw new Error("provider 类型非法");
   return {
@@ -43,7 +54,7 @@ export function parseRegisteredModelRevision(value: unknown): RegisteredModelRev
     outputModalities: strings(raw.outputModalities, "outputModalities"), capabilities: strings(raw.capabilities, "capabilities"),
     contextWindow: integer(raw.contextWindow, "contextWindow", 1), quotaPolicyRef: ref(raw.quotaPolicyRef, "quotaPolicyRef"),
     budgetPolicyRef: ref(raw.budgetPolicyRef, "budgetPolicyRef"), priceSnapshotRef: ref(raw.priceSnapshotRef, "priceSnapshotRef"),
-    evalGateRef: ref(raw.evalGateRef, "evalGateRef"), lifecycle: enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]),
+    evalGateRef: configurationEval(raw.evalGateRef, lifecycle), lifecycle,
     createdBy: string(raw.createdBy, "createdBy"), createdAt: iso(raw.createdAt, "createdAt"),
   };
 }
@@ -62,9 +73,9 @@ export function parseModelRouteRevision(value: unknown): ModelRouteRevision {
   const candidateIds = candidates.map((item) => item.model.assetId);
   if (new Set(candidateIds).size !== candidateIds.length) throw new Error("candidates 不能重复引用同一模型");
   const runtimePolicyRef = ref(raw.runtimePolicyRef, "runtimePolicyRef");
-  const evalGateRef = ref(raw.evalGateRef, "evalGateRef");
+  const lifecycle = enumeration<RuntimeLifecycle>(raw.lifecycle, "lifecycle", ["draft", "validated", "active", "suspended", "revoked"]);
+  const evalGateRef = configurationEval(raw.evalGateRef, lifecycle);
   if (runtimePolicyRef.assetType !== "RuntimePolicyRevision") throw new Error("runtimePolicyRef 类型非法");
-  if (evalGateRef.assetType !== "EvalGateDecision") throw new Error("evalGateRef 类型非法");
   const strategy = enumeration(raw.strategy, "strategy", ["failover", "weighted", "lowest_latency", "lowest_cost"] as const);
   if (strategy === "weighted" && candidates.reduce((total, item) => total + item.weight, 0) !== 100) throw new Error("weighted candidates 权重总和必须为 100");
   if (strategy !== "weighted" && candidates.some((item) => item.weight !== 100)) throw new Error("非 weighted candidates 权重必须为 100");

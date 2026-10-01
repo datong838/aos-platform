@@ -740,8 +740,9 @@ def _runtime_route_chain(scope, route_summary, candidate_ref, resolution, store,
     eval_refs = [route.eval_gate_ref]
     if model is not None:
         eval_refs.append(model.eval_gate_ref)
-    eval_gates = store.list_eval_gates(scope, eval_refs)
-    eval_ready = len(eval_gates) == len({(ref.asset_id, ref.revision, ref.content_hash) for ref in eval_refs}) and all(
+    available_eval_refs = [ref for ref in eval_refs if ref is not None]
+    eval_gates = store.list_eval_gates(scope, available_eval_refs)
+    eval_ready = len(available_eval_refs) == len(eval_refs) and len(eval_gates) == len({(ref.asset_id, ref.revision, ref.content_hash) for ref in available_eval_refs}) and all(
         item.status == "passed" for item in eval_gates
     )
     matching_pool = next((

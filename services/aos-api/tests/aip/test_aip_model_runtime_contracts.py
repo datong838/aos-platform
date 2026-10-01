@@ -239,3 +239,24 @@ def test_deferred_price_lifecycle_keeps_explicit_authorization_and_unknown_amoun
 def test_contracts_reject_tenant_payload_extensions() -> None:
     with pytest.raises(ValidationError, match="Extra inputs"):
         ModelRouteRevision(**route().model_dump(), org_id="dev-org")
+
+
+@pytest.mark.parametrize('lifecycle', ['draft', 'validated'])
+def test_route_configuration_can_truthfully_omit_eval(lifecycle):
+    payload = route().model_dump(mode='json', by_alias=True)
+    payload['lifecycle'] = lifecycle
+    payload.pop('evalGateRef')
+    configured = ModelRouteRevision.model_validate(payload)
+    assert configured.eval_gate_ref is None
+    assert configured.model_dump(mode='json', by_alias=True)['evalGateRef'] is None
+    with pytest.raises(ValidationError, match='eval_gate_ref'):
+        ModelRouteRevision.model_validate({**payload, 'lifecycle': 'active'})
+
+
+def test_missing_eval_authority_is_dependency_blocked_without_db_access():
+    from aos_api.aip_eval_authority_store import AipEvalAuthorityStore, AipEvalGateDependencyBlocked
+    from aos_api.tenant_scope import TenantScope
+    def forbidden(*args, **kwargs):
+        pytest.fail('missing ref must be rejected before opening database')
+    with pytest.raises(AipEvalGateDependencyBlocked, match='unavailable'):
+        AipEvalAuthorityStore(forbidden).require_exact_passed(TenantScope('org-org', 'dev-project'), None)

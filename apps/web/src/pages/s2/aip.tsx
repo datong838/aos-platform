@@ -2651,7 +2651,7 @@ export function ModelRouterPage() {
         <div className="mp-section-head">
           <div>
             <h2 className="mp-section-title">路由生命周期工作区</h2>
-            <p className="mp-section-hint">配置草稿、批准版本、当前生效与不可变历史严格分层</p>
+            <p className="mp-section-hint">配置草稿、已校验配置、当前生效与不可变历史严格分层</p>
           </div>
           <Link to="/aip/evals" className="btn-nav">提交评测与审批 →</Link>
         </div>
@@ -2662,9 +2662,9 @@ export function ModelRouterPage() {
             <button type="button" className="btn-nav" onClick={validateDraft}>校验当前草稿</button>
           </article>
           <article className="mp-provider-card">
-            <strong>已批准版本</strong>
+            <strong>已校验配置</strong>
             <div className="mp-provider-meta">validated · {allCanonicalRevisions.filter((item) => item.lifecycle === "validated").length} 个 revision</div>
-            <span className="tag">exact Eval 批准</span>
+            <span className="tag">运行前仍需评测通过</span>
           </article>
           <article className="mp-provider-card">
             <strong>当前生效路由</strong>
@@ -2695,9 +2695,9 @@ export function ModelRouterPage() {
               {selectedHistory.map((item, index) => (
                 <tr key={`${item.routeId}-${item.revision}`}>
                   <td>r{item.revision}<br /><code>{item.contentHash.slice(0, 12)}…</code></td>
-                  <td>{item.lifecycle === "draft" ? "配置草稿" : item.lifecycle === "validated" ? "已批准" : item.lifecycle === "active" ? "当前生效" : item.lifecycle === "suspended" ? "已暂停" : "已撤销"}</td>
+                  <td>{item.lifecycle === "draft" ? "配置草稿" : item.lifecycle === "validated" ? "已校验配置" : item.lifecycle === "active" ? "当前生效" : item.lifecycle === "suspended" ? "已暂停" : "已撤销"}</td>
                   <td>{item.strategy} · {item.candidates.map((candidate) => `${candidate.model.assetId} ${candidate.weight}%`).join("、")}</td>
-                  <td>Eval r{item.evalGateRef.revision} · Policy r{item.runtimePolicyRef.revision}</td>
+                  <td>{item.evalGateRef ? `Eval r${item.evalGateRef.revision}` : "Eval 未评估"} · Policy r{item.runtimePolicyRef.revision}</td>
                   <td>
                     {index === 0 ? <span className="tag">当前头</span> : (
                       <button type="button" className="btn-nav" onClick={() => void createRollbackDraft(item)}>生成回滚草稿</button>

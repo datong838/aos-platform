@@ -469,13 +469,15 @@ class AipEvalAuthorityStore:
     def require_exact_passed(
         self,
         scope: TenantScope,
-        ref: VersionedAssetRef,
+        ref: VersionedAssetRef | None,
         *,
         expected_target: VersionedAssetRef | None = None,
         now: datetime | None = None,
     ) -> ReleaseGateDecision:
         """Require one exact, unexpired PASSED gate for an optional exact target."""
         self._require_scope(scope)
+        if ref is None:
+            raise AipEvalGateDependencyBlocked("eval gate is unavailable")
         if ref.asset_type != "EvalGateDecision" or ref.revision != 1:
             raise AipEvalGateDependencyBlocked("eval gate ref must be exact revision 1")
         checked_at = now or datetime.now(UTC)

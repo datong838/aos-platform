@@ -226,12 +226,12 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
     expect(host.textContent).not.toContain("已保存并重读确认");
   });
 
-  it("把草稿、批准、生效和不可变历史分层展示且不把读取当激活", async () => {
+  it("把草稿、校验、生效和不可变历史分层展示且不把读取当激活", async () => {
     const H = "a".repeat(64);
     const ref = (assetType: string, assetId: string, revision = 1) => ({ assetType, assetId, revision, contentHash: H });
     const revisions = [
       { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: ref("EvalGateDecision", "eval-a"), lifecycle: "active", createdBy: "fde", createdAt: "2026-08-29T00:00:00Z" },
-      { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 2, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: ref("EvalGateDecision", "eval-a"), lifecycle: "validated", createdBy: "reviewer", createdAt: "2026-08-28T00:00:00Z" },
+      { tenant: { orgId: "org-org", projectId: "dev-project" }, routeId: "route-text", revision: 2, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-a"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-a"), evalGateRef: null, lifecycle: "validated", createdBy: "reviewer", createdAt: "2026-08-28T00:00:00Z" },
     ];
     apiMocks.apiGet.mockImplementation(async (path: string) => {
       if (path === "/v1/aip/models") return { items: [{ id: "model-a", kind: "chat", ready: true }] };
@@ -247,7 +247,9 @@ describe("Wave 3C W3 · Model Router 单一版本化真源", () => {
 
     expect(host.textContent).toContain("路由生命周期工作区");
     expect(host.textContent).toContain("配置草稿");
-    expect(host.textContent).toContain("已批准版本");
+    expect(host.textContent).toContain("已校验配置");
+    expect(host.textContent).toContain("Eval 未评估");
+    expect(host.textContent).not.toContain("exact Eval 批准");
     expect(host.textContent).toContain("当前生效路由");
     expect(host.textContent).toContain("历史版本");
     expect(host.textContent).toContain("生成回滚草稿");

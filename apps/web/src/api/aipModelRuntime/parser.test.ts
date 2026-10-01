@@ -26,7 +26,7 @@ describe("AIP-7 exact model runtime parser", () => {
   it("解析模型到 Provider、价格、容量和 Eval 的 exact 关系", () => {
     const model = parseRegisteredModelRevision({ tenant: empty.tenant, registeredModelId: "model-1", revision: 1, contentHash: H, provider: ref("ProviderInstanceRevision", "provider-1"), providerModelId: "agnes-2.5-flash", inputModalities: ["text"], outputModalities: ["text"], capabilities: ["chat", "function-calling"], contextWindow: 128000, quotaPolicyRef: ref("QuotaPolicyRevision", "quota-1"), budgetPolicyRef: ref("BudgetPolicyRevision", "budget-1"), priceSnapshotRef: ref("ModelPriceSnapshotRevision", "price-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
     expect(model.providerModelId).toBe("agnes-2.5-flash");
-    expect(model.evalGateRef.assetId).toBe("gate-1");
+    expect(model.evalGateRef?.assetId).toBe("gate-1");
   });
   it("解析不可变路由 revision 与 exact Eval/Policy 关系", () => {
     const route = parseModelRouteRevision({ tenant: empty.tenant, routeId: "route-1", revision: 3, contentHash: H, taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text", requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model-1"), weight: 100 }], strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy-1"), evalGateRef: ref("EvalGateDecision", "gate-1"), lifecycle: "active", createdBy: "fde", createdAt: empty.generatedAt });
@@ -121,4 +121,14 @@ describe("AIP-7 runtime chain parser", () => {
     const referenceNodes = chain.chains[0].nodes.map((item) => item.stage === "secret_ref" ? { ...item, secretRef: "vault://forbidden" } : item);
     expect(() => parseModelRuntimeChainOverview({ ...chain, chains: [{ ...chain.chains[0], nodes: referenceNodes }] })).toThrow(/凭据引用/);
   });
+});
+
+it("未评估路由配置保留空引用且不能解析成 active", () => {
+  const draft = { tenant: empty.tenant, routeId: "pending", revision: 1, contentHash: H,
+    taskTypes: ["summary"], requiredInputModality: "text", requiredOutputModality: "text",
+    requiredCapabilities: ["chat"], candidates: [{ model: ref("RegisteredModelRevision", "model"), weight: 100 }],
+    strategy: "failover", runtimePolicyRef: ref("RuntimePolicyRevision", "policy"),
+    evalGateRef: null, lifecycle: "draft", createdBy: "owner", createdAt: empty.generatedAt };
+  expect(parseModelRouteRevision(draft).evalGateRef).toBeNull();
+  expect(() => parseModelRouteRevision({ ...draft, lifecycle: "active" })).toThrow(/evalGateRef/);
 });

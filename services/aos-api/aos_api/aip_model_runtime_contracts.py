@@ -135,7 +135,7 @@ class RegisteredModelRevision(AipContractModel):
     quota_policy_ref: VersionedAssetRef
     budget_policy_ref: VersionedAssetRef
     price_snapshot_ref: VersionedAssetRef
-    eval_gate_ref: VersionedAssetRef
+    eval_gate_ref: VersionedAssetRef | None = None
     lifecycle: ModelRuntimeLifecycle
     created_by: str = Field(min_length=1, max_length=200)
     created_at: datetime
@@ -165,6 +165,10 @@ class RegisteredModelRevision(AipContractModel):
             "eval_gate_ref": "EvalGateDecision",
         }
         for field_name, kind in expected.items():
+            if field_name == "eval_gate_ref" and self.eval_gate_ref is None:
+                if self.lifecycle not in {ModelRuntimeLifecycle.DRAFT, ModelRuntimeLifecycle.VALIDATED}:
+                    raise ValueError("eval_gate_ref is required outside draft/validated configuration")
+                continue
             if getattr(self, field_name).asset_type != kind:
                 raise ValueError(f"{field_name} must reference {kind}")
         return self
@@ -286,7 +290,7 @@ class ModelRouteRevision(AipContractModel):
     candidates: list[ModelRouteCandidate] = Field(min_length=1, max_length=32)
     strategy: RouteStrategy
     runtime_policy_ref: VersionedAssetRef
-    eval_gate_ref: VersionedAssetRef
+    eval_gate_ref: VersionedAssetRef | None = None
     lifecycle: ModelRuntimeLifecycle
     created_by: str = Field(min_length=1, max_length=200)
     created_at: datetime
@@ -311,7 +315,10 @@ class ModelRouteRevision(AipContractModel):
             raise ValueError("non-weighted route candidates must use weight 100")
         if self.runtime_policy_ref.asset_type != "RuntimePolicyRevision":
             raise ValueError("runtime_policy_ref must reference RuntimePolicyRevision")
-        if self.eval_gate_ref.asset_type != "EvalGateDecision":
+        if self.eval_gate_ref is None:
+            if self.lifecycle not in {ModelRuntimeLifecycle.DRAFT, ModelRuntimeLifecycle.VALIDATED}:
+                raise ValueError("eval_gate_ref is required outside draft/validated configuration")
+        elif self.eval_gate_ref.asset_type != "EvalGateDecision":
             raise ValueError("eval_gate_ref must reference EvalGateDecision")
         return self
 

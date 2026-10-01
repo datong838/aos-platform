@@ -84,7 +84,7 @@ export type RegisteredModelRevision = {
   quotaPolicyRef: ExactRuntimeRef;
   budgetPolicyRef: ExactRuntimeRef;
   priceSnapshotRef: ExactRuntimeRef;
-  evalGateRef: ExactRuntimeRef;
+  evalGateRef: ExactRuntimeRef | null;
   lifecycle: RuntimeLifecycle;
   createdBy: string;
   createdAt: string;
@@ -102,7 +102,7 @@ export type ModelRouteRevision = {
   candidates: Array<{ model: ExactRuntimeRef; weight: number }>;
   strategy: "failover" | "weighted" | "lowest_latency" | "lowest_cost";
   runtimePolicyRef: ExactRuntimeRef;
-  evalGateRef: ExactRuntimeRef;
+  evalGateRef: ExactRuntimeRef | null;
   lifecycle: RuntimeLifecycle;
   createdBy: string;
   createdAt: string;

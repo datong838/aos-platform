@@ -35,7 +35,7 @@ export type CatalogModel = {
   runtimeModelRef?: ExactRuntimeRef;
   providerRef?: ExactRuntimeRef;
   routeRefs?: ExactRuntimeRef[];
-  evalGateRef?: ExactRuntimeRef;
+  evalGateRef?: ExactRuntimeRef | null;
   healthLabel?: string;
   healthExpiresAt?: string;
   capacityPoolCount?: number;
