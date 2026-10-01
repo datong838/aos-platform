@@ -20,7 +20,11 @@ from aos_api.tenant_scope import TenantScope
 
 CALLER = 'aos_budget_consumer_call'
 OWNER = 'aos_budget_consumer_owner'
-FUNCTION = 'public.aip_consume_budget_cost_a0v_126(text,text,text,text)'
+FUNCTION = 'public.aip_consume_budget_as_actor_a0v_127(text,text,text,text,text,text)'
+OWNER_FUNCTIONS = (FUNCTION,
+    'public.aip_reconcile_budget_as_actor_a0v_127(text,text,text,text,text,text)',
+    'public.aip_budget_cost_actor_a0v_127(text,text,text,text,text)',
+    'public.aip_consume_budget_cost_a0v_126(text,text,text,text)')
 _TABLES = (
     'aip_budget_cost_proposal', 'aip_budget_cost_proposal_receipt',
     'aip_budget_cost_decision', 'aip_budget_cost_revocation', 'aip_budget_cost_issuer_receipt',
@@ -54,7 +58,7 @@ class BudgetConsumerConfig:
 
 def budget_consumer_schema_snapshot(conn):
     owners = {
-        FUNCTION: OWNER,
+        **{name: OWNER for name in OWNER_FUNCTIONS},
         'public.aip_budget_cost_hash_a0v_126(jsonb)': 'aos_app',
         'public.canonical_asset_registry_jsonb(jsonb)': 'aos_app',
     }
@@ -97,8 +101,8 @@ def require_budget_consumer(conn, config, scope, *, read_only):
                 LATERAL aclexplode(att.attacl) a WHERE a.grantee=%s::regrole
                 AND NOT (n.nspname='public' AND c.relname=ANY(%s)))
             OR EXISTS(SELECT 1 FROM pg_catalog.pg_proc WHERE proowner=%s::regrole
-                AND oid<>to_regprocedure(%s)) AS unsafe""",
-            (OWNER, list(_TABLES), OWNER, list(_TABLES), OWNER, FUNCTION)).fetchone()
+                AND oid<>ALL(ARRAY(SELECT to_regprocedure(x) FROM unnest(%s::text[]) x))) AS unsafe""",
+            (OWNER, list(_TABLES), OWNER, list(_TABLES), OWNER, list(OWNER_FUNCTIONS))).fetchone()
         if extra is None or extra['unsafe'] is not False:
             raise BudgetConsumerBlocked('BUDGET_CONSUMER_PRIVILEGE_DRIFT')
         expected = json.loads(Path(__file__).with_name('aip_budget_consumer_schema.json').read_text())

@@ -38,8 +38,8 @@ def caller(tmp_path):
 
 
 def consume(conn,saved,decision,scope=SCOPE):
-    return conn.execute('SELECT public.aip_consume_budget_cost_a0v_126(%s,%s,%s,%s) AS result',
-        (*scope.key,saved['proposalId'],decision['decisionId'])).fetchone()['result']
+    return conn.execute('SELECT public.aip_consume_budget_as_actor_a0v_127(%s,%s,%s,%s,%s,%s) AS result',
+        (*scope.key,saved['proposalId'],decision['decisionId'],saved['proposal']['makerSubject'],saved['proposalHash'])).fetchone()['result']
 
 
 def approved(issuer_factory,https_signer):

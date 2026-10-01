@@ -81,7 +81,7 @@ def test_real_connection_atomic_consume_and_rollback(configured, issuer_factory,
     'ALTER POLICY budget_consumer_a0v126 ON aip_budget_head USING (true)',
     'GRANT DELETE ON aip_budget_revision TO aos_budget_consumer_owner',
     'GRANT SELECT ON aip_network_policy_receipt TO aos_budget_consumer_owner',
-    'GRANT EXECUTE ON FUNCTION aip_consume_budget_cost_a0v_126(text,text,text,text) TO PUBLIC',
+    'GRANT EXECUTE ON FUNCTION aip_consume_budget_as_actor_a0v_127(text,text,text,text,text,text) TO PUBLIC',
     "CREATE OR REPLACE FUNCTION public.aip_consume_budget_cost_a0v_126(p_org text,p_project text,p_proposal text,p_decision text) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$ BEGIN RETURN '{}'::jsonb; END $$",
     "CREATE OR REPLACE FUNCTION public.aip_budget_active_insert_guard() RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$ BEGIN RETURN NEW; END $$",
 ])
