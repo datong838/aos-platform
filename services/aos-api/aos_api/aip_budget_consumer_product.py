@@ -64,7 +64,9 @@ def configured_budget_consumer_product():
         raise BudgetProductBlocked('BUDGET_CONSUMER_PRODUCT_CONFIG_REQUIRED', 503) from None
 
 
-def budget_consumption_request(config, proposal_id, body, principal, authorization):
+def budget_consumption_request(config, proposal_id, body, principal, authorization, *, operation='consume'):
+    if operation not in ('consume', 'configure'):
+        raise BudgetProductBlocked('BUDGET_CONSUMER_PRODUCT_OPERATION_INVALID', 422)
     actor = _authenticated(principal, authorization)
     try:
         if type(proposal_id) is not str or not 1 <= len(proposal_id) <= 160:
@@ -81,13 +83,14 @@ def budget_consumption_request(config, proposal_id, body, principal, authorizati
     review = store.review(actor, proposal_id)
     if review['proposal']['proposal']['makerSubject'] != actor.subject:
         raise BudgetProductBlocked('BUDGET_CONSUMER_ORIGINAL_MAKER_REQUIRED', 403)
-    key = 'budget-consumer-product-v1-'+canonical_hash([actor.org_id, actor.project_id, actor.subject, proposal_id])
+    prefix = 'budget-consumer-product-v1-' if operation == 'consume' else 'budget-configuration-product-v1-'
+    key = prefix+canonical_hash([actor.org_id, actor.project_id, actor.subject, proposal_id])
 
     def make_command(value):
         if type(value) is not BudgetConsumptionRequest:
             raise ValueError()
         value = BudgetConsumptionRequest.model_validate(value.model_dump())
-        return BudgetConsumerRequest(schemaVersion=1, orgId=actor.org_id, projectId=actor.project_id,
+        return BudgetConsumerRequest(schemaVersion=1, operation=operation, orgId=actor.org_id, projectId=actor.project_id,
             proposalId=proposal_id, proposalHash=value.proposal_hash, decisionId=value.decision_id,
             bearerToken=parse_bearer(authorization))
 

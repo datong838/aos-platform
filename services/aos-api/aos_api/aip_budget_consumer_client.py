@@ -2,9 +2,8 @@
 from dataclasses import dataclass
 import json
 from pathlib import Path
-import re
 
-from aos_api.aip_budget_consumer_service import BudgetConsumerRequest
+from aos_api.aip_budget_consumer_service import BudgetConsumerRequest, validate_consumer_result
 from aos_api.aip_network_issuer_ipc import MAX_ISSUER_FRAME_BYTES, _unique_pairs, _invalid_constant
 from aos_api.aip_private_service_transport import validate_private_endpoint, exchange_private_frame, request_private_frame
 
@@ -37,23 +36,8 @@ def decode_consumer_response(raw, request):
         if type(value) is not dict or type(value.get('schemaVersion')) is not int or value['schemaVersion'] != 1:
             raise ValueError()
         status = value.get('status')
-        if status == 'observed':
-            if set(value) != {'schemaVersion', 'status', 'receipt', 'activationEligible'} or value['activationEligible'] is not False:
-                raise ValueError()
-            r = value['receipt']
-            if (type(r) is not dict or set(r) != {'resourceType', 'resourceId', 'revision', 'contentHash',
-                    'proposalId', 'proposalHash', 'decisionId', 'receiptId'}
-                    or r['resourceType'] != 'BudgetRevision' or r['proposalId'] != request.proposal_id
-                    or r['proposalHash'] != request.proposal_hash or r['decisionId'] != request.decision_id
-                    or r['receiptId'] != 'budget-cost-consume-'+request.request_hash
-                    or type(r['revision']) is not int or not 1 <= r['revision'] <= 9007199254740991
-                    or type(r['contentHash']) is not str or re.fullmatch('[0-9a-f]{64}', r['contentHash']) is None
-                    or type(r['resourceId']) is not str or not 1 <= len(r['resourceId']) <= 160
-                    or not r['resourceId'].isprintable() or any(c.isspace() for c in r['resourceId'])):
-                raise ValueError()
-        elif status in ('unresolved', 'conflict'):
-            if set(value) != {'schemaVersion', 'status'}:
-                raise ValueError()
+        if status in ('observed', 'unresolved', 'conflict'):
+            validate_consumer_result({k:v for k,v in value.items() if k != 'schemaVersion'}, request)
         elif status == 'blocked':
             if set(value) != {'schemaVersion', 'status', 'code'} or value['code'] != 'BUDGET_CONSUMER_REQUEST_BLOCKED':
                 raise ValueError()

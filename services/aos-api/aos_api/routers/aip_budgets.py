@@ -168,10 +168,10 @@ def inquire_cost_review(proposal_id: str, operation: str, response: Response,
     return _cost_review(response, proposal_id, operation, None, principal, authorization)
 
 
-def _budget_consumption(response, proposal_id, body, principal, authorization):
+def _budget_consumption(response, proposal_id, body, principal, authorization, *, operation='consume'):
     try:
         result = budget_consumption_request(configured_budget_consumer_product(), proposal_id,
-                                            body, principal, authorization)
+                                            body, principal, authorization, operation=operation)
     except BudgetProductBlocked as exc:
         raise ApiError(code=str(exc), message='预算消费原请求暂无法确认，请保留原引用并查询',
                        status_code=exc.status_code) from None
@@ -194,6 +194,20 @@ def inquire_budget_consumption(proposal_id: str, response: Response,
                                authorization: str = Header(alias='Authorization'),
                                principal: Principal = Depends(require_principal)) -> dict:
     return _budget_consumption(response, proposal_id, None, principal, authorization)
+
+
+@router.post('/cost-proposals/{proposal_id}/configuration-request')
+def submit_budget_configuration(proposal_id: str, body: BudgetConsumptionRequest, response: Response,
+                                authorization: str = Header(alias='Authorization'),
+                                principal: Principal = Depends(require_principal)) -> dict:
+    return _budget_consumption(response, proposal_id, body, principal, authorization, operation='configure')
+
+
+@router.get('/cost-proposals/{proposal_id}/configuration-request')
+def inquire_budget_configuration(proposal_id: str, response: Response,
+                                 authorization: str = Header(alias='Authorization'),
+                                 principal: Principal = Depends(require_principal)) -> dict:
+    return _budget_consumption(response, proposal_id, None, principal, authorization, operation='configure')
 
 
 @router.post(
