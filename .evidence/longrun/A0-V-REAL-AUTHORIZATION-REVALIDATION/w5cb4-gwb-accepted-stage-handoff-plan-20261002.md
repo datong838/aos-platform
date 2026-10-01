@@ -79,3 +79,7 @@ GW-b-2c2b 施工结果：隔离 PG RED 为 `approved_stage_source` 参数缺失�
 3. 验证：专项 OCI+PG、原签名安装相邻测试、c2c0 测试、静态及 diff check。测试 green 只代表隔离路径；当前正式安装、真人批准与自然首链仍需独立证据。若完整 disposable DB 的身份/策略比历史局部 schema 更严格，按原正式接口补 fixture 身份/来源，不使用 `session_replication_role=replica` 或高权限跳过合同。
 
 GW-b-2c2c1a 先收口签名安装 producer：新 hook RED 是接口缺失；修后完整 PG 暴露 runtime 角色门、schema migration 权限与 verify 准入参数的历史测试 helper 缺口，均以原角色/owner 和现有受限服务参数修正。`preparation_admission=lambda:True` 仅为测试 Host 准入 seam，不能视为当前正式 Host assignment。新测试证明 test-only 签名、apply、verify、active 安装与仍 fenced/disabled 的 binding 在完整 schema 可组合；**还没有同一测试中的原 Analysis Receipt、派发、Case/Occurrence 与 Stage 联合链**。GW-b-2c2c1b 继续这些原 producer，不沿用 c2c0 的 raw binding/dispatch 夹具。
+
+## GW-b-2c2c1b1 签名安装至原 Case 的受限前缀（07:45）
+
+复习 231-5 §9 与原 `AutomationOccurrenceStore.put_binding`：当前同代次正式 dispatch 是 ScheduleBinding 必需来源；c1a 的真实签名测试安装虽 active，但 binding 仍 disabled/fenced，尚无 dispatch。先只改 `services/aos-api/tests/extension_runtime/test_accepted_stage_signed_source_pg.py`：在同一 full-schema、同租户、同一 signed installation 的 verify probe 内，调用原 `BusinessInvestigationCaseStore` 创建并激活 Case，回读其原 head；随后使用原 `AutomationOccurrenceStore.put_binding` 证明在无正式 dispatch 时拒绝 ScheduleBinding 且无 Occurrence 副作用。测试先运行并记录新发现；若原生产者有实际缺陷，再以最小代码修复，不能为 GREEN 手插 dispatch、直接打开 binding 或制造批准。相邻测试与 OCI 容器清理复验。此切片只推进原 Case 联合来源和精确 dispatch 缺口，不能称已启用 Host 或完成 Analysis/Stage/首链。后续 c1b2 查正式配置、AIP cutover approval、dispatch producer 的可执行路径，再接自然 Occurrence 与 Analysis Receipt。
