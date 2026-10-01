@@ -18,6 +18,7 @@ class ContentTaskSpec:
     constraints: tuple[str, ...]
     growth_plan_ref: ExactRef
     artifact_refs: tuple[ExactRef, ...]
+    source_kind: str = "issue-review-v1"
 
     def __post_init__(self) -> None:
         text_limits = (
@@ -42,13 +43,20 @@ class ContentTaskSpec:
             raise ValueError("content business values must be non-blank strings")
         if len(values) != len(set(values)):
             raise ValueError("content business values must be unique")
-        if (
-            type(self.artifact_refs) is not tuple
-            or len(self.artifact_refs) != 4
-            or len(set(self.artifact_refs)) != 4
-            or any(ref.resource_type != "ArtifactRevision" for ref in self.artifact_refs)
-        ):
-            raise ValueError("content task requires four unique Artifact revisions")
+        if self.source_kind == "issue-review-v1":
+            if (
+                type(self.artifact_refs) is not tuple
+                or len(self.artifact_refs) != 4
+                or len(set(self.artifact_refs)) != 4
+                or any(ref.resource_type != "ArtifactRevision" for ref in self.artifact_refs)
+            ):
+                raise ValueError("content task requires four unique Artifact revisions")
+        elif self.source_kind == "accepted-stage-v1":
+            if (type(self.artifact_refs) is not tuple or len(self.artifact_refs) != 1
+                    or self.artifact_refs[0].resource_type != "Artifact"):
+                raise ValueError("accepted stage content task requires one exact Artifact")
+        else:
+            raise ValueError("unsupported content task source kind")
 
     def business_text_values(self) -> tuple[str, ...]:
         return (

@@ -8,6 +8,8 @@ import re
 import unicodedata
 
 from .ecommerce_content_campaign_workflow_contracts import ContentTaskSpec
+from .ecommerce_analyst_authority_contracts import AnalystExactRef
+from .ecommerce_analyst_stage_decision import EvalStageAttemptRef
 from .sdk_ports import ExactRef
 
 
@@ -205,7 +207,119 @@ class ReviewHandoffRequest:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class AcceptedStageHandoffRequest:
+    """Package-owned exact proposal; current Host still refuses its execution."""
+
+    occurrence_ref: ExactRef
+    case_ref: ExactRef
+    run_ref: ExactRef
+    analysis_receipt_ref: ExactRef
+    current_plan_ref: ExactRef
+    growth_plan_ref: ExactRef
+    eval_report_ref: ExactRef
+    stage_decision_ref: AnalystExactRef
+    stage_task_run_id: str
+    stage_plan_ref: AnalystExactRef
+    stage_attempt_ref: EvalStageAttemptRef
+    stage_artifact_ref: AnalystExactRef
+    responsibility_plan_ref: AnalystExactRef
+    cutoff_at: datetime
+    expires_at: datetime
+    idempotency_key: str
+    content_task: ContentTaskSpec
+
+    def __post_init__(self) -> None:
+        for value, kind, model in (
+            (self.occurrence_ref, "AutomationOccurrence", ExactRef),
+            (self.case_ref, "BusinessInvestigationCaseRevision", ExactRef),
+            (self.run_ref, "BusinessInvestigationRun", ExactRef),
+            (self.analysis_receipt_ref, "AnalysisRuntimeReceipt", ExactRef),
+            (self.current_plan_ref, "PlanRevision", ExactRef),
+            (self.growth_plan_ref, "GrowthPlanRevision", ExactRef),
+            (self.eval_report_ref, "EvalReportRevision", ExactRef),
+            (self.stage_decision_ref, "AnalystStageDecisionRevision", AnalystExactRef),
+            (self.stage_plan_ref, "PlanRevision", AnalystExactRef),
+            (self.stage_artifact_ref, "Artifact", AnalystExactRef),
+            (self.responsibility_plan_ref, "ResponsibilityPlanRevision", AnalystExactRef),
+        ):
+            if type(value) is not model or value.resource_type != kind:
+                raise ValueError("accepted stage Handoff exact reference type drifted")
+        if (type(self.stage_attempt_ref) is not EvalStageAttemptRef
+                or type(self.stage_task_run_id) is not str or not self.stage_task_run_id
+                or self.stage_task_run_id != self.stage_task_run_id.strip()
+                or self.stage_attempt_ref.run_id != self.stage_task_run_id
+                or self.stage_attempt_ref.step_key not in {"solution-design", "solution_design"}
+                or self.current_plan_ref.resource_id != self.stage_plan_ref.resource_id
+                or self.current_plan_ref.revision != self.stage_plan_ref.revision
+                or self.current_plan_ref.content_hash != "sha256:" + self.stage_plan_ref.content_hash):
+            raise ValueError("accepted stage Handoff runtime source drifted")
+        if (type(self.cutoff_at) is not datetime or self.cutoff_at.utcoffset() is None
+                or type(self.expires_at) is not datetime or self.expires_at.utcoffset() is None
+                or not self.cutoff_at < self.expires_at <= self.cutoff_at + timedelta(days=7)
+                or type(self.idempotency_key) is not str
+                or self.idempotency_key != self.idempotency_key.strip()
+                or not 1 <= len(self.idempotency_key) <= 200):
+            raise ValueError("accepted stage Handoff lifetime or idempotency drifted")
+        if (type(self.content_task) is not ContentTaskSpec
+                or self.content_task.source_kind != "accepted-stage-v1"
+                or self.content_task.growth_plan_ref != self.growth_plan_ref
+                or self.content_task.artifact_refs != (ExactRef(
+                    "Artifact", self.stage_artifact_ref.resource_id,
+                    self.stage_artifact_ref.revision,
+                    "sha256:" + self.stage_artifact_ref.content_hash),)):
+            raise ValueError("accepted stage Handoff Task source drifted")
+        for value in self.content_task.business_text_values():
+            normalized = "".join(ch for ch in unicodedata.normalize("NFKC", value)
+                                 if unicodedata.category(ch) != "Cf")
+            if (normalized != value or value != value.strip()
+                    or not _CJK.search(value) or _TECHNICAL_POLLUTION.search(value)):
+                raise ValueError("accepted stage Handoff requires Chinese business text")
+
+    def command_payload(self) -> dict[str, object]:
+        task = self.content_task
+        return {
+            "operation": "review_handoff.advance",
+            "sourceKind": "accepted-stage-v1",
+            "occurrenceRef": exact_ref_payload(self.occurrence_ref),
+            "caseRef": exact_ref_payload(self.case_ref),
+            "runRef": exact_ref_payload(self.run_ref),
+            "analysisReceiptRef": exact_ref_payload(self.analysis_receipt_ref),
+            "currentPlanRef": exact_ref_payload(self.current_plan_ref),
+            "growthPlanRef": exact_ref_payload(self.growth_plan_ref),
+            "evalReportRef": exact_ref_payload(self.eval_report_ref),
+            "stageDecisionRef": self.stage_decision_ref.model_dump(mode="json", by_alias=True),
+            "stageTaskRunId": self.stage_task_run_id,
+            "stagePlanRef": self.stage_plan_ref.model_dump(mode="json", by_alias=True),
+            "stageAttemptRef": self.stage_attempt_ref.model_dump(mode="json", by_alias=True),
+            "stageArtifactRef": self.stage_artifact_ref.model_dump(mode="json", by_alias=True),
+            "responsibilityPlanRef": self.responsibility_plan_ref.model_dump(mode="json", by_alias=True),
+            "decision": "ACCEPT",
+            "returnStage": None,
+            "targetModuleId": "ecommerce.content-campaign",
+            "sourceSlotId": "analyst.solution",
+            "targetSlotId": "content.plan",
+            "markings": ["internal"],
+            "expiresAt": self.expires_at.isoformat(),
+            "taskSpec": {
+                "taskType": "ecommerce.workshop.business_task",
+                "briefType": "content_campaign",
+                "title": task.title,
+                "objective": task.objective,
+                "channels": list(task.channels),
+                "audience": task.audience,
+                "timeWindow": task.time_window,
+                "constraints": list(task.constraints),
+                "growthPlanRef": exact_ref_payload(task.growth_plan_ref),
+                "artifactRefs": [exact_ref_payload(ref) for ref in task.artifact_refs],
+            },
+            "cutoffAt": self.cutoff_at.isoformat(),
+            "idempotencyKey": self.idempotency_key,
+        }
+
+
 __all__ = [
+    "AcceptedStageHandoffRequest",
     "ARTIFACT_FAMILIES",
     "ArtifactBinding",
     "ReviewHandoffRequest",

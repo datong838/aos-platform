@@ -29,3 +29,9 @@
 ## GW-b-2a 原 Owner 同事务读取（06:08）
 
 Host 仅在新来源 envelope/dispatch 校验后，调用现有 `read_approved_stage_handoff_source` 回读当前人工决定与获批 successor，再逐项对齐原 Artifact/EvalReport/ResponsibilityPlan/截止时间。这个读取和禁入都在原 `ReviewAdvanceHostService.revalidate` 内；`execute` 继续拒绝，bundle 暂不发出新命令。隔离 PG 原 Store fixture 用于代码正反测试，不是当前真实人工批准。下一步必须让 bundle producer 生成同一 exact 命令，并补原 Occurrence/Case/Run/Analysis Receipt 与 Stage TaskRun 的真来源关联；之后 Task/Brief v3、内容生成与评审同步接线。只做此读取不会解锁 Handoff。
+
+## GW-b-2b bundle producer 文件级计划（06:12）
+
+先在 `ecommerce_content_campaign_workflow_contracts.py` 给 `ContentTaskSpec` 增显式来源种类：默认旧 Issue 路径仍要求四个 `ArtifactRevision`；仅 `accepted-stage-v1` 允许一个原 `Artifact`。再在 `ecommerce_business_investigation_review_command.py` 新增独立强类型 `AcceptedStageHandoffRequest`，使用包内现有 `AnalystExactRef`、`EvalStageAttemptRef` 与原 `ExactRef`，输出宿主 GW-b-1 已冻结的字段；`ecommerce_business_investigation_handoff.py` 暴露纯命令构造。`test_ecommerce_review_handoff_content_runtime.py` 先 RED 并验证输出被宿主严格 parser 接受，跨来源/布尔修订/哈希漂移拒绝。生产 application 的 `advance_review` 与 Receipt parser 在 Task/Brief v3 和完整 Owner 联合校验前不发此命令，Host `execute` 保持禁入。下一切片再接原 BI↔Stage TaskRun 与 Task/Brief/生成评审，不能以纯 producer GREEN 代替首链。
+
+GW-b-2b 施工结果：bundle 纯命令生产与宿主语法 parser 联合 GREEN；不接 `advance_review`/transport。下一波需要原 Occurrence/Case/Run/Analysis Receipt 与阶段 TaskRun/Plan/Decision 的同源核验，随后 Task/Brief v3 和内容生成/评审同源校验；当前 runtime 仍禁入。

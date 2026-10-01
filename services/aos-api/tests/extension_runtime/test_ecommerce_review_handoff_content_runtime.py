@@ -111,6 +111,62 @@ def request(*, decision="ACCEPT", key="review-1", **overrides):
     return ReviewHandoffRequest(**values)
 
 
+def test_package_builds_accepted_stage_command_without_inventing_four_artifacts() -> None:
+    from dataclasses import replace
+    from ecommerce_growth.ecommerce_analyst_authority_contracts import AnalystExactRef
+    from ecommerce_growth.ecommerce_analyst_stage_decision import EvalStageAttemptRef
+    from ecommerce_growth.ecommerce_business_investigation_handoff import build_accepted_stage_handoff_command
+    import ecommerce_growth.ecommerce_business_investigation_review_command as review_commands
+
+    def stage_ref(kind: str, identity: str) -> AnalystExactRef:
+        return AnalystExactRef(resourceType=kind, resourceId=identity,
+                               revision=1, contentHash="a" * 64)
+
+    task = ContentTaskSpec(
+        title="制定七夕会员复购活动方案",
+        objective="围绕栖月汇微商城会员设计七夕复购活动",
+        channels=("微信小店", "私域社群"),
+        audience="近九十天已购会员",
+        time_window="七夕活动前七天至活动后三天",
+        constraints=("毛利率不低于百分之十五",),
+        growth_plan_ref=ref("GrowthPlanRevision", "growth-plan-1"),
+        artifact_refs=(ref("Artifact", "original-stage-text"),),
+        source_kind="accepted-stage-v1",
+    )
+    item = review_commands.AcceptedStageHandoffRequest(
+        occurrence_ref=ref("AutomationOccurrence", "11111111-1111-4111-8111-111111111111"),
+        case_ref=ref("BusinessInvestigationCaseRevision", "case-1"),
+        run_ref=ref("BusinessInvestigationRun", "run-1"),
+        analysis_receipt_ref=ref("AnalysisRuntimeReceipt", "analysis-1"),
+        current_plan_ref=ref("PlanRevision", "plan-1"),
+        growth_plan_ref=task.growth_plan_ref,
+        eval_report_ref=ref("EvalReportRevision", "eval-1"),
+        stage_decision_ref=stage_ref("AnalystStageDecisionRevision", "stage-decision-1"),
+        stage_task_run_id="task-run-1",
+        stage_plan_ref=stage_ref("PlanRevision", "plan-1"),
+        stage_attempt_ref=EvalStageAttemptRef(resourceType="StepRunAttempt", runId="task-run-1",
+                                              stepKey="solution-design", stepRunId="stage-step-1",
+                                              attempt=1, inputHash="a" * 64),
+        stage_artifact_ref=stage_ref("Artifact", "original-stage-text"),
+        responsibility_plan_ref=stage_ref("ResponsibilityPlanRevision", "responsibility-1"),
+        cutoff_at=CUTOFF, expires_at=CUTOFF + timedelta(days=1),
+        idempotency_key="accepted-stage-1", content_task=task,
+    )
+    command = build_accepted_stage_handoff_command(item)
+    command["requestHash"] = runtime_adapters._analysis_command_hash(command)
+    key, _occurrence, _case = runtime_adapters._strict_review_accept_command(command)
+    assert key == "accepted-stage-1"
+    assert command["sourceKind"] == "accepted-stage-v1"
+    assert "reviewIssueRef" not in command and "artifactBindings" not in command
+    assert command["taskSpec"]["artifactRefs"] == [exact_ref_payload(task.artifact_refs[0])]
+    with pytest.raises(ValueError):
+        request(content_task=task)
+    with pytest.raises(ValueError, match="source kind"):
+        replace(task, source_kind="unrecognized")
+    with pytest.raises(ValueError, match="reference type"):
+        replace(item, stage_artifact_ref=ref("Artifact", "original-stage-text"))
+
+
 def receipt_payload(command, *, replayed=False, **overrides):
     accepted = command["decision"] == "ACCEPT"
     value = {
