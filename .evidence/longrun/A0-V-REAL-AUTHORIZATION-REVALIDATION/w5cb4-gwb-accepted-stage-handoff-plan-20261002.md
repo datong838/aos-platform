@@ -67,3 +67,15 @@ GW-b-2c2b 施工结果：隔离 PG RED 为 `approved_stage_source` 参数缺失�
 ## GW-b-2c2c0 前缀修正与复审（07:08）
 
 原始 RED 中直接插入 `bundle_installation` 被 `fk_bundle_installation_current_revision` 拒绝。只在隔离 `aos_test_*_ti4_test` PG 内，改用原 `PostgresCompositionStore.create_or_get` 与 `PostgresInstallationStore.create_draft` 形成有合法 revision 的测试安装；`extension_runtime_binding`/dispatch 仍是测试控制面夹具，不能当作当前签名正式安装。原 Case 与 Occurrence 分别经其 Store 产生；同一 HostTransaction 的预期下一拒绝点是缺 `AnalysisRuntimeReceipt`。本切片只证明前缀接线及失败封闭，不改变 Host、发布或真实库。随后 GW-b-2c2c1 必须引入正式签名安装 producer 和原 Analysis/Stage/AgentRun/Eval/权限联合链，保留 Task/Brief v3 为后续门。
+
+## GW-b-2c2c1 签名安装与原 Analysis 联合方案（07:20）
+
+复习 231-5 §5/§9 和 231-9 §2/§4：获批阶段需真实同安装代次的 Analysis、TaskRun 与阶段来源，不能把测试 draft 或页面200当放行。`signed_installation_case.run_signed_installation` 已由原 RegistryService、Composition、InstallationService、RuntimeLifecycleService 和 test-only OCI 实施签名安装/verify，但现有 `package_probe` 位于 draft 前，现有生命周期测试又只迁移至 `a0v_028` 的局部 schema，不能承载当下 Stage/Analysis 表。`test_ecommerce_analysis_run_resume_pg.py` 的原 Analysis 片段位于独立 schema，前置安装/派发以 `session_replication_role=replica` 直插，不能挪作正式安装证明。
+
+文件级施工：
+
+1. `services/aos-api/tests/extension_runtime/signed_installation_case.py`：仅增可选 `verified_probe` 测试钩子，放在原 verify 成功、active/binding 回读之后、停止 test-only OCI 前；默认 `None` 保持既有测试合同。完整 schema 的 worker 身份门要求 `current_user=aos_runtime`，故辅助入口再增可选 `worker_connect` 精确注入正式 runtime 角色连接，默认沿用原 `connect`。不得给生产服务添加捷径。
+2. 新 `services/aos-api/tests/extension_runtime/test_accepted_stage_signed_source_pg.py`：要求 `AOS_EXTENSION_PG_TEST=1` 与 `AOS_EXTENSION_OCI_TEST=1`，只对自动创建的完整 disposable PG；原 OCI helper 固定使用 `colima-aos-extension` 中一次性隔离容器（只用新随机名字，不连接当前权威 PG），测试后必须回读清理。先 RED 证明 helper 尚无 verified hook，再用原签名 producer 回读 active 安装/binding 与隔离权限。后续在同一测试事实中加入原 Case/Occurrence/Analysis/Stage/AgentRun/Eval，任何一步未联通应保留精确失败和原因。
+3. 验证：专项 OCI+PG、原签名安装相邻测试、c2c0 测试、静态及 diff check。测试 green 只代表隔离路径；当前正式安装、真人批准与自然首链仍需独立证据。若完整 disposable DB 的身份/策略比历史局部 schema 更严格，按原正式接口补 fixture 身份/来源，不使用 `session_replication_role=replica` 或高权限跳过合同。
+
+GW-b-2c2c1a 先收口签名安装 producer：新 hook RED 是接口缺失；修后完整 PG 暴露 runtime 角色门、schema migration 权限与 verify 准入参数的历史测试 helper 缺口，均以原角色/owner 和现有受限服务参数修正。`preparation_admission=lambda:True` 仅为测试 Host 准入 seam，不能视为当前正式 Host assignment。新测试证明 test-only 签名、apply、verify、active 安装与仍 fenced/disabled 的 binding 在完整 schema 可组合；**还没有同一测试中的原 Analysis Receipt、派发、Case/Occurrence 与 Stage 联合链**。GW-b-2c2c1b 继续这些原 producer，不沿用 c2c0 的 raw binding/dispatch 夹具。

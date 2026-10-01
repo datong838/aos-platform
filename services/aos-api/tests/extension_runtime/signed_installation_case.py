@@ -39,7 +39,7 @@ SCHEMA_PROBE_SQL='CREATE TABLE runtime_schema_probe (id bigint)'
 
 def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,planned=False,
                             worker_mode=None,schema_setup=None,lifecycle_probe=None,
-                            package_probe=None):
+                            package_probe=None,verified_probe=None,worker_connect=None):
     from test_admission import fixture
     from test_persistent_supervisor import build_session_image,CONTEXT
     from offline_registry import cached_registry_image
@@ -146,7 +146,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                 return configuration_authority['authorize'](*a,**k)
             from aos_api.extension_runtime.current_permission import CurrentControlPermission
             from aos_api.asset_registry.control_policy import ENABLE_RUNTIME_OPERATION
-            worker=PreparationWorker(connect=connect,driver=OciDriver(context=CONTEXT),
+            worker=PreparationWorker(connect=worker_connect or connect,driver=OciDriver(context=CONTEXT),
                 installation_store=store,revalidator=fresh,check_current_permission=permission,
                 load_record=load_record,read_artifact=args['read_artifact'],policy=policy,platform=args['platform'],
                 check_current_conditions=conditions,
@@ -188,7 +188,8 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                     if worker_mode=='verify':
                         from aos_api.ecommerce_workshop_catalog import PostgresWorkshopCatalogSource
                         requested=await asyncio.to_thread(service.request_preparation,**action,kind='runtime-verify',
-                            idempotency_key='signed-verify',if_match=f'"{applied.etag_version}"')
+                            idempotency_key='signed-verify',preparation_admission=lambda:True,
+                            if_match=f'"{applied.etag_version}"')
                         if lifecycle_probe is None:
                             verified=await job.verify(operation_id=requested.response_json['operationId'],
                                 expected_revision=requested.response_json['revision'])
@@ -203,6 +204,9 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                         with connect() as conn:
                             assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
                                 'enabled':False,'operation_fence':True,'observed_state':'ready'}
+                        if verified_probe is not None:
+                            verified_probe(connect=connect,scope=scope,installation=verified,
+                                generation=job.plan.generation)
                         # Actual current catalog must not turn active into legacy capability.
                         assert await asyncio.to_thread(PostgresWorkshopCatalogSource(connect).read_active_bundles,
                             **scope,markings=[])==()
