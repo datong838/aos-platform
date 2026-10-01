@@ -70,9 +70,11 @@ def persist_signed_skill_eval_report(
                 conn.execute("""INSERT INTO aip_eval_report_revision
                     (org_id,project_id,report_id,revision,content_hash,run_id,
                      suite_ref,target_ref,dataset_ref,judge_ref,results,passed,
-                     failed,total,pass_rate,gate_passed,created_at)
+                     failed,total,pass_rate,gate_passed,created_at,
+                     eval_contract_ref,subject_artifact_ref,stage_attempt_ref,
+                     gate_policy_ref,evidence_cutoff_at)
                     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                            %s,%s,%s,%s,%s,%s,%s)""",
+                            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                     (*scope, report.report_id, report.revision, report.content_hash,
                      report.run_id,
                      Jsonb(report.suite_ref.model_dump(mode="json", by_alias=True)),
@@ -82,7 +84,11 @@ def persist_signed_skill_eval_report(
                      Jsonb([case.model_dump(mode="json", by_alias=True)
                             for case in report.results]),
                      report.passed, report.failed, report.total, report.pass_rate,
-                     report.gate_passed, report.created_at))
+                     report.gate_passed, report.created_at,
+                     *(None if ref is None else Jsonb(ref.model_dump(mode="json", by_alias=True))
+                       for ref in (report.eval_contract_ref, report.subject_artifact_ref,
+                                   report.stage_attempt_ref, report.gate_policy_ref)),
+                     report.evidence_cutoff_at))
                 for result, pair in zip(report.results, proof.cases, strict=True):
                     conn.execute("""INSERT INTO aip_eval_case_execution_proof
                         (org_id,project_id,run_id,case_id,report_id,report_revision,

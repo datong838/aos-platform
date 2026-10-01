@@ -26,6 +26,7 @@ from aos_api.aip_eval_report_proof_reader import (
     PresentedEvalCaseProof, VerifiedSkillEvalReportProof,
 )
 from aos_api.aip_eval_runner import compute_eval_report_hash
+from aos_api.aip_eval_report_context import require_same_eval_context
 from aos_api.tenant_scope import TenantScope
 
 
@@ -93,6 +94,7 @@ def preflight_skill_eval_writer_authority(
                 and run["judge_ref"] == report.judge.model_dump(mode="json", by_alias=True),
                 "Skill Eval Run and Report drifted",
             )
+            require_same_eval_context(report, run)
             dataset = cur.execute("""SELECT * FROM aip_eval_dataset_revision
                 WHERE org_id=%s AND project_id=%s AND dataset_id=%s AND revision=%s""",
                 (*scope, report.dataset.dataset_id, report.dataset.revision)).fetchone()

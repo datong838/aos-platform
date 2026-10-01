@@ -14,6 +14,7 @@ from aos_api.aip_eval_contracts import (
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected, VerifiedEvalExecutionPair
 from aos_api.aip_eval_persisted_authority_reader import read_persisted_execution_pair
 from aos_api.aip_eval_runner import AipEvalRunner, compute_eval_report_hash
+from aos_api.aip_eval_report_context import require_same_eval_context
 from aos_api.tenant_scope import TenantScope
 
 
@@ -87,6 +88,7 @@ def read_verified_skill_eval_report(
                 and run["judge_ref"] == report.judge.model_dump(mode="json", by_alias=True),
                 "Skill Eval Run is not exact and succeeded",
             )
+            require_same_eval_context(report, run)
             row = cur.execute("""SELECT * FROM aip_eval_report_revision
                 WHERE org_id=%s AND project_id=%s AND report_id=%s AND revision=%s""",
                 (*scope.key, report.report_id, report.revision)).fetchone()
