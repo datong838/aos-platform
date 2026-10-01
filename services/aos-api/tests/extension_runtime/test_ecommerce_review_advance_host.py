@@ -127,7 +127,8 @@ def test_accepted_stage_source_has_a_distinct_strict_envelope():
     assert case.resource_id == "case-1"
 
 
-@pytest.mark.parametrize("mutation", ["missing_decision", "wrong_artifact", "hash_drift", "old_issue"])
+@pytest.mark.parametrize("mutation", ["missing_decision", "wrong_artifact", "hash_drift", "old_issue",
+                                       "boolean_stage_revision", "extra_stage_ref", "boolean_attempt"])
 def test_accepted_stage_envelope_rejects_cross_source_drift(mutation):
     from aos_api.ecommerce_growth_runtime_adapters import _strict_review_accept_command
 
@@ -138,6 +139,12 @@ def test_accepted_stage_envelope_rejects_cross_source_drift(mutation):
         value["stageArtifactRef"] = {**value["stageArtifactRef"], "resourceId": "another"}
     elif mutation == "hash_drift":
         value["requestHash"] = "sha256:" + "b" * 64
+    elif mutation == "boolean_stage_revision":
+        value["stageDecisionRef"]["revision"] = True
+    elif mutation == "extra_stage_ref":
+        value["stageDecisionRef"]["admin"] = True
+    elif mutation == "boolean_attempt":
+        value["stageAttemptRef"]["attempt"] = True
     else:
         value["reviewIssueRef"] = ref("ReviewIssueRevision", "old-issue")
     if mutation != "hash_drift":
@@ -150,9 +157,9 @@ def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
     command = accepted_stage_command()
     host = ReviewAdvanceHostService()
     transaction = HostTransaction(SimpleNamespace())
-    with pytest.raises(ValueError, match="Owner is not wired"):
+    with pytest.raises(ValueError, match="dispatch operation drifted"):
         host.revalidate(transaction=transaction, scope=SCOPE,
-                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance"),
+                        dispatch=SimpleNamespace(operation_id="other-operation"),
                         command=command)
     with pytest.raises(ValueError, match="Owner is not wired"):
         host.execute(transaction=transaction, scope=SCOPE, dispatch_ref=None,

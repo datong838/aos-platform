@@ -25,3 +25,7 @@
 ## GW-b-1 有界语法切片（05:50）
 
 231-5 §9 已补旧/新来源矩阵。先在宿主加独立 `accepted-stage-v1` envelope 解析与 requestHash/exact refs/单 Artifact 形状校验，并在 `revalidate`、`execute`、Receipt verify 三处继续失败封闭。旧 `review_handoff.advance` Issue 命令保持原校验。此切片只证明新来源不能混入旧 Issue 回执或产生 Task/Brief；没有 bundle producer、原 Owner 验证及下游 schema，**不是** Handoff/业务 GREEN。后续只有在 producer 与 Host Owner 可同波联测时才允许发出这一命令；随后接 Task/Brief v3 与生成/评审共同来源复核。此分段先隔离可复核的协议歧视字段，绝不开放业务运行。
+
+## GW-b-2a 原 Owner 同事务读取（06:08）
+
+Host 仅在新来源 envelope/dispatch 校验后，调用现有 `read_approved_stage_handoff_source` 回读当前人工决定与获批 successor，再逐项对齐原 Artifact/EvalReport/ResponsibilityPlan/截止时间。这个读取和禁入都在原 `ReviewAdvanceHostService.revalidate` 内；`execute` 继续拒绝，bundle 暂不发出新命令。隔离 PG 原 Store fixture 用于代码正反测试，不是当前真实人工批准。下一步必须让 bundle producer 生成同一 exact 命令，并补原 Occurrence/Case/Run/Analysis Receipt 与 Stage TaskRun 的真来源关联；之后 Task/Brief v3、内容生成与评审同步接线。只做此读取不会解锁 Handoff。

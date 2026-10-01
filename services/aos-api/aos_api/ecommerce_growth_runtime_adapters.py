@@ -2411,6 +2411,17 @@ def _strict_accepted_stage_accept_command(command: dict[str, Any]) -> tuple[str,
     if (cutoff is None or expires is None or cutoff.utcoffset() is None
             or expires.utcoffset() is None or not cutoff < expires <= cutoff + timedelta(days=7)):
         raise ValueError("accepted stage Handoff lifetime drifted")
+    for name in ("stageDecisionRef", "stagePlanRef", "stageArtifactRef", "responsibilityPlanRef"):
+        value = command[name]
+        if (type(value) is not dict
+                or set(value) != {"resourceType", "resourceId", "revision", "contentHash"}
+                or type(value["revision"]) is not int):
+            raise ValueError("accepted stage Handoff exact source ref shape drifted")
+    attempt_value = command["stageAttemptRef"]
+    if (type(attempt_value) is not dict
+            or set(attempt_value) != {"resourceType", "runId", "stepKey", "stepRunId", "attempt", "inputHash"}
+            or type(attempt_value["attempt"]) is not int):
+        raise ValueError("accepted stage Handoff attempt shape drifted")
     try:
         occurrence = InvestigationExactRef.model_validate(command["occurrenceRef"])
         case = InvestigationExactRef.model_validate(command["caseRef"])
@@ -2671,6 +2682,43 @@ class ReviewAdvanceHostService:
         ):
             raise ValueError("review GrowthPlan must be current and APPROVED")
         return plan
+
+    @staticmethod
+    def _revalidate_accepted_stage_source(*, transaction, scope, command):
+        """Read the original current human decision and approved successor together."""
+        from aos_api.aip_eval_contracts import EvalStageAttemptRef
+        from aos_api.ecommerce_analyst_stage_handoff_source import read_approved_stage_handoff_source
+
+        if type(transaction) is not HostTransaction or type(scope) is not TenantScope:
+            raise TypeError("accepted stage source needs a scoped Host transaction")
+        supplied_plan = InvestigationExactRef.model_validate(command["growthPlanRef"])
+        if supplied_plan.resource_type != "GrowthPlanRevision":
+            raise ValueError("accepted stage approved plan type drifted")
+        approved_ref = AnalystExactRef(
+            resource_type="GrowthPlanRevision", resource_id=supplied_plan.resource_id,
+            revision=supplied_plan.revision,
+            content_hash=supplied_plan.content_hash.removeprefix("sha256:"),
+        )
+        decision_ref = AnalystExactRef.model_validate(command["stageDecisionRef"])
+        plan_ref = AnalystExactRef.model_validate(command["stagePlanRef"])
+        attempt_ref = EvalStageAttemptRef.model_validate(command["stageAttemptRef"])
+        source = read_approved_stage_handoff_source(
+            transaction, scope, approved_ref=approved_ref,
+            decision_ref=decision_ref, task_run_id=command["stageTaskRunId"],
+            plan_ref=plan_ref, stage_attempt_ref=attempt_ref,
+        )
+        decision = source.decision
+        expected_eval = decision.eval_report_ref.model_dump(mode="json", by_alias=True)
+        expected_eval["contentHash"] = "sha256:" + expected_eval["contentHash"]
+        expires = datetime.fromisoformat(command["expiresAt"])
+        cutoff = datetime.fromisoformat(command["cutoffAt"])
+        if (decision_ref.resource_type != "AnalystStageDecisionRevision"
+                or command["stageArtifactRef"] != decision.artifact_ref.model_dump(mode="json", by_alias=True)
+                or command["responsibilityPlanRef"] != decision.responsibility_plan_ref.model_dump(mode="json", by_alias=True)
+                or command["evalReportRef"] != expected_eval
+                or not cutoff <= decision.created_at < expires <= decision.expires_at):
+            raise ValueError("accepted stage Handoff differs from current source")
+        return source
 
     @staticmethod
     def _revalidate_issue_eval(*, transaction, scope, command) -> ReviewIssue:
@@ -3250,10 +3298,12 @@ class ReviewAdvanceHostService:
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         key, occurrence_ref, case_ref = _strict_review_accept_command(command)
-        if command.get("sourceKind") == "accepted-stage-v1":
-            raise ValueError("accepted stage Handoff Owner is not wired")
         if dispatch.operation_id != "ecommerce_growth_review_advance":
             raise ValueError("review dispatch operation drifted")
+        if command.get("sourceKind") == "accepted-stage-v1":
+            self._revalidate_accepted_stage_source(
+                transaction=transaction, scope=scope, command=command)
+            raise ValueError("accepted stage Handoff Task/Brief is not wired")
         occurrence_reader, cases, _receipts = self._components(transaction, scope)
         try:
             occurrence_id = UUID(str(occurrence_ref.resource_id))

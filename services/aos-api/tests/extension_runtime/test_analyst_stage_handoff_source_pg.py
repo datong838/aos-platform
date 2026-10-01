@@ -1,5 +1,6 @@
 """Source join on disposable PG; fixture decisions are not human authority proof."""
 from datetime import timedelta
+from types import SimpleNamespace
 import os
 from uuid import uuid4
 from psycopg.conninfo import conninfo_to_dict
@@ -11,9 +12,11 @@ from aos_api.ecommerce_analyst_growth_plan_approval import ApproveGrowthPlanRequ
 from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionStore, stage_decision_id
 from aos_api.ecommerce_analyst_stage_handoff_source import read_approved_stage_handoff_source
 from aos_api.ecommerce_growth_host_ports import HostTransaction
+from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_approval import plan
 from test_ecommerce_analyst_stage_decision import decision, ref
+from test_ecommerce_review_advance_host import accepted_stage_command, command_hash
 SCOPE=TenantScope('org-org','dev-project')
 
 def hashed(value):
@@ -62,6 +65,78 @@ def test_exact_historical_draft_and_approved_successor(source):
     assert result.approved.prior_ref==item.subject_ref
     assert not owner.is_current_plan(SCOPE,item.subject_ref)
     assert result.approved.generation_artifact_ref==item.artifact_ref
+
+
+def host_command(item, args):
+    approved = args['approved_ref'].model_dump(mode='json', by_alias=True)
+    return {
+        'growthPlanRef': {**approved, 'contentHash': 'sha256:' + approved['contentHash']},
+        'stageDecisionRef': args['decision_ref'].model_dump(mode='json', by_alias=True),
+        'stageTaskRunId': item.task_run_id,
+        'stagePlanRef': item.plan_ref.model_dump(mode='json', by_alias=True),
+        'stageAttemptRef': item.stage_attempt_ref.model_dump(mode='json', by_alias=True),
+        'stageArtifactRef': item.artifact_ref.model_dump(mode='json', by_alias=True),
+        'evalReportRef': {'resourceType': 'EvalReportRevision',
+                          'resourceId': item.eval_report_ref.resource_id,
+                          'revision': item.eval_report_ref.revision,
+                          'contentHash': 'sha256:' + item.eval_report_ref.content_hash},
+        'responsibilityPlanRef': item.responsibility_plan_ref.model_dump(mode='json', by_alias=True),
+        'cutoffAt': item.created_at.isoformat(),
+        'expiresAt': item.expires_at.isoformat(),
+    }
+
+
+def test_review_host_reads_original_accepted_stage_owner_in_same_transaction(source):
+    _owner, _draft, item, args = source
+    command = host_command(item, args)
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        result = ReviewAdvanceHostService._revalidate_accepted_stage_source(
+            transaction=HostTransaction(conn), scope=SCOPE, command=command)
+    assert result.decision == item
+    assert result.approved.prior_ref == item.subject_ref
+
+
+@pytest.mark.parametrize('fault', ['artifact', 'eval', 'responsibility', 'expiry', 'tenant'])
+def test_review_host_rejects_accepted_stage_source_drift(source, fault):
+    _owner, _draft, item, args = source
+    command = host_command(item, args)
+    scope = SCOPE
+    if fault == 'artifact':
+        command['stageArtifactRef'] = {**command['stageArtifactRef'], 'resourceId': 'other-artifact'}
+    elif fault == 'eval':
+        command['evalReportRef'] = {**command['evalReportRef'], 'resourceId': 'other-report'}
+    elif fault == 'responsibility':
+        command['responsibilityPlanRef'] = {**command['responsibilityPlanRef'], 'resourceId': 'other-plan'}
+    elif fault == 'expiry':
+        command['expiresAt'] = (item.expires_at + timedelta(seconds=1)).isoformat()
+    else:
+        scope = TenantScope('dev-org', 'dev-project')
+    with connect(scope) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(ValueError):
+            ReviewAdvanceHostService._revalidate_accepted_stage_source(
+                transaction=HostTransaction(conn), scope=scope, command=command)
+
+
+def test_host_parses_owner_source_then_keeps_downstream_closed(source):
+    _owner, _draft, item, args = source
+    exact = host_command(item, args)
+    command = accepted_stage_command()
+    command.update(exact)
+    command['currentPlanRef'] = {**exact['stagePlanRef'],
+                                 'contentHash': 'sha256:' + exact['stagePlanRef']['contentHash']}
+    command['taskSpec']['growthPlanRef'] = exact['growthPlanRef']
+    command['taskSpec']['artifactRefs'] = [{**exact['stageArtifactRef'],
+                                           'contentHash': 'sha256:' + exact['stageArtifactRef']['contentHash']}]
+    command['requestHash'] = command_hash({k: v for k, v in command.items() if k != 'requestHash'})
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(ValueError, match='Task/Brief is not wired'):
+            ReviewAdvanceHostService().revalidate(
+                transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_review_advance'),
+                command=command)
 
 @pytest.mark.parametrize('fault',['run','plan','attempt','approved_hash','tenant'])
 def test_other_lineage_is_not_accepted(source,fault):
