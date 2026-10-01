@@ -43,4 +43,44 @@ class ModelEvalPreflight(AipContractModel):
         return self
 
 
-__all__ = ["ModelEvalPreflight"]
+class ModelEvalRequestCreate(AipContractModel):
+    """Exact first-Eval application; persistence and approval remain separate."""
+
+    tenant: TenantContext
+    source_ref: VersionedAssetRef
+    target_ref: VersionedAssetRef
+    expected_head_version: int = Field(strict=True, ge=1)
+    eval_contract_ref: VersionedAssetRef
+    suite_ref: VersionedAssetRef
+    provider_ref: VersionedAssetRef
+    price_ref: VersionedAssetRef
+    quota_policy_ref: VersionedAssetRef
+    budget_policy_ref: VersionedAssetRef
+    purpose: Literal["quality-eval"] = "quality-eval"
+    currency: Literal["CNY"] = "CNY"
+    upper_bound_minor: int = Field(strict=True, gt=0, le=100_000_000)
+    expires_at: datetime
+
+    @model_validator(mode="after")
+    def _exact_application(self) -> "ModelEvalRequestCreate":
+        expected = (
+            (self.eval_contract_ref, "EvalContractRevision"),
+            (self.suite_ref, "EvalSuiteRevision"),
+            (self.provider_ref, "ProviderInstanceRevision"),
+            (self.price_ref, "ModelPriceSnapshotRevision"),
+            (self.quota_policy_ref, "QuotaPolicyRevision"),
+            (self.budget_policy_ref, "BudgetPolicyRevision"),
+        )
+        if (
+            self.source_ref.asset_type != "RegisteredModelRevision"
+            or self.target_ref.asset_type != self.source_ref.asset_type
+            or self.target_ref.asset_id != self.source_ref.asset_id
+            or self.target_ref.revision != self.source_ref.revision + 1
+            or any(ref.asset_type != kind for ref, kind in expected)
+            or self.expires_at.utcoffset() is None
+        ):
+            raise ValueError("exact Model first-Eval application required")
+        return self
+
+
+__all__ = ["ModelEvalPreflight", "ModelEvalRequestCreate"]

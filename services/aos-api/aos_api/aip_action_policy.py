@@ -42,6 +42,9 @@ def classify_action_risk(
     if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
         floor = POLICY_ACTIVATION_ACTION_RISK[action_type_id]
         reasons.append("formal_policy_activation")
+    elif action_type_id == "aip_request_model_eval":
+        floor = ActionRiskLevel.R2
+        reasons.append("formal_model_eval_application")
     elif (action_type_id == 'ecommerce_growth_content_generate'
           and {'firstContentReviewKey', 'firstContentSources'} & payload.keys()):
         floor = ActionRiskLevel.R2
@@ -90,4 +93,6 @@ def classify_action_risk(
     }
     if action_type_id == 'ecommerce_analysis_bootstrap' and level is ActionRiskLevel.R1:
         approval_policy.update(makerChecker=True, draftOnly=False, controlledSourceInitialization=True)
+    if action_type_id == "aip_request_model_eval":
+        approval_policy["executionAllowed"] = False
     return RiskDecision(level, floor, tuple(reasons), approval_policy)

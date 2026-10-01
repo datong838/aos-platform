@@ -71,6 +71,9 @@ class AipActionExecutionService:
     def _reject_bootstrap_action(proposal) -> None:
         if proposal is None:
             raise AipActionNotFound("proposal not found in scope")
+        if (proposal["action_type_id"] == "aip_request_model_eval"
+                or (proposal["action_type_snapshot"] or {}).get("id") == "aip_request_model_eval"):
+            raise AipActionTransitionBlocked("MODEL_EVAL_APPLICATION_NOT_EXECUTABLE")
         from aos_api.ecommerce_content_first_action_binding import is_first_content
         if is_first_content(proposal['action_type_id'], proposal['action_type_snapshot'] or {},
                             proposal.get('payload')):

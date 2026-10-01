@@ -96,7 +96,13 @@ def proposal_request_hash(body: CreateActionProposalRequest, action_revision_has
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None,
-                 first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None) -> None:
+                 first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,
+                 model_eval_guard=None) -> None:
+        if model_eval_guard is not None:
+            from aos_api.aip_model_eval_action import ModelEvalActionGuard
+            if type(model_eval_guard) is not ModelEvalActionGuard:
+                raise TypeError('exact Model Eval Action guard required')
+        self._model_eval_guard = model_eval_guard
         if guard_approval_guard is not None:
             from aos_api.aip_guard_policy_activation import GuardPolicyApprovalGuard
             if type(guard_approval_guard) is not GuardPolicyApprovalGuard:
@@ -159,6 +165,11 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        if "aip_request_model_eval" in {body.action_type_id, action_snapshot.get("id")}:
+            if self._model_eval_guard is None:
+                raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
+            return self._model_eval_guard.check_request(
+                conn, scope, actor_id, body, action_snapshot, risk)
         from aos_api.ecommerce_content_first_action_binding import is_first_content
         if is_first_content(body.action_type_id, action_snapshot, body.payload):
             if self._first_content_guard is None:
@@ -205,6 +216,11 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        if "aip_request_model_eval" in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
+            if self._model_eval_guard is None:
+                raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
+            return self._model_eval_guard.check_proposal(conn, scope, actor_id, row,
+                                                         checker=checker)
         from aos_api.ecommerce_content_first_action_binding import is_first_content
         if is_first_content(row['action_type_id'], row['action_type_snapshot'], row['payload']):
             if self._first_content_guard is None:
