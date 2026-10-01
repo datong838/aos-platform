@@ -55,8 +55,8 @@ NOW = datetime.now(UTC)
 SUFFIX = f"test:aip7-store:{uuid.uuid4().hex}"
 
 
-def ref(kind: str, asset_id: str, digest: str) -> VersionedAssetRef:
-    return VersionedAssetRef(asset_type=kind, asset_id=asset_id, revision=1, content_hash=digest)
+def ref(kind: str, asset_id: str, digest: str, revision: int = 1) -> VersionedAssetRef:
+    return VersionedAssetRef(asset_type=kind, asset_id=asset_id, revision=revision, content_hash=digest)
 
 
 def hashed(model: type, payload: dict):
@@ -147,8 +147,8 @@ def publish_runtime_guards() -> tuple[VersionedAssetRef, VersionedAssetRef]:
         ),
     )
     return (
-        ref("EgressPolicyRevision", egress.policy_id, egress.content_hash),
-        ref("DataClassificationPolicyRevision", data.policy_id, data.content_hash),
+        ref("EgressPolicyRevision", egress.policy_id, egress.content_hash, egress.revision),
+        ref("DataClassificationPolicyRevision", data.policy_id, data.content_hash, data.revision),
     )
 
 
@@ -193,34 +193,17 @@ def publish_model_governance_policies() -> tuple[VersionedAssetRef, VersionedAss
 
 
 def publish_network_policy(egress_ref: VersionedAssetRef) -> VersionedAssetRef:
+    from tests.aip._runtime_guard_history_fixture import produce_formal_network_policy
     instant = datetime.now(UTC)
-    network = materialize_network_policy(
-        SCOPE, SUFFIX,
-        NetworkPolicyRevisionCreate(
-            policyId=f"{SUFFIX}:network", revision=1,
-            allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"],
-            allowedPorts=[443], tlsRequired=True, publicFallbackAllowed=False,
-            egressPolicyRef=egress_ref, effectiveFrom=instant - timedelta(minutes=30),
-            effectiveUntil=instant + timedelta(days=20), owner=SUFFIX,
-            approvalRef="approval:test:aip7-store", lifecycle="active",
-        ),
-    )
-    # Model dependency test consumes a pre-existing row in its disposable PG.
-    # New active publication is separately rejected without exact approval.
-    with psycopg.connect(get_dsn()) as conn:
-        conn.execute(
-            "INSERT INTO aip_network_policy_head(org_id,project_id,policy_id,current_revision,version) VALUES(%s,%s,%s,%s,1)",
-            (*SCOPE.key, network.policy_id, network.revision),
-        )
-        conn.execute(
-            """INSERT INTO aip_network_policy_revision(org_id,project_id,policy_id,revision,content_hash,lifecycle,
-               effective_from,effective_until,payload,created_by,created_at) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,%s)""",
-            (*SCOPE.key, network.policy_id, network.revision, network.content_hash, network.lifecycle.value,
-             network.effective_from, network.effective_until, json.dumps(network.model_dump(mode="json", by_alias=True)),
-             network.created_by, network.created_at),
-        )
-        conn.commit()
-    return ref("NetworkPolicyRevision", network.policy_id, network.content_hash)
+    network = produce_formal_network_policy(SCOPE, SUFFIX, NetworkPolicyRevisionCreate(
+        policyId=f"{SUFFIX}:network", revision=1,
+        allowedSchemes=["https"], allowedHosts=["apihub.agnes-ai.com"],
+        allowedPorts=[443], tlsRequired=True, publicFallbackAllowed=False,
+        egressPolicyRef=egress_ref, effectiveFrom=instant - timedelta(minutes=30),
+        effectiveUntil=instant + timedelta(days=20), owner=SUFFIX,
+        approvalRef="approval:test:aip7-store", lifecycle="active",
+    ))
+    return ref("NetworkPolicyRevision", network.policy_id, network.content_hash, network.revision)
 
 
 class _AllowGovernance:

@@ -65,7 +65,7 @@ def _approved(expiring):
         policyId=f"bg00eh-network-{suffix}", revision=1, allowedSchemes=["https"],
         allowedHosts=["api.agnes-ai.cn"], allowedPorts=[443], tlsRequired=True,
         publicFallbackAllowed=False, egressPolicyRef={"assetType": "EgressPolicyRevision",
-        "assetId": egress.policy_id, "revision": 1, "contentHash": egress.content_hash},
+        "assetId": egress.policy_id, "revision": egress.revision, "contentHash": egress.content_hash},
         effectiveFrom=now, effectiveUntil=now+timedelta(hours=1), owner=maker,
         approvalRef="isolated-test", lifecycle="active",
     )

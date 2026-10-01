@@ -96,7 +96,17 @@ def proposal_request_hash(body: CreateActionProposalRequest, action_revision_has
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None,
-                 first_content_guard=None) -> None:
+                 first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None) -> None:
+        if guard_approval_guard is not None:
+            from aos_api.aip_guard_policy_activation import GuardPolicyApprovalGuard
+            if type(guard_approval_guard) is not GuardPolicyApprovalGuard:
+                raise TypeError('exact guard policy approval guard required')
+        self._guard_approval_guard = guard_approval_guard
+        if guard_activation_guard is not None:
+            from aos_api.aip_guard_policy_activation import GuardPolicyActivationGuard
+            if type(guard_activation_guard) is not GuardPolicyActivationGuard:
+                raise TypeError('exact guard policy activation guard required')
+        self._guard_activation_guard = guard_activation_guard
         if first_content_guard is not None:
             from aos_api.ecommerce_content_first_action_binding import FirstContentActionGuard
             if type(first_content_guard) is not FirstContentActionGuard:
@@ -157,6 +167,11 @@ class AipActionStore:
                 conn, scope, actor_id, body, action_snapshot, risk)
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 or action_snapshot.get('id') in POLICY_ACTIVATION_ACTION_RISK):
+            if (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+                    and action_snapshot.get('id') == body.action_type_id
+                    and self._guard_activation_guard is not None):
+                return self._guard_activation_guard.check_request(
+                    conn, scope, actor_id, body, action_snapshot, risk)
             if (body.action_type_id != 'aip_activate_network_policy'
                     or action_snapshot.get('id') != body.action_type_id
                     or self._network_activation_guard is None):
@@ -197,6 +212,13 @@ class AipActionStore:
             return self._first_content_guard.check_proposal(conn, scope, actor_id, row, checker=checker)
         if (row['action_type_id'] in POLICY_ACTIVATION_ACTION_RISK
                 or row['action_type_snapshot'].get('id') in POLICY_ACTIVATION_ACTION_RISK):
+            if (checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+                    and self._guard_approval_guard is not None):
+                return self._guard_approval_guard.check(conn, scope, actor_id, row)
+            if (not checker and row['action_type_id'] in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+                    and self._guard_activation_guard is not None):
+                self._guard_activation_guard.check_replay(conn, scope, actor_id, row)
+                return None
             if (not checker and row['action_type_id'] == 'aip_activate_network_policy'
                     and self._network_activation_guard is not None):
                 self._network_activation_guard.check_replay(conn, scope, actor_id, row)
@@ -601,7 +623,9 @@ class AipActionStore:
         risk: RiskDecision,
     ) -> ActionDraftBundle:
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
-                and self._network_activation_guard is None):
+                and self._network_activation_guard is None
+                and not (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy'}
+                         and self._guard_activation_guard is not None)):
             raise AipActionTransitionBlocked('POLICY_ACTION_PRODUCER_REQUIRED')
         expires_at = body.effective_expiry()
         if expires_at <= datetime.now(timezone.utc):

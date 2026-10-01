@@ -14,6 +14,7 @@ from aos_api.aip_runtime_guard_policy_store import (
     DataPolicyApprovalRequired,
     GuardPolicyIdempotencyConflict,
     GuardPolicyNotFound,
+    GuardPolicyDependencyBlocked,
 )
 from aos_api.tenant_scope import TenantScope
 from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_guard
@@ -21,7 +22,7 @@ from tests.aip._runtime_guard_history_fixture import seed_historical_runtime_gua
 
 SCOPE = TenantScope("org-org", "dev-project")
 CANARY = TenantScope("dev-org", "dev-project")
-NOW = datetime(2026, 8, 17, tzinfo=UTC)
+NOW = datetime.now(UTC)
 SUFFIX = uuid.uuid4().hex
 
 
@@ -64,8 +65,16 @@ def test_guard_policy_store_requires_exact_active_effective_refs() -> None:
     store = AipRuntimeGuardPolicyStore()
     e = seed_historical_runtime_guard(SCOPE, "test-history", egress(name="exact"))
     d = seed_historical_runtime_guard(SCOPE, "test-history", data_policy(name="exact"))
-    store.require_exact_active(SCOPE, VersionedAssetRef(assetType="EgressPolicyRevision", assetId=e.policy_id, revision=1, contentHash=e.content_hash), now=NOW)
-    store.require_exact_active(SCOPE, VersionedAssetRef(assetType="DataClassificationPolicyRevision", assetId=d.policy_id, revision=1, contentHash=d.content_hash), now=NOW)
+    for item,kind in ((e,"EgressPolicyRevision"),(d,"DataClassificationPolicyRevision")):
+        exact=VersionedAssetRef(assetType=kind,assetId=item.policy_id,revision=item.revision,contentHash=item.content_hash)
+        assert item.revision==2
+        assert store.require_exact_active(SCOPE,exact,now=NOW)==item
+        with pytest.raises(GuardPolicyDependencyBlocked,match="outside effective window"):
+            store.require_exact_active(SCOPE,exact,now=item.effective_until)
+        with pytest.raises(GuardPolicyDependencyBlocked):
+            store.require_exact_active(CANARY,exact,now=NOW)
+        with pytest.raises(GuardPolicyDependencyBlocked):
+            store.require_exact_active(SCOPE,exact.model_copy(update={"revision":1}),now=NOW)
 
 
 def test_new_active_egress_rejects_string_only_approval() -> None:
