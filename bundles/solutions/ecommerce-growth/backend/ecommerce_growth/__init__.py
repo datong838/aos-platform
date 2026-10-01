@@ -43,6 +43,11 @@ def handle(operation_id, _payload, _context):
         from .analyst_workspace_view import project_workspace
 
         return project_workspace(_payload["snapshot"])
+    if (operation_id == "ecommerce_growth_analysis_advance"
+            and type(_payload) is dict and _payload.get("kind") == "evaluate_stage_structure"):
+        from .analyst_structure_eval_operation import evaluate_stage_structure
+
+        return evaluate_stage_structure(_payload)
     if (
         operation_id == "ecommerce_growth_analysis_advance"
         and type(_payload) is dict
