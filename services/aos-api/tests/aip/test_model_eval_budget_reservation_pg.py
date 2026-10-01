@@ -366,3 +366,51 @@ def test_formal_signed_development_risk_counts_original_eval_hold(
     with connect_serializable(scope) as conn:
         require_cost_risk(conn, scope, budget_ref, price_ref,
                           basis.basis.per_request_risk_minor, new_hold=False)
+
+
+@pytest.mark.parametrize("drift", ["price", "budget_policy"])
+def test_approved_eval_cannot_hold_after_current_price_or_policy_head_moves(drift):
+    from uuid import uuid4
+    from aos_api.aip_model_eval_budget_reservation import (
+        AipModelEvalBudgetReservationStore, ModelEvalBudgetBlocked,
+    )
+    from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+    from aos_api.aip_model_governance_policy_store import AipModelGovernancePolicyStore
+    from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevisionCreate
+    from tests.aip.test_aip7_model_runtime_store import rehashed
+
+    scope, first, _, proposal, _, budget, policy, price = (
+        seeded_approved_model_eval_request(stop_after_approval=True)
+    )
+    event_id = _approval_event(scope, proposal.proposal.id)
+    if drift == "price":
+        next_price = rehashed(price, revision=2, inputTokenPrice="0.03")
+        published = AipModelRuntimeStore().publish_price_snapshot(
+            scope, "test-maker", "eval-price-drift-" + uuid4().hex,
+            next_price, expected_version=1,
+        )
+        assert published.revision == 2
+    else:
+        body = policy.model_dump(mode="json", by_alias=True)
+        for field in ("tenant", "contentHash", "createdBy", "createdAt"):
+            body.pop(field, None)
+        body.update(revision=2, lifecycle="draft")
+        next_policy = BudgetPolicyRevisionCreate.model_validate(body)
+        published = AipModelGovernancePolicyStore().publish_budget(
+            scope, "test-maker", "eval-policy-drift-" + uuid4().hex,
+            next_policy, expected_version=1,
+        )
+        assert published.revision == 2
+    with pytest.raises(ModelEvalBudgetBlocked,
+                       match="original Model Eval checker authority drifted"):
+        with connect_serializable(scope) as conn:
+            AipModelEvalBudgetReservationStore().hold(
+                conn, scope, first["request_id"], event_id)
+    with connect_serializable(scope) as conn:
+        assert conn.execute("""SELECT count(*) AS n FROM aip_model_eval_budget_reservation
+            WHERE request_id=%s""", (first["request_id"],)).fetchone()["n"] == 0
+        assert conn.execute("""SELECT COALESCE(sum(held_minor),0) AS n
+            FROM aip_budget_bucket WHERE org_id=%s AND project_id=%s
+              AND account_id LIKE %s""",
+            (*scope.key, budget.budget_id + ":%"),
+        ).fetchone()["n"] == 0
