@@ -13,7 +13,7 @@
 ## 不可绕过的设计不变量
 
 1. 用途身份为 `ModelEvalRequest` + 原 `ActionApprovalEvent`，不填假的 Task/AgentRun。任何 Eval 预留必须精确重验申请 hash、当前 Model head、next-active target、Suite/Contract、Provider/Price/Quota/Budget、checker、审批期限与撤销。普通业务仍走原 Route active/Eval gate。
-2. Eval 的费用占额写入原 `aip_budget_bucket`，日/月账户使用 `BudgetPolicyRevision.budgetRevisionRef.resourceId`，与业务调用的 BudgetRevision ID 相同；Eval 独有的单申请上界作为第三个 task-kind 账户，以 `model-eval:<request_id>` 命名，但不得将它记成 Task。三桶锁定顺序与原 Store 相同，未知不释放。
+2. Eval 的费用占额写入原 `aip_budget_bucket`，日/月账户使用 `BudgetPolicyRevision.budgetRevisionRef.resourceId`，与业务调用的 BudgetRevision ID 相同；Eval 独有的单申请上界作为第三个 task-kind 账户，以 `model-eval/<request_id>` 命名，ID 禁含 `:`，与普通 `operation_id:task_id` 空间分离，但不得将它记成 Task。三桶锁定顺序与原 Store 相同，未知不释放。
 3. 物理并发上界必须有独立、可追溯的 Provider 容量权威，不能拿某 Route 池上界冒充 Provider 上界。普通 AgentRun 和 Model Eval 在同一个 `(tenant, provider instance)` 容量账户行锁及同一占用账本计数；普通运行还保留 exact Route 池限制。若 Provider 物理上界/身份缺失，所有新 Eval 发送禁入；迁移后的普通运行不能绕过共享门。
 4. 锁顺序固定为 Model/批准 head 重验 → 三预算桶（稳定排序）→ Provider 物理账户 → 普通 Route 池（如适用）→ 持久化预留和一次性 send intent。不能在持锁事务中调用 Provider。由于现有 `reserve()` 自开连接/提交，不能把它与 Eval 物理预留顺次调用并宣称原子；应抽取事务内复用的预算核验/桶移动内核，或以数据库过程共享相同账本与锁，而不复制独立余额。
 5. Intent 只允许一次领取；`prepared` 可在明确零发送时取消，`submitted/unknown` 保持预算与物理占额并转只读对账。失联、超时、无 Receipt 不得自动重发。有效期、批准撤销、Price/Policy/head 漂移在领取前再验；普通 `AipEvalRunner` 与 Action executor 仍拒绝绕入。

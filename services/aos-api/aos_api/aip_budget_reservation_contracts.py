@@ -252,6 +252,60 @@ def derive_bucket_authorities(
     pilot_limit_minor: int,
     timezone_name: str = "Asia/Shanghai",
 ) -> tuple[BudgetBucketAuthority, BudgetBucketAuthority, BudgetBucketAuthority]:
+    return _derive_bucket_authorities(
+        task_account_id=f"{request.operation_id}:{request.task_ref.resource_id}",
+        budget_account_id=request.policy_ref.resource_id,
+        upper_bound_minor=request.upper_bound_minor,
+        checked_at=checked_at,
+        budget_effective_from=budget_effective_from,
+        budget_effective_until=budget_effective_until,
+        daily_limit_minor=daily_limit_minor,
+        pilot_limit_minor=pilot_limit_minor,
+        timezone_name=timezone_name,
+    )
+
+
+def derive_model_eval_bucket_authorities(
+    *,
+    request_id: str,
+    budget_revision_ref: BudgetExactRef,
+    upper_bound_minor: int,
+    checked_at: datetime,
+    budget_effective_from: datetime,
+    budget_effective_until: datetime,
+    daily_limit_minor: int,
+    pilot_limit_minor: int,
+    timezone_name: str = "Asia/Shanghai",
+) -> tuple[BudgetBucketAuthority, BudgetBucketAuthority, BudgetBucketAuthority]:
+    """Address the same daily/pilot BudgetRevision buckets without inventing a Task."""
+    if (
+        type(request_id) is not str or not request_id or request_id.strip() != request_id
+        or ":" in request_id or len(f"model-eval/{request_id}") > 200
+        or type(budget_revision_ref) is not BudgetExactRef
+        or budget_revision_ref.resource_type != "BudgetRevision"
+        or type(upper_bound_minor) is not int
+        or not 0 < upper_bound_minor <= 100_000_000
+    ):
+        raise ValueError("exact Model Eval request and BudgetRevision required")
+    return _derive_bucket_authorities(
+        task_account_id=f"model-eval/{request_id}",
+        budget_account_id=budget_revision_ref.resource_id,
+        upper_bound_minor=upper_bound_minor,
+        checked_at=checked_at,
+        budget_effective_from=budget_effective_from,
+        budget_effective_until=budget_effective_until,
+        daily_limit_minor=daily_limit_minor,
+        pilot_limit_minor=pilot_limit_minor,
+        timezone_name=timezone_name,
+    )
+
+
+def _derive_bucket_authorities(
+    *, task_account_id: str, budget_account_id: str, upper_bound_minor: int,
+    checked_at: datetime, budget_effective_from: datetime,
+    budget_effective_until: datetime, daily_limit_minor: int,
+    pilot_limit_minor: int, timezone_name: str,
+) -> tuple[BudgetBucketAuthority, BudgetBucketAuthority, BudgetBucketAuthority]:
     if any(
         value.tzinfo is None
         for value in (checked_at, budget_effective_from, budget_effective_until)
@@ -273,11 +327,11 @@ def derive_bucket_authorities(
     pilot_start = max(month_start, budget_effective_from.astimezone(zone))
     pilot_end = min(month_end, budget_effective_until.astimezone(zone))
     values = (
-        ("task", f"{request.operation_id}:{request.task_ref.resource_id}",
-         budget_effective_from, budget_effective_until, request.upper_bound_minor),
-        ("daily", f"{request.policy_ref.resource_id}:daily",
+        ("task", task_account_id,
+         budget_effective_from, budget_effective_until, upper_bound_minor),
+        ("daily", f"{budget_account_id}:daily",
          daily_start, daily_end, daily_limit_minor),
-        ("pilot", f"{request.policy_ref.resource_id}:pilot",
+        ("pilot", f"{budget_account_id}:pilot",
          pilot_start, pilot_end, pilot_limit_minor),
     )
     return tuple(
