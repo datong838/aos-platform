@@ -1,0 +1,143 @@
+{
+  "schema": "aos.review-producer-source-audit/v1",
+  "head": "b20948c256e9c7fc9461eae38ea78cd8859802e0",
+  "databaseAccess": false,
+  "providerCalls": 0,
+  "records": [
+    {
+      "path": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_receiver.py",
+      "sha256": "8c5ae5598a08fbb24fd9caba6fbdb28007e7bf4e9e0920039e871edece5d6ffa",
+      "symbols": [
+        {
+          "name": "receive",
+          "start": 47,
+          "end": 120
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_analyst_growth_plan_approval.py",
+      "sha256": "9d3013da2cfb7f78bc5075183a986155a5515a3ecb24e02abed35ec42b834728",
+      "symbols": [
+        {
+          "name": "approve",
+          "start": 91,
+          "end": 153
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_analyst_stage_review_command.py",
+      "sha256": "82d7507e3595dc0ac876583b553a5f5bb8a5e00c37eb76acb5fc9a1a1e76f6ee",
+      "symbols": [
+        {
+          "name": "_sources_and_eval",
+          "start": 81,
+          "end": 195
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_business_investigation_eval.py",
+      "sha256": "75d026a3b7c856ef86ebdea118282634d5a9efc5b1b80384c68f3a943f9d16fb",
+      "symbols": [
+        {
+          "name": "evaluate_stage",
+          "start": 117,
+          "end": 175
+        },
+        {
+          "name": "open_review_issue",
+          "start": 177,
+          "end": 199
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_eval_runner.py",
+      "sha256": "e5b92b9ef211dc0446e11a17af6795888408df55676b3082f5096b11ec9b642c",
+      "symbols": [
+        {
+          "name": "run_by_contract",
+          "start": 95,
+          "end": 145
+        },
+        {
+          "name": "_assert_media_subject",
+          "start": 416,
+          "end": 500
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_eval_writer_atomic.py",
+      "sha256": "c6bd9e65f1e9139107c81cdeb6bfbba68ec037822b1afdd3810d277a84dabaeb",
+      "symbols": [
+        {
+          "name": "persist_signed_skill_eval_report",
+          "start": 18,
+          "end": 98
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/aip_production_contract_store.py",
+      "sha256": "f5c6b38bc5c43d18dba4e79ee8bab8fdbe11257e2d122f6517bcf6d40cc5e94f",
+      "symbols": [
+        {
+          "name": "create_review_issue",
+          "start": 2443,
+          "end": 2509
+        }
+      ]
+    },
+    {
+      "path": "services/aos-api/aos_api/ecommerce_growth_runtime_adapters.py",
+      "sha256": "9fb53f8a9a0b8aa31811725ce30b73675fed3d1e862a9c344d0aec71be4281da",
+      "symbols": [
+        {
+          "name": "_revalidate_issue_eval",
+          "start": 2583,
+          "end": 2689
+        },
+        {
+          "name": "_revalidate_artifacts",
+          "start": 2692,
+          "end": 2737
+        },
+        {
+          "name": "_revalidate_analysis_runtime",
+          "start": 2740,
+          "end": 2913
+        },
+        {
+          "name": "_review_lineage",
+          "start": 2915,
+          "end": 3122
+        }
+      ]
+    },
+    {
+      "path": "bundles/solutions/ecommerce-growth/backend/ecommerce_growth/ecommerce_business_investigation_review_command.py",
+      "sha256": "17812042c5002edd57c6fb5b7c87948eb56c031d034fcfc67cd9b1a678962b9d",
+      "symbols": [
+        {
+          "name": "__post_init__",
+          "start": 61,
+          "end": 65
+        },
+        {
+          "name": "__post_init__",
+          "start": 96,
+          "end": 167
+        }
+      ]
+    }
+  ],
+  "findings": [
+    "stage generation and Review handoff use different artifact contracts",
+    "stage reader requires Skill target; generic runner rejects Skill target",
+    "signed Skill writer does not persist five optional stage binding columns",
+    "passed stage gate cannot use automatic open_review_issue"
+  ]
+}
