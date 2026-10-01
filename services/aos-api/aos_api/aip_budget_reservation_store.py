@@ -110,6 +110,9 @@ class AipBudgetReservationStore:
                 task_ref=request.task_ref,
                 operation_id=request.operation_id,
                 upper_bound_minor=request.upper_bound_minor,
+                policy_ref=request.policy_ref,
+                pricing_ref=request.pricing_ref,
+                invocation_key=request.invocation_key,
             )
             buckets = derive_bucket_authorities(
                 request,
@@ -1190,6 +1193,9 @@ class AipBudgetReservationStore:
         task_ref: BudgetExactRef,
         operation_id: str,
         upper_bound_minor: int,
+        policy_ref: BudgetExactRef | None = None,
+        pricing_ref: BudgetExactRef | None = None,
+        invocation_key: str | None = None,
     ) -> None:
         row = conn.execute(
             f"""SELECT approval_event_id,proposal_id,proposal_version,proposal_hash,decision,
@@ -1301,6 +1307,20 @@ class AipBudgetReservationStore:
             raise BudgetReservationBlocked(
                 "approval must bind this Task, operation, action binding and exact budget upper bound"
             )
+        from aos_api.ecommerce_content_first_action_binding import is_first_content, require_first_content_budget_source
+        if is_first_content(operation_id, self._load(proposal["action_type_snapshot"]), payload):
+            if self._authority_schema != "public":
+                raise BudgetReservationBlocked("first content requires current public source authority")
+            try:
+                sources = require_first_content_budget_source(conn, scope, row, payload)
+                if policy_ref is not None or pricing_ref is not None or invocation_key is not None:
+                    if (policy_ref is None or pricing_ref is None
+                            or invocation_key != payload["firstContentReviewKey"]
+                            or policy_ref.model_dump(mode="json", by_alias=True) != sources.authorities["budget"]
+                            or pricing_ref.model_dump(mode="json", by_alias=True) != sources.authorities["pricing"]):
+                        raise BudgetReservationBlocked("first content budget or price differs from approved source")
+            except (ValueError, RuntimeError) as exc:
+                raise BudgetReservationBlocked("first content current source authority required") from exc
 
     @staticmethod
     def _lock_invocation(

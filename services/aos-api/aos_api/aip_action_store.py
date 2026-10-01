@@ -95,7 +95,13 @@ def proposal_request_hash(body: CreateActionProposalRequest, action_revision_has
 
 class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
-                 network_activation_guard=None, network_approval_guard=None) -> None:
+                 network_activation_guard=None, network_approval_guard=None,
+                 first_content_guard=None) -> None:
+        if first_content_guard is not None:
+            from aos_api.ecommerce_content_first_action_binding import FirstContentActionGuard
+            if type(first_content_guard) is not FirstContentActionGuard:
+                raise TypeError('exact first content guard required')
+        self._first_content_guard = first_content_guard
         if bootstrap_guard is not None:
             from aos_api.ecommerce_analysis_bootstrap_action import _BootstrapActionGuard
             if type(bootstrap_guard) is not _BootstrapActionGuard:
@@ -143,6 +149,12 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        from aos_api.ecommerce_content_first_action_binding import is_first_content
+        if is_first_content(body.action_type_id, action_snapshot, body.payload):
+            if self._first_content_guard is None:
+                raise AipActionTransitionBlocked('FIRST_CONTENT_PRODUCER_REQUIRED')
+            return self._first_content_guard.check_request(
+                conn, scope, actor_id, body, action_snapshot, risk)
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 or action_snapshot.get('id') in POLICY_ACTIVATION_ACTION_RISK):
             if (body.action_type_id != 'aip_activate_network_policy'
@@ -178,6 +190,11 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        from aos_api.ecommerce_content_first_action_binding import is_first_content
+        if is_first_content(row['action_type_id'], row['action_type_snapshot'], row['payload']):
+            if self._first_content_guard is None:
+                raise AipActionTransitionBlocked('FIRST_CONTENT_PRODUCER_REQUIRED')
+            return self._first_content_guard.check_proposal(conn, scope, actor_id, row, checker=checker)
         if (row['action_type_id'] in POLICY_ACTIVATION_ACTION_RISK
                 or row['action_type_snapshot'].get('id') in POLICY_ACTIVATION_ACTION_RISK):
             if (not checker and row['action_type_id'] == 'aip_activate_network_policy'

@@ -266,6 +266,9 @@ class ContentBudgetCommandOwner:
         return SimpleNamespace(
             dispatch=dispatch, snapshot=snapshot, task_ref=task_ref,
             price=price, quota=quota, cost_context=cost_context, authorities=authorities,
+            action_context=SimpleNamespace(request=request, response=response,
+                agent_run_id=intent["agent_run_id"], resolution=resolution,
+                runtime_policy=policy, budget_policy=budget_policy, capacity=capacity),
             source_artifact_refs=[item["artifactRef"] for item in response["artifactBindings"]],
             fact_source_refs=[exact(
                 "EvidenceBundleRevision", item.resource_id, item.revision,

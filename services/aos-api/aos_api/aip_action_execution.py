@@ -71,6 +71,10 @@ class AipActionExecutionService:
     def _reject_bootstrap_action(proposal) -> None:
         if proposal is None:
             raise AipActionNotFound("proposal not found in scope")
+        from aos_api.ecommerce_content_first_action_binding import is_first_content
+        if is_first_content(proposal['action_type_id'], proposal['action_type_snapshot'] or {},
+                            proposal.get('payload')):
+            raise AipActionTransitionBlocked("FIRST_CONTENT_NATURAL_OWNER_REQUIRED")
         if (proposal["action_type_id"] in POLICY_ACTIVATION_ACTION_RISK
                 or (proposal["action_type_snapshot"] or {}).get("id") in POLICY_ACTIVATION_ACTION_RISK):
             raise AipActionTransitionBlocked("POLICY_ACTION_EXECUTOR_UNWIRED")

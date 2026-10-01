@@ -1,0 +1,27 @@
+# BG00GM 首生内容 Action 同事务绑定方案
+
+基线AOS-001053/m1 dfd6aca7；复习231-5 §1/5/6、GK/GL与ActionStore、原Owner、OIDC和成员/marking实现。m1串行；真实库只读，无Provider/旧Run/商城源/迁移。
+
+## 合同与最小改动
+
+1. ecommerce_content_budget_command_owner.py：共享来源返回已有request/origin response/resolution/policy/capacity供首生来源序列化，不复制原来源核验。来源含tenant/review、原Receipt、Task/Plan/Run请求、AgentRun、installation/dispatch/runtime、Skill/模型/Provider/价格/配额/预算及Capacity期限。动态checked_at/resolved_at不纳入binding；固定原revision/hash和期限。原命令在读出批准后检查显式首生合同当前来源及Draft绑定，claimed路径复用已有sources，不再按pending重读。
+2. 新ecommerce_content_first_action_binding.py：显式payload仅firstContentReviewKey、firstContentSources、budgetUpperBoundMinor；任何首生标记均要求专用guard，未知/不完整合同拒绝。同一Action事务内核OIDC身份、唯一当前membership、checker业务审批role（沿ACTION_APPROVAL_ROLES，不能挪control权限）、当前metadata与持久marking bearer、原来源、金额和期限。metadata读取上锁且不接受客户端snapshot。maker/checker重验不可变Draft canonical与binding；拒自批、跨租户、版本漂移。复用原ActionStore幂等/ApprovalEvent，不新建审批表。
+3. aip_action_store.py：构造器仅接精确类型guard；request/replay/checker对显式首生合同默认拒绝，普通未绑定草稿及RETURN保持原行为。
+4. aip_action_policy.py：仅首生显式合同固定服务端R2 floor，hint只能抬高且专用producer不接hint。更正初步口头观察：分类只扫描metadata及payload顶层键，嵌套价格引用本身不触发R3；真正问题是首生无hint默认R1/draftOnly。不能以客户端R2冒服务端正式策略。
+5. 服务函数preview/propose/decide要求外部OIDC配置与每次JWT验证；无凭据保存、无新HTTP/UI路由。本波仅后端组合，正式产品路由及可读预览后续接原Action UI并browser。
+
+## 验证与完整目标
+
+先RED：无guard首生必须拒绝、无hint首生R2、dev身份不触DB。再实现。新tests/aip/test_content_first_action_binding.py验证metadata/member/marking/来源/金额/期限/绑定漂移；tests/aip/test_content_first_action_binding_pg.py验证实际Store幂等与Draft/Approval存储，当前来源替身只能作组合子证据。继续探索合法完整来源fixture；不直写审批或任意hash、不把组合GREEN称正式首链。
+
+原Owner、RETURN、Action风险及GJ风险PG累计回归。API/UI未接则browser不适用。verification明确真实来源到held是否已证，未证保持pending并列下一依赖；不放宽Budget authority。
+
+## 风险
+
+_prepare_sources依赖已有容量reserved且租约短；预览/批准有效期不得超过capacity/policy窗口，过期需合法重新配置/流程，不续旧claim。SQL共享锁在真实read-only事务不可用，preview使用写能力事务仅做SELECT并rollback；不得称其数据库read-only session。require_cost_risk仅在proposal/decision/执行事务调用（含fence更新），预览不调用。新正式HTTP配置未开放，当前系统禁入不变。
+
+## 复审补充：通用预算入口必须同门
+
+源码确认AipBudgetReservationStore.reserve可直接调用_approval_authority，不能只在ContentBudgetCommandOwner补重验。新增最小文件aip_budget_reservation_store.py：既有不可变批准核验通过后，仅显式首生合同调用同一当前来源/成员/metadata/Draft重验；public来源schema固定，未知schema拒绝。历史reservation幂等回读保持原行为，不产生新hold。Owner经既有_approval_authority复用此门，无需增加第二份Owner校验。来源准备按实际pending/claimed状态读取claim token并调用同一_prepare_sources，不claim、不执行。对应PG测试从原Store批准到真实预算authority，缺自然intent必须拒，不能用有binding代替当前来源。
+
+复审二：reserve请求的budget/price须与首生source envelope精确相等，防借同金额批准改扣其他预算/价格；仅新首生合同新增两ref校验，普通预算行为不改。aip_action_execution.py的既有通用执行禁入函数增加首生合同拒绝；首生费用批准仅供自然Content Owner消费，不授权通用Adapter/外部动作。测试新增不经过DB的执行门负例。

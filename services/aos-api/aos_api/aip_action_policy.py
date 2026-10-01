@@ -42,6 +42,10 @@ def classify_action_risk(
     if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
         floor = POLICY_ACTIVATION_ACTION_RISK[action_type_id]
         reasons.append("formal_policy_activation")
+    elif (action_type_id == 'ecommerce_growth_content_generate'
+          and {'firstContentReviewKey', 'firstContentSources'} & payload.keys()):
+        floor = ActionRiskLevel.R2
+        reasons.append('current_first_content_cost_approval')
     elif action_type_id in {"ecommerce_growth_cutover", "ecommerce_growth_cutover_rollback",
                           "ecommerce_dispatch_configuration_refresh"}:
         floor = ActionRiskLevel.R2
