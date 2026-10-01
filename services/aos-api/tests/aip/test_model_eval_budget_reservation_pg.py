@@ -227,17 +227,21 @@ def test_model_eval_hold_requires_serializable_runtime_tenant():
             WHERE request_id=%s""", (first["request_id"],)).fetchone()["n"] == 0
 
 
-@pytest.mark.parametrize("provider_model_id,expected_allowed", [
-    ("candidate-model", True), ("different-model", False),
+@pytest.mark.parametrize("provider_model_id,expected_allowed,revoke_after_hold", [
+    ("candidate-model", True, False),
+    ("different-model", False, False),
+    ("candidate-model", True, True),
 ])
 def test_formal_signed_development_risk_counts_original_eval_hold(
     caller, issuer_factory, https_signer, provider_model_id, expected_allowed,
+    revoke_after_hold,
 ):
     from uuid import uuid4
     from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
     from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
     from aos_api.aip_budget_cost_runtime import require_cost_risk, BudgetCostRuntimeBlocked
     from aos_api.aip_budget_reservation_contracts import BudgetExactRef
+    from aos_api.aip_budget_reservation_store import BudgetReservationBlocked
     from aos_api.aip_budget_store import AipBudgetAuthorityStore
     from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevision
     from aos_api.aip_model_runtime_contracts import (
@@ -258,8 +262,9 @@ def test_formal_signed_development_risk_counts_original_eval_hold(
         "asset_id": provider.provider_instance_id,
         "content_hash": provider.content_hash,
     })
-    basis.basis.max_requests = 1
-    basis.basis.total_risk_minor = basis.basis.per_request_risk_minor
+    basis.basis.max_requests = 2 if revoke_after_hold else 1
+    basis.basis.total_risk_minor = (
+        basis.basis.per_request_risk_minor * basis.basis.max_requests)
     saved = BudgetCostProposalStore().create(maker, basis, key)
     decision = BudgetCostIssuer(issuer_factory).execute(
         command(https_signer[0], checker, saved))
@@ -310,14 +315,54 @@ def test_formal_signed_development_risk_counts_original_eval_hold(
         resourceType="ModelPriceSnapshotRevision", resourceId=price.price_snapshot_id,
         revision=price.revision, contentHash="sha256:" + price.content_hash,
     )
+    provider_ref = BudgetExactRef(
+        resourceType="ProviderInstanceRevision",
+        resourceId=provider.provider_instance_id,
+        revision=provider.revision,
+        contentHash="sha256:" + provider.content_hash,
+    )
+    if revoke_after_hold:
+        with connect_serializable(scope) as conn:
+            require_cost_risk(conn, scope, budget_ref, price_ref,
+                              basis.basis.per_request_risk_minor,
+                              provider_ref=provider_ref)
+        BudgetCostIssuer(issuer_factory).execute(command(
+            https_signer[0], maker, saved, operation="revoke", decision=None,
+            reason="withdraw before second Eval hold"))
+        _, second, _, second_proposal, _, _, _, _ = seeded_approved_model_eval_request(
+            stop_after_approval=True,
+            formal_sources=(budget, policy, provider, price),
+            upper_bound_minor=basis.basis.per_request_risk_minor,
+            provider_model_id=provider_model_id,
+        )
+        second_event_id = _approval_event(scope, second_proposal.proposal.id)
+        with pytest.raises(BudgetReservationBlocked,
+                           match="BUDGET_COST_CURRENT_RISK_AUTHORITY_REQUIRED"):
+            with connect_serializable(scope) as conn:
+                AipModelEvalBudgetReservationStore().hold(
+                    conn, scope, second["request_id"], second_event_id)
+        with connect_serializable(scope) as conn:
+            repeated = AipModelEvalBudgetReservationStore().hold(
+                conn, scope, first["request_id"], event_id)
+            assert repeated["request_id"] == first["request_id"]
+        with connect_serializable(scope) as conn:
+            assert conn.execute("""SELECT count(*) AS n
+                FROM aip_model_eval_budget_reservation WHERE request_id=%s""",
+                (second["request_id"],)).fetchone()["n"] == 0
+            original = conn.execute("""SELECT reservation_id FROM
+                aip_model_eval_budget_reservation WHERE request_id=%s
+                  AND state='held'""", (first["request_id"],)).fetchone()
+            assert original is not None
+            links = conn.execute("""SELECT count(*) AS n,
+                sum(reserved_minor) AS total FROM aip_model_eval_budget_reservation_bucket
+                WHERE reservation_id=%s""", (original["reservation_id"],)).fetchone()
+            assert links == {"n": 3, "total": 3 * basis.basis.per_request_risk_minor}
+        return
     with pytest.raises(BudgetCostRuntimeBlocked, match="RISK_AUTHORITY_REQUIRED"):
         with connect_serializable(scope) as conn:
             require_cost_risk(conn, scope, budget_ref, price_ref,
-                              basis.basis.per_request_risk_minor, provider_ref=
-                              BudgetExactRef(resourceType="ProviderInstanceRevision",
-                                  resourceId=provider.provider_instance_id,
-                                  revision=provider.revision,
-                                  contentHash="sha256:" + provider.content_hash))
+                              basis.basis.per_request_risk_minor,
+                              provider_ref=provider_ref)
     with connect_serializable(scope) as conn:
         require_cost_risk(conn, scope, budget_ref, price_ref,
                           basis.basis.per_request_risk_minor, new_hold=False)
