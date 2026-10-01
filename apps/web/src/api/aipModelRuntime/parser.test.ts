@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
+import { parseModelEvalCandidate, parseModelRouteRevision, parseModelRuntimeChainOverview, parseModelRuntimeCostOverview, parseModelRuntimeOverview, parseProviderInstanceRevision, parseProviderPluginRevision, parseRegisteredModelRevision } from "./parser";
 
 const H = "a".repeat(64);
 const ref = (assetType: string, assetId: string) => ({ assetType, assetId, revision: 1, contentHash: H });
@@ -131,4 +131,23 @@ it("未评估路由配置保留空引用且不能解析成 active", () => {
     evalGateRef: null, lifecycle: "draft", createdBy: "owner", createdAt: empty.generatedAt };
   expect(parseModelRouteRevision(draft).evalGateRef).toBeNull();
   expect(() => parseModelRouteRevision({ ...draft, lifecycle: "active" })).toThrow(/evalGateRef/);
+});
+
+
+describe("只读模型评测候选", () => {
+  const candidate = { sourceRef: ref("RegisteredModelRevision", "model"),
+    targetRef: { ...ref("RegisteredModelRevision", "model"), revision: 2 },
+    expectedHeadVersion: 1, sourceLifecycle: "validated", executionAllowed: false };
+  it("严格区分来源与下一评测目标", () => {
+    expect(parseModelEvalCandidate(candidate).targetRef.revision).toBe(2);
+  });
+  it.each([
+    { executionAllowed: true }, { executionAllowed: 0 }, { expectedHeadVersion: true },
+    { sourceLifecycle: "active" }, { targetRef: candidate.sourceRef },
+    { targetRef: { ...candidate.targetRef, assetId: "another" } },
+    { targetRef: { ...candidate.targetRef, assetType: "ProviderInstanceRevision" } },
+    { targetRef: { ...candidate.targetRef, contentHash: "bad" } },
+  ])("拒绝伪执行权、错误版本与漂移引用 %j", (drift) => {
+    expect(() => parseModelEvalCandidate({ ...candidate, ...drift })).toThrow();
+  });
 });

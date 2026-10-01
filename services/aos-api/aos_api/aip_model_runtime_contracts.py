@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator, model_serializer
 
@@ -320,6 +320,23 @@ class ModelRouteRevision(AipContractModel):
                 raise ValueError("eval_gate_ref is required outside draft/validated configuration")
         elif self.eval_gate_ref.asset_type != "EvalGateDecision":
             raise ValueError("eval_gate_ref must reference EvalGateDecision")
+        return self
+
+
+class ModelEvalCandidate(AipContractModel):
+    source_ref: VersionedAssetRef
+    target_ref: VersionedAssetRef
+    expected_head_version: int = Field(ge=1)
+    source_lifecycle: Literal["draft", "validated"]
+    execution_allowed: Literal[False] = False
+
+    @model_validator(mode="after")
+    def _same_next_revision(self) -> "ModelEvalCandidate":
+        source, target = self.source_ref, self.target_ref
+        if (source.asset_type not in {"RegisteredModelRevision", "ModelRouteRevision"}
+                or target.asset_type != source.asset_type or target.asset_id != source.asset_id
+                or target.revision != source.revision + 1):
+            raise ValueError("Eval candidate must bind the same asset's next revision")
         return self
 
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from pydantic import BaseModel, Field
 
 from aos_api.aip_model_runtime_contracts import (
+    ModelEvalCandidate,
     ModelRuntimeChainOverview,
     ModelPriceAuthoritySummary, ModelPriceSnapshotRevision, ModelRouteResolution,
     ModelRouteRevision, ModelRuntimeCostOverview, ModelRuntimeLifecycle,
@@ -441,6 +442,17 @@ def _usage_attribution_dimensions(period_receipts, deltas, attributions, task_bi
         aggregate("task", "lineage", task_rows),
         *(aggregate(dimension, "explicit", explicit[dimension]) for dimension in ("agent", "logic", "model")),
     ]
+
+
+@router.get("/eval-candidates", response_model=list[ModelEvalCandidate])
+def get_eval_candidates(
+    principal: Principal = Depends(require_principal),
+    store: AipModelRuntimeStore = Depends(get_store),
+):
+    try:
+        return store.list_eval_candidates(_scope(principal))
+    except ModelRuntimeStoreError as exc:
+        raise _map(exc) from None
 
 
 @router.get("/provider-plugins/{plugin_id}", response_model=ProviderPluginRevision)

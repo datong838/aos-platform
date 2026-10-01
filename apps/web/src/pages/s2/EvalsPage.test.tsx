@@ -34,7 +34,13 @@ describe("EvalsPage · 真实运行与门控", () => {
   let host: HTMLDivElement;
   let root: Root;
 
-  const graph = {
+  const modelCandidate = {
+  sourceRef: { assetType: "RegisteredModelRevision", assetId: "model-1", revision: 1, contentHash: "a".repeat(64) },
+  targetRef: { assetType: "RegisteredModelRevision", assetId: "model-1", revision: 2, contentHash: "b".repeat(64) },
+  expectedHeadVersion: 1, sourceLifecycle: "validated" as const, executionAllowed: false as const,
+};
+
+const graph = {
     id: "logic-1",
     name: "真实 Logic",
     revision: 3,
@@ -131,13 +137,15 @@ describe("EvalsPage · 真实运行与门控", () => {
       graphs: [graph],
       skills: [{ skillId: "skill-1", revision: 2, contentHash: "b".repeat(64), canonicalLogicId: "内容经营" }],
       agents: [{ template: { templateId: "agent-1", revision: 4, contentHash: "c".repeat(64), displayName: "内容官" } }],
-      models: [{ id: "model-1", displayName: "经营分析模型" }],
+      models: [modelCandidate],
     });
     expect(rows.map((item) => item.targetType)).toEqual(["业务逻辑", "原子技能", "数字同事", "模型"]);
     expect(rows[0].evidenceState).toBe("可直接评测");
     expect(rows[1].evidenceState).toBe("需独立执行");
     expect(rows[2].costEvidence).toContain("尚无");
-    expect(rows[3].evidenceState).toBe("缺精确版本");
+    expect(rows[3].evidenceState).toBe("需独立执行");
+    expect(rows[3].contentHash).toBe(modelCandidate.targetRef.contentHash);
+    expect(rows[3].revision).toBe("2");
     expect(rows[3].costEvidence).not.toContain("零费用");
   });
 
@@ -380,7 +388,7 @@ describe("EvalsPage · 真实运行与门控", () => {
       if (path === "/v1/aip/logic/graphs") return Promise.resolve(graphList);
       if (path === "/v1/aip/skills?limit=200") return Promise.resolve({ items: [{ skillId: "skill-1", revision: 2, contentHash: "b".repeat(64), canonicalLogicId: "内容经营" }] });
       if (path === "/v1/aip/agent-registry") return Promise.resolve({ items: [{ template: { templateId: "agent-1", revision: 4, contentHash: "c".repeat(64), displayName: "内容官" } }] });
-      if (path === "/v1/aip/model-admin/models") return Promise.resolve({ items: [{ id: "model-1", displayName: "经营分析模型" }] });
+      if (path === "/v1/aip/model-runtime/eval-candidates") return Promise.resolve([modelCandidate]);
       if (path === "/v1/evals/suite-1/history") return Promise.resolve({ items: [report, { ...report, report_id: "report-2", run_at: "2026-08-02T00:00:00Z", pass_rate: 1, passed: 1, failed: 0, gate_passed: true }] });
       return Promise.reject(new Error(`unexpected path ${path}`));
     });
@@ -391,13 +399,26 @@ describe("EvalsPage · 真实运行与门控", () => {
     await act(async () => inventory.click());
     await flush();
     expect(host.textContent).toContain("已读取 4 个真实评测目标");
-    expect(host.textContent).toContain("经营分析模型");
-    expect(host.textContent).toContain("缺精确修订或 SHA-256");
+    expect(host.textContent).toContain("model-1");
+    expect(host.textContent).toContain("下一生效版本");
+    expect(apiMocks.apiGet).not.toHaveBeenCalledWith("/v1/aip/model-admin/models");
+    expect(apiMocks.apiGet).not.toHaveBeenCalledWith("/v1/aip/model-catalog");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
 
     const history = Array.from(host.querySelectorAll("button")).find((button) => button.textContent === "加载回归历史")!;
     await act(async () => history.click());
     await flush();
     expect(host.textContent).toContain("已读取当前 Logic 精确修订的 2 次回归");
     expect(host.textContent).toContain("+100.0 个百分点");
+    const previous = apiMocks.apiGet.getMockImplementation()!;
+    apiMocks.apiGet.mockImplementation((path: string) => path === "/v1/aip/model-runtime/eval-candidates"
+      ? Promise.reject(new Error("candidate authority unavailable")) : previous(path));
+    await act(async () => inventory.click());
+    await flush();
+    expect(host.textContent).toContain("1 类权威目录读取失败");
+    expect(apiMocks.apiGet).not.toHaveBeenCalledWith("/v1/aip/model-admin/models");
+    expect(apiMocks.apiGet).not.toHaveBeenCalledWith("/v1/aip/model-catalog");
+    expect(apiMocks.apiPost).not.toHaveBeenCalled();
+
   });
 });

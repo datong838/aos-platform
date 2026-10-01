@@ -14,6 +14,8 @@ import {
 import { BpArchitectureBar } from "../../components/bp/BpArchitectureBar";
 import { AipOperationalProjectionStrip } from "../../components/aip/AipOperationalProjectionStrip";
 import {
+  aipModelRuntime,
+  type ModelEvalCandidate,
   parseModelRouteRevision,
   type ModelRouteRevision,
   type ModelRuntimeOverview,
@@ -3504,7 +3506,7 @@ type EvalGateResult = {
 
 export type EvalTargetInventoryItem = {
   key: string;
-  targetType: "业务逻辑" | "原子技能" | "数字同事" | "模型";
+  targetType: "业务逻辑" | "原子技能" | "数字同事" | "模型" | "模型路由";
   displayName: string;
   assetId: string;
   revision: string;
@@ -3519,7 +3521,7 @@ type EvalTargetInventorySources = {
   graphs: Array<{ id: string; name: string; revision: number; graph_hash: string }>;
   skills: unknown[];
   agents: unknown[];
-  models: unknown[];
+  models: ModelEvalCandidate[];
 };
 
 function evalRecord(value: unknown): Record<string, unknown> {
@@ -3594,26 +3596,18 @@ export function buildEvalTargetInventory(sources: EvalTargetInventorySources): E
     });
   }
 
-  for (const raw of sources.models) {
-    const model = evalRecord(raw);
-    const registration = evalRecord(model.registration);
-    const id = String(model.id || model.model || "").trim();
-    if (!id) continue;
-    const revision = String(model.revision || registration.revision || "").trim();
-    const hash = evalExactHash(model.contentHash || registration.contentHash);
+  for (const candidate of sources.models) {
+    const target = candidate.targetRef;
+    const isRoute = target.assetType === "ModelRouteRevision";
     rows.push({
-      key: `model:${id}@${revision || "unknown"}`,
-      targetType: "模型",
-      displayName: businessDisplayName(String(model.displayName || model.model || id)),
-      assetId: id,
-      revision,
-      contentHash: hash,
-      evidenceState: revision && hash ? "需独立执行" : "缺精确版本",
-      executionPlan: revision && hash
-        ? "通过受控模型路由执行质量、延迟和费用评测，保存供应商回包证据"
-        : "模型目录仅证明发现；需先形成注册修订、SHA-256 与受控路由",
-      costEvidence: "缺同次运行 usage 与价格权威；不展示虚假费用数字",
-      href: "/aip/model-catalog",
+      key: `${target.assetType}:${target.assetId}@${target.revision}`,
+      targetType: isRoute ? "模型路由" : "模型",
+      displayName: businessDisplayName(target.assetId), assetId: target.assetId,
+      revision: String(target.revision), contentHash: target.contentHash,
+      evidenceState: "需独立执行",
+      executionPlan: `来源配置 r${candidate.sourceRef.revision}（头版本 ${candidate.expectedHeadVersion}）；下一生效版本 r${target.revision} 的评测候选，仍需正式执行授权与供应商回包证据`,
+      costEvidence: "尚无该候选同次 EvalRun 的用量与费用证据；读取候选不启动执行",
+      href: isRoute ? "/aip/model-router" : "/aip/model-catalog",
     });
   }
   return rows;
@@ -3866,22 +3860,14 @@ export function EvalsPage() {
       const results = await Promise.allSettled([
         apiGet<{ items?: unknown[] }>("/v1/aip/skills?limit=200"),
         apiGet<{ items?: unknown[] }>("/v1/aip/agent-registry"),
-        (async () => {
-          try {
-            const admin = await apiGet<{ items?: unknown[] }>("/v1/aip/model-admin/models");
-            if ((admin.items || []).length > 0) return admin;
-          } catch {
-            // 权威管理目录不可读时继续读取发现目录；两者都失败才由 allSettled 记录缺证。
-          }
-          return apiGet<{ items?: unknown[] }>("/v1/aip/model-catalog");
-        })(),
+        aipModelRuntime.evalCandidates(),
       ]);
       const failed = results.filter((item) => item.status === "rejected").length;
       const items = buildEvalTargetInventory({
         graphs,
         skills: results[0].status === "fulfilled" ? results[0].value.items || [] : [],
         agents: results[1].status === "fulfilled" ? results[1].value.items || [] : [],
-        models: results[2].status === "fulfilled" ? results[2].value.items || [] : [],
+        models: results[2].status === "fulfilled" ? results[2].value : [],
       });
       setTargetInventory(items);
       setInventoryState(failed === results.length ? "error" : "loaded");

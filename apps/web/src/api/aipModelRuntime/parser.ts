@@ -1,4 +1,4 @@
-import type { ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
+import type { ModelEvalCandidate, ExactRuntimeRef, ModelPriceAuthoritySummary, ModelRouteRevision, ModelRuntimeChainOverview, ModelRuntimeCostOverview, ModelRuntimeOverview, ProviderHealthObservation, ProviderInstanceRevision, ProviderPluginRevision, RegisteredModelRevision, RuntimeAssetSummary, RuntimeBudgetAuthoritySummary, RuntimeCapacityPoolSummary, RuntimeChainNode, RuntimeEvalGateSummary, RuntimeLifecycle, RuntimeModelImpactTrace, RuntimeQuotaAuthoritySummary, RuntimeReadiness, RuntimeResolution, RuntimeRouteChain, RuntimeTaskModelTrace, RuntimeTraceRef, RuntimeUsageAttributionDimension, RuntimeUsageAuthoritySummary } from "./contracts";
 
 function object(value: unknown, label: string): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} 必须是对象`); return value as Record<string, unknown>; }
 function array(value: unknown, label: string): unknown[] { if (!Array.isArray(value)) throw new Error(`${label} 必须是数组`); return value; }
@@ -322,4 +322,17 @@ export function parseModelRuntimeCostOverview(value: unknown): ModelRuntimeCostO
     usage: usageAuthority(raw.usage, "usage"),
     generatedAt: iso(raw.generatedAt, "generatedAt"),
   };
+}
+
+
+export function parseModelEvalCandidate(value: unknown): ModelEvalCandidate {
+  const raw = object(value, "ModelEvalCandidate");
+  const sourceRef = ref(raw.sourceRef, "sourceRef");
+  const targetRef = ref(raw.targetRef, "targetRef");
+  if (!["RegisteredModelRevision", "ModelRouteRevision"].includes(sourceRef.assetType)
+    || targetRef.assetType !== sourceRef.assetType || targetRef.assetId !== sourceRef.assetId
+    || targetRef.revision !== sourceRef.revision + 1) throw new Error("评测候选必须绑定同一资产的下一版本");
+  if (raw.executionAllowed !== false) throw new Error("评测候选不授予执行权");
+  return { sourceRef, targetRef, expectedHeadVersion: integer(raw.expectedHeadVersion, "expectedHeadVersion", 1),
+    sourceLifecycle: enumeration(raw.sourceLifecycle, "sourceLifecycle", ["draft", "validated"] as const), executionAllowed: false };
 }

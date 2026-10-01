@@ -90,6 +90,14 @@ export type RegisteredModelRevision = {
   createdAt: string;
 };
 
+export type ModelEvalCandidate = {
+  sourceRef: ExactRuntimeRef;
+  targetRef: ExactRuntimeRef;
+  expectedHeadVersion: number;
+  sourceLifecycle: "draft" | "validated";
+  executionAllowed: false;
+};
+
 export type ModelRouteRevision = {
   tenant: { orgId: string; projectId: string };
   routeId: string;

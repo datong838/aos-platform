@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_model_runtime_contracts import (
+    ModelEvalCandidate,
     ModelRuntimeAssetSummary,
     ModelRuntimeCapacityPoolSummary,
     ModelRuntimeEvalGateSummary,
@@ -318,6 +319,39 @@ class AipModelRuntimeStore:
                 lifecycle=item.lifecycle, dependencyRefs=refs,
             ))
         return result
+
+    def list_eval_candidates(self, scope: TenantScope) -> list[ModelEvalCandidate]:
+        """Observe one snapshot of draft heads; never create or authorize Eval runs."""
+        with self._connect_factory(scope) as conn:
+            rows = conn.execute("""
+                SELECT 'registered_model' AS kind, h.version, r.registered_model_id AS asset_id, r.revision, r.payload
+                FROM aip_registered_model_head h JOIN aip_registered_model_revision r
+                  ON (r.org_id,r.project_id,r.registered_model_id,r.revision)=
+                     (h.org_id,h.project_id,h.registered_model_id,h.current_revision)
+                WHERE h.org_id=%s AND h.project_id=%s AND r.lifecycle IN ('draft','validated')
+                UNION ALL
+                SELECT 'model_route' AS kind, h.version, r.model_route_id AS asset_id, r.revision, r.payload
+                FROM aip_model_route_head h JOIN aip_model_route_revision r
+                  ON (r.org_id,r.project_id,r.model_route_id,r.revision)=
+                     (h.org_id,h.project_id,h.model_route_id,h.current_revision)
+                WHERE h.org_id=%s AND h.project_id=%s AND r.lifecycle IN ('draft','validated')
+                """, (*scope.key, *scope.key)).fetchall()
+        candidates = []
+        for row in rows:
+            model = RegisteredModelRevision if row['kind']=='registered_model' else ModelRouteRevision
+            item = model.model_validate(self._load(row['payload']))
+            self._check_scope(scope, item)
+            body = item.model_dump(mode='json', by_alias=True)
+            if canonical_hash({k:v for k,v in body.items() if k not in self._META_FIELDS}) != item.content_hash:
+                raise ModelRuntimeConflict('Eval source revision content hash drifted')
+            source = evaluation_candidate_ref(item).model_copy(update={'content_hash':item.content_hash})
+            if source.asset_id != row['asset_id'] or source.revision != row['revision']:
+                raise ModelRuntimeConflict('Eval source identity drifted')
+            target = evaluation_candidate_ref(item.model_copy(update={
+                'revision':item.revision+1, 'lifecycle':ModelRuntimeLifecycle.ACTIVE, 'eval_gate_ref':None}))
+            candidates.append(ModelEvalCandidate(source_ref=source,target_ref=target,
+                expected_head_version=row['version'],source_lifecycle=item.lifecycle.value))
+        return sorted(candidates,key=lambda item:(item.source_ref.asset_type,item.source_ref.asset_id))
 
     def list_eval_gates(self, scope: TenantScope, refs: list[VersionedAssetRef]) -> list[ModelRuntimeEvalGateSummary]:
         unique = {(ref.asset_id, ref.revision, ref.content_hash): ref for ref in refs if ref.asset_type == "EvalGateDecision"}

@@ -11,6 +11,7 @@ from aos_api.aip_budget_cost_proposal_store import BudgetCostProposalStore
 from aos_api.aip_provider_plugin_authority import ProviderPluginAuthority
 from aos_api.aip_model_runtime_contracts import RegisteredModelRevision, ModelRouteRevision, RuntimePolicyRevision, ModelRuntimeLifecycle
 from aos_api.aip_model_runtime_store import AipModelRuntimeStore, ModelRuntimeDependencyBlocked, canonical_hash
+from aos_api.aip_model_runtime_store import evaluation_candidate_ref
 from aos_api.aip_model_runtime_resolver import AipModelRuntimeResolver
 from aos_api.aip_model_governance_policy_contracts import QuotaPolicyRevisionCreate
 from aos_api.aip_network_policy_contracts import NetworkPolicyRevisionCreate
@@ -119,3 +120,43 @@ def test_signed_configuration_is_readable_and_missing_eval_health_remain_blocked
         with pytest.raises(ModelRuntimeDependencyBlocked,match='eval gate is unavailable'):
             publish(SCOPE,item.created_by,'forbidden-'+uuid4().hex,
                 item.model_copy(update={'lifecycle':ModelRuntimeLifecycle.ACTIVE}),expected_version=1)
+
+
+def test_eval_candidates_are_exact_next_active_refs_and_never_execute(configuration):
+    _,model,route,_,client,headers=configuration
+    with connect(SCOPE) as conn:
+        before = tuple(conn.execute('SELECT count(*) AS n FROM '+table).fetchone()['n']
+            for table in ('aip_eval_run','aip_release_gate_decision','aip_model_runtime_receipt'))
+    response=client.get('/v1/aip/model-runtime/eval-candidates',headers=headers)
+    assert response.status_code==200,response.text
+    candidates=response.json()
+    for item,identity in ((model,model.registered_model_id),(route,route.route_id)):
+        row=next(row for row in candidates if row['sourceRef']['assetId']==identity)
+        assert row['sourceRef']['contentHash']==item.content_hash
+        assert row['expectedHeadVersion']==1 and row['executionAllowed'] is False
+        target=evaluation_candidate_ref(item.model_copy(update={
+            'revision':2,'lifecycle':ModelRuntimeLifecycle.ACTIVE,'eval_gate_ref':None}))
+        assert row['targetRef']==target.model_dump(mode='json',by_alias=True)
+        assert target.content_hash!=evaluation_candidate_ref(item).content_hash
+    assert client.get('/v1/aip/model-runtime/eval-candidates',headers=headers).json()==candidates
+    with connect(SCOPE) as conn:
+        after = tuple(conn.execute('SELECT count(*) AS n FROM '+table).fetchone()['n']
+            for table in ('aip_eval_run','aip_release_gate_decision','aip_model_runtime_receipt'))
+    assert after==before
+    assert client.get('/v1/aip/model-runtime/eval-candidates').status_code==401
+    mismatch=client.get('/v1/aip/model-runtime/eval-candidates',headers={**headers,'X-Org-Id':'dev-org'})
+    assert mismatch.status_code in (401,403)
+    store=AipModelRuntimeStore()
+    next_model=hashed(RegisteredModelRevision, {
+        **model.model_dump(mode='json', by_alias=True),
+        'revision':2, 'contextWindow':model.context_window-1,
+    })
+    store.publish_model(SCOPE,model.created_by,'next-'+uuid4().hex,next_model,expected_version=1)
+    refreshed=client.get('/v1/aip/model-runtime/eval-candidates',headers=headers).json()
+    current=next(row for row in refreshed if row['sourceRef']['assetId']==model.registered_model_id)
+    assert current['sourceRef']['revision']==2 and current['targetRef']['revision']==3
+    assert current['expectedHeadVersion']==2
+    assert current['sourceRef']['contentHash']==next_model.content_hash
+    assert current['targetRef']['contentHash']!=next(
+        row['targetRef']['contentHash'] for row in candidates
+        if row['sourceRef']['assetId']==model.registered_model_id)
