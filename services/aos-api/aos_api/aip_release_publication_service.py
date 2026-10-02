@@ -24,13 +24,15 @@ from aos_api.aip_eval_contracts import (
     ReleaseGateStatus,
 )
 from aos_api.aip_eval_pack_registry import compute_eval_suite_hash
+from aos_api.aip_eval_execution_authority import EvalExecutionRejected
+from aos_api.aip_eval_report_proof_reader import read_verified_skill_eval_report_from_persistence
 from aos_api.aip_eval_runner import compute_eval_report_hash
 from aos_api.aip_release_publication_models import (
     DeriveReleaseGateRequest,
     PublishReleaseRequest,
     RevokePublicationRequest,
 )
-from aos_api.db import connect as db_connect
+from aos_api.db import connect as db_connect, connect_serializable
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -104,7 +106,7 @@ class AipReleasePublicationService:
         actor = self._actor(actor)
         decision_id = self._stable_id("gate", scope, request.idempotency_key)
         try:
-            with self._connect(scope) as conn:
+            with self._connect(scope, serializable=True) as conn:
                 existing = self._gate_row(conn, scope, decision_id)
                 if existing is not None:
                     gate = self._gate_from_row(scope, existing)
@@ -160,9 +162,7 @@ class AipReleasePublicationService:
                         "eval suite/report exact references drifted"
                     )
                 if report.target.asset_type is AssetType.SKILL_TEMPLATE:
-                    raise AipReleaseGateRejected(
-                        "formal Skill Eval executor authority unavailable"
-                    )
+                    self._verify_signed_skill_report(conn, report)
 
                 status = (
                     ReleaseGateStatus.PASSED
@@ -223,7 +223,7 @@ class AipReleasePublicationService:
         publication_id = self._stable_id("publication", scope, request.idempotency_key)
         event_id = self._stable_id("published", scope, request.idempotency_key)
         try:
-            with self._connect(scope) as conn:
+            with self._connect(scope, serializable=True) as conn:
                 existing = self._event_row(conn, scope, event_id)
                 if existing is not None:
                     event = self._event_from_row(scope, existing)
@@ -394,9 +394,21 @@ class AipReleasePublicationService:
                 "release gate eval report exact references drifted"
             )
         if report.target.asset_type is AssetType.SKILL_TEMPLATE:
+            AipReleasePublicationService._verify_signed_skill_report(conn, report)
+
+    @staticmethod
+    def _verify_signed_skill_report(conn: Any, report: EvalReportRevision) -> None:
+        try:
+            evaluated_at = conn.execute(
+                "SELECT transaction_timestamp() AS evaluated_at"
+            ).fetchone()["evaluated_at"]
+            read_verified_skill_eval_report_from_persistence(
+                conn, report=report, evaluated_at=evaluated_at,
+            )
+        except EvalExecutionRejected as exc:
             raise AipReleaseGateRejected(
                 "formal Skill Eval executor authority unavailable"
-            )
+            ) from exc
 
     @staticmethod
     def _verify_run(report: EvalReportRevision, row: Any) -> None:
@@ -616,9 +628,11 @@ class AipReleasePublicationService:
             gate_threshold=row["gate_threshold"],
         )
 
-    def _connect(self, scope: TenantScope) -> AbstractContextManager[Any]:
+    def _connect(
+        self, scope: TenantScope, *, serializable: bool = False,
+    ) -> AbstractContextManager[Any]:
         if self._connect_factory is db_connect:
-            return db_connect(scope)
+            return connect_serializable(scope) if serializable else db_connect(scope)
         try:
             return self._connect_factory(scope)
         except TypeError:
