@@ -1,0 +1,178 @@
+apiVersion: aos.dev/v1alpha1
+kind: SolutionPack
+metadata:
+  id: solution.ecommerce.growth
+  version: 1.13.0
+  displayName: 电商增长方案包（W3：六数字同事生产 Profile Candidate）
+  publisher: aos
+  license: internal
+spec:
+  platformApi: ">=1.7.0 <2.0.0"
+  runtime:
+    apiVersion: aos.dev/bundle-runtime/v1alpha1
+    backend:
+      entrypoint: backend/ecommerce_growth/__init__.py:register
+      pythonPackage: ecommerce_growth
+      schemaNamespace: ecommerce_growth
+      profileId: internal-python-v1
+      imageIndex: artifacts/runtime-image-index.json
+    frontend:
+      manifest: frontend/manifest.json
+      artifactHash: sha256:8fe67617e00386bbc4c9003d61ff43600042763d376a0079515fe231f667aa7c
+  dependencies:
+    - publisher: aos
+      id: domain.ecommerce.core
+      version: ">=1.4.0 <2.0.0"
+  optionalDependencies: []
+  conflicts: []
+  exports:
+    agents:
+      - content/agents/
+      - content/knowledge/
+      - content/live/
+      - content/media/
+    logic:
+      - content/logic/
+      - content/growth/
+    workshops:
+      - content/workshops/
+    evals:
+      - content/evals/
+      - content/harness/
+    policies:
+      - content/policies/
+    schemas:
+      - content/schemas/
+      - content/production-profiles/
+      - content/media-production-templates/
+      - content/responsibility-templates/
+      - content/cost-projection-contracts/
+  capabilities:
+    provides:
+      - material.collect
+      - strategy.plan
+      - copy.generate
+      - script.compose
+      - speech.synthesize
+      - video.compose
+      - content.review
+      - live.orchestrate
+      - platform.adapt
+      - performance.review
+    requires: []
+  permissions:
+    roles: []
+    markings: []
+    dataScopes: [ecommerce.workshop.read]
+    actionTypes: []
+  migrations:
+    plan: null
+    downgradePolicy: retain-canonical
+  preflight: null
+  regression: null
+  rollback: null
+  contributions:
+    - kind: navigation
+      route: /workshop/cockpit
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.task-cockpit
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/content-campaign
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.content-campaign
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/creator-growth
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.creator-growth
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/media-studio
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.media-studio
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/analyst
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.analyst
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/price-governance
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.price-governance
+      mode: exclusive
+    - kind: navigation
+      route: /workshop/customer
+      mode: exclusive
+    - kind: ui
+      slot: workshop.primary.ecommerce
+      id: ecommerce.customer
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_event_control
+      method: POST
+      path: /ecommerce/growth/investigations/events/control
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_investigation_describe
+      method: POST
+      path: /ecommerce/growth/investigations/describe
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_case_put
+      method: POST
+      path: /ecommerce/growth/investigations/cases
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_schedule_put
+      method: POST
+      path: /ecommerce/growth/investigations/schedules
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_schedule_trigger
+      method: POST
+      path: /ecommerce/growth/investigations/schedules/trigger
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_data_fulfill
+      method: POST
+      path: /ecommerce/growth/investigations/data/fulfill
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_analysis_advance
+      method: POST
+      path: /ecommerce/growth/investigations/analysis/advance
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_review_advance
+      method: POST
+      path: /ecommerce/growth/investigations/review/advance
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_content_generate
+      method: POST
+      path: /ecommerce/growth/content/generate
+      mode: exclusive
+    - kind: api
+      operationId: ecommerce_growth_content_review
+      method: POST
+      path: /ecommerce/growth/content/review
+      mode: exclusive
+    - kind: api
+      operationId: analyst_workspace_view_v1
+      method: POST
+      path: /ecommerce/growth/workspace/view
+      mode: exclusive

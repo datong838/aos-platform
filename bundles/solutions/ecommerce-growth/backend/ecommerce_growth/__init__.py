@@ -17,7 +17,7 @@ _OPERATIONS = (
 
 def register(_context):
     return {
-        "contributions": [
+        "contributions": [dict(item) for item in _STATIC_CONTRIBUTIONS] + [
             {"kind": "api", "operationId": operation, "method": method, "path": path, "mode": "exclusive"}
             for operation, method, path in _OPERATIONS
         ]
@@ -73,3 +73,21 @@ def handle(operation_id, _payload, _context):
 
         return handle_stage_review_message(_payload)
     raise PermissionError("ecommerce growth runtime is registration-only before AR2-7 cutover")
+
+
+_STATIC_CONTRIBUTIONS = (
+    {"kind": "navigation", "route": "/workshop/cockpit", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.task-cockpit", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/content-campaign", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.content-campaign", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/creator-growth", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.creator-growth", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/media-studio", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.media-studio", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/analyst", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.analyst", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/price-governance", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.price-governance", "mode": "exclusive"},
+    {"kind": "navigation", "route": "/workshop/customer", "mode": "exclusive"},
+    {"kind": "ui", "slot": "workshop.primary.ecommerce", "id": "ecommerce.customer", "mode": "exclusive"},
+)
