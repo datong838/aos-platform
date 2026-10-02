@@ -7,6 +7,7 @@ from psycopg.types.json import Jsonb
 from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
+    ContentGenerateHostService,
     ReviewAdvanceHostService,
     TransactionBoundConnectFactory,
     _analysis_command_hash,
@@ -18,6 +19,7 @@ from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, Budg
 from aos_api.aip_task_models import CreatePlanRevisionRequest, CreateTaskRunRequest
 from aos_api.aip_contracts import ExactContractRef, PlanStep, ResourceRef
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, SalesWeaponMethod
+from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_authority_contracts import sales_weapon_method
 
@@ -172,6 +174,45 @@ def test_accepted_stage_task_brief_v3_persists_one_original_artifact_and_exact_s
             "WHERE org_id=%s AND project_id=%s",
             SCOPE.key,
         ).fetchone()["n"] == 0
+
+
+def test_content_generate_reader_requires_independent_v3_task_brief_lineage():
+    value = accepted_stage_command()
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        refs = ReviewAdvanceHostService()._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value, occurred_at=NOW,
+        )
+        authorities = {
+            name: InvestigationExactRef.model_validate(refs[name + "Ref"])
+            for name in ("handoff", "task", "brief")
+        }
+        authorities["growth_plan"] = InvestigationExactRef.model_validate(value["growthPlanRef"])
+        expected = {name: value[name] for name in (
+            "sourceKind", "cutoffAt", "expiresAt", "markings", "occurrenceRef",
+            "caseRef", "runRef", "analysisReceiptRef", "currentPlanRef",
+            "growthPlanRef", "evalReportRef", "stageDecisionRef", "stageTaskRunId",
+            "stagePlanRef", "stageAttemptRef", "stageArtifactRef",
+            "responsibilityPlanRef",
+        )}
+        reader = ContentGenerateHostService()
+        kwargs = dict(transaction=transaction, scope=SCOPE, authorities=authorities,
+                      source_values=value["taskSpec"]["artifactRefs"],
+                      source_kind="accepted-stage-v1", source_lineage=expected)
+        reader._task_brief(**kwargs)
+        with pytest.raises(ValueError, match="Task/Brief exact lineage drifted"):
+            reader._task_brief(**{**kwargs, "source_lineage": None})
+        with pytest.raises(ValueError, match="Task/Brief exact lineage drifted"):
+            reader._task_brief(**{**kwargs, "source_lineage": {
+                **expected, "markings": ["public"],
+            }})
+        with pytest.raises(ValueError, match="Task/Brief exact lineage drifted"):
+            reader._task_brief(**{**kwargs, "source_lineage": {
+                **expected, "stageArtifactRef": {
+                    **expected["stageArtifactRef"], "resourceId": "another-artifact",
+                },
+            }})
+        conn.rollback()
 
 
 def test_review_lineage_uses_real_task_and_brief_owners_and_outer_rollback():

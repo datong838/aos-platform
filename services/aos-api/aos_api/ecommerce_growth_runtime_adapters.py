@@ -4059,6 +4059,12 @@ _CONTENT_BRIEF_SPEC_FIELDS = frozenset(
 _CONTENT_BRIEF_SPEC_FIELDS_V2 = _CONTENT_BRIEF_SPEC_FIELDS | {
     "salesWeaponMethod", "decisionRef", "sourceCutoffAt",
 }
+_CONTENT_STAGE_LINEAGE_FIELDS = frozenset({
+    "sourceKind", "cutoffAt", "expiresAt", "markings", "occurrenceRef", "caseRef",
+    "runRef", "analysisReceiptRef", "currentPlanRef", "growthPlanRef",
+    "evalReportRef", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
+    "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",
+})
 
 
 def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
@@ -4537,7 +4543,29 @@ class ContentGenerateHostService:
         return response
 
     @staticmethod
-    def _task_brief(transaction, scope, authorities, source_values, *, approved_plan=None) -> None:
+    def _task_brief(transaction, scope, authorities, source_values, *, approved_plan=None,
+                    source_kind="issue-review-v1", source_lineage=None) -> None:
+        accepted_stage = source_kind == "accepted-stage-v1"
+        if source_kind not in {"issue-review-v1", "accepted-stage-v1"}:
+            raise ValueError("content generate Task/Brief source kind drifted")
+        if accepted_stage:
+            if (type(source_lineage) is not dict
+                    or set(source_lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
+                    or source_lineage["sourceKind"] != "accepted-stage-v1"
+                    or source_lineage["markings"] != ["internal"]
+                    or type(source_values) is not list or len(source_values) != 1):
+                raise ValueError("content generate Task/Brief exact lineage drifted")
+            _content_exact_ref(source_values[0], "Artifact")
+            stage_artifact = source_lineage["stageArtifactRef"]
+            if (type(stage_artifact) is not dict
+                    or stage_artifact.get("resourceType") != "Artifact"
+                    or stage_artifact.get("resourceId") != source_values[0]["resourceId"]
+                    or stage_artifact.get("revision") != source_values[0]["revision"]
+                    or stage_artifact.get("contentHash")
+                    != source_values[0]["contentHash"].removeprefix("sha256:")):
+                raise ValueError("content generate Task/Brief exact lineage drifted")
+        elif source_lineage is not None:
+            raise ValueError("content generate Task/Brief source kind drifted")
         task_ref = authorities["task"]
         brief_ref = authorities["brief"]
         task = transaction.execute(
@@ -4604,10 +4632,13 @@ class ContentGenerateHostService:
         expected_spec_fields = (
             _CONTENT_BRIEF_SPEC_FIELDS if method is None else _CONTENT_BRIEF_SPEC_FIELDS_V2
         )
+        if accepted_stage:
+            expected_spec_fields = expected_spec_fields | {"sourceLineage"}
         expected_v2_schema = {
             "resourceType": "ContentCampaignBriefSchema",
-            "resourceId": "schema://aos/ecommerce/content-campaign-brief/v2",
-            "revision": "2",
+            "resourceId": "schema://aos/ecommerce/content-campaign-brief/v3" if accepted_stage
+                else "schema://aos/ecommerce/content-campaign-brief/v2",
+            "revision": "3" if accepted_stage else "2",
             "authority": "aos://ecommerce-workshop/content-campaign",
         }
         v2_matches_plan = (method is None or (
@@ -4671,6 +4702,12 @@ class ContentGenerateHostService:
             or type(goal) is not dict
             or type(spec) is not dict
             or set(spec) != expected_spec_fields
+            or (accepted_stage and brief["schema_ref"] != expected_v2_schema)
+            or (accepted_stage and (
+                goal.get("sourceLineage") != source_lineage
+                or spec.get("sourceLineage") != source_lineage
+                or source_lineage["growthPlanRef"] != expected_growth_plan
+            ))
             or not v2_matches_plan
             or goal.get("sourceHandoffRef") != expected_handoff
             or spec.get("sourceHandoffRef") != expected_handoff
