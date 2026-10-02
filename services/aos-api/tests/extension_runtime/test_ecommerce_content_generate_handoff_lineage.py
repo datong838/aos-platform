@@ -613,8 +613,33 @@ def test_accepted_stage_content_command_is_strict_and_host_stays_closed():
             raise AssertionError("Host touched database before accepted-stage gate")
 
     host = ContentGenerateHostService()
-    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+    with pytest.raises(ValueError, match="dispatch operation drifted"):
         host.revalidate(transaction=NoDatabase(), scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_review_advance"),
+                        command=command)
+    class MissingReviewReceipt:
+        rows = []
+
+        def execute(self, query, params):
+            assert "ecommerce_growth_runtime_command_receipt" in query
+            assert params[:2] == SCOPE.key
+            assert params[-1] == command["authorityRefs"]["handoff"]["resourceId"]
+            return SimpleNamespace(fetchall=lambda: self.rows)
+
+    with pytest.raises(ValueError, match="accepted stage Review Receipt is not unique"):
+        host.revalidate(transaction=MissingReviewReceipt(), scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+                        command=command)
+    duplicate = MissingReviewReceipt()
+    duplicate.rows = [{"response": {}}, {"response": {}}]
+    with pytest.raises(ValueError, match="accepted stage Review Receipt is not unique"):
+        host.revalidate(transaction=duplicate, scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+                        command=command)
+    malformed = MissingReviewReceipt()
+    malformed.rows = [{"response": {"sourceLineage": {"sourceKind": "accepted-stage-v1"}}}]
+    with pytest.raises(ValueError, match="accepted stage Review Receipt lineage drifted"):
+        host.revalidate(transaction=malformed, scope=SCOPE,
                         dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
                         command=command)
     with pytest.raises(ValueError, match="accepted stage content Host is not wired"):

@@ -26,6 +26,7 @@ from test_ecommerce_analyst_growth_plan_approval import plan
 from test_ecommerce_analyst_stage_decision import decision, ref
 from tests.test_ecommerce_business_investigation_lifecycle import draft_case
 from test_ecommerce_review_advance_host import accepted_stage_command, command_hash
+from test_ecommerce_content_generate_handoff_lineage import accepted_stage_content_command
 from tests.asset_registry.test_m2_core_integration import _composition_input
 SCOPE=TenantScope('org-org','dev-project')
 
@@ -169,6 +170,70 @@ def test_content_generate_rebuilds_stage_refs_from_original_owner(source):
                 candidate={**candidate, 'sourceKind': 'issue-review-v1'})
 
 
+def test_content_generate_revalidate_requires_persisted_stage_review_before_execution(source):
+    _owner, _draft, _item, _args = source
+    command = accepted_stage_content_command()
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        with pytest.raises(ValueError, match='accepted stage Review Receipt is not unique'):
+            ContentGenerateHostService().revalidate(
+                transaction=HostTransaction(conn), scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_content_generate'),
+                command=command,
+            )
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.ecommerce_growth_runtime_command_receipt "
+            "WHERE org_id=%s AND project_id=%s AND operation_id='ecommerce_growth_content_generate'",
+            SCOPE.key,
+        ).fetchone()['n'] == 0
+
+
+def test_content_generate_revalidates_original_owner_before_missing_occurrence(source):
+    _owner, _draft, item, args = source
+    review_command = accepted_stage_command()
+    review_command.update(host_command(item, args))
+    lineage = {name: review_command[name] for name in (
+        'sourceKind', 'cutoffAt', 'expiresAt', 'markings', 'occurrenceRef',
+        'caseRef', 'runRef', 'analysisReceiptRef', 'currentPlanRef',
+        'growthPlanRef', 'evalReportRef', 'stageDecisionRef', 'stageTaskRunId',
+        'stagePlanRef', 'stageAttemptRef', 'stageArtifactRef',
+        'responsibilityPlanRef',
+    )}
+    command = accepted_stage_content_command()
+
+    class OneReceiptConnection:
+        def __init__(self, connection, candidate):
+            self.connection = connection
+            self.candidate = candidate
+
+        def execute(self, query, params=()):
+            if 'SELECT response FROM public.ecommerce_growth_runtime_command_receipt' in query:
+                assert params[:2] == SCOPE.key
+                return SimpleNamespace(fetchall=lambda: [
+                    {'response': {'sourceLineage': self.candidate}}
+                ])
+            return self.connection.execute(query, params)
+
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        transaction = HostTransaction(OneReceiptConnection(conn, lineage))
+        with pytest.raises(ValueError, match='AutomationOccurrence authority is missing'):
+            ContentGenerateHostService().revalidate(
+                transaction=transaction, scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_content_generate'),
+                command=command,
+            )
+        drift = {**lineage, 'stageArtifactRef': {
+            **lineage['stageArtifactRef'], 'resourceId': 'other-artifact'}}
+        transaction = HostTransaction(OneReceiptConnection(conn, drift))
+        with pytest.raises(ValueError, match='accepted stage Handoff differs from current source'):
+            ContentGenerateHostService().revalidate(
+                transaction=transaction, scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_content_generate'),
+                command=command,
+            )
+
+
 @pytest.mark.parametrize('fault', ['artifact', 'eval', 'responsibility', 'expiry', 'tenant'])
 def test_review_host_rejects_accepted_stage_source_drift(source, fault):
     _owner, _draft, item, args = source
@@ -287,6 +352,29 @@ def test_original_case_and_occurrence_producers_reach_missing_analysis(source):
                 transaction=HostTransaction(conn), scope=SCOPE,
                 dispatch=SimpleNamespace(operation_id='ecommerce_growth_review_advance'),
                 command=command,
+            )
+        stage_lineage = {name: command[name] for name in (
+            'sourceKind', 'cutoffAt', 'expiresAt', 'markings', 'occurrenceRef',
+            'caseRef', 'runRef', 'analysisReceiptRef', 'currentPlanRef',
+            'growthPlanRef', 'evalReportRef', 'stageDecisionRef', 'stageTaskRunId',
+            'stagePlanRef', 'stageAttemptRef', 'stageArtifactRef',
+            'responsibilityPlanRef',
+        )}
+
+        class ReviewCandidateConnection:
+            def execute(self, query, params=()):
+                if 'SELECT response FROM public.ecommerce_growth_runtime_command_receipt' in query:
+                    assert params[:2] == SCOPE.key
+                    return SimpleNamespace(fetchall=lambda: [
+                        {'response': {'sourceLineage': stage_lineage}}
+                    ])
+                return conn.execute(query, params)
+
+        with pytest.raises(ValueError, match='AnalysisRuntimeReceipt authority is not unique'):
+            ContentGenerateHostService().revalidate(
+                transaction=HostTransaction(ReviewCandidateConnection()), scope=SCOPE,
+                dispatch=SimpleNamespace(operation_id='ecommerce_growth_content_generate'),
+                command=accepted_stage_content_command(),
             )
 
 @pytest.mark.parametrize('fault',['run','plan','attempt','approved_hash','tenant'])

@@ -5693,6 +5693,64 @@ class ContentGenerateHostService:
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
         if parsed["sourceKind"] == "accepted-stage-v1":
+            if dispatch.operation_id != "ecommerce_growth_content_generate":
+                raise ValueError("content generate dispatch operation drifted")
+            authorities = parsed["authorities"]
+            rows = transaction.execute(
+                """SELECT response FROM public.ecommerce_growth_runtime_command_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation_id='ecommerce_growth_review_advance'
+                      AND response->'handoffRef'->>'resourceId'=%s""",
+                (*scope.key, authorities["handoff"].resource_id),
+            ).fetchall()
+            if len(rows) != 1:
+                raise ValueError("accepted stage Review Receipt is not unique")
+            response = rows[0]["response"]
+            lineage = response.get("sourceLineage") if type(response) is dict else None
+            if (type(lineage) is not dict
+                    or set(lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
+                    or lineage.get("sourceKind") != "accepted-stage-v1"):
+                raise ValueError("accepted stage Review Receipt lineage drifted")
+            self._accepted_stage_owner_refs(
+                transaction=transaction, scope=scope, candidate=lineage,
+            )
+            review_host = ReviewAdvanceHostService()
+            source = review_host._revalidate_accepted_stage_source(
+                transaction=transaction, scope=scope, command=lineage,
+            )
+            review_host._revalidate_current_occurrence_case(
+                transaction=transaction, scope=scope, command=lineage,
+                occurrence_ref=_content_exact_ref(lineage["occurrenceRef"], "AutomationOccurrence"),
+                case_ref=_content_exact_ref(lineage["caseRef"], "BusinessInvestigationCaseRevision"),
+            )
+            review_host._revalidate_analysis_runtime(
+                transaction=transaction, scope=scope, command=lineage,
+                artifact_task_run_id=source.decision.task_run_id,
+                expected_cutoff=lineage["cutoffAt"],
+                accepted_stage_task_run_id=source.decision.task_run_id,
+            )
+            review_host._revalidate_accepted_stage_runtime_sources(
+                transaction=transaction, scope=scope, command=lineage,
+                stage_source=source,
+            )
+            checked_at = getattr(dispatch, "checked_at", None)
+            cutoff = datetime.fromisoformat(lineage["cutoffAt"])
+            expiry = datetime.fromisoformat(lineage["expiresAt"])
+            if (not isinstance(checked_at, datetime) or checked_at.utcoffset() is None
+                    or cutoff.utcoffset() is None or expiry.utcoffset() is None
+                    or not cutoff <= checked_at < expiry):
+                raise ValueError("accepted stage content authority expired")
+            source_values = [ref.model_dump(mode="json", by_alias=True, exclude_none=True)
+                             for ref in parsed["sourceRefs"]]
+            self._review_receipt(
+                transaction, scope, authorities, source_values,
+                source_kind="accepted-stage-v1", source_lineage=lineage,
+            )
+            self._task_brief(
+                transaction, scope, authorities, source_values,
+                approved_plan=source.approved,
+                source_kind="accepted-stage-v1", source_lineage=lineage,
+            )
             raise ValueError("accepted stage content Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
