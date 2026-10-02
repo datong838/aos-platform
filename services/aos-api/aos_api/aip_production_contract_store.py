@@ -6184,7 +6184,8 @@ class AipProductionContractStore:
             instance_id = assignee["resourceId"]
             required = set(slot["requiredCapabilityIds"])
             skill_rows = conn.execute(
-                """SELECT capability_refs FROM public.aip_skill_binding
+                """SELECT capability_refs,readiness,dependency_snapshot_hash,readiness_expires_at
+                   FROM public.aip_skill_binding
                    WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
                 (*scope.key, instance_id),
             ).fetchall()
@@ -6197,8 +6198,27 @@ class AipProductionContractStore:
                 )
                 uncovered.append(slot_id)
                 continue
+            ready_skills = [
+                skill for skill in skill_rows
+                if skill["readiness"] == "available"
+                and skill["dependency_snapshot_hash"] is not None
+                and skill["readiness_expires_at"] is not None
+                and skill["readiness_expires_at"] > now
+            ]
+            if not ready_skills:
+                stale = any(
+                    skill["readiness"] == "available" for skill in skill_rows
+                )
+                blockers.append(
+                    ContractBlocker(
+                        code="SKILL_BINDING_STALE" if stale else "SKILL_BINDING_NOT_READY",
+                        message=f"职责 {slot_id} 的 SkillBinding 未达当前可用且新鲜的 readiness",
+                    )
+                )
+                uncovered.append(slot_id)
+                continue
             binding_ids: list[str] = []
-            for skill in skill_rows:
+            for skill in ready_skills:
                 for ref in self._load(skill["capability_refs"]) or []:
                     if isinstance(ref, str) and ref.strip():
                         binding_ids.append(ref.strip())

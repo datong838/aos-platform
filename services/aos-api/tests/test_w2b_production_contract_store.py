@@ -31,6 +31,7 @@ from aos_api.tenant_scope import TenantScope
 
 
 SCOPE = TenantScope("dev-org", "dev-project")
+PRIMARY_SCOPE = TenantScope("org-org", "dev-project")
 OTHER_SCOPE = TenantScope("other-org", "dev-project")
 HASH = "a" * 64
 
@@ -89,8 +90,16 @@ def _responsibility_request(profile: str = "ecommerce-standard") -> CreateRespon
     )
 
 
-def _seed_dependencies() -> None:
+def _seed_dependencies(scope: TenantScope = SCOPE) -> None:
     with connect() as conn:
+        conn.execute(
+            "INSERT INTO twa_org(id,name) VALUES(%s,'隔离测试组织') ON CONFLICT DO NOTHING",
+            (scope.org_id,),
+        )
+        conn.execute(
+            "INSERT INTO twa_workspace(org_id,project_id,name) VALUES(%s,%s,'隔离测试工作区') ON CONFLICT DO NOTHING",
+            scope.key,
+        )
         conn.execute(
             "INSERT INTO twa_org(id,name) VALUES('other-org','隔离组织') ON CONFLICT DO NOTHING"
         )
@@ -104,7 +113,7 @@ def _seed_dependencies() -> None:
              judge_ref,cases,gate_threshold,actor)
             VALUES(%s,%s,'suite-w2b',1,%s,'{}','{}','{}','[{}]',1.0,'test')
             ON CONFLICT DO NOTHING""",
-            (*SCOPE.key, HASH),
+            (*scope.key, HASH),
         )
         conn.execute(
             """INSERT INTO aip_agent_template_revision
@@ -120,9 +129,94 @@ def _seed_dependencies() -> None:
              overlay,version,created_by)
             VALUES(%s,%s,'agent-content-w2b','template-content-w2b',1,
              'active','{}',1,'test') ON CONFLICT DO NOTHING""",
-            SCOPE.key,
+            scope.key,
         )
         conn.commit()
+
+
+@pytest.mark.parametrize(
+    ("readiness", "expiry_seconds", "expected_blocker"),
+    [
+        ("unknown", 3600, "SKILL_BINDING_NOT_READY"),
+        ("available", -60, "SKILL_BINDING_STALE"),
+    ],
+)
+def test_responsibility_plan_rejects_active_skill_binding_without_fresh_readiness(
+    readiness: str, expiry_seconds: int, expected_blocker: str,
+) -> None:
+    """A direct active row is a negative attack input, never publication proof."""
+    _seed_dependencies(PRIMARY_SCOPE)
+    suffix = uuid4().hex[:10]
+    capability_id = f"cap-stale-{suffix}"
+    skill_id = f"skill-stale-{suffix}"
+    binding_id = f"bind-stale-{suffix}"
+    with connect() as conn:
+        conn.execute(
+            """INSERT INTO aip_capability_binding
+               (org_id,project_id,binding_id,capability_ref,secret_ref,health,
+                network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
+                status,version,operational_readiness,allow_degraded,dependency_snapshot_hash,
+                last_evaluated_at,readiness_expires_at)
+               VALUES(%s,%s,%s,%s::jsonb,'secret://pytest/provider','healthy',
+                'network-test','quota-test',30000,1,'active',1,'available',FALSE,%s,
+                NOW(),NOW()+INTERVAL '1 hour')""",
+            (*PRIMARY_SCOPE.key, capability_id,
+             '{"assetType":"CapabilityRevision","assetId":"capability.content.review","revision":1,"contentHash":"%s"}' % HASH,
+             HASH),
+        )
+        conn.execute(
+            """INSERT INTO aip_skill_template_revision
+               (skill_id,revision,canonical_logic_id,lifecycle,input_schema,output_schema,
+                tool_allowlist,required_capabilities,risk_level,memory_policy_ref,
+                handoff_policy_ref,source_ref,source_license,content_hash,created_by)
+               VALUES(%s,1,%s,'draft','{}','{}','[]','[]','low',
+                      '{}','{}','{}','internal',%s,'pytest')""",
+            (skill_id, f"logic-{suffix}", HASH),
+        )
+        conn.execute(
+            """INSERT INTO aip_skill_binding
+               (org_id,project_id,binding_id,instance_id,skill_id,skill_revision,
+                capability_refs,budget_policy_ref,status,version,readiness,
+                dependency_snapshot_hash,last_evaluated_at,readiness_expires_at)
+               VALUES(%s,%s,%s,'agent-content-w2b',%s,1,%s::jsonb,'{}',
+                      'active',1,%s,%s,NOW(),NOW()+(%s * INTERVAL '1 second'))""",
+            (*PRIMARY_SCOPE.key, binding_id, skill_id,
+             '["%s"]' % capability_id, readiness, HASH, expiry_seconds),
+        )
+        conn.commit()
+    store = AipProductionContractStore(
+        responsibility_template_resolver=lambda _scope, _ref: True,
+    )
+    plan_id = f"plan-stale-{suffix}"
+    created = store.create_responsibility_plan(
+        PRIMARY_SCOPE, "pytest", plan_id, _responsibility_request(),
+    )
+    assert created.readiness is ContractReadiness.BLOCKED
+    assert expected_blocker in {item.code for item in created.blockers}
+    assert created.uncovered_slots == ["content.review"]
+    freeze_key = f"freeze-stale-{suffix}"
+    with pytest.raises(ProductionContractDependencyBlocked, match="RESPONSIBILITY_PLAN_NOT_READY"):
+        store.freeze_responsibility_plan(
+            PRIMARY_SCOPE, "pytest", created.plan_id, created.version, freeze_key,
+        )
+    with connect(PRIMARY_SCOPE) as conn:
+        assert conn.execute(
+            """SELECT count(*) AS n FROM aip_production_contract_receipt
+               WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
+                 AND idempotency_key=%s""",
+            (*PRIMARY_SCOPE.key, freeze_key),
+        ).fetchone()["n"] == 0
+        assert conn.execute(
+            """SELECT current_revision FROM aip_responsibility_plan_head
+               WHERE org_id=%s AND project_id=%s AND plan_id=%s""",
+            (*PRIMARY_SCOPE.key, created.plan_id),
+        ).fetchone()["current_revision"] == created.revision
+    with connect(SCOPE) as conn:
+        assert conn.execute(
+            """SELECT count(*) AS n FROM aip_responsibility_plan_head
+               WHERE org_id=%s AND project_id=%s AND plan_id=%s""",
+            (*SCOPE.key, created.plan_id),
+        ).fetchone()["n"] == 0
 
 
 def test_eval_contract_create_replay_list_and_tenant_isolation() -> None:
@@ -336,11 +430,14 @@ def test_responsibility_plan_requires_assignee_operational_binding() -> None:
         conn.execute(
             """INSERT INTO aip_skill_binding
                (org_id,project_id,binding_id,instance_id,skill_id,skill_revision,
-                capability_refs,budget_policy_ref,status,version,created_at,updated_at)
+                capability_refs,budget_policy_ref,status,version,readiness,
+                dependency_snapshot_hash,last_evaluated_at,readiness_expires_at,
+                created_at,updated_at)
                VALUES(%s,%s,'skill-bind-w2b','agent-content-w2b','skill-w2b-review',1,
-                      %s::jsonb,'{}'::jsonb,'active',1,NOW(),NOW())
+                      %s::jsonb,'{}'::jsonb,'active',1,'available',%s,
+                      NOW(),NOW()+INTERVAL '1 hour',NOW(),NOW())
                ON CONFLICT DO NOTHING""",
-            (*SCOPE.key, '["cap-owned-review"]'),
+            (*SCOPE.key, '["cap-owned-review"]', HASH),
         )
         conn.commit()
     store = AipProductionContractStore(
@@ -373,7 +470,12 @@ class _CoverageConnection:
 
     def execute(self, query, _params):
         if "aip_skill_binding" in query:
-            return _CoverageRows([{"capability_refs": self._binding_ids}])
+            return _CoverageRows([{
+                "capability_refs": self._binding_ids,
+                "readiness": "available",
+                "dependency_snapshot_hash": HASH,
+                "readiness_expires_at": datetime.now(UTC).replace(year=2099),
+            }])
         if "aip_capability_binding" in query:
             return _CoverageRows(self._capability_rows)
         raise AssertionError(query)
