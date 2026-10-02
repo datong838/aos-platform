@@ -234,7 +234,7 @@ def read_current_runtime_image_evidence(
                     raise CurrentReleaseEvidenceBlocked("RUNTIME_RESOURCE_PROOF_MISSING")
                 preparation_id = UUID(handle["preparationOperationId"])
                 resources = conn.execute(
-                    """SELECT package_id,package_hash,cleanup_state,container_id,expires_at
+                    """SELECT package_id,package_hash,cleanup_state,observed_release,container_id,expires_at
                         FROM extension_runtime_resource_lease
                         WHERE org_id=%s AND project_id=%s AND operation_id=%s
                           AND generation=%s""",
@@ -246,7 +246,8 @@ def read_current_runtime_image_evidence(
                 if (not expected or len(resources) != len(expected)
                         or {(item["package_id"], item["package_hash"]) for item in resources} != expected):
                     raise CurrentReleaseEvidenceBlocked("RUNTIME_RESOURCE_SET_DRIFT")
-                if any(item["cleanup_state"] != "pending" or not item["container_id"]
+                if any(item["cleanup_state"] != "pending" or item["observed_release"] is not False
+                       or not item["container_id"]
                        or item["expires_at"] <= view.checked_at for item in resources):
                     raise CurrentReleaseEvidenceBlocked("RUNTIME_RESOURCE_NOT_LIVE")
                 images = []

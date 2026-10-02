@@ -333,6 +333,34 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 assert formal['bindingGeneration'] == str(binding['generation'])
                 assert formal['schemaHead'] == 'a0v_135'
                 assert len(formal['images']) == 3
+                # A resource observed released is no longer an Owner candidate,
+                # even if its cleanup state and lease deadline remain unchanged.
+                with connect(SCOPE) as conn:
+                    released = conn.execute('''UPDATE extension_runtime_resource_lease
+                        SET observed_release=true
+                        WHERE org_id=%s AND project_id=%s AND operation_id=%s
+                          AND generation=%s AND observed_release=false
+                        RETURNING resource_id''',
+                        (*SCOPE.key, accepted.response_json['operationId'],
+                         binding['generation'])).fetchall()
+                assert released
+                try:
+                    with pytest.raises(CurrentReleaseEvidenceBlocked,
+                                       match='RUNTIME_RESOURCE_NOT_LIVE'):
+                        read_current_runtime_image_evidence(
+                            connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                            scope=SCOPE, installation_id=installed['installationId'],
+                            expected_generation=str(binding['generation']), release_policy=policy,
+                            loader=loader, driver=OciDriver(context=context), platform='linux/arm64',
+                        )
+                finally:
+                    with connect(SCOPE) as conn:
+                        conn.execute('''UPDATE extension_runtime_resource_lease
+                            SET observed_release=false
+                            WHERE org_id=%s AND project_id=%s AND operation_id=%s
+                              AND generation=%s''',
+                            (*SCOPE.key, accepted.response_json['operationId'],
+                             binding['generation']))
                 with pytest.raises(preview.PreviewBlocked, match='FORMAL_RELEASE_EVIDENCE_INVALID'):
                     preview.select_formal_current_release(
                         connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
