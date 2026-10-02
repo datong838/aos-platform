@@ -27,8 +27,9 @@ from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION
-from aos_api.asset_registry.signature import FileTrustRootProvider
+from aos_api.asset_registry.signature import FileTrustRootProvider, FrozenTrustRootProvider
 from aos_api.db import connect, get_dsn
+from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
@@ -131,6 +132,28 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
     )
     assert installed['installationState'] == 'approved'
     assert installed['installationEtag'] == 3
+    selected_template = ApprovedBIPreparationResolver(
+        connect_factory=connect,
+        registry_connect_factory=connect,
+        release_root=signed['signed_tree'], trust_roots=trust,
+        source_alias=signed['source_alias'],
+    ).select(SCOPE)
+    assert selected_template is not None
+    assert selected_template.installation_id == installed['installationId']
+    assert selected_template.template_ref.resource_id == (
+        f"bundle://{signed['source_alias']}/solution.ecommerce.growth/"
+        f"{growth_version}/content/responsibility-templates/business-investigation.readonly.json"
+    )
+    assert ApprovedBIPreparationResolver(
+        connect_factory=connect, registry_connect_factory=connect,
+        release_root=signed['signed_tree'],
+        trust_roots=FrozenTrustRootProvider({}), source_alias=signed['source_alias'],
+    ).select(SCOPE) is None
+    assert ApprovedBIPreparationResolver(
+        connect_factory=connect, registry_connect_factory=connect,
+        release_root=signed['signed_tree'], trust_roots=trust,
+        source_alias=signed['source_alias'],
+    ).select(TenantScope('dev-org', 'dev-project')) is None
     lock = PostgresCompositionStore(connect).get_lock(
         org_id=SCOPE.org_id, project_id=SCOPE.project_id,
         composition_id=installed['compositionId'], revision=installed['lockRevision'],

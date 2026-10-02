@@ -511,7 +511,8 @@ class ApprovedBIPreparationResolver:
                        AND """ + state_predicate + """
                        AND bundle.publisher='aos'
                        AND bundle.bundle_id='solution.ecommerce.growth'
-                       AND version.version='1.12.0' AND version.status='published'""",
+                       AND version.version IN ('1.12.0','1.13.0')
+                       AND version.status='published'""",
                 (_BI_TEMPLATE_PATH, scope.org_id, scope.project_id),
             ).fetchall())
 
