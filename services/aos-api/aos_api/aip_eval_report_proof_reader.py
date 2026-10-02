@@ -7,11 +7,13 @@ from typing import Mapping
 
 import psycopg
 from psycopg.rows import dict_row
+from pydantic import ValidationError
 
 from aos_api.aip_eval_contracts import (
     AssetType, EvalExecutionReceipt, EvalExecutorCertificate, EvalReportRevision,
 )
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected, VerifiedEvalExecutionPair
+from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_persisted_authority_reader import read_persisted_execution_pair
 from aos_api.aip_eval_runner import AipEvalRunner, compute_eval_report_hash
 from aos_api.aip_eval_report_context import require_same_eval_context
@@ -143,4 +145,111 @@ def read_verified_skill_eval_report(
     return VerifiedSkillEvalReportProof(
         report_id=report.report_id, report_hash=report.content_hash,
         cases=tuple(verified_cases),
+    )
+
+
+def read_verified_skill_eval_report_from_persistence(
+    conn: psycopg.Connection,
+    *,
+    report: EvalReportRevision,
+    evaluated_at: datetime,
+) -> VerifiedSkillEvalReportProof:
+    """Assemble independent Suite inputs and signed claims in one tenant snapshot."""
+    scope = (report.tenant.org_id, report.tenant.project_id)
+    _require(
+        report.suite_ref.revision.isdecimal()
+        and str(int(report.suite_ref.revision)) == report.suite_ref.revision,
+        "Skill Eval Suite revision is not canonical",
+    )
+    try:
+        with conn.cursor(row_factory=dict_row) as cur:
+            context = cur.execute("""SELECT current_user AS role,
+                current_setting('aos.org_id',true) AS org_id,
+                current_setting('aos.project_id',true) AS project_id,
+                current_setting('transaction_isolation') AS isolation""").fetchone()
+            _require(
+                context["role"] == "aos_runtime"
+                and (context["org_id"], context["project_id"]) == scope
+                and context["isolation"] in ("repeatable read", "serializable"),
+                "Skill Eval tenant snapshot is unavailable",
+            )
+            suite_row = cur.execute("""SELECT * FROM aip_eval_suite_revision
+                WHERE org_id=%s AND project_id=%s AND suite_id=%s AND revision=%s""",
+                (*scope, report.suite_ref.asset_id, int(report.suite_ref.revision)),
+            ).fetchone()
+            _require(suite_row is not None, "persisted Skill Eval Suite is unavailable")
+            suite = AipEvalPackRegistry._suite_from_row(suite_row)
+            _require(
+                suite.content_hash == report.suite_ref.content_hash
+                and compute_eval_suite_hash(suite) == suite.content_hash
+                and suite.target == report.target
+                and suite.dataset == report.dataset
+                and suite.judge == report.judge,
+                "persisted Skill Eval Suite drifted",
+            )
+            case_ids = {case.case_id for case in suite.cases}
+            _require(
+                len(case_ids) == len(suite.cases)
+                and case_ids == {case.case_id for case in report.results}
+                and len(case_ids) == len(report.results),
+                "persisted Skill Eval case set drifted",
+            )
+            expected_input_hashes = {
+                case.case_id: case.input_artifact.content_hash for case in suite.cases
+            }
+            sidecars = cur.execute("""SELECT * FROM aip_eval_case_execution_proof
+                WHERE org_id=%s AND project_id=%s AND run_id=%s
+                  AND report_id=%s AND report_revision=%s""",
+                (*scope, report.run_id, report.report_id, report.revision),
+            ).fetchall()
+            _require(
+                len(sidecars) == len(case_ids)
+                and {row["case_id"] for row in sidecars} == case_ids,
+                "persisted Skill Eval sidecars are incomplete",
+            )
+            presented: dict[str, PresentedEvalCaseProof] = {}
+            for sidecar in sidecars:
+                claims = []
+                for purpose in ("target", "judge"):
+                    receipt = cur.execute("""SELECT * FROM aip_eval_execution_receipt
+                        WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
+                        (*scope, sidecar[f"{purpose}_receipt_id"]),
+                    ).fetchone()
+                    _require(
+                        receipt is not None
+                        and receipt["run_id"] == report.run_id
+                        and receipt["case_id"] == sidecar["case_id"]
+                        and receipt["purpose"] == purpose,
+                        "persisted Skill Eval Receipt source drifted",
+                    )
+                    identity = cur.execute("""SELECT certificate_json
+                        FROM aip_eval_executor_identity
+                        WHERE org_id=%s AND project_id=%s AND identity_id=%s""",
+                        (*scope, receipt["identity_id"]),
+                    ).fetchone()
+                    _require(identity is not None, "persisted Skill Eval identity is unavailable")
+                    certificate = EvalExecutorCertificate.model_validate(identity["certificate_json"])
+                    claim = EvalExecutionReceipt(
+                        receipt_id=receipt["receipt_id"], tenant=report.tenant,
+                        purpose=receipt["purpose"], run_id=receipt["run_id"],
+                        suite_ref=receipt["suite_ref"], case_id=receipt["case_id"],
+                        identity_id=receipt["identity_id"],
+                        certificate_hash=receipt["certificate_hash"],
+                        executor_ref=receipt["executor_ref"],
+                        input_hash=receipt["input_hash"], output_hash=receipt["output_hash"],
+                        actual_hash=receipt["actual_hash"],
+                        expected_hash=receipt["expected_hash"], passed=receipt["passed"],
+                        detail_code=receipt["detail_code"], occurred_at=receipt["occurred_at"],
+                        signature_base64=receipt["signature_base64"],
+                    )
+                    claims.append((certificate, claim))
+                presented[sidecar["case_id"]] = PresentedEvalCaseProof(
+                    target_certificate=claims[0][0], target_receipt=claims[0][1],
+                    judge_certificate=claims[1][0], judge_receipt=claims[1][1],
+                )
+    except (psycopg.Error, ValidationError, ValueError) as exc:
+        raise EvalExecutionRejected("persisted Skill Eval proof assembly failed") from exc
+    return read_verified_skill_eval_report(
+        conn, report=report, evaluated_at=evaluated_at,
+        expected_input_hashes=expected_input_hashes, presented=presented,
     )
