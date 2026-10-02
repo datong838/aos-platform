@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 import uuid
@@ -5,7 +6,12 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
+import psycopg
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from pydantic import ValidationError
+from psycopg import sql
+from psycopg.types.json import Jsonb
 
 from aos_api.aip_agent_registry_contracts import (
     PublishEvaluatedSkillRevisionRequest,
@@ -13,7 +19,9 @@ from aos_api.aip_agent_registry_contracts import (
     TemplateLifecycle,
     VersionedAssetRef,
 )
-from aos_api.aip_agent_registry_store import AipAgentRegistryTransitionBlocked
+from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryNotFound, AipAgentRegistryTransitionBlocked,
+)
 from aos_api.aip_contracts import ArtifactRef, ResourceRef, TenantContext
 from aos_api.aip_eval_contracts import (
     AssetRevisionRef,
@@ -35,6 +43,11 @@ from aos_api.aip_eval_contracts import (
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
 from aos_api.aip_eval_execution_authority import EvalExecutionRejected
+from aos_api.aip_eval_execution_authority import (
+    EvalIssuerRoot, canonical_certificate_bytes, canonical_receipt_bytes,
+    certificate_hash, receipt_identity,
+)
+from aos_api.aip_eval_contracts import EvalExecutionReceipt, EvalExecutorCertificate
 from aos_api.aip_eval_runner import (
     AipEvalRunner,
     compute_eval_report_hash,
@@ -55,8 +68,14 @@ from aos_api.aip_skill_publication_service import (
 )
 from aos_api.aip_model_runtime_contracts import ModelRuntimeLifecycle
 from aos_api.aip_skill_registry import AipSkillRegistry
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 from aos_api.tenant_scope import TenantScope
+from test_aip_eval_execution_authority import (
+    ACTUAL_HASH, EXPECTED_HASH, INPUT_HASH, JUDGE, TENANT, _judge_output_hash,
+)
+from test_aip_eval_persisted_authority_reader import _seed as _seed_signed_pair
+from test_aip_eval_report_proof_reader import _seed_report, _seed_sidecar
+from test_aip_eval_writer_atomic import _seed_source, _source_objects
 
 HASH = "a" * 64
 
@@ -688,6 +707,191 @@ def test_final_skill_publication_rechecks_evidence_in_stable_tenant_snapshot() -
               AND operation='skill_template.publish_evaluated'""",
             runtime.scope.key,
         ).fetchone()["n"] == 0
+
+
+def _test_only_signed_pair_for_skill(suite, *, at):
+    """Bind isolated signer claims to the original evaluated Skill source."""
+    issuer, target_key, judge_key = (Ed25519PrivateKey.generate() for _ in range(3))
+
+    def public_bytes(key):
+        return key.public_key().public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+
+    root = EvalIssuerRoot(
+        issuer_id="e17-s2c-test-issuer", key_id="test-key-1",
+        public_key=public_bytes(issuer), purpose="eval-execution",
+        not_before=at - timedelta(days=1), not_after=at + timedelta(days=1),
+    )
+    suite_ref = AssetRevisionRef(
+        asset_type=AssetType.EVAL_SUITE, asset_id=suite.suite_id,
+        revision=str(suite.revision), content_hash=suite.content_hash,
+    )
+
+    def signed(purpose, identity_id, executor_ref, key, output_hash, **judge_fields):
+        cert = EvalExecutorCertificate(
+            identity_id=identity_id, tenant=TENANT, purpose=purpose,
+            executor_ref=executor_ref, issuer_id=root.issuer_id,
+            issuer_key_id=root.key_id,
+            public_key_base64=base64.b64encode(public_bytes(key)).decode(),
+            valid_from=at - timedelta(hours=1),
+            valid_until=at + timedelta(hours=1), signature_base64="pending",
+        )
+        cert = cert.model_copy(update={"signature_base64": base64.b64encode(
+            issuer.sign(canonical_certificate_bytes(cert)),
+        ).decode()})
+        receipt = EvalExecutionReceipt(
+            receipt_id=receipt_identity(TENANT, "run-1", "case-1", purpose),
+            tenant=TENANT, purpose=purpose, run_id="run-1", suite_ref=suite_ref,
+            case_id="case-1", identity_id=cert.identity_id,
+            certificate_hash=certificate_hash(cert), executor_ref=executor_ref,
+            input_hash=INPUT_HASH, output_hash=output_hash,
+            occurred_at=at, signature_base64="pending", **judge_fields,
+        )
+        receipt = receipt.model_copy(update={"signature_base64": base64.b64encode(
+            key.sign(canonical_receipt_bytes(receipt)),
+        ).decode()})
+        return cert, receipt, key
+
+    target = signed("target", "e17-s2c-target", suite.target,
+                    target_key, ACTUAL_HASH)
+    judge = signed(
+        "judge", "e17-s2c-judge", suite.judge, judge_key,
+        _judge_output_hash(ACTUAL_HASH, EXPECTED_HASH, True, "exact_match"),
+        actual_hash=ACTUAL_HASH, expected_hash=EXPECTED_HASH,
+        passed=True, detail_code="exact_match",
+    )
+    return root, target, judge
+
+
+@pytest.fixture()
+def isolated_signed_skill_rows():
+    yield
+    with psycopg.connect(get_dsn()) as conn:
+        assert conn.info.dbname.startswith("aos_test_")
+        assert conn.info.dbname.endswith("_ti4_test")
+        for table in (
+            "aip_publication_event", "aip_release_gate_decision",
+            "aip_eval_case_execution_proof", "aip_eval_execution_receipt",
+            "aip_eval_report_revision", "aip_eval_authority_revocation",
+            "aip_eval_run", "aip_eval_executor_identity", "aip_eval_issuer_root",
+            "aip_eval_suite_revision", "aip_eval_dataset_revision",
+        ):
+            conn.execute(sql.SQL("ALTER TABLE {} DISABLE TRIGGER USER").format(sql.Identifier(table)))
+            conn.execute(sql.SQL("DELETE FROM {} WHERE org_id=%s AND project_id=%s").format(
+                sql.Identifier(table)), ("org-org", "dev-project"))
+            conn.execute(sql.SQL("ALTER TABLE {} ENABLE TRIGGER USER").format(sql.Identifier(table)))
+        conn.commit()
+
+
+def test_original_evaluated_skill_signed_gate_event_publishes_once(
+    isolated_signed_skill_rows,
+) -> None:
+    scope = TenantScope("org-org", "dev-project")
+    suffix = uuid.uuid4().hex[:12]
+    source_request = skill_request(
+        skill_id=f"e17.s2c.test.{suffix}",
+        canonical_logic_id=f"e17.s2c.logic.{suffix}",
+    )
+    source_request = source_request.model_copy(update={"content_hash": _canonical_hash(
+        source_request.model_dump(mode="json", by_alias=True, exclude={"content_hash"}),
+    )})
+    source = AipSkillRegistry().publish_skill(source_request, actor="e17-s2c-test")
+    target_ref = AssetRevisionRef(
+        asset_type=AssetType.SKILL_TEMPLATE, asset_id=source.skill_id,
+        revision=str(source.revision), content_hash=source.content_hash,
+    )
+    suite, base = _source_objects()
+    suite = suite.model_copy(update={"target": target_ref})
+    suite = suite.model_copy(update={"content_hash": compute_eval_suite_hash(suite)})
+    suite_ref = AssetRevisionRef(
+        asset_type=AssetType.EVAL_SUITE, asset_id=suite.suite_id,
+        revision=str(suite.revision), content_hash=suite.content_hash,
+    )
+    now = datetime.now(UTC)
+    report = base.model_copy(update={
+        "target": target_ref, "suite_ref": suite_ref, "created_at": now,
+    })
+    report = report.model_copy(update={"content_hash": compute_eval_report_hash(report)})
+    root, target, judge = _test_only_signed_pair_for_skill(suite, at=now)
+    with connect() as conn:
+        conn.execute("INSERT INTO twa_org(id,name) VALUES ('org-org','isolated') ON CONFLICT DO NOTHING")
+        conn.execute("""INSERT INTO twa_workspace(org_id,project_id,name)
+            VALUES ('org-org','dev-project','isolated') ON CONFLICT DO NOTHING""")
+        _seed_source(conn, suite)
+        _seed_signed_pair(conn, root, target, judge, suite_ref=suite_ref)
+        _seed_report(conn, report)
+        _seed_sidecar(conn, target, judge)
+        conn.commit()
+
+    release = AipReleasePublicationService()
+    gate = release.derive_gate(scope, actor="e17-s2c-test", request=DeriveReleaseGateRequest(
+        report_id=report.report_id, report_revision=report.revision,
+        report_hash=report.content_hash, idempotency_key=f"s2c-gate-{suffix}",
+    ))
+    assert gate.status is ReleaseGateStatus.PASSED
+    event = release.publish(scope, actor="e17-s2c-test", request=PublishReleaseRequest(
+        release_gate_decision_id=gate.decision_id, reason_hash="5" * 64,
+        idempotency_key=f"s2c-event-{suffix}",
+    ))
+    assert event.target == target_ref
+    request = PublishEvaluatedSkillRevisionRequest(
+        source_skill=ref("SkillTemplate", source.skill_id).model_copy(
+            update={"content_hash": source.content_hash}),
+        publication_id=event.publication_id,
+        release_gate_decision_id=gate.decision_id,
+        model_route_ref=ref("ModelRouteRevision", f"route-{suffix}"),
+        runtime_policy_ref=ref("RuntimePolicyRevision", f"policy-{suffix}"),
+        logic_revision_ref=ref("LogicRevision", source.canonical_logic_id),
+        idempotency_key=f"s2c-publish-{suffix}",
+    )
+    service = AipSkillPublicationService(
+        route_authority=_ReadyRouteAuthority(scope),
+        logic_authority=_PublishedLogicAuthority(scope),
+    )
+    published, receipt = service.publish_evaluated_revision(
+        scope, request, actor="e17-s2c-test", occurred_at=now,
+    )
+    assert published.lifecycle is TemplateLifecycle.PUBLISHED
+    assert published.parent_ref.content_hash == source.content_hash
+    assert published.release_gate_ref.asset_id == gate.decision_id
+    assert published.publication_ref.resource_id == event.event_id
+    assert published.model_route_ref == request.model_route_ref
+    assert published.runtime_policy_ref == request.runtime_policy_ref
+    assert published.logic_revision_ref == request.logic_revision_ref
+    replay, replay_receipt = service.publish_evaluated_revision(
+        scope, request, actor="e17-s2c-test", occurred_at=now,
+    )
+    assert replay == published and replay_receipt == receipt
+    with pytest.raises(AipAgentRegistryNotFound, match="skill publication event not found"):
+        service.publish_evaluated_revision(
+            scope, request.model_copy(update={
+                "publication_id": f"missing-{suffix}",
+                "idempotency_key": f"s2c-wrong-event-{suffix}",
+            }), actor="e17-s2c-test",
+        )
+    with connect() as conn:
+        conn.execute("""INSERT INTO aip_eval_authority_revocation
+            (org_id,project_id,event_id,identity_id,revoked_at,owner_ref,
+             approval_ref,reason_hash)
+            VALUES ('org-org','dev-project',%s,%s,%s,%s,%s,%s)""",
+            (f"s2c-revoked-{suffix}", target[0].identity_id,
+             datetime.now(UTC), "e17-s2c-test-owner",
+             Jsonb({"testOnly": True}), "e" * 64))
+        conn.commit()
+    with pytest.raises(AipAgentRegistryTransitionBlocked):
+        service.publish_evaluated_revision(
+            scope, request.model_copy(update={
+                "idempotency_key": f"s2c-after-revocation-{suffix}",
+            }), actor="e17-s2c-test",
+        )
+    with connect(scope) as conn:
+        assert conn.execute("""SELECT count(*) AS n FROM aip_agent_registry_receipt
+            WHERE org_id=%s AND project_id=%s
+              AND operation='skill_template.publish_evaluated'""",
+            scope.key,
+        ).fetchone()["n"] == 1
 
 
 @pytest.mark.xfail(
