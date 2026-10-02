@@ -552,6 +552,43 @@ def test_accepted_stage_review_receipt_hash_preserves_original_source_without_fa
     assert changed["receiptRef"]["contentHash"] != receipt["receiptRef"]["contentHash"]
 
 
+def test_content_generate_reads_distinct_persisted_stage_review_receipt():
+    command = accepted_stage_command()
+    lineage = {
+        "handoffRef": ref("HandoffReceipt", "handoff-stage-1", receipt=True),
+        "taskRef": ref("Task", "task-stage-1"),
+        "briefRef": ref("TaskBriefRevision", "brief-stage-1"),
+    }
+    receipt = ReviewAdvanceHostService()._accept_receipt(
+        command, lineage, SCOPE, command["idempotencyKey"],
+        datetime(2026, 9, 9, 4, 1, tzinfo=timezone.utc),
+    )
+    row = {"request_hash": command["requestHash"],
+           "response": receipt, "target_receipt_ref": receipt["receiptRef"]}
+    refs = {
+        "handoff": InvestigationExactRef.model_validate(lineage["handoffRef"]),
+        "task": InvestigationExactRef.model_validate(lineage["taskRef"]),
+        "brief": InvestigationExactRef.model_validate(lineage["briefRef"]),
+        "growth_plan": InvestigationExactRef.model_validate(command["growthPlanRef"]),
+    }
+    expected = receipt["sourceLineage"]
+    source = [ref("Artifact", "stage-artifact-1")]
+    def read(candidate, *, owner=expected, artifacts=source):
+        return ContentGenerateHostService._review_receipt(
+            Transaction({"review": candidate}), SCOPE, refs, artifacts,
+            source_kind="accepted-stage-v1", source_lineage=owner,
+        )
+    assert read(row) == receipt
+    changed = deepcopy(row)
+    changed["response"]["sourceLineage"]["markings"] = ["public"]
+    with pytest.raises(ValueError):
+        read(changed)
+    with pytest.raises(ValueError):
+        read(row, owner={**expected, "stageTaskRunId": "another-run"})
+    with pytest.raises(ValueError):
+        read(row, artifacts=[ref("Artifact", "another-artifact")])
+
+
 def test_accepted_stage_content_command_is_strict_and_host_stays_closed():
     command = accepted_stage_content_command()
     parsed = _strict_content_generate_command(command)

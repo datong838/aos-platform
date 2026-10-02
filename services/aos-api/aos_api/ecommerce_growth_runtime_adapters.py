@@ -4050,6 +4050,9 @@ _CONTENT_REVIEW_RECEIPT_FIELDS = frozenset(
         "sideEffects",
     }
 )
+_CONTENT_REVIEW_RECEIPT_FIELDS_STAGE = (
+    _CONTENT_REVIEW_RECEIPT_FIELDS - {"reviewIssueRef", "artifactBindings"}
+) | {"sourceKind", "sourceLineage"}
 _CONTENT_BRIEF_SPEC_FIELDS = frozenset(
     {
         "sourceHandoffRef",
@@ -4481,7 +4484,21 @@ class ContentGenerateHostService:
         }
 
     @staticmethod
-    def _review_receipt(transaction, scope, authorities, source_values):
+    def _review_receipt(transaction, scope, authorities, source_values, *,
+                        source_kind="issue-review-v1", source_lineage=None):
+        accepted_stage = source_kind == "accepted-stage-v1"
+        if source_kind not in {"issue-review-v1", "accepted-stage-v1"}:
+            raise ValueError("content generate Review source kind drifted")
+        if accepted_stage:
+            if (type(source_lineage) is not dict
+                    or set(source_lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
+                    or source_lineage["sourceKind"] != "accepted-stage-v1"
+                    or source_lineage["markings"] != ["internal"]
+                    or type(source_values) is not list or len(source_values) != 1):
+                raise ValueError("content generate Review exact lineage drifted")
+            _content_exact_ref(source_values[0], "Artifact")
+        elif source_lineage is not None:
+            raise ValueError("content generate Review source kind drifted")
         handoff_ref = authorities["handoff"]
         rows = transaction.execute(
             """SELECT request_hash,response,target_receipt_ref
@@ -4494,7 +4511,9 @@ class ContentGenerateHostService:
         if len(rows) != 1:
             raise ValueError("content generate Review authority is not unique")
         response = rows[0]["response"]
-        if type(response) is not dict or set(response) != _CONTENT_REVIEW_RECEIPT_FIELDS:
+        expected_fields = (_CONTENT_REVIEW_RECEIPT_FIELDS_STAGE if accepted_stage
+                           else _CONTENT_REVIEW_RECEIPT_FIELDS)
+        if type(response) is not dict or set(response) != expected_fields:
             raise ValueError("content generate Review Receipt shape drifted")
         response_ref = InvestigationExactRef.model_validate(response["receiptRef"])
         target_ref = InvestigationExactRef.model_validate(rows[0]["target_receipt_ref"])
@@ -4520,7 +4539,8 @@ class ContentGenerateHostService:
             "contentHash": _analysis_command_hash(body),
             "receiptId": rows[0]["target_receipt_ref"]["resourceId"],
         }
-        expected_artifacts = [item["artifactRef"] for item in response.get("artifactBindings", [])]
+        expected_artifacts = ([item["artifactRef"] for item in response["artifactBindings"]]
+                              if not accepted_stage else [])
         if (
             response.get("receiptRef") != expected_receipt_ref
             or rows[0]["target_receipt_ref"] != expected_receipt_ref
@@ -4545,7 +4565,19 @@ class ContentGenerateHostService:
             != authorities["growth_plan"].model_dump(
                 mode="json", by_alias=True, exclude_none=True
             )
-            or expected_artifacts != source_values
+            or (not accepted_stage and expected_artifacts != source_values)
+            or (accepted_stage and (
+                response["sourceKind"] != "accepted-stage-v1"
+                or response["sourceLineage"] != source_lineage
+                or source_lineage["growthPlanRef"] != response["growthPlanRef"]
+                or source_lineage["stageArtifactRef"].get("resourceType") != "Artifact"
+                or source_lineage["stageArtifactRef"].get("resourceId")
+                   != source_values[0]["resourceId"]
+                or source_lineage["stageArtifactRef"].get("revision")
+                   != source_values[0]["revision"]
+                or source_lineage["stageArtifactRef"].get("contentHash")
+                   != source_values[0]["contentHash"].removeprefix("sha256:")
+            ))
         ):
             raise ValueError("content generate Review exact lineage drifted")
         return response
