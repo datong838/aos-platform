@@ -11,3 +11,5 @@
 | 相邻回归 | `pytest -q tests/aip/test_e17_s3of_issuer_acl_pg.py tests/aip/test_w6_01_exact_assignee_resolution.py tests/aip/test_w_l20_assignee_resolution.py --tb=short` → exit0，13 passed/2 xfailed/7 warnings；`py_compile` exit0，test-only issuer 角色剩余0；当前签名预检 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、API health200。|
 
 方案复审：这只是测试库的最小权姿态与默认关闭的连接器；已正向验证 Human assignee，Agent/Tool/Provider 三类真实 issuer 读路径尚需各自完整正向/负向。普通 runtime 的 Registry/Skill/Capability/Tool 表权限仍过宽，当前真实库 Assignee ACL 也未变；后续需在隔离克隆做原 Registry/Binding 命令同事务正向和正式迁移，再以新备份/克隆全链/零执行窗口切换当前。Host/worker/Provider、正式六 Binding/八配置/自然首链继续禁入。
+
+代码提交后用原签名制品预检，`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、代码/库头135、runtimeBindings0；独立备份 SHA仍为 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0`。仅重载原 launchd API 到 PID41852，健康/就绪/OpenAPI/Web200，PG18435/Web8434继续、18181无监听。此为代码局部重载，不是新的完整 PG/API/Web 重启验收。
