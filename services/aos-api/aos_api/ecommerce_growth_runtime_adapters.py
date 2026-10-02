@@ -3126,7 +3126,7 @@ class ReviewAdvanceHostService:
         if accepted_stage:
             _strict_review_accept_command(command)
             source_lineage = {name: command[name] for name in (
-                "sourceKind", "cutoffAt", "expiresAt", "occurrenceRef", "caseRef",
+                "sourceKind", "cutoffAt", "expiresAt", "markings", "occurrenceRef", "caseRef",
                 "runRef", "analysisReceiptRef", "currentPlanRef", "growthPlanRef",
                 "evalReportRef", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
                 "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",

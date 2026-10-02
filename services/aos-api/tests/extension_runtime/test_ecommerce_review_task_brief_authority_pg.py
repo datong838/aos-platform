@@ -129,7 +129,7 @@ def test_accepted_stage_task_brief_v3_persists_one_original_artifact_and_exact_s
         ).fetchone()
         expected_source = {
             name: value[name] for name in (
-                "sourceKind", "cutoffAt", "expiresAt", "occurrenceRef", "caseRef",
+                "sourceKind", "cutoffAt", "expiresAt", "markings", "occurrenceRef", "caseRef",
                 "runRef", "analysisReceiptRef", "currentPlanRef", "growthPlanRef",
                 "evalReportRef", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
                 "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",
