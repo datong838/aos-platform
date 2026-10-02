@@ -29,7 +29,9 @@ from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION
 from aos_api.asset_registry.signature import FileTrustRootProvider, FrozenTrustRootProvider
 from aos_api.db import connect, get_dsn
-from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
+from aos_api.aip_responsibility_template_authority import (
+    ActiveBIBusinessResolver, ApprovedBIPreparationResolver,
+)
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
@@ -144,6 +146,12 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
         f"bundle://{signed['source_alias']}/solution.ecommerce.growth/"
         f"{growth_version}/content/responsibility-templates/business-investigation.readonly.json"
     )
+    active_resolver = ActiveBIBusinessResolver(
+        connect_factory=connect, registry_connect_factory=connect,
+        release_root=signed['signed_tree'], trust_roots=trust,
+        source_alias=signed['source_alias'],
+    )
+    assert active_resolver.select(SCOPE) is None
     assert ApprovedBIPreparationResolver(
         connect_factory=connect, registry_connect_factory=connect,
         release_root=signed['signed_tree'],
@@ -300,6 +308,29 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 expected_revision=requested.response_json['revision'],
             )
             assert verified.state == 'active' and verified.active_revision is not None
+            active_template = active_resolver.select(SCOPE)
+            assert active_template is not None
+            assert active_template.installation_id == installed['installationId']
+            assert active_template.template_ref == selected_template.template_ref.model_copy(
+                update={'revision': verified.current_revision},
+            )
+            # BI preparation pins the approved installation revision.
+            # An active business reader must reject that stale exact ref; a
+            # separate governed rebind is required before freezing the Plan.
+            assert selected_template.template_ref.revision != verified.current_revision
+            assert active_resolver.resolve(SCOPE, selected_template.template_ref) is False
+            assert active_resolver.resolve(SCOPE, active_template.template_ref) is True
+            assert ApprovedBIPreparationResolver(
+                connect_factory=connect, registry_connect_factory=connect,
+                release_root=signed['signed_tree'], trust_roots=trust,
+                source_alias=signed['source_alias'],
+            ).select(SCOPE) is None
+            assert ActiveBIBusinessResolver(
+                connect_factory=connect, registry_connect_factory=connect,
+                release_root=signed['signed_tree'],
+                trust_roots=FrozenTrustRootProvider({}), source_alias=signed['source_alias'],
+            ).select(SCOPE) is None
+            assert active_resolver.select(TenantScope('dev-org', 'dev-project')) is None
             with connect(SCOPE) as conn:
                 binding = conn.execute('''SELECT generation,installation_revision,package_lock_ref,
                     observed_state,enabled,operation_fence
