@@ -27,6 +27,7 @@ from aos_api.aip_logic_publication_models import (
 from aos_api.aip_logic_publication_store import (
     LogicPublicationDryRunRequired,
     LogicPublicationEvalEvidenceExpired,
+    LogicPublicationEvalEvidenceRequired,
     LogicPublicationEvalGateRejected,
     LogicPublicationEvalTargetMismatch,
     LogicPublicationIdempotencyConflict,
@@ -37,7 +38,12 @@ from aos_api.aip_logic_publication_store import (
     LogicPublicationVersionConflict,
 )
 from aos_api.aip_logic_run_store import LogicRunStore
+from aos_api.aip_eval_store import EvalEvidenceStore, LogicEvalEvidenceReader
+from aos_api.auth import Principal
 from aos_api.db import connect
+from aos_api.evals_engine import EvalSuite, TestCase as EvalTestCase
+from aos_api.aip_logic_runtime_adapters import RuntimeAdapterRegistry
+from aos_api.routers.evals import RunRequest, _run_and_persist
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -135,7 +141,10 @@ def _succeed_dry_run(
         inputs={"sample": True},
     )
     started = run_store.start_run(org, project, "runner", graph, request, run_id)
-    result = LogicDryRunExecutor().execute(
+    # The isolated PostgreSQL clock can lead the test process by a few ms.
+    result = LogicDryRunExecutor(
+        now=lambda: max(datetime.now(UTC), started.started_at + timedelta(milliseconds=1))
+    ).execute(
         graph, request.inputs, run_id=run_id, started_at=started.started_at
     )
     run_store.finalize_run(org, project, result)
@@ -274,6 +283,71 @@ def test_publish_is_atomic_durable_and_updates_published_version(
             (graph.id,),
         ).fetchone()
     assert current["published_version"] == graph.revision
+
+
+def test_original_logic_eval_report_is_required_and_can_publish_exact_graph(
+    publication_scope,
+) -> None:
+    graph_store, run_store, publication_store, scoped_connect = publication_scope
+    graph = _create_graph(graph_store, "org", "project")
+    dry_run = _succeed_dry_run(run_store, graph, "org", "project")
+    reader = LogicEvalEvidenceReader()
+    with pytest.raises(LogicPublicationEvalEvidenceRequired):
+        publication_store.publish(
+            "org", "project", "publisher", graph.id, _request(graph), reader
+        )
+    assert publication_store.list("org", "project", graph.id).count == 0
+
+    eval_store = EvalEvidenceStore(connect_factory=scoped_connect)
+    eval_store.create_suite(
+        "org", "project", "evaluator",
+        EvalSuite(
+            id="suite-1", name="original logic evaluation", gate_threshold=1.0,
+            cases=[EvalTestCase(
+                id="case-1", inputs={"sample": True},
+                expected={"sample": True}, judge="exact",
+            )],
+        ),
+    )
+    _, report = _run_and_persist(
+        RunRequest(
+            suite_id="suite-1", target_type="logic_graph", target_id=graph.id,
+            target_revision=graph.revision, target_hash=graph.graph_hash,
+        ),
+        principal=Principal(subject="evaluator", org_id="org", project_id="project"),
+        store=eval_store,
+        graph_store=graph_store,
+        adapters=RuntimeAdapterRegistry(),
+    )
+    assert report.gate_passed is True
+    with pytest.raises(LogicPublicationEvalEvidenceRequired):
+        publication_store.publish(
+            "org", "project", "publisher", graph.id,
+            _request(graph, key="wrong-report", report_id="another-report"), reader,
+        )
+    with pytest.raises(LogicPublicationNotFound):
+        publication_store.publish(
+            "other-org", "project", "publisher", graph.id,
+            _request(graph, key="other-tenant", report_id=report.report_id), reader,
+        )
+    assert publication_store.list("org", "project", graph.id).count == 0
+    request = PublishLogicGraphRequest(
+        expected_revision=graph.revision,
+        expected_graph_hash=graph.graph_hash,
+        eval_suite_id="suite-1",
+        eval_report_id=report.report_id,
+        idempotency_key="original-eval-publication",
+    )
+    publication = publication_store.publish(
+        "org", "project", "publisher", graph.id, request, reader
+    )
+    assert publication.eval_report_id == report.report_id
+    assert publication.dry_run_id == dry_run.run_id
+    assert publication.graph_hash == graph.graph_hash
+    assert publication_store.publish(
+        "org", "project", "publisher", graph.id, request, reader
+    ) == publication
+    assert publication_store.list("org", "project", graph.id).count == 1
 
 
 def test_same_request_replays_and_changed_request_conflicts(publication_scope) -> None:
