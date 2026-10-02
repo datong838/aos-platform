@@ -6092,6 +6092,7 @@ class ContentReviewHostService:
 
     @staticmethod
     def _artifact_authority(transaction, scope, command):
+        accepted_stage = command.get("sourceKind") == "accepted-stage-v1"
         row = transaction.execute(
             """SELECT artifact_id,run_id,artifact_type,content_hash,metadata,family_revision
                  FROM public.aip_artifact
@@ -6110,7 +6111,9 @@ class ContentReviewHostService:
         }
         if (
             type(artifact) is not dict
-            or set(artifact) != _READABLE_CONTENT_FIELDS
+            or set(artifact) != (_READABLE_CONTENT_FIELDS | {"sourceKind"}
+                                    if accepted_stage else _READABLE_CONTENT_FIELDS)
+            or (accepted_stage and artifact.get("sourceKind") != "accepted-stage-v1")
             or _request_hash(artifact.get("artifactRef")) != _request_hash(expected_ref)
             or _request_hash(command["artifactRef"]) != _request_hash(expected_ref)
             or _request_hash(artifact.get("taskRef")) != _request_hash(command["taskRef"])
@@ -6151,14 +6154,14 @@ class ContentReviewHostService:
         ).fetchall()
         observed = {
             item["artifact_id"]: {
-                "resourceType": "ArtifactRevision",
+                "resourceType": "Artifact" if accepted_stage else "ArtifactRevision",
                 "resourceId": item["artifact_id"],
                 "revision": 1 if item["family_revision"] is None else int(item["family_revision"]),
                 "contentHash": "sha256:" + item["content_hash"],
             }
             for item in rows
         }
-        if len(rows) != 4 or _request_hash(
+        if len(rows) != (1 if accepted_stage else 4) or _request_hash(
             [observed.get(identity) for identity in source_ids]
         ) != _request_hash(command["sourceArtifactRefs"]):
             raise ValueError("content review source Artifact authority drifted")
@@ -6661,6 +6664,8 @@ class ContentReviewHostService:
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         _strict_content_review_command(command)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            raise ValueError("accepted stage content review Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_review":
             raise ValueError("content review dispatch operation drifted")
         artifact = self._artifact_authority(transaction, scope, command)
@@ -6672,6 +6677,8 @@ class ContentReviewHostService:
 
     def execute(self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at):
         parsed = _strict_content_review_command(command)
+        if command.get("sourceKind") == "accepted-stage-v1":
+            raise ValueError("accepted stage content review Host is not wired")
         effective_at = checked_at
         runtime_hash = _request_hash(command)
         row = transaction.execute(
@@ -6740,6 +6747,9 @@ class ContentReviewHostService:
         return receipt
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(command) is dict and command.get("sourceKind") == "accepted-stage-v1":
+            _strict_content_review_command(command)
+            raise ValueError("accepted stage content review Host is not wired")
         if type(receipt) is not dict or set(receipt) != _CONTENT_REVIEW_RESPONSE_FIELDS:
             return {}
         parsed = _strict_content_review_command(command)

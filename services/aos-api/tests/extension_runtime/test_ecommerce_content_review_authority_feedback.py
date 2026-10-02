@@ -295,6 +295,32 @@ def test_content_review_command_rejects_hash_source_and_decision_drift():
         _strict_content_review_command(boolean_alias)
 
 
+def test_accepted_stage_review_execution_stays_closed_before_database_effects():
+    item = command()
+    item["sourceKind"] = "accepted-stage-v1"
+    item["sourceArtifactRefs"] = [ref("Artifact", "original-stage-artifact")]
+    item["requestHash"] = _analysis_command_hash(
+        {name: value for name, value in item.items() if name != "requestHash"}
+    )
+    assert _strict_content_review_command(item)["sourceRefs"][0].resource_type == "Artifact"
+
+    class NoDatabaseEffects:
+        def execute(self, *_args, **_kwargs):
+            raise AssertionError("accepted stage review reached the database")
+
+    service = ContentReviewHostService()
+    with pytest.raises(ValueError, match="Host is not wired"):
+        service.revalidate(transaction=NoDatabaseEffects(), scope=SCOPE,
+                           dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
+                           command=item)
+    with pytest.raises(ValueError, match="Host is not wired"):
+        service.execute(transaction=NoDatabaseEffects(), scope=SCOPE, dispatch_ref=None,
+                        command=item, checked_at=NOW, occurred_at=NOW)
+    with pytest.raises(ValueError, match="Host is not wired"):
+        service.verify_receipt(transaction=NoDatabaseEffects(), scope=SCOPE,
+                               dispatch=None, command=item, receipt={})
+
+
 def test_reviewer_authority_is_one_current_ready_content_review_slot(monkeypatch):
     item = command()
     class Dump:

@@ -557,6 +557,32 @@ def test_accepted_stage_result_keeps_original_source_in_readable_artifact():
         })
 
 
+def test_accepted_stage_review_reads_exact_persisted_content_artifact():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        generation = _seed_current_command_receipt(connect, proof, accepted_stage_source=True)
+        artifact = _run_controlled_result_and_consume(connect, proof, generation)["artifact"]
+        review = {key: artifact[key] for key in (
+            "artifactRef", "taskRef", "briefRef", "growthPlanRef", "sourceArtifactRefs"
+        )}
+        review["sourceKind"] = "accepted-stage-v1"
+        with connect(SCOPE) as conn:
+            assert ContentReviewHostService._artifact_authority(
+                HostTransaction(conn), SCOPE, review
+            ) == artifact
+            wrong_source = deepcopy(review)
+            wrong_source["sourceArtifactRefs"][0]["contentHash"] = "sha256:" + "f" * 64
+            with pytest.raises(ValueError, match="Artifact"):
+                ContentReviewHostService._artifact_authority(
+                    HostTransaction(conn), SCOPE, wrong_source
+                )
+            with pytest.raises(ValueError, match="Artifact authority is missing"):
+                ContentReviewHostService._artifact_authority(
+                    HostTransaction(conn), TenantScope("dev-org", "dev-project"), review
+                )
+
+
 def test_original_content_run_can_hold_formal_budget_in_one_full_database():
     with disposable_database() as connect:
         _upgrade_test_clone_to_head(connect)
