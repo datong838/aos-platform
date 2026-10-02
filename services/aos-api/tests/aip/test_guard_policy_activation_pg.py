@@ -15,6 +15,7 @@ from aos_api.aip_runtime_guard_policy_contracts import EgressPolicyRevisionCreat
 from aos_api.aip_runtime_guard_policy_store import (
     AipRuntimeGuardPolicyStore, materialize_policy, EgressPolicyApprovalRequired, DataPolicyApprovalRequired,
 )
+from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
 from tests.aip.test_network_consumer_boundary_pg import SCOPE, isolated_owner
 from tests.aip.test_network_consumer_connection_pg import private_passfile
 from tests.aip._runtime_guard_history_fixture import https_signer, guard_issuer_factory, guard_consumer_factory
@@ -349,6 +350,8 @@ def test_signed_guard_pair_consumes_and_provider_reads_exact_sources(https_signe
     factory,database=guard_consumer_factory
     folder=tmp_path/"consumer-attempts";folder.mkdir(mode=0o700)
     consumer=GuardPolicyConsumer(factory,folder,expected_database=database)
+    with connect(SCOPE) as conn:
+        before=read_candidates(conn,SCOPE).counts
     refs={}
     for kind in ("egress","data_classification"):
         maker,_,bundle,_,approval=approved_guard_case(kind,sign,guard_issuer_factory,tmp_path)
@@ -367,6 +370,12 @@ def test_signed_guard_pair_consumes_and_provider_reads_exact_sources(https_signe
     AipRuntimeGuardPolicyStore().require_provider_dependencies(SCOPE,SimpleNamespace(
         egress_policy_ref=refs["egress"],data_classification_policy_ref=refs["data_classification"],
         endpoint_profile=SimpleNamespace(base_url="https://api.agnes-ai.cn",region="isolated-cn")))
+    with connect(SCOPE) as conn:
+        after=read_candidates(conn,SCOPE).counts
+    assert after["egress_policies"]==before["egress_policies"]+1
+    assert after["data_policies"]==before["data_policies"]+1
+    for field in set(before)-{"egress_policies","data_policies"}:
+        assert after[field]==before[field]
     assert len(list(folder.iterdir()))==2
 
 
