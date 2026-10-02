@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import json
 from uuid import uuid4
 import psycopg
 import pytest
@@ -325,6 +326,173 @@ def test_tool_write_admission_locks_current_dependencies_until_freeze_commit(tar
                 revoker.rollback()
             frozen=owner.freeze_responsibility_plan_in_transaction(writer,SCOPE,ACTOR,
                 draft.plan_id,draft.version,f'tool-lock-freeze-{uuid4().hex[:10]}')
+            assert frozen.lifecycle.value=='frozen'
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='ready'
+        with connect(SCOPE) as revoker:
+            revoker.execute(f'''UPDATE {table} SET {change}
+                WHERE org_id=%s AND project_id=%s AND {field}=%s''',
+                (*SCOPE.key,identity))
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='blocked'
+
+
+def _agent_inputs(conn, *, sourced=False, missing_receipt=None):
+    _,_,_,instance_id,cap_id=_tool_plan(conn)
+    suffix=uuid4().hex[:10]
+    skill_id=f'skill-agent-{suffix}'
+    binding_id=f'skill-binding-agent-{suffix}'
+    now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    conn.execute('''INSERT INTO aip_skill_template_revision
+        (skill_id,revision,canonical_logic_id,lifecycle,input_schema,output_schema,
+         tool_allowlist,required_capabilities,risk_level,memory_policy_ref,
+         handoff_policy_ref,source_ref,source_license,content_hash,created_by,
+         parent_ref,publication_tenant,release_gate_ref,publication_ref,
+         model_route_ref,runtime_policy_ref,logic_revision_ref)
+        VALUES(%s,1,%s,%s,'{}','{}','[]','[]','low','{}','{}','{}',
+            'internal',%s,%s,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+            %s::jsonb,%s::jsonb,%s::jsonb)''',
+        (skill_id,f'logic-{suffix}','published' if sourced else 'draft','c'*64,
+         ACTOR,json.dumps({'assetType':'SkillTemplate'}) if sourced else None,
+         json.dumps({'orgId':SCOPE.org_id,'projectId':SCOPE.project_id})
+         if sourced else None,
+         json.dumps({'assetType':'EvalGateDecision'}) if sourced else None,
+         json.dumps({'resourceType':'PublicationEvent'}) if sourced else None,
+         json.dumps({'assetType':'ModelRouteRevision'}) if sourced else None,
+         json.dumps({'assetType':'RuntimePolicyRevision'}) if sourced else None,
+         json.dumps({'assetType':'LogicRevision','assetId':f'logic-{suffix}',
+                     'revision':1,'contentHash':'c'*64}) if sourced else None))
+    insert(conn,'aip_skill_binding',binding_id=binding_id,instance_id=instance_id,
+        skill_id=skill_id,skill_revision=1,capability_refs=[cap_id],
+        budget_policy_ref={},status='active',version=1,readiness='available',
+        dependency_snapshot_hash='d'*64,last_evaluated_at=now,
+        readiness_expires_at=now+timedelta(hours=1))
+    if sourced:
+        for operation in ('skill_binding.create','skill_binding.evaluate','skill_binding.update'):
+            if operation == missing_receipt:
+                continue
+            insert(conn,'aip_agent_registry_receipt',receipt_id=f'{operation}-{suffix}',
+                operation=operation,idempotency_key=f'{operation}-{suffix}',
+                request_hash='f'*64,resource_ref={},
+                result_ref={'resourceId':binding_id},status='applied',
+                created_by=ACTOR,created_at=now)
+    factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE)
+    assignee=AssigneeRef(kind=AssigneeKind.AGENT_INSTANCE,
+        resource_id=instance_id,version=1)
+    capability=VersionedAssetRef(asset_type='CapabilityRevision',
+        asset_id='capability.content.review',revision=1,content_hash='a'*64)
+    receipt=AipAssigneeResolutionStore(factory).resolve(SCOPE,
+        ResolveAssigneeRequest(subjectId='analyst.portrait.review',
+            candidates=[assignee],requiredCapabilities=[capability]),
+        ACTOR,now=now)
+    assert receipt.status.value=='resolved'
+    owner=AipProductionContractStore(factory,
+        responsibility_template_resolver=lambda scope,ref:True)
+    body=CreateResponsibilityPlanRequest(profile='TEST_AGENT_REVIEW',
+        templateRef=dict(resourceType='ResponsibilityTemplateRevision',
+            resourceId='test-template',revision=1,contentHash='a'*64),
+        slots=[slot(requiredCapabilityIds=[capability.asset_id],
+            assignee=assignee.model_dump(mode='json',by_alias=True),
+            assigneeResolutionReceiptId=receipt.receipt_id)])
+    return owner,body,instance_id,binding_id,cap_id
+
+
+def test_agent_receipt_cannot_bypass_skill_publication_and_binding_source():
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            owner,body,_,_,_=_agent_inputs(conn)
+            key=f'agent-unsourced-{uuid4().hex[:10]}'
+            with pytest.raises(ProductionContractDependencyBlocked,
+                match='ASSIGNEE_RESOLUTION_AGENT_SOURCE_INVALID'):
+                owner.create_responsibility_plan(SCOPE,ACTOR,key,body)
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation='responsibility_plan.create' AND idempotency_key=%s''',
+                (*SCOPE.key,key)).fetchone()['n']==0
+
+
+@pytest.mark.parametrize('missing_operation',[
+    'skill_binding.create','skill_binding.evaluate','skill_binding.update',
+])
+def test_agent_receipt_requires_each_original_binding_source(missing_operation):
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            owner,body,_,_,_=_agent_inputs(conn,sourced=True,
+                missing_receipt=missing_operation)
+            with pytest.raises(ProductionContractDependencyBlocked,
+                match='ASSIGNEE_RESOLUTION_AGENT_SOURCE_INVALID'):
+                owner.create_responsibility_plan(SCOPE,ACTOR,
+                    f'agent-missing-source-{uuid4().hex[:10]}',body)
+
+
+@pytest.mark.parametrize('drift,blocker',[
+    ('instance_status','AGENT_BINDING_REVOKED'),
+    ('instance_version','AGENT_BINDING_REVOKED'),
+    ('skill_status','AGENT_SOURCE_INVALID'),
+    ('skill_freshness','AGENT_BINDING_REVOKED'),
+    ('capability_status','AGENT_BINDING_REVOKED'),
+    ('capability_policy','AGENT_BINDING_DRIFTED'),
+])
+def test_agent_resolution_current_dependencies_block_plan_freeze(drift,blocker):
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            owner,body,instance_id,skill_id,cap_id=_agent_inputs(conn,sourced=True)
+            draft=owner.create_responsibility_plan(SCOPE,ACTOR,
+                f'agent-ready-{uuid4().hex[:10]}',body)
+            assert draft.readiness.value=='ready'
+            updates={
+                'instance_status':('aip_agent_instance','instance_id',instance_id,"status='suspended'"),
+                'instance_version':('aip_agent_instance','instance_id',instance_id,'version=version+1'),
+                'skill_status':('aip_skill_binding','binding_id',skill_id,"status='suspended'"),
+                'skill_freshness':('aip_skill_binding','binding_id',skill_id,
+                    "readiness_expires_at=NOW()-INTERVAL '1 second'"),
+                'capability_status':('aip_capability_binding','binding_id',cap_id,"status='suspended'"),
+                'capability_policy':('aip_capability_binding','binding_id',cap_id,
+                    "network_policy_revision='network-2'"),
+            }
+            table,field,identifier,change=updates[drift]
+            conn.execute(f'''UPDATE {table} SET {change}
+                WHERE org_id=%s AND project_id=%s AND {field}=%s''',
+                (*SCOPE.key,identifier))
+            current=owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=conn)
+            assert current.readiness.value=='blocked'
+            with pytest.raises(ProductionContractDependencyBlocked,
+                match=f'ASSIGNEE_RESOLUTION_{blocker}'):
+                owner.freeze_responsibility_plan(SCOPE,ACTOR,draft.plan_id,draft.version,
+                    f'agent-freeze-{uuid4().hex[:10]}')
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
+                  AND result_ref->>'resourceId'=%s''',
+                (*SCOPE.key,draft.plan_id)).fetchone()['n']==0
+
+
+@pytest.mark.parametrize('target',['instance','skill','capability'])
+def test_agent_write_admission_locks_current_dependencies_until_freeze_commit(target):
+    with disposable_database() as connect:
+        with connect(SCOPE) as seed:
+            owner,body,instance_id,skill_id,cap_id=_agent_inputs(seed,sourced=True)
+            draft=owner.create_responsibility_plan(SCOPE,ACTOR,
+                f'agent-lock-plan-{uuid4().hex[:10]}',body)
+            assert draft.readiness.value=='ready'
+        with connect(SCOPE) as writer:
+            owner=AipProductionContractStore(responsibility_template_resolver=lambda scope,ref:True)
+            owner._require_responsibility_dependencies(writer,SCOPE,draft)
+            table,field,identity,change={
+                'instance':('aip_agent_instance','instance_id',instance_id,"status='suspended'"),
+                'skill':('aip_skill_binding','binding_id',skill_id,"status='suspended'"),
+                'capability':('aip_capability_binding','binding_id',cap_id,"status='suspended'"),
+            }[target]
+            with connect(SCOPE) as revoker:
+                revoker.execute("SET LOCAL lock_timeout = '250ms'")
+                with pytest.raises(psycopg.errors.LockNotAvailable):
+                    revoker.execute(f'''UPDATE {table} SET {change}
+                        WHERE org_id=%s AND project_id=%s AND {field}=%s''',
+                        (*SCOPE.key,identity))
+                revoker.rollback()
+            frozen=owner.freeze_responsibility_plan_in_transaction(writer,SCOPE,ACTOR,
+                draft.plan_id,draft.version,f'agent-lock-freeze-{uuid4().hex[:10]}')
             assert frozen.lifecycle.value=='frozen'
         with connect(SCOPE) as reader:
             reader.read_only=True

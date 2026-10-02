@@ -5976,6 +5976,7 @@ class AipProductionContractStore:
                     lock_human_membership=True,
                     lock_provider_binding=True,
                     lock_tool_binding=True,
+                    lock_agent_binding=True,
                 )
                 continue
             if slot.assignee.kind.value != "agent_instance":
@@ -6110,6 +6111,7 @@ class AipProductionContractStore:
         lock_human_membership: bool = False,
         lock_provider_binding: bool = False,
         lock_tool_binding: bool = False,
+        lock_agent_binding: bool = False,
     ) -> None:
         row = conn.execute(
             """SELECT subject_id,kind,resource_id,version,status,selected_assignee,
@@ -6166,7 +6168,9 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked(
                 f"ASSIGNEE_RESOLUTION_CAPABILITY_DRIFTED:{slot_id}"
             )
-        if assignee.kind.value in {"provider_capability_binding", "tool_binding"}:
+        if assignee.kind.value in {
+            "provider_capability_binding", "tool_binding", "agent_instance"
+        }:
             if lock_provider_binding and assignee.kind.value == "provider_capability_binding":
                 conn.execute(
                     """SELECT 1 FROM aip_capability_binding
@@ -6200,10 +6204,35 @@ class AipProductionContractStore:
                                 ORDER BY binding_id FOR SHARE""",
                             (*scope.key, sorted(set(binding_ids))),
                         ).fetchall()
+            if lock_agent_binding and assignee.kind.value == "agent_instance":
+                conn.execute(
+                    """SELECT 1 FROM aip_agent_instance
+                        WHERE org_id=%s AND project_id=%s AND instance_id=%s
+                        FOR SHARE""",
+                    (*scope.key, assignee.resource_id),
+                ).fetchone()
+                refs = self._load(row["binding_refs"]) or []
+                for asset_type, table in (
+                    ("SkillBinding", "aip_skill_binding"),
+                    ("CapabilityBinding", "aip_capability_binding"),
+                ):
+                    ids = sorted({
+                        ref.get("assetId") for ref in refs
+                        if isinstance(ref, dict) and ref.get("assetType") == asset_type
+                        and isinstance(ref.get("assetId"), str)
+                    })
+                    if ids:
+                        conn.execute(
+                            f"""SELECT 1 FROM {table}
+                                WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)
+                                ORDER BY binding_id FOR SHARE""",
+                            (*scope.key, ids),
+                        ).fetchall()
             kind = (
                 "PROVIDER_BINDING"
                 if assignee.kind.value == "provider_capability_binding"
-                else "TOOL_BINDING"
+                else "TOOL_BINDING" if assignee.kind.value == "tool_binding"
+                else "AGENT_BINDING"
             )
             try:
                 required = [VersionedAssetRef.model_validate(item) for item in capabilities]
@@ -6223,6 +6252,48 @@ class AipProductionContractStore:
                 raise ProductionContractDependencyBlocked(
                     f"ASSIGNEE_RESOLUTION_{kind}_DRIFTED:{slot_id}"
                 ) from exc
+            if assignee.kind.value == "agent_instance":
+                skill_refs = [
+                    ref for ref in frozen_refs if ref.asset_type == "SkillBinding"
+                ]
+                if not skill_refs or any(
+                    conn.execute(
+                        """SELECT 1 FROM aip_skill_binding b
+                            JOIN aip_skill_template_revision s
+                              ON s.skill_id=b.skill_id AND s.revision=b.skill_revision
+                            WHERE b.org_id=%s AND b.project_id=%s
+                              AND b.binding_id=%s AND b.instance_id=%s
+                              AND b.version=%s AND b.status='active'
+                              AND s.lifecycle='published'
+                              AND s.publication_tenant->>'orgId'=%s
+                              AND s.publication_tenant->>'projectId'=%s
+                              AND (SELECT latest.lifecycle
+                                   FROM aip_skill_template_revision latest
+                                   WHERE latest.skill_id=b.skill_id
+                                   ORDER BY latest.revision DESC LIMIT 1)='published'
+                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r
+                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                    AND r.operation='skill_binding.create'
+                                    AND r.status='applied'
+                                    AND r.result_ref->>'resourceId'=b.binding_id)
+                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r
+                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                    AND r.operation='skill_binding.evaluate'
+                                    AND r.status='applied'
+                                    AND r.result_ref->>'resourceId'=b.binding_id)
+                              AND EXISTS (SELECT 1 FROM aip_agent_registry_receipt r
+                                  WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                    AND r.operation='skill_binding.update'
+                                    AND r.status='applied'
+                                    AND r.result_ref->>'resourceId'=b.binding_id)""",
+                        (*scope.key, ref.asset_id, assignee.resource_id,
+                         ref.revision, *scope.key),
+                    ).fetchone() is None
+                    for ref in skill_refs
+                ):
+                    raise ProductionContractDependencyBlocked(
+                        f"ASSIGNEE_RESOLUTION_AGENT_SOURCE_INVALID:{slot_id}"
+                    )
             if decision.status is not AssigneeResolutionStatus.RESOLVED:
                 raise ProductionContractDependencyBlocked(
                     f"ASSIGNEE_RESOLUTION_{kind}_REVOKED:{slot_id}"
