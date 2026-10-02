@@ -1,8 +1,11 @@
 """Archived local Growth signature in a disposable full-schema installation DB."""
+import asyncio
 import importlib.util
 import hashlib
 import json
 import os
+import subprocess
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,16 +17,24 @@ from psycopg.conninfo import conninfo_to_dict
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.installation_revalidation import _record_from_row
+from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
+from aos_api.asset_registry.installation_service import InstallationService
+from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
+from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION
 from aos_api.asset_registry.signature import FileTrustRootProvider
 from aos_api.db import connect
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
-from aos_api.extension_runtime.schema_conditions import admit_schema_requirements
+from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
+from aos_api.extension_runtime.preparation_worker import PreparationWorker
+from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
+from aos_api.extension_runtime.schema_conditions import CurrentSchemaConditions, admit_schema_requirements
 from aos_api.extension_runtime.schema_registry import apply_once, require_installed
 from aos_api.tenant_scope import TenantScope
 
@@ -61,6 +72,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
         conn.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated test') ON CONFLICT DO NOTHING")
         conn.execute("INSERT INTO meta_org(id,name) VALUES('org-org','isolated test') ON CONFLICT DO NOTHING")
         conn.execute("INSERT INTO meta_workspace(org_id,project_id,name) VALUES('org-org','dev-project','isolated test') ON CONFLICT DO NOTHING")
+        conn.execute("INSERT INTO meta_membership(org_id,project_id,subject,role) VALUES('org-org','dev-project','test-author','admin') ON CONFLICT DO NOTHING")
     for relative, bundle_id, version, _ in signed['builder'].ALL_CASES:
         source_ref = f"bundle://{signed['source_alias']}/{relative}"
         loaded = loader.load(source_ref)
@@ -104,6 +116,20 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             row['bundle_id']: _record_from_row(row)
             for row in conn.execute(_SNAPSHOT_QUERY).fetchall()
         }
+    signed_roots = {bundle_id: signed['signed_tree'] / relative
+                    for relative, bundle_id, _, _ in signed['builder'].RUNTIME_CASES}
+    def read_member(selected, path, limit):
+        raw = (signed_roots[selected.id] / path).read_bytes()
+        assert len(raw) <= limit
+        return raw
+    policy = ReleasePolicy(trust_roots=trust)
+    conditions = CurrentSchemaConditions(
+        load_record=lambda member: current_records[member.id],
+        read_artifact=read_member, policy=policy,
+    )
+    with connect(SCOPE) as conn:
+        with pytest.raises(LookupError, match='required schema migration is not installed'):
+            conditions(conn=conn, locked=None, lock=lock, actor='test-author')
     for relative, bundle_id, _version, _package in signed['builder'].RUNTIME_CASES:
         root = signed['signed_tree'] / relative
         record = current_records[bundle_id]
@@ -148,3 +174,74 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
             (*SCOPE.key, installed['installationId'])).fetchone()['n'] == 0
         assert conn.execute("SELECT count(*) AS n FROM bundle_installation WHERE org_id='dev-org'").fetchone()['n'] == 0
+
+    context = 'colima-aos-extension'
+    def owned_containers():
+        return set(subprocess.check_output([
+            'docker', '--context', context, 'ps', '-aq', '--filter', 'label=aos.extension.owner',
+        ], text=True, timeout=15).split())
+    before_containers = owned_containers()
+    revalidator = RuntimeReleaseRevalidator(release_policy=policy)
+    store = PostgresInstallationStore(connect)
+    legacy = InstallationService(
+        store=store, composition_store=PostgresCompositionStore(connect),
+        revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
+    )
+    lifecycle = RuntimeLifecycleService(installation_store=store,
+                                        installation_reader=legacy, revalidator=revalidator)
+    action = dict(org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                  installation_id=installed['installationId'], actor='test-author',
+                  roles=['asset-installer'], markings=[])
+    accepted = lifecycle.request_preparation(
+        **action, kind='runtime-apply', idempotency_key='test-growth112-runtime-apply',
+        if_match=f'"{installed["installationEtag"]}"', preparation_admission=lambda: True,
+    )
+
+    @contextmanager
+    def runtime_connect():
+        with connect() as conn:
+            conn.execute('SET ROLE aos_runtime')
+            conn.commit()
+            yield conn
+
+    worker = PreparationWorker(
+        connect=runtime_connect, driver=OciDriver(context=context), installation_store=store,
+        revalidator=revalidator,
+        check_current_permission=CurrentControlPermission(operation=APPLY_INSTALLATION_OPERATION),
+        load_record=lambda member: current_records[member.id],
+        read_artifact=None, read_member_artifact=read_member,
+        policy=policy, platform='linux/arm64', check_current_conditions=conditions,
+        check_verification_permission=CurrentControlPermission(operation=VERIFY_INSTALLATION_OPERATION),
+    )
+    async def prepare_and_verify():
+        job = await worker.start(
+            **dict(org_id=SCOPE.org_id, project_id=SCOPE.project_id),
+            operation_id=accepted.response_json['operationId'],
+            expected_revision=accepted.response_json['revision'],
+        )
+        try:
+            applied = await job.prepared()
+            assert applied.state == 'applied' and applied.active_revision is None
+            requested = await asyncio.to_thread(
+                lifecycle.request_preparation, **action, kind='runtime-verify',
+                idempotency_key='test-growth112-runtime-verify',
+                if_match=f'"{applied.etag_version}"', preparation_admission=lambda: True,
+            )
+            verified = await job.verify(
+                operation_id=requested.response_json['operationId'],
+                expected_revision=requested.response_json['revision'],
+            )
+            assert verified.state == 'active' and verified.active_revision is not None
+            with connect(SCOPE) as conn:
+                binding = conn.execute('''SELECT observed_state,enabled,operation_fence
+                    FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+                    AND installation_id=%s''', (*SCOPE.key, installed['installationId'])).fetchone()
+                assert binding == {'observed_state': 'ready', 'enabled': False, 'operation_fence': True}
+                assert conn.execute('''SELECT count(*) AS n FROM extension_operation_dispatch_binding
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                    (*SCOPE.key, installed['installationId'])).fetchone()['n'] == 0
+                assert conn.execute("SELECT count(*) AS n FROM bundle_installation WHERE org_id='dev-org'").fetchone()['n'] == 0
+        finally:
+            await job.stop()
+    asyncio.run(prepare_and_verify())
+    assert owned_containers() == before_containers

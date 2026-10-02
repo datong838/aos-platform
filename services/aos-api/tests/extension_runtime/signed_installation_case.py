@@ -202,7 +202,9 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                             verified=await asyncio.to_thread(store.get_installation,**scope,installation_id=draft.installation_id)
                         assert verified.state=='active'
                         with connect() as conn:
-                            assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                            assert conn.execute('''SELECT enabled,operation_fence,observed_state
+                                FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+                                AND installation_id=%s''',(scope['org_id'],scope['project_id'],draft.installation_id)).fetchone()=={
                                 'enabled':False,'operation_fence':True,'observed_state':'ready'}
                         if verified_probe is not None:
                             verified_probe(connect=connect,scope=scope,installation=verified,
@@ -221,7 +223,9 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                                 assert str(result.operation_id)==str(enable['operation_id'])
                                 assert result.operation_status=='succeeded'
                                 with connect() as conn:
-                                    assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                                    assert conn.execute('''SELECT enabled,operation_fence,observed_state
+                                        FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+                                        AND installation_id=%s''',(scope['org_id'],scope['project_id'],draft.installation_id)).fetchone()=={
                                         'enabled':True,'operation_fence':False,'observed_state':'ready'}
                                 from disable_case import exercise_disable
                                 await asyncio.to_thread(exercise_disable,worker,legacy,scope,action,verified,job.plan.generation)
@@ -235,10 +239,16 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
             assert (observed.active_revision is not None)==(worker_mode=='verify')
             with connect() as conn:
                 assert conn.execute('SELECT status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()=={'status':'succeeded' if worker_mode in {'normal','verify'} else 'failed'}
-                assert conn.execute('SELECT observed_release,cleanup_state FROM extension_runtime_resource_lease').fetchall()==[{'observed_release':True,'cleanup_state':'released'}]
-                assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==(1 if worker_mode=='verify' else 0)
+                assert conn.execute('''SELECT observed_release,cleanup_state
+                    FROM extension_runtime_resource_lease WHERE resource_id=%s''',
+                    (plan.members[0].intent.resource_id,)).fetchall()==[{'observed_release':True,'cleanup_state':'released'}]
+                assert conn.execute('''SELECT count(*) AS n FROM extension_runtime_binding
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                    (scope['org_id'],scope['project_id'],draft.installation_id)).fetchone()['n']==(1 if worker_mode=='verify' else 0)
                 if worker_mode=='verify':
-                    assert conn.execute('SELECT enabled,operation_fence,observed_state FROM extension_runtime_binding').fetchone()=={
+                    assert conn.execute('''SELECT enabled,operation_fence,observed_state
+                        FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
+                        AND installation_id=%s''',(scope['org_id'],scope['project_id'],draft.installation_id)).fetchone()=={
                         'enabled':False,'operation_fence':True,'observed_state':'unknown'}
             assert_container_absent(CONTEXT,plan.members[0].intent)
             assert len(permission_calls)==(1 if worker_mode=='artifact_error' else 3 if worker_mode=='verify' else 2)
@@ -350,5 +360,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
         with connect() as conn:
             assert conn.execute('SELECT phase,status FROM extension_runtime_operation WHERE operation_id=%s',(operation,)).fetchone()==({'phase':'preparing','status':'running'} if revoke else {'phase':'succeeded','status':'succeeded'})
             assert conn.execute('SELECT cleanup_state,observed_release FROM extension_runtime_resource_lease WHERE resource_id=%s',(intent.resource_id,)).fetchone()=={'cleanup_state':'released','observed_release':True}
-            assert conn.execute('SELECT count(*) AS n FROM extension_runtime_binding').fetchone()['n']==0
+            assert conn.execute('''SELECT count(*) AS n FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                (scope['org_id'],scope['project_id'],draft.installation_id)).fetchone()['n']==0
         assert_container_absent(CONTEXT,intent)
