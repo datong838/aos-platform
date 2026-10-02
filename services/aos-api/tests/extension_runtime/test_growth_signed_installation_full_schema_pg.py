@@ -1,11 +1,14 @@
 """Archived local Growth signature in a disposable full-schema installation DB."""
 import importlib.util
+import hashlib
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from psycopg.conninfo import conninfo_to_dict
 
 from aos_api.asset_registry.manifest_loader import ManifestLoader
@@ -21,6 +24,7 @@ from aos_api.ecommerce_growth_registration_qualification import require_growth_r
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.schema_conditions import admit_schema_requirements
+from aos_api.extension_runtime.schema_registry import apply_once, require_installed
 from aos_api.tenant_scope import TenantScope
 
 
@@ -90,6 +94,11 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
     assert len(selected) == 1
     assert require_growth_registration_claims(selected[0]).startswith('sha256:')
     resolved = {member.id: member for member in lock.payload.resolved}
+    schema_check = _load_script('a0v_ecommerce_schema_receipts.py')
+    alembic = Config(str(ROOT / 'services/aos-api/alembic.ini'))
+    alembic.set_main_option('script_location', str(ROOT / 'services/aos-api/alembic'))
+    graph = ScriptDirectory.from_config(alembic)
+    revisions = lambda head: {item.revision for item in graph.walk_revisions(base='base', head=head)}
     with connect(SCOPE) as conn:
         current_records = {
             row['bundle_id']: _record_from_row(row)
@@ -105,6 +114,26 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             read_artifact=artifact,
         )
         assert len(requirements) == 1
+        with connect() as conn:
+            with conn.transaction():
+                with pytest.raises(LookupError, match='required schema migration is not installed'):
+                    require_installed(conn, requirements)
+        raw = (root / 'artifacts/schema-compatibility.json').read_bytes()
+        compatibility = json.loads(raw)
+        assert requirements[0].migration_hash == 'sha256:' + hashlib.sha256(raw).hexdigest()
+        assert compatibility['bundleId'] == bundle_id
+        with connect() as conn:
+            with conn.transaction():
+                assert apply_once(conn, requirements[0],
+                    lambda scoped: schema_check.verify_physical(scoped, compatibility, revisions)) is True
+                require_installed(conn, requirements)
+            conn.execute('SET ROLE aos_runtime')
+            with conn.transaction():
+                role = conn.execute("SELECT current_user AS role, has_table_privilege(current_user,'extension_schema_installation','INSERT') AS can_insert").fetchone()
+                assert role == {'role': 'aos_runtime', 'can_insert': False}
+                require_installed(conn, requirements)
+                with pytest.raises(PermissionError, match='maintenance schema role required'):
+                    apply_once(conn, requirements[0], lambda _: pytest.fail('runtime cannot migrate'))
         admitted = admit_runtime_artifact(
             record=record, selected=resolved[bundle_id],
             policy=ReleasePolicy(trust_roots=trust), checked_at=datetime.now(timezone.utc),

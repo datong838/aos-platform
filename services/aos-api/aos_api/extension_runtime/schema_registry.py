@@ -50,8 +50,10 @@ def apply_once(conn,requirement,apply):
     _require_transaction(conn)
     if not isinstance(requirement,SchemaRequirement) or not callable(apply):
         raise ValueError("typed requirement and trusted callback required")
-    allowed=conn.execute("SELECT has_table_privilege(current_user,'extension_schema_installation','INSERT') AS allowed").fetchone()
-    if not _values(allowed,("allowed",))[0]:
+    allowed=conn.execute("""SELECT current_user AS role,
+        has_table_privilege(current_user,'extension_schema_installation','INSERT') AS allowed""").fetchone()
+    role,can_insert=_values(allowed,("role","allowed"))
+    if role=='aos_runtime' or not can_insert:
         raise PermissionError("maintenance schema role required")
     # Shared physical schema, not per-tenant or per-container migration execution.
     conn.execute("SELECT pg_advisory_xact_lock(2314,1)")
