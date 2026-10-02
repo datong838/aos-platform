@@ -1,0 +1,13 @@
+# GW-b-2c2c1b3c2b 验证：Growth 1.13 本地签名与当前正式来源
+
+2026-10-02 10:09 CST。基线 `aos-platform/m1 d84a6d7f` / `AOS-001118`，Task `W5CB4-GWB2C2C1B3C2B-20261002`。先复习 231-2、231-5 §9、原 1.12 signer，方案 `w5cb4-gwb2c2c1b3c2b-signature-owner-plan-20261002.md`。本地签名仓外状态只作为测试来源，不发布当前正式目录。
+
+| 门 | 本次输出 |
+| --- | --- |
+| RED/回归 | 新 profile 缺失 3 errors→最小新 signer；新 1.13、原 1.12 signer 和新 build profile 合计 `10 passed, 7 warnings`，退出0。缺 qualifier、错 Growth 版本、未释放 OCI session、已有 state 均拒绝；旧 key/profile 不变。`py_compile`、`git diff --check` 退出0。 |
+| Exact 签名 | `services/aos-api/.venv/bin/python scripts/sign_ecommerce_growth_1_13_candidates.py --build-dir /Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-build-20261002-r2 --build-receipt /Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-build-receipt-20261002-r2.json --qualification-receipt /Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-qualification-receipt-20261002-r2.json --state-dir /Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-signing-state-20261002-r1 --output /Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-signing-receipt-20261002-r1.json` 退出0、`SIGNED_TREE_GREEN`；独立 keyId `a0v-local-ecommerce-growth-1-13-v1`。状态目录 mode0700、私钥0600；签名树 hash `sha256:ebb122ef3157b3605647deb3f0cac5253f99da533debb1188303820ce2f41756`。 |
+| 信任/OCI | 本地 trust revision 与 Receipt 相等、未撤销且当前时刻在有效窗内；四包签名 content hash 与 r2 build 相等；build/qualify/sign 树 hash 绑定。Growth index image `sha256:dc619ab1…e59f53`、config `sha256:4483d2e2…6cd44674` 与 build Receipt 一致；`docker --context colima-aos-extension image inspect sha256:4483d2e2…6cd44674` 返回同 config、`linux/arm64`。四种作用计数均0。 |
+| 当前库只读 | `a0v_current_preview_bootstrap._connection_parameters` 仅在进程内读取连接材料；`psycopg` 设置 `read_only=true` 并先断言库 `aos_current_preview_20260927`/版本 `a0v_118`。原 `read_candidates(TenantScope('org-org','dev-project'))` 八项：`responsibility_plans/runtime_policies/data_policies/egress_policies/network_policies/quota_policies/budget_policies/budgets` 全0。当前正租户安装1、binding0、1.13 published0、Host identity0/assignment0、dev-org 安装0。只读事务 rollback，未输出账号内容。 |
+| 当前正式身份 | 当前签名 Receipt keyId 是旧 `a0v-local-ecommerce-current-v1`；当前 trust-roots 不包含新本地 1.13 key。`a0v_current_runtime_host_preflight.py --signed-receipt ...current...` 输出 `SAFE_BLOCKED/CREDENTIAL_FILE_REQUIRED`、退出2。API 进程仍为9月30日 `--serve`，未变成正式受限 `--serve-limited`。 |
+
+结论：**1.13 本地测试签名及 OCI 精确制品 GREEN；当前实例正式安装/配置/首登记 Owner/Host 准入仍失败封闭。**本地 key 不能冒充当前正式信任根；唯一正向租户 org-org/dev-project 八源空，缺当前发布与独立身份。当前库仍只读 `a0v_118`、代码 `a0v_135`，今天最新栈全面重启未执行。下一波从正式配置来源的合法创建/绑定产品入口与受限身份的独立安全研发继续，当前真实迁移/重启需单独零执行窗口和停机备份；不借测试签名改当前库/开 Host。
