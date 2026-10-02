@@ -5970,6 +5970,7 @@ class AipProductionContractStore:
                     slot.assignee,
                     set(slot.required_capability_ids),
                     slot.slot_id,
+                    lock_human_membership=True,
                 )
                 continue
             if slot.assignee.kind.value != "agent_instance":
@@ -6100,6 +6101,8 @@ class AipProductionContractStore:
         assignee: AssigneeRef,
         required_capability_ids: set[str],
         slot_id: str,
+        *,
+        lock_human_membership: bool = False,
     ) -> None:
         row = conn.execute(
             """SELECT subject_id,kind,resource_id,version,status,selected_assignee,
@@ -6139,7 +6142,8 @@ class AipProductionContractStore:
             )
         if assignee.kind.value == "human_principal" and conn.execute(
             """SELECT 1 FROM meta_membership
-                WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                WHERE org_id=%s AND project_id=%s AND subject=%s"""
+            + (" FOR SHARE" if lock_human_membership else ""),
             (*scope.key, assignee.resource_id),
         ).fetchone() is None:
             raise ProductionContractDependencyBlocked(

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
+import psycopg
 import pytest
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
@@ -90,6 +91,46 @@ def test_revoked_human_membership_blocks_unexpired_resolution_plan_freeze():
             assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
                 WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
                   AND result_ref->>'resourceId'=%s''',(*SCOPE.key,draft.plan_id)).fetchone()['n']==0
+
+
+def test_plan_write_admission_holds_member_until_freeze_commit_without_locking_read_only_get():
+    with disposable_database() as connect:
+        with connect(SCOPE) as seed:
+            seed.execute('''INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES(%s,%s,%s,'member') ON CONFLICT DO NOTHING''',(*SCOPE.key,ACTOR))
+            factory=TransactionBoundConnectFactory(HostTransaction(seed),SCOPE)
+            receipt=AipAssigneeResolutionStore(factory).resolve(SCOPE,
+                ResolveAssigneeRequest(subjectId='analyst.portrait.review',assignee=slot().assignee),
+                ACTOR,now=seed.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+            owner=AipProductionContractStore(factory,responsibility_template_resolver=lambda scope,ref:True)
+            draft=owner.create_responsibility_plan(SCOPE,ACTOR,f'lock-draft-{uuid4().hex[:10]}',
+                CreateResponsibilityPlanRequest(profile='TEST_HUMAN_REVIEW',
+                    templateRef=dict(resourceType='ResponsibilityTemplateRevision',resourceId='test-template',revision=1,contentHash='a'*64),
+                    slots=[slot(assigneeResolutionReceiptId=receipt.receipt_id)]))
+            assert draft.readiness.value=='ready'
+        with connect(SCOPE) as writer:
+            owner=AipProductionContractStore(responsibility_template_resolver=lambda scope,ref:True)
+            owner._require_responsibility_dependencies(writer,SCOPE,draft)
+            with connect(SCOPE) as revoker:
+                revoker.execute("SET LOCAL lock_timeout = '250ms'")
+                with pytest.raises(psycopg.errors.LockNotAvailable):
+                    revoker.execute('''DELETE FROM meta_membership
+                        WHERE org_id=%s AND project_id=%s AND subject=%s''',(*SCOPE.key,ACTOR))
+                revoker.rollback()
+            frozen=owner.freeze_responsibility_plan_in_transaction(writer,SCOPE,ACTOR,
+                draft.plan_id,draft.version,f'lock-freeze-{uuid4().hex[:10]}')
+            assert frozen.lifecycle.value=='frozen'
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='ready'
+        with connect(SCOPE) as revoker:
+            revoker.execute('''DELETE FROM meta_membership
+                WHERE org_id=%s AND project_id=%s AND subject=%s''',(*SCOPE.key,ACTOR))
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            current=owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader)
+            assert current.readiness.value=='blocked'
+            assert 'ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED' in current.blockers[0].message
 
 
 @pytest.mark.parametrize('kind',['agent_instance','tool_binding','provider_capability_binding'])
