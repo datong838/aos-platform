@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "failed": 0,
+  "scope": "Growth 1.13 immutable source, exact manifest and runtime registration, isolated build profile, 1.12 compatibility, stage structure eval and registration contracts",
+  "sourceTreeHash": "sha256:5818e50bd8c28900ec324b023243b8289a4ef243413b51fd94437fb7fa1f3167",
+  "testCommand": "services/aos-api/.venv/bin/pytest -q --disable-warnings services/aos-api/tests/extension_runtime/test_ecommerce_growth_1_13_candidate.py services/aos-api/tests/extension_runtime/test_build_ecommerce_growth_1_13_candidates.py services/aos-api/tests/extension_runtime/test_ecommerce_growth_1_12_candidate.py services/aos-api/tests/extension_runtime/test_build_ecommerce_growth_1_12_candidates.py services/aos-api/tests/extension_runtime/test_analyst_structure_eval_operation.py services/aos-api/tests/extension_runtime/test_ecommerce_growth_registration_contracts.py",
+  "testResult": "54 passed, 8 warnings in 5.20s, exit 0, 2026-10-02 09:55 CST",
+  "runtimeReadiness": "blocked",
+  "runtimeBlockers": [
+    "new release qualification and formal signing not yet verified",
+    "current formal authorization and installation migration not established",
+    "natural provider and business outcome not verified"
+  ],
+  "note": "Candidate source and contract tests only; not a Model Eval, formal signed release, active installation, natural business chain, or production readiness."
+}
