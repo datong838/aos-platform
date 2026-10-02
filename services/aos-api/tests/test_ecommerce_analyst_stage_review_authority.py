@@ -60,6 +60,38 @@ def test_resolution_receipt_for_another_subject_cannot_authorize_plan_slot():
                 WHERE org_id=%s AND project_id=%s''',SCOPE.key).fetchone()['n']==before
 
 
+def test_revoked_human_membership_blocks_unexpired_resolution_plan_freeze():
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            conn.execute('''INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES(%s,%s,%s,'member') ON CONFLICT DO NOTHING''',(*SCOPE.key,ACTOR))
+            factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE)
+            receipt=AipAssigneeResolutionStore(factory).resolve(
+                SCOPE,
+                ResolveAssigneeRequest(subjectId='analyst.portrait.review',assignee=slot().assignee),
+                ACTOR,now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+            assert receipt.status.value=='resolved'
+            owner=AipProductionContractStore(factory,responsibility_template_resolver=lambda scope,ref:True)
+            draft=owner.create_responsibility_plan(SCOPE,ACTOR,f'pre-revoke-{uuid4().hex[:10]}',
+                CreateResponsibilityPlanRequest(profile='TEST_HUMAN_REVIEW',
+                    templateRef=dict(resourceType='ResponsibilityTemplateRevision',resourceId='test-template',revision=1,contentHash='a'*64),
+                    slots=[slot(assigneeResolutionReceiptId=receipt.receipt_id)]))
+            assert draft.readiness.value=='ready'
+            conn.execute('DELETE FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',
+                (*SCOPE.key,ACTOR))
+            current=owner.get_responsibility_plan(SCOPE,draft.plan_id,draft.revision,conn=conn)
+            assert current.readiness.value=='blocked'
+            assert 'ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED' in current.blockers[0].message
+            with pytest.raises(ProductionContractDependencyBlocked,match='ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED'):
+                owner.freeze_responsibility_plan(SCOPE,ACTOR,draft.plan_id,draft.version,
+                    f'freeze-after-revoke-{uuid4().hex[:10]}')
+            assert conn.execute('''SELECT current_revision AS revision FROM aip_responsibility_plan_head
+                WHERE org_id=%s AND project_id=%s AND plan_id=%s''',(*SCOPE.key,draft.plan_id)).fetchone()['revision']==draft.revision
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
+                  AND result_ref->>'resourceId'=%s''',(*SCOPE.key,draft.plan_id)).fetchone()['n']==0
+
+
 @pytest.mark.parametrize('kind',['agent_instance','tool_binding','provider_capability_binding'])
 def test_machine_still_requires_capability(kind):
     with pytest.raises(ValueError,match='non-human responsibilities require'):slot(assignee=dict(kind=kind,resourceId='machine',version=1))
@@ -107,7 +139,11 @@ def test_actual_human_resolution_and_frozen_plan_current_checks():
                 with pytest.raises((ValueError,RuntimeError)):check(conn,ref,**args)
         with connect(SCOPE) as conn:
             conn.execute('DELETE FROM meta_membership WHERE org_id=%s AND project_id=%s AND subject=%s',(*SCOPE.key,ACTOR))
-            with pytest.raises(ValueError,match='tenant member'):check(conn,ref)
+            owner=AipProductionContractStore(TransactionBoundConnectFactory(HostTransaction(conn),SCOPE))
+            current=owner.get_responsibility_plan(SCOPE,ref.resource_id,ref.revision,conn=conn)
+            assert current.readiness.value=='blocked'
+            assert 'ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED' in current.blockers[0].message
+            with pytest.raises(ValueError,match='responsibility plan is stale'):check(conn,ref)
 
 
 @pytest.mark.parametrize('field',['expires_at','snapshot_hash','content_hash'])

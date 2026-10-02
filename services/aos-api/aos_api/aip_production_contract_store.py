@@ -6137,6 +6137,14 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked(
                 f"ASSIGNEE_RESOLUTION_SELECTION_DRIFTED:{slot_id}"
             )
+        if assignee.kind.value == "human_principal" and conn.execute(
+            """SELECT 1 FROM meta_membership
+                WHERE org_id=%s AND project_id=%s AND subject=%s""",
+            (*scope.key, assignee.resource_id),
+        ).fetchone() is None:
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED:{slot_id}"
+            )
         capabilities = self._load(row["required_capability_refs"]) or []
         resolved_ids = {
             item.get("assetId")
