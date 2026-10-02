@@ -9,12 +9,14 @@ from contextlib import contextmanager
 import importlib.util
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 
@@ -94,6 +96,20 @@ from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeed
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
 
+GROWTH_ROOT = Path(__file__).resolve().parents[4] / "bundles/solutions/ecommerce-growth/backend"
+SDK_ROOT = Path(__file__).resolve().parents[4] / "packages/aos-extension-sdk/python"
+for dependency in (SDK_ROOT, GROWTH_ROOT):
+    if str(dependency) not in sys.path:
+        sys.path.insert(0, str(dependency))
+from ecommerce_growth.content_artifact_review import ReadableContentArtifact
+
+
+def _code_migration_head():
+    root = Path(__file__).resolve().parents[2]
+    cfg = Config(str(root / "alembic.ini"))
+    cfg.set_main_option("script_location", str(root / "alembic"))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
 
 def _upgrade_test_clone_to_head(connect):
     """Upgrade only the exact disposable clone, never the current business DB."""
@@ -115,7 +131,7 @@ def _upgrade_test_clone_to_head(connect):
     finally:
         engine.dispose()
     with connect(SCOPE) as conn:
-        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_111"
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == _code_migration_head()
         assert conn.execute("SELECT to_regprocedure(%s) AS procedure",
             ("public.extension_dispatch_lock_group_a0v_028(uuid)",)).fetchone()["procedure"] is not None
 
@@ -272,7 +288,7 @@ def _seed_original_run_and_budget(connect, *, eval_gate=None):
     proposal_hash = canonical_hash(stable)
     with connect(SCOPE) as conn:
         assert conn.info.dbname.startswith("a0v_growth_graph_test_")
-        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == "a0v_111"
+        assert conn.execute("SELECT version_num FROM alembic_version").fetchone()["version_num"] == _code_migration_head()
         assert conn.execute("""SELECT count(*) AS n FROM pg_trigger
             WHERE tgrelid='public.aip_budget_revision'::regclass
               AND tgname='aip_budget_active_insert_guard'""").fetchone()["n"] == 1
@@ -373,7 +389,8 @@ def _seed_formal_brief_sources(connect, proof, command):
     return command
 
 
-def _seed_current_command_receipt(connect, proof, *, formal_brief_sources=False):
+def _seed_current_command_receipt(connect, proof, *, formal_brief_sources=False,
+                                  accepted_stage_source=False):
     """Only an isolated installation; use the formal immutable Receipt owner."""
     fixture_path = Path(__file__).resolve().parents[1] / "aip/test_aip_budget_reservation_pg.py"
     spec = importlib.util.spec_from_file_location("content_budget_command_fixture", fixture_path)
@@ -383,6 +400,25 @@ def _seed_current_command_receipt(connect, proof, *, formal_brief_sources=False)
     command = module.content_generate_command(proof["request"])
     if formal_brief_sources:
         command = _seed_formal_brief_sources(connect, proof, command)
+    if accepted_stage_source:
+        assert not formal_brief_sources
+        source_id = AipTaskStore(connect).record_artifact(
+            SCOPE, proof["run_id"], "fixture", "ecommerce_analysis_source",
+            {"metadata": {"sourceKind": "controlled_test_stage_source"}},
+        )
+        with connect(SCOPE) as conn:
+            source = conn.execute(
+                "SELECT content_hash FROM aip_artifact WHERE org_id=%s AND project_id=%s AND artifact_id=%s",
+                (*SCOPE.key, source_id),
+            ).fetchone()
+        command["sourceKind"] = "accepted-stage-v1"
+        command["sourceArtifactRefs"] = [{
+            "resourceType": "Artifact", "resourceId": source_id, "revision": 1,
+            "contentHash": "sha256:" + source["content_hash"],
+        }]
+        command["requestHash"] = _analysis_command_hash(
+            {key: value for key, value in command.items() if key != "requestHash"}
+        )
     reservation_id = proof["reservation"].reservation_ref.resource_id
     journal = ContentExecutionJournal()
     with connect(SCOPE) as conn:
@@ -489,11 +525,36 @@ def _run_controlled_result_and_consume(connect, proof, command, *, consume=True)
         return consumer
     with connect(SCOPE) as conn:
         consumed = consumer.consume(conn, SCOPE, reservation_id)
+    if "sourceKind" not in command:
+        assert "sourceKind" not in consumed["artifact"]
     with connect(SCOPE) as conn:
         replay = consumer.consume(conn, SCOPE, reservation_id)
     assert replay["reservation"].replayed
     assert replay["artifact"] == consumed["artifact"]
     return consumed
+
+
+def test_accepted_stage_result_keeps_original_source_in_readable_artifact():
+    with disposable_database() as connect:
+        _upgrade_test_clone_to_head(connect)
+        proof = _seed_original_run_and_budget(connect)
+        command = _seed_current_command_receipt(connect, proof, accepted_stage_source=True)
+        consumed = _run_controlled_result_and_consume(connect, proof, command)
+        artifact = consumed["artifact"]
+        assert artifact["sourceKind"] == "accepted-stage-v1"
+        assert artifact["sourceArtifactRefs"] == command["sourceArtifactRefs"]
+        parsed = ReadableContentArtifact.from_payload(artifact)
+        assert parsed.source_kind == "accepted-stage-v1"
+        with connect(SCOPE) as conn:
+            row = conn.execute(
+                "SELECT content_hash,metadata FROM aip_artifact "
+                "WHERE org_id=%s AND project_id=%s AND artifact_id=%s",
+                (*SCOPE.key, artifact["artifactRef"]["resourceId"]),
+            ).fetchone()
+        assert row["metadata"]["ecommerceGrowthContentArtifact"] == artifact
+        assert row["content_hash"] == canonical_hash({
+            key: value for key, value in artifact.items() if key != "artifactRef"
+        })
 
 
 def test_original_content_run_can_hold_formal_budget_in_one_full_database():

@@ -10,6 +10,7 @@ from aos_api.ecommerce_content_usage import ContentUsageRecorder
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
     ContentGenerateHostService, TransactionBoundConnectFactory, _content_business_text,
+    _strict_content_generate_command,
 )
 
 
@@ -44,12 +45,19 @@ class ContentResultConsumer:
                 if type(values) is not list or not 1<=len(values)<=limit or any(type(v) is not str for v in values) or len(set(values))!=len(values):
                     raise ContentExecutionConflict('business context values drifted')
                 for value in values: _content_business_text(value,name=name,limit=300)
+            source_kind=command.get('sourceKind')
+            if source_kind is not None:
+                if source_kind != 'accepted-stage-v1':
+                    raise ContentExecutionConflict('content source kind is unsupported')
+                _strict_content_generate_command(command)
             authorities=command['authorityRefs']
             artifact={
                 'taskRef':authorities['task'],'briefRef':authorities['brief'],'growthPlanRef':authorities['growth_plan'],
                 'sourceArtifactRefs':command['sourceArtifactRefs'],'factSourceRefs':command['factSourceRefs'],
                 'body':body,**{k:context[k] for k in ('productNames','channels','constraintChecks')},
             }
+            if source_kind == 'accepted-stage-v1':
+                artifact['sourceKind']=source_kind
             digest=canonical_hash(artifact)
             artifact_id='artifact-'+hashlib.sha256(str(row['invocation_id']).encode()).hexdigest()[:20]
             artifact_ref={'resourceType':'ArtifactRevision','resourceId':artifact_id,'revision':1,'contentHash':'sha256:'+digest}
