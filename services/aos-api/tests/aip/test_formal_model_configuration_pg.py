@@ -122,6 +122,36 @@ def test_signed_configuration_is_readable_and_missing_eval_health_remain_blocked
                 item.model_copy(update={'lifecycle':ModelRuntimeLifecycle.ACTIVE}),expected_version=1)
 
 
+def test_original_active_runtime_policy_reaches_candidate_reader_without_model_execution(configuration):
+    from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
+    from aos_api.tenant_scope import TenantScope
+    from tests.aip.test_network_consumer_boundary_pg import isolated_owner
+
+    maker, _, route, _, _, _ = configuration
+    other = TenantScope('dev-org', 'dev-project')
+    store = AipModelRuntimeStore()
+    policy = store.get_policy(SCOPE, route.runtime_policy_ref.asset_id)
+    with isolated_owner() as conn:
+        before = read_candidates(conn, SCOPE).counts
+        other_before = read_candidates(conn, other).counts
+    active = policy.model_copy(update={'revision': 2, 'lifecycle': ModelRuntimeLifecycle.ACTIVE,
+                                       'kill_switch_enabled': False})
+    body = active.model_dump(mode='json', by_alias=True)
+    active.content_hash = canonical_hash({key: value for key, value in body.items()
+                                          if key not in store._META_FIELDS})
+    store.publish_policy(SCOPE, maker.subject, 'activate-policy-'+uuid4().hex,
+                         active, expected_version=1)
+    with isolated_owner() as conn:
+        after = read_candidates(conn, SCOPE).counts
+        assert read_candidates(conn, other).counts == other_before
+    assert after['runtime_policies'] == before['runtime_policies'] + 1
+    assert {key: value for key, value in after.items() if key != 'runtime_policies'} == {
+        key: value for key, value in before.items() if key != 'runtime_policies'}
+    resolution = AipModelRuntimeResolver().resolve(SCOPE, route.route_id)
+    assert resolution.readiness.value == 'blocked'
+    assert resolution.selected_model is None
+
+
 def test_eval_candidates_are_exact_next_active_refs_and_never_execute(configuration):
     _,model,route,_,client,headers=configuration
     with connect(SCOPE) as conn:
