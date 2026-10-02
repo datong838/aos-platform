@@ -12,3 +12,5 @@
 | 测试 | `pytest -q tests/aip/test_e17_s3oi_registry_issuer_pg.py tests/aip/test_aip_agent_registry_store.py --tb=short` → exit0，8 passed/7 warnings；`py_compile`、目标 diff check exit0。|
 
 方案/代码一致性：原 `AipAgentRegistryStore` 的幂等、hash、状态转移、CAS 与 Receipt 同事务算法未改，只注入独立连接；新模块不自动加入 API/Host。Skill/Capability/Tool 同事务 Registry 写路尚未以此身份验证；当前原库 `aos_runtime` 的 Registry 直写依旧为 strict xfail，正式 OIDC/凭证、当前迁移/切换和六绑定/八配置/Host/自然首链仍未完成。下一波先补该 issuer 的 Skill/Capability 原 Store 兼容与权限边界，再另波做可恢复的当前 ACL 迁移。
+
+代码提交后原签名预检 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，代码/库头135、安装 approved、runtimeBindings0；独立全备 SHA256 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0` 再一致。仅重载原 launchd API 至 PID42664；健康/就绪/OpenAPI/Web200，PG18435/Web8434持续、18181无监听。此为局部 API 重载，非本波全栈重启。
