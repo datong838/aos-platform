@@ -6748,6 +6748,8 @@ class ContentReviewHostService:
             self._accepted_stage_task_brief_authority(
                 transaction, scope, command, checked_at=checked_at,
             )
+            self._issue_authority(transaction, scope, command)
+            self._reviewer_authority(transaction, scope, command)
             if _request_hash(artifact["growthPlanRef"]) != _request_hash(command["growthPlanRef"]):
                 raise ValueError("content review GrowthPlan lineage drifted")
             raise ValueError("accepted stage content review Host is not wired")

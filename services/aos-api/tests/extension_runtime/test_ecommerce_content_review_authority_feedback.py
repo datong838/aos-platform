@@ -322,6 +322,14 @@ def test_accepted_stage_review_execution_stays_closed_before_database_effects(mo
         ContentReviewHostService, "_accepted_stage_task_brief_authority",
         staticmethod(lambda *_args, **kwargs: observed.append(kwargs["checked_at"])),
     )
+    monkeypatch.setattr(
+        ContentReviewHostService, "_issue_authority",
+        staticmethod(lambda *_args: observed.append("content-issue-eval-human-event")),
+    )
+    monkeypatch.setattr(
+        ContentReviewHostService, "_reviewer_authority",
+        staticmethod(lambda *_args: observed.append("independent-human-reviewer")),
+    )
     service = ContentReviewHostService()
     with pytest.raises(ValueError, match="dispatch operation drifted"):
         service.revalidate(transaction=NoDatabaseEffects(), scope=SCOPE,
@@ -331,13 +339,42 @@ def test_accepted_stage_review_execution_stays_closed_before_database_effects(mo
         service.revalidate(transaction=ReadCurrentTimeOnly(), scope=SCOPE,
                            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
                            command=item)
-    assert observed == [NOW]
+    assert observed == [NOW, "content-issue-eval-human-event", "independent-human-reviewer"]
     with pytest.raises(ValueError, match="Host is not wired"):
         service.execute(transaction=NoDatabaseEffects(), scope=SCOPE, dispatch_ref=None,
                         command=item, checked_at=NOW, occurred_at=NOW)
     with pytest.raises(ValueError, match="Host is not wired"):
         service.verify_receipt(transaction=NoDatabaseEffects(), scope=SCOPE,
                                dispatch=None, command=item, receipt={})
+
+
+def test_accepted_stage_review_rejects_missing_content_issue_before_reviewer(monkeypatch):
+    item = command()
+    item["sourceKind"] = "accepted-stage-v1"
+    item["sourceArtifactRefs"] = [ref("Artifact", "original-stage-artifact")]
+    item["requestHash"] = _analysis_command_hash(
+        {name: value for name, value in item.items() if name != "requestHash"}
+    )
+
+    class CurrentReadOnly:
+        def execute(self, statement, *_args, **_kwargs):
+            if statement == "SELECT clock_timestamp() AS checked_at":
+                return Result({"checked_at": NOW})
+            assert "FROM public.aip_review_issue" in statement
+            return Result(None)
+
+    monkeypatch.setattr(ContentReviewHostService, "_artifact_authority",
+                        staticmethod(lambda *_args: artifact(item)))
+    monkeypatch.setattr(ContentReviewHostService, "_accepted_stage_task_brief_authority",
+                        staticmethod(lambda *_args, **_kwargs: "七夕会员复购内容策划"))
+    monkeypatch.setattr(ContentReviewHostService, "_reviewer_authority",
+                        staticmethod(lambda *_args: pytest.fail("reviewer reached before Issue")))
+    with pytest.raises(ValueError, match="ReviewIssue authority is missing"):
+        ContentReviewHostService().revalidate(
+            transaction=CurrentReadOnly(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
+            command=item,
+        )
 
 
 def test_reviewer_authority_is_one_current_ready_content_review_slot(monkeypatch):
