@@ -154,6 +154,53 @@ def preflight(*, signed_receipt: Path) -> tuple[dict[str, object], dict[str, obj
                         "signedRoot": str(signed_root), "trustRoots": str(trust_path)}
 
 
+def select_formal_current_release(
+    *, connect_factory, scope, installation_id, expected_generation,
+    release_policy, loader, driver, platform,
+) -> dict[str, object]:
+    """Select exact current release evidence without granting API or Host start."""
+    from aos_api.extension_runtime.current_installation_release_evidence import (
+        CurrentReleaseEvidenceBlocked, read_current_runtime_image_evidence,
+    )
+
+    if getattr(scope, "key", None) != ("org-org", "dev-project"):
+        raise PreviewBlocked("FORMAL_SCOPE_INVALID")
+    try:
+        view = read_current_runtime_image_evidence(
+            connect_factory=connect_factory, scope=scope,
+            installation_id=installation_id, expected_generation=expected_generation,
+            release_policy=release_policy, loader=loader, driver=driver,
+            platform=platform,
+        )
+    except CurrentReleaseEvidenceBlocked:
+        raise PreviewBlocked("FORMAL_RELEASE_EVIDENCE_INVALID") from None
+    if view.schema_head != _code_schema_head():
+        raise PreviewBlocked("FORMAL_CODE_SCHEMA_DRIFT")
+    growth = [item for item in view.release_evidence.releases
+              if item.publisher == "aos" and item.bundle_id == "solution.ecommerce.growth"]
+    if len(growth) != 1 or growth[0].version != "1.13.0":
+        raise PreviewBlocked("FORMAL_GROWTH_RELEASE_MISSING")
+    if (view.authorization != "EVIDENCE_ONLY_NO_START"
+            or len(view.images) != len(view.release_evidence.runtime_members)
+            or {item.bundle_id for item in view.images} != set(view.release_evidence.runtime_members)):
+        raise PreviewBlocked("FORMAL_RUNTIME_EVIDENCE_INVALID")
+    return {
+        "installationId": view.release_evidence.installation_id,
+        "installationRevision": view.release_evidence.current_revision,
+        "etagVersion": view.release_evidence.etag_version,
+        "lockHash": view.release_evidence.lock_hash,
+        "growthVersion": growth[0].version,
+        "growthContentHash": growth[0].content_hash,
+        "bindingGeneration": view.binding_generation,
+        "bindingRevision": view.binding_revision,
+        "schemaHead": view.schema_head,
+        "images": [dict(bundleId=item.bundle_id, version=item.version,
+                        imageDigest=item.image_digest, configDigest=item.config_digest)
+                   for item in view.images],
+        "authorization": "PREFLIGHT_ONLY_NO_RUNTIME_START",
+    }
+
+
 def _port_free(port: int) -> bool:
     result = subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN"],
                             capture_output=True, timeout=5, check=False)

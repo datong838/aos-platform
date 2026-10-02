@@ -320,11 +320,42 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 assert {item.bundle_id for item in runtime_view.images} == set(runtime_view.release_evidence.runtime_members)
                 assert all(item.image_digest.startswith('sha256:') and item.config_digest.startswith('sha256:')
                            for item in runtime_view.images)
+                preview = _load_script('a0v_current_preview_http.py')
+                formal = preview.select_formal_current_release(
+                    connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                    scope=SCOPE, installation_id=installed['installationId'],
+                    expected_generation=str(binding['generation']), release_policy=policy,
+                    loader=loader, driver=OciDriver(context=context), platform='linux/arm64',
+                )
+                assert formal['authorization'] == 'PREFLIGHT_ONLY_NO_RUNTIME_START'
+                assert formal['installationId'] == installed['installationId']
+                assert formal['growthVersion'] == '1.13.0'
+                assert formal['bindingGeneration'] == str(binding['generation'])
+                assert formal['schemaHead'] == 'a0v_135'
+                assert len(formal['images']) == 3
+                with pytest.raises(preview.PreviewBlocked, match='FORMAL_RELEASE_EVIDENCE_INVALID'):
+                    preview.select_formal_current_release(
+                        connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                        scope=SCOPE, installation_id=installed['installationId'],
+                        expected_generation='00000000-0000-0000-0000-000000000000',
+                        release_policy=policy, loader=loader,
+                        driver=OciDriver(context=context), platform='linux/arm64',
+                    )
                 with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_GENERATION_MISMATCH'):
                     read_current_runtime_image_evidence(
                         connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
                         scope=SCOPE, installation_id=installed['installationId'],
                         expected_generation='00000000-0000-0000-0000-000000000000',
+                        release_policy=policy, loader=loader,
+                        driver=OciDriver(context=context), platform='linux/arm64',
+                    )
+            else:
+                preview = _load_script('a0v_current_preview_http.py')
+                with pytest.raises(preview.PreviewBlocked, match='FORMAL_GROWTH_RELEASE_MISSING'):
+                    preview.select_formal_current_release(
+                        connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                        scope=SCOPE, installation_id=installed['installationId'],
+                        expected_generation=str(binding['generation']),
                         release_policy=policy, loader=loader,
                         driver=OciDriver(context=context), platform='linux/arm64',
                     )

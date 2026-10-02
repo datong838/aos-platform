@@ -70,6 +70,24 @@ def test_current_signed_installation_is_evidence_only():
         )
 
 
+def test_current_approved_preview_cannot_select_formal_runtime():
+    connect, policy, loader, report = _current_inputs()
+    spec = importlib.util.spec_from_file_location(
+        "current_preview_for_formal_selector", ROOT / "scripts/a0v_current_preview_http.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    with pytest.raises(module.PreviewBlocked, match="FORMAL_RELEASE_EVIDENCE_INVALID"):
+        module.select_formal_current_release(
+            connect_factory=connect, scope=TenantScope("org-org", "dev-project"),
+            installation_id=report["installationId"],
+            expected_generation="00000000-0000-0000-0000-000000000000",
+            release_policy=policy, loader=loader,
+            driver=OciDriver(context="colima-aos-extension"), platform="linux/arm64",
+        )
+
+
 def test_other_tenant_cannot_read_installation():
     connect, policy, loader, report = _current_inputs()
     with pytest.raises(CurrentReleaseEvidenceBlocked, match="INSTALLATION_MISSING"):

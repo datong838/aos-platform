@@ -14,3 +14,7 @@
 ## 验证/停止线
 
 先 RED，逐项最小实现；专项、旧 preview、旧 Growth1.12、相邻 Host/发行测试串行执行。当前库只读，不用 test-only signer/credential/假账号，不读商城源、不重放旧12 Run、不手工 Run、不碰230 L0。若发现正式 selector 需新的实质身份协议，先完成已授权且独立的拒绝路径，记录精确缺口并转 D-waves 已登记 d2b3c4f 原持久 Review Receipt 主线。当前 API/Host/worker/Provider 不因 RED 或本地正例放行。
+
+## 实施切片与新发现
+
+本波先完成 b1：在既有脚本加可调用、无副作用的版本感知 selector，并以原 1.13 producer 的同代 PG+OCI 和当前 approved 四旧包做正反例。它是后续正式 API/Host 的共同输入，结果固定 `PREFLIGHT_ONLY_NO_RUNTIME_START`。实际 `--serve-limited` 与 Host CLI 接线列 b2：当前没有可核验的正式 trust/root 来源、OIDC、API/Directory/Runtime/Web 凭据及精确 Owner；若直接把任意路径上的本地 trust 文件当作正式来源，会把 test-only 签名升格。b2 须先在输入合同中固定正式来源与三身份，再用原 producer 证据接线，保留 pinned `--serve`，不能只改命令行开关。
