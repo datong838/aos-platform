@@ -23,6 +23,29 @@ def totals(saved):
         return c.execute("SELECT count(*) AS n FROM aip_model_governance_policy_receipt WHERE operation='budget_cost.configure' AND idempotency_key=%s",(saved['proposalId'],)).fetchone()['n']
 
 
+def test_signed_budget_pair_reaches_runtime_candidate_reader_without_other_authority(
+        caller, issuer_factory, https_signer):
+    from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
+    from aos_api.tenant_scope import TenantScope
+
+    other = TenantScope('dev-org', 'dev-project')
+    _, _, _, saved, decision = approved(issuer_factory, https_signer)
+    with isolated_owner() as conn:
+        before = read_candidates(conn, SCOPE).counts
+        other_before = read_candidates(conn, other).counts
+    with caller() as conn:
+        consume(conn, saved, decision)
+        configured = derive(conn, saved, decision)
+    assert configured['activationEligible'] is False
+    with isolated_owner() as conn:
+        after = read_candidates(conn, SCOPE).counts
+        assert read_candidates(conn, other).counts == other_before
+    assert after['budgets'] == before['budgets'] + 1
+    assert after['budget_policies'] == before['budget_policies'] + 1
+    assert {key: value for key, value in after.items() if key not in {'budgets', 'budget_policies'}} == {
+        key: value for key, value in before.items() if key not in {'budgets', 'budget_policies'}}
+
+
 def test_derived_pair_is_atomic_exact_and_idempotent(caller,issuer_factory,https_signer):
     _,_,p,saved,d=approved(issuer_factory,https_signer)
     with caller() as c:consume(c,saved,d)
