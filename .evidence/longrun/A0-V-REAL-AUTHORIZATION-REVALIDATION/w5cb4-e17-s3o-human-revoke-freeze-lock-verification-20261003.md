@@ -21,3 +21,7 @@
 ## 边界与下波
 
 行锁只保障 Plan create/revise/freeze 写事务的真人成员检查到提交之间不被并发删除；GET/list 继续只读判断，提交后的撤销会让 Plan 重新 BLOCKED。角色/ABAC/容量、机器 Binding 撤销当前性、Receipt 独立签发 ACL、旧 RETURN 正向冲突、六正式绑定、八配置与自然首链均未由本波证明。不能因这次隔离 GREEN 启动 Host。
+
+## 提交后当前实例回读
+
+`m1@7aa1f48f`、Authority `AOS-001186` 后，原签名启动器预检 exit0：`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、库 `aos_current_preview_20260927@a0v_135`、安装 approved、publishedVersions4/runtimeBindings0；本日完整备份 SHA256 再核 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0`。原 launchd API `bootout` exit0，确认8080退出后同 plist `bootstrap` exit0；新 PID36810，PG18435/Web31986/8434保持，18181无监听。`/v1/health`、`/v1/ready`、OpenAPI 与页面均 HTTP200，启动日志 `migrationMode=disabled`、`runtimeHost=0`、`workersEnabled=0`。CUA 在 org-org/dev-project 的技能发布页回读37已评测/0发布、三项来源 blocker、发布按钮 disabled、无电商工作台入口并截图；未对当前真实库执行 Plan/freeze。
