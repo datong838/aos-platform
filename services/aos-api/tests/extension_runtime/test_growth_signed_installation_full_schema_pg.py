@@ -36,7 +36,8 @@ from aos_api.aip_responsibility_template_authority import (
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
 from aos_api.auth import Principal
 from aos_api.aip_production_contract_store import (
-    ProductionContractConflict, ProductionContractIdempotencyConflict,
+    ProductionContractConflict, ProductionContractDependencyBlocked,
+    ProductionContractIdempotencyConflict,
     ProductionContractNotFound, SignedBIPlanRebindReceiptReader,
 )
 from aos_api.ecommerce_business_investigation_aip_authority import (
@@ -390,6 +391,51 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             assert readback.original_preparation_verified is True
             assert readback.plan_revision_verified is True
             assert readback.current_admission_verified is False
+            from aos_api.ecommerce_business_investigation_aip_authority import (
+                SignedBIPlanActiveFreezeService,
+            )
+            freeze_key = f'test-growth-{growth_version}-bi-plan-freeze'
+            freeze_service = SignedBIPlanActiveFreezeService(
+                connect_factory=connect, active_resolver=active_resolver,
+            )
+            freeze_args = dict(
+                installation_id=installed['installationId'],
+                plan_id=rebound.plan_id, rebind_key=rebind_key,
+                expected_etag_version=verified.etag_version,
+                expected_plan_version=rebound.version,
+                principal=principal, idempotency_key=freeze_key,
+            )
+            with pytest.raises(ProductionContractDependencyBlocked, match='SKILL_BINDING_NOT_ACTIVE'):
+                freeze_service.freeze(SCOPE, **freeze_args)
+            with pytest.raises(ProductionContractNotFound, match='rebind receipt'):
+                freeze_service.freeze(SCOPE, **{**freeze_args, 'rebind_key': f'{rebind_key}-missing'})
+            with pytest.raises(RevisionConflictError):
+                freeze_service.freeze(SCOPE, **{
+                    **freeze_args, 'expected_etag_version': verified.etag_version + 1})
+            with pytest.raises(ProductionContractConflict, match='signed active'):
+                SignedBIPlanActiveFreezeService(
+                    connect_factory=connect,
+                    active_resolver=ActiveBIBusinessResolver(
+                        connect_factory=connect, registry_connect_factory=connect,
+                        release_root=signed['signed_tree'],
+                        trust_roots=FrozenTrustRootProvider({}),
+                        source_alias=signed['source_alias'],
+                    ),
+                ).freeze(SCOPE, **freeze_args)
+            with pytest.raises(PermissionError, match='formal authenticated actor'):
+                freeze_service.freeze(SCOPE, **{**freeze_args, 'principal': Principal(
+                    subject='test-author', org_id=SCOPE.org_id,
+                    project_id=SCOPE.project_id, roles=['admin'], token_kind='dev')})
+            with pytest.raises(PermissionError, match='formal authenticated actor'):
+                freeze_service.freeze(TenantScope('dev-org', 'dev-project'), **freeze_args)
+            with connect(SCOPE) as conn:
+                assert conn.execute("""SELECT count(*) AS n FROM aip_production_contract_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='bi_responsibility_plan.freeze'
+                      AND idempotency_key=%s""", (*SCOPE.key, freeze_key)).fetchone()['n'] == 0
+                assert conn.execute("""SELECT current_revision FROM aip_responsibility_plan_head
+                    WHERE org_id=%s AND project_id=%s AND plan_id=%s""",
+                    (*SCOPE.key, rebound.plan_id)).fetchone()['current_revision'] == rebound.revision
             with pytest.raises(ProductionContractNotFound):
                 SignedBIPlanRebindReceiptReader(
                     connect_factory=connect_read_only,

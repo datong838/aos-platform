@@ -405,6 +405,28 @@ def _require_bi_rebind_binding(
     return value
 
 
+def _require_bi_freeze_binding(value: Any, actor: str) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {
+        "installationId", "installationETag", "rebindReceiptId", "draftPlanRef", "actor",
+    }:
+        raise ProductionContractConflict("exact BI freeze binding required")
+    try:
+        canonical_id = str(uuid.UUID(value["installationId"]))
+        draft_ref = ExactRevisionRef.model_validate(value["draftPlanRef"])
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ProductionContractConflict("exact BI freeze binding required") from exc
+    if (canonical_id != value["installationId"]
+            or type(value["installationETag"]) is not int
+            or value["installationETag"] < 1
+            or type(value["rebindReceiptId"]) is not str
+            or not value["rebindReceiptId"].strip()
+            or value["rebindReceiptId"] != value["rebindReceiptId"].strip()
+            or draft_ref.resource_type != "ResponsibilityPlanRevision"
+            or value["actor"] != actor):
+        raise ProductionContractConflict("exact BI freeze binding required")
+    return value
+
+
 def compute_action_binding_hash(
     *,
     org_id: str,
@@ -668,27 +690,49 @@ class AipProductionContractStore:
 
     def freeze_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    expected_version: int, key: str) -> ResponsibilityPlanRevision:
-        request_hash = canonical_hash({"planId": plan_id, "expectedVersion": expected_version})
         with self._connect_factory(scope) as conn:
-            replay = self._replay(conn, scope, "responsibility_plan.freeze", key, request_hash)
-            if replay:
-                return self.get_responsibility_plan(scope, plan_id, int(replay["revision"]), conn=conn)
-            head = self._head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id)
-            if not head:
-                raise ProductionContractNotFound("responsibility plan not found")
-            if int(head["version"]) != expected_version:
-                raise ProductionContractConflict("stale responsibility plan version")
-            current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
-            if current.lifecycle is not BriefLifecycle.DRAFT:
-                raise ProductionContractConflict("responsibility plan is not a draft")
-            self._require_responsibility_dependencies(
-                conn, scope, current, existing_plan_id=plan_id
-            )
-            if current.readiness is not ContractReadiness.READY:
-                codes = ",".join(blocker.code for blocker in current.blockers)
-                raise ProductionContractDependencyBlocked(f"RESPONSIBILITY_PLAN_NOT_READY:{codes}")
-            revision = int(head["current_revision"]) + 1
-            row = conn.execute("""INSERT INTO aip_responsibility_plan_revision
+            result = self.freeze_responsibility_plan_in_transaction(
+                conn, scope, actor, plan_id, expected_version, key)
+            conn.commit()
+            return result
+
+    def freeze_responsibility_plan_in_transaction(
+        self, conn: Any, scope: TenantScope, actor: str, plan_id: str,
+        expected_version: int, key: str, *,
+        operation: str = "responsibility_plan.freeze",
+        request_context: dict[str, Any] | None = None,
+    ) -> ResponsibilityPlanRevision:
+        if operation == "responsibility_plan.freeze":
+            if request_context is not None:
+                raise ProductionContractConflict("generic Plan freeze cannot carry installation context")
+            binding = None
+        elif operation == "bi_responsibility_plan.freeze":
+            binding = _require_bi_freeze_binding(request_context, actor)
+        else:
+            raise ProductionContractConflict("unsupported Plan freeze operation")
+        request_hash = canonical_hash(
+            {"planId": plan_id, "expectedVersion": expected_version}
+            if binding is None else
+            {"planId": plan_id, "expectedVersion": expected_version, "context": binding})
+        replay = self._replay(conn, scope, operation, key, request_hash)
+        if replay:
+            return self.get_responsibility_plan(scope, plan_id, int(replay["revision"]), conn=conn)
+        head = self._head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id)
+        if not head:
+            raise ProductionContractNotFound("responsibility plan not found")
+        if int(head["version"]) != expected_version:
+            raise ProductionContractConflict("stale responsibility plan version")
+        current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
+        if current.lifecycle is not BriefLifecycle.DRAFT:
+            raise ProductionContractConflict("responsibility plan is not a draft")
+        self._require_responsibility_dependencies(
+            conn, scope, current, existing_plan_id=plan_id
+        )
+        if current.readiness is not ContractReadiness.READY:
+            codes = ",".join(blocker.code for blocker in current.blockers)
+            raise ProductionContractDependencyBlocked(f"RESPONSIBILITY_PLAN_NOT_READY:{codes}")
+        revision = int(head["current_revision"]) + 1
+        row = conn.execute("""INSERT INTO aip_responsibility_plan_revision
                 (org_id,project_id,plan_id,revision,profile,template_ref,slots,merge_decisions,
                  profile_recommendation_ref,profile_confirmation_id,merge_policy_ref,
                  merge_decision_receipt_ids,
@@ -698,12 +742,14 @@ class AipProductionContractStore:
                  merge_decision_receipt_ids,
                  content_hash,'frozen',%s FROM aip_responsibility_plan_revision
                 WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s RETURNING *""",
-                (revision, actor, *scope.key, plan_id, head["current_revision"])).fetchone()
-            self._advance_head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id, revision)
-            self._receipt(conn, scope, "responsibility_plan.freeze", key, request_hash,
-                {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,"revision":revision,"contentHash":row["content_hash"]}, actor)
-            conn.commit()
-            return self._responsibility_plan(scope, row, expected_version + 1, conn)
+            (revision, actor, *scope.key, plan_id, head["current_revision"])).fetchone()
+        self._advance_head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id, revision)
+        result_ref = {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,
+                      "revision":revision,"contentHash":row["content_hash"]}
+        if binding is not None:
+            result_ref["freezeBinding"] = binding
+        self._receipt(conn, scope, operation, key, request_hash, result_ref, actor)
+        return self._responsibility_plan(scope, row, expected_version + 1, conn)
 
     def get_responsibility_plan(self, scope: TenantScope, plan_id: str, revision: int | None = None,
                                 *, conn: Any | None = None) -> ResponsibilityPlanRevision:
