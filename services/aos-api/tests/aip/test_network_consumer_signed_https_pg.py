@@ -20,6 +20,8 @@ from aos_api.aip_network_consumer_auth import ConsumerAuthBlocked
 from aos_api.aip_network_consumer_connection import ConsumerDatabaseBlocked
 from aos_api.aip_network_consumer_contracts import NetworkConsumerCommand
 from aos_api.aip_network_consumer_service import consume_network_once, inquire_network
+from aos_api.db import connect
+from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
 from tests.aip.test_network_consumer_actor_pg import approved_args
 from tests.aip.test_network_consumer_connection_pg import private_passfile, live_test_config
 from tests.aip.test_network_consumer_boundary_pg import isolated_owner, SCOPE
@@ -39,6 +41,8 @@ def command_for(args, token):
 
 def test_signed_identity_consumes_and_refreshed_token_observes(private_passfile, tmp_path, https_signer):
     args, _ = approved_args()
+    with connect(SCOPE) as conn:
+        before = read_candidates(conn, SCOPE).counts
     sign, requests = https_signer
     command = command_for(args, sign(args[4]))
     attempts = tmp_path / 'attempts'
@@ -52,6 +56,11 @@ def test_signed_identity_consumes_and_refreshed_token_observes(private_passfile,
     assert len(requests) >= 3
     assert len(list(attempts.iterdir())) == 1
     assert counts(args[2]) == (1, 1, 1)
+    with connect(SCOPE) as conn:
+        after = read_candidates(conn, SCOPE).counts
+    assert after['network_policies'] == before['network_policies'] + 1
+    for field in set(before) - {'network_policies'}:
+        assert after[field] == before[field]
 
 
 @pytest.mark.parametrize('bad', ['expired', 'no_exp', 'wrong_signature', 'wrong_audience', 'cross_tenant', 'wrong_actor'])
