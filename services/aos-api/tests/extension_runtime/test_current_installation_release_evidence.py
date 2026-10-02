@@ -15,7 +15,9 @@ from aos_api.asset_registry.signature import FrozenTrustRootProvider
 from aos_api.extension_runtime.current_installation_release_evidence import (
     CurrentReleaseEvidenceBlocked,
     read_current_installation_release_evidence,
+    read_current_runtime_image_evidence,
 )
+from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.tenant_scope import TenantScope
 
 
@@ -57,6 +59,15 @@ def test_current_signed_installation_is_evidence_only():
     assert len(view.releases) == report["publishedVersions"]
     assert any(item.bundle_id == "solution.ecommerce.growth" for item in view.releases)
     assert not hasattr(view, "ready") and not hasattr(view, "enabled")
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="INSTALLATION_NOT_ACTIVE"):
+        read_current_runtime_image_evidence(
+            connect_factory=connect,
+            scope=TenantScope("org-org", "dev-project"),
+            installation_id=report["installationId"],
+            expected_generation="00000000-0000-0000-0000-000000000000",
+            release_policy=policy, loader=loader,
+            driver=OciDriver(context="colima-aos-extension"), platform="linux/arm64",
+        )
 
 
 def test_other_tenant_cannot_read_installation():

@@ -33,7 +33,11 @@ from aos_api.ecommerce_growth_registration_qualification import require_growth_r
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
-from aos_api.extension_runtime.current_installation_release_evidence import read_current_installation_release_evidence
+from aos_api.extension_runtime.current_installation_release_evidence import (
+    CurrentReleaseEvidenceBlocked,
+    read_current_installation_release_evidence,
+    read_current_runtime_image_evidence,
+)
 from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
 from aos_api.extension_runtime.preparation_worker import PreparationWorker
 from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
@@ -292,17 +296,48 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                     WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
                     (*SCOPE.key, installed['installationId'])).fetchone()['n'] == 0
                 assert conn.execute("SELECT count(*) AS n FROM bundle_installation WHERE org_id='dev-org'").fetchone()['n'] == 0
+            if growth_version == '1.13.0':
+                view = read_current_installation_release_evidence(
+                    connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                    scope=SCOPE, installation_id=installed['installationId'],
+                    release_policy=policy, loader=loader,
+                )
+                assert view.authorization == 'EVIDENCE_ONLY_NO_START'
+                assert view.active_revision == view.current_revision
+                assert any(item.bundle_id == 'solution.ecommerce.growth'
+                           and item.version == '1.13.0' for item in view.releases)
+                runtime_view = read_current_runtime_image_evidence(
+                    connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                    scope=SCOPE, installation_id=installed['installationId'],
+                    expected_generation=str(binding['generation']), release_policy=policy,
+                    loader=loader, driver=OciDriver(context=context), platform='linux/arm64',
+                )
+                assert runtime_view.authorization == 'EVIDENCE_ONLY_NO_START'
+                assert runtime_view.release_evidence.active_revision == runtime_view.release_evidence.current_revision
+                assert runtime_view.binding_generation == str(binding['generation'])
+                assert runtime_view.schema_head == 'a0v_135'
+                assert len(runtime_view.images) == 3
+                assert {item.bundle_id for item in runtime_view.images} == set(runtime_view.release_evidence.runtime_members)
+                assert all(item.image_digest.startswith('sha256:') and item.config_digest.startswith('sha256:')
+                           for item in runtime_view.images)
+                with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_GENERATION_MISMATCH'):
+                    read_current_runtime_image_evidence(
+                        connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                        scope=SCOPE, installation_id=installed['installationId'],
+                        expected_generation='00000000-0000-0000-0000-000000000000',
+                        release_policy=policy, loader=loader,
+                        driver=OciDriver(context=context), platform='linux/arm64',
+                    )
+            return str(binding['generation'])
         finally:
             await job.stop()
-    asyncio.run(prepare_and_verify())
+    verified_generation = asyncio.run(prepare_and_verify())
     if growth_version == '1.13.0':
-        view = read_current_installation_release_evidence(
-            connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
-            scope=SCOPE, installation_id=installed['installationId'],
-            release_policy=policy, loader=loader,
-        )
-        assert view.authorization == 'EVIDENCE_ONLY_NO_START'
-        assert view.active_revision == view.current_revision
-        assert any(item.bundle_id == 'solution.ecommerce.growth'
-                   and item.version == '1.13.0' for item in view.releases)
+        with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_BINDING_DRIFT'):
+            read_current_runtime_image_evidence(
+                connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                scope=SCOPE, installation_id=installed['installationId'],
+                expected_generation=verified_generation, release_policy=policy,
+                loader=loader, driver=OciDriver(context=context), platform='linux/arm64',
+            )
     assert owned_containers() == before_containers
