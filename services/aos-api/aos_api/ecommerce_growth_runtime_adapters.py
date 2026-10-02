@@ -4484,6 +4484,41 @@ class ContentGenerateHostService:
         }
 
     @staticmethod
+    def _accepted_stage_owner_refs(*, transaction, scope, candidate):
+        """Rebuild Stage refs from the current original Owner, not a Receipt body."""
+        if type(candidate) is not dict or candidate.get("sourceKind") != "accepted-stage-v1":
+            raise ValueError("content generate Stage Owner candidate is invalid")
+        source = ReviewAdvanceHostService._revalidate_accepted_stage_source(
+            transaction=transaction, scope=scope, command=candidate,
+        )
+        decision = source.decision
+        approved = source.approved
+        expected = {
+            "growthPlanRef": {
+                "resourceType": "GrowthPlanRevision", "resourceId": approved.plan_id,
+                "revision": approved.revision, "contentHash": "sha256:" + approved.content_hash,
+            },
+            "stageDecisionRef": {
+                "resourceType": "AnalystStageDecisionRevision",
+                "resourceId": decision.decision_id, "revision": decision.revision,
+                "contentHash": decision.content_hash,
+            },
+            "stageTaskRunId": decision.task_run_id,
+            "stagePlanRef": decision.plan_ref.model_dump(mode="json", by_alias=True),
+            "stageAttemptRef": decision.stage_attempt_ref.model_dump(mode="json", by_alias=True),
+            "stageArtifactRef": decision.artifact_ref.model_dump(mode="json", by_alias=True),
+            "evalReportRef": {
+                **decision.eval_report_ref.model_dump(mode="json", by_alias=True),
+                "contentHash": "sha256:" + decision.eval_report_ref.content_hash,
+            },
+            "responsibilityPlanRef": decision.responsibility_plan_ref.model_dump(
+                mode="json", by_alias=True),
+        }
+        if any(candidate.get(name) != value for name, value in expected.items()):
+            raise ValueError("content generate Stage Owner exact source drifted")
+        return expected
+
+    @staticmethod
     def _review_receipt(transaction, scope, authorities, source_values, *,
                         source_kind="issue-review-v1", source_lineage=None):
         accepted_stage = source_kind == "accepted-stage-v1"

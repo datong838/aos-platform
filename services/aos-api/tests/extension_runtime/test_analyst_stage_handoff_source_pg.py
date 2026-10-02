@@ -20,7 +20,7 @@ from aos_api.ecommerce_analyst_stage_decision_store import AnalystStageDecisionS
 from aos_api.ecommerce_analyst_stage_handoff_source import read_approved_stage_handoff_source
 from aos_api.ecommerce_analyst_stage_review_command import read_stage_review_eval_source_authority
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, _case_ref, _occurrence_payload, _occurrence_ref
+from aos_api.ecommerce_growth_runtime_adapters import ContentGenerateHostService, ReviewAdvanceHostService, _case_ref, _occurrence_payload, _occurrence_ref
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_approval import plan
 from test_ecommerce_analyst_stage_decision import decision, ref
@@ -144,6 +144,29 @@ def test_review_host_reads_original_accepted_stage_owner_in_same_transaction(sou
             transaction=HostTransaction(conn), scope=SCOPE, command=command)
     assert result.decision == item
     assert result.approved.prior_ref == item.subject_ref
+
+
+def test_content_generate_rebuilds_stage_refs_from_original_owner(source):
+    _owner, _draft, item, args = source
+    candidate = {'sourceKind': 'accepted-stage-v1', **host_command(item, args)}
+    with connect(SCOPE) as conn:
+        conn.execute('SET LOCAL ROLE aos_runtime')
+        transaction = HostTransaction(conn)
+        expected = ContentGenerateHostService._accepted_stage_owner_refs(
+            transaction=transaction, scope=SCOPE, candidate=candidate)
+        assert expected['stageDecisionRef'] == candidate['stageDecisionRef']
+        assert expected['growthPlanRef'] == candidate['growthPlanRef']
+        assert expected['stageArtifactRef'] == candidate['stageArtifactRef']
+        assert expected['stageTaskRunId'] == item.task_run_id
+        drift = {**candidate, 'stageArtifactRef': {
+            **candidate['stageArtifactRef'], 'resourceId': 'other-artifact'}}
+        with pytest.raises(ValueError):
+            ContentGenerateHostService._accepted_stage_owner_refs(
+                transaction=transaction, scope=SCOPE, candidate=drift)
+        with pytest.raises(ValueError):
+            ContentGenerateHostService._accepted_stage_owner_refs(
+                transaction=transaction, scope=SCOPE,
+                candidate={**candidate, 'sourceKind': 'issue-review-v1'})
 
 
 @pytest.mark.parametrize('fault', ['artifact', 'eval', 'responsibility', 'expiry', 'tenant'])
