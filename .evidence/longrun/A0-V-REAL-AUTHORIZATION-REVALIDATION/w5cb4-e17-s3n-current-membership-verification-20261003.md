@@ -23,3 +23,7 @@
 ## 剩余
 
 这证明隔离代码路径上的成员撤销禁入，不证明当前实例六正式 Binding/frozen Plan、八有效配置、Host assignment/Owner 或自然经营首链。人类角色/ABAC、值班/容量、机器 Binding 当前撤销、独立 Receipt issuer/DB ACL 和上述并发窗口仍需独立核验；不得以本波 GREEN 启用 Host。
+
+## 提交后在线加载
+
+`m1@369688cc` 后原签名启动器预检 exit0，输出 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`、当前库 `aos_current_preview_20260927@a0v_135`、安装 approved、publishedVersions4/runtimeBindings0；独立完整备份 SHA256 再核 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0`。原 launchd API `bootout` exit0，确认8080释放，原 plist `bootstrap` exit0。新 API PID35799，PG18435、Web PID31986/8434，18181关闭；`/v1/health`、`/v1/ready`、OpenAPI/页面均 HTTP200。日志证 Host inactive `DISABLED`、workers disabled。CUA 原 org-org/dev-project 技能发布页 AX 无变化，沿用上一轮37已评测/0发布、三 blocker、按钮 disabled、无电商业务入口。未触发真库 Plan/Run。
