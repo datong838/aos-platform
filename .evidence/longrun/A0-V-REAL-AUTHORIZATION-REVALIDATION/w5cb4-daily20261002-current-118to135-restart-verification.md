@@ -14,7 +14,7 @@
 | 同卷最新栈 | `docker --context colima-aos-extension restart aos-a0v-recovery-pg`退出0；`pg_isready`接受连接，原卷不变。当前签名 Receipt `/Users/ddt/work/projects/ai_agent/.aos-current-build-pyGkqQ/signing-receipt.json` 由 `a0v_current_preview_http.py` 返回 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，版本/代码135、approved安装1/published4/binding0。API LaunchAgent 新PID26049于10:17:11、Web 新PID26099于10:17:21启动；PG于10:16:41Z重新启动。18435/8080/8434监听、18181无监听；API `/v1/health`、`/v1/ready`、`/openapi.json` 均200。日志 `migrationMode=disabled`、`runtimeHost=0`、`workersEnabled=0`、`startup_extension_runtime_host_inactive code=DISABLED`。 |
 | 页面与只读交互 | 8434 八 `/workshop/{cockpit,content-campaign,operations,creator-growth,media-studio,analyst,price-governance,customer}` 与 `/aip/{skill-publish,agent-catalog}` HTTP均200。实际 Codex 浏览器打开八页，均见“当前工作台入口不可用”；技能发布页“刷新”后仍37条仅已评测、已发布0，缺正式发布决定/Logic发布/模型路由策略，按钮 `发布此修订` disabled。浏览器截图已在本轮工具输出展示；浏览器页保留给用户。 |
 | 安装与隔离 | 当前库只读 SQL：`org-org/dev-project` 安装 `ccdcb0f0-1040-4bc6-aa0c-d045f5689813` 为 `approved/currentRevision3/activeRevision NULL/etag3`；`dev-org`安装0、正租户binding0、Host assignment0。 |
-| 回归与复审 | `pytest -q services/aos-api/tests/extension_runtime/test_a0v_current_preview_http.py`：13 passed/7 warnings，退出0；`py_compile`当前迁移脚本退出0；`git diff --check`退出0。方案明确的唯一目标/17迁移/停机备份/同卷重启/禁入验证全部逐项对齐。 |
+| 回归与复审 | `pytest -q services/aos-api/tests/extension_runtime/test_a0v_current_preview_http.py`：13 passed/7 warnings，退出0；加入 `test_a0v_current_runtime_host_preflight.py`、`test_a0v_current_preview_installation.py` 的相邻累计为28 passed/7 warnings，退出0。`py_compile`当前迁移脚本退出0；`git diff --check`退出0。方案明确的唯一目标/17迁移/停机备份/同卷重启/禁入验证全部逐项对齐。 |
 
 ## 风险与下一波
 
