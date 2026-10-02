@@ -84,18 +84,29 @@ class ContentCapabilityRequest:
     max_input_tokens: int
     max_output_tokens: int
     idempotency_key: str
+    source_kind: str = "issue-review-v1"
 
     def __post_init__(self) -> None:
         for name, kind in _AUTHORITY_TYPES:
             if getattr(self, name).resource_type != kind:
                 raise ValueError(f"{name} must reference {kind}")
-        if (
+        if (type(self.source_kind) is not str
+                or self.source_kind not in {"issue-review-v1", "accepted-stage-v1"}):
+            raise ValueError("content capability source kind is invalid")
+        if self.source_kind == "issue-review-v1":
+            if (
+                type(self.source_artifact_refs) is not tuple
+                or len(self.source_artifact_refs) != 4
+                or len(set(self.source_artifact_refs)) != 4
+                or any(ref.resource_type != "ArtifactRevision" for ref in self.source_artifact_refs)
+            ):
+                raise ValueError("content capability requires four unique source Artifacts")
+        elif (
             type(self.source_artifact_refs) is not tuple
-            or len(self.source_artifact_refs) != 4
-            or len(set(self.source_artifact_refs)) != 4
-            or any(ref.resource_type != "ArtifactRevision" for ref in self.source_artifact_refs)
+            or len(self.source_artifact_refs) != 1
+            or self.source_artifact_refs[0].resource_type != "Artifact"
         ):
-            raise ValueError("content capability requires four unique source Artifacts")
+            raise ValueError("accepted stage content requires one original Artifact")
         if (
             type(self.fact_source_refs) is not tuple
             or not 1 <= len(self.fact_source_refs) <= 200
@@ -132,7 +143,7 @@ class ContentCapabilityRequest:
         }
 
     def command_payload(self) -> dict[str, object]:
-        return {
+        command = {
             "operation": "content.generate",
             "authorityRefs": self.authority_refs(),
             "sourceArtifactRefs": [exact_ref_payload(ref) for ref in self.source_artifact_refs],
@@ -143,6 +154,9 @@ class ContentCapabilityRequest:
             "maxOutputTokens": self.max_output_tokens,
             "idempotencyKey": self.idempotency_key,
         }
+        if self.source_kind == "accepted-stage-v1":
+            command["sourceKind"] = self.source_kind
+        return command
 
 
 def _parse_authority_refs(value: Any) -> dict[str, ExactRef]:
@@ -340,6 +354,8 @@ def execute_content_capability(
 ) -> ContentCapabilityReceipt:
     if dispatch_ref.operation_id != CONTENT_GENERATE_OPERATION or dispatch_ref.handler_kind != "extension":
         raise PermissionError("dispatch does not authorize content capability")
+    if request.source_kind == "accepted-stage-v1":
+        raise ValueError("accepted stage content Host is not wired")
     command = request.command_payload()
     request_hash = canonical_command_hash(command)
     result = commit_with_dispatch(port, dispatch_ref, {**command, "requestHash": request_hash})

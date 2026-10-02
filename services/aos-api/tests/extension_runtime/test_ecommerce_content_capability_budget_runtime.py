@@ -27,6 +27,8 @@ from ecommerce_growth.content_capability_runtime import (
     ContentCapabilityRequest,
     execute_content_capability,
 )
+from ecommerce_growth.aip_business_investigation_compiler import canonical_command_hash
+from aos_api.ecommerce_growth_runtime_adapters import _strict_content_generate_command
 from ecommerce_growth.ecommerce_business_investigation_application import (
     EcommerceGrowthApplication,
 )
@@ -92,6 +94,35 @@ def capability_request(*, key="capability-1", **overrides):
     }
     values.update(overrides)
     return ContentCapabilityRequest(**values)
+
+
+def test_accepted_stage_content_source_is_distinct_and_host_remains_closed():
+    original = (ref("Artifact", "original-stage-text"),)
+    legacy = capability_request().command_payload()
+    assert "sourceKind" not in legacy
+    with pytest.raises(ValueError, match="four unique source Artifacts"):
+        capability_request(source_artifact_refs=original)
+    with pytest.raises(ValueError):
+        capability_request(source_kind="issue-review-v1", source_artifact_refs=original)
+    with pytest.raises(ValueError):
+        capability_request(source_kind="accepted-stage-v1", source_artifact_refs=source_artifacts())
+    with pytest.raises(ValueError):
+        capability_request(source_kind="unknown", source_artifact_refs=original)
+    with pytest.raises(ValueError):
+        capability_request(source_kind=["accepted-stage-v1"], source_artifact_refs=original)
+
+    stage = capability_request(source_kind="accepted-stage-v1", source_artifact_refs=original)
+    command = stage.command_payload()
+    assert command["sourceKind"] == "accepted-stage-v1"
+    assert command["sourceArtifactRefs"] == [exact_ref_payload(original[0])]
+    assert canonical_command_hash(command) != canonical_command_hash(legacy)
+    with pytest.raises(ValueError, match="envelope drifted"):
+        _strict_content_generate_command({**command, "requestHash": canonical_command_hash(command)})
+    port = CapabilityPort()
+    with pytest.raises(ValueError, match="Host is not wired"):
+        execute_content_capability(port, dispatch_ref=dispatch(), request=stage)
+    assert port.commands == []
+    assert port.provider_calls == 0
 
 
 def artifact_payload(command):
