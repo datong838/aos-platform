@@ -864,6 +864,26 @@ def test_original_evaluated_skill_signed_gate_event_publishes_once(
         scope, request, actor="e17-s2c-test", occurred_at=now,
     )
     assert replay == published and replay_receipt == receipt
+    with pytest.raises(
+        AipAgentRegistryTransitionBlocked,
+        match="exact published LogicRevision",
+    ):
+        AipSkillPublicationService().publish_evaluated_revision(
+            scope, request.model_copy(update={
+                "idempotency_key": f"s3b-original-logic-{suffix}",
+            }), actor="e17-s2c-test",
+        )
+    with pytest.raises(
+        AipAgentRegistryTransitionBlocked,
+        match="model route is unavailable",
+    ):
+        AipSkillPublicationService(
+            logic_authority=_PublishedLogicAuthority(scope),
+        ).publish_evaluated_revision(
+            scope, request.model_copy(update={
+                "idempotency_key": f"s3b-original-route-{suffix}",
+            }), actor="e17-s2c-test",
+        )
     with pytest.raises(AipAgentRegistryNotFound, match="skill publication event not found"):
         service.publish_evaluated_revision(
             scope, request.model_copy(update={
