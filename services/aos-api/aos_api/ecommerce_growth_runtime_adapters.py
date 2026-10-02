@@ -3494,12 +3494,37 @@ class ReviewAdvanceHostService:
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
         key, _occurrence_ref, _case_ref_value = _strict_review_accept_command(command)
-        if command.get("sourceKind") == "accepted-stage-v1":
+        if command.get("sourceKind") == "accepted-stage-v1" and not receipt:
             return {}
         _reader, _cases, receipts = self._components(transaction, scope)
         expected = receipts.read(key)
         if expected is None or type(receipt) is not dict:
             return {}
+        if command.get("sourceKind") == "accepted-stage-v1":
+            if type(expected) is not dict or dict(receipt) != expected:
+                return {}
+            receipt_id = str(uuid5(REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
+            body = {name: value for name, value in expected.items() if name != "receiptRef"}
+            exact_ref = {
+                "resourceType": "ReviewDecisionReceipt",
+                "resourceId": receipt_id,
+                "revision": 1,
+                "contentHash": _analysis_command_hash(body),
+                "receiptId": receipt_id,
+            }
+            source_lineage = {
+                name: command[name] for name in sorted(_CONTENT_STAGE_LINEAGE_FIELDS)
+            }
+            if (
+                expected.get("receiptRef") != exact_ref
+                or expected.get("requestHash") != command["requestHash"]
+                or expected.get("sourceKind") != "accepted-stage-v1"
+                or expected.get("sourceLineage") != source_lineage
+                or expected.get("decision") != "ACCEPT"
+                or expected.get("returnStage") is not None
+                or expected.get("sideEffects") != dict(_REVIEW_SIDE_EFFECTS)
+            ):
+                return {}
         return expected if dict(receipt) == expected else {}
 
 

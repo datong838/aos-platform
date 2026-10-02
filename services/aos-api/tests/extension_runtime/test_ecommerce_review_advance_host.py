@@ -168,6 +168,43 @@ def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
                                command=command, receipt={}) == {}
 
 
+def test_accepted_stage_receipt_readback_requires_exact_persisted_command(monkeypatch):
+    """Unit readback contract only; the accepted-stage original producer remains gated."""
+    host = ReviewAdvanceHostService()
+    command = accepted_stage_command()
+    lineage = {
+        "handoffRef": ref("HandoffReceipt", "handoff-1"),
+        "taskRef": ref("Task", "task-1"),
+        "briefRef": ref("TaskBriefRevision", "brief-1"),
+    }
+    receipt = host._accept_receipt(command, lineage, SCOPE, command["idempotencyKey"], NOW)
+    journal = {command["idempotencyKey"]: receipt}
+    monkeypatch.setattr(host, "_components", lambda *_: (
+        None, None, SimpleNamespace(read=lambda key: journal.get(key))))
+    transaction = HostTransaction(SimpleNamespace())
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=command, receipt=receipt) == receipt
+    assert host.verify_receipt(transaction=transaction,
+                               scope=TenantScope("dev-org", "dev-project"), dispatch=None,
+                               command=command, receipt=receipt) == {}
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=accepted_stage_command(idempotencyKey="review-2"),
+                               receipt=receipt) == {}
+    drifted = accepted_stage_command()
+    drifted["stageDecisionRef"] = {**drifted["stageDecisionRef"],
+                                   "resourceId": "other-decision"}
+    drifted["requestHash"] = command_hash({
+        key: value for key, value in drifted.items() if key != "requestHash"})
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=drifted, receipt=receipt) == {}
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=command,
+                               receipt={**receipt, "decision": "RETURN"}) == {}
+    journal[command["idempotencyKey"]] = {**receipt, "requestHash": HASH}
+    assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
+                               command=command, receipt=journal[command["idempotencyKey"]]) == {}
+
+
 @pytest.mark.parametrize("drift", ["occurrence", "case"])
 def test_accepted_stage_checks_current_occurrence_and_case_before_stage_source(monkeypatch, drift):
     host, _journal = wired_host(monkeypatch, occurrence_hash=(
