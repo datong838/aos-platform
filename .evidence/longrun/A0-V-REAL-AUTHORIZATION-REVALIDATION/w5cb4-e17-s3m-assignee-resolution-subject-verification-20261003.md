@@ -25,3 +25,9 @@
 ## 未解除的门
 
 旧 `RETURN` 正向用例与后置 fail-closed 生产合同冲突，不能借本波跳过返工正式来源门；登记后续独立修复/重定验收。运行 DB 角色仍能直接写 Binding/Registry Receipt；Assignee 当前成员撤销/Binding 变化、正式六绑定、八有效配置、Host assignment/Owner 与首链仍未证明。此波证据只证明隔离代码门，不是当前实例安装、运行或业务闭环通过。
+
+## 提交后在线回读（同日完整重启之后的 API 局部重载）
+
+- `m1@35c66547` 后原签名启动器预检退出0：`CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，库 `aos_current_preview_20260927@a0v_135`、安装 `ccdcb0f0-1040-4bc6-aa0c-d045f5689813` approved、publishedVersions4、runtimeBindings0。独立备份 SHA256 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0` 再核一致。
+- 原 launchd API 项 `bootout` exit0，确认8080退出，原 plist `bootstrap` exit0；API PID35024，PG映射18435、Web31986/8434仍在，18181无监听。`/v1/health`、`/v1/ready`、`/openapi.json`、`/aip/skill-publish` 均 HTTP200；首次用错误的无 `/v1` 健康路径得到404，已按 Router 实际路径纠正。启动日志 `migrationMode=disabled`、`runtimeHost=0`、`workersEnabled=0`、Host inactive `DISABLED`。
+- CUA 原浏览器 `org-org/dev-project` 的技能发布页回读：37条仅已评测、0已发布，三个来源 blocker，发布按钮 disabled，工作台无可见电商入口。浏览器截图已在本轮 CUA 输出取证；没有真实 Plan/Run 写入。
