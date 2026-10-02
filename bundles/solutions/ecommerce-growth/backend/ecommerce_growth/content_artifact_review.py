@@ -99,10 +99,16 @@ class ReadableContentArtifact:
     fact_source_refs: tuple[ExactRef, ...]
     body: str
     constraint_checks: tuple[str, ...]
+    source_kind: str = "issue-review-v1"
 
     @classmethod
     def from_payload(cls, value: Any) -> "ReadableContentArtifact":
-        if type(value) is not dict or set(value) != _ARTIFACT_FIELDS:
+        if type(value) is not dict:
+            raise ValueError("content Artifact fields drifted")
+        source_kind = value.get("sourceKind", "issue-review-v1")
+        expected_fields = (_ARTIFACT_FIELDS | {"sourceKind"}
+                           if source_kind == "accepted-stage-v1" else _ARTIFACT_FIELDS)
+        if set(value) != expected_fields:
             raise ValueError("content Artifact fields drifted")
         artifact = cls(
             artifact_ref=exact_ref_from_payload(value["artifactRef"], {"ArtifactRevision"}),
@@ -114,7 +120,8 @@ class ReadableContentArtifact:
             source_artifact_refs=_exact_ref_tuple(
                 value["sourceArtifactRefs"],
                 name="sourceArtifactRefs",
-                kinds={"ArtifactRevision"},
+                kinds={"Artifact"} if source_kind == "accepted-stage-v1"
+                else {"ArtifactRevision"},
                 maximum=16,
             ),
             product_names=_string_tuple(
@@ -135,8 +142,12 @@ class ReadableContentArtifact:
             constraint_checks=_string_tuple(
                 value["constraintChecks"], name="constraintChecks", maximum=50
             ),
+            source_kind=source_kind,
         )
-        if len(artifact.source_artifact_refs) != 4:
+        if source_kind == "accepted-stage-v1":
+            if len(artifact.source_artifact_refs) != 1:
+                raise ValueError("accepted stage content Artifact requires one original Artifact")
+        elif len(artifact.source_artifact_refs) != 4:
             raise ValueError("content Artifact requires four source Artifacts")
         return artifact
 
@@ -151,6 +162,8 @@ class ContentReviewRequest:
     return_stage: str | None = None
 
     def __post_init__(self) -> None:
+        if self.artifact.source_kind == "accepted-stage-v1":
+            raise ValueError("accepted stage content review Host is not wired")
         if self.review_issue_ref.resource_type != "ReviewIssueRevision":
             raise ValueError("content review requires ReviewIssueRevision")
         if self.reviewer_authority_ref.resource_type != "ReviewerAuthorityRevision":

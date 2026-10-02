@@ -222,10 +222,13 @@ class ContentCapabilityReceipt:
         authority_refs = _parse_authority_refs(value["authorityRefs"])
         source_refs = _parse_ref_list(
             value["sourceArtifactRefs"],
-            kinds={"ArtifactRevision"},
+            kinds={"Artifact"} if request.source_kind == "accepted-stage-v1"
+            else {"ArtifactRevision"},
             name="sourceArtifactRefs",
             allow_empty=False,
         )
+        if len(source_refs) != (1 if request.source_kind == "accepted-stage-v1" else 4):
+            raise ValueError("capability Receipt source count drifted")
         receipt = cls(
             receipt_ref=exact_ref_from_payload(
                 value["receiptRef"], {"CapabilityInvocationRevision"}
@@ -304,6 +307,7 @@ class ContentCapabilityReceipt:
                 or self.artifact.brief_ref != request.brief_ref
                 or self.artifact.growth_plan_ref != request.growth_plan_ref
                 or self.artifact.source_artifact_refs != request.source_artifact_refs
+                or self.artifact.source_kind != request.source_kind
                 or self.artifact.fact_source_refs != request.fact_source_refs
                 or self.retry_directive != "NONE"
                 or self.provider_invocation_count != 1

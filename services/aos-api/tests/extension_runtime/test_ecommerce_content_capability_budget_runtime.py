@@ -24,6 +24,7 @@ from ecommerce_growth.content_artifact_review import (
 )
 from ecommerce_growth.content_capability_runtime import (
     CONTENT_GENERATE_OPERATION,
+    ContentCapabilityReceipt,
     ContentCapabilityRequest,
     execute_content_capability,
 )
@@ -126,6 +127,49 @@ def test_accepted_stage_content_source_is_distinct_and_host_remains_closed():
         execute_content_capability(port, dispatch_ref=dispatch(), request=stage)
     assert port.commands == []
     assert port.provider_calls == 0
+
+
+def test_accepted_stage_receipt_and_readable_artifact_keep_original_source_type():
+    original = (ref("Artifact", "original-stage-text"),)
+    request = capability_request(source_kind="accepted-stage-v1", source_artifact_refs=original)
+    command = request.command_payload()
+    command["requestHash"] = canonical_command_hash(command)
+    pending = ContentCapabilityReceipt.from_payload(
+        pending_receipt(command), request=request, request_hash=command["requestHash"]
+    )
+    assert pending.source_artifact_refs == original and pending.artifact is None
+    completed_payload = capability_receipt(command)
+    completed_payload["artifact"]["sourceKind"] = "accepted-stage-v1"
+    completed = ContentCapabilityReceipt.from_payload(
+        completed_payload, request=request, request_hash=command["requestHash"]
+    )
+    assert completed.artifact.source_kind == "accepted-stage-v1"
+    assert completed.artifact.source_artifact_refs == original
+    with pytest.raises(ValueError, match="review Host is not wired"):
+        ContentReviewRequest(
+            artifact=completed.artifact,
+            review_issue_ref=ref("ReviewIssueRevision", "synthetic-issue"),
+            reviewer_authority_ref=ref("ReviewerAuthorityRevision", "reviewer-1"),
+            decision="ACCEPT", idempotency_key="stage-review-closed",
+        )
+    for drift in (
+        {"sourceArtifactRefs": [exact_ref_payload(item) for item in source_artifacts()]},
+        {"artifact": {key: value for key, value in completed_payload["artifact"].items()
+                      if key != "sourceKind"}},
+        {"artifact": {**completed_payload["artifact"], "sourceKind": "issue-review-v1"}},
+    ):
+        with pytest.raises(ValueError):
+            ContentCapabilityReceipt.from_payload(
+                {**completed_payload, **drift}, request=request,
+                request_hash=command["requestHash"],
+            )
+    legacy = capability_request()
+    legacy_command = legacy.command_payload()
+    legacy_command["requestHash"] = canonical_command_hash(legacy_command)
+    assert ContentCapabilityReceipt.from_payload(
+        capability_receipt(legacy_command), request=legacy,
+        request_hash=legacy_command["requestHash"],
+    ).artifact.source_kind == "issue-review-v1"
 
 
 def artifact_payload(command):
