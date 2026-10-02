@@ -504,6 +504,53 @@ def test_content_generate_return_envelope_is_exact_and_original_unchanged():
             _strict_content_generate_command(drift)
 
 
+def accepted_stage_content_command():
+    command = deepcopy(authorities()["command"])
+    command["sourceKind"] = "accepted-stage-v1"
+    command["sourceArtifactRefs"] = [ref("Artifact", "stage-artifact-1")]
+    command["requestHash"] = _analysis_command_hash(
+        {key: value for key, value in command.items() if key != "requestHash"}
+    )
+    return command
+
+
+def test_accepted_stage_content_command_is_strict_and_host_stays_closed():
+    command = accepted_stage_content_command()
+    parsed = _strict_content_generate_command(command)
+    assert parsed["sourceKind"] == "accepted-stage-v1"
+    assert [item.resource_type for item in parsed["sourceRefs"]] == ["Artifact"]
+    for change in (
+        lambda value: value.update(sourceKind="issue-review-v1"),
+        lambda value: value["sourceArtifactRefs"].append(ref("Artifact", "another")),
+        lambda value: value["sourceArtifactRefs"][0].update(resourceType="ArtifactRevision"),
+        lambda value: value.update(returnDecisionRef=ref("ReturnDecision", "returned")),
+    ):
+        drift = deepcopy(command)
+        change(drift)
+        drift["requestHash"] = _analysis_command_hash(
+            {key: value for key, value in drift.items() if key != "requestHash"}
+        )
+        with pytest.raises(ValueError):
+            _strict_content_generate_command(drift)
+
+    class NoDatabase:
+        def execute(self, *_args, **_kwargs):
+            raise AssertionError("Host touched database before accepted-stage gate")
+
+    host = ContentGenerateHostService()
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        host.revalidate(transaction=NoDatabase(), scope=SCOPE,
+                        dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+                        command=command)
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        host.execute(transaction=NoDatabase(), scope=SCOPE, dispatch_ref=None,
+                     command=command, checked_at=datetime.now(timezone.utc),
+                     occurred_at=datetime.now(timezone.utc))
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        host.verify_receipt(transaction=NoDatabase(), scope=SCOPE, dispatch=None,
+                            command=command, receipt={})
+
+
 class ReturnAuthorityTransaction:
     def __init__(self, row):
         self.row = row

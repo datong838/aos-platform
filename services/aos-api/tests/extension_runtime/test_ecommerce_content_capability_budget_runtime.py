@@ -116,8 +116,11 @@ def test_accepted_stage_content_source_is_distinct_and_host_remains_closed():
     assert command["sourceKind"] == "accepted-stage-v1"
     assert command["sourceArtifactRefs"] == [exact_ref_payload(original[0])]
     assert canonical_command_hash(command) != canonical_command_hash(legacy)
-    with pytest.raises(ValueError, match="envelope drifted"):
-        _strict_content_generate_command({**command, "requestHash": canonical_command_hash(command)})
+    parsed = _strict_content_generate_command(
+        {**command, "requestHash": canonical_command_hash(command)}
+    )
+    assert parsed["sourceKind"] == "accepted-stage-v1"
+    assert [item.resource_type for item in parsed["sourceRefs"]] == ["Artifact"]
     port = CapabilityPort()
     with pytest.raises(ValueError, match="Host is not wired"):
         execute_content_capability(port, dispatch_ref=dispatch(), request=stage)

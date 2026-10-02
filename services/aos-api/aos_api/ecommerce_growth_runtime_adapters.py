@@ -4081,8 +4081,13 @@ def _content_exact_ref(value: Any, expected_type: str) -> InvestigationExactRef:
 
 def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, Any]:
     fields = set(command) if type(command) is dict else set()
-    if fields not in (_CONTENT_GENERATE_FIELDS, _CONTENT_GENERATE_FIELDS | {"returnDecisionRef"}):
+    accepted_stage = fields == _CONTENT_GENERATE_FIELDS | {"sourceKind"}
+    if not accepted_stage and fields not in (
+        _CONTENT_GENERATE_FIELDS, _CONTENT_GENERATE_FIELDS | {"returnDecisionRef"}
+    ):
         raise ValueError("content generate command envelope drifted")
+    if accepted_stage and command["sourceKind"] != "accepted-stage-v1":
+        raise ValueError("content generate source kind drifted")
     if command["operation"] != "content.generate":
         raise ValueError("content generate operation drifted")
     key = command["idempotencyKey"]
@@ -4117,12 +4122,15 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
     fact_values = command["factSourceRefs"]
     if (
         type(source_values) is not list
-        or len(source_values) != 4
+        or len(source_values) != (1 if accepted_stage else 4)
         or type(fact_values) is not list
         or not 1 <= len(fact_values) <= 200
     ):
         raise ValueError("content generate source closure is invalid")
-    source_refs = [_content_exact_ref(value, "ArtifactRevision") for value in source_values]
+    source_refs = [
+        _content_exact_ref(value, "Artifact" if accepted_stage else "ArtifactRevision")
+        for value in source_values
+    ]
     fact_refs = []
     for value in fact_values:
         if type(value) is not dict or value.get("resourceType") not in {
@@ -4136,7 +4144,7 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
         (ref.resource_type, ref.resource_id, ref.revision, ref.content_hash)
         for ref in refs
     }
-    if len(identities(source_refs)) != 4 or len(identities(fact_refs)) != len(fact_refs):
+    if len(identities(source_refs)) != len(source_refs) or len(identities(fact_refs)) != len(fact_refs):
         raise ValueError("content generate source refs must be unique")
     numeric = (
         (command["upperBoundFen"], 1, 100_000_000),
@@ -4150,6 +4158,7 @@ def _strict_content_generate_command(command: Mapping[str, Any]) -> dict[str, An
         raise ValueError("content generate bounded execution values drifted")
     return {
         "key": key,
+        "sourceKind": "accepted-stage-v1" if accepted_stage else "issue-review-v1",
         "authorities": parsed_authorities,
         "sourceRefs": source_refs,
         "factRefs": fact_refs,
@@ -5571,6 +5580,8 @@ class ContentGenerateHostService:
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         parsed = _strict_content_generate_command(command)
+        if parsed["sourceKind"] == "accepted-stage-v1":
+            raise ValueError("accepted stage content Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
         self._return_authority(transaction, scope, command, parsed, dispatch=dispatch)
@@ -5641,7 +5652,10 @@ class ContentGenerateHostService:
     def execute(
         self, *, transaction, scope, dispatch_ref, command, checked_at, occurred_at
     ):
-        if _strict_content_generate_command(command)["returnRef"] is not None:
+        parsed = _strict_content_generate_command(command)
+        if parsed["sourceKind"] == "accepted-stage-v1":
+            raise ValueError("accepted stage content Host is not wired")
+        if parsed["returnRef"] is not None:
             raise ValueError("content return generation is not enabled")
         persisted = self._runtime_command_authority(transaction, scope, command)
         if persisted is not None:
@@ -5694,6 +5708,9 @@ class ContentGenerateHostService:
         )
 
     def verify_receipt(self, *, transaction, scope, dispatch, command, receipt):
+        if type(command) is dict and command.get("sourceKind") == "accepted-stage-v1":
+            _strict_content_generate_command(command)
+            raise ValueError("accepted stage content Host is not wired")
         if type(receipt) is not dict or type(receipt.get("replayed")) is not bool:
             return {}
         request = self._budget_request(command)
