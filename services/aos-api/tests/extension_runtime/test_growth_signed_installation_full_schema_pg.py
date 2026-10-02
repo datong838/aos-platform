@@ -190,6 +190,17 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 require_installed(conn, requirements)
                 with pytest.raises(PermissionError, match='maintenance schema role required'):
                     apply_once(conn, requirements[0], lambda _: pytest.fail('runtime cannot migrate'))
+        if growth_version == '1.13.0' and bundle_id == 'solution.ecommerce.growth':
+            def corrupted_image_index(path, limit):
+                raw = artifact(path, limit)
+                return raw + b' ' if path == 'artifacts/runtime-image-index.json' else raw
+            with pytest.raises(ValueError, match='artifact bytes differ from signed release'):
+                admit_runtime_artifact(
+                    record=record, selected=resolved[bundle_id],
+                    policy=ReleasePolicy(trust_roots=trust), checked_at=datetime.now(timezone.utc),
+                    read_artifact=corrupted_image_index, platform='linux/arm64',
+                    driver=OciDriver(context='colima-aos-extension'),
+                )
         admitted = admit_runtime_artifact(
             record=record, selected=resolved[bundle_id],
             policy=ReleasePolicy(trust_roots=trust), checked_at=datetime.now(timezone.utc),

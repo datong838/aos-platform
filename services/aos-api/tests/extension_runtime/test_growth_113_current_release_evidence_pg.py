@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -115,6 +116,18 @@ def test_growth_113_exact_current_release_from_original_producers(tmp_path):
     assert len(growth) == 1
     assert growth[0].version == "1.13.0"
     assert growth[0].content_hash == receipt["contentHashes"]["solution.ecommerce.growth"]
+    with connect(SCOPE) as conn:
+        with pytest.raises(psycopg.errors.CheckViolation,
+                           match="canonical bundle control-plane rows are immutable"):
+            with conn.transaction():
+                conn.execute("""UPDATE bundle_installation_revision r
+                    SET lock_hash=%s
+                    WHERE r.org_id=%s AND r.project_id=%s AND r.revision=%s
+                      AND r.installation_pk=(SELECT i.installation_pk FROM bundle_installation i
+                        WHERE i.org_id=%s AND i.project_id=%s AND i.installation_id=%s)""",
+                    ("sha256:" + "0" * 64, *SCOPE.key, view.current_revision,
+                     *SCOPE.key, installed["installationId"]),
+                )
     with pytest.raises(CurrentReleaseEvidenceBlocked, match="INSTALLATION_MISSING"):
         read_current_installation_release_evidence(
             connect_factory=_reader_connect, scope=TenantScope("dev-org", "dev-project"),
@@ -127,4 +140,26 @@ def test_growth_113_exact_current_release_from_original_producers(tmp_path):
             installation_id=installed["installationId"],
             release_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({})),
             loader=loader,
+        )
+    tampered_tree = tmp_path / "tampered-signed-tree"
+    shutil.copytree(signed_tree, tampered_tree)
+    index = tampered_tree / "solution.ecommerce.growth/1.13.0/artifacts/runtime-image-index.json"
+    index.write_bytes(index.read_bytes() + b" ")
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="RELEASE_BYTES_DRIFT"):
+        read_current_installation_release_evidence(
+            connect_factory=_reader_connect, scope=SCOPE,
+            installation_id=installed["installationId"],
+            release_policy=policy,
+            loader=ManifestLoader({"a0v-growth-113": tampered_tree}, trust_roots=trust),
+        )
+    registry.revoke(
+        publisher="aos", bundle_id="solution.ecommerce.growth", version="1.13.0",
+        actor="test-publisher", roles={"asset-publisher"},
+        publisher_scopes={"aos"}, reason="isolated revocation negative",
+    )
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="RELEASE_EVIDENCE_INVALID"):
+        read_current_installation_release_evidence(
+            connect_factory=_reader_connect, scope=SCOPE,
+            installation_id=installed["installationId"],
+            release_policy=policy, loader=loader,
         )
