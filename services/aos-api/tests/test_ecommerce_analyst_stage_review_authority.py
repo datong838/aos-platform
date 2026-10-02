@@ -228,6 +228,116 @@ def test_provider_write_admission_locks_current_binding_until_freeze_commit():
             assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='blocked'
 
 
+def _tool_plan(conn):
+    _,_,cap_binding_id=_provider_plan(conn)
+    suffix=uuid4().hex[:10]
+    template_id=f'template-tool-{suffix}'
+    instance_id=f'instance-tool-{suffix}'
+    tool_binding_id=f'tool-binding-{suffix}'
+    conn.execute('''INSERT INTO aip_agent_template_revision
+        (template_id,revision,display_name,role_key,lifecycle,source_ref,
+         source_license,manifest,content_hash,created_by)
+        VALUES(%s,1,'Tool owner',%s,'published','{}','internal','{}',%s,%s)''',
+        (template_id,f'role-{suffix}','b'*64,ACTOR))
+    insert(conn,'aip_agent_instance',instance_id=instance_id,
+        template_id=template_id,template_revision=1,status='active',overlay={},
+        version=1,created_by=ACTOR)
+    insert(conn,'aip_tool_binding',binding_id=tool_binding_id,tool_id='tool.review',
+        version=1,agent_instance_id=instance_id,status='active',
+        capability_binding_ids=[cap_binding_id],policy_refs=[])
+    factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE)
+    assignee=AssigneeRef(kind=AssigneeKind.TOOL_BINDING,
+        resource_id=tool_binding_id,version=1)
+    capability=VersionedAssetRef(asset_type='CapabilityRevision',
+        asset_id='capability.content.review',revision=1,content_hash='a'*64)
+    receipt=AipAssigneeResolutionStore(factory).resolve(SCOPE,
+        ResolveAssigneeRequest(subjectId='analyst.portrait.review',
+            candidates=[assignee],requiredCapabilities=[capability]),
+        ACTOR,now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+    assert receipt.status.value=='resolved'
+    owner=AipProductionContractStore(factory,
+        responsibility_template_resolver=lambda scope,ref:True)
+    draft=owner.create_responsibility_plan(SCOPE,ACTOR,
+        f'tool-plan-{suffix}',CreateResponsibilityPlanRequest(
+            profile='TEST_TOOL_REVIEW',
+            templateRef=dict(resourceType='ResponsibilityTemplateRevision',
+                resourceId='test-template',revision=1,contentHash='a'*64),
+            slots=[slot(requiredCapabilityIds=[capability.asset_id],
+                assignee=assignee.model_dump(mode='json',by_alias=True),
+                assigneeResolutionReceiptId=receipt.receipt_id)]))
+    assert draft.readiness.value=='ready'
+    return owner,draft,tool_binding_id,instance_id,cap_binding_id
+
+
+@pytest.mark.parametrize('drift,blocker',[
+    ('tool_status','REVOKED'),('tool_version','REVOKED'),
+    ('instance_status','REVOKED'),('instance_owner','REVOKED'),
+    ('capability_status','REVOKED'),('capability_policy','DRIFTED'),
+])
+def test_revoked_tool_binding_blocks_unexpired_resolution_plan_freeze(drift,blocker):
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            owner,draft,tool_id,instance_id,cap_id=_tool_plan(conn)
+            updates={
+                'tool_status':('aip_tool_binding',tool_id,"status='disabled'",'binding_id'),
+                'tool_version':('aip_tool_binding',tool_id,'version=version+1','binding_id'),
+                'instance_status':('aip_agent_instance',instance_id,"status='suspended'",'instance_id'),
+                'instance_owner':('aip_tool_binding',tool_id,"agent_instance_id='missing-instance'",'binding_id'),
+                'capability_status':('aip_capability_binding',cap_id,"status='suspended'",'binding_id'),
+                'capability_policy':('aip_capability_binding',cap_id,
+                    "network_policy_revision='network-2'",'binding_id'),
+            }
+            table,identifier,change,key=updates[drift]
+            conn.execute(f'''UPDATE {table} SET {change}
+                WHERE org_id=%s AND project_id=%s AND {key}=%s''',
+                (*SCOPE.key,identifier))
+            current=owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=conn)
+            assert current.readiness.value=='blocked'
+            with pytest.raises(ProductionContractDependencyBlocked,
+                match=f'ASSIGNEE_RESOLUTION_TOOL_BINDING_{blocker}'):
+                owner.freeze_responsibility_plan(SCOPE,ACTOR,draft.plan_id,draft.version,
+                    f'tool-freeze-{uuid4().hex[:10]}')
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
+                  AND result_ref->>'resourceId'=%s''',
+                (*SCOPE.key,draft.plan_id)).fetchone()['n']==0
+
+
+@pytest.mark.parametrize('target',['tool','instance','capability'])
+def test_tool_write_admission_locks_current_dependencies_until_freeze_commit(target):
+    with disposable_database() as connect:
+        with connect(SCOPE) as seed:
+            _,draft,tool_id,instance_id,cap_id=_tool_plan(seed)
+        with connect(SCOPE) as writer:
+            owner=AipProductionContractStore(responsibility_template_resolver=lambda scope,ref:True)
+            owner._require_responsibility_dependencies(writer,SCOPE,draft)
+            table,field,identity,change={
+                'tool':('aip_tool_binding','binding_id',tool_id,"status='disabled'"),
+                'instance':('aip_agent_instance','instance_id',instance_id,"status='suspended'"),
+                'capability':('aip_capability_binding','binding_id',cap_id,"status='suspended'"),
+            }[target]
+            with connect(SCOPE) as revoker:
+                revoker.execute("SET LOCAL lock_timeout = '250ms'")
+                with pytest.raises(psycopg.errors.LockNotAvailable):
+                    revoker.execute(f'''UPDATE {table} SET {change}
+                        WHERE org_id=%s AND project_id=%s AND {field}=%s''',
+                        (*SCOPE.key,identity))
+                revoker.rollback()
+            frozen=owner.freeze_responsibility_plan_in_transaction(writer,SCOPE,ACTOR,
+                draft.plan_id,draft.version,f'tool-lock-freeze-{uuid4().hex[:10]}')
+            assert frozen.lifecycle.value=='frozen'
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='ready'
+        with connect(SCOPE) as revoker:
+            revoker.execute(f'''UPDATE {table} SET {change}
+                WHERE org_id=%s AND project_id=%s AND {field}=%s''',
+                (*SCOPE.key,identity))
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='blocked'
+
+
 @pytest.mark.parametrize('kind',['agent_instance','tool_binding','provider_capability_binding'])
 def test_machine_still_requires_capability(kind):
     with pytest.raises(ValueError,match='non-human responsibilities require'):slot(assignee=dict(kind=kind,resourceId='machine',version=1))

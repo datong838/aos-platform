@@ -5975,6 +5975,7 @@ class AipProductionContractStore:
                     slot.slot_id,
                     lock_human_membership=True,
                     lock_provider_binding=True,
+                    lock_tool_binding=True,
                 )
                 continue
             if slot.assignee.kind.value != "agent_instance":
@@ -6108,6 +6109,7 @@ class AipProductionContractStore:
         *,
         lock_human_membership: bool = False,
         lock_provider_binding: bool = False,
+        lock_tool_binding: bool = False,
     ) -> None:
         row = conn.execute(
             """SELECT subject_id,kind,resource_id,version,status,selected_assignee,
@@ -6164,14 +6166,45 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked(
                 f"ASSIGNEE_RESOLUTION_CAPABILITY_DRIFTED:{slot_id}"
             )
-        if assignee.kind.value == "provider_capability_binding":
-            if lock_provider_binding:
+        if assignee.kind.value in {"provider_capability_binding", "tool_binding"}:
+            if lock_provider_binding and assignee.kind.value == "provider_capability_binding":
                 conn.execute(
                     """SELECT 1 FROM aip_capability_binding
                         WHERE org_id=%s AND project_id=%s AND binding_id=%s
                         FOR SHARE""",
                     (*scope.key, assignee.resource_id),
                 ).fetchone()
+            if lock_tool_binding and assignee.kind.value == "tool_binding":
+                tool_row = conn.execute(
+                    """SELECT agent_instance_id,capability_binding_ids
+                        FROM aip_tool_binding
+                        WHERE org_id=%s AND project_id=%s AND binding_id=%s
+                        FOR SHARE""",
+                    (*scope.key, assignee.resource_id),
+                ).fetchone()
+                if tool_row is not None:
+                    conn.execute(
+                        """SELECT 1 FROM aip_agent_instance
+                            WHERE org_id=%s AND project_id=%s AND instance_id=%s
+                            FOR SHARE""",
+                        (*scope.key, tool_row["agent_instance_id"]),
+                    ).fetchone()
+                    binding_ids = AipAssigneeResolutionStore._binding_ids(
+                        tool_row["capability_binding_ids"]
+                    )
+                    if binding_ids:
+                        conn.execute(
+                            """SELECT 1 FROM aip_capability_binding
+                                WHERE org_id=%s AND project_id=%s
+                                  AND binding_id=ANY(%s)
+                                ORDER BY binding_id FOR SHARE""",
+                            (*scope.key, sorted(set(binding_ids))),
+                        ).fetchall()
+            kind = (
+                "PROVIDER_BINDING"
+                if assignee.kind.value == "provider_capability_binding"
+                else "TOOL_BINDING"
+            )
             try:
                 required = [VersionedAssetRef.model_validate(item) for item in capabilities]
                 frozen_refs = [
@@ -6188,15 +6221,15 @@ class AipProductionContractStore:
                 )
             except (TypeError, ValueError) as exc:
                 raise ProductionContractDependencyBlocked(
-                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_DRIFTED:{slot_id}"
+                    f"ASSIGNEE_RESOLUTION_{kind}_DRIFTED:{slot_id}"
                 ) from exc
             if decision.status is not AssigneeResolutionStatus.RESOLVED:
                 raise ProductionContractDependencyBlocked(
-                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_REVOKED:{slot_id}"
+                    f"ASSIGNEE_RESOLUTION_{kind}_REVOKED:{slot_id}"
                 )
             if not frozen_refs or frozen_refs != decision.binding_refs:
                 raise ProductionContractDependencyBlocked(
-                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_DRIFTED:{slot_id}"
+                    f"ASSIGNEE_RESOLUTION_{kind}_DRIFTED:{slot_id}"
                 )
 
     def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:
