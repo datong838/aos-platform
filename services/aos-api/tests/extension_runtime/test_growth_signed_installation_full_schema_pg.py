@@ -1,4 +1,4 @@
-"""Archived local Growth signature in a disposable full-schema installation DB."""
+"""Local Growth 1.12/1.13 signatures in a disposable full-schema installation DB."""
 import asyncio
 import importlib.util
 import hashlib
@@ -9,10 +9,12 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+import psycopg
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from psycopg.conninfo import conninfo_to_dict
+from psycopg.rows import dict_row
 
 from aos_api.asset_registry.manifest_loader import ManifestLoader
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
@@ -26,11 +28,12 @@ from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION
 from aos_api.asset_registry.signature import FileTrustRootProvider
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.extension_runtime.current_installation_release_evidence import read_current_installation_release_evidence
 from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
 from aos_api.extension_runtime.preparation_worker import PreparationWorker
 from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalidator
@@ -41,8 +44,8 @@ from aos_api.tenant_scope import TenantScope
 
 pytestmark = pytest.mark.skipif(
     os.getenv('AOS_EXTENSION_PG_TEST') != '1' or os.getenv('AOS_EXTENSION_OCI_TEST') != '1'
-    or not os.getenv('AOS_GROWTH112_SIGNED_RECEIPT'),
-    reason='disposable PG, isolated OCI and explicit archived signed receipt required',
+    or not (os.getenv('AOS_GROWTH112_SIGNED_RECEIPT') or os.getenv('AOS_GROWTH113_SIGNED_RECEIPT')),
+    reason='disposable PG, isolated OCI and explicit local signed receipt required',
 )
 ROOT = Path(__file__).resolve().parents[4]
 SCOPE = TenantScope('org-org', 'dev-project')
@@ -56,12 +59,39 @@ def _load_script(name):
     return module
 
 
+def _signed_release():
+    growth_113 = os.getenv('AOS_GROWTH113_SIGNED_RECEIPT')
+    if growth_113 and os.getenv('AOS_GROWTH112_SIGNED_RECEIPT'):
+        raise ValueError('choose one local signed Growth receipt')
+    if not growth_113:
+        signed = _load_script('a0v_growth_112_successor_clone.py').check_signed_receipt(
+            Path(os.environ['AOS_GROWTH112_SIGNED_RECEIPT']), expected_growth='1.12.0',
+        )
+        return signed, '1.12.0'
+    receipt = json.loads(Path(growth_113).read_text())
+    builder = _load_script('build_ecommerce_growth_1_13_candidates.py').load_builder()
+    signed_tree = Path(receipt['signedTree'])
+    trust_path = signed_tree.parent / 'trust-roots.json'
+    assert receipt['outcome'] == 'SIGNED_TREE_GREEN'
+    assert receipt['keyId'] == 'a0v-local-ecommerce-growth-1-13-v1'
+    assert receipt['signedTreeHash'] == builder._tree_hash(signed_tree)
+    trust = FileTrustRootProvider(trust_path).snapshot()
+    root = trust.get_trust_root(publisher='aos', key_id=receipt['keyId'])
+    assert root is not None and root.revision == receipt['trustRootRevision']
+    loader = ManifestLoader({'a0v-growth-113': signed_tree}, trust_roots=trust)
+    policy = ReleasePolicy(trust_roots=trust)
+    for relative, bundle_id, _, _ in builder.ALL_CASES:
+        loaded = loader.load(f'bundle://a0v-growth-113/{relative}')
+        assert loaded.content_hash == receipt['contentHashes'][bundle_id]
+        policy.evaluate(builder._release_record(loaded), checked_at=datetime.now(timezone.utc))
+    return dict(receipt=receipt, signed_tree=signed_tree, trust_path=trust_path,
+                builder=builder, source_alias='a0v-growth-113'), '1.13.0'
+
+
 def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_path):
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
-    signed = _load_script('a0v_growth_112_successor_clone.py').check_signed_receipt(
-        Path(os.environ['AOS_GROWTH112_SIGNED_RECEIPT']), expected_growth='1.12.0',
-    )
+    signed, growth_version = _signed_release()
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
     registry = RegistryService(
@@ -89,10 +119,10 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                          actor='test-publisher', roles={'asset-publisher'}, **access)
     installed = _load_script('a0v_canonical_ecommerce_first_install.py').create_approved_first_installation(
         connect_factory=connect, state_dir=tmp_path,
-        core_version='1.4.0', adapter_version='1.23.0', growth_version='1.12.0',
+        core_version='1.4.0', adapter_version='1.23.0', growth_version=growth_version,
         operations_version='1.2.0', trust_path=signed['trust_path'],
-        idempotency_prefix='test-growth-112-full-schema',
-        overlay_revision='test-growth-112-full-schema',
+        idempotency_prefix=f'test-growth-{growth_version}-full-schema',
+        overlay_revision=f'test-growth-{growth_version}-full-schema',
         maker_actor='test-author', checker_actor='test-reviewer',
     )
     assert installed['installationState'] == 'approved'
@@ -193,7 +223,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                   installation_id=installed['installationId'], actor='test-author',
                   roles=['asset-installer'], markings=[])
     accepted = lifecycle.request_preparation(
-        **action, kind='runtime-apply', idempotency_key='test-growth112-runtime-apply',
+        **action, kind='runtime-apply', idempotency_key=f'test-growth-{growth_version}-runtime-apply',
         if_match=f'"{installed["installationEtag"]}"', preparation_admission=lambda: True,
     )
 
@@ -224,7 +254,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             assert applied.state == 'applied' and applied.active_revision is None
             requested = await asyncio.to_thread(
                 lifecycle.request_preparation, **action, kind='runtime-verify',
-                idempotency_key='test-growth112-runtime-verify',
+                idempotency_key=f'test-growth-{growth_version}-runtime-verify',
                 if_match=f'"{applied.etag_version}"', preparation_admission=lambda: True,
             )
             verified = await job.verify(
@@ -233,10 +263,20 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             )
             assert verified.state == 'active' and verified.active_revision is not None
             with connect(SCOPE) as conn:
-                binding = conn.execute('''SELECT observed_state,enabled,operation_fence
+                binding = conn.execute('''SELECT generation,installation_revision,package_lock_ref,
+                    observed_state,enabled,operation_fence
                     FROM extension_runtime_binding WHERE org_id=%s AND project_id=%s
                     AND installation_id=%s''', (*SCOPE.key, installed['installationId'])).fetchone()
-                assert binding == {'observed_state': 'ready', 'enabled': False, 'operation_fence': True}
+                generations = conn.execute('''SELECT DISTINCT generation FROM extension_runtime_resource_lease
+                    WHERE org_id=%s AND project_id=%s AND operation_id=%s''',
+                    (*SCOPE.key, accepted.response_json['operationId'])).fetchall()
+                assert len(generations) == 1
+                assert binding == {
+                    'generation': generations[0]['generation'],
+                    'installation_revision': verified.current_revision,
+                    'package_lock_ref': {'lockHash': lock.lock_hash},
+                    'observed_state': 'ready', 'enabled': False, 'operation_fence': True,
+                }
                 assert conn.execute('''SELECT count(*) AS n FROM extension_operation_dispatch_binding
                     WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
                     (*SCOPE.key, installed['installationId'])).fetchone()['n'] == 0
@@ -244,4 +284,14 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
         finally:
             await job.stop()
     asyncio.run(prepare_and_verify())
+    if growth_version == '1.13.0':
+        view = read_current_installation_release_evidence(
+            connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+            scope=SCOPE, installation_id=installed['installationId'],
+            release_policy=policy, loader=loader,
+        )
+        assert view.authorization == 'EVIDENCE_ONLY_NO_START'
+        assert view.active_revision == view.current_revision
+        assert any(item.bundle_id == 'solution.ecommerce.growth'
+                   and item.version == '1.13.0' for item in view.releases)
     assert owned_containers() == before_containers
