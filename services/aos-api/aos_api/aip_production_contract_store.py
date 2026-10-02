@@ -11,6 +11,9 @@ from typing import Any, Literal
 
 from pydantic import Field, model_validator
 
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_assignee_resolution import AssigneeResolutionStatus, ResolveAssigneeRequest
+from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
 from aos_api.aip_contracts import AipContractModel, ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
     ArtifactFamilyCandidateGroup, ArtifactFamilyCandidateStatus,
@@ -5971,6 +5974,7 @@ class AipProductionContractStore:
                     set(slot.required_capability_ids),
                     slot.slot_id,
                     lock_human_membership=True,
+                    lock_provider_binding=True,
                 )
                 continue
             if slot.assignee.kind.value != "agent_instance":
@@ -6103,10 +6107,11 @@ class AipProductionContractStore:
         slot_id: str,
         *,
         lock_human_membership: bool = False,
+        lock_provider_binding: bool = False,
     ) -> None:
         row = conn.execute(
             """SELECT subject_id,kind,resource_id,version,status,selected_assignee,
-                      required_capability_refs,snapshot_hash,expires_at
+                      required_capability_refs,binding_refs,snapshot_hash,expires_at
                  FROM public.aip_assignee_resolution_receipt
                 WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
             (*scope.key, receipt_id),
@@ -6159,6 +6164,40 @@ class AipProductionContractStore:
             raise ProductionContractDependencyBlocked(
                 f"ASSIGNEE_RESOLUTION_CAPABILITY_DRIFTED:{slot_id}"
             )
+        if assignee.kind.value == "provider_capability_binding":
+            if lock_provider_binding:
+                conn.execute(
+                    """SELECT 1 FROM aip_capability_binding
+                        WHERE org_id=%s AND project_id=%s AND binding_id=%s
+                        FOR SHARE""",
+                    (*scope.key, assignee.resource_id),
+                ).fetchone()
+            try:
+                required = [VersionedAssetRef.model_validate(item) for item in capabilities]
+                frozen_refs = [
+                    VersionedAssetRef.model_validate(item)
+                    for item in (self._load(row["binding_refs"]) or [])
+                ]
+                decision = AipAssigneeResolutionStore()._evaluate_candidate(
+                    conn, scope,
+                    ResolveAssigneeRequest(
+                        subject_id=slot_id, candidates=[assignee],
+                        required_capabilities=required,
+                    ),
+                    assignee, datetime.now(timezone.utc),
+                )
+            except (TypeError, ValueError) as exc:
+                raise ProductionContractDependencyBlocked(
+                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_DRIFTED:{slot_id}"
+                ) from exc
+            if decision.status is not AssigneeResolutionStatus.RESOLVED:
+                raise ProductionContractDependencyBlocked(
+                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_REVOKED:{slot_id}"
+                )
+            if not frozen_refs or frozen_refs != decision.binding_refs:
+                raise ProductionContractDependencyBlocked(
+                    f"ASSIGNEE_RESOLUTION_PROVIDER_BINDING_DRIFTED:{slot_id}"
+                )
 
     def _responsibility_blockers(self, conn: Any, scope: TenantScope, row: Any) -> tuple[list[ContractBlocker], list[str]]:
         """W-L4: coverage via assignee SkillBinding → CapabilityBinding operational, not tenant-global."""

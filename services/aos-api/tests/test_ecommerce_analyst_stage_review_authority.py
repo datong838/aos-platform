@@ -1,11 +1,12 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 import psycopg
 import pytest
 from aos_api.asset_registry.canonical_json import canonical_json
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
 from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
-from aos_api.aip_production_contracts import ResponsibilitySlot, CreateResponsibilityPlanRequest
+from aos_api.aip_production_contracts import AssigneeKind, AssigneeRef, ResponsibilitySlot, CreateResponsibilityPlanRequest
 from aos_api.aip_production_contract_store import AipProductionContractStore, ProductionContractDependencyBlocked
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_stage_review_authority import (
@@ -13,7 +14,7 @@ from aos_api.ecommerce_analyst_stage_review_authority import (
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import TransactionBoundConnectFactory
 from aos_api.tenant_scope import TenantScope
-from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, SCOPE
+from test_ecommerce_analyst_growth_plan_full_graph import disposable_database, insert, SCOPE
 
 ACTOR='human:stage-reviewer'
 
@@ -131,6 +132,100 @@ def test_plan_write_admission_holds_member_until_freeze_commit_without_locking_r
             current=owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader)
             assert current.readiness.value=='blocked'
             assert 'ASSIGNEE_RESOLUTION_MEMBERSHIP_REVOKED' in current.blockers[0].message
+
+
+def _provider_plan(conn):
+    now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+    binding_id=f'provider-revoke-{uuid4().hex[:10]}'
+    capability=VersionedAssetRef(asset_type='CapabilityRevision',
+        asset_id='capability.content.review',revision=1,content_hash='a'*64)
+    insert(conn,'aip_capability_binding',binding_id=binding_id,
+        capability_ref=capability.model_dump(mode='json',by_alias=True),
+        secret_ref='secret://pytest/provider',health='healthy',
+        network_policy_revision='network-1',quota_policy_revision='quota-1',
+        timeout_ms=30000,max_concurrency=1,status='active',version=1,
+        operational_readiness='available',allow_degraded=False,
+        dependency_snapshot_hash='e'*64,last_evaluated_at=now,
+        readiness_expires_at=now+timedelta(hours=1),observed_at=now)
+    factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE)
+    assignee=AssigneeRef(kind=AssigneeKind.PROVIDER_CAPABILITY_BINDING,
+        resource_id=binding_id,version=1)
+    receipt=AipAssigneeResolutionStore(factory).resolve(SCOPE,
+        ResolveAssigneeRequest(subjectId='analyst.portrait.review',
+            candidates=[assignee],requiredCapabilities=[capability]),
+        ACTOR,now=now)
+    assert receipt.status.value=='resolved'
+    owner=AipProductionContractStore(factory,
+        responsibility_template_resolver=lambda scope,ref:True)
+    draft=owner.create_responsibility_plan(SCOPE,ACTOR,
+        f'provider-plan-{uuid4().hex[:10]}',CreateResponsibilityPlanRequest(
+            profile='TEST_PROVIDER_REVIEW',
+            templateRef=dict(resourceType='ResponsibilityTemplateRevision',
+                resourceId='test-template',revision=1,contentHash='a'*64),
+            slots=[slot(requiredCapabilityIds=[capability.asset_id],
+                assignee=assignee.model_dump(mode='json',by_alias=True),
+                assigneeResolutionReceiptId=receipt.receipt_id)]))
+    assert draft.readiness.value=='ready'
+    return owner,draft,binding_id
+
+
+@pytest.mark.parametrize('drift,blocker',[
+    ('status','REVOKED'),('health','REVOKED'),('version','REVOKED'),
+    ('freshness','REVOKED'),('policy','DRIFTED'),
+])
+def test_revoked_provider_binding_blocks_unexpired_resolution_plan_freeze(drift,blocker):
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            owner,draft,binding_id=_provider_plan(conn)
+            updates={
+                'status':"status='suspended'",
+                'health':"health='unavailable'",
+                'version':'version=version+1',
+                'freshness':"readiness_expires_at=NOW()-INTERVAL '1 second'",
+                'policy':"network_policy_revision='network-2'",
+            }
+            conn.execute(f'''UPDATE aip_capability_binding SET {updates[drift]}
+                WHERE org_id=%s AND project_id=%s AND binding_id=%s''',
+                (*SCOPE.key,binding_id))
+            current=owner.get_responsibility_plan(SCOPE,draft.plan_id,draft.revision,conn=conn)
+            assert current.readiness.value=='blocked'
+            with pytest.raises(ProductionContractDependencyBlocked,
+                match=f'ASSIGNEE_RESOLUTION_PROVIDER_BINDING_{blocker}'):
+                owner.freeze_responsibility_plan(SCOPE,ACTOR,draft.plan_id,draft.version,
+                    f'provider-freeze-{uuid4().hex[:10]}')
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.freeze'
+                  AND result_ref->>'resourceId'=%s''',
+                (*SCOPE.key,draft.plan_id)).fetchone()['n']==0
+
+
+def test_provider_write_admission_locks_current_binding_until_freeze_commit():
+    with disposable_database() as connect:
+        with connect(SCOPE) as seed:
+            _,draft,binding_id=_provider_plan(seed)
+        with connect(SCOPE) as writer:
+            owner=AipProductionContractStore(responsibility_template_resolver=lambda scope,ref:True)
+            owner._require_responsibility_dependencies(writer,SCOPE,draft)
+            with connect(SCOPE) as revoker:
+                revoker.execute("SET LOCAL lock_timeout = '250ms'")
+                with pytest.raises(psycopg.errors.LockNotAvailable):
+                    revoker.execute('''UPDATE aip_capability_binding SET status='suspended'
+                        WHERE org_id=%s AND project_id=%s AND binding_id=%s''',
+                        (*SCOPE.key,binding_id))
+                revoker.rollback()
+            frozen=owner.freeze_responsibility_plan_in_transaction(writer,SCOPE,ACTOR,
+                draft.plan_id,draft.version,f'provider-lock-freeze-{uuid4().hex[:10]}')
+            assert frozen.lifecycle.value=='frozen'
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='ready'
+        with connect(SCOPE) as revoker:
+            revoker.execute('''UPDATE aip_capability_binding SET status='suspended'
+                WHERE org_id=%s AND project_id=%s AND binding_id=%s''',
+                (*SCOPE.key,binding_id))
+        with connect(SCOPE) as reader:
+            reader.read_only=True
+            assert owner.get_responsibility_plan(SCOPE,draft.plan_id,conn=reader).readiness.value=='blocked'
 
 
 @pytest.mark.parametrize('kind',['agent_instance','tool_binding','provider_capability_binding'])
