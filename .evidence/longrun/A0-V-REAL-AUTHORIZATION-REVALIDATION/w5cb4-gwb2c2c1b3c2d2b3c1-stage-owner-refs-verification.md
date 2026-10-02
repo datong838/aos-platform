@@ -8,3 +8,5 @@
 - 复审限制：此方法尚未被新 Receipt/TaskBrief 消费者调用；原 BI Analysis Receipt 与 Stage runtime/Eval/permission 无完整 producer 正向；当前真实库未写，Host/worker/Provider 禁入，不能称生成 Host、原 Review Handoff 或首链可执行。可读 Artifact 和人工评审消费者仍未接。
 
 下一步 d2b3c2：先用原 BI AnalysisRuntimeReceipt 和当前 Case/Occurrence producer 在隔离 PG 同事务接 Stage TaskRun/Plan/Eval/permission，再把这组 Owner-verified expected 交给现有 Review Receipt 与 v3 Task/Brief 读者。若原生产者配置不足，明确保留该具体实例禁入，不用 fixture 造当前业务正例。
+
+提交后补证：`aos-platform/m1@14b52259`，`launchctl kickstart -k` 重载 API/Web 后 PID39963/39966；首个即时健康探针遇启动瞬态 connection refused，随后同一 PID 的 `/v1/health`、`/v1/ready` 和 Web 页面均 HTTP200。Codex 浏览器等异步目录加载后仍见37项仅已评测、已发布0、三项发布来源缺失、按钮 disabled、无电商工作台入口。此读者切片没有改变业务准入。
