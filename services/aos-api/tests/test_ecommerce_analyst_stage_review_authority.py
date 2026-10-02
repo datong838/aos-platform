@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
+from uuid import uuid4
 import pytest
 from aos_api.asset_registry.canonical_json import canonical_json
 from aos_api.aip_assignee_resolution import ResolveAssigneeRequest
 from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
 from aos_api.aip_production_contracts import ResponsibilitySlot, CreateResponsibilityPlanRequest
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import AipProductionContractStore, ProductionContractDependencyBlocked
 from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef
 from aos_api.ecommerce_analyst_stage_review_authority import (
     read_stage_review_responsibility_authority,require_stage_review_authority)
@@ -29,6 +30,34 @@ def test_human_without_machine_capability_and_existing_shape():
     assert slot().required_capability_ids==[]
     original=slot(requiredCapabilityIds=['review'])
     assert original.model_dump(mode='json',by_alias=True)['requiredCapabilityIds']==['review']
+
+
+def test_resolution_receipt_for_another_subject_cannot_authorize_plan_slot():
+    with disposable_database() as connect:
+        with connect(SCOPE) as conn:
+            conn.execute('''INSERT INTO meta_membership(org_id,project_id,subject,role)
+                VALUES(%s,%s,%s,'member') ON CONFLICT DO NOTHING''',(*SCOPE.key,ACTOR))
+            factory=TransactionBoundConnectFactory(HostTransaction(conn),SCOPE)
+            receipt=AipAssigneeResolutionStore(factory).resolve(
+                SCOPE,
+                ResolveAssigneeRequest(subjectId='analyst.portrait.review',assignee=slot().assignee),
+                ACTOR,now=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'])
+            assert receipt.status.value=='resolved'
+            store=AipProductionContractStore(factory,responsibility_template_resolver=lambda scope,ref:True)
+            plan_key=f'plan-subject-drift-{uuid4().hex[:10]}'
+            before=conn.execute('''SELECT count(*) AS n FROM aip_responsibility_plan_head
+                WHERE org_id=%s AND project_id=%s''',SCOPE.key).fetchone()['n']
+            with pytest.raises(ProductionContractDependencyBlocked,match='ASSIGNEE_RESOLUTION_SUBJECT_DRIFTED'):
+                store.create_responsibility_plan(
+                    SCOPE,ACTOR,plan_key,CreateResponsibilityPlanRequest(
+                        profile='TEST_HUMAN_REVIEW',
+                        templateRef=dict(resourceType='ResponsibilityTemplateRevision',resourceId='test-template',revision=1,contentHash='a'*64),
+                        slots=[slot(slotId='analyst.other.review',assigneeResolutionReceiptId=receipt.receipt_id)]))
+            assert conn.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='responsibility_plan.create'
+                  AND idempotency_key=%s''',(*SCOPE.key,plan_key)).fetchone()['n']==0
+            assert conn.execute('''SELECT count(*) AS n FROM aip_responsibility_plan_head
+                WHERE org_id=%s AND project_id=%s''',SCOPE.key).fetchone()['n']==before
 
 
 @pytest.mark.parametrize('kind',['agent_instance','tool_binding','provider_capability_binding'])

@@ -6102,7 +6102,7 @@ class AipProductionContractStore:
         slot_id: str,
     ) -> None:
         row = conn.execute(
-            """SELECT kind,resource_id,version,status,selected_assignee,
+            """SELECT subject_id,kind,resource_id,version,status,selected_assignee,
                       required_capability_refs,snapshot_hash,expires_at
                  FROM public.aip_assignee_resolution_receipt
                 WHERE org_id=%s AND project_id=%s AND receipt_id=%s""",
@@ -6111,6 +6111,10 @@ class AipProductionContractStore:
         if row is None:
             raise ProductionContractDependencyBlocked(
                 f"ASSIGNEE_RESOLUTION_MISSING:{slot_id}"
+            )
+        if row["subject_id"] != slot_id:
+            raise ProductionContractDependencyBlocked(
+                f"ASSIGNEE_RESOLUTION_SUBJECT_DRIFTED:{slot_id}"
             )
         if row["status"] != "resolved" or not row["snapshot_hash"]:
             raise ProductionContractDependencyBlocked(

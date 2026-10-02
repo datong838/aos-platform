@@ -353,7 +353,7 @@ def test_responsibility_plan_accepts_fresh_canonical_provider_resolution() -> No
     resolution = AipAssigneeResolutionStore().resolve(
         SCOPE,
         ResolveAssigneeRequest(
-            subject_id=f"responsibility-plan:w2b/slot:content.review/{suffix}",
+            subject_id="content.review",
             candidates=[assignee],
             required_capabilities=[capability],
         ),
