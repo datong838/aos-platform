@@ -8,3 +8,5 @@
 4. 专项加相邻五文件：`103 passed, 7 warnings`，退出0；`py_compile` 与 `git diff --check` 退出0。原 Stage 正向完整 producer、双读者联合成功、当前正式身份/八配置/发布/assignment/绑定及自然首链均未证明。
 
 复审限制：本波以未接线错误作为最后屏障；未来解除前须以真实原生产者在可销毁 PG 做 Stage runtime/Eval/permission、持久化 Receipt、v3 Task/Brief、可读产物和人工评审的完整正反链，最后再在当前正式授权实例自然验收。当前真实库只读，Host/worker/Provider仍关闭。
+
+提交后运行回读：`m1@23097ad7`；`launchctl kickstart -k` 重载 API/Web，PID43654/43657。`/v1/health`、`/v1/ready`、`/aip/skill-publish` HTTP200；18181无监听。浏览器首次在重载窗口显示目录/候选读取失败，完整重载并等待异步数据后恢复：37项仅评测、已发布0、缺正式放行/Logic/路由三来源、“发布此修订”disabled、无电商工作台入口。该启动瞬态未当作验收通过，已复核最终页面状态。直接无 Bearer 请求 publication-options 返回401，符合预览认证边界，不能据此判定浏览器身份已正式齐备。
