@@ -6,7 +6,12 @@ from psycopg.types.json import Jsonb
 
 from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
-from aos_api.ecommerce_growth_runtime_adapters import ReviewAdvanceHostService, TransactionBoundConnectFactory
+from aos_api.ecommerce_growth_runtime_adapters import (
+    ReviewAdvanceHostService,
+    TransactionBoundConnectFactory,
+    _analysis_command_hash,
+    _strict_review_accept_command,
+)
 from aos_api.aip_task_store import AipTaskIdempotencyConflict, AipTaskStore
 from aos_api.aip_budget_reservation_contracts import BudgetExactRef
 from aos_api.aip_budget_reservation_store import AipBudgetReservationStore, BudgetReservationBlocked
@@ -69,6 +74,104 @@ def command(*, title: str = "制定七夕会员复购活动方案") -> dict[str,
             "artifactRefs": artifacts,
         },
     }
+
+
+def accepted_stage_command() -> dict[str, object]:
+    value = command()
+    value.pop("reviewIssueRef")
+    value.pop("artifactBindings")
+    stage_artifact = {**ref("Artifact", "stage-artifact-1"), "contentHash": "a" * 64}
+    stage_plan = {**value["currentPlanRef"], "contentHash": "a" * 64}
+    value.update({
+        "operation": "review_handoff.advance",
+        "decision": "ACCEPT",
+        "sourceKind": "accepted-stage-v1",
+        "stageDecisionRef": {**ref("AnalystStageDecisionRevision", "decision-1"),
+                             "contentHash": "a" * 64},
+        "stageTaskRunId": "task-run-1",
+        "stagePlanRef": stage_plan,
+        "stageAttemptRef": {
+            "resourceType": "StepRunAttempt", "runId": "task-run-1",
+            "stepKey": "solution-design", "stepRunId": "step-run-1",
+            "attempt": 1, "inputHash": "a" * 64,
+        },
+        "stageArtifactRef": stage_artifact,
+        "responsibilityPlanRef": {**ref("ResponsibilityPlanRevision", "responsibility-1"),
+                                  "contentHash": "a" * 64},
+        "cutoffAt": NOW.isoformat(),
+        "returnStage": None,
+    })
+    value["taskSpec"]["artifactRefs"] = [ref("Artifact", "stage-artifact-1")]
+    value["requestHash"] = _analysis_command_hash(value)
+    return value
+
+
+def test_accepted_stage_task_brief_v3_persists_one_original_artifact_and_exact_source():
+    value = accepted_stage_command()
+    _strict_review_accept_command(value)
+    host = ReviewAdvanceHostService()
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        first = host._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value, occurred_at=NOW,
+        )
+        assert host._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value, occurred_at=NOW,
+        ) == first
+        task = conn.execute(
+            "SELECT goal FROM public.aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s",
+            (*SCOPE.key, first["taskRef"]["resourceId"]),
+        ).fetchone()
+        brief = conn.execute(
+            "SELECT schema_ref,spec FROM public.aip_task_brief_revision "
+            "WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=1",
+            (*SCOPE.key, first["briefRef"]["resourceId"]),
+        ).fetchone()
+        expected_source = {
+            name: value[name] for name in (
+                "sourceKind", "cutoffAt", "expiresAt", "occurrenceRef", "caseRef",
+                "runRef", "analysisReceiptRef", "currentPlanRef", "growthPlanRef",
+                "evalReportRef", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
+                "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",
+            )
+        }
+        expected_handoff_body = {
+            "operation": "review_handoff.accept",
+            **{name: value[name] for name in (
+                "occurrenceRef", "caseRef", "runRef", "analysisReceiptRef",
+                "currentPlanRef", "growthPlanRef", "evalReportRef", "targetModuleId",
+                "sourceSlotId", "targetSlotId", "markings", "expiresAt",
+            )},
+            "sourceLineage": expected_source,
+        }
+        assert first["handoffRef"]["contentHash"] == _analysis_command_hash(expected_handoff_body)
+        assert brief["schema_ref"]["resourceId"] == "schema://aos/ecommerce/content-campaign-brief/v3"
+        assert task["goal"]["sourceLineage"] == brief["spec"]["sourceLineage"] == expected_source
+        assert task["goal"]["artifactRefs"] == brief["spec"]["artifactRefs"] == [
+            ref("Artifact", "stage-artifact-1")
+        ]
+        assert "reviewIssueRef" not in expected_source
+        assert brief["spec"]["externalPublicationRequested"] is False
+        drift = accepted_stage_command()
+        drift["stageDecisionRef"]["resourceId"] = "another-decision"
+        drift["requestHash"] = _analysis_command_hash(
+            {name: item for name, item in drift.items() if name != "requestHash"}
+        )
+        _strict_review_accept_command(drift)
+        with pytest.raises(AipTaskIdempotencyConflict):
+            host._review_lineage(
+                transaction=transaction, scope=SCOPE, command=drift, occurred_at=NOW,
+            )
+        conn.rollback()
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.aip_task WHERE org_id=%s AND project_id=%s",
+            SCOPE.key,
+        ).fetchone()["n"] == 0
+        assert conn.execute(
+            "SELECT count(*) AS n FROM public.aip_task_brief_revision "
+            "WHERE org_id=%s AND project_id=%s",
+            SCOPE.key,
+        ).fetchone()["n"] == 0
 
 
 def test_review_lineage_uses_real_task_and_brief_owners_and_outer_rollback():

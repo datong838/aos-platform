@@ -3121,6 +3121,16 @@ class ReviewAdvanceHostService:
             raise ValueError("review lineage time must include timezone")
         key = command["idempotencyKey"]
         task_spec = command["taskSpec"]
+        accepted_stage = command.get("sourceKind") == "accepted-stage-v1"
+        source_lineage = None
+        if accepted_stage:
+            _strict_review_accept_command(command)
+            source_lineage = {name: command[name] for name in (
+                "sourceKind", "cutoffAt", "expiresAt", "occurrenceRef", "caseRef",
+                "runRef", "analysisReceiptRef", "currentPlanRef", "growthPlanRef",
+                "evalReportRef", "stageDecisionRef", "stageTaskRunId", "stagePlanRef",
+                "stageAttemptRef", "stageArtifactRef", "responsibilityPlanRef",
+            )}
         handoff_body = {
             "operation": "review_handoff.accept",
             "occurrenceRef": command["occurrenceRef"],
@@ -3129,15 +3139,18 @@ class ReviewAdvanceHostService:
             "analysisReceiptRef": command["analysisReceiptRef"],
             "currentPlanRef": command["currentPlanRef"],
             "growthPlanRef": command["growthPlanRef"],
-            "reviewIssueRef": command["reviewIssueRef"],
             "evalReportRef": command["evalReportRef"],
-            "artifactBindings": command["artifactBindings"],
             "targetModuleId": command["targetModuleId"],
             "sourceSlotId": command["sourceSlotId"],
             "targetSlotId": command["targetSlotId"],
             "markings": command["markings"],
             "expiresAt": command["expiresAt"],
         }
+        if accepted_stage:
+            handoff_body["sourceLineage"] = source_lineage
+        else:
+            handoff_body["reviewIssueRef"] = command["reviewIssueRef"]
+            handoff_body["artifactBindings"] = command["artifactBindings"]
         handoff_id = str(
             uuid5(REVIEW_HANDOFF_NAMESPACE, "\x1f".join((*scope.key, key)))
         )
@@ -3160,6 +3173,8 @@ class ReviewAdvanceHostService:
                 "status": "requested",
             },
         }
+        if accepted_stage:
+            task_goal["sourceLineage"] = source_lineage
         task_request = CreateTaskRequest(
             type=task_spec["taskType"],
             title=task_spec["title"],
@@ -3218,6 +3233,8 @@ class ReviewAdvanceHostService:
             "constraints": task_spec["constraints"],
             "externalPublicationRequested": False,
         }
+        if accepted_stage:
+            brief_spec["sourceLineage"] = source_lineage
         if approved_plan is not None and approved_plan.sales_weapon_method is not None:
             method = approved_plan.sales_weapon_method
             brief_spec.update({
@@ -3230,10 +3247,12 @@ class ReviewAdvanceHostService:
             brief_type=task_spec["briefType"],
             schema_ref=ResourceRef(
                 resource_type="ContentCampaignBriefSchema",
-                resource_id=("schema://aos/ecommerce/content-campaign-brief/v2"
+                resource_id=("schema://aos/ecommerce/content-campaign-brief/v3"
+                             if accepted_stage else
+                             "schema://aos/ecommerce/content-campaign-brief/v2"
                              if approved_plan is not None and approved_plan.sales_weapon_method is not None
                              else "schema://aos/ecommerce/content-campaign-brief/v1"),
-                revision=("2" if approved_plan is not None
+                revision=("3" if accepted_stage else "2" if approved_plan is not None
                           and approved_plan.sales_weapon_method is not None else "1"),
                 authority="aos://ecommerce-workshop/content-campaign",
             ),
