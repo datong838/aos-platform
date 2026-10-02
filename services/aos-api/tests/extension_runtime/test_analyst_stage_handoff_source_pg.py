@@ -61,7 +61,9 @@ def source(request):
             'objective':'different objective'}))
         approved_ref=owner.publish_plan(SCOPE,changed.created_by,name+':changed',changed,expected_version=1)
     else:
-        approval=EcommerceAnalystGrowthPlanApprovalService(owner).approve(SCOPE,name,ApproveGrowthPlanRequest(draftRef=draft_ref),expected_version=1,idempotency_key=name+':approve',actor='fixture-approver')
+        with connect(SCOPE) as conn:
+            approval_time=conn.execute('SELECT clock_timestamp() AS now').fetchone()['now']
+        approval=EcommerceAnalystGrowthPlanApprovalService(owner, clock=lambda: approval_time).approve(SCOPE,name,ApproveGrowthPlanRequest(draftRef=draft_ref),expected_version=1,idempotency_key=name+':approve',actor='fixture-approver')
         approved_ref=approval.approved_ref
     args=dict(approved_ref=approved_ref,decision_ref=decision_ref,task_run_id=item.task_run_id,plan_ref=item.plan_ref,stage_attempt_ref=item.stage_attempt_ref)
     return owner,draft,item,args

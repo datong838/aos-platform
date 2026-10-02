@@ -3525,6 +3525,57 @@ class ReviewAdvanceHostService:
                 or expected.get("sideEffects") != dict(_REVIEW_SIDE_EFFECTS)
             ):
                 return {}
+            handoff_body = {
+                "operation": "review_handoff.accept",
+                **{name: command[name] for name in (
+                    "occurrenceRef", "caseRef", "runRef", "analysisReceiptRef",
+                    "currentPlanRef", "growthPlanRef", "evalReportRef",
+                    "targetModuleId", "sourceSlotId", "targetSlotId",
+                    "markings", "expiresAt",
+                )},
+                "sourceLineage": source_lineage,
+            }
+            handoff_id = str(uuid5(REVIEW_HANDOFF_NAMESPACE, "\x1f".join((*scope.key, key))))
+            handoff_ref = {
+                "resourceType": "HandoffReceipt", "resourceId": handoff_id,
+                "revision": 1, "contentHash": _analysis_command_hash(handoff_body),
+                "receiptId": handoff_id,
+            }
+            if expected.get("handoffRef") != handoff_ref:
+                return {}
+            task_ref, brief_ref = expected.get("taskRef"), expected.get("briefRef")
+            if type(task_ref) is not dict or type(brief_ref) is not dict:
+                return {}
+            try:
+                ContentReviewHostService._task_brief_authority(
+                    transaction, scope, {
+                        "taskRef": task_ref, "briefRef": brief_ref,
+                        "growthPlanRef": command["growthPlanRef"],
+                        "sourceArtifactRefs": command["taskSpec"]["artifactRefs"],
+                    },
+                )
+                task = transaction.execute(
+                    """SELECT goal FROM public.aip_task
+                        WHERE org_id=%s AND project_id=%s AND task_id=%s FOR SHARE""",
+                    (*scope.key, task_ref["resourceId"]),
+                ).fetchone()
+                brief = transaction.execute(
+                    """SELECT schema_ref,spec FROM public.aip_task_brief_revision
+                        WHERE org_id=%s AND project_id=%s AND brief_id=%s AND revision=%s""",
+                    (*scope.key, brief_ref["resourceId"], brief_ref["revision"]),
+                ).fetchone()
+                if (task is None or brief is None or type(task["goal"]) is not dict
+                        or type(brief["spec"]) is not dict
+                        or task["goal"].get("sourceLineage") != source_lineage
+                        or brief["spec"].get("sourceLineage") != source_lineage
+                        or task["goal"].get("sourceHandoffRef") != handoff_ref
+                        or brief["spec"].get("sourceHandoffRef") != handoff_ref
+                        or brief["schema_ref"].get("resourceId")
+                        != "schema://aos/ecommerce/content-campaign-brief/v3"
+                        or brief["spec"].get("externalPublicationRequested") is not False):
+                    return {}
+            except (AttributeError, KeyError, TypeError, ValueError):
+                return {}
         return expected if dict(receipt) == expected else {}
 
 

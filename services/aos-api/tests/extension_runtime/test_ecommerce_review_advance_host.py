@@ -169,7 +169,7 @@ def test_accepted_stage_envelope_cannot_execute_before_owner_wiring():
 
 
 def test_accepted_stage_receipt_readback_requires_exact_persisted_command(monkeypatch):
-    """Unit readback contract only; the accepted-stage original producer remains gated."""
+    """A journal-only response cannot prove the original Task/Brief lineage."""
     host = ReviewAdvanceHostService()
     command = accepted_stage_command()
     lineage = {
@@ -183,7 +183,7 @@ def test_accepted_stage_receipt_readback_requires_exact_persisted_command(monkey
         None, None, SimpleNamespace(read=lambda key: journal.get(key))))
     transaction = HostTransaction(SimpleNamespace())
     assert host.verify_receipt(transaction=transaction, scope=SCOPE, dispatch=None,
-                               command=command, receipt=receipt) == receipt
+                               command=command, receipt=receipt) == {}
     assert host.verify_receipt(transaction=transaction,
                                scope=TenantScope("dev-org", "dev-project"), dispatch=None,
                                command=command, receipt=receipt) == {}

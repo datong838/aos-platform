@@ -176,6 +176,40 @@ def test_accepted_stage_task_brief_v3_persists_one_original_artifact_and_exact_s
         ).fetchone()["n"] == 0
 
 
+def test_accepted_stage_receipt_readback_requires_original_task_brief(monkeypatch):
+    value = accepted_stage_command()
+    host = ReviewAdvanceHostService()
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        refs = host._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value, occurred_at=NOW,
+        )
+        receipt = host._accept_receipt(value, refs, SCOPE, value["idempotencyKey"], NOW)
+        journal = {value["idempotencyKey"]: receipt}
+        monkeypatch.setattr(host, "_components", lambda *_: (
+            None, None, SimpleNamespace(read=lambda key: journal.get(key))))
+        check = lambda item: host.verify_receipt(
+            transaction=transaction, scope=SCOPE, dispatch=None,
+            command=value, receipt=item,
+        )
+        assert check(receipt) == receipt
+
+        missing = host._accept_receipt(
+            value, {**refs, "taskRef": {**refs["taskRef"], "resourceId": "missing-task"}},
+            SCOPE, value["idempotencyKey"], NOW,
+        )
+        journal[value["idempotencyKey"]] = missing
+        assert check(missing) == {}
+
+        missing_brief = host._accept_receipt(
+            value, {**refs, "briefRef": {**refs["briefRef"], "resourceId": "missing-brief"}},
+            SCOPE, value["idempotencyKey"], NOW,
+        )
+        journal[value["idempotencyKey"]] = missing_brief
+        assert check(missing_brief) == {}
+        conn.rollback()
+
+
 def test_content_generate_reader_requires_independent_v3_task_brief_lineage():
     value = accepted_stage_command()
     with connect_serializable(SCOPE) as conn:
