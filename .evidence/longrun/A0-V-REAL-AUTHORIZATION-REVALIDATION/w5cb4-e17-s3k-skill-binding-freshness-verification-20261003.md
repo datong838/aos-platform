@@ -22,6 +22,12 @@
 
 浏览器现有 8434 `/aip/skill-publish` 只读回 org-org/dev-project、37已评测/0已发布、三项正式来源 blocker、发布按钮 disabled、电商无可见入口；截图与 AX 在本轮 CUA 工具记录。页面/API 进程仍是此提交前版本，本波浏览器只证明当前预览禁入状态，**不是新服务端门已在线生效**。签名 Growth 全栈测试缺显式 disposable PG/OCI/签名 Receipt，本轮不运行也不计通过。
 
+### 提交后服务重载复验
+
+代码提交 `m1@764a999b` 后，原签名预览启动器预检 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`，安装 ID `ccdcb0f0-1040-4bc6-aa0c-d045f5689813`、已发布版本4、runtime binding0；原卷 `aos-a0v-recovery-pg-data` 和库 `aos_current_preview_20260927@a0v_135` 只读回读，今日完整备份 SHA256 `e2c3a4b6881e5b4616b92ce42052227d6a20fa34b4310debcda83c939c9e04a0` 再核一致，命令均退出0。此轮无新迁移、无真库写、无 PG 重启；本日 PG/API/Web 完整顺序重启另见 daily20261003 证据。
+
+受控 reload 原 launchd API/Web 启动项时，立即 `bootstrap` 两项一度 exit5，旧进程随后确实停止；查 `plutil -lint` 两文件均 OK、GUI domain 存在、服务已不存在，稍后按**同一原 plist**重试，两项 `bootstrap` exit0。新 API PID31970、Web PID31986；18435/8080/8434 LISTEN、18181无监听；`/v1/health`、`/v1/ready`、`/openapi.json`、`/aip/skill-publish` 均 HTTP200，当前 API 启动日志 `migrationMode=disabled`、`runtimeHost=0`、`workersEnabled=0`、Host inactive `DISABLED`。浏览器 CUA 再回读37已评测/0发布、三项 blocker、按钮 disabled、电商无可见入口。新服务进程在本代码提交后启动，证明已加载 m1 文件；未对真实库写 Plan/freeze，故只证明页面继续禁入，不宣称新门在线业务正向或首链。
+
 ## 方案一致性与剩余风险
 
 实现只缩紧 Plan create/revise/freeze 的共用职责读取门，不改原 SkillBinding Store、Capability 读证和现有正式身份准入。原 Route/Model Eval/签名 Skill/六 Binding、当前八配置、Host Owner、自然首链仍缺。直接能写 SkillBinding 表的角色理论上仍可伪造 `available` 与 snapshot；本波只证明“active、未知或过期”失败封闭，不能把它外推为数据库级签发来源认证。下波应对 active+伪造 ready 的发行/评测来源做独立 RED，再决定数据库写门或受限 issuer 接线；不得仅靠当前状态列开放 Plan 正向。
