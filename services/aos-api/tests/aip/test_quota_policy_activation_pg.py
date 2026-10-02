@@ -112,9 +112,15 @@ def test_signed_quota_consumes_once_and_original_reader_accepts(
 ):
     from aos_api.aip_quota_policy_consumer import QuotaPolicyConsumer
     from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+    from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
+    from aos_api.tenant_scope import TenantScope
     from tests.aip.test_guard_policy_activation_pg import guard_consume_command
     sign, _ = https_signer
     maker, _, bundle, _, approval = approved_quota(sign,guard_issuer_factory,tmp_path)
+    other = TenantScope('dev-org', 'dev-project')
+    with isolated_owner() as conn:
+        before = read_candidates(conn, SCOPE).counts
+        other_before = read_candidates(conn, other).counts
     command = guard_consume_command(sign,maker,bundle,approval)
     factory,database = guard_consumer_factory
     folder = tmp_path / "quota-consumer-attempts"
@@ -130,6 +136,12 @@ def test_signed_quota_consumes_once_and_original_reader_accepts(
     assert saved.revision == 2 and saved.max_concurrency == 2
     with connect(SCOPE) as conn:
         assert conn.execute("SELECT count(*) AS n FROM aip_model_governance_policy_receipt WHERE operation='model_governance_policy.quota.activate' AND idempotency_key=%s",(bundle.proposal.id,)).fetchone()["n"] == 1
+    with isolated_owner() as conn:
+        after = read_candidates(conn, SCOPE).counts
+        assert read_candidates(conn, other).counts == other_before
+    assert after['quota_policies'] == before['quota_policies'] + 1
+    assert {key: value for key, value in after.items() if key != 'quota_policies'} == {
+        key: value for key, value in before.items() if key != 'quota_policies'}
 
 
 @pytest.mark.parametrize("bad", ["target", "binding", "wrong_actor", "wrong_signature", "tenant", "checker_revoked", "head_advanced", "withdrawn"])
