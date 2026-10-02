@@ -6243,6 +6243,80 @@ class ContentReviewHostService:
         return _content_business_text(task["title"], name="business_task_title", limit=120)
 
     @staticmethod
+    def _accepted_stage_task_brief_authority(transaction, scope, command, *, checked_at):
+        if command.get("sourceKind") != "accepted-stage-v1":
+            raise ValueError("content review Stage source kind drifted")
+        title = ContentReviewHostService._task_brief_authority(transaction, scope, command)
+        row = transaction.execute(
+            """SELECT goal FROM public.aip_task
+                WHERE org_id=%s AND project_id=%s AND task_id=%s FOR SHARE""",
+            (*scope.key, command["taskRef"]["resourceId"]),
+        ).fetchone()
+        goal = None if row is None else row["goal"]
+        lineage = None if type(goal) is not dict else goal.get("sourceLineage")
+        handoff = None if type(goal) is not dict else goal.get("sourceHandoffRef")
+        if (type(lineage) is not dict
+                or set(lineage) != _CONTENT_STAGE_LINEAGE_FIELDS
+                or lineage.get("sourceKind") != "accepted-stage-v1"
+                or lineage.get("markings") != ["internal"]
+                or type(command.get("sourceArtifactRefs")) is not list
+                or len(command["sourceArtifactRefs"]) != 1):
+            raise ValueError("content review Stage lineage drifted")
+        source_values = command["sourceArtifactRefs"]
+        _content_exact_ref(source_values[0], "Artifact")
+        if (not isinstance(checked_at, datetime) or checked_at.utcoffset() is None):
+            raise ValueError("content review Stage check time is invalid")
+        try:
+            cutoff = datetime.fromisoformat(lineage["cutoffAt"])
+            expiry = datetime.fromisoformat(lineage["expiresAt"])
+        except (TypeError, ValueError, KeyError):
+            raise ValueError("content review Stage time drifted") from None
+        if (cutoff.utcoffset() is None or expiry.utcoffset() is None
+                or not cutoff <= checked_at < expiry):
+            raise ValueError("content review Stage authority expired")
+        authorities = {
+            "handoff": InvestigationExactRef.model_validate(handoff),
+            "task": InvestigationExactRef.model_validate(command["taskRef"]),
+            "brief": InvestigationExactRef.model_validate(command["briefRef"]),
+            "growth_plan": InvestigationExactRef.model_validate(command["growthPlanRef"]),
+        }
+        handoff_body = {
+            "operation": "review_handoff.accept",
+            **{name: lineage[name] for name in (
+                "occurrenceRef", "caseRef", "runRef", "analysisReceiptRef",
+                "currentPlanRef", "growthPlanRef", "evalReportRef", "markings", "expiresAt",
+            )},
+            "targetModuleId": "ecommerce.content-campaign",
+            "sourceSlotId": "analyst.solution",
+            "targetSlotId": "content.plan",
+            "sourceLineage": lineage,
+        }
+        if handoff != {
+            "resourceType": "HandoffReceipt",
+            "resourceId": authorities["handoff"].resource_id,
+            "revision": 1,
+            "contentHash": _analysis_command_hash(handoff_body),
+            "receiptId": authorities["handoff"].resource_id,
+        }:
+            raise ValueError("content review Handoff exact lineage drifted")
+        ContentGenerateHostService._accepted_stage_owner_refs(
+            transaction=transaction, scope=scope, candidate=lineage,
+        )
+        source = ReviewAdvanceHostService._revalidate_accepted_stage_source(
+            transaction=transaction, scope=scope, command=lineage,
+        )
+        ContentGenerateHostService._review_receipt(
+            transaction, scope, authorities, source_values,
+            source_kind="accepted-stage-v1", source_lineage=lineage,
+        )
+        ContentGenerateHostService._task_brief(
+            transaction, scope, authorities, source_values,
+            approved_plan=source.approved,
+            source_kind="accepted-stage-v1", source_lineage=lineage,
+        )
+        return title
+
+    @staticmethod
     def _issue_authority(transaction, scope, command):
         row = transaction.execute(
             """SELECT * FROM public.aip_review_issue
@@ -6664,10 +6738,19 @@ class ContentReviewHostService:
 
     def revalidate(self, *, transaction, scope, dispatch, command):
         _strict_content_review_command(command)
-        if command.get("sourceKind") == "accepted-stage-v1":
-            raise ValueError("accepted stage content review Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_review":
             raise ValueError("content review dispatch operation drifted")
+        if command.get("sourceKind") == "accepted-stage-v1":
+            checked_at = transaction.execute(
+                "SELECT clock_timestamp() AS checked_at"
+            ).fetchone()["checked_at"]
+            artifact = self._artifact_authority(transaction, scope, command)
+            self._accepted_stage_task_brief_authority(
+                transaction, scope, command, checked_at=checked_at,
+            )
+            if _request_hash(artifact["growthPlanRef"]) != _request_hash(command["growthPlanRef"]):
+                raise ValueError("content review GrowthPlan lineage drifted")
+            raise ValueError("accepted stage content review Host is not wired")
         artifact = self._artifact_authority(transaction, scope, command)
         self._task_brief_authority(transaction, scope, command)
         self._issue_authority(transaction, scope, command)

@@ -7,7 +7,7 @@ from psycopg.types.json import Jsonb
 from aos_api.db import connect_serializable
 from aos_api.ecommerce_growth_host_ports import HostTransaction
 from aos_api.ecommerce_growth_runtime_adapters import (
-    ContentGenerateHostService,
+    ContentGenerateHostService, ContentReviewHostService,
     ReviewAdvanceHostService,
     TransactionBoundConnectFactory,
     _analysis_command_hash,
@@ -212,6 +212,91 @@ def test_content_generate_reader_requires_independent_v3_task_brief_lineage():
                     **expected["stageArtifactRef"], "resourceId": "another-artifact",
                 },
             }})
+        conn.rollback()
+
+
+def test_content_review_v3_reader_rejects_brief_without_current_stage_owner_and_receipt():
+    value = accepted_stage_command()
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        refs = ReviewAdvanceHostService()._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value, occurred_at=NOW,
+        )
+        review = {
+            "sourceKind": "accepted-stage-v1",
+            "taskRef": refs["taskRef"], "briefRef": refs["briefRef"],
+            "growthPlanRef": value["growthPlanRef"],
+            "sourceArtifactRefs": value["taskSpec"]["artifactRefs"],
+        }
+        with pytest.raises(ValueError):
+            ContentReviewHostService._accepted_stage_task_brief_authority(
+                transaction, SCOPE, review, checked_at=NOW,
+            )
+        with pytest.raises(ValueError, match="expired"):
+            ContentReviewHostService._accepted_stage_task_brief_authority(
+                transaction, SCOPE, review,
+                checked_at=datetime(2026, 9, 11, 4, tzinfo=UTC),
+            )
+        with pytest.raises(ValueError, match="Task authority is missing"):
+            ContentReviewHostService._accepted_stage_task_brief_authority(
+                transaction, TenantScope("dev-org", "dev-project"), review,
+                checked_at=NOW,
+            )
+        conn.rollback()
+
+
+def test_content_review_v3_reader_reaches_persisted_receipt_only_after_current_stage_owner(monkeypatch):
+    # Reuse the original StageDecision/GrowthPlan stores on this disposable PG.
+    # The controlled fixture is not a formal human approval or a business pass.
+    import test_analyst_stage_handoff_source_pg as stage_test
+
+    _owner, _draft, decision, args = stage_test.source.__wrapped__(
+        SimpleNamespace(param=None)
+    )
+    stage = stage_test.host_command(decision, args)
+    value = accepted_stage_command()
+    value.update(stage)
+    value["currentPlanRef"] = {
+        **stage["stagePlanRef"],
+        "contentHash": "sha256:" + stage["stagePlanRef"]["contentHash"],
+    }
+    source_artifact = {
+        **stage["stageArtifactRef"],
+        "contentHash": "sha256:" + stage["stageArtifactRef"]["contentHash"],
+    }
+    value["taskSpec"]["growthPlanRef"] = stage["growthPlanRef"]
+    value["taskSpec"]["artifactRefs"] = [source_artifact]
+    value["requestHash"] = _analysis_command_hash(
+        {name: item for name, item in value.items() if name != "requestHash"}
+    )
+    _strict_review_accept_command(value)
+    with connect_serializable(SCOPE) as conn:
+        transaction = HostTransaction(conn)
+        refs = ReviewAdvanceHostService()._review_lineage(
+            transaction=transaction, scope=SCOPE, command=value,
+            occurred_at=decision.created_at,
+        )
+        review = {
+            "sourceKind": "accepted-stage-v1",
+            "taskRef": refs["taskRef"], "briefRef": refs["briefRef"],
+            "growthPlanRef": value["growthPlanRef"],
+            "sourceArtifactRefs": value["taskSpec"]["artifactRefs"],
+        }
+        conn.execute("SET LOCAL ROLE aos_runtime")
+        checked_at = conn.execute("SELECT clock_timestamp() AS now").fetchone()["now"]
+        with pytest.raises(ValueError, match="Review authority is not unique"):
+            ContentReviewHostService._accepted_stage_task_brief_authority(
+                transaction, SCOPE, review, checked_at=checked_at,
+            )
+        # The isolated seam tests the remaining original v3 Brief reader only;
+        # it is never used as a formal persisted Review Receipt acceptance.
+        monkeypatch.setattr(
+            ContentGenerateHostService, "_review_receipt",
+            staticmethod(lambda *_args, **_kwargs: None),
+        )
+        assert ContentReviewHostService._accepted_stage_task_brief_authority(
+            transaction, SCOPE, review, checked_at=checked_at,
+        ) == value["taskSpec"]["title"]
         conn.rollback()
 
 

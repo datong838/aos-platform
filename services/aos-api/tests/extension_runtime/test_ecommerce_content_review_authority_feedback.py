@@ -295,7 +295,7 @@ def test_content_review_command_rejects_hash_source_and_decision_drift():
         _strict_content_review_command(boolean_alias)
 
 
-def test_accepted_stage_review_execution_stays_closed_before_database_effects():
+def test_accepted_stage_review_execution_stays_closed_before_database_effects(monkeypatch):
     item = command()
     item["sourceKind"] = "accepted-stage-v1"
     item["sourceArtifactRefs"] = [ref("Artifact", "original-stage-artifact")]
@@ -308,11 +308,30 @@ def test_accepted_stage_review_execution_stays_closed_before_database_effects():
         def execute(self, *_args, **_kwargs):
             raise AssertionError("accepted stage review reached the database")
 
+    class ReadCurrentTimeOnly:
+        def execute(self, statement, *_args, **_kwargs):
+            assert statement == "SELECT clock_timestamp() AS checked_at"
+            return Result({"checked_at": NOW})
+
+    observed = []
+    monkeypatch.setattr(
+        ContentReviewHostService, "_artifact_authority",
+        staticmethod(lambda *_args: artifact(item)),
+    )
+    monkeypatch.setattr(
+        ContentReviewHostService, "_accepted_stage_task_brief_authority",
+        staticmethod(lambda *_args, **kwargs: observed.append(kwargs["checked_at"])),
+    )
     service = ContentReviewHostService()
-    with pytest.raises(ValueError, match="Host is not wired"):
+    with pytest.raises(ValueError, match="dispatch operation drifted"):
         service.revalidate(transaction=NoDatabaseEffects(), scope=SCOPE,
+                           dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate"),
+                           command=item)
+    with pytest.raises(ValueError, match="Host is not wired"):
+        service.revalidate(transaction=ReadCurrentTimeOnly(), scope=SCOPE,
                            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_review"),
                            command=item)
+    assert observed == [NOW]
     with pytest.raises(ValueError, match="Host is not wired"):
         service.execute(transaction=NoDatabaseEffects(), scope=SCOPE, dispatch_ref=None,
                         command=item, checked_at=NOW, occurred_at=NOW)
