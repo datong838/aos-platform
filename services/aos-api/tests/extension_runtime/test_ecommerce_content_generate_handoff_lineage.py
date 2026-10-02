@@ -651,6 +651,125 @@ def test_accepted_stage_content_command_is_strict_and_host_stays_closed():
                             command=command, receipt={})
 
 
+def test_accepted_stage_content_revalidates_execution_authorities_before_closed_gate(monkeypatch):
+    command = accepted_stage_content_command()
+    review_command = accepted_stage_command()
+    receipt = ReviewAdvanceHostService()._accept_receipt(
+        review_command,
+        {"handoffRef": command["authorityRefs"]["handoff"],
+         "taskRef": command["authorityRefs"]["task"],
+         "briefRef": command["authorityRefs"]["brief"]},
+        SCOPE, review_command["idempotencyKey"],
+        datetime(2026, 9, 9, 4, 1, tzinfo=timezone.utc),
+    )
+    lineage = receipt["sourceLineage"]
+    calls = []
+
+    class OneReviewReceipt:
+        def execute(self, query, params):
+            assert "ecommerce_growth_runtime_command_receipt" in query
+            assert params[:2] == SCOPE.key
+            return SimpleNamespace(fetchall=lambda: [{"response": receipt}])
+
+    def stage_source(**_kwargs):
+        calls.append("stage")
+        return SimpleNamespace(decision=SimpleNamespace(task_run_id="task-run-1"),
+                               approved=object())
+
+    monkeypatch.setattr(ContentGenerateHostService, "_accepted_stage_owner_refs",
+                        staticmethod(lambda **_: calls.append("owner")))
+    monkeypatch.setattr(ReviewAdvanceHostService, "_revalidate_accepted_stage_source",
+                        staticmethod(stage_source))
+    for name in ("_revalidate_current_occurrence_case", "_revalidate_analysis_runtime",
+                 "_revalidate_accepted_stage_runtime_sources"):
+        monkeypatch.setattr(ReviewAdvanceHostService, name,
+                            staticmethod(lambda **_: calls.append("stage-runtime")))
+    monkeypatch.setattr(ContentGenerateHostService, "_review_receipt",
+                        staticmethod(lambda *_args, **_kwargs: calls.append("review-receipt")))
+    monkeypatch.setattr(ContentGenerateHostService, "_task_brief",
+                        staticmethod(lambda *_args, **_kwargs: calls.append("task-brief")))
+
+    def agent(*_args):
+        calls.append("agent")
+        return object(), object()
+
+    monkeypatch.setattr(ContentGenerateHostService, "_agent_capability_authority",
+                        staticmethod(agent))
+
+    def route_denied(*_args, **_kwargs):
+        calls.append("route-budget")
+        raise ValueError("current route budget authority unavailable")
+
+    monkeypatch.setattr(ContentGenerateHostService, "_route_budget_approval_authority",
+                        staticmethod(route_denied))
+    checked_at = datetime.fromisoformat(lineage["cutoffAt"]) + timedelta(minutes=1)
+    with pytest.raises(ValueError, match="current route budget authority unavailable"):
+        ContentGenerateHostService().revalidate(
+            transaction=OneReviewReceipt(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+                                     checked_at=checked_at),
+            command=command,
+        )
+    assert calls[-4:] == ["review-receipt", "task-brief", "agent", "route-budget"]
+
+    def step(name, result):
+        def read(*_args, **_kwargs):
+            calls.append(name)
+            return result
+        return staticmethod(read)
+
+    monkeypatch.setattr(ContentGenerateHostService, "_route_budget_approval_authority",
+                        step("route-budget", (object(),
+                                              datetime.fromisoformat(lineage["expiresAt"])
+                                              + timedelta(seconds=1))))
+    calls.clear()
+    with pytest.raises(ValueError, match="accepted stage content authority expired"):
+        ContentGenerateHostService().revalidate(
+            transaction=OneReviewReceipt(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+                                     checked_at=checked_at),
+            command=command,
+        )
+    assert calls[-2:] == ["agent", "route-budget"]
+
+    monkeypatch.setattr(ContentGenerateHostService, "_route_budget_approval_authority",
+                        step("route-budget", (object(), checked_at)))
+    monkeypatch.setattr(ContentGenerateHostService, "_fact_source_authority",
+                        step("facts", None))
+    monkeypatch.setattr(ContentGenerateHostService, "_resolution_capacity_authority",
+                        step("capacity", (object(), object(), object(), object())))
+    monkeypatch.setattr(ContentGenerateHostService, "_binding_authority",
+                        step("binding", (object(), object())))
+    monkeypatch.setattr(ContentGenerateHostService, "_binding_dependency_authority",
+                        step("dependencies", None))
+    calls.clear()
+    with pytest.raises(ValueError, match="accepted stage content Host is not wired"):
+        ContentGenerateHostService().revalidate(
+            transaction=OneReviewReceipt(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+                                     checked_at=checked_at),
+            command=command,
+        )
+    assert calls[-8:] == ["review-receipt", "task-brief", "agent", "route-budget",
+                           "facts", "capacity", "binding", "dependencies"]
+
+    def facts_denied(*_args, **_kwargs):
+        calls.append("facts-denied")
+        raise ValueError("accepted stage fact source unavailable")
+
+    monkeypatch.setattr(ContentGenerateHostService, "_fact_source_authority",
+                        staticmethod(facts_denied))
+    calls.clear()
+    with pytest.raises(ValueError, match="accepted stage fact source unavailable"):
+        ContentGenerateHostService().revalidate(
+            transaction=OneReviewReceipt(), scope=SCOPE,
+            dispatch=SimpleNamespace(operation_id="ecommerce_growth_content_generate",
+                                     checked_at=checked_at),
+            command=command,
+        )
+    assert calls[-4:] == ["task-brief", "agent", "route-budget", "facts-denied"]
+
+
 class ReturnAuthorityTransaction:
     def __init__(self, row):
         self.row = row

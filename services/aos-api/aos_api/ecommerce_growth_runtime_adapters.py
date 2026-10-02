@@ -5751,6 +5751,34 @@ class ContentGenerateHostService:
                 approved_plan=source.approved,
                 source_kind="accepted-stage-v1", source_lineage=lineage,
             )
+            _agent, capability = self._agent_capability_authority(
+                transaction, scope, authorities
+            )
+            route, checked_at = self._route_budget_approval_authority(
+                transaction, scope, authorities,
+                upper_bound_fen=command["upperBoundFen"],
+            )
+            if not cutoff <= checked_at < expiry:
+                raise ValueError("accepted stage content authority expired")
+            self._fact_source_authority(
+                transaction, scope, command["factSourceRefs"], source.approved,
+                checked_at=checked_at,
+            )
+            _model, provider, policy, run = self._resolution_capacity_authority(
+                transaction, scope, authorities,
+                route=route, checked_at=checked_at,
+                max_input_tokens=command["maxInputTokens"],
+                max_output_tokens=command["maxOutputTokens"],
+            )
+            dependencies, dependency_row = self._binding_authority(
+                transaction, scope, authorities,
+                route=route, provider=provider, policy=policy, run=run,
+                capability=capability, checked_at=checked_at,
+            )
+            self._binding_dependency_authority(
+                transaction, scope, capability, dependencies, dependency_row,
+                checked_at=checked_at,
+            )
             raise ValueError("accepted stage content Host is not wired")
         if dispatch.operation_id != "ecommerce_growth_content_generate":
             raise ValueError("content generate dispatch operation drifted")
