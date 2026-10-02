@@ -15,6 +15,7 @@ from aos_api.automation_occurrence_store import (
 from aos_api.ecommerce_business_investigation_case import (
     BusinessInvestigationCaseLifecycle, BusinessInvestigationCaseStore,
 )
+from aos_api.ecommerce_growth_registration_qualification import qualify_registration_release
 from aos_api.extension_runtime.schema_registry import SchemaRequirement, apply_once
 from aos_api.tenant_scope import TenantScope
 from signed_installation_case import SCHEMA_PROBE_SQL, run_signed_installation
@@ -59,7 +60,7 @@ def test_signed_installation_producer_can_be_read_in_full_stage_schema(tmp_path)
             conn.commit()
             yield conn
 
-    def verified_probe(*, connect, scope, installation, generation):
+    def verified_probe(*, connect, scope, installation, generation, lock, policy):
         assert scope == dict(org_id='org-org', project_id='dev-project')
         assert installation.state == 'active'
         with connect(SCOPE) as conn:
@@ -77,6 +78,14 @@ def test_signed_installation_producer_can_be_read_in_full_stage_schema(tmp_path)
             assert row['operation_fence'] is True and row['enabled'] is False
             assert row['observed_state'] == 'ready'
             now = conn.execute('SELECT clock_timestamp() AS now').fetchone()['now'].replace(microsecond=0)
+            with pytest.raises(ValueError, match='REGISTRATION_GROWTH_PACKAGE_REQUIRED'):
+                qualify_registration_release(conn, lock=lock, release_policy=policy)
+            assert conn.execute('''SELECT count(*) AS n FROM extension_dispatch_registration_receipt
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                (*SCOPE.key, installation.installation_id)).fetchone()['n'] == 0
+            assert conn.execute('''SELECT count(*) AS n FROM extension_operation_dispatch_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                (*SCOPE.key, installation.installation_id)).fetchone()['n'] == 0
         case_store = BusinessInvestigationCaseStore(connect)
         case = draft_case('signed-case-' + uuid4().hex)
         case_store.create_draft(SCOPE, case, idempotency_key=case.case_id + ':draft')

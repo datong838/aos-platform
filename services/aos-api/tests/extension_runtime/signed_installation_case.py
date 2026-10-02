@@ -206,7 +206,7 @@ def run_signed_installation(connect,helper,tmp_path,*,revoke=False,owned=False,p
                                 'enabled':False,'operation_fence':True,'observed_state':'ready'}
                         if verified_probe is not None:
                             verified_probe(connect=connect,scope=scope,installation=verified,
-                                generation=job.plan.generation)
+                                generation=job.plan.generation,lock=lock,policy=policy)
                         # Actual current catalog must not turn active into legacy capability.
                         assert await asyncio.to_thread(PostgresWorkshopCatalogSource(connect).read_active_bundles,
                             **scope,markings=[])==()

@@ -83,3 +83,9 @@ GW-b-2c2c1a 先收口签名安装 producer：新 hook RED 是接口缺失；修�
 ## GW-b-2c2c1b1 签名安装至原 Case 的受限前缀（07:45）
 
 复习 231-5 §9 与原 `AutomationOccurrenceStore.put_binding`：当前同代次正式 dispatch 是 ScheduleBinding 必需来源；c1a 的真实签名测试安装虽 active，但 binding 仍 disabled/fenced，尚无 dispatch。先只改 `services/aos-api/tests/extension_runtime/test_accepted_stage_signed_source_pg.py`：在同一 full-schema、同租户、同一 signed installation 的 verify probe 内，调用原 `BusinessInvestigationCaseStore` 创建并激活 Case，回读其原 head；随后使用原 `AutomationOccurrenceStore.put_binding` 证明在无正式 dispatch 时拒绝 ScheduleBinding 且无 Occurrence 副作用。测试先运行并记录新发现；若原生产者有实际缺陷，再以最小代码修复，不能为 GREEN 手插 dispatch、直接打开 binding 或制造批准。相邻测试与 OCI 容器清理复验。此切片只推进原 Case 联合来源和精确 dispatch 缺口，不能称已启用 Host 或完成 Analysis/Stage/首链。后续 c1b2 查正式配置、AIP cutover approval、dispatch producer 的可执行路径，再接自然 Occurrence 与 Analysis Receipt。
+
+## GW-b-2c2c1b2 正式派发来源审计与负合同（08:00）
+
+复习 231-3 configure/enable、231-5 §9 与原 `FirstDispatchRegistrationService`、`EcommerceGrowthCutoverStore`。正式顺序是签名 Growth 包 active 安装→八类当前配置与 runtime configure/enable→首登记原 Owner 创建九条 fenced legacy dispatch 和 RegistrationReceipt→AIP cutover proposal/独立批准→Cutover Store prepare/commit/validate/resume→九条 extension dispatch→ScheduleBinding/自然 Occurrence。c1a/b1 的测试签名 fixture 来自 `/example/read`，既非 `solution.ecommerce.growth`，也没有九条 Growth API 声明；它不具备首登记资格。不能用它直接跨入正式派发。
+
+本切片先改 `services/aos-api/tests/extension_runtime/signed_installation_case.py` 的可选 verify probe 参数，传入现有 composition lock 与正式 ReleasePolicy；默认路径不变。再在 `test_accepted_stage_signed_source_pg.py` 通过原 `qualify_registration_release` 对已验证签名测试安装做负向验证，精确拒绝 `REGISTRATION_GROWTH_PACKAGE_REQUIRED`，九条 dispatch 和首登记 Receipt 均零。先 RED（probe 缺参数），最小扩展 helper 后专项/相邻回归；不改生产代码或打开 Host。之后独立波使用已登记的 Growth 1.12 候选、构建/资格/本地签名链建立可重复的隔离正式包 fixture，并在同一 full-schema 经原 Registration/配置 Owner 联合正反测试；本地签名不能冒充当前正式信任根。
