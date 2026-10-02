@@ -34,6 +34,7 @@ from aos_api.aip_eval_contracts import (
     ReleaseGateStatus,
 )
 from aos_api.aip_eval_pack_registry import AipEvalPackRegistry, compute_eval_suite_hash
+from aos_api.aip_eval_execution_authority import EvalExecutionRejected
 from aos_api.aip_eval_runner import (
     AipEvalRunner,
     compute_eval_report_hash,
@@ -665,6 +666,28 @@ def test_historical_unattested_skill_event_cannot_mint_new_skill_revision() -> N
         ).fetchone()["n"]
     assert [(row["revision"], row["lifecycle"]) for row in rows] == [(1, "evaluated")]
     assert receipt_count == 0
+
+
+def test_final_skill_publication_rechecks_evidence_in_stable_tenant_snapshot() -> None:
+    runtime = published_skill_runtime(
+        historical_event=True, stop_before_skill_publication=True,
+    )
+    with pytest.raises(AipAgentRegistryTransitionBlocked) as captured:
+        runtime.service.publish_evaluated_revision(
+            runtime.scope, runtime.request, actor="pytest-bind3",
+            occurred_at=datetime.now(UTC),
+        )
+    gate_error = captured.value.__cause__
+    assert isinstance(gate_error, AipReleaseGateRejected)
+    proof_error = gate_error.__cause__
+    assert isinstance(proof_error, EvalExecutionRejected)
+    assert "sidecar" in str(proof_error), repr(proof_error.__cause__)
+    with connect(runtime.scope) as conn:
+        assert conn.execute("""SELECT count(*) AS n FROM aip_agent_registry_receipt
+            WHERE org_id=%s AND project_id=%s
+              AND operation='skill_template.publish_evaluated'""",
+            runtime.scope.key,
+        ).fetchone()["n"] == 0
 
 
 @pytest.mark.xfail(

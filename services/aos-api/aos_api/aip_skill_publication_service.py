@@ -36,6 +36,7 @@ from aos_api.aip_release_publication_service import (
     AipReleasePublicationService,
 )
 from aos_api.aip_skill_registry import AipSkillRegistry
+from aos_api.db import connect as db_connect, connect_serializable
 from aos_api.tenant_scope import TenantScope
 
 
@@ -171,7 +172,11 @@ class AipSkillPublicationService(AipSkillRegistry):
         happened_at = occurred_at or datetime.now(UTC)
         request_hash = self._command_hash(request, actor)
         try:
-            with self._connect_factory(scope) as conn:
+            connector = (
+                connect_serializable
+                if self._connect_factory is db_connect else self._connect_factory
+            )
+            with connector(scope) as conn:
                 self._lock(conn, scope, self._OPERATION, request.idempotency_key)
                 replay = self._receipt_row(
                     conn, scope, self._OPERATION, request.idempotency_key

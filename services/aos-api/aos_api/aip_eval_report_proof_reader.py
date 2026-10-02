@@ -247,6 +247,8 @@ def read_verified_skill_eval_report_from_persistence(
                     target_certificate=claims[0][0], target_receipt=claims[0][1],
                     judge_certificate=claims[1][0], judge_receipt=claims[1][1],
                 )
+    except EvalExecutionRejected:
+        raise
     except (psycopg.Error, ValidationError, ValueError) as exc:
         raise EvalExecutionRejected("persisted Skill Eval proof assembly failed") from exc
     return read_verified_skill_eval_report(
