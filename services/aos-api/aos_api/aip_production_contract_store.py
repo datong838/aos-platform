@@ -6184,9 +6184,38 @@ class AipProductionContractStore:
             instance_id = assignee["resourceId"]
             required = set(slot["requiredCapabilityIds"])
             skill_rows = conn.execute(
-                """SELECT capability_refs,readiness,dependency_snapshot_hash,readiness_expires_at
-                   FROM public.aip_skill_binding
-                   WHERE org_id=%s AND project_id=%s AND instance_id=%s AND status='active'""",
+                """SELECT b.capability_refs,b.readiness,b.dependency_snapshot_hash,
+                          b.readiness_expires_at,
+                          (EXISTS (
+                              SELECT 1 FROM public.aip_skill_template_revision s
+                              WHERE s.skill_id=b.skill_id AND s.revision=b.skill_revision
+                                AND s.lifecycle='published'
+                                AND s.publication_tenant @> jsonb_build_object(
+                                    'orgId',b.org_id,'projectId',b.project_id)
+                          ) AND (
+                              SELECT latest.lifecycle
+                              FROM public.aip_skill_template_revision latest
+                              WHERE latest.skill_id=b.skill_id
+                              ORDER BY latest.revision DESC LIMIT 1
+                          )='published' AND EXISTS (
+                              SELECT 1 FROM public.aip_agent_registry_receipt r
+                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                AND r.operation='skill_binding.create' AND r.status='applied'
+                                AND r.result_ref->>'resourceId'=b.binding_id
+                          ) AND EXISTS (
+                              SELECT 1 FROM public.aip_agent_registry_receipt r
+                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                AND r.operation='skill_binding.evaluate' AND r.status='applied'
+                                AND r.result_ref->>'resourceId'=b.binding_id
+                          ) AND EXISTS (
+                              SELECT 1 FROM public.aip_agent_registry_receipt r
+                              WHERE r.org_id=b.org_id AND r.project_id=b.project_id
+                                AND r.operation='skill_binding.update' AND r.status='applied'
+                                AND r.result_ref->>'resourceId'=b.binding_id
+                          )) AS source_valid
+                   FROM public.aip_skill_binding b
+                   WHERE b.org_id=%s AND b.project_id=%s AND b.instance_id=%s
+                     AND b.status='active'""",
                 (*scope.key, instance_id),
             ).fetchall()
             if not skill_rows:
@@ -6217,8 +6246,20 @@ class AipProductionContractStore:
                 )
                 uncovered.append(slot_id)
                 continue
+            sourced_skills = [skill for skill in ready_skills if skill["source_valid"]]
+            if not sourced_skills:
+                blockers.append(
+                    ContractBlocker(
+                        code="SKILL_BINDING_SOURCE_INVALID",
+                        message=f"职责 {slot_id} 的 SkillBinding 缺少当前正式发布和绑定评测激活来源",
+                    )
+                )
+                uncovered.append(slot_id)
+                # Preserve capability diagnostics while the source blocker keeps
+                # this slot closed; unsourced rows never make it ready.
+                sourced_skills = ready_skills
             binding_ids: list[str] = []
-            for skill in ready_skills:
+            for skill in sourced_skills:
                 for ref in self._load(skill["capability_refs"]) or []:
                     if isinstance(ref, str) and ref.strip():
                         binding_ids.append(ref.strip())
@@ -6236,7 +6277,8 @@ class AipProductionContractStore:
                         message=f"职责 {slot_id} 的 SkillBinding 未挂 CapabilityBinding",
                     )
                 )
-                uncovered.append(slot_id)
+                if slot_id not in uncovered:
+                    uncovered.append(slot_id)
                 continue
             cap_rows = conn.execute(
                 """SELECT * FROM public.aip_capability_binding
@@ -6293,7 +6335,8 @@ class AipProductionContractStore:
                 }
                 for code in sorted(slot_codes):
                     blockers.append(ContractBlocker(code=code, message=messages[code]))
-                uncovered.append(slot_id)
+                if slot_id not in uncovered:
+                    uncovered.append(slot_id)
         return blockers, uncovered
 
     def _insert_eval(self, conn: Any, scope: TenantScope, contract_id: str, revision: int,

@@ -135,14 +135,17 @@ def _seed_dependencies(scope: TenantScope = SCOPE) -> None:
 
 
 @pytest.mark.parametrize(
-    ("readiness", "expiry_seconds", "expected_blocker"),
+    ("readiness", "expiry_seconds", "published_without_receipt", "expected_blocker"),
     [
-        ("unknown", 3600, "SKILL_BINDING_NOT_READY"),
-        ("available", -60, "SKILL_BINDING_STALE"),
+        ("unknown", 3600, False, "SKILL_BINDING_NOT_READY"),
+        ("available", -60, False, "SKILL_BINDING_STALE"),
+        ("available", 3600, False, "SKILL_BINDING_SOURCE_INVALID"),
+        ("available", 3600, True, "SKILL_BINDING_SOURCE_INVALID"),
     ],
 )
-def test_responsibility_plan_rejects_active_skill_binding_without_fresh_readiness(
-    readiness: str, expiry_seconds: int, expected_blocker: str,
+def test_responsibility_plan_rejects_active_skill_binding_without_fresh_readiness_or_source(
+    readiness: str, expiry_seconds: int, published_without_receipt: bool,
+    expected_blocker: str,
 ) -> None:
     """A direct active row is a negative attack input, never publication proof."""
     _seed_dependencies(PRIMARY_SCOPE)
@@ -150,6 +153,15 @@ def test_responsibility_plan_rejects_active_skill_binding_without_fresh_readines
     capability_id = f"cap-stale-{suffix}"
     skill_id = f"skill-stale-{suffix}"
     binding_id = f"bind-stale-{suffix}"
+    publication_fields = (
+        ('{"assetType":"SkillTemplate"}',
+         '{"orgId":"org-org","projectId":"dev-project"}',
+         '{"assetType":"EvalGateDecision"}',
+         '{"resourceType":"PublicationEvent"}',
+         '{"assetType":"ModelRouteRevision"}',
+         '{"assetType":"RuntimePolicyRevision"}')
+        if published_without_receipt else (None,) * 6
+    )
     with connect() as conn:
         conn.execute(
             """INSERT INTO aip_capability_binding
@@ -168,10 +180,19 @@ def test_responsibility_plan_rejects_active_skill_binding_without_fresh_readines
             """INSERT INTO aip_skill_template_revision
                (skill_id,revision,canonical_logic_id,lifecycle,input_schema,output_schema,
                 tool_allowlist,required_capabilities,risk_level,memory_policy_ref,
-                handoff_policy_ref,source_ref,source_license,content_hash,created_by)
-               VALUES(%s,1,%s,'draft','{}','{}','[]','[]','low',
-                      '{}','{}','{}','internal',%s,'pytest')""",
-            (skill_id, f"logic-{suffix}", HASH),
+                handoff_policy_ref,source_ref,source_license,content_hash,created_by,
+                parent_ref,publication_tenant,release_gate_ref,publication_ref,
+                model_route_ref,runtime_policy_ref,logic_revision_ref)
+               VALUES(%s,1,%s,%s,'{}','{}','[]','[]','low',
+                      '{}','{}','{}','internal',%s,'pytest',
+                      %s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,%s::jsonb,
+                      %s::jsonb)""",
+            (skill_id, f"logic-{suffix}",
+             "published" if published_without_receipt else "draft", HASH,
+             *publication_fields,
+             ('{"assetType":"LogicRevision","assetId":"logic.test",'
+              '"revision":1,"contentHash":"%s"}' % HASH)
+             if published_without_receipt else None),
         )
         conn.execute(
             """INSERT INTO aip_skill_binding
@@ -475,6 +496,7 @@ class _CoverageConnection:
                 "readiness": "available",
                 "dependency_snapshot_hash": HASH,
                 "readiness_expires_at": datetime.now(UTC).replace(year=2099),
+                "source_valid": True,
             }])
         if "aip_capability_binding" in query:
             return _CoverageRows(self._capability_rows)
