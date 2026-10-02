@@ -8,7 +8,10 @@ from typing import Any
 from uuid import UUID
 
 from aos_api.aip_contracts import AipContractModel, ResourceRef
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore, ProductionContractConflict,
+    ProductionContractNotFound, _require_bi_installation_binding,
+)
 from aos_api.asset_registry.composition_store import load_stored_lock
 from aos_api.asset_registry.control_policy import (
     APPLY_INSTALLATION_OPERATION, CONFIGURE_RUNTIME_OPERATION,
@@ -27,6 +30,7 @@ from aos_api.aip_production_contracts import (
     CreateStageTemplateRequest,
     ExactRevisionRef,
     ResponsibilityPlanRevision,
+    ReviseResponsibilityPlanRequest,
     ResponsibilitySlot,
     StageApplicability,
     StageApplicabilityKind,
@@ -34,7 +38,7 @@ from aos_api.aip_production_contracts import (
     StageTemplateRevision,
 )
 from aos_api.aip_responsibility_template_authority import (
-    ApprovedBIPreparationResolver,
+    ActiveBIBusinessResolver, ApprovedBIPreparationResolver,
     published_template_ref,
 )
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
@@ -396,6 +400,173 @@ class SignedBIPlanPreparationService:
             )
             conn.commit()
             return result
+
+
+class SignedBIPlanActiveRebindService:
+    """Rebind an original approved BI draft to its signed active installation."""
+
+    def __init__(
+        self, *, connect_factory: Callable[[TenantScope], Any] = db_connect,
+        active_resolver: ActiveBIBusinessResolver | None = None,
+    ) -> None:
+        self._connect = connect_factory
+        self._resolver = active_resolver or ActiveBIBusinessResolver()
+        self._installation_store = PostgresInstallationStore()
+        self._permission = CurrentControlPermission(operation=CONFIGURE_RUNTIME_OPERATION)
+        self._plan_store = AipProductionContractStore(
+            connect_factory=connect_factory,
+            responsibility_template_resolver=self._resolver.resolve,
+        )
+
+    def rebind(
+        self, scope: TenantScope, *, installation_id: str, plan_id: str,
+        prepare_key: str, expected_etag_version: int,
+        expected_plan_version: int, principal: Principal, idempotency_key: str,
+    ) -> ResponsibilityPlanRevision:
+        if (type(scope) is not TenantScope or type(principal) is not Principal
+                or principal.token_kind != "oidc"
+                or (principal.org_id, principal.project_id) != scope.key
+                or not principal.subject or principal.subject != principal.subject.strip()):
+            raise PermissionError("formal authenticated actor required")
+        installation_id = str(UUID(installation_id))
+        if (type(plan_id) is not str or not plan_id
+                or type(expected_etag_version) is not int or expected_etag_version < 1
+                or type(expected_plan_version) is not int or expected_plan_version < 1
+                or any(type(key) is not str or not 1 <= len(key) <= 120
+                       or key != key.strip() for key in (prepare_key, idempotency_key))):
+            raise ValueError("exact BI rebind target, versions and idempotency keys required")
+        with self._connect(scope) as conn:
+            apply_asset_transaction_scope(
+                conn, org_id=scope.org_id, project_id=scope.project_id)
+            locked = self._installation_store.lock_for_transition_in_transaction(
+                conn, org_id=scope.org_id, project_id=scope.project_id,
+                installation_id=installation_id,
+                expected_etag_version=expected_etag_version,
+            )
+            self._permission(conn=conn, locked=locked, actor=principal.subject)
+            if (locked.record.state != "active"
+                    or locked.record.active_revision != locked.record.current_revision):
+                raise ProductionContractConflict("signed BI rebind requires current active installation")
+            # Hold the growth release rows while the signed resolver reads its
+            # Registry snapshot, so a concurrent revocation cannot overtake
+            # this Plan write before commit.
+            release_rows = conn.execute(
+                """SELECT version.version_pk FROM asset_bundle_version AS version
+                   JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
+                   WHERE bundle.publisher='aos'
+                     AND bundle.bundle_id='solution.ecommerce.growth'
+                     AND version.version IN ('1.12.0','1.13.0')
+                   ORDER BY version.version_pk FOR SHARE OF version"""
+            ).fetchall()
+            if not release_rows:
+                raise ProductionContractConflict("current signed BI release unavailable")
+            selection = self._resolver.select(scope)
+            if (selection is None or selection.installation_id != installation_id
+                    or selection.template_ref.revision != locked.record.current_revision):
+                raise ProductionContractConflict("exact signed active BI installation unavailable")
+            row = conn.execute(
+                """SELECT receipt_id,result_ref FROM aip_production_contract_receipt
+                   WHERE org_id=%s AND project_id=%s
+                     AND operation='bi_responsibility_plan.prepare'
+                     AND idempotency_key=%s AND created_by=%s""",
+                (*scope.key, prepare_key, principal.subject),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("original BI preparation receipt not found")
+            result_ref = self._plan_store._load(row["result_ref"])
+            if not isinstance(result_ref, dict):
+                raise ProductionContractConflict("original BI preparation receipt invalid")
+            binding = _require_bi_installation_binding(
+                result_ref.get("installationBinding"), principal.subject)
+            try:
+                original_ref = ExactRevisionRef.model_validate({
+                    name: result_ref.get(name) for name in
+                    ("resourceType", "resourceId", "revision", "contentHash")})
+                original_template = ExactRevisionRef.model_validate(binding["templateRef"])
+            except (TypeError, ValueError) as exc:
+                raise ProductionContractConflict("original BI preparation reference invalid") from exc
+            if (original_ref.resource_type != "ResponsibilityPlanRevision"
+                    or original_ref.resource_id != plan_id
+                    or binding["installationId"] != installation_id
+                    or binding["installationETag"] >= expected_etag_version
+                    or original_template.resource_type != "ResponsibilityTemplateRevision"
+                    or original_template.resource_id != selection.template_ref.resource_id
+                    or original_template.content_hash != selection.template_ref.content_hash
+                    or original_template.revision >= selection.template_ref.revision):
+                raise ProductionContractConflict("original BI Plan and active installation differ")
+            original = self._plan_store.get_responsibility_plan(
+                scope, plan_id, original_ref.revision, conn=conn)
+            if (original.content_hash != original_ref.content_hash
+                    or original.created_by != principal.subject
+                    or original.template_ref != original_template
+                    or original.lifecycle is not BriefLifecycle.DRAFT):
+                raise ProductionContractConflict("original BI Plan revision drifted")
+            head = self._plan_store._head(
+                conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id)
+            if head is None:
+                raise ProductionContractNotFound("original BI Plan not found")
+            replay = self._plan_store._replay(
+                conn, scope, "bi_responsibility_plan.rebind", idempotency_key,
+                self._rebind_request_hash(
+                    original, selection.template_ref, expected_plan_version,
+                    installation_id, expected_etag_version, row["receipt_id"],
+                    principal.subject, plan_id),
+            )
+            if replay is None and (int(head["current_revision"]) != original_ref.revision
+                                   or int(head["version"]) != expected_plan_version):
+                raise ProductionContractConflict("original BI Plan head changed")
+            body = self._rebind_body(
+                original, selection.template_ref, expected_plan_version)
+            context = self._rebind_context(
+                installation_id, expected_etag_version, row["receipt_id"],
+                original.template_ref, selection.template_ref, principal.subject)
+            result = self._plan_store.revise_responsibility_plan_in_transaction(
+                conn, scope, principal.subject, plan_id, idempotency_key, body,
+                operation="bi_responsibility_plan.rebind", request_context=context,
+            )
+            current_selection = self._resolver.select(scope)
+            if (current_selection is None
+                    or current_selection.installation_id != installation_id
+                    or current_selection.template_ref != selection.template_ref):
+                raise ProductionContractConflict("signed active BI source changed before commit")
+            conn.commit()
+            return result
+
+    @staticmethod
+    def _rebind_body(original: ResponsibilityPlanRevision,
+                     active_ref: ExactRevisionRef, expected_version: int,
+                     ) -> ReviseResponsibilityPlanRequest:
+        fields = CreateResponsibilityPlanRequest.model_fields
+        body = {name: getattr(original, name) for name in fields}
+        return ReviseResponsibilityPlanRequest.model_validate({
+            **body, "template_ref": active_ref, "expected_version": expected_version,
+        })
+
+    @staticmethod
+    def _rebind_context(installation_id: str, etag: int, receipt_id: str,
+                        approved_ref: ExactRevisionRef, active_ref: ExactRevisionRef,
+                        actor: str) -> dict[str, Any]:
+        return {
+            "installationId": installation_id, "installationETag": etag,
+            "prepareReceiptId": receipt_id,
+            "approvedTemplateRef": approved_ref.model_dump(mode="json", by_alias=True),
+            "activeTemplateRef": active_ref.model_dump(mode="json", by_alias=True),
+            "actor": actor,
+        }
+
+    @classmethod
+    def _rebind_request_hash(cls, original: ResponsibilityPlanRevision,
+                             active_ref: ExactRevisionRef, expected_version: int,
+                             installation_id: str, etag: int, receipt_id: str,
+                             actor: str, plan_id: str) -> str:
+        from aos_api.aip_production_contract_store import canonical_hash
+        body = cls._rebind_body(original, active_ref, expected_version)
+        return canonical_hash({
+            "planId": plan_id, "body": body.model_dump(mode="json", by_alias=True),
+            "context": cls._rebind_context(
+                installation_id, etag, receipt_id, original.template_ref,
+                active_ref, actor),
+        })
 
 
 class SignedBIPlanAdmissionSnapshot(AipContractModel):

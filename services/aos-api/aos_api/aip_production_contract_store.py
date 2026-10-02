@@ -9,7 +9,7 @@ from contextlib import AbstractContextManager
 from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from aos_api.aip_contracts import AipContractModel, ExactContractRef, PlanStep, ResourceRef, TenantContext
 from aos_api.aip_production_contracts import (
@@ -220,6 +220,137 @@ class SignedBIPlanReceiptReader:
             )
 
 
+class SignedBIPlanRebindReceiptBinding(AipContractModel):
+    installation_id: str
+    installation_etag: int = Field(alias="installationETag")
+    prepare_receipt_id: str
+    approved_template_ref: ExactRevisionRef
+    active_template_ref: ExactRevisionRef
+    actor: str
+
+
+class SignedBIPlanRebindReceiptReadback(AipContractModel):
+    """Original rebind result only; it is never current configuration admission."""
+
+    receipt_id: str
+    request_hash: str
+    result_ref: ExactRevisionRef
+    created_at: datetime
+    rebind_binding: SignedBIPlanRebindReceiptBinding
+    original_preparation_verified: Literal[True]
+    plan_revision_verified: Literal[True]
+    current_admission_verified: Literal[False] = False
+
+
+class SignedBIPlanRebindReceiptReader:
+    """Read an exact persisted BI rebind after an unknown write outcome."""
+
+    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only) -> None:
+        self._connect = connect_factory
+
+    def read(
+        self, scope: TenantScope, *, principal: Principal, idempotency_key: str,
+    ) -> SignedBIPlanRebindReceiptReadback:
+        if (type(scope) is not TenantScope or type(principal) is not Principal
+                or principal.token_kind != "oidc"
+                or (principal.org_id, principal.project_id) != scope.key
+                or not principal.subject or principal.subject != principal.subject.strip()):
+            raise PermissionError("formal authenticated actor required")
+        if (type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 120
+                or idempotency_key != idempotency_key.strip()):
+            raise ValueError("exact BI rebind idempotency key required")
+        if openfga_api_url():
+            raise PermissionError("current configuration permission adapter unavailable")
+        with self._connect(scope) as conn:
+            apply_asset_transaction_scope(
+                conn, org_id=scope.org_id, project_id=scope.project_id)
+            members = conn.execute(
+                """SELECT role FROM meta_membership
+                   WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                (*scope.key, principal.subject),
+            ).fetchall()
+            if len(members) != 1:
+                raise PermissionError("current persisted membership required")
+            try:
+                require_control_role(
+                    roles=[members[0]["role"]], operation=APPLY_INSTALLATION_OPERATION)
+            except AssetRegistryError as exc:
+                raise PermissionError("current configuration role required") from exc
+            row = conn.execute(
+                """SELECT receipt_id,request_hash,result_ref,created_at
+                   FROM aip_production_contract_receipt
+                   WHERE org_id=%s AND project_id=%s
+                     AND operation='bi_responsibility_plan.rebind'
+                     AND idempotency_key=%s AND created_by=%s""",
+                (*scope.key, idempotency_key, principal.subject),
+            ).fetchone()
+            if row is None:
+                raise ProductionContractNotFound("BI rebind receipt not found")
+            result = row["result_ref"]
+            if isinstance(result, str):
+                result = json.loads(result)
+            if not isinstance(result, dict):
+                raise ProductionContractError("BI rebind receipt result invalid")
+            try:
+                plan_ref = ExactRevisionRef.model_validate({
+                    name: result.get(name) for name in
+                    ("resourceType", "resourceId", "revision", "contentHash")})
+                binding_raw = result.get("rebindBinding")
+                active_ref = ExactRevisionRef.model_validate(
+                    binding_raw["activeTemplateRef"])
+                _require_bi_rebind_binding(
+                    binding_raw, principal.subject, active_ref)
+                binding = SignedBIPlanRebindReceiptBinding.model_validate(binding_raw)
+            except (KeyError, TypeError, ValueError, ProductionContractConflict) as exc:
+                raise ProductionContractError("BI rebind receipt binding invalid") from exc
+            if plan_ref.resource_type != "ResponsibilityPlanRevision":
+                raise ProductionContractError("BI rebind receipt result type invalid")
+            original_row = conn.execute(
+                """SELECT result_ref FROM aip_production_contract_receipt
+                   WHERE org_id=%s AND project_id=%s AND receipt_id=%s
+                     AND operation='bi_responsibility_plan.prepare'
+                     AND created_by=%s""",
+                (*scope.key, binding.prepare_receipt_id, principal.subject),
+            ).fetchone()
+            if original_row is None:
+                raise ProductionContractError("original BI preparation receipt missing")
+            original_result = original_row["result_ref"]
+            if isinstance(original_result, str):
+                original_result = json.loads(original_result)
+            if not isinstance(original_result, dict):
+                raise ProductionContractError("original BI preparation receipt invalid")
+            try:
+                original_binding = _require_bi_installation_binding(
+                    original_result.get("installationBinding"), principal.subject)
+            except ProductionContractConflict as exc:
+                raise ProductionContractError("original BI preparation binding invalid") from exc
+            if (original_result.get("resourceId") != plan_ref.resource_id
+                    or original_binding["installationId"] != binding.installation_id
+                    or original_binding["templateRef"] != binding.approved_template_ref.model_dump(
+                        mode="json", by_alias=True)):
+                raise ProductionContractError("BI rebind original receipt mismatch")
+            plan = conn.execute(
+                """SELECT content_hash,created_by,template_ref
+                   FROM aip_responsibility_plan_revision
+                   WHERE org_id=%s AND project_id=%s AND plan_id=%s AND revision=%s""",
+                (*scope.key, plan_ref.resource_id, plan_ref.revision),
+            ).fetchone()
+            if (plan is None or plan["content_hash"] != plan_ref.content_hash
+                    or plan["created_by"] != principal.subject):
+                raise ProductionContractError("BI rebind Plan revision missing or drifted")
+            template = plan["template_ref"]
+            if isinstance(template, str):
+                template = json.loads(template)
+            if ExactRevisionRef.model_validate(template) != binding.active_template_ref:
+                raise ProductionContractError("BI rebind Plan template drifted")
+            return SignedBIPlanRebindReceiptReadback(
+                receipt_id=row["receipt_id"], request_hash=row["request_hash"],
+                result_ref=plan_ref, created_at=row["created_at"],
+                rebind_binding=binding,
+                original_preparation_verified=True, plan_revision_verified=True,
+            )
+
+
 def canonical_hash(value: Any) -> str:
     raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(raw.encode()).hexdigest()
@@ -241,6 +372,36 @@ def _require_bi_installation_binding(value: Any, actor: str) -> dict[str, Any]:
             or value["actor"] != actor
             or template_ref.resource_type != "ResponsibilityTemplateRevision"):
         raise ProductionContractConflict("exact BI installation binding required")
+    return value
+
+
+def _require_bi_rebind_binding(
+    value: Any, actor: str, active_ref: ExactRevisionRef,
+) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {
+        "installationId", "installationETag", "prepareReceiptId",
+        "approvedTemplateRef", "activeTemplateRef", "actor",
+    }:
+        raise ProductionContractConflict("exact BI rebind binding required")
+    try:
+        canonical_id = str(uuid.UUID(value["installationId"]))
+        approved = ExactRevisionRef.model_validate(value["approvedTemplateRef"])
+        active = ExactRevisionRef.model_validate(value["activeTemplateRef"])
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ProductionContractConflict("exact BI rebind binding required") from exc
+    if (canonical_id != value["installationId"]
+            or type(value["installationETag"]) is not int
+            or value["installationETag"] < 1
+            or type(value["prepareReceiptId"]) is not str
+            or not value["prepareReceiptId"]
+            or value["prepareReceiptId"] != value["prepareReceiptId"].strip()
+            or value["actor"] != actor
+            or approved.resource_type != "ResponsibilityTemplateRevision"
+            or approved.resource_id != active.resource_id
+            or approved.content_hash != active.content_hash
+            or approved.revision >= active.revision
+            or active != active_ref):
+        raise ProductionContractConflict("exact BI rebind binding required")
     return value
 
 
@@ -445,38 +606,65 @@ class AipProductionContractStore:
 
     def revise_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    key: str, body: ReviseResponsibilityPlanRequest) -> ResponsibilityPlanRevision:
-        payload = body.model_dump(mode="json", by_alias=True)
-        request_hash = canonical_hash({"planId": plan_id, **payload})
         with self._connect_factory(scope) as conn:
-            replay = self._replay(conn, scope, "responsibility_plan.revise", key, request_hash)
-            if replay:
-                return self.get_responsibility_plan(scope, plan_id, int(replay["revision"]), conn=conn)
-            head = self._head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id)
-            if not head:
-                raise ProductionContractNotFound("responsibility plan not found")
-            if int(head["version"]) != body.expected_version:
-                raise ProductionContractConflict("stale responsibility plan version")
-            current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
-            if current.lifecycle is not BriefLifecycle.DRAFT:
-                raise ProductionContractConflict("only a draft responsibility plan can be revised")
-            current_ref = ExactRevisionRef(
-                resourceType="ResponsibilityPlanRevision",
-                resourceId=plan_id,
-                revision=current.revision,
-                contentHash=current.content_hash,
-            )
-            self._require_responsibility_dependencies(
-                conn, scope, body, expected_merge_base_ref=current_ref
-            )
-            revision = int(head["current_revision"]) + 1
-            content = body.model_dump(mode="json", by_alias=True, exclude={"expected_version"})
-            content_hash = canonical_hash(content)
-            row = self._insert_responsibility(conn, scope, plan_id, revision, actor, body, content_hash, BriefLifecycle.DRAFT)
-            self._advance_head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id, revision)
-            self._receipt(conn, scope, "responsibility_plan.revise", key, request_hash,
-                {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,"revision":revision,"contentHash":content_hash}, actor)
+            result = self.revise_responsibility_plan_in_transaction(
+                conn, scope, actor, plan_id, key, body)
             conn.commit()
-            return self._responsibility_plan(scope, row, int(head["version"]) + 1, conn)
+            return result
+
+    def revise_responsibility_plan_in_transaction(
+        self, conn: Any, scope: TenantScope, actor: str, plan_id: str,
+        key: str, body: ReviseResponsibilityPlanRequest, *,
+        operation: str = "responsibility_plan.revise",
+        request_context: dict[str, Any] | None = None,
+    ) -> ResponsibilityPlanRevision:
+        """Append one draft revision and Receipt in the caller's transaction."""
+        if operation == "responsibility_plan.revise":
+            if request_context is not None:
+                raise ProductionContractConflict("generic Plan revision cannot carry installation context")
+            binding = None
+        elif operation == "bi_responsibility_plan.rebind":
+            binding = _require_bi_rebind_binding(
+                request_context, actor, body.template_ref)
+        else:
+            raise ProductionContractConflict("unsupported Plan revision operation")
+        payload = body.model_dump(mode="json", by_alias=True)
+        request_hash = canonical_hash(
+            {"planId": plan_id, **payload} if request_context is None else
+            {"planId": plan_id, "body": payload, "context": request_context})
+        replay = self._replay(conn, scope, operation, key, request_hash)
+        if replay:
+            return self.get_responsibility_plan(scope, plan_id, int(replay["revision"]), conn=conn)
+        head = self._head(conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id)
+        if not head:
+            raise ProductionContractNotFound("responsibility plan not found")
+        if int(head["version"]) != body.expected_version:
+            raise ProductionContractConflict("stale responsibility plan version")
+        current = self.get_responsibility_plan(scope, plan_id, int(head["current_revision"]), conn=conn)
+        if current.lifecycle is not BriefLifecycle.DRAFT:
+            raise ProductionContractConflict("only a draft responsibility plan can be revised")
+        current_ref = ExactRevisionRef(
+            resourceType="ResponsibilityPlanRevision",
+            resourceId=plan_id,
+            revision=current.revision,
+            contentHash=current.content_hash,
+        )
+        self._require_responsibility_dependencies(
+            conn, scope, body, expected_merge_base_ref=current_ref
+        )
+        revision = int(head["current_revision"]) + 1
+        content = body.model_dump(mode="json", by_alias=True, exclude={"expected_version"})
+        content_hash = canonical_hash(content)
+        row = self._insert_responsibility(
+            conn, scope, plan_id, revision, actor, body, content_hash, BriefLifecycle.DRAFT)
+        self._advance_head(
+            conn, scope, "aip_responsibility_plan_head", "plan_id", plan_id, revision)
+        result_ref = {"resourceType":"ResponsibilityPlanRevision","resourceId":plan_id,
+                      "revision":revision,"contentHash":content_hash}
+        if binding is not None:
+            result_ref["rebindBinding"] = binding
+        self._receipt(conn, scope, operation, key, request_hash, result_ref, actor)
+        return self._responsibility_plan(scope, row, int(head["version"]) + 1, conn)
 
     def freeze_responsibility_plan(self, scope: TenantScope, actor: str, plan_id: str,
                                    expected_version: int, key: str) -> ResponsibilityPlanRevision:

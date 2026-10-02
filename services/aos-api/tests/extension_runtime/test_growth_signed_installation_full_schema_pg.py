@@ -22,20 +22,31 @@ from aos_api.asset_registry.installation_revalidation import _record_from_row
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
 from aos_api.asset_registry.installation_service import InstallationService
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
+from aos_api.asset_registry.errors import RevisionConflictError
 from aos_api.asset_registry.registry_service import RegistryService
 from aos_api.asset_registry.registry_snapshot import _SNAPSHOT_QUERY
 from aos_api.asset_registry.registry_store import PostgresRegistryStore
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.asset_registry.control_policy import APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION
 from aos_api.asset_registry.signature import FileTrustRootProvider, FrozenTrustRootProvider
-from aos_api.db import connect, get_dsn
+from aos_api.db import connect, connect_read_only, get_dsn
 from aos_api.aip_responsibility_template_authority import (
     ActiveBIBusinessResolver, ApprovedBIPreparationResolver,
+)
+from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
+from aos_api.auth import Principal
+from aos_api.aip_production_contract_store import (
+    ProductionContractConflict, ProductionContractIdempotencyConflict,
+    ProductionContractNotFound, SignedBIPlanRebindReceiptReader,
+)
+from aos_api.ecommerce_business_investigation_aip_authority import (
+    SignedBIPlanActiveRebindService, SignedBIPlanPreparationService,
 )
 from aos_api.ecommerce_growth_registration_qualification import require_growth_registration_claims
 from aos_api.extension_runtime.admission import admit_runtime_artifact
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.extension_runtime.current_permission import CurrentControlPermission
+from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.extension_runtime.current_installation_release_evidence import (
     CurrentReleaseEvidenceBlocked,
     read_current_installation_release_evidence,
@@ -162,6 +173,41 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
         release_root=signed['signed_tree'], trust_roots=trust,
         source_alias=signed['source_alias'],
     ).select(TenantScope('dev-org', 'dev-project')) is None
+    # Six active instances are isolated test prerequisites; their direct fixture
+    # setup is not evidence of a current formal AgentInstance product flow.
+    with connect(SCOPE) as conn:
+        conn.execute("""INSERT INTO aip_agent_template_revision
+            (template_id,revision,display_name,role_key,lifecycle,source_ref,
+             source_license,manifest,content_hash,created_by)
+            VALUES('test-bi-plan-active-handoff',1,'isolated BI handoff',
+                   'content_officer','published','{}','internal','{}',%s,'test-author')""",
+            ('b' * 64,))
+        for _, _, instance_id, _, _ in BI_ROLE_BLUEPRINTS:
+            conn.execute("""INSERT INTO aip_agent_instance
+                (org_id,project_id,instance_id,template_id,template_revision,
+                 status,overlay,version,created_by)
+                VALUES(%s,%s,%s,'test-bi-plan-active-handoff',1,
+                       'active','{}',1,'test-author')""",
+                (*SCOPE.key, instance_id))
+    principal = Principal(
+        subject='test-author', org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+        roles=['admin'], token_kind='oidc',
+    )
+    prepare_key = f'test-growth-{growth_version}-bi-plan-prepare'
+    prepared_plan = SignedBIPlanPreparationService(
+        connect_factory=connect,
+        preparation_resolver=ApprovedBIPreparationResolver(
+            connect_factory=connect, registry_connect_factory=connect,
+            release_root=signed['signed_tree'], trust_roots=trust,
+            source_alias=signed['source_alias'],
+        ),
+    ).prepare(
+        SCOPE, installation_id=installed['installationId'],
+        expected_etag_version=installed['installationEtag'],
+        principal=principal, idempotency_key=prepare_key,
+    )
+    assert prepared_plan.lifecycle.value == 'draft'
+    assert prepared_plan.template_ref == selected_template.template_ref
     lock = PostgresCompositionStore(connect).get_lock(
         org_id=SCOPE.org_id, project_id=SCOPE.project_id,
         composition_id=installed['compositionId'], revision=installed['lockRevision'],
@@ -320,6 +366,90 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             assert selected_template.template_ref.revision != verified.current_revision
             assert active_resolver.resolve(SCOPE, selected_template.template_ref) is False
             assert active_resolver.resolve(SCOPE, active_template.template_ref) is True
+            rebind_service = SignedBIPlanActiveRebindService(
+                connect_factory=connect, active_resolver=active_resolver,
+            )
+            rebind_key = f'test-growth-{growth_version}-bi-plan-rebind'
+            rebind_args = dict(
+                installation_id=installed['installationId'],
+                plan_id=prepared_plan.plan_id, prepare_key=prepare_key,
+                expected_etag_version=verified.etag_version,
+                expected_plan_version=prepared_plan.version,
+                principal=principal, idempotency_key=rebind_key,
+            )
+            rebound = rebind_service.rebind(SCOPE, **rebind_args)
+            replay = rebind_service.rebind(SCOPE, **rebind_args)
+            assert replay.revision == rebound.revision
+            readback = SignedBIPlanRebindReceiptReader(
+                connect_factory=connect_read_only,
+            ).read(SCOPE, principal=principal, idempotency_key=rebind_key)
+            assert readback.result_ref.resource_id == rebound.plan_id
+            assert readback.result_ref.revision == rebound.revision
+            assert readback.rebind_binding.prepare_receipt_id
+            assert readback.rebind_binding.active_template_ref == rebound.template_ref
+            assert readback.original_preparation_verified is True
+            assert readback.plan_revision_verified is True
+            assert readback.current_admission_verified is False
+            with pytest.raises(ProductionContractNotFound):
+                SignedBIPlanRebindReceiptReader(
+                    connect_factory=connect_read_only,
+                ).read(SCOPE, principal=principal, idempotency_key=f'{rebind_key}-missing')
+            with pytest.raises(ProductionContractIdempotencyConflict):
+                rebind_service.rebind(
+                    SCOPE, **{**rebind_args, 'expected_plan_version': rebound.version},
+                )
+            with pytest.raises(ProductionContractConflict, match='Plan head changed'):
+                rebind_service.rebind(
+                    SCOPE, **{**rebind_args, 'idempotency_key': f'{rebind_key}-new'},
+                )
+            with pytest.raises(RevisionConflictError):
+                rebind_service.rebind(
+                    SCOPE, **{**rebind_args, 'expected_etag_version': verified.etag_version + 1},
+                )
+            with pytest.raises(ProductionContractNotFound):
+                rebind_service.rebind(
+                    SCOPE, **{**rebind_args, 'prepare_key': f'{prepare_key}-other'},
+                )
+            with pytest.raises(ProductionContractConflict, match='signed active'):
+                SignedBIPlanActiveRebindService(
+                    connect_factory=connect,
+                    active_resolver=ActiveBIBusinessResolver(
+                        connect_factory=connect, registry_connect_factory=connect,
+                        release_root=signed['signed_tree'],
+                        trust_roots=FrozenTrustRootProvider({}),
+                        source_alias=signed['source_alias'],
+                    ),
+                ).rebind(SCOPE, **rebind_args)
+            with pytest.raises(RuntimeConflict):
+                rebind_service.rebind(SCOPE, **{
+                    **rebind_args,
+                    'principal': Principal(
+                        subject='test-reviewer', org_id=SCOPE.org_id,
+                        project_id=SCOPE.project_id, roles=['admin'], token_kind='oidc',
+                    ),
+                })
+            with pytest.raises(PermissionError, match='formal authenticated actor'):
+                rebind_service.rebind(SCOPE, **{
+                    **rebind_args,
+                    'principal': Principal(
+                        subject='test-author', org_id=SCOPE.org_id,
+                        project_id=SCOPE.project_id, roles=['admin'], token_kind='dev',
+                    ),
+                })
+            with pytest.raises(PermissionError, match='formal authenticated actor'):
+                rebind_service.rebind(TenantScope('dev-org', 'dev-project'), **rebind_args)
+            assert rebound.lifecycle.value == 'draft'
+            assert rebound.template_ref == active_template.template_ref
+            assert rebound.revision == prepared_plan.revision + 1
+            with connect(SCOPE) as conn:
+                receipt = conn.execute("""SELECT result_ref FROM aip_production_contract_receipt
+                    WHERE org_id=%s AND project_id=%s
+                      AND operation='bi_responsibility_plan.rebind'
+                      AND idempotency_key=%s""",
+                    (*SCOPE.key, rebind_key),
+                ).fetchone()
+            assert receipt is not None
+            assert receipt['result_ref']['resourceId'] == prepared_plan.plan_id
             assert ApprovedBIPreparationResolver(
                 connect_factory=connect, registry_connect_factory=connect,
                 release_root=signed['signed_tree'], trust_roots=trust,

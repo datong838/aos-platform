@@ -12,6 +12,7 @@ from aos_api.aip_production_contract_store import (
     ProductionContractDependencyBlocked, ProductionContractError,
     ProductionContractIdempotencyConflict, ProductionContractNotFound,
     SignedBIPlanReceiptReader, SignedBIPlanReceiptReadback,
+    SignedBIPlanRebindReceiptReader, SignedBIPlanRebindReceiptReadback,
 )
 from aos_api.aip_production_start_service import AipProductionStartService
 from aos_api.asset_registry.control_policy import parse_strong_if_match
@@ -71,7 +72,7 @@ from aos_api.aip_production_contracts import (
 from aos_api.auth import Principal, require_principal
 from aos_api.ecommerce_business_investigation_aip_authority import (
     SignedBIPlanAdmissionReader, SignedBIPlanAdmissionSnapshot,
-    SignedBIPlanPreparationService,
+    SignedBIPlanActiveRebindService, SignedBIPlanPreparationService,
 )
 from aos_api.errors import ApiError
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
@@ -85,8 +86,10 @@ _STORE = AipProductionContractStore(
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PROFILE_STORE = AipResponsibilityProfileStore()
 _SIGNED_BI_PREPARATION = SignedBIPlanPreparationService()
+_SIGNED_BI_REBIND = SignedBIPlanActiveRebindService()
 _SIGNED_BI_ADMISSION = SignedBIPlanAdmissionReader()
 _SIGNED_BI_RECEIPTS = SignedBIPlanReceiptReader()
+_SIGNED_BI_REBIND_RECEIPTS = SignedBIPlanRebindReceiptReader()
 _PRODUCTION_START_ROLES = frozenset(
     {"admin", "operator", "executor", "aip_executor", "production_operator"}
 )
@@ -110,6 +113,13 @@ class SignedBIPlanPreparationRequest(AipContractModel):
     installation_id: str = Field(alias="installationId", min_length=36, max_length=36)
 
 
+class SignedBIPlanRebindRequest(AipContractModel):
+    installation_id: str = Field(alias="installationId", min_length=36, max_length=36)
+    plan_id: str = Field(alias="planId", min_length=1, max_length=200)
+    prepare_key: str = Field(alias="prepareIdempotencyKey", min_length=1, max_length=120)
+    expected_plan_version: int = Field(alias="expectedPlanVersion", ge=1)
+
+
 def get_store() -> AipProductionContractStore:
     return _STORE
 
@@ -118,12 +128,20 @@ def get_signed_bi_preparation_service() -> SignedBIPlanPreparationService:
     return _SIGNED_BI_PREPARATION
 
 
+def get_signed_bi_rebind_service() -> SignedBIPlanActiveRebindService:
+    return _SIGNED_BI_REBIND
+
+
 def get_signed_bi_admission_reader() -> SignedBIPlanAdmissionReader:
     return _SIGNED_BI_ADMISSION
 
 
 def get_signed_bi_receipt_reader() -> SignedBIPlanReceiptReader:
     return _SIGNED_BI_RECEIPTS
+
+
+def get_signed_bi_rebind_receipt_reader() -> SignedBIPlanRebindReceiptReader:
+    return _SIGNED_BI_REBIND_RECEIPTS
 
 
 def get_start_service() -> AipProductionStartService:
@@ -410,6 +428,35 @@ def prepare_signed_bi_responsibility_plan(
         raise ApiError(code="BI_PREPARATION_UNAVAILABLE", message=str(exc), status_code=409) from exc
 
 
+@router.post("/responsibility-plans/bi-preparation/rebind", response_model=ResponsibilityPlanRevision)
+def rebind_signed_bi_responsibility_plan(
+    body: SignedBIPlanRebindRequest,
+    idempotency_key: str = Header(alias="Idempotency-Key"),
+    if_match: str = Header(alias="If-Match"),
+    principal: Principal = Depends(require_principal),
+    service: SignedBIPlanActiveRebindService = Depends(get_signed_bi_rebind_service),
+):
+    try:
+        _, expected_etag = parse_strong_if_match(if_match)
+        return service.rebind(
+            _scope(principal), installation_id=body.installation_id,
+            plan_id=body.plan_id, prepare_key=body.prepare_key,
+            expected_etag_version=expected_etag,
+            expected_plan_version=body.expected_plan_version,
+            principal=principal, idempotency_key=_key(idempotency_key),
+        )
+    except AssetRegistryError as exc:
+        raise ApiError(code=exc.code.value, message=str(exc), status_code=exc.http_status) from exc
+    except PermissionError as exc:
+        raise ApiError(code="BI_REBIND_ACTOR_DENIED", message=str(exc), status_code=403) from exc
+    except RuntimeConflict as exc:
+        raise ApiError(code="BI_REBIND_PERMISSION_DENIED", message=str(exc), status_code=403) from exc
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="BI_REBIND_UNAVAILABLE", message=str(exc), status_code=409) from exc
+
+
 @router.get("/responsibility-plans/bi-preparation/admission", response_model=SignedBIPlanAdmissionSnapshot)
 def read_signed_bi_plan_admission(
     installation_id: str = Query(alias="installationId", min_length=36, max_length=36),
@@ -446,6 +493,28 @@ def read_signed_bi_plan_receipt(
         raise _map(exc) from exc
     except ValueError as exc:
         raise ApiError(code="BI_RECEIPT_INVALID_KEY", message=str(exc), status_code=400) from exc
+
+
+@router.get(
+    "/responsibility-plans/bi-preparation/rebind/receipts/{idempotency_key}",
+    response_model=SignedBIPlanRebindReceiptReadback,
+)
+def read_signed_bi_plan_rebind_receipt(
+    idempotency_key: str,
+    principal: Principal = Depends(require_principal),
+    reader: SignedBIPlanRebindReceiptReader = Depends(get_signed_bi_rebind_receipt_reader),
+):
+    try:
+        return reader.read(
+            _scope(principal), principal=principal,
+            idempotency_key=idempotency_key,
+        )
+    except PermissionError as exc:
+        raise ApiError(code="BI_REBIND_RECEIPT_ACTOR_DENIED", message=str(exc), status_code=403) from exc
+    except ProductionContractError as exc:
+        raise _map(exc) from exc
+    except ValueError as exc:
+        raise ApiError(code="BI_REBIND_RECEIPT_INVALID_KEY", message=str(exc), status_code=400) from exc
 
 
 @router.post("/responsibility-profile/merge-policies", response_model=MergePolicyRevision, status_code=201)

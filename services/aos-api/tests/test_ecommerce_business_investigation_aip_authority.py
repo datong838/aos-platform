@@ -433,6 +433,24 @@ def test_signed_bi_receipt_route_preserves_authenticated_actor_and_unknown() -> 
     assert error.value.status_code == 404
 
 
+def test_signed_bi_rebind_receipt_route_preserves_actor_and_unknown() -> None:
+    from aos_api.auth import Principal
+    from aos_api.aip_production_contract_store import ProductionContractNotFound
+    from aos_api.routers.aip_production_contracts import read_signed_bi_plan_rebind_receipt
+    from aos_api.errors import ApiError
+
+    principal = Principal(subject="person:current", org_id="org-org", project_id="dev-project",
+                          roles=["admin"], token_kind="oidc")
+    class Reader:
+        def read(self, scope, *, principal: Principal, idempotency_key: str):
+            assert scope == SCOPE and principal.subject == "person:current"
+            assert idempotency_key == "bi-rebind-1"
+            raise ProductionContractNotFound("BI rebind receipt not found")
+    with pytest.raises(ApiError) as error:
+        read_signed_bi_plan_rebind_receipt("bi-rebind-1", principal=principal, reader=Reader())
+    assert error.value.status_code == 404
+
+
 def test_signed_bi_plan_preparation_orders_current_checks_before_one_receipt(monkeypatch) -> None:
     from aos_api.auth import Principal
     from aos_api import ecommerce_business_investigation_aip_authority as module
@@ -524,11 +542,58 @@ def test_signed_bi_plan_route_uses_principal_and_strong_installation_etag() -> N
     assert len(seen) == 1
 
 
+def test_signed_bi_rebind_route_accepts_only_server_actor_and_strong_installation_etag() -> None:
+    from aos_api.auth import Principal
+    from aos_api.errors import ApiError
+    from aos_api.routers.aip_production_contracts import (
+        SignedBIPlanRebindRequest, rebind_signed_bi_responsibility_plan,
+    )
+    from pydantic import ValidationError
+
+    installation_id = "42785d78-5914-4a54-a078-e5d2c7f48481"
+    body = SignedBIPlanRebindRequest.model_validate({
+        "installationId": installation_id,
+        "planId": "responsibility-plan-original",
+        "prepareIdempotencyKey": "original-preparation-key",
+        "expectedPlanVersion": 1,
+    })
+    with pytest.raises(ValidationError):
+        SignedBIPlanRebindRequest.model_validate({
+            **body.model_dump(mode="json", by_alias=True), "actor": "forged",
+        })
+    principal = Principal(
+        subject="person:current", org_id="org-org", project_id="dev-project",
+        roles=["admin"], token_kind="oidc",
+    )
+    calls = []
+    class Service:
+        def rebind(self, scope, **kwargs):
+            calls.append((scope, kwargs))
+            return "rebound-draft"
+    assert rebind_signed_bi_responsibility_plan(
+        body, idempotency_key="new-rebind-key", if_match='"5"',
+        principal=principal, service=Service(),
+    ) == "rebound-draft"
+    assert calls == [(SCOPE, dict(
+        installation_id=installation_id, plan_id="responsibility-plan-original",
+        prepare_key="original-preparation-key", expected_etag_version=5,
+        expected_plan_version=1, principal=principal,
+        idempotency_key="new-rebind-key",
+    ))]
+    with pytest.raises(ApiError) as error:
+        rebind_signed_bi_responsibility_plan(
+            body, idempotency_key="new-rebind-key", if_match="5",
+            principal=principal, service=Service(),
+        )
+    assert error.value.status_code == 400 and len(calls) == 1
+
+
 def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None:
     """Database rollback proof only; injected template authority is not acceptance."""
     from aos_api.aip_production_contract_store import (
         AipProductionContractStore, ProductionContractIdempotencyConflict,
     )
+    from aos_api.aip_production_contracts import ReviseResponsibilityPlanRequest
     from aos_api.db import connect
 
     key = f"bi-du-rollback-{uuid4().hex}"
@@ -577,6 +642,40 @@ def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None
                     operation="bi_responsibility_plan.prepare",
                     request_context={**context, "installationId": str(uuid4())},
                 )
+            active_ref = request.template_ref.model_copy(update={"revision": 4})
+            rebind = ReviseResponsibilityPlanRequest.model_validate({
+                **request.model_dump(mode="json", by_alias=True),
+                "templateRef": active_ref.model_dump(mode="json", by_alias=True),
+                "expectedVersion": plan.version,
+            })
+            rebind_context = {
+                "installationId": installation_id,
+                "installationETag": 4,
+                "prepareReceiptId": "w2r-isolated-preparation",
+                "approvedTemplateRef": request.template_ref.model_dump(mode="json", by_alias=True),
+                "activeTemplateRef": active_ref.model_dump(mode="json", by_alias=True),
+                "actor": "test:bi-du",
+            }
+            rebound = store.revise_responsibility_plan_in_transaction(
+                conn, SCOPE, "test:bi-du", plan.plan_id, f"{key}-rebind", rebind,
+                operation="bi_responsibility_plan.rebind",
+                request_context=rebind_context,
+            )
+            assert rebound.revision == 2 and rebound.version == 2
+            assert rebound.lifecycle is BriefLifecycle.DRAFT
+            assert rebound.template_ref == active_ref
+            replay = store.revise_responsibility_plan_in_transaction(
+                conn, SCOPE, "test:bi-du", plan.plan_id, f"{key}-rebind", rebind,
+                operation="bi_responsibility_plan.rebind",
+                request_context=rebind_context,
+            )
+            assert replay.revision == rebound.revision
+            with pytest.raises(ProductionContractIdempotencyConflict):
+                store.revise_responsibility_plan_in_transaction(
+                    conn, SCOPE, "test:bi-du", plan.plan_id, f"{key}-rebind", rebind,
+                    operation="bi_responsibility_plan.rebind",
+                    request_context={**rebind_context, "installationETag": 5},
+                )
             raise StopAfterPlan()
     with connect(SCOPE) as conn:
         assert conn.execute("""SELECT count(*) AS n FROM aip_production_contract_receipt
@@ -585,6 +684,9 @@ def test_bi_plan_later_failure_rolls_back_draft_receipt_in_isolated_pg() -> None
         assert conn.execute("""SELECT count(*) AS n FROM aip_responsibility_plan_revision
             WHERE org_id=%s AND project_id=%s AND created_by='test:bi-du'""",
             SCOPE.key).fetchone()["n"] == 0
+        assert conn.execute("""SELECT count(*) AS n FROM aip_production_contract_receipt
+            WHERE org_id=%s AND project_id=%s AND operation='bi_responsibility_plan.rebind'
+              AND idempotency_key=%s""", (*SCOPE.key, f"{key}-rebind")).fetchone()["n"] == 0
 
 
 def test_skill_selection_is_exact_and_d03_is_explicit_r4() -> None:
