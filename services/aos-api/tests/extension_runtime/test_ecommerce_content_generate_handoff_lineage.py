@@ -15,6 +15,7 @@ from aos_api.ecommerce_analyst_authority_contracts import AnalystExactRef, Sales
 from aos_api.business_investigation_shared_contracts import InvestigationExactRef
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_authority_contracts import sales_weapon_method
+from test_ecommerce_review_task_brief_authority_pg import accepted_stage_command
 
 
 SCOPE = TenantScope("org-org", "dev-project")
@@ -512,6 +513,43 @@ def accepted_stage_content_command():
         {key: value for key, value in command.items() if key != "requestHash"}
     )
     return command
+
+
+def test_accepted_stage_review_receipt_hash_preserves_original_source_without_fake_issue():
+    command = accepted_stage_command()
+    lineage = {
+        "handoffRef": ref("HandoffReceipt", "handoff-stage-1", receipt=True),
+        "taskRef": ref("Task", "task-stage-1"),
+        "briefRef": ref("TaskBriefRevision", "brief-stage-1"),
+    }
+    host = ReviewAdvanceHostService()
+    receipt = host._accept_receipt(
+        command, lineage, SCOPE, command["idempotencyKey"],
+        datetime(2026, 9, 9, 4, 1, tzinfo=timezone.utc),
+    )
+    source = {name: command[name] for name in (
+        "sourceKind", "cutoffAt", "expiresAt", "markings", "occurrenceRef",
+        "caseRef", "runRef", "analysisReceiptRef", "currentPlanRef",
+        "growthPlanRef", "evalReportRef", "stageDecisionRef", "stageTaskRunId",
+        "stagePlanRef", "stageAttemptRef", "stageArtifactRef",
+        "responsibilityPlanRef",
+    )}
+    assert receipt["sourceKind"] == "accepted-stage-v1"
+    assert receipt["sourceLineage"] == source
+    assert "reviewIssueRef" not in receipt and "artifactBindings" not in receipt
+    assert receipt["receiptRef"]["contentHash"] == _analysis_command_hash({
+        key: value for key, value in receipt.items() if key != "receiptRef"
+    })
+    drift = deepcopy(command)
+    drift["stageDecisionRef"]["resourceId"] = "another-decision"
+    drift["requestHash"] = _analysis_command_hash({
+        key: value for key, value in drift.items() if key != "requestHash"
+    })
+    changed = host._accept_receipt(
+        drift, lineage, SCOPE, drift["idempotencyKey"],
+        datetime(2026, 9, 9, 4, 1, tzinfo=timezone.utc),
+    )
+    assert changed["receiptRef"]["contentHash"] != receipt["receiptRef"]["contentHash"]
 
 
 def test_accepted_stage_content_command_is_strict_and_host_stays_closed():

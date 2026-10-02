@@ -3345,6 +3345,9 @@ class ReviewAdvanceHostService:
         }
 
     def _accept_receipt(self, command, lineage, scope, key, decided_at):
+        accepted_stage = command.get("sourceKind") == "accepted-stage-v1"
+        if accepted_stage:
+            _strict_review_accept_command(command)
         body = {
             "requestHash": command["requestHash"],
             "decision": "ACCEPT",
@@ -3353,10 +3356,10 @@ class ReviewAdvanceHostService:
             "runRef": command["runRef"],
             "analysisReceiptRef": command["analysisReceiptRef"],
             "currentPlanRef": command["currentPlanRef"],
-            "reviewIssueRef": command["reviewIssueRef"],
+            **({} if accepted_stage else {"reviewIssueRef": command["reviewIssueRef"]}),
             "evalReportRef": command["evalReportRef"],
             "growthPlanRef": command["growthPlanRef"],
-            "artifactBindings": command["artifactBindings"],
+            **({} if accepted_stage else {"artifactBindings": command["artifactBindings"]}),
             "returnStage": None,
             "handoffRef": lineage["handoffRef"],
             "taskRef": lineage["taskRef"],
@@ -3366,6 +3369,11 @@ class ReviewAdvanceHostService:
             "replayed": False,
             "sideEffects": dict(_REVIEW_SIDE_EFFECTS),
         }
+        if accepted_stage:
+            body["sourceKind"] = "accepted-stage-v1"
+            body["sourceLineage"] = {
+                name: command[name] for name in sorted(_CONTENT_STAGE_LINEAGE_FIELDS)
+            }
         receipt_id = str(uuid5(REVIEW_RECEIPT_NAMESPACE, "\x1f".join((*scope.key, key))))
         return {
             "receiptRef": {
