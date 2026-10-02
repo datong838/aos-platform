@@ -6040,7 +6040,10 @@ def _content_business_text(value: Any, *, name: str, limit: int) -> str:
 
 
 def _strict_content_review_command(command: Mapping[str, Any]) -> dict[str, Any]:
-    if type(command) is not dict or set(command) != _CONTENT_REVIEW_FIELDS:
+    accepted_stage = type(command) is dict and command.get("sourceKind") == "accepted-stage-v1"
+    expected_fields = (_CONTENT_REVIEW_FIELDS | {"sourceKind"}
+                       if accepted_stage else _CONTENT_REVIEW_FIELDS)
+    if type(command) is not dict or set(command) != expected_fields:
         raise ValueError("content review command envelope drifted")
     if command["operation"] != "content.review":
         raise ValueError("content review operation drifted")
@@ -6067,10 +6070,12 @@ def _strict_content_review_command(command: Mapping[str, Any]) -> dict[str, Any]
         ),
     }
     source_values = command["sourceArtifactRefs"]
-    if type(source_values) is not list or len(source_values) != 4:
-        raise ValueError("content review requires four source Artifacts")
-    source_refs = [_content_exact_ref(value, "ArtifactRevision") for value in source_values]
-    if len({(ref.resource_id, ref.revision, ref.content_hash) for ref in source_refs}) != 4:
+    source_count = 1 if accepted_stage else 4
+    source_type = "Artifact" if accepted_stage else "ArtifactRevision"
+    if type(source_values) is not list or len(source_values) != source_count:
+        raise ValueError("content review source Artifact count drifted")
+    source_refs = [_content_exact_ref(value, source_type) for value in source_values]
+    if len({(ref.resource_id, ref.revision, ref.content_hash) for ref in source_refs}) != source_count:
         raise ValueError("content review source Artifacts must be unique")
     if command["artifactContentHash"] != command["artifactRef"]["contentHash"]:
         raise ValueError("content review Artifact input hash drifted")

@@ -29,7 +29,9 @@ from ecommerce_growth.content_capability_runtime import (
     execute_content_capability,
 )
 from ecommerce_growth.aip_business_investigation_compiler import canonical_command_hash
-from aos_api.ecommerce_growth_runtime_adapters import _strict_content_generate_command
+from aos_api.ecommerce_growth_runtime_adapters import (
+    _strict_content_generate_command, _strict_content_review_command,
+)
 from ecommerce_growth.ecommerce_business_investigation_application import (
     EcommerceGrowthApplication,
 )
@@ -145,13 +147,13 @@ def test_accepted_stage_receipt_and_readable_artifact_keep_original_source_type(
     )
     assert completed.artifact.source_kind == "accepted-stage-v1"
     assert completed.artifact.source_artifact_refs == original
-    with pytest.raises(ValueError, match="review Host is not wired"):
-        ContentReviewRequest(
-            artifact=completed.artifact,
-            review_issue_ref=ref("ReviewIssueRevision", "synthetic-issue"),
-            reviewer_authority_ref=ref("ReviewerAuthorityRevision", "reviewer-1"),
-            decision="ACCEPT", idempotency_key="stage-review-closed",
-        )
+    review = ContentReviewRequest(
+        artifact=completed.artifact,
+        review_issue_ref=ref("ReviewIssueRevision", "content-eval-issue"),
+        reviewer_authority_ref=ref("ReviewerAuthorityRevision", "reviewer-1"),
+        decision="ACCEPT", idempotency_key="stage-review-closed",
+    )
+    assert review.command_payload()["sourceKind"] == "accepted-stage-v1"
     for drift in (
         {"sourceArtifactRefs": [exact_ref_payload(item) for item in source_artifacts()]},
         {"artifact": {key: value for key, value in completed_payload["artifact"].items()
@@ -170,6 +172,43 @@ def test_accepted_stage_receipt_and_readable_artifact_keep_original_source_type(
         capability_receipt(legacy_command), request=legacy,
         request_hash=legacy_command["requestHash"],
     ).artifact.source_kind == "issue-review-v1"
+
+
+def test_accepted_stage_content_review_command_keeps_single_original_source():
+    original = (ref("Artifact", "original-stage-text"),)
+    generation = capability_request(source_kind="accepted-stage-v1", source_artifact_refs=original)
+    generate_command = generation.command_payload()
+    generate_command["requestHash"] = canonical_command_hash(generate_command)
+    artifact = ContentCapabilityReceipt.from_payload(
+        {**capability_receipt(generate_command),
+         "artifact": {**capability_receipt(generate_command)["artifact"],
+                      "sourceKind": "accepted-stage-v1"}},
+        request=generation, request_hash=generate_command["requestHash"],
+    ).artifact
+    request = ContentReviewRequest(
+        artifact=artifact,
+        review_issue_ref=ref("ReviewIssueRevision", "content-eval-issue"),
+        reviewer_authority_ref=ref("ReviewerAuthorityRevision", "reviewer-1"),
+        decision="ACCEPT", idempotency_key="accepted-content-review-1",
+    )
+    command = request.command_payload()
+    assert command["sourceKind"] == "accepted-stage-v1"
+    assert command["sourceArtifactRefs"] == [exact_ref_payload(original[0])]
+    assert canonical_command_hash(command) != canonical_command_hash(
+        {name: value for name, value in command.items() if name != "sourceKind"}
+    )
+    assert _strict_content_review_command(
+        {**command, "requestHash": canonical_command_hash(command)}
+    )["sourceRefs"][0].resource_type == "Artifact"
+    for drift in (
+        {"sourceArtifactRefs": [exact_ref_payload(item) for item in source_artifacts()]},
+        {"sourceKind": "issue-review-v1"},
+    ):
+        changed = {**command, **drift}
+        with pytest.raises(ValueError):
+            _strict_content_review_command(
+                {**changed, "requestHash": canonical_command_hash(changed)}
+            )
 
 
 def artifact_payload(command):

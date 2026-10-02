@@ -162,8 +162,6 @@ class ContentReviewRequest:
     return_stage: str | None = None
 
     def __post_init__(self) -> None:
-        if self.artifact.source_kind == "accepted-stage-v1":
-            raise ValueError("accepted stage content review Host is not wired")
         if self.review_issue_ref.resource_type != "ReviewIssueRevision":
             raise ValueError("content review requires ReviewIssueRevision")
         if self.reviewer_authority_ref.resource_type != "ReviewerAuthorityRevision":
@@ -183,7 +181,7 @@ class ContentReviewRequest:
 
     def command_payload(self) -> dict[str, object]:
         artifact = self.artifact
-        return {
+        command = {
             "operation": "content.review",
             "artifactRef": exact_ref_payload(artifact.artifact_ref),
             "taskRef": exact_ref_payload(artifact.task_ref),
@@ -197,6 +195,9 @@ class ContentReviewRequest:
             "returnStage": self.return_stage,
             "idempotencyKey": self.idempotency_key,
         }
+        if artifact.source_kind == "accepted-stage-v1":
+            command["sourceKind"] = "accepted-stage-v1"
+        return command
 
 
 @dataclass(frozen=True, slots=True)
