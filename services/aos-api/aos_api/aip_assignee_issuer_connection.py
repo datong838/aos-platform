@@ -68,7 +68,7 @@ def _require_identity(conn, config: AssigneeIssuerDatabaseConfig, scope: TenantS
       (SELECT setting::int FROM pg_settings WHERE name='idle_in_transaction_session_timeout') AS idle_ms,
       r.rolcanlogin,r.rolsuper,r.rolbypassrls,
       pg_has_role(session_user,'aos_app','MEMBER') AS owner_member,
-      pg_has_role(session_user,'aos_runtime','USAGE') AS runtime_inherited,
+      pg_has_role(session_user,'aos_runtime','MEMBER') AS runtime_member,
       (SELECT relowner::regrole::text FROM pg_class
         WHERE oid='public.aip_assignee_resolution_receipt'::regclass) AS receipt_owner,
       (SELECT pg_has_role(session_user,relowner,'MEMBER') FROM pg_class
@@ -87,7 +87,7 @@ def _require_identity(conn, config: AssigneeIssuerDatabaseConfig, scope: TenantS
             or row["search_path"] != "public,pg_catalog"
             or (row["statement_ms"], row["lock_ms"], row["idle_ms"]) != (10000, 5000, 10000)
             or not row["rolcanlogin"] or row["rolsuper"] or row["rolbypassrls"]
-            or row["owner_member"] or not row["runtime_inherited"]
+            or row["owner_member"] or row["runtime_member"]
             or row["receipt_owner"] == ISSUER_LOGIN or row["receipt_owner_member"]
             or not row["forced_rls"]
             or not row["issuer_select"] or not row["issuer_insert"]

@@ -56,13 +56,18 @@ def isolated_assignee_issuer():
     issuer = "aos_aip_assignee_issuer"
     password = secrets.token_urlsafe(32)
     scope = TenantScope("org-org", "dev-project")
+    scoped_reads = (
+        "meta_membership", "aip_agent_instance", "aip_skill_binding",
+        "aip_tool_binding", "aip_capability_binding",
+        "aip_assignee_resolution_receipt",
+    )
     with psycopg.connect(get_dsn()) as admin:
         assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s", (issuer,)).fetchone() is None
         admin.execute(
-            sql.SQL("CREATE ROLE {} LOGIN INHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
+            sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
             .format(sql.Identifier(issuer), sql.Literal(password))
         )
-        admin.execute(sql.SQL("GRANT aos_runtime TO {}").format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(sql.Identifier(issuer)))
         admin.execute("INSERT INTO twa_org(id,name) VALUES('org-org','栖月汇') ON CONFLICT DO NOTHING")
         admin.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES"
                       "('org-org','dev-project','开发工作区') ON CONFLICT DO NOTHING")
@@ -72,6 +77,17 @@ def isolated_assignee_issuer():
         admin.execute("INSERT INTO meta_membership(org_id,project_id,subject,role) "
                       "VALUES('org-org','dev-project','s3og-human','owner') ON CONFLICT DO NOTHING")
         admin.execute("REVOKE INSERT,UPDATE,DELETE ON aip_assignee_resolution_receipt FROM aos_runtime")
+        for table in scoped_reads:
+            admin.execute(sql.SQL("GRANT SELECT ON {} TO {}").format(
+                sql.Identifier("public", table), sql.Identifier(issuer)))
+            admin.execute(sql.SQL("""CREATE POLICY s3oh_assignee_issuer_scope ON {} TO {}
+                USING (org_id=NULLIF(current_setting('aos.org_id',true),'')
+                   AND project_id=NULLIF(current_setting('aos.project_id',true),''))
+                WITH CHECK (org_id=NULLIF(current_setting('aos.org_id',true),'')
+                   AND project_id=NULLIF(current_setting('aos.project_id',true),''))""").format(
+                sql.Identifier("public", table), sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT SELECT ON public.aip_agent_template_revision TO {}")
+                      .format(sql.Identifier(issuer)))
         admin.execute(sql.SQL("GRANT SELECT,INSERT ON aip_assignee_resolution_receipt TO {}")
                       .format(sql.Identifier(issuer)))
     with tempfile.TemporaryDirectory(prefix="aos-s3og-issuer-") as directory:
@@ -87,8 +103,10 @@ def isolated_assignee_issuer():
         finally:
             # Test-only role is cluster-wide; restore this DB's ACL and remove it.
             with psycopg.connect(get_dsn()) as admin:
+                for table in scoped_reads:
+                    admin.execute(sql.SQL("DROP POLICY IF EXISTS s3oh_assignee_issuer_scope ON {}")
+                                  .format(sql.Identifier("public", table)))
                 admin.execute(sql.SQL("DROP OWNED BY {}").format(sql.Identifier(issuer)))
-                admin.execute(sql.SQL("REVOKE aos_runtime FROM {}").format(sql.Identifier(issuer)))
                 admin.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(issuer)))
                 admin.execute("GRANT SELECT,INSERT,UPDATE,DELETE ON "
                               "aip_assignee_resolution_receipt TO aos_runtime")
@@ -154,3 +172,52 @@ def test_assignee_issuer_rejects_runtime_acl_widening(isolated_assignee_issuer) 
     with pytest.raises(AssigneeIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
         with factory(scope):
             pass
+
+
+_REGISTRY_INSERT = """INSERT INTO aip_agent_registry_receipt
+    (org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
+     resource_ref,result_ref,status,created_by,created_at)
+    VALUES(%s,%s,%s,'agent_instance.create',%s,%s,'{}'::jsonb,'{}'::jsonb,
+           'applied','untrusted-direct-writer',now())"""
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="E17-s3o-h RED: current aos_runtime can directly issue Registry Receipt",
+)
+def test_runtime_cannot_issue_registry_receipt_directly() -> None:
+    scope = TenantScope("org-org", "dev-project")
+    with psycopg.connect(get_dsn()) as admin:
+        admin.execute("INSERT INTO twa_org(id,name) VALUES('org-org','隔离测试组织') ON CONFLICT DO NOTHING")
+        admin.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES"
+                      "('org-org','dev-project','隔离测试工作区') ON CONFLICT DO NOTHING")
+    identifier = uuid4().hex
+    with connect(scope) as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute(_REGISTRY_INSERT,
+                         (*scope.key, f"s3oh-{identifier}", identifier, "a" * 64))
+
+
+def test_assignee_issuer_cannot_issue_registry_receipt_directly(isolated_assignee_issuer) -> None:
+    factory, scope = isolated_assignee_issuer
+    identifier = uuid4().hex
+    with factory(scope) as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute(_REGISTRY_INSERT,
+                         (*scope.key, f"s3oh-issuer-{identifier}", identifier, "a" * 64))
+
+
+def test_assignee_issuer_has_no_cross_domain_write_grants(isolated_assignee_issuer) -> None:
+    factory, scope = isolated_assignee_issuer
+    names = (
+        "aip_agent_registry_receipt", "aip_skill_binding",
+        "aip_capability_binding", "aip_tool_binding",
+    )
+    with factory(scope) as conn:
+        grants = {
+            name: tuple(conn.execute(
+                "SELECT has_table_privilege(current_user,%s,%s) AS granted", (name, command)
+            ).fetchone()["granted"] for command in ("INSERT", "UPDATE", "DELETE"))
+            for name in names
+        }
+    assert not any(any(flags) for flags in grants.values()), grants
