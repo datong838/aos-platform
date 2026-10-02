@@ -283,6 +283,25 @@ def test_evaluation_candidate_hash_excludes_only_gate_back_reference() -> None:
     assert candidate.content_hash != evaluation_candidate_ref(changed_semantics).content_hash
 
 
+def test_active_route_requires_exact_model_eval_gate_before_store_write() -> None:
+    route = hashed(ModelRouteRevision, dict(
+        tenant=TENANT, routeId=f"{SUFFIX}:active-route", revision=1,
+        taskTypes=["copy.generate"], requiredInputModality=ModelModality.TEXT,
+        requiredOutputModality=ModelModality.TEXT,
+        requiredCapabilities=["structured_output"],
+        candidates=[ModelRouteCandidate(
+            model=ref("RegisteredModelRevision", "candidate-model", "1" * 64),
+        )],
+        strategy=RouteStrategy.FAILOVER,
+        runtimePolicyRef=ref("RuntimePolicyRevision", "policy", "2" * 64),
+        evalGateRef=ref("EvalGateDecision", "wrong-model-gate", "3" * 64),
+        lifecycle=ModelRuntimeLifecycle.ACTIVE, createdBy=SUFFIX, createdAt=NOW,
+    ))
+    store = AipModelRuntimeStore(eval_authority_store=_RejectEvalGate())
+    with pytest.raises(ModelRuntimeDependencyBlocked, match="target drifted"):
+        store.publish_route(SCOPE, SUFFIX, "active-route", route)
+
+
 def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> None:
     cleanup()
     store = AipModelRuntimeStore()
