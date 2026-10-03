@@ -8,6 +8,9 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 import pytest
 
+from aos_api.aip_agent_registry_contracts import PublishCapabilityRevisionRequest, VersionedAssetRef
+from aos_api.aip_capability_registry import AipCapabilityRegistry
+from aos_api.aip_contracts import ResourceRef
 from aos_api.db import get_dsn
 
 
@@ -61,6 +64,12 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
     issuer = "s3owaob22_issuer_" + secrets.token_hex(4)
     runtime = "s3owaob22_runtime_" + secrets.token_hex(4)
     passwords = {name: secrets.token_urlsafe(24) for name in (issuer, runtime)}
+    published_id = "b30.published." + secrets.token_hex(4)
+    evaluated_id = "b30.evaluated." + secrets.token_hex(4)
+    catalog_hash = "a" * 64
+    published_ref = {"assetType": "CapabilityRevision", "assetId": published_id,
+                     "revision": 1, "contentHash": catalog_hash}
+    evaluated_ref = {**published_ref, "assetId": evaluated_id}
 
     def login(name):
         return psycopg.connect(make_conninfo(dsn, user=name, password=passwords[name]))
@@ -86,19 +95,42 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
     def flush_guards(conn):
         conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
 
-    def insert_binding(conn, binding, *, status="provisioning", version=1):
+    def insert_binding(conn, binding, *, status="provisioning", version=1,
+                       capability_ref=None):
         conn.execute("""INSERT INTO aip_capability_binding(
             org_id,project_id,binding_id,capability_ref,secret_ref,health,
             network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
             status,version)
-            VALUES('org-org','dev-project',%s,'{}'::jsonb,'secret://test-only',
+            VALUES('org-org','dev-project',%s,%s::jsonb,'secret://test-only',
                    'unknown','test-only','test-only',1000,1,%s,%s)""",
-            (binding, status, version))
+            (binding, json.dumps(published_ref if capability_ref is None else capability_ref),
+             status, version))
 
     with psycopg.connect(dsn, autocommit=True) as owner:
         owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','formal') ON CONFLICT DO NOTHING")
         owner.execute("INSERT INTO twa_workspace(org_id,project_id,name) "
                       "VALUES('org-org','dev-project','formal') ON CONFLICT DO NOTHING")
+        def asset(kind, name):
+            return VersionedAssetRef(asset_type=kind, asset_id=name,
+                                     revision=1, content_hash=catalog_hash)
+
+        for capability_id, lifecycle in ((published_id, "published"),
+                                         (evaluated_id, "evaluated")):
+            AipCapabilityRegistry().publish(
+                PublishCapabilityRevisionRequest(
+                    capability_id=capability_id, revision=1, display_name="test-only",
+                    lifecycle=lifecycle, input_schema_ref=asset("SchemaRevision", "input"),
+                    output_schema_ref=asset("SchemaRevision", "output"),
+                    risk_level="low", memory_policy_ref=asset("MemoryPolicy", "memory"),
+                    handoff_policy_ref=asset("HandoffPolicy", "handoff"),
+                    effect_review_schema_ref=asset("SchemaRevision", "effect"),
+                    license_policy_ref=asset("LicensePolicy", "license"),
+                    readiness_policy_ref=asset("ReadinessPolicy", "readiness"),
+                    readiness="unknown", source_ref=ResourceRef(
+                        resource_type="SolutionPack", resource_id="b30-test-only",
+                        revision="1", authority="isolated-test"),
+                    source_license="test-only", content_hash=catalog_hash),
+                actor="b30-test-only")
         for name, password in passwords.items():
             owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
                           .format(sql.Identifier(name), sql.Literal(password)))
@@ -113,6 +145,8 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     "project_id=current_setting('aos.project_id',true))")
                     .format(sql.Identifier(name + "_receipt"), sql.Identifier(name)))
             owner.execute(sql.SQL("GRANT SELECT,INSERT,UPDATE ON aip_capability_binding TO {}")
+                          .format(sql.Identifier(issuer)))
+            owner.execute(sql.SQL("GRANT SELECT ON aip_capability_revision TO {}")
                           .format(sql.Identifier(issuer)))
             owner.execute(sql.SQL("CREATE POLICY {} ON aip_capability_binding TO {} "
                 "USING(org_id=current_setting('aos.org_id',true) AND "
@@ -134,6 +168,26 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                        OR NEW.operational_readiness<>'unknown'
                        OR NEW.readiness_expires_at IS NOT NULL
                     THEN RAISE EXCEPTION 'CAPABILITY_CREATE_INITIAL_STATE_REQUIRED'
+                        USING ERRCODE='42501';
+                    END IF;
+                    IF NOT (NEW.capability_ref ?& ARRAY[
+                           'assetType','assetId','revision','contentHash'])
+                       OR NEW.capability_ref - ARRAY[
+                           'assetType','assetId','revision','contentHash'] <> '{}'::jsonb
+                       OR NEW.capability_ref->>'assetType' <> 'CapabilityRevision'
+                       OR jsonb_typeof(NEW.capability_ref->'revision') <> 'number'
+                       OR (NEW.capability_ref->>'revision') !~ '^[1-9][0-9]*$'
+                       OR (NEW.capability_ref->>'contentHash') !~ '^[0-9a-f]{64}$'
+                    THEN RAISE EXCEPTION 'CAPABILITY_CREATE_EXACT_REF_REQUIRED'
+                        USING ERRCODE='42501';
+                    END IF;
+                    IF NOT EXISTS (
+                        SELECT 1 FROM public.aip_capability_revision c
+                        WHERE c.capability_id=NEW.capability_ref->>'assetId'
+                          AND c.revision=(NEW.capability_ref->>'revision')::bigint
+                          AND c.content_hash=NEW.capability_ref->>'contentHash'
+                          AND c.lifecycle='published'
+                    ) THEN RAISE EXCEPTION 'CAPABILITY_CREATE_PUBLISHED_SOURCE_REQUIRED'
                         USING ERRCODE='42501';
                     END IF;
                     NEW.s3owaob24_last_operation := 'capability_binding.create';
@@ -310,6 +364,29 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 set_scope(conn)
                 insert_binding(conn, "b22-binding")
                 receipt(conn, "capability_binding.create", "b22-created")
+            with login(issuer) as conn:
+                set_scope(conn)
+                assert conn.execute("SELECT session_user,current_user").fetchone() == (issuer, issuer)
+                assert conn.execute("SELECT lifecycle FROM aip_capability_revision "
+                    "WHERE capability_id=%s", (published_id,)).fetchone()[0] == "published"
+                assert conn.execute("SELECT has_table_privilege(session_user, "
+                    "'aip_capability_revision','INSERT')").fetchone()[0] is False
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    conn.execute("ALTER TABLE aip_capability_binding DISABLE TRIGGER ALL")
+                conn.rollback()
+            for binding, bad_ref in (
+                ("b30-empty-ref", {}),
+                ("b30-evaluated-ref", evaluated_ref),
+                ("b30-wrong-hash", {**published_ref, "contentHash": "b" * 64}),
+                ("b30-wrong-revision", {**published_ref, "revision": 2}),
+                ("b30-wrong-id", {**published_ref, "assetId": "b30.missing"}),
+                ("b30-wrong-type", {**published_ref, "assetType": "Other"}),
+            ):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with login(issuer) as conn:
+                        set_scope(conn)
+                        insert_binding(conn, binding, capability_ref=bad_ref)
+                        receipt(conn, "capability_binding.create", binding, binding=binding)
             for binding, status, version in (
                 ("b29-active-create", "active", 1),
                 ("b29-version-two-create", "provisioning", 2),
@@ -453,6 +530,8 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
             owner.execute(sql.SQL("DROP POLICY IF EXISTS {} ON aip_capability_binding")
                           .format(sql.Identifier(issuer + "_binding")))
             owner.execute(sql.SQL("REVOKE SELECT,INSERT,UPDATE ON aip_capability_binding FROM {}")
+                          .format(sql.Identifier(issuer)))
+            owner.execute(sql.SQL("REVOKE SELECT ON aip_capability_revision FROM {}")
                           .format(sql.Identifier(issuer)))
             for name in (issuer, runtime):
                 owner.execute(sql.SQL("DROP POLICY IF EXISTS {} ON aip_agent_registry_receipt")
