@@ -22,6 +22,32 @@ SCOPE = TenantScope("org-org", "dev-project")
 NOW = datetime(2026, 10, 3, 2, 0, tzinfo=UTC)
 
 
+def _active_agent() -> None:
+    with connect(SCOPE) as conn:
+        conn.execute(
+            """INSERT INTO aip_agent_template_revision(
+                 template_id,revision,display_name,role_key,lifecycle,source_ref,
+                 source_license,manifest,content_hash,created_by)
+               VALUES('template-s3oq',1,'S3OQ','tester','published','{}',
+                      'internal','{}',%s,'tester') ON CONFLICT DO NOTHING""",
+            ("f" * 64,),
+        )
+        conn.execute(
+            """INSERT INTO aip_agent_instance(
+                 org_id,project_id,instance_id,template_id,template_revision,status,
+                 overlay,version,created_by)
+               VALUES(%s,%s,'s3oq-test-only-agent','template-s3oq',1,
+                      'active','{}',1,'tester') ON CONFLICT DO NOTHING""",
+            SCOPE.key,
+        )
+        conn.commit()
+
+
+@pytest.fixture(autouse=True)
+def active_agent_fixture():
+    _active_agent()
+
+
 def _request(binding_id: str, *, version: int = 1,
              tool_id: str = "tool.query") -> UpsertToolBindingRequest:
     return UpsertToolBindingRequest(

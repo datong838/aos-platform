@@ -64,6 +64,12 @@ def upsert_tool_binding(
             _scope(principal), body, now=datetime.now(UTC)
         )
     except AipAssigneeResolutionBlocked as exc:
+        if str(exc) == "TOOL_BINDING_INSTANCE_NOT_ACTIVE":
+            raise ApiError(
+                code="TOOL_BINDING_INSTANCE_NOT_ACTIVE",
+                message="tool binding requires an active scoped agent instance",
+                status_code=409,
+            ) from exc
         if str(exc) != "TOOL_BINDING_VERSION_CONFLICT":
             raise
         raise ApiError(

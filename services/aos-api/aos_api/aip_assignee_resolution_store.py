@@ -73,6 +73,14 @@ class AipAssigneeResolutionStore:
         now: datetime,
     ) -> ToolBindingRecord:
         with self._connect(scope) as conn:
+            if request.status == "active":
+                instance = conn.execute(
+                    """SELECT status FROM aip_agent_instance
+                        WHERE org_id=%s AND project_id=%s AND instance_id=%s""",
+                    (*scope.key, request.agent_instance_id),
+                ).fetchone()
+                if instance is None or instance["status"] != "active":
+                    raise AipAssigneeResolutionBlocked("TOOL_BINDING_INSTANCE_NOT_ACTIVE")
             written = conn.execute(
                 """INSERT INTO aip_tool_binding(
                   org_id,project_id,binding_id,tool_id,version,agent_instance_id,

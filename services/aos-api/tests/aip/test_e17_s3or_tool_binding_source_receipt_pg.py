@@ -17,11 +17,29 @@ from aos_api.tenant_scope import TenantScope
 def test_original_tool_binding_write_has_same_transaction_issuance_receipt():
     scope = TenantScope("org-org", "dev-project")
     binding_id = f"s3or-{uuid4().hex}"
+    agent_id = f"s3or-agent-{uuid4().hex}"
+    with connect(scope) as conn:
+        conn.execute(
+            """INSERT INTO aip_agent_template_revision(
+                 template_id,revision,display_name,role_key,lifecycle,source_ref,
+                 source_license,manifest,content_hash,created_by)
+               VALUES('template-s3or',1,'S3OR','tester','published','{}',
+                      'internal','{}',%s,'tester') ON CONFLICT DO NOTHING""",
+            ("f" * 64,),
+        )
+        conn.execute(
+            """INSERT INTO aip_agent_instance(
+                 org_id,project_id,instance_id,template_id,template_revision,status,
+                 overlay,version,created_by)
+               VALUES(%s,%s,%s,'template-s3or',1,'active','{}',1,'tester')""",
+            (*scope.key, agent_id),
+        )
+        conn.commit()
     AipAssigneeResolutionStore().upsert_tool_binding(
         scope,
         UpsertToolBindingRequest(
             binding_id=binding_id, tool_id="test-only-tool", version=1,
-            agent_instance_id="test-only-agent",
+            agent_instance_id=agent_id,
         ),
         now=datetime.now(UTC),
     )
