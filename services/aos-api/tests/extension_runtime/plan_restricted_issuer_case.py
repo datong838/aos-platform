@@ -185,14 +185,21 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                   IF session_user<>{} OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
                      OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project
                      OR cardinality(p_ids)<>6
-                     OR (SELECT count(DISTINCT id) FROM unnest(p_ids) AS id)<>6 THEN
+                     OR (SELECT count(DISTINCT id) FROM unnest(p_ids) AS id)<>6
+                     OR (SELECT array_agg(id ORDER BY id) FROM unnest(p_ids) AS id)
+                        IS DISTINCT FROM {} THEN
                     RAISE EXCEPTION 'agents unavailable' USING ERRCODE='42501';
                   END IF;
                   RETURN QUERY SELECT a.instance_id,a.version FROM public.aip_agent_instance a
                     WHERE a.org_id=p_org AND a.project_id=p_project AND a.status='active'
                       AND a.instance_id=ANY(p_ids)
                     ORDER BY a.instance_id FOR SHARE OF a;
-                END $$''').format(sql.Literal(issuer)))
+                END $$''').format(
+                    sql.Literal(issuer),
+                    sql.SQL('ARRAY[{}]::text[]').format(sql.SQL(',').join(
+                        sql.Literal(instance_id)
+                        for instance_id in sorted(item[2] for item in BI_ROLE_BLUEPRINTS))),
+                ))
             admin.execute('''REVOKE ALL ON FUNCTION public.aos_bi_plan_agents_lock_a0v_136(
                 text,text,text[]) FROM PUBLIC''')
             admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
@@ -201,6 +208,11 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute('''INSERT INTO authz_tuple(org_id,project_id,user_key,relation,object_key)
                 VALUES(%s,%s,'user:test-author','bearer','marking:s3owq-test')
                 ON CONFLICT DO NOTHING''', SCOPE.key)
+            admin.execute('''INSERT INTO aip_agent_instance
+                (org_id,project_id,instance_id,template_id,template_revision,
+                 status,overlay,version,created_by)
+                VALUES(%s,%s,'s3ows-unlisted-agent','test-bi-plan-active-handoff',1,
+                       'active','{}',1,'test-author')''', SCOPE.key)
             parts = conninfo_to_dict(get_dsn())
             with psycopg.connect(host=parts['host'], port=parts['port'], dbname=dbname,
                                  user=issuer, password=password, row_factory=dict_row) as writer:
@@ -279,7 +291,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                             WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
                             (*SCOPE.key, agent_ids[0]))
                     admin.execute('RESET lock_timeout')
-                for ids in (agent_ids[:5], [agent_ids[0]] * 6):
+                for ids in (agent_ids[:5], [agent_ids[0]] * 6,
+                            agent_ids[:5] + ['s3ows-unlisted-agent']):
                     with pytest.raises(psycopg.errors.InsufficientPrivilege):
                         writer.execute('''SELECT instance_id FROM
                             public.aos_bi_plan_agents_lock_a0v_136(%s,%s,%s)''',
