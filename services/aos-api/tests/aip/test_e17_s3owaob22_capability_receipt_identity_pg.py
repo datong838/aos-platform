@@ -83,6 +83,9 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
              json.dumps({"resourceType": result_type, "resourceId": binding,
                          "revision": revision})))
 
+    def flush_guards(conn):
+        conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
     def insert_binding(conn, binding):
         conn.execute("""INSERT INTO aip_capability_binding(
             org_id,project_id,binding_id,capability_ref,secret_ref,health,
@@ -116,6 +119,26 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 "WITH CHECK(org_id=current_setting('aos.org_id',true) AND "
                 "project_id=current_setting('aos.project_id',true))")
                 .format(sql.Identifier(issuer + "_binding"), sql.Identifier(issuer)))
+            owner.execute("ALTER TABLE aip_capability_binding "
+                          "ADD COLUMN s3owaob24_last_operation text")
+            owner.execute("""CREATE FUNCTION public.s3owaob24_mark_binding_operation()
+                RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
+                SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF TG_OP='INSERT' THEN
+                    NEW.s3owaob24_last_operation := 'capability_binding.create';
+                  ELSIF NEW.status IS DISTINCT FROM OLD.status
+                     OR NEW.health IS DISTINCT FROM OLD.health THEN
+                    NEW.s3owaob24_last_operation := 'capability_binding.update';
+                  ELSE
+                    NEW.s3owaob24_last_operation := 'capability_binding.evaluate';
+                  END IF;
+                  RETURN NEW;
+                END $$""")
+            owner.execute("REVOKE ALL ON FUNCTION public.s3owaob24_mark_binding_operation() FROM PUBLIC")
+            owner.execute("""CREATE TRIGGER s3owaob24_mark_binding_operation
+                BEFORE INSERT OR UPDATE ON aip_capability_binding FOR EACH ROW
+                EXECUTE FUNCTION public.s3owaob24_mark_binding_operation()""")
             owner.execute(sql.SQL("""CREATE FUNCTION public.s3owaob22_receipt_guard()
                 RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
                 SET search_path=pg_catalog AS $$
@@ -131,6 +154,7 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                          WHERE b.org_id=NEW.org_id AND b.project_id=NEW.project_id
                            AND b.binding_id=NEW.result_ref->>'resourceId'
                            AND b.version::text=NEW.result_ref->>'revision'
+                           AND b.s3owaob24_last_operation=NEW.operation
                            AND b.xmin::text=pg_current_xact_id()::text
                            AND ((NEW.operation='capability_binding.create'
                                  AND NEW.result_ref->>'resourceType'='CapabilityBinding'
@@ -149,8 +173,9 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                   RETURN NEW;
                 END $$""").format(sql.Literal(issuer), sql.Literal(issuer)))
             owner.execute("REVOKE ALL ON FUNCTION public.s3owaob22_receipt_guard() FROM PUBLIC")
-            owner.execute("""CREATE TRIGGER s3owaob22_receipt_guard
-                BEFORE INSERT ON aip_agent_registry_receipt FOR EACH ROW
+            owner.execute("""CREATE CONSTRAINT TRIGGER s3owaob22_receipt_guard
+                AFTER INSERT ON aip_agent_registry_receipt
+                DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
                 EXECUTE FUNCTION public.s3owaob22_receipt_guard()""")
             owner.execute(sql.SQL("""CREATE FUNCTION public.s3owaob22_binding_guard()
                 RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER
@@ -185,10 +210,17 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
             with login(runtime) as conn:
                 set_scope(conn)
                 receipt(conn, "agent_instance.create", "b22-normal")
+                for operation, key in (
+                    ("skill_binding.create", "b22-normal-skill"),
+                    ("agent_run.create", "b22-normal-run"),
+                    ("handoff.issue", "b22-normal-handoff"),
+                ):
+                    receipt(conn, operation, key)
             with login(runtime) as conn:
                 set_scope(conn)
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "capability_binding.create", "b22-runtime-forgery")
+                    flush_guards(conn)
                 conn.rollback()
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     conn.execute(sql.SQL("SET ROLE {}") .format(sql.Identifier(issuer)))
@@ -197,11 +229,13 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 set_scope(conn)
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "capability_binding.create", "b22-unpaired")
+                    flush_guards(conn)
                 conn.rollback()
             with login(issuer) as conn:
                 set_scope(conn)
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "agent_instance.create", "b22-issuer-other")
+                    flush_guards(conn)
                 conn.rollback()
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with login(issuer) as conn:
@@ -223,15 +257,44 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     last_evaluated_at=now(),readiness_expires_at=now()+interval '15 minutes'
                     WHERE binding_id='b22-binding'""", ("b" * 64,))
                 receipt(conn, "capability_binding.evaluate", "b22-evaluated", revision="3")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET status='revoked',
+                        version=version+1 WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.update", "b22-update-with-spoof", revision="4")
+                    receipt(conn, "capability_binding.create", "b22-spoofed-create", revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    receipt(conn, "capability_binding.create", "b22-create-before-update", revision="4")
+                    conn.execute("""UPDATE aip_capability_binding SET status='revoked',
+                        version=version+1 WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.update", "b22-update-after-spoof", revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET status='revoked',
+                        version=version+1 WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.update", "b22-update-with-false-eval", revision="4")
+                    receipt(conn, "capability_binding.evaluate", "b22-spoofed-eval", revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET
+                        s3owaob24_last_operation='capability_binding.create',version=version+1
+                        WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.create", "b22-client-marker-spoof", revision="4")
             with login(issuer) as conn:
                 set_scope(conn)
-                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with pytest.raises(psycopg.errors.UniqueViolation):
                     receipt(conn, "capability_binding.create", "b22-created")
                 conn.rollback()
             with login(issuer) as conn:
                 set_scope(conn)
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "capability_binding.create", "b22-late")
+                    flush_guards(conn)
                 conn.rollback()
             with login(issuer) as conn:
                 set_scope(conn)
@@ -239,11 +302,13 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "capability_binding.create", "b22-wrong-version", revision="2",
                             binding="b22-wrong-version")
+                    flush_guards(conn)
                 conn.rollback()
             with login(issuer) as conn:
                 set_scope(conn, "dev-org")
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     receipt(conn, "capability_binding.create", "b22-cross-tenant")
+                    flush_guards(conn)
                 conn.rollback()
             with login(issuer) as conn:
                 set_scope(conn)
@@ -252,7 +317,7 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                         binding="b22-rollback")
                 conn.rollback()
             assert owner.execute("SELECT count(*) FROM aip_agent_registry_receipt "
-                                 "WHERE idempotency_key LIKE 'b22-%'").fetchone()[0] == 4
+                                 "WHERE idempotency_key LIKE 'b22-%'").fetchone()[0] == 7
             assert owner.execute("SELECT count(*) FROM aip_capability_binding "
                                  "WHERE binding_id LIKE 'b22-%'").fetchone()[0] == 1
         finally:
@@ -261,6 +326,11 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
             owner.execute("DROP TRIGGER IF EXISTS s3owaob22_receipt_guard "
                           "ON aip_agent_registry_receipt")
             owner.execute("DROP FUNCTION IF EXISTS public.s3owaob22_receipt_guard()")
+            owner.execute("DROP TRIGGER IF EXISTS s3owaob24_mark_binding_operation "
+                          "ON aip_capability_binding")
+            owner.execute("DROP FUNCTION IF EXISTS public.s3owaob24_mark_binding_operation()")
+            owner.execute("ALTER TABLE aip_capability_binding "
+                          "DROP COLUMN IF EXISTS s3owaob24_last_operation")
             owner.execute(sql.SQL("DROP POLICY IF EXISTS {} ON aip_capability_binding")
                           .format(sql.Identifier(issuer + "_binding")))
             owner.execute(sql.SQL("REVOKE SELECT,INSERT,UPDATE ON aip_capability_binding FROM {}")

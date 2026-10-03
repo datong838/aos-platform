@@ -21,6 +21,10 @@
 
 b22 test-only Receipt 守卫在 `BEFORE INSERT` 检查同事务 Binding 的 `xmin`；若先更新 Binding 到新版本，再插入合法 update Receipt 和**额外伪 create Receipt**，当前守卫可能只因同事务版本相同而接纳额外 create。还要检查反序插入后更新；正式协议必须区分 INSERT/UPDATE 事件并在事务末验证最终版本，不能只凭结果 ID/版本与 `xmin`。
 
+### b24 RED 后的最小隔离修订合同
+
+真实独立 issuer test DB 中已复现：更新到版本4并写合法 update Receipt 后，额外 `capability_binding.create` Receipt 被 b22 `BEFORE` 守卫接受，目标测试 exit1 `DID NOT RAISE`。仅在一次性测试库给 Binding 加一个由数据库 `BEFORE INSERT/UPDATE` 触发器**覆盖赋值**的 last-operation 探针列；它由 `TG_OP` 和 OLD/NEW 状态/健康变化推导，发行者不能通过请求参数选值。Receipt 守卫改为 deferred AFTER INSERT，在 commit 读最终 Binding版本、该数据库派生 operation 与当前事务行版本；Binding 反向守卫继续要求每次写有同事务 Receipt。若同一 Binding 在一事务多次变更，最终版本不匹配应失败关闭。此列/触发器仅为隔离探针，生产迁移需独立审查兼容性、权限与清理，不因本波测试 GREEN 直接写原库。
+
 ## 文件级次序
 
 1. 只读形成 operation/写者/真实 DB LOGIN/tenant/结果引用/幂等重放矩阵：检查 `aip_agent_registry_store.py`、Capability/Skill/Run/Handoff/Execution 服务、Receipt 表迁移与历史只读回执。列出未覆盖 operation，不以少数例子推全表合法范围。
