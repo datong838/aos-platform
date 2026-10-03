@@ -169,6 +169,51 @@ def test_reader_rechecks_exact_bundle_revocation_and_requires_revoke_acl(
         authority.exact_assets_available(scope, [evidence])
 
 
+def test_reader_rechecks_license_bundle_revocation_and_requires_revoke_acl(
+    capability_case, readiness_reader,
+):
+    scope, _ = capability_case
+    bundle_id = f"s3owaob9-{uuid4().hex}"
+    content_hash = "d" * 64
+    evidence = ResourceRef(
+        resource_type="EvidenceBundleRevision", resource_id=bundle_id,
+        revision="1", authority="test-only",
+    )
+    with connect(scope) as owner:
+        owner.execute("""INSERT INTO aip_evidence_bundle_revision
+            (org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+             item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+             license_summary,content_hash,lifecycle,created_by)
+            VALUES(%s,%s,%s,1,'{}'::jsonb,'[]'::jsonb,NOW(),'[]'::jsonb,
+                   'complete','[]'::jsonb,'[]'::jsonb,'[]'::jsonb,'fresh',
+                   '{}'::jsonb,'{"license":"test-only"}'::jsonb,%s,'frozen','test-only')""",
+            (*scope.key, bundle_id, content_hash),
+        )
+        owner.commit()
+    authority = PostgresBindingDependencyAuthority(readiness_reader)
+    assert authority.license_evidence_available(scope, [evidence])
+    assert not authority.license_evidence_available(
+        TenantScope("org-org", "other-project"), [evidence]
+    )
+    assert not authority.license_evidence_available(
+        TenantScope("dev-org", "dev-project"), [evidence]
+    )
+    with connect(scope) as owner:
+        owner.execute("""INSERT INTO aip_evidence_bundle_revoke_event
+            (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
+            VALUES(%s,%s,%s,%s,1,%s,'test-only-revocation','test-only')""",
+            (*scope.key, f"revoke-{uuid4().hex}", bundle_id, content_hash),
+        )
+        owner.commit()
+    assert not authority.license_evidence_available(scope, [evidence])
+    with connect() as owner:
+        owner.execute(sql.SQL("REVOKE SELECT ON aip_evidence_bundle_revoke_event FROM {}")
+                      .format(sql.Identifier(READINESS_READER_LOGIN)))
+        owner.commit()
+    with pytest.raises(ReadinessReaderConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        authority.license_evidence_available(scope, [evidence])
+
+
 def test_reader_rejects_missing_required_acl(capability_case, readiness_reader):
     scope, _ = capability_case
     with connect() as owner:

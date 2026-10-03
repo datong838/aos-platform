@@ -96,11 +96,18 @@ class PostgresBindingDependencyAuthority:
                 except ValueError:
                     return False
                 row = conn.execute(
-                    """SELECT lifecycle,license_summary FROM aip_evidence_bundle_revision
+                    """SELECT lifecycle,license_summary,content_hash FROM aip_evidence_bundle_revision
                        WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=%s""",
                     (*scope.key, ref.resource_id, revision),
                 ).fetchone()
                 if not row or row["lifecycle"] != "frozen" or not row["license_summary"]:
+                    return False
+                if conn.execute(
+                    """SELECT 1 FROM aip_evidence_bundle_revoke_event
+                       WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                         AND revision=%s AND content_hash=%s""",
+                    (*scope.key, ref.resource_id, revision, row["content_hash"]),
+                ).fetchone() is not None:
                     return False
         return True
 
