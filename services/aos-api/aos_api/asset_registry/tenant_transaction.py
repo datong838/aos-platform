@@ -40,6 +40,21 @@ def apply_asset_transaction_scope(
                 (org_id, project_id),
             )
             return
+        member = conn.execute(
+            "SELECT pg_has_role(current_user, %s, 'member') AS member",
+            (RUNTIME_DB_ROLE,),
+        ).fetchone()
+        if member is None or type(member["member"]) is not bool:
+            raise PermissionError("database role membership unavailable")
+        if not member["member"]:
+            # Dedicated issuers retain their own narrow GRANT/RLS identity.
+            # Binding tenant GUCs grants no table access by itself.
+            conn.execute(
+                """SELECT set_config('aos.org_id', %s, true),
+                          set_config('aos.project_id', %s, true)""",
+                (org_id, project_id),
+            )
+            return
         search_path = str(conn.execute("SHOW search_path").fetchone()["search_path"])
         apply_transaction_scope(conn, TenantScope(org_id, project_id))
         # SET ROLE may activate a role-specific default and hide isolated test

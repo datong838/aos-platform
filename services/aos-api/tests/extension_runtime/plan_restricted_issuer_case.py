@@ -122,7 +122,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 before_bi = writer.execute(
                     'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
                 with pytest.raises(psycopg.errors.InsufficientPrivilege,
-                                   match='role'):
+                                   match='bundle_installation'):
                     SignedBIPlanPreparationService(
                         connect_factory=lambda _: nullcontext(writer),
                         preparation_resolver=resolver,
