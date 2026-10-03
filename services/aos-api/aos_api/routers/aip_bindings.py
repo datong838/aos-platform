@@ -91,6 +91,10 @@ def build_capability_binding_service(
 
 
 _CAPABILITY_SERVICE = build_capability_binding_service()
+_CAPABILITY_PRIVATE_CONFIGURED = (
+    isinstance(_CAPABILITY_SERVICE._connect_factory, RegistryIssuerConnectionFactory)
+    and _CAPABILITY_SERVICE._readiness_service is not None
+)
 _SKILL_SERVICE = AipSkillRegistry()
 
 
@@ -140,6 +144,16 @@ def _map_error(exc: AipAgentRegistryError) -> ApiError:
 def _require_snapshot(expected: str | None, actual: str | None) -> None:
     if expected is not None and expected != actual:
         raise AipAgentRegistryConflict("dependency snapshot hash changed")
+
+
+def _require_private_capability_write() -> None:
+    if (os.environ.get("AOS_AIP_BINDING_REQUIRE_PRIVATE") == "1"
+            and not _CAPABILITY_PRIVATE_CONFIGURED):
+        raise ApiError(
+            code="AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED",
+            message="private capability binding identity required",
+            status_code=503,
+        )
 
 
 @router.get(
@@ -193,6 +207,7 @@ def create_capability_binding(
         get_capability_binding_service
     ),
 ) -> CapabilityBindingCommandResponse:
+    _require_private_capability_write()
     try:
         binding, receipt = service.create(
             _scope(principal),
@@ -237,6 +252,7 @@ def evaluate_capability_binding(
         get_capability_binding_service
     ),
 ) -> CapabilityBindingCommandResponse:
+    _require_private_capability_write()
     try:
         binding, readiness, receipt = service.evaluate(
             _scope(principal),
@@ -264,6 +280,7 @@ def _transition_capability(
     service: AipCapabilityBindingService,
     idempotency_key: str,
 ) -> CapabilityBindingCommandResponse:
+    _require_private_capability_write()
     try:
         current = service.get(_scope(principal), binding_id)
         _require_snapshot(
