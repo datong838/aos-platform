@@ -9,6 +9,7 @@
 
 - clone 内先将原 `pg_hba.conf` 以 mode600 保留为 `pg_hba.conf.b21-original`，新建 `b21-reader-private/` mode700、随机口令 passfile mode600；仅对该数据库/Reader 的本地 socket 新增首条 `scram-sha-256` 规则，原管理员/其他规则原样保留；`pg_reload_conf()` 返回 true。`docker exec ... sha256sum` 复核原副本 `2366fa203f80a6b335fb103ef2d181e5f9d2cebdd27ae5cff1eb97d991f94ff0`、新配置 `53bf1430376aa1004f8e0c6783f0a25eb016b4897dbac4fa44e9b5bad1233dad`，exit0。
 - `pg_hba_file_rules` 首规则 `local ... Reader scram-sha-256` 无 error；`PGPASSFILE=/dev/null` 无文件 exit2，错误私有文件 exit2；正确私有文件独立登录输出 `session_user=current_user=aos_aip_binding_readiness_reader`、DB CONNECT=true、RegistryReceipt INSERT=false、全局 CapabilityRevision10、org-org/dev-project BudgetHead0，事务 READ ONLY，exit0。clone Reader 18 public表 SELECT/0写、17策略；Receipt6/CapabilityBinding0。原库 `BEGIN READ ONLY` 回读版本135、正式 Reader/issuer角色0、Receipt6/CapabilityBinding0，exit0。
+- 为把凭据和 RLS 正反链合并，仅在 clone 由 postgres 插入唯一 `org-org/dev-project/b21-private-reader-rls-test-only-20261004` 合成 BudgetHead，`INSERT 0 1`；正确私有文件下独立 Reader 的同一 READ ONLY事务：无scope0、org-org/dev-project 1、dev-org/dev-project 0，exit0。随后精确 `DELETE 1` 只删该新造行，后读0；当前原库和 dev-org均无写入。该 test-only 行不作业务配置证据。
 - 一次 clone 后验把安装表误写为不存在的 `asset_bundle_installation`，只读事务报错 exit1；随后 `pg_tables` 精确列出 `bundle_installation` 等表，改查 Receipt/Binding exit0。该失败不是数据损坏或迁移失败。
 
 ## 结论与风险
