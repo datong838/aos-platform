@@ -14,6 +14,8 @@ from psycopg.rows import dict_row
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore, ProductionContractConflict,
     ProductionContractDependencyBlocked, ProductionContractIdempotencyConflict,
+    ProductionContractNotFound, SignedBIPlanReceiptReader,
+    SignedBIPlanRebindReceiptReader,
 )
 from aos_api.aip_production_contracts import ReviseResponsibilityPlanRequest
 from aos_api.aip_production_contracts import ExactRevisionRef
@@ -68,6 +70,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
     with psycopg.connect(get_dsn(), autocommit=True) as admin:
         admin.execute(sql.SQL('''CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS
             PASSWORD {}''').format(sql.Identifier(issuer), sql.Literal(password)))
+        private_context = None
         try:
             for table, privileges in (
                 ('bundle_installation', 'SELECT'),
@@ -171,6 +174,30 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
                 public.aos_bi_plan_membership_lock_a0v_136(text,text,text) TO {}''').format(
                     sql.Identifier(issuer)))
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_membership_read_a0v_138(
+                p_org text,p_project text,p_subject text) RETURNS TABLE(role text)
+                LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user<>{} OR p_org<>'org-org' OR p_project<>'dev-project'
+                     OR p_subject<>'test-author'
+                     OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project THEN
+                    RAISE EXCEPTION 'membership unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN QUERY SELECT m.role::text FROM public.meta_membership m
+                    WHERE m.org_id=p_org AND m.project_id=p_project AND m.subject=p_subject;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION
+                public.aos_bi_plan_membership_read_a0v_138(text,text,text) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_membership_read_a0v_138(text,text,text) TO {}''').format(
+                    sql.Identifier(issuer)))
+            assert admin.execute('''SELECT p.prosecdef,p.proconfig,p.provolatile,
+                EXISTS(SELECT 1 FROM aclexplode(p.proacl) acl
+                       WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE')
+                FROM pg_proc p WHERE p.oid=
+                    'public.aos_bi_plan_membership_read_a0v_138(text,text,text)'::regprocedure'''
+            ).fetchone() == (True, ['search_path=pg_catalog'], 's', False)
             admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_marking_lock_a0v_136(
                 p_org text,p_project text,p_user_key text,p_object_key text)
                 RETURNS TABLE(object_key text)
@@ -323,7 +350,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                     'public.aos_bi_growth_registry_a0v_137(text,text,text)'::regprocedure''').fetchone()
             assert function_guard == (True, ['search_path=pg_catalog'], 's', False)
             parts = conninfo_to_dict(get_dsn())
-            with tempfile.TemporaryDirectory(prefix='aos-bi-issuer-') as private_dir:
+            private_context = tempfile.TemporaryDirectory(prefix='aos-bi-issuer-')
+            with nullcontext(private_context.name) as private_dir:
                 private = Path(private_dir)
                 private.chmod(0o700)
                 passfile = private / 'issuer.pgpass'
@@ -422,7 +450,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                     'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
                 service = SignedBIPlanPreparationService(
                     connect_factory=lambda _: nullcontext(writer),
-                    preparation_resolver=resolver,
+                    preparation_resolver=restricted_resolver,
                 )
                 prepare_args = dict(
                     installation_id=installed['installationId'],
@@ -440,6 +468,42 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
                     WHERE operation='bi_responsibility_plan.prepare'
                       AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 1
+                receipt_reader = SignedBIPlanReceiptReader(
+                    connect_factory=lambda scope: connect_bi_issuer_read_only(
+                        issuer_config, scope), restricted_bi_scope=SCOPE)
+                readback = receipt_reader.read(
+                    SCOPE, principal=prepare_args['principal'],
+                    idempotency_key=prepare_args['idempotency_key'])
+                assert readback.result_ref.resource_id == prepared.plan_id
+                assert readback.installation_binding_verified is True
+                with pytest.raises(ProductionContractNotFound):
+                    SignedBIPlanRebindReceiptReader(
+                        connect_factory=lambda scope: connect_bi_issuer_read_only(
+                            issuer_config, scope), restricted_bi_scope=SCOPE).read(
+                                SCOPE, principal=prepare_args['principal'],
+                                idempotency_key='s3owab-no-rebind')
+                assert admin.execute('''SELECT has_table_privilege(
+                    'aos_bi_plan_issuer','meta_membership','SELECT')''').fetchone()[0] is False
+                with pytest.raises(PermissionError, match='tenant mismatch'):
+                    receipt_reader.read(TenantScope('dev-org','dev-project'),
+                        principal=Principal(subject='test-author', org_id='dev-org',
+                                            project_id='dev-project', roles=['admin'],
+                                            token_kind='oidc'),
+                        idempotency_key=prepare_args['idempotency_key'])
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                        guarded.execute('''SELECT role FROM
+                            public.aos_bi_plan_membership_read_a0v_138(
+                                %s,%s,'other-subject')''', SCOPE.key).fetchall()
+                admin.execute(sql.SQL('''REVOKE EXECUTE ON FUNCTION
+                    public.aos_bi_plan_membership_read_a0v_138(text,text,text)
+                    FROM {}''').format(sql.Identifier(issuer)))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    receipt_reader.read(SCOPE, principal=prepare_args['principal'],
+                                        idempotency_key=prepare_args['idempotency_key'])
+                admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                    public.aos_bi_plan_membership_read_a0v_138(text,text,text)
+                    TO {}''').format(sql.Identifier(issuer)))
                 with writer.transaction():
                     assert writer.execute('''SELECT role FROM
                         public.aos_bi_plan_membership_lock_a0v_136(%s,%s,%s)''',
@@ -653,6 +717,10 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
         finally:
+            if private_context is not None:
+                private_context.cleanup()
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_membership_read_a0v_138(text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_growth_registry_a0v_137(text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS

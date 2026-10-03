@@ -130,8 +130,12 @@ class SignedBIPlanReceiptReadback(AipContractModel):
 class SignedBIPlanReceiptReader:
     """Read an existing BI preparation receipt without retrying its command."""
 
-    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only) -> None:
+    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only,
+                 restricted_bi_scope: TenantScope | None = None) -> None:
+        if restricted_bi_scope is not None and type(restricted_bi_scope) is not TenantScope:
+            raise ValueError("exact restricted BI receipt scope required")
         self._connect = connect_factory
+        self._restricted_bi_scope = restricted_bi_scope
 
     def read(
         self, scope: TenantScope, *, principal: Principal, idempotency_key: str,
@@ -141,6 +145,8 @@ class SignedBIPlanReceiptReader:
                 or (principal.org_id, principal.project_id) != scope.key
                 or not principal.subject or principal.subject != principal.subject.strip()):
             raise PermissionError("formal authenticated actor required")
+        if self._restricted_bi_scope is not None and scope != self._restricted_bi_scope:
+            raise PermissionError("restricted BI receipt tenant mismatch")
         if (type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 120
                 or idempotency_key != idempotency_key.strip()):
             raise ValueError("exact BI preparation idempotency key required")
@@ -149,11 +155,17 @@ class SignedBIPlanReceiptReader:
         with self._connect(scope) as conn:
             apply_asset_transaction_scope(
                 conn, org_id=scope.org_id, project_id=scope.project_id)
-            members = conn.execute(
-                """SELECT role FROM meta_membership
-                   WHERE org_id=%s AND project_id=%s AND subject=%s""",
-                (*scope.key, principal.subject),
-            ).fetchall()
+            if self._restricted_bi_scope is None:
+                members = conn.execute(
+                    """SELECT role FROM meta_membership
+                       WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                    (*scope.key, principal.subject),
+                ).fetchall()
+            else:
+                members = conn.execute(
+                    """SELECT role FROM public.aos_bi_plan_membership_read_a0v_138(
+                        %s,%s,%s)""", (*scope.key, principal.subject),
+                ).fetchall()
             if len(members) != 1:
                 raise PermissionError("current persisted membership required")
             try:
@@ -248,8 +260,12 @@ class SignedBIPlanRebindReceiptReadback(AipContractModel):
 class SignedBIPlanRebindReceiptReader:
     """Read an exact persisted BI rebind after an unknown write outcome."""
 
-    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only) -> None:
+    def __init__(self, *, connect_factory: ConnectFactory = connect_read_only,
+                 restricted_bi_scope: TenantScope | None = None) -> None:
+        if restricted_bi_scope is not None and type(restricted_bi_scope) is not TenantScope:
+            raise ValueError("exact restricted BI receipt scope required")
         self._connect = connect_factory
+        self._restricted_bi_scope = restricted_bi_scope
 
     def read(
         self, scope: TenantScope, *, principal: Principal, idempotency_key: str,
@@ -259,6 +275,8 @@ class SignedBIPlanRebindReceiptReader:
                 or (principal.org_id, principal.project_id) != scope.key
                 or not principal.subject or principal.subject != principal.subject.strip()):
             raise PermissionError("formal authenticated actor required")
+        if self._restricted_bi_scope is not None and scope != self._restricted_bi_scope:
+            raise PermissionError("restricted BI receipt tenant mismatch")
         if (type(idempotency_key) is not str or not 1 <= len(idempotency_key) <= 120
                 or idempotency_key != idempotency_key.strip()):
             raise ValueError("exact BI rebind idempotency key required")
@@ -267,11 +285,17 @@ class SignedBIPlanRebindReceiptReader:
         with self._connect(scope) as conn:
             apply_asset_transaction_scope(
                 conn, org_id=scope.org_id, project_id=scope.project_id)
-            members = conn.execute(
-                """SELECT role FROM meta_membership
-                   WHERE org_id=%s AND project_id=%s AND subject=%s""",
-                (*scope.key, principal.subject),
-            ).fetchall()
+            if self._restricted_bi_scope is None:
+                members = conn.execute(
+                    """SELECT role FROM meta_membership
+                       WHERE org_id=%s AND project_id=%s AND subject=%s""",
+                    (*scope.key, principal.subject),
+                ).fetchall()
+            else:
+                members = conn.execute(
+                    """SELECT role FROM public.aos_bi_plan_membership_read_a0v_138(
+                        %s,%s,%s)""", (*scope.key, principal.subject),
+                ).fetchall()
             if len(members) != 1:
                 raise PermissionError("current persisted membership required")
             try:
