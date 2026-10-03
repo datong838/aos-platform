@@ -129,9 +129,18 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     NEW.s3owaob24_last_operation := 'capability_binding.create';
                   ELSIF NEW.status IS DISTINCT FROM OLD.status
                      OR NEW.health IS DISTINCT FROM OLD.health THEN
+                    IF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at
+                       OR NEW.dependency_snapshot_hash IS DISTINCT FROM OLD.dependency_snapshot_hash
+                    THEN RAISE EXCEPTION 'CAPABILITY_OPERATION_MIXED' USING ERRCODE='42501';
+                    END IF;
                     NEW.s3owaob24_last_operation := 'capability_binding.update';
-                  ELSE
+                  ELSIF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at
+                     AND NEW.last_evaluated_at IS NOT NULL
+                     AND NEW.dependency_snapshot_hash IS NOT NULL
+                     AND NEW.readiness_expires_at > NEW.last_evaluated_at THEN
                     NEW.s3owaob24_last_operation := 'capability_binding.evaluate';
+                  ELSE
+                    RAISE EXCEPTION 'CAPABILITY_OPERATION_SHAPE_REQUIRED' USING ERRCODE='42501';
                   END IF;
                   RETURN NEW;
                 END $$""")
@@ -186,9 +195,18 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     expected_operation := 'capability_binding.create';
                   ELSIF NEW.status IS DISTINCT FROM OLD.status
                      OR NEW.health IS DISTINCT FROM OLD.health THEN
+                    IF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at
+                       OR NEW.dependency_snapshot_hash IS DISTINCT FROM OLD.dependency_snapshot_hash
+                    THEN RAISE EXCEPTION 'CAPABILITY_OPERATION_MIXED' USING ERRCODE='42501';
+                    END IF;
                     expected_operation := 'capability_binding.update';
-                  ELSE
+                  ELSIF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at
+                     AND NEW.last_evaluated_at IS NOT NULL
+                     AND NEW.dependency_snapshot_hash IS NOT NULL
+                     AND NEW.readiness_expires_at > NEW.last_evaluated_at THEN
                     expected_operation := 'capability_binding.evaluate';
+                  ELSE
+                    RAISE EXCEPTION 'CAPABILITY_OPERATION_SHAPE_REQUIRED' USING ERRCODE='42501';
                   END IF;
                   IF session_user<>{} OR NOT EXISTS (
                       SELECT 1 FROM public.aip_agent_registry_receipt r
@@ -257,6 +275,21 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     last_evaluated_at=now(),readiness_expires_at=now()+interval '15 minutes'
                     WHERE binding_id='b22-binding'""", ("b" * 64,))
                 receipt(conn, "capability_binding.evaluate", "b22-evaluated", revision="3")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET version=version+1,
+                        updated_at=now() WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.evaluate", "b26-version-only-eval",
+                            revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET status='revoked',
+                        last_evaluated_at=now()+interval '1 second',
+                        version=version+1 WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.update", "b26-mixed-update",
+                            revision="4")
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with login(issuer) as conn:
                     set_scope(conn)
