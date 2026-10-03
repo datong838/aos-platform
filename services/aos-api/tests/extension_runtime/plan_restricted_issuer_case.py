@@ -14,6 +14,11 @@ from aos_api.aip_production_contract_store import (
     ProductionContractDependencyBlocked, ProductionContractIdempotencyConflict,
 )
 from aos_api.aip_production_contracts import ReviseResponsibilityPlanRequest
+from aos_api.aip_production_contracts import ExactRevisionRef
+from aos_api.aip_responsibility_assignment import CreateResponsibilitySuccessorRequest
+from aos_api.aip_responsibility_assignment_store import (
+    AipResponsibilityAssignmentStore, ResponsibilityAssignmentBlocked,
+)
 from aos_api.ecommerce_business_investigation_aip_authority import (
     build_responsibility_plan_request,
 )
@@ -59,6 +64,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 ('aip_skill_binding', 'SELECT'),
                 ('aip_skill_template_revision', 'SELECT'),
                 ('aip_agent_registry_receipt', 'SELECT'),
+                ('aip_responsibility_successor', 'SELECT'),
             ):
                 admin.execute(sql.SQL('GRANT {} ON {} TO {}').format(
                     sql.SQL(privileges), sql.Identifier(table), sql.Identifier(issuer)))
@@ -66,6 +72,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 'aip_responsibility_plan_head', 'aip_responsibility_plan_revision',
                 'aip_production_contract_receipt', 'aip_agent_instance',
                 'aip_skill_binding', 'aip_agent_registry_receipt',
+                'aip_responsibility_successor',
             ):
                 admin.execute(sql.SQL('''CREATE POLICY {} ON {} TO {}
                     USING(org_id=current_setting('aos.org_id',true)
@@ -166,6 +173,29 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                     SCOPE, 'test-author', issued.plan_id, 's3owi-original-revise',
                     revised_request)
                 assert revised.revision == 2 and revised.version == 2
+                with pytest.raises(ResponsibilityAssignmentBlocked,
+                                   match='SOURCE_PLAN_NOT_EXACT_FROZEN'):
+                    AipResponsibilityAssignmentStore(
+                        connect_factory=lambda _: nullcontext(writer),
+                    ).create_successor(
+                        SCOPE,
+                        CreateResponsibilitySuccessorRequest(
+                            task_id='s3owk-isolated-task',
+                            source_plan_ref=ExactRevisionRef(
+                                resource_type='ResponsibilityPlanRevision',
+                                resource_id=issued.plan_id, revision=revised.revision,
+                                content_hash=revised.content_hash,
+                            ),
+                            expected_source_version=revised.version,
+                            slot_id=request.slots[0].slot_id,
+                            target_assignee=request.slots[0].assignee,
+                            resolution_receipt_id='s3owk-unissued-resolution',
+                            reason_code='OPERATOR_REASSIGNED',
+                        ),
+                        actor='test-author', idempotency_key='s3owk-successor',
+                    )
+                assert writer.execute('''SELECT count(*) AS n FROM aip_responsibility_successor
+                    WHERE idempotency_key='s3owk-successor' ''').fetchone()['n'] == 0
                 assert store.revise_responsibility_plan(
                     SCOPE, 'test-author', issued.plan_id, 's3owi-original-revise',
                     revised_request).revision == 2
