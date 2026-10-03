@@ -9,7 +9,9 @@
 ## 文件级施工候选与前置检查
 
 1. `services/aos-api/aos_api/aip_binding_readiness_reader_connection.py`：冻结现有 `READINESS_READER_TABLES` 为白名单、`_require_identity` 的 NOINHERIT/NOBYPASSRLS/非 owner/非 runtime/只读/RLS/无额外表权限条件。若克隆反证发现遗漏，只改精确检查点；不放宽门。
+   克隆施工前复审发现 `_require_identity` 读取 `rolsuper/rolbypassrls` 等属性，却未读取/拒绝 `rolinherit`。先在 `services/aos-api/tests/aip/test_e17_s3oo_capability_reader_pg.py` 增加 `ALTER ROLE ... INHERIT` 负例取得 RED，再只补这一属性检查；不得以当前角色没有成员关系为由放行日后继承提权。
 2. `services/aos-api/tests/aip/test_e17_s3oo_capability_reader_pg.py`：原可销毁库已证明完整身份与撤销链。另建**从当前全备恢复**的隔离克隆演练，用原登录/当前 18 张白名单表检查正向、错租户、撤 SELECT、额外 SELECT 和写权限负向，并在事后回读原库版本/Receipt/进程未变。
+   本次恢复克隆的专用可复核脚本放在 `services/aos-api/tests/aip/e17_s3owan_restored_reader_probe.py`，仅接受固定 `colima-aos-a0v-test-only/aos-a0v-test-pg/aos_e17_s3owan_restore_20261004`；脚本先确认角色缺失的 RED，测试时随机密码只留内存和 0700/0600 临时 passfile，最后清除克隆角色/授权/policy。测试过程中若出现未知写结果先只读对账，禁止覆盖重跑。
 3. 若克隆通过，再拟专用受控维护脚本及私有凭据文件（待定具体路径），以已核源库名/卷/备份 SHA、角色不存在、零执行窗口为入参门；事务中创建 NOINHERIT/NOSUPERUSER/NOBYPASSRLS 登录，仅授 USAGE、白名单 SELECT、每个租户表精确 RLS policy。默认只读 dry-run；失败回滚并保留诊断。不得由普通 API、请求、包代码或 migration 自动建角色。
 4. 当前实例切换另行写 verification：重启加载新私有连接前核原签名安装/迁移/八工作台、Host 关闭，切换后只读回读角色、ACL、RLS 和端口。没有正式 OIDC 时仅宣称 DB reader 就绪，不宣称首链。
 

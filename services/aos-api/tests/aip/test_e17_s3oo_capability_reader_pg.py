@@ -191,6 +191,17 @@ def test_reader_rejects_cross_domain_grant(capability_case, readiness_reader):
             pass
 
 
+def test_reader_rejects_inherit_role(capability_case, readiness_reader):
+    scope, _ = capability_case
+    with connect() as owner:
+        owner.execute(sql.SQL("ALTER ROLE {} INHERIT")
+                      .format(sql.Identifier(READINESS_READER_LOGIN)))
+        owner.commit()
+    with pytest.raises(ReadinessReaderConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with readiness_reader(scope):
+            pass
+
+
 def test_reader_rejects_loose_private_file_and_pg_env(
     capability_case, readiness_reader, monkeypatch,
 ):

@@ -79,7 +79,7 @@ def _require_identity(conn, config: ReadinessReaderDatabaseConfig,
       (SELECT setting::int FROM pg_settings WHERE name='statement_timeout') AS statement_ms,
       (SELECT setting::int FROM pg_settings WHERE name='lock_timeout') AS lock_ms,
       (SELECT setting::int FROM pg_settings WHERE name='idle_in_transaction_session_timeout') AS idle_ms,
-      r.rolcanlogin,r.rolsuper,r.rolbypassrls,r.rolcreatedb,r.rolcreaterole,r.rolreplication,
+      r.rolcanlogin,r.rolinherit,r.rolsuper,r.rolbypassrls,r.rolcreatedb,r.rolcreaterole,r.rolreplication,
       pg_has_role(session_user,'aos_app','MEMBER') AS owner_member,
       pg_has_role(session_user,'aos_runtime','MEMBER') AS runtime_member
       FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
@@ -89,7 +89,8 @@ def _require_identity(conn, config: ReadinessReaderDatabaseConfig,
             or (row["org_id"], row["project_id"]) != expected_scope
             or row["search_path"] != "public,pg_catalog" or row["readonly"] != "on"
             or (row["statement_ms"], row["lock_ms"], row["idle_ms"]) != (10000, 5000, 10000)
-            or not row["rolcanlogin"] or row["rolsuper"] or row["rolbypassrls"]
+            or not row["rolcanlogin"] or row["rolinherit"]
+            or row["rolsuper"] or row["rolbypassrls"]
             or row["rolcreatedb"] or row["rolcreaterole"] or row["rolreplication"]
             or row["owner_member"] or row["runtime_member"]):
         raise ReadinessReaderConnectionBlocked("READINESS_READER_DATABASE_IDENTITY_REQUIRED")
