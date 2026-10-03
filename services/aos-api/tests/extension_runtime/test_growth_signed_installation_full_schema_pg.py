@@ -38,6 +38,10 @@ from aos_api.auth import Principal
 from aos_api.aip_bi_plan_issuer_connection import (
     connect_bi_issuer_read_only, connect_bi_issuer_write,
 )
+from aos_api.aip_bi_plan_issuer_contracts import BIIssuerRebindCommand
+from aos_api.aip_bi_plan_issuer_process import (
+    BIIssuerProcessBlocked, BIIssuerProcessConfig, build_bi_issuer_dispatcher,
+)
 from aos_api.aip_production_contract_store import (
     ProductionContractConflict, ProductionContractDependencyBlocked,
     ProductionContractIdempotencyConflict,
@@ -113,7 +117,9 @@ def _signed_release():
                 builder=builder, source_alias='a0v-growth-113'), '1.13.0'
 
 
-def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_path, request):
+def test_signed_growth_release_reaches_approved_installation_in_full_schema(
+    tmp_path, request, monkeypatch,
+):
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
@@ -437,6 +443,71 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                         AND operation='bi_responsibility_plan.rebind' AND
                         idempotency_key IN ('s3owi-forced-rollback',%s)''',
                         (*SCOPE.key, issuer_rebind_key)).fetchone()['n'] == 0
+                attempt_dir = tmp_path / 'bi-issuer-attempts'
+                attempt_dir.mkdir(mode=0o700)
+                process_config = BIIssuerProcessConfig(
+                    socket_path=tmp_path / 'bi-issuer.sock',
+                    api_uid=os.geteuid() + 1, issuer_uid=os.geteuid(),
+                    ipc_gid=os.getegid(), database=issuer_config, scope=SCOPE,
+                    attempt_directory=attempt_dir,
+                )
+                dispatch = build_bi_issuer_dispatcher(
+                    process_config, release_root=signed['signed_tree'],
+                    trust_roots=trust, source_alias=signed['source_alias'],
+                )
+                command = BIIssuerRebindCommand.model_validate(dict(
+                    schemaVersion=1, bearerToken='test.only.jwt',
+                    orgId=SCOPE.org_id, projectId=SCOPE.project_id,
+                    installationId=installed['installationId'],
+                    expectedETagVersion=verified.etag_version,
+                    expectedPlanVersion=issuer_plan.version,
+                    planId=issuer_plan.plan_id,
+                    prepareIdempotencyKey=issuer_prepare['idempotency_key'],
+                    idempotencyKey=issuer_rebind_key,
+                ))
+                from aos_api import aip_bi_plan_issuer_service as issuer_service
+                original_rebind = SignedBIPlanActiveRebindService.rebind
+                calls = []
+                def committed_but_ack_lost(service, *args, **kwargs):
+                    calls.append(kwargs['idempotency_key'])
+                    original_rebind(service, *args, **kwargs)
+                    raise ConnectionError('test-only response lost after commit')
+                with monkeypatch.context() as patch:
+                    patch.setattr(issuer_service, 'authenticate_bi_issuer_request',
+                                  lambda _: issuer_prepare['principal'])
+                    patch.setattr(SignedBIPlanActiveRebindService, 'rebind',
+                                  committed_but_ack_lost)
+                    first_outcome = dispatch(command)
+                assert first_outcome.status == 'observed'
+                assert first_outcome.receipt.result_ref.resource_id == issuer_plan.plan_id
+                with monkeypatch.context() as patch:
+                    patch.setattr(issuer_service, 'authenticate_bi_issuer_request',
+                                  lambda _: issuer_prepare['principal'])
+                    patch.setattr(SignedBIPlanActiveRebindService, 'rebind',
+                                  lambda *a, **k: pytest.fail('unknown commit was resent'))
+                    repeated_outcome = dispatch(command)
+                    changed_outcome = dispatch(command.model_copy(update={
+                        'expected_plan_version': issuer_plan.version + 1}))
+                assert repeated_outcome.status == 'observed'
+                assert changed_outcome.status == 'conflict'
+                assert calls == [issuer_rebind_key]
+                with pytest.raises(BIIssuerProcessBlocked,
+                                   match='BI_ISSUER_PROCESS_SCOPE_REQUIRED'):
+                    dispatch(command.model_copy(update={'org_id': 'dev-org'}))
+                missing_command = command.model_copy(update={
+                    'idempotency_key': 's3owae-missing-prepare',
+                    'prepare_key': 's3owae-unissued-prepare',
+                })
+                with monkeypatch.context() as patch:
+                    patch.setattr(issuer_service, 'authenticate_bi_issuer_request',
+                                  lambda _: issuer_prepare['principal'])
+                    assert dispatch(missing_command).status == 'unresolved'
+                    patch.setattr(SignedBIPlanActiveRebindService, 'rebind',
+                                  lambda *a, **k: pytest.fail('unresolved attempt was resent'))
+                    assert dispatch(missing_command).status == 'unresolved'
+                markers = list(attempt_dir.glob('*.json'))
+                assert len(markers) == 2
+                assert all('test.only.jwt' not in item.read_text() for item in markers)
                 issuer_rebound = issuer_rebind.rebind(SCOPE, **issuer_args)
                 assert issuer_rebound.plan_id == issuer_plan.plan_id
                 assert issuer_rebound.template_ref == active_template.template_ref

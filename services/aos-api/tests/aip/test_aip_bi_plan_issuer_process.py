@@ -92,3 +92,48 @@ def test_wrong_socket_directory_is_rejected_before_bind(config, monkeypatch):
         with process.bi_issuer_listener(config):
             pytest.fail("listener opened")
     assert not config.socket_path.exists()
+
+
+def test_finite_process_rejects_missing_signed_source_before_listener(config, tmp_path, monkeypatch):
+    from aos_api import aip_bi_plan_issuer_process as process
+    monkeypatch.setattr(process, "bi_issuer_listener",
+                        lambda _: pytest.fail("listener opened before signed source"))
+    with pytest.raises(process.BIIssuerProcessBlocked,
+                       match="BI_ISSUER_SIGNED_SOURCE_REQUIRED"):
+        process.run_bi_issuer_process(
+            config, release_root=tmp_path / "missing",
+            trust_roots=None, source_alias="a0v-growth-113")
+    assert not config.socket_path.exists()
+
+
+def test_finite_process_accepts_once_and_stops_at_timeout(config, tmp_path, monkeypatch):
+    from aos_api import aip_bi_plan_issuer_process as process
+    config = replace(config, max_connections=2)
+    class Trust:
+        def snapshot(self):
+            return self
+    class Connection:
+        closed = False
+        def close(self):
+            self.closed = True
+    conn = Connection()
+    class Listener:
+        calls = 0
+        def settimeout(self, value):
+            assert value == config.accept_timeout
+        def accept(self):
+            self.calls += 1
+            if self.calls == 1:
+                return conn, None
+            raise TimeoutError()
+    listener = Listener()
+    monkeypatch.setattr(process, "bi_issuer_listener", lambda _: nullcontext(listener))
+    seen = []
+    monkeypatch.setattr(process, "serve_one_bi_issuer_connection", lambda c, **kw:
+                        (seen.append((c, kw["expected_scope"])) or True))
+    result = process.run_bi_issuer_process(
+        config, release_root=tmp_path, trust_roots=Trust(),
+        source_alias="a0v-growth-113")
+    assert result == {"accepted": 1, "processed": 1}
+    assert seen == [(conn, SCOPE)] and conn.closed is True
+    assert listener.calls == 2
