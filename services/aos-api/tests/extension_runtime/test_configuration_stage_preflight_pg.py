@@ -19,9 +19,22 @@ class ScopedSchema:
             value.replace('public.', self.schema+'.') if isinstance(value, str) else value for value in params))
 
 
-@pytest.mark.parametrize('mutation', (None, 'insert', 'delete', 'truncate', 'identity', 'missing_update', 'rls', 'trigger'))
+@pytest.fixture
+def source_acl(stage):
+    conn, _, _ = stage
+    for table in ('aip_responsibility_plan_head', 'aip_responsibility_plan_revision',
+                  'aip_production_contract_receipt'):
+        conn.execute(f'CREATE TABLE {table}(id integer)')
+        conn.execute(f'ALTER TABLE {table} ENABLE ROW LEVEL SECURITY')
+        conn.execute(f'ALTER TABLE {table} FORCE ROW LEVEL SECURITY')
+        conn.execute(f'GRANT SELECT ON {table} TO aos_runtime')
+
+
+@pytest.mark.parametrize('mutation', (None, 'insert', 'delete', 'truncate', 'identity', 'missing_update', 'rls', 'trigger',
+                                     'source_head_insert', 'source_revision_update', 'source_receipt_insert',
+                                     'source_receipt_delete', 'source_revision_rls'))
 @pytest.mark.parametrize('as_dict', (False, True))
-def test_preflight_accepts_only_current_minimal_runtime_rights(stage, database, mutation, as_dict):
+def test_preflight_accepts_only_current_minimal_runtime_rights(stage, source_acl, database, mutation, as_dict):
     conn, _, _ = stage
     _, role, schema = database
     changes = {
@@ -32,6 +45,11 @@ def test_preflight_accepts_only_current_minimal_runtime_rights(stage, database, 
         'missing_update': f'REVOKE UPDATE(result_json) ON {TABLE} FROM aos_runtime',
         'rls': f'ALTER TABLE {TABLE} NO FORCE ROW LEVEL SECURITY',
         'trigger': f'ALTER TABLE {TABLE} DISABLE TRIGGER configuration_stage_guard',
+        'source_head_insert': 'GRANT INSERT ON aip_responsibility_plan_head TO aos_runtime',
+        'source_revision_update': 'GRANT UPDATE ON aip_responsibility_plan_revision TO aos_runtime',
+        'source_receipt_insert': 'GRANT INSERT ON aip_production_contract_receipt TO aos_runtime',
+        'source_receipt_delete': 'GRANT DELETE ON aip_production_contract_receipt TO aos_runtime',
+        'source_revision_rls': 'ALTER TABLE aip_responsibility_plan_revision NO FORCE ROW LEVEL SECURITY',
     }
     if mutation: conn.execute(changes[mutation])
     conn.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(role)))
@@ -49,3 +67,14 @@ def test_preflight_accepts_only_current_minimal_runtime_rights(stage, database, 
 def test_owner_connection_is_rejected_even_when_schema_is_correct(stage, database):
     conn, _, _ = stage
     assert configuration_stage_ready(ScopedSchema(conn, database[2])) is False
+
+
+def test_missing_current_source_table_fails_closed(stage, database):
+    conn, _, schema = database
+    conn.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(database[1])))
+    conn.execute(sql.SQL('SET SESSION AUTHORIZATION {}').format(sql.Identifier(database[1])))
+    try:
+        conn.execute('SET ROLE aos_runtime')
+        assert configuration_stage_ready(ScopedSchema(conn, schema)) is False
+    finally:
+        conn.execute('RESET SESSION AUTHORIZATION')
