@@ -15,8 +15,9 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 
 from aos_api.aip_agent_registry_contracts import (
-    CreateAgentInstanceRequest, CreateSkillBindingRequest, PublishAgentTemplateRequest,
-    VersionedAssetRef,
+    CreateAgentInstanceRequest, CreateSkillBindingRequest,
+    EvaluateOperationalBindingRequest, OperationalBindingDependencies,
+    PublishAgentTemplateRequest, UpdateSkillBindingRequest, VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict, AipAgentRegistryPersistenceError, AipAgentRegistryStore,
@@ -118,9 +119,10 @@ def skill_issuer(skill_case):
             ("aip_agent_template_revision", "SELECT"),
             ("aip_agent_instance", "SELECT"),
             ("aip_skill_template_revision", "SELECT"),
+            ("aip_publication_event", "SELECT"),
             ("aip_capability_binding", "SELECT"),
             ("aip_agent_registry_receipt", "SELECT,INSERT"),
-            ("aip_skill_binding", "SELECT,INSERT"),
+            ("aip_skill_binding", "SELECT,INSERT,UPDATE"),
         ):
             admin.execute(sql.SQL("GRANT {} ON {} TO {}")
                           .format(sql.SQL(privileges), sql.Identifier(table), sql.Identifier(issuer)))
@@ -190,7 +192,8 @@ def test_skill_issuer_identity_accepts_narrow_skill_acl(skill_case, skill_issuer
     with skill_issuer(scope) as conn:
         assert conn.execute("SELECT session_user AS login").fetchone()["login"] == "aos_aip_skill_issuer"
         assert not conn.execute("SELECT has_table_privilege(current_user,'aip_agent_instance','INSERT') AS granted").fetchone()["granted"]
-        assert not conn.execute("SELECT has_table_privilege(current_user,'aip_skill_binding','UPDATE') AS granted").fetchone()["granted"]
+        assert conn.execute("SELECT has_table_privilege(current_user,'aip_skill_binding','UPDATE') AS granted").fetchone()["granted"]
+        assert not conn.execute("SELECT has_table_privilege(current_user,'aip_skill_binding','DELETE') AS granted").fetchone()["granted"]
         for table in ("aip_capability_binding", "aip_tool_binding",
                       "aip_assignee_resolution_receipt"):
             assert not conn.execute(
@@ -217,8 +220,94 @@ def test_skill_issuer_rejects_missing_insert_without_partial_binding(skill_case,
 def test_skill_issuer_rejects_write_widening(skill_case, skill_issuer):
     scope, _ = skill_case
     with connect() as conn:
-        conn.execute("GRANT UPDATE ON aip_skill_binding TO aos_aip_skill_issuer")
+        conn.execute("GRANT DELETE ON aip_skill_binding TO aos_aip_skill_issuer")
         conn.commit()
     with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
         with skill_issuer(scope):
             pass
+
+
+def test_original_skill_evaluate_blocked_and_revoke_cas(skill_case, skill_issuer):
+    scope, request = skill_case
+    store = AipSkillRegistry(connect_factory=skill_issuer)
+    binding, _ = store.create_binding(scope, request,
+        idempotency_key=f"s3ok:create:{request.binding_id}", actor="test-only",
+        occurred_at=datetime.now(UTC))
+    evaluation = EvaluateOperationalBindingRequest(
+        expected_version=binding.version,
+        dependencies=OperationalBindingDependencies(
+            budget_policy_ref=request.budget_policy_ref,
+        ),
+    )
+    assessed, readiness, receipt = store.evaluate_binding(
+        scope, binding.binding_id, evaluation,
+        idempotency_key=f"s3ok:evaluate:{binding.binding_id}",
+        actor="test-only", evaluated_at=datetime.now(UTC))
+    assert assessed.version == 2
+    assert readiness.readiness.value == "blocked"
+    assert "SKILL_PUBLICATION_REVOKED" in readiness.reasons
+    assert receipt.status == "applied"
+    replay, _, replay_receipt = store.evaluate_binding(
+        scope, binding.binding_id, evaluation,
+        idempotency_key=f"s3ok:evaluate:{binding.binding_id}",
+        actor="test-only", evaluated_at=datetime.now(UTC))
+    assert replay.version == assessed.version
+    assert replay_receipt.receipt_id == receipt.receipt_id
+    revoked, revoke_receipt = store.update_binding(
+        scope, binding.binding_id,
+        UpdateSkillBindingRequest(expected_version=2, from_status="provisioning",
+                                  to_status="revoked"),
+        idempotency_key=f"s3ok:revoke:{binding.binding_id}",
+        actor="test-only", occurred_at=datetime.now(UTC))
+    assert revoked.status == "revoked" and revoked.version == 3
+    assert revoke_receipt.status == "applied"
+    with pytest.raises(AipAgentRegistryConflict):
+        store.update_binding(
+            scope, binding.binding_id,
+            UpdateSkillBindingRequest(expected_version=2, from_status="provisioning",
+                                      to_status="revoked"),
+            idempotency_key=f"s3ok:stale:{binding.binding_id}",
+            actor="test-only", occurred_at=datetime.now(UTC))
+
+
+def test_skill_evaluate_rejects_missing_publication_read_without_partial_receipt(
+    skill_case, skill_issuer,
+):
+    scope, request = skill_case
+    store = AipSkillRegistry(connect_factory=skill_issuer)
+    binding, _ = store.create_binding(scope, request,
+        idempotency_key=f"s3ok:create:{request.binding_id}", actor="test-only",
+        occurred_at=datetime.now(UTC))
+    with connect() as conn:
+        conn.execute("REVOKE SELECT ON aip_publication_event FROM aos_aip_skill_issuer")
+        conn.commit()
+    with pytest.raises(AipAgentRegistryPersistenceError) as failure:
+        store.evaluate_binding(scope, binding.binding_id,
+            EvaluateOperationalBindingRequest(
+                expected_version=1,
+                dependencies=OperationalBindingDependencies(
+                    budget_policy_ref=request.budget_policy_ref)),
+            idempotency_key=f"s3ok:evaluate:{binding.binding_id}",
+            actor="test-only", evaluated_at=datetime.now(UTC))
+    assert isinstance(failure.value.__cause__, RegistryIssuerConnectionBlocked)
+    with connect(scope) as conn:
+        assert conn.execute("SELECT version FROM aip_skill_binding WHERE binding_id=%s",
+                            (binding.binding_id,)).fetchone()["version"] == 1
+        assert conn.execute("SELECT 1 FROM aip_agent_registry_receipt "
+                            "WHERE operation='skill_binding.evaluate' AND result_ref->>'resourceId'=%s",
+                            (binding.binding_id,)).fetchone() is None
+
+
+def test_skill_issuer_rejects_publication_event_without_force_rls(skill_case, skill_issuer):
+    scope, _ = skill_case
+    with connect() as conn:
+        conn.execute("ALTER TABLE aip_publication_event NO FORCE ROW LEVEL SECURITY")
+        conn.commit()
+    try:
+        with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+            with skill_issuer(scope):
+                pass
+    finally:
+        with connect() as conn:
+            conn.execute("ALTER TABLE aip_publication_event FORCE ROW LEVEL SECURITY")
+            conn.commit()

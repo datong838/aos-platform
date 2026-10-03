@@ -399,9 +399,12 @@ class AipSkillRegistry(AipAgentRegistryStore):
                          AND version=%s AND status IN ('provisioning','active','suspended')
                        RETURNING *""",
                     (
-                        self._json(dependencies.model_route_ref),
-                        self._json(dependencies.runtime_policy_ref),
-                        self._json(dependencies.eval_gate_ref),
+                        (self._json(dependencies.model_route_ref)
+                         if dependencies.model_route_ref is not None else None),
+                        (self._json(dependencies.runtime_policy_ref)
+                         if dependencies.runtime_policy_ref is not None else None),
+                        (self._json(dependencies.eval_gate_ref)
+                         if dependencies.eval_gate_ref is not None else None),
                         result.dependency_snapshot_hash,
                         result.readiness.value,
                         self._json(result.reasons),

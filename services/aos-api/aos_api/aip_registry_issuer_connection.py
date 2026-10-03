@@ -92,7 +92,15 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
       (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
         WHERE oid='public.aip_skill_binding'::regclass) AS skill_rls,
       has_table_privilege(session_user,'public.aip_skill_template_revision','SELECT') AS skill_template_select,
+      (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
+        WHERE oid='public.aip_publication_event'::regclass) AS publication_rls,
+      has_table_privilege(session_user,'public.aip_publication_event','SELECT') AS publication_select,
+      (has_table_privilege(session_user,'public.aip_publication_event','INSERT') OR
+       has_table_privilege(session_user,'public.aip_publication_event','UPDATE') OR
+       has_table_privilege(session_user,'public.aip_publication_event','DELETE')) AS publication_write,
       has_table_privilege(session_user,'public.aip_capability_binding','SELECT') AS capability_select,
+      (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
+        WHERE oid='public.aip_capability_binding'::regclass) AS capability_rls,
       has_table_privilege(session_user,'public.aip_skill_binding','SELECT') AS skill_select,
       has_table_privilege(session_user,'public.aip_skill_binding','INSERT') AS skill_insert,
       has_table_privilege(session_user,'public.aip_skill_binding','UPDATE') AS skill_update,
@@ -130,8 +138,12 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
                 row["skill_insert"] or row["skill_update"] or row["skill_delete"]))
             or (command_family == "skill" and (
                 not row["skill_rls"] or not row["skill_template_select"]
-                or not row["capability_select"] or not row["skill_select"]
-                or not row["skill_insert"] or row["skill_update"] or row["skill_delete"]))):
+                or not row["publication_rls"] or not row["publication_select"]
+                or row["publication_write"]
+                or not row["capability_select"] or not row["capability_rls"]
+                or not row["skill_select"]
+                or not row["skill_insert"] or not row["skill_update"]
+                or row["skill_delete"]))):
         raise RegistryIssuerConnectionBlocked("REGISTRY_ISSUER_DATABASE_IDENTITY_REQUIRED")
 
 
