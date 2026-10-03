@@ -13,4 +13,8 @@
 
 ## 当前运行门
 
-本证据初写时运行 API 尚未重载新代码，须精确提交后用原权威卷135、独立可恢复全备与签名安装来源做 PG→API→Web 完整重启和浏览器失败封闭复验，才可称 live 装载。正式 Model/Route/EvalGate、六 Binding、Host 与自然首链均 pending。
+代码提交 `m1@ef1f9e94` 后，使用原权威命名卷 `colima-aos-extension/aos-a0v-recovery-pg-data`，按 PG→API→Web 顺序完整重启；PG 立即 `pg_isready` 首查 exit2，随后重试 exit0。新 API/Web PID 58016/58037，18435/8080/8434 LISTEN，18181 无监听，Host/worker/Provider 保持关闭。当前代码与库迁移均 `a0v_135`；`/v1/health`、ready 和八工作台路由均 HTTP 200，旧 `/v1/tools` HTTP 404、OpenAPI 旧路由 0。原卷只读核对 Installation1、RegistryReceipt6、ReleaseGate0、CapabilityBinding0、Host assignment0。此前独立完整恢复并逐表对账的当日全备 SHA `28b356f3…b6f1` 保持在 `aos-recovery/.aos-current-backup-20261004-s3owaob3`，本轮未对原库写入。
+
+重启后签名 receipt 预检 exit0：安装 approved、4 个 publishedVersions、runtimeBindings0，签名树仍是 `.aos-current-build-pyGkqQ`。CUA 浏览器重载 `/aip/skill-publish` 并截图复核 `org-org/dev-project`：37 条仅评测、0 发布，正式技能发布决策/事件、当前已发布 Logic、可用模型路由/策略三项阻断仍在，发布按钮禁用，无可见电商工作台入口。截图经浏览器工具显示，本 verification 未另存 PNG，故以页面可复核状态和工具输出为证，不虚称文件截图已落盘。
+
+此为新代码 live 装载及失败封闭，不是正式 EvalGate 或自然首链通过。正式 Model/Route/EvalGate、六 Binding、八配置、Owner、Host 与自然首链仍 pending。
