@@ -73,7 +73,7 @@ class AipAssigneeResolutionStore:
         now: datetime,
     ) -> ToolBindingRecord:
         with self._connect(scope) as conn:
-            conn.execute(
+            written = conn.execute(
                 """INSERT INTO aip_tool_binding(
                   org_id,project_id,binding_id,tool_id,version,agent_instance_id,
                   status,capability_binding_ids,policy_refs,updated_at)
@@ -85,7 +85,9 @@ class AipAssigneeResolutionStore:
                     status=EXCLUDED.status,
                     capability_binding_ids=EXCLUDED.capability_binding_ids,
                     policy_refs=EXCLUDED.policy_refs,
-                    updated_at=EXCLUDED.updated_at""",
+                    updated_at=EXCLUDED.updated_at
+                  WHERE aip_tool_binding.version < EXCLUDED.version
+                  RETURNING binding_id""",
                 (
                     *scope.key,
                     request.binding_id,
@@ -99,7 +101,27 @@ class AipAssigneeResolutionStore:
                     ),
                     now,
                 ),
-            )
+            ).fetchone()
+            if written is None:
+                existing = conn.execute(
+                    """SELECT tool_id,version,agent_instance_id,status,
+                              capability_binding_ids,policy_refs
+                         FROM aip_tool_binding
+                        WHERE org_id=%s AND project_id=%s AND binding_id=%s""",
+                    (*scope.key, request.binding_id),
+                ).fetchone()
+                expected_policies = [
+                    item.model_dump(mode="json", by_alias=True) for item in request.policy_refs
+                ]
+                if existing is None or (
+                    existing["tool_id"], existing["version"],
+                    existing["agent_instance_id"], existing["status"],
+                    existing["capability_binding_ids"], existing["policy_refs"]
+                ) != (
+                    request.tool_id, request.version, request.agent_instance_id,
+                    request.status, request.capability_binding_ids, expected_policies,
+                ):
+                    raise AipAssigneeResolutionBlocked("TOOL_BINDING_VERSION_CONFLICT")
             conn.commit()
         return ToolBindingRecord(
             tenant=_tenant(scope),

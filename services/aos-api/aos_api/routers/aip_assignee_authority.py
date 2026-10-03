@@ -13,7 +13,9 @@ from aos_api.aip_assignee_resolution import (
     ToolBindingRecord,
     UpsertToolBindingRequest,
 )
-from aos_api.aip_assignee_resolution_store import AipAssigneeResolutionStore
+from aos_api.aip_assignee_resolution_store import (
+    AipAssigneeResolutionBlocked, AipAssigneeResolutionStore,
+)
 from aos_api.auth import Principal, require_principal
 from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
@@ -50,9 +52,18 @@ def upsert_tool_binding(
     store: AipAssigneeResolutionStore = Depends(get_aip_assignee_resolution_store),
 ) -> ToolBindingRecord:
     _require_role(principal)
-    return store.upsert_tool_binding(
-        _scope(principal), body, now=datetime.now(UTC)
-    )
+    try:
+        return store.upsert_tool_binding(
+            _scope(principal), body, now=datetime.now(UTC)
+        )
+    except AipAssigneeResolutionBlocked as exc:
+        if str(exc) != "TOOL_BINDING_VERSION_CONFLICT":
+            raise
+        raise ApiError(
+            code="TOOL_BINDING_VERSION_CONFLICT",
+            message="tool binding version or content conflicts with current binding",
+            status_code=409,
+        ) from exc
 
 
 @router.post("/resolutions", response_model=AssigneeResolutionReceipt)
