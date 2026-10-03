@@ -81,6 +81,10 @@ class AipAgentInstanceActivationService:
             idempotency_key=idempotency_key,
             actor=actor,
             occurred_at=occurred_at,
+            before_update=lambda conn: self._require_exact_template_and_bindings(
+                scope, current, binding_ids, evaluated_at=occurred_at,
+                connection=conn, lock=True,
+            ),
         )
 
     def suspend(
@@ -131,29 +135,38 @@ class AipAgentInstanceActivationService:
         binding_ids: list[str],
         *,
         evaluated_at: datetime,
+        connection: Any | None = None,
+        lock: bool = False,
     ) -> None:
-        with self._connect_factory(scope) as conn:
-            template = conn.execute(
-                """SELECT lifecycle,content_hash FROM aip_agent_template_revision
-                   WHERE template_id=%s AND revision=%s""",
-                (instance.template.asset_id, instance.template.revision),
-            ).fetchone()
-            if (
-                template is None
-                or template["lifecycle"] != "published"
-                or template["content_hash"] != instance.template.content_hash
-            ):
-                raise AipAgentRegistryTransitionBlocked(
-                    "exact published AgentTemplate is required for activation"
+        if connection is None:
+            with self._connect_factory(scope) as conn:
+                return self._require_exact_template_and_bindings(
+                    scope, instance, binding_ids, evaluated_at=evaluated_at,
+                    connection=conn,
                 )
-            rows = conn.execute(
-                """SELECT binding_id,status,health,operational_readiness,
-                          allow_degraded,dependency_snapshot_hash,readiness_expires_at
-                   FROM aip_capability_binding
-                   WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)
-                   ORDER BY binding_id""",
-                (*scope.key, binding_ids),
-            ).fetchall()
+        template = connection.execute(
+            """SELECT lifecycle,content_hash FROM aip_agent_template_revision
+               WHERE template_id=%s AND revision=%s"""
+            + (" FOR SHARE" if lock else ""),
+            (instance.template.asset_id, instance.template.revision),
+        ).fetchone()
+        if (
+            template is None
+            or template["lifecycle"] != "published"
+            or template["content_hash"] != instance.template.content_hash
+        ):
+            raise AipAgentRegistryTransitionBlocked(
+                "exact published AgentTemplate is required for activation"
+            )
+        rows = connection.execute(
+            """SELECT binding_id,status,health,operational_readiness,
+                      allow_degraded,dependency_snapshot_hash,readiness_expires_at
+               FROM aip_capability_binding
+               WHERE org_id=%s AND project_id=%s AND binding_id=ANY(%s)
+               ORDER BY binding_id"""
+            + (" FOR SHARE" if lock else ""),
+            (*scope.key, binding_ids),
+        ).fetchall()
         if len(rows) != len(binding_ids):
             raise AipAgentRegistryTransitionBlocked(
                 "all activation CapabilityBindings must exist in tenant scope"

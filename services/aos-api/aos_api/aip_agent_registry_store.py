@@ -212,7 +212,11 @@ class AipAgentRegistryStore:
         except Exception as exc:
             raise AipAgentRegistryPersistenceError("agent instance list failed") from exc
 
-    def update_instance(self, scope: TenantScope, instance_id: str, request: UpdateAgentInstanceRequest, *, idempotency_key: str, actor: str, occurred_at: datetime) -> tuple[AgentInstance, RegistryReceipt]:
+    def update_instance(
+        self, scope: TenantScope, instance_id: str, request: UpdateAgentInstanceRequest,
+        *, idempotency_key: str, actor: str, occurred_at: datetime,
+        before_update: Callable[[Any], None] | None = None,
+    ) -> tuple[AgentInstance, RegistryReceipt]:
         self._validate_command(scope, idempotency_key, actor)
         request_hash = self._command_hash(request, actor)
         operation = "agent_instance.update"
@@ -225,6 +229,8 @@ class AipAgentRegistryStore:
                     return self._instance_from_row(scope, self._instance_row(conn, scope, instance_id)), self._receipt_from_row(scope, replay)
                 if request.to_status not in _INSTANCE_TRANSITIONS[request.from_status]:
                     raise AipAgentRegistryTransitionBlocked("agent instance transition is not allowed")
+                if before_update is not None:
+                    before_update(conn)
                 row = conn.execute(
                     """UPDATE aip_agent_instance SET status=%s,overlay=%s::jsonb,
                        version=version+1,updated_at=%s
