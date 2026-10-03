@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -25,6 +26,7 @@ from aos_api.errors import ApiError
 from aos_api.main import app
 from aos_api.routers.aip_bindings import (
     _transition_capability,
+    build_capability_binding_service,
     get_capability_binding_service,
     list_capability_bindings,
     preview_capability_binding,
@@ -176,6 +178,61 @@ def test_default_capability_preview_requires_explicit_reader(monkeypatch):
             request, principal=PRIMARY, service=get_capability_binding_service(),
         )
     assert caught.value.status_code == 422
+
+
+def test_capability_private_identity_configuration_requires_both_families(tmp_path):
+    base = {
+        "AOS_AIP_BINDING_READER_HOST": "127.0.0.1",
+        "AOS_AIP_BINDING_READER_PORT": "18435",
+        "AOS_AIP_BINDING_READER_DATABASE": "aos_current_preview_20260927",
+        "AOS_AIP_BINDING_READER_PASSFILE": str(tmp_path / "reader.pgpass"),
+    }
+    with pytest.raises(RuntimeError, match="AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED"):
+        build_capability_binding_service(base)
+    assert build_capability_binding_service({})._readiness_service is None
+
+
+def test_capability_private_identity_configuration_wires_reader_and_issuer(tmp_path):
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
+    reader = private / "reader.pgpass"
+    issuer = private / "issuer.pgpass"
+    reader.write_text("reader credential placeholder")
+    issuer.write_text("issuer credential placeholder")
+    reader.chmod(0o600)
+    issuer.chmod(0o600)
+    config = {
+        "AOS_AIP_BINDING_READER_HOST": "127.0.0.1",
+        "AOS_AIP_BINDING_READER_PORT": "18435",
+        "AOS_AIP_BINDING_READER_DATABASE": "aos_current_preview_20260927",
+        "AOS_AIP_BINDING_READER_PASSFILE": str(reader),
+        "AOS_AIP_BINDING_ISSUER_HOST": "127.0.0.1",
+        "AOS_AIP_BINDING_ISSUER_PORT": "18435",
+        "AOS_AIP_BINDING_ISSUER_DATABASE": "aos_current_preview_20260927",
+        "AOS_AIP_BINDING_ISSUER_PASSFILE": str(issuer),
+    }
+    service = build_capability_binding_service(config)
+    writer = service._connect_factory
+    readiness = service._readiness_service
+    reader_factory = readiness._authority._connect_factory
+    assert writer.command_family == "capability_lifecycle"
+    assert writer.config.passfile == issuer
+    assert reader_factory.config.passfile == reader
+    assert readiness._model_store._connect_factory is reader_factory
+    assert readiness._model_store._guard_policy_store._connect_factory is reader_factory
+    config["AOS_AIP_BINDING_ISSUER_PASSFILE"] = str(reader)
+    with pytest.raises(RuntimeError, match="AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED"):
+        build_capability_binding_service(config)
+    config["AOS_AIP_BINDING_ISSUER_PASSFILE"] = str(issuer)
+    config["AOS_AIP_BINDING_ISSUER_DATABASE"] = "another_database"
+    with pytest.raises(RuntimeError, match="AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED"):
+        build_capability_binding_service(config)
+    config["AOS_AIP_BINDING_ISSUER_DATABASE"] = config["AOS_AIP_BINDING_READER_DATABASE"]
+    alias = private / "issuer-alias.pgpass"
+    os.link(reader, alias)
+    config["AOS_AIP_BINDING_ISSUER_PASSFILE"] = str(alias)
+    with pytest.raises(RuntimeError, match="AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED"):
+        build_capability_binding_service(config)
 
 
 def test_transition_fails_closed_on_dependency_snapshot_drift():

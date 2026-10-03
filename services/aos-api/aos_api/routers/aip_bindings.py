@@ -1,7 +1,10 @@
 """Canonical tenant API for governed CapabilityBinding and SkillBinding."""
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Mapping
 
 from fastapi import APIRouter, Depends, Header, Query, status
 
@@ -33,6 +36,19 @@ from aos_api.aip_binding_api_contracts import (
     SkillBindingTransitionRequest,
 )
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+from aos_api.aip_binding_readiness_reader_connection import (
+    ReadinessReaderConnectionFactory,
+    ReadinessReaderDatabaseConfig,
+)
+from aos_api.aip_binding_readiness_service import (
+    AipBindingReadinessService,
+    PostgresBindingDependencyAuthority,
+)
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+from aos_api.aip_registry_issuer_connection import (
+    RegistryIssuerConnectionFactory,
+    RegistryIssuerDatabaseConfig,
+)
 from aos_api.aip_contracts import TenantContext
 from aos_api.aip_skill_registry import AipSkillRegistry
 from aos_api.auth import Principal, require_principal
@@ -40,7 +56,41 @@ from aos_api.errors import ApiError
 from aos_api.tenant_scope import TenantScope
 
 router = APIRouter(prefix="/v1/aip", tags=["aip-bindings"])
-_CAPABILITY_SERVICE = AipCapabilityBindingService()
+
+
+def build_capability_binding_service(
+    environ: Mapping[str, str] | None = None,
+) -> AipCapabilityBindingService:
+    config = os.environ if environ is None else environ
+    names = ("HOST", "PORT", "DATABASE", "PASSFILE")
+    prefixes = ("AOS_AIP_BINDING_READER_", "AOS_AIP_BINDING_ISSUER_")
+    values = [[config.get(prefix + name, "") for name in names] for prefix in prefixes]
+    if not any(value for group in values for value in group):
+        return AipCapabilityBindingService()
+    if (any(not value for group in values for value in group)
+            or values[0][:3] != values[1][:3]
+            or values[0][3] == values[1][3]):
+        raise RuntimeError("AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED")
+    try:
+        host, port, database = values[0][:3]
+        reader = ReadinessReaderConnectionFactory(ReadinessReaderDatabaseConfig(
+            host, int(port), database, Path(values[0][3]),
+        ))
+        issuer = RegistryIssuerConnectionFactory(RegistryIssuerDatabaseConfig(
+            host, int(port), database, Path(values[1][3]),
+        ), command_family="capability_lifecycle")
+        if os.path.samefile(reader.config.passfile, issuer.config.passfile):
+            raise RuntimeError("AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED")
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise RuntimeError("AIP_BINDING_PRIVATE_CONFIGURATION_REQUIRED") from exc
+    readiness = AipBindingReadinessService(
+        authority=PostgresBindingDependencyAuthority(reader),
+        model_store=AipModelRuntimeStore(reader),
+    )
+    return AipCapabilityBindingService(issuer, readiness_service=readiness)
+
+
+_CAPABILITY_SERVICE = build_capability_binding_service()
 _SKILL_SERVICE = AipSkillRegistry()
 
 
