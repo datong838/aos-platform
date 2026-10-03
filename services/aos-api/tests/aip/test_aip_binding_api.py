@@ -13,17 +13,23 @@ from aos_api.aip_agent_registry_contracts import (
     SkillBinding,
     VersionedAssetRef,
 )
+from aos_api.aip_agent_registry_store import AipAgentRegistryTransitionBlocked
 from aos_api.aip_binding_api_contracts import (
+    CapabilityBindingPreviewRequest,
     CapabilityBindingTransitionRequest,
 )
+from aos_api.aip_binding_readiness_service import AipBindingReadinessService
 from aos_api.aip_contracts import ResourceRef, TenantContext
 from aos_api.auth import Principal
 from aos_api.errors import ApiError
 from aos_api.main import app
 from aos_api.routers.aip_bindings import (
     _transition_capability,
+    get_capability_binding_service,
     list_capability_bindings,
+    preview_capability_binding,
 )
+from aos_api.tenant_scope import TenantScope
 from fastapi.testclient import TestClient
 
 NOW = datetime(2026, 8, 15, 8, tzinfo=UTC)
@@ -150,6 +156,26 @@ def test_list_is_principal_scoped_and_echoes_tenant():
     assert response.count == 1
     assert service.scope.key == ("org-org", "dev-project")
     assert service.limit == 25
+
+
+def test_default_capability_preview_requires_explicit_reader(monkeypatch):
+    def forbidden_owner_read(*_args, **_kwargs):
+        raise AssertionError("default owner readiness path was used")
+
+    monkeypatch.setattr(AipBindingReadinessService, "evaluate_capability", forbidden_owner_read)
+    request = CapabilityBindingPreviewRequest(
+        capability=ref("CapabilityRevision", "wiki.search"),
+        dependencies=OperationalBindingDependencies(),
+    )
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="explicit readiness reader"):
+        get_capability_binding_service().preview(
+            TenantScope(PRIMARY.org_id, PRIMARY.project_id), request, evaluated_at=NOW,
+        )
+    with pytest.raises(ApiError) as caught:
+        preview_capability_binding(
+            request, principal=PRIMARY, service=get_capability_binding_service(),
+        )
+    assert caught.value.status_code == 422
 
 
 def test_transition_fails_closed_on_dependency_snapshot_drift():

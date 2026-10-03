@@ -37,9 +37,7 @@ _TRANSITIONS = {
 class AipCapabilityBindingService(AipAgentRegistryStore):
     def __init__(self, connect_factory=None, *, readiness_service: AipBindingReadinessService | None = None) -> None:
         super().__init__(connect_factory)
-        self._readiness_service = readiness_service or (
-            AipBindingReadinessService() if connect_factory is None else None
-        )
+        self._readiness_service = readiness_service
 
     def _require_readiness_service(self) -> AipBindingReadinessService:
         if self._readiness_service is None:
