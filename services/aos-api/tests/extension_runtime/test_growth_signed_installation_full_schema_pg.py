@@ -192,7 +192,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                        'active','{}',1,'test-author')""",
                 (*SCOPE.key, instance_id))
     if growth_version == '1.13.0':
-        assert_original_plan_store_with_restricted_login(selected_template, signed, trust)
+        assert_original_plan_store_with_restricted_login(selected_template, signed, trust, installed)
     principal = Principal(
         subject='test-author', org_id=SCOPE.org_id, project_id=SCOPE.project_id,
         roles=['admin'], token_kind='oidc',

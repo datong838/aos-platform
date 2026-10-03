@@ -19,14 +19,16 @@ from aos_api.ecommerce_business_investigation_aip_authority import (
 )
 from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
+from aos_api.auth import Principal
 from aos_api.db import connect, get_dsn
+from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
 from aos_api.tenant_scope import TenantScope
 
 
 SCOPE = TenantScope('org-org', 'dev-project')
 
 
-def assert_original_plan_store_with_restricted_login(selected_template, signed, trust):
+def assert_original_plan_store_with_restricted_login(selected_template, signed, trust, installed):
     dbname = conninfo_to_dict(get_dsn())['dbname']
     assert dbname.startswith('aos_test_') and dbname.endswith('_ti4_test')
     issuer = 's3owi_plan_' + secrets.token_hex(6)
@@ -107,6 +109,30 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 writer.commit()
                 assert writer.execute('SELECT session_user,current_user').fetchone() == {
                     'session_user': issuer, 'current_user': issuer}
+                assert writer.execute(
+                    "SELECT pg_has_role(current_user,'aos_runtime','member') AS member"
+                ).fetchone()['member'] is False
+                before_bi = writer.execute(
+                    'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
+                with pytest.raises(psycopg.errors.InsufficientPrivilege,
+                                   match='role'):
+                    SignedBIPlanPreparationService(
+                        connect_factory=lambda _: nullcontext(writer),
+                        preparation_resolver=resolver,
+                    ).prepare(
+                        SCOPE, installation_id=installed['installationId'],
+                        expected_etag_version=installed['installationEtag'],
+                        principal=Principal(subject='test-author', org_id=SCOPE.org_id,
+                                            project_id=SCOPE.project_id, roles=['admin'],
+                                            token_kind='oidc'),
+                        idempotency_key='s3owj-restricted-bi-prepare',
+                    )
+                writer.rollback()
+                assert writer.execute(
+                    'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n'] == before_bi
+                assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                    WHERE operation='bi_responsibility_plan.prepare'
+                      AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 0
                 store = AipProductionContractStore(
                     connect_factory=lambda _: nullcontext(writer),
                     responsibility_template_resolver=resolver.resolve,
