@@ -39,6 +39,7 @@ from aos_api.asset_registry.release_policy import (
 )
 from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
 from aos_api.db import connect, get_dsn
+from aos_api.tenant_scope import TenantScope
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS = (
@@ -923,3 +924,11 @@ def test_snapshot_rejects_wrong_prepared_transaction(
             release_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({})),
             prepared_transaction=True,
         ).read()
+
+
+def test_restricted_bi_snapshot_requires_explicit_prepared_scope() -> None:
+    with pytest.raises(ValueError):
+        RegistrySnapshotReader(
+            release_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({})),
+            restricted_bi_scope=TenantScope("org-org", "dev-project"),
+        )

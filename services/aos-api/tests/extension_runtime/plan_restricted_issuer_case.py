@@ -226,6 +226,102 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                  status,overlay,version,created_by)
                 VALUES(%s,%s,'s3ows-unlisted-agent','test-bi-plan-active-handoff',1,
                        'active','{}',1,'test-author')''', SCOPE.key)
+            # Test-only fixed Growth projection. Formal tenant/role mapping and
+            # migration remain separate; never grant global Registry tables.
+            with admin.transaction():
+                admin.execute('''CREATE FUNCTION public.aos_bi_growth_registry_a0v_137(
+                    p_org text,p_project text,p_kind text)
+                    RETURNS TABLE(payload jsonb) LANGUAGE plpgsql STABLE SECURITY DEFINER
+                    SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user <> 'aos_bi_plan_issuer'
+                     OR p_org <> 'org-org' OR p_project <> 'dev-project'
+                     OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project
+                     OR p_kind IS NULL OR p_kind NOT IN ('approved','active','snapshot') THEN
+                    RAISE EXCEPTION 'BI_GROWTH_SOURCE_DENIED' USING ERRCODE='42501';
+                  END IF;
+                  IF p_kind IN ('approved','active') THEN
+                    RETURN QUERY SELECT jsonb_build_object(
+                      'installation_id',i.installation_id::text,
+                      'current_revision',i.current_revision,
+                      'lock_payload',cl.lock_payload,
+                      'publisher',b.publisher,'bundle_id',b.bundle_id,
+                      'version',v.version,'bundle_content_hash',v.content_hash,
+                      'artifact_ref',a.artifact_ref,'artifact_digest',a.digest)
+                    FROM public.bundle_installation i
+                    JOIN public.bundle_installation_revision r
+                      ON r.org_id=i.org_id AND r.project_id=i.project_id
+                     AND r.installation_pk=i.installation_pk
+                     AND r.revision=i.current_revision
+                    JOIN public.bundle_composition_lock cl
+                      ON cl.org_id=r.org_id AND cl.project_id=r.project_id
+                     AND cl.composition_pk=r.composition_pk AND cl.revision=r.lock_revision
+                    JOIN public.asset_bundle_artifact a
+                      ON a.relative_path='content/responsibility-templates/business-investigation.readonly.json'
+                    JOIN public.asset_bundle_version v ON v.version_pk=a.version_pk
+                    JOIN public.asset_bundle b ON b.bundle_pk=v.bundle_pk
+                    WHERE i.org_id=p_org AND i.project_id=p_project
+                      AND b.publisher='aos' AND b.bundle_id='solution.ecommerce.growth'
+                      AND v.version='1.13.0' AND v.status='published'
+                      AND cl.lock_payload->'resolved' @> jsonb_build_array(
+                        jsonb_build_object('publisher',b.publisher,'id',b.bundle_id,
+                                           'version',v.version,'contentHash',v.content_hash))
+                      AND ((p_kind='approved' AND i.active_revision IS NULL AND r.state='approved')
+                        OR (p_kind='active' AND i.active_revision=i.current_revision
+                            AND r.state='active'));
+                  ELSE
+                    RETURN QUERY SELECT jsonb_build_object(
+                      'version_pk',v.version_pk,'publisher',b.publisher,
+                      'bundle_id',b.bundle_id,'kind',b.kind,'version',v.version,
+                      'manifest_json',v.manifest_json,'content_hash',v.content_hash,
+                      'signature',v.signature,'status',v.status,
+                      'artifacts',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+                        'relativePath',a.relative_path,'digest',a.digest,
+                        'size',a.size,'mediaType',a.media_type) ORDER BY a.relative_path)
+                        FROM public.asset_bundle_artifact a WHERE a.version_pk=v.version_pk),
+                        '[]'::jsonb),
+                      'evidence',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+                        'type',e.evidence_type,'artifactRef',e.artifact_ref,
+                        'artifactHash',e.artifact_hash,'status',e.status,
+                        'observedAt',e.observed_at,'expiresAt',e.expires_at,
+                        'revokedAt',e.revoked_at,'metadata',e.metadata)
+                        ORDER BY e.evidence_type,e.artifact_hash,e.observed_at,
+                                 e.expires_at NULLS FIRST,e.artifact_ref)
+                        FROM public.asset_bundle_evidence e WHERE e.version_pk=v.version_pk),
+                        '[]'::jsonb))
+                    FROM public.asset_bundle_version v
+                    JOIN public.asset_bundle b ON b.bundle_pk=v.bundle_pk
+                    WHERE b.publisher='aos' AND b.bundle_id='solution.ecommerce.growth'
+                      AND v.version='1.13.0' AND v.status='published'
+                      AND EXISTS (SELECT 1 FROM public.bundle_installation i
+                        JOIN public.bundle_installation_revision r
+                          ON r.org_id=i.org_id AND r.project_id=i.project_id
+                         AND r.installation_pk=i.installation_pk
+                         AND r.revision=i.current_revision
+                        JOIN public.bundle_composition_lock cl
+                          ON cl.org_id=r.org_id AND cl.project_id=r.project_id
+                         AND cl.composition_pk=r.composition_pk
+                         AND cl.revision=r.lock_revision
+                        WHERE i.org_id=p_org AND i.project_id=p_project
+                          AND cl.lock_payload->'resolved' @> jsonb_build_array(
+                            jsonb_build_object('publisher',b.publisher,'id',b.bundle_id,
+                                               'version',v.version,'contentHash',v.content_hash))
+                          AND ((i.active_revision IS NULL AND r.state='approved')
+                            OR (i.active_revision=i.current_revision AND r.state='active')));
+                  END IF;
+                END $$''')
+                admin.execute('''REVOKE ALL ON FUNCTION
+                    public.aos_bi_growth_registry_a0v_137(text,text,text) FROM PUBLIC''')
+                admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                    public.aos_bi_growth_registry_a0v_137(text,text,text) TO {}''').format(
+                        sql.Identifier(issuer)))
+            function_guard = admin.execute('''SELECT p.prosecdef,p.proconfig,p.provolatile,
+                EXISTS(SELECT 1 FROM aclexplode(p.proacl) acl
+                       WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE')
+                FROM pg_proc p WHERE p.oid=
+                    'public.aos_bi_growth_registry_a0v_137(text,text,text)'::regprocedure''').fetchone()
+            assert function_guard == (True, ['search_path=pg_catalog'], 's', False)
             parts = conninfo_to_dict(get_dsn())
             with tempfile.TemporaryDirectory(prefix='aos-bi-issuer-') as private_dir:
                 private = Path(private_dir)
@@ -264,8 +360,44 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                     release_root=signed['signed_tree'], trust_roots=trust,
                     source_alias=signed['source_alias'],
                     registry_prepared_transaction=True,
+                    restricted_bi_scope=SCOPE,
                 )
-                assert restricted_resolver.select(SCOPE) is None
+                assert restricted_resolver.resolve(SCOPE, selected_template.template_ref) is True
+                assert restricted_resolver.resolve(
+                    SCOPE, selected_template.template_ref.model_copy(
+                        update={'content_hash': '0' * 64})) is False
+                assert restricted_resolver.resolve(
+                    TenantScope('dev-org', 'dev-project'),
+                    selected_template.template_ref) is False
+                with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                    rows = guarded.execute('''SELECT payload FROM
+                        public.aos_bi_growth_registry_a0v_137(%s,%s,'snapshot')''',
+                        SCOPE.key).fetchall()
+                    assert [(row['payload']['bundle_id'], row['payload']['version'])
+                            for row in rows] == [('solution.ecommerce.growth', '1.13.0')]
+                    assert guarded.execute('''SELECT payload FROM
+                        public.aos_bi_growth_registry_a0v_137(%s,%s,'active')''',
+                        SCOPE.key).fetchall() == []
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                        guarded.execute('''SELECT payload FROM
+                            public.aos_bi_growth_registry_a0v_137(
+                                'dev-org','dev-project','snapshot')''').fetchall()
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                        guarded.execute('''SELECT payload FROM
+                            public.aos_bi_growth_registry_a0v_137(%s,%s,NULL)''',
+                            SCOPE.key).fetchall()
+                assert admin.execute('''SELECT has_function_privilege(
+                    'aos_runtime','public.aos_bi_growth_registry_a0v_137(text,text,text)',
+                    'EXECUTE') AS allowed''').fetchone()[0] is False
+                admin.execute(sql.SQL('''REVOKE EXECUTE ON FUNCTION
+                    public.aos_bi_growth_registry_a0v_137(text,text,text) FROM {}''').format(
+                        sql.Identifier(issuer)))
+                assert restricted_resolver.resolve(SCOPE, selected_template.template_ref) is False
+                admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                    public.aos_bi_growth_registry_a0v_137(text,text,text) TO {}''').format(
+                        sql.Identifier(issuer)))
                 with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
                     with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
                         guarded.execute('CREATE TEMP TABLE s3oww_read_only_denied (id int)')
@@ -521,6 +653,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
         finally:
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_growth_registry_a0v_137(text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_agents_lock_a0v_136(text,text,text[])''')
             admin.execute('''DROP FUNCTION IF EXISTS

@@ -34,6 +34,7 @@ from aos_api.asset_registry.errors import (
 )
 from aos_api.asset_registry.release_policy import ReleasePolicy
 from aos_api.db import connect
+from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[[], AbstractContextManager[Any]]
 TransactionClock = Callable[[Any], datetime]
@@ -61,13 +62,18 @@ class RegistrySnapshotReader:
         connect_factory: ConnectFactory = connect,
         clock: TransactionClock | None = None,
         prepared_transaction: bool = False,
+        restricted_bi_scope: TenantScope | None = None,
     ) -> None:
         if type(prepared_transaction) is not bool:
             raise ValueError("prepared transaction mode must be explicit")
+        if (restricted_bi_scope is not None
+                and (type(restricted_bi_scope) is not TenantScope or not prepared_transaction)):
+            raise ValueError("restricted BI source requires a prepared scoped transaction")
         self._release_policy = release_policy
         self._connect_factory = connect_factory
         self._clock = clock or _transaction_timestamp
         self._prepared_transaction = prepared_transaction
+        self._restricted_bi_scope = restricted_bi_scope
 
     def read(self) -> RegistrySnapshot:
         """Return all currently eligible published candidates or fail atomically."""
@@ -96,7 +102,15 @@ class RegistrySnapshotReader:
                         "registry snapshot transaction clock is invalid"
                     )
                 candidates = []
-                for row in conn.execute(_SNAPSHOT_QUERY):
+                if self._restricted_bi_scope is None:
+                    rows = conn.execute(_SNAPSHOT_QUERY)
+                else:
+                    rows = (item["payload"] for item in conn.execute(
+                        """SELECT payload FROM public.aos_bi_growth_registry_a0v_137(
+                            %s,%s,'snapshot')""",
+                        self._restricted_bi_scope.key,
+                    ))
+                for row in rows:
                     candidate = self._candidate_from_row(
                         row,
                         checked_at=checked_at,

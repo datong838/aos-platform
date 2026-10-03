@@ -381,18 +381,26 @@ class ApprovedBIPreparationResolver:
         trust_roots: Any = None,
         source_alias: str | None = None,
         registry_prepared_transaction: bool = False,
+        restricted_bi_scope: TenantScope | None = None,
     ) -> None:
         if type(registry_prepared_transaction) is not bool:
             raise ValueError("registry transaction mode must be explicit")
+        if (restricted_bi_scope is not None
+                and (type(restricted_bi_scope) is not TenantScope
+                     or not registry_prepared_transaction)):
+            raise ValueError("restricted BI source requires one prepared tenant")
         self._connect_factory = connect_factory
         self._registry_connect_factory = registry_connect_factory
         self._release_root = release_root
         self._trust_roots = trust_roots
         self._source_alias = source_alias
         self._registry_prepared_transaction = registry_prepared_transaction
+        self._restricted_bi_scope = restricted_bi_scope
 
     def select(self, scope: TenantScope) -> ApprovedBIPreparationSelection | None:
         if type(scope) is not TenantScope:
+            return None
+        if self._restricted_bi_scope is not None and scope != self._restricted_bi_scope:
             return None
         try:
             from aos_api.asset_registry.contracts import BundleVersionStatus
@@ -414,6 +422,7 @@ class ApprovedBIPreparationResolver:
                 release_policy=ReleasePolicy(trust_roots=roots),
                 connect_factory=self._registry_connect_factory,
                 prepared_transaction=self._registry_prepared_transaction,
+                restricted_bi_scope=self._restricted_bi_scope,
             ).read()
             matched = [(row, item) for row in rows for item in snapshot.candidates
                        if (item.publisher, item.id, item.version, item.content_hash)
@@ -485,6 +494,14 @@ class ApprovedBIPreparationResolver:
         return self._installation_rows(scope, active=False)
 
     def _installation_rows(self, scope: TenantScope, *, active: bool) -> list[Any]:
+        if self._restricted_bi_scope is not None:
+            if scope != self._restricted_bi_scope:
+                return []
+            kind = "active" if active else "approved"
+            with self._connect_factory(scope) as conn:
+                return [row["payload"] for row in conn.execute(
+                    """SELECT payload FROM public.aos_bi_growth_registry_a0v_137(
+                        %s,%s,%s)""", (*scope.key, kind))]
         state_predicate = (
             "installation.active_revision=installation.current_revision AND current.state='active'"
             if active else
