@@ -1,5 +1,6 @@
 """Current local-PG control authorization; never grants or bootstraps members."""
 import psycopg
+from aos_api.aip_bi_plan_issuer_connection import _ScopedBIIssuerConnection
 
 from aos_api.asset_registry.control_policy import (
     APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION,
@@ -29,7 +30,7 @@ class CurrentControlPermission:
                          "current_setting('aos.project_id',true) AS project_id").fetchone()
         if any(type(v) is not str or not v for v in scope) or _values(row,('org_id','project_id'))!=scope:
             raise RuntimeConflict('current permission tenant differs')
-        bi_issuer=(isinstance(conn,psycopg.Connection) and
+        bi_issuer=(isinstance(conn,(psycopg.Connection,_ScopedBIIssuerConnection)) and
                    _values(conn.execute('SELECT current_user AS role').fetchone(),('role',))[0]
                    =='aos_bi_plan_issuer')
         if bi_issuer:

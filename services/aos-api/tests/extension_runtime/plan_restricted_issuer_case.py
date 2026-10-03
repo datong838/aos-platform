@@ -42,7 +42,9 @@ from aos_api.tenant_scope import TenantScope
 SCOPE = TenantScope('org-org', 'dev-project')
 
 
-def assert_original_plan_store_with_restricted_login(selected_template, signed, trust, installed):
+def assert_original_plan_store_with_restricted_login(
+    selected_template, signed, trust, installed, *, retain_active=False,
+):
     dbname = conninfo_to_dict(get_dsn())['dbname']
     assert dbname.startswith('aos_test_') and dbname.endswith('_ti4_test')
     issuer = 'aos_bi_plan_issuer'
@@ -73,6 +75,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
         admin.execute(sql.SQL('''CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS
             PASSWORD {}''').format(sql.Identifier(issuer), sql.Literal(password)))
         private_context = None
+        retained = False
         try:
             for table, privileges in (
                 ('bundle_installation', 'SELECT'),
@@ -111,11 +114,15 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute(sql.SQL('''CREATE FUNCTION s3owi_plan_receipt_guard() RETURNS trigger
                 LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public AS $$
                 BEGIN
-                  IF session_user<>{} OR current_user<>{}
+                  IF session_user<>{} THEN
+                    RETURN NEW;
+                  END IF;
+                  IF current_user<>{}
                      OR NEW.operation NOT IN ('responsibility_plan.create',
                                              'responsibility_plan.revise',
                                              'responsibility_plan.freeze',
-                                             'bi_responsibility_plan.prepare')
+                                             'bi_responsibility_plan.prepare',
+                                             'bi_responsibility_plan.rebind')
                      OR NEW.result_ref->>'resourceType'<>'ResponsibilityPlanRevision'
                      OR NOT EXISTS (
                        SELECT 1 FROM aip_responsibility_plan_head h
@@ -780,25 +787,33 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                         (*SCOPE.key, 'a' * 64,
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
+            if retain_active:
+                retained = True
+                return issuer_config, private_context, prepared, prepare_args
         finally:
-            if private_context is not None:
-                private_context.cleanup()
-            admin.execute('''DROP FUNCTION IF EXISTS
+            if not retained:
+                cleanup_restricted_issuer_case(admin, private_context, issuer)
+
+
+def cleanup_restricted_issuer_case(admin, private_context, issuer='aos_bi_plan_issuer'):
+    if private_context is not None:
+        private_context.cleanup()
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_release_lock_a0v_139(text,text)''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_membership_read_a0v_138(text,text,text)''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_growth_registry_a0v_137(text,text,text)''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_agents_lock_a0v_136(text,text,text[])''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_marking_lock_a0v_136(text,text,text,text)''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_membership_lock_a0v_136(text,text,text)''')
-            admin.execute('''DROP FUNCTION IF EXISTS
+    admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_installation_lock_a0v_136(text,text,uuid,bigint)''')
-            admin.execute('''DROP TRIGGER IF EXISTS s3owi_plan_receipt_guard
+    admin.execute('''DROP TRIGGER IF EXISTS s3owi_plan_receipt_guard
                 ON aip_production_contract_receipt''')
-            admin.execute('DROP FUNCTION IF EXISTS s3owi_plan_receipt_guard()')
-            admin.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(issuer)))
-            admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(issuer)))
+    admin.execute('DROP FUNCTION IF EXISTS s3owi_plan_receipt_guard()')
+    admin.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(issuer)))
+    admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(issuer)))

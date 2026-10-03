@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID
 
 import psycopg
+from aos_api.aip_bi_plan_issuer_connection import _ScopedBIIssuerConnection
 
 from aos_api.aip_contracts import AipContractModel, ResourceRef
 from aos_api.aip_production_contract_store import (
@@ -379,7 +380,7 @@ class SignedBIPlanPreparationService:
             if selection is None or selection.installation_id != installation_id:
                 raise ValueError("exact signed approved BI installation unavailable")
             instance_ids = [item[2] for item in _ROLE_BLUEPRINTS]
-            bi_issuer = (isinstance(conn, psycopg.Connection) and conn.execute(
+            bi_issuer = (isinstance(conn, (psycopg.Connection, _ScopedBIIssuerConnection)) and conn.execute(
                 'SELECT current_user AS role').fetchone()['role'] == 'aos_bi_plan_issuer')
             if bi_issuer:
                 rows = conn.execute(

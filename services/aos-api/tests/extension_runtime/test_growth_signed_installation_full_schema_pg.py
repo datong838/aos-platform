@@ -35,6 +35,9 @@ from aos_api.aip_responsibility_template_authority import (
 )
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
 from aos_api.auth import Principal
+from aos_api.aip_bi_plan_issuer_connection import (
+    connect_bi_issuer_read_only, connect_bi_issuer_write,
+)
 from aos_api.aip_production_contract_store import (
     ProductionContractConflict, ProductionContractDependencyBlocked,
     ProductionContractIdempotencyConflict,
@@ -59,7 +62,9 @@ from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalid
 from aos_api.extension_runtime.schema_conditions import CurrentSchemaConditions, admit_schema_requirements
 from aos_api.extension_runtime.schema_registry import apply_once, require_installed
 from aos_api.tenant_scope import TenantScope
-from plan_restricted_issuer_case import assert_original_plan_store_with_restricted_login
+from plan_restricted_issuer_case import (
+    assert_original_plan_store_with_restricted_login, cleanup_restricted_issuer_case,
+)
 
 
 pytestmark = pytest.mark.skipif(
@@ -108,7 +113,7 @@ def _signed_release():
                 builder=builder, source_alias='a0v-growth-113'), '1.13.0'
 
 
-def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_path):
+def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_path, request):
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
@@ -191,8 +196,14 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 VALUES(%s,%s,%s,'test-bi-plan-active-handoff',1,
                        'active','{}',1,'test-author')""",
                 (*SCOPE.key, instance_id))
+    restricted_bi = None
     if growth_version == '1.13.0':
-        assert_original_plan_store_with_restricted_login(selected_template, signed, trust, installed)
+        restricted_bi = assert_original_plan_store_with_restricted_login(
+            selected_template, signed, trust, installed, retain_active=True)
+        def cleanup_restricted_bi():
+            with psycopg.connect(get_dsn(), autocommit=True) as admin:
+                cleanup_restricted_issuer_case(admin, restricted_bi[1])
+        request.addfinalizer(cleanup_restricted_bi)
     principal = Principal(
         subject='test-author', org_id=SCOPE.org_id, project_id=SCOPE.project_id,
         roles=['admin'], token_kind='oidc',
@@ -370,6 +381,95 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
             assert selected_template.template_ref.revision != verified.current_revision
             assert active_resolver.resolve(SCOPE, selected_template.template_ref) is False
             assert active_resolver.resolve(SCOPE, active_template.template_ref) is True
+            if restricted_bi is not None:
+                issuer_config, _, issuer_plan, issuer_prepare = restricted_bi
+                restricted_active = ActiveBIBusinessResolver(
+                    connect_factory=lambda scope: connect_bi_issuer_read_only(
+                        issuer_config, scope),
+                    registry_connect_factory=lambda: connect_bi_issuer_read_only(
+                        issuer_config, SCOPE),
+                    release_root=signed['signed_tree'], trust_roots=trust,
+                    source_alias=signed['source_alias'],
+                    registry_prepared_transaction=True, restricted_bi_scope=SCOPE,
+                )
+                assert restricted_active.select(SCOPE) is not None
+                issuer_rebind_key = 's3owad-restricted-bi-rebind'
+                issuer_rebind = SignedBIPlanActiveRebindService(
+                    connect_factory=lambda scope: connect_bi_issuer_write(
+                        issuer_config, scope), active_resolver=restricted_active)
+                issuer_args = dict(
+                    installation_id=installed['installationId'],
+                    plan_id=issuer_plan.plan_id,
+                    prepare_key=issuer_prepare['idempotency_key'],
+                    expected_etag_version=verified.etag_version,
+                    expected_plan_version=issuer_plan.version,
+                    principal=issuer_prepare['principal'],
+                    idempotency_key=issuer_rebind_key,
+                )
+                with pytest.raises(psycopg.errors.InsufficientPrivilege,
+                                   match='installation unavailable'):
+                    issuer_rebind.rebind(SCOPE, **{
+                        **issuer_args, 'expected_etag_version': verified.etag_version + 1})
+                with pytest.raises(ProductionContractNotFound):
+                    issuer_rebind.rebind(SCOPE, **{
+                        **issuer_args, 'prepare_key': 's3owad-missing-prepare'})
+                with pytest.raises(PermissionError, match='formal authenticated actor'):
+                    issuer_rebind.rebind(TenantScope('dev-org', 'dev-project'), **issuer_args)
+                with psycopg.connect(get_dsn(), autocommit=True) as admin:
+                    admin.execute('''REVOKE EXECUTE ON FUNCTION
+                        public.aos_bi_plan_release_lock_a0v_139(text,text)
+                        FROM aos_bi_plan_issuer''')
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        issuer_rebind.rebind(SCOPE, **issuer_args)
+                    admin.execute('''GRANT EXECUTE ON FUNCTION
+                        public.aos_bi_plan_release_lock_a0v_139(text,text)
+                        TO aos_bi_plan_issuer''')
+                with pytest.raises(psycopg.Error, match='PLAN_FORCED_ROLLBACK'):
+                    issuer_rebind.rebind(SCOPE, **{
+                        **issuer_args, 'idempotency_key': 's3owi-forced-rollback'})
+                with connect(SCOPE) as conn:
+                    assert conn.execute('''SELECT current_revision FROM
+                        aip_responsibility_plan_head WHERE org_id=%s AND project_id=%s
+                        AND plan_id=%s''', (*SCOPE.key, issuer_plan.plan_id)
+                    ).fetchone()['current_revision'] == issuer_plan.revision
+                    assert conn.execute('''SELECT count(*) AS n FROM
+                        aip_production_contract_receipt WHERE org_id=%s AND project_id=%s
+                        AND operation='bi_responsibility_plan.rebind' AND
+                        idempotency_key IN ('s3owi-forced-rollback',%s)''',
+                        (*SCOPE.key, issuer_rebind_key)).fetchone()['n'] == 0
+                issuer_rebound = issuer_rebind.rebind(SCOPE, **issuer_args)
+                assert issuer_rebound.plan_id == issuer_plan.plan_id
+                assert issuer_rebound.template_ref == active_template.template_ref
+                assert issuer_rebind.rebind(SCOPE, **issuer_args).revision == issuer_rebound.revision
+                issuer_readback = SignedBIPlanRebindReceiptReader(
+                    connect_factory=lambda scope: connect_bi_issuer_read_only(
+                        issuer_config, scope), restricted_bi_scope=SCOPE,
+                ).read(SCOPE, principal=issuer_prepare['principal'],
+                       idempotency_key=issuer_rebind_key)
+                assert issuer_readback.result_ref.resource_id == issuer_plan.plan_id
+                assert issuer_readback.result_ref.revision == issuer_rebound.revision
+                assert issuer_readback.rebind_binding.prepare_receipt_id
+                assert issuer_readback.original_preparation_verified is True
+                assert issuer_readback.plan_revision_verified is True
+                with pytest.raises(ProductionContractIdempotencyConflict):
+                    issuer_rebind.rebind(SCOPE, **{
+                        **issuer_args, 'expected_plan_version': issuer_rebound.version})
+                with pytest.raises(ProductionContractConflict, match='Plan head changed'):
+                    issuer_rebind.rebind(SCOPE, **{
+                        **issuer_args, 'idempotency_key': 's3owad-stale-plan'})
+                with psycopg.connect(get_dsn(), autocommit=True) as admin:
+                    admin.execute('''REVOKE EXECUTE ON FUNCTION
+                        public.aos_bi_plan_membership_read_a0v_138(text,text,text)
+                        FROM aos_bi_plan_issuer''')
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        SignedBIPlanRebindReceiptReader(
+                            connect_factory=lambda scope: connect_bi_issuer_read_only(
+                                issuer_config, scope), restricted_bi_scope=SCOPE,
+                        ).read(SCOPE, principal=issuer_prepare['principal'],
+                               idempotency_key=issuer_rebind_key)
+                    admin.execute('''GRANT EXECUTE ON FUNCTION
+                        public.aos_bi_plan_membership_read_a0v_138(text,text,text)
+                        TO aos_bi_plan_issuer''')
             rebind_service = SignedBIPlanActiveRebindService(
                 connect_factory=connect, active_resolver=active_resolver,
             )
