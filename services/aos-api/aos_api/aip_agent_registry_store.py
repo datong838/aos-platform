@@ -277,19 +277,21 @@ class AipAgentRegistryStore:
     def _insert_receipt(self, conn: Any, scope: TenantScope, operation: str, key: str,
                         request_hash: str, source_type: str, source_id: str,
                         result_type: str, result_id: str, actor: str,
-                        occurred_at: datetime) -> RegistryReceipt:
+                        occurred_at: datetime, *, result_revision: str | None = None) -> RegistryReceipt:
         row = conn.execute("""INSERT INTO aip_agent_registry_receipt
             (org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
              resource_ref,result_ref,status,created_by,created_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s::jsonb,%s::jsonb,'applied',%s,%s) RETURNING *""",
             (*scope.key, f"aip6r-{uuid.uuid4().hex}", operation, key, request_hash,
-             self._json(self._ref(source_type, source_id)), self._json(self._ref(result_type, result_id)),
+             self._json(self._ref(source_type, source_id)),
+             self._json(self._ref(result_type, result_id, revision=result_revision)),
              actor.strip(), occurred_at)).fetchone()
         return self._receipt_from_row(scope, row)
 
     @staticmethod
-    def _ref(kind: str, identifier: str) -> ResourceRef:
-        return ResourceRef(resource_type=kind, resource_id=identifier, revision=None, authority="postgresql")
+    def _ref(kind: str, identifier: str, *, revision: str | None = None) -> ResourceRef:
+        return ResourceRef(resource_type=kind, resource_id=identifier,
+                           revision=revision, authority="postgresql")
 
     @staticmethod
     def _template_from_row(row: Any) -> AgentTemplateRevision:

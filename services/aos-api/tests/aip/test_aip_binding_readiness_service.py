@@ -456,6 +456,7 @@ def test_evaluation_is_tenant_scoped_cas_idempotent_and_required_for_activation(
     assert evaluated.operational_readiness is CapabilityReadiness.AVAILABLE
     assert result.dependency_snapshot_hash == evaluated.dependency_snapshot_hash
     assert receipt.operation == "capability_binding.evaluate"
+    assert receipt.result_ref.revision == str(evaluated.version)
     replay, _, replay_receipt = service.evaluate(
         PRIMARY,
         created.binding_id,
@@ -480,7 +481,7 @@ def test_evaluation_is_tenant_scoped_cas_idempotent_and_required_for_activation(
             actor="pytest",
             evaluated_at=evaluation_time,
         )
-    active, _ = service.update(
+    active, activation_receipt = service.update(
         PRIMARY,
         created.binding_id,
         UpdateCapabilityBindingRequest(
@@ -494,6 +495,7 @@ def test_evaluation_is_tenant_scoped_cas_idempotent_and_required_for_activation(
         actor="pytest",
     )
     assert active.status == "active" and active.version == 3
+    assert activation_receipt.result_ref.revision == str(active.version)
 
 
 def test_expired_operational_snapshot_blocks_activation():

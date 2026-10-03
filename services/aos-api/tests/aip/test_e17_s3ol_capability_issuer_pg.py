@@ -166,6 +166,17 @@ def test_original_capability_create_replay_and_tenant_isolation(capability_case,
                 (*scope.key, f"s3ol-direct-{uuid4().hex}", uuid4().hex, "a" * 64))
 
 
+def test_original_capability_create_receipt_matches_persisted_binding_version(
+    capability_case, capability_issuer,
+):
+    scope, request = capability_case
+    created, receipt = AipCapabilityBindingService(connect_factory=capability_issuer).create(
+        scope, request, idempotency_key=f"s3ob23:{request.binding_id}",
+        actor="test-only", occurred_at=datetime.now(UTC),
+    )
+    assert receipt.result_ref.revision == str(created.version)
+
+
 def test_capability_issuer_is_narrow(capability_case, capability_issuer):
     scope, _ = capability_case
     with capability_issuer(scope) as conn:

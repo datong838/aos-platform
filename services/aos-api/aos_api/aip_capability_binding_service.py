@@ -103,7 +103,8 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                 ).fetchone()
                 receipt = self._insert_receipt(conn, scope, operation, idempotency_key,
                     request_hash, "Capability", binding.capability.asset_id,
-                    "CapabilityBinding", request.binding_id, actor, occurred_at)
+                    "CapabilityBinding", request.binding_id, actor, occurred_at,
+                    result_revision=str(row["version"]))
                 conn.commit()
                 return self._from_row(scope, row), receipt
         except (
@@ -187,7 +188,8 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                     raise AipAgentRegistryConflict("capability binding version or status changed")
                 receipt = self._insert_receipt(conn, scope, operation, idempotency_key,
                     request_hash, "CapabilityBinding", binding_id,
-                    "CapabilityBinding", binding_id, actor, request.observed_at)
+                    "CapabilityBinding", binding_id, actor, request.observed_at,
+                    result_revision=str(row["version"]))
                 conn.commit()
                 return self._from_row(scope, row), receipt
         except (AipAgentRegistryConflict, AipAgentRegistryNotFound, AipAgentRegistryTransitionBlocked):
@@ -286,6 +288,7 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                     binding_id,
                     actor,
                     evaluated_at,
+                    result_revision=str(row["version"]),
                 )
                 conn.commit()
                 return self._from_row(scope, row), result, receipt
