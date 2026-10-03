@@ -1,4 +1,4 @@
-"""E17 Reader maintenance preflight is a clone-only, read-only gate."""
+"""E17 Reader maintenance rejects current and implicit clone apply."""
 
 from __future__ import annotations
 
@@ -81,3 +81,6 @@ def test_cli_requires_explicit_clone_target_and_rejects_apply():
     with pytest.raises(SystemExit) as apply:
         main(["--target", "clone", "--apply-current"])
     assert apply.value.code == 2
+    assert main(["--target", "fresh-clone", "--admin-passfile", "/missing"]) == 2
+    assert main(["--target", "clone", "--admin-passfile", "/missing",
+                 "--apply-fresh-clone", "--reader-password-file", "/missing"]) == 2
