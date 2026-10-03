@@ -487,7 +487,7 @@ def test_signed_bi_plan_preparation_orders_current_checks_before_one_receipt(mon
         events.append("installation-lock")
         assert kwargs["expected_etag_version"] == 3
         return SimpleNamespace(record=SimpleNamespace(state="approved", active_revision=None))
-    monkeypatch.setattr(module.PostgresInstallationStore, "lock_for_transition_in_transaction", lock)
+    monkeypatch.setattr(module.PostgresInstallationStore, "lock_for_bi_plan_in_transaction", lock)
     monkeypatch.setattr(module.CurrentControlPermission, "__call__",
                         lambda self, **kwargs: events.append("current-permission"))
     service = module.SignedBIPlanPreparationService(

@@ -590,6 +590,48 @@ class PostgresInstallationStore:
             record=record,
         )
 
+    def lock_for_bi_plan_in_transaction(
+        self,
+        conn: Any,
+        *,
+        org_id: str,
+        project_id: str,
+        installation_id: str,
+        expected_etag_version: int,
+    ) -> LockedInstallation:
+        """Keep the original lock for runtime; use an exact DB lock for a narrow issuer."""
+        current = conn.execute("SELECT current_user AS role").fetchone()
+        if current is None:
+            raise InstallationPersistenceError()
+        if current["role"] != "aos_bi_plan_issuer":
+            return self.lock_for_transition_in_transaction(
+                conn, org_id=org_id, project_id=project_id,
+                installation_id=installation_id,
+                expected_etag_version=expected_etag_version,
+            )
+        org_id = _normalized_text(org_id, "org_id")
+        project_id = _normalized_text(project_id, "project_id")
+        if (type(expected_etag_version) is not int or expected_etag_version < 1):
+            raise RevisionConflictError("installation revision does not match")
+        row = conn.execute(
+            """SELECT public.aos_bi_plan_installation_lock_a0v_136(
+                %s,%s,%s,%s) AS installation_pk""",
+            (org_id, project_id, _resource_uuid(installation_id), expected_etag_version),
+        ).fetchone()
+        if row is None or row["installation_pk"] is None:
+            raise AssetNotFoundError("bundle installation not found")
+        installation_pk = uuid.UUID(str(row["installation_pk"]))
+        record = _load_record_by_pk(
+            conn, org_id=org_id, project_id=project_id,
+            installation_pk=installation_pk, lock=False,
+        )
+        if record.etag_version != expected_etag_version:
+            raise RevisionConflictError("installation revision does not match")
+        return LockedInstallation(
+            org_id=org_id, project_id=project_id,
+            installation_pk=installation_pk, record=record,
+        )
+
     def load_active_baseline_in_transaction(
         self,
         conn: Any,

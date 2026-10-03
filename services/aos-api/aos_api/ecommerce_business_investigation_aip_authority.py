@@ -365,7 +365,7 @@ class SignedBIPlanPreparationService:
         with self._connect(scope) as conn:
             apply_asset_transaction_scope(
                 conn, org_id=scope.org_id, project_id=scope.project_id)
-            locked = self._installation_store.lock_for_transition_in_transaction(
+            locked = self._installation_store.lock_for_bi_plan_in_transaction(
                 conn, org_id=scope.org_id, project_id=scope.project_id,
                 installation_id=installation_id,
                 expected_etag_version=expected_etag_version,
@@ -439,7 +439,7 @@ class SignedBIPlanActiveRebindService:
         with self._connect(scope) as conn:
             apply_asset_transaction_scope(
                 conn, org_id=scope.org_id, project_id=scope.project_id)
-            locked = self._installation_store.lock_for_transition_in_transaction(
+            locked = self._installation_store.lock_for_bi_plan_in_transaction(
                 conn, org_id=scope.org_id, project_id=scope.project_id,
                 installation_id=installation_id,
                 expected_etag_version=expected_etag_version,
@@ -592,7 +592,7 @@ class SignedBIPlanActiveFreezeService(SignedBIPlanActiveRebindService):
             raise ValueError("exact BI freeze target, versions and idempotency keys required")
         with self._connect(scope) as conn:
             apply_asset_transaction_scope(conn, org_id=scope.org_id, project_id=scope.project_id)
-            locked = self._installation_store.lock_for_transition_in_transaction(
+            locked = self._installation_store.lock_for_bi_plan_in_transaction(
                 conn, org_id=scope.org_id, project_id=scope.project_id,
                 installation_id=installation_id,
                 expected_etag_version=expected_etag_version,

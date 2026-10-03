@@ -36,7 +36,7 @@ SCOPE = TenantScope('org-org', 'dev-project')
 def assert_original_plan_store_with_restricted_login(selected_template, signed, trust, installed):
     dbname = conninfo_to_dict(get_dsn())['dbname']
     assert dbname.startswith('aos_test_') and dbname.endswith('_ti4_test')
-    issuer = 's3owi_plan_' + secrets.token_hex(6)
+    issuer = 'aos_bi_plan_issuer'
     password = secrets.token_urlsafe(24)
     resolver = ApprovedBIPreparationResolver(
         connect_factory=connect, registry_connect_factory=connect,
@@ -57,6 +57,12 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             PASSWORD {}''').format(sql.Identifier(issuer), sql.Literal(password)))
         try:
             for table, privileges in (
+                ('bundle_installation', 'SELECT'),
+                ('bundle_installation_revision', 'SELECT'),
+                ('bundle_installation_event', 'SELECT'),
+                ('bundle_installation_decision', 'SELECT'),
+                ('bundle_composition', 'SELECT'),
+                ('bundle_composition_lock', 'SELECT'),
                 ('aip_responsibility_plan_head', 'SELECT,INSERT,UPDATE'),
                 ('aip_responsibility_plan_revision', 'SELECT,INSERT'),
                 ('aip_production_contract_receipt', 'SELECT,INSERT'),
@@ -69,6 +75,9 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 admin.execute(sql.SQL('GRANT {} ON {} TO {}').format(
                     sql.SQL(privileges), sql.Identifier(table), sql.Identifier(issuer)))
             for table in (
+                'bundle_installation', 'bundle_installation_revision',
+                'bundle_installation_event', 'bundle_installation_decision',
+                'bundle_composition', 'bundle_composition_lock',
                 'aip_responsibility_plan_head', 'aip_responsibility_plan_revision',
                 'aip_production_contract_receipt', 'aip_agent_instance',
                 'aip_skill_binding', 'aip_agent_registry_receipt',
@@ -108,6 +117,29 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute('''CREATE TRIGGER s3owi_plan_receipt_guard BEFORE INSERT
                 ON aip_production_contract_receipt FOR EACH ROW
                 EXECUTE FUNCTION s3owi_plan_receipt_guard()''')
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_installation_lock_a0v_136(
+                p_org text,p_project text,p_installation uuid,p_etag bigint) RETURNS uuid
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+                DECLARE found_pk uuid; found_etag bigint;
+                BEGIN
+                  IF session_user<>{} OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project THEN
+                    RAISE EXCEPTION 'installation unavailable' USING ERRCODE='42501';
+                  END IF;
+                  SELECT installation_pk,etag_version INTO found_pk,found_etag
+                    FROM public.bundle_installation
+                   WHERE org_id=p_org AND project_id=p_project
+                     AND installation_id=p_installation FOR UPDATE;
+                  IF found_pk IS NULL OR found_etag IS DISTINCT FROM p_etag THEN
+                    RAISE EXCEPTION 'installation unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN found_pk;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION public.aos_bi_plan_installation_lock_a0v_136(
+                text,text,uuid,bigint) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_installation_lock_a0v_136(text,text,uuid,bigint) TO {}''').format(
+                    sql.Identifier(issuer)))
             parts = conninfo_to_dict(get_dsn())
             with psycopg.connect(host=parts['host'], port=parts['port'], dbname=dbname,
                                  user=issuer, password=password, row_factory=dict_row) as writer:
@@ -122,7 +154,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 before_bi = writer.execute(
                     'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
                 with pytest.raises(psycopg.errors.InsufficientPrivilege,
-                                   match='bundle_installation'):
+                                   match='meta_membership'):
                     SignedBIPlanPreparationService(
                         connect_factory=lambda _: nullcontext(writer),
                         preparation_resolver=resolver,
@@ -140,6 +172,28 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
                     WHERE operation='bi_responsibility_plan.prepare'
                       AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 0
+                lock_args = (*SCOPE.key, installed['installationId'],
+                             installed['installationEtag'])
+                for args in (("dev-org", *lock_args[1:]),
+                             (*lock_args[:3], lock_args[3] + 1)):
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        writer.execute('''SELECT public.aos_bi_plan_installation_lock_a0v_136(
+                            %s,%s,%s,%s)''', args)
+                    writer.rollback()
+                with writer.transaction():
+                    row = writer.execute('''SELECT public.aos_bi_plan_installation_lock_a0v_136(
+                        %s,%s,%s,%s) AS installation_pk''', lock_args).fetchone()
+                    assert row['installation_pk'] is not None
+                    admin.execute("SET lock_timeout='150ms'")
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        admin.execute('''UPDATE bundle_installation
+                            SET etag_version=etag_version+1
+                            WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                            lock_args[:3])
+                    admin.execute('RESET lock_timeout')
+                assert admin.execute('''SELECT etag_version FROM bundle_installation
+                    WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                    lock_args[:3]).fetchone()[0] == installed['installationEtag']
                 store = AipProductionContractStore(
                     connect_factory=lambda _: nullcontext(writer),
                     responsibility_template_resolver=resolver.resolve,
@@ -239,6 +293,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
         finally:
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_installation_lock_a0v_136(text,text,uuid,bigint)''')
             admin.execute('''DROP TRIGGER IF EXISTS s3owi_plan_receipt_guard
                 ON aip_production_contract_receipt''')
             admin.execute('DROP FUNCTION IF EXISTS s3owi_plan_receipt_guard()')
