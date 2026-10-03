@@ -37,7 +37,14 @@ _TRANSITIONS = {
 class AipCapabilityBindingService(AipAgentRegistryStore):
     def __init__(self, connect_factory=None, *, readiness_service: AipBindingReadinessService | None = None) -> None:
         super().__init__(connect_factory)
-        self._readiness_service = readiness_service or AipBindingReadinessService()
+        self._readiness_service = readiness_service or (
+            AipBindingReadinessService() if connect_factory is None else None
+        )
+
+    def _require_readiness_service(self) -> AipBindingReadinessService:
+        if self._readiness_service is None:
+            raise AipAgentRegistryTransitionBlocked("explicit readiness reader required for custom issuer")
+        return self._readiness_service
 
     def preview(
         self,
@@ -46,7 +53,7 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
         *,
         evaluated_at: datetime,
     ) -> OperationalBindingReadiness:
-        return self._readiness_service.evaluate_capability(
+        return self._require_readiness_service().evaluate_capability(
             scope,
             request.capability,
             request.dependencies,
@@ -116,6 +123,8 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
             raise AipAgentRegistryTransitionBlocked("capability binding transition is not allowed")
         if request.to_status == "active" and request.health is not BindingHealth.HEALTHY:
             raise AipAgentRegistryTransitionBlocked("only healthy capability bindings can be active")
+        if request.to_status == "active":
+            self._require_readiness_service()
         operation = "capability_binding.update"
         request_hash = self._command_hash(request, actor)
         try:
@@ -144,7 +153,7 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                         raise AipAgentRegistryTransitionBlocked(
                             "fresh operational binding readiness does not allow activation"
                         )
-                    recomputed = self._readiness_service.evaluate_capability(
+                    recomputed = self._require_readiness_service().evaluate_capability(
                         scope,
                         self._from_row(scope, binding_row).capability,
                         self._dependencies_from_row(binding_row),
@@ -200,8 +209,9 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
     ) -> tuple[CapabilityBinding, OperationalBindingReadiness, RegistryReceipt]:
         """Persist a short-lived, exact dependency snapshot without activating it."""
         self._validate_command(scope, idempotency_key, actor)
+        readiness_service = self._require_readiness_service()
         current = self.get(scope, binding_id)
-        result = self._readiness_service.evaluate_capability(
+        result = readiness_service.evaluate_capability(
             scope, current.capability, request.dependencies, evaluated_at=evaluated_at
         )
         if (
