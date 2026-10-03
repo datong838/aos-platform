@@ -133,11 +133,35 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                        OR NEW.dependency_snapshot_hash IS DISTINCT FROM OLD.dependency_snapshot_hash
                     THEN RAISE EXCEPTION 'CAPABILITY_OPERATION_MIXED' USING ERRCODE='42501';
                     END IF;
+                    IF (to_jsonb(NEW) - ARRAY['status','health','observed_at',
+                        'version','updated_at','s3owaob24_last_operation'])
+                       IS DISTINCT FROM
+                       (to_jsonb(OLD) - ARRAY['status','health','observed_at',
+                        'version','updated_at','s3owaob24_last_operation'])
+                    THEN RAISE EXCEPTION 'CAPABILITY_UPDATE_COLUMN_FORBIDDEN' USING ERRCODE='42501';
+                    END IF;
                     NEW.s3owaob24_last_operation := 'capability_binding.update';
                   ELSIF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at
                      AND NEW.last_evaluated_at IS NOT NULL
                      AND NEW.dependency_snapshot_hash IS NOT NULL
                      AND NEW.readiness_expires_at > NEW.last_evaluated_at THEN
+                    IF (to_jsonb(NEW) - ARRAY['provider_ref','model_route_ref',
+                        'runtime_policy_ref','eval_gate_ref','eval_contract_ref',
+                        'license_evidence_refs','data_dependency_refs',
+                        'tool_dependency_refs','budget_policy_ref','allow_degraded',
+                        'dependency_snapshot_hash','operational_readiness',
+                        'readiness_reasons','last_evaluated_at','readiness_expires_at',
+                        'version','updated_at','s3owaob24_last_operation'])
+                       IS DISTINCT FROM
+                       (to_jsonb(OLD) - ARRAY['provider_ref','model_route_ref',
+                        'runtime_policy_ref','eval_gate_ref','eval_contract_ref',
+                        'license_evidence_refs','data_dependency_refs',
+                        'tool_dependency_refs','budget_policy_ref','allow_degraded',
+                        'dependency_snapshot_hash','operational_readiness',
+                        'readiness_reasons','last_evaluated_at','readiness_expires_at',
+                        'version','updated_at','s3owaob24_last_operation'])
+                    THEN RAISE EXCEPTION 'CAPABILITY_EVALUATE_COLUMN_FORBIDDEN' USING ERRCODE='42501';
+                    END IF;
                     NEW.s3owaob24_last_operation := 'capability_binding.evaluate';
                   ELSE
                     RAISE EXCEPTION 'CAPABILITY_OPERATION_SHAPE_REQUIRED' USING ERRCODE='42501';
@@ -313,6 +337,24 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                     receipt(conn, "capability_binding.evaluate", "b27-eval-first",
                             revision="4")
                     receipt(conn, "capability_binding.evaluate", "b27-eval-duplicate",
+                            revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET status='revoked',
+                        secret_ref='secret://test-only-tamper',version=version+1
+                        WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.update", "b28-update-extra-column",
+                            revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET version=version+1,
+                        last_evaluated_at=now()+interval '1 second',
+                        readiness_expires_at=now()+interval '16 minutes',
+                        secret_ref='secret://test-only-tamper'
+                        WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.evaluate", "b28-eval-extra-column",
                             revision="4")
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with login(issuer) as conn:
