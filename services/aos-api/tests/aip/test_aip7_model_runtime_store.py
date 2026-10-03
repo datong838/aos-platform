@@ -31,6 +31,7 @@ from aos_api.aip_model_runtime_store import (
     canonical_hash,
     evaluation_candidate_ref,
 )
+from aos_api.aip_provider_plugin_authority import ProviderPluginAuthority
 from aos_api.aip_eval_authority_store import AipEvalGateDependencyBlocked
 from aos_api.aip_runtime_guard_policy_contracts import (
     DataClassificationPolicyRevisionCreate,
@@ -306,9 +307,11 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
     cleanup()
     store = AipModelRuntimeStore()
     try:
+        approved_plugin = ProviderPluginAuthority().get(SCOPE, "agnes-text")
         provider_without_guards = hashed(ProviderInstanceRevision, dict(
             tenant=TENANT, providerInstanceId=SUFFIX, revision=1,
-            pluginRef=ref("ProviderPluginRevision", "test:plugin", "1" * 64),
+            pluginRef=ref("ProviderPluginRevision", approved_plugin.provider_plugin_id,
+                          approved_plugin.content_hash, approved_plugin.revision),
             endpointProfile=ProviderEndpointProfile(baseUrl="https://provider.invalid/v1", region="cn", timeoutMs=10_000),
             secretRef="vault://aos/org-org/test-provider", secretVersion="1",
             egressPolicyRef=ref("EgressPolicyRevision", "test:egress", "2" * 64),
@@ -335,6 +338,18 @@ def test_store_persists_exact_chain_replays_receipt_and_isolates_tenant() -> Non
                 timeoutMs=10_000,
             ).model_dump(mode="json", by_alias=True),
         )
+        unapproved_plugin = rehashed(
+            provider, pluginRef=ref("ProviderPluginRevision", "test:plugin", "1" * 64)
+            .model_dump(mode="json", by_alias=True),
+        )
+        with pytest.raises(ModelRuntimeDependencyBlocked, match="provider plugin"):
+            store.publish_provider(SCOPE, SUFFIX, "provider-unapproved-plugin", unapproved_plugin)
+        with pytest.raises(ModelRuntimeNotFound):
+            store.get_provider(SCOPE, SUFFIX)
+        with psycopg.connect(get_dsn()) as conn:
+            assert conn.execute("""SELECT count(*) FROM aip_model_runtime_receipt
+                WHERE org_id=%s AND project_id=%s AND operation='provider_instance.publish'
+                  AND idempotency_key='provider-unapproved-plugin'""", SCOPE.key).fetchone()[0] == 0
         stored_provider = store.publish_provider(SCOPE, SUFFIX, "provider-1", provider)
         assert store.publish_provider(SCOPE, SUFFIX, "provider-1", provider) == stored_provider
         with pytest.raises(ModelRuntimeIdempotencyConflict):

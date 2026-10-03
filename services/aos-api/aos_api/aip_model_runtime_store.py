@@ -40,6 +40,7 @@ from aos_api.aip_eval_authority_store import (
     AipEvalAuthorityStore,
     AipEvalGateDependencyBlocked,
 )
+from aos_api.aip_provider_plugin_authority import ProviderPluginAuthority, ProviderPluginAuthorityError
 from aos_api.tenant_scope import TenantScope
 
 ConnectFactory = Callable[..., AbstractContextManager[Any]]
@@ -147,6 +148,10 @@ class AipModelRuntimeStore:
         )
 
     def publish_provider(self, scope: TenantScope, actor: str, key: str, item: ProviderInstanceRevision, *, expected_version: int = 0) -> ProviderInstanceRevision:
+        try:
+            ProviderPluginAuthority().validate_ref(scope, item.plugin_ref)
+        except ProviderPluginAuthorityError as exc:
+            raise ModelRuntimeDependencyBlocked(f"provider plugin {exc.code}") from None
         try:
             self._guard_policy_store.require_provider_dependencies(scope, item)
         except GuardPolicyDependencyBlocked as exc:
