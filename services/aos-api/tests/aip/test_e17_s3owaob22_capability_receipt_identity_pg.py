@@ -86,13 +86,14 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
     def flush_guards(conn):
         conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
 
-    def insert_binding(conn, binding):
+    def insert_binding(conn, binding, *, status="provisioning", version=1):
         conn.execute("""INSERT INTO aip_capability_binding(
             org_id,project_id,binding_id,capability_ref,secret_ref,health,
             network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
             status,version)
             VALUES('org-org','dev-project',%s,'{}'::jsonb,'secret://test-only',
-                   'unknown','test-only','test-only',1000,1,'provisioning',1)""", (binding,))
+                   'unknown','test-only','test-only',1000,1,%s,%s)""",
+            (binding, status, version))
 
     with psycopg.connect(dsn, autocommit=True) as owner:
         owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','formal') ON CONFLICT DO NOTHING")
@@ -126,6 +127,15 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 SET search_path=pg_catalog AS $$
                 BEGIN
                   IF TG_OP='INSERT' THEN
+                    IF NEW.status<>'provisioning' OR NEW.health<>'unknown'
+                       OR NEW.version<>1 OR NEW.observed_at IS NOT NULL
+                       OR NEW.last_evaluated_at IS NOT NULL
+                       OR NEW.dependency_snapshot_hash IS NOT NULL
+                       OR NEW.operational_readiness<>'unknown'
+                       OR NEW.readiness_expires_at IS NOT NULL
+                    THEN RAISE EXCEPTION 'CAPABILITY_CREATE_INITIAL_STATE_REQUIRED'
+                        USING ERRCODE='42501';
+                    END IF;
                     NEW.s3owaob24_last_operation := 'capability_binding.create';
                   ELSIF NEW.status IS DISTINCT FROM OLD.status
                      OR NEW.health IS DISTINCT FROM OLD.health THEN
@@ -300,6 +310,16 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 set_scope(conn)
                 insert_binding(conn, "b22-binding")
                 receipt(conn, "capability_binding.create", "b22-created")
+            for binding, status, version in (
+                ("b29-active-create", "active", 1),
+                ("b29-version-two-create", "provisioning", 2),
+            ):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with login(issuer) as conn:
+                        set_scope(conn)
+                        insert_binding(conn, binding, status=status, version=version)
+                        receipt(conn, "capability_binding.create", binding,
+                                binding=binding, revision=str(version))
             with login(issuer) as conn:
                 set_scope(conn)
                 conn.execute("""UPDATE aip_capability_binding SET status='suspended',
