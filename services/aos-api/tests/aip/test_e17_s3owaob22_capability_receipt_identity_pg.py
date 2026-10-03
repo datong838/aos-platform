@@ -158,6 +158,12 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                        OR session_user<>{} OR NEW.status<>'applied'
                        OR NEW.result_ref->>'resourceId' IS NULL
                        OR NEW.result_ref->>'revision' IS NULL
+                       OR (SELECT count(*) FROM public.aip_agent_registry_receipt r
+                           WHERE r.org_id=NEW.org_id AND r.project_id=NEW.project_id
+                             AND r.operation LIKE 'capability_binding.%'
+                             AND r.result_ref->>'resourceId'=NEW.result_ref->>'resourceId'
+                             AND r.result_ref->>'revision'=NEW.result_ref->>'revision'
+                             AND r.xmin::text=pg_current_xact_id()::text) <> 1
                        OR NOT EXISTS (
                          SELECT 1 FROM public.aip_capability_binding b
                          WHERE b.org_id=NEW.org_id AND b.project_id=NEW.project_id
@@ -208,7 +214,14 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                   ELSE
                     RAISE EXCEPTION 'CAPABILITY_OPERATION_SHAPE_REQUIRED' USING ERRCODE='42501';
                   END IF;
-                  IF session_user<>{} OR NOT EXISTS (
+                  IF session_user<>{}
+                     OR (SELECT count(*) FROM public.aip_agent_registry_receipt r
+                         WHERE r.org_id=NEW.org_id AND r.project_id=NEW.project_id
+                           AND r.operation LIKE 'capability_binding.%'
+                           AND r.result_ref->>'resourceId'=NEW.binding_id
+                           AND r.result_ref->>'revision'=NEW.version::text
+                           AND r.xmin::text=pg_current_xact_id()::text) <> 1
+                     OR NOT EXISTS (
                       SELECT 1 FROM public.aip_agent_registry_receipt r
                        WHERE r.org_id=NEW.org_id AND r.project_id=NEW.project_id
                          AND r.operation=expected_operation
@@ -289,6 +302,17 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                         last_evaluated_at=now()+interval '1 second',
                         version=version+1 WHERE binding_id='b22-binding'""")
                     receipt(conn, "capability_binding.update", "b26-mixed-update",
+                            revision="4")
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with login(issuer) as conn:
+                    set_scope(conn)
+                    conn.execute("""UPDATE aip_capability_binding SET version=version+1,
+                        last_evaluated_at=now()+interval '1 second',
+                        readiness_expires_at=now()+interval '16 minutes'
+                        WHERE binding_id='b22-binding'""")
+                    receipt(conn, "capability_binding.evaluate", "b27-eval-first",
+                            revision="4")
+                    receipt(conn, "capability_binding.evaluate", "b27-eval-duplicate",
                             revision="4")
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 with login(issuer) as conn:
