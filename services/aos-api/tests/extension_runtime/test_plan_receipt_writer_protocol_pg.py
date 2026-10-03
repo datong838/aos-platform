@@ -4,15 +4,22 @@ This does not install a production migration or provision formal credentials.
 """
 
 import ast
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from uuid import uuid4
 
 import psycopg
 from psycopg import sql
+from psycopg.rows import dict_row
 import pytest
 
-from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_production_contract_store import (
+    AipProductionContractStore, ProductionContractIdempotencyConflict,
+)
+from aos_api.aip_production_contracts import (
+    ContractReadiness, CreateEvalContractRequest, ExactRevisionRef,
+)
 from aos_api.tenant_scope import TenantScope
 from current_configuration_sources_case import _migration, source_case
 from test_lifecycle_pg import database
@@ -324,6 +331,172 @@ def test_all_mapped_receipt_operations_have_one_exact_issuer(protocol):
             conn.execute('''INSERT INTO aip_responsibility_plan_head
                 (org_id,project_id,plan_id,current_revision,version)
                 VALUES(%s,%s,'contract-cannot-issue-plan',1,1)''', SCOPE.key)
+
+
+@pytest.fixture
+def original_contract_database(database):
+    # The original Store explicitly selects public.* on replay; use a separate
+    # disposable database in the dedicated test container, never the current DB.
+    dbname = 's3owh_' + uuid4().hex[:16]
+    contract_role = 's3owh_contract_' + uuid4().hex[:12]
+    with psycopg.connect(host='127.0.0.1', port=18432, user='postgres',
+                         dbname='postgres', autocommit=True) as root:
+        root.execute(sql.SQL('CREATE DATABASE {}').format(sql.Identifier(dbname)))
+        try:
+            root.execute(sql.SQL('CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS').format(
+                sql.Identifier(contract_role)))
+            with psycopg.connect(host='127.0.0.1', port=18432, user='postgres',
+                                 dbname=dbname, autocommit=True) as admin:
+                admin.execute('''CREATE TABLE twa_workspace(
+                    org_id text NOT NULL, project_id text NOT NULL,
+                    PRIMARY KEY(org_id,project_id))''')
+                admin.execute('INSERT INTO twa_workspace VALUES(%s,%s)', SCOPE.key)
+                admin.execute('''CREATE TABLE aip_task(
+                    org_id text NOT NULL, project_id text NOT NULL, task_id text NOT NULL,
+                    PRIMARY KEY(org_id,project_id,task_id))''')
+                admin.execute('''CREATE FUNCTION guard_aip4_append_only() RETURNS trigger
+                    LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'APPEND_ONLY'; END $$''')
+                _migration(admin, 'aip4_002_eval_pack_registry.py', 's3owh_suite')
+                _migration(admin, 'w2_002_eval_responsibility.py', 's3owh_eval')
+                _migration(admin, 'w2_001_brief_evidence.py', 's3owh_receipt')
+                admin.execute('''INSERT INTO aip_eval_suite_revision
+            (org_id,project_id,suite_id,revision,content_hash,target_ref,
+             dataset_ref,judge_ref,cases,gate_threshold,actor)
+            VALUES(%s,%s,'isolated-suite',1,%s,'{}','{}','{}','[{}]',1.0,'isolated')''',
+                    (*SCOPE.key, 'a' * 64))
+                admin.execute(sql.SQL('GRANT USAGE ON SCHEMA public TO {}').format(
+                    sql.Identifier(contract_role)))
+                for table, privileges in (
+                    ('aip_eval_suite_revision', 'SELECT'),
+                    ('aip_eval_contract_head', 'SELECT,INSERT,UPDATE'),
+                    ('aip_eval_contract_revision', 'SELECT,INSERT'),
+                    ('aip_production_contract_receipt', 'SELECT,INSERT'),
+                ):
+                    admin.execute(sql.SQL('GRANT {} ON {} TO {}').format(
+                        sql.SQL(privileges), sql.Identifier(table),
+                        sql.Identifier(contract_role)))
+                    admin.execute(sql.SQL('''CREATE POLICY {} ON {} TO {}
+                        USING(org_id=current_setting('aos.org_id',true)
+                          AND project_id=current_setting('aos.project_id',true))
+                        WITH CHECK(org_id=current_setting('aos.org_id',true)
+                          AND project_id=current_setting('aos.project_id',true))''').format(
+                        sql.Identifier('s3owh_' + table), sql.Identifier(table),
+                        sql.Identifier(contract_role)))
+                admin.execute('''REVOKE INSERT,UPDATE,DELETE ON
+                    aip_eval_contract_head,aip_eval_contract_revision,
+                    aip_production_contract_receipt FROM aos_runtime''')
+                issuer = sql.Literal(contract_role).as_string(admin)
+                admin.execute(f'''CREATE FUNCTION s3owh_guard() RETURNS trigger
+                    LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog,public AS $$
+                    BEGIN
+                      IF TG_OP='DELETE' THEN
+                        RAISE EXCEPTION 'ISSUER_DELETE_FORBIDDEN' USING ERRCODE='42501';
+                      END IF;
+                      IF session_user<>{issuer} OR current_user<>{issuer}
+                         OR NEW.org_id IS DISTINCT FROM current_setting('aos.org_id',true)
+                         OR NEW.project_id IS DISTINCT FROM current_setting('aos.project_id',true) THEN
+                        RAISE EXCEPTION 'CONTRACT_ISSUER_REQUIRED' USING ERRCODE='42501';
+                      END IF;
+                      IF TG_TABLE_NAME='aip_production_contract_receipt' THEN
+                        IF NEW.operation NOT IN ('eval_contract.create',
+                                'eval_contract.revise','eval_contract.freeze')
+                           OR NEW.result_ref->>'resourceType'<>'EvalContractRevision'
+                           OR NOT EXISTS (
+                             SELECT 1 FROM aip_eval_contract_head h
+                             JOIN aip_eval_contract_revision r
+                               ON r.org_id=h.org_id AND r.project_id=h.project_id
+                              AND r.contract_id=h.contract_id
+                              AND r.revision=h.current_revision
+                             WHERE h.org_id=NEW.org_id AND h.project_id=NEW.project_id
+                               AND h.contract_id=NEW.result_ref->>'resourceId'
+                               AND r.revision=(NEW.result_ref->>'revision')::bigint
+                               AND r.content_hash=NEW.result_ref->>'contentHash') THEN
+                          RAISE EXCEPTION 'CONTRACT_RECEIPT_UNPAIRED' USING ERRCODE='42501';
+                        END IF;
+                        IF NEW.idempotency_key='forced-rollback' THEN
+                          RAISE EXCEPTION 'FORCED_ROLLBACK';
+                        END IF;
+                      END IF;
+                      RETURN NEW;
+                    END $$''')
+                for table, actions in (
+                    ('aip_eval_contract_head', 'INSERT OR UPDATE OR DELETE'),
+                    ('aip_eval_contract_revision', 'INSERT OR DELETE'),
+                    ('aip_production_contract_receipt', 'INSERT OR DELETE'),
+                ):
+                    admin.execute(sql.SQL('CREATE TRIGGER {} BEFORE {} ON {} '
+                        'FOR EACH ROW EXECUTE FUNCTION s3owh_guard()').format(
+                            sql.Identifier('s3owh_' + table), sql.SQL(actions),
+                            sql.Identifier(table)))
+                yield dbname, contract_role
+        finally:
+            root.execute(sql.SQL('DROP DATABASE {} WITH (FORCE)').format(
+                sql.Identifier(dbname)))
+            root.execute(sql.SQL('DROP ROLE IF EXISTS {}').format(
+                sql.Identifier(contract_role)))
+
+
+def test_original_eval_contract_store_issues_paired_receipt_with_restricted_login(
+        original_contract_database):
+    dbname, contract_role = original_contract_database
+    request = CreateEvalContractRequest(
+        suite_ref=ExactRevisionRef(resource_type='EvalSuiteRevision',
+            resource_id='isolated-suite', revision=1, content_hash='a' * 64),
+        artifact_schema_ref=ResourceRef(resource_type='Schema',
+            resource_id='isolated-artifact', revision='1', authority='aip'),
+        severity_thresholds={'critical': 1.0}, gate_policy={'mode': 'all'},
+        return_mapping={'critical': 'draft'}, override_policy={'allowed': False},
+    )
+    with psycopg.connect(host='127.0.0.1', port=18432, user=contract_role,
+                         dbname=dbname, row_factory=dict_row) as writer:
+        writer.execute("SELECT set_config('aos.org_id',%s,false)", (SCOPE.org_id,))
+        writer.execute("SELECT set_config('aos.project_id',%s,false)", (SCOPE.project_id,))
+        writer.commit()
+        assert writer.execute('SELECT session_user,current_user').fetchone() == {
+            'session_user': contract_role, 'current_user': contract_role}
+        store = AipProductionContractStore(connect_factory=lambda _: nullcontext(writer))
+        issued = store.create_eval_contract(SCOPE, 'isolated', 'original-eval-create', request)
+        assert issued.contract_id.startswith('eval-contract-')
+        assert issued.readiness is ContractReadiness.BLOCKED
+        replay = store.create_eval_contract(SCOPE, 'isolated', 'original-eval-create', request)
+        assert replay.contract_id == issued.contract_id
+        with pytest.raises(ProductionContractIdempotencyConflict):
+            store.create_eval_contract(SCOPE, 'isolated', 'original-eval-create',
+                request.model_copy(update={'gate_policy': {'mode': 'any'}}))
+        rows = writer.execute('''SELECT h.contract_id,h.current_revision,
+                r.content_hash,receipt.result_ref
+            FROM aip_eval_contract_head h
+            JOIN aip_eval_contract_revision r USING(org_id,project_id,contract_id)
+            JOIN aip_production_contract_receipt receipt
+              ON receipt.org_id=h.org_id AND receipt.project_id=h.project_id
+             AND receipt.operation='eval_contract.create'
+             AND receipt.idempotency_key='original-eval-create'
+            WHERE h.org_id=%s AND h.project_id=%s''', SCOPE.key).fetchall()
+        assert len(rows) == 1
+        assert rows[0]['result_ref']['resourceId'] == issued.contract_id
+        assert rows[0]['result_ref']['contentHash'] == rows[0]['content_hash']
+        before = writer.execute('SELECT count(*) AS n FROM aip_eval_contract_head').fetchone()['n']
+        with pytest.raises(psycopg.Error, match='FORCED_ROLLBACK'):
+            store.create_eval_contract(SCOPE, 'isolated', 'forced-rollback', request)
+        writer.rollback()
+        assert writer.execute('SELECT count(*) AS n FROM aip_eval_contract_head').fetchone()['n'] == before
+        assert writer.execute('SELECT count(*) AS n FROM aip_eval_contract_revision').fetchone()['n'] == before
+        assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+            WHERE idempotency_key='forced-rollback' ''').fetchone()['n'] == 0
+        with pytest.raises(psycopg.errors.InsufficientPrivilege), writer.transaction():
+            writer.execute('''INSERT INTO aip_eval_contract_head
+                (org_id,project_id,contract_id,current_revision,version)
+                VALUES('dev-org','dev-project','cross-tenant-contract',1,1)''')
+        with pytest.raises(psycopg.errors.InsufficientPrivilege,
+                           match='CONTRACT_RECEIPT_UNPAIRED'), writer.transaction():
+            writer.execute('''INSERT INTO aip_production_contract_receipt
+                (org_id,project_id,receipt_id,operation,idempotency_key,
+                 request_hash,result_ref,created_by)
+                VALUES(%s,%s,'unpaired-receipt','eval_contract.create',
+                  'unpaired-key',%s,%s::jsonb,'isolated')''',
+                (*SCOPE.key, 'a' * 64,
+                 '{"resourceType":"EvalContractRevision","resourceId":"missing",'
+                 '"revision":1,"contentHash":"' + 'b' * 64 + '"}'))
 
 
 def _receipt(conn, operation, key, *, result=None):
