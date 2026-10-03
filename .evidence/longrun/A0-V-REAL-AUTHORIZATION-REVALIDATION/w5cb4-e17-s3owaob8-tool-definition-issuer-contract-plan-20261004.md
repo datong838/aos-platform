@@ -7,7 +7,7 @@
 ## 文件级实施顺序与退出门
 
 1. **签名来源合同**：在正式 bundle 制品/安装方案中冻结 ToolDefinition 的 canonical 字段、content hash、签名链、sourceRef、tenant/install epoch、Owner 批准及撤销语义；读取当前四制品并做隔离签名正反例。缺正式签名制品时不得造“当前正式 Tool”。计划涉及上位制品/公共 DTO，先复审协议，再改代码。
-2. **发行身份与事务**：设计独立非 owner、非 runtime 的 Tool issuer DB 登录，最小 INSERT/UPDATE ToolBinding 与 exact operation RegistryReceipt 同一事务；普通 runtime 对两表均不得伪造发行。当前真库不做角色/ACL/migration 写。先在随机 test-only PG 证明独立角色、错租户、重复同键、版本冲突、故障回滚和 runtime 越权拒绝。
+2. **发行身份与事务**：设计独立非 owner、非 runtime 的 Tool issuer DB 登录，最小 INSERT/UPDATE ToolBinding 与 exact operation RegistryReceipt 同一事务；普通 runtime 对两表均不得伪造 Tool 发行。2026-10-04 原库只读 ACL 回读证明 `aos_runtime` 对 `aip_tool_binding` 有 INSERT/UPDATE，对共享 `aip_agent_registry_receipt` 有 INSERT；该 Receipt 还有其他合法 operation，不能为 Tool 而直接 REVOKE 全表 INSERT。方案需让 ToolBinding 对 runtime 只读，并用 DB 级 operation/session 身份分流或等效防伪协议保护 Tool 专用 Receipt，同时保留其他合法写者。当前真库不做角色/ACL/migration 写。先在随机 test-only PG 证明独立角色、错租户、重复同键、版本冲突、故障回滚和 runtime 越权拒绝。
 3. **应用入口**：在 `services/aos-api/aos_api/aip_assignee_resolution.py`、`aip_assignee_resolution_store.py`、`routers/aip_assignee_authority.py` 仅增精确来源校验/issuer 组合；保留 disabled 撤销和旧数据只读，不以一刀切禁用 active 作为正向通过。RED 使用现有 `tests/aip/test_e17_s3owaob6_tool_active_source_red.py` 与发行 Receipt strict xfail，先精确复现，再最小改动。
 4. **验证与切换**：目标/相邻/累计回归、签名制品+隔离 PG 正反链、OpenAPI/DTO drift；当前生产启用须外部正式签名来源、私有凭据、独立备份完整恢复和零执行窗口全部通过。当前真库只读，Host/worker/Provider关；浏览器仅在有用户可见变化时复验。
 
