@@ -97,6 +97,25 @@ def test_current_binding_activates_with_original_registry_receipt():
     assert receipt.result_ref.resource_id == instance_id
 
 
+def test_binding_expired_before_write_transaction_cannot_activate():
+    old_admission_time = datetime.now(UTC) - timedelta(minutes=20)
+    instance_id, binding_id = _prerequisites(old_admission_time)
+    # The prerequisite snapshot was valid at admission but expired ten minutes
+    # before this write transaction.  Receipt time is not a freshness clock.
+    with pytest.raises(AipAgentRegistryTransitionBlocked,
+                       match="fresh active CapabilityBinding"):
+        _activate(AipAgentRegistryStore(), instance_id, binding_id,
+                  old_admission_time)
+    with connect(SCOPE) as conn:
+        assert conn.execute("""SELECT status FROM aip_agent_instance WHERE
+            org_id=%s AND project_id=%s AND instance_id=%s""",
+            (*SCOPE.key, instance_id)).fetchone()["status"] == "provisioning"
+        assert conn.execute("""SELECT count(*) AS n FROM aip_agent_registry_receipt
+            WHERE org_id=%s AND project_id=%s AND operation='agent_instance.update'
+              AND result_ref->>'resourceId'=%s""",
+            (*SCOPE.key, instance_id)).fetchone()["n"] == 0
+
+
 def test_binding_lock_blocks_concurrent_revoke_until_activation_commits():
     now = datetime.now(UTC)
     instance_id, binding_id = _prerequisites(now)

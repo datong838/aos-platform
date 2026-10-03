@@ -171,6 +171,13 @@ class AipAgentInstanceActivationService:
             raise AipAgentRegistryTransitionBlocked(
                 "all activation CapabilityBindings must exist in tenant scope"
             )
+        if lock:
+            # Read the database clock after acquiring the row locks.  The
+            # request timestamp may predate a lock wait and expired readiness.
+            evaluated_at = max(
+                evaluated_at,
+                connection.execute("SELECT clock_timestamp() AS now").fetchone()["now"],
+            )
         for row in rows:
             usable = row["operational_readiness"] == "available" or (
                 row["operational_readiness"] == "degraded"
