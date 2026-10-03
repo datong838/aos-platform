@@ -12,4 +12,10 @@
 3. 生产候选变更仅在完整协议和独立恢复证明充分后决定：预计 Alembic `a0v_136`（下游精确 `a0v_135`）最小加列/触发器/专用 role ACL、`RegistryIssuerConnectionFactory` 预检权限收窄、原 Capability 三写正向。迁移一旦加入 m1，代码头高于当前库，必须先执行独立可恢复备份/克隆全链及零执行窗口，不能强行启动或宣称最新。
 4. 当前原库继续只读。正式私有 issuer/Reader/OIDC/API非owner身份、Owner/Host、八配置和六 Binding 不因隔离测试自动齐备；缺身份时只阻当前实例，转已有配置来源安全代码项。完成时专项/相邻/累计、适用时最新栈重启和浏览器、方案/代码复审、verification、m1精确提交、01/06/D-waves/Prime同步。
 
+## 2026-10-04 全恢复克隆后的方案复审
+
+- 新一致备份已在无网络的 b17 test-only PostgreSQL 容器内独立新库完整恢复；原库与新库均为 `a0v_135`、604 个关系对象、Capability Binding 0、Registry Receipt 6，原有 24 个 AOS 角色的 14,496 项有效关系权限及 590 条 RLS 策略摘要相同。新库复用 b17 的隔离容器与全局角色，不声称为独立新集群；原始 `relacl` 字节不同，但有效权限摘要一致。
+- 三写 Store 的 SQL 差异已核：create 为 INSERT；update 修改 status/health/observed_at；evaluate 修改依赖与 readiness 快照。b24 test-only 的“status/health 不变则 evaluate”分类不充分：在恢复库的回滚事务中，以 `aos_runtime` 角色仅把 Binding.version 从 1 加到 2、readiness 仍 `unknown`、last_evaluated_at 仍 NULL，同时插入 `capability_binding.evaluate` Receipt，现有 schema 接受，随后 ROLLBACK 后两表该试验行均为 0。仅按行差异推断 operation 不能进入正式迁移。
+- 因此本波不新增 `a0v_136`，不打开当前 Capability 写门。下一实施波先冻结不可由普通 runtime 伪造的发行命令/operation 证据、精确写列和历史行兼容合同，在隔离恢复库跑 RED/正反链与回滚；其后才可提出生产迁移候选。此处不把 test-only issuer 或可写 session GUC 当正式权威。
+
 禁止：商城源读取、旧12 Run重放、手工 run_definition、230 L0、dev-org正向写、Host/worker/Provider无正式授权启动、push或清理旧库/卷/备份。Goal 保持 active。
