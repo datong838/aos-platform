@@ -24,7 +24,8 @@ READINESS_READER_LOGIN = "aos_aip_binding_readiness_reader"
 READINESS_READER_TABLES = (
     "aip_capability_revision",  # global catalog; intentionally has no tenant RLS
     "aip_release_gate_decision", "aip_eval_contract_revision",
-    "aip_evidence_bundle_revision", "aip_eval_dataset_revision",
+    "aip_evidence_bundle_revision", "aip_evidence_bundle_revoke_event",
+    "aip_eval_dataset_revision",
     "aip_model_route_head", "aip_model_route_revision",
     "aip_runtime_policy_revision", "aip_registered_model_revision",
     "aip_model_price_snapshot_revision", "aip_provider_instance_revision",

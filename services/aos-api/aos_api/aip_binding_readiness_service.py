@@ -109,21 +109,30 @@ class PostgresBindingDependencyAuthority:
         if not refs:
             return True
         specs = {
-            "EvalDatasetRevision": ("aip_eval_dataset_revision", "dataset_id"),
-            "EvidenceBundleRevision": ("aip_evidence_bundle_revision", "bundle_id"),
+            "EvalDatasetRevision": ("aip_eval_dataset_revision", "dataset_id", False),
+            "EvidenceBundleRevision": ("aip_evidence_bundle_revision", "bundle_id", True),
         }
         with self._connect_factory(scope) as conn:
             for ref in refs:
                 spec = specs.get(ref.asset_type)
                 if spec is None:
                     return False
-                table, id_column = spec
+                table, id_column, has_lifecycle = spec
+                columns = "content_hash,lifecycle" if has_lifecycle else "content_hash"
                 row = conn.execute(
-                    f"""SELECT content_hash FROM {table}
+                    f"""SELECT {columns} FROM {table}
                         WHERE org_id=%s AND project_id=%s AND {id_column}=%s AND revision=%s""",
                     (*scope.key, ref.asset_id, ref.revision),
                 ).fetchone()
-                if not row or row["content_hash"] != ref.content_hash:
+                if (not row or row["content_hash"] != ref.content_hash
+                        or (has_lifecycle and row["lifecycle"] != "frozen")):
+                    return False
+                if has_lifecycle and conn.execute(
+                    """SELECT 1 FROM aip_evidence_bundle_revoke_event
+                       WHERE org_id=%s AND project_id=%s AND bundle_id=%s
+                         AND revision=%s AND content_hash=%s""",
+                    (*scope.key, ref.asset_id, ref.revision, ref.content_hash),
+                ).fetchone() is not None:
                     return False
         return True
 

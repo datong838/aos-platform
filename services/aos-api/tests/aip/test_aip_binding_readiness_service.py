@@ -208,6 +208,85 @@ def test_budget_authority_requires_current_active_exact_effective_revision(chang
     )
 
 
+@pytest.mark.parametrize(
+    ("lifecycle", "expected"),
+    [("frozen", True), ("withdrawn", False), ("superseded", False)],
+)
+def test_evidence_bundle_data_dependency_stops_when_source_is_withdrawn(
+    lifecycle, expected
+):
+    class Connection:
+        def execute(self, query, params):
+            if "aip_evidence_bundle_revoke_event" in query:
+                assert params == (*PRIMARY.key, "evidence-1", 1, "a" * 64)
+                self.row = None
+            else:
+                assert "aip_evidence_bundle_revision" in query
+                assert params == (*PRIMARY.key, "evidence-1", 1)
+                self.row = {"content_hash": "a" * 64, "lifecycle": lifecycle}
+            return self
+
+        def fetchone(self):
+            return self.row
+
+    @contextmanager
+    def connect(scope):
+        assert scope == PRIMARY
+        yield Connection()
+
+    authority = PostgresBindingDependencyAuthority(connect)
+    evidence = ref("EvidenceBundleRevision", "evidence-1", "a" * 64)
+    assert authority.exact_assets_available(PRIMARY, [evidence]) is expected
+
+
+def test_eval_dataset_dependency_keeps_its_immutable_hash_contract():
+    class Connection:
+        def execute(self, query, params):
+            assert "aip_eval_dataset_revision" in query
+            assert "lifecycle" not in query
+            assert params == (*PRIMARY.key, "dataset-1", 1)
+            return self
+
+        def fetchone(self):
+            return {"content_hash": "b" * 64}
+
+    @contextmanager
+    def connect(scope):
+        assert scope == PRIMARY
+        yield Connection()
+
+    authority = PostgresBindingDependencyAuthority(connect)
+    dataset = ref("EvalDatasetRevision", "dataset-1", "b" * 64)
+    assert authority.exact_assets_available(PRIMARY, [dataset])
+    assert not authority.exact_assets_available(
+        PRIMARY, [ref("EvalDatasetRevision", "dataset-1", "c" * 64)]
+    )
+
+
+def test_frozen_evidence_bundle_with_exact_revocation_is_unavailable():
+    class Connection:
+        def execute(self, query, params):
+            if "aip_evidence_bundle_revoke_event" in query:
+                assert params == (*PRIMARY.key, "evidence-1", 1, "a" * 64)
+                self.row = {"event_id": "revoked-1"}
+            else:
+                assert "aip_evidence_bundle_revision" in query
+                self.row = {"content_hash": "a" * 64, "lifecycle": "frozen"}
+            return self
+
+        def fetchone(self):
+            return self.row
+
+    @contextmanager
+    def connect(scope):
+        assert scope == PRIMARY
+        yield Connection()
+
+    authority = PostgresBindingDependencyAuthority(connect)
+    evidence = ref("EvidenceBundleRevision", "evidence-1", "a" * 64)
+    assert not authority.exact_assets_available(PRIMARY, [evidence])
+
+
 def test_dependency_snapshot_hash_is_insensitive_to_set_like_ref_order():
     capability = ref("CapabilityRevision", "wiki.search", HASHES["cap"])
     first = dependencies()
