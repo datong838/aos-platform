@@ -17,4 +17,5 @@
 
 - 先核全备 TOC 与可恢复性、克隆可用容量、已有恢复脚本是否适配当前真实库（旧脚本若固定 `a0v_092` 不可直接运行）。然后形成精确维护命令/回滚文档，RED 先证明无角色时原连接拒绝。
 - 初查：当日独立全备文件 4.0 MiB、`pg_restore --list` 5905 行且退出0；宿主可用 115 GiB、当前 Docker 数据卷 2.762 GB。TOC 可读和容量充足不等于全库恢复演练，下一步仍须隔离恢复并核表/行/Receipt 摘要。
+- 2026-10-04 演练对象固定为 `colima-aos-a0v-test-only/aos-a0v-test-pg` 的新库 `aos_e17_s3owan_restore_20261004`，与当前 `colima-aos-extension/aos-a0v-recovery-pg` 物理卷分离。前检目标库不存在（0）、隔离盘可用 10.1 GiB、PG16.15、备份 SHA256 与上段一致，源库只读核 `a0v_135` 和 592 张 public 表。新库从 template0 创建，立即撤 PUBLIC CONNECT；用 `pg_restore --no-owner --no-acl --exit-on-error` 从该固定备份一次恢复。失败保留现场只读诊断，不覆盖或删除任何旧库。
 - 正式库角色创建前，必须完成独立克隆全链和零执行窗口；仍保留 `a0v_135` 当前库与 Host 禁入。任何未知副作用只读对账，不重试写入。
