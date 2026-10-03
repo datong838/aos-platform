@@ -4,6 +4,13 @@
 
 - 231-4 要求共享 PostgreSQL 显式表所有权、租户 RLS、审计与业务 runtime 分离；BIND-1 31 要求 CapabilityBinding tenant scoped、expected-version CAS、幂等 Receipt。b22 `m1@ca7ec63a` 只在一次性完整迁移 test DB 证明独立 issuer/同事务配对，保留原缺口 strict xfail。
 - 原 `AipCapabilityBindingService.create/update/evaluate` 分别写 Binding 版本 `1`/`version+1`/`version+1`，随后同事务 `_insert_receipt`；结果类型依次为 `CapabilityBinding`、`CapabilityBinding`、`CapabilityBindingReadiness`。共享 `AipAgentRegistryStore._ref()` 把所有 `ResourceRef.revision` 固定为 `None`，因此 b22 test-only 显式版本正向并非原 Store 正向。AgentInstance create/update 也复用 `_insert_receipt`；其他 Store 操作和迁移中合法 operation 需逐项列全，不能凭两条示例给全表改 ACL。
+- 本波首个原 Store RED：现有独立 issuer 创建 Binding 的基线 `1 passed`；单独新增结果版本断言后 `1 failed`，落库 `version=1` 而 Receipt `revision=None`。相邻 `5 passed, 2 xfailed`（含 b22 未配对缺口）。
+
+## 最小版本写入合同（不包含权限放行）
+
+- 共享 `_insert_receipt` 仅追加**可选** `result_revision` 参数，默认 `None`；AgentInstance 和继承此 Store 的 Skill/Run/Handoff 等现有调用不变。`_ref` 同样默认 `None`，只在 Capability 三个现有事务已 `RETURNING` 的行上，将 `row['version']` 转成十进制字符串写入结果引用；不新增数据库字段、不改旧回执与幂等重放回读。
+- Capability create/update/evaluate 写入都使用该操作自身 `RETURNING` 的版本，不二次查询、不信调用者提交的 expected-version 替代实际版本。源引用保持现形，结果类型保持现形。普通 operation 不获新权限，b20 当前实例写503继续生效。
+- 正式 DB 双向配对守卫、专用 issuer ACL/撤销仍须后续独立迁移门；即使版本 RED 转绿，也只算生产 DTO 前置，不算 Receipt 防伪或首链。
 
 ## 文件级施工顺序
 
