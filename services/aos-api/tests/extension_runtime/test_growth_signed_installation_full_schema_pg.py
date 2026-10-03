@@ -59,6 +59,7 @@ from aos_api.extension_runtime.release_revalidation import RuntimeReleaseRevalid
 from aos_api.extension_runtime.schema_conditions import CurrentSchemaConditions, admit_schema_requirements
 from aos_api.extension_runtime.schema_registry import apply_once, require_installed
 from aos_api.tenant_scope import TenantScope
+from plan_restricted_issuer_case import assert_original_plan_store_with_restricted_login
 
 
 pytestmark = pytest.mark.skipif(
@@ -190,6 +191,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(tmp_
                 VALUES(%s,%s,%s,'test-bi-plan-active-handoff',1,
                        'active','{}',1,'test-author')""",
                 (*SCOPE.key, instance_id))
+    if growth_version == '1.13.0':
+        assert_original_plan_store_with_restricted_login(selected_template, signed, trust)
     principal = Principal(
         subject='test-author', org_id=SCOPE.org_id, project_id=SCOPE.project_id,
         roles=['admin'], token_kind='oidc',
