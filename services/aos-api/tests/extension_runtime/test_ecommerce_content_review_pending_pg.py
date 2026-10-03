@@ -92,6 +92,7 @@ from aos_api.ecommerce_growth_content_return_target import (
 from aos_api.ecommerce_content_repair_brief_authority import (
     require_repair_brief, require_frozen_repair_brief,
 )
+from aos_api.extension_runtime.runtime_configuration_candidates import read_candidates
 from aos_api.ecommerce_workshop_feedback_read_model import EcommerceWorkshopFeedbackReadModel
 from aos_api.tenant_scope import TenantScope
 from test_ecommerce_analyst_growth_plan_full_graph import SCOPE, disposable_database, insert
@@ -984,8 +985,23 @@ def test_original_settled_artifact_runs_current_content_subject_eval(review_deci
                 profile="TEST_HUMAN_REVIEW", templateRef={
                     "resourceType": "ResponsibilityTemplateRevision", "resourceId": "test-template",
                     "revision": 1, "contentHash": "a" * 64}, slots=[slot]))
+        with connect(SCOPE) as conn:
+            before_candidates = read_candidates(conn, SCOPE).counts
+            other_candidates = read_candidates(conn, other_scope).counts
         frozen = responsibility_store.freeze_responsibility_plan(SCOPE, "fixture-reviewer",
             draft.plan_id, draft.version, "content-p2g-freeze-review-responsibility")
+        with connect(SCOPE) as conn:
+            after_candidates = read_candidates(conn, SCOPE).counts
+            assert read_candidates(conn, other_scope).counts == other_candidates
+            assert conn.execute("""SELECT count(*) AS n FROM aip_production_contract_receipt
+                WHERE org_id=%s AND project_id=%s
+                  AND operation='responsibility_plan.freeze'
+                  AND result_ref->>'resourceId'=%s
+                  AND result_ref->>'revision'=%s""",
+                (*SCOPE.key, frozen.plan_id, str(frozen.revision))).fetchone()["n"] == 1
+        assert after_candidates["responsibility_plans"] == before_candidates["responsibility_plans"] + 1
+        assert {key: value for key, value in after_candidates.items() if key != "responsibility_plans"} == {
+            key: value for key, value in before_candidates.items() if key != "responsibility_plans"}
         reviewer_projection = {
             "responsibilityPlanRef": {"resourceType": "ResponsibilityPlanRevision",
                 "resourceId": frozen.plan_id, "revision": frozen.revision,
