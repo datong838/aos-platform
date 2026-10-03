@@ -24,7 +24,8 @@ ISSUER_LOGIN = "aos_aip_registry_issuer"
 SKILL_ISSUER_LOGIN = "aos_aip_skill_issuer"
 CAPABILITY_ISSUER_LOGIN = "aos_aip_capability_issuer"
 _ISSUER_LOGINS = {"agent": ISSUER_LOGIN, "skill": SKILL_ISSUER_LOGIN,
-                  "capability": CAPABILITY_ISSUER_LOGIN}
+                  "capability": CAPABILITY_ISSUER_LOGIN,
+                  "capability_lifecycle": CAPABILITY_ISSUER_LOGIN}
 _DATABASE = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
 _FORBIDDEN_PG_ENV = ("PGPASSWORD", "PGPASSFILE", "PGSERVICE", "PGSERVICEFILE", "PGOPTIONS")
 _OPTIONS = ("-c statement_timeout=10000 -c lock_timeout=5000 "
@@ -62,7 +63,7 @@ class RegistryIssuerDatabaseConfig:
 
 
 def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantScope,
-                      command_family: Literal["agent", "skill", "capability"]) -> None:
+                      command_family: Literal["agent", "skill", "capability", "capability_lifecycle"]) -> None:
     row = conn.execute("""SELECT current_database() AS database,
       session_user AS login,current_user AS role,
       current_setting('aos.org_id',true) AS org_id,
@@ -150,10 +151,10 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
             or (command_family == "skill" and (
                 not row["instance_rls"] or not row["instance_select"]
                 or row["instance_insert"] or row["instance_update"]))
-            or (command_family == "capability" and (
+            or (command_family in {"capability", "capability_lifecycle"} and (
                 row["instance_select"] or row["instance_insert"]
                 or row["instance_update"]))
-            or (command_family != "capability" and not row["template_select"])
+            or (command_family not in {"capability", "capability_lifecycle"} and not row["template_select"])
             or row["cross_domain_write"] or row["publication_write"] or conn.read_only
             or (command_family == "skill" and (
                 not row["skill_rls"] or not row["skill_template_select"]
@@ -164,11 +165,12 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
                 or row["skill_delete"]))
             or (command_family != "skill" and (
                 row["skill_insert"] or row["skill_update"] or row["skill_delete"]))
-            or (command_family == "capability" and (
+            or (command_family in {"capability", "capability_lifecycle"} and (
                 not row["capability_rls"] or not row["capability_revision_select"]
                 or not row["capability_select"] or not row["capability_insert"]
-                or row["capability_update"] or row["capability_delete"]))
-            or (command_family != "capability" and (
+                or row["capability_delete"]
+                or row["capability_update"] != (command_family == "capability_lifecycle")))
+            or (command_family not in {"capability", "capability_lifecycle"} and (
                 row["capability_insert"] or row["capability_update"]
                 or row["capability_delete"]))):
         raise RegistryIssuerConnectionBlocked("REGISTRY_ISSUER_DATABASE_IDENTITY_REQUIRED")
@@ -177,7 +179,7 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
 @dataclass(frozen=True)
 class RegistryIssuerConnectionFactory:
     config: RegistryIssuerDatabaseConfig
-    command_family: Literal["agent", "skill", "capability"] = "agent"
+    command_family: Literal["agent", "skill", "capability", "capability_lifecycle"] = "agent"
 
     @contextmanager
     def __call__(self, scope: TenantScope) -> Iterator:

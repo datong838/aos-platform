@@ -1,0 +1,229 @@
+"""E17-s3o-o: real, least-privileged Capability readiness catalog/scoped reads."""
+
+from __future__ import annotations
+
+import os
+import secrets
+import tempfile
+from contextlib import contextmanager
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import uuid4
+
+import psycopg
+import pytest
+from psycopg import sql
+from psycopg.conninfo import conninfo_to_dict
+
+from aos_api.aip_agent_registry_contracts import (
+    EvaluateOperationalBindingRequest, OperationalBindingDependencies,
+    UpdateCapabilityBindingRequest,
+)
+from aos_api.aip_agent_registry_store import (
+    AipAgentRegistryConflict, AipAgentRegistryTransitionBlocked,
+)
+from aos_api.aip_binding_readiness_service import (
+    AipBindingReadinessService, PostgresBindingDependencyAuthority,
+)
+from aos_api.aip_binding_readiness_reader_connection import (
+    READINESS_READER_LOGIN, READINESS_READER_TABLES,
+    ReadinessReaderConnectionBlocked, ReadinessReaderConnectionFactory,
+    ReadinessReaderDatabaseConfig,
+)
+from aos_api.aip_capability_binding_service import AipCapabilityBindingService
+from aos_api.aip_contracts import ResourceRef
+from aos_api.aip_model_runtime_store import AipModelRuntimeStore
+from aos_api.aip_registry_issuer_connection import (
+    RegistryIssuerConnectionBlocked, RegistryIssuerConnectionFactory,
+)
+from aos_api.db import connect, get_dsn
+from aos_api.tenant_scope import TenantScope
+
+from tests.aip.test_e17_s3ol_capability_issuer_pg import capability_case, capability_issuer
+
+
+@pytest.fixture()
+def readiness_reader(capability_case):
+    parts = conninfo_to_dict(get_dsn())
+    database = parts["dbname"]
+    assert database.startswith("aos_test_") and database.endswith("_ti4_test")
+    password = secrets.token_urlsafe(32)
+    with psycopg.connect(get_dsn()) as admin:
+        assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
+                             (READINESS_READER_LOGIN,)).fetchone() is None
+        admin.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
+                      .format(sql.Identifier(READINESS_READER_LOGIN), sql.Literal(password)))
+        admin.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}")
+                      .format(sql.Identifier(READINESS_READER_LOGIN)))
+        for table in READINESS_READER_TABLES:
+            admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
+                          .format(sql.Identifier(table), sql.Identifier(READINESS_READER_LOGIN)))
+            if table != "aip_capability_revision":
+                admin.execute(sql.SQL("""CREATE POLICY s3oo_reader_scope ON {} TO {}
+                    USING (org_id=NULLIF(current_setting('aos.org_id',true),'')
+                       AND project_id=NULLIF(current_setting('aos.project_id',true),''))""")
+                              .format(sql.Identifier(table), sql.Identifier(READINESS_READER_LOGIN)))
+    with tempfile.TemporaryDirectory(prefix="aos-s3oo-reader-") as directory:
+        passfile = Path(directory) / "pgpass"
+        fd = os.open(passfile, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(f"127.0.0.1:5433:{database}:{READINESS_READER_LOGIN}:{password}\n")
+        factory = ReadinessReaderConnectionFactory(ReadinessReaderDatabaseConfig(
+            host="127.0.0.1", port=5433, database=database, passfile=passfile))
+        try:
+            yield factory
+        finally:
+            with psycopg.connect(get_dsn()) as admin:
+                for table in READINESS_READER_TABLES:
+                    if table != "aip_capability_revision":
+                        admin.execute(sql.SQL("DROP POLICY IF EXISTS s3oo_reader_scope ON {}")
+                                      .format(sql.Identifier(table)))
+                admin.execute(sql.SQL("DROP OWNED BY {}")
+                              .format(sql.Identifier(READINESS_READER_LOGIN)))
+                admin.execute(sql.SQL("DROP ROLE {}")
+                              .format(sql.Identifier(READINESS_READER_LOGIN)))
+
+
+def test_reader_global_catalog_and_scoped_dataset_are_read_only(capability_case, readiness_reader):
+    scope, request = capability_case
+    dataset_id = f"s3oo-dataset-{uuid4().hex[:12]}"
+    with connect(scope) as owner:
+        owner.execute("""INSERT INTO aip_eval_dataset_revision
+            (org_id,project_id,dataset_id,revision,content_hash,source_hash,
+             redaction_policy_ref,manifest,actor)
+            VALUES (%s,%s,%s,1,%s,%s,'{}'::jsonb,'{}'::jsonb,'test-only')""",
+            (*scope.key, dataset_id, "a" * 64, "b" * 64))
+        owner.commit()
+    for selected_scope, expected in ((None, 0), (scope, 1),
+                                     (TenantScope("org-org", "other-project"), 0)):
+        with readiness_reader(selected_scope) as reader:
+            identity = reader.execute("""SELECT session_user AS login,current_user AS role,
+                current_setting('transaction_read_only') AS readonly""").fetchone()
+            assert identity == {"login": READINESS_READER_LOGIN,
+                                "role": READINESS_READER_LOGIN, "readonly": "on"}
+            assert reader.execute("SELECT count(*) AS n FROM aip_capability_revision "
+                                  "WHERE capability_id=%s", (request.binding.capability.asset_id,)
+                                  ).fetchone()["n"] == 1
+            assert reader.execute("SELECT count(*) AS n FROM aip_eval_dataset_revision "
+                                  "WHERE dataset_id=%s", (dataset_id,)).fetchone()["n"] == expected
+            assert not reader.execute("""SELECT has_table_privilege(current_user,
+                'aip_eval_dataset_revision','INSERT') AS granted""").fetchone()["granted"]
+            with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+                reader.execute("CREATE TEMP TABLE s3oo_write_probe(id int)")
+
+
+def test_reader_rejects_missing_required_acl(capability_case, readiness_reader):
+    scope, _ = capability_case
+    with connect() as owner:
+        owner.execute(sql.SQL("REVOKE SELECT ON aip_capability_revision FROM {}")
+                      .format(sql.Identifier(READINESS_READER_LOGIN)))
+        owner.commit()
+    with pytest.raises(ReadinessReaderConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with readiness_reader(scope):
+            pass
+
+
+def test_reader_rejects_cross_domain_grant(capability_case, readiness_reader):
+    scope, _ = capability_case
+    with connect() as owner:
+        owner.execute(sql.SQL("GRANT SELECT ON aip_capability_binding TO {}")
+                      .format(sql.Identifier(READINESS_READER_LOGIN)))
+        owner.commit()
+    with pytest.raises(ReadinessReaderConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with readiness_reader(scope):
+            pass
+
+
+def test_reader_rejects_loose_private_file_and_pg_env(
+    capability_case, readiness_reader, monkeypatch,
+):
+    scope, _ = capability_case
+    os.chmod(readiness_reader.config.passfile, 0o644)
+    try:
+        with pytest.raises(ReadinessReaderConnectionBlocked, match="PRIVATE_CREDENTIAL_REQUIRED"):
+            with readiness_reader(scope):
+                pass
+    finally:
+        os.chmod(readiness_reader.config.passfile, 0o600)
+    monkeypatch.setenv("PGPASSWORD", "test-only-forbidden")
+    with pytest.raises(ReadinessReaderConnectionBlocked, match="EXACT_CONNECTION_REQUIRED"):
+        with readiness_reader(scope):
+            pass
+
+
+def test_lifecycle_issuer_requires_exact_update_without_delete(
+    capability_case, capability_issuer,
+):
+    scope, _ = capability_case
+    lifecycle_issuer = RegistryIssuerConnectionFactory(
+        capability_issuer.config, command_family="capability_lifecycle")
+    with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with lifecycle_issuer(scope):
+            pass
+    with connect() as owner:
+        owner.execute("GRANT UPDATE,DELETE ON aip_capability_binding TO aos_aip_capability_issuer")
+        owner.commit()
+    with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with lifecycle_issuer(scope):
+            pass
+
+
+def test_original_capability_evaluate_uses_explicit_reader_and_issuer_cas(
+    capability_case, capability_issuer, readiness_reader,
+):
+    scope, request = capability_case
+    created, _ = AipCapabilityBindingService(connect_factory=capability_issuer).create(
+        scope, request,
+        idempotency_key=f"s3oo:create:{request.binding_id}",
+        actor="test-only", occurred_at=datetime.now(UTC))
+    with connect() as owner:
+        owner.execute("GRANT UPDATE ON aip_capability_binding TO aos_aip_capability_issuer")
+        owner.commit()
+    lifecycle_issuer = RegistryIssuerConnectionFactory(
+        capability_issuer.config, command_family="capability_lifecycle")
+    observed: list[tuple[TenantScope | None, str, str]] = []
+
+    @contextmanager
+    def traced_readiness_reader(selected_scope=None):
+        with readiness_reader(selected_scope) as reader:
+            row = reader.execute("""SELECT session_user AS login,
+                current_setting('transaction_read_only') AS readonly""").fetchone()
+            observed.append((selected_scope, row["login"], row["readonly"]))
+            yield reader
+
+    service = AipCapabilityBindingService(connect_factory=lifecycle_issuer,
+        readiness_service=AipBindingReadinessService(
+            authority=PostgresBindingDependencyAuthority(traced_readiness_reader),
+            model_store=AipModelRuntimeStore(traced_readiness_reader)))
+    dependencies = OperationalBindingDependencies(license_evidence_refs=[ResourceRef(
+        resource_type="EvidenceBundleRevision", resource_id="s3oo-absent",
+        revision="1", authority="test-only")])
+    command = EvaluateOperationalBindingRequest(expected_version=1, dependencies=dependencies)
+    evaluated, snapshot, receipt = service.evaluate(
+        scope, created.binding_id, command,
+        idempotency_key=f"s3oo:evaluate:{created.binding_id}",
+        actor="test-only", evaluated_at=datetime.now(UTC))
+    assert evaluated.version == 2 and snapshot.readiness.value == "blocked"
+    assert receipt.operation == "capability_binding.evaluate"
+    assert any(item[0] is None for item in observed)
+    assert any(item[0] == scope for item in observed)
+    assert all(login == READINESS_READER_LOGIN and readonly == "on"
+               for _, login, readonly in observed)
+    replay, _, replay_receipt = service.evaluate(
+        scope, created.binding_id, command,
+        idempotency_key=f"s3oo:evaluate:{created.binding_id}",
+        actor="test-only", evaluated_at=datetime.now(UTC))
+    assert replay.version == 2 and replay_receipt.receipt_id == receipt.receipt_id
+    with pytest.raises(AipAgentRegistryConflict):
+        service.evaluate(scope, created.binding_id, command,
+            idempotency_key=f"s3oo:stale:{created.binding_id}", actor="test-only",
+            evaluated_at=datetime.now(UTC))
+    with pytest.raises(AipAgentRegistryTransitionBlocked):
+        service.update(scope, created.binding_id, UpdateCapabilityBindingRequest(
+            expected_version=2, from_status="provisioning", to_status="active",
+            health="healthy", observed_at=datetime.now(UTC)),
+            idempotency_key=f"s3oo:active:{created.binding_id}", actor="test-only")
+    with connect(scope) as owner:
+        assert owner.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+            "WHERE operation='capability_binding.evaluate' AND result_ref->>'resourceId'=%s",
+            (created.binding_id,)).fetchone()["n"] == 1
