@@ -65,6 +65,66 @@ def dependencies() -> OperationalBindingDependencies:
     )
 
 
+def test_gate_reader_rejects_wrong_kind_and_revision_even_with_matching_row():
+    checked_at = datetime.now(UTC)
+    row = {
+        "status": "passed", "decision_hash": HASHES["gate"],
+        "decided_at": checked_at - timedelta(minutes=1),
+        "expires_at": checked_at + timedelta(minutes=1),
+    }
+
+    class GateConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def execute(self, _statement, params):
+            assert params == (*PRIMARY.key, "gate-1")
+            return self
+
+        def fetchone(self):
+            return row
+
+    authority = PostgresBindingDependencyAuthority(lambda _scope: GateConnection())
+    exact = dependencies().eval_gate_ref
+    assert authority.eval_gate_passed(PRIMARY, exact, checked_at)
+    assert not authority.eval_gate_passed(
+        PRIMARY, exact.model_copy(update={"revision": 2}), checked_at
+    )
+    assert not authority.eval_gate_passed(
+        PRIMARY, exact.model_copy(update={"asset_type": "OtherDecision"}), checked_at
+    )
+
+
+def test_gate_reader_uses_binding_evaluation_time_for_expiry():
+    row = {
+        "status": "passed", "decision_hash": HASHES["gate"],
+        "decided_at": NOW - timedelta(minutes=1),
+        "expires_at": NOW + timedelta(minutes=1),
+    }
+
+    class GateConnection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def execute(self, _statement, _params):
+            return self
+
+        def fetchone(self):
+            return row
+
+    authority = PostgresBindingDependencyAuthority(lambda _scope: GateConnection())
+    assert authority.eval_gate_passed(PRIMARY, dependencies().eval_gate_ref, NOW)
+    assert not authority.eval_gate_passed(
+        PRIMARY, dependencies().eval_gate_ref, row["expires_at"]
+    )
+
+
 class Authority:
     def __init__(self, *, gate=True, contract=True, license=True, assets=True, budget=True):
         self.gate = gate
@@ -82,7 +142,7 @@ class Authority:
             "required_tool_refs": [],
         }
 
-    def eval_gate_passed(self, _scope, _ref):
+    def eval_gate_passed(self, _scope, _ref, _evaluated_at):
         return self.gate
 
     def eval_contract_frozen(self, _scope, _ref):

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 import json
 from typing import Any, Protocol
 
@@ -31,7 +31,9 @@ ConnectFactory = Callable[..., AbstractContextManager[Any]]
 class BindingDependencyAuthority(Protocol):
     def capability(self, ref: VersionedAssetRef) -> Any | None: ...
 
-    def eval_gate_passed(self, scope: TenantScope, ref: VersionedAssetRef) -> bool: ...
+    def eval_gate_passed(
+        self, scope: TenantScope, ref: VersionedAssetRef, evaluated_at: datetime
+    ) -> bool: ...
 
     def eval_contract_frozen(self, scope: TenantScope, ref: VersionedAssetRef) -> bool: ...
 
@@ -60,19 +62,23 @@ class PostgresBindingDependencyAuthority:
                 (ref.asset_id, ref.revision),
             ).fetchone()
 
-    def eval_gate_passed(self, scope: TenantScope, ref: VersionedAssetRef) -> bool:
+    def eval_gate_passed(
+        self, scope: TenantScope, ref: VersionedAssetRef, evaluated_at: datetime
+    ) -> bool:
+        if (ref.asset_type != "EvalGateDecision" or ref.revision != 1
+                or evaluated_at.utcoffset() is None):
+            return False
         with self._connect_factory(scope) as conn:
             row = conn.execute(
                 """SELECT status,decision_hash,decided_at,expires_at FROM aip_release_gate_decision
                    WHERE org_id=%s AND project_id=%s AND decision_id=%s""",
                 (*scope.key, ref.asset_id),
             ).fetchone()
-        now = datetime.now(UTC)
         return bool(
             row
             and row["status"] == "passed"
             and row["decision_hash"] == ref.content_hash
-            and row["decided_at"] <= now < row["expires_at"]
+            and row["decided_at"] <= evaluated_at < row["expires_at"]
         )
 
     def eval_contract_frozen(self, scope: TenantScope, ref: VersionedAssetRef) -> bool:
@@ -241,7 +247,9 @@ class AipBindingReadinessService:
         elif (
             route_revision is None
             or route_revision.eval_gate_ref != dependencies.eval_gate_ref
-            or not self._authority.eval_gate_passed(scope, dependencies.eval_gate_ref)
+            or not self._authority.eval_gate_passed(
+                scope, dependencies.eval_gate_ref, evaluated_at
+            )
         ):
             reasons.append("EVAL_GATE_BLOCKED")
 
