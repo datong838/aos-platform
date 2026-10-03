@@ -16,3 +16,4 @@
 
 - 本波把 b18 的独立角色/RLS 与同一忠实克隆的私有文件 SCRAM 登录连成一条真实**test-only**链，仍是容器本地 socket/无网络，不等于当前 API `RegistryIssuerConnectionFactory` 或外部 OIDC正式验收；Reader passfile未复制到当前实例。clone pg_hba/Reader口令只在保留的隔离卷中改变，原文件副本可回滚；无原库角色/ACL/DDL/业务写、无 Host/worker/Provider。
 - Capability issuer仍无正式角色和 operation scoped Receipt门，当前签名预览 b20 写503保持；正式 OIDC/API非owner/Owner、八配置/六 Binding/自然首链 pending。`org-org/dev-project`唯一正向，`dev-org`零副作用，不读商城源、不回放旧12 Run、不手工 Run、不碰230 L0、不 push。
+- 下游最小合法生产者次序按 b14已验来源登记：Guard Data/Egress（E17-s3e）、Network（s3f）、BudgetPolicy与Budget（s3g）、Quota（s3h）、RuntimePolicy（s3i）各须在当前签名/审批/低权身份链实际签发，再由六个同事的正式 Model/Route/Eval→CapabilityBinding/SkillBinding 正向后审 frozen ResponsibilityPlan（s3j）。这些隔离 +1 试验与当前八候选0不可混同；本波不把列表本身当配置可用或启 Host 授权。
