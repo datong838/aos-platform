@@ -85,8 +85,6 @@ _STORE = AipProductionContractStore(
 )
 _START_SERVICE = AipProductionStartService(contract_store=_STORE)
 _PROFILE_STORE = AipResponsibilityProfileStore()
-_SIGNED_BI_PREPARATION = SignedBIPlanPreparationService()
-_SIGNED_BI_REBIND = SignedBIPlanActiveRebindService()
 _SIGNED_BI_ADMISSION = SignedBIPlanAdmissionReader()
 _SIGNED_BI_RECEIPTS = SignedBIPlanReceiptReader()
 _SIGNED_BI_REBIND_RECEIPTS = SignedBIPlanRebindReceiptReader()
@@ -125,11 +123,13 @@ def get_store() -> AipProductionContractStore:
 
 
 def get_signed_bi_preparation_service() -> SignedBIPlanPreparationService:
-    return _SIGNED_BI_PREPARATION
+    raise ApiError(code="BI_FORMAL_ISSUER_REQUIRED",
+                   message="formal BI issuer service is unavailable", status_code=503)
 
 
 def get_signed_bi_rebind_service() -> SignedBIPlanActiveRebindService:
-    return _SIGNED_BI_REBIND
+    raise ApiError(code="BI_FORMAL_ISSUER_REQUIRED",
+                   message="formal BI issuer service is unavailable", status_code=503)
 
 
 def get_signed_bi_admission_reader() -> SignedBIPlanAdmissionReader:

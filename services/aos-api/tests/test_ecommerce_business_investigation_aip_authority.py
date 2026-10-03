@@ -542,6 +542,19 @@ def test_signed_bi_plan_route_uses_principal_and_strong_installation_etag() -> N
     assert len(seen) == 1
 
 
+def test_default_signed_bi_write_dependencies_require_formal_issuer() -> None:
+    from aos_api.errors import ApiError
+    from aos_api.routers.aip_production_contracts import (
+        get_signed_bi_preparation_service, get_signed_bi_rebind_service,
+    )
+
+    for dependency in (get_signed_bi_preparation_service, get_signed_bi_rebind_service):
+        with pytest.raises(ApiError) as error:
+            dependency()
+        assert error.value.code == 'BI_FORMAL_ISSUER_REQUIRED'
+        assert error.value.status_code == 503
+
+
 def test_signed_bi_rebind_route_accepts_only_server_actor_and_strong_installation_etag() -> None:
     from aos_api.auth import Principal
     from aos_api.errors import ApiError
