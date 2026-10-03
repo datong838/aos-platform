@@ -605,6 +605,8 @@ class AipProductionContractStore:
         request_context: dict[str, Any] | None = None,
     ) -> ResponsibilityPlanRevision:
         """Append a Plan and Receipt in a caller-held authority transaction."""
+        if operation not in {"responsibility_plan.create", "bi_responsibility_plan.prepare"}:
+            raise ProductionContractConflict("unsupported Plan creation operation")
         if operation == "bi_responsibility_plan.prepare":
             binding = _require_bi_installation_binding(request_context, actor)
             if ExactRevisionRef.model_validate(binding["templateRef"]) != body.template_ref:

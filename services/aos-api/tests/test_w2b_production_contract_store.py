@@ -90,6 +90,24 @@ def _responsibility_request(profile: str = "ecommerce-standard") -> CreateRespon
     )
 
 
+@pytest.mark.parametrize("operation", (
+    "content_draft.register", "eval_contract.create", "unknown.plan.issue",
+))
+def test_responsibility_plan_create_rejects_non_plan_receipt_operation_before_sql(operation: str) -> None:
+    store = AipProductionContractStore()
+    with connect(PRIMARY_SCOPE) as conn:
+        before = conn.execute("""SELECT count(*) AS n FROM aip_responsibility_plan_head
+            WHERE org_id=%s AND project_id=%s""", PRIMARY_SCOPE.key).fetchone()["n"]
+        with pytest.raises(ProductionContractConflict, match="unsupported Plan creation operation"):
+            store.create_responsibility_plan_in_transaction(
+                conn, PRIMARY_SCOPE, "isolated-actor", "invalid-operation-key",
+                _responsibility_request(), operation=operation,
+            )
+        after = conn.execute("""SELECT count(*) AS n FROM aip_responsibility_plan_head
+            WHERE org_id=%s AND project_id=%s""", PRIMARY_SCOPE.key).fetchone()["n"]
+        assert after == before
+
+
 def _seed_dependencies(scope: TenantScope = SCOPE) -> None:
     with connect() as conn:
         conn.execute(
