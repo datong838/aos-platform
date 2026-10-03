@@ -4,6 +4,7 @@
 
 - 依据 231-4 的非 owner 专用角色、FORCE RLS、固定 search_path/超时/最小表权限，D-wave 2026-10-04 的克隆先行与当前库写入分门，以及 `aip_binding_readiness_reader_connection.py` 固定18表白名单。当前正式角色0；`aos_e17_s3owan_restore_20261004` 为已有独立 test-only 完整恢复克隆，源/克隆 head 都是135、clone public 592表、Reader role0。当前真实库仍只读。
 - 现有 `e17_s3owan_restored_reader_probe.py` 是一次性 test-only 角色及 ACL 正反探针，末尾清理角色/policy；不得将它改名后直接用于当前库。维护 runner 需要更严格的固定 target、私有 admin 凭据来源、默认只读与可审计输出，且不能复用 test-only 凭据进入正式库。
+- 实跑前复核修正：旧 s3o-w-an 恢复文档写 public sequence=11；2026-10-04 本波分别只读列出当前源与克隆 `pg_class relkind='S'`，两边12个名称逐项一致，`pg_sequences` 均12。维护预检按当前双端事实要求12，旧文档计数不再作为门值；保留首次按11失败关闭的证据。
 
 ## 文件级任务与安全门
 

@@ -13,3 +13,5 @@
 | 源不变 | 源 `BEGIN READ ONLY` 查 `a0v_135` 与 `aos_aip_binding_readiness_reader` 角色数 | `a0v_135`/0，exit0；8080 和8434 LISTEN，18181 无监听（合并 `lsof` 对不存在端口返回1） |
 
 `--no-acl` 意味着本次先证明物理数据恢复，不代表恢复了正式权限。后续只在隔离克隆验证 NOINHERIT/NOBYPASSRLS 独立角色、18表 SELECT、租户 RLS、撤权/额外授权负例，再形成当前库维护 SOP；当前库仍只读，Host/worker/Provider 关闭。未读商城源，未重放旧 Run 或手工执行 Run。
+
+**2026-10-04 s3o-w-ao-b2 计数更正**：上表“11序列”为本记录统计误差。后续分别对当前源与独立恢复克隆只读列出 public `pg_class.relkind='S'` 名称，双方12/12同名；`pg_sequences` 双方也都是12。此更正不涉及 DDL/数据写入，后续维护预检以双端实读12为门值，详见 s3owaob2 verification。
