@@ -17,7 +17,7 @@ from psycopg.conninfo import conninfo_to_dict
 
 from aos_api.aip_agent_registry_contracts import (
     EvaluateOperationalBindingRequest, OperationalBindingDependencies,
-    UpdateCapabilityBindingRequest,
+    UpdateCapabilityBindingRequest, VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import (
     AipAgentRegistryConflict, AipAgentRegistryTransitionBlocked,
@@ -110,6 +110,16 @@ def test_reader_global_catalog_and_scoped_dataset_are_read_only(capability_case,
                 'aip_eval_dataset_revision','INSERT') AS granted""").fetchone()["granted"]
             with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
                 reader.execute("CREATE TEMP TABLE s3oo_write_probe(id int)")
+
+
+def test_reader_cannot_resolve_absent_exact_budget_policy(capability_case, readiness_reader):
+    scope, _ = capability_case
+    authority = PostgresBindingDependencyAuthority(readiness_reader)
+    budget = VersionedAssetRef(
+        asset_type="BudgetPolicyRevision", asset_id=f"absent-{uuid4().hex}",
+        revision=1, content_hash="a" * 64,
+    )
+    assert not authority.budget_policy_available(scope, budget, datetime.now(UTC))
 
 
 def test_reader_rejects_missing_required_acl(capability_case, readiness_reader):

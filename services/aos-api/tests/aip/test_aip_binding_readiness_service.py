@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -21,7 +22,9 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryNotFound,
     AipAgentRegistryTransitionBlocked,
 )
-from aos_api.aip_binding_readiness_service import AipBindingReadinessService
+from aos_api.aip_binding_readiness_service import (
+    AipBindingReadinessService, PostgresBindingDependencyAuthority,
+)
 from aos_api.aip_capability_binding_service import AipCapabilityBindingService
 from aos_api.aip_capability_registry import AipCapabilityRegistry
 from aos_api.aip_contracts import ResourceRef
@@ -63,11 +66,12 @@ def dependencies() -> OperationalBindingDependencies:
 
 
 class Authority:
-    def __init__(self, *, gate=True, contract=True, license=True, assets=True):
+    def __init__(self, *, gate=True, contract=True, license=True, assets=True, budget=True):
         self.gate = gate
         self.contract = contract
         self.license = license
         self.assets = assets
+        self.budget = budget
 
     def capability(self, _ref):
         return {
@@ -89,6 +93,9 @@ class Authority:
 
     def exact_assets_available(self, _scope, _refs):
         return self.assets
+
+    def budget_policy_available(self, _scope, _ref, _evaluated_at):
+        return self.budget
 
 
 class Resolver:
@@ -147,6 +154,58 @@ def test_exact_dependencies_produce_available_deterministic_snapshot():
     assert first.reasons == []
     assert first.dependency_snapshot_hash == second.dependency_snapshot_hash
     assert first.expires_at == NOW + timedelta(minutes=15)
+
+
+def test_matching_runtime_policy_cannot_make_missing_budget_policy_available():
+    service = AipBindingReadinessService(
+        authority=Authority(budget=False), model_resolver=Resolver(), model_store=ModelStore()
+    )
+    result = service.evaluate_capability(
+        PRIMARY, ref("CapabilityRevision", "wiki.search", HASHES["cap"]),
+        dependencies(), evaluated_at=NOW,
+    )
+    assert result.readiness is CapabilityReadiness.BLOCKED
+    assert result.reasons == ["BUDGET_POLICY_MISSING"]
+
+
+@pytest.mark.parametrize("change", ["valid", "absent", "wrong_hash", "revoked", "early", "expired"])
+def test_budget_authority_requires_current_active_exact_effective_revision(change):
+    class Connection:
+        def execute(self, query, params):
+            assert "r.revision=h.current_revision" in query
+            assert params == (*PRIMARY.key, "budget-1", 1)
+            return self
+
+        def fetchone(self):
+            row = {
+                "content_hash": HASHES["budget"], "lifecycle": "active",
+                "effective_from": NOW - timedelta(minutes=1),
+                "effective_until": NOW + timedelta(minutes=1),
+            }
+            if change == "absent":
+                return None
+            if change == "wrong_hash":
+                row["content_hash"] = "0" * 64
+            elif change == "revoked":
+                row["lifecycle"] = "revoked"
+            elif change == "early":
+                row["effective_from"] = NOW + timedelta(seconds=1)
+            elif change == "expired":
+                row["effective_until"] = NOW
+            return row
+
+    @contextmanager
+    def connect(scope):
+        assert scope == PRIMARY
+        yield Connection()
+
+    authority = PostgresBindingDependencyAuthority(connect)
+    assert authority.budget_policy_available(
+        PRIMARY, dependencies().budget_policy_ref, NOW
+    ) is (change == "valid")
+    assert not authority.budget_policy_available(
+        PRIMARY, ref("QuotaPolicyRevision", "budget-1", HASHES["budget"]), NOW
+    )
 
 
 def test_dependency_snapshot_hash_is_insensitive_to_set_like_ref_order():

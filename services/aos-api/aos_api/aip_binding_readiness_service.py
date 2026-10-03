@@ -39,6 +39,10 @@ class BindingDependencyAuthority(Protocol):
 
     def exact_assets_available(self, scope: TenantScope, refs: list[VersionedAssetRef]) -> bool: ...
 
+    def budget_policy_available(
+        self, scope: TenantScope, ref: VersionedAssetRef, evaluated_at: datetime
+    ) -> bool: ...
+
 
 class PostgresBindingDependencyAuthority:
     """Read existing authorities without creating another source of truth."""
@@ -122,6 +126,29 @@ class PostgresBindingDependencyAuthority:
                 if not row or row["content_hash"] != ref.content_hash:
                     return False
         return True
+
+    def budget_policy_available(
+        self, scope: TenantScope, ref: VersionedAssetRef, evaluated_at: datetime
+    ) -> bool:
+        if ref.asset_type != "BudgetPolicyRevision":
+            return False
+        with self._connect_factory(scope) as conn:
+            row = conn.execute(
+                """SELECT r.content_hash,r.lifecycle,r.effective_from,r.effective_until
+                   FROM aip_model_governance_policy_head AS h
+                   JOIN aip_model_governance_policy_revision AS r
+                     ON r.org_id=h.org_id AND r.project_id=h.project_id
+                    AND r.policy_kind=h.policy_kind AND r.policy_id=h.policy_id
+                    AND r.revision=h.current_revision
+                   WHERE h.org_id=%s AND h.project_id=%s AND h.policy_kind='budget'
+                     AND h.policy_id=%s AND h.current_revision=%s""",
+                (*scope.key, ref.asset_id, ref.revision),
+            ).fetchone()
+        return bool(
+            row and row["content_hash"] == ref.content_hash
+            and row["lifecycle"] == "active"
+            and row["effective_from"] <= evaluated_at < row["effective_until"]
+        )
 
 
 class AipBindingReadinessService:
@@ -238,6 +265,9 @@ class AipBindingReadinessService:
                 if (
                     policy.content_hash != dependencies.runtime_policy_ref.content_hash
                     or policy.budget_policy_ref != dependencies.budget_policy_ref
+                    or not self._authority.budget_policy_available(
+                        scope, dependencies.budget_policy_ref, evaluated_at
+                    )
                 ):
                     reasons.append("BUDGET_POLICY_MISSING")
 
