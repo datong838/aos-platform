@@ -33,7 +33,9 @@ from aos_api.aip_bi_plan_issuer_connection import (
     BIIssuerDatabaseConfig, connect_bi_issuer_read_only, connect_bi_issuer_write,
 )
 from aos_api.db import connect, connect_read_only, get_dsn
-from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
+from aos_api.ecommerce_business_investigation_aip_authority import (
+    SignedBIPlanActiveRebindService, SignedBIPlanPreparationService,
+)
 from aos_api.tenant_scope import TenantScope
 
 
@@ -198,6 +200,35 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 FROM pg_proc p WHERE p.oid=
                     'public.aos_bi_plan_membership_read_a0v_138(text,text,text)'::regprocedure'''
             ).fetchone() == (True, ['search_path=pg_catalog'], 's', False)
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_release_lock_a0v_139(
+                p_org text,p_project text) RETURNS TABLE(version_pk uuid)
+                LANGUAGE plpgsql VOLATILE SECURITY DEFINER SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user<>{} OR p_org<>'org-org' OR p_project<>'dev-project'
+                     OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project THEN
+                    RAISE EXCEPTION 'release unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN QUERY SELECT v.version_pk FROM public.asset_bundle_version v
+                    JOIN public.asset_bundle b ON b.bundle_pk=v.bundle_pk
+                    WHERE b.publisher='aos' AND b.bundle_id='solution.ecommerce.growth'
+                      AND v.version IN ('1.12.0','1.13.0')
+                    ORDER BY v.version_pk FOR SHARE OF v;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION
+                public.aos_bi_plan_release_lock_a0v_139(text,text) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_release_lock_a0v_139(text,text) TO {}''').format(
+                    sql.Identifier(issuer)))
+            assert admin.execute('''SELECT p.prosecdef,p.proconfig,p.provolatile,
+                EXISTS(SELECT 1 FROM aclexplode(p.proacl) acl
+                       WHERE acl.grantee=0 AND acl.privilege_type='EXECUTE')
+                FROM pg_proc p WHERE p.oid=
+                    'public.aos_bi_plan_release_lock_a0v_139(text,text)'::regprocedure'''
+            ).fetchone() == (True, ['search_path=pg_catalog'], 'v', False)
+            assert admin.execute('''SELECT has_function_privilege(
+                'aos_runtime','public.aos_bi_plan_release_lock_a0v_139(text,text)',
+                'EXECUTE')''').fetchone()[0] is False
             admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_marking_lock_a0v_136(
                 p_org text,p_project text,p_user_key text,p_object_key text)
                 RETURNS TABLE(object_key text)
@@ -476,6 +507,39 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                     idempotency_key=prepare_args['idempotency_key'])
                 assert readback.result_ref.resource_id == prepared.plan_id
                 assert readback.installation_binding_verified is True
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    writer.execute(
+                        """SELECT version.version_pk FROM asset_bundle_version AS version
+                           JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
+                           WHERE bundle.publisher='aos'
+                             AND bundle.bundle_id='solution.ecommerce.growth'
+                             AND version.version IN ('1.12.0','1.13.0')
+                           ORDER BY version.version_pk FOR SHARE OF version"""
+                    ).fetchall()
+                writer.rollback()
+                with writer.transaction():
+                    release_rows = SignedBIPlanActiveRebindService._lock_growth_release(
+                        writer, SCOPE)
+                    assert release_rows
+                    admin.execute("SET lock_timeout='150ms'")
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        admin.execute('''UPDATE asset_bundle_version SET status=status
+                            WHERE version_pk=%s''', (release_rows[0]['version_pk'],))
+                    admin.execute('RESET lock_timeout')
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    writer.execute('''SELECT version_pk FROM
+                        public.aos_bi_plan_release_lock_a0v_139(
+                            'dev-org','dev-project')''').fetchall()
+                writer.rollback()
+                admin.execute(sql.SQL('''REVOKE EXECUTE ON FUNCTION
+                    public.aos_bi_plan_release_lock_a0v_139(text,text) FROM {}''').format(
+                        sql.Identifier(issuer)))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    SignedBIPlanActiveRebindService._lock_growth_release(writer, SCOPE)
+                writer.rollback()
+                admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                    public.aos_bi_plan_release_lock_a0v_139(text,text) TO {}''').format(
+                        sql.Identifier(issuer)))
                 with pytest.raises(ProductionContractNotFound):
                     SignedBIPlanRebindReceiptReader(
                         connect_factory=lambda scope: connect_bi_issuer_read_only(
@@ -719,6 +783,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
         finally:
             if private_context is not None:
                 private_context.cleanup()
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_release_lock_a0v_139(text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_membership_read_a0v_138(text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS

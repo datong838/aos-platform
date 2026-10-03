@@ -428,6 +428,25 @@ class SignedBIPlanActiveRebindService:
             responsibility_template_resolver=self._resolver.resolve,
         )
 
+    @staticmethod
+    def _lock_growth_release(conn: Any, scope: TenantScope) -> list[Any]:
+        current = conn.execute("SELECT current_user AS role").fetchone()
+        if current is None:
+            raise ProductionContractConflict("current signed BI release unavailable")
+        if current["role"] == "aos_bi_plan_issuer":
+            return conn.execute(
+                """SELECT version_pk FROM public.aos_bi_plan_release_lock_a0v_139(
+                    %s,%s)""", scope.key,
+            ).fetchall()
+        return conn.execute(
+            """SELECT version.version_pk FROM asset_bundle_version AS version
+               JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
+               WHERE bundle.publisher='aos'
+                 AND bundle.bundle_id='solution.ecommerce.growth'
+                 AND version.version IN ('1.12.0','1.13.0')
+               ORDER BY version.version_pk FOR SHARE OF version"""
+        ).fetchall()
+
     def rebind(
         self, scope: TenantScope, *, installation_id: str, plan_id: str,
         prepare_key: str, expected_etag_version: int,
@@ -460,14 +479,7 @@ class SignedBIPlanActiveRebindService:
             # Hold the growth release rows while the signed resolver reads its
             # Registry snapshot, so a concurrent revocation cannot overtake
             # this Plan write before commit.
-            release_rows = conn.execute(
-                """SELECT version.version_pk FROM asset_bundle_version AS version
-                   JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
-                   WHERE bundle.publisher='aos'
-                     AND bundle.bundle_id='solution.ecommerce.growth'
-                     AND version.version IN ('1.12.0','1.13.0')
-                   ORDER BY version.version_pk FOR SHARE OF version"""
-            ).fetchall()
+            release_rows = self._lock_growth_release(conn, scope)
             if not release_rows:
                 raise ProductionContractConflict("current signed BI release unavailable")
             selection = self._resolver.select(scope)
@@ -610,14 +622,7 @@ class SignedBIPlanActiveFreezeService(SignedBIPlanActiveRebindService):
             if (locked.record.state != "active"
                     or locked.record.active_revision != locked.record.current_revision):
                 raise ProductionContractConflict("signed BI freeze requires current active installation")
-            release_rows = conn.execute(
-                """SELECT version.version_pk FROM asset_bundle_version AS version
-                   JOIN asset_bundle AS bundle ON bundle.bundle_pk=version.bundle_pk
-                   WHERE bundle.publisher='aos'
-                     AND bundle.bundle_id='solution.ecommerce.growth'
-                     AND version.version IN ('1.12.0','1.13.0')
-                   ORDER BY version.version_pk FOR SHARE OF version"""
-            ).fetchall()
+            release_rows = self._lock_growth_release(conn, scope)
             if not release_rows:
                 raise ProductionContractConflict("current signed BI release unavailable")
             selection = self._resolver.select(scope)
