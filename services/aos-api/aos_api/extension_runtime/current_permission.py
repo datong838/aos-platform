@@ -1,4 +1,6 @@
 """Current local-PG control authorization; never grants or bootstraps members."""
+import psycopg
+
 from aos_api.asset_registry.control_policy import (
     APPLY_INSTALLATION_OPERATION, VERIFY_INSTALLATION_OPERATION, APPROVE_INSTALLATION_OPERATION,
     CONFIGURE_RUNTIME_OPERATION, ENABLE_RUNTIME_OPERATION, DISABLE_RUNTIME_OPERATION,
@@ -27,8 +29,15 @@ class CurrentControlPermission:
                          "current_setting('aos.project_id',true) AS project_id").fetchone()
         if any(type(v) is not str or not v for v in scope) or _values(row,('org_id','project_id'))!=scope:
             raise RuntimeConflict('current permission tenant differs')
-        rows=conn.execute('''SELECT role FROM meta_membership
-            WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE''',(*scope,actor)).fetchall()
+        bi_issuer=(isinstance(conn,psycopg.Connection) and
+                   _values(conn.execute('SELECT current_user AS role').fetchone(),('role',))[0]
+                   =='aos_bi_plan_issuer')
+        if bi_issuer:
+            rows=conn.execute('''SELECT role FROM public.aos_bi_plan_membership_lock_a0v_136(
+                %s,%s,%s)''',(*scope,actor)).fetchall()
+        else:
+            rows=conn.execute('''SELECT role FROM meta_membership
+                WHERE org_id=%s AND project_id=%s AND subject=%s FOR SHARE''',(*scope,actor)).fetchall()
         if len(rows)!=1:
             raise RuntimeConflict('current persisted membership unavailable')
         permission_operation=(APPLY_INSTALLATION_OPERATION if self.operation in {
@@ -38,10 +47,15 @@ class CurrentControlPermission:
         target=lock.payload.permission_diff.target.markings
         granted=[]
         for label in sorted(set(target)):
-            rows=conn.execute('''SELECT object_key FROM authz_tuple
-                WHERE org_id=%s AND project_id=%s AND user_key=%s
-                AND relation='bearer' AND object_key=%s FOR SHARE''',
-                (*scope,user_key(actor),marking_key(label))).fetchall()
+            if bi_issuer:
+                rows=conn.execute('''SELECT object_key FROM
+                    public.aos_bi_plan_marking_lock_a0v_136(%s,%s,%s,%s)''',
+                    (*scope,user_key(actor),marking_key(label))).fetchall()
+            else:
+                rows=conn.execute('''SELECT object_key FROM authz_tuple
+                    WHERE org_id=%s AND project_id=%s AND user_key=%s
+                    AND relation='bearer' AND object_key=%s FOR SHARE''',
+                    (*scope,user_key(actor),marking_key(label))).fetchall()
             if len(rows)==1:granted.append(label)
         require_target_markings(principal_markings=granted,target_markings=target)
         return True

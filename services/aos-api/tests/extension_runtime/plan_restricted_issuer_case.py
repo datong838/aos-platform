@@ -140,6 +140,45 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
                 public.aos_bi_plan_installation_lock_a0v_136(text,text,uuid,bigint) TO {}''').format(
                     sql.Identifier(issuer)))
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_membership_lock_a0v_136(
+                p_org text,p_project text,p_subject text) RETURNS TABLE(role text)
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user<>{} OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project THEN
+                    RAISE EXCEPTION 'membership unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN QUERY SELECT m.role::text FROM public.meta_membership m
+                    WHERE m.org_id=p_org AND m.project_id=p_project AND m.subject=p_subject
+                    FOR SHARE OF m;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION public.aos_bi_plan_membership_lock_a0v_136(
+                text,text,text) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_membership_lock_a0v_136(text,text,text) TO {}''').format(
+                    sql.Identifier(issuer)))
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_marking_lock_a0v_136(
+                p_org text,p_project text,p_user_key text,p_object_key text)
+                RETURNS TABLE(object_key text)
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user<>{} OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project THEN
+                    RAISE EXCEPTION 'marking unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN QUERY SELECT t.object_key::text FROM public.authz_tuple t
+                    WHERE t.org_id=p_org AND t.project_id=p_project
+                      AND t.user_key=p_user_key AND t.relation='bearer'
+                      AND t.object_key=p_object_key FOR SHARE OF t;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION public.aos_bi_plan_marking_lock_a0v_136(
+                text,text,text,text) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_marking_lock_a0v_136(text,text,text,text) TO {}''').format(
+                    sql.Identifier(issuer)))
+            admin.execute('''INSERT INTO authz_tuple(org_id,project_id,user_key,relation,object_key)
+                VALUES(%s,%s,'user:test-author','bearer','marking:s3owq-test')
+                ON CONFLICT DO NOTHING''', SCOPE.key)
             parts = conninfo_to_dict(get_dsn())
             with psycopg.connect(host=parts['host'], port=parts['port'], dbname=dbname,
                                  user=issuer, password=password, row_factory=dict_row) as writer:
@@ -154,7 +193,7 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 before_bi = writer.execute(
                     'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
                 with pytest.raises(psycopg.errors.InsufficientPrivilege,
-                                   match='meta_membership'):
+                                   match='aip_agent_instance'):
                     SignedBIPlanPreparationService(
                         connect_factory=lambda _: nullcontext(writer),
                         preparation_resolver=resolver,
@@ -172,6 +211,38 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
                     WHERE operation='bi_responsibility_plan.prepare'
                       AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 0
+                with writer.transaction():
+                    assert writer.execute('''SELECT role FROM
+                        public.aos_bi_plan_membership_lock_a0v_136(%s,%s,%s)''',
+                        (*SCOPE.key, 'test-author')).fetchone()['role'] == 'admin'
+                    assert writer.execute('''SELECT role FROM
+                        public.aos_bi_plan_membership_lock_a0v_136(%s,%s,%s)''',
+                        (*SCOPE.key, 'absent-author')).fetchall() == []
+                    assert writer.execute('''SELECT object_key FROM
+                        public.aos_bi_plan_marking_lock_a0v_136(%s,%s,%s,%s)''',
+                        (*SCOPE.key, 'user:test-author', 'marking:s3owq-test')
+                    ).fetchone()['object_key'] == 'marking:s3owq-test'
+                    admin.execute("SET lock_timeout='150ms'")
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        admin.execute('''UPDATE meta_membership SET role=role
+                            WHERE org_id=%s AND project_id=%s AND subject=%s''',
+                            (*SCOPE.key, 'test-author'))
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        admin.execute('''DELETE FROM authz_tuple WHERE org_id=%s
+                            AND project_id=%s AND user_key='user:test-author'
+                            AND relation='bearer' AND object_key='marking:s3owq-test' ''',
+                            SCOPE.key)
+                    admin.execute('RESET lock_timeout')
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    writer.execute('''SELECT role FROM
+                        public.aos_bi_plan_membership_lock_a0v_136(%s,%s,%s)''',
+                        ('dev-org', SCOPE.project_id, 'test-author'))
+                writer.rollback()
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    writer.execute('''SELECT object_key FROM
+                        public.aos_bi_plan_marking_lock_a0v_136(%s,%s,%s,%s)''',
+                        ('dev-org', SCOPE.project_id, 'user:test-author', 'marking:public'))
+                writer.rollback()
                 lock_args = (*SCOPE.key, installed['installationId'],
                              installed['installationEtag'])
                 for args in (("dev-org", *lock_args[1:]),
@@ -293,6 +364,10 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
         finally:
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_marking_lock_a0v_136(text,text,text,text)''')
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_membership_lock_a0v_136(text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_installation_lock_a0v_136(text,text,uuid,bigint)''')
             admin.execute('''DROP TRIGGER IF EXISTS s3owi_plan_receipt_guard

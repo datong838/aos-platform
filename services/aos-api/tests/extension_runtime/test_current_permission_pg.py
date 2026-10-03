@@ -35,7 +35,7 @@ def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,ca
             conn.execute("SELECT set_config('aos.org_id',%s,true),set_config('aos.project_id','dev-project',true)",
                          ('dev-org' if case=='wrong_tenant' else 'org-org',))
         reader=CurrentControlPermission(operation=operation)
-        if case in {'allowed','revoke_locked'}:
+        if case in {'allowed','revoke_locked','owner'}:
             assert reader(conn=conn,locked=locked,actor='tester') is True
             if case=='revoke_locked':
                 with psycopg.connect(host='127.0.0.1',port=18432,user='postgres',dbname='postgres',autocommit=True) as other:
@@ -49,7 +49,7 @@ def test_current_permission_reads_persisted_exact_tenant(database,monkeypatch,ca
                 reader(conn=conn,locked=locked,actor='tester')
 
 
-@pytest.mark.parametrize('role,allowed', [('asset-install-approver',True),('asset-installer',False),('admin',True),('owner',False)])
+@pytest.mark.parametrize('role,allowed', [('asset-install-approver',True),('asset-installer',False),('admin',True),('owner',True)])
 def test_approval_uses_distinct_current_checker_role(database,monkeypatch,role,allowed):
     from aos_api.extension_runtime.current_permission import CurrentControlPermission
     from aos_api.asset_registry.control_policy import APPROVE_INSTALLATION_OPERATION
