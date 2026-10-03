@@ -13,4 +13,8 @@
 
 ## 当前运行门
 
-代码已修改但本证据撰写时当前 API 尚未重载，不能称 live 生效。下步先精确提交，再以当前原卷135、独立可验证备份、签名安装来源做 PG→API→Web 最新代码完整重启，读回八页面/三阻断及 Host 关闭。隔离正向不代表当前正式 License、六 Binding 或自然首链完成。
+`m1@b6e9ad5e` 代码已精确提交。随后复核既有全备 `aos-recovery/.aos-current-backup-20261004-s3owaob3/current-full.dump` SHA256 `28b356f3e7c8eb3ecf7c994e205d04ee4c2ad6f575644d3d9a8044e74c6db6f1`；该备份曾在独立 PG 完整恢复并作26/26控制摘要一致。原卷名 `aos-a0v-recovery-pg-data`、库/代码迁移同为 `a0v_135`，签名安装原预检前后 exit0：approved、4 published、runtimeBindings0。
+
+Web/API launchd bootout 各 exit0，8080/8434/18181 均无监听；原 `aos-a0v-recovery-pg` restart exit0、`pg_isready` exit0，容器启动时刻 `2026-10-03T19:02:52.658703767Z`，仍挂原命名卷。API/Web 依次 bootstrap 各 exit0，新 PID57364/57390；18435/8080/8434 LISTEN，18181无监听。运行 HTTP：health/ready各200、旧 `/v1/tools`404/OpenAPI旧 Tool 路径0、八工作台200、技能发布页200，脚本 exit0。当前原库 `BEGIN READ ONLY`：135、Installation1、RegistryReceipt6、CapabilityBinding0、License EvidenceBundle0、Host assignment0，exit0。
+
+In-app browser 重载 `/aip/skill-publish` 并经 AX 与截图核：org-org/dev-project，37仅已评测/发布0、正式技能发布决定/当前 Logic/模型路由策略三阻断、按钮 disabled、暂无可见电商工作台入口。截图在本轮 UI 工具输出中展示；工具未提供本地保存通道，未声称仓库内有截图文件。未点击发布/建绑定。隔离 License 正向不代表当前正式 License、六 Binding 或自然首链完成；Host/worker/Provider继续关。
