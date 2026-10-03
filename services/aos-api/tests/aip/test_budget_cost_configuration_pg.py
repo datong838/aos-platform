@@ -1,8 +1,12 @@
 """Formal derived configuration in disposable PostgreSQL, not live deployment."""
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 import psycopg
 import pytest
+from aos_api.aip_agent_registry_contracts import VersionedAssetRef
+from aos_api.aip_binding_readiness_service import PostgresBindingDependencyAuthority
 from aos_api.aip_budget_cost_issuer import BudgetCostIssuer
+from aos_api.db import connect_read_only
 from aos_api.aip_model_runtime_contracts import ModelPriceSnapshotRevision
 from aos_api.aip_model_governance_policy_contracts import BudgetPolicyRevision
 from tests.aip.test_budget_cost_consumer_pg import caller, approved, consume
@@ -44,6 +48,33 @@ def test_signed_budget_pair_reaches_runtime_candidate_reader_without_other_autho
     assert after['budget_policies'] == before['budget_policies'] + 1
     assert {key: value for key, value in after.items() if key not in {'budgets', 'budget_policies'}} == {
         key: value for key, value in before.items() if key not in {'budgets', 'budget_policies'}}
+
+
+def test_signed_budget_policy_is_exact_for_binding_readiness_and_tenant_isolated(
+        caller, issuer_factory, https_signer):
+    from aos_api.tenant_scope import TenantScope
+
+    _, _, _, saved, decision = approved(issuer_factory, https_signer)
+    with caller() as conn:
+        consume(conn, saved, decision)
+        configured = derive(conn, saved, decision)
+    assert configured['activationEligible'] is False
+    budget = VersionedAssetRef.model_validate(configured['receipt']['policyRef'])
+    authority = PostgresBindingDependencyAuthority(connect_read_only)
+    with isolated_owner() as conn:
+        window = conn.execute("""SELECT effective_from,effective_until FROM aip_model_governance_policy_revision
+            WHERE org_id=%s AND project_id=%s AND policy_kind='budget' AND policy_id=%s AND revision=%s""",
+            (*SCOPE.key, budget.asset_id, budget.revision)).fetchone()
+    assert authority.budget_policy_available(SCOPE, budget, datetime.now(UTC))
+    assert not authority.budget_policy_available(TenantScope('dev-org', 'dev-project'), budget, datetime.now(UTC))
+    assert not authority.budget_policy_available(SCOPE, budget, window['effective_until'])
+    assert not authority.budget_policy_available(SCOPE, budget.model_copy(update={'revision': 2}), datetime.now(UTC))
+    with isolated_owner() as conn:
+        conn.execute("""UPDATE aip_model_governance_policy_head SET current_revision=2
+            WHERE org_id=%s AND project_id=%s AND policy_kind='budget' AND policy_id=%s""",
+            (*SCOPE.key, budget.asset_id))
+        conn.commit()
+    assert not authority.budget_policy_available(SCOPE, budget, datetime.now(UTC))
 
 
 def test_derived_pair_is_atomic_exact_and_idempotent(caller,issuer_factory,https_signer):
