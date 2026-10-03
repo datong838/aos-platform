@@ -543,9 +543,12 @@ def test_signed_bi_plan_route_uses_principal_and_strong_installation_etag() -> N
 
 
 def test_default_signed_bi_write_dependencies_require_formal_issuer() -> None:
-    from aos_api.errors import ApiError
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from aos_api.auth import Principal, require_principal
+    from aos_api.errors import ApiError, register_exception_handlers
     from aos_api.routers.aip_production_contracts import (
-        get_signed_bi_preparation_service, get_signed_bi_rebind_service,
+        get_signed_bi_preparation_service, get_signed_bi_rebind_service, router,
     )
 
     for dependency in (get_signed_bi_preparation_service, get_signed_bi_rebind_service):
@@ -553,6 +556,20 @@ def test_default_signed_bi_write_dependencies_require_formal_issuer() -> None:
             dependency()
         assert error.value.code == 'BI_FORMAL_ISSUER_REQUIRED'
         assert error.value.status_code == 503
+    app = FastAPI()
+    register_exception_handlers(app)
+    app.include_router(router)
+    app.dependency_overrides[require_principal] = lambda: Principal(
+        subject='person:current', org_id='org-org', project_id='dev-project',
+        roles=['admin'], token_kind='oidc')
+    with TestClient(app) as client:
+        response = client.post(
+            '/v1/aip/production-contracts/responsibility-plans/bi-preparation',
+            json={'installationId': '42785d78-5914-4a54-a078-e5d2c7f48481'},
+            headers={'Idempotency-Key': 'bi-formal-issuer-required', 'If-Match': '"3"'},
+        )
+    assert response.status_code == 503
+    assert response.json()['code'] == 'BI_FORMAL_ISSUER_REQUIRED'
 
 
 def test_signed_bi_rebind_route_accepts_only_server_actor_and_strong_installation_etag() -> None:
