@@ -22,6 +22,9 @@ from aos_api.tenant_scope import TenantScope
 
 ISSUER_LOGIN = "aos_aip_registry_issuer"
 SKILL_ISSUER_LOGIN = "aos_aip_skill_issuer"
+CAPABILITY_ISSUER_LOGIN = "aos_aip_capability_issuer"
+_ISSUER_LOGINS = {"agent": ISSUER_LOGIN, "skill": SKILL_ISSUER_LOGIN,
+                  "capability": CAPABILITY_ISSUER_LOGIN}
 _DATABASE = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
 _FORBIDDEN_PG_ENV = ("PGPASSWORD", "PGPASSFILE", "PGSERVICE", "PGSERVICEFILE", "PGOPTIONS")
 _OPTIONS = ("-c statement_timeout=10000 -c lock_timeout=5000 "
@@ -59,7 +62,7 @@ class RegistryIssuerDatabaseConfig:
 
 
 def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantScope,
-                      command_family: Literal["agent", "skill"]) -> None:
+                      command_family: Literal["agent", "skill", "capability"]) -> None:
     row = conn.execute("""SELECT current_database() AS database,
       session_user AS login,current_user AS role,
       current_setting('aos.org_id',true) AS org_id,
@@ -75,6 +78,8 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
         WHERE oid='public.aip_agent_registry_receipt'::regclass) AS receipt_owner_member,
       (SELECT pg_has_role(session_user,relowner,'MEMBER') FROM pg_class
         WHERE oid='public.aip_agent_instance'::regclass) AS instance_owner_member,
+      (SELECT pg_has_role(session_user,relowner,'MEMBER') FROM pg_class
+        WHERE oid='public.aip_capability_binding'::regclass) AS capability_owner_member,
       (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
         WHERE oid='public.aip_agent_registry_receipt'::regclass) AS receipt_rls,
       (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
@@ -99,15 +104,25 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
        has_table_privilege(session_user,'public.aip_publication_event','UPDATE') OR
        has_table_privilege(session_user,'public.aip_publication_event','DELETE')) AS publication_write,
       has_table_privilege(session_user,'public.aip_capability_binding','SELECT') AS capability_select,
+      has_table_privilege(session_user,'public.aip_capability_binding','INSERT') AS capability_insert,
+      has_table_privilege(session_user,'public.aip_capability_binding','UPDATE') AS capability_update,
+      has_table_privilege(session_user,'public.aip_capability_binding','DELETE') AS capability_delete,
+      has_table_privilege(session_user,'public.aip_capability_revision','SELECT') AS capability_revision_select,
       (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
         WHERE oid='public.aip_capability_binding'::regclass) AS capability_rls,
       has_table_privilege(session_user,'public.aip_skill_binding','SELECT') AS skill_select,
       has_table_privilege(session_user,'public.aip_skill_binding','INSERT') AS skill_insert,
       has_table_privilege(session_user,'public.aip_skill_binding','UPDATE') AS skill_update,
       has_table_privilege(session_user,'public.aip_skill_binding','DELETE') AS skill_delete,
-      (has_table_privilege(session_user,'public.aip_capability_binding','INSERT') OR
-       has_table_privilege(session_user,'public.aip_capability_binding','UPDATE') OR
-       has_table_privilege(session_user,'public.aip_capability_binding','DELETE') OR
+      (has_table_privilege(session_user,'public.aip_capability_revision','INSERT') OR
+       has_table_privilege(session_user,'public.aip_capability_revision','UPDATE') OR
+       has_table_privilege(session_user,'public.aip_capability_revision','DELETE') OR
+       has_table_privilege(session_user,'public.aip_skill_template_revision','INSERT') OR
+       has_table_privilege(session_user,'public.aip_skill_template_revision','UPDATE') OR
+       has_table_privilege(session_user,'public.aip_skill_template_revision','DELETE') OR
+       has_table_privilege(session_user,'public.aip_agent_template_revision','INSERT') OR
+       has_table_privilege(session_user,'public.aip_agent_template_revision','UPDATE') OR
+       has_table_privilege(session_user,'public.aip_agent_template_revision','DELETE') OR
        has_table_privilege(session_user,'public.aip_tool_binding','INSERT') OR
        has_table_privilege(session_user,'public.aip_tool_binding','UPDATE') OR
        has_table_privilege(session_user,'public.aip_tool_binding','DELETE') OR
@@ -116,7 +131,7 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
        has_table_privilege(session_user,'public.aip_assignee_resolution_receipt','DELETE')) AS cross_domain_write
       FROM pg_roles r WHERE r.rolname=session_user""").fetchone()
     if (row is None or row["database"] != config.database
-            or row["login"] != (ISSUER_LOGIN if command_family == "agent" else SKILL_ISSUER_LOGIN)
+            or row["login"] != _ISSUER_LOGINS[command_family]
             or row["role"] != row["login"]
             or (row["org_id"], row["project_id"]) != scope.key
             or row["search_path"] != "public,pg_catalog"
@@ -125,42 +140,55 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
             or row["rolcreatedb"] or row["rolcreaterole"] or row["rolreplication"]
             or row["owner_member"] or row["runtime_member"]
             or row["receipt_owner_member"] or row["instance_owner_member"]
-            or not row["receipt_rls"] or not row["instance_rls"]
+            or row["capability_owner_member"] or not row["receipt_rls"]
             or not row["receipt_select"] or not row["receipt_insert"]
             or row["receipt_update"] or row["receipt_delete"] or row["runtime_insert"]
-            or not row["instance_select"] or row["instance_delete"]
+            or row["instance_delete"]
             or (command_family == "agent" and (
-                not row["instance_insert"] or not row["instance_update"]))
+                not row["instance_rls"] or not row["instance_select"]
+                or not row["instance_insert"] or not row["instance_update"]))
             or (command_family == "skill" and (
-                row["instance_insert"] or row["instance_update"]))
-            or not row["template_select"] or row["cross_domain_write"] or conn.read_only
-            or (command_family == "agent" and (
-                row["skill_insert"] or row["skill_update"] or row["skill_delete"]))
+                not row["instance_rls"] or not row["instance_select"]
+                or row["instance_insert"] or row["instance_update"]))
+            or (command_family == "capability" and (
+                row["instance_select"] or row["instance_insert"]
+                or row["instance_update"]))
+            or (command_family != "capability" and not row["template_select"])
+            or row["cross_domain_write"] or row["publication_write"] or conn.read_only
             or (command_family == "skill" and (
                 not row["skill_rls"] or not row["skill_template_select"]
                 or not row["publication_rls"] or not row["publication_select"]
-                or row["publication_write"]
                 or not row["capability_select"] or not row["capability_rls"]
                 or not row["skill_select"]
                 or not row["skill_insert"] or not row["skill_update"]
-                or row["skill_delete"]))):
+                or row["skill_delete"]))
+            or (command_family != "skill" and (
+                row["skill_insert"] or row["skill_update"] or row["skill_delete"]))
+            or (command_family == "capability" and (
+                not row["capability_rls"] or not row["capability_revision_select"]
+                or not row["capability_select"] or not row["capability_insert"]
+                or row["capability_update"] or row["capability_delete"]))
+            or (command_family != "capability" and (
+                row["capability_insert"] or row["capability_update"]
+                or row["capability_delete"]))):
         raise RegistryIssuerConnectionBlocked("REGISTRY_ISSUER_DATABASE_IDENTITY_REQUIRED")
 
 
 @dataclass(frozen=True)
 class RegistryIssuerConnectionFactory:
     config: RegistryIssuerDatabaseConfig
-    command_family: Literal["agent", "skill"] = "agent"
+    command_family: Literal["agent", "skill", "capability"] = "agent"
 
     @contextmanager
     def __call__(self, scope: TenantScope) -> Iterator:
         if (type(scope) is not TenantScope or type(self.config) is not RegistryIssuerDatabaseConfig
-                or self.command_family not in ("agent", "skill")
+                or type(self.command_family) is not str
+                or self.command_family not in _ISSUER_LOGINS
                 or any(os.environ.get(key) for key in _FORBIDDEN_PG_ENV)):
             raise RegistryIssuerConnectionBlocked("REGISTRY_ISSUER_EXACT_CONNECTION_REQUIRED")
         self.config.__post_init__()
         try:
-            login = ISSUER_LOGIN if self.command_family == "agent" else SKILL_ISSUER_LOGIN
+            login = _ISSUER_LOGINS[self.command_family]
             conn = connect(host=self.config.host, port=self.config.port,
                            dbname=self.config.database, user=login,
                            passfile=str(self.config.passfile), connect_timeout=5,
