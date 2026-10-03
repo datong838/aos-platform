@@ -10,3 +10,7 @@
 4. 当前真库只读。任何迁移/正式 ACL 切换另波需新全备可恢复、克隆全链演练、零执行窗口；正式 OIDC/凭据、签名来源和 Host Owner 仍是实例门。浏览器不用于本波底层锁契约。
 
 预期交付：明确可验证的只读稳定版本/独立发行合同，或证据化地排除不安全候选并转已登记 ToolBinding/RETURN 独立项。Goal 保持 active，m1 精确提交、不 push。
+
+## s3o-w-b 狭义协议探针（下一步）
+
+现有 SQL 权限反证排除原行锁、SHARE 表锁和仅 ACCESS SHARE。隔离 schema 中验证候选：所有 Plan head 写入由数据库 trigger 在本事务取得 `(org,project,plan)` 的 advisory 锁；只读消费者先取得同键锁再做普通当前版 SELECT，并保持到配置提交。测试至少证明发布者会等待消费者提交、只读运行角色不能直写、锁释放后原写者成功；随后核全 create/revise/freeze、Receipt 同事务及多个 Plan 的稳定锁顺序。仅隔离探针还不是正式契约：生产 migration/独立 issuer/全部合法写者覆盖需下一门审查，不能以探针通过替代当前实例正向。
