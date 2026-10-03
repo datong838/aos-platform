@@ -1,6 +1,7 @@
-"""W2-#18 · 工具集注册 API 路由。
+"""W2-#18 legacy in-memory Tool functions, no public HTTP registration.
 
-详见 docs/palantier/20_tech/220tech_w2-b-aip-functions.md §2.2。
+Formal Tool HTTP issuance requires a signed source and dedicated issuer.
+The W2-B Python ToolRegistry/Logic interface remains available internally.
 """
 from __future__ import annotations
 
@@ -66,13 +67,11 @@ def _compile_handler(code: str) -> ToolHandler:
     return fn
 
 
-@router.get("/v1/tools")
 def list_tools():
     reg = get_registry()
     return {"items": [t.model_dump() for t in reg.list_all()]}
 
 
-@router.post("/v1/tools/register")
 def register_tool(req: RegisterToolRequest):
     reg = get_registry()
     handler = _compile_handler(req.code)
@@ -84,7 +83,6 @@ def register_tool(req: RegisterToolRequest):
     return tool.model_dump()
 
 
-@router.get("/v1/tools/{tool_id}")
 def get_tool(tool_id: str):
     reg = get_registry()
     tool = reg.get(tool_id)
@@ -93,7 +91,6 @@ def get_tool(tool_id: str):
     return tool.model_dump()
 
 
-@router.post("/v1/tools/invoke")
 def invoke_tool(req: InvokeToolRequest):
     reg = get_registry()
     try:
@@ -103,20 +100,17 @@ def invoke_tool(req: InvokeToolRequest):
     return {"tool_id": req.tool_id, "result": result}
 
 
-@router.delete("/v1/tools/{tool_id}")
 def delete_tool(tool_id: str):
     reg = get_registry()
     ok = reg.remove(tool_id)
     return {"tool_id": tool_id, "deleted": ok}
 
 
-@router.get("/v1/capabilities")
 def list_capabilities():
     store = get_capability_store()
     return {"items": [c.model_dump() for c in store.list_all()]}
 
 
-@router.post("/v1/capabilities")
 def define_capability(req: DefineCapabilityRequest):
     store = get_capability_store()
     cap = Capability(name=req.name, description=req.description, tool_ids=req.tool_ids)
@@ -127,7 +121,6 @@ def define_capability(req: DefineCapabilityRequest):
     return cap.model_dump()
 
 
-@router.post("/v1/capabilities/{cap_id}/tools")
 def add_tool_to_capability(cap_id: str, req: AddToolToCapabilityRequest):
     store = get_capability_store()
     try:
@@ -137,7 +130,6 @@ def add_tool_to_capability(cap_id: str, req: AddToolToCapabilityRequest):
     return cap.model_dump()
 
 
-@router.get("/v1/capabilities/{cap_id}/tools")
 def list_capability_tools(cap_id: str):
     store = get_capability_store()
     return {"items": [t.model_dump() for t in store.tools_of(cap_id)]}
