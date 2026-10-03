@@ -96,7 +96,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                   IF session_user<>{} OR current_user<>{}
                      OR NEW.operation NOT IN ('responsibility_plan.create',
                                              'responsibility_plan.revise',
-                                             'responsibility_plan.freeze')
+                                             'responsibility_plan.freeze',
+                                             'bi_responsibility_plan.prepare')
                      OR NEW.result_ref->>'resourceType'<>'ResponsibilityPlanRevision'
                      OR NOT EXISTS (
                        SELECT 1 FROM aip_responsibility_plan_head h
@@ -176,6 +177,27 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
             admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
                 public.aos_bi_plan_marking_lock_a0v_136(text,text,text,text) TO {}''').format(
                     sql.Identifier(issuer)))
+            admin.execute(sql.SQL('''CREATE FUNCTION public.aos_bi_plan_agents_lock_a0v_136(
+                p_org text,p_project text,p_ids text[])
+                RETURNS TABLE(instance_id text,version bigint)
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+                BEGIN
+                  IF session_user<>{} OR current_setting('aos.org_id',true) IS DISTINCT FROM p_org
+                     OR current_setting('aos.project_id',true) IS DISTINCT FROM p_project
+                     OR cardinality(p_ids)<>6
+                     OR (SELECT count(DISTINCT id) FROM unnest(p_ids) AS id)<>6 THEN
+                    RAISE EXCEPTION 'agents unavailable' USING ERRCODE='42501';
+                  END IF;
+                  RETURN QUERY SELECT a.instance_id,a.version FROM public.aip_agent_instance a
+                    WHERE a.org_id=p_org AND a.project_id=p_project AND a.status='active'
+                      AND a.instance_id=ANY(p_ids)
+                    ORDER BY a.instance_id FOR SHARE OF a;
+                END $$''').format(sql.Literal(issuer)))
+            admin.execute('''REVOKE ALL ON FUNCTION public.aos_bi_plan_agents_lock_a0v_136(
+                text,text,text[]) FROM PUBLIC''')
+            admin.execute(sql.SQL('''GRANT EXECUTE ON FUNCTION
+                public.aos_bi_plan_agents_lock_a0v_136(text,text,text[]) TO {}''').format(
+                    sql.Identifier(issuer)))
             admin.execute('''INSERT INTO authz_tuple(org_id,project_id,user_key,relation,object_key)
                 VALUES(%s,%s,'user:test-author','bearer','marking:s3owq-test')
                 ON CONFLICT DO NOTHING''', SCOPE.key)
@@ -192,25 +214,26 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 ).fetchone()['member'] is False
                 before_bi = writer.execute(
                     'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n']
-                with pytest.raises(psycopg.errors.InsufficientPrivilege,
-                                   match='aip_agent_instance'):
-                    SignedBIPlanPreparationService(
-                        connect_factory=lambda _: nullcontext(writer),
-                        preparation_resolver=resolver,
-                    ).prepare(
-                        SCOPE, installation_id=installed['installationId'],
-                        expected_etag_version=installed['installationEtag'],
-                        principal=Principal(subject='test-author', org_id=SCOPE.org_id,
-                                            project_id=SCOPE.project_id, roles=['admin'],
-                                            token_kind='oidc'),
-                        idempotency_key='s3owj-restricted-bi-prepare',
-                    )
-                writer.rollback()
+                service = SignedBIPlanPreparationService(
+                    connect_factory=lambda _: nullcontext(writer),
+                    preparation_resolver=resolver,
+                )
+                prepare_args = dict(
+                    installation_id=installed['installationId'],
+                    expected_etag_version=installed['installationEtag'],
+                    principal=Principal(subject='test-author', org_id=SCOPE.org_id,
+                                        project_id=SCOPE.project_id, roles=['admin'],
+                                        token_kind='oidc'),
+                    idempotency_key='s3owj-restricted-bi-prepare',
+                )
+                prepared = service.prepare(SCOPE, **prepare_args)
+                assert prepared.plan_id
+                assert service.prepare(SCOPE, **prepare_args).plan_id == prepared.plan_id
                 assert writer.execute(
-                    'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n'] == before_bi
+                    'SELECT count(*) AS n FROM aip_responsibility_plan_head').fetchone()['n'] == before_bi + 1
                 assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
                     WHERE operation='bi_responsibility_plan.prepare'
-                      AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 0
+                      AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 1
                 with writer.transaction():
                     assert writer.execute('''SELECT role FROM
                         public.aos_bi_plan_membership_lock_a0v_136(%s,%s,%s)''',
@@ -243,6 +266,65 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                         public.aos_bi_plan_marking_lock_a0v_136(%s,%s,%s,%s)''',
                         ('dev-org', SCOPE.project_id, 'user:test-author', 'marking:public'))
                 writer.rollback()
+                agent_ids = [item[2] for item in BI_ROLE_BLUEPRINTS]
+                with writer.transaction():
+                    rows = writer.execute('''SELECT instance_id,version FROM
+                        public.aos_bi_plan_agents_lock_a0v_136(%s,%s,%s)''',
+                        (*SCOPE.key, agent_ids)).fetchall()
+                    assert {row['instance_id'] for row in rows} == set(agent_ids)
+                    assert {row['version'] for row in rows} == {1}
+                    admin.execute("SET lock_timeout='150ms'")
+                    with pytest.raises(psycopg.errors.LockNotAvailable):
+                        admin.execute('''UPDATE aip_agent_instance SET status='suspended'
+                            WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
+                            (*SCOPE.key, agent_ids[0]))
+                    admin.execute('RESET lock_timeout')
+                for ids in (agent_ids[:5], [agent_ids[0]] * 6):
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        writer.execute('''SELECT instance_id FROM
+                            public.aos_bi_plan_agents_lock_a0v_136(%s,%s,%s)''',
+                            (*SCOPE.key, ids))
+                    writer.rollback()
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    writer.execute('''SELECT instance_id FROM
+                        public.aos_bi_plan_agents_lock_a0v_136(%s,%s,%s)''',
+                        ('dev-org', SCOPE.project_id, agent_ids))
+                writer.rollback()
+                admin.execute(sql.SQL('SET ROLE {}').format(sql.Identifier(issuer)))
+                try:
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        admin.execute('''SELECT instance_id FROM
+                            public.aos_bi_plan_agents_lock_a0v_136(%s,%s,%s)''',
+                            (*SCOPE.key, agent_ids))
+                finally:
+                    admin.execute('RESET ROLE')
+                admin.execute('''UPDATE aip_agent_instance SET status='suspended'
+                    WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
+                    (*SCOPE.key, agent_ids[0]))
+                with pytest.raises(ValueError, match='six current digital coworker instances required'):
+                    service.prepare(SCOPE, **{**prepare_args,
+                        'idempotency_key': 's3owr-inactive-agent-rejected'})
+                writer.rollback()
+                assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                    WHERE operation='bi_responsibility_plan.prepare'
+                      AND idempotency_key='s3owr-inactive-agent-rejected' ''').fetchone()['n'] == 0
+                writer.rollback()
+                admin.execute('''UPDATE aip_agent_instance SET status='active'
+                    WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
+                    (*SCOPE.key, agent_ids[0]))
+                admin.execute('''UPDATE aip_agent_instance SET version=2
+                    WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
+                    (*SCOPE.key, agent_ids[0]))
+                with pytest.raises(ProductionContractIdempotencyConflict):
+                    service.prepare(SCOPE, **prepare_args)
+                writer.rollback()
+                assert writer.execute('''SELECT count(*) AS n FROM aip_production_contract_receipt
+                    WHERE operation='bi_responsibility_plan.prepare'
+                      AND idempotency_key='s3owj-restricted-bi-prepare' ''').fetchone()['n'] == 1
+                writer.rollback()
+                admin.execute('''UPDATE aip_agent_instance SET version=1
+                    WHERE org_id=%s AND project_id=%s AND instance_id=%s''',
+                    (*SCOPE.key, agent_ids[0]))
                 lock_args = (*SCOPE.key, installed['installationId'],
                              installed['installationEtag'])
                 for args in (("dev-org", *lock_args[1:]),
@@ -364,6 +446,8 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                          '{"resourceType":"ResponsibilityPlanRevision",'
                          '"resourceId":"missing","revision":1,"contentHash":"' + 'b' * 64 + '"}'))
         finally:
+            admin.execute('''DROP FUNCTION IF EXISTS
+                public.aos_bi_plan_agents_lock_a0v_136(text,text,text[])''')
             admin.execute('''DROP FUNCTION IF EXISTS
                 public.aos_bi_plan_marking_lock_a0v_136(text,text,text,text)''')
             admin.execute('''DROP FUNCTION IF EXISTS

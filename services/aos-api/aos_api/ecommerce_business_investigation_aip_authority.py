@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+import psycopg
+
 from aos_api.aip_contracts import AipContractModel, ResourceRef
 from aos_api.aip_production_contract_store import (
     AipProductionContractStore, ProductionContractConflict,
@@ -377,12 +379,19 @@ class SignedBIPlanPreparationService:
             if selection is None or selection.installation_id != installation_id:
                 raise ValueError("exact signed approved BI installation unavailable")
             instance_ids = [item[2] for item in _ROLE_BLUEPRINTS]
-            rows = conn.execute(
-                """SELECT instance_id,version FROM aip_agent_instance
-                    WHERE org_id=%s AND project_id=%s AND status='active'
-                      AND instance_id=ANY(%s) ORDER BY instance_id FOR SHARE""",
-                (*scope.key, instance_ids),
-            ).fetchall()
+            bi_issuer = (isinstance(conn, psycopg.Connection) and conn.execute(
+                'SELECT current_user AS role').fetchone()['role'] == 'aos_bi_plan_issuer')
+            if bi_issuer:
+                rows = conn.execute(
+                    """SELECT instance_id,version FROM public.aos_bi_plan_agents_lock_a0v_136(
+                        %s,%s,%s)""", (*scope.key, instance_ids)).fetchall()
+            else:
+                rows = conn.execute(
+                    """SELECT instance_id,version FROM aip_agent_instance
+                        WHERE org_id=%s AND project_id=%s AND status='active'
+                          AND instance_id=ANY(%s) ORDER BY instance_id FOR SHARE""",
+                    (*scope.key, instance_ids),
+                ).fetchall()
             versions = {str(row["instance_id"]): int(row["version"]) for row in rows}
             if (len(rows) != len(instance_ids) or len(versions) != len(instance_ids)
                     or any(version < 1 for version in versions.values())):
