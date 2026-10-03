@@ -4,6 +4,8 @@ import json
 import os
 import socket
 import struct
+import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -65,6 +67,47 @@ def test_same_uid_rejects_before_frame_or_handler():
         assert called == []
     finally:
         left.close(); right.close()
+
+
+def test_real_unix_peer_wrong_uid_rejects_before_dispatch():
+    """Real macOS kernel peer negative; no synthetic credential or formal positive claim."""
+    from aos_api.aip_bi_plan_issuer_ipc import serve_one_bi_issuer_connection
+    from aos_api.aip_network_issuer_ipc import open_private_issuer_listener
+    from aos_api.aip_private_listener import owned_private_listener
+
+    # macOS AF_UNIX paths have a short fixed limit; pytest's long fixture path
+    # would fail at bind() before reaching the kernel peer check.
+    with tempfile.TemporaryDirectory(prefix="bi-", dir="/tmp") as short:
+        socket_dir = Path(short) / "ipc"
+        socket_dir.mkdir(mode=0o750)
+        os.chown(socket_dir, -1, os.getegid())
+        os.chmod(socket_dir, 0o750)
+        credential_dir = Path(short) / "private"
+        credential_dir.mkdir(mode=0o700)
+        credential_file = credential_dir / "issuer.pgpass"
+        credential_file.write_text("test-only-placeholder")
+        os.chmod(credential_file, 0o600)
+        socket_path = socket_dir / "issuer.sock"
+        api_uid, issuer_uid = os.geteuid() + 1, os.geteuid()
+        called = []
+        with owned_private_listener(
+            socket_path, service_uid=issuer_uid, ipc_gid=os.getegid(),
+            blocked=ValueError, error_code="PRIVATE_LISTENER_BLOCKED",
+            open_listener=lambda: open_private_issuer_listener(
+                socket_path, api_uid=api_uid, issuer_uid=issuer_uid,
+                ipc_gid=os.getegid(), credential_file=credential_file,
+            ),
+        ) as listener:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+                client.connect(str(socket_path))
+                accepted, _ = listener.accept()
+                assert serve_one_bi_issuer_connection(
+                    accepted, api_uid=api_uid, issuer_uid=issuer_uid,
+                    expected_scope=SCOPE, dispatch=lambda _: called.append("called"),
+                ) is False
+                assert client.recv(1) == b""
+            assert called == []
+        assert not socket_path.exists()
 
 
 def test_synthetic_wrong_tenant_is_blocked_before_dispatch(monkeypatch):
