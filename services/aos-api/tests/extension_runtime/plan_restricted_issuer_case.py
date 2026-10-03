@@ -1,7 +1,9 @@
 """Original Plan Store under a disposable, nonowner signed-source issuer."""
 
 import secrets
+import tempfile
 from contextlib import nullcontext
+from pathlib import Path
 
 import psycopg
 import pytest
@@ -25,6 +27,9 @@ from aos_api.ecommerce_business_investigation_aip_authority import (
 from aos_api.aip_responsibility_template_authority import ApprovedBIPreparationResolver
 from aos_api.aip_business_investigation_responsibility_template import BI_ROLE_BLUEPRINTS
 from aos_api.auth import Principal
+from aos_api.aip_bi_plan_issuer_connection import (
+    BIIssuerDatabaseConfig, connect_bi_issuer_read_only, connect_bi_issuer_write,
+)
 from aos_api.db import connect, get_dsn
 from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
 from aos_api.tenant_scope import TenantScope
@@ -214,6 +219,33 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                 VALUES(%s,%s,'s3ows-unlisted-agent','test-bi-plan-active-handoff',1,
                        'active','{}',1,'test-author')''', SCOPE.key)
             parts = conninfo_to_dict(get_dsn())
+            with tempfile.TemporaryDirectory(prefix='aos-bi-issuer-') as private_dir:
+                private = Path(private_dir)
+                private.chmod(0o700)
+                passfile = private / 'issuer.pgpass'
+                passfile.write_text(
+                    f"{parts['host']}:{parts['port']}:{dbname}:{issuer}:{password}\n")
+                passfile.chmod(0o600)
+                issuer_config = BIIssuerDatabaseConfig(
+                    parts['host'], int(parts['port']), dbname, passfile)
+                with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                    assert guarded.execute('''SELECT session_user,current_user,
+                        current_setting('aos.org_id') AS org_id,
+                        current_setting('aos.project_id') AS project_id,
+                        current_setting('transaction_read_only') AS read_only''').fetchone() == {
+                            'session_user': issuer, 'current_user': issuer,
+                            'org_id': SCOPE.org_id, 'project_id': SCOPE.project_id,
+                            'read_only': 'on'}
+                with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+                    with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
+                        guarded.execute('CREATE TEMP TABLE s3oww_read_only_denied (id int)')
+                with connect_bi_issuer_write(issuer_config, SCOPE) as guarded:
+                    guarded.rollback()
+                    assert guarded.execute('''SELECT session_user,current_user,
+                        current_setting('aos.org_id') AS org_id,
+                        current_setting('aos.project_id') AS project_id''').fetchone() == {
+                            'session_user': issuer, 'current_user': issuer,
+                            'org_id': SCOPE.org_id, 'project_id': SCOPE.project_id}
             with psycopg.connect(host=parts['host'], port=parts['port'], dbname=dbname,
                                  user=issuer, password=password, row_factory=dict_row) as writer:
                 writer.execute("SELECT set_config('aos.org_id',%s,false)", (SCOPE.org_id,))
