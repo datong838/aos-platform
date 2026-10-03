@@ -1,13 +1,18 @@
 """Atomic Host staging with real AIP sources and isolated permission fixture."""
 import pytest
 import psycopg
+from contextlib import contextmanager
+from psycopg import sql
+from psycopg.rows import dict_row
 
 from test_lifecycle_pg import database, pytestmark
 from test_configuration_store_pg import configuration_case
 from test_configuration_stage_schema_pg import stage, insert, TABLE
 from current_configuration_sources_case import install_current_configuration_sources
 from aos_api.aip_runtime_configuration_sources import build_current_configuration_authorization
-from aos_api.extension_runtime.configuration_stage_consumer import process_one_configuration_stage
+from aos_api.extension_runtime.configuration_stage_consumer import (
+    ConfigurationStageConsumer, process_one_configuration_stage)
+from aos_api.extension_runtime import configuration_stage_preflight
 
 
 @pytest.fixture
@@ -40,6 +45,44 @@ def test_success_commits_one_configuration_and_terminal_result(consumer):
     assert conn.execute(f'SELECT state,result_json FROM {TABLE}').fetchone() == ('succeeded', result['result'])
     with conn.transaction(): assert process(consumer) is None
     assert conn.execute('SELECT count(*) FROM extension_runtime_configuration').fetchone()[0] == 1
+
+
+def test_source_acl_drift_after_startup_keeps_request_pending(consumer, database, monkeypatch):
+    from aos_api.asset_registry.installation_store import PostgresInstallationStore
+    from aos_api.extension_runtime.configuration_authorization import CurrentConfigurationPermission
+    conn, _, _ = consumer
+    _, role, schema = database
+    conn.execute('RESET ROLE')
+    conn.execute('''REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON
+        aip_responsibility_plan_head,aip_responsibility_plan_revision FROM aos_runtime''')
+    conn.execute('CREATE TABLE aip_production_contract_receipt(id integer)')
+    conn.execute('ALTER TABLE aip_production_contract_receipt ENABLE ROW LEVEL SECURITY')
+    conn.execute('ALTER TABLE aip_production_contract_receipt FORCE ROW LEVEL SECURITY')
+    conn.execute('GRANT SELECT ON aip_production_contract_receipt TO aos_runtime')
+    monkeypatch.setattr(configuration_stage_preflight, '_SOURCE_TABLES', tuple(
+        f'{schema}.{name}' for name in ('aip_responsibility_plan_head',
+            'aip_responsibility_plan_revision', 'aip_production_contract_receipt')))
+    with conn.transaction():
+        assert configuration_stage_preflight.configuration_source_acl_ready(conn) is True
+    conn.execute('GRANT INSERT ON aip_responsibility_plan_head TO aos_runtime')
+    conn.execute(sql.SQL('GRANT aos_runtime TO {}').format(sql.Identifier(role)))
+    conn.execute(sql.SQL('SET SESSION AUTHORIZATION {}').format(sql.Identifier(role)))
+    conn.execute('SET ROLE aos_runtime')
+    @contextmanager
+    def connect(): yield conn
+    authorize = build_current_configuration_authorization(permission=CurrentConfigurationPermission(
+        installation_store=PostgresInstallationStore(connect_factory=connect)))
+    old_factory = conn.row_factory
+    try:
+        conn.row_factory = dict_row
+        with pytest.raises(PermissionError, match='configuration source issuer ACL drifted'):
+            ConfigurationStageConsumer(connect=connect, authorize=authorize).run_once(
+                org_id='org-org', project_id='dev-project')
+        assert conn.execute(f'SELECT state FROM {TABLE}').fetchone()['state'] == 'requested'
+        assert conn.execute('SELECT count(*) AS n FROM extension_runtime_configuration').fetchone()['n'] == 0
+    finally:
+        conn.row_factory = old_factory
+        conn.execute('RESET SESSION AUTHORIZATION')
 
 
 def test_outer_transaction_failure_rolls_back_record_and_result_then_reclaims(consumer):

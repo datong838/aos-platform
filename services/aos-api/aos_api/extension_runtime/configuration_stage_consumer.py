@@ -96,6 +96,7 @@ class ConfigurationStageConsumer:
     def run_once(self, *, org_id, project_id):
         from aos_api.tenant_scope import TenantScope
         from .consumer_connection import consumer_connection
+        from .configuration_stage_preflight import configuration_source_acl_ready
         from .storage_ports import require_runtime_role
         TenantScope(org_id, project_id)
         scope = dict(org_id=org_id, project_id=project_id)
@@ -104,4 +105,6 @@ class ConfigurationStageConsumer:
             require_runtime_role(conn, **scope, protected_tables=(
                 _TABLE, 'extension_runtime_configuration',
             ))
+            if not configuration_source_acl_ready(conn):
+                raise PermissionError('configuration source issuer ACL drifted')
             return process_one_configuration_stage(conn, **scope, authorize=self.authorize)

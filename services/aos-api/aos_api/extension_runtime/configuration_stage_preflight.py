@@ -11,6 +11,23 @@ _SOURCE_TABLES = (
 )
 
 
+def configuration_source_acl_ready(conn):
+    """Check fixed current source tables inside the caller-owned transaction."""
+    sources = conn.execute('''SELECT c.relrowsecurity,c.relforcerowsecurity,
+        has_table_privilege('aos_runtime',c.oid,'SELECT') AS readable,
+        has_table_privilege('aos_runtime',c.oid,'INSERT') AS insertable,
+        has_table_privilege('aos_runtime',c.oid,'UPDATE') AS updatable,
+        has_table_privilege('aos_runtime',c.oid,'DELETE') AS deletable,
+        has_table_privilege('aos_runtime',c.oid,'TRUNCATE') AS truncatable
+        FROM (VALUES (%s::text),(%s::text),(%s::text)) AS source(name)
+        LEFT JOIN pg_class c ON c.oid=to_regclass(source.name)''',
+        _SOURCE_TABLES).fetchall()
+    return len(sources) == len(_SOURCE_TABLES) and all(
+        _values(row, ('relrowsecurity','relforcerowsecurity','readable',
+                      'insertable','updatable','deletable','truncatable'))
+        == (True,True,True,False,False,False,False) for row in sources)
+
+
 def configuration_stage_ready(conn):
     if conn.info.transaction_status != TransactionStatus.IDLE:
         raise RuntimeError('configuration staging preflight requires idle connection')
@@ -44,16 +61,4 @@ def configuration_stage_ready(conn):
             return False
         # A current source row or Receipt cannot be an issuance authority if
         # the ordinary Host role can create or change it in the same tenant.
-        sources = conn.execute('''SELECT c.relrowsecurity,c.relforcerowsecurity,
-            has_table_privilege('aos_runtime',c.oid,'SELECT') AS readable,
-            has_table_privilege('aos_runtime',c.oid,'INSERT') AS insertable,
-            has_table_privilege('aos_runtime',c.oid,'UPDATE') AS updatable,
-            has_table_privilege('aos_runtime',c.oid,'DELETE') AS deletable,
-            has_table_privilege('aos_runtime',c.oid,'TRUNCATE') AS truncatable
-            FROM (VALUES (%s::text),(%s::text),(%s::text)) AS source(name)
-            LEFT JOIN pg_class c ON c.oid=to_regclass(source.name)''',
-            _SOURCE_TABLES).fetchall()
-        return len(sources) == len(_SOURCE_TABLES) and all(
-            _values(row, ('relrowsecurity','relforcerowsecurity','readable',
-                          'insertable','updatable','deletable','truncatable'))
-            == (True,True,True,False,False,False,False) for row in sources)
+        return configuration_source_acl_ready(conn)
