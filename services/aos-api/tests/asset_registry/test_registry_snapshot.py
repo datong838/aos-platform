@@ -14,6 +14,9 @@ from types import ModuleType
 from unittest.mock import MagicMock, patch
 
 import pytest
+import psycopg
+from psycopg import IsolationLevel
+from psycopg.rows import dict_row
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from psycopg import sql
@@ -35,7 +38,7 @@ from aos_api.asset_registry.release_policy import (
     ReleasePolicy,
 )
 from aos_api.asset_registry.signature import FrozenTrustRootProvider, TrustRoot
-from aos_api.db import connect
+from aos_api.db import connect, get_dsn
 
 API_ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS = (
@@ -867,3 +870,56 @@ def test_snapshot_fails_closed_when_provider_cannot_freeze_one_view(
 
     assert caught.value.code == AssetRegistryErrorCode.TRUST_ROOT_UNAVAILABLE
     assert "private provider outage" not in str(caught.value)
+
+
+def test_snapshot_accepts_verified_prepared_read_only_transaction(registry_database) -> None:
+    """An issuer's tenant/identity SELECT has already started its transaction."""
+    _, scoped_connect = registry_database
+    with scoped_connect() as conn:
+        schema = conn.execute("SELECT current_schema() AS schema").fetchone()["schema"]
+
+    @contextmanager
+    def prepared():
+        with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+            conn.isolation_level = IsolationLevel.REPEATABLE_READ
+            conn.read_only = True
+            conn.execute(sql.SQL("SET LOCAL search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute("SELECT 1")
+            yield conn
+
+    snapshot = RegistrySnapshotReader(
+        connect_factory=prepared,
+        release_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({})),
+        prepared_transaction=True,
+    ).read()
+    assert snapshot.candidates == []
+
+
+@pytest.mark.parametrize("isolation,read_only", [
+    (IsolationLevel.READ_COMMITTED, True),
+    (IsolationLevel.REPEATABLE_READ, False),
+])
+def test_snapshot_rejects_wrong_prepared_transaction(
+    registry_database, isolation, read_only,
+) -> None:
+    from aos_api.asset_registry.errors import VerificationFailedError
+
+    _, scoped_connect = registry_database
+    with scoped_connect() as conn:
+        schema = conn.execute("SELECT current_schema() AS schema").fetchone()["schema"]
+
+    @contextmanager
+    def prepared():
+        with psycopg.connect(get_dsn(), row_factory=dict_row) as conn:
+            conn.isolation_level = isolation
+            conn.read_only = read_only
+            conn.execute(sql.SQL("SET LOCAL search_path TO {}").format(sql.Identifier(schema)))
+            conn.execute("SELECT 1")
+            yield conn
+
+    with pytest.raises(VerificationFailedError):
+        RegistrySnapshotReader(
+            connect_factory=prepared,
+            release_policy=ReleasePolicy(trust_roots=FrozenTrustRootProvider({})),
+            prepared_transaction=True,
+        ).read()

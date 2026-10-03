@@ -30,7 +30,7 @@ from aos_api.auth import Principal
 from aos_api.aip_bi_plan_issuer_connection import (
     BIIssuerDatabaseConfig, connect_bi_issuer_read_only, connect_bi_issuer_write,
 )
-from aos_api.db import connect, get_dsn
+from aos_api.db import connect, connect_read_only, get_dsn
 from aos_api.ecommerce_business_investigation_aip_authority import SignedBIPlanPreparationService
 from aos_api.tenant_scope import TenantScope
 
@@ -53,6 +53,14 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
         template_ref=selected_template.template_ref,
     )
     assert resolver.resolve(SCOPE, selected_template.template_ref) is True
+    prepared_reader_resolver = ApprovedBIPreparationResolver(
+        connect_factory=connect_read_only,
+        registry_connect_factory=lambda: connect_read_only(SCOPE),
+        release_root=signed['signed_tree'], trust_roots=trust,
+        source_alias=signed['source_alias'],
+        registry_prepared_transaction=True,
+    )
+    assert prepared_reader_resolver.resolve(SCOPE, selected_template.template_ref) is True
     assert resolver.resolve(TenantScope('dev-org', 'dev-project'),
                             selected_template.template_ref) is False
     assert resolver.resolve(SCOPE, selected_template.template_ref.model_copy(
@@ -236,6 +244,28 @@ def assert_original_plan_store_with_restricted_login(selected_template, signed, 
                             'session_user': issuer, 'current_user': issuer,
                             'org_id': SCOPE.org_id, 'project_id': SCOPE.project_id,
                             'read_only': 'on'}
+                    registry_reads = {
+                        table: guarded.execute('SELECT has_table_privilege(current_user,%s,\'SELECT\') AS allowed',
+                                               (table,)).fetchone()['allowed']
+                        for table in ('asset_bundle', 'asset_bundle_version',
+                                      'asset_bundle_artifact', 'asset_bundle_evidence')
+                    }
+                    assert registry_reads == {
+                        'asset_bundle': False,
+                        'asset_bundle_version': False,
+                        'asset_bundle_artifact': False,
+                        'asset_bundle_evidence': False,
+                    }
+                restricted_resolver = ApprovedBIPreparationResolver(
+                    connect_factory=lambda scope: connect_bi_issuer_read_only(
+                        issuer_config, scope),
+                    registry_connect_factory=lambda: connect_bi_issuer_read_only(
+                        issuer_config, SCOPE),
+                    release_root=signed['signed_tree'], trust_roots=trust,
+                    source_alias=signed['source_alias'],
+                    registry_prepared_transaction=True,
+                )
+                assert restricted_resolver.select(SCOPE) is None
                 with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
                     with connect_bi_issuer_read_only(issuer_config, SCOPE) as guarded:
                         guarded.execute('CREATE TEMP TABLE s3oww_read_only_denied (id int)')

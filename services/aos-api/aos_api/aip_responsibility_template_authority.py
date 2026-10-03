@@ -380,12 +380,16 @@ class ApprovedBIPreparationResolver:
         release_root: Path | None = None,
         trust_roots: Any = None,
         source_alias: str | None = None,
+        registry_prepared_transaction: bool = False,
     ) -> None:
+        if type(registry_prepared_transaction) is not bool:
+            raise ValueError("registry transaction mode must be explicit")
         self._connect_factory = connect_factory
         self._registry_connect_factory = registry_connect_factory
         self._release_root = release_root
         self._trust_roots = trust_roots
         self._source_alias = source_alias
+        self._registry_prepared_transaction = registry_prepared_transaction
 
     def select(self, scope: TenantScope) -> ApprovedBIPreparationSelection | None:
         if type(scope) is not TenantScope:
@@ -409,6 +413,7 @@ class ApprovedBIPreparationResolver:
             snapshot = RegistrySnapshotReader(
                 release_policy=ReleasePolicy(trust_roots=roots),
                 connect_factory=self._registry_connect_factory,
+                prepared_transaction=self._registry_prepared_transaction,
             ).read()
             matched = [(row, item) for row in rows for item in snapshot.candidates
                        if (item.publisher, item.id, item.version, item.content_hash)

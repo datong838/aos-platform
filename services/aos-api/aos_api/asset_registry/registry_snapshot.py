@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from psycopg import Error as PsycopgError
+from psycopg import Connection, Error as PsycopgError, IsolationLevel
+from psycopg.pq import TransactionStatus
 from pydantic import ValidationError
 
 from aos_api.asset_registry.composition_contracts import (
@@ -59,10 +60,14 @@ class RegistrySnapshotReader:
         release_policy: ReleasePolicy,
         connect_factory: ConnectFactory = connect,
         clock: TransactionClock | None = None,
+        prepared_transaction: bool = False,
     ) -> None:
+        if type(prepared_transaction) is not bool:
+            raise ValueError("prepared transaction mode must be explicit")
         self._release_policy = release_policy
         self._connect_factory = connect_factory
         self._clock = clock or _transaction_timestamp
+        self._prepared_transaction = prepared_transaction
 
     def read(self) -> RegistrySnapshot:
         """Return all currently eligible published candidates or fail atomically."""
@@ -70,9 +75,18 @@ class RegistrySnapshotReader:
         try:
             release_policy = self._release_policy.snapshot()
             with self._connect_factory() as conn:
-                conn.execute(
-                    "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
-                )
+                if self._prepared_transaction:
+                    if (not isinstance(conn, Connection)
+                            or conn.info.transaction_status != TransactionStatus.INTRANS
+                            or conn.isolation_level != IsolationLevel.REPEATABLE_READ
+                            or conn.read_only is not True):
+                        raise VerificationFailedError(
+                            "prepared registry transaction must be repeatable read and read only"
+                        )
+                else:
+                    conn.execute(
+                        "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY"
+                    )
                 checked_at = self._clock(conn)
                 if (
                     not isinstance(checked_at, datetime)
