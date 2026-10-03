@@ -35,6 +35,13 @@ def _scope(principal: Principal) -> TenantScope:
 
 
 def _require_role(principal: Principal) -> None:
+    if (principal.token_kind != "oidc" or not principal.subject
+            or principal.subject != principal.subject.strip()):
+        raise ApiError(
+            code="AIP_FORMAL_ACTOR_REQUIRED",
+            message="formal authenticated assignee authority actor required",
+            status_code=403,
+        )
     if not {role.lower() for role in principal.roles}.intersection(
         {"admin", "executor", "aip_executor"}
     ):

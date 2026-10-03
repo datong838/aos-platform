@@ -72,7 +72,7 @@ def test_http_command_maps_version_conflict_without_changing_binding():
     binding_id = f"s3oq-{uuid4().hex}"
     store = AipAssigneeResolutionStore()
     principal = Principal(subject="test-only", org_id="org-org",
-                          project_id="dev-project", roles=["admin"])
+                          project_id="dev-project", roles=["admin"], token_kind="oidc")
     upsert_tool_binding(_request(binding_id), principal=principal, store=store)
     with pytest.raises(ApiError) as error:
         upsert_tool_binding(_request(binding_id, tool_id="tool.other"),
