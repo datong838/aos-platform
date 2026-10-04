@@ -127,10 +127,12 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     tmp_path, request, monkeypatch,
 ):
     committed_revoke_case = os.getenv('AOS_B48_COMMITTED_REVOKE') == '1'
+    concurrent_revoke_case = os.getenv('AOS_B49_CONCURRENT_REVOKE') == '1'
+    assert not (committed_revoke_case and concurrent_revoke_case)
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
-    if committed_revoke_case and growth_version != '1.13.0':
+    if (committed_revoke_case or concurrent_revoke_case) and growth_version != '1.13.0':
         pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
@@ -960,9 +962,10 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         scope=SCOPE, role=role, restricted_parts=restricted_parts,
                         lock_function=lock_function, installation=installed['installationId'],
                         etag=selected_view.etag_version, growth=growth,
-                        registry=registry if committed_revoke_case else None,
+                        registry=registry if (committed_revoke_case or concurrent_revoke_case) else None,
+                        concurrent_revoke=concurrent_revoke_case,
                     )
-                    if committed_revoke_case:
+                    if committed_revoke_case or concurrent_revoke_case:
                         return str(binding['generation'])
                 finally:
                     with psycopg.connect(get_dsn()) as admin:
@@ -1072,7 +1075,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
         finally:
             await job.stop()
     verified_generation = asyncio.run(prepare_and_verify())
-    if growth_version == '1.13.0' and not committed_revoke_case:
+    if growth_version == '1.13.0' and not (committed_revoke_case or concurrent_revoke_case):
         with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_BINDING_DRIFT'):
             read_current_runtime_image_evidence(
                 connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),

@@ -2,6 +2,9 @@
 
 import json
 import secrets
+import time
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
 from uuid import uuid4
 
 import psycopg
@@ -14,7 +17,7 @@ from aos_api.db import get_dsn
 
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
-    registry=None,
+    registry=None, concurrent_revoke=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -49,6 +52,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
             for table in ("asset_bundle", "asset_bundle_version"):
                 admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
                               .format(sql.Identifier(table), sql.Identifier(definer)))
+            admin.execute(sql.SQL("GRANT UPDATE(status) ON asset_bundle_version TO {}")
+                          .format(sql.Identifier(definer)))
             admin.execute(sql.SQL("GRANT SELECT,UPDATE ON aip_capability_binding TO {}")
                           .format(sql.Identifier(definer)))
             admin.execute(sql.SQL("GRANT SELECT,INSERT ON aip_agent_registry_receipt TO {}")
@@ -69,7 +74,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                 p_binding text,p_version bigint,p_key text)
                 RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER
                 SET search_path=pg_catalog AS $$
-                DECLARE locked_pk uuid; source_count integer; release_count integer;
+                DECLARE locked_pk uuid; release_pk uuid; source_count integer;
                         next_version bigint;
                         digest text;
                 BEGIN
@@ -106,15 +111,16 @@ def assert_restricted_blocked_evaluate_composes_lock(
                   IF source_count <> 1 THEN
                     RAISE EXCEPTION 'signed source unavailable' USING ERRCODE='42501';
                   END IF;
-                  SELECT count(*) INTO release_count
+                  SELECT v.version_pk INTO release_pk
                     FROM public.asset_bundle_version v
                     JOIN public.asset_bundle b ON b.bundle_pk=v.bundle_pk
                    WHERE b.publisher={}
                      AND b.bundle_id={}
                      AND v.version={}
                      AND v.content_hash={}
-                     AND v.status='published';
-                  IF release_count <> 1 THEN
+                     AND v.status='published'
+                     FOR SHARE OF v;
+                  IF release_pk IS NULL THEN
                     RAISE EXCEPTION 'current release unavailable' USING ERRCODE='42501';
                   END IF;
                   digest := pg_catalog.md5(p_org||':'||p_project||':'||p_binding||':'||
@@ -215,7 +221,14 @@ def assert_restricted_blocked_evaluate_composes_lock(
                                                    binding, 2, key + "-wrong"))
             assert admin.execute("SELECT version FROM aip_capability_binding WHERE "
                 "binding_id=%s", (binding,)).fetchone()["version"] == 2
-            if registry is not None:
+            if concurrent_revoke:
+                assert registry is not None
+                _assert_concurrent_revoke_fails_closed(
+                    admin=admin, registry=registry, restricted_parts=restricted_parts,
+                    call=call, scope=scope, installation=installation, etag=etag,
+                    growth=growth, binding=binding, key=key,
+                )
+            elif registry is not None:
                 revoked = registry.revoke(
                     publisher=growth.publisher, bundle_id=growth.bundle_id,
                     version=growth.version, actor="b48-test-only-revoker",
@@ -247,3 +260,75 @@ def assert_restricted_blocked_evaluate_composes_lock(
             admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(definer)))
             assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
                                  (definer,)).fetchone() is None
+
+
+def _assert_concurrent_revoke_fails_closed(
+    *, admin, registry, restricted_parts, call, scope, installation, etag,
+    growth, binding, key,
+):
+    release = admin.execute("""SELECT v.version_pk FROM asset_bundle_version v
+        JOIN asset_bundle b ON b.bundle_pk=v.bundle_pk
+        WHERE b.publisher=%s AND b.bundle_id=%s AND v.version=%s
+          AND v.content_hash=%s AND v.status='published'""",
+        (growth.publisher, growth.bundle_id, growth.version,
+         growth.content_hash)).fetchone()
+    assert release is not None
+    blocker = psycopg.connect(get_dsn(), autocommit=True)
+    pids = Queue()
+
+    def revoke():
+        return registry.revoke(
+            publisher=growth.publisher, bundle_id=growth.bundle_id,
+            version=growth.version, actor="b49-test-only-revoker",
+            roles={"asset-publisher"}, publisher_scopes={growth.publisher},
+            reason="b49 concurrent revoke versus restricted evaluate",
+        )
+
+    def evaluate():
+        with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+            with limited.transaction():
+                limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                limited.execute("SET statement_timeout='10s'")
+                limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                "set_config('aos.project_id',%s,true)", scope.key)
+                pids.put(limited.execute("SELECT pg_backend_pid() AS pid").fetchone()["pid"])
+                try:
+                    limited.execute(call, (*scope.key, installation, etag,
+                                           binding, 2, key + "-race"))
+                except psycopg.Error as exc:
+                    return exc.sqlstate
+                return "applied"
+
+    def await_lock(*, granted, pid=None):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            count = admin.execute("""SELECT count(*) AS n FROM pg_locks
+                WHERE locktype='advisory' AND classid=228 AND objid=1
+                  AND granted=%s AND (%s::int IS NULL OR pid=%s::int)""",
+                (granted, pid, pid)).fetchone()["n"]
+            if count:
+                return
+            time.sleep(0.025)
+        raise AssertionError("expected advisory lock phase not observed")
+
+    try:
+        blocker.execute("BEGIN")
+        blocker.execute("SELECT 1 FROM asset_bundle_version WHERE version_pk=%s "
+                        "FOR UPDATE", (release["version_pk"],))
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            revoked = pool.submit(revoke)
+            await_lock(granted=True)
+            evaluated = pool.submit(evaluate)
+            limited_pid = pids.get(timeout=8)
+            await_lock(granted=False, pid=limited_pid)
+            blocker.execute("COMMIT")
+            assert revoked.result(timeout=10)["status"] == "revoked"
+            outcome = evaluated.result(timeout=10)
+        assert outcome in {"42501", "40001"}, outcome
+        assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+            "WHERE idempotency_key=%s", (key + "-race",)).fetchone()["n"] == 0
+        assert admin.execute("SELECT version FROM aip_capability_binding "
+            "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 2
+    finally:
+        blocker.execute("ROLLBACK")
+        blocker.close()
