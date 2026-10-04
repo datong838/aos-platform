@@ -2876,6 +2876,96 @@ def test_runtime_role_cannot_call_application_uninstall_command(database):
             )
 
 
+def test_dedicated_noninheriting_installation_command_role(database):
+    scope = TenantScope("org-org", "dev-project")
+    request = _detach_and_release_runtime(database, scope)
+    role = "ar2_install_command_" + uuid4().hex[:12]
+    owner = database.owner
+    owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS").format(sql.Identifier(role)))
+    try:
+        owner.execute(sql.SQL("GRANT aos_app TO {} WITH INHERIT FALSE, SET FALSE").format(sql.Identifier(role)))
+        with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+            rights = conn.execute(
+                "SELECT pg_has_role(session_user,'aos_app','MEMBER') AS member, "
+                "pg_has_role(session_user,'aos_app','USAGE') AS usage, "
+                "pg_has_role(session_user,'aos_app','SET') AS can_set"
+            ).fetchone()
+            assert rights == {"member": True, "usage": False, "can_set": False}
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                conn.execute("SET ROLE aos_app")
+
+        # A hidden schema may surface as UndefinedTable before table ACL is
+        # evaluated; both are the intended no-grant denial.
+        with pytest.raises((psycopg.errors.InsufficientPrivilege, psycopg.errors.UndefinedTable)):
+            with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+                conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                RuntimeUninstallGuard().before_uninstall(
+                    conn, org_id=scope.org_id, project_id=scope.project_id,
+                    installation_id=request.target_installation_id,
+                    expected_installation_revision=1, actor="asset-operator",
+                )
+
+        owner.execute(sql.SQL("GRANT USAGE ON SCHEMA {} TO {}").format(
+            sql.Identifier(database.schema), sql.Identifier(role)))
+        owner.execute(sql.SQL("GRANT SELECT ON {} TO {}").format(
+            sql.Identifier(database.schema, "bundle_installation"), sql.Identifier(role)))
+        owner.execute(sql.SQL(
+            "GRANT UPDATE (current_revision,etag_version,active_revision) ON {} TO {}"
+        ).format(sql.Identifier(database.schema, "bundle_installation"), sql.Identifier(role)))
+        owner.execute(sql.SQL("GRANT SELECT,INSERT ON {} TO {}").format(
+            sql.Identifier(database.schema, "bundle_installation_revision"), sql.Identifier(role)))
+        owner.execute(sql.SQL("GRANT SELECT ON {} TO {}").format(
+            sql.Identifier(database.schema, "extension_runtime_uninstall_receipt"), sql.Identifier(role)))
+        owner.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {}(uuid,bigint,text) TO {}").format(
+            sql.Identifier(database.schema, "extension_runtime_uninstall_commit_ar2_018"),
+            sql.Identifier(role)))
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+                conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                conn.execute(
+                    "UPDATE extension_runtime_binding SET enabled=false "
+                    "WHERE org_id=%s AND project_id=%s AND installation_id=%s",
+                    (*scope.key, request.target_installation_id),
+                )
+        with pytest.raises(psycopg.errors.SerializationFailure, match="current active installation authority"):
+            with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+                conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+                conn.execute("SELECT set_config('aos.org_id',%s,true)", ("dev-org",))
+                conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+                RuntimeUninstallGuard().before_uninstall(
+                    conn, org_id=scope.org_id, project_id=scope.project_id,
+                    installation_id=request.target_installation_id,
+                    expected_installation_revision=1, actor="asset-operator",
+                )
+        with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+            conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
+            conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
+            receipt = RuntimeUninstallGuard().before_uninstall(
+                conn, org_id=scope.org_id, project_id=scope.project_id,
+                installation_id=request.target_installation_id,
+                expected_installation_revision=1, actor="asset-operator",
+            )
+            assert receipt["authorityData"]["releasedResourceCount"] == 1
+            _append_minimal_uninstalled_revision(
+                conn, scope, request.target_installation_id, 1,
+            )
+            conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+        assert owner.execute(
+            "SELECT count(*) AS n FROM extension_runtime_uninstall_receipt "
+            "WHERE org_id=%s AND project_id=%s AND installation_id=%s",
+            (*scope.key, request.target_installation_id),
+        ).fetchone()["n"] == 1
+    finally:
+        owner.execute(sql.SQL("DROP OWNED BY {}").format(sql.Identifier(role)))
+        owner.execute(sql.SQL("REVOKE aos_app FROM {}").format(sql.Identifier(role)))
+        owner.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
+
+
 def test_direct_runtime_uninstall_binding_without_receipt_is_rejected(database):
     scope = TenantScope("org-org", "dev-project")
     request = _detach_and_release_runtime(database, scope)
