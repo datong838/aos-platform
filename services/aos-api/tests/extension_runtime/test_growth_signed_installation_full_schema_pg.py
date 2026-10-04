@@ -292,6 +292,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     alembic = Config(str(ROOT / 'services/aos-api/alembic.ini'))
     alembic.set_main_option('script_location', str(ROOT / 'services/aos-api/alembic'))
     graph = ScriptDirectory.from_config(alembic)
+    expected_schema_head = graph.get_current_head()
+    assert expected_schema_head is not None
     revisions = lambda head: {item.revision for item in graph.walk_revisions(base='base', head=head)}
     with connect(SCOPE) as conn:
         current_records = {
@@ -1086,7 +1088,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 assert runtime_view.authorization == 'EVIDENCE_ONLY_NO_START'
                 assert runtime_view.release_evidence.active_revision == runtime_view.release_evidence.current_revision
                 assert runtime_view.binding_generation == str(binding['generation'])
-                assert runtime_view.schema_head == 'a0v_135'
+                assert runtime_view.schema_head == expected_schema_head
                 assert len(runtime_view.images) == 3
                 assert {item.bundle_id for item in runtime_view.images} == set(runtime_view.release_evidence.runtime_members)
                 assert all(item.image_digest.startswith('sha256:') and item.config_digest.startswith('sha256:')
@@ -1102,7 +1104,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 assert formal['installationId'] == installed['installationId']
                 assert formal['growthVersion'] == '1.13.0'
                 assert formal['bindingGeneration'] == str(binding['generation'])
-                assert formal['schemaHead'] == 'a0v_135'
+                assert formal['schemaHead'] == expected_schema_head
                 assert len(formal['images']) == 3
                 # A resource observed released is no longer an Owner candidate,
                 # even if its cleanup state and lease deadline remain unchanged.

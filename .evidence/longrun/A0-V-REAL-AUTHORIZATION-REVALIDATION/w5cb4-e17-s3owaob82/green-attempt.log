@@ -1,0 +1,52 @@
+.....FFFFFF.............                                                 [100%]
+=================================== FAILURES ===================================
+_ test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+_ test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+_ test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+_ test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+_ test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+_ test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:106: in test_immutable_history_rejects_even_maintenance_mutation
+    owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ObjectNotInPrerequisiteState: AIP6_REGISTRY_APPEND_ONLY
+E   CONTEXT:  PL/pgSQL function guard_aip6_registry_append_only() line 3 at RAISE
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_binding_evaluation_proof]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_binding_evaluation_proof]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_binding_evaluation_proof]
+6 failed, 18 passed, 7 warnings in 4.98s

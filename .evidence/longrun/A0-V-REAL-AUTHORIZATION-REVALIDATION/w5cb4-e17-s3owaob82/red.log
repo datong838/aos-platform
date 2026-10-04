@@ -1,0 +1,120 @@
+FEEEEEEEEEEE                                                             [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_head] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_runtime_can_read_only_its_tenant_and_cannot_write[aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+____ ERROR at setup of test_exact_source_and_same_tenant_links_are_enforced ____
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+_ ERROR at setup of test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_binding_evaluation_proof] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+____ ERROR at setup of test_missing_dimension_and_invalid_validity_rejected ____
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:44: in source
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "aip_license_source_issuance" does not exist
+E   LINE 1: SELECT count(*) FROM aip_license_source_issuance
+E                                ^
+=================================== FAILURES ===================================
+_____________ test_source_schema_exists_without_implicit_issuance ______________
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:25: in test_source_schema_exists_without_implicit_issuance
+    assert owner.execute('SELECT to_regclass(%s)', ('public.' + table,)).fetchone()[0]
+E   assert None
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_source_schema_exists_without_implicit_issuance
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_issuance]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_head]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_runtime_can_read_only_its_tenant_and_cannot_write[aip_binding_evaluation_proof]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_exact_source_and_same_tenant_links_are_enforced
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_binding_evaluation_proof]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_binding_evaluation_proof]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_binding_evaluation_proof]
+ERROR services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_missing_dimension_and_invalid_validity_rejected
+1 failed, 7 warnings, 11 errors in 4.75s
