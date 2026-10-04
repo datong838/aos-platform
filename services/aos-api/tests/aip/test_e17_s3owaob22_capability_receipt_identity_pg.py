@@ -78,17 +78,25 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
         conn.execute("SELECT set_config('aos.org_id',%s,true),"
                      "set_config('aos.project_id','dev-project',true)", (org,))
 
-    def receipt(conn, operation, key, *, binding="b22-binding", revision="1"):
+    def receipt(conn, operation, key, *, binding="b22-binding", revision="1",
+                source_id=None, source_revision="1"):
         result_type = ("CapabilityBindingReadiness" if operation == "capability_binding.evaluate"
                        else "CapabilityBinding")
-        source_type = "Capability" if operation == "capability_binding.create" else "CapabilityBinding"
+        is_create = operation == "capability_binding.create"
+        source_type = "Capability" if is_create else "CapabilityBinding"
+        source = {
+            "resourceType": source_type,
+            "resourceId": (published_id if source_id is None else source_id) if is_create else binding,
+        }
+        if is_create:
+            source["revision"] = source_revision
         return conn.execute("""INSERT INTO aip_agent_registry_receipt(
             org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
             resource_ref,result_ref,status,created_by,created_at)
             VALUES('org-org','dev-project',%s,%s,%s,%s,%s::jsonb,%s::jsonb,
                    'applied','b22-test',now())""",
             (key, operation, key, "f" * 64,
-             json.dumps({"resourceType": source_type, "resourceId": binding}),
+             json.dumps(source),
              json.dumps({"resourceType": result_type, "resourceId": binding,
                          "revision": revision})))
 
@@ -261,7 +269,9 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                            AND b.xmin::text=pg_current_xact_id()::text
                            AND ((NEW.operation='capability_binding.create'
                                  AND NEW.result_ref->>'resourceType'='CapabilityBinding'
-                                 AND NEW.resource_ref->>'resourceType'='Capability')
+                                 AND NEW.resource_ref->>'resourceType'='Capability'
+                                 AND NEW.resource_ref->>'resourceId'=b.capability_ref->>'assetId'
+                                 AND NEW.resource_ref->>'revision'=b.capability_ref->>'revision')
                              OR (NEW.operation='capability_binding.update'
                                  AND NEW.result_ref->>'resourceType'='CapabilityBinding'
                                  AND NEW.resource_ref->>'resourceType'='CapabilityBinding')
@@ -364,6 +374,18 @@ def test_clone_only_capability_operation_guard_preserves_normal_receipts():
                 set_scope(conn)
                 insert_binding(conn, "b22-binding")
                 receipt(conn, "capability_binding.create", "b22-created")
+            for binding, source_id, source_revision in (
+                ("b32-wrong-source-id", "b30.other-capability", "1"),
+                ("b32-wrong-source-revision", published_id, "2"),
+                ("b32-missing-source-revision", published_id, None),
+            ):
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with login(issuer) as conn:
+                        set_scope(conn)
+                        insert_binding(conn, binding)
+                        receipt(conn, "capability_binding.create", binding,
+                                binding=binding, source_id=source_id,
+                                source_revision=source_revision)
             with login(issuer) as conn:
                 set_scope(conn)
                 assert conn.execute("SELECT session_user,current_user").fetchone() == (issuer, issuer)
