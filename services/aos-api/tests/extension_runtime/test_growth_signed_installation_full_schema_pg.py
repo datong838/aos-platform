@@ -126,9 +126,12 @@ def _signed_release():
 def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     tmp_path, request, monkeypatch,
 ):
+    committed_revoke_case = os.getenv('AOS_B48_COMMITTED_REVOKE') == '1'
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
+    if committed_revoke_case and growth_version != '1.13.0':
+        pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
     registry = RegistryService(
@@ -957,7 +960,10 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         scope=SCOPE, role=role, restricted_parts=restricted_parts,
                         lock_function=lock_function, installation=installed['installationId'],
                         etag=selected_view.etag_version, growth=growth,
+                        registry=registry if committed_revoke_case else None,
                     )
+                    if committed_revoke_case:
+                        return str(binding['generation'])
                 finally:
                     with psycopg.connect(get_dsn()) as admin:
                         admin.execute(sql.SQL('''DROP FUNCTION IF EXISTS public.{}(
@@ -1066,7 +1072,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
         finally:
             await job.stop()
     verified_generation = asyncio.run(prepare_and_verify())
-    if growth_version == '1.13.0':
+    if growth_version == '1.13.0' and not committed_revoke_case:
         with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_BINDING_DRIFT'):
             read_current_runtime_image_evidence(
                 connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),

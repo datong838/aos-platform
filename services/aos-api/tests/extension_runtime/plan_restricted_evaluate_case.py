@@ -14,6 +14,7 @@ from aos_api.db import get_dsn
 
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
+    registry=None,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -45,6 +46,9 @@ def assert_restricted_blocked_evaluate_composes_lock(
             for table in scoped_tables[:3]:
                 admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
                               .format(sql.Identifier(table), sql.Identifier(definer)))
+            for table in ("asset_bundle", "asset_bundle_version"):
+                admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
+                              .format(sql.Identifier(table), sql.Identifier(definer)))
             admin.execute(sql.SQL("GRANT SELECT,UPDATE ON aip_capability_binding TO {}")
                           .format(sql.Identifier(definer)))
             admin.execute(sql.SQL("GRANT SELECT,INSERT ON aip_agent_registry_receipt TO {}")
@@ -65,7 +69,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
                 p_binding text,p_version bigint,p_key text)
                 RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER
                 SET search_path=pg_catalog AS $$
-                DECLARE locked_pk uuid; source_count integer; next_version bigint;
+                DECLARE locked_pk uuid; source_count integer; release_count integer;
+                        next_version bigint;
                         digest text;
                 BEGIN
                   IF session_user IS DISTINCT FROM {}
@@ -101,6 +106,17 @@ def assert_restricted_blocked_evaluate_composes_lock(
                   IF source_count <> 1 THEN
                     RAISE EXCEPTION 'signed source unavailable' USING ERRCODE='42501';
                   END IF;
+                  SELECT count(*) INTO release_count
+                    FROM public.asset_bundle_version v
+                    JOIN public.asset_bundle b ON b.bundle_pk=v.bundle_pk
+                   WHERE b.publisher={}
+                     AND b.bundle_id={}
+                     AND v.version={}
+                     AND v.content_hash={}
+                     AND v.status='published';
+                  IF release_count <> 1 THEN
+                    RAISE EXCEPTION 'current release unavailable' USING ERRCODE='42501';
+                  END IF;
                   digest := pg_catalog.md5(p_org||':'||p_project||':'||p_binding||':'||
                       p_version::text||':'||p_key);
                   digest := digest||digest;
@@ -133,6 +149,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     sql.Identifier(function), sql.Literal(role),
                     sql.Identifier(lock_function), sql.Literal(growth.publisher),
                     sql.Literal(growth.bundle_id), sql.Literal(growth.version),
+                    sql.Literal(growth.content_hash), sql.Literal(growth.publisher),
+                    sql.Literal(growth.bundle_id), sql.Literal(growth.version),
                     sql.Literal(growth.content_hash)))
             admin.execute(sql.SQL("ALTER FUNCTION {} OWNER TO {}")
                           .format(signature, sql.Identifier(definer)))
@@ -156,6 +174,12 @@ def assert_restricted_blocked_evaluate_composes_lock(
                                     "set_config('aos.project_id',%s,true)", scope.key)
                     assert limited.execute("SELECT has_table_privilege(session_user,"
                         "'aip_capability_binding','UPDATE') AS writable").fetchone()["writable"] is False
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        with limited.transaction():
+                            limited.execute("""UPDATE aip_capability_binding
+                                SET operational_readiness='available'
+                                WHERE org_id=%s AND project_id=%s AND binding_id=%s""",
+                                (*scope.key, binding))
                     assert limited.execute(call, (*scope.key, installation, etag,
                                                   binding, 1, key)).fetchone()["revision"] == 2
                     with psycopg.connect(get_dsn(), autocommit=True) as contender:
@@ -191,6 +215,28 @@ def assert_restricted_blocked_evaluate_composes_lock(
                                                    binding, 2, key + "-wrong"))
             assert admin.execute("SELECT version FROM aip_capability_binding WHERE "
                 "binding_id=%s", (binding,)).fetchone()["version"] == 2
+            if registry is not None:
+                revoked = registry.revoke(
+                    publisher=growth.publisher, bundle_id=growth.bundle_id,
+                    version=growth.version, actor="b48-test-only-revoker",
+                    roles={"asset-publisher"},
+                    publisher_scopes={growth.publisher},
+                    reason="b48 committed revoke versus restricted evaluate",
+                )
+                assert revoked["status"] == "revoked"
+                with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                    with limited.transaction():
+                        limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                        limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                        "set_config('aos.project_id',%s,true)", scope.key)
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                            with limited.transaction():
+                                limited.execute(call, (*scope.key, installation, etag,
+                                                       binding, 2, key + "-revoked"))
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE idempotency_key=%s", (key + "-revoked",)).fetchone()["n"] == 0
+                assert admin.execute("SELECT version FROM aip_capability_binding "
+                    "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 2
         finally:
             admin.execute(sql.SQL("DROP FUNCTION IF EXISTS {}") .format(signature))
             for table in scoped_tables:
