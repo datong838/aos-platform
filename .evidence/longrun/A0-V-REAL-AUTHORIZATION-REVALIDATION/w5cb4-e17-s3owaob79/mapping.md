@@ -1,6 +1,6 @@
 # b79 当前来源映射与生产落点修正
 
-代码7b0626ec，官方authority AOS-001329。实际Alembic ScriptDirectory.get_heads()输出唯一a0v_135；a0v_135_shared_schema_receipt_owner_acl.py仅收紧extension_schema_installation的runtime写权，不存在正式License source/head初始化。
+代码7b0626ec，官方authority AOS-001329。实际Alembic ScriptDirectory.get_heads()输出唯一a0v_135；a0v_135_extension_schema_acl.py仅收紧extension_schema_installation的runtime写权，不存在正式License source/head初始化。
 
 | 合同项 | 实际源码/权威 | 当前能证明什么 | 未闭合项 |
 |---|---|---|---|
@@ -26,3 +26,5 @@ b78已列source_issuance/head候选表仍不能因“head存在”获得权威�
 先正式八依赖evaluator/source initializer整体方案（文件、DTO、issuer identity、同事务读取、锁序、Receipt、兼容）和独立复核；使用当前可检查源码，与BIND-1 §5一致。先新增不可用正式evaluator的真实HTTP/PG RED和独立身份ACL准入测试，再最小实现source/head schema与同事务命令；不把普通lifecycle身份放宽为eval。License issuer许可来源的未决项继续fail-closed，读者缺源不授权；独立W-L20来源路径可继续。不得把增加空服务/永远503占位当成最终实现或完成证据。
 
 本wave仅静态mapping与Alembic头实读，未做业务副作用或运行验证，不声称正式安装、配置或首链完成。Goal active；current135只读/Host等独立授权门不变。
+
+路径更正：首版migration描述名误写，实际rg和source-hashes均指向a0v_135_extension_schema_acl.py；仅更正文档，唯一head135结论不变。
