@@ -36,6 +36,36 @@ def exact_file(repo, relative, roots):
     return current
 
 
+def process_identity(pid):
+    if type(pid) is not int or pid <= 0:
+        raise ValueError('invalid command PID')
+    result = subprocess.run(['ps', '-p', str(pid), '-o', 'uid=', '-o', 'lstart=', '-o', 'comm='],
+                            capture_output=True, text=True, timeout=5, env={'PATH': '/usr/bin:/bin', 'LC_ALL': 'C'})
+    if result.returncode == 1 and not result.stdout.strip():
+        return None
+    result.check_returncode()
+    parts = result.stdout.strip().split(maxsplit=6)
+    if len(parts) != 7:
+        raise ValueError('unexpected process identity')
+    return {'uid': int(parts[0]), 'started': ' '.join(parts[1:6]), 'comm': parts[6]}
+
+
+def command_observation(command, now):
+    if command.get('status') == 'UNKNOWN_EXTERNAL':
+        return 'UNKNOWN_EXTERNAL'
+    if command.get('status') != 'RUNNING':
+        raise ValueError('unknown command state')
+    deadline = datetime.fromisoformat(command['deadline_at'])
+    if deadline.utcoffset() is None:
+        raise ValueError('command deadline must include timezone')
+    identity = process_identity(command['pid'])
+    if identity is None:
+        return 'EXIT_UNRECONCILED'
+    if identity != {'uid': os.getuid(), 'started': command['started'], 'comm': command['comm']}:
+        return 'IDENTITY_MISMATCH'
+    return 'EXPIRED' if now >= deadline.timestamp() else 'ACTIVE'
+
+
 def checkpoint_snapshot(repo, thread, checkpoint, context):
     cp = json.loads(exact_file(repo, checkpoint, ('.evidence',)).read_text())
     required = ('task_id', 'owner', 'authority_revision', 'step')
@@ -73,7 +103,10 @@ def checkpoint_snapshot(repo, thread, checkpoint, context):
             hashes[relative] = hashlib.sha256(file.read_bytes()).hexdigest()
     if not hashes:
         raise ValueError('checkpoint must reference evidence or code')
-    return dict((k, cp[k]) for k in required) | {'fingerprint': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()}
+    result = dict((k, cp[k]) for k in required) | {'fingerprint': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()}
+    if 'command' in cp:
+        result['command_state'] = command_observation(cp['command'], time.time())
+    return result
 
 
 def snapshot(repo, thread, checkpoint=None, context=None):
@@ -110,6 +143,8 @@ def observe(previous, current, event, now):
     age = max(0, int(now - current['code_time']))
     review = unchanged >= 2 or age >= 1800 or not current['code_commit']
     action = ('TASK_PROGRESS_OBSERVED' if task_changed else 'REVIEW_REQUIRED') if cp else ('REVIEW_REQUIRED' if review else 'CONTINUE')
+    if cp and cp.get('command_state'):
+        action = {'ACTIVE': 'WAIT_EXISTING_TOOL', 'UNKNOWN_EXTERNAL': 'RECONCILE_RECEIPT_ONLY'}.get(cp['command_state'], 'REVIEW_REQUIRED')
     return dict(current, schema='aos-wake-progress/v2', event=event,
                 observed_at=now, unchanged_wakes=unchanged, code_age_seconds=age,
                 action=action,

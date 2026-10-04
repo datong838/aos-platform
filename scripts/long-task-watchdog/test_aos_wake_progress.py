@@ -2,8 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 from subprocess import run
-from aos_wake_progress import observe, snapshot, checkpoint_snapshot, exact_file, recovery_guidance
+from aos_wake_progress import observe, snapshot, checkpoint_snapshot, exact_file, recovery_guidance, process_identity, command_observation
 import json
+import os
 from datetime import datetime, timezone, timedelta
 
 class ProgressTest(unittest.TestCase):
@@ -159,5 +160,41 @@ class FixedRecoveryCasesTest(unittest.TestCase):
         for case in data['cases']:
             with self.subTest(case=case['id'],partition=case['partition']):
                 self.assertEqual(recovery_guidance(**case['input']),case['expected'])
+
+class LongToolTest(unittest.TestCase):
+    def current(self, state):
+        return dict(repo='/repo',thread='thread',branch='m1',head='a',code_commit='a',code_time=100,
+                    checkpoint={'task_id':'task','owner':'owner','authority_revision':'AOS-001329',
+                                'step':'test','fingerprint':'same','command_state':state})
+
+    def test_live_tool_does_not_allow_takeover(self):
+        self.assertEqual(observe({},self.current('ACTIVE'),'001',3000)['action'],'WAIT_EXISTING_TOOL')
+
+    def test_unknown_effect_requires_reconciliation(self):
+        self.assertEqual(observe({},self.current('UNKNOWN_EXTERNAL'),'001',3000)['action'],'RECONCILE_RECEIPT_ONLY')
+
+    def test_expired_or_lost_tool_requires_review_not_takeover(self):
+        for state in ('EXPIRED','IDENTITY_MISMATCH','EXIT_UNRECONCILED'):
+            self.assertEqual(observe({},self.current(state),'001',3000)['action'],'REVIEW_REQUIRED')
+
+class ActualProcessIdentityTest(unittest.TestCase):
+    def command(self):
+        ident=process_identity(os.getpid())
+        return dict(status='RUNNING',pid=os.getpid(),started=ident['started'],comm=ident['comm'],
+                    deadline_at=(datetime.now(timezone.utc)+timedelta(minutes=1)).isoformat())
+
+    def test_current_process_verified_without_args(self):
+        self.assertEqual(command_observation(self.command(),datetime.now(timezone.utc).timestamp()),'ACTIVE')
+
+    def test_reused_identity_and_expired_bound_do_not_kill(self):
+        c=self.command();c['started']='wrong-generation'
+        self.assertEqual(command_observation(c,0),'IDENTITY_MISMATCH')
+        c=self.command();c['deadline_at']='2000-01-01T00:00:00+00:00'
+        self.assertEqual(command_observation(c,datetime.now(timezone.utc).timestamp()),'EXPIRED')
+        self.assertIsNotNone(process_identity(os.getpid()))
+
+    def test_naive_deadline_rejected(self):
+        c=self.command();c['deadline_at']='2026-10-04T00:00:00'
+        with self.assertRaises(ValueError):command_observation(c,0)
 
 if __name__=='__main__': unittest.main()
