@@ -18,6 +18,7 @@ from aos_api.db import get_dsn
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
     registry=None, concurrent_revoke=False, evaluate_first=False,
+    forged_available=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -210,6 +211,11 @@ def assert_restricted_blocked_evaluate_composes_lock(
             assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
                 "WHERE operation='capability_binding.evaluate' AND idempotency_key=%s",
                 (key,)).fetchone()["n"] == 1
+            if forged_available:
+                _assert_ordinary_issuer_cannot_forge_available(
+                    admin=admin, restricted_parts=restricted_parts,
+                    scope=scope, binding=binding, key=key,
+                )
             with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
                 with limited.transaction():
                     limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
@@ -267,6 +273,64 @@ def assert_restricted_blocked_evaluate_composes_lock(
             admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(definer)))
             assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
                                  (definer,)).fetchone() is None
+
+
+def _assert_ordinary_issuer_cannot_forge_available(
+    *, admin, restricted_parts, scope, binding, key,
+):
+    issuer = "b62b_issuer_" + secrets.token_hex(4)
+    password = secrets.token_urlsafe(32)
+    policy = "b62b_policy_" + secrets.token_hex(4)
+    tables = ("aip_capability_binding", "aip_agent_registry_receipt")
+    admin.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
+                  .format(sql.Identifier(issuer), sql.Literal(password)))
+    try:
+        admin.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}")
+                      .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT SELECT,UPDATE ON aip_capability_binding TO {}")
+                      .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT SELECT,INSERT ON aip_agent_registry_receipt TO {}")
+                      .format(sql.Identifier(issuer)))
+        for table in tables:
+            admin.execute(sql.SQL("CREATE POLICY {} ON {} TO {} "
+                "USING(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true)) "
+                "WITH CHECK(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true))")
+                .format(sql.Identifier(policy + table), sql.Identifier(table),
+                        sql.Identifier(issuer)))
+        issuer_parts = dict(restricted_parts, user=issuer, password=password)
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with psycopg.connect(**issuer_parts, row_factory=dict_row) as limited:
+                with limited.transaction():
+                    limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                    "set_config('aos.project_id',%s,true)", scope.key)
+                    limited.execute("""UPDATE aip_capability_binding SET
+                        operational_readiness='available',
+                        dependency_snapshot_hash=%s,
+                        readiness_reasons='[]'::jsonb,
+                        last_evaluated_at=clock_timestamp(),
+                        readiness_expires_at=clock_timestamp()+interval '15 minutes',
+                        version=version+1
+                        WHERE org_id=%s AND project_id=%s AND binding_id=%s AND version=2""",
+                        ("f" * 64, *scope.key, binding))
+                    limited.execute("""INSERT INTO aip_agent_registry_receipt(
+                        org_id,project_id,receipt_id,operation,idempotency_key,
+                        request_hash,resource_ref,result_ref,status,created_by,created_at)
+                        VALUES(%s,%s,%s,'capability_binding.evaluate',%s,%s,
+                        %s::jsonb,%s::jsonb,'applied',%s,clock_timestamp())""",
+                        (*scope.key, "b62b-" + key, "b62b-" + key, "f" * 64,
+                         json.dumps({"resourceType": "CapabilityBinding", "resourceId": binding}),
+                         json.dumps({"resourceType": "CapabilityBindingReadiness",
+                                     "resourceId": binding, "revision": "3"}), issuer))
+    finally:
+        for table in tables:
+            admin.execute(sql.SQL("DROP POLICY IF EXISTS {} ON {}")
+                          .format(sql.Identifier(policy + table), sql.Identifier(table)))
+        admin.execute(sql.SQL("DROP OWNED BY {}") .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(issuer)))
+        assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
+                             (issuer,)).fetchone() is None
 
 
 def _assert_concurrent_revoke_fails_closed(
