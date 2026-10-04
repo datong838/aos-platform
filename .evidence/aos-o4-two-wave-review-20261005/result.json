@@ -1,0 +1,38 @@
+{
+  "schema": "aos-material-review-result/v1",
+  "mode": "tools-disabled-material-only",
+  "result": {
+    "request_id": "o4-b70-b71-frozen-20261005-v1",
+    "task_id": "aos-o4-two-wave-review-20261005",
+    "owner": "codex-01a107a2-e9e4-7670-bc44-1144fa9b27e2",
+    "kind": "route",
+    "baseline": {
+      "head": "3906c0b750cdfbf9c253ad7645d779e8e3a340e5",
+      "authority_revision": "AOS-001329",
+      "files": {
+        ".evidence/aos-o4-two-wave-review-20261005/material.md": "10bcec69ccff0584cb32dae5fd5b62570fd842b82ec57ecc1f426e367dd35b81"
+      }
+    },
+    "verdict": "PASS",
+    "findings": [
+      {
+        "claim": "b70两项实际失败分别证明旧快照接受已提交撤销和License写者没有等待共同锁。",
+        "evidence": "SOURCE .evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob70/verification.md 明确声明两项保留真正失败、不用xfail或修改期望掩盖；SOURCE .evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob70/revoke-first-red.txt 在 services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:847 assert 捕获 AssertionError: ('B70_STALE_SNAPSHOT_AFTER_COMMITTED_LICENSE_REVOKE', 'applied', 1, 3)，对应旧快照接受已提交撤销；SOURCE .evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob70/evaluate-first-red.txt 在 plan_restricted_evaluate_case.py:876 assert 捕获 AssertionError: B70_LICENSE_WRITER_COMMITTED_BEFORE_EVALUATOR_WITHOUT_COMMON_LOCK，对应License写者未等待共同锁即提交。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "b71仅是一次性库中epoch候选的两顺序验证，不能认定正式权威、当前实例授权或自然首链通过。",
+        "evidence": "SOURCE .evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob71/verification.md 明确指出这是test-only concurrency candidate、不是正式可信epoch权威；b70真实两RED保留且b71只改两测试文件、随机epoch表只在disposable库、原生产Store未改。",
+        "assessment": "supported"
+      },
+      {
+        "claim": "当前已登记安全下一步是候选幂等与回滚RED和正式写者合同，局部缺口不满足整个Goal停止条件。",
+        "evidence": "SOURCE .evidence/longrun/A0-V-REAL-AUTHORIZATION-REVALIDATION/w5cb4-e17-s3owaob71/verification.md 复审和剩余风险段落注明重复key与并发同key尚待专门验证、不能声称幂等合同完备；正式化须覆盖writer DB强制门、epoch初始化/来源绑定/迁移恢复与多来源锁序后另波批准；O4第二真实施工观察不将两测试波当全天候效果通过；独立复核与新thread实际定时到达尚待核验。",
+        "assessment": "supported"
+      }
+    ],
+    "next_safe_step": "保留当前AOS-001329基础与b70/b71候选结果，进入b72候选设计：冻结幂等键/回滚RED验证与正式写者DB强制门合同，不要将b71单次epoch fence当作生产权威或使用其跳过全局Goal停止条件。"
+  },
+  "execution_authorized": false,
+  "runner_sha256": "cf7c089cb3fbaec4e4f84c87607c07548622c44a4760bbf6f2991685d1ae084f"
+}
