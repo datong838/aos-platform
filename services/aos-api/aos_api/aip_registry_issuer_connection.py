@@ -26,6 +26,7 @@ CAPABILITY_ISSUER_LOGIN = "aos_aip_capability_issuer"
 _ISSUER_LOGINS = {"agent": ISSUER_LOGIN, "skill": SKILL_ISSUER_LOGIN,
                   "capability": CAPABILITY_ISSUER_LOGIN,
                   "capability_lifecycle": CAPABILITY_ISSUER_LOGIN}
+_LIFECYCLE_UPDATE_COLUMNS = ("health", "observed_at", "status", "updated_at", "version")
 _DATABASE = re.compile(r"[a-z][a-z0-9_]{0,62}\Z")
 _FORBIDDEN_PG_ENV = ("PGPASSWORD", "PGPASSFILE", "PGSERVICE", "PGSERVICEFILE", "PGOPTIONS")
 _OPTIONS = ("-c statement_timeout=10000 -c lock_timeout=5000 "
@@ -107,6 +108,12 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
       has_table_privilege(session_user,'public.aip_capability_binding','SELECT') AS capability_select,
       has_table_privilege(session_user,'public.aip_capability_binding','INSERT') AS capability_insert,
       has_table_privilege(session_user,'public.aip_capability_binding','UPDATE') AS capability_update,
+      (SELECT COALESCE(array_agg(a.attname ORDER BY a.attname) FILTER (
+          WHERE has_column_privilege(session_user,'public.aip_capability_binding',
+                                     a.attname,'UPDATE')), ARRAY[]::name[])
+         FROM pg_attribute a
+        WHERE a.attrelid='public.aip_capability_binding'::regclass
+          AND a.attnum>0 AND NOT a.attisdropped) AS capability_update_columns,
       has_table_privilege(session_user,'public.aip_capability_binding','DELETE') AS capability_delete,
       has_table_privilege(session_user,'public.aip_capability_revision','SELECT') AS capability_revision_select,
       (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class
@@ -169,7 +176,8 @@ def _require_identity(conn, config: RegistryIssuerDatabaseConfig, scope: TenantS
                 not row["capability_rls"] or not row["capability_revision_select"]
                 or not row["capability_select"] or not row["capability_insert"]
                 or row["capability_delete"]
-                or row["capability_update"] != (command_family == "capability_lifecycle")))
+                or tuple(row["capability_update_columns"]) != (
+                    _LIFECYCLE_UPDATE_COLUMNS if command_family == "capability_lifecycle" else ())))
             or (command_family not in {"capability", "capability_lifecycle"} and (
                 row["capability_insert"] or row["capability_update"]
                 or row["capability_delete"]))):

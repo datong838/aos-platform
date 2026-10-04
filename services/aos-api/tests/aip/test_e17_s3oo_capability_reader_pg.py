@@ -20,7 +20,8 @@ from aos_api.aip_agent_registry_contracts import (
     UpdateCapabilityBindingRequest, VersionedAssetRef,
 )
 from aos_api.aip_agent_registry_store import (
-    AipAgentRegistryConflict, AipAgentRegistryTransitionBlocked,
+    AipAgentRegistryConflict, AipAgentRegistryPersistenceError,
+    AipAgentRegistryTransitionBlocked,
 )
 from aos_api.aip_binding_readiness_service import (
     AipBindingReadinessService, PostgresBindingDependencyAuthority,
@@ -274,6 +275,12 @@ def test_lifecycle_issuer_requires_exact_update_without_delete(
         with lifecycle_issuer(scope):
             pass
     with connect() as owner:
+        owner.execute("REVOKE DELETE ON aip_capability_binding FROM aos_aip_capability_issuer")
+        owner.commit()
+    with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with lifecycle_issuer(scope):
+            pass
+    with connect() as owner:
         owner.execute("GRANT UPDATE,DELETE ON aip_capability_binding TO aos_aip_capability_issuer")
         owner.commit()
     with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
@@ -311,10 +318,6 @@ def test_column_grants_keep_readiness_out_of_ordinary_issuer_dml(
                 (*scope.key, request.binding_id))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="lifecycle issuer preflight still requires broad Binding UPDATE",
-)
 def test_lifecycle_issuer_can_omit_readiness_column_write_grants(
     capability_case, capability_issuer,
 ):
@@ -334,7 +337,28 @@ def test_lifecycle_issuer_can_omit_readiness_column_write_grants(
         assert privileges == {"readiness_write": False, "status_write": True}
 
 
-def test_original_capability_evaluate_uses_explicit_reader_and_issuer_cas(
+@pytest.mark.parametrize("columns", [
+    "status,health,observed_at,updated_at",
+    "status,health,observed_at,version,updated_at,operational_readiness",
+])
+def test_lifecycle_issuer_rejects_missing_or_extra_update_column(
+    capability_case, capability_issuer, columns,
+):
+    scope, _ = capability_case
+    with connect() as owner:
+        owner.execute(sql.SQL("GRANT UPDATE({}) ON aip_capability_binding "
+                              "TO aos_aip_capability_issuer").format(
+                                  sql.SQL(",").join(
+                                      sql.Identifier(name) for name in columns.split(","))))
+        owner.commit()
+    lifecycle_issuer = RegistryIssuerConnectionFactory(
+        capability_issuer.config, command_family="capability_lifecycle")
+    with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
+        with lifecycle_issuer(scope):
+            pass
+
+
+def test_original_capability_evaluate_fails_closed_under_narrow_issuer_acl(
     capability_case, capability_issuer, readiness_reader,
 ):
     scope, request = capability_case
@@ -343,7 +367,8 @@ def test_original_capability_evaluate_uses_explicit_reader_and_issuer_cas(
         idempotency_key=f"s3oo:create:{request.binding_id}",
         actor="test-only", occurred_at=datetime.now(UTC))
     with connect() as owner:
-        owner.execute("GRANT UPDATE ON aip_capability_binding TO aos_aip_capability_issuer")
+        owner.execute("""GRANT UPDATE(status,health,observed_at,version,updated_at)
+            ON aip_capability_binding TO aos_aip_capability_issuer""")
         owner.commit()
     lifecycle_issuer = RegistryIssuerConnectionFactory(
         capability_issuer.config, command_family="capability_lifecycle")
@@ -365,31 +390,31 @@ def test_original_capability_evaluate_uses_explicit_reader_and_issuer_cas(
         resource_type="EvidenceBundleRevision", resource_id="s3oo-absent",
         revision="1", authority="test-only")])
     command = EvaluateOperationalBindingRequest(expected_version=1, dependencies=dependencies)
-    evaluated, snapshot, receipt = service.evaluate(
-        scope, created.binding_id, command,
-        idempotency_key=f"s3oo:evaluate:{created.binding_id}",
-        actor="test-only", evaluated_at=datetime.now(UTC))
-    assert evaluated.version == 2 and snapshot.readiness.value == "blocked"
-    assert receipt.operation == "capability_binding.evaluate"
+    with pytest.raises(AipAgentRegistryPersistenceError) as failure:
+        service.evaluate(
+            scope, created.binding_id, command,
+            idempotency_key=f"s3oo:evaluate:{created.binding_id}",
+            actor="test-only", evaluated_at=datetime.now(UTC))
+    assert isinstance(failure.value.__cause__, psycopg.errors.InsufficientPrivilege)
     assert any(item[0] is None for item in observed)
     assert any(item[0] == scope for item in observed)
     assert all(login == READINESS_READER_LOGIN and readonly == "on"
                for _, login, readonly in observed)
-    replay, _, replay_receipt = service.evaluate(
-        scope, created.binding_id, command,
-        idempotency_key=f"s3oo:evaluate:{created.binding_id}",
-        actor="test-only", evaluated_at=datetime.now(UTC))
-    assert replay.version == 2 and replay_receipt.receipt_id == receipt.receipt_id
-    with pytest.raises(AipAgentRegistryConflict):
-        service.evaluate(scope, created.binding_id, command,
-            idempotency_key=f"s3oo:stale:{created.binding_id}", actor="test-only",
-            evaluated_at=datetime.now(UTC))
-    with pytest.raises(AipAgentRegistryTransitionBlocked):
-        service.update(scope, created.binding_id, UpdateCapabilityBindingRequest(
-            expected_version=2, from_status="provisioning", to_status="active",
-            health="healthy", observed_at=datetime.now(UTC)),
-            idempotency_key=f"s3oo:active:{created.binding_id}", actor="test-only")
     with connect(scope) as owner:
+        assert owner.execute("SELECT version FROM aip_capability_binding WHERE binding_id=%s",
+            (created.binding_id,)).fetchone()["version"] == 1
         assert owner.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
             "WHERE operation='capability_binding.evaluate' AND result_ref->>'resourceId'=%s",
-            (created.binding_id,)).fetchone()["n"] == 1
+            (created.binding_id,)).fetchone()["n"] == 0
+    with pytest.raises(AipAgentRegistryTransitionBlocked):
+        service.update(scope, created.binding_id, UpdateCapabilityBindingRequest(
+            expected_version=1, from_status="provisioning", to_status="active",
+            health="healthy", observed_at=datetime.now(UTC)),
+            idempotency_key=f"s3oo:active:{created.binding_id}", actor="test-only")
+    revoked, receipt = service.update(scope, created.binding_id,
+        UpdateCapabilityBindingRequest(
+            expected_version=1, from_status="provisioning", to_status="revoked",
+            health="revoked", observed_at=datetime.now(UTC)),
+        idempotency_key=f"s3oo:revoke:{created.binding_id}", actor="test-only")
+    assert revoked.version == 2 and revoked.status == "revoked"
+    assert receipt.operation == "capability_binding.update"
