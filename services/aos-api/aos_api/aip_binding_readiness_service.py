@@ -7,7 +7,7 @@ exact runtime dependencies required to execute it now.
 from __future__ import annotations
 
 from collections.abc import Callable
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 import json
 from typing import Any, Protocol
@@ -190,6 +190,21 @@ class AipBindingReadinessService:
         self._model_store = model_store or AipModelRuntimeStore()
         self._model_resolver = model_resolver or AipModelRuntimeResolver(self._model_store)
         self._ttl = ttl
+
+    @classmethod
+    def for_transaction(cls, conn: Any) -> AipBindingReadinessService:
+        """Bind all built-in readers to a caller-owned transaction without committing it.
+
+        This only shares evidence visibility; it does not authorize a binding write.
+        """
+
+        def shared_connect(*_args: Any, **_kwargs: Any) -> AbstractContextManager[Any]:
+            return nullcontext(conn)
+
+        return cls(
+            authority=PostgresBindingDependencyAuthority(shared_connect),
+            model_store=AipModelRuntimeStore(shared_connect),
+        )
 
     def evaluate_capability(
         self,
