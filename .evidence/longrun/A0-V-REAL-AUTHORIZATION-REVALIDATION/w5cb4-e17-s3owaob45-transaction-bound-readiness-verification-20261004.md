@@ -12,6 +12,7 @@
 | --- | --- |
 | `AOS_DOTENV_DISABLED=1 uv run pytest -q --tb=short --disable-warnings tests/aip/test_e17_s3owaob45_transaction_readiness_pg.py` | 实现前 exit1，`AttributeError: AipBindingReadinessService.for_transaction`；测试为真实 disposable PG。 |
 | 同目录运行 `tests/aip/test_e17_s3owaob45_transaction_readiness_pg.py tests/aip/test_aip_binding_readiness_service.py tests/aip/test_e17_s3owaob22_capability_receipt_identity_pg.py -k 'not downgrade'` | 实现后 exit0，22 passed、4 xfailed、7 warnings。 |
+| 再追加 `test_e17_s3ol_capability_issuer_pg.py`、`test_e17_s3owaob12_tool_receipt_identity_pg.py`、`test_aip6_003_exact_instance.py`、`test_aip6_capability_run_handoff.py` 的七文件相邻回归 | exit0，35 passed、1 deselected、4 xfailed、7 warnings。 |
 | `python3 -m compileall -q aos_api/aip_binding_readiness_service.py tests/aip/test_e17_s3owaob45_transaction_readiness_pg.py`、`git diff --check` | 均 exit0。 |
 | `uv run ruff check ...` | exit2：本地环境缺少 Ruff 可执行文件；未把静态 lint 说成通过。 |
 
