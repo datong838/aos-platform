@@ -9,7 +9,8 @@
 ## 文件级步骤
 
 1. 在 `services/aos-api/tests/aip/test_aip_binding_readiness_service.py` 用现有 authority 测试夹具做最小 RED：Catalog published、其他依赖可用但签名来源不存在/失效时，`evaluate_capability` 应给来源阻断且不可 active；先确认原实现是否错误地返回 available。别对当前真库写。
-2. 只有明确 Reader/生产权限与当前签名 release 判据后才在 `services/aos-api/aos_api/aip_binding_readiness_service.py` 加 exact source reader；若仅加一个可被测试伪造的布尔值会放大假权威，停止在 RED 与合同，不做不安全补丁。保留普通非正式调用兼容；runtime gate 仍独立最终重验。
-3. 专项/相邻回归、方案一致性复审、verification；若源码修复安全可落地再精确 m1 提交，否则登记缺口并转独立正式 operation/Receipt 合同。原库只读、Host/worker/Provider关；收到每日提醒独立再做一次最新栈重启。
+2. 拆出可安全落地的 Reader 字段：在同一测试文件要求 `PostgresBindingDependencyAuthority.capability()` 回读 Catalog 原 `source_ref`，原 SQL 缺此列应 RED；仅在 `services/aos-api/aos_api/aip_binding_readiness_service.py` 原 SELECT 增该列，不改变现有 readiness 判定或正常调用。它只是证据传递，不是 signed release 校验。
+3. 只有明确 Reader/生产权限与当前签名 release 判据后才加 exact source gate；若仅加一个可被测试伪造的布尔值会放大假权威，停止在 RED 与合同，不做不安全补丁。保留普通非正式调用兼容；runtime gate 仍独立最终重验。
+4. 专项/相邻回归、方案一致性复审、verification；精确 m1 提交并登记完整来源门仍缺。原库只读、Host/worker/Provider关；收到每日提醒独立再做一次最新栈重启。
 
 硬边界：`org-org/dev-project`唯一正向，`dev-org`零副作用，不读商城源、不回放旧12 Run、不手工 Run、不碰230 L0、不 push。
