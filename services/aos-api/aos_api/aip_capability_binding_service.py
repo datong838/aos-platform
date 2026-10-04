@@ -21,6 +21,7 @@ from aos_api.aip_agent_registry_store import (
     AipAgentRegistryStore,
     AipAgentRegistryTransitionBlocked,
 )
+from aos_api.aip_registry_issuer_connection import RegistryIssuerConnectionFactory
 from aos_api.aip_binding_api_contracts import CapabilityBindingPreviewRequest
 from aos_api.aip_binding_readiness_service import AipBindingReadinessService
 from aos_api.aip_contracts import TenantContext
@@ -32,6 +33,10 @@ _TRANSITIONS = {
     "suspended": {"active", "revoked"},
     "revoked": set(),
 }
+
+
+class AipBindingEvaluatorRequired(AipAgentRegistryConflict):
+    code = "AIP_BINDING_EVALUATOR_REQUIRED"
 
 
 class AipCapabilityBindingService(AipAgentRegistryStore):
@@ -210,6 +215,9 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
     ) -> tuple[CapabilityBinding, OperationalBindingReadiness, RegistryReceipt]:
         """Persist a short-lived, exact dependency snapshot without activating it."""
         self._validate_command(scope, idempotency_key, actor)
+        if (type(self._connect_factory) is RegistryIssuerConnectionFactory
+                and self._connect_factory.command_family == "capability_lifecycle"):
+            raise AipBindingEvaluatorRequired("trusted capability binding evaluator required")
         readiness_service = self._require_readiness_service()
         current = self.get(scope, binding_id)
         result = readiness_service.evaluate_capability(

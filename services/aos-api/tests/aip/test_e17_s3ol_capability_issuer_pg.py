@@ -220,3 +220,20 @@ def test_capability_issuer_rejects_write_widening(capability_case, capability_is
     with pytest.raises(RegistryIssuerConnectionBlocked, match="DATABASE_IDENTITY_REQUIRED"):
         with capability_issuer(scope):
             pass
+
+
+@pytest.mark.xfail(strict=True, reason="shared registry receipt lacks evaluate operation guard")
+def test_ordinary_capability_issuer_cannot_forge_evaluate_receipt(
+    capability_case, capability_issuer,
+):
+    scope, request = capability_case
+    with capability_issuer(scope) as conn:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            conn.execute("""INSERT INTO aip_agent_registry_receipt
+                (org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
+                 resource_ref,result_ref,status,created_by,created_at)
+                VALUES (%s,%s,%s,'capability_binding.evaluate',%s,%s,
+                        %s::jsonb,%s::jsonb,'applied','test-only',now())""",
+                (*scope.key, uuid4().hex, f"forged:{request.binding_id}", "a" * 64,
+                 '{"resourceType":"CapabilityBinding","resourceId":"forged"}',
+                 '{"resourceType":"CapabilityBindingReadiness","resourceId":"forged"}'))

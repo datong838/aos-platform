@@ -390,16 +390,16 @@ def test_original_capability_evaluate_fails_closed_under_narrow_issuer_acl(
         resource_type="EvidenceBundleRevision", resource_id="s3oo-absent",
         revision="1", authority="test-only")])
     command = EvaluateOperationalBindingRequest(expected_version=1, dependencies=dependencies)
-    with pytest.raises(AipAgentRegistryPersistenceError) as failure:
+    with pytest.raises(AipAgentRegistryConflict) as failure:
         service.evaluate(
             scope, created.binding_id, command,
             idempotency_key=f"s3oo:evaluate:{created.binding_id}",
             actor="test-only", evaluated_at=datetime.now(UTC))
-    assert isinstance(failure.value.__cause__, psycopg.errors.InsufficientPrivilege)
-    assert any(item[0] is None for item in observed)
-    assert any(item[0] == scope for item in observed)
-    assert all(login == READINESS_READER_LOGIN and readonly == "on"
-               for _, login, readonly in observed)
+    assert failure.value.code == "AIP_BINDING_EVALUATOR_REQUIRED"
+    assert observed == []
+    from aos_api.routers.aip_bindings import _map_error
+    mapped = _map_error(failure.value)
+    assert mapped.status_code == 409 and mapped.code == "AIP_BINDING_EVALUATOR_REQUIRED"
     with connect(scope) as owner:
         assert owner.execute("SELECT version FROM aip_capability_binding WHERE binding_id=%s",
             (created.binding_id,)).fetchone()["version"] == 1
