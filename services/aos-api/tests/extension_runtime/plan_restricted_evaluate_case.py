@@ -17,7 +17,7 @@ from aos_api.db import get_dsn
 
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
-    registry=None, concurrent_revoke=False,
+    registry=None, concurrent_revoke=False, evaluate_first=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -228,6 +228,13 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     call=call, scope=scope, installation=installation, etag=etag,
                     growth=growth, binding=binding, key=key,
                 )
+            elif evaluate_first:
+                assert registry is not None
+                _assert_evaluate_first_revoke_waits(
+                    admin=admin, registry=registry, restricted_parts=restricted_parts,
+                    call=call, scope=scope, installation=installation, etag=etag,
+                    growth=growth, binding=binding, key=key,
+                )
             elif registry is not None:
                 revoked = registry.revoke(
                     publisher=growth.publisher, bundle_id=growth.bundle_id,
@@ -332,3 +339,60 @@ def _assert_concurrent_revoke_fails_closed(
     finally:
         blocker.execute("ROLLBACK")
         blocker.close()
+
+
+def _assert_evaluate_first_revoke_waits(
+    *, admin, registry, restricted_parts, call, scope, installation, etag,
+    growth, binding, key,
+):
+    first_key = key + "-first"
+    after_key = key + "-after"
+
+    def revoke():
+        return registry.revoke(
+            publisher=growth.publisher, bundle_id=growth.bundle_id,
+            version=growth.version, actor="b50-test-only-revoker",
+            roles={"asset-publisher"}, publisher_scopes={growth.publisher},
+            reason="b50 restricted evaluate commits before Registry revoke",
+        )
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+            with limited.transaction():
+                limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                "set_config('aos.project_id',%s,true)", scope.key)
+                assert limited.execute(call, (*scope.key, installation, etag,
+                                              binding, 2, first_key)).fetchone()["revision"] == 3
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE idempotency_key=%s", (first_key,)).fetchone()["n"] == 0
+                revoked = pool.submit(revoke)
+                deadline = time.monotonic() + 8
+                while time.monotonic() < deadline:
+                    waiting = admin.execute("""SELECT count(*) AS n FROM pg_locks
+                        WHERE locktype='advisory' AND classid=228 AND objid=1
+                          AND NOT granted""").fetchone()["n"]
+                    if waiting:
+                        break
+                    assert not revoked.done(), "revoke did not wait for evaluate"
+                    time.sleep(0.025)
+                else:
+                    raise AssertionError("Registry revoke advisory wait not observed")
+            assert revoked.result(timeout=10)["status"] == "revoked"
+    assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+        "WHERE idempotency_key=%s", (first_key,)).fetchone()["n"] == 1
+    assert admin.execute("SELECT version FROM aip_capability_binding "
+        "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 3
+    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+        with limited.transaction():
+            limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+            limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                            "set_config('aos.project_id',%s,true)", scope.key)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                with limited.transaction():
+                    limited.execute(call, (*scope.key, installation, etag,
+                                           binding, 3, after_key))
+    assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+        "WHERE idempotency_key=%s", (after_key,)).fetchone()["n"] == 0
+    assert admin.execute("SELECT version FROM aip_capability_binding "
+        "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 3
