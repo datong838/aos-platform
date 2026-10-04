@@ -11,6 +11,7 @@ from aos_api.aip_action_models import (
     SubmitActionDraftRequest,
     WithdrawActionProposalRequest,
 )
+from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
 from aos_api.aip_action_policy import ACTION_APPROVAL_ROLES, classify_action_risk
 from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_action_store import AipActionStore
@@ -136,6 +137,12 @@ class AipActionService:
 
     @staticmethod
     def _require_generic_producer(action_type_id: str) -> None:
+        if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
+            raise ApiError(
+                code="AIP_SOURCE_LICENSE_PRODUCER_REQUIRED",
+                message="source license action requires a dedicated producer",
+                status_code=403,
+            )
         if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
             raise ApiError(
                 code="AIP_POLICY_ACTION_PRODUCER_REQUIRED",

@@ -23,6 +23,7 @@ from aos_api.aip_action_models import (
     WithdrawActionProposalRequest,
     actor,
 )
+from aos_api.aip_license_source_action import is_source_license_action
 from aos_api.aip_action_policy import RiskDecision
 from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_contracts import (
@@ -165,6 +166,8 @@ class AipActionStore:
             raise AipActionTransitionBlocked('INTERNAL_CONTROL_CURRENT_AUTHORITY_REQUIRED') from exc
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
+        if is_source_license_action(body.action_type_id, action_snapshot):
+            raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
         if "aip_request_model_eval" in {body.action_type_id, action_snapshot.get("id")}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -216,6 +219,8 @@ class AipActionStore:
             impact_preview=body.impact_preview_ref)[0]
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
+        if is_source_license_action(row["action_type_id"], row["action_type_snapshot"]):
+            raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
         if "aip_request_model_eval" in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -638,6 +643,8 @@ class AipActionStore:
         action_snapshot: dict[str, Any],
         risk: RiskDecision,
     ) -> ActionDraftBundle:
+        if is_source_license_action(body.action_type_id, action_snapshot):
+            raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 and self._network_activation_guard is None
                 and not (body.action_type_id in {'aip_activate_egress_policy', 'aip_activate_data_policy', 'aip_activate_quota_policy'}

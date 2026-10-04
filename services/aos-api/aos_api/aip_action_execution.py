@@ -30,6 +30,7 @@ from aos_api.aip_action_models import (
 )
 from aos_api.aip_action_canary_models import EvaluateKillPolicyRequest
 from aos_api.aip_action_canary_service import AipActionCanaryService
+from aos_api.aip_license_source_action import is_source_license_action
 from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 from aos_api.aip_action_store import (
     AipActionConflict,
@@ -71,6 +72,8 @@ class AipActionExecutionService:
     def _reject_bootstrap_action(proposal) -> None:
         if proposal is None:
             raise AipActionNotFound("proposal not found in scope")
+        if is_source_license_action(proposal["action_type_id"], proposal["action_type_snapshot"] or {}):
+            raise AipActionTransitionBlocked("SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED")
         if (proposal["action_type_id"] == "aip_request_model_eval"
                 or (proposal["action_type_snapshot"] or {}).get("id") == "aip_request_model_eval"):
             raise AipActionTransitionBlocked("MODEL_EVAL_APPLICATION_NOT_EXECUTABLE")

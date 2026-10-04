@@ -5,6 +5,8 @@ These identities do not register ActionTypes or authorize any active policy writ
 
 from types import MappingProxyType
 
+from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
+
 from aos_api.aip_contracts import ActionRiskLevel
 
 
@@ -22,5 +24,7 @@ class PolicyActivationActionTypeReserved(ValueError):
 
 
 def require_generic_action_type_mutable(action_type_id: str) -> None:
+    if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
+        raise PolicyActivationActionTypeReserved("system source license action type is reserved")
     if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
         raise PolicyActivationActionTypeReserved("system policy action type is reserved")

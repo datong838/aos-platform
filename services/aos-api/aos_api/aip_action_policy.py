@@ -10,6 +10,8 @@ from aos_api.aip_provider_health_action import (
 )
 from aos_api.aip_policy_activation_action import POLICY_ACTIVATION_ACTION_RISK
 
+from aos_api.aip_license_source_action import SOURCE_LICENSE_ISSUANCE_ACTION
+
 ACTION_APPROVAL_ROLES = frozenset({'admin', 'approver', 'aip_approver'})
 
 _ORDER = {level: index for index, level in enumerate(ActionRiskLevel)}
@@ -39,7 +41,10 @@ def classify_action_risk(
     ).lower()
     reasons: list[str] = []
     floor = ActionRiskLevel.R1
-    if action_type_id in POLICY_ACTIVATION_ACTION_RISK:
+    if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
+        floor = ActionRiskLevel.R2
+        reasons.append("formal_source_license_issuance")
+    elif action_type_id in POLICY_ACTIVATION_ACTION_RISK:
         floor = POLICY_ACTIVATION_ACTION_RISK[action_type_id]
         reasons.append("formal_policy_activation")
     elif action_type_id == "aip_request_model_eval":
@@ -95,4 +100,6 @@ def classify_action_risk(
         approval_policy.update(makerChecker=True, draftOnly=False, controlledSourceInitialization=True)
     if action_type_id == "aip_request_model_eval":
         approval_policy["executionAllowed"] = False
+    if action_type_id == SOURCE_LICENSE_ISSUANCE_ACTION:
+        approval_policy.update(executionAllowed=False, sourceLicenseIssuanceOnly=True)
     return RiskDecision(level, floor, tuple(reasons), approval_policy)

@@ -1,0 +1,34 @@
+FFFFFF.                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-aip_issue_source_license-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-aip_issue_source_license-ordinary] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-ordinary-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-aip_issue_source_license-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-aip_issue_source_license-ordinary] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-ordinary-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_execution_gate.py:14: in test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_DEDICATED_ISSUER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-aip_issue_source_license-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-aip_issue_source_license-ordinary]
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy0-ordinary-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-aip_issue_source_license-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-aip_issue_source_license-ordinary]
+FAILED services/aos-api/tests/aip/test_aip_license_source_execution_gate.py::test_generic_execution_rejects_source_issuance_identity_even_if_policy_permits[policy1-ordinary-aip_issue_source_license]
+6 failed, 1 passed, 7 warnings in 4.59s

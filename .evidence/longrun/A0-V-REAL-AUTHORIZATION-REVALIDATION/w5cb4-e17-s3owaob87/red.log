@@ -1,0 +1,79 @@
+FFFFFFFFFF                                                               [100%]
+=================================== FAILURES ===================================
+_ test_source_issuance_requires_independent_approval_and_dedicated_consumer[None] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:21: in test_source_issuance_requires_independent_approval_and_dedicated_consumer
+    assert risk.floor is ActionRiskLevel.R2
+E   AssertionError: assert <ActionRiskLevel.R1: 'R1'> is <ActionRiskLevel.R2: 'R2'>
+E    +  where <ActionRiskLevel.R1: 'R1'> = RiskDecision(level=<ActionRiskLevel.R1: 'R1'>, floor=<ActionRiskLevel.R1: 'R1'>, reasons=('draft_only_default',), approval_policy={'makerChecker': False, 'minimumApprovals': 1, 'executionAllowed': True, 'draftOnly': True}).floor
+E    +  and   <ActionRiskLevel.R2: 'R2'> = ActionRiskLevel.R2
+_ test_source_issuance_requires_independent_approval_and_dedicated_consumer[R0] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:21: in test_source_issuance_requires_independent_approval_and_dedicated_consumer
+    assert risk.floor is ActionRiskLevel.R2
+E   AssertionError: assert <ActionRiskLevel.R1: 'R1'> is <ActionRiskLevel.R2: 'R2'>
+E    +  where <ActionRiskLevel.R1: 'R1'> = RiskDecision(level=<ActionRiskLevel.R1: 'R1'>, floor=<ActionRiskLevel.R1: 'R1'>, reasons=('draft_only_default',), approval_policy={'makerChecker': False, 'minimumApprovals': 1, 'executionAllowed': True, 'draftOnly': True}).floor
+E    +  and   <ActionRiskLevel.R2: 'R2'> = ActionRiskLevel.R2
+______ test_source_action_cannot_be_registered_by_generic_editor_or_seed _______
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:30: in test_source_action_cannot_be_registered_by_generic_editor_or_seed
+    with pytest.raises(PolicyActivationActionTypeReserved):
+E   Failed: DID NOT RAISE PolicyActivationActionTypeReserved
+_ test_generic_producer_rejects_source_before_schema_or_store[create_proposal-CreateActionProposalRequest] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:58: in test_generic_producer_rejects_source_before_schema_or_store
+    getattr(service,method)(principal,'key',body)
+services/aos-api/aos_api/aip_action_service.py:38: in create_proposal
+    ensure_action_schema(scope)
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:46: in unexpected
+    raise AssertionError('generic schema must not be accessed')
+E   AssertionError: generic schema must not be accessed
+_ test_generic_producer_rejects_source_before_schema_or_store[create_draft-CreateActionDraftRequest] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:58: in test_generic_producer_rejects_source_before_schema_or_store
+    getattr(service,method)(principal,'key',body)
+services/aos-api/aos_api/aip_action_service.py:68: in create_draft
+    scope, snapshot, risk = self._prepare_action(principal, body)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_action_service.py:113: in _prepare_action
+    ensure_action_schema(scope)
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:46: in unexpected
+    raise AssertionError('generic schema must not be accessed')
+E   AssertionError: generic schema must not be accessed
+_ test_generic_producer_rejects_source_before_schema_or_store[revise_draft-ReviseActionDraftRequest] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:56: in test_generic_producer_rejects_source_before_schema_or_store
+    service.revise_draft(principal,'draft','key',body)
+services/aos-api/aos_api/aip_action_service.py:80: in revise_draft
+    scope, snapshot, risk = self._prepare_action(principal, body)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_action_service.py:113: in _prepare_action
+    ensure_action_schema(scope)
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:46: in unexpected
+    raise AssertionError('generic schema must not be accessed')
+E   AssertionError: generic schema must not be accessed
+_ test_direct_store_request_and_proposal_cannot_spoof_source_identity[aip_issue_source_license-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:72: in test_direct_store_request_and_proposal_cannot_spoof_source_identity
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_PRODUCER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_direct_store_request_and_proposal_cannot_spoof_source_identity[aip_issue_source_license-ordinary] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:72: in test_direct_store_request_and_proposal_cannot_spoof_source_identity
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_PRODUCER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+_ test_direct_store_request_and_proposal_cannot_spoof_source_identity[ordinary-aip_issue_source_license] _
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:72: in test_direct_store_request_and_proposal_cannot_spoof_source_identity
+    with pytest.raises(AipActionTransitionBlocked,match='SOURCE_LICENSE_PRODUCER_REQUIRED'):
+E   Failed: DID NOT RAISE AipActionTransitionBlocked
+____________ test_direct_create_rejects_before_opening_transaction _____________
+services/aos-api/tests/aip/test_aip_license_source_action_gate.py:87: in test_direct_create_rejects_before_opening_transaction
+    store.create_proposal(TenantScope('org-org','dev-project'),'owner','key',body,{'id':ACTION},risk)
+services/aos-api/aos_api/aip_action_store.py:650: in create_proposal
+    body, action_snapshot["revisionHash"], risk.level.value,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'revisionHash'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_source_issuance_requires_independent_approval_and_dedicated_consumer[None]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_source_issuance_requires_independent_approval_and_dedicated_consumer[R0]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_source_action_cannot_be_registered_by_generic_editor_or_seed
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_generic_producer_rejects_source_before_schema_or_store[create_proposal-CreateActionProposalRequest]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_generic_producer_rejects_source_before_schema_or_store[create_draft-CreateActionDraftRequest]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_generic_producer_rejects_source_before_schema_or_store[revise_draft-ReviseActionDraftRequest]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_direct_store_request_and_proposal_cannot_spoof_source_identity[aip_issue_source_license-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_direct_store_request_and_proposal_cannot_spoof_source_identity[aip_issue_source_license-ordinary]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_direct_store_request_and_proposal_cannot_spoof_source_identity[ordinary-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_action_gate.py::test_direct_create_rejects_before_opening_transaction
+10 failed, 7 warnings in 5.05s
