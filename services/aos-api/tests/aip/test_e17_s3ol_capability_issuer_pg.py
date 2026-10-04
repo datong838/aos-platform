@@ -237,3 +237,51 @@ def test_ordinary_capability_issuer_cannot_forge_evaluate_receipt(
                 (*scope.key, uuid4().hex, f"forged:{request.binding_id}", "a" * 64,
                  '{"resourceType":"CapabilityBinding","resourceId":"forged"}',
                  '{"resourceType":"CapabilityBindingReadiness","resourceId":"forged"}'))
+
+
+def test_clone_only_evaluate_receipt_role_guard_keeps_create_receipt(
+    capability_case, capability_issuer,
+):
+    scope, request = capability_case
+    name = "s3ob66_guard_" + uuid4().hex[:12]
+    with connect() as owner:
+        owner.execute(sql.SQL("""CREATE FUNCTION public.{}() RETURNS trigger
+            LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$
+            BEGIN
+              IF NEW.operation='capability_binding.evaluate'
+                 AND current_user <> 'aos_aip_capability_evaluator_definer'
+              THEN RAISE EXCEPTION 'CAPABILITY_EVALUATOR_RECEIPT_REQUIRED'
+                   USING ERRCODE='42501';
+              END IF;
+              RETURN NEW;
+            END $$""").format(sql.Identifier(name)))
+        owner.execute(sql.SQL("""CREATE TRIGGER {} BEFORE INSERT
+            ON aip_agent_registry_receipt FOR EACH ROW
+            EXECUTE FUNCTION public.{}()""").format(
+                sql.Identifier(name), sql.Identifier(name)))
+        owner.commit()
+    try:
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with capability_issuer(scope) as conn:
+                conn.execute("""INSERT INTO aip_agent_registry_receipt
+                    (org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
+                     resource_ref,result_ref,status,created_by,created_at)
+                    VALUES (%s,%s,%s,'capability_binding.evaluate',%s,%s,
+                            '{}'::jsonb,'{}'::jsonb,'applied','test-only',now())""",
+                    (*scope.key, uuid4().hex, f"forged:{request.binding_id}", "a" * 64))
+        created, receipt = AipCapabilityBindingService(connect_factory=capability_issuer).create(
+            scope, request, idempotency_key=f"s3ob66:{request.binding_id}",
+            actor="test-only", occurred_at=datetime.now(UTC))
+        assert created.version == 1 and receipt.operation == "capability_binding.create"
+        with connect(scope) as owner:
+            assert owner.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                "WHERE operation='capability_binding.evaluate' AND "
+                "idempotency_key=%s", (f"forged:{request.binding_id}",)
+            ).fetchone()["n"] == 0
+    finally:
+        with connect() as owner:
+            owner.execute(sql.SQL("DROP TRIGGER {} ON aip_agent_registry_receipt")
+                          .format(sql.Identifier(name)))
+            owner.execute(sql.SQL("DROP FUNCTION public.{}()")
+                          .format(sql.Identifier(name)))
+            owner.commit()
