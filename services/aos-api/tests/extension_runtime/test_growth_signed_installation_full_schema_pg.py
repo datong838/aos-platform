@@ -16,11 +16,11 @@ import pytest
 from psycopg import sql
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from psycopg.conninfo import conninfo_to_dict
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
 from psycopg.rows import dict_row
 
 from aos_api.asset_registry.manifest_loader import ManifestLoader
-from aos_api.asset_registry.composition_contracts import RollbackInstallationRequest
+from aos_api.asset_registry.composition_contracts import RollbackInstallationRequest, UninstallInstallationRequest
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.installation_revalidation import _record_from_row
 from aos_api.asset_registry.installation_revalidation import InstallationRevalidator
@@ -132,11 +132,12 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     concurrent_revoke_case = os.getenv('AOS_B49_CONCURRENT_REVOKE') == '1'
     evaluate_first_case = os.getenv('AOS_B50_EVALUATE_FIRST') == '1'
     runtime_rollback_case = os.getenv('AOS_B51_RUNTIME_ROLLBACK') == '1'
+    missing_runtime_binding_case = os.getenv('AOS_B52_MISSING_RUNTIME_BINDING') == '1'
     assert sum((committed_revoke_case, concurrent_revoke_case, evaluate_first_case)) <= 1
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
-    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case) and growth_version != '1.13.0':
+    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case or missing_runtime_binding_case) and growth_version != '1.13.0':
         pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
@@ -344,7 +345,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     legacy = InstallationService(
         store=store, composition_store=PostgresCompositionStore(connect),
         revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
-        runtime_uninstall_guard=RuntimeUninstallGuard() if runtime_rollback_case else None,
+        runtime_uninstall_guard=RuntimeUninstallGuard() if (runtime_rollback_case or missing_runtime_binding_case) else None,
     )
     lifecycle = RuntimeLifecycleService(installation_store=store,
                                         installation_reader=legacy, revalidator=revalidator)
@@ -1112,7 +1113,62 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
         finally:
             await job.stop()
     verified_generation = asyncio.run(prepare_and_verify())
-    if growth_version == '1.13.0' and not (committed_revoke_case or concurrent_revoke_case or evaluate_first_case):
+    if missing_runtime_binding_case:
+        uninstall_key = 'b52-test-only-missing-binding-uninstall'
+        with connect(SCOPE) as fault:
+            head = fault.execute('''SELECT current_revision,etag_version FROM bundle_installation
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                (*SCOPE.key, installed['installationId'])).fetchone()
+            assert head['current_revision'] == head['etag_version']
+            removed = fault.execute('''DELETE FROM extension_runtime_binding
+                WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+                (*SCOPE.key, installed['installationId']))
+            assert removed.rowcount == 1
+        app_role = 'aos_b52_app_' + uuid4().hex[:12]
+        app_password = secrets.token_urlsafe(32)
+        with psycopg.connect(get_dsn()) as owner:
+            owner.execute(sql.SQL('''CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER
+                NOBYPASSRLS PASSWORD {}''').format(
+                sql.Identifier(app_role), sql.Literal(app_password)))
+            owner.execute(sql.SQL('GRANT aos_runtime,aos_app TO {}').format(
+                sql.Identifier(app_role)))
+            # Fault probe only: current production ACL denies this call before
+            # the no-Binding semantic branch. The grant is removed below.
+            owner.execute('''GRANT EXECUTE ON FUNCTION
+                extension_runtime_uninstall_commit_ar2_018(uuid,bigint,text)
+                TO aos_runtime''')
+        try:
+            app_dsn = make_conninfo(get_dsn(), user=app_role, password=app_password)
+            with monkeypatch.context() as app_env:
+                app_env.setenv('AOS_DATABASE_URL', app_dsn)
+                with pytest.raises(RuntimeOperationRequiredError):
+                    legacy.uninstall(
+                        installation_id=installed['installationId'],
+                        request=UninstallInstallationRequest(reason='missing binding fault probe'),
+                        org_id=SCOPE.org_id, project_id=SCOPE.project_id,
+                        actor='test-author', roles={'asset-installer'}, markings=set(),
+                        idempotency_key=uninstall_key, if_match=f'"{head["etag_version"]}"',
+                    )
+        finally:
+            with psycopg.connect(get_dsn()) as owner:
+                owner.execute('''REVOKE EXECUTE ON FUNCTION
+                    extension_runtime_uninstall_commit_ar2_018(uuid,bigint,text)
+                    FROM aos_runtime''')
+                owner.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(app_role)))
+        with connect(SCOPE) as audit:
+            assert audit.execute('''SELECT current_revision,active_revision,etag_version
+                FROM bundle_installation WHERE org_id=%s AND project_id=%s
+                  AND installation_id=%s''',
+                (*SCOPE.key, installed['installationId'])).fetchone() == {
+                    'current_revision': head['current_revision'],
+                    'active_revision': head['current_revision'],
+                    'etag_version': head['etag_version'],
+                }
+            assert audit.execute('''SELECT count(*) AS n FROM bundle_installation_command
+                WHERE org_id=%s AND project_id=%s AND operation='bundle_installations.uninstall'
+                  AND idempotency_key=%s''',
+                (*SCOPE.key, uninstall_key)).fetchone()['n'] == 0
+    if growth_version == '1.13.0' and not (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or missing_runtime_binding_case):
         with pytest.raises(CurrentReleaseEvidenceBlocked, match='RUNTIME_BINDING_DRIFT'):
             read_current_runtime_image_evidence(
                 connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),

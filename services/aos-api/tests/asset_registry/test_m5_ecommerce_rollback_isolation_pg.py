@@ -13,6 +13,7 @@ from aos_api.asset_registry.composition_contracts import (
     CreateInstallationRequest,
     InstallationResponse,
     RollbackInstallationRequest,
+    UninstallInstallationRequest,
     StoredCompositionLock,
 )
 from aos_api.asset_registry.errors import RegistrySnapshotStaleError
@@ -41,7 +42,8 @@ MAKER = "maker:m5-w3"
 CHECKER = "checker:m5-w3"
 
 
-def test_guarded_pure_content_rollback_remains_available(tmp_path: Path) -> None:
+@pytest.mark.parametrize('command', ('rollback', 'uninstall'))
+def test_guarded_pure_content_rollback_remains_available(tmp_path: Path, command: str) -> None:
     with m5_control_runtime(tmp_path / "content-only") as runtime:
         snapshot = runtime.snapshot_reader.read()
         core = next(item for item in snapshot.candidates
@@ -71,14 +73,18 @@ def test_guarded_pure_content_rollback_remains_available(tmp_path: Path) -> None
                 trust_roots=runtime.prepared.trust_roots)),
             runtime_uninstall_guard=RuntimeUninstallGuard(),
         )
-        rolled = _response(guarded.rollback(
+        method = guarded.rollback if command == 'rollback' else guarded.uninstall
+        request = (RollbackInstallationRequest(reason='pure content rollback')
+                   if command == 'rollback' else
+                   UninstallInstallationRequest(reason='pure content uninstall'))
+        rolled = _response(method(
             installation_id=active.installation_id,
-            request=RollbackInstallationRequest(reason="pure content rollback"),
+            request=request,
             org_id=runtime.org_id, project_id=runtime.project_id,
             actor=MAKER, roles={"asset-installer"}, markings=set(),
-            idempotency_key="b51-content-rollback", if_match='"5"',
+            idempotency_key=f'b52-content-{command}', if_match='"5"',
         ))
-        assert rolled.state == "rolled_back"
+        assert rolled.state == ('rolled_back' if command == 'rollback' else 'uninstalled')
         assert rolled.etag_version == 6
 
 

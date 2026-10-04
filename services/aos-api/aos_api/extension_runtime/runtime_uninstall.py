@@ -130,7 +130,7 @@ class RuntimeUninstallGuard:
 
     @staticmethod
     def before_uninstall(conn,*,org_id,project_id,installation_id,
-                         expected_installation_revision,actor):
+                         expected_installation_revision,actor,lock=None):
         if conn.info.transaction_status!=TransactionStatus.INTRANS:
             raise RuntimeError('runtime uninstall guard requires an explicit transaction')
         installation_id=UUID(str(installation_id))
@@ -165,6 +165,20 @@ class RuntimeUninstallGuard:
             if _values(row,('bindings','unresolved','unsafe'))!=(0,0,0):
                 raise RuntimeConflict('approved runtime preparation is not clean for uninstall')
             return None
+        if not isinstance(lock, StoredCompositionLock):
+            raise RuntimeOperationRequiredError('当前安装来源不可确认')
+        content=conn.execute(
+            f"SELECT {legacy_content_predicate('l')} AS eligible "
+            "FROM (SELECT %s::jsonb AS lock_payload) l",
+            (Jsonb(lock.payload.model_dump(mode='json', by_alias=True)),),
+        ).fetchone()
+        if content is not None and _values(content, ('eligible',))[0] is True:
+            return None
+        binding=conn.execute('''SELECT 1 FROM extension_runtime_binding
+            WHERE org_id=%s AND project_id=%s AND installation_id=%s''',
+            (org_id,project_id,installation_id)).fetchone()
+        if binding is None:
+            raise RuntimeOperationRequiredError('当前运行绑定缺失，须对账运行卸载义务')
         row=conn.execute('''SELECT applied,receipt_data,content_hash
             FROM extension_runtime_uninstall_commit_ar2_018(%s,%s,%s)''',
             (installation_id,expected_installation_revision,actor)).fetchone()

@@ -595,6 +595,7 @@ class InstallationService:
                 installation_id=locked.record.installation_id,
                 expected_installation_revision=locked.record.current.revision,
                 actor=actor,
+                lock=lock,
             )
         checked_at = self._store.read_control_clock_in_transaction(conn)
         return self._store.append_uninstall_in_transaction(
