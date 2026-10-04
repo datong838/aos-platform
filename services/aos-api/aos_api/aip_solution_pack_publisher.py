@@ -146,6 +146,29 @@ class AipSolutionPackPublisher:
         return SolutionPackCandidateInspection(SOLUTION_PACK_ID, CURRENT_SIGNED_CANDIDATE_VERSION,
             len(agents), len(logics), len(capabilities))
 
+    @classmethod
+    def inspect_current_capability_requests(
+        cls, bundle_dir: Path,
+    ) -> tuple[PublishCapabilityRevisionRequest, ...]:
+        """Recompute exact Catalog rows from candidate bytes; never publish them."""
+        cls.inspect_current_candidate(bundle_dir)
+        root = bundle_dir.resolve(strict=True)
+        manifest = cls._yaml(root / "bundle.yaml")
+        document = cls._json(root / "content/agents/ecommerce-capability-catalog.json")
+        schema_hash = cls._file_hash(root / "content/schemas/aip6-contribution-schemas.json")
+        policy_path = root / "content/policies/aip6-runtime-policies.json"
+        policy_hash = cls._file_hash(policy_path)
+        policy_refs = {
+            item["assetType"]: cls._asset(item["assetType"], item["id"], policy_hash)
+            for item in cls._list(cls._json(policy_path), "artifacts")
+        }
+        return cls._capability_requests(
+            cls._list(document, "capabilities"), document, schema_hash, policy_refs,
+            ResourceRef(resource_type="SolutionPack", resource_id=SOLUTION_PACK_ID,
+                        revision=CURRENT_SIGNED_CANDIDATE_VERSION, authority="asset-registry"),
+            manifest["metadata"]["license"],
+        )
+
     def publish(self, bundle_dir: Path, *, actor: str) -> SolutionPackPublication:
         return self._publish(
             bundle_dir, actor=actor, expected_version=SOLUTION_PACK_VERSION,
@@ -260,39 +283,10 @@ class AipSolutionPackPublisher:
             raise AipSolutionPackInvalid("schema contract must be an object")
 
         capability_refs = []
-        for item in capabilities:
-            capability_payload = dict(
-                capability_id=item["id"],
-                revision=1,
-                display_name=item["displayName"],
-                lifecycle="published",
-                aliases=item["aliases"],
-                input_schema_ref=self._asset(
-                    "SchemaRevision", item["inputSchema"], schema_hash
-                ),
-                output_schema_ref=self._asset(
-                    "SchemaRevision", item["outputSchema"], schema_hash
-                ),
-                risk_level=item["risk"],
-                required_data_refs=[],
-                required_tool_refs=[],
-                required_capability_refs=[],
-                memory_policy_ref=policy_refs["MemoryPolicy"],
-                handoff_policy_ref=policy_refs["HandoffPolicy"],
-                effect_review_schema_ref=self._asset(
-                    "SchemaRevision", "EffectReviewRef", schema_hash
-                ),
-                license_policy_ref=policy_refs["LicensePolicy"],
-                readiness_policy_ref=policy_refs["ReadinessPolicy"],
-                readiness=capability_document["readiness"],
-                readiness_reasons=capability_document["readinessReasons"],
-                source_ref=source,
-                source_license=metadata["license"],
-            )
-            request = PublishCapabilityRevisionRequest(
-                **capability_payload,
-                content_hash=self._hash(capability_payload),
-            )
+        for request in self._capability_requests(
+            capabilities, capability_document, schema_hash, policy_refs,
+            source, metadata["license"],
+        ):
             revision = self._capabilities.publish(request, actor=actor)
             capability_refs.append(
                 self._asset(
@@ -366,6 +360,36 @@ class AipSolutionPackPublisher:
             skill_refs=tuple(skill_refs),
             capability_refs=tuple(capability_refs),
         )
+
+    @classmethod
+    def _capability_requests(
+        cls, capabilities: list[dict[str, Any]], capability_document: dict[str, Any],
+        schema_hash: str, policy_refs: dict[str, VersionedAssetRef],
+        source: ResourceRef, source_license: str,
+    ) -> tuple[PublishCapabilityRevisionRequest, ...]:
+        requests = []
+        for item in capabilities:
+            payload = dict(
+                capability_id=item["id"], revision=1,
+                display_name=item["displayName"], lifecycle="published",
+                aliases=item["aliases"],
+                input_schema_ref=cls._asset("SchemaRevision", item["inputSchema"], schema_hash),
+                output_schema_ref=cls._asset("SchemaRevision", item["outputSchema"], schema_hash),
+                risk_level=item["risk"], required_data_refs=[], required_tool_refs=[],
+                required_capability_refs=[],
+                memory_policy_ref=policy_refs["MemoryPolicy"],
+                handoff_policy_ref=policy_refs["HandoffPolicy"],
+                effect_review_schema_ref=cls._asset("SchemaRevision", "EffectReviewRef", schema_hash),
+                license_policy_ref=policy_refs["LicensePolicy"],
+                readiness_policy_ref=policy_refs["ReadinessPolicy"],
+                readiness=capability_document["readiness"],
+                readiness_reasons=capability_document["readinessReasons"],
+                source_ref=source, source_license=source_license,
+            )
+            requests.append(PublishCapabilityRevisionRequest(
+                **payload, content_hash=cls._hash(payload),
+            ))
+        return tuple(requests)
 
     @classmethod
     def _validate(

@@ -108,6 +108,50 @@ def test_current_publication_uses_exact_new_source_without_touching_old_path(tmp
     assert requests == []
 
 
+def test_current_capability_hashes_recompute_from_exact_candidate_without_publication(tmp_path):
+    candidate = _current_candidate(tmp_path)
+    expected = AipSolutionPackPublisher.inspect_current_capability_requests(candidate)
+    assert len(expected) == 10
+    assert {item.capability_id for item in expected} == set(CAPABILITY_IDS)
+    assert all(item.source_ref.revision == CURRENT_SIGNED_CANDIDATE_VERSION for item in expected)
+
+    observed = []
+
+    class CapturingCapabilities:
+        def publish(self, request, *, actor):
+            observed.append(request)
+            return request
+
+    class PassthroughAgents:
+        def publish_template(self, request, *, actor):
+            return request
+
+    class PassthroughSkills:
+        def publish_skill(self, request, *, actor):
+            return request
+
+    proof = CurrentDefinitionSourceProof(
+        source_ref=f"bundle://a0v-current/{SOLUTION_PACK_ID}/{CURRENT_SIGNED_CANDIDATE_VERSION}",
+        content_hash="sha256:" + "a" * 64, signature_fingerprint="sha256:" + "b" * 64,
+        registry_snapshot_hash="sha256:" + "c" * 64,
+        agent_count=6, skill_count=37, capability_count=10,
+    )
+    AipSolutionPackPublisher(
+        agent_store=PassthroughAgents(), skill_store=PassthroughSkills(),
+        capability_store=CapturingCapabilities(),
+    ).publish_current_verified(candidate, actor="pytest-current", source_proof=proof)
+    assert [(item.capability_id, item.content_hash) for item in observed] == [
+        (item.capability_id, item.content_hash) for item in expected
+    ]
+
+    document_path = candidate / "content/agents/ecommerce-capability-catalog.json"
+    document = json.loads(document_path.read_text(encoding="utf-8"))
+    document["capabilities"][0]["displayName"] += " changed"
+    document_path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+    changed = AipSolutionPackPublisher.inspect_current_capability_requests(candidate)
+    assert changed[0].content_hash != expected[0].content_hash
+
+
 @pytest.mark.skipif(
     os.getenv("AOS_RUN_CURRENT_DEFINITION_PG_ISOLATED") != "1",
     reason="append-only publication requires a dedicated disposable PG test session",
