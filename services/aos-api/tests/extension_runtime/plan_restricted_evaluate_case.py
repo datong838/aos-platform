@@ -26,6 +26,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     license_epoch_fence=False, license_replay_probe=False,
     license_transaction_probe=False, license_receipt_guard=False,
     license_db_fence_probe=False, license_db_trigger_candidate=False,
+    license_lock_entry_probe=False, license_lock_entry_candidate=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -384,6 +385,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
                         template_license=license_id, license_hash=license_hash,
                         receipt_guard=license_receipt_guard, db_fence_probe=license_db_fence_probe,
                         db_trigger_candidate=license_db_trigger_candidate,
+                        lock_entry_probe=license_lock_entry_probe,
+                        lock_entry_candidate=license_lock_entry_candidate,
                     )
                 if license_revoke_first or license_evaluate_first:
                     _assert_license_race(
@@ -1008,7 +1011,7 @@ def _assert_license_race(
 
 def _assert_license_transaction_contract(
     *, admin, scope, fence_table, template_license, license_hash, receipt_guard,
-    db_fence_probe=False, db_trigger_candidate=False,
+    db_fence_probe=False, db_trigger_candidate=False, lock_entry_probe=False, lock_entry_candidate=False,
 ):
     """Fresh source, independent writer closures, real Store and bounded PID waits."""
     from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
@@ -1087,7 +1090,8 @@ def _assert_license_transaction_contract(
     assert snapshot() == (0, 0, 0)
     if db_trigger_candidate:
         _assert_license_db_trigger(admin=admin, scope=scope, fence_table=fence_table,
-            template_license=template_license, license_hash=license_hash, bundle=bundle)
+            template_license=template_license, license_hash=license_hash, bundle=bundle,
+            lock_entry_probe=lock_entry_probe, lock_entry_candidate=lock_entry_candidate)
         return
     if db_fence_probe:
         assert invoke(key, unwrapped=True).revoked is True
@@ -1135,10 +1139,12 @@ def _assert_license_transaction_contract(
     assert snapshot() == (1, 1, 1), 'B73_CONFLICT_CHANGED_AUTHORITY'
 
 
-def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, license_hash, bundle):
+def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, license_hash, bundle,
+                              lock_entry_probe=False, lock_entry_candidate=False):
     suffix = secrets.token_hex(5)
     owner = 'b75_owner_' + suffix
     function = 'b75_fence_' + suffix
+    lock_function = function + '_lock'
     policy = 'b75_tenant_' + suffix
     event_table = 'aip_evidence_bundle_revoke_event'
     source_table = 'aip_evidence_bundle_revision'
@@ -1240,7 +1246,41 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
                     VALUES(%s,%s,%s,%s,1,%s,'b75 raw insert','b75-test-only')""",
                     (*selected_scope.key, 'b75-event-' + secrets.token_hex(5), source, content_hash))
 
+        if lock_entry_candidate:
+            admin.execute(sql.SQL('''CREATE FUNCTION public.{}(text,text,text,bigint,text) RETURNS void
+                LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $l$
+                BEGIN
+                  PERFORM 1 FROM public.{} WHERE org_id=$1 AND project_id=$2 AND bundle_id=$3
+                    AND revision=$4 AND content_hash=$5 FOR UPDATE;
+                  IF NOT FOUND THEN RAISE EXCEPTION 'exact lock source unavailable' USING ERRCODE='42501'; END IF;
+                END $l$''').format(sql.Identifier(lock_function), sql.Identifier(fence_table)))
+            admin.execute(sql.SQL('ALTER FUNCTION public.{}(text,text,text,bigint,text) OWNER TO {}').format(
+                sql.Identifier(lock_function), sql.Identifier(owner)))
+            admin.execute(sql.SQL('REVOKE ALL ON FUNCTION public.{}(text,text,text,bigint,text) FROM PUBLIC').format(sql.Identifier(lock_function)))
+            admin.execute(sql.SQL('GRANT EXECUTE ON FUNCTION public.{}(text,text,text,bigint,text) TO aos_runtime').format(sql.Identifier(lock_function)))
         source = fresh('store')
+        if lock_entry_probe:
+            with connect(scope) as conn:
+                # Preserve the real privilege error: caller cannot reuse the old pre-replay lock.
+                if lock_entry_candidate:
+                    conn.execute(sql.SQL('SELECT public.{}(%s,%s,%s,1,%s)').format(sql.Identifier(lock_function)),
+                                 (*scope.key, source, license_hash))
+                else:
+                    assert conn.execute(sql.SQL('SELECT epoch FROM public.{} WHERE org_id=%s '
+                        'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s '
+                        'FOR UPDATE').format(sql.Identifier(fence_table)),
+                        (*scope.key, source, license_hash)).fetchone() is not None
+            assert state(source) == (0, 0, 0), 'lock entry must not mutate epoch'
+            if lock_entry_candidate:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with connect(scope) as conn:
+                        conn.execute(sql.SQL('SELECT public.{}(%s,%s,%s,1,%s)').format(sql.Identifier(lock_function)),
+                                     (*scope.key, source, 'e' * 64))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with connect(type(scope)(org_id='dev-org', project_id='dev-project')) as conn:
+                        conn.execute(sql.SQL('SELECT public.{}(%s,%s,%s,1,%s)').format(sql.Identifier(lock_function)),
+                                     (*scope.key, source, license_hash))
+                assert state(source) == (0, 0, 0)
         assert store(source, source).revoked
         assert state(source) == (1, 1, 1)
         assert store(source, source).revoked
@@ -1270,6 +1310,7 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
         assert state(failure) == (0, 0, 0)
     finally:
         admin.execute(sql.SQL('DROP TRIGGER IF EXISTS {} ON public.{}').format(sql.Identifier(function), sql.Identifier(event_table)))
+        admin.execute(sql.SQL('DROP FUNCTION IF EXISTS public.{}(text,text,text,bigint,text)').format(sql.Identifier(lock_function)))
         admin.execute(sql.SQL('DROP FUNCTION IF EXISTS public.{}()').format(sql.Identifier(function)))
         for table in created_policies:
             admin.execute(sql.SQL('DROP POLICY {} ON public.{}').format(sql.Identifier(policy), sql.Identifier(table)))

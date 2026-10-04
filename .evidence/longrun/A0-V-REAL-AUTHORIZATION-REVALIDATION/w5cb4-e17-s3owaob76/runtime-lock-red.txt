@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1155: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1026: in prepare_and_verify
+    assert_restricted_blocked_evaluate_composes_lock(
+services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:383: in assert_restricted_blocked_evaluate_composes_lock
+    _assert_license_transaction_contract(
+services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:1091: in _assert_license_transaction_contract
+    _assert_license_db_trigger(admin=admin, scope=scope, fence_table=fence_table,
+services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:1251: in _assert_license_db_trigger
+    assert conn.execute(sql.SQL('SELECT epoch FROM public.{} WHERE org_id=%s '
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table b71_license_epoch_81d0f120
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 14.71s

@@ -1,0 +1,13 @@
+# b76 接续：事件触发器与受限锁入口组合
+
+b75已把真正事件更新与epoch绑定，并取消runtime直接UPDATE权限。尚不能生产化：触发器WHEN是随机fixture前缀，未覆盖其他bundle；source/head初始化仍admin fixture；replay前锁仍b73包装器，移除UPDATE权限后普通runtime无法FOR UPDATE，而单独trigger发生在Store _replay之后不能保证并发Receipt；正式signed source/Owner/install epoch与多来源仍待验。
+
+下一在同disposable验证完整组合，原两测试文件：去前缀WHEN、整撤销event表候选触发器（只在当前测试阶段生命周期内，不改正式表迁移）；新增最小SECURITY DEFINER exact-head锁入口，runtime只有EXECUTE测试权而没有UPDATE head，fixed search_path/FORCE RLS/无BYPASSRLS。该入口只做锁与exact存在验证，不更新epoch，source事件trigger是唯一推进入口。请求级工厂在Store _replay前调用锁；真实Store仍canonical hash/Receipt真源。
+
+RED须覆盖取消runtime UPDATE后原FOR UPDATE失败，以及无prelock并发Receipt/epoch合同缺口，不能声称trigger单独解决。组合须证明两个精确PID锁等待、同key一次event/epoch/Receipt、samekey不同body冲突、newkey existingevent不推进、首次失败完全回滚；evaluator先与revoke先旧快照40001/42501继续复验。unknown/missing/cross tenant/head漂移均拒绝。
+
+这一步锁入口测试EXECUTE不是正式签名授权：正式源初始化、signed发行/安装/Owner绑定、其他七依赖与当前迁移仍独立门。完成组合后再列生产schema/Store/restricted evaluator的最小文件清单，先整体设计与风险复核，不靠候选测试升级权威。当前真库135保持只读，不碰旧Run或Provider。
+
+第一实际门：新增B76_LOCK_ENTRY_PROBE配b75，在runtime UPDATE撤销时直接FOR UPDATE exact head必须成功才可继续旧pre-replay锁合同；实际42501应保留为RED。这个前测只证明旧入口不可用，不声称触发器/重放完整组合通过。后续受限入口需记录完整组合测试，再生产化设计。基线b1c7016d/权威1329；只两原测试文件。
+
+本段候选B76_LOCK_ENTRY_CANDIDATE仅合法head锁入口，runtime EXECUTE随机测试函数，不能正式授权；owner沿b75最小role，RLS保留，fixed search_path。wronghash和canary拒绝且不变。尚未连入Store pre-replay、全表触发器、并发同key复合证明；下一b77继续原b76完整合同，不缩减退出标准，不生产化。
