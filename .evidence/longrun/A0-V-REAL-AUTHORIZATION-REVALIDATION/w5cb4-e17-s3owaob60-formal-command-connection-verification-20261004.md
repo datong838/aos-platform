@@ -10,7 +10,13 @@
 
 - 保护文件/DSN 负门 9 项（含缺文件、宽权限、符号链接、重复字段、同 Web DSN、hostaddr、会话 options、错目标、角色漂移）专项 exit0；生产组装 opt-in/默认路径测试 exit0。
 - isolated PG/OCI signed 两代次全链 exit0；命令身份替换为超管、INHERIT、runtime 成员、额外 `pg_read_all_data` 成员、Binding UPDATE 均被拒绝，回滚角色后正常签名卸载/重装、两个 Receipt 与 OCI 资源回收仍通过。
-- 专项与相邻 `pytest` exit0 `33 passed/1 deselected/7 warnings`。排除的旧 `test_runtime_control_plane_permission_locks_the_current_installation` 仍因 fake connection 无 `.info` 失败；不将其记为通过。`git diff --check` 待最终复核。
+- 专项与相邻 `pytest` exit0 `33 passed/1 deselected/7 warnings`。排除的旧 `test_runtime_control_plane_permission_locks_the_current_installation` 仍因 fake connection 无 `.info` 失败；不将其记为通过。精确暂存 `git diff --cached --check` exit0；代码提交 `m1@2dc591d6`。
+
+## 最新代码重载与浏览器验收
+
+- 当前 `.env` 中正式命令凭证引用不存在（只查变量名存在性，不读秘密）；PG 当前库 migration `a0v_135`。Web→API bootout 均 exit0；项目 Python 的当前签名预检 exit0 `CURRENT_PREVIEW_HTTP_PREFLIGHT_GREEN`；API→Web bootstrap 均 exit0。新 API PID 24322、Web PID 24333，PG 18435/API 8080/Web 8434 监听，18181 不监听；`/v1/ready` 与 `/aip/skill-publish` HTTP200。
+- Codex 浏览器刷新后，`org-org/dev-project`，电商工作台“暂无可见工作台入口”；技能37仅评测、已发布0，正式发布决定、Logic精确版本、模型路由/策略三 blocker；“发布此修订”disabled。截图 `w5cb4-e17-s3owaob60-browser-20261004.png` 与完整 AX `w5cb4-e17-s3owaob60-browser-ax-20261004.txt`。HTTP与页面禁入是安全证据，不是业务首链。
+- 当前卷只读事务 exit0：`aos_current_preview_20260927@a0v_135`，正向安装 current3/active NULL/ETag3，Capability Binding0、Runtime Binding0、Host assignment0；ROLLBACK。没有借此读商城源或重发未知操作。
 
 ## 局限与下一步
 
