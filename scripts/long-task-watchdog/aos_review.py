@@ -190,7 +190,7 @@ def main():
             raise ValueError('consume path outside task directory')
         existing = exact_file(repo, args.consume, ('.evidence',))
         transport_path = str(Path(args.consume).with_suffix('.transport.json'))
-        transport = json.loads(exact_file(repo, transport_path, ('.evidence',)).read_text())
+        transport = json.loads(exact_file(repo, transport_path, ('.evidence',), max_bytes=8 * 1024 * 1024).read_text())
         record = consumption_record(request, json.loads(existing.read_text()), transport,
                                     hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
         validate_request(repo, request)

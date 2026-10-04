@@ -18,7 +18,7 @@ CODE_ROOTS = ('services', 'apps', 'bundles', 'scripts')
 CODE_EXTENSIONS = ('.py', '.ts', '.tsx', '.js', '.mjs', '.sql', '.sh')
 
 
-def exact_file(repo, relative, roots):
+def exact_file(repo, relative, roots, *, max_bytes=1024 * 1024):
     path = Path(relative)
     if path.is_absolute() or '..' in path.parts or not path.parts or path.parts[0] not in roots:
         raise ValueError('file outside permitted roots')
@@ -31,7 +31,7 @@ def exact_file(repo, relative, roots):
         current = current / part
         if current.is_symlink():
             raise ValueError('symlink material rejected')
-    if not current.is_file() or current.stat().st_size > 1024 * 1024:
+    if not current.is_file() or current.stat().st_size > max_bytes:
         raise ValueError('missing or oversized material')
     return current
 

@@ -115,6 +115,16 @@ class ReviewBaselineIntegrationTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'excluded scope'):validate_request(repo,req)
 
 class ConsumptionTest(unittest.TestCase):
+    def test_transport_has_explicit_bounded_limit_without_relaxing_material_limit(self):
+        from aos_wake_progress import exact_file
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'.evidence').mkdir();file=root/'.evidence/review.transport.json'
+            with file.open('wb') as stream:stream.truncate(2*1024*1024)
+            with self.assertRaises(ValueError):exact_file(root,'.evidence/review.transport.json',('.evidence',))
+            self.assertEqual(exact_file(root,'.evidence/review.transport.json',('.evidence',),max_bytes=8*1024*1024),file)
+            with file.open('wb') as stream:stream.truncate(8*1024*1024+1)
+            with self.assertRaises(ValueError):exact_file(root,'.evidence/review.transport.json',('.evidence',),max_bytes=8*1024*1024)
+
     def request(self):
         return ReviewContractTest().request()
 
