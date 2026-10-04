@@ -1,0 +1,22 @@
+[
+  {
+    "path": "services/aos-api/aos_api/aip_binding_readiness_service.py",
+    "sha256": "babfe7b5fc13f87d72c9d3ef0844da38e6cebc1d0c90a6f2339c0a1d229bcd6f"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_model_runtime_resolver.py",
+    "sha256": "c6dfd79b036b279d2ff35ff7124f5dac2b3146c592bf2771c8409dc77d39f1b1"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_model_runtime_store.py",
+    "sha256": "ebd1e1ffa38032a069048a5e8c53b3fe3e01f19a6a38fc42f7597d391b3b4c26"
+  },
+  {
+    "path": "services/aos-api/tests/aip/test_e17_s3owaob45_transaction_readiness_pg.py",
+    "sha256": "b4be9113737fb4b34c3948e5ec72935b07a46603f2eb61cf5779076d37d53b6f"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_capability_binding_service.py",
+    "sha256": "99105e030a38817d4ccf5606b2b6009af493e73fa4d6fdaa9ee8f7074b900ada"
+  }
+]
