@@ -104,6 +104,7 @@ class AipCapabilityBindingService(AipAgentRegistryStore):
                 receipt = self._insert_receipt(conn, scope, operation, idempotency_key,
                     request_hash, "Capability", binding.capability.asset_id,
                     "CapabilityBinding", request.binding_id, actor, occurred_at,
+                    source_revision=str(binding.capability.revision),
                     result_revision=str(row["version"]))
                 conn.commit()
                 return self._from_row(scope, row), receipt

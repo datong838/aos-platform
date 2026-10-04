@@ -141,10 +141,14 @@ def test_original_capability_create_replay_and_tenant_isolation(capability_case,
                                       actor="test-only", occurred_at=datetime.now(UTC))
     assert created.binding_id == request.binding_id and created.status == "provisioning"
     assert receipt.status == "applied"
+    assert receipt.resource_ref.resource_type == "Capability"
+    assert receipt.resource_ref.resource_id == request.binding.capability.asset_id
+    assert receipt.resource_ref.revision == str(request.binding.capability.revision)
     replay, replay_receipt = service.create(scope, request, idempotency_key=key,
                                            actor="test-only", occurred_at=datetime.now(UTC))
     assert replay.binding_id == created.binding_id
     assert replay_receipt.receipt_id == receipt.receipt_id
+    assert replay_receipt.resource_ref.revision == receipt.resource_ref.revision
     with pytest.raises(AipAgentRegistryConflict):
         service.create(scope, request.model_copy(update={"binding_id": "drift"}),
                        idempotency_key=key, actor="test-only", occurred_at=datetime.now(UTC))
@@ -157,6 +161,9 @@ def test_original_capability_create_replay_and_tenant_isolation(capability_case,
         assert conn.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
                             "WHERE operation='capability_binding.create' AND result_ref->>'resourceId'=%s",
                             (request.binding_id,)).fetchone()["n"] == 1
+        assert conn.execute("SELECT resource_ref->>'revision' AS revision "
+                            "FROM aip_agent_registry_receipt WHERE receipt_id=%s",
+                            (receipt.receipt_id,)).fetchone()["revision"] == str(request.binding.capability.revision)
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             conn.execute("""INSERT INTO aip_agent_registry_receipt
                 (org_id,project_id,receipt_id,operation,idempotency_key,request_hash,
