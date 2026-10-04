@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 import time
 
-THREAD = '01a0e5ff-d1a0-70f2-828f-9fc997519d04'
+THREAD = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
 
 
 CODE_ROOTS = ('services', 'apps', 'bundles', 'scripts')
@@ -221,9 +221,12 @@ def recovery_guidance(*, user_paused, mechanism_authorized, active_tool, ownersh
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--event', required=True, help='heartbeat current_time_iso')
+    parser.add_argument('--thread', required=True, help='explicit calling thread; must match current writer binding')
     parser.add_argument('--checkpoint', help='exact repo-relative .evidence checkpoint')
     parser.add_argument('--shadow', action='store_true', help='read observations without changing stored state')
     args = parser.parse_args()
+    if args.thread != THREAD:
+        parser.error('calling thread does not match current writer binding')
     event_time = datetime.fromisoformat(args.event.replace('Z', '+00:00'))
     if event_time.utcoffset() is None:
         raise ValueError('event must include timezone')
@@ -234,7 +237,7 @@ def main():
     if args.shadow:
         print(json.dumps(observe({}, snapshot(repo, THREAD, args.checkpoint, context), event, time.time()), ensure_ascii=False))
         return
-    state = home / 'automations' / 'aos-2' / 'progress.json'
+    state = home / 'automations' / 'aos-2' / ('progress-' + THREAD + '.json')
     state.parent.mkdir(parents=True, exist_ok=True)
     with open(state.with_suffix('.lock'), 'a') as lock:
         os.chmod(lock.name, 0o600)

@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from subprocess import run
-from aos_wake_progress import observe, snapshot, checkpoint_snapshot, exact_file, recovery_guidance, process_identity, command_observation
+from aos_wake_progress import observe, snapshot, checkpoint_snapshot, exact_file, recovery_guidance, process_identity, command_observation, THREAD
 import json
 import os
 from datetime import datetime, timezone, timedelta
@@ -250,5 +250,53 @@ class StepCheckpointTest(CheckpointSafetyTest):
             self.assertEqual(self.read(repo,context)['next_step'],'RECONCILE_STEP_ONLY:review')
             cp['steps'][1]={'id':'review','state':'NOT_APPLICABLE','reason':'local CLI only'};file.write_text(json.dumps(cp))
             self.assertEqual(self.read(repo,context)['next_step'],'LOCAL_STEPS_RECORDED')
+
+class ThreadTransferTest(unittest.TestCase):
+    NEW = '01a107a2-e9e4-7670-bc44-1144fa9b27e2'
+    OLD = '01a0e5ff-d1a0-70f2-828f-9fc997519d04'
+
+    def cli(self, home, *args):
+        import sys
+        return run([sys.executable, str(Path(__file__).with_name('aos_wake_progress.py')),
+                    '--event', '2026-10-05T00:20:00+08:00', *args],
+                   env=dict(os.environ, CODEX_HOME=str(home)), capture_output=True, text=True)
+
+    def test_current_binding_and_old_or_missing_caller_rejected_without_write(self):
+        self.assertEqual(THREAD, self.NEW)
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d)
+            for args in [(), ('--thread', self.OLD)]:
+                result = self.cli(home, *args)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(list(home.iterdir()), [])
+
+    def test_new_progress_isolated_preserves_old_bytes_and_duplicate_state(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d); directory = home/'automations/aos-2'; directory.mkdir(parents=True)
+            old = directory/'progress.json'; old.write_text(json.dumps({'thread': self.OLD, 'event': 'old'}))
+            original = old.read_bytes()
+            result = self.cli(home, '--thread', self.NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            state = directory/('progress-' + self.NEW + '.json')
+            self.assertTrue(state.is_file())
+            before = state.read_bytes(); stamp = state.stat().st_mtime_ns
+            self.assertEqual(json.loads(before)['thread'], self.NEW)
+            result = self.cli(home, '--thread', self.NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((state.read_bytes(), state.stat().st_mtime_ns), (before, stamp))
+            self.assertEqual(old.read_bytes(), original)
+            result = self.cli(home, '--thread', self.OLD)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(state.read_bytes(), before)
+            self.assertEqual(old.read_bytes(), original)
+
+    def test_old_checkpoint_not_adopted_by_new_thread(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo, context, cp, file = CheckpointSafetyTest().setup_context(Path(d))
+            cp['thread'] = self.OLD; file.write_text(json.dumps(cp))
+            with self.assertRaises(ValueError):
+                checkpoint_snapshot(repo, self.NEW, '.evidence/task/checkpoint.json', context)
+            cp['thread'] = self.NEW; file.write_text(json.dumps(cp))
+            self.assertEqual(checkpoint_snapshot(repo, self.NEW, '.evidence/task/checkpoint.json', context)['owner'], 'owner')
 
 if __name__=='__main__': unittest.main()
