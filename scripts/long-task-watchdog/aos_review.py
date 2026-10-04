@@ -28,6 +28,10 @@ verdict为PASS/REWORK/NEED_EVIDENCE/NEED_DECISION；findings为非空列表，
 （supported/contradicted/insufficient）。PASS须全部claims有supported依据。
 findings.claim必须逐字复制claims中的原字符串，包括末尾标点；不得改写或省略字符。
 依据优先定位文件名和函数/字段；材料没有提供的行号、PR、提交或完成状态不得编造。
+判定边界：明确反证或既有硬门违反用REWORK；证据不足用NEED_EVIDENCE。
+assessment明确反证为contradicted，缺证据为insufficient；不能混用。
+NEED_DECISION仅用于确需用户实质选择、既有合同无法决定的情形，不用于确定性拒绝。
+过期或错Owner结果不可通过恢复Lease或修改归属回退接受；只能保留旧结果并取新基线审阅。
 next_safe_step为具体安全建议。证据不足返回NEED_EVIDENCE；不能凭自述证明实际业务完成。
 可指出范围漂移、权限/版本缺口；局部缺口不判整个目标blocked。'''
 
