@@ -66,6 +66,53 @@ def command_observation(command, now):
     return 'EXPIRED' if now >= deadline.timestamp() else 'ACTIVE'
 
 
+def step_navigation(repo, cp, hashes):
+    """Validate local step evidence and suggest navigation; never execute a step."""
+    steps = cp['steps']
+    if not isinstance(steps, list) or not 0 < len(steps) <= 32:
+        raise ValueError('invalid step list')
+    seen, next_step = set(), None
+    for step in steps:
+        if not isinstance(step, dict):
+            raise ValueError('invalid step')
+        ident, state = step.get('id'), step.get('state')
+        if not isinstance(ident, str) or not ident.strip() or ident in seen:
+            raise ValueError('missing or duplicate step ID')
+        seen.add(ident)
+        if state in ('PENDING', 'UNKNOWN_EXTERNAL'):
+            candidate = ('REVIEW_STEP:' if state == 'PENDING' else 'RECONCILE_STEP_ONLY:') + ident
+            if next_step is None or state == 'UNKNOWN_EXTERNAL' and not next_step.startswith('RECONCILE_STEP_ONLY:'):
+                next_step = candidate
+        elif state == 'NOT_APPLICABLE':
+            if not isinstance(step.get('reason'), str) or not step['reason'].strip():
+                raise ValueError('missing not-applicable reason')
+        elif state == 'VERIFIED_LOCAL':
+            relative = step.get('proof')
+            if not isinstance(relative, str) or not relative.startswith('.evidence/' + cp['task_id'] + '/'):
+                raise ValueError('missing or foreign step proof')
+            proof = json.loads(exact_file(repo, relative, ('.evidence',)).read_text())
+            if (proof.get('schema') != 'aos-step-evidence/v1' or proof.get('task_id') != cp['task_id']
+                    or proof.get('owner') != cp['owner'] or proof.get('step') != ident
+                    or type(proof.get('exit_code')) is not int or proof['exit_code'] != 0):
+                raise ValueError('invalid step proof identity or exit')
+            for kind in ('input_files', 'output_files'):
+                files = proof.get(kind)
+                if not isinstance(files, dict) or not 0 < len(files) <= 32:
+                    raise ValueError('missing step evidence files')
+                for path, expected in files.items():
+                    if kind == 'input_files':
+                        actual = hashes.get(path)
+                    else:
+                        if not path.startswith('.evidence/' + cp['task_id'] + '/'):
+                            raise ValueError('foreign step output')
+                        actual = hashlib.sha256(exact_file(repo, path, ('.evidence',)).read_bytes()).hexdigest()
+                    if not actual or actual != expected:
+                        raise ValueError('stale or unowned step evidence')
+        else:
+            raise ValueError('unknown step state')
+    return next_step or 'LOCAL_STEPS_RECORDED'
+
+
 def checkpoint_snapshot(repo, thread, checkpoint, context):
     cp = json.loads(exact_file(repo, checkpoint, ('.evidence',)).read_text())
     required = ('task_id', 'owner', 'authority_revision', 'step')
@@ -104,6 +151,8 @@ def checkpoint_snapshot(repo, thread, checkpoint, context):
     if not hashes:
         raise ValueError('checkpoint must reference evidence or code')
     result = dict((k, cp[k]) for k in required) | {'fingerprint': hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()}
+    if 'steps' in cp:
+        result['next_step'] = step_navigation(repo, cp, hashes)
     if 'command' in cp:
         result['command_state'] = command_observation(cp['command'], time.time())
     return result

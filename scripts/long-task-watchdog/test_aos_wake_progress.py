@@ -197,4 +197,58 @@ class ActualProcessIdentityTest(unittest.TestCase):
         c=self.command();c['deadline_at']='2026-10-04T00:00:00'
         with self.assertRaises(ValueError):command_observation(c,0)
 
+class StepCheckpointTest(CheckpointSafetyTest):
+    def setup_steps(self, root):
+        import hashlib
+        repo,context,cp,file=self.setup_context(root)
+        output=repo/'.evidence/task/result.txt';output.write_text('local result')
+        digest=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+        proof={'schema':'aos-step-evidence/v1','task_id':'task','owner':'owner','step':'test',
+               'input_files':{'scripts/a.py':digest(repo/'scripts/a.py')},
+               'output_files':{'.evidence/task/result.txt':digest(output)},'exit_code':0}
+        pf=repo/'.evidence/task/proof.json';pf.write_text(json.dumps(proof))
+        cp['steps']=[{'id':'test','state':'VERIFIED_LOCAL','proof':'.evidence/task/proof.json'},
+                     {'id':'review','state':'PENDING'}]
+        file.write_text(json.dumps(cp))
+        return repo,context,cp,file,proof,pf
+
+    def read(self, repo, context):
+        return checkpoint_snapshot(repo,'thread','.evidence/task/checkpoint.json',context)
+
+    def test_valid_evidence_navigates_without_writing(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file,proof,pf=self.setup_steps(Path(d))
+            before={p:p.read_bytes() for p in (file,pf,repo/'.evidence/task/result.txt')}
+            for _ in range(2):self.assertEqual(self.read(repo,context)['next_step'],'REVIEW_STEP:review')
+            self.assertEqual(before,{p:p.read_bytes() for p in before})
+
+    def test_invalid_proof_rejected(self):
+        for change in ({'exit_code':1},{'exit_code':False},{'owner':'other'},
+                       {'input_files':{}},{'output_files':{}}):
+            with self.subTest(change=change),tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file,proof,pf=self.setup_steps(Path(d))
+                proof.update(change);pf.write_text(json.dumps(proof))
+                with self.assertRaises(ValueError):self.read(repo,context)
+        for path in ('scripts/a.py','.evidence/task/result.txt'):
+            with self.subTest(path=path),tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file,proof,pf=self.setup_steps(Path(d));(repo/path).write_text('changed')
+                with self.assertRaises(ValueError):self.read(repo,context)
+
+    def test_missing_duplicate_or_false_skip_rejected(self):
+        for steps in ([{'id':'a','state':'VERIFIED_LOCAL'}],
+                      [{'id':'a','state':'PENDING'},{'id':'a','state':'PENDING'}],
+                      [{'id':'a','state':'NOT_APPLICABLE','reason':''}],
+                      [{'id':'a','state':'DONE'}],[]):
+            with self.subTest(steps=steps),tempfile.TemporaryDirectory() as d:
+                repo,context,cp,file,proof,pf=self.setup_steps(Path(d));cp['steps']=steps;file.write_text(json.dumps(cp))
+                with self.assertRaises(ValueError):self.read(repo,context)
+
+    def test_unknown_and_all_local_are_not_execution_or_completion(self):
+        with tempfile.TemporaryDirectory() as d:
+            repo,context,cp,file,proof,pf=self.setup_steps(Path(d))
+            cp['steps'][1]['state']='UNKNOWN_EXTERNAL';file.write_text(json.dumps(cp))
+            self.assertEqual(self.read(repo,context)['next_step'],'RECONCILE_STEP_ONLY:review')
+            cp['steps'][1]={'id':'review','state':'NOT_APPLICABLE','reason':'local CLI only'};file.write_text(json.dumps(cp))
+            self.assertEqual(self.read(repo,context)['next_step'],'LOCAL_STEPS_RECORDED')
+
 if __name__=='__main__': unittest.main()
