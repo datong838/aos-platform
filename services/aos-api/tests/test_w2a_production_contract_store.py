@@ -24,30 +24,20 @@ CANARY = TenantScope("dev-org", "dev-project")
 ACTOR = "test:w2a"
 
 
-def cleanup() -> None:
-    with connect(ORG) as conn:
-        task_ids = [r["task_id"] for r in conn.execute(
-            "SELECT task_id FROM aip_task WHERE org_id=%s AND project_id=%s AND created_by=%s AND title LIKE 'W2A %%'",
-            (*ORG.key, ACTOR),
-        ).fetchall()]
-        conn.execute("DELETE FROM aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND created_by=%s", (*ORG.key, ACTOR))
-        conn.execute("DELETE FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND created_by=%s", (*ORG.key, ACTOR))
-        conn.execute("DELETE FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND created_by=%s", (*ORG.key, ACTOR))
-        for task_id in task_ids:
-            conn.execute("DELETE FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=%s", (*ORG.key, task_id))
-        # Base Evidence is append-only from W4-01 onward. Test rows use unique
-        # identifiers, so cleanup must preserve them instead of bypassing the
-        # production immutability contract.
-        for task_id in task_ids:
-            conn.execute("DELETE FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s", (*ORG.key, task_id))
-        conn.commit()
+def assert_disposable_database() -> None:
+    # Build provenance and its Evidence/Receipt parents are immutable history.
+    # UUIDs isolate each scenario; session teardown drops only its disposable DB.
+    from aos_api.db import get_dsn
+    from psycopg.conninfo import conninfo_to_dict
+    database = conninfo_to_dict(get_dsn())["dbname"]
+    assert database.startswith("aos_test_") and database.endswith("_ti4_test")
 
 
 @pytest.fixture(autouse=True)
 def isolated_w2a_rows():
-    cleanup()
+    assert_disposable_database()
     yield
-    cleanup()
+    assert_disposable_database()
 
 
 def key(prefix: str) -> str:

@@ -1,0 +1,22 @@
+# b85 原始构建输入存证交付
+
+## 真实证据
+原Store构建同一组Evidence与完整coverage，仅requiredFactIds不同即产生不同contentHash；原存储缺输入。red.log：真实PG UndefinedTable，1failed/7warnings/4.80s，不是mock。
+新a0v_138的同事务append-only provenance保留原请求与server authority payload；复用原canonical_hash，未改hash算法、旧response、Evidence或Receipt。读取需caller scope/事务、exact frozen source，验证DTO规范输入、原request/content hash、全部原业务字段和cutoff UTC语义、原build Receipt request_hash及exact result_ref。返回BUILD_PROVENANCE_ONLY_NO_START；不把provenance当签名、授权、freshness或发行政策。
+
+最终八组累计green-accepted.log：96passed/8warnings/50.44s。包含18项新专项及原来源撤销/锁并发、schema ACL、严格evaluator、W2A/B Store/API。原hash再现、不同requiredFacts、双别名重放仅一存证；普通历史缺存证拒绝；raw维护伪造input/requestHash/authority、Receipt漂移与source字段漂移拒绝；维护UPDATE/DELETE/TRUNCATE旧55000guard；runtime仅SELECT/INSERT，FORCE RLS/no PUBLIC、canary/noscope不可读、跨scope实际INSERT拒绝；exact source/Receipt FK；写存证后throw外部bundle/两Receipt/provenance整体0；表已存在而INSERT缺权不能fallback，整体0；仅自有测试库暂时rename新表检验未迁移generic构建/重放兼容与schema unavailable，restore后旧replay不补写原始输入。不是当前真实135迁移/回退验收。
+
+signed-full-schema.log：复用既有签名Receipt与OCI隔离环境，完整schema138安装/reader路径1passed/7warnings/15.13s。旧source fact夹具仍admin/test-only，证据读取NO_START；不宣称真实Owner/Policy/发行/经营链。
+六文件py_compile和精确tracked diff检查通过。测试库开工49/最终49；fence owner开工0/结束属性全安全、成员0、共享依赖0后只清本轮新建role，最终0。所有session terminal后清理，无旧库/角色清除。真实135未DDL/重启，用户九个M与历史未跟踪证据保护。
+
+## 排障与自审
+首轮green-first 6failed/13passed/21.79s：维护mutation误用connect(scope)会SET ROLE runtime，无UPDATE/DELETE权限；改测试明确自有隔离库maintenance连接，没有放宽生产权限。green-second19passed/21.51s。
+扩充后green-cumulative93passed/50.42s。FK用例首次green-final1failed/95passed/50.01s因复制同一source碰provenance PK，未抵达Receipt FK；增加独立有效父记录验证错误Receipt，最终96全过。旧失败日志保留，不冒充业务RED。
+旧W2A清理删除Evidence/Receipt父记录与不可变存证历史冲突；改明确assert_disposable_database，UUID案例保留session历史，由原autouse session fixture最终DROP自有DB。业务断言未削弱，未disable triggers/删除历史/影响共享库。
+
+方案与代码一致，scope未扩大；migration纯新增，无backfill、默认runtime无发行/head权限、downgrade拒删历史。泛型runtime可INSERT来源存证，因此canonical一致性并不证明合法发行或许可拥有者；正式issuer必须另外消费原始当前Owner/Policy和明确审批。读取只是历史构建证据，不验证当前Evidence revoke/有效期/业务使用权，必须由完整issuer/evaluator的共同锁/当前facts补齐。
+
+## 下一正式命令入口
+已读取CurrentControlPermission：原Owner来自meta_membership FOR SHARE、markings来自authz_tuple、当前installation lock；created_by不是Owner，安装控制权限也不能自动换成License授权。
+已读取原SolutionPackPublisher与current signed release reader：LicensePolicy是content/policies/aip6-runtime-policies.json整体file hash引用，规则source_license_required/derived_asset_traceable；前者inspect_current_capability_requests固定候选1.11.0，不能作为任意当前签名安装Policy来源。需从原signed选中release/verified bytes动态读取exact policy，而非新造Policy表或硬码本地文件。
+已读取原Action store/policy guard：guard-policy的独立issuer+Owner checker/makerChecker是可复用治理方式，但aip_activate_data_policy等既有Approval不能授权LicenseSource发行。下一b86完整来源发行应将准确License来源许可/Owner显式批准/当前签名Policy与安装/source绑定到原Proposal/ApprovalEvent；独立身份消费该原始审批，再同SERIALIZABLE事务写issuance/head/RegistryReceipt、拒绝revoke/过期/旧provenance/错Policy、重放/并发/rollback。未存在对应审批时fail-closed；不能改Owner权限或借无关Approval。八维/evaluator/首链仍待施工，Goal active/authority1329。

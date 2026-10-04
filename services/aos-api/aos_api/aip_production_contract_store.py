@@ -3262,8 +3262,11 @@ class AipProductionContractStore:
             self._receipt(
                 conn, scope, "evidence_bundle.create", key, request_hash, result, actor
             )
+            from aos_api.evidence_bundle_provenance import append_build_provenance
+            append_build_provenance(conn, scope, bundle_id, key, payload, authority_payload)
+            response = self._bundle(scope, row)
             conn.commit()
-            return self._bundle(scope, row)
+            return response
 
     def _compute_evidence_bundle_coverage(
         self,

@@ -1,0 +1,14 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_original_required_fact_inputs_survive_build_and_reproduce_old_hash ____
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:54: in test_original_required_fact_inputs_survive_build_and_reproduce_old_hash
+    rows=conn.execute("SELECT * FROM public.aip_evidence_bundle_build_provenance WHERE org_id=%s AND project_id=%s AND bundle_id=ANY(%s) ORDER BY bundle_id",(*SCOPE.key,[first.bundle_id,second.bundle_id])).fetchall()
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UndefinedTable: relation "public.aip_evidence_bundle_build_provenance" does not exist
+E   LINE 1: SELECT * FROM public.aip_evidence_bundle_build_provenance WH...
+E                         ^
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_original_required_fact_inputs_survive_build_and_reproduce_old_hash
+1 failed, 7 warnings in 4.80s

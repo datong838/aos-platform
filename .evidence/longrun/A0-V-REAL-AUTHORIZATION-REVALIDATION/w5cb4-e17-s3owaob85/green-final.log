@@ -1,0 +1,13 @@
+................F....................................................... [ 75%]
+........................                                                 [100%]
+=================================== FAILURES ===================================
+______ test_provenance_exact_parent_links_cannot_be_detached[receipt_key] ______
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:257: in test_provenance_exact_parent_links_cannot_be_detached
+    conn.execute("""INSERT INTO aip_evidence_bundle_build_provenance
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "aip_evidence_bundle_build_provenance_pkey"
+E   DETAIL:  Key (org_id, project_id, bundle_id, revision, content_hash)=(org-org, dev-project, evidence-bundle-56dbfe94b18d4018873d, 1, 06f3ce85249fd44729b814b4d3c80b86cf9d354db8edc96e9560a74f7969e368) already exists.
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_provenance_exact_parent_links_cannot_be_detached[receipt_key]
+1 failed, 95 passed, 8 warnings in 50.01s

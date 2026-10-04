@@ -21,43 +21,17 @@ def headers(org="org-org",key=None):
     return out
 
 
-def cleanup():
-    with connect(ORG) as c:
-        ids=[r["task_id"] for r in c.execute("SELECT task_id FROM aip_task WHERE org_id=%s AND project_id=%s AND title LIKE 'W2A API %%'",ORG.key).fetchall()]
-        brief_ids=[]
-        if ids:
-            brief_ids=[r["brief_id"] for r in c.execute(
-                "SELECT brief_id FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=ANY(%s)",
-                (*ORG.key,ids),
-            ).fetchall()]
-        bundle_ids=[r["bundle_id"] for r in c.execute(
-            "SELECT bundle_id FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND created_by=%s",
-            (*ORG.key,ACTOR),
-        ).fetchall()]
-        resource_ids=brief_ids+bundle_ids
-        if resource_ids:
-            c.execute(
-                "DELETE FROM aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND result_ref->>'resourceId'=ANY(%s)",
-                (*ORG.key,resource_ids),
-            )
-        c.execute(
-            "DELETE FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s AND created_by=%s",
-            (*ORG.key,ACTOR),
-        )
-        if ids:
-            c.execute("DELETE FROM aip_task_brief_revision WHERE org_id=%s AND project_id=%s AND task_id=ANY(%s)",(*ORG.key,ids))
-        for task_id in ids:
-            c.execute("DELETE FROM aip_task_brief_head WHERE org_id=%s AND project_id=%s AND task_id=%s",(*ORG.key,task_id))
-        # Base Evidence is append-only from W4-01 onward. Every API test row has
-        # a unique evidence_id, so preserving it is both isolated and faithful
-        # to the production immutability contract.
-        for task_id in ids:
-            c.execute("DELETE FROM aip_task WHERE org_id=%s AND project_id=%s AND task_id=%s",(*ORG.key,task_id))
-        c.commit()
+def assert_disposable_database() -> None:
+    # Build provenance and its Evidence/Receipt parents are immutable history.
+    # UUIDs isolate each scenario; session teardown drops only its disposable DB.
+    from aos_api.db import get_dsn
+    from psycopg.conninfo import conninfo_to_dict
+    database = conninfo_to_dict(get_dsn())["dbname"]
+    assert database.startswith("aos_test_") and database.endswith("_ti4_test")
 
 
 def test_brief_api_principal_tenant_idempotency_and_canary(client):
-    cleanup()
+    assert_disposable_database()
     try:
         task=AipTaskStore().create_task(ORG,ACTOR,f"api-task-{uuid.uuid4().hex}",CreateTaskRequest(title="W2A API authority"))
         payload={"taskId":task.id,"briefType":"ecommerce.analysis","schemaRef":{"resourceType":"Schema","resourceId":"analysis","revision":"1","authority":"aip"},"spec":{"goal":"facts first"}}
@@ -76,11 +50,11 @@ def test_brief_api_principal_tenant_idempotency_and_canary(client):
         assert frozen.status_code==200 and frozen.json()["revision"]==2 and frozen.json()["lifecycle"]=="frozen"
         stale=client.post(f"/v1/aip/production-contracts/task-briefs/{body['briefId']}/freeze",headers=headers(key=f"freeze-{uuid.uuid4().hex}"),json={"expectedVersion":1})
         assert stale.status_code==409 and stale.json()["code"]=="AIP_VERSION_CONFLICT"
-    finally:cleanup()
+    finally:assert_disposable_database()
 
 
 def test_creator_internal_brief_rejects_generic_create_revise_and_freeze(client):
-    cleanup()
+    assert_disposable_database()
     try:
         task = AipTaskStore().create_task(
             ORG,
@@ -147,11 +121,11 @@ def test_creator_internal_brief_rejects_generic_create_revise_and_freeze(client)
         assert current.revision == 1
         assert current.version == 1
     finally:
-        cleanup()
+        assert_disposable_database()
 
 
 def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
-    cleanup()
+    assert_disposable_database()
     try:
         task=AipTaskStore().create_task(ORG,ACTOR,f"api-task-{uuid.uuid4().hex}",CreateTaskRequest(title="W2A API evidence authority"))
         created=client.post(
@@ -209,7 +183,7 @@ def test_evidence_bundle_api_binds_exact_frozen_brief_and_evidence(client):
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers()).status_code==200
         assert client.get(f"/v1/aip/production-contracts/evidence-bundles/{bundle['bundleId']}",headers=headers("dev-org")).status_code==404
     finally:
-        cleanup()
+        assert_disposable_database()
 
 
 def test_brief_api_requires_idempotency_key(client):

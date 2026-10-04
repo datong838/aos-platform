@@ -1,0 +1,46 @@
+..FFF..FFF.........                                                      [100%]
+=================================== FAILURES ===================================
+_ test_history_is_immutable_for_maintenance[UPDATE aip_evidence_bundle_build_provenance SET request_payload=request_payload WHERE bundle_id=%s] _
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:106: in test_history_is_immutable_for_maintenance
+    conn.execute(command,(bundle.bundle_id,) if '%s' in command else None)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_evidence_bundle_build_provenance
+_ test_history_is_immutable_for_maintenance[DELETE FROM aip_evidence_bundle_build_provenance WHERE bundle_id=%s] _
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:106: in test_history_is_immutable_for_maintenance
+    conn.execute(command,(bundle.bundle_id,) if '%s' in command else None)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_evidence_bundle_build_provenance
+_ test_history_is_immutable_for_maintenance[TRUNCATE aip_evidence_bundle_build_provenance] _
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:106: in test_history_is_immutable_for_maintenance
+    conn.execute(command,(bundle.bundle_id,) if '%s' in command else None)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_evidence_bundle_build_provenance
+__ test_reader_rejects_receipt_drift_without_rewriting_history[request_hash] ___
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:161: in test_reader_rejects_receipt_drift_without_rewriting_history
+    conn.execute(sql.SQL("UPDATE aip_production_contract_receipt SET {}=%s WHERE operation='evidence_bundle.build' AND idempotency_key=%s").format(sql.Identifier(field)),('d'*64 if field=='request_hash' else Jsonb({}),key))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_production_contract_receipt
+___ test_reader_rejects_receipt_drift_without_rewriting_history[result_ref] ____
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:161: in test_reader_rejects_receipt_drift_without_rewriting_history
+    conn.execute(sql.SQL("UPDATE aip_production_contract_receipt SET {}=%s WHERE operation='evidence_bundle.build' AND idempotency_key=%s").format(sql.Identifier(field)),('d'*64 if field=='request_hash' else Jsonb({}),key))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_production_contract_receipt
+____________________ test_reader_rejects_source_field_drift ____________________
+services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py:172: in test_reader_rejects_source_field_drift
+    conn.execute("UPDATE aip_evidence_bundle_revision SET license_summary='{}' WHERE bundle_id=%s",(bundle.bundle_id,))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: permission denied for table aip_evidence_bundle_revision
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_history_is_immutable_for_maintenance[UPDATE aip_evidence_bundle_build_provenance SET request_payload=request_payload WHERE bundle_id=%s]
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_history_is_immutable_for_maintenance[DELETE FROM aip_evidence_bundle_build_provenance WHERE bundle_id=%s]
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_history_is_immutable_for_maintenance[TRUNCATE aip_evidence_bundle_build_provenance]
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_reader_rejects_receipt_drift_without_rewriting_history[request_hash]
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_reader_rejects_receipt_drift_without_rewriting_history[result_ref]
+FAILED services/aos-api/tests/aip/test_evidence_bundle_provenance_pg.py::test_reader_rejects_source_field_drift
+6 failed, 13 passed, 7 warnings in 21.79s
