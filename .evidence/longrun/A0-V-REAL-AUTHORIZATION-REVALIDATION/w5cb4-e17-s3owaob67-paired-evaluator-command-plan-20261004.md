@@ -8,7 +8,7 @@
 
 ## 文件与步骤
 
-1. 读取 b22/b46/b66 夹具的 grant、RLS、definer、Trigger 顺序和清理逻辑，在 `services/aos-api/tests/aip/` 建立最小联合测试：普通 issuer 可 create/update，但不可直接 evaluate Receipt；受限 evaluator 登录无 Binding/Receipt DML，只有 EXECUTE；definer 在同事务写 blocked Binding/Receipt，deferred Trigger 对同事务 version/operation/key 唯一配对。
+1. 读取 b22/b46/b66 夹具的 grant、RLS、definer、Trigger 顺序和清理逻辑。优先在现有 `services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py` 的 signed Growth1.13 路径加入 opt-in 联合身份/配对测试，并在 `test_growth_signed_installation_full_schema_pg.py` 只接该模式：普通 issuer 可 create/update，但不可直接 evaluate Receipt；受限 evaluator 登录无 Binding/Receipt DML，只有 EXECUTE；definer 在同事务写 blocked Binding/Receipt，deferred Trigger 对同事务 version/operation/key 唯一配对。保留原无 guard 模式和 b22/b46 专项。
 2. RED 必须分别标出缺身份门、缺配对门和独立 Reader 预计算；不能用客户端提供的 GUC/hash/available 作为真实依赖。测试覆盖错租户/错 key、相同 key 相同 hash replay、同 key 异 hash冲突、两份 Receipt、Binding 更新无 Receipt、插入失败全回滚。
 3. 若需要修改原 Service/Router，只接入真实受限命令和明确错误，不改变 create/update 或当前生产装配。signed Growth1.13 夹具另验证 Installation/Registry 锁序与撤销/换代竞争；若正式八类来源未齐，结果只可 blocked。
 

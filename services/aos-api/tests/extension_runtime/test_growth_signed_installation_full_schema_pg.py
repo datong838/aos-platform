@@ -134,6 +134,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     runtime_rollback_case = os.getenv('AOS_B51_RUNTIME_ROLLBACK') == '1'
     missing_runtime_binding_case = os.getenv('AOS_B52_MISSING_RUNTIME_BINDING') == '1'
     forged_available_case = os.getenv('AOS_B62B_FORGED_AVAILABLE') == '1'
+    paired_receipt_case = os.getenv('AOS_B67_PAIRED_RECEIPT') == '1'
     if forged_available_case:
         request.node.add_marker(pytest.mark.xfail(
             strict=True, reason='ordinary issuer can forge available in signed installation clone',
@@ -142,7 +143,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     database = conninfo_to_dict(os.environ['AOS_DATABASE_URL'])['dbname']
     assert database.startswith('aos_test_') and database.endswith('_ti4_test')
     signed, growth_version = _signed_release()
-    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case or missing_runtime_binding_case or forged_available_case) and growth_version != '1.13.0':
+    if (committed_revoke_case or concurrent_revoke_case or evaluate_first_case or runtime_rollback_case or missing_runtime_binding_case or forged_available_case or paired_receipt_case) and growth_version != '1.13.0':
         pytest.skip('committed revoke case uses the signed Growth 1.13 release')
     trust = FileTrustRootProvider(signed['trust_path']).snapshot()
     loader = ManifestLoader({signed['source_alias']: signed['signed_tree']}, trust_roots=trust)
@@ -1008,6 +1009,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         concurrent_revoke=concurrent_revoke_case,
                         evaluate_first=evaluate_first_case,
                         forged_available=forged_available_case,
+                        paired_receipt=paired_receipt_case,
                     )
                     if committed_revoke_case or concurrent_revoke_case or evaluate_first_case:
                         return str(binding['generation'])

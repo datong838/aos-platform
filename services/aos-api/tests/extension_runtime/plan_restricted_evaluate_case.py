@@ -18,7 +18,7 @@ from aos_api.db import get_dsn
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
     registry=None, concurrent_revoke=False, evaluate_first=False,
-    forged_available=False,
+    forged_available=False, paired_receipt=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -34,6 +34,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     scoped_tables = ("bundle_installation", "bundle_installation_revision",
                      "bundle_composition_lock", "aip_capability_binding",
                      "aip_agent_registry_receipt")
+    receipt_guards = None
     with psycopg.connect(get_dsn(), autocommit=True, row_factory=dict_row) as admin:
         admin.execute("""INSERT INTO aip_capability_binding(
             org_id,project_id,binding_id,capability_ref,secret_ref,health,
@@ -76,7 +77,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                 RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER
                 SET search_path=pg_catalog AS $$
                 DECLARE locked_pk uuid; release_pk uuid; source_count integer;
-                        next_version bigint;
+                        next_version bigint; existing record;
                         digest text;
                 BEGIN
                   IF session_user IS DISTINCT FROM {}
@@ -124,9 +125,23 @@ def assert_restricted_blocked_evaluate_composes_lock(
                   IF release_pk IS NULL THEN
                     RAISE EXCEPTION 'current release unavailable' USING ERRCODE='42501';
                   END IF;
-                  digest := pg_catalog.md5(p_org||':'||p_project||':'||p_binding||':'||
+                  digest := pg_catalog.md5(p_org||':'||p_project||':'||
+                      p_installation::text||':'||p_etag::text||':'||p_binding||':'||
                       p_version::text||':'||p_key);
                   digest := digest||digest;
+                  SELECT request_hash,result_ref INTO existing
+                    FROM public.aip_agent_registry_receipt
+                   WHERE org_id=p_org AND project_id=p_project
+                     AND operation='capability_binding.evaluate'
+                     AND idempotency_key=p_key;
+                  IF FOUND THEN
+                    IF existing.request_hash<>digest
+                       OR existing.result_ref->>'resourceId'<>p_binding
+                    THEN RAISE EXCEPTION 'evaluate idempotency conflict'
+                         USING ERRCODE='42501';
+                    END IF;
+                    RETURN (existing.result_ref->>'revision')::bigint;
+                  END IF;
                   UPDATE public.aip_capability_binding SET
                     operational_readiness='blocked',
                     readiness_reasons='["TRUSTED_EVALUATOR_PENDING"]'::jsonb,
@@ -163,6 +178,9 @@ def assert_restricted_blocked_evaluate_composes_lock(
                           .format(signature, sql.Identifier(definer)))
             admin.execute(sql.SQL("REVOKE ALL ON FUNCTION {} FROM PUBLIC")
                           .format(signature))
+            if paired_receipt:
+                receipt_guards = _install_b67_receipt_guards(
+                    admin=admin, suffix=suffix, definer=definer, role=role)
             with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
                 with limited.transaction():
                     limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
@@ -211,8 +229,58 @@ def assert_restricted_blocked_evaluate_composes_lock(
             assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
                 "WHERE operation='capability_binding.evaluate' AND idempotency_key=%s",
                 (key,)).fetchone()["n"] == 1
+            if paired_receipt:
+                with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                    with limited.transaction():
+                        limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                        limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                        "set_config('aos.project_id',%s,true)", scope.key)
+                        assert limited.execute(call, (*scope.key, installation, etag,
+                            binding, 1, key)).fetchone()["revision"] == 2
+                        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                            with limited.transaction():
+                                limited.execute(call, (*scope.key, installation, etag,
+                                    binding, 2, key))
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE operation='capability_binding.evaluate' AND idempotency_key=%s",
+                    (key,)).fetchone()["n"] == 1
+                fail_key = "b67-failed-" + suffix
+                admin.execute("""INSERT INTO aip_agent_registry_receipt(
+                    org_id,project_id,receipt_id,operation,idempotency_key,
+                    request_hash,resource_ref,result_ref,status,created_by,created_at)
+                    VALUES(%s,%s,%s,'agent_instance.create',%s,%s,
+                    '{}'::jsonb,'{}'::jsonb,'applied','test-only',now())""",
+                    (*scope.key, "b47-" + fail_key, fail_key + "-sentinel", "f" * 64))
+                with pytest.raises(psycopg.errors.UniqueViolation):
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                            limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                            "set_config('aos.project_id',%s,true)", scope.key)
+                            limited.execute(call, (*scope.key, installation, etag,
+                                                  binding, 2, fail_key))
+                assert admin.execute("SELECT version FROM aip_capability_binding "
+                    "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 2
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE operation='capability_binding.evaluate' AND idempotency_key=%s",
+                    (fail_key,)).fetchone()["n"] == 0
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                            limited.execute("SELECT set_config('aos.org_id','dev-org',true),"
+                                            "set_config('aos.project_id','dev-project',true)")
+                            limited.execute(call, ("dev-org", "dev-project", installation,
+                                                  etag, binding, 2, key + "-tenant"))
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE idempotency_key=%s", (key + "-tenant",)).fetchone()["n"] == 0
             if forged_available:
                 _assert_ordinary_issuer_cannot_forge_available(
+                    admin=admin, restricted_parts=restricted_parts,
+                    scope=scope, binding=binding, key=key,
+                )
+            if paired_receipt:
+                _assert_b67_ordinary_receipt_denied(
                     admin=admin, restricted_parts=restricted_parts,
                     scope=scope, binding=binding, key=key,
                 )
@@ -264,6 +332,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
                 assert admin.execute("SELECT version FROM aip_capability_binding "
                     "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 2
         finally:
+            if receipt_guards is not None:
+                _drop_b67_receipt_guards(admin, receipt_guards)
             admin.execute(sql.SQL("DROP FUNCTION IF EXISTS {}") .format(signature))
             for table in scoped_tables:
                 admin.execute(sql.SQL("DROP POLICY IF EXISTS {} ON {}")
@@ -273,6 +343,160 @@ def assert_restricted_blocked_evaluate_composes_lock(
             admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(definer)))
             assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
                                  (definer,)).fetchone() is None
+
+
+def _install_b67_receipt_guards(*, admin, suffix, definer, role):
+    identity = "b67_receipt_identity_" + suffix
+    paired = "b67_receipt_pair_" + suffix
+    binding_pair = "b67_binding_pair_" + suffix
+    admin.execute(sql.SQL("""CREATE FUNCTION public.{}() RETURNS trigger
+        LANGUAGE plpgsql SECURITY INVOKER SET search_path=pg_catalog AS $$
+        BEGIN
+          IF NEW.operation='capability_binding.evaluate'
+             AND (session_user IS DISTINCT FROM {} OR current_user IS DISTINCT FROM {})
+          THEN RAISE EXCEPTION 'CAPABILITY_EVALUATOR_RECEIPT_REQUIRED'
+               USING ERRCODE='42501';
+          END IF;
+          RETURN NEW;
+        END $$""").format(sql.Identifier(identity), sql.Literal(role), sql.Literal(definer)))
+    admin.execute(sql.SQL("""CREATE FUNCTION public.{}() RETURNS trigger
+        LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+        DECLARE paired_count integer;
+        BEGIN
+          IF NEW.operation='capability_binding.evaluate' THEN
+            SELECT count(*) INTO paired_count
+              FROM public.aip_capability_binding b
+             WHERE b.org_id=NEW.org_id AND b.project_id=NEW.project_id
+               AND b.binding_id=NEW.result_ref->>'resourceId'
+               AND b.version::text=NEW.result_ref->>'revision'
+               AND b.xmin::text=pg_catalog.pg_current_xact_id()::text
+               AND b.operational_readiness='blocked'
+               AND b.last_evaluated_at IS NOT NULL;
+            IF paired_count<>1
+               OR NEW.resource_ref->>'resourceType'<>'CapabilityBinding'
+               OR NEW.resource_ref->>'resourceId'<>NEW.result_ref->>'resourceId'
+               OR NEW.result_ref->>'resourceType'<>'CapabilityBindingReadiness'
+               OR NEW.created_by IS DISTINCT FROM session_user
+            THEN RAISE EXCEPTION 'CAPABILITY_EVALUATE_RECEIPT_UNPAIRED'
+                 USING ERRCODE='42501';
+            END IF;
+          END IF;
+          RETURN NEW;
+        END $$""").format(sql.Identifier(paired)))
+    admin.execute(sql.SQL("ALTER FUNCTION public.{}() OWNER TO {}")
+                  .format(sql.Identifier(paired), sql.Identifier(definer)))
+    admin.execute(sql.SQL("""CREATE FUNCTION public.{}() RETURNS trigger
+        LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $$
+        DECLARE receipt_count integer;
+        BEGIN
+          IF NEW.last_evaluated_at IS DISTINCT FROM OLD.last_evaluated_at THEN
+            SELECT count(*) INTO receipt_count
+              FROM public.aip_agent_registry_receipt r
+             WHERE r.org_id=NEW.org_id AND r.project_id=NEW.project_id
+               AND r.operation='capability_binding.evaluate'
+               AND r.result_ref->>'resourceId'=NEW.binding_id
+               AND r.result_ref->>'revision'=NEW.version::text
+               AND r.xmin::text=pg_catalog.pg_current_xact_id()::text;
+            IF receipt_count<>1
+            THEN RAISE EXCEPTION 'CAPABILITY_BINDING_RECEIPT_REQUIRED'
+                 USING ERRCODE='42501';
+            END IF;
+          END IF;
+          RETURN NEW;
+        END $$""").format(sql.Identifier(binding_pair)))
+    admin.execute(sql.SQL("ALTER FUNCTION public.{}() OWNER TO {}")
+                  .format(sql.Identifier(binding_pair), sql.Identifier(definer)))
+    admin.execute(sql.SQL("REVOKE ALL ON FUNCTION public.{}() FROM PUBLIC")
+                  .format(sql.Identifier(identity)))
+    admin.execute(sql.SQL("REVOKE ALL ON FUNCTION public.{}() FROM PUBLIC")
+                  .format(sql.Identifier(paired)))
+    admin.execute(sql.SQL("REVOKE ALL ON FUNCTION public.{}() FROM PUBLIC")
+                  .format(sql.Identifier(binding_pair)))
+    admin.execute(sql.SQL("""CREATE TRIGGER {} BEFORE INSERT ON aip_agent_registry_receipt
+        FOR EACH ROW EXECUTE FUNCTION public.{}()""")
+                  .format(sql.Identifier(identity), sql.Identifier(identity)))
+    admin.execute(sql.SQL("""CREATE CONSTRAINT TRIGGER {} AFTER INSERT
+        ON aip_agent_registry_receipt DEFERRABLE INITIALLY DEFERRED
+        FOR EACH ROW EXECUTE FUNCTION public.{}()""")
+                  .format(sql.Identifier(paired), sql.Identifier(paired)))
+    admin.execute(sql.SQL("""CREATE CONSTRAINT TRIGGER {} AFTER UPDATE
+        ON aip_capability_binding DEFERRABLE INITIALLY DEFERRED
+        FOR EACH ROW EXECUTE FUNCTION public.{}()""")
+                  .format(sql.Identifier(binding_pair), sql.Identifier(binding_pair)))
+    return identity, paired, binding_pair
+
+
+def _drop_b67_receipt_guards(admin, names):
+    for name, table in zip(names, ("aip_agent_registry_receipt",
+                                   "aip_agent_registry_receipt",
+                                   "aip_capability_binding")):
+        admin.execute(sql.SQL("DROP TRIGGER {} ON {}")
+                      .format(sql.Identifier(name), sql.Identifier(table)))
+        admin.execute(sql.SQL("DROP FUNCTION public.{}()")
+                      .format(sql.Identifier(name)))
+
+
+def _assert_b67_ordinary_receipt_denied(
+    *, admin, restricted_parts, scope, binding, key,
+):
+    issuer = "b67_issuer_" + secrets.token_hex(4)
+    password = secrets.token_urlsafe(32)
+    policy = "b67_policy_" + secrets.token_hex(4)
+    admin.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS PASSWORD {}")
+                  .format(sql.Identifier(issuer), sql.Literal(password)))
+    try:
+        admin.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}")
+                      .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT SELECT,INSERT ON aip_agent_registry_receipt TO {}")
+                      .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("GRANT SELECT,UPDATE ON aip_capability_binding TO {}")
+                      .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("CREATE POLICY {} ON aip_agent_registry_receipt TO {} "
+                              "USING(org_id=current_setting('aos.org_id',true) AND "
+                              "project_id=current_setting('aos.project_id',true)) "
+                              "WITH CHECK(org_id=current_setting('aos.org_id',true) AND "
+                              "project_id=current_setting('aos.project_id',true))")
+                      .format(sql.Identifier(policy), sql.Identifier(issuer)))
+        admin.execute(sql.SQL("CREATE POLICY {} ON aip_capability_binding TO {} "
+                              "USING(org_id=current_setting('aos.org_id',true) AND "
+                              "project_id=current_setting('aos.project_id',true)) "
+                              "WITH CHECK(org_id=current_setting('aos.org_id',true) AND "
+                              "project_id=current_setting('aos.project_id',true))")
+                      .format(sql.Identifier(policy + "_binding"), sql.Identifier(issuer)))
+        issuer_parts = dict(restricted_parts, user=issuer, password=password)
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with psycopg.connect(**issuer_parts, row_factory=dict_row) as limited:
+                limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                "set_config('aos.project_id',%s,true)", scope.key)
+                limited.execute("""INSERT INTO aip_agent_registry_receipt(
+                    org_id,project_id,receipt_id,operation,idempotency_key,
+                    request_hash,resource_ref,result_ref,status,created_by,created_at)
+                    VALUES(%s,%s,%s,'capability_binding.evaluate',%s,%s,
+                    %s::jsonb,%s::jsonb,'applied',%s,clock_timestamp())""",
+                    (*scope.key, "b67-" + key, "b67-" + key, "f" * 64,
+                     json.dumps({"resourceType": "CapabilityBinding", "resourceId": binding}),
+                     json.dumps({"resourceType": "CapabilityBindingReadiness",
+                                 "resourceId": binding, "revision": "2"}), issuer))
+        assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+            "WHERE idempotency_key=%s", ("b67-" + key,)).fetchone()["n"] == 0
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with psycopg.connect(**issuer_parts, row_factory=dict_row) as limited:
+                limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                "set_config('aos.project_id',%s,true)", scope.key)
+                limited.execute("""UPDATE aip_capability_binding SET
+                    operational_readiness='blocked',
+                    last_evaluated_at=clock_timestamp(),version=version+1
+                    WHERE org_id=%s AND project_id=%s AND binding_id=%s
+                      AND version=2""", (*scope.key, binding))
+    finally:
+        admin.execute(sql.SQL("DROP POLICY IF EXISTS {} ON aip_agent_registry_receipt")
+                      .format(sql.Identifier(policy)))
+        admin.execute(sql.SQL("DROP POLICY IF EXISTS {} ON aip_capability_binding")
+                      .format(sql.Identifier(policy + "_binding")))
+        admin.execute(sql.SQL("DROP OWNED BY {}") .format(sql.Identifier(issuer)))
+        admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(issuer)))
+        assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
+                             (issuer,)).fetchone() is None
 
 
 def _assert_ordinary_issuer_cannot_forge_available(
