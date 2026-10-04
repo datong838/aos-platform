@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_same_key_different_source_writers_return_conflict_without_partial_revoke _
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:284: in test_same_key_different_source_writers_return_conflict_without_partial_revoke
+    assert sorted(f.result(timeout=10) for f in fs)==['conflict','ok']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:284: in <genexpr>
+    assert sorted(f.result(timeout=10) for f in fs)==['conflict','ok']
+                  ^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:269: in run
+    assert invoke(bundle,key,factory=writer_factory).revoked
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:97: in invoke
+    return AipProductionContractStore(connect_factory=factory).revoke_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3475: in revoke_evidence_bundle
+    self._receipt(
+services/aos-api/aos_api/aip_production_contract_store.py:6722: in _receipt
+    conn.execute("INSERT INTO aip_production_contract_receipt(org_id,project_id,receipt_id,operation,idempotency_key,request_hash,result_ref,created_by) VALUES(%s,%s,%s,%s,%s,%s,%s::jsonb,%s)",(*scope.key,f"w2r-{uuid.uuid4().hex[:20]}",operation,key,request_hash,self._json(result),actor))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "aip_production_contract_recei_org_id_project_id_operation_i_key"
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_same_key_different_source_writers_return_conflict_without_partial_revoke
+1 failed, 11 deselected, 7 warnings in 4.80s

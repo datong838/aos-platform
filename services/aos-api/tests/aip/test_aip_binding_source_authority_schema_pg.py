@@ -5,6 +5,9 @@ import psycopg
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict
 import pytest
+from pathlib import Path
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 
 from aos_api.db import get_dsn
 
@@ -23,11 +26,12 @@ def owner():
 def test_source_schema_exists_without_implicit_issuance(owner):
     for table in TABLES:
         assert owner.execute('SELECT to_regclass(%s)', ('public.' + table,)).fetchone()[0]
-        assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 0
         assert owner.execute("""SELECT relrowsecurity,relforcerowsecurity,
             NOT EXISTS (SELECT 1 FROM aclexplode(relacl) a WHERE a.grantee=0)
             FROM pg_class WHERE oid=%s::regclass""", ('public.' + table,)).fetchone() == (True,True,True)
-    assert owner.execute('SELECT version_num FROM alembic_version').fetchall() == [('a0v_136',)]
+    config=Config()
+    config.set_main_option('script_location',str(Path(__file__).resolve().parents[2]/'alembic'))
+    assert owner.execute('SELECT version_num FROM alembic_version').fetchall() == [(ScriptDirectory.from_config(config).get_current_head(),)]
 
 
 @pytest.fixture
@@ -35,6 +39,7 @@ def source(owner):
     suffix = uuid4().hex
     bundle, issuance, receipt, binding = ('b82.' + suffix + name for name in ('bundle','issuance','receipt','binding'))
     installation = uuid4()
+    issuance_count=owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0]
     owner.execute("INSERT INTO twa_org(id,name) VALUES('org-org','test-only') ON CONFLICT DO NOTHING")
     owner.execute("INSERT INTO twa_workspace(org_id,project_id,name) VALUES('org-org','dev-project','test-only') ON CONFLICT DO NOTHING")
     owner.execute("""INSERT INTO aip_evidence_bundle_revision
@@ -44,7 +49,7 @@ def source(owner):
         VALUES('org-org','dev-project',%s,1,'{}','[]',NOW(),'[]','complete','[]','[]',
          '[]','fresh','{}','{"license":"ordinary-test-only"}',%s,'frozen','test-only')""", (bundle, 'a'*64))
     # Ordinary nonempty license_summary creates no formal source.
-    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == 0
+    assert owner.execute('SELECT count(*) FROM aip_license_source_issuance').fetchone()[0] == issuance_count
     owner.execute("""INSERT INTO bundle_installation(org_id,project_id,installation_pk,
         installation_id,display_name,current_revision,etag_version,created_by)
         VALUES('org-org','dev-project',%s,%s,'test-only',1,1,'test-only')""", (uuid4(), installation))
@@ -77,16 +82,19 @@ def source(owner):
 def test_runtime_can_read_only_its_tenant_and_cannot_write(owner, source, table):
     owner.execute('SET LOCAL ROLE aos_runtime')
     owner.execute("SELECT set_config('aos.org_id','org-org',true),set_config('aos.project_id','dev-project',true)")
-    query = sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))
-    assert owner.execute(query).fetchone()[0] == 1
+    bundle,_=source
+    column='binding_id' if table=='aip_binding_evaluation_proof' else 'bundle_id'
+    identifier=bundle[:-6]+'binding' if column=='binding_id' else bundle
+    query = sql.SQL('SELECT count(*) FROM {} WHERE {}=%s').format(sql.Identifier(table),sql.Identifier(column))
+    assert owner.execute(query,(identifier,)).fetchone()[0] == 1
     for permission in ('INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'):
         assert not owner.execute('SELECT has_table_privilege(current_user,%s,%s)', (table,permission)).fetchone()[0]
     with pytest.raises(psycopg.errors.InsufficientPrivilege), owner.transaction():
         owner.execute(sql.SQL('INSERT INTO {} SELECT * FROM {} LIMIT 0').format(sql.Identifier(table),sql.Identifier(table)))
     owner.execute("SELECT set_config('aos.org_id','dev-org',true)")
-    assert owner.execute(query).fetchone()[0] == 0
+    assert owner.execute(query,(identifier,)).fetchone()[0] == 0
     owner.execute("SELECT set_config('aos.org_id','',true)")
-    assert owner.execute(query).fetchone()[0] == 0
+    assert owner.execute(query,(identifier,)).fetchone()[0] == 0
 
 
 def test_exact_source_and_same_tenant_links_are_enforced(owner, source):
@@ -103,11 +111,12 @@ def test_exact_source_and_same_tenant_links_are_enforced(owner, source):
 @pytest.mark.parametrize('table', ('aip_license_source_issuance','aip_binding_evaluation_proof'))
 @pytest.mark.parametrize('operation', ('UPDATE','DELETE','TRUNCATE'))
 def test_immutable_history_rejects_even_maintenance_mutation(owner, source, table, operation):
+    before=owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0]
     statement = {'UPDATE':'UPDATE {} SET project_id=project_id',
                  'DELETE':'DELETE FROM {}', 'TRUNCATE':'TRUNCATE {} CASCADE'}[operation]
     with pytest.raises(psycopg.errors.ObjectNotInPrerequisiteState, match='AIP6_REGISTRY_APPEND_ONLY'), owner.transaction():
         owner.execute(sql.SQL(statement).format(sql.Identifier(table)))
-    assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 1
+    assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == before
 
 
 def test_missing_dimension_and_invalid_validity_rejected(owner, source):

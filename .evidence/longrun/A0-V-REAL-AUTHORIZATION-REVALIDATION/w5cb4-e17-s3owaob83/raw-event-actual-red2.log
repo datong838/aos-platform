@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_raw_revoke_advances_epoch_only_for_inserted_event ____________
+services/aos-api/aos_api/asset_registry/composition_store.py:108: in create_or_get
+    result = self.create_or_get_in_transaction(
+services/aos-api/aos_api/asset_registry/composition_store.py:197: in create_or_get_in_transaction
+    inserted = conn.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_composition" violates foreign key constraint "fk_bundle_composition_workspace_ti6"
+E   DETAIL:  Key (org_id, project_id)=(org-org, dev-project) is not present in table "meta_workspace".
+
+The above exception was the direct cause of the following exception:
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:103: in test_raw_revoke_advances_epoch_only_for_inserted_event
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:49: in create
+    composition=PostgresCompositionStore().create_or_get(
+services/aos-api/aos_api/asset_registry/composition_store.py:122: in create_or_get
+    raise LockIntegrityInvalidError(
+E   aos_api.asset_registry.errors.LockIntegrityInvalidError: composition lock violates persistence constraints
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_raw_revoke_advances_epoch_only_for_inserted_event
+1 failed, 8 deselected, 7 warnings in 4.51s

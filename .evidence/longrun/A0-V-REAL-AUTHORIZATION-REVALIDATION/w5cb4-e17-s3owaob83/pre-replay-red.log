@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_two_same_key_store_writers_wait_before_replay_and_both_succeed ______
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:216: in test_two_same_key_store_writers_wait_before_replay_and_both_succeed
+    assert all(f.result(timeout=10).revoked for f in fs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:216: in <genexpr>
+    assert all(f.result(timeout=10).revoked for f in fs)
+               ^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/_base.py:449: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:91: in invoke
+    return AipProductionContractStore(connect_factory=factory).revoke_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3461: in revoke_evidence_bundle
+    conn.execute(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.UniqueViolation: duplicate key value violates unique constraint "aip_evidence_bundle_revoke_ev_org_id_project_id_bundle_id_r_key"
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_two_same_key_store_writers_wait_before_replay_and_both_succeed
+1 failed, 9 deselected, 7 warnings in 4.76s

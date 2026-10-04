@@ -1106,6 +1106,9 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 assert formal['bindingGeneration'] == str(binding['generation'])
                 assert formal['schemaHead'] == expected_schema_head
                 assert len(formal['images']) == 3
+                if os.getenv('AOS_B83_SOURCE_FACT_TEST') == '1':
+                    from tests.aip.test_aip_license_source_authority_pg import assert_active_installation_source_reader
+                    assert_active_installation_source_reader(installed['installationId'])
                 # A resource observed released is no longer an Owner candidate,
                 # even if its cleanup state and lease deadline remain unchanged.
                 with connect(SCOPE) as conn:

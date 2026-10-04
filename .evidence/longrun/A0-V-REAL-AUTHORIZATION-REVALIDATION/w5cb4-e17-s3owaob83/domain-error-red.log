@@ -1,0 +1,30 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_missing_head_and_wrong_tenant_do_not_revoke _______________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:178: in test_missing_head_and_wrong_tenant_do_not_revoke
+    invoke(bundle,'b83.'+bundle)
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:97: in invoke
+    return AipProductionContractStore(connect_factory=factory).revoke_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3438: in revoke_evidence_bundle
+    lock_existing_license_source_for_revoke(
+services/aos-api/aos_api/aip_license_source_authority.py:63: in lock_existing_license_source_for_revoke
+    lock_license_source_head(conn,scope,ExactRevisionRef(resource_type='EvidenceBundleRevision',
+services/aos-api/aos_api/aip_license_source_authority.py:43: in lock_license_source_head
+    row = conn.execute('SELECT public.aos_license_source_lock(%s,%s,%s,%s,%s,%s) AS epoch',
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: LICENSE_SOURCE_HEAD_MISSING
+E   CONTEXT:  PL/pgSQL function aos_license_source_lock(text,text,text,bigint,text,boolean) line 23 at RAISE
+_____________ test_source_reader_wrong_hash_has_safe_domain_error ______________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:191: in test_source_reader_wrong_hash_has_safe_domain_error
+    lock_license_source_head(conn,SCOPE,ExactRevisionRef(resource_type='EvidenceBundleRevision',
+services/aos-api/aos_api/aip_license_source_authority.py:43: in lock_license_source_head
+    row = conn.execute('SELECT public.aos_license_source_lock(%s,%s,%s,%s,%s,%s) AS epoch',
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: LICENSE_SOURCE_EXACT_FROZEN_MISSING
+E   CONTEXT:  PL/pgSQL function aos_license_source_lock(text,text,text,bigint,text,boolean) line 11 at RAISE
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_missing_head_and_wrong_tenant_do_not_revoke
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_source_reader_wrong_hash_has_safe_domain_error
+2 failed, 11 deselected, 7 warnings in 4.94s

@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_raw_revoke_advances_epoch_only_for_inserted_event ____________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:91: in test_raw_revoke_advances_epoch_only_for_inserted_event
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, a6af0d91-f4aa-449c-94d8-b7e1abe37f36, 1) is not present in table "bundle_installation_revision".
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_raw_revoke_advances_epoch_only_for_inserted_event
+1 failed, 8 deselected, 7 warnings in 4.86s

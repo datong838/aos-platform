@@ -1,0 +1,29 @@
+...........FF..F.F.F.............................................        [100%]
+=================================== FAILURES ===================================
+_ test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:86: in test_runtime_can_read_only_its_tenant_and_cannot_write
+    assert owner.execute(query).fetchone()[0] == 1
+E   assert 11 == 1
+_ test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_head] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:86: in test_runtime_can_read_only_its_tenant_and_cannot_write
+    assert owner.execute(query).fetchone()[0] == 1
+E   assert 10 == 1
+_ test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:115: in test_immutable_history_rejects_even_maintenance_mutation
+    assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 1
+E   assert 11 == 1
+_ test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:115: in test_immutable_history_rejects_even_maintenance_mutation
+    assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 1
+E   assert 11 == 1
+_ test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance] _
+services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py:115: in test_immutable_history_rejects_even_maintenance_mutation
+    assert owner.execute(sql.SQL('SELECT count(*) FROM {}').format(sql.Identifier(table))).fetchone()[0] == 1
+E   assert 11 == 1
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_runtime_can_read_only_its_tenant_and_cannot_write[aip_license_source_head]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[UPDATE-aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[DELETE-aip_license_source_issuance]
+FAILED services/aos-api/tests/aip/test_aip_binding_source_authority_schema_pg.py::test_immutable_history_rejects_even_maintenance_mutation[TRUNCATE-aip_license_source_issuance]
+5 failed, 60 passed, 7 warnings in 6.84s

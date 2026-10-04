@@ -3,6 +3,7 @@
 from uuid import uuid4
 
 from psycopg.conninfo import conninfo_to_dict
+from psycopg.types.json import Jsonb
 
 from aos_api.aip_agent_registry_contracts import VersionedAssetRef
 from aos_api.aip_binding_readiness_service import PostgresBindingDependencyAuthority
@@ -32,10 +33,11 @@ def test_evidence_bundle_revocation_is_visible_to_binding_readiness():
             (org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
              item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
              license_summary,content_hash,lifecycle,created_by)
-            VALUES(%s,%s,%s,1,'{}'::jsonb,'[]'::jsonb,NOW(),'[]'::jsonb,
+            VALUES(%s,%s,%s,1,%s,'[]'::jsonb,NOW(),'[]'::jsonb,
                    'complete','[]'::jsonb,'[]'::jsonb,'[]'::jsonb,'fresh',
-                   '{}'::jsonb,'{}'::jsonb,%s,'frozen','test-only')""",
-            (*scope.key, bundle_id, content_hash),
+                   '[]'::jsonb,'{}'::jsonb,%s,'frozen','test-only')""",
+            (*scope.key, bundle_id, Jsonb(dict(resourceType='TaskBriefRevision',
+                resourceId='s3owal-test-only-brief',revision=1,contentHash=content_hash)), content_hash),
         )
         conn.commit()
 

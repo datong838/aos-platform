@@ -3433,6 +3433,14 @@ class AipProductionContractStore:
             }
         )
         with self._connect_factory(scope) as conn:
+            self._lock_evidence_revoke_key(conn, scope, key)
+            from aos_api.aip_license_source_authority import LicenseSourceUnavailable, lock_existing_license_source_for_revoke
+            try:
+                lock_existing_license_source_for_revoke(
+                    conn, scope, bundle_id, body.expected_revision, body.expected_content_hash
+                )
+            except LicenseSourceUnavailable as exc:
+                raise ProductionContractDependencyBlocked(str(exc)) from exc
             replay = self._replay(conn, scope, "evidence_bundle.revoke", key, request_hash)
             if replay:
                 return self.get_evidence_bundle(
@@ -6710,6 +6718,15 @@ class AipProductionContractStore:
     def _json(value:Any)->str:return json.dumps(value,ensure_ascii=False,separators=(",",":"),default=str)
     @staticmethod
     def _load(value:Any)->Any:return json.loads(value) if isinstance(value,str) else value
+    @staticmethod
+    def _lock_evidence_revoke_key(conn: Any, scope: TenantScope, key: str) -> None:
+        # Receipt uniqueness is tenant/operation/key, not resource/head. Hash
+        # collisions only serialize extra callers; they never authorize replay.
+        label = "aos:production-contract-request:" + AipProductionContractStore._json(
+            [*scope.key, "evidence_bundle.revoke", key]
+        )
+        conn.execute("SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))", (label,))
+
     def _replay(self,conn:Any,scope:TenantScope,operation:str,key:str,request_hash:str):
         row=conn.execute("SELECT * FROM aip_production_contract_receipt WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s",(*scope.key,operation,key)).fetchone()
         if row and row["request_hash"]!=request_hash: raise ProductionContractIdempotencyConflict("idempotency key payload drift")

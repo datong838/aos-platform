@@ -1,0 +1,15 @@
+...F.....                                                                [100%]
+=================================== FAILURES ===================================
+_______________ test_missing_head_and_wrong_tenant_do_not_revoke _______________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:154: in test_missing_head_and_wrong_tenant_do_not_revoke
+    lock(conn,bundle)
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:97: in lock
+    return lock_license_source_head(conn,SCOPE,ExactRevisionRef(
+services/aos-api/aos_api/aip_license_source_authority.py:40: in lock_license_source_head
+    _require_scope(conn,scope)
+services/aos-api/aos_api/aip_license_source_authority.py:36: in _require_scope
+    raise LicenseSourceUnavailable('LICENSE_SOURCE_SCOPE_MISMATCH')
+E   aos_api.aip_license_source_authority.LicenseSourceUnavailable: LICENSE_SOURCE_SCOPE_MISMATCH
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_missing_head_and_wrong_tenant_do_not_revoke
+1 failed, 8 passed, 7 warnings in 5.10s

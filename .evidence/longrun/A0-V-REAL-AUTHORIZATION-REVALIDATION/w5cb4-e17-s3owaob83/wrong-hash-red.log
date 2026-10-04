@@ -1,0 +1,9 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_trusted_source_revision_cannot_evade_fence_using_wrong_hash _______
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:224: in test_trusted_source_revision_cannot_evade_fence_using_wrong_hash
+    with pytest.raises(psycopg.errors.InsufficientPrivilege),conn.transaction():
+E   Failed: DID NOT RAISE InsufficientPrivilege
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_trusted_source_revision_cannot_evade_fence_using_wrong_hash
+1 failed, 9 deselected, 7 warnings in 4.77s

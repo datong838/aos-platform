@@ -1,0 +1,36 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_raw_revoke_advances_epoch_only_for_inserted_event ____________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:105: in test_raw_revoke_advances_epoch_only_for_inserted_event
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:56: in create
+    request=CreateInstallationRequest(composition_id=composition.composition_id,
+E   pydantic_core._pydantic_core.ValidationError: 8 validation errors for CreateInstallationRequest
+E   compositionId
+E     Field required [type=missing, input_value={'composition_id': 'cb2cc..._name': 'b83-test-only'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   lockRevision
+E     Field required [type=missing, input_value={'composition_id': 'cb2cc..._name': 'b83-test-only'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   overlayRevision
+E     Field required [type=missing, input_value={'composition_id': 'cb2cc..._name': 'b83-test-only'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   displayName
+E     Field required [type=missing, input_value={'composition_id': 'cb2cc..._name': 'b83-test-only'}, input_type=dict]
+E       For further information visit https://errors.pydantic.dev/2.13/v/missing
+E   composition_id
+E     Extra inputs are not permitted [type=extra_forbidden, input_value='cb2cc2d0-e0ef-41c0-b46c-9338d4ed3a58', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+E   lock_revision
+E     Extra inputs are not permitted [type=extra_forbidden, input_value=1, input_type=int]
+E       For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+E   overlay_revision
+E     Extra inputs are not permitted [type=extra_forbidden, input_value='b83-test-only', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+E   display_name
+E     Extra inputs are not permitted [type=extra_forbidden, input_value='b83-test-only', input_type=str]
+E       For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_raw_revoke_advances_epoch_only_for_inserted_event
+1 failed, 8 deselected, 7 warnings in 4.38s

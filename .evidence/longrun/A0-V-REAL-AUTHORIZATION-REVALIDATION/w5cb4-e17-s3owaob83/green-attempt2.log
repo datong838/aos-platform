@@ -1,0 +1,183 @@
+FFFFFFFFF                                                                [100%]
+=================================== FAILURES ===================================
+____________ test_raw_revoke_advances_epoch_only_for_inserted_event ____________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:91: in test_raw_revoke_advances_epoch_only_for_inserted_event
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 21ea5eff-e281-44e2-b736-88287ee98c2d, 1) is not present in table "bundle_installation_revision".
+_________ test_store_replay_conflict_new_key_and_generic_compatibility _________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:104: in test_store_replay_conflict_new_key_and_generic_compatibility
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 45889903-510a-42fc-b255-43bf62d4627b, 1) is not present in table "bundle_installation_revision".
+__________________ test_epoch_event_receipt_rollback_together __________________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:120: in test_epoch_event_receipt_rollback_together
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 1ff361af-f7ad-4765-a27a-a8b8b4785d58, 1) is not present in table "bundle_installation_revision".
+_______________ test_missing_head_and_wrong_tenant_do_not_revoke _______________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:139: in test_missing_head_and_wrong_tenant_do_not_revoke
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 86707462-70ce-46c1-b860-0132087f04cc, 1) is not present in table "bundle_installation_revision".
+____ test_fence_has_narrow_owner_runtime_acl_and_unfiltered_event_triggers _____
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:155: in test_fence_has_narrow_owner_runtime_acl_and_unfiltered_event_triggers
+    create()
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 0443df99-de8a-4f21-9cf9-540938b0ba86, 1) is not present in table "bundle_installation_revision".
+_____ test_two_same_key_store_writers_wait_before_replay_and_both_succeed ______
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:185: in test_two_same_key_store_writers_wait_before_replay_and_both_succeed
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, 775b9334-a601-4881-8eb3-2768e6cc03c8, 1) is not present in table "bundle_installation_revision".
+______ test_serializable_old_snapshot_cannot_acquire_changed_license_head ______
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:205: in test_serializable_old_snapshot_cannot_acquire_changed_license_head
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, ebb4abd4-274b-442c-aedc-e6efbed1f83f, 1) is not present in table "bundle_installation_revision".
+__________ test_evaluate_first_shared_lock_blocks_actual_store_writer __________
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:218: in test_evaluate_first_shared_lock_blocks_actual_store_writer
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, bc71f2a9-cb70-4b81-a2f8-fe8bf9bad86c, 1) is not present in table "bundle_installation_revision".
+_ test_source_fact_is_transactional_and_rejects_revoke_and_installation_drift __
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:241: in test_source_fact_is_transactional_and_rejects_revoke_and_installation_drift
+    bundle=create()
+           ^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:57: in create
+    admin.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "bundle_installation" violates foreign key constraint "fk_bundle_installation_current_revision"
+E   DETAIL:  Key (org_id, project_id, installation_pk, current_revision)=(org-org, dev-project, bb108d32-ddf9-4892-a329-e9d89992ff3c, 1) is not present in table "bundle_installation_revision".
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_raw_revoke_advances_epoch_only_for_inserted_event
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_store_replay_conflict_new_key_and_generic_compatibility
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_epoch_event_receipt_rollback_together
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_missing_head_and_wrong_tenant_do_not_revoke
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_fence_has_narrow_owner_runtime_acl_and_unfiltered_event_triggers
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_two_same_key_store_writers_wait_before_replay_and_both_succeed
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_serializable_old_snapshot_cannot_acquire_changed_license_head
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_evaluate_first_shared_lock_blocks_actual_store_writer
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_source_fact_is_transactional_and_rejects_revoke_and_installation_drift
+9 failed, 7 warnings in 4.59s
