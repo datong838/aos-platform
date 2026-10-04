@@ -56,7 +56,7 @@ class PostgresBindingDependencyAuthority:
         with self._connect_factory() as conn:
             return conn.execute(
                 """SELECT lifecycle,content_hash,risk_level,required_data_refs,
-                          required_tool_refs
+                          required_tool_refs,source_ref
                    FROM aip_capability_revision
                    WHERE capability_id=%s AND revision=%s""",
                 (ref.asset_id, ref.revision),

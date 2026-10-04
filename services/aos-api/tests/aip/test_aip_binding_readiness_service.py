@@ -158,6 +158,33 @@ class Authority:
         return self.budget
 
 
+def test_capability_reader_exposes_persisted_catalog_source_for_later_signed_gate():
+    source = {"resourceType": "SolutionPack", "resourceId": "solution.ecommerce.growth",
+              "revision": "1.11.0", "authority": "asset-registry"}
+
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def execute(self, statement, params):
+            assert params == ("wiki.search", 1)
+            assert "source_ref" in statement
+            return self
+
+        def fetchone(self):
+            return {"lifecycle": "published", "content_hash": HASHES["cap"],
+                    "risk_level": "low", "required_data_refs": [],
+                    "required_tool_refs": [], "source_ref": source}
+
+    observed = PostgresBindingDependencyAuthority(lambda: Connection()).capability(
+        ref("CapabilityRevision", "wiki.search", HASHES["cap"])
+    )
+    assert observed["source_ref"] == source
+
+
 class Resolver:
     def resolve(self, scope, _route_id, *, now):
         deps = dependencies()
@@ -214,6 +241,23 @@ def test_exact_dependencies_produce_available_deterministic_snapshot():
     assert first.reasons == []
     assert first.dependency_snapshot_hash == second.dependency_snapshot_hash
     assert first.expires_at == NOW + timedelta(minutes=15)
+
+
+@pytest.mark.xfail(strict=True, reason="formal current signed source reader is not yet wired to readiness")
+def test_published_capability_without_current_signed_source_is_not_ready():
+    class MissingSignedSource(Authority):
+        def capability_source_current(self, _scope, _ref, _evaluated_at):
+            return False
+
+    service = AipBindingReadinessService(
+        authority=MissingSignedSource(), model_resolver=Resolver(), model_store=ModelStore()
+    )
+    result = service.evaluate_capability(
+        PRIMARY, ref("CapabilityRevision", "wiki.search", HASHES["cap"]),
+        dependencies(), evaluated_at=NOW,
+    )
+    assert result.readiness is CapabilityReadiness.BLOCKED
+    assert "CAPABILITY_SIGNED_SOURCE_UNAVAILABLE" in result.reasons
 
 
 def test_matching_runtime_policy_cannot_make_missing_budget_policy_available():
