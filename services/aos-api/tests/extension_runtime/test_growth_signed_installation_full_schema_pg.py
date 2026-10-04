@@ -57,6 +57,7 @@ from aos_api.extension_runtime.current_permission import CurrentControlPermissio
 from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.extension_runtime.current_installation_release_evidence import (
     CurrentReleaseEvidenceBlocked,
+    _read_unique_active_in_transaction,
     read_current_installation_release_evidence,
     read_unique_active_installation_release_evidence,
     read_current_runtime_image_evidence,
@@ -723,6 +724,20 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 assert selected_view.authorization == 'EVIDENCE_ONLY_NO_START'
                 assert selected_view.installation_id == view.installation_id
                 assert selected_view.lock_hash == view.lock_hash
+                with psycopg.connect(get_dsn(), row_factory=dict_row) as evidence_conn:
+                    evidence_conn.read_only = True
+                    with evidence_conn.transaction():
+                        evidence_conn.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+                        in_transaction = _read_unique_active_in_transaction(
+                            evidence_conn, scope=SCOPE, publisher=growth.publisher,
+                            bundle_id=growth.bundle_id, version=growth.version,
+                            content_hash=growth.content_hash,
+                            release_policy=policy, loader=loader,
+                        )
+                        assert in_transaction.installation_id == selected_view.installation_id
+                        assert in_transaction.lock_hash == selected_view.lock_hash
+                        assert in_transaction.authorization == 'EVIDENCE_ONLY_NO_START'
+                        assert evidence_conn.execute('SELECT 1 AS alive').fetchone()['alive'] == 1
                 with pytest.raises(CurrentReleaseEvidenceBlocked, match='ACTIVE_INSTALLATION_MISSING'):
                     read_unique_active_installation_release_evidence(
                         connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),

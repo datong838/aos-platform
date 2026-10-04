@@ -542,6 +542,32 @@ def test_evaluation_is_tenant_scoped_cas_idempotent_and_required_for_activation(
     assert activation_receipt.result_ref.revision == str(active.version)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="active transition has no current signed Installation recheck in its final issuer transaction",
+)
+def test_active_transition_requires_current_signed_installation_in_final_transaction():
+    suffix = uuid.uuid4().hex[:12]
+    evaluated_at = datetime.now(UTC)
+    service = AipCapabilityBindingService(readiness_service=PersistedReadiness())
+    created = _publish_and_create(service, suffix)
+    service.evaluate(
+        PRIMARY, created.binding_id,
+        EvaluateOperationalBindingRequest(expected_version=1, dependencies=dependencies()),
+        idempotency_key=f"evaluate-source-{suffix}", actor="pytest",
+        evaluated_at=evaluated_at,
+    )
+    with pytest.raises(AipAgentRegistryTransitionBlocked, match="signed installation"):
+        service.update(
+            PRIMARY, created.binding_id,
+            UpdateCapabilityBindingRequest(
+                expected_version=2, from_status="provisioning", to_status="active",
+                health="healthy", observed_at=evaluated_at,
+            ),
+            idempotency_key=f"activate-source-{suffix}", actor="pytest",
+        )
+
+
 def test_expired_operational_snapshot_blocks_activation():
     suffix = uuid.uuid4().hex[:12]
     evaluation_time = datetime.now(UTC) - timedelta(minutes=20)

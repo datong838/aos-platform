@@ -85,6 +85,23 @@ def test_current_approved_installation_cannot_be_unique_active_capability_source
         )
 
 
+def test_unique_active_source_reader_reuses_caller_transaction_without_closing_it():
+    connect, policy, loader, _report = _current_inputs()
+    with connect() as conn:
+        conn.read_only = True
+        with conn.transaction():
+            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            with pytest.raises(CurrentReleaseEvidenceBlocked, match="ACTIVE_INSTALLATION_MISSING"):
+                release_evidence._read_unique_active_in_transaction(
+                    conn, scope=TenantScope("org-org", "dev-project"),
+                    publisher="aos", bundle_id="solution.ecommerce.growth",
+                    version="1.11.0",
+                    content_hash="sha256:3d8817e01f53690adbd58698951c226e8c3917304a9ec4d7eee37d64bf02b328",
+                    release_policy=policy, loader=loader,
+                )
+            assert conn.execute("SELECT 1 AS alive").fetchone()["alive"] == 1
+
+
 def test_unique_active_capability_source_rejects_wrong_hash_and_other_tenant():
     connect, policy, loader, _report = _current_inputs()
     common = dict(

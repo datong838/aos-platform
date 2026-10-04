@@ -188,13 +188,13 @@ def read_current_installation_release_evidence(
         raise CurrentReleaseEvidenceBlocked("RELEASE_EVIDENCE_INVALID") from None
 
 
-def read_unique_active_installation_release_evidence(
-    *, connect_factory: Callable, scope: TenantScope, publisher: str,
+def _read_unique_active_in_transaction(
+    conn, *, scope: TenantScope, publisher: str,
     bundle_id: str, version: str, content_hash: str,
     release_policy: ReleasePolicy, loader: ManifestLoader,
 ) -> CurrentInstallationReleaseEvidence:
-    """Find one exact active installation; return evidence, never start authority."""
-    if (not callable(connect_factory) or type(scope) is not TenantScope
+    """Inspect the caller's transaction; it never commits or grants authority."""
+    if (type(scope) is not TenantScope
             or not isinstance(release_policy, ReleasePolicy)
             or not isinstance(loader, ManifestLoader)):
         raise CurrentReleaseEvidenceBlocked("READER_DEPENDENCY_INVALID")
@@ -203,51 +203,66 @@ def read_unique_active_installation_release_evidence(
             or type(content_hash) is not str
             or re.fullmatch(r"sha256:[0-9a-f]{64}", content_hash) is None):
         raise CurrentReleaseEvidenceBlocked("RELEASE_IDENTITY_INVALID")
+    apply_asset_transaction_scope(
+        conn, org_id=scope.org_id, project_id=scope.project_id,
+    )
+    rows = conn.execute(
+        """SELECT DISTINCT i.installation_id
+             FROM bundle_installation i
+             JOIN bundle_installation_revision r
+               ON r.org_id=i.org_id AND r.project_id=i.project_id
+              AND r.installation_pk=i.installation_pk
+              AND r.revision=i.current_revision
+             JOIN bundle_composition_lock l
+               ON l.org_id=r.org_id AND l.project_id=r.project_id
+              AND l.composition_pk=r.composition_pk
+              AND l.revision=r.lock_revision
+             CROSS JOIN LATERAL
+               jsonb_array_elements(l.lock_payload->'resolved') member
+            WHERE i.org_id=%s AND i.project_id=%s
+              AND i.active_revision=i.current_revision
+              AND r.state='active'
+              AND member->>'kind'='SolutionPack'
+              AND member->>'publisher'=%s AND member->>'id'=%s
+              AND member->>'version'=%s AND member->>'contentHash'=%s
+            ORDER BY i.installation_id LIMIT 2""",
+        (*scope.key, publisher, bundle_id, version, content_hash),
+    ).fetchall()
+    if not rows:
+        raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_MISSING")
+    if len(rows) != 1:
+        raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_AMBIGUOUS")
+    view, row, _ = _read_exact_in_transaction(
+        conn, scope=scope, exact_installation=UUID(str(rows[0]["installation_id"])),
+        release_policy=release_policy, loader=loader,
+    )
+    if (row["state"] != "active"
+            or view.active_revision != view.current_revision
+            or len([item for item in view.releases if
+                    (item.publisher, item.bundle_id, item.version, item.content_hash)
+                    == (publisher, bundle_id, version, content_hash)]) != 1):
+        raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_DRIFT")
+    return view
+
+
+def read_unique_active_installation_release_evidence(
+    *, connect_factory: Callable, scope: TenantScope, publisher: str,
+    bundle_id: str, version: str, content_hash: str,
+    release_policy: ReleasePolicy, loader: ManifestLoader,
+) -> CurrentInstallationReleaseEvidence:
+    """Find one exact active installation; return evidence, never start authority."""
+    if not callable(connect_factory):
+        raise CurrentReleaseEvidenceBlocked("READER_DEPENDENCY_INVALID")
     try:
         with connect_factory() as conn:
             conn.read_only = True
             with conn.transaction():
                 conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
-                apply_asset_transaction_scope(
-                    conn, org_id=scope.org_id, project_id=scope.project_id,
-                )
-                rows = conn.execute(
-                    """SELECT DISTINCT i.installation_id
-                         FROM bundle_installation i
-                         JOIN bundle_installation_revision r
-                           ON r.org_id=i.org_id AND r.project_id=i.project_id
-                          AND r.installation_pk=i.installation_pk
-                          AND r.revision=i.current_revision
-                         JOIN bundle_composition_lock l
-                           ON l.org_id=r.org_id AND l.project_id=r.project_id
-                          AND l.composition_pk=r.composition_pk
-                          AND l.revision=r.lock_revision
-                         CROSS JOIN LATERAL
-                           jsonb_array_elements(l.lock_payload->'resolved') member
-                        WHERE i.org_id=%s AND i.project_id=%s
-                          AND i.active_revision=i.current_revision
-                          AND r.state='active'
-                          AND member->>'kind'='SolutionPack'
-                          AND member->>'publisher'=%s AND member->>'id'=%s
-                          AND member->>'version'=%s AND member->>'contentHash'=%s
-                        ORDER BY i.installation_id LIMIT 2""",
-                    (*scope.key, publisher, bundle_id, version, content_hash),
-                ).fetchall()
-                if not rows:
-                    raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_MISSING")
-                if len(rows) != 1:
-                    raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_AMBIGUOUS")
-                view, row, _ = _read_exact_in_transaction(
-                    conn, scope=scope, exact_installation=UUID(str(rows[0]["installation_id"])),
+                return _read_unique_active_in_transaction(
+                    conn, scope=scope, publisher=publisher, bundle_id=bundle_id,
+                    version=version, content_hash=content_hash,
                     release_policy=release_policy, loader=loader,
                 )
-                if (row["state"] != "active"
-                        or view.active_revision != view.current_revision
-                        or len([item for item in view.releases if
-                                (item.publisher, item.bundle_id, item.version, item.content_hash)
-                                == (publisher, bundle_id, version, content_hash)]) != 1):
-                    raise CurrentReleaseEvidenceBlocked("ACTIVE_INSTALLATION_DRIFT")
-                return view
     except CurrentReleaseEvidenceBlocked:
         raise
     except Exception:
