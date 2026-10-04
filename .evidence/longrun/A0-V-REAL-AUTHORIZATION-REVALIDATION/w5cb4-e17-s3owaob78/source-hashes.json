@@ -1,0 +1,38 @@
+[
+  {
+    "path": "services/aos-api/aos_api/routers/aip_production_contracts.py",
+    "sha256": "e3bd0833883c6cfdfbd886654cde02cb5f975c717d795f9242feeabcce9db5d6"
+  },
+  {
+    "path": "services/aos-api/aos_api/auth.py",
+    "sha256": "d8a0f190308f01f61a972ad9a02c54ac58fb0981eb611525d3f7b074d8a16603"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_production_contracts.py",
+    "sha256": "562354dc813c52c073c91c9c480516fe382e34f2ae86e5bd63b27cbbf7fd3105"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_production_contract_store.py",
+    "sha256": "1b7fcf872f6ebb2643ab0dbbcc8e058c5ccb53cc0e68665ab79f66f440e5ad5f"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_binding_readiness_service.py",
+    "sha256": "babfe7b5fc13f87d72c9d3ef0844da38e6cebc1d0c90a6f2339c0a1d229bcd6f"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_memory_production_factory.py",
+    "sha256": "54a01719b43c49c14e8072a0d9847b543c5efa2ba0dc4ca655175f647702e201"
+  },
+  {
+    "path": "services/aos-api/aos_api/ecommerce_business_investigation_aip_authority.py",
+    "sha256": "40be5c7da5b92f449650fdef94f222f13d1785f0cc786426be134b11d28bf334"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_bi_plan_issuer_connection.py",
+    "sha256": "0b71d6b2e5d5674a141d4e92d0f8cc33aa45fa2b3cd5b8a77b6053d3ba10444c"
+  },
+  {
+    "path": "services/aos-api/alembic/versions/w2_005_evidence_revoke_disclosure.py",
+    "sha256": "6b49e8d1abe202f4a8ad011463ae4f532fed8aea93255cac5966e233bac18270"
+  }
+]
