@@ -18,7 +18,7 @@ from aos_api.db import get_dsn
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
     registry=None, concurrent_revoke=False, evaluate_first=False,
-    forged_available=False, paired_receipt=False,
+    forged_available=False, paired_receipt=False, license_authority=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -34,6 +34,27 @@ def assert_restricted_blocked_evaluate_composes_lock(
     scoped_tables = ("bundle_installation", "bundle_installation_revision",
                      "bundle_composition_lock", "aip_capability_binding",
                      "aip_agent_registry_receipt")
+    license_id = "b69-license-" + suffix
+    license_hash = "c" * 64
+    if license_authority:
+        scoped_tables += ("aip_evidence_bundle_revision",
+                          "aip_evidence_bundle_revoke_event")
+    license_check = sql.SQL("")
+    if license_authority:
+        license_check = sql.SQL("""IF NOT EXISTS (
+            SELECT 1 FROM public.aip_evidence_bundle_revision e
+             WHERE e.org_id=p_org AND e.project_id=p_project
+               AND e.bundle_id={} AND e.revision=1
+               AND e.content_hash={} AND e.lifecycle='frozen'
+               AND e.license_summary<>'{{}}'::jsonb
+               AND NOT EXISTS (
+                 SELECT 1 FROM public.aip_evidence_bundle_revoke_event r
+                  WHERE r.org_id=e.org_id AND r.project_id=e.project_id
+                    AND r.bundle_id=e.bundle_id AND r.revision=e.revision
+                    AND r.content_hash=e.content_hash))
+          THEN RAISE EXCEPTION 'license evidence unavailable'
+               USING ERRCODE='42501';
+          END IF;""").format(sql.Literal(license_id), sql.Literal(license_hash))
     receipt_guards = None
     with psycopg.connect(get_dsn(), autocommit=True, row_factory=dict_row) as admin:
         admin.execute("""INSERT INTO aip_capability_binding(
@@ -43,6 +64,15 @@ def assert_restricted_blocked_evaluate_composes_lock(
             VALUES('org-org','dev-project',%s,%s::jsonb,'secret://test-only',
                    'unknown','test-only','test-only',1000,1,'provisioning',1)""",
             (binding, json.dumps(binding_ref)))
+        if license_authority:
+            admin.execute("""INSERT INTO aip_evidence_bundle_revision
+                (org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+                 item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+                 license_summary,content_hash,lifecycle,created_by)
+                VALUES(%s,%s,%s,1,'{}'::jsonb,'[]'::jsonb,NOW(),'[]'::jsonb,
+                       'complete','[]'::jsonb,'[]'::jsonb,'[]'::jsonb,'fresh',
+                       '{}'::jsonb,'{"license":"test-only"}'::jsonb,%s,
+                       'frozen','test-only')""", (*scope.key, license_id, license_hash))
         admin.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS")
                       .format(sql.Identifier(definer)))
         try:
@@ -125,6 +155,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                   IF release_pk IS NULL THEN
                     RAISE EXCEPTION 'current release unavailable' USING ERRCODE='42501';
                   END IF;
+                  {}
                   digest := pg_catalog.md5(p_org||':'||p_project||':'||
                       p_installation::text||':'||p_etag::text||':'||p_binding||':'||
                       p_version::text||':'||p_key);
@@ -173,7 +204,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     sql.Literal(growth.bundle_id), sql.Literal(growth.version),
                     sql.Literal(growth.content_hash), sql.Literal(growth.publisher),
                     sql.Literal(growth.bundle_id), sql.Literal(growth.version),
-                    sql.Literal(growth.content_hash)))
+                    sql.Literal(growth.content_hash), license_check))
             admin.execute(sql.SQL("ALTER FUNCTION {} OWNER TO {}")
                           .format(signature, sql.Identifier(definer)))
             admin.execute(sql.SQL("REVOKE ALL ON FUNCTION {} FROM PUBLIC")
@@ -192,6 +223,22 @@ def assert_restricted_blocked_evaluate_composes_lock(
                                                    binding, 1, key))
             admin.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {} TO {}")
                           .format(signature, sql.Identifier(role)))
+            if license_authority:
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                            limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                            "set_config('aos.project_id',%s,true)", scope.key)
+                            limited.execute(call, (*scope.key, installation, etag,
+                                                  binding, 1, key + "-no-license-acl"))
+                assert admin.execute("SELECT version FROM aip_capability_binding "
+                    "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 1
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE idempotency_key=%s", (key + "-no-license-acl",)).fetchone()["n"] == 0
+                for table in scoped_tables[-2:]:
+                    admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
+                                  .format(sql.Identifier(table), sql.Identifier(definer)))
             with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
                 with limited.transaction():
                     limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
@@ -284,6 +331,24 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     admin=admin, restricted_parts=restricted_parts,
                     scope=scope, binding=binding, key=key,
                 )
+            if license_authority:
+                revoked_key = key + "-license-revoked"
+                admin.execute("""INSERT INTO aip_evidence_bundle_revoke_event
+                    (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
+                    VALUES(%s,%s,%s,%s,1,%s,'test-only','test-only')""",
+                    (*scope.key, "b69-revoke-" + suffix, license_id, license_hash))
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                        with limited.transaction():
+                            limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+                            limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                            "set_config('aos.project_id',%s,true)", scope.key)
+                            limited.execute(call, (*scope.key, installation, etag,
+                                                  binding, 2, revoked_key))
+                assert admin.execute("SELECT version FROM aip_capability_binding "
+                    "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 2
+                assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
+                    "WHERE idempotency_key=%s", (revoked_key,)).fetchone()["n"] == 0
             with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
                 with limited.transaction():
                     limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
