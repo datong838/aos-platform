@@ -1,0 +1,32 @@
+{
+  "results": [
+    {
+      "mode": "b69",
+      "exit_code": 0,
+      "seconds": 26.93
+    },
+    {
+      "mode": "default",
+      "exit_code": 0,
+      "seconds": 26.34
+    },
+    {
+      "mode": "b67",
+      "exit_code": 0,
+      "seconds": 26.48
+    },
+    {
+      "mode": "b49",
+      "exit_code": 0,
+      "seconds": 25.47
+    },
+    {
+      "mode": "b50",
+      "exit_code": 0,
+      "seconds": 25.39
+    }
+  ],
+  "before_count": 49,
+  "after_count": 49,
+  "new_residue": []
+}

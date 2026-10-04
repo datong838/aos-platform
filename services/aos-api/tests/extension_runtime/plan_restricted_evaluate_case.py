@@ -3,6 +3,7 @@
 import json
 import secrets
 import time
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from uuid import uuid4
@@ -12,13 +13,16 @@ from psycopg import sql
 from psycopg.rows import dict_row
 import pytest
 
-from aos_api.db import get_dsn
+from aos_api.db import get_dsn, connect
+from aos_api.aip_production_contract_store import AipProductionContractStore
+from aos_api.aip_production_contracts import RevokeEvidenceBundleRequest
 
 
 def assert_restricted_blocked_evaluate_composes_lock(
     *, scope, role, restricted_parts, lock_function, installation, etag, growth,
     registry=None, concurrent_revoke=False, evaluate_first=False,
     forged_available=False, paired_receipt=False, license_authority=False,
+    license_revoke_first=False, license_evaluate_first=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -73,6 +77,13 @@ def assert_restricted_blocked_evaluate_composes_lock(
                        'complete','[]'::jsonb,'[]'::jsonb,'[]'::jsonb,'fresh',
                        '{}'::jsonb,'{"license":"test-only"}'::jsonb,%s,
                        'frozen','test-only')""", (*scope.key, license_id, license_hash))
+            if license_revoke_first or license_evaluate_first:
+                admin.execute("""UPDATE aip_evidence_bundle_revision
+                    SET brief_ref=%s::jsonb, marking='[]'::jsonb
+                    WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=1""",
+                    (json.dumps({'resourceType': 'TaskBriefRevision',
+                                 'resourceId': 'b70-test-only', 'revision': 1,
+                                 'contentHash': 'd' * 64}), *scope.key, license_id))
         admin.execute(sql.SQL("CREATE ROLE {} NOLOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS")
                       .format(sql.Identifier(definer)))
         try:
@@ -332,6 +343,14 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     scope=scope, binding=binding, key=key,
                 )
             if license_authority:
+                if license_revoke_first or license_evaluate_first:
+                    _assert_license_race(
+                        admin=admin, restricted_parts=restricted_parts, call=call,
+                        scope=scope, installation=installation, etag=etag,
+                        binding=binding, key=key, license_id=license_id,
+                        license_hash=license_hash, evaluate_first=license_evaluate_first,
+                    )
+                    return
                 revoked_key = key + "-license-revoked"
                 admin.execute("""INSERT INTO aip_evidence_bundle_revoke_event
                     (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
@@ -749,3 +768,122 @@ def _assert_evaluate_first_revoke_waits(
         "WHERE idempotency_key=%s", (after_key,)).fetchone()["n"] == 0
     assert admin.execute("SELECT version FROM aip_capability_binding "
         "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 3
+
+
+def _assert_license_race(
+    *, admin, restricted_parts, call, scope, installation, etag,
+    binding, key, license_id, license_hash, evaluate_first,
+):
+    """Probe the real Evidence writer; no direct revoke INSERT or current DB."""
+    writer_pids = Queue()
+    evaluator_pids = Queue()
+    revoke_key = key + '-b70-revoke'
+    evaluate_key = key + '-b70-evaluate'
+
+    @contextmanager
+    def writer_connection(selected_scope):
+        with connect(selected_scope) as conn:
+            conn.execute("SET LOCAL statement_timeout='10s'")
+            conn.execute("SET LOCAL lock_timeout='8s'")
+            writer_pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+            yield conn
+
+    def revoke():
+        return AipProductionContractStore(connect_factory=writer_connection).revoke_evidence_bundle(
+            scope, 'b70-test-only-revoker', license_id, revoke_key,
+            RevokeEvidenceBundleRequest(expected_revision=1,
+                                        expected_content_hash=license_hash,
+                                        reason='b70 isolated concurrent revoke'),
+        )
+
+    def evaluate():
+        try:
+            with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                with limited.transaction():
+                    limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                    limited.execute("SET LOCAL statement_timeout='10s'")
+                    limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                    "set_config('aos.project_id',%s,true)", scope.key)
+                    evaluator_pids.put(limited.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                    limited.execute(call, (*scope.key, installation, etag,
+                                          binding, 2, evaluate_key))
+            return 'applied'
+        except psycopg.Error as exc:
+            return exc.sqlstate
+
+    if not evaluate_first:
+        with psycopg.connect(get_dsn(), autocommit=True) as blocker:
+            blocker.execute('BEGIN')
+            try:
+                blocker_pid = blocker.execute('SELECT pg_backend_pid()').fetchone()[0]
+                blocker.execute('SELECT 1 FROM bundle_installation WHERE org_id=%s '
+                                'AND project_id=%s AND installation_id=%s FOR UPDATE',
+                                (*scope.key, installation))
+                with ThreadPoolExecutor(max_workers=1) as pool:
+                    evaluated = pool.submit(evaluate)
+                    pid = evaluator_pids.get(timeout=8)
+                    try:
+                        deadline = time.monotonic() + 8
+                        while time.monotonic() < deadline:
+                            blocked = admin.execute('SELECT %s=ANY(pg_blocking_pids(%s)) AS waiting',
+                                                    (blocker_pid, pid)).fetchone()['waiting']
+                            if blocked:
+                                break
+                            assert not evaluated.done(), 'evaluate did not reach Installation wait'
+                            time.sleep(0.025)
+                        else:
+                            raise AssertionError('exact Installation lock wait not observed')
+                        assert revoke().revoked is True
+                        assert admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+                            "WHERE operation='evidence_bundle.revoke' AND idempotency_key=%s",
+                            (revoke_key,)).fetchone()['n'] == 1
+                    finally:
+                        blocker.execute('ROLLBACK')
+                    outcome = evaluated.result(timeout=12)
+                receipts = admin.execute('SELECT count(*) AS n FROM aip_agent_registry_receipt '
+                    'WHERE idempotency_key=%s', (evaluate_key,)).fetchone()['n']
+                version = admin.execute('SELECT version FROM aip_capability_binding WHERE binding_id=%s',
+                                        (binding,)).fetchone()['version']
+                assert (outcome, receipts, version) in {('42501', 0, 2), ('40001', 0, 2)}, (
+                    'B70_STALE_SNAPSHOT_AFTER_COMMITTED_LICENSE_REVOKE', outcome, receipts, version)
+            finally:
+                blocker.execute('ROLLBACK')
+    else:
+        waiting = False
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+                with limited.transaction():
+                    limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                    limited.execute("SET LOCAL statement_timeout='10s'")
+                    limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                    "set_config('aos.project_id',%s,true)", scope.key)
+                    limited_pid = limited.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid']
+                    assert limited.execute(call, (*scope.key, installation, etag,
+                        binding, 2, evaluate_key)).fetchone()['revision'] == 3
+                    assert admin.execute('SELECT count(*) AS n FROM aip_agent_registry_receipt '
+                        'WHERE idempotency_key=%s', (evaluate_key,)).fetchone()['n'] == 0
+                    revoked = pool.submit(revoke)
+                    writer_pid = writer_pids.get(timeout=8)
+                    deadline = time.monotonic() + 8
+                    while time.monotonic() < deadline:
+                        waiting = admin.execute('SELECT %s=ANY(pg_blocking_pids(%s)) AS waiting',
+                                                (limited_pid, writer_pid)).fetchone()['waiting']
+                        if waiting or revoked.done():
+                            break
+                        time.sleep(0.025)
+                result = revoked.result(timeout=12)
+            assert result.revoked is True
+        assert waiting, 'B70_LICENSE_WRITER_COMMITTED_BEFORE_EVALUATOR_WITHOUT_COMMON_LOCK'
+        assert admin.execute('SELECT count(*) AS n FROM aip_agent_registry_receipt '
+            'WHERE idempotency_key=%s', (evaluate_key,)).fetchone()['n'] == 1
+        with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
+            with limited.transaction():
+                limited.execute('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+                limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                                "set_config('aos.project_id',%s,true)", scope.key)
+                with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                    with limited.transaction():
+                        limited.execute(call, (*scope.key, installation, etag,
+                                              binding, 3, evaluate_key + '-after'))
+        assert admin.execute('SELECT count(*) AS n FROM aip_agent_registry_receipt '
+            'WHERE idempotency_key=%s', (evaluate_key + '-after',)).fetchone()['n'] == 0

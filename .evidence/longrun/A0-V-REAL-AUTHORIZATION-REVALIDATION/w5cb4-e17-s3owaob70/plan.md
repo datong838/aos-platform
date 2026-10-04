@@ -21,3 +21,11 @@
 先b70专项，再b69/默认/b67/b49/b50相邻签名PG和readiness reader回归，py_compile/diff检查；本波无页面变化，浏览器不适用，不用旧页面证据冒充首链。真库135只读，Host/worker/Provider关闭，禁商城源、旧12Run、手工run_definition、230L0与push。test-only结果不授正式实例权限。
 
 当前只完成步骤1/8与2/8方案准备，未写测试/跑RED，未修生产代码；两项安全候选为本并发RED、W-L20实例ToolBinding来源核验。机制O4必须凭后续真实施工证据记录，不能把本方案算成已完成业务波。
+
+## 新thread实际施工补充
+
+2026-10-05基线f7d38b0c、docs774a2508；唯一写者新thread，旧Goalpaused、新Goalactive；迁移Task已收口。两个opt-in AOS_B70_LICENSE_REVOKE_FIRST / AOS_B70_LICENSE_EVALUATE_FIRST 独立运行，不与Registry撤销模式混合；强制b69 License和b67配对。仅b70 fixture把brief_ref/marking设为合法test-only模型格式，以便调用原writer回读；不改默认b69 fixture。writer使用原Store/默认tenant connect封装有限statement/lock_timeout和精确PID队列，不mock Store。撤销先：先block Installation、evaluator已取SERIALIZABLE快照并由pg_blocking_pids确认等待blocker，再writer实际commit/Receipt回读，释放blocker，要求拒绝+版本/Receipt不增。评测先：评测结果未提交时启动writer，精确PID观测锁等待或提前完成，以有界实际阶段裁决；必须finally释放连接/超时，无盲sleep推断。生产锁/隔离级别不改，本波先形成两个真实RED证据；之后补合同选择最小修复，不能以负门失败停整个Goal。测试资源仅现有test-only context aos-a0v-test-pg/5433 +签名OCI colima-aos-extension，conftest独立建drop aos_test_*_ti4_test，不连接18435当前真库。
+
+## 两顺序RED后的收口范围
+
+撤销先实测applied/Receipt1/version3；评测先writer提前commit、无共同锁等待。问题涉及SERIALIZABLE早快照+append-only撤销源，现有Evidence修订无可变head；仅锁不可变修订不充分。b70保持两显式诊断模式原失败，不设xfail掩盖，不直接改生产writer/隔离级别。专项RED是交付反证而非功能GREEN；默认/b69/b67/b49/b50相邻保持兼容。下一b71先对账各Evidence写者/消费合同，比较事务前来源栅栏与可变撤销epoch方案，冻结全锁序与回滚再隔离演练；新增权威行/隔离变更须正式设计门，不扩当前库授权。

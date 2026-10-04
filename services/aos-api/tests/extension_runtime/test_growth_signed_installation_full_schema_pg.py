@@ -136,6 +136,12 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     forged_available_case = os.getenv('AOS_B62B_FORGED_AVAILABLE') == '1'
     paired_receipt_case = os.getenv('AOS_B67_PAIRED_RECEIPT') == '1'
     license_authority_case = os.getenv('AOS_B69_LICENSE_AUTHORITY') == '1'
+    license_revoke_first = os.getenv('AOS_B70_LICENSE_REVOKE_FIRST') == '1'
+    license_evaluate_first = os.getenv('AOS_B70_LICENSE_EVALUATE_FIRST') == '1'
+    assert sum((license_revoke_first, license_evaluate_first)) <= 1
+    if license_revoke_first or license_evaluate_first:
+        assert not any((committed_revoke_case, concurrent_revoke_case, evaluate_first_case))
+        license_authority_case = True
     paired_receipt_case = paired_receipt_case or license_authority_case
     if forged_available_case:
         request.node.add_marker(pytest.mark.xfail(
@@ -1013,6 +1019,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         forged_available=forged_available_case,
                         paired_receipt=paired_receipt_case,
                         license_authority=license_authority_case,
+                        license_revoke_first=license_revoke_first,
+                        license_evaluate_first=license_evaluate_first,
                     )
                     if committed_revoke_case or concurrent_revoke_case or evaluate_first_case:
                         return str(binding['generation'])
