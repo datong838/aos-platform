@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss _
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:54: in test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss
+    response=invoke(bundle,'b84.'+bundle,factory=factory)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:138: in invoke
+    return AipProductionContractStore(connect_factory=factory).revoke_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3494: in revoke_evidence_bundle
+    return self.get_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3390: in get_evidence_bundle
+    return read(conn)
+           ^^^^^^^^^^
+services/aos-api/aos_api/aip_production_contract_store.py:3378: in read
+    raise ProductionContractNotFound("evidence bundle not found")
+E   aos_api.aip_production_contract_store.ProductionContractNotFound: evidence bundle not found
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss
+1 failed, 16 deselected, 7 warnings in 4.76s

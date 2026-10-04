@@ -21,10 +21,51 @@ from aos_api.aip_production_contracts import ExactRevisionRef, RevokeEvidenceBun
 from aos_api.asset_registry.composition_store import PostgresCompositionStore
 from aos_api.asset_registry.installation_store import PostgresInstallationStore
 from tests.asset_registry.test_installation_store import _composition_inputs, _create_request
+from tests.aip.test_aip_binding_evaluator_connection_pg import independent_login
+from aos_api.aip_binding_evaluator_connection import BindingEvaluatorConnectionFactory
 
 SCOPE = TenantScope('org-org','dev-project')
 HASH = 'a'*64
 OWNER = 'aos_license_source_fence_owner'
+
+
+def test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss(source,independent_login):
+    admin,create=source
+    bundle=create()
+    owner,role,config=independent_login
+    tables=('aip_evidence_bundle_revision','aip_license_source_issuance','aip_license_source_head',
+            'aip_evidence_bundle_revoke_event','aip_production_contract_receipt')
+    policy='b84_'+uuid4().hex[:12]
+    created=[]
+    try:
+        owner.execute(sql.SQL('GRANT USAGE ON SCHEMA public TO {}').format(sql.Identifier(role)))
+        for table in tables:
+            owner.execute(sql.SQL('GRANT SELECT ON public.{} TO {}').format(sql.Identifier(table),sql.Identifier(role)))
+            owner.execute(sql.SQL("CREATE POLICY {} ON public.{} TO {} USING ("
+                "org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) "
+                "WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(
+                    sql.Identifier(policy),sql.Identifier(table),sql.Identifier(role)))
+            created.append(table)
+        for table in ('aip_evidence_bundle_revoke_event','aip_production_contract_receipt'):
+            owner.execute(sql.SQL('GRANT INSERT ON public.{} TO {}').format(sql.Identifier(table),sql.Identifier(role)))
+        owner.execute(sql.SQL('GRANT EXECUTE ON FUNCTION public.aos_license_source_lock(text,text,text,bigint,text,boolean) TO {}').format(sql.Identifier(role)))
+        factory=BindingEvaluatorConnectionFactory(config)
+        try:
+            response=invoke(bundle,'b84.'+bundle,factory=factory)
+        except Exception:
+            # Read-only reconciliation, never retry an unknown first outcome.
+            assert snapshot(admin,bundle)==(1,1,1), 'first outcome must be independently reconciled'
+            raise
+        assert response.revoked and response.bundle_id==bundle
+        assert snapshot(admin,bundle)==(1,1,1)
+        assert invoke(bundle,'b84.'+bundle,factory=factory).revoked
+        assert snapshot(admin,bundle)==(1,1,1)
+        with factory(TenantScope('dev-org','dev-project')) as conn:
+            assert conn.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revision WHERE bundle_id=%s',(bundle,)).fetchone()['n']==0
+    finally:
+        admin.rollback()
+        for table in created:
+            owner.execute(sql.SQL('DROP POLICY {} ON public.{}').format(sql.Identifier(policy),sql.Identifier(table)))
 
 
 def create_source(admin, trusted=True, *, installation_id=None):
@@ -70,6 +111,20 @@ def create_source(admin, trusted=True, *, installation_id=None):
             revision,content_hash,issuance_id,epoch) VALUES('org-org','dev-project',%s,1,%s,%s,0)""", (bundle,HASH,issuance))
     admin.commit()
     return bundle
+
+
+def test_revoke_response_validation_failure_rolls_back_before_commit(source,monkeypatch):
+    admin,create=source
+    bundle=create()
+    def reject_response(self,scope,bundle_id,revision=1,*,conn=None,**kwargs):
+        assert conn.execute('SELECT epoch FROM aip_license_source_head WHERE bundle_id=%s',(bundle,)).fetchone()['epoch']==1
+        assert conn.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event WHERE bundle_id=%s',(bundle,)).fetchone()['n']==1
+        assert conn.execute("SELECT count(*) AS n FROM aip_production_contract_receipt WHERE result_ref->>'resourceId'=%s",(bundle,)).fetchone()['n']==1
+        raise ValueError('b84 response validation rejected')
+    monkeypatch.setattr(AipProductionContractStore,'get_evidence_bundle',reject_response)
+    with pytest.raises(ValueError,match='response validation rejected'):
+        invoke(bundle,'b84.'+bundle)
+    assert snapshot(admin,bundle)==(0,0,0)
 
 
 @pytest.fixture

@@ -3490,10 +3490,11 @@ class AipProductionContractStore:
                 },
                 actor,
             )
-            conn.commit()
-            return self.get_evidence_bundle(
+            result = self.get_evidence_bundle(
                 scope, bundle_id, body.expected_revision, conn=conn
             )
+            conn.commit()
+            return result
 
     def revoke_evidence(
         self,

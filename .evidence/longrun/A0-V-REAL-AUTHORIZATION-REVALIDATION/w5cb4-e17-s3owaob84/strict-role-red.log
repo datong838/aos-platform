@@ -1,0 +1,38 @@
+FE                                                                       [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss _
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:118: in source
+    with psycopg.connect(get_dsn(),row_factory=dict_row) as admin:
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:172: in __exit__
+    self.commit()
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:305: in commit
+    self.wait(self._commit_gen())
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:241: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:585: in _commit_gen
+    yield from self._exec_command(b"COMMIT")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:483: in _exec_command
+    raise e.error_from_result(result, encoding=self.pgconn._encoding)
+E   psycopg.errors.AdminShutdown: terminating connection due to administrator command
+=================================== FAILURES ===================================
+_ test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss _
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:54: in test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss
+    response=invoke(bundle,'b84.'+bundle,factory=factory)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/tests/aip/test_aip_license_source_authority_pg.py:137: in invoke
+    return AipProductionContractStore(connect_factory=factory).revoke_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3494: in revoke_evidence_bundle
+    return self.get_evidence_bundle(
+services/aos-api/aos_api/aip_production_contract_store.py:3390: in get_evidence_bundle
+    return read(conn)
+           ^^^^^^^^^^
+services/aos-api/aos_api/aip_production_contract_store.py:3378: in read
+    raise ProductionContractNotFound("evidence bundle not found")
+E   aos_api.aip_production_contract_store.ProductionContractNotFound: evidence bundle not found
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss
+ERROR services/aos-api/tests/aip/test_aip_license_source_authority_pg.py::test_strict_login_returns_first_revoke_response_without_postcommit_scope_loss
+1 failed, 16 deselected, 7 warnings, 1 error in 186.06s (0:03:06)
