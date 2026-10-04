@@ -27,6 +27,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     license_transaction_probe=False, license_receipt_guard=False,
     license_db_fence_probe=False, license_db_trigger_candidate=False,
     license_lock_entry_probe=False, license_lock_entry_candidate=False,
+    license_composition_probe=False, license_pre_replay_lock=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -387,7 +388,15 @@ def assert_restricted_blocked_evaluate_composes_lock(
                         db_trigger_candidate=license_db_trigger_candidate,
                         lock_entry_probe=license_lock_entry_probe,
                         lock_entry_candidate=license_lock_entry_candidate,
+                        composition_probe=license_composition_probe, pre_replay_lock=license_pre_replay_lock,
+                        race_args=dict(admin=admin, restricted_parts=restricted_parts, call=call,
+                            scope=scope, installation=installation, etag=etag, binding=binding,
+                            key=key, license_id=license_id, license_hash=license_hash,
+                            evaluate_first=license_evaluate_first, fence_table=fence_table)
+                            if license_composition_probe else None,
                     )
+                    if license_composition_probe:
+                        return
                 if license_revoke_first or license_evaluate_first:
                     _assert_license_race(
                         admin=admin, restricted_parts=restricted_parts, call=call,
@@ -821,7 +830,7 @@ def _assert_evaluate_first_revoke_waits(
 def _assert_license_race(
     *, admin, restricted_parts, call, scope, installation, etag,
     binding, key, license_id, license_hash, evaluate_first,
-    fence_table=None, replay_probe=False,
+    fence_table=None, replay_probe=False, writer_lock_function=None, event_driven=False,
 ):
     """Probe the real Evidence writer; no direct revoke INSERT or current DB."""
     writer_pids = Queue()
@@ -837,6 +846,9 @@ def _assert_license_race(
             conn.execute("SET LOCAL statement_timeout='10s'")
             conn.execute("SET LOCAL lock_timeout='8s'")
             writer_pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+            if writer_lock_function:
+                conn.execute(sql.SQL('SELECT public.{}(%s,%s,%s,1,%s)').format(sql.Identifier(writer_lock_function)),
+                             (*selected_scope.key, license_id, license_hash))
             if fence_table and replay_probe:
                 assert conn.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
                     'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s '
@@ -847,7 +859,7 @@ def _assert_license_race(
                     'AND idempotency_key=%s', (*scope.key, selected_writer_key[0])).fetchone()
             else:
                 replay = None
-            if fence_table and not replay:
+            if fence_table and not replay and not event_driven:
                 updated = conn.execute(sql.SQL('UPDATE {} SET epoch=epoch+1 '
                     'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=1 '
                     'AND content_hash=%s').format(sql.Identifier(fence_table)),
@@ -1012,6 +1024,7 @@ def _assert_license_race(
 def _assert_license_transaction_contract(
     *, admin, scope, fence_table, template_license, license_hash, receipt_guard,
     db_fence_probe=False, db_trigger_candidate=False, lock_entry_probe=False, lock_entry_candidate=False,
+    composition_probe=False, pre_replay_lock=False, race_args=None,
 ):
     """Fresh source, independent writer closures, real Store and bounded PID waits."""
     from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
@@ -1091,7 +1104,8 @@ def _assert_license_transaction_contract(
     if db_trigger_candidate:
         _assert_license_db_trigger(admin=admin, scope=scope, fence_table=fence_table,
             template_license=template_license, license_hash=license_hash, bundle=bundle,
-            lock_entry_probe=lock_entry_probe, lock_entry_candidate=lock_entry_candidate)
+            lock_entry_probe=lock_entry_probe, lock_entry_candidate=lock_entry_candidate,
+            composition_probe=composition_probe, pre_replay_lock=pre_replay_lock, race_args=race_args)
         return
     if db_fence_probe:
         assert invoke(key, unwrapped=True).revoked is True
@@ -1140,7 +1154,8 @@ def _assert_license_transaction_contract(
 
 
 def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, license_hash, bundle,
-                              lock_entry_probe=False, lock_entry_candidate=False):
+                              lock_entry_probe=False, lock_entry_candidate=False,
+                              composition_probe=False, pre_replay_lock=False, race_args=None):
     suffix = secrets.token_hex(5)
     owner = 'b75_owner_' + suffix
     function = 'b75_fence_' + suffix
@@ -1175,9 +1190,13 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
             END $f$""").format(sql.Identifier(function), sql.Identifier(fence_table)))
         admin.execute(sql.SQL('ALTER FUNCTION public.{}() OWNER TO {}').format(sql.Identifier(function), sql.Identifier(owner)))
         admin.execute(sql.SQL('REVOKE ALL ON FUNCTION public.{}() FROM PUBLIC,aos_runtime').format(sql.Identifier(function)))
-        admin.execute(sql.SQL('CREATE TRIGGER {} BEFORE INSERT ON public.{} FOR EACH ROW '
-            'WHEN (NEW.bundle_id LIKE {}) EXECUTE FUNCTION public.{}()').format(
-            sql.Identifier(function), sql.Identifier(event_table), sql.Literal(bundle + '%'), sql.Identifier(function)))
+        condition = sql.SQL('') if composition_probe else sql.SQL('WHEN (NEW.bundle_id LIKE {}) ').format(sql.Literal(bundle + '%'))
+        admin.execute(sql.SQL('CREATE TRIGGER {} BEFORE INSERT ON public.{} FOR EACH ROW {}EXECUTE FUNCTION public.{}()').format(
+            sql.Identifier(function), sql.Identifier(event_table), condition, sql.Identifier(function)))
+        if composition_probe:
+            assert admin.execute('SELECT tgqual IS NULL AS unfiltered FROM pg_trigger WHERE tgname=%s',
+                                 (function,)).fetchone()['unfiltered']
+        writer_pids = Queue()
         attrs = admin.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolbypassrls FROM pg_roles WHERE rolname=%s', (owner,)).fetchone()
         assert not any(attrs.values())
         proc = admin.execute('SELECT prosecdef,proconfig,pg_get_userbyid(proowner) AS owner '
@@ -1215,11 +1234,17 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
             receipts = admin.execute("SELECT count(*) AS n FROM aip_production_contract_receipt WHERE result_ref->>'resourceId'=%s", (source,)).fetchone()['n']
             return row['epoch'] if row else None, event, receipts
 
-        def store(source, key, fail=False):
+        def store(source, key, fail=False, concurrent=False, reason='b75 event fence'):
             @contextmanager
             def connection(selected_scope):
                 with connect(selected_scope) as conn:
                     conn.execute("SET LOCAL statement_timeout='10s'")
+                    conn.execute("SET LOCAL lock_timeout='8s'")
+                    if concurrent:
+                        writer_pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+                    if pre_replay_lock:
+                        conn.execute(sql.SQL('SELECT public.{}(%s,%s,%s,1,%s)').format(sql.Identifier(lock_function)),
+                                     (*selected_scope.key, source, license_hash))
                     if fail:
                         class Failure:
                             def __getattr__(self, name): return getattr(conn, name)
@@ -1236,7 +1261,7 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
                         yield conn
             return AipProductionContractStore(connect_factory=connection).revoke_evidence_bundle(
                 scope, 'b75-test-only', source, key, RevokeEvidenceBundleRequest(
-                    expected_revision=1, expected_content_hash=license_hash, reason='b75 event fence'))
+                    expected_revision=1, expected_content_hash=license_hash, reason=reason))
 
         def raw(source, selected_scope=scope, content_hash=license_hash):
             with connect(selected_scope) as conn:
@@ -1304,10 +1329,55 @@ def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, l
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 raw(selected_source, selected_scope, selected_hash)
             assert state(selected_source) == expected
+        if composition_probe:
+            from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
+            with pytest.raises(ProductionContractIdempotencyConflict):
+                store(source, source, reason='b77 conflicting body')
+            assert state(source) == (1, 1, 2)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                raw('unrelated-b77-' + suffix)
+            concurrent_source = fresh('concurrent')
+            def invoke_concurrent():
+                try:
+                    return 'ok' if store(concurrent_source, concurrent_source, concurrent=True).revoked else 'not-revoked'
+                except psycopg.Error as exc:
+                    return exc.sqlstate
+            with psycopg.connect(get_dsn(), autocommit=True) as blocker:
+                blocker.execute('BEGIN')
+                blocker_pid = blocker.execute('SELECT pg_backend_pid()').fetchone()[0]
+                blocker.execute(sql.SQL('SELECT epoch FROM public.{} WHERE bundle_id=%s FOR UPDATE').format(
+                    sql.Identifier(fence_table)), (concurrent_source,))
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    futures = [pool.submit(invoke_concurrent) for _ in range(2)]
+                    try:
+                        pids = [writer_pids.get(timeout=8) for _ in range(2)]
+                        assert len(set(pids)) == 2
+                        deadline = time.monotonic() + 6
+                        while time.monotonic() < deadline:
+                            graph = {pid: admin.execute('SELECT pg_blocking_pids(%s) AS blockers',
+                                (pid,)).fetchone()['blockers'] for pid in pids}
+                            def reaches(pid, seen=None):
+                                seen = set() if seen is None else seen
+                                if pid == blocker_pid: return True
+                                if pid in seen: return False
+                                return any(reaches(parent, seen | {pid}) for parent in graph.get(pid, []))
+                            if all(reaches(pid) for pid in pids): break
+                            assert not any(f.done() for f in futures), ('writer escaped blocker', graph)
+                            time.sleep(0.025)
+                        else:
+                            raise AssertionError(('exact two-writer lock chain missing', graph))
+                    finally:
+                        blocker.execute('ROLLBACK')
+                    outcomes = [f.result(timeout=12) for f in futures]
+            assert outcomes == ['ok', 'ok'], ('B77_NO_PRE_REPLAY_LOCK_RACE', outcomes, state(concurrent_source))
+            assert state(concurrent_source) == (1, 1, 1)
         failure = fresh('rollback')
         with pytest.raises(RuntimeError, match='b75 precommit rollback'):
             store(failure, failure, fail=True)
         assert state(failure) == (0, 0, 0)
+        if composition_probe:
+            assert pre_replay_lock and race_args is not None
+            _assert_license_race(**race_args, writer_lock_function=lock_function, event_driven=True)
     finally:
         admin.execute(sql.SQL('DROP TRIGGER IF EXISTS {} ON public.{}').format(sql.Identifier(function), sql.Identifier(event_table)))
         admin.execute(sql.SQL('DROP FUNCTION IF EXISTS public.{}(text,text,text,bigint,text)').format(sql.Identifier(lock_function)))

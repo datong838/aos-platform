@@ -1,0 +1,12 @@
+[
+  {
+    "name": "composition-revoke-first",
+    "returncode": 0,
+    "seconds": 24.4
+  },
+  {
+    "name": "composition-evaluate-first",
+    "returncode": 0,
+    "seconds": 24.3
+  }
+]

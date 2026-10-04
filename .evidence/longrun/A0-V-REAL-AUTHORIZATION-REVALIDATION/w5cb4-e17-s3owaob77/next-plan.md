@@ -1,0 +1,9 @@
+# b78 可信License source/head初始化正式合同审计
+
+完整test-only事务组合不等License可信发行：现head admin fixture，aip_production_contract_store.build_evidence_bundle用请求license_summary生成frozen修订，w2_005普通runtime可以INSERT撤销；GUC租户和runtime测试EXECUTE不是signed安装/Owner权限。
+
+下一必须先复习正式signed安装发行ACL、受限eval执行者、原Evidence build/revoke router/store/DTO/migrations、E17上位与当前authority；逐写路映射谁能初始化exact head、发行Receipt、由何当前正式身份证明来源和安装epoch。不能凭epoch整数、nonempty license_summary或测试角色授源权。明确真实Source/issuance不存在时fail-closed，不自动backfill旧冻结修订。
+
+目标文件清单先由实际源码确定：可信head独立迁移、source初始化与revoke DB gate、Store pre-replay lock、安全调用入口、restricted evaluator共用head，迁移单head与RLS/角色/恢复测试。当前135库不执行迁移，先disposable真实完整schema演练。Formal contract设计和authority/Owner/license身份要求冻结后才实现生产文件；不同key既有event不加epoch、旧Receipt/history不改。
+
+已登记独立W-L20来源绑定和八依赖统一不能因License局部成功跳过。下一不重复新增epoch微波以求GREEN，应直接补正式来源/初始化缺口并对照八依赖共同合同，真实首链仍需Host等独立授权，未放行商城读取或外部效果。

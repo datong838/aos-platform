@@ -1,0 +1,22 @@
+[
+  {
+    "name": "composition-revoke-first",
+    "returncode": 0,
+    "seconds": 24.67
+  },
+  {
+    "name": "composition-evaluate-first",
+    "returncode": 0,
+    "seconds": 24.18
+  },
+  {
+    "name": "b76-adjacent",
+    "returncode": 0,
+    "seconds": 24.38
+  },
+  {
+    "name": "default",
+    "returncode": 0,
+    "seconds": 23.95
+  }
+]

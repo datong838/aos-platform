@@ -146,6 +146,10 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     license_db_trigger_candidate = os.getenv('AOS_B75_DB_TRIGGER_CANDIDATE') == '1'
     license_lock_entry_probe = os.getenv('AOS_B76_LOCK_ENTRY_PROBE') == '1'
     license_lock_entry_candidate = os.getenv('AOS_B76_LOCK_ENTRY_CANDIDATE') == '1'
+    license_composition_probe = os.getenv('AOS_B77_COMPOSITION_PROBE') == '1'
+    license_pre_replay_lock = os.getenv('AOS_B77_PRE_REPLAY_LOCK') == '1'
+    assert not license_composition_probe or license_lock_entry_candidate
+    assert not license_pre_replay_lock or license_composition_probe
     assert not license_lock_entry_candidate or license_lock_entry_probe
     assert not license_lock_entry_probe or license_db_trigger_candidate
     assert not license_db_trigger_candidate or license_db_fence_probe
@@ -1045,6 +1049,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         license_db_trigger_candidate=license_db_trigger_candidate,
                         license_lock_entry_probe=license_lock_entry_probe,
                         license_lock_entry_candidate=license_lock_entry_candidate,
+                        license_composition_probe=license_composition_probe,
+                        license_pre_replay_lock=license_pre_replay_lock,
                     )
                     if committed_revoke_case or concurrent_revoke_case or evaluate_first_case:
                         return str(binding['generation'])

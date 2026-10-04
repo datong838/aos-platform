@@ -1,0 +1,12 @@
+[
+  {
+    "name": "b76-adjacent-final",
+    "returncode": 0,
+    "seconds": 24.16
+  },
+  {
+    "name": "default-final",
+    "returncode": 0,
+    "seconds": 23.84
+  }
+]

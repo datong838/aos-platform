@@ -1,0 +1,9 @@
+# b77 完整事件与重放前锁组合
+
+基线5cf37d27、authority1329。只原两extension_runtime测试文件和本evidence。B77_COMPOSITION_PROBE须配b76/b75；B77_PRE_REPLAY_LOCK仅配probe。probe激活时撤销表trigger去WHEN，runtime仍无UPDATE(epoch)，锁函数仅EXECUTE。候选request工厂原Store_replay之前调用exact锁，不Python UPDATE；eventtrigger唯一推进。先候选lock关闭，两个同keyfresh writer在epoch blocker等待后实际两返回都成功/状态1/1/1断言，预期真实23505 RED，不掩盖失败。再开启锁取GREEN。
+
+两个精确PID等待图必须都到known blocker，8s lock/10s statement/6s观察，不改变超时。positive samekey并发、differentbody冲突/newkey existingevent不推进、首次rollback、rawSQL、unknown exact、canary；函数tgqualNULL读回证无前缀。原b70两个顺序回归继续；若并发evaluator仍在旧包装器阶段，明确不将其说完整组合evaluator通过，需下一实际组合门。
+
+Task/Delivery精确commit、01/06/D-wave，编译diff、自复审；当前135库/生产Store/migration/Host/Provider不变，无UI浏览器不适用。formal signed来源初始化/Owner/install epoch/八源与正式迁移另门。完整目标不缩减。
+
+组合第一轮通过后扩展到实际evaluator：将原restricted call/installation/Binding/race args传入db helper，在trigger仍全表生效/runtime仍无UPDATE的阶段调用原race；writer请求在_replay前使用同head受限锁，仅触发器更新epoch。helper完成该race后直接返回主流程，禁止再执行会重复版本的原race。两个旧快照顺序必须在此组合内通过，证据原首轮保留另名，扩展后重测，不以旧包装器验证替代。
