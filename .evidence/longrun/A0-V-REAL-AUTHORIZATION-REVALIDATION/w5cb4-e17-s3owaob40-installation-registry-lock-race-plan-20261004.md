@@ -16,3 +16,8 @@
 
 - 正式 issuer/Reader 登录当前仍缺；b40 不生成正式凭据、不迁移当前卷、不启 Host/worker/Provider。`FOR SHARE`/advisory 的底层互斥通过后，还需安装行锁→Registry 锁→签名重验→Binding CAS/Receipt 的最终受限 issuer 原子接线和原 transition 撤销并发测试，才能考虑关闭 xfail。
 - 正向只 org-org/dev-project，dev-org 零副作用；不读商城源、不重放旧12 Run、不手工 run_definition、不碰230 L0、不 push。每日提醒单独重启最新栈。
+
+## RED 后的受限修订
+
+- 新选项原 RED 为缺关键字 `TypeError`；试做 `FOR SHARE` 后，原 test-only 低权 SELECT 账号立即报 `InsufficientPrivilege: bundle_installation`。直接给该登录 UPDATE 会突破本波“来源仅 SELECT”的 ACL 判据，因此收回未提交的生产选项，不让 owner-only 成功掩盖正式发行失败。
+- 本波最终只在隔离测试中固定三个实际结果：低权 `FOR SHARE` 拒绝；Reader 持有 Registry advisory 时另一连接仍可对安装行 `FOR UPDATE`（安装头竞争缺口）；Registry `(228,1)` 竞争在 250ms 超时失败、事务结束后恢复。下一波设计精确的受限安装锁函数/迁移并走当前卷独立安全门，再谈最终事务接线。

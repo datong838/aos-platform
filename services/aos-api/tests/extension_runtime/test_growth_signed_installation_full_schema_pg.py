@@ -806,6 +806,26 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                             assert limited.execute('SELECT count(*) AS n FROM bundle_installation'
                                                    ).fetchone()['n'] == 1
                             assert limited.execute('SELECT 1 AS alive').fetchone()['alive'] == 1
+                            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                                with limited.transaction():
+                                    limited.execute('''SELECT 1 FROM bundle_installation
+                                        WHERE org_id=%s AND project_id=%s
+                                          AND installation_id=%s FOR SHARE''',
+                                        (*SCOPE.key, installed['installationId']))
+                            with psycopg.connect(get_dsn(), autocommit=True) as contender:
+                                contender.execute("SET lock_timeout='250ms'")
+                                assert contender.execute('''SELECT 1 AS acquired
+                                    FROM bundle_installation WHERE org_id=%s AND project_id=%s
+                                      AND installation_id=%s FOR UPDATE''',
+                                    (*SCOPE.key, installed['installationId'])).fetchone()[0] == 1
+                                with pytest.raises(psycopg.errors.LockNotAvailable):
+                                    contender.execute('SELECT pg_advisory_xact_lock(228, 1)')
+                    with psycopg.connect(get_dsn(), autocommit=True) as contender:
+                        contender.execute("SET lock_timeout='250ms'")
+                        assert contender.execute('''SELECT 1 AS acquired FROM bundle_installation
+                            WHERE org_id=%s AND project_id=%s AND installation_id=%s FOR UPDATE''',
+                            (*SCOPE.key, installed['installationId'])).fetchone()[0] == 1
+                        contender.execute('SELECT pg_advisory_xact_lock(228, 1)')
                     for wrong_scope, wrong_hash in (
                         (TenantScope('dev-org', 'dev-project'), growth.content_hash),
                         (SCOPE, 'sha256:' + '0' * 64),
