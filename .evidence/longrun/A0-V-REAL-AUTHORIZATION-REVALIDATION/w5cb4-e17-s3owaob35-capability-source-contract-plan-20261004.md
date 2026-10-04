@@ -19,3 +19,9 @@
 - 最小正确数据合同应是**不可变、精确到每一 Catalog revision 的来源 Receipt**：source publisher/id/version、bundle content hash、签名指纹、Registry release revision、Catalog id/revision/hash、发布 operation/idempotency、actor 与 DB 时刻，并与对应 Catalog 插入同事务固化。复用现有 Catalog 及 Registry/Installation 表，不修改旧 Capability hash、旧包 manifest 或普通 `create→provisioning` 语义。新增来源 Receipt 的普通 runtime 写权默认无，正式发行角色单独限权；历史行不推断回填，只有正式重验并受控补证后才可授权。具体迁移号、角色和回滚在下一安全波先用 test-only 克隆验证，当前真实库只读。
 - 就绪 Reader 需从 Receipt 精确配对 Catalog 行，再用当前租户 Installation lock 选中同 publisher/id/version/hash/fingerprint，重验 Registry 发布/撤销/签名原字节；缺任一项、错 hash、旧 release、撤销、Installation 非当前代均给 `CAPABILITY_SIGNED_SOURCE_UNAVAILABLE`。`CurrentInstallationReleaseEvidence` 可复用签名和 lock 校验，但其返回值明示 `EVIDENCE_ONLY_NO_START`，不得当成 runtime 许可。
 - 激活与每次 runtime invocation 的最后许可边界仍须**在同一数据库事务**持有精确 Installation/binding/fence/current permission 的读锁或等价 CAS，再重算来源与依赖；`AipCapabilityBindingService.update(active)` 目前调用跨连接的 readiness 服务，即使先加 Reader 也存在 TOCTOU，故不能提前消除 strict xfail。先做 Receipt 持久合同、低权负例，再接最终事务重验。当前实例原 Catalog 无该 Receipt，继续禁入。
+
+## 只读重算反证与最小路径修订
+
+- 用原 `_hash` 和当前签名包的 `ecommerce-capability-catalog.json`、schema/policy 文件在内存中重算 `material.collect@1`，得到 `e50506079d86ed329e0052677d2f9bdbd46541f6f11b1465203710c0f24b58e2`；当前权威库 `BEGIN READ ONLY` 原 Catalog 读得同一 hash（两命令 exit0）。这是字节来源**候选**的可复核算法，前提仍是先验证签名/Registry/Installation 原字节、当前代次与撤销。
+- 因原算法可重算，先不新增 Receipt 表或迁移。上段 Receipt 是备选持久合同，只有在完整签名 Reader 无法无损重算十项 exact hash、或最终事务无法安全再校验时才启用，不能据此抢先改真库。
+- 本波首个代码切口限定 `aip_solution_pack_publisher.py`：把 `_publish` 现有 Capability payload 构造提为纯函数供原发布器和未来签名 Reader 共同使用；不动其他定义或写操作。先以 signed candidate 的十项 hash 与原发布记录建立 RED/回归，再做最小提取。后续 Reader 仍要精确校验 tenant Installation active/current、Registry/签名/撤销、same generation；预检对象单独不能准入。活跃/调用同事务门继续后置独立代码波，b34 strict xfail 保留至真正闭合。
