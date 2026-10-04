@@ -23,7 +23,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     registry=None, concurrent_revoke=False, evaluate_first=False,
     forged_available=False, paired_receipt=False, license_authority=False,
     license_revoke_first=False, license_evaluate_first=False,
-    license_epoch_fence=False,
+    license_epoch_fence=False, license_replay_probe=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -382,7 +382,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                         scope=scope, installation=installation, etag=etag,
                         binding=binding, key=key, license_id=license_id,
                         license_hash=license_hash, evaluate_first=license_evaluate_first,
-                        fence_table=fence_table,
+                        fence_table=fence_table, replay_probe=license_replay_probe,
                     )
                     return
                 revoked_key = key + "-license-revoked"
@@ -809,7 +809,7 @@ def _assert_evaluate_first_revoke_waits(
 def _assert_license_race(
     *, admin, restricted_parts, call, scope, installation, etag,
     binding, key, license_id, license_hash, evaluate_first,
-    fence_table=None,
+    fence_table=None, replay_probe=False,
 ):
     """Probe the real Evidence writer; no direct revoke INSERT or current DB."""
     writer_pids = Queue()
@@ -817,13 +817,25 @@ def _assert_license_race(
     revoke_key = key + '-b70-revoke'
     evaluate_key = key + '-b70-evaluate'
 
+    selected_writer_key = [revoke_key]
+
     @contextmanager
     def writer_connection(selected_scope):
         with connect(selected_scope) as conn:
             conn.execute("SET LOCAL statement_timeout='10s'")
             conn.execute("SET LOCAL lock_timeout='8s'")
             writer_pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
-            if fence_table:
+            if fence_table and replay_probe:
+                assert conn.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
+                    'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s '
+                    'FOR UPDATE').format(sql.Identifier(fence_table)),
+                    (*scope.key, license_id, license_hash)).fetchone() is not None
+                replay = conn.execute('SELECT 1 FROM aip_production_contract_receipt '
+                    "WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.revoke' "
+                    'AND idempotency_key=%s', (*scope.key, selected_writer_key[0])).fetchone()
+            else:
+                replay = None
+            if fence_table and not replay:
                 updated = conn.execute(sql.SQL('UPDATE {} SET epoch=epoch+1 '
                     'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=1 '
                     'AND content_hash=%s').format(sql.Identifier(fence_table)),
@@ -932,3 +944,54 @@ def _assert_license_race(
                                               binding, 3, evaluate_key + '-after'))
         assert admin.execute('SELECT count(*) AS n FROM aip_agent_registry_receipt '
             'WHERE idempotency_key=%s', (evaluate_key + '-after',)).fetchone()['n'] == 0
+
+    if replay_probe:
+        def snapshot():
+            epoch = admin.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
+                'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s').format(
+                sql.Identifier(fence_table)), (*scope.key, license_id, license_hash)).fetchone()['epoch']
+            events = admin.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event '
+                'WHERE org_id=%s AND project_id=%s AND bundle_id=%s',
+                (*scope.key, license_id)).fetchone()['n']
+            receipts = admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+                "WHERE org_id=%s AND project_id=%s AND operation='evidence_bundle.revoke' "
+                'AND idempotency_key=%s', (*scope.key, revoke_key)).fetchone()['n']
+            return epoch, events, receipts
+        before = snapshot()
+        assert before == (1, 1, 1)
+        assert revoke().revoked is True
+        assert snapshot() == before, 'B72_SAME_KEY_REPLAY_ADVANCED_EPOCH'
+
+        from aos_api.aip_production_contract_store import ProductionContractDependencyBlocked
+        selected_writer_key[0] = revoke_key + '-wrong-hash'
+        with pytest.raises(ProductionContractDependencyBlocked):
+            AipProductionContractStore(connect_factory=writer_connection).revoke_evidence_bundle(
+                scope, 'b72-test-only', license_id, revoke_key + '-wrong-hash',
+                RevokeEvidenceBundleRequest(expected_revision=1,
+                    expected_content_hash='e' * 64, reason='b72 wrong hash rollback'))
+        assert snapshot() == before
+        assert admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+            'WHERE idempotency_key=%s', (revoke_key + '-wrong-hash',)).fetchone()['n'] == 0
+
+        class CommitFailure:
+            def __init__(self, conn):
+                self.conn = conn
+            def __getattr__(self, name):
+                return getattr(self.conn, name)
+            def commit(self):
+                raise RuntimeError('b72 forced precommit rollback')
+
+        @contextmanager
+        def failing_connection(selected_scope):
+            with writer_connection(selected_scope) as conn:
+                yield CommitFailure(conn)
+
+        selected_writer_key[0] = revoke_key + '-forced-error'
+        with pytest.raises(RuntimeError, match='b72 forced precommit rollback'):
+            AipProductionContractStore(connect_factory=failing_connection).revoke_evidence_bundle(
+                scope, 'b72-test-only', license_id, revoke_key + '-forced-error',
+                RevokeEvidenceBundleRequest(expected_revision=1,
+                    expected_content_hash=license_hash, reason='b72 forced rollback'))
+        assert snapshot() == before
+        assert admin.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+            'WHERE idempotency_key=%s', (revoke_key + '-forced-error',)).fetchone()['n'] == 0

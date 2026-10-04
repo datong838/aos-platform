@@ -139,6 +139,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     license_revoke_first = os.getenv('AOS_B70_LICENSE_REVOKE_FIRST') == '1'
     license_evaluate_first = os.getenv('AOS_B70_LICENSE_EVALUATE_FIRST') == '1'
     license_epoch_fence = os.getenv('AOS_B71_LICENSE_EPOCH_FENCE') == '1'
+    license_replay_probe = os.getenv('AOS_B72_LICENSE_REPLAY_PROBE') == '1'
+    assert not license_replay_probe or license_epoch_fence
     assert not license_epoch_fence or license_revoke_first or license_evaluate_first
     assert sum((license_revoke_first, license_evaluate_first)) <= 1
     if license_revoke_first or license_evaluate_first:
@@ -1024,6 +1026,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         license_revoke_first=license_revoke_first,
                         license_evaluate_first=license_evaluate_first,
                         license_epoch_fence=license_epoch_fence,
+                        license_replay_probe=license_replay_probe,
                     )
                     if committed_revoke_case or concurrent_revoke_case or evaluate_first_case:
                         return str(binding['generation'])

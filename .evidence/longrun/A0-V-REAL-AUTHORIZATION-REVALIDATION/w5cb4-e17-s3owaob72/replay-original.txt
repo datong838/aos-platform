@@ -1,0 +1,26 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1140: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1016: in prepare_and_verify
+    assert_restricted_blocked_evaluate_composes_lock(
+services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:380: in assert_restricted_blocked_evaluate_composes_lock
+    _assert_license_race(
+services/aos-api/tests/extension_runtime/plan_restricted_evaluate_case.py:951: in _assert_license_race
+    assert snapshot() == before, 'B72_SAME_KEY_REPLAY_ADVANCED_EPOCH'
+           ^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: B72_SAME_KEY_REPLAY_ADVANCED_EPOCH
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 14.49s
