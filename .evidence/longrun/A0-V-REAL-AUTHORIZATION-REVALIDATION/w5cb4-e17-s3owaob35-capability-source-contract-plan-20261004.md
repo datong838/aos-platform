@@ -25,3 +25,8 @@
 - 用原 `_hash` 和当前签名包的 `ecommerce-capability-catalog.json`、schema/policy 文件在内存中重算 `material.collect@1`，得到 `e50506079d86ed329e0052677d2f9bdbd46541f6f11b1465203710c0f24b58e2`；当前权威库 `BEGIN READ ONLY` 原 Catalog 读得同一 hash（两命令 exit0）。这是字节来源**候选**的可复核算法，前提仍是先验证签名/Registry/Installation 原字节、当前代次与撤销。
 - 因原算法可重算，先不新增 Receipt 表或迁移。上段 Receipt 是备选持久合同，只有在完整签名 Reader 无法无损重算十项 exact hash、或最终事务无法安全再校验时才启用，不能据此抢先改真库。
 - 本波首个代码切口限定 `aip_solution_pack_publisher.py`：把 `_publish` 现有 Capability payload 构造提为纯函数供原发布器和未来签名 Reader 共同使用；不动其他定义或写操作。先以 signed candidate 的十项 hash 与原发布记录建立 RED/回归，再做最小提取。后续 Reader 仍要精确校验 tenant Installation active/current、Registry/签名/撤销、same generation；预检对象单独不能准入。活跃/调用同事务门继续后置独立代码波，b34 strict xfail 保留至真正闭合。
+
+## 安装锚点复审
+
+- `CapabilityBindingRequest`、`OperationalBindingDependencies`、`aip_capability_binding` 当前均无 Installation id/generation。Reader 不能从单个 Binding 直接确定哪个安装为其来源。最小不改合同的候选是按租户、source publisher/id/version/hash 查**唯一 active/current Installation**，0 或多于1均失败关闭，并将 exact Installation id/revision/lock hash 编入就绪快照；激活与每次调用在最终事务重验。若该唯一性在正式替换/并存场景不能保证，再设计显式安装锚点的 additive 字段/迁移，不从页面选择或旧快照猜测。
+- 本波只交付原字节重算切口与负向合同；签名 Reader、唯一当前安装查询、激活/调用同事务门尚未实现，不能标记 b35 全门 GREEN。此缺口只限制 Capability 当前实例；共享 Receipt operation 与正式身份配置的独立施工继续。
