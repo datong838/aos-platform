@@ -20,6 +20,7 @@ from psycopg.rows import dict_row
 from pydantic import ValidationError
 
 from aos_api.aip_budget_reservation_store import canonical_hash
+from aos_api.asset_registry.installation_store import CommandResult, PostgresInstallationStore
 from aos_api.automation_occurrence_store import AutomationOccurrenceStore
 from aos_api.ecommerce_growth_cutover import (
     CutoverApprovalRefreshRequest,
@@ -2881,6 +2882,19 @@ def test_dedicated_noninheriting_installation_command_role(database):
     request = _detach_and_release_runtime(database, scope)
     role = "ar2_install_command_" + uuid4().hex[:12]
     owner = database.owner
+    owner.execute("""CREATE TABLE bundle_installation_command(
+        org_id text NOT NULL, project_id text NOT NULL, operation text NOT NULL,
+        idempotency_key text NOT NULL, subject text NOT NULL, request_hash text NOT NULL,
+        status_code smallint NOT NULL, response_json jsonb NOT NULL,
+        response_etag text, created_at timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY(org_id,project_id,operation,idempotency_key))""")
+    owner.execute("ALTER TABLE bundle_installation_command ENABLE ROW LEVEL SECURITY")
+    owner.execute("ALTER TABLE bundle_installation_command FORCE ROW LEVEL SECURITY")
+    owner.execute("""CREATE POLICY tenant_scope ON bundle_installation_command
+        USING(org_id=current_setting('aos.org_id',true)
+          AND project_id=current_setting('aos.project_id',true))
+        WITH CHECK(org_id=current_setting('aos.org_id',true)
+          AND project_id=current_setting('aos.project_id',true))""")
     owner.execute(sql.SQL("CREATE ROLE {} LOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS").format(sql.Identifier(role)))
     try:
         owner.execute(sql.SQL("GRANT aos_app TO {} WITH INHERIT FALSE, SET FALSE").format(sql.Identifier(role)))
@@ -2918,6 +2932,8 @@ def test_dedicated_noninheriting_installation_command_role(database):
             sql.Identifier(database.schema, "bundle_installation_revision"), sql.Identifier(role)))
         owner.execute(sql.SQL("GRANT SELECT ON {} TO {}").format(
             sql.Identifier(database.schema, "extension_runtime_uninstall_receipt"), sql.Identifier(role)))
+        owner.execute(sql.SQL("GRANT SELECT,INSERT ON {} TO {}").format(
+            sql.Identifier(database.schema, "bundle_installation_command"), sql.Identifier(role)))
         owner.execute(sql.SQL("GRANT EXECUTE ON FUNCTION {}(uuid,bigint,text) TO {}").format(
             sql.Identifier(database.schema, "extension_runtime_uninstall_commit_ar2_018"),
             sql.Identifier(role)))
@@ -2941,24 +2957,69 @@ def test_dedicated_noninheriting_installation_command_role(database):
                     installation_id=request.target_installation_id,
                     expected_installation_revision=1, actor="asset-operator",
                 )
-        with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
-            conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
-            conn.execute("SELECT set_config('aos.org_id',%s,true)", (scope.org_id,))
-            conn.execute("SELECT set_config('aos.project_id',%s,true)", (scope.project_id,))
-            receipt = RuntimeUninstallGuard().before_uninstall(
+        @contextmanager
+        def dedicated_connect():
+            with psycopg.connect(**{**PG, "user": role}, row_factory=dict_row) as conn:
+                conn.execute(sql.SQL("SET search_path TO {}").format(sql.Identifier(database.schema)))
+                yield conn
+
+        store = PostgresInstallationStore(dedicated_connect)
+        command = dict(
+            org_id=scope.org_id, project_id=scope.project_id,
+            operation="bundle_installations.uninstall",
+            idempotency_key="b57-dedicated-terminal", subject="asset-operator",
+            request_hash="sha256:" + "a" * 64,
+        )
+
+        def terminal_handler(conn):
+            terminal = RuntimeUninstallGuard().before_uninstall(
                 conn, org_id=scope.org_id, project_id=scope.project_id,
                 installation_id=request.target_installation_id,
                 expected_installation_revision=1, actor="asset-operator",
             )
-            assert receipt["authorityData"]["releasedResourceCount"] == 1
+            assert terminal["authorityData"]["releasedResourceCount"] == 1
             _append_minimal_uninstalled_revision(
                 conn, scope, request.target_installation_id, 1,
             )
             conn.execute("SET CONSTRAINTS ALL IMMEDIATE")
+            return CommandResult(200, {"state": "uninstalled"}, '"2"')
+
+        def force_rollback(conn):
+            RuntimeUninstallGuard().before_uninstall(
+                conn, org_id=scope.org_id, project_id=scope.project_id,
+                installation_id=request.target_installation_id,
+                expected_installation_revision=1, actor="asset-operator",
+            )
+            raise RuntimeError("test-only forced command rollback")
+
+        with pytest.raises(RuntimeError, match="forced command rollback"):
+            store.execute_idempotent(**{**command, "idempotency_key": "b57-rollback"},
+                                     handler=force_rollback)
         assert owner.execute(
             "SELECT count(*) AS n FROM extension_runtime_uninstall_receipt "
             "WHERE org_id=%s AND project_id=%s AND installation_id=%s",
             (*scope.key, request.target_installation_id),
+        ).fetchone()["n"] == 0
+        assert owner.execute(
+            "SELECT count(*) AS n FROM bundle_installation_command "
+            "WHERE org_id=%s AND project_id=%s",
+            scope.key,
+        ).fetchone()["n"] == 0
+
+        first = store.execute_idempotent(**command, handler=terminal_handler)
+        assert first.replayed is False and first.response_json == {"state": "uninstalled"}
+        replay = store.execute_idempotent(**command,
+            handler=lambda conn: pytest.fail("terminal handler was replayed"))
+        assert replay.replayed is True and replay.response_json == first.response_json
+        assert owner.execute(
+            "SELECT count(*) AS n FROM extension_runtime_uninstall_receipt "
+            "WHERE org_id=%s AND project_id=%s AND installation_id=%s",
+            (*scope.key, request.target_installation_id),
+        ).fetchone()["n"] == 1
+        assert owner.execute(
+            "SELECT count(*) AS n FROM bundle_installation_command "
+            "WHERE org_id=%s AND project_id=%s AND operation=%s AND idempotency_key=%s",
+            (*scope.key, command["operation"], command["idempotency_key"]),
         ).fetchone()["n"] == 1
     finally:
         owner.execute(sql.SQL("DROP OWNED BY {}").format(sql.Identifier(role)))
