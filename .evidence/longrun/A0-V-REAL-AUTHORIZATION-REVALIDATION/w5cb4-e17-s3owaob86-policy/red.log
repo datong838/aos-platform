@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1172: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1114: in prepare_and_verify
+    assert_active_signed_license_policy(installed['installationId'],loader,policy)
+services/aos-api/tests/aip/test_aip_license_source_policy_pg.py:20: in assert_active_signed_license_policy
+    from aos_api.aip_license_source_policy import read_license_source_policy,SignedLicensePolicyUnavailable
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_policy'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 15.03s

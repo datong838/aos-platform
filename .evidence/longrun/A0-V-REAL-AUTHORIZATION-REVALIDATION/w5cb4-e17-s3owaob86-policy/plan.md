@@ -1,0 +1,9 @@
+# b86 当前签名 LicensePolicy 同事务事实
+
+基线fd2668c8/authority1329强CURRENT；231/b80/b85b86已登记完整发行路径接续，中性竞争协调已完成并不授License权。本子任务只闭合原signed Policy事实，不将事实当Owner许可/审批。
+
+文件：新增services/aos-api/aos_api/aip_license_source_policy.py；新增services/aos-api/tests/aip/test_aip_license_source_policy_pg.py；原services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py追加明确opt-in当前Policy事实验收；本.evidence目录。无迁移/Role供给、无新Policy权威表，不改变bundle/candidate bytes。
+
+read_license_source_policy在caller原SERIALIZABLE事务、exactScope/installationUUID/expectedETag/SelectedReleaseEvidence/VersionedAssetRef下复用_read_exact_in_transaction（原Registry、installation、签名/当前release再验证），必须当前active revision。目标release必须同selected完整tuple，原Loader.load再次核record/签名/hash，原artifact index取得固定runtime-policy文件digest，再read_verified_artifact绑定exact bytes；LicensePolicy ref沿用原Publisher整体file hash、revision1/id语义，拒LicensePolicyRevision等另一domain别名/重复artifact/未知rules/version/错hash/parent release/etag。不得硬码1.11或从local候选裸读文件。返回签名Policy事实NO_START，无Callback式信任/写入/approve。
+
+真实RED：签名全schema达到actualactive安装后调用缺失新模块，不用mock读取成功。真实positive与错etag/hash/type/id/revision/selected版本/Scope/读隔离/isolation等拒绝，均同原PG签名安装测试；future tightened规则未知须拒，不能静默当旧版本。最终old signed+source协调等累计，编译/diff/库49/本轮role安全清理；没有UI变更。source Policy byte可用不等于Owner明确授予具体Evidence许可；后续必须原Proposal/Approval、独立issuer/完整事务命令，不能以本事实读当b86整体完成。

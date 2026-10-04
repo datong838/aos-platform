@@ -1,0 +1,17 @@
+# b86 当前签名 LicensePolicy 字节事实交付（不是具体源许可）
+
+## RED/真实PG正向
+red.log：签名安装已到实际active/runtime image/preview验证后，Policy事实模块缺失，1failed7warnings15.03s。新增read_license_source_policy必须caller-owned SERIALIZABLE/exact Scope，复用原_read_exact_in_transaction对当前installation/Registry/选中release/signature再验证；expected ETag/active revision一致。从原LoadedBundle artifacts index取runtime-policy file digest，再原read_verified_artifact读exact bytes，不从裸local候选或静态1.11 Publisher推当前Policy。
+
+真实signed 1.13.0/完整schema139测试：green-first1passed15.57s；最终green-final-signed1passed7warnings15.63s，复用原签名Receipt/OCI隔离环境。positive exact policyRef与releaseRef，七种错etag/hash/domain/id/revision/旧selected version/canary Scope拒，RC事务拒；已知40001失败注入仍传播原事务错误，不变成缺Policy。使用实际aos_runtime RLS角色读取，不是superuser绕过；数据/安装与Root均隔离test-only，不算当前真实经营首链或业务授权。
+
+九个schema/rule拒绝案例与原105累计：114passed8warnings50.17s。重复JSON key、schema bool/version2、空/重复LicensePolicy、重复rule、缺必需rule、unknown tighter rule/extra grant字段均拒，不默默以旧规则解释。整体file hash/revision1/id语义沿用原Publisher，不创建新Policy真源；新字段只为类型化历史事实，authorization强制SIGNED_POLICY_EVIDENCE_ONLY_NO_START。
+
+三文件compile及精确diff通过。所有测试session结束后库49，owner为本轮新建且安全attrs全false/双向成员0/共享依赖0才清，最终role0/库49。第一Source协调子任务已fd2668c8/Delivery释放；当前真135未迁移/重启/写入、Host/worker/Provider/商城源未动、无新模型调用/发布。
+
+## 自审/下一完整命令
+PolicyFact只说明当前事务快照下选中签名Policy字节/规则，不能授权一个EvidenceBundle；不代表安装共享锁已被issuer持有，完整写命令仍须原installation/approval/source lock及最后database clock/expiry复核。Package license也不能换成业务数据许可。Owner显式具体来源许可必须进入原Proposal/ApprovalEvent与binding hash；SourceProducer/Checker typed guard、独立issuer身份/权限、完整issuance/head/RegistryReceipt事务仍未交付。不能借data/network/quota activation的批准或created_by当Owner。
+
+已检原ActionStore源码：constructor固定typed guards；_internal_request_binding/_internal_proposal_guard有现成生产/复核接点，create_proposal/decide是原mutable Proposal+immutable Draft/ApprovalEvent/Receipt路径，inner commit需原TransactionBoundConnectFactory约束；decide后commit再_bundle读响应风险已由原事务外层复用方式避免，不能再借strict角色直跑裸inner提交。现classify_action_risk未识别LicenseSource专用动作，不能直接把通用draft_only当许可批准。下一须整体生产/复核/消费命令方案和实际PG正向，不能另造审批/Owner库或交付空503。
+
+整个b86发行与八维/evaluator/自然首链未完成，Goal active/authority1329。
