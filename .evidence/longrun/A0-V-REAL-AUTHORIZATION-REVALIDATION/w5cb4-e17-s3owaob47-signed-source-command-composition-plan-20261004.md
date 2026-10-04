@@ -13,3 +13,5 @@
 ## 验收
 
 目标测试必须在完整 disposable PG/OCI、test-only 签名 Growth1.13 上跑专项和相邻回归；保留 b34/b37/b44 xfail，不启 Host/worker/Provider、不写当前库、不读商城源/旧12Run、不手工 Run、不碰230 L0、不 push。当前实例的身份与配置缺口只阻当前实例，独立产品配置研发继续。
+
+基线读回：`AOS_DOTENV_DISABLED=1 AOS_EXTENSION_PG_TEST=1 AOS_EXTENSION_OCI_TEST=1 AOS_GROWTH113_SIGNED_RECEIPT=/Users/ddt/work/projects/ai_agent/aos-recovery/.aos-growth-113-signing-receipt-20261002-r1.json PYTHONPATH=services/aos-api services/aos-api/.venv/bin/python -m pytest -q --tb=short --disable-warnings --show-capture=no services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py`，退出0，1 passed/7 warnings，15.18s。此为修改前隔离测试基线，不代表当前正式安装通过。
