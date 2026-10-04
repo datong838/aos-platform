@@ -1,0 +1,114 @@
+FFFFFFFFFFFFFFFFFFFFFF                                                   [100%]
+=================================== FAILURES ===================================
+_____ test_exact_request_binding_does_not_claim_source_or_owner_authority ______
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:29: in test_exact_request_binding_does_not_claim_source_or_owner_authority
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_all_grant_terms_change_binding[sourceRequestHash-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+___________ test_all_grant_terms_change_binding[installationEtag-5] ____________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_________ test_all_grant_terms_change_binding[installationRevision-3] __________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_all_grant_terms_change_binding[installationId-4a6b6d09-b543-4062-b6ba-aa8dc445c173] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_____ test_all_grant_terms_change_binding[licenseId-another-exact-license] _____
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_____ test_all_grant_terms_change_binding[usagePurpose-another exact use] ______
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+__________ test_all_grant_terms_change_binding[permittedUses-value6] ___________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:45: in test_all_grant_terms_change_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_invalid_request_cannot_create_request_binding[path0-KnowledgeSourceRef] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+________ test_invalid_request_cannot_create_request_binding[path1-True] ________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_invalid_request_cannot_create_request_binding[path2-LicensePolicyRevision] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_________ test_invalid_request_cannot_create_request_binding[path3-2] __________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+________ test_invalid_request_cannot_create_request_binding[path4-True] ________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_________ test_invalid_request_cannot_create_request_binding[path5-0] __________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_____ test_invalid_request_cannot_create_request_binding[path6-not-a-uuid] _____
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_invalid_request_cannot_create_request_binding[path7-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_______ test_invalid_request_cannot_create_request_binding[path8-value8] _______
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_______ test_invalid_request_cannot_create_request_binding[path9-value9] _______
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_ test_invalid_request_cannot_create_request_binding[path10-inferred-from-MIT] _
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+___ test_invalid_request_cannot_create_request_binding[path11-  implicit  ] ____
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+______ test_invalid_request_cannot_create_request_binding[path12-value12] ______
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:62: in test_invalid_request_cannot_create_request_binding
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+_______________ test_reparse_blocks_model_copy_validation_bypass _______________
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:71: in test_reparse_blocks_model_copy_validation_bypass
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseProposalRequest, source_license_request_binding
+E   ModuleNotFoundError: No module named 'aos_api.aip_license_source_proposal_contracts'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_exact_request_binding_does_not_claim_source_or_owner_authority
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[sourceRequestHash-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[installationEtag-5]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[installationRevision-3]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[installationId-4a6b6d09-b543-4062-b6ba-aa8dc445c173]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[licenseId-another-exact-license]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[usagePurpose-another exact use]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_all_grant_terms_change_binding[permittedUses-value6]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path0-KnowledgeSourceRef]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path1-True]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path2-LicensePolicyRevision]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path3-2]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path4-True]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path5-0]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path6-not-a-uuid]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path7-sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path8-value8]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path9-value9]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path10-inferred-from-MIT]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path11-  implicit  ]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_invalid_request_cannot_create_request_binding[path12-value12]
+FAILED services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py::test_reparse_blocks_model_copy_validation_bypass
+22 failed, 7 warnings in 4.71s

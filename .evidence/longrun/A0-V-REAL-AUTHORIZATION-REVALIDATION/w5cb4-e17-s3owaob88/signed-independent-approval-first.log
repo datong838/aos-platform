@@ -1,0 +1,43 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1175: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1117: in prepare_and_verify
+    assert_active_signed_source_request(installed['installationId'],loader,policy)
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:206: in assert_active_signed_source_request
+    assert_independent_signed_source_approval(proposal,maker,loader,release_policy)
+services/aos-api/tests/aip/test_source_license_approval_pg.py:85: in assert_independent_signed_source_approval
+    with conn.transaction(): approve_source_license_in_transaction(**{**args,'decision':changed})
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_license_source_approval.py:77: in approve_source_license_in_transaction
+    result=AipActionStore(factory,source_license_approval_guard=guard).decide(
+services/aos-api/aos_api/aip_action_store.py:1176: in decide
+    current_roles = self._internal_proposal_guard(conn, scope, actor_id, row, checker=True)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_action_store.py:236: in _internal_proposal_guard
+    return self._source_license_approval_guard.check_proposal(conn,scope,actor_id,row)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_license_source_approval.py:56: in check_proposal
+    original.check_replay(conn,scope,row['created_by'],row)
+services/aos-api/aos_api/aip_license_source_proposal.py:198: in check_replay
+    expected=self.request()
+             ^^^^^^^^^^^^^^
+services/aos-api/aos_api/aip_license_source_proposal.py:171: in request
+    facts=read_source_license_request_facts(conn=self.native,scope=self.scope,maker=self.actor,
+services/aos-api/aos_api/aip_license_source_proposal.py:89: in read_source_license_request_facts
+    raise SourceLicenseProposalBlocked('SOURCE_LICENSE_INSTALLATION_DRIFT')
+E   aos_api.aip_license_source_proposal.SourceLicenseProposalBlocked: SOURCE_LICENSE_INSTALLATION_DRIFT
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 16.56s

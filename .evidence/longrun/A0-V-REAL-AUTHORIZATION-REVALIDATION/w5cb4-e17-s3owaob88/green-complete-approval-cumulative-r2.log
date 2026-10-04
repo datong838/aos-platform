@@ -1,0 +1,14 @@
+F....................................................................... [ 45%]
+........................................................................ [ 90%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_______ test_source_approval_acl_is_narrow_and_does_not_provision_login ________
+services/aos-api/tests/aip/test_source_license_approval_pg.py:20: in test_source_approval_acl_is_narrow_and_does_not_provision_login
+    updates=conn.execute("SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' AND has_column_privilege(%s,format('%I.%I',table_schema,table_name),column_name,'UPDATE')",(ISSUER,)).fetchall()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.ProgrammingError: only '%s', '%b', '%t' are allowed as placeholders, got '%I'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_source_approval_acl_is_narrow_and_does_not_provision_login
+1 failed, 158 passed, 7 warnings in 86.77s (0:01:26)

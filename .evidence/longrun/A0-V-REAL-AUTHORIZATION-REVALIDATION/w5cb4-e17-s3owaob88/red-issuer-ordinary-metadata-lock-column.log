@@ -1,0 +1,14 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_issuer_cannot_mutate_ordinary_metadata_using_lock_column[meta_object_type-SourceLicenseRequest] _
+services/aos-api/tests/aip/test_source_license_approval_pg.py:339: in test_issuer_cannot_mutate_ordinary_metadata_using_lock_column
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_APPROVAL_READ_LOCK_ONLY'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+_ test_issuer_cannot_mutate_ordinary_metadata_using_lock_column[meta_action_type-aip_issue_source_license] _
+services/aos-api/tests/aip/test_source_license_approval_pg.py:339: in test_issuer_cannot_mutate_ordinary_metadata_using_lock_column
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_APPROVAL_READ_LOCK_ONLY'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_issuer_cannot_mutate_ordinary_metadata_using_lock_column[meta_object_type-SourceLicenseRequest]
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_issuer_cannot_mutate_ordinary_metadata_using_lock_column[meta_action_type-aip_issue_source_license]
+2 failed, 7 deselected, 7 warnings in 4.64s

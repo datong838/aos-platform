@@ -1,0 +1,18 @@
+.................FF                                                      [100%]
+=================================== FAILURES ===================================
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-action_type] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:112: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_INDEPENDENT_APPROVAL_ISSUER_REQUIRED'):
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'SOURCE_LICENSE_INDEPENDENT_APPROVAL_ISSUER_REQUIRED'
+E     Actual message: 'NETWORK_APPROVAL_PROPOSAL_UNAVAILABLE\nCONTEXT:  PL/pgSQL function public.aip_network_approval_event_guard_a0v_118() line 17 at RAISE'
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-snapshot] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:107: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    admin.execute("CREATE POLICY b88_hide_source ON public.aip_action_proposal AS RESTRICTIVE FOR SELECT TO aos_runtime USING (action_type_id<>'aip_issue_source_license' AND action_type_snapshot->>'id'<>'aip_issue_source_license')")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.DuplicateObject: policy "b88_hide_source" for table "aip_action_proposal" already exists
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-action_type]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-snapshot]
+2 failed, 17 passed, 7 warnings in 20.85s

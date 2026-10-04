@@ -1,0 +1,14 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_source_connection_rejects_public_credential_file[420] __________
+services/aos-api/tests/aip/test_source_license_approval_pg.py:146: in test_source_connection_rejects_public_credential_file
+    from aos_api.aip_license_source_approval import SourceApprovalDatabaseConfig,SourceLicenseDatabaseBlocked
+E   ImportError: cannot import name 'SourceApprovalDatabaseConfig' from 'aos_api.aip_license_source_approval' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_license_source_approval.py)
+__________ test_source_connection_rejects_public_credential_file[438] __________
+services/aos-api/tests/aip/test_source_license_approval_pg.py:146: in test_source_connection_rejects_public_credential_file
+    from aos_api.aip_license_source_approval import SourceApprovalDatabaseConfig,SourceLicenseDatabaseBlocked
+E   ImportError: cannot import name 'SourceApprovalDatabaseConfig' from 'aos_api.aip_license_source_approval' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_license_source_approval.py)
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_source_connection_rejects_public_credential_file[420]
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_source_connection_rejects_public_credential_file[438]
+2 failed, 4 deselected, 7 warnings in 5.09s

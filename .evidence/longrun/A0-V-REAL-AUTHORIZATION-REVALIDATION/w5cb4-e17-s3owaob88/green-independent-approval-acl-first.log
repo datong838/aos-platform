@@ -1,0 +1,44 @@
+..................FFFFF                                                  [100%]
+=================================== FAILURES ===================================
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[False-action_type] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:103: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    admin.execute(sql.SQL('INSERT INTO aip_action_proposal ({}) VALUES ({})').format(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: SOURCE_APPROVAL_INITIAL_DRAFT_REQUIRED
+E   CONTEXT:  PL/pgSQL function public.source_approval_lifecycle_a0v141() line 5 at RAISE
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[False-snapshot] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:103: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    admin.execute(sql.SQL('INSERT INTO aip_action_proposal ({}) VALUES ({})').format(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: SOURCE_APPROVAL_INITIAL_DRAFT_REQUIRED
+E   CONTEXT:  PL/pgSQL function public.source_approval_lifecycle_a0v141() line 5 at RAISE
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-action_type] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:103: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    admin.execute(sql.SQL('INSERT INTO aip_action_proposal ({}) VALUES ({})').format(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: SOURCE_APPROVAL_INITIAL_DRAFT_REQUIRED
+E   CONTEXT:  PL/pgSQL function public.source_approval_lifecycle_a0v141() line 5 at RAISE
+_ test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-snapshot] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:103: in test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows
+    admin.execute(sql.SQL('INSERT INTO aip_action_proposal ({}) VALUES ({})').format(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: SOURCE_APPROVAL_INITIAL_DRAFT_REQUIRED
+E   CONTEXT:  PL/pgSQL function public.source_approval_lifecycle_a0v141() line 5 at RAISE
+_____ test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action _____
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:145: in test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action
+    admin.execute(sql.SQL('INSERT INTO aip_action_proposal ({}) VALUES ({})').format(
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.InsufficientPrivilege: SOURCE_APPROVAL_INITIAL_DRAFT_REQUIRED
+E   CONTEXT:  PL/pgSQL function public.source_approval_lifecycle_a0v141() line 5 at RAISE
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[False-action_type]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[False-snapshot]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-action_type]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_append_source_approval_even_with_adversarial_original_rows[True-snapshot]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action
+5 failed, 18 passed, 7 warnings in 25.41s

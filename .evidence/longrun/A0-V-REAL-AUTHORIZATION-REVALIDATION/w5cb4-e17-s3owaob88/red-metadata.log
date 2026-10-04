@@ -1,0 +1,38 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_________ test_original_metadata_defines_exact_requested_grant_action __________
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:14: in test_original_metadata_defines_exact_requested_grant_action
+    assert conn.execute('SELECT id,name,description,published,properties,required_markings FROM meta_object_type WHERE id=%s',(OBJECT,)).fetchone()=={
+E   AssertionError: assert None == {'id': 'SourceLicenseRequest', 'name': '来源许可请求', 'description': '原Proposal内的精确来源许可声明', 'published': True, ...}
+E    +  where None = fetchone()
+E    +    where fetchone = <psycopg.Cursor [TUPLES_OK] [INTRANS] (host=127.0.0.1 port=5433 user=aos_app database=aos_test_974d9aecd46c_ti4_test) at 0x11a42f580>.fetchone
+E    +      where <psycopg.Cursor [TUPLES_OK] [INTRANS] (host=127.0.0.1 port=5433 user=aos_app database=aos_test_974d9aecd46c_ti4_test) at 0x11a42f580> = execute('SELECT id,name,description,published,properties,required_markings FROM meta_object_type WHERE id=%s', ('SourceLicenseRequest',))
+E    +        where execute = <psycopg.Connection [INTRANS] (host=127.0.0.1 port=5433 user=aos_app database=aos_test_974d9aecd46c_ti4_test) at 0x119fe3190>.execute
+____ test_reserved_approval_identity_has_no_login_members_or_business_write ____
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:25: in test_reserved_approval_identity_has_no_login_members_or_business_write
+    assert role is not None
+E   assert None is not None
+_ test_runtime_cannot_mutate_reserved_metadata[UPDATE-meta_action_type-aip_issue_source_license] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:38: in test_runtime_cannot_mutate_reserved_metadata
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_METADATA_RESERVED'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+_ test_runtime_cannot_mutate_reserved_metadata[UPDATE-meta_object_type-SourceLicenseRequest] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:38: in test_runtime_cannot_mutate_reserved_metadata
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_METADATA_RESERVED'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+_ test_runtime_cannot_mutate_reserved_metadata[DELETE-meta_action_type-aip_issue_source_license] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:38: in test_runtime_cannot_mutate_reserved_metadata
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_METADATA_RESERVED'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+_ test_runtime_cannot_mutate_reserved_metadata[DELETE-meta_object_type-SourceLicenseRequest] _
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:38: in test_runtime_cannot_mutate_reserved_metadata
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_METADATA_RESERVED'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_original_metadata_defines_exact_requested_grant_action
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_reserved_approval_identity_has_no_login_members_or_business_write
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_mutate_reserved_metadata[UPDATE-meta_action_type-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_mutate_reserved_metadata[UPDATE-meta_object_type-SourceLicenseRequest]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_mutate_reserved_metadata[DELETE-meta_action_type-aip_issue_source_license]
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_runtime_cannot_mutate_reserved_metadata[DELETE-meta_object_type-SourceLicenseRequest]
+6 failed, 7 warnings in 4.79s

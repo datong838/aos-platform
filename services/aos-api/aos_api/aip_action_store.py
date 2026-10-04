@@ -98,7 +98,17 @@ class AipActionStore:
     def __init__(self, connect_factory: ConnectFactory | None = None, *, bootstrap_guard=None,
                  network_activation_guard=None, network_approval_guard=None,
                  first_content_guard=None, guard_activation_guard=None, guard_approval_guard=None,
-                 model_eval_guard=None) -> None:
+                 model_eval_guard=None, source_license_guard=None, source_license_approval_guard=None) -> None:
+        if source_license_approval_guard is not None:
+            from aos_api.aip_license_source_approval import SourceLicenseApprovalGuard
+            if type(source_license_approval_guard) is not SourceLicenseApprovalGuard:
+                raise TypeError('exact source license approval guard required')
+        self._source_license_approval_guard = source_license_approval_guard
+        if source_license_guard is not None:
+            from aos_api.aip_license_source_proposal import SourceLicenseProposalGuard
+            if type(source_license_guard) is not SourceLicenseProposalGuard:
+                raise TypeError('exact source license proposal guard required')
+        self._source_license_guard = source_license_guard
         if model_eval_guard is not None:
             from aos_api.aip_model_eval_action import ModelEvalActionGuard
             if type(model_eval_guard) is not ModelEvalActionGuard:
@@ -167,7 +177,9 @@ class AipActionStore:
 
     def _internal_request_binding(self, conn, scope, actor_id, body, action_snapshot, risk):
         if is_source_license_action(body.action_type_id, action_snapshot):
-            raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
+            if self._source_license_guard is None:
+                raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
+            return self._source_license_guard.check_request(conn, scope, actor_id, body, action_snapshot, risk)
         if "aip_request_model_eval" in {body.action_type_id, action_snapshot.get("id")}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -220,7 +232,13 @@ class AipActionStore:
 
     def _internal_proposal_guard(self, conn, scope, actor_id, row, *, checker):
         if is_source_license_action(row["action_type_id"], row["action_type_snapshot"]):
-            raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
+            if checker and self._source_license_approval_guard is not None:
+                return self._source_license_approval_guard.check_proposal(conn,scope,actor_id,row)
+            if self._source_license_guard is None:
+                raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
+            if checker:
+                raise AipActionTransitionBlocked("SOURCE_LICENSE_INDEPENDENT_CHECKER_REQUIRED")
+            return self._source_license_guard.check_replay(conn, scope, actor_id, row)
         if "aip_request_model_eval" in {row['action_type_id'], row['action_type_snapshot'].get('id')}:
             if self._model_eval_guard is None:
                 raise AipActionTransitionBlocked("MODEL_EVAL_ACTION_GUARD_REQUIRED")
@@ -643,7 +661,7 @@ class AipActionStore:
         action_snapshot: dict[str, Any],
         risk: RiskDecision,
     ) -> ActionDraftBundle:
-        if is_source_license_action(body.action_type_id, action_snapshot):
+        if is_source_license_action(body.action_type_id, action_snapshot) and self._source_license_guard is None:
             raise AipActionTransitionBlocked("SOURCE_LICENSE_PRODUCER_REQUIRED")
         if (body.action_type_id in POLICY_ACTIVATION_ACTION_RISK
                 and self._network_activation_guard is None

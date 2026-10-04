@@ -1,0 +1,9 @@
+...................F                                                     [100%]
+=================================== FAILURES ===================================
+_____ test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action _____
+services/aos-api/tests/aip/test_source_license_action_metadata_pg.py:148: in test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_LICENSE_PROPOSAL_TERMS_IMMUTABLE'):
+E   Failed: DID NOT RAISE InsufficientPrivilege
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_action_metadata_pg.py::test_source_proposal_terms_cannot_be_disguised_as_an_ordinary_action
+1 failed, 19 passed, 7 warnings in 24.47s

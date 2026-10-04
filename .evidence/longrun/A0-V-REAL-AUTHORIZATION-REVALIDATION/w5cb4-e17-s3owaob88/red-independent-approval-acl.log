@@ -1,0 +1,31 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_______ test_source_approval_acl_is_narrow_and_does_not_provision_login ________
+services/aos-api/tests/aip/test_source_license_approval_pg.py:14: in test_source_approval_acl_is_narrow_and_does_not_provision_login
+    assert conn.execute("SELECT has_table_privilege(%s,%s,'INSERT') AS allowed",(ISSUER,table)).fetchone()['allowed']
+E   assert False
+__________ test_store_rejects_callback_as_independent_source_checker ___________
+services/aos-api/tests/aip/test_source_license_approval_pg.py:25: in test_store_rejects_callback_as_independent_source_checker
+    with pytest.raises(TypeError,match='exact source license approval guard'):
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'exact source license approval guard'
+E     Actual message: "AipActionStore.__init__() got an unexpected keyword argument 'source_license_approval_guard'"
+_ test_issuer_lock_column_cannot_change_current_owner_or_installation[meta_membership-subject] _
+services/aos-api/tests/aip/test_source_license_approval_pg.py:34: in test_issuer_lock_column_cannot_change_current_owner_or_installation
+    conn.execute("INSERT INTO meta_membership(org_id,project_id,subject,role) VALUES(%s,%s,'b88-acl-readonly-owner','owner') ON CONFLICT DO NOTHING",SCOPE.key)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:300: in execute
+    raise ex.with_traceback(None)
+E   psycopg.errors.ForeignKeyViolation: insert or update on table "meta_membership" violates foreign key constraint "fk_meta_membership_workspace_ti1"
+E   DETAIL:  Key (org_id, project_id)=(org-org, dev-project) is not present in table "meta_workspace".
+_ test_issuer_lock_column_cannot_change_current_owner_or_installation[bundle_installation-installation_id] _
+services/aos-api/tests/aip/test_source_license_approval_pg.py:38: in test_issuer_lock_column_cannot_change_current_owner_or_installation
+    with pytest.raises(psycopg.errors.InsufficientPrivilege,match='SOURCE_APPROVAL_READ_LOCK_ONLY'):
+E   AssertionError: Regex pattern did not match.
+E     Expected regex: 'SOURCE_APPROVAL_READ_LOCK_ONLY'
+E     Actual message: 'permission denied for table bundle_installation'
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_source_approval_acl_is_narrow_and_does_not_provision_login
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_store_rejects_callback_as_independent_source_checker
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_issuer_lock_column_cannot_change_current_owner_or_installation[meta_membership-subject]
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_issuer_lock_column_cannot_change_current_owner_or_installation[bundle_installation-installation_id]
+4 failed, 7 warnings in 4.80s

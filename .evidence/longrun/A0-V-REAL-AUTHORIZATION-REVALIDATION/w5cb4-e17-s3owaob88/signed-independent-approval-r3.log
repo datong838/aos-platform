@@ -1,0 +1,41 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_signed_growth_release_reaches_approved_installation_in_full_schema ____
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1175: in test_signed_growth_release_reaches_approved_installation_in_full_schema
+    verified_generation = asyncio.run(prepare_and_verify())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:190: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/Users/ddt/.local/share/uv/python/cpython-3.11.15-macos-aarch64-none/lib/python3.11/asyncio/base_events.py:654: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py:1117: in prepare_and_verify
+    assert_active_signed_source_request(installed['installationId'],loader,policy)
+services/aos-api/tests/aip/test_aip_license_source_proposal_pg.py:211: in assert_active_signed_source_request
+    assert_independent_signed_source_approval(proposal,maker,loader,release_policy)
+services/aos-api/tests/aip/test_source_license_approval_pg.py:75: in assert_independent_signed_source_approval
+    conn.isolation_level=IsolationLevel.SERIALIZABLE
+    ^^^^^^^^^^^^^^^^^^^^
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:204: in isolation_level
+    self._set_isolation_level(value)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:505: in _set_isolation_level
+    self.set_isolation_level(value)
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:510: in set_isolation_level
+    self.wait(self._set_isolation_level_gen(value))
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/connection.py:484: in wait
+    return waiting.wait(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg_binary/_psycopg/waiting.pyx:219: in psycopg_binary._psycopg.wait_c
+    ???
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:210: in _set_isolation_level_gen
+    yield from self._check_intrans_gen("isolation_level")
+services/aos-api/.venv/lib/python3.11/site-packages/psycopg/_connection_base.py:264: in _check_intrans_gen
+    raise e.ProgrammingError(
+E   psycopg.ProgrammingError: can't change 'isolation_level' now: connection in transaction status INTRANS
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py::test_signed_growth_release_reaches_approved_installation_in_full_schema
+1 failed, 7 warnings in 16.30s

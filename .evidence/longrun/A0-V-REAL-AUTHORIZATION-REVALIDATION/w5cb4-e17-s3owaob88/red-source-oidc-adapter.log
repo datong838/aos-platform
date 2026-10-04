@@ -1,0 +1,9 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_source_adapter_verifies_signed_oidc_and_rejects_wrong_signature_scope_and_expiry _
+services/aos-api/tests/aip/test_source_license_approval_pg.py:116: in test_source_adapter_verifies_signed_oidc_and_rejects_wrong_signature_scope_and_expiry
+    from aos_api.aip_license_source_proposal_contracts import SourceLicenseApprovalCommand
+E   ImportError: cannot import name 'SourceLicenseApprovalCommand' from 'aos_api.aip_license_source_proposal_contracts' (/Users/ddt/work/projects/ai_agent/aos-platform/services/aos-api/aos_api/aip_license_source_proposal_contracts.py)
+=========================== short test summary info ============================
+FAILED services/aos-api/tests/aip/test_source_license_approval_pg.py::test_source_adapter_verifies_signed_oidc_and_rejects_wrong_signature_scope_and_expiry
+1 failed, 3 deselected, 7 warnings in 4.73s
