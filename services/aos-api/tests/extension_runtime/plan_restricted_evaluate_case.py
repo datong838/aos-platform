@@ -25,6 +25,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     license_revoke_first=False, license_evaluate_first=False,
     license_epoch_fence=False, license_replay_probe=False,
     license_transaction_probe=False, license_receipt_guard=False,
+    license_db_fence_probe=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -381,7 +382,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     _assert_license_transaction_contract(
                         admin=admin, scope=scope, fence_table=fence_table,
                         template_license=license_id, license_hash=license_hash,
-                        receipt_guard=license_receipt_guard,
+                        receipt_guard=license_receipt_guard, db_fence_probe=license_db_fence_probe,
                     )
                 if license_revoke_first or license_evaluate_first:
                     _assert_license_race(
@@ -1006,6 +1007,7 @@ def _assert_license_race(
 
 def _assert_license_transaction_contract(
     *, admin, scope, fence_table, template_license, license_hash, receipt_guard,
+    db_fence_probe=False,
 ):
     """Fresh source, independent writer closures, real Store and bounded PID waits."""
     from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
@@ -1037,14 +1039,14 @@ def _assert_license_transaction_contract(
             "AND result_ref->>'resourceId'=%s", (*scope.key, bundle)).fetchone()['n']
         return epoch, event, receipts
 
-    def invoke(request_key, *, reason='b73 concurrent same body', fail_commit=False):
+    def invoke(request_key, *, reason='b73 concurrent same body', fail_commit=False, unwrapped=False):
         @contextmanager
         def connection(selected_scope):
             with connect(selected_scope) as conn:
                 conn.execute("SET LOCAL statement_timeout='10s'")
                 conn.execute("SET LOCAL lock_timeout='8s'")
                 pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
-                if receipt_guard:
+                if receipt_guard and not unwrapped:
                     assert conn.execute(sql.SQL('SELECT epoch FROM {} WHERE org_id=%s '
                         'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s '
                         'FOR UPDATE').format(sql.Identifier(fence_table)),
@@ -1054,7 +1056,7 @@ def _assert_license_transaction_contract(
                         'AND idempotency_key=%s', (*selected_scope.key, request_key)).fetchone()
                 else:
                     replay = None
-                if not replay:
+                if not replay and not unwrapped:
                     assert conn.execute(sql.SQL('UPDATE {} SET epoch=epoch+1 WHERE org_id=%s '
                         'AND project_id=%s AND bundle_id=%s AND revision=1 AND content_hash=%s').format(
                         sql.Identifier(fence_table)),
@@ -1082,6 +1084,10 @@ def _assert_license_transaction_contract(
                 expected_content_hash=license_hash, reason=reason))
 
     assert snapshot() == (0, 0, 0)
+    if db_fence_probe:
+        assert invoke(key, unwrapped=True).revoked is True
+        assert snapshot() == (1, 1, 1), ('B74_REAL_STORE_BYPASSED_EPOCH_FENCE', snapshot())
+        return
     with pytest.raises(RuntimeError, match='b73 forced first-event precommit rollback'):
         invoke(key + '-failure', fail_commit=True)
     assert snapshot() == (0, 0, 0), 'B73_FIRST_EVENT_ROLLBACK_LEAK'
