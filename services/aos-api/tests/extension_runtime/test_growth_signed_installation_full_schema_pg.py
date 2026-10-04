@@ -58,6 +58,7 @@ from aos_api.extension_runtime.lifecycle_store import RuntimeConflict
 from aos_api.extension_runtime.current_installation_release_evidence import (
     CurrentReleaseEvidenceBlocked,
     read_current_installation_release_evidence,
+    read_unique_active_installation_release_evidence,
     read_current_runtime_image_evidence,
 )
 from aos_api.extension_runtime.lifecycle_service import RuntimeLifecycleService
@@ -710,6 +711,26 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                 assert view.active_revision == view.current_revision
                 assert any(item.bundle_id == 'solution.ecommerce.growth'
                            and item.version == '1.13.0' for item in view.releases)
+                growth = next(item for item in view.releases
+                              if item.bundle_id == 'solution.ecommerce.growth')
+                selected_view = read_unique_active_installation_release_evidence(
+                    connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                    scope=SCOPE, publisher=growth.publisher,
+                    bundle_id=growth.bundle_id, version=growth.version,
+                    content_hash=growth.content_hash,
+                    release_policy=policy, loader=loader,
+                )
+                assert selected_view.authorization == 'EVIDENCE_ONLY_NO_START'
+                assert selected_view.installation_id == view.installation_id
+                assert selected_view.lock_hash == view.lock_hash
+                with pytest.raises(CurrentReleaseEvidenceBlocked, match='ACTIVE_INSTALLATION_MISSING'):
+                    read_unique_active_installation_release_evidence(
+                        connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
+                        scope=SCOPE, publisher=growth.publisher,
+                        bundle_id=growth.bundle_id, version=growth.version,
+                        content_hash='sha256:' + '0' * 64,
+                        release_policy=policy, loader=loader,
+                    )
                 runtime_view = read_current_runtime_image_evidence(
                     connect_factory=lambda: psycopg.connect(get_dsn(), row_factory=dict_row),
                     scope=SCOPE, installation_id=installed['installationId'],

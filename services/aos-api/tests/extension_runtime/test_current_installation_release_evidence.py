@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 import psycopg
@@ -17,6 +18,7 @@ from aos_api.extension_runtime.current_installation_release_evidence import (
     read_current_installation_release_evidence,
     read_current_runtime_image_evidence,
 )
+from aos_api.extension_runtime import current_installation_release_evidence as release_evidence
 from aos_api.extension_runtime.oci_driver import OciDriver
 from aos_api.tenant_scope import TenantScope
 
@@ -67,6 +69,78 @@ def test_current_signed_installation_is_evidence_only():
             expected_generation="00000000-0000-0000-0000-000000000000",
             release_policy=policy, loader=loader,
             driver=OciDriver(context="colima-aos-extension"), platform="linux/arm64",
+        )
+
+
+def test_current_approved_installation_cannot_be_unique_active_capability_source():
+    connect, policy, loader, _report = _current_inputs()
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="ACTIVE_INSTALLATION_MISSING"):
+        release_evidence.read_unique_active_installation_release_evidence(
+            connect_factory=connect,
+            scope=TenantScope("org-org", "dev-project"),
+            publisher="aos", bundle_id="solution.ecommerce.growth",
+            version="1.11.0",
+            content_hash="sha256:3d8817e01f53690adbd58698951c226e8c3917304a9ec4d7eee37d64bf02b328",
+            release_policy=policy, loader=loader,
+        )
+
+
+def test_unique_active_capability_source_rejects_wrong_hash_and_other_tenant():
+    connect, policy, loader, _report = _current_inputs()
+    common = dict(
+        connect_factory=connect, publisher="aos", bundle_id="solution.ecommerce.growth",
+        version="1.11.0", release_policy=policy, loader=loader,
+    )
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="ACTIVE_INSTALLATION_MISSING"):
+        release_evidence.read_unique_active_installation_release_evidence(
+            scope=TenantScope("org-org", "dev-project"),
+            content_hash="sha256:" + "0" * 64, **common,
+        )
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="ACTIVE_INSTALLATION_MISSING"):
+        release_evidence.read_unique_active_installation_release_evidence(
+            scope=TenantScope("dev-org", "dev-project"),
+            content_hash="sha256:3d8817e01f53690adbd58698951c226e8c3917304a9ec4d7eee37d64bf02b328",
+            **common,
+        )
+
+
+def test_unique_active_capability_source_rejects_ambiguous_installation_before_signed_read():
+    class Connection:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        @contextmanager
+        def transaction(self):
+            yield
+
+        def execute(self, query, params=None):
+            if "SELECT DISTINCT i.installation_id" in query:
+                assert "i.active_revision=i.current_revision" in query
+                assert "r.state='active'" in query
+                assert "member->>'kind'='SolutionPack'" in query
+                assert "member->>'contentHash'=%s" in query
+                assert "LIMIT 2" in query
+                assert params[:2] == ("org-org", "dev-project")
+            return self
+
+        def fetchall(self):
+            return [
+                {"installation_id": "00000000-0000-0000-0000-000000000001"},
+                {"installation_id": "00000000-0000-0000-0000-000000000002"},
+            ]
+
+    _connect, policy, loader, _report = _current_inputs()
+    with pytest.raises(CurrentReleaseEvidenceBlocked, match="ACTIVE_INSTALLATION_AMBIGUOUS"):
+        release_evidence.read_unique_active_installation_release_evidence(
+            connect_factory=lambda: Connection(),
+            scope=TenantScope("org-org", "dev-project"),
+            publisher="aos", bundle_id="solution.ecommerce.growth",
+            version="1.11.0",
+            content_hash="sha256:3d8817e01f53690adbd58698951c226e8c3917304a9ec4d7eee37d64bf02b328",
+            release_policy=policy, loader=loader,
         )
 
 
