@@ -62,12 +62,14 @@ class InstallationService:
         revalidator: InstallationRevalidator,
         planning_revalidator: Any | None = None,
         runtime_uninstall_guard: Any | None = None,
+        uninstall_command_store: PostgresInstallationStore | None = None,
     ) -> None:
         self._store = store
         self._composition_store = composition_store
         self._revalidator = revalidator
         self._planning_revalidator = planning_revalidator or revalidator
         self._runtime_uninstall_guard = runtime_uninstall_guard
+        self._uninstall_command_store = uninstall_command_store or store
 
     def create(
         self,
@@ -456,7 +458,12 @@ class InstallationService:
         if_match: str | None,
         handler: Callable[[Any], CommandResult],
     ) -> CommandReceipt:
-        return self._store.execute_idempotent(
+        command_store = (
+            self._uninstall_command_store
+            if operation == UNINSTALL_INSTALLATION_OPERATION
+            else self._store
+        )
+        return command_store.execute_idempotent(
             org_id=org_id,
             project_id=project_id,
             operation=operation,

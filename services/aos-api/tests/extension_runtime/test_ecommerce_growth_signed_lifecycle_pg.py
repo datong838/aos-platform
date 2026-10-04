@@ -546,7 +546,8 @@ def test_signed_disable_uninstall_reinstall_routes_exact_ecommerce_group(databas
                 with psycopg.connect(**{**PG, "user": database.command_role}) as probe:
                     probe.execute("SET ROLE aos_app")
             app_store = PostgresInstallationStore(_app_connect(database))
-            guarded = InstallationService(store=app_store, composition_store=package["composition_store"],
+            guarded = InstallationService(store=runtime_store, uninstall_command_store=app_store,
+                composition_store=package["composition_store"],
                 revalidator=InstallationRevalidator(release_policy=policy), planning_revalidator=revalidator,
                 runtime_uninstall_guard=RuntimeUninstallGuard())
             current = store.get_installation(**scope_dict, installation_id=first["draft"].installation_id)
