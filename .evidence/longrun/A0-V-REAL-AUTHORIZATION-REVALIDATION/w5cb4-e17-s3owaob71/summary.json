@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "mode": "revoke-first-final",
+      "exit_code": 0,
+      "seconds": 26.09
+    },
+    {
+      "mode": "evaluate-first",
+      "exit_code": 0,
+      "seconds": 25.71
+    },
+    {
+      "mode": "b69",
+      "exit_code": 0,
+      "seconds": 26.16
+    },
+    {
+      "mode": "default",
+      "exit_code": 0,
+      "seconds": 27.89
+    }
+  ],
+  "before_count": 49,
+  "after_count": 49,
+  "new_residue": []
+}

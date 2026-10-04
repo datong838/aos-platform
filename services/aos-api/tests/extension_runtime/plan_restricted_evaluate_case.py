@@ -23,6 +23,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     registry=None, concurrent_revoke=False, evaluate_first=False,
     forged_available=False, paired_receipt=False, license_authority=False,
     license_revoke_first=False, license_evaluate_first=False,
+    license_epoch_fence=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -40,9 +41,12 @@ def assert_restricted_blocked_evaluate_composes_lock(
                      "aip_agent_registry_receipt")
     license_id = "b69-license-" + suffix
     license_hash = "c" * 64
+    fence_table = 'b71_license_epoch_' + suffix if license_epoch_fence else None
     if license_authority:
         scoped_tables += ("aip_evidence_bundle_revision",
                           "aip_evidence_bundle_revoke_event")
+    if fence_table:
+        scoped_tables += (fence_table,)
     license_check = sql.SQL("")
     if license_authority:
         license_check = sql.SQL("""IF NOT EXISTS (
@@ -59,8 +63,34 @@ def assert_restricted_blocked_evaluate_composes_lock(
           THEN RAISE EXCEPTION 'license evidence unavailable'
                USING ERRCODE='42501';
           END IF;""").format(sql.Literal(license_id), sql.Literal(license_hash))
+        if fence_table:
+            license_check = sql.SQL("""PERFORM 1 FROM public.{}
+                WHERE org_id=p_org AND project_id=p_project AND bundle_id={}
+                  AND revision=1 AND content_hash={} FOR SHARE;
+                IF NOT FOUND THEN RAISE EXCEPTION 'license epoch unavailable'
+                  USING ERRCODE='42501'; END IF;""").format(
+                    sql.Identifier(fence_table), sql.Literal(license_id),
+                    sql.Literal(license_hash)) + license_check
     receipt_guards = None
     with psycopg.connect(get_dsn(), autocommit=True, row_factory=dict_row) as admin:
+        if fence_table:
+            admin.execute(sql.SQL("""CREATE TABLE public.{}(
+                org_id text NOT NULL, project_id text NOT NULL, bundle_id text NOT NULL,
+                revision bigint NOT NULL, content_hash text NOT NULL, epoch bigint NOT NULL,
+                PRIMARY KEY(org_id,project_id,bundle_id,revision,content_hash))""").format(
+                    sql.Identifier(fence_table)))
+            admin.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(sql.Identifier(fence_table)))
+            admin.execute(sql.SQL('ALTER TABLE {} FORCE ROW LEVEL SECURITY').format(sql.Identifier(fence_table)))
+            admin.execute(sql.SQL('REVOKE ALL ON {} FROM PUBLIC,aos_runtime').format(sql.Identifier(fence_table)))
+            admin.execute(sql.SQL('INSERT INTO {} VALUES(%s,%s,%s,1,%s,0)').format(
+                sql.Identifier(fence_table)), (*scope.key, license_id, license_hash))
+            admin.execute(sql.SQL('GRANT SELECT,UPDATE(epoch) ON {} TO aos_runtime').format(
+                sql.Identifier(fence_table)))
+            admin.execute(sql.SQL("CREATE POLICY b71_writer ON {} TO aos_runtime "
+                "USING(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true)) "
+                "WITH CHECK(org_id=current_setting('aos.org_id',true) AND "
+                "project_id=current_setting('aos.project_id',true))").format(sql.Identifier(fence_table)))
         admin.execute("""INSERT INTO aip_capability_binding(
             org_id,project_id,binding_id,capability_ref,secret_ref,health,
             network_policy_revision,quota_policy_revision,timeout_ms,max_concurrency,
@@ -247,9 +277,12 @@ def assert_restricted_blocked_evaluate_composes_lock(
                     "WHERE binding_id=%s", (binding,)).fetchone()["version"] == 1
                 assert admin.execute("SELECT count(*) AS n FROM aip_agent_registry_receipt "
                     "WHERE idempotency_key=%s", (key + "-no-license-acl",)).fetchone()["n"] == 0
-                for table in scoped_tables[-2:]:
+                for table in ("aip_evidence_bundle_revision", "aip_evidence_bundle_revoke_event"):
                     admin.execute(sql.SQL("GRANT SELECT ON {} TO {}")
                                   .format(sql.Identifier(table), sql.Identifier(definer)))
+                if fence_table:
+                    admin.execute(sql.SQL('GRANT SELECT,UPDATE(epoch) ON {} TO {}').format(
+                        sql.Identifier(fence_table), sql.Identifier(definer)))
             with psycopg.connect(**restricted_parts, row_factory=dict_row) as limited:
                 with limited.transaction():
                     limited.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
@@ -349,6 +382,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                         scope=scope, installation=installation, etag=etag,
                         binding=binding, key=key, license_id=license_id,
                         license_hash=license_hash, evaluate_first=license_evaluate_first,
+                        fence_table=fence_table,
                     )
                     return
                 revoked_key = key + "-license-revoked"
@@ -427,6 +461,8 @@ def assert_restricted_blocked_evaluate_composes_lock(
             admin.execute(sql.SQL("DROP ROLE IF EXISTS {}") .format(sql.Identifier(definer)))
             assert admin.execute("SELECT 1 FROM pg_roles WHERE rolname=%s",
                                  (definer,)).fetchone() is None
+            if fence_table:
+                admin.execute(sql.SQL('DROP TABLE {}').format(sql.Identifier(fence_table)))
 
 
 def _install_b67_receipt_guards(*, admin, suffix, definer, role):
@@ -773,6 +809,7 @@ def _assert_evaluate_first_revoke_waits(
 def _assert_license_race(
     *, admin, restricted_parts, call, scope, installation, etag,
     binding, key, license_id, license_hash, evaluate_first,
+    fence_table=None,
 ):
     """Probe the real Evidence writer; no direct revoke INSERT or current DB."""
     writer_pids = Queue()
@@ -786,6 +823,12 @@ def _assert_license_race(
             conn.execute("SET LOCAL statement_timeout='10s'")
             conn.execute("SET LOCAL lock_timeout='8s'")
             writer_pids.put(conn.execute('SELECT pg_backend_pid() AS pid').fetchone()['pid'])
+            if fence_table:
+                updated = conn.execute(sql.SQL('UPDATE {} SET epoch=epoch+1 '
+                    'WHERE org_id=%s AND project_id=%s AND bundle_id=%s AND revision=1 '
+                    'AND content_hash=%s').format(sql.Identifier(fence_table)),
+                    (*scope.key, license_id, license_hash))
+                assert updated.rowcount == 1, 'exact epoch source missing'
             yield conn
 
     def revoke():
@@ -846,6 +889,8 @@ def _assert_license_race(
                                         (binding,)).fetchone()['version']
                 assert (outcome, receipts, version) in {('42501', 0, 2), ('40001', 0, 2)}, (
                     'B70_STALE_SNAPSHOT_AFTER_COMMITTED_LICENSE_REVOKE', outcome, receipts, version)
+                if fence_table:
+                    assert outcome == '40001', 'epoch fence must reject the stale serializable snapshot'
             finally:
                 blocker.execute('ROLLBACK')
     else:
