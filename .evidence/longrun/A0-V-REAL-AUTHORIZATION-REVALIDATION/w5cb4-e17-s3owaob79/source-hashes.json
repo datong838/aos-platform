@@ -1,0 +1,22 @@
+[
+  {
+    "path": "services/aos-api/aos_api/extension_runtime/current_installation_release_evidence.py",
+    "sha256": "f7ec9f1e572a4bcbaebef59d22ff0a4bea211b07e20572fd5366afb41322fc13"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_capability_binding_service.py",
+    "sha256": "99105e030a38817d4ccf5606b2b6009af493e73fa4d6fdaa9ee8f7074b900ada"
+  },
+  {
+    "path": "services/aos-api/aos_api/aip_registry_issuer_connection.py",
+    "sha256": "a098a65df3d86aad048997ca590d6928ac9f2d3811d3a26de77f6d3fbe047ea5"
+  },
+  {
+    "path": "services/aos-api/aos_api/routers/aip_bindings.py",
+    "sha256": "1d864631c2d201588871925e7d303b7c0ffd34cdbc4634d6a7b9f5fe4dc0594e"
+  },
+  {
+    "path": "services/aos-api/alembic/versions/a0v_135_extension_schema_acl.py",
+    "sha256": "447229956b63f2b3b05c0e04e97f48da8dfec8860d0487bf824e650c30e271a0"
+  }
+]
