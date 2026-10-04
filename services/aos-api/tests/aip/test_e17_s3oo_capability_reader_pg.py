@@ -281,6 +281,59 @@ def test_lifecycle_issuer_requires_exact_update_without_delete(
             pass
 
 
+def test_column_grants_keep_readiness_out_of_ordinary_issuer_dml(
+    capability_case, capability_issuer,
+):
+    scope, request = capability_case
+    AipCapabilityBindingService(connect_factory=capability_issuer).create(
+        scope, request,
+        idempotency_key=f"b63:create:{request.binding_id}",
+        actor="test-only", occurred_at=datetime.now(UTC),
+    )
+    with connect() as owner:
+        owner.execute("""GRANT UPDATE(status,health,observed_at,version,updated_at)
+            ON aip_capability_binding TO aos_aip_capability_issuer""")
+        owner.commit()
+    config = capability_issuer.config
+    with psycopg.connect(host=config.host, port=config.port, dbname=config.database,
+                         user="aos_aip_capability_issuer", passfile=str(config.passfile)) as limited:
+        limited.execute("SELECT set_config('aos.org_id',%s,true),"
+                        "set_config('aos.project_id',%s,true)", scope.key)
+        assert limited.execute("""SELECT
+            has_column_privilege(session_user,'aip_capability_binding',
+                'status','UPDATE'),
+            has_column_privilege(session_user,'aip_capability_binding',
+                'operational_readiness','UPDATE')""").fetchone() == (True, False)
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            limited.execute("""UPDATE aip_capability_binding
+                SET operational_readiness='available'
+                WHERE org_id=%s AND project_id=%s AND binding_id=%s""",
+                (*scope.key, request.binding_id))
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="lifecycle issuer preflight still requires broad Binding UPDATE",
+)
+def test_lifecycle_issuer_can_omit_readiness_column_write_grants(
+    capability_case, capability_issuer,
+):
+    scope, _ = capability_case
+    with connect() as owner:
+        owner.execute("""GRANT UPDATE(status,health,observed_at,version,updated_at)
+            ON aip_capability_binding TO aos_aip_capability_issuer""")
+        owner.commit()
+    lifecycle_issuer = RegistryIssuerConnectionFactory(
+        capability_issuer.config, command_family="capability_lifecycle")
+    with lifecycle_issuer(scope) as limited:
+        privileges = limited.execute("""SELECT
+            has_column_privilege(session_user,'aip_capability_binding',
+                'operational_readiness','UPDATE') AS readiness_write,
+            has_column_privilege(session_user,'aip_capability_binding',
+                'status','UPDATE') AS status_write""").fetchone()
+        assert privileges == {"readiness_write": False, "status_write": True}
+
+
 def test_original_capability_evaluate_uses_explicit_reader_and_issuer_cas(
     capability_case, capability_issuer, readiness_reader,
 ):
