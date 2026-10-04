@@ -8,9 +8,9 @@
 
 ## 文件级步骤与判据
 
-1. 在既有 `services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py` 的 Growth1.13 active 段，复用 b39 disposable 非 owner 角色与八表 SELECT/RLS，尝试同租户 exact 安装行 `FOR SHARE`。直接执行 SQL 记录权限判据；错租户须空读，角色不能获得 Registry/Binding 写权。
-2. 用两条独立连接/受控线程，在角色共享锁持有期间，让原 owner 对**同一 test-only 安装**尝试 `FOR UPDATE`，以短 lock_timeout 证明其不能跨过，随后释放共享锁并证明 owner 可获得锁。Registry `(228,1)` 同理先由重验事务持有，再令独立撤销者以短 lock_timeout 尝试取得，释放后可取得。测试只验证锁互斥/顺序，不执行正式 revoke/publish，也不写真实库。
-3. 对缺权限或锁未阻断先 RED，再做最小 test-only 权限/测试修复；串行 full-schema 专项、当前只读 Reader 与相邻 AIP 回归，确认 cleanup、静态检查和方案一致。若底层锁证明尚不足以排除业务撤销/换代漂移，明确下一波构造原生产 transition 的并发 RED，维持 b34/b37 strict xfail。
+1. 在既有 `services/aos-api/tests/extension_runtime/test_growth_signed_installation_full_schema_pg.py` 的 Growth1.13 active 段，复用 b39 disposable 非 owner 角色与八表 SELECT/RLS，先对事务内 Reader 的**显式安装锁选项**写 RED；其返回后另一连接对同一安装行 `FOR UPDATE` 与 Registry `(228,1)` 都须在短 lock_timeout 内受阻，事务释放后均可取得。错租户须空读，角色不能获得 Registry/Binding 写权。
+2. 在 `services/aos-api/aos_api/extension_runtime/current_installation_release_evidence.py` 给内部 `_read_unique_active_in_transaction` 加默认关闭的 `lock_installation`：仅调用方 SERIALIZABLE、可写事务可启；选择唯一 candidate 后按租户和 id `FOR SHARE` 锁安装行，锁后重验 active=current，再沿原精确签名/Registry/字节重验取得 advisory `(228,1)`。公开只读包装不启锁、不改变返回的 `EVIDENCE_ONLY_NO_START`，错误/权限不足失败关闭。这只增加最终事务可复用原语，不把它接入 Capability active。
+3. 先无选项 RED，再最小实现；串行 full-schema 专项、当前只读 Reader 与相邻 AIP 回归，确认 cleanup、静态检查和方案一致。底层互斥不能替代原生产 transition 的撤销/换代并发或 Binding CAS/Receipt；保留 b34/b37 strict xfail。
 
 ## 安全边界与下一步
 
