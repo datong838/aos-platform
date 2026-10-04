@@ -25,7 +25,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
     license_revoke_first=False, license_evaluate_first=False,
     license_epoch_fence=False, license_replay_probe=False,
     license_transaction_probe=False, license_receipt_guard=False,
-    license_db_fence_probe=False,
+    license_db_fence_probe=False, license_db_trigger_candidate=False,
 ):
     suffix = secrets.token_hex(4)
     definer = "b47_definer_" + suffix
@@ -383,6 +383,7 @@ def assert_restricted_blocked_evaluate_composes_lock(
                         admin=admin, scope=scope, fence_table=fence_table,
                         template_license=license_id, license_hash=license_hash,
                         receipt_guard=license_receipt_guard, db_fence_probe=license_db_fence_probe,
+                        db_trigger_candidate=license_db_trigger_candidate,
                     )
                 if license_revoke_first or license_evaluate_first:
                     _assert_license_race(
@@ -1007,7 +1008,7 @@ def _assert_license_race(
 
 def _assert_license_transaction_contract(
     *, admin, scope, fence_table, template_license, license_hash, receipt_guard,
-    db_fence_probe=False,
+    db_fence_probe=False, db_trigger_candidate=False,
 ):
     """Fresh source, independent writer closures, real Store and bounded PID waits."""
     from aos_api.aip_production_contract_store import ProductionContractIdempotencyConflict
@@ -1084,6 +1085,10 @@ def _assert_license_transaction_contract(
                 expected_content_hash=license_hash, reason=reason))
 
     assert snapshot() == (0, 0, 0)
+    if db_trigger_candidate:
+        _assert_license_db_trigger(admin=admin, scope=scope, fence_table=fence_table,
+            template_license=template_license, license_hash=license_hash, bundle=bundle)
+        return
     if db_fence_probe:
         assert invoke(key, unwrapped=True).revoked is True
         assert snapshot() == (1, 1, 1), ('B74_REAL_STORE_BYPASSED_EPOCH_FENCE', snapshot())
@@ -1128,3 +1133,146 @@ def _assert_license_transaction_contract(
     with pytest.raises(ProductionContractIdempotencyConflict):
         invoke(key, reason='b73 conflicting body')
     assert snapshot() == (1, 1, 1), 'B73_CONFLICT_CHANGED_AUTHORITY'
+
+
+def _assert_license_db_trigger(*, admin, scope, fence_table, template_license, license_hash, bundle):
+    suffix = secrets.token_hex(5)
+    owner = 'b75_owner_' + suffix
+    function = 'b75_fence_' + suffix
+    policy = 'b75_tenant_' + suffix
+    event_table = 'aip_evidence_bundle_revoke_event'
+    source_table = 'aip_evidence_bundle_revision'
+    created_policies = []
+    admin.execute(sql.SQL('CREATE ROLE {} NOLOGIN NOINHERIT NOSUPERUSER NOBYPASSRLS').format(sql.Identifier(owner)))
+    try:
+        admin.execute(sql.SQL('GRANT USAGE ON SCHEMA public TO {}').format(sql.Identifier(owner)))
+        for table in (source_table, fence_table):
+            admin.execute(sql.SQL('GRANT SELECT ON public.{} TO {}').format(sql.Identifier(table), sql.Identifier(owner)))
+            admin.execute(sql.SQL("CREATE POLICY {} ON public.{} TO {} USING ("
+                "org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true)) "
+                "WITH CHECK(org_id=current_setting('aos.org_id',true) AND project_id=current_setting('aos.project_id',true))").format(
+                sql.Identifier(policy), sql.Identifier(table), sql.Identifier(owner)))
+            created_policies.append(table)
+        admin.execute(sql.SQL('GRANT UPDATE(epoch) ON public.{} TO {}').format(sql.Identifier(fence_table), sql.Identifier(owner)))
+        admin.execute(sql.SQL('REVOKE UPDATE(epoch) ON public.{} FROM aos_runtime').format(sql.Identifier(fence_table)))
+        admin.execute(sql.SQL("""CREATE FUNCTION public.{}() RETURNS trigger
+            LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $f$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM public.aip_evidence_bundle_revision
+                WHERE org_id=NEW.org_id AND project_id=NEW.project_id AND bundle_id=NEW.bundle_id
+                  AND revision=NEW.revision AND content_hash=NEW.content_hash AND lifecycle='frozen')
+                THEN RAISE EXCEPTION 'exact source unavailable' USING ERRCODE='42501'; END IF;
+              UPDATE public.{} SET epoch=epoch+1 WHERE org_id=NEW.org_id AND project_id=NEW.project_id
+                AND bundle_id=NEW.bundle_id AND revision=NEW.revision AND content_hash=NEW.content_hash;
+              IF NOT FOUND THEN RAISE EXCEPTION 'exact epoch unavailable' USING ERRCODE='42501'; END IF;
+              RETURN NEW;
+            END $f$""").format(sql.Identifier(function), sql.Identifier(fence_table)))
+        admin.execute(sql.SQL('ALTER FUNCTION public.{}() OWNER TO {}').format(sql.Identifier(function), sql.Identifier(owner)))
+        admin.execute(sql.SQL('REVOKE ALL ON FUNCTION public.{}() FROM PUBLIC,aos_runtime').format(sql.Identifier(function)))
+        admin.execute(sql.SQL('CREATE TRIGGER {} BEFORE INSERT ON public.{} FOR EACH ROW '
+            'WHEN (NEW.bundle_id LIKE {}) EXECUTE FUNCTION public.{}()').format(
+            sql.Identifier(function), sql.Identifier(event_table), sql.Literal(bundle + '%'), sql.Identifier(function)))
+        attrs = admin.execute('SELECT rolcanlogin,rolinherit,rolsuper,rolbypassrls FROM pg_roles WHERE rolname=%s', (owner,)).fetchone()
+        assert not any(attrs.values())
+        proc = admin.execute('SELECT prosecdef,proconfig,pg_get_userbyid(proowner) AS owner '
+            'FROM pg_proc WHERE oid=%s::regprocedure', ('public.' + function + '()',)).fetchone()
+        assert proc['prosecdef'] and proc['owner'] == owner
+        assert proc['proconfig'] == ['search_path=pg_catalog, public']
+        assert not admin.execute("SELECT has_function_privilege('aos_runtime',%s,'EXECUTE') AS permitted",
+            ('public.' + function + '()',)).fetchone()['permitted']
+        flags = admin.execute('SELECT relrowsecurity,relforcerowsecurity FROM pg_class '
+            'WHERE oid=%s::regclass', ('public.' + fence_table,)).fetchone()
+        assert all(flags.values())
+        assert admin.execute("SELECT has_column_privilege('aos_runtime',%s,'epoch','UPDATE') AS permitted",
+            ('public.' + fence_table,)).fetchone()['permitted'] is False
+
+        def fresh(name, head=True):
+            source = bundle + '-' + name
+            admin.execute("""INSERT INTO aip_evidence_bundle_revision
+                (org_id,project_id,bundle_id,revision,brief_ref,subject_refs,cutoff_at,
+                 item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+                 license_summary,content_hash,lifecycle,created_by)
+                SELECT org_id,project_id,%s,revision,brief_ref,subject_refs,cutoff_at,
+                 item_refs,coverage,missing,conflicts,uncertainties,freshness,marking,
+                 license_summary,content_hash,lifecycle,created_by
+                FROM aip_evidence_bundle_revision WHERE org_id=%s AND project_id=%s
+                AND bundle_id=%s AND revision=1""", (source, *scope.key, template_license))
+            if head:
+                admin.execute(sql.SQL('INSERT INTO public.{} VALUES(%s,%s,%s,1,%s,0)').format(sql.Identifier(fence_table)),
+                              (*scope.key, source, license_hash))
+            return source
+
+        def state(source):
+            row = admin.execute(sql.SQL('SELECT epoch FROM public.{} WHERE org_id=%s AND project_id=%s AND bundle_id=%s').format(
+                sql.Identifier(fence_table)), (*scope.key, source)).fetchone()
+            event = admin.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event WHERE bundle_id=%s', (source,)).fetchone()['n']
+            receipts = admin.execute("SELECT count(*) AS n FROM aip_production_contract_receipt WHERE result_ref->>'resourceId'=%s", (source,)).fetchone()['n']
+            return row['epoch'] if row else None, event, receipts
+
+        def store(source, key, fail=False):
+            @contextmanager
+            def connection(selected_scope):
+                with connect(selected_scope) as conn:
+                    conn.execute("SET LOCAL statement_timeout='10s'")
+                    if fail:
+                        class Failure:
+                            def __getattr__(self, name): return getattr(conn, name)
+                            def commit(self):
+                                assert conn.execute('SELECT count(*) AS n FROM aip_evidence_bundle_revoke_event WHERE bundle_id=%s',
+                                                    (source,)).fetchone()['n'] == 1
+                                assert conn.execute('SELECT count(*) AS n FROM aip_production_contract_receipt '
+                                    'WHERE idempotency_key=%s', (key,)).fetchone()['n'] == 1
+                                assert conn.execute(sql.SQL('SELECT epoch FROM public.{} WHERE bundle_id=%s').format(
+                                    sql.Identifier(fence_table)), (source,)).fetchone()['epoch'] == 1
+                                raise RuntimeError('b75 precommit rollback')
+                        yield Failure()
+                    else:
+                        yield conn
+            return AipProductionContractStore(connect_factory=connection).revoke_evidence_bundle(
+                scope, 'b75-test-only', source, key, RevokeEvidenceBundleRequest(
+                    expected_revision=1, expected_content_hash=license_hash, reason='b75 event fence'))
+
+        def raw(source, selected_scope=scope, content_hash=license_hash):
+            with connect(selected_scope) as conn:
+                conn.execute("SET LOCAL statement_timeout='10s'")
+                conn.execute("""INSERT INTO aip_evidence_bundle_revoke_event
+                    (org_id,project_id,event_id,bundle_id,revision,content_hash,reason,actor)
+                    VALUES(%s,%s,%s,%s,1,%s,'b75 raw insert','b75-test-only')""",
+                    (*selected_scope.key, 'b75-event-' + secrets.token_hex(5), source, content_hash))
+
+        source = fresh('store')
+        assert store(source, source).revoked
+        assert state(source) == (1, 1, 1)
+        assert store(source, source).revoked
+        assert state(source) == (1, 1, 1)
+        assert store(source, source + '-new-key').revoked
+        assert state(source) == (1, 1, 2), 'new key on existing event must not advance epoch'
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            with connect(scope) as conn:
+                conn.execute(sql.SQL('UPDATE public.{} SET epoch=42').format(sql.Identifier(fence_table)))
+        raw_source = fresh('raw')
+        raw(raw_source)
+        assert state(raw_source) == (1, 1, 0)
+        missing = fresh('missing', head=False)
+        wrong = fresh('wrong-hash')
+        foreign = fresh('canary')
+        for selected_source, selected_scope, selected_hash, expected in (
+            (missing, scope, license_hash, (None, 0, 0)),
+            (wrong, scope, 'e' * 64, (0, 0, 0)),
+            (foreign, type(scope)(org_id='dev-org', project_id='dev-project'), license_hash, (0, 0, 0)),
+        ):
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                raw(selected_source, selected_scope, selected_hash)
+            assert state(selected_source) == expected
+        failure = fresh('rollback')
+        with pytest.raises(RuntimeError, match='b75 precommit rollback'):
+            store(failure, failure, fail=True)
+        assert state(failure) == (0, 0, 0)
+    finally:
+        admin.execute(sql.SQL('DROP TRIGGER IF EXISTS {} ON public.{}').format(sql.Identifier(function), sql.Identifier(event_table)))
+        admin.execute(sql.SQL('DROP FUNCTION IF EXISTS public.{}()').format(sql.Identifier(function)))
+        for table in created_policies:
+            admin.execute(sql.SQL('DROP POLICY {} ON public.{}').format(sql.Identifier(policy), sql.Identifier(table)))
+        admin.execute(sql.SQL('DROP OWNED BY {}').format(sql.Identifier(owner)))
+        admin.execute(sql.SQL('DROP ROLE {}').format(sql.Identifier(owner)))
+        admin.execute(sql.SQL('GRANT UPDATE(epoch) ON public.{} TO aos_runtime').format(sql.Identifier(fence_table)))

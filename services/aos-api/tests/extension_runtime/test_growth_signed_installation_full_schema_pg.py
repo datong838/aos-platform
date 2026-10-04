@@ -143,6 +143,8 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
     license_transaction_probe = os.getenv('AOS_B73_TRANSACTION_PROBE') == '1'
     license_receipt_guard = os.getenv('AOS_B73_RECEIPT_GUARD') == '1'
     license_db_fence_probe = os.getenv('AOS_B74_DB_FENCE_PROBE') == '1'
+    license_db_trigger_candidate = os.getenv('AOS_B75_DB_TRIGGER_CANDIDATE') == '1'
+    assert not license_db_trigger_candidate or license_db_fence_probe
     assert not license_db_fence_probe or license_receipt_guard
     assert not license_transaction_probe or license_replay_probe
     assert not license_receipt_guard or license_transaction_probe
@@ -1036,6 +1038,7 @@ def test_signed_growth_release_reaches_approved_installation_in_full_schema(
                         license_transaction_probe=license_transaction_probe,
                         license_receipt_guard=license_receipt_guard,
                         license_db_fence_probe=license_db_fence_probe,
+                        license_db_trigger_candidate=license_db_trigger_candidate,
                     )
                     if committed_revoke_case or concurrent_revoke_case or evaluate_first_case:
                         return str(binding['generation'])
